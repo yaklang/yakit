@@ -15,5 +15,6 @@ export interface HistoryTaskTreeItemProps {
 export interface AIHistoryContinueTaskProps {
     item: AIAgentGrpcApi.PlanHistory
     isExecuting: boolean
+    currentCoordinatorId: string
     onRecover: (coordinatorId: string) => void
 }

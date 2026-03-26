@@ -48,17 +48,15 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     useUpdateEffect(() => {
         if (!taskStatus.loading && currentCoordinatorIdRef.current) {
             onSendRecover(currentCoordinatorIdRef.current)
-            currentCoordinatorIdRef.current = ""
         }
     }, [taskStatus.loading])
     const onRecover = useMemoizedFn((coordinatorId: string) => {
         const taskId = getTaskId()
         if (!coordinatorId) return
+        currentCoordinatorIdRef.current = coordinatorId
         chatIPCEvents.handleCancelLoadingChange("task", true)
-
         if (taskStatus.loading && taskId) {
             // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
-            currentCoordinatorIdRef.current = coordinatorId
             handleSendSyncMessage({
                 syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
                 SyncJsonInput: JSON.stringify({task_id: taskId})
@@ -73,6 +71,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
             SyncJsonInput: JSON.stringify({coordinator_id: coordinatorId})
         })
         handleTabChange(AIChatLeft.TaskTree)
+        currentCoordinatorIdRef.current = ""
     })
     const getTaskInfo = useMemoizedFn(() => {
         return chatIPCEvents.fetchTaskChatID()
@@ -117,6 +116,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                                                 item={item}
                                                 isExecuting={taskStatus.loading}
                                                 onRecover={onRecover}
+                                                currentCoordinatorId={currentCoordinatorIdRef.current}
                                             />
                                         )}
                                     </div>
@@ -134,29 +134,21 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
 })
 
 const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((props) => {
-    const {chatIPCEvents} = useChatIPCDispatcher()
-    const {chatIPCData} = useChatIPCStore()
-
-    const {item, isExecuting, onRecover} = props
+    const {item, isExecuting, onRecover, currentCoordinatorId} = props
     const [visible, setVisible] = useState<boolean>(false)
 
-    const cancelTaskLoading = useCreation(() => {
-        return chatIPCData.cancelTaskLoading
-    }, [chatIPCData.cancelTaskLoading])
-
-    const getCoordinatorId = useMemoizedFn(() => {
-        const taskInfo = getTaskInfo()
-        return taskInfo?.coordinatorId || ""
-    })
-    const getTaskInfo = useMemoizedFn(() => {
-        return chatIPCEvents.fetchTaskChatID()
-    })
-
+    const loading = useCreation(() => {
+        return currentCoordinatorId === item.coordinator_id && isExecuting
+    }, [isExecuting, currentCoordinatorId])
+    const disabled = useCreation(() => {
+        return isExecuting && !!currentCoordinatorId
+    }, [isExecuting, currentCoordinatorId])
     return (
         <YakitPopconfirm
             title={isExecuting ? "停掉当前正在执行的任务，恢复此任务" : "是否确认恢复该此任务"}
             onConfirm={(e) => {
                 e?.stopPropagation()
+                setVisible(false)
                 onRecover(item.coordinator_id)
             }}
             onCancel={(e) => {
@@ -172,7 +164,8 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
                     e.stopPropagation()
                 }}
                 style={{paddingRight: 0}}
-                loading={getCoordinatorId() === item.coordinator_id && cancelTaskLoading}
+                loading={loading}
+                disabled={disabled}
             >
                 继续任务
             </YakitButton>
