@@ -22,35 +22,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.11.0
-          cache: "yarn"
+          node-version: 20.20.1
+          cache: 'yarn'
           cache-dependency-path: |
-              yarn.lock
-              app/renderer/src/main/yarn.lock
-              app/renderer/engine-link-startup/yarn.lock
-
-      - name: Install dependencies (root)
-        # if: steps.node-mod-cache.outputs.cache-hit != 'true'
-        working-directory: .
-        run: yarn install --prefer-offline --network-concurrency 1
-
-      - name: Install dependencies (renderer main)
-        working-directory: app/renderer/src/main
-        run: yarn install --prefer-offline --network-concurrency 1
-
-      - name: Install dependencies (engine-link-startup)
-        working-directory: app/renderer/engine-link-startup
-        run: yarn install --prefer-offline --network-concurrency 1
-
-      - name: Skip install (node_modules cache hit)
-        # if: steps.node-mod-cache.outputs.cache-hit == 'true'
-        run: echo "node_modules cache restored; skipping yarn install"
-
-      - name: Verify installed packages (quick)
-        working-directory: .
-        run: |
-          echo "Yarn cache dir: $(yarn cache dir)"
-          ls -la node_modules | head -n 20 || true
+            yarn.lock
+            app/renderer/src/main/yarn.lock
+            app/renderer/engine-link-startup/yarn.lock
 
       - name: Debug - list candidate test files
         working-directory: .
@@ -152,7 +129,40 @@ jobs:
           echo "No relevant tests found to run"
           echo "tests=none" >> $GITHUB_OUTPUT
 
+      - name: End job early when no relevant tests are found
+        if: steps.test_selection.outputs.tests == 'none'
+        run: echo "No relevant tests found, ending this CI job early"
+
+      - name: Install dependencies (root)
+        if: steps.test_selection.outputs.tests != 'none'
+        # if: steps.node-mod-cache.outputs.cache-hit != 'true'
+        working-directory: .
+        run: yarn install --prefer-offline --network-concurrency 1
+
+      - name: Install dependencies (renderer main)
+        if: steps.test_selection.outputs.tests != 'none'
+        working-directory: app/renderer/src/main
+        run: yarn install --prefer-offline --network-concurrency 1
+
+      - name: Install dependencies (engine-link-startup)
+        if: steps.test_selection.outputs.tests != 'none'
+        working-directory: app/renderer/engine-link-startup
+        run: yarn install --prefer-offline --network-concurrency 1
+
+      - name: Skip install (node_modules cache hit)
+        if: steps.test_selection.outputs.tests != 'none'
+        # if: steps.node-mod-cache.outputs.cache-hit == 'true'
+        run: echo "node_modules cache restored; skipping yarn install"
+
+      - name: Verify installed packages (quick)
+        if: steps.test_selection.outputs.tests != 'none'
+        working-directory: .
+        run: |
+          echo "Yarn cache dir: $(yarn cache dir)"
+          ls -la node_modules | head -n 20 || true
+
       - name: Run Vitest (root)
+        if: steps.test_selection.outputs.tests != 'none'
         # run from repo root so root-level script `test:vitest` is available
         working-directory: .
         env:
