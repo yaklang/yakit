@@ -955,6 +955,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                     onActiveKey={onActiveKey}
                     show={openTabsFlag}
                     setShow={onSetOpenTabsFlag}
+                    barHint={() => ''}
                 />
                 <div
                     className={classNames(styles["mitm-hijack-tab-cont-item"])}
