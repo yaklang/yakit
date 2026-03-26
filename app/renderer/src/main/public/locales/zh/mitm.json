@@ -267,5 +267,11 @@
     "replaceRuleWarning": "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
     "goConfigure": "去配置",
     "usingV1": "当前使用的是MITM v1版本"
+  },
+  "PluginTunHijack": {
+    "connectivityCheck": "TUN劫持联通性检测",
+    "connectivityChecking": "TUN劫持联通性检测进行中",
+    "connectivityCheckCompleted": "TUN劫持联通性检测完成",
+    "connectivityCheckPluginNotFound": "未找到本地插件“{{name}}”，请先确认插件已安装，或将代码中的插件名改为实际脚本名"
   }
 }

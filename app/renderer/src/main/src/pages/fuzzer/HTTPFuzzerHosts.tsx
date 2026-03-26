@@ -45,7 +45,7 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
     const {t, i18n} = useI18nNamespaces(["yakitUi", "webFuzzer"])
     const [params, setParams] = useState<{Key: string; Value: string}>({Key: "", Value: ""})
     const [configType, setConfigType] = useState<"input" | "upload">("input")
-    const supportedHostsFileExtList = [".txt", ".hosts"]
+    const supportedHostsFileExtList = ["txt", "hosts"]
     const [fileName, setFileName] = useState<string>("")
 
     const typeOptions = useMemo(()=>[
@@ -62,7 +62,7 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
         if (!normalizedPath) return false
 
         const file = normalizedPath.split(/[\\/]/).pop() || ""
-        return file === "hosts" || supportedHostsFileExtList.some((ext) => file.endsWith(ext))
+        return file === "hosts" || supportedHostsFileExtList.some((ext) => file.endsWith(`.${ext}`))
     }
 
     const parseHostsContent = (content: string): {Key: string; Value: string}[] => {
@@ -103,7 +103,7 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
                 return
             }
             if (!isSupportedHostsFile(fileName)) {
-                yakitFailed(t("HTTPFuzzerHosts.unsupportedFileType", {accept: supportedHostsFileExtList.join(', ')}))
+                yakitFailed(t("HTTPFuzzerHosts.unsupportedFileType", {accept: supportedHostsFileExtList.join('/')}))
                 return
             }
             let currentHostsContent = ""

@@ -267,5 +267,11 @@
     "replaceRuleWarning": "Replacement rules are enabled and may affect hijacking. Confirm starting?",
     "goConfigure": "Configure",
     "usingV1": "Currently using MITM v1"
+  },
+  "PluginTunHijack": {
+    "connectivityCheck": "TUN Hijack Connectivity Check",
+    "connectivityChecking": "TUN Hijack Connectivity Check In Progress",
+    "connectivityCheckCompleted": "TUN Hijack Connectivity Check Completed",
+    "connectivityCheckPluginNotFound": "Local plugin '{{name}}' was not found. Install the plugin first, or change the plugin name in code to the actual script name."
   }
 }
