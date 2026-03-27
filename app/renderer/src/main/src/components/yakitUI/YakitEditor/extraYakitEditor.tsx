@@ -33,6 +33,7 @@ import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useHttpFlowStore} from "@/store/httpFlow"
 import { JSONParseLog } from "@/utils/tool"
+import {fetchCursorContent} from "./editorUtils"
 const {ipcRenderer} = window.require("electron")
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = "HTTP_PACKET_EDITOR_DisableUnicodeDecode"
@@ -139,11 +140,50 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         const originValueBytes = StringToUint8Array(originValue)
         let menuItems: OtherMenuListProps = {
             ...(contextMenu || {}),
-            copyCURL: {
-                menu: [{key: "copy-as-curl", label: t("YakitEditor.HTTPPacketYakitEditor.copyCurlCommand")}],
+            copyActions: {
+                menu: [
+                    {
+                        key: "copy-actions",
+                        label: t("YakitEditor.copy"),
+                        children: [
+                            {
+                                key: "copy",
+                                label: t("YakitEditor.copy")
+                            },
+                            {
+                                key: "copy-as-curl",
+                                label: t("YakitEditor.HTTPPacketYakitEditor.copyCurlCommand")
+                            },
+                            {
+                                key: "copyUrl",
+                                label: t("YakitEditor.HTTPPacketYakitEditor.copyUrl")
+                            },
+                            ...(showDownBodyMenu
+                                ? [
+                                      {
+                                          key: "copyBodyBase64",
+                                          label: t("YakitEditor.HTTPPacketYakitEditor.copyBodyBase64")
+                                      }
+                                  ]
+                                : []),
+                            {
+                                key: "copy-to-notepad",
+                                label: `${t("YakitEditor.HTTPPacketYakitEditor.copyTo")}${getNotepadNameByEdition()}${
+                                    !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+                                        ? t("YakitEditor.HTTPPacketYakitEditor.pleaseLogin")
+                                        : ""
+                                }`,
+                                disabled: !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
+                            }
+                        ]
+                    }
+                ],
                 onRun: (editor, key) => {
                     switch (key) {
-                        case "copy-as-curl":
+                        case "copy":
+                            setClipboardText(`${fetchCursorContent(editor, true)}`)
+                            return
+                        case "copy-as-curl": {
                             const text = editor.getModel()?.getValue() || ""
                             if (!text) {
                                 info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
@@ -157,34 +197,72 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                 })
                             })
                             return
+                        }
+                        case "copyUrl":
+                            if (onClickUrlMenu) {
+                                onClickUrlMenu()
+                            } else {
+                                setClipboardText(url || "")
+                            }
+                            return
+                        case "copyBodyBase64": {
+                            const text = editor.getModel()?.getValue()
+                            if (!text) {
+                                yakitNotify("info", t("YakitEditor.HTTPPacketYakitEditor.noPacketCannotCopyBody"))
+                                return
+                            }
+                            ipcRenderer
+                                .invoke("GetHTTPPacketBody", {Packet: text, ForceRenderFuzztag: true})
+                                .then((bytes: {Raw: Uint8Array}) => {
+                                    ipcRenderer
+                                        .invoke("BytesToBase64", {
+                                            Bytes: bytes.Raw
+                                        })
+                                        .then((res: {Base64: string}) => {
+                                            setClipboardText(res.Base64)
+                                        })
+                                        .catch((err) => {
+                                            yakitNotify("error", `${err}`)
+                                        })
+                                })
+                            return
+                        }
+                        case "copy-to-notepad": {
+                            const text = editor.getModel()?.getValue() || ""
+                            if (!text) {
+                                info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
+                                return
+                            }
+                            let content = "```" + text + "\n```"
+                            goAddNotepad({
+                                title: `${t("YakitEditor.HTTPPacketYakitEditor.packet")}-${Date.now()}`,
+                                content
+                            })
+                            return
+                        }
                         default:
                             break
                     }
                 }
             },
-            copyUrl: {
+            copyAsCsrfPoc: {
                 menu: [
                     {
-                        key: "copyUrl",
-                        label: t("YakitEditor.HTTPPacketYakitEditor.copyUrl")
+                        key: "copy-as-csrf-poc",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc"),
+                        children: [
+                            {
+                                key: "csrfpoc",
+                                label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic")
+                            },
+                            {
+                                key: "auto-submit-csrf-poc",
+                                label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit")
+                            }
+                        ]
                     }
                 ],
-                onRun: (editor: YakitIMonacoEditor, key: string) => {
-                    if (onClickUrlMenu) {
-                        onClickUrlMenu()
-                    } else {
-                        setClipboardText(url || "")
-                    }
-                }
-            },
-            copyCSRF: {
-                menu: [
-                    {
-                        key: "csrfpoc",
-                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic")
-                    }
-                ],
-                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                onRun: (editor, key) => {
                     try {
                         const text = editor.getModel()?.getValue() || ""
                         if (!text) {
@@ -193,57 +271,10 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         }
                         generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), defaultHttps, (code) => {
                             setClipboardText(code)
-                        },false)
+                        }, key === "auto-submit-csrf-poc")
                     } catch (e) {
                         failed(t("YakitEditor.HTTPPacketYakitEditor.autoGenerateCsrfFailed"))
                     }
-                }
-            },
-            autoSubmitCSRF: {
-                menu: [
-                    {
-                        key: "auto-submit-csrf-poc",
-                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit")
-                    }
-                ],
-                onRun: (editor: YakitIMonacoEditor, key: string) => {
-                    try {
-                        const text = editor.getModel()?.getValue() || ""
-                        if (!text) {
-                            info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
-                            return
-                        }
-                        generateCSRFPocByRequest(StringToUint8Array(text, "utf8"), defaultHttps, (code) => {
-                            setClipboardText(code)
-                        },true)
-                    } catch (e) {
-                        failed(t("YakitEditor.HTTPPacketYakitEditor.autoGenerateCsrfFailed"))
-                    }
-                }
-            },
-            copyNotepad: {
-                menu: [
-                    {
-                        key: "copy-to-notepad",
-                        label: `${t("YakitEditor.HTTPPacketYakitEditor.copyTo")}${getNotepadNameByEdition()}${
-                            !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
-                                ? t("YakitEditor.HTTPPacketYakitEditor.pleaseLogin")
-                                : ""
-                        }`,
-                        disabled: !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
-                    }
-                ],
-                onRun: (editor: YakitIMonacoEditor, key: string) => {
-                    const text = editor.getModel()?.getValue() || ""
-                    if (!text) {
-                        info(t("YakitEditor.HTTPPacketYakitEditor.packetEmpty"))
-                        return
-                    }
-                    let content = "```" + text + "\n```"
-                    goAddNotepad({
-                        title: `${t("YakitEditor.HTTPPacketYakitEditor.packet")}-${Date.now()}`,
-                        content
-                    })
                 }
             },
             exportTxt: {
@@ -414,44 +445,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 ac[a] = menuItems[a]
                 return ac
             }, {}) as OtherMenuListProps
-
-            menuItems = Object.keys(menuItems).reduce((ac, a) => {
-                if (a === "downloadBody") {
-                    ac["copyBodyBase64"] = {
-                        menu: [
-                            {
-                                key: "copyBodyBase64",
-                                label: t("YakitEditor.HTTPPacketYakitEditor.copyBodyBase64")
-                            }
-                        ],
-                        onRun: (editor: YakitIMonacoEditor, key: string) => {
-                            const text = editor.getModel()?.getValue()
-                            if (!text) {
-                                yakitNotify("info", t("YakitEditor.HTTPPacketYakitEditor.noPacketCannotCopyBody"))
-                                return
-                            }
-                            ipcRenderer
-                                .invoke("GetHTTPPacketBody", {Packet: text, ForceRenderFuzztag: true})
-                                .then((bytes: {Raw: Uint8Array}) => {
-                                    ipcRenderer
-                                        .invoke("BytesToBase64", {
-                                            Bytes: bytes.Raw
-                                        })
-                                        .then((res: {Base64: string}) => {
-                                            setClipboardText(res.Base64)
-                                        })
-                                        .catch((err) => {
-                                            yakitNotify("error", `${err}`)
-                                        })
-                                })
-                        }
-                    }
-                }
-                ac[a] = menuItems[a]
-                return ac
-            }, {}) as OtherMenuListProps
         }
-
         if (isWebSocket) {
             menuItems.newSocket = {
                 menu: [
@@ -670,6 +664,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             menuType={rightMenuType}
             readOnly={readOnly}
             contextMenu={rightContextMenu}
+            hiddenDefaultContextMenuKeys={["copy"]}
             disableUnicodeDecode={disableUnicodeDecode}
             {...restProps}
             {...extraEditorProps}
