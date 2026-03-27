@@ -59,6 +59,7 @@ import {
 } from "@/pages/ai-agent/aiModelList/AIModelList"
 import {
     AIModelPolicyOptions,
+    AIModelTypeEnum,
     AIModelTypeInterFileNameEnum,
     defaultAIGlobalConfig
 } from "@/pages/ai-agent/defaultConstant"
@@ -1446,6 +1447,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
                                             index
                                         })
                                     }
+                                    modelType={AIModelTypeEnum.TierIntelligent}
                                 />
                             )}
                         </YakitCollapse.YakitPanel>
@@ -1471,6 +1473,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
                                             index
                                         })
                                     }
+                                     modelType={AIModelTypeEnum.TierLightweight}
                                 />
                             </YakitCollapse.YakitPanel>
                         )}
@@ -1496,6 +1499,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
                                             index
                                         })
                                     }
+                                    modelType={AIModelTypeEnum.TierVision}
                                 />
                             </YakitCollapse.YakitPanel>
                         )}

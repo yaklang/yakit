@@ -111,5 +111,16 @@
     "tip": "Tip",
     "memfitUpdateNotice": "Memfit session data upgraded, all historical session records in the system will be deleted.",
     "clearHistoryConfirm": "Whether to clear database history records"
+  },
+  "AIModelTestResult": {
+    "quickPreview": "quick preview",
+    "modelTesting": "Model testing",
+    "firstByteDelay": "First byte delay",
+    "totalTime": "Total time",
+    "responseStatusCode": "Response status code",
+    "request": "Request",
+    "response": "Response",
+    "testSuccess": "Test success",
+    "testFailed": "Test failed"
   }
 }

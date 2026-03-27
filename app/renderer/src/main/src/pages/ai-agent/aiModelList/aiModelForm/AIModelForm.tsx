@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from "react"
 import {
     AIConfigAPIKeyFormItemProps,
+    AIModelCheckResultProps,
     AIModelFormAddOptions,
     AIModelFormProps,
     AIModelFormSetAIGlobalConfigOptions,
@@ -19,7 +20,9 @@ import {
     grpcGetAIGlobalConfig,
     grpcQueryAIProviderAll,
     grpcSetAIGlobalConfig,
-    normalizeAIAPIType
+    grpcAIConfigHealthCheck,
+    normalizeAIAPIType,
+    AIConfigHealthCheckResponse
 } from "../utils"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
 import {YakitAutoCompleteProps} from "@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType"
@@ -29,6 +32,19 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {yakitNotify} from "@/utils/notification"
 import emiter from "@/utils/eventBus/eventBus"
 import {cloneDeep} from "lodash"
+import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
+import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
+import styles from "./AIModelForm.module.scss"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
+import {OutlineXIcon} from "@/assets/icon/outline"
+import {HorizontalScrollCard} from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
+import {HoldGRPCStreamProps} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
+import {NewHTTPPacketEditor, RenderTypeOptionVal} from "@/utils/editors"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {setRemoteValue} from "@/utils/kv"
+import {RemoteAIAgentGV} from "@/enums/aiAgent"
 
 const defaultFormValues = {
     Type: "",
@@ -81,11 +97,59 @@ export const getModelTypeByFileName = (fileName: string) => {
     }
     return modelType
 }
+export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationConfig => {
+    const config: ThirdPartyApplicationConfig = {
+        Type: values.Type || "",
+        APIKey: values.api_key || "",
+        Domain: values.domain || "",
+        Proxy: values.proxy || "",
+        NoHttps: !!values.no_https,
+        APIType: values.api_type || "",
+        ExtraParams: []
+        /** 下面这些字段ai中没有 */
+        // UserIdentifier: values.user_identifier || "",
+        // UserSecret: values.user_secret || "",
+        // Namespace: values.namespace || "",
+        // WebhookURL: values.webhook_url || "",
+    }
+
+    const builtInFieldSet = new Set([
+        "Type",
+        "api_key",
+        "user_identifier",
+        "user_secret",
+        "namespace",
+        "domain",
+        "proxy",
+        "no_https",
+        "api_type",
+        "webhook_url",
+        "api_key_id" //测试不需要传这个给后端
+    ])
+
+    Object.entries(values).forEach(([key, value]) => {
+        if (builtInFieldSet.has(key)) return
+        if (value === undefined || value === null || value === "") return
+        config.ExtraParams?.push({
+            Key: key,
+            Value: `${value}`
+        })
+    })
+
+    if (!config.ExtraParams?.length) {
+        delete config.ExtraParams
+    }
+
+    return config
+}
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     const {item, aiModelType, onSuccess, onClose} = props
 
     const [loading, setLoading] = useState<boolean>(false)
 
+    const [testLoading, setTestLoading] = useState<boolean>(false)
+
+    const isShowSaveLoadingRef = useRef<boolean>(true)
     const formRef = useRef<{form: FormInstance}>(null)
     const footerRef = useRef<HTMLDivElement>(null)
     let aiGlobalConfigRef = useRef<AIGlobalConfig>()
@@ -183,6 +247,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         if (!fileName) return
         const index = newConfig[fileName].findIndex((i) => isEqualAIModel(i, newItem))
         if (index !== -1) {
+            isShowSaveLoadingRef.current = true
             yakitNotify("error", "已存在相同配置的AI模型，请勿重复添加")
             return
         }
@@ -222,6 +287,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             if (aiModelType !== modelType) {
                 const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newUpdateItem))
                 if (isHave) {
+                    isShowSaveLoadingRef.current = true
                     yakitNotify("error", "已存在相同配置的AI模型，请勿重复添加")
                     return
                 }
@@ -237,11 +303,12 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
             onSetAIGlobalConfig(newConfig, item)
         } catch (error) {
+            isShowSaveLoadingRef.current = true
             yakitNotify("error", `更新AI模型配置失败:${error}`)
         }
     })
     const onSetAIGlobalConfig = useMemoizedFn((config: AIGlobalConfig, option: AIModelFormSetAIGlobalConfigOptions) => {
-        setLoading(true)
+        isShowSaveLoadingRef.current && setLoading(true)
         grpcSetAIGlobalConfig(config)
             .then(() => {
                 const {aiService, aiModelName, fileName} = option
@@ -263,10 +330,46 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 onClose?.()
             })
             .finally(() => {
+                isShowSaveLoadingRef.current = true
                 setTimeout(() => {
                     setLoading(false)
                 }, 200)
             })
+    })
+    const onCheckAndSave = useMemoizedFn(() => {
+        if (!formRef.current?.form) return
+
+        formRef.current.form.validateFields().then((res) => {
+            setTestLoading(true)
+            const config = buildAIConfigHealthCheckConfig(res)
+            grpcAIConfigHealthCheck({
+                Config: config,
+                Content: "你好,请简单回复'测试成功'"
+            })
+                .then((response) => {
+                    const isSuccess = response.ResponseStatusCode === 200
+                    if (isSuccess) {
+                        yakitNotify("success", "测试成功")
+                        isShowSaveLoadingRef.current = false
+                        onOk()
+                    } else {
+                        onOpenCheckResult(response)
+                    }
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        setTestLoading(false)
+                    }, 200)
+                })
+        })
+    })
+    const onOpenCheckResult = useMemoizedFn((testResult: AIConfigHealthCheckResponse) => {
+        const m = showYakitModal({
+            hiddenHeader: true,
+            type: "white",
+            content: <AIModelCheckResult testResult={testResult} onClose={() => m.destroy()} />,
+            onOk: () => m.destroy()
+        })
     })
     return (
         <NewThirdPartyApplicationConfigBase
@@ -277,7 +380,16 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             footer={
                 <>
                     <div ref={footerRef} />
-                    <YakitButton size='large' type={"primary"} onClick={onOk} loading={loading}>
+                    <YakitButton size='large' type='outline2' onClick={onCheckAndSave} loading={testLoading}>
+                        测试并添加
+                    </YakitButton>
+                    <YakitButton
+                        size='large'
+                        type={"primary"}
+                        onClick={onOk}
+                        loading={loading}
+                        disabled={testLoading || !isShowSaveLoadingRef.current}
+                    >
                         确定添加
                     </YakitButton>
                 </>
@@ -285,6 +397,130 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         />
     )
 })
+
+export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => {
+    const {testResult, onClose} = props
+
+    const {t, i18n} = useI18nNamespaces(["aiAgent"])
+    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("response") //选中的表格项
+    const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
+
+    const testStatus = useCreation(() => {
+        if (!testResult) return null
+        const isSuccess = testResult.ResponseStatusCode === 200
+        return {
+            color: (isSuccess ? "success" : "danger") as YakitTagColor,
+            text: isSuccess ? t("AIModelTestResult.testSuccess") : t("AIModelTestResult.testFailed")
+        }
+    }, [testResult, i18n.language])
+    const data: HoldGRPCStreamProps.InfoCards[] = useCreation(() => {
+        if (!testResult) return []
+        const baseInfo: HoldGRPCStreamProps.InfoCards[] = [
+            {
+                tag: t("AIModelTestResult.firstByteDelay"),
+                info: [
+                    {
+                        Id: "首字节延时",
+                        Data: testResult.FirstByteCostMs ? `${testResult.FirstByteCostMs} ms` : "-",
+                        Timestamp: Date.now()
+                    }
+                ]
+            },
+            {
+                tag: t("AIModelTestResult.totalTime"),
+                info: [
+                    {
+                        Id: "总耗时",
+                        Data: testResult.TotalCostMs ? `${testResult.TotalCostMs} ms` : "-",
+                        Timestamp: Date.now()
+                    }
+                ]
+            },
+            {
+                tag: t("AIModelTestResult.responseStatusCode"),
+                info: [
+                    {
+                        Id: "响应状态码",
+                        Data: testResult.ResponseStatusCode ? `${testResult.ResponseStatusCode}` : "0",
+                        Timestamp: Date.now()
+                    }
+                ]
+            }
+        ]
+        return baseInfo
+    }, [testResult, i18n.language])
+    const onTypeOptionValChange = useMemoizedFn((typeOptionVal) => {
+        if (typeOptionVal !== undefined) {
+            setTypeOptionVal(typeOptionVal)
+            setRemoteValue(RemoteAIAgentGV.AIModelCheckResultEditorBeautify, typeOptionVal)
+        } else {
+            setTypeOptionVal(undefined)
+            setRemoteValue(RemoteAIAgentGV.AIModelCheckResultEditorBeautify, "")
+        }
+    })
+    return (
+        <div className={styles["test-result-wrapper"]}>
+            <div className={styles["test-result-heard"]}>
+                <div className={styles["test-result-title"]}>
+                    <span className={styles["title"]}> {t("AIModelTestResult.modelTesting")}</span>
+                    <YakitTag className={styles["tag"]} color={testStatus?.color}>
+                        {testStatus?.text}
+                    </YakitTag>
+                    {testResult?.ErrorMessage && (
+                        <span className={styles["tip"]} title={testResult?.ErrorMessage}>
+                            {testResult?.ErrorMessage}
+                        </span>
+                    )}
+                </div>
+                <YakitButton type='text2' size={"middle"} icon={<OutlineXIcon />} onClick={onClose} />
+            </div>
+            <div className={styles["test-result-content"]}>
+                <HorizontalScrollCard hiddenHeard={true} data={data} />
+                <div className={styles["test-result-packet"]}>
+                    <NewHTTPPacketEditor
+                        originValue={
+                            currentSelectShowType === "request"
+                                ? testResult?.RawRequest || ""
+                                : testResult?.ResponseContent || ""
+                        }
+                        title={
+                            <div className={styles["packet-title-wrapper"]}>
+                                <span className={styles["packet-title-text"]}>
+                                    {t("AIModelTestResult.quickPreview")}
+                                </span>
+                                <div className={styles["packet-title-btns"]}>
+                                    <YakitRadioButtons
+                                        size='small'
+                                        value={currentSelectShowType}
+                                        onChange={(e) => {
+                                            setCurrentSelectShowType(e.target.value)
+                                        }}
+                                        buttonStyle='solid'
+                                        options={[
+                                            {
+                                                value: "request",
+                                                label: t("AIModelTestResult.request")
+                                            },
+                                            {
+                                                value: "response",
+                                                label: t("AIModelTestResult.response")
+                                            }
+                                        ]}
+                                    />
+                                </div>
+                            </div>
+                        }
+                        readOnly={true}
+                        noMinimap={true}
+                        isResponse={true}
+                        typeOptionVal={typeOptionVal}
+                        onTypeOptionVal={onTypeOptionValChange}
+                    />
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = React.memo((props) => {
     const {formProps, aiType} = props

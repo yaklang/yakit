@@ -2109,6 +2109,7 @@ message AIFocus {
   string UsagePrompt = 4;
   string VerboseName = 5;
   string VerboseNameZh = 6;
+  string DescriptionZh = 7;
 }
 
 message QueryAIFocusRequest {

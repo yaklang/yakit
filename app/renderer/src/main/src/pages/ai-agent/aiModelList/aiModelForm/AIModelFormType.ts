@@ -1,5 +1,5 @@
 import {ThirdPartyApplicationConfigProp} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
-import {AIModelConfig, AIModelTypeFileName} from "../utils"
+import {AIModelConfig, AIModelTypeFileName, AIConfigHealthCheckResponse} from "../utils"
 import {AIModelTypeEnum} from "../../defaultConstant"
 import {FormItemProps} from "antd"
 
@@ -29,3 +29,8 @@ interface AddOrUpdateOptions {
 export interface AIModelFormAddOptions extends AddOrUpdateOptions {}
 
 export interface AIModelFormUpdateOptions extends AddOrUpdateOptions {}
+
+export interface AIModelCheckResultProps {
+    testResult?: AIConfigHealthCheckResponse
+    onClose: () => void
+}

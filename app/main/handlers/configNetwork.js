@@ -156,6 +156,21 @@ module.exports = (win, getClient) => {
         return await asyncListAIProviders(params)
     })
 
+    const asyncAIConfigHealthCheck = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().AIConfigHealthCheck(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("AIConfigHealthCheck", async (e, params) => {
+        return await asyncAIConfigHealthCheck(params)
+    })
+    
     const asyncQueryAIProvider = (params) => {
         return new Promise((resolve, reject) => {
             getClient().QueryAIProvider(params, (err, data) => {

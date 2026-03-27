@@ -26,7 +26,7 @@ import {KVPair} from "@/models/kv"
 import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
 import {GetThirdPartyAppConfigTemplateResponse} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
 import {AIModelPolicyEnum, defaultAIGlobalConfig} from "../defaultConstant"
-import { TFunction } from "@/i18n/useI18nNamespaces"
+import {TFunction} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -431,6 +431,32 @@ export const grpcGetAIThirdPartyAppConfigTemplate: APINoRequestFunc<GetThirdPart
             .then(resolve)
             .catch((err) => {
                 if (!hiddenError) yakitNotify("error", "grpcGetAIThirdPartyAppConfigTemplate 失败:" + err)
+                reject(err)
+            })
+    })
+}
+
+export interface AIConfigHealthCheckRequest {
+    Config: ThirdPartyApplicationConfig
+    Content: string
+}
+
+export interface AIConfigHealthCheckResponse {
+    FirstByteCostMs: number
+    TotalCostMs: number
+    RawRequest: string
+    ResponseStatusCode: number
+    ResponseContent: string
+    ErrorMessage: string
+}
+
+export const grpcAIConfigHealthCheck: APIFunc<AIConfigHealthCheckRequest, AIConfigHealthCheckResponse> = (params, hiddenError) => {
+    return new Promise((resolve, reject) => {
+        ipcRenderer
+            .invoke("AIConfigHealthCheck", params)
+            .then(resolve)
+            .catch((err) => {
+                if (!hiddenError) yakitNotify("error", "grpcAIConfigHealthCheck 失败:" + err)
                 reject(err)
             })
     })

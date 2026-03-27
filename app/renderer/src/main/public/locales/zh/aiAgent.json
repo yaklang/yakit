@@ -111,5 +111,16 @@
     "tip": "提示",
     "memfitUpdateNotice": "Memfit会话数据升级，会删除系统内的所有历史会话记录",
     "clearHistoryConfirm": "是否清除数据库历史记录"
+  },
+  "AIModelTestResult": {
+    "quickPreview": "快速预览",
+    "modelTesting": "模型检测",
+    "firstByteDelay": "首字节延时",
+    "totalTime": "总耗时",
+    "responseStatusCode": "响应状态码",
+    "request": "请求",
+    "response": "响应",
+    "testSuccess": "测试成功",
+    "testFailed": "测试失败"
   }
 }
