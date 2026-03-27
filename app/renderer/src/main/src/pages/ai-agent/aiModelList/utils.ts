@@ -436,12 +436,12 @@ export const grpcGetAIThirdPartyAppConfigTemplate: APINoRequestFunc<GetThirdPart
     })
 }
 
-export interface TestAIModelRequest {
+export interface AIConfigHealthCheckRequest {
     Config: ThirdPartyApplicationConfig
     Content: string
 }
 
-export interface TestAIModelResponse {
+export interface AIConfigHealthCheckResponse {
     FirstByteCostMs: number
     TotalCostMs: number
     RawRequest: string
@@ -450,13 +450,13 @@ export interface TestAIModelResponse {
     ErrorMessage: string
 }
 
-export const grpcTestAIModel: APIFunc<TestAIModelRequest, TestAIModelResponse> = (params, hiddenError) => {
+export const grpcAIConfigHealthCheck: APIFunc<AIConfigHealthCheckRequest, AIConfigHealthCheckResponse> = (params, hiddenError) => {
     return new Promise((resolve, reject) => {
         ipcRenderer
-            .invoke("TestAIModel", params)
+            .invoke("AIConfigHealthCheck", params)
             .then(resolve)
             .catch((err) => {
-                if (!hiddenError) yakitNotify("error", "grpcTestAIModel 失败:" + err)
+                if (!hiddenError) yakitNotify("error", "grpcAIConfigHealthCheck 失败:" + err)
                 reject(err)
             })
     })

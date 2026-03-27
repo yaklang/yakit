@@ -24,6 +24,7 @@ import {
     AIGlobalConfig,
     AIModelConfig,
     AIModelTypeFileName,
+    grpcAIConfigHealthCheck,
     grpcCancelStartLocalModel,
     grpcClearAllModels,
     grpcDeleteLocalModel,
@@ -58,7 +59,8 @@ import {
     OutlineTrashIcon,
     OutlineSpeechToTextIcon,
     OutlineCheckIcon,
-    OutlineCogIcon
+    OutlineCogIcon,
+    OutlineEngineIcon
 } from "@/assets/icon/outline"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {
@@ -88,7 +90,12 @@ import {onOpenLocalFileByPath} from "@/pages/notepadManage/notepadManage/utils"
 import emiter from "@/utils/eventBus/eventBus"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
-import {AIModelForm, getModelTypeByFileName, isEqualAIModel} from "./aiModelForm/AIModelForm"
+import {
+    AIModelCheckResult,
+    AIModelForm,
+    buildAIConfigHealthCheckConfig,
+    getModelTypeByFileName
+} from "./aiModelForm/AIModelForm"
 import {AIModelFormProps} from "./aiModelForm/AIModelFormType"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
@@ -636,6 +643,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                         index
                                     })
                                 }
+                                modelType={AIModelTypeEnum.TierIntelligent}
                             />
                         )}
                         {!!aiGlobalConfig?.LightweightModels.length && (
@@ -661,6 +669,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                         index
                                     })
                                 }
+                                modelType={AIModelTypeEnum.TierLightweight}
                             />
                         )}
                         {!!aiGlobalConfig?.VisionModels.length && (
@@ -686,6 +695,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
                                         index
                                     })
                                 }
+                                modelType={AIModelTypeEnum.TierVision}
                             />
                         )}
                     </div>
@@ -704,7 +714,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     })
 )
 export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) => {
-    const {title, subTitle, list, onEdit, onRemove, onSelect} = props
+    const {title, subTitle, list, onEdit, onRemove, onSelect, modelType} = props
 
     return (
         <div className={styles["ai-online-model"]}>
@@ -726,6 +736,7 @@ export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) =>
                             onEdit={() => onEdit(index)}
                             onRemove={() => onRemove(index)}
                             checked={index === 0}
+                            modelType={modelType}
                         />
                     </div>
                 ))}
@@ -734,7 +745,10 @@ export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) =>
     )
 })
 const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((props) => {
-    const {item, checked, onEdit, onRemove} = props
+    const {item, checked, onEdit, onRemove, modelType} = props
+
+    const [testLoading, setTestLoading] = useState<boolean>(false)
+
     const config: ThirdPartyApplicationConfig = useCreation(() => {
         return item.Provider
     }, [item.Provider])
@@ -745,6 +759,39 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     const onRemoveClick = useMemoizedFn((e) => {
         e.stopPropagation()
         onRemove(item)
+    })
+    const onCheckModel = useMemoizedFn((e) => {
+        e.stopPropagation()
+
+        setTestLoading(true)
+        const value = {
+            Type: item.Provider.Type,
+            api_key: item.Provider.APIKey,
+            domain: item.Provider.Domain,
+            proxy: item.Provider.Proxy,
+            no_https: item.Provider.NoHttps,
+            api_type: item.Provider.APIType,
+            model: item.ModelName,
+            model_type: modelType
+        }
+        const config = buildAIConfigHealthCheckConfig(value)
+        grpcAIConfigHealthCheck({
+            Config: config,
+            Content: "你好,请简单回复'测试成功'"
+        })
+            .then((response) => {
+                const m = showYakitModal({
+                    hiddenHeader: true,
+                    type: "white",
+                    onOk: () => m.destroy(),
+                    content: <AIModelCheckResult testResult={response} onClose={() => m.destroy()} />
+                })
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    setTestLoading(false)
+                }, 200)
+            })
     })
     return (
         <div className={styles["ai-online-model-list-item"]}>
@@ -759,6 +806,12 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
             </div>
             <div className={styles["ai-online-model-list-item-extra"]}>
                 <div className={styles["ai-online-model-list-item-extra-edit"]}>
+                    <YakitButton
+                        type='text2'
+                        icon={<OutlineEngineIcon />}
+                        onClick={onCheckModel}
+                        loading={testLoading}
+                    />
                     <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEditClick} />
                     <YakitPopconfirm
                         title={`确定要删除厂商${config.Type},模型名称为${item.ModelName} 吗？`}

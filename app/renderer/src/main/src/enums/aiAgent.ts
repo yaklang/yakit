@@ -18,5 +18,7 @@ export enum RemoteAIAgentGV {
     /** @name ai侧边栏展开收起模式 */
     AIAgentSideShowMode = "ai-agent-side-show-mode",
     /** @name 记忆库快捷删除 */
-    AIMemoryRemove = "ai-memory-remove"
+    AIMemoryRemove = "ai-memory-remove",
+    /** @name AIModel检测结果中的编辑器的美化 */
+    AIModelCheckResultEditorBeautify = "ai-model-check-result-editor-beautify",
 }

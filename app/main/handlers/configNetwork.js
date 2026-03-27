@@ -156,9 +156,9 @@ module.exports = (win, getClient) => {
         return await asyncListAIProviders(params)
     })
 
-    const asyncTestAIModel = (params) => {
+    const asyncAIConfigHealthCheck = (params) => {
         return new Promise((resolve, reject) => {
-            getClient().TestAIModel(params, (err, data) => {
+            getClient().AIConfigHealthCheck(params, (err, data) => {
                 if (err) {
                     reject(err)
                     return
@@ -167,8 +167,8 @@ module.exports = (win, getClient) => {
             })
         })
     }
-    ipcMain.handle("TestAIModel", async (e, params) => {
-        return await asyncTestAIModel(params)
+    ipcMain.handle("AIConfigHealthCheck", async (e, params) => {
+        return await asyncAIConfigHealthCheck(params)
     })
     
     const asyncQueryAIProvider = (params) => {

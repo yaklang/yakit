@@ -1,0 +1,66 @@
+.test-result-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+
+    .test-result-heard {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+        padding: 8px 16px;
+        width: 100%;
+        overflow: hidden;
+
+        .test-result-title {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+            .title {
+                flex-shrink: 0;
+            }
+            .tag {
+                margin-right: 0;
+            }
+            .tip {
+                font-size: 12px;
+                font-weight: 400;
+                color: var(--Colors-Use-Neutral-Text-4-Help-text);
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                word-break: break-all;
+            }
+        }
+    }
+    .test-result-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        padding: 16px 16px 0 16px;
+        .test-result-packet {
+            height: 300px;
+        }
+        .packet-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            .packet-title-text {
+                font-weight: 500;
+                font-size: 12px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                line-height: 16px;
+            }
+            .packet-title-btns {
+                display: inline-flex;
+                align-items: center;
+            }
+        }
+    }
+}
