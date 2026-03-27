@@ -182,7 +182,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         keepSearchName,
         editorDidMount,
         contextMenu = {},
-        hiddenDefaultContextMenuKeys = [],
+        hiddenDefaultContextMenuKeys,
         onContextMenu,
         readOnly = false,
         disabled = false,
@@ -247,7 +247,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const {fontSize: nowFontsize, setFontSize: setNowFontsize, initFontSize } = useEditorFontSize()
     const DefaultMenuTopArr = useMemo(() => DefaultMenuTop(t,nowFontsize), [i18n.language,nowFontsize])
     const DefaultMenuBottomArr = useMemo(
-        () => DefaultMenuBottom(t).filter((item) => !hiddenDefaultContextMenuKeys.includes((item as {key?: string}).key || "")),
+        () => DefaultMenuBottom(t).filter((item) => !(hiddenDefaultContextMenuKeys || []).includes((item as {key?: string}).key || "")),
         [i18n.language, hiddenDefaultContextMenuKeys]
     )
     const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTopArr, ...DefaultMenuBottomArr])
