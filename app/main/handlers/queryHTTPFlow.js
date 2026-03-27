@@ -329,6 +329,36 @@ module.exports = (win, getClient) => {
         return await asyncQueryMITMRuleExtractedData(params)
     })
 
+    const asyncDeleteMITMRuleExtractedData = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeleteMITMRuleExtractedData(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeleteMITMRuleExtractedData", async (e, params) => {
+        return await asyncDeleteMITMRuleExtractedData(params)
+    })
+
+    const asyncDeduplicateMITMRuleExtractedData = (params) => {
+        return new Promise((resolve, reject) => {
+            getClient().DeduplicateMITMRuleExtractedData(params, (err, data) => {
+                if (err) {
+                    reject(err)
+                    return
+                }
+                resolve(data)
+            })
+        })
+    }
+    ipcMain.handle("DeduplicateMITMRuleExtractedData", async (e, params) => {
+        return await asyncDeduplicateMITMRuleExtractedData(params)
+    })
+
 
     const handlerHelper = require("./handleStreamWithContext");
     const streamExportMITMRuleExtractedData = new Map()
