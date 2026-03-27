@@ -12,10 +12,12 @@ let id = randomString(40)
 export interface FileMonitorItemProps {
     // 是否为文件夹
     IsDir: boolean
-    // 操作
-    Op: "delete" | "create"
+    // 操作 createTemp、rename、renameFront、renameRollback、markReadOnly为前端定义
+    Op: "delete" | "create" | "createTemp" | "renameFront" | "rename" | "renameRollback" | "markReadOnly"
     // 路径
     Path: string
+    // 重命名用
+    NewPath?: string
 }
 
 export interface FileMonitorProps {
@@ -123,7 +125,9 @@ export const startupDuplexConn = () => {
                     break
                 case "httpflow_slow_insert_sql":
                 case "httpflow_slow_query_sql":
-                    yakitFailed(`检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后点击顶部设置或者在首页回收数据库空间。`)
+                    yakitFailed(
+                        `检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后点击顶部设置或者在首页回收数据库空间。`
+                    )
                     break
                 case "mitm_slow_rule_hook":
                     emiter.emit("onMitmRuleMoreLimt")

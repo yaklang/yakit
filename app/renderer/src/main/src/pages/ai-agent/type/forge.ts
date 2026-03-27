@@ -14,8 +14,8 @@ export interface AIForge {
     // yak type is yak script, config type is empty
     /** yak 类型为脚本代码, config 类型为空 */
     ForgeContent?: string
-    // yak or config
-    ForgeType: "yak" | "config"
+    // yak, config or skillmd
+    ForgeType: "yak" | "config" | "skillmd"
     Description?: string
     // json config for UI
     ParamsUIConfig?: string
@@ -40,6 +40,8 @@ export interface AIForge {
     ResultPrompt?: string
     /**给用户看的展示名称 */
     ForgeVerboseName?: string
+    /** 技能模板目录，仅在编辑详情按需解压时返回 */
+    SkillPath?: string
 }
 
 /** forge 相关的过滤条件 */
@@ -68,6 +70,7 @@ export interface QueryAIForgeResponse {
 export interface GetAIForgeRequest {
     ID?: number
     ForgeName?: string
+    InflateSkillPath?: boolean
 }
 
 export interface AIFocus {

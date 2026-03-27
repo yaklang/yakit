@@ -67,7 +67,7 @@ export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]
                     } catch (error) {}
                     const current: AIChatQSData = {
                         ...genBaseAIChatData(item),
-                        chatType:"reAct", // 随机写的，后面需要开发UI时通过传入参数设置
+                        chatType: "reAct", // 随机写的，后面需要开发UI时通过传入参数设置
                         type: AIChatQSDataTypeEnum.STREAM,
                         data: {
                             CallToolID: item.CallToolID,
@@ -189,6 +189,22 @@ export const grpcQueryHTTPFlows: APIFunc<YakQueryHTTPFlowRequest, YakQueryHTTPFl
             .then(resolve)
             .catch((e) => {
                 if (!hiddenError) yakitNotify("error", "grpcQueryHTTPFlows 查询HTTP流失败:" + e)
+                reject(e)
+            })
+    })
+}
+
+/** @name 生成temp文件夹下路径 */
+export const GenerateTempFilePath: APIFunc<string, string> = async (
+    fileName,
+    hiddenError
+) => {
+    return new Promise(async (resolve, reject) => {
+        ipcRenderer
+            .invoke("GenerateTempFilePath", fileName)
+            .then(resolve)
+            .catch((e) => {
+                if (!hiddenError) yakitNotify("error", "GenerateTempFilePath 失败:" + e)
                 reject(e)
             })
     })

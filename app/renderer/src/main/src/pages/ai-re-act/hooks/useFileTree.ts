@@ -17,10 +17,13 @@ export interface UseFileTreeParams {
     onInitComplete?: () => void
     /** 触发文件树数据重渲染的事件 */
     onRefreshTreeData?: () => void
+    /** 文件树节点被删除后的回调 */
+    onTreeNodeDel?: (path: string, isFolder: boolean) => void
 }
 
 export interface UseFileTreeState {
     treeData: MutableRefObject<FileNodeProps | undefined>
+    watchToken: MutableRefObject<string | undefined>
     folderChildrenSet: MutableRefObject<Set<string>>
 }
 export interface UseFileTreeEvents {
@@ -29,14 +32,14 @@ export interface UseFileTreeEvents {
     /** 刷新整棵文件树数据 */
     onResetTree: () => Promise<void>
     /** 获取指定节点的详情数据 */
-    getDetailMap: (key:string) => FileNodeProps | undefined
+    getDetailMap: (key: string) => FileNodeProps | undefined
 }
 // #endregion
 
 function useFileTree(params: UseFileTreeParams): [UseFileTreeState, UseFileTreeEvents]
 
 function useFileTree(params: UseFileTreeParams) {
-    const {target, onInitComplete, onRefreshTreeData} = params || {}
+    const {target, onInitComplete, onRefreshTreeData, onTreeNodeDel} = params || {}
 
     // 主动触发UI文件树更新
     const onTriggerUIUpdate = useThrottleFn(
@@ -99,8 +102,8 @@ function useFileTree(params: UseFileTreeParams) {
     })
 
     // 获取指定节点的详情数据
-    const getDetailMap = useMemoizedFn((key:string) => {
-      return nodeDetailMap.current.get(key)
+    const getDetailMap = useMemoizedFn((key: string) => {
+        return nodeDetailMap.current.get(key)
     })
 
     // 待获取子集的文件夹列表
@@ -111,7 +114,7 @@ function useFileTree(params: UseFileTreeParams) {
         try {
             const {path, isFolder} = target || {}
             if (!path) return
-            const targetName = await getNameByPath(path) || path
+            const targetName = (await getNameByPath(path)) || path
             if (!targetName) return
 
             let icon = ""
@@ -129,7 +132,7 @@ function useFileTree(params: UseFileTreeParams) {
                 isFolder: !!isFolder,
                 icon: icon,
                 depth: 1,
-                isLeaf:!isFolder,
+                isLeaf: !isFolder,
                 children: []
             }
             setNodeDetailMap(node)
@@ -239,27 +242,81 @@ function useFileTree(params: UseFileTreeParams) {
     })
     // 创建文件夹
     const createFolder = useMemoizedFn(async (folderPath: string) => {
-        const parentPath = await getPathParent(folderPath)
-        const folderName = await getNameByPath(folderPath)
-        if (!parentPath || !folderName) return
-        const parentNode = getParentNode(parentPath)
-        if (!parentNode) return
-        const newNode: FileNodeProps = {
-            parent: parentPath,
-            name: folderName,
-            path: folderPath,
-            isFolder: true,
-            icon: "_fd_default",
-            depth: parentNode.depth + 1,
-            isLeaf: false
-        }
-        setNodeDetailMap(newNode)
-        pendingFolderList.current.push(folderPath)
-        parentNode.children = (parentNode.children || []).concat([newNode])
-        parentNode.isLeaf = false
-        setNodeDetailMap(parentNode)
-        updateTreeNodeData(parentNode)
-        onTriggerUIUpdate()
+        try {
+            const parentPath = await getPathParent(folderPath)
+            const folderName = await getNameByPath(folderPath)
+            if (!parentPath || !folderName) return
+            const parentNode = getParentNode(parentPath)
+            if (!parentNode) return
+            const newNode: FileNodeProps = {
+                parent: parentPath,
+                name: folderName,
+                path: folderPath,
+                isFolder: true,
+                icon: "_fd_default",
+                depth: parentNode.depth + 1,
+                isLeaf: false
+            }
+            setNodeDetailMap(newNode)
+            pendingFolderList.current.push(folderPath)
+            parentNode.children = (parentNode.children || []).concat([newNode])
+            parentNode.isLeaf = false
+            setNodeDetailMap(parentNode)
+            updateTreeNodeData(parentNode)
+            onTriggerUIUpdate()
+        } catch (error) {}
+    })
+    // 创建临时文件夹
+    const createTempFolder = useMemoizedFn(async (folderPath: string) => {
+        try {
+            const parentPath = await getPathParent(folderPath)
+            const folderName = await getNameByPath(folderPath)
+            if (!parentPath || !folderName) return
+            const parentNode = getParentNode(parentPath)
+            if (!parentNode) return
+            const newNode: FileNodeProps = {
+                parent: parentPath,
+                name: "",
+                path: folderPath,
+                isFolder: true,
+                icon: "_fd_default",
+                depth: parentNode.depth + 1,
+                isLeaf: true,
+                isCreate: true
+            }
+            setNodeDetailMap(newNode)
+            parentNode.children = (parentNode.children || []).concat([newNode])
+            parentNode.isLeaf = false
+            setNodeDetailMap(parentNode)
+            updateTreeNodeData(parentNode)
+            onTriggerUIUpdate()
+        } catch (error) {}
+    })
+    // 重命名文件夹
+    const renameFolder = useMemoizedFn(async (oldPath: string, newPath: string) => {
+        try {
+            const parentPath = await getPathParent(oldPath)
+            const oldNode = nodeDetailMap.current.get(oldPath)
+            if (!parentPath || !oldNode) return
+            const parentNode = getParentNode(parentPath)
+            const newName = await getNameByPath(newPath)
+            const newNode: FileNodeProps = {
+                ...oldNode,
+                name: newName,
+                path: newPath,
+                isRename: false // 退出编辑态
+            }
+            nodeDetailMap.current.delete(oldPath)
+            setNodeDetailMap(newNode)
+            pendingFolderList.current.push(newPath)
+            if (parentNode) {
+                parentNode.children = parentNode.children?.map((item) => (item.path === oldPath ? newNode : item))
+                updateTreeNodeData(parentNode)
+            } else {
+                treeData.current = newNode
+            }
+            onTriggerUIUpdate()
+        } catch (error) {}
     })
 
     // 删除文件
@@ -277,43 +334,151 @@ function useFileTree(params: UseFileTreeParams) {
     })
     // 创建文件
     const createFile = useMemoizedFn(async (filePath: string) => {
-        const parentPath = await getPathParent(filePath)
-        const fileName = await getNameByPath(filePath)
-        if (!parentPath || !fileName) return
-        const parentNode = getParentNode(parentPath)
-        if (!parentNode) return
-        const suffix = fileName.indexOf(".") > -1 ? fileName.split(".").pop() : ""
-        const newNode: FileNodeProps = {
-            parent: parentPath,
-            name: fileName,
-            path: filePath,
-            isFolder: false,
-            icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
-            depth: parentNode.depth + 1,
-            isLeaf: true
-        }
-        setNodeDetailMap(newNode)
-        parentNode.children = (parentNode.children || []).concat([newNode])
-        parentNode.isLeaf = false
-        setNodeDetailMap(parentNode)
-        updateTreeNodeData(parentNode)
-        onTriggerUIUpdate()
+        try {
+            const parentPath = await getPathParent(filePath)
+            const fileName = await getNameByPath(filePath)
+            if (!parentPath || !fileName) return
+            const parentNode = getParentNode(parentPath)
+            if (!parentNode) return
+            const suffix = fileName.indexOf(".") > -1 ? fileName.split(".").pop() : ""
+            const newNode: FileNodeProps = {
+                parent: parentPath,
+                name: fileName,
+                path: filePath,
+                isFolder: false,
+                icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+                depth: parentNode.depth + 1,
+                isLeaf: true
+            }
+            setNodeDetailMap(newNode)
+            parentNode.children = (parentNode.children || []).concat([newNode])
+            parentNode.isLeaf = false
+            setNodeDetailMap(parentNode)
+            updateTreeNodeData(parentNode)
+            onTriggerUIUpdate()
+        } catch (error) {}
+    })
+    // 创建临时文件
+    const createTempFile = useMemoizedFn(async (filePath: string) => {
+        try {
+            const parentPath = await getPathParent(filePath)
+            const fileName = await getNameByPath(filePath)
+            if (!parentPath || !fileName) return
+            const parentNode = getParentNode(parentPath)
+            if (!parentNode) return
+            const newNode: FileNodeProps = {
+                parent: parentPath,
+                name: "",
+                path: filePath,
+                isFolder: false,
+                icon: "_f_yak",
+                depth: parentNode.depth + 1,
+                isLeaf: true,
+                isCreate: true
+            }
+            setNodeDetailMap(newNode)
+            parentNode.children = (parentNode.children || []).concat([newNode])
+            parentNode.isLeaf = false
+            setNodeDetailMap(parentNode)
+            updateTreeNodeData(parentNode)
+            onTriggerUIUpdate()
+        } catch (error) {}
+    })
+    // 重命名文件
+    const renameFile = useMemoizedFn(async (oldPath: string, newPath: string) => {
+        try {
+            const parentPath = await getPathParent(oldPath)
+            const oldNode = nodeDetailMap.current.get(oldPath)
+            if (!parentPath || !oldNode) return
+            const parentNode = getParentNode(parentPath)
+            const newName = await getNameByPath(newPath)
+            const suffix = newName.includes(".") ? newName.split(".").pop() : ""
+            const newNode: FileNodeProps = {
+                ...oldNode,
+                name: newName,
+                path: newPath,
+                icon: suffix ? FileSuffix[suffix] || FileDefault : FileDefault,
+                isRename: false // 退出编辑态
+            }
+            nodeDetailMap.current.delete(oldPath)
+            setNodeDetailMap(newNode)
+            if (parentNode) {
+                parentNode.children = parentNode.children?.map((item) => (item.path === oldPath ? newNode : item))
+                updateTreeNodeData(parentNode)
+            } else {
+                treeData.current = newNode
+            }
+            onTriggerUIUpdate()
+        } catch (error) {}
+    })
+
+    // 重命名前置或回滚
+    const renameFrontOrRollback = useMemoizedFn(async (path: string, rename: boolean) => {
+        try {
+            const parentPath = await getPathParent(path)
+            const node = nodeDetailMap.current.get(path)
+            if (!parentPath || !node) return
+            const parentNode = getParentNode(parentPath)
+            const newNode = {...node, isRename: rename}
+            setNodeDetailMap(newNode)
+            if (parentNode) {
+                parentNode.children = parentNode.children?.map((item) => (item.path === path ? newNode : item))
+                updateTreeNodeData(parentNode)
+            } else {
+                treeData.current = newNode
+            }
+            onTriggerUIUpdate()
+        } catch (error) {}
+    })
+
+    // 标记只读
+    const markReadOnly = useMemoizedFn(async (path: string) => {
+        try {
+            const parentPath = await getPathParent(path)
+            const node = nodeDetailMap.current.get(path)
+            if (!parentPath || !node) return
+            const parentNode = getParentNode(parentPath)
+            const newNode = {...node, isReadOnly: true}
+            setNodeDetailMap(newNode)
+            if (parentNode) {
+                parentNode.children = parentNode.children?.map((item) => (item.path === path ? newNode : item))
+                updateTreeNodeData(parentNode)
+            } else {
+                treeData.current = newNode
+            }
+            onTriggerUIUpdate()
+        } catch (error) {}
     })
 
     // 外界触发的调整文件树数据
     const onTriggerUpdateTreeData = useMemoizedFn(async (list: FileMonitorItemProps[]) => {
         for (let ev of list) {
-            const {Op, Path, IsDir} = ev
+            const {Op, Path, IsDir, NewPath} = ev
 
             if (IsDir) {
                 switch (Op) {
                     case "delete":
                         deleteFolder(Path)
+                        onTreeNodeDel?.(Path, true)
                         break
                     case "create":
                         createFolder(Path)
                         break
-
+                    case "createTemp": // 前端使用
+                        createTempFolder(Path)
+                        break
+                    case "renameFront": // 前端使用
+                        renameFrontOrRollback(Path, true)
+                        break
+                    case "rename": // 前端使用
+                        renameFolder(Path, NewPath!)
+                        break
+                    case "renameRollback": // 前端使用
+                        renameFrontOrRollback(Path, false)
+                        break
+                    case "markReadOnly": // 前端使用
+                        markReadOnly(Path)
+                        break
                     default:
                         break
                 }
@@ -321,11 +486,26 @@ function useFileTree(params: UseFileTreeParams) {
                 switch (Op) {
                     case "delete":
                         deleteFile(Path)
+                        onTreeNodeDel?.(Path, false)
                         break
                     case "create":
                         createFile(Path)
                         break
-
+                    case "createTemp": // 前端使用
+                        createTempFile(Path)
+                        break
+                    case "renameFront": // 前端使用
+                        renameFrontOrRollback(Path, true)
+                        break
+                    case "rename": // 前端使用
+                        renameFile(Path, NewPath!)
+                        break
+                    case "renameRollback": // 前端使用
+                        renameFrontOrRollback(Path, false)
+                        break
+                    case "markReadOnly": // 前端使用
+                        markReadOnly(Path)
+                        break
                     default:
                         break
                 }
@@ -505,8 +685,8 @@ function useFileTree(params: UseFileTreeParams) {
     }, [])
 
     return [
-        {treeData: treeData, folderChildrenSet: folderNodeSet},
-        {onLoadFolderChildren: loadFolderChildren, onResetTree, getDetailMap},
+        {treeData: treeData, watchToken: watchToken, folderChildrenSet: folderNodeSet},
+        {onLoadFolderChildren: loadFolderChildren, onResetTree, getDetailMap}
     ]
 }
 

@@ -5,7 +5,12 @@ import {useMemoizedFn} from "ahooks"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import styles from "./FileTreeSystemListWapper.module.scss"
 import FileTreeSystemList from "../FileTreeSystemList/FileTreeSystemList"
-import {OutlineChevrondownIcon, OutlineDocumentaddIcon, OutlineFolderaddIcon, OutlinePluscircleIcon} from "@/assets/icon/outline"
+import {
+    OutlineChevrondownIcon,
+    OutlineDocumentaddIcon,
+    OutlineFolderaddIcon,
+    OutlinePluscircleIcon
+} from "@/assets/icon/outline"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {checkPathIncludeRelation, mergePathArray, onOpenFileFolder} from "../utils"
@@ -53,7 +58,7 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
 
     // 去重path
     const [uniquePaths, setUniquePaths, getUniquePaths] = useGetSetState<HistoryItem[]>([])
-    
+
     const renderContent = useMemoizedFn(() => {
         if (isOpen && uniquePaths.length === 0) {
             return (
@@ -135,21 +140,19 @@ const FileTreeSystemListWapper: FC<FileTreeSystemListWapperProps> = ({
                         hidden={!isOpen}
                         type='text2'
                         title='打开文件'
-                        onClick={()=>menuSelect(FileListTileMenu.OpenFile)}
+                        onClick={() => menuSelect(FileListTileMenu.OpenFile)}
                         icon={<OutlineDocumentaddIcon />}
                     />
                     <YakitButton
                         hidden={!isOpen}
                         type='text2'
                         title='打开文件夹'
-                        onClick={()=>menuSelect(FileListTileMenu.OpenFolder)}
+                        onClick={() => menuSelect(FileListTileMenu.OpenFolder)}
                         icon={<OutlineFolderaddIcon />}
                     />
                 </div>
             </div>
-            <div hidden={!expanded} className={styles["file-tree-system-list"]}>
-                {renderContent()}
-            </div>
+            {expanded && renderContent()}
         </div>
     )
 }
