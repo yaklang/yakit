@@ -122,7 +122,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
         let flag = false
         let currentPath = ""
         try {
-            let currentPath = await getPathJoin(data.parent, fileName)
+            currentPath = await getPathJoin(data.parent, fileName)
             if (currentPath.length === 0) {
                 throw new Error("路径拼接失败")
             }
