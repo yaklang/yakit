@@ -247,6 +247,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         if (!fileName) return
         const index = newConfig[fileName].findIndex((i) => isEqualAIModel(i, newItem))
         if (index !== -1) {
+            isShowSaveLoadingRef.current = true
             yakitNotify("error", "已存在相同配置的AI模型，请勿重复添加")
             return
         }
@@ -286,6 +287,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             if (aiModelType !== modelType) {
                 const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newUpdateItem))
                 if (isHave) {
+                    isShowSaveLoadingRef.current = true
                     yakitNotify("error", "已存在相同配置的AI模型，请勿重复添加")
                     return
                 }
@@ -301,6 +303,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
             onSetAIGlobalConfig(newConfig, item)
         } catch (error) {
+            isShowSaveLoadingRef.current = true
             yakitNotify("error", `更新AI模型配置失败:${error}`)
         }
     })
@@ -346,6 +349,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 .then((response) => {
                     const isSuccess = response.ResponseStatusCode === 200
                     if (isSuccess) {
+                        yakitNotify("success", "测试成功")
                         isShowSaveLoadingRef.current = false
                         onOk()
                     } else {
@@ -376,7 +380,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             footer={
                 <>
                     <div ref={footerRef} />
-                    <YakitButton size='large' type={"primary"} onClick={onCheckAndSave} loading={testLoading}>
+                    <YakitButton size='large' type='outline2' onClick={onCheckAndSave} loading={testLoading}>
                         测试并添加
                     </YakitButton>
                     <YakitButton

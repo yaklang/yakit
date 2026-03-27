@@ -167,7 +167,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             if (!qs.trim() || !editorMilkdown.current) return
             const {mentions, plainText} = extractDataWithMilkdown(editorMilkdown.current)
             const value: AIChatTextareaSubmit = {
-                qs: qs,
+                qs,
                 mentionList: mentions,
                 showQS: qs,
                 focusMode
