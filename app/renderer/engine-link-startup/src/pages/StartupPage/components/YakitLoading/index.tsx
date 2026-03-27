@@ -727,7 +727,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                         </>
                                     )}
                                     {/* 回收数据库空间：部分状态下不显示 */}
-                                    {yakitStatus &&
+                                    {/* {yakitStatus &&
                                         ![
                                             "link",
                                             "install",
@@ -737,7 +737,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                             "reclaimDatabaseSpace_start",
                                             "ready",
                                             "init"
-                                        ].includes(yakitStatus) && false && (
+                                        ].includes(yakitStatus) && (
                                             <>
                                                 <Divider type='vertical'></Divider>
                                                 <Tooltip
@@ -757,7 +757,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                                     </span>
                                                 </Tooltip>
                                             </>
-                                        )}
+                                        )} */}
                                     {/* 远程连接按钮：在非连接状态时显示 */}
                                     {yakitStatus &&
                                         !["link", "ready", "init", "reclaimDatabaseSpace_start"].includes(
