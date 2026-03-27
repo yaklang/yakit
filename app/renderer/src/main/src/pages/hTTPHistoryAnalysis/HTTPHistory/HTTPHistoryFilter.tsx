@@ -119,7 +119,7 @@ import ChatIPCContent, {
 } from "@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {AIAgentSettingDefault} from "@/pages/ai-agent/defaultConstant"
-import {histroyAiStore} from "@/pages/ai-agent/store/ChatDataStore"
+import {FlowAiStore} from "@/pages/ai-agent/store/ChatDataStore"
 import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {
     AIReActChatRefProps,
@@ -277,7 +277,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
     const [activeChat, setActiveChat] = useSafeState<AIChatInfo>()
 
     const [chatIPCData, events] = useChatIPC({
-        cacheDataStore: histroyAiStore
+        cacheDataStore: FlowAiStore
     })
 
     const {execute} = chatIPCData
@@ -415,7 +415,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
             setChats: setChats,
             getChats: getChats,
             setActiveChat: setActiveChat,
-            getChatData: histroyAiStore.get
+            getChatData: FlowAiStore.get
         }
     }, [])
     // #endregion
