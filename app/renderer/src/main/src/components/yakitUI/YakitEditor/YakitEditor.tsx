@@ -182,6 +182,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         keepSearchName,
         editorDidMount,
         contextMenu = {},
+        hiddenDefaultContextMenuKeys = [],
         onContextMenu,
         readOnly = false,
         disabled = false,
@@ -245,7 +246,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     /** @name 记录右键菜单组信息 */
     const {fontSize: nowFontsize, setFontSize: setNowFontsize, initFontSize } = useEditorFontSize()
     const DefaultMenuTopArr = useMemo(() => DefaultMenuTop(t,nowFontsize), [i18n.language,nowFontsize])
-    const DefaultMenuBottomArr = useMemo(() => DefaultMenuBottom(t), [i18n.language])
+    const DefaultMenuBottomArr = useMemo(
+        () => DefaultMenuBottom(t).filter((item) => !hiddenDefaultContextMenuKeys.includes((item as {key?: string}).key || "")),
+        [i18n.language, hiddenDefaultContextMenuKeys]
+    )
     const rightContextMenu = useRef<EditorMenuItemType[]>([...DefaultMenuTopArr, ...DefaultMenuBottomArr])
     /** @name 记录右键菜单组内的快捷键对应菜单项的key值 */
     const keyBindingRef = useRef<KeyboardToFuncProps>({})
@@ -816,7 +820,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         rightContextMenu.current = contextMenuKeybindingHandle("", rightContextMenu.current)
 
         if (!forceRenderMenu) isInitRef.current = true
-    }, [forceRenderMenu, menuType, contextMenu, contextMenuPlugin, customHTTPMutatePlugin, extraMenuListsObj, DefaultMenuTopArr])
+    }, [
+        forceRenderMenu,
+        menuType,
+        contextMenu,
+        contextMenuPlugin,
+        customHTTPMutatePlugin,
+        extraMenuListsObj,
+        DefaultMenuTopArr,
+        DefaultMenuBottomArr
+    ])
 
     /**
      * editor编辑器的额外渲染功能:

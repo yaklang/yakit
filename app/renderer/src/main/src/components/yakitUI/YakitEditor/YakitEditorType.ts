@@ -44,6 +44,8 @@ export interface YakitEditorProps {
 
     /** @name 自定义额外的右键菜单组 */
     contextMenu?: OtherMenuListProps
+    /** @name 隐藏编辑器默认右键菜单项 */
+    hiddenDefaultContextMenuKeys?: string[]
     /** @name 右键菜单点击事件回调 */
     onContextMenu?: (editor: YakitIMonacoEditor, key: string) => any
 

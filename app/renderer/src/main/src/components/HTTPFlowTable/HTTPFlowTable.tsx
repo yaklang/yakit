@@ -3072,29 +3072,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             },
             {
                 key: "复制为 CSRF Poc",
-                label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic"),
+                label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc"),
                 default: true,
                 webSocket: false,
-                onClickSingle: (v) => {
-                    const flow = v as HTTPFlow
-                    if (!flow) return
-                    generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
-                        setClipboardText(e)
-                    },false)
-                }
-            },
-            {
-                key: "auto-submit-csrf-poc",
-                label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit"),
-                default: true,
-                webSocket: false,
-                onClickSingle: (v) => {
-                    const flow = v as HTTPFlow
-                    if (!flow) return
-                    generateCSRFPocByRequest(flow.Request, flow.IsHTTPS, (e) => {
-                        setClipboardText(e)
-                    },true)
-                }
+                children: [
+                    {
+                        key: "csrfpoc",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic")
+                    },
+                    {
+                        key: "auto-submit-csrf-poc",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit")
+                    }
+                ]
             },
             {
                 key: "复制为 Yak PoC 模版",
@@ -3425,6 +3415,16 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         return
                     }
                     switch (key) {
+                        case "csrfpoc":
+                            generateCSRFPocByRequest(rowData.Request, rowData.IsHTTPS, (e) => {
+                                setClipboardText(e)
+                            }, false)
+                            break
+                        case "auto-submit-csrf-poc":
+                            generateCSRFPocByRequest(rowData.Request, rowData.IsHTTPS, (e) => {
+                                setClipboardText(e)
+                            }, true)
+                            break
                         case "数据包 PoC 模版":
                             onPocMould(rowData)
                             break
