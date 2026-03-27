@@ -3298,8 +3298,6 @@ message ExportMITMRuleExtractedDataResponse {
 
 message DeleteMITMRuleExtractedDataRequest {
   ExtractedDataFilter Filter = 1;
-  int64 Id = 1;
-  repeated int64 Ids = 2;
 }
 
 message DeduplicateMITMRuleExtractedDataRequest {
