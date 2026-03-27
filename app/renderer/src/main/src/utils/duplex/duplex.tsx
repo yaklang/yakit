@@ -12,7 +12,7 @@ let id = randomString(40)
 export interface FileMonitorItemProps {
     // 是否为文件夹
     IsDir: boolean
-    // 操作 createTemp、rename、renameFront、renameRollback、updateNode为前端定义
+    // 操作 createTemp、rename、renameFront、renameRollback、markReadOnly为前端定义
     Op: "delete" | "create" | "createTemp" | "renameFront" | "rename" | "renameRollback" | "markReadOnly"
     // 路径
     Path: string

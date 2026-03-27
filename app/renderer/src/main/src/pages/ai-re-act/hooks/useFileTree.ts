@@ -303,6 +303,7 @@ function useFileTree(params: UseFileTreeParams) {
         }
         nodeDetailMap.current.delete(oldPath)
         setNodeDetailMap(newNode)
+        pendingFolderList.current.push(newPath)
         if (parentNode) {
             parentNode.children = parentNode.children?.map((item) => (item.path === oldPath ? newNode : item))
             updateTreeNodeData(parentNode)
