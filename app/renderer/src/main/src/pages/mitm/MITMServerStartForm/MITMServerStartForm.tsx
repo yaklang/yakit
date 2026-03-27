@@ -282,6 +282,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             proxyPassword: params.proxyPassword,
             dnsServers: params.dnsServers,
             hosts: params.etcHosts,
+            EnableHostsMappingBeforeDownstreamProxy: params.EnableHostsMappingBeforeDownstreamProxy,
             filterWebsocket: params.filterWebsocket,
             disableCACertPage: params.disableCACertPage,
             DisableSystemProxy: params.DisableSystemProxy,

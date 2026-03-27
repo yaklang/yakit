@@ -162,6 +162,7 @@ interface ExtraMITMServerV2 {
     DnsServers: string[]
 
     HostsMapping: KVPair[]
+    EnableHostsMappingBeforeDownstreamProxy: boolean
     /**@name 过滤WebSocket */
     FilterWebsocket: boolean
     /**禁用初始页 */
@@ -201,6 +202,7 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
                   ProxyUsername: value.extra.proxyUsername,
                   DnsServers: value.extra.dnsServers,
                   HostsMapping: value.extra.hosts,
+                  EnableHostsMappingBeforeDownstreamProxy: value.extra.EnableHostsMappingBeforeDownstreamProxy,
                   FilterWebsocket: value.extra.filterWebsocket,
                   DisableCACertPage: value.extra.disableCACertPage,
                   DisableSystemProxy: value.extra.DisableSystemProxy,

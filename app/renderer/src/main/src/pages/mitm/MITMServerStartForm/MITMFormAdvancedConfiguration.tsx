@@ -56,6 +56,7 @@ export interface AdvancedConfigurationFromValue {
     proxyPassword: string
     dnsServers: string[]
     etcHosts: any[]
+    EnableHostsMappingBeforeDownstreamProxy: boolean
     filterWebsocket: boolean
     disableCACertPage: boolean
     DisableSystemProxy: boolean
@@ -74,6 +75,7 @@ const DefFieldsVal: AdvancedConfigurationFromValue = {
     proxyPassword: "",
     dnsServers: ["8.8.8.8", "114.114.114.114"],
     etcHosts: [],
+    EnableHostsMappingBeforeDownstreamProxy: false,
     filterWebsocket: false,
     disableCACertPage: false,
     DisableSystemProxy: false,
@@ -116,6 +118,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     dnsServers: defFieldsRef.current.dnsServers,
                     proxyUsername: defFieldsRef.current.enableProxyAuth ? defFieldsRef.current.proxyUsername : "",
                     proxyPassword: defFieldsRef.current.enableProxyAuth ? defFieldsRef.current.proxyPassword : "",
+                    EnableHostsMappingBeforeDownstreamProxy:
+                        defFieldsRef.current.EnableHostsMappingBeforeDownstreamProxy,
                     filterWebsocket: defFieldsRef.current.filterWebsocket,
                     disableCACertPage: defFieldsRef.current.disableCACertPage,
                     DisableSystemProxy: defFieldsRef.current.DisableSystemProxy,
@@ -195,6 +199,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     setEtcHosts(etcHosts)
                     form.setFieldsValue({etcHosts})
                 }
+            })
+            // Hosts映射优先
+            getRemoteValue(RemoteGV.MITMEnableHostsMappingBeforeDownstreamProxy).then((e) => {
+                const v = e === "true" ? true : false
+                defFieldsRef.current.EnableHostsMappingBeforeDownstreamProxy = v
+                form.setFieldsValue({EnableHostsMappingBeforeDownstreamProxy: v})
             })
             // 过滤WebSocket
             getRemoteValue(MITMConsts.MITMDefaultFilterWebsocket).then((e) => {
@@ -331,6 +341,10 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 setRemoteValue(MITMConsts.MITMDefaultProxyPassword, params.proxyPassword)
                 setRemoteValue(MITMConsts.MITMDefaultDnsServers, JSON.stringify(params.dnsServers))
                 setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts))
+                setRemoteValue(
+                    RemoteGV.MITMEnableHostsMappingBeforeDownstreamProxy,
+                    params.EnableHostsMappingBeforeDownstreamProxy ? "true" : ""
+                )
                 setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${params.filterWebsocket}`)
                 setRemoteValue(RemoteGV.MITMDisableCACertPage, params.disableCACertPage ? "true" : "")
                 setRemoteValue(RemoteGV.MITMDisableSystemProxy, params.DisableSystemProxy ? "true" : "")
@@ -349,6 +363,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 certs: defFieldsRef.current.certs,
                 dnsServers: defFieldsRef.current.dnsServers,
                 etcHosts: defFieldsRef.current.etcHosts,
+                EnableHostsMappingBeforeDownstreamProxy: defFieldsRef.current.EnableHostsMappingBeforeDownstreamProxy,
                 enableProxyAuth: defFieldsRef.current.enableProxyAuth,
                 filterWebsocket: defFieldsRef.current.filterWebsocket,
                 disableCACertPage: defFieldsRef.current.disableCACertPage,
@@ -492,6 +507,14 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                 </YakitTag>
                             ))}
                         </div>
+                    </Form.Item>
+                    <Form.Item
+                        label={t("AdvancedConfiguration.hosts_mapping_priority")}
+                        name='EnableHostsMappingBeforeDownstreamProxy'
+                        valuePropName='checked'
+                        help={t("AdvancedConfiguration.hosts_mapping_priority_help")}
+                    >
+                        <YakitSwitch size='large' />
                     </Form.Item>
                     <Form.Item
                         label={t("HttpQueryAdvancedConfig.disable_system_proxy")}

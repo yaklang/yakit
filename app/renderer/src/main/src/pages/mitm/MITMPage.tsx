@@ -516,6 +516,7 @@ export interface ExtraMITMServerProps {
     proxyUsername: string
     dnsServers: string[]
     hosts: KVPair[]
+    EnableHostsMappingBeforeDownstreamProxy: boolean
     /**@name 过滤WebSocket */
     filterWebsocket: boolean
     /**禁用初始页 */

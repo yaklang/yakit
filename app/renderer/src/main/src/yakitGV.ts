@@ -92,6 +92,8 @@ export enum RemoteGV {
     YakitDraggerContentFileLimit = "yakit_dragger_content_file_limit",
     /**@name mitm禁用初始页 */
     MITMDisableCACertPage = "mitm_disable_CACertPage",
+    /**@name mitm优先匹配Hosts映射再走下游代理 */
+    MITMEnableHostsMappingBeforeDownstreamProxy = "mitm_enable_HostsMapping_Before_DownstreamProxy",
     /**@name mitm禁用系统代理 */
     MITMDisableSystemProxy = "mitm_disable_SystemProxy",
     /**@name 缓存一级菜单选择的tab的key值 */
