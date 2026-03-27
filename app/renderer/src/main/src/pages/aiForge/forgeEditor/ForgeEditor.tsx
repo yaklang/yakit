@@ -1582,16 +1582,16 @@ const AIForgeSkillFileCont: React.FC<{data?: FileNodeProps}> = ({data}) => {
                 ipcRenderer.invoke("cancel-ReadFile")
             }
             setLoading(true)
-            const {size, isPlainText} = await getCodeSizeByPath(path)
+            const {size, isPlainText} = await getCodeSizeByPath(targetPath)
             if (size > MAX_FILE_SIZE_BYTES) {
                 setFileInfo(null)
                 setShowFileHint(true)
                 return
             }
             setIsBinary(!isPlainText)
-            const content = await getCodeByPath(path)
-            const file = await getLocalFileName(path)
-            setFileInfo({path, size, isPlainText, content, language: monacaLanguageType(file.suffix)})
+            const content = await getCodeByPath(targetPath)
+            const file = await getLocalFileName(targetPath)
+            setFileInfo({path: targetPath, size, isPlainText, content, language: monacaLanguageType(file.suffix)})
         } catch (err) {
             yakitNotify("error", `Failed to load file:${err}`)
         } finally {
