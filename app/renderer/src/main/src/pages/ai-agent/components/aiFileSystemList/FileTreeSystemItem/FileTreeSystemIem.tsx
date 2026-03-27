@@ -119,9 +119,10 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
             fileName = `${inputVal}.yak`
         }
 
-        let flag = true
-        const currentPath = await getPathJoin(data.parent, fileName)
+        let flag = false
+        let currentPath = ""
         try {
+            let currentPath = await getPathJoin(data.parent, fileName)
             if (currentPath.length === 0) {
                 throw new Error("路径拼接失败")
             }
@@ -132,11 +133,11 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
             if (result.length === 0) {
                 throw new Error("创建失败")
             }
+            flag = true
         } catch (error) {
-            flag = false
             yakitNotify("error", error + "")
         } finally {
-            if (flag) {
+            if (flag && currentPath.length) {
                 // 新增节点数据
                 const event: FileMonitorProps = {
                     Id: watchToken,
