@@ -22,6 +22,11 @@
         align-items: center;
         justify-content: space-between;
         overflow: hidden;
+        :global {
+            .ant-btn.ant-btn-loading::before {
+                background-color: transparent;
+            }
+        }
         .history-task-tree-item-header-left {
             display: flex;
             align-items: center;
