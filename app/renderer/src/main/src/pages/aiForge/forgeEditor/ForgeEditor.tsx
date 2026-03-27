@@ -99,13 +99,12 @@ import {placeholderConfig, placeholderPlugin} from "@/components/MilkdownEditor/
 import {Ctx} from "@milkdown/kit/ctx"
 import {defaultValueCtx, Editor, editorViewCtx, editorViewOptionsCtx, rootCtx} from "@milkdown/kit/core"
 import {listener, listenerCtx} from "@milkdown/kit/plugin/listener"
-import {$remark, getMarkdown} from "@milkdown/kit/utils"
+import {getMarkdown} from "@milkdown/kit/utils"
 import {commonmark} from "@milkdown/kit/preset/commonmark"
 import {gfm} from "@milkdown/kit/preset/gfm"
 import {gapCursorPlugin} from "@milkdown/kit/plugin/cursor"
 import {history} from "@milkdown/kit/plugin/history"
 import {clipboard} from "@milkdown/kit/plugin/clipboard"
-import directive from "remark-directive"
 import {ProsemirrorAdapterProvider} from "@prosemirror-adapter/react"
 
 import classNames from "classnames"
@@ -1202,7 +1201,6 @@ const AIForgeEditorCodeAndParams: React.FC<AIForgeEditorCodeAndParamsProps> = me
 })
 
 /** @name 正文md */
-const remarkDirective = $remark(`remark-directive`, () => directive)
 const AIForgeMilkdownBase: React.FC<AIForgeMilkdownBaseProps> = memo((props) => {
     const {readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper} = props
     const {get, loading} = useEditor(
@@ -1236,7 +1234,6 @@ const AIForgeMilkdownBase: React.FC<AIForgeMilkdownBaseProps> = memo((props) => 
                             }
                         })
                     })
-                    .use(remarkDirective)
                     .use(commonmark)
                     .use(gfm)
                     .use(gapCursorPlugin)
