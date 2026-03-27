@@ -13,6 +13,18 @@ import emiter from "@/utils/eventBus/eventBus"
 
 const {ipcRenderer} = window.require("electron")
 
+const normalizePath = (p: string) => {
+    return p
+        .replace(/\\/g, "/") // 全部转成 /
+        .replace(/\/+/g, "/") // 去掉重复 //
+        .replace(/\/$/, "") // 去掉结尾 /
+}
+const isAncestor = (ancestor: string, target: string) => {
+    const a = normalizePath(ancestor)
+    const t = normalizePath(target)
+    return t === a || t.startsWith(a + "/")
+}
+
 const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListProps>((props, ref) => {
     const {
         path,
@@ -58,7 +70,7 @@ const FileTreeSystemList = forwardRef<FileTreeSystemListRef, FileTreeSystemListP
             setData(tree ? [cloneDeep(tree)] : [])
         },
         onTreeNodeDel: (path, isFolder) => {
-            if (selected?.path === path) {
+            if (selected?.path && isAncestor(path, selected.path)) {
                 if (isFolder) {
                     setSelected(undefined)
                 } else {
