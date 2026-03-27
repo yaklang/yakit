@@ -6791,6 +6791,7 @@ message QueryHTTPFlowResponse {
 
 message HTTPFlowsFieldGroupRequest {
   bool RefreshRequest = 1;
+  bool IsAll = 2;
 }
 
 message HTTPFlowsFieldGroupResponse {

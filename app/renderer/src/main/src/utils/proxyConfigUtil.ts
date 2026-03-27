@@ -77,12 +77,12 @@ export const checkProxyVersion = async (): Promise<boolean> => {
 export const isValidUrlWithProtocol = (url: string): boolean => {
     try {
         // 使用 validator 验证 URL 格式
-        // protocols: 仅支持 http, https, socks4, socks4a, socks5 五种协议
+        // protocols: 支持 http, https, socks4, socks4a, socks5, socks, s5, s4a, s4
         // require_protocol: 必须包含协议
         // require_host: 必须包含主机名
         // require_port: 必须包含端口号
         return validator.isURL(url, {
-            protocols: ["http", "https", "socks4", "socks4a", "socks5"],
+            protocols: ["http", "https", "socks4", "socks4a", "socks5", "socks", "s5", "s4a", "s4"],
             require_protocol: true,
             require_host: true,
             require_port: true,

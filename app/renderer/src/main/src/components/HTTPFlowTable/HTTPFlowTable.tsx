@@ -313,6 +313,8 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
     downstreamProxyStr?: string
     /** 进程名 */
     ProcessName?: string[]
+    /** 标签筛选 */
+    TagsFilter?: string[]
     /** 过滤运行时ID Dom */
     filterTagDom?: ReactNode
     onSetTableTotal?: (t: number) => void
@@ -1006,7 +1008,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [inViewport])
     useEffect(() => {
         if (inViewport) {
-            getHTTPFlowsFieldGroup(true)
             searchCodecSingleHistoryPlugin()
             searchCodecMultipleHistoryPlugin()
         }
@@ -1093,6 +1094,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             setIsAllSelect(false)
         }
     }, [campareProcessName, pageType])
+
+    const campareTagsFilter = useCampare(props.TagsFilter)
+    useUpdateEffect(() => {
+        if (pageType === "History") {
+            const nextTags = props.TagsFilter || []
+            setTagsFilter(nextTags)
+            setParams((prev) => ({
+                ...prev,
+                Tags: nextTags
+            }))
+            setScrollToIndex(0)
+            setCurrentIndex(undefined)
+            setSelected(undefined)
+            setSelectedRowKeys([])
+            setSelectedRows([])
+            setIsAllSelect(false)
+        }
+    }, [campareTagsFilter, pageType])
 
     /**
      * 网站树部分
@@ -1472,25 +1491,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             getDataByGrpc(query, type)
         })
     })
-
-    // 获取tags等分组
-    const getHTTPFlowsFieldGroup = useMemoizedFn(
-        (RefreshRequest: boolean, callBack?: (tags: FiltersItemProps[]) => void) => {
-            ipcRenderer
-                .invoke("HTTPFlowsFieldGroup", {
-                    RefreshRequest
-                })
-                .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                    const tags = rsp.Tags.filter((item) => item.Value)
-                    const realTags: FiltersItemProps[] = tags.map((ele) => ({label: ele.Value, value: ele.Value}))
-                    setTags(realTags)
-                    callBack && callBack(realTags)
-                })
-                .catch((e: any) => {
-                    yakitNotify("error", `query HTTP Flows Field Group failed: ${e}`)
-                })
-        }
-    )
 
     const scrollUpdate = useMemoizedFn(() => {
         if (isGrpcRef.current) return
@@ -1947,57 +1947,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                               .join(", ")
                         : ""
                 },
-                filterProps: {
-                    filterKey: "Tags",
-                    filterMultiple: true,
-                    filterIcon: (
-                        <OutlineSearchIcon
-                            className={style["filter-icon"]}
-                            onClick={() => getHTTPFlowsFieldGroup(true)}
-                        />
-                    ),
-                    filterRender: (closePopover: () => void) => {
-                        return (
-                            <MultipleSelect
-                                filterProps={{
-                                    filterSearch: true,
-                                    filterSearchInputProps: {
-                                        prefix: <OutlineSearchIcon className='search-icon' />,
-                                        allowClear: true
-                                    }
-                                }}
-                                originalList={tags}
-                                searchVal={tagSearchVal}
-                                onChangeSearchVal={setTagSearchVal}
-                                value={tagsFilter}
-                                onSelect={(v, item) => {
-                                    if (Array.isArray(v)) {
-                                        setTagsFilter(v)
-                                        if (pageType === "MITM") {
-                                            emiter.emit(
-                                                "onHistoryTagToMitm",
-                                                JSON.stringify({
-                                                    tags: v.join(","),
-                                                    version: mitmVersion
-                                                })
-                                            )
-                                        }
-                                    }
-                                }}
-                                onClose={() => {
-                                    closePopover()
-                                }}
-                                onQuery={() => {
-                                    // 这里重置过后的 tagsFilter 不一定是最新的
-                                    setParams((prev) => ({...prev, Tags: []}))
-                                }}
-                                selectContainerStyle={{
-                                    maxHeight: "40vh"
-                                }}
-                            ></MultipleSelect>
-                        )
-                    }
-                }
             },
             {
                 title: "IP",

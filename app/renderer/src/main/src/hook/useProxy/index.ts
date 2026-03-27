@@ -79,8 +79,8 @@ export const parseUrl = (url: string): ParsedUrlResult => {
   try {
     const { username = '', password = '', protocol = '', host = '', pathname = '', search = '', hash = '' } = new URL(url)
     const path = pathname === '/' ? '' : pathname, 
-      isSocks = protocol.includes('socks4') || protocol.includes("socks5")
-    const Url = isSocks ? `${protocol}${path}${search}${hash}` : `${protocol}//${host}${path}${search}${hash}`
+      isHttps = protocol.includes('http') || protocol.includes("https")
+    const Url = !isHttps ? `${protocol}${path}${search}${hash}` : `${protocol}//${host}${path}${search}${hash}`
     return { Url, UserName: username, Password: password }
   } catch (error) {
     // 如果解析失败，返回原始 URL 和空的用户名密码
@@ -119,7 +119,7 @@ export const useProxy = (): UseProxyReturn => {
     if (!!findPoint) {
       const { Url, UserName, Password } = findPoint
       if (UserName && Password) {
-        const protocolMatch = Url.match(/^((?:https?|socks[45]):\/\/)(.*)$/)
+        const protocolMatch = Url.match(/^((?:https?|socks4a?|socks5|socks|s5|s4a|s4):\/\/)(.*)$/)
         if (protocolMatch) {
           const protocol = protocolMatch[1]
           const domain = protocolMatch[2]

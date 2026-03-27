@@ -199,6 +199,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
 
     const [curProcess, setCurProcess] = useState<string[]>([])
     const [processQueryparams, setProcessQueryparams] = useState<string>("")
+    const [curTags, setCurTags] = useState<string[]>([])
 
     // 表格参数改变
     const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
@@ -211,6 +212,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
 
             const processQuery = JSONParseLog(queryParams, {page: "HTTPHistoryFilter", fun: "processQuery"}) || {}
             delete processQuery.ProcessName
+            delete processQuery.Tags
             setProcessQueryparams(JSON.stringify(processQuery))
         } catch (error) {}
     })
@@ -264,6 +266,8 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                                     queryparamsStr={processQueryparams}
                                     refreshProcessFlag={refreshFlag}
                                     curProcess={curProcess}
+                                    curTags={curTags}
+                                    onSetCurTags={setCurTags}
                                     onSetCurProcess={setCurProcess}
                                 ></HistoryProcess>
                             </div>
@@ -279,6 +283,7 @@ export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = React.memo((p
                             onQueryParams={onQueryParams}
                             includeInUrl={includeInUrl}
                             ProcessName={curProcess}
+                            TagsFilter={curTags}
                             onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
                             onSetClickedHttpFlow={onSetClickedHttpFlow}
                             onSetFirstHttpFlow={onSetFirstHttpFlow}
@@ -325,6 +330,7 @@ export const defalutColumnsOrder = [
 interface HTTPFlowTableProps {
     includeInUrl?: string[]
     ProcessName?: string[]
+    TagsFilter?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     onSetSelectedHttpFlowIds?: (ids: string[]) => void
     onSetClickedHttpFlow?: (flow?: HTTPFlow) => void
@@ -343,6 +349,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const {
         includeInUrl,
         ProcessName,
+        TagsFilter,
         onQueryParams,
         onSetSelectedHttpFlowIds,
         onSetClickedHttpFlow,
@@ -396,6 +403,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const refreshTabsContRef = useRef<boolean>(false)
     const campareProcessName = useCampare(ProcessName)
     const campareIncludeInUrl = useCampare(includeInUrl)
+    const campareTagsFilter = useCampare(TagsFilter)
     useDebounceEffect(
         () => {
             setQuery((prev) => {
@@ -407,6 +415,20 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             })
         },
         [campareIncludeInUrl, campareProcessName],
+        {wait: 500}
+    )
+    useDebounceEffect(
+        () => {
+            const nextTags = TagsFilter || []
+            setTagsFilter(nextTags)
+            setQuery((prev) => {
+                return {
+                    ...prev,
+                    Tags: nextTags
+                }
+            })
+        },
+        [campareTagsFilter],
         {wait: 500}
     )
     // #endregion
@@ -615,23 +637,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     const [tags, setTags] = useState<FiltersItemProps[]>([])
     const [tagSearchVal, setTagSearchVal] = useState<string>("")
     const [tagsFilter, setTagsFilter] = useState<string[]>([])
-    const getHTTPFlowsFieldGroup = useMemoizedFn(
-        (RefreshRequest: boolean, callBack?: (tags: FiltersItemProps[]) => void) => {
-            ipcRenderer
-                .invoke("HTTPFlowsFieldGroup", {
-                    RefreshRequest
-                })
-                .then((rsp: HTTPFlowsFieldGroupResponse) => {
-                    const tags = rsp.Tags.filter((item) => (toWebFuzzer ? item.Value === "webfuzzer" : item.Value))
-                    const realTags: FiltersItemProps[] = tags.map((ele) => ({label: ele.Value, value: ele.Value}))
-                    setTags(realTags)
-                    callBack && callBack(realTags)
-                })
-                .catch((e: any) => {
-                    yakitNotify("error", `query HTTP Flows Field Group failed: ${e}`)
-                })
-        }
-    )
     /** ---- tags end ----*/
 
     /** ---- 响应长度 start ----*/
@@ -930,53 +935,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                               .filter((i) => !i.startsWith("YAKIT_COLOR_"))
                               .join(", ")
                         : ""
-                },
-                filterProps: {
-                    filterKey: "Tags",
-                    filterMultiple: true,
-                    filterIcon: (
-                        <OutlineSearchIcon
-                            className={styles["filter-icon"]}
-                            onClick={() => getHTTPFlowsFieldGroup(true)}
-                        />
-                    ),
-                    filterRender: (closePopover: () => void) => {
-                        return (
-                            <MultipleSelect
-                                filterProps={{
-                                    filterSearch: true,
-                                    filterSearchInputProps: {
-                                        prefix: <OutlineSearchIcon className='search-icon' />,
-                                        allowClear: true
-                                    }
-                                }}
-                                originalList={tags}
-                                searchVal={tagSearchVal}
-                                onChangeSearchVal={setTagSearchVal}
-                                value={tagsFilter}
-                                onSelect={(v) => {
-                                    if (Array.isArray(v)) {
-                                        setTagsFilter(v)
-                                    }
-                                }}
-                                onClose={() => {
-                                    closePopover()
-                                }}
-                                onQuery={() => {
-                                    setTagsFilter([])
-                                    setQuery((prev) => {
-                                        return {
-                                            ...prev,
-                                            Tags: []
-                                        }
-                                    })
-                                }}
-                                selectContainerStyle={{
-                                    maxHeight: "40vh"
-                                }}
-                            ></MultipleSelect>
-                        )
-                    }
                 }
             },
             {

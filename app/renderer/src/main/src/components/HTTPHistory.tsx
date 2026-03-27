@@ -1,6 +1,6 @@
 import React, {CSSProperties, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState} from "react"
 import "react-resizable/css/styles.css"
-import {HistoryTableTitleShow, HTTPFlow, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
+import {HistoryTableTitleShow, HTTPFlow, HTTPFlowsFieldGroupResponse, HTTPFlowTable} from "./HTTPFlowTable/HTTPFlowTable"
 import {HTTPFlowDetailMini} from "./HTTPFlowDetail"
 import {
     useControllableValue,
@@ -19,7 +19,7 @@ import {v4 as uuidv4} from "uuid"
 import classNames from "classnames"
 import emiter from "@/utils/eventBus/eventBus"
 import {WebTree} from "./WebTree/WebTree"
-import {OutlineBotIcon, OutlineLog2Icon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {OutlineBotIcon, OutlineLog2Icon, OutlineFilterIcon, OutlineSearchIcon } from "@/assets/icon/outline"
 import {YakitInput} from "./yakitUI/YakitInput/YakitInput"
 import {YakitEmpty} from "./yakitUI/YakitEmpty/YakitEmpty"
 import {
@@ -95,8 +95,13 @@ import useChatIPC from "@/pages/ai-re-act/hooks/useChatIPC"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 
 import {HistroryAIReActChat} from "./HistroryAIReActChat"
+import YakitCollapse from "./yakitUI/YakitCollapse/YakitCollapse"
+import {YakitPopover} from "./yakitUI/YakitPopover/YakitPopover"
+import { yakitNotify } from "@/utils/notification"
+import { FiltersItemProps } from "./TableVirtualResize/TableVirtualResizeType"
 
 const {ipcRenderer} = window.require("electron")
+const {YakitPanel} = YakitCollapse
 
 export interface HTTPPacketFuzzable {
     defaultHttps?: boolean
@@ -131,8 +136,8 @@ export const HistoryTab: YakitTabsProps[] = [
         value: "web-tree"
     },
     {
-        icon: <OutlineTerminalIcon />,
-        label: "HTTPHistory.process",
+        icon: <OutlineFilterIcon />,
+        label: "RangeInputNumberTableWrapper.filter",
         value: "process"
     },
     {
@@ -198,6 +203,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
 
     const [curProcess, setCurProcess] = useState<string[]>([])
     const [processQueryparams, setProcessQueryparams] = useState<string>("")
+    const [curTags, setCurTags] = useState<string[]>([])
 
     const mitmContent = useContext(MITMContext)
 
@@ -216,6 +222,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
             const processQuery =
                 JSONParseLog(queryParams, {page: "HTTPHistory", fun: "onQueryParams-processQuery"}) || {}
             delete processQuery.ProcessName
+            delete processQuery.Tags
             setProcessQueryparams(JSON.stringify(processQuery))
             if (pageType === "MITM") {
                 emiter.emit(
@@ -455,6 +462,8 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                             queryparamsStr={processQueryparams}
                                             refreshProcessFlag={refreshFlag}
                                             curProcess={curProcess}
+                                            curTags={curTags}
+                                            onSetCurTags={setCurTags}
                                             onSetCurProcess={setCurProcess}
                                             resetTableAndEditorShow={(table, editor) => {
                                                 setOnlyShowFirstNode(table)
@@ -491,6 +500,7 @@ export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
                                 <HTTPFlowRealTimeTableAndEditor
                                     includeInUrl={includeInUrl}
                                     curProcess={curProcess}
+                                    curTags={curTags}
                                     onQueryParams={onQueryParams}
                                     setOnlyShowFirstNode={setOnlyShowFirstNode}
                                     setSecondNodeVisible={setSecondNodeVisible}
@@ -523,6 +533,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
     params?: YakQueryHTTPFlowRequest
     includeInUrl?: string[]
     curProcess?: string[]
+    curTags?: string[]
     onQueryParams?: (queryParams: string, execFlag: boolean) => void
     downstreamProxyStr?: string
     onSetTableTotal?: (t: number) => void
@@ -546,6 +557,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
         includeInUrl,
         filterTagDom,
         curProcess,
+        curTags,
         onQueryParams,
         downstreamProxyStr,
         onSetTableTotal,
@@ -698,6 +710,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
                             inViewport={inViewport}
                             downstreamProxyStr={downstreamProxy}
                             ProcessName={curProcess}
+                            TagsFilter={curTags}
                             onSetTableTotal={onSetTableTotal}
                             onSetTableSelectNum={onSetTableSelectNum}
                             onSetHasNewData={onSetHasNewData}
@@ -891,15 +904,26 @@ export interface ProcessItem {
     process: string
     icon?: ReactElement
 }
+type HistoryProcessPanelKey = "process" | "tag"
 interface HistoryProcessProps {
     queryparamsStr: string
     refreshProcessFlag: boolean
     curProcess: string[]
     onSetCurProcess: (curProcess: string[]) => void
+    curTags?: string[]
+    onSetCurTags?: (curTags: string[]) => void
     resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
 }
 export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
-    const {queryparamsStr, refreshProcessFlag, curProcess, onSetCurProcess, resetTableAndEditorShow} = props
+    const {
+        queryparamsStr,
+        refreshProcessFlag,
+        curProcess,
+        curTags = [],
+        onSetCurProcess,
+        onSetCurTags,
+        resetTableAndEditorShow
+    } = props
     const processRef = useRef<HTMLDivElement>(null)
     const [inViewport] = useInViewport(processRef)
     const [searchProcessVal, setSearchProcessVal] = useState<string>("")
@@ -907,6 +931,13 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     const [processList, setProcessList] = useState<ProcessItem[]>([])
     const searchProcessValRef = useRef<string>(searchProcessVal)
     const curProcessRef = useRef<string[]>(curProcess)
+    const [searchTagVal, setSearchTagVal] = useState<string>("")
+    const [tagList, setTagList] = useState<FiltersItemProps[]>([])
+    const [tagListLoading, setTagListLoading] = useState<boolean>(false)
+    const [activeKey, setActiveKey] = useState<string[]>(["process", "tag"])
+    const {t} = useI18nNamespaces(["history", "yakitUi"])
+    const [searchValues, setSearchValues] = useState<{process: string; tag: string}>({process: "", tag: ""})
+
     useEffect(() => {
         searchProcessValRef.current = searchProcessVal
     }, [searchProcessVal])
@@ -984,55 +1015,169 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
         }
     })
 
+    const refreshTags = useMemoizedFn(async () => {
+        setTagListLoading(true)
+        ipcRenderer
+            .invoke("HTTPFlowsFieldGroup", {
+                RefreshRequest: true,
+                IsAll: true
+            })
+            .then((rsp: HTTPFlowsFieldGroupResponse) => {
+                const tags = (rsp.Tags || []).filter((item) => item.Value)
+                const realTags: FiltersItemProps[] = tags.map(({ Value }) => ({
+                    label: Value,
+                    value: Value,
+                }))
+                setTagList(realTags)
+            })
+            .catch((error) => {
+                yakitNotify("error", `query HTTP Flows Field Group failed: ${error}`)
+            })
+            .finally(() => {
+                setTagListLoading(false)
+            })    
+    })
+
+    useEffect(() => {
+        if (!inViewport) return
+        refreshTags()
+    }, [inViewport])
+
+    const refreshAllFilters = useMemoizedFn((clearSelected?: boolean) => {
+        if (clearSelected) {
+            onSetCurProcess([])
+            onSetCurTags?.([])
+        }
+        refreshProcess()
+        refreshTags()
+    })
+
+    const renderTagList = useMemo(() => {
+        return searchTagVal
+            ? tagList.filter((item) => item.label.toLocaleLowerCase().includes(searchTagVal.toLocaleLowerCase()))
+            : tagList
+    }, [searchTagVal, tagList])
+
+
+    const onTagItemClick = useMemoizedFn((tag: FiltersItemProps) => {
+        const nextTags = curTags.includes(tag.value)
+            ? curTags.filter((item) => item !== tag.value)
+            : [...curTags, tag.value]
+        onSetCurTags?.(nextTags)
+    })
+
+    const onSearch = useMemoizedFn((key: HistoryProcessPanelKey) => {
+        if (key === "process") {
+            setSearchProcessVal(searchValues.process)
+        } else {
+            setSearchTagVal(searchValues.tag)
+        }
+    })
+
+    const renderSearchInput = useMemoizedFn((key: HistoryProcessPanelKey) => {
+        const hasActiveSearch = key === "process" ? !!searchProcessVal.trim() : !!searchTagVal.trim()
+        return (
+            <div onClick={(e) => e.stopPropagation()}>
+                <YakitPopover
+                    overlayClassName={styles["history-process-popover"]}
+                    trigger='click'
+                    content={
+                        <div onKeyPress={(e) => e.stopPropagation()}>
+                            <YakitInput
+                                placeholder={t("YakitInput.searchKeyWordPlaceholder")}
+                                value={searchValues[key]}
+                                onChange={(e) => setSearchValues((pre) => ({...pre, [key]: e.target.value}))}
+                                onPressEnter={() => {
+                                    onSearch(key)
+                                }}
+                                allowClear
+                            />
+                        </div>
+                    }
+                    onVisibleChange={(visible) => !visible && onSearch(key)}
+                >
+                    <YakitButton icon={<OutlineSearchIcon />} type={hasActiveSearch ? "text" : "text2"}/>
+                </YakitPopover>
+            </div>               
+        )
+    })
+
+    const renderPanel = useMemoizedFn((panelItem: {header: string; key: HistoryProcessPanelKey}) => {
+        const {header, key} = panelItem
+        const loading = key === "tag" ? tagListLoading : processLoading
+        const list = key === "tag" ? renderTagList : renderProcessList
+        return (
+            <YakitPanel
+                header={header}
+                key={key}
+                extra={renderSearchInput(key)}
+            >
+                {loading ? <YakitSpin style={{ display: 'block'}} /> : list.length ?
+                    list.map((item) => {
+                        if (key === "tag") {
+                            const checked = curTags.includes(item.value)
+                            return (
+                                <label
+                                    className={classNames(styles["list-item"], {
+                                        [styles["list-item-active"]]: checked
+                                    })}
+                                    key={item.value}
+                                >
+                                    <YakitCheckbox checked={checked} onChange={() => onTagItemClick(item)}>
+                                        <span className={styles["list-item-left"]}>
+                                            <span className={styles["item-title"]} title={item.label}>
+                                                {item.label}
+                                            </span>
+                                        </span>
+                                    </YakitCheckbox>
+                                </label>
+                            )
+                        }
+
+                        const checked = curProcess.includes(item.process)
+                        return (
+                            <label
+                                className={classNames(styles["list-item"], {
+                                    [styles["list-item-active"]]: checked
+                                })}
+                                key={item.process}
+                            >
+                                <YakitCheckbox checked={checked} onChange={() => onProcessItemClick(item)}>
+                                    <span className={styles["list-item-left"]}>
+                                        {item.icon ? <span className={styles["item-icon"]}>{item.icon}</span> : null}
+                                        <span className={styles["item-title"]} title={item.process}>
+                                            {item.process}
+                                        </span>
+                                    </span>
+                                </YakitCheckbox>
+                            </label>
+                        )
+                    }) : <YakitEmpty />}
+            </YakitPanel>
+        )
+    })
+
+    const panelList = useMemo(() => [
+        {
+            header: t("HTTPHistory.process"),
+            key: "process" as HistoryProcessPanelKey
+        },
+        {
+            header: "Tag",
+            key: "tag" as HistoryProcessPanelKey
+        }
+    ], [t])
+
     return (
         <div className={styles["history-process"]} ref={processRef}>
-            <div className={styles["history-process-search-wrapper"]}>
-                <YakitInput.Search
-                    wrapperStyle={{width: "calc(100% - 40px)"}}
-                    onSearch={(value) => setSearchProcessVal(value)}
-                    allowClear
-                />
-                <YakitButton type='text2' icon={<RefreshIcon />} onClick={refreshProcess} />
+            <div className={styles["history-process-header"]}>
+                <span>{t("YakitTable.filter")}</span> 
+                <YakitButton type='text2' icon={<RefreshIcon />} onClick={() => refreshAllFilters(true)} />
             </div>
-            <div className={styles["process-list-wrapper"]}>
-                {processLoading ? (
-                    <YakitSpin style={{display: "block"}}></YakitSpin>
-                ) : (
-                    <>
-                        {renderProcessList.length ? (
-                            <>
-                                {renderProcessList.map((item) => (
-                                    <div
-                                        className={classNames(styles["process-list-item"], {
-                                            [styles["process-list-item-active"]]: curProcess.includes(item.process)
-                                        })}
-                                        key={item.process}
-                                    >
-                                        <YakitCheckbox
-                                            checked={curProcess.includes(item.process)}
-                                            onChange={() => {
-                                                onProcessItemClick(item)
-                                            }}
-                                        >
-                                            <div className={styles["process-item-left-wrapper"]}>
-                                                {item.icon ? (
-                                                    <div className={styles["process-icon"]}>{item.icon}</div>
-                                                ) : (
-                                                    <OutlineTerminalIcon className={styles["process-icon"]} />
-                                                )}
-                                                <div className={styles["process-item-label"]} title={item.process}>
-                                                    {item.process}
-                                                </div>
-                                            </div>
-                                        </YakitCheckbox>
-                                    </div>
-                                ))}
-                            </>
-                        ) : (
-                            <YakitEmpty></YakitEmpty>
-                        )}
-                    </>
-                )}
+            <div className={styles["history-process-body"]}>
+                <YakitCollapse activeKey={activeKey} onChange={(key) => setActiveKey(key as string[])}>
+                    {panelList.map((item) => renderPanel(item))}
+                </YakitCollapse>
             </div>
         </div>
     )
