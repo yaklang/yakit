@@ -1,4 +1,7 @@
 import moment from "moment"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 /** @name 将unix时间戳转换为 YYYY-MM-DD HH:mm:ss */
 export const formatTimestamp = (i: number, onlyTime?: boolean) => {
@@ -46,16 +49,16 @@ export const formatTimestampJudge = (i: number) => {
     const duration = moment.duration(now.diff(time))
     if (duration.asSeconds() < 60) {
         // 一分钟内
-        return `${Math.floor(duration.asSeconds())} 秒前`
+        return `${Math.floor(duration.asSeconds())} ${t("basic.TimeUtil.secondsAgo")}`
     } else if (duration.asMinutes() < 60) {
         // 一小时内
-        return `${Math.floor(duration.asMinutes())} 分钟前`
+        return `${Math.floor(duration.asMinutes())} ${t("basic.TimeUtil.minutesAgo")}`
     } else if (duration.asHours() < 24) {
         // 在24小时内
-        return `${Math.floor(duration.asHours())} 小时前`
+        return `${Math.floor(duration.asHours())} ${t("basic.TimeUtil.hoursAgo")}`
     } else if (duration.asDays() < 3) {
         // 超过24小时但少于3天
-        return `${Math.floor(duration.asDays())} 天前`
+        return `${Math.floor(duration.asDays())} ${t("basic.TimeUtil.daysAgo")}`
     } else {
         // 超过3天
         return time.format("YYYY-MM-DD HH:mm:ss")

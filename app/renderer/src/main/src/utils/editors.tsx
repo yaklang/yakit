@@ -101,6 +101,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
 
     const {theme: themeGlobal} = useTheme()
     const {fontSize: globalFontSize} = useEditorFontSize()
+    const {t, i18n} = useI18nNamespaces(["utils"])
 
     useLayoutEffect(() => {
         applyYakitMonacoTheme(props?.propsTheme ?? themeGlobal)
@@ -234,7 +235,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             editor.addAction({
                 contextMenuGroupId: "yaklang",
                 id: YAK_FORMATTER_COMMAND_ID,
-                label: "Yak 代码格式化",
+                label: t("basic.Editors.yakFormat"),
                 run: () => {
                     yakCompileAndFormat.run(editor, model)
                     return undefined

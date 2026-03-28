@@ -10,6 +10,9 @@ import xmlParser from "@prettier/plugin-xml"
 import xmlFormatter from "xml-formatter"
 import {debugYakitModalAny} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import DOMPurify from "isomorphic-dompurify"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 const {ipcRenderer} = window.require("electron")
 const plugins = [babelParser as any, htmlParser as any, espreeParser as any, xmlParser]
@@ -128,7 +131,7 @@ const formatCode = async (rsp: PacketPrettifyHelperResponse, option, callback) =
     try {
         const formattedCode = await prettier.format(Uint8ArrayToString(rsp.Body), option)
         if (extractAndCompareCode(Uint8ArrayToString(rsp.Body), formattedCode)) {
-            yakitNotify("info", "原始数据可能存在问题，美化丢失了部分内容")
+            yakitNotify("info", t("basic.PrettifyPacket.lossyBeautifyWarning"))
         }
         callback(formattedCode)
     } catch (error) {

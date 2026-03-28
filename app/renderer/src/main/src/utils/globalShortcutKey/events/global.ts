@@ -3,6 +3,9 @@ import {YakitKeyBoard, YakitKeyMod} from "../keyboard"
 import {ShortcutKeyEventInfo} from "./pageMaps"
 import {PRODUCT_RELEASE_EDITION} from "@/utils/envfile"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 /** 控件级焦点(子页面焦点暂不用做标记)  */
 export enum ShortcutKeyFocusType {
@@ -51,35 +54,35 @@ type EventsType = Record<`${GlobalShortcutKey}`, ShortcutKeyEventInfo>
 
 const globalShortcutKeyEvents: EventsType = {
     screenshot: {
-        name: "截图",
+        name: t("basic.ShortcutKey.screenshot"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.KEY_B]
     },
     removePage: {
-        name: "关闭当前页面",
+        name: t("basic.ShortcutKey.closeCurrentPage"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_W]
     },
     addSubPage: {
-        name: "新增二级页面",
+        name: t("basic.ShortcutKey.addSubPage"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_T]
     },
     // 公共组件快捷键
     "sendAndJump*common": {
-        name: "发送并跳转",
+        name: t("basic.ShortcutKey.sendAndJump"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_R],
         scopeShow: [Yakit, EnpriTrace]
     },
     "send*common": {
-        name: "仅发送",
+        name: t("basic.ShortcutKey.sendOnly"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_R],
         scopeShow: [Yakit, EnpriTrace]
     },
     // 公共组件快捷键 + 焦点校验 ShortcutKeyFocusHook?
     "tableVirtualUP*common":{
-        name: "Table表格向上选",
+        name: t("basic.ShortcutKey.tableVirtualUp"),
         keys: [YakitKeyBoard.UpArrow],
     },
     "tableVirtualDown*common":{
-        name: "Table表格向下选",
+        name: t("basic.ShortcutKey.tableVirtualDown"),
         keys: [YakitKeyBoard.DownArrow],
     }
 }
@@ -117,5 +120,3 @@ export const resetGlobalShortcutKeyEvents = () => {
     currentKeyEvents = null
     setLocalValue(LocalStorageKey, JSON.stringify(globalShortcutKeyEvents))
 }
-
-

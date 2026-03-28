@@ -12,6 +12,9 @@ import styles from "./encodec.module.scss"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import classNames from "classnames"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 export type CodecType =
     | "fuzz"
@@ -42,7 +45,7 @@ const editorCodecHandlerFactory = (typeStr: CodecType) => {
             const text = e.getModel()?.getValueInRange(e.getSelection()) || ""
             execCodec(typeStr, text, false, e)
         } catch (e) {
-            failed("editor exec codec failed")
+            failed(t("basic.Encodec.editorExecCodecFailed"))
         }
     }
 }
@@ -60,7 +63,7 @@ const editorFullCodecHandlerFactory = (typeStr: CodecType) => {
                 execCodec(typeStr, fullText || "", false, e, true)
             }
         } catch (e) {
-            failed("editor exec codec failed")
+            failed(t("basic.Encodec.editorExecCodecFailed"))
             console.error(e)
         }
     }
@@ -95,7 +98,7 @@ const editorMutateHTTPRequestHandlerFactory = (params: MutateHTTPRequestParams) 
             const fullText = model?.getValue()
             mutateRequest({...params, Request: new Buffer(fullText || "")}, e)
         } catch (e) {
-            failed(`mutate request failed: ${e}`)
+            failed(t("basic.Encodec.mutateRequestFailed", {error: String(e)}))
         }
     }
 }
@@ -109,21 +112,21 @@ export interface MonacoEditorActions extends IMonacoActionDescriptor {
 }
 
 export const MonacoEditorCodecActions: MonacoEditorActions[] = [
-    {id: "urlencode", label: "URL 编码"},
-    {id: "urlescape", label: "URL 编码(只编码特殊字符)"},
-    {id: "base64", label: "Base64 编码"},
-    {id: "base64-decode", label: "Base64 解码"},
-    {id: "htmlencode", label: "HTML 编码"},
-    {id: "htmldecode", label: "HTML 解码"},
-    {id: "urlunescape", label: "URL 解码"},
-    {id: "double-urlencode", label: "双重 URL 编码"},
-    {id: "unicode-decode", label: "Unicode 解码（\\uXXXX 解码）"},
-    {id: "unicode-encode", label: "Unicode 编码（\\uXXXX 编码）"},
-    {id: "base64-url-encode", label: "先 Base64 后 URL 编码"},
-    {id: "url-base64-decode", label: "先 URL 后 Base64 解码"},
-    {id: "hex-decode", label: "HEX 解码（十六进制解码）"},
-    {id: "hex-encode", label: "HEX 编码（十六进制编码）"},
-    {id: "jwt-parse-weak", label: "JWT 解析（同时测试弱 Key）"}
+    {id: "urlencode", label: t("basic.Encodec.urlencode")},
+    {id: "urlescape", label: t("basic.Encodec.urlescape")},
+    {id: "base64", label: t("basic.Encodec.base64")},
+    {id: "base64-decode", label: t("basic.Encodec.base64Decode")},
+    {id: "htmlencode", label: t("basic.Encodec.htmlencode")},
+    {id: "htmldecode", label: t("basic.Encodec.htmldecode")},
+    {id: "urlunescape", label: t("basic.Encodec.urlDecode")},
+    {id: "double-urlencode", label: t("basic.Encodec.doubleUrlEncode")},
+    {id: "unicode-decode", label: t("basic.Encodec.unicodeDecode")},
+    {id: "unicode-encode", label: t("basic.Encodec.unicodeEncode")},
+    {id: "base64-url-encode", label: t("basic.Encodec.base64UrlEncode")},
+    {id: "url-base64-decode", label: t("basic.Encodec.urlBase64Decode")},
+    {id: "hex-decode", label: t("basic.Encodec.hexDecode")},
+    {id: "hex-encode", label: t("basic.Encodec.hexEncode")},
+    {id: "jwt-parse-weak", label: t("basic.Encodec.jwtParseWeak")}
 ].map((i) => {
     return {id: i.id, label: i.label, contextMenuGroupId: "codec", run: editorCodecHandlerFactory(i.id as CodecType)}
 })
@@ -136,27 +139,27 @@ export const MonacoEditorMutateHTTPRequestActions: {
 }[] = [
     {
         id: "mutate-http-method-get",
-        label: "改变 HTTP 方法成 GET",
+        label: t("basic.Encodec.changeHttpMethodGet"),
         params: {FuzzMethods: ["GET"]} as MutateHTTPRequestParams
     },
     {
         id: "mutate-http-method-post",
-        label: "改变 HTTP 方法成 POST",
+        label: t("basic.Encodec.changeHttpMethodPost"),
         params: {FuzzMethods: ["POST"]} as MutateHTTPRequestParams
     },
     {
         id: "mutate-http-method-head",
-        label: "改变 HTTP 方法成 HEAD",
+        label: t("basic.Encodec.changeHttpMethodHead"),
         params: {FuzzMethods: ["HEAD"]} as MutateHTTPRequestParams
     },
     {
         id: "mutate-chunked",
-        label: "HTTP Chunk 编码",
+        label: t("basic.Encodec.httpChunkEncode"),
         params: {ChunkEncode: true} as MutateHTTPRequestParams
     },
     {
         id: "mutate-upload",
-        label: "修改为上传数据包",
+        label: t("basic.Encodec.modifyToUploadPacket"),
         params: {UploadEncode: true} as MutateHTTPRequestParams
     }
 ].map((i) => {
@@ -190,7 +193,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
     return (
         <Space style={{width: "100%"}} direction={"vertical"}>
             {isShowSource && (
-                <AutoCard title={`选择内容`} size={"small"}>
+                <AutoCard title={t("basic.Encodec.selectContent")} size={"small"}>
                     <div style={{height: 120}}>
                         <YakEditor noMiniMap={true} type={"html"} value={source} readOnly={true} />
                     </div>
@@ -203,7 +206,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                         title={
                             <div
                                 className={classNames(styles["decode-step-title"], "yakit-single-line-ellipsis")}
-                            >{`解码步骤[${index + 1}]: ${i.TypeVerbose}(${i.Type})`}</div>
+                            >{t("basic.Encodec.decodeStep", {index: index + 1, verbose: i.TypeVerbose, type: i.Type})}</div>
                         }
                         size={"small"}
                         extra={
@@ -211,7 +214,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                                 size={"small"}
                                 onClick={() => {
                                     showYakitModal({
-                                        title: "原文",
+                                        title: t("basic.Encodec.originText"),
                                         width: "50%",
                                         content: (
                                             <div style={{height: 280}}>
@@ -228,7 +231,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                                     })
                                 }}
                             >
-                                查看本次编码原文
+                                {t("basic.Encodec.viewOriginalText")}
                             </YakitButton>
                         }
                     >
@@ -247,7 +250,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                                             setResult(e.Results)
                                         })
                                         .catch((e) => {
-                                            failed(`自动解码失败：${e}`)
+                                                failed(t("basic.Encodec.autoDecodeFailed", {error: String(e)}))
                                         })
                                 }}
                             />
@@ -263,13 +266,13 @@ export const execAutoDecode = async (text: string) => {
         .invoke("AutoDecode", {Data: text})
         .then((e: {Results: AutoDecodeResult[]}) => {
             showModal({
-                title: "自动解码（智能解码）",
+                title: t("basic.Encodec.autoDecodeSmart"),
                 width: "60%",
                 content: <AutoDecode data={e.Results}></AutoDecode>
             })
         })
         .catch((e) => {
-            failed(`自动解码失败：${e}`)
+            failed(t("basic.Encodec.autoDecodeFailed", {error: String(e)}))
         })
 }
 
@@ -292,7 +295,7 @@ export const execCodec = async (
                     width: "50%",
                     content: (
                         <AutoCard
-                            title={"编码结果"}
+                            title={t("basic.Encodec.codeResult")}
                             bordered={false}
                             extra={
                                 <YakitButton
@@ -308,7 +311,7 @@ export const execCodec = async (
                                     }}
                                     size={"small"}
                                 >
-                                    替换内容
+                                    {t("basic.Encodec.replaceContent")}
                                 </YakitButton>
                             }
                             size={"small"}
@@ -323,7 +326,7 @@ export const execCodec = async (
 
             if (noPrompt) {
                 showModal({
-                    title: "编码结果",
+                    title: t("basic.Encodec.codeResult"),
                     width: "50%",
                     content: (
                         <div style={{width: "100%"}}>
@@ -339,7 +342,7 @@ export const execCodec = async (
             return result?.Result || ""
         })
         .catch((e: any) => {
-            failed(`CODEC[${typeStr}] 执行失败：${e}`)
+            failed(t("basic.Encodec.codecExecutionFailed", {type: typeStr, error: String(e)}))
         })
 }
 
@@ -358,7 +361,7 @@ export const HTTPFlowCodec: React.FC<HTTPFlowCodecProps> = React.memo((props) =>
                 setCodec(e.Results)
             })
             .catch((e) => {
-                failed(`自动解码失败：${e}`)
+                failed(t("basic.Encodec.autoDecodeFailed", {error: String(e)}))
             })
             .finally(() => {})
     }, [data])

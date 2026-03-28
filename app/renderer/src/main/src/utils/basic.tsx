@@ -26,6 +26,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export const ConfigGlobalReverse = React.memo(() => {
+    const {t, i18n} = useI18nNamespaces(["utils"])
     const [addr, setAddr, getAddr] = useGetState("")
     const [password, setPassword, getPassword] = useGetState("")
     const [localIP, setLocalIP, getLocalIP] = useGetState("")
@@ -82,10 +83,10 @@ export const ConfigGlobalReverse = React.memo(() => {
                             DNSLogSecret: password
                         })
                         .then(() => {
-                            info("配置全局 DNSLog 生效")
+                            info(t("basic.ConfigGlobalReverse.dnslogSuccess"))
                         })
                         .catch((e) => {
-                            failed(`配置全局 DNSLog 失败：${e}`)
+                            failed(t("basic.ConfigGlobalReverse.dnslogFailed", {error: String(e)}))
                         })
                 } else {
                     setRemoteValue(DNSLOG_ADDR, dnslogAddr)
@@ -96,15 +97,15 @@ export const ConfigGlobalReverse = React.memo(() => {
                             DNSLogSecret: dnslogPassword
                         })
                         .then(() => {
-                            info("配置全局 DNSLog 生效")
+                            info(t("basic.ConfigGlobalReverse.dnslogSuccess"))
                         })
                         .catch((e) => {
-                            failed(`配置全局 DNSLog 失败：${e}`)
+                            failed(t("basic.ConfigGlobalReverse.dnslogFailed", {error: String(e)}))
                         })
                 }
             })
             .catch((e) => {
-                failed(`Config Global Reverse Server failed: ${e}`)
+                failed(t("basic.ConfigGlobalReverse.configFailed", {error: String(e)}))
             })
     })
 
@@ -181,7 +182,7 @@ export const ConfigGlobalReverse = React.memo(() => {
 
     useEffect(() => {
         ipcRenderer.on("global-reverse-error", (e, data) => {
-            failed(`全局反连配置失败：${data}`)
+            failed(t("basic.ConfigGlobalReverse.configFailed", {error: String(data)}))
         })
         return () => {
             ipcRenderer.removeAllListeners("global-reverse-error")
@@ -202,7 +203,7 @@ export const ConfigGlobalReverse = React.memo(() => {
                 wrapperCol={{span: 16}}
             >
                 <InputItem
-                    label={"本地反连 IP"}
+                    label={t("basic.ConfigGlobalReverse.localReverseIP")}
                     value={localIP}
                     disable={ok}
                     setValue={setLocalIP}
@@ -217,52 +218,52 @@ export const ConfigGlobalReverse = React.memo(() => {
                                 }}
                                 icon={<RefreshIcon />}
                             >
-                                更新 yak 引擎本地 IP
+                                {t("basic.ConfigGlobalReverse.updateYakEngineLocalIP")}
                             </YakitButton>
                         </div>
                     }
                 />
-                <Divider orientation={"left"}>公网反连配置</Divider>
+                <Divider orientation={"left"}>{t("basic.ConfigGlobalReverse.publicReverseConfig")}</Divider>
                 <Form.Item label={" "} colon={false}>
                     <Alert
                         message={
                             <Space direction={"vertical"}>
-                                <div>在公网服务器上运行</div>
+                                <div>{t("basic.ConfigGlobalReverse.runOnPublicServer")}</div>
                                 <YakitTag
                                     enableCopy={true}
                                     color='blue'
                                     copyText={`yak bridge --secret [your-password]`}
                                 ></YakitTag>
-                                <div>或</div>
+                                <div>{t("basic.ConfigGlobalReverse.or")}</div>
                                 <YakitTag
                                     enableCopy={true}
                                     color='blue'
                                     copyText={`docker run -it --rm --net=host v1ll4n/yak-bridge yak bridge --secret
                         [your-password]`}
                                 ></YakitTag>
-                                <div>已配置</div>
+                                <div>{t("basic.ConfigGlobalReverse.configured")}</div>
                             </Space>
                         }
                     />
                 </Form.Item>
                 <InputItem
-                    label={"Yak Bridge 地址"}
+                    label={t("basic.ConfigGlobalReverse.yakBridgeAddress")}
                     value={addr}
                     setValue={setAddr}
                     disable={ok}
-                    help={"格式 host:port, 例如 cybertunnel.run:64333"}
+                    help={t("basic.ConfigGlobalReverse.yakBridgeAddressHelp")}
                 />
                 <InputItem
-                    label={"Yak Bridge 密码"}
+                    label={t("basic.ConfigGlobalReverse.yakBridgePassword")}
                     setValue={setPassword}
                     value={password}
                     type={"password"}
                     disable={ok}
-                    help={`yak bridge 命令的 --secret 参数值`}
+                    help={t("basic.ConfigGlobalReverse.yakBridgePasswordHelp")}
                 />
-                <Divider orientation={"left"}>{isCommunityEdition() && "Yakit"} 全局 DNSLog 配置</Divider>
+                <Divider orientation={"left"}>{isCommunityEdition() && "Yakit"} {t("basic.ConfigGlobalReverse.globalDNSLogConfig")}</Divider>
                 <SwitchItem
-                    label={"复用 Yak Bridge 配置"}
+                    label={t("basic.ConfigGlobalReverse.reuseYakBridgeConfig")}
                     disabled={ok}
                     value={inheritBridge}
                     setValue={setInheritBridge}
@@ -270,20 +271,20 @@ export const ConfigGlobalReverse = React.memo(() => {
                 />
                 {!inheritBridge && (
                     <InputItem
-                        label={"DNSLog 配置"}
+                        label={t("basic.ConfigGlobalReverse.dnslogConfig")}
                         disable={ok}
                         value={dnslogAddr}
-                        help={"配置好 Yak Bridge 的 DNSLog 系统的地址：[ip]:[port]"}
+                        help={t("basic.ConfigGlobalReverse.dnslogAddressHelp")}
                         setValue={setDNSLogAddr}
                     />
                 )}
                 {!inheritBridge && (
-                    <InputItem label={"DNSLog 密码"} disable={ok} value={dnslogPassword} setValue={setDNSLogPassword} />
+                    <InputItem label={t("basic.ConfigGlobalReverse.dnslogPassword")} disable={ok} value={dnslogPassword} setValue={setDNSLogPassword} />
                 )}
                 <Form.Item colon={false} label={" "}>
                     <YakitButton type='primary' htmlType='submit' disabled={ok}>
                         {" "}
-                        配置反连{" "}
+                        {t("basic.ConfigGlobalReverse.configureReverseConnection")} {" "}
                     </YakitButton>
                     {ok && (
                         <YakitButton
@@ -295,7 +296,7 @@ export const ConfigGlobalReverse = React.memo(() => {
                             style={{marginLeft: 8}}
                         >
                             {" "}
-                            停止{" "}
+                            {t("basic.ConfigGlobalReverse.stop")} {" "}
                         </YakitButton>
                     )}
                 </Form.Item>
