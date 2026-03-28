@@ -307,4 +307,21 @@
             "sendToWebFuzzer": "Send to Web Fuzzer"
         }
     }
+    ,"EngineConsole": {
+        "monitorStarted": "Output monitoring started successfully"
+    },
+    "ICMPSizeLoggerPage": {
+        "title": "ICMP Size Logger",
+        "description": "Determine ICMP reverse connection by sending ping packets with a specific length",
+        "setPingSize": "Set Ping packet size:",
+        "randomLength": "Generate a usable length",
+        "refresh": "Refresh",
+        "pingLength": "ICMP/Ping Length",
+        "remoteIp": "Remote IP",
+        "triggerTime": "Trigger Time",
+        "summary": "ICMP Size Logger is an ICMP recorder that judges ICMP reverse connections by ping packet size:",
+        "windowsCommand": "On Windows, use",
+        "macCommand": "On macOS/Linux/*nix, use",
+        "command": "command"
+    }
 }

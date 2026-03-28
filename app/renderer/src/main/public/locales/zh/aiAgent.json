@@ -51,6 +51,19 @@
     "notConfigured": "如未配置",
     "clickToConfigure": "请点此配置"
   },
+  "AIChatTemplate": {
+    "dropToAddToChat": "松开以添加到对话",
+    "openFolder": "打开文件夹"
+  },
+  "AIToolList": {
+    "all": "全部",
+    "collect": "收藏",
+    "searchPlaceholder": "请输入关键词搜索",
+    "copy": "复制",
+    "delete": "删除",
+    "deleteSuccess": "删除成功",
+    "templateIdError": "该模板 ID('{id}') 异常, 无法编辑"
+  },
   "AIModelSelect": {
     "configTitle": "AI 模型未配置",
     "toConfigure": "去配置",

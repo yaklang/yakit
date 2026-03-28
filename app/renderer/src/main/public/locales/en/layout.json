@@ -245,6 +245,26 @@
     "bugReport": "Bug Report",
     "aboutUs": "About Us"
   },
+  "TabRenameModalContent": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "restoreRecent": "Restore Recent",
+    "restoreMode": "Restore Mode",
+    "overwriteCurrentTab": "Overwrite Current Tab",
+    "addRestoreTab": "Add Restored Tab",
+    "restoreLimitExceeded": "The number of restored tabs cannot exceed {count}",
+    "restoreTabs": "Restore {count} tabs",
+    "tabPage": "tab pages"
+  },
+  "BatchAddNewGroup": {
+    "groupName": "Group Name:",
+    "addTabsToGroup": "Add tabs to group:",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "groupNameRequired": "Group name cannot be empty",
+    "groupNameTooLong": "Group name cannot exceed 50 characters",
+    "pleaseSelectTabs": "Please select tabs"
+  },
   "RunNodeModal": {
     "inputNodeParamsError": "Please enter ip/domain, port number, node name",
     "duplicateNodeRunning": "Same node is running",

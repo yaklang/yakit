@@ -9,5 +9,11 @@
     "watermarkPlaceholder": "不超过 15 个字",
     "default": "默认",
     "custom": "自定义"
+  },
+  "SoftwareSettings": {
+    "projectManagement": "项目管理",
+    "remoteMode": "远程模式",
+    "noImage": "暂无图片",
+    "loading": "loading"
   }
 }

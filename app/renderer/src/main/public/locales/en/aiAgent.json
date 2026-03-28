@@ -51,6 +51,19 @@
     "notConfigured": "If not configured",
     "clickToConfigure": "Please click here to configure"
   },
+  "AIChatTemplate": {
+    "dropToAddToChat": "Release to add to chat",
+    "openFolder": "Open Folder"
+  },
+  "AIToolList": {
+    "all": "All",
+    "collect": "Favorites",
+    "searchPlaceholder": "Search by keyword",
+    "copy": "Copy",
+    "delete": "Delete",
+    "deleteSuccess": "Deleted successfully",
+    "templateIdError": "Template ID('{id}') is invalid and cannot be edited"
+  },
   "AIModelSelect": {
     "configTitle": "AI Model Not Configured",
     "toConfigure": "Go to Configure",

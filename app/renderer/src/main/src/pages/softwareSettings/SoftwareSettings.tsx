@@ -10,6 +10,7 @@ import {ProjectManageProp} from "./ProjectManage"
 import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
 import {isCommunityMemfit, isEnpriTrace, isEnpriTraceAgent, isIRify, isMemfit} from "@/utils/envfile"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import yakitEEProject from "@/assets/yakitFontEE.png"
 import yakitSEProject from "@/assets/yakitFontSE.png"
 import yakitEEMiniProject from "@/assets/yakitEE.png"
@@ -32,32 +33,32 @@ interface SettingsMenuProp {
     name: string
     icon: ReactNode
 }
-const ProjectLogo = (showMini: boolean) => {
+const ProjectLogo = (showMini: boolean, t: (k: string) => string) => {
     if (isIRify()) {
         return showMini ? <SolidIrifyMiniLogoIcon className={styles['prject-logo-mini']}/> : <SolidIrifyFontLogoIcon />
     } else if (isEnpriTrace()) {
-        return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt='暂无图片' />
+        return <img style={{height: "100%"}} src={showMini ? yakitEEMiniProject : yakitEEProject} alt={t("SoftwareSettings.noImage")} />
     } else if (isEnpriTraceAgent()) {
-        return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt='暂无图片' />
+        return <img style={{height: "100%"}} src={showMini ? yakitSEMiniProject : yakitSEProject} alt={t("SoftwareSettings.noImage")} />
     } else if (isMemfit() || isCommunityMemfit()) {
         return showMini ? <SolidMemfitMiniLogoIcon className={styles['prject-logo-mini']} /> : <SolidMemfitFontLogoIcon />
     } else {
         return <YakitLogoSvgIcon />
     }
 }
-const SettingsMenu: SettingsMenuProp[] = [
+const getSettingsMenu = (t: (k: string) => string): SettingsMenuProp[] => [
     {
         key: "project",
-        name: "项目管理",
+        name: t("SoftwareSettings.projectManagement"),
         icon: <DesktopComputerSvgIcon />
     }
 ]
 
-const switchSettings: (type: string, params: SoftwareSettingsProp) => ReactNode = (type, params) => {
+const switchSettings: (type: string, params: SoftwareSettingsProp, t: (k: string) => string) => ReactNode = (type, params, t) => {
     switch (type) {
         case "project":
             return (
-                <Suspense fallback={<div>loading</div>}>
+                <Suspense fallback={<div>{t("SoftwareSettings.loading")}</div>}>
                     <ProjectManage {...(params as ProjectManageProp)} />
                 </Suspense>
             )
@@ -75,11 +76,13 @@ export interface SoftwareSettingsProp {
 
 export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => {
     const {onEngineModeChange} = props
+    const {t} = useI18nNamespaces(["setting"])
 
     const [hostName, setHostName] = useState<string>("")
     const [currentKey, setCurrentKey] = useState<string>("project")
 
     const [showMini, setShowMini] = useState<boolean>(false)
+    const SettingsMenu = getSettingsMenu(t)
 
     const wrapperResize = useMemoizedFn((e: UIEvent) => {
         const win: Window = e.target as any
@@ -109,7 +112,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
     }, [])
 
     return (
-        <div className={styles["software-settings-wrapper"]}>
+    <div className={styles["software-settings-wrapper"]}>
             <div className={styles["software-settings-container"]}>
                 <div
                     className={classNames(styles["left-wrapper"], {
@@ -117,7 +120,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                         [styles["left-mini-body"]]: showMini
                     })}
                 >
-                    <div className={styles["navbar-logo"]}>{ProjectLogo(showMini)}</div>
+                    <div className={styles["navbar-logo"]}>{ProjectLogo(showMini, t)}</div>
 
                     <div className={styles["navbar-list-wrapper"]}>
                         <div className={styles["list-body"]}>
@@ -165,11 +168,11 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                         type='outline2'
                         onClick={() => onEngineModeChange("remote")}
                     >
-                        {showMini ? <SoftwareRemoteSvgIcon /> : "远程模式"}
+                        {showMini ? <SoftwareRemoteSvgIcon /> : t("SoftwareSettings.remoteMode")}
                     </YakitButton>
                 </div>
 
-                <div className={styles["right-wrapper"]}>{switchSettings(currentKey, props)}</div>
+                <div className={styles["right-wrapper"]}>{switchSettings(currentKey, props, t)}</div>
             </div>
         </div>
     )

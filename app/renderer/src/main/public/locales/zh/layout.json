@@ -245,6 +245,26 @@
     "bugReport": "BUG",
     "aboutUs": "关于我们"
   },
+  "TabRenameModalContent": {
+    "cancel": "取消",
+    "confirm": "确定",
+    "restoreRecent": "恢复最近",
+    "restoreMode": "恢复模式",
+    "overwriteCurrentTab": "覆盖当前标签",
+    "addRestoreTab": "新增恢复标签页",
+    "restoreLimitExceeded": "恢复标签数超过上限",
+    "restoreTabs": "恢复 {count} 个标签页",
+    "tabPage": "个标签页"
+  },
+  "BatchAddNewGroup": {
+    "groupName": "组名：",
+    "addTabsToGroup": "添加标签页到组：",
+    "cancel": "取消",
+    "confirm": "确定",
+    "groupNameRequired": "组名不能为空",
+    "groupNameTooLong": "组名不能超过50个字符",
+    "pleaseSelectTabs": "请勾选tab页"
+  },
   "RunNodeModal": {
     "inputNodeParamsError": "请输入ip/域名、端口号、节点名",
     "duplicateNodeRunning": "相同节点正在运行",

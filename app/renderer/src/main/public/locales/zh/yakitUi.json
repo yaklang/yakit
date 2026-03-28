@@ -307,4 +307,21 @@
             "sendToWebFuzzer": "发送到 Web Fuzzer"
         }
     }
+    ,"EngineConsole": {
+        "monitorStarted": "启动输出监控成功"
+    },
+    "ICMPSizeLoggerPage": {
+        "title": "ICMP Size Logger",
+        "description": "使用 ping 携带特定长度数据包判定 ICMP 反连",
+        "setPingSize": "设置 Ping 包大小：",
+        "randomLength": "随机生成可用长度",
+        "refresh": "刷新",
+        "pingLength": "ICMP/Ping 长度",
+        "remoteIp": "远端IP",
+        "triggerTime": "触发时间",
+        "summary": "ICMP Size Logger 是一个通过 Ping 包大小来判断 ICMP 反连的 ICMP 记录器：",
+        "windowsCommand": "在 Windows 系统中，使用",
+        "macCommand": "在 MacOS/Linux/*nix 系统中，使用",
+        "command": "命令"
+    }
 }
