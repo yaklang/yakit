@@ -1,0 +1,220 @@
+name: pull_request test
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - package.json
+      - yarn.lock
+      - README.md
+      - README-EN.md
+      - README_LEGACY.md
+      - LICENSE.md
+      - docs/**
+      - .github/**
+      - '**/*.md'
+      - '**/*.txt'
+      - .vscode/**
+
+jobs:
+  pr-test:
+    name: pull_request test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.1
+
+      - name: Check i18n parity (zh/en)
+        id: i18n_check
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          yarn i18n:check 2>&1 | tee i18n-output.log
+
+      - name: Comment i18n failure on PR
+        if: steps.i18n_check.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- pull-request-test -->'
+            const rawLog = fs.existsSync('i18n-output.log')
+              ? fs.readFileSync('i18n-output.log', 'utf8').slice(-6000)
+              : 'No log available.'
+            const body = `${marker}\n❌ i18n 检查失败\n\n错误信息：\n\`\`\`\n${rawLog}\n\`\`\``
+            const issue_number = context.payload.pull_request.number
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+            })
+            const existing = comments.find(
+              (c) => c.user?.type === 'Bot' && c.body?.includes(marker)
+            )
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                body,
+              })
+            }
+
+      - name: Stop CI on i18n failure
+        if: steps.i18n_check.outcome == 'failure'
+        run: |
+          echo "i18n check failed. See PR comment for details."
+          exit 1
+
+      - name: Format PR changed files with prettier
+        id: format_step
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          {
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          mapfile -d '' changed_files < <(git diff --name-only -z "$BASE_SHA" "$HEAD_SHA")
+
+          format_targets=()
+          for file in "${changed_files[@]}"; do
+            [ -f "$file" ] && format_targets+=("$file")
+          done
+
+          if [ "${#format_targets[@]}" -eq 0 ]; then
+            echo "No files to format."
+            exit 0
+          fi
+
+          echo "Formatting ${#format_targets[@]} file(s)..."
+          npx prettier@3.8.1 --write --ignore-unknown "${format_targets[@]}"
+          } 2>&1 | tee format-output.log
+
+      - name: Comment format failure on PR
+        if: steps.format_step.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- pull-request-test -->'
+            const rawLog = fs.existsSync('format-output.log')
+              ? fs.readFileSync('format-output.log', 'utf8').slice(-6000)
+              : 'No log available.'
+            const body = `${marker}\n❌ prettier 格式化失败\n\n错误信息：\n\`\`\`\n${rawLog}\n\`\`\``
+            const issue_number = context.payload.pull_request.number
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+            })
+            const existing = comments.find(
+              (c) => c.user?.type === 'Bot' && c.body?.includes(marker)
+            )
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                body,
+              })
+            }
+
+      - name: Stop CI on format failure
+        if: steps.format_step.outcome == 'failure'
+        run: |
+          echo "prettier format failed. See PR comment for details."
+          exit 1
+
+      - name: Commit formatted files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          # GITHUB_TOKEN cannot update workflow files without extra app permission.
+          # Unstage workflow paths to avoid push rejection.
+          git reset -- .github/workflows || true
+          if git diff-index --quiet HEAD; then
+            echo "No formatting changes, nothing to commit"
+          else
+            git commit -m "style: apply prettier formatting [skip ci]"
+            git push
+          fi
+
+      - name: Comment pull_request format and check success on PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- pull-request-test -->'
+            const body = [
+              marker,
+              '## ✅ CI 检查通过',
+              '',
+              '本次 PR 已完成以下自动检查：',
+              '',
+              '- ✅ i18n 配置校验通过（zh/en）',
+              '- ✅ Prettier 格式化已完成',
+              '- ✅ 结果已自动提交到当前 PR 分支（如有变更）',
+              '',
+              '---',
+              '_由 pull_request test workflow 自动生成_',
+            ].join('\n')
+            const issue_number = context.payload.pull_request.number
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+            })
+
+            const existing = comments.find(
+              (comment) =>
+                comment.user?.type === 'Bot' && comment.body?.includes(marker)
+            )
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                body,
+              })
+            }
