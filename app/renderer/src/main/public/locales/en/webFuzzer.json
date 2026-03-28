@@ -571,6 +571,9 @@
     "matchersAndExtractorsUseInstructions": "Instructions for Using Web Fuzzer Matchers and Extractors",
     "understand": "I understand"
   },
+  "FuzzerSequence": {
+    "pleaseSendMultipleRequestsBeforeApply": "Please send multiple request packets before applying"
+  },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "This matcher already has an empty condition",
     "addMatcherConditionFailed": "Failed to add matcher condition:",

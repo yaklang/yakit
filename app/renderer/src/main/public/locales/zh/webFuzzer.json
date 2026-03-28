@@ -571,6 +571,9 @@
     "matchersAndExtractorsUseInstructions": "Web Fuzzer 匹配器和提取器使用说明",
     "understand": "我知道了"
   },
+  "FuzzerSequence": {
+    "pleaseSendMultipleRequestsBeforeApply": "请发送多个请求包后再应用"
+  },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "该匹配器已有空匹配器条件",
     "addMatcherConditionFailed": "添加匹配器条件失败：",

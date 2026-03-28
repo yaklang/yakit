@@ -1522,7 +1522,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             : 0
         
         if(!cachedTotal){
-            yakitNotify("warning", `请发送多个请求包后再应用`)
+            yakitNotify("warning", t("FuzzerSequence.pleaseSendMultipleRequestsBeforeApply"))
             return;
         }
         onSingleMatchSubmit()

@@ -19,6 +19,9 @@ i18n.use(HttpBackend)
             "history",
             "webFuzzer",
             "aiAgent",
+            "notepad",
+            "risk",
+            "utils",
             "cve",
             "yakRunner"
         ], // 这几个需要预加载
