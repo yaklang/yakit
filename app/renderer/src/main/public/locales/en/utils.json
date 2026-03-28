@@ -267,7 +267,8 @@
       "savePlugin": "Save plugin"
     },
     "Editors": {
-      "yakFormat": "Yak code formatting"
+      "yakFormat": "Yak code formatting",
+      "loadDefaultSearchFailed": "Failed to load default search string"
     },
     "PrettifyPacket": {
       "lossyBeautifyWarning": "Original data may have issues; beautification lost some content"

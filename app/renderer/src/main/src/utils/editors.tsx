@@ -806,7 +806,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             monacoEditor.revealRangeNearTop(range)
             monacoEditor.trigger("", "actions.find", undefined)
         } catch (e) {
-            console.info("加载默认搜索字符串失败", props.defaultSearchKeyword)
+            console.info(t("Editors.loadDefaultSearchFailed"), props.defaultSearchKeyword)
         }
     }, [props.defaultSearchKeyword, monacoEditor])
 

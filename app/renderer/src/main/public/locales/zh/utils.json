@@ -267,7 +267,8 @@
       "savePlugin": "插件保存"
     },
     "Editors": {
-      "yakFormat": "Yak 代码格式化"
+      "yakFormat": "Yak 代码格式化",
+      "loadDefaultSearchFailed": "加载默认搜索字符串失败"
     },
     "PrettifyPacket": {
       "lossyBeautifyWarning": "原始数据可能存在问题，美化丢失了部分内容"
