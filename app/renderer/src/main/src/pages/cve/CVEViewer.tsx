@@ -14,6 +14,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import {YakitCheckableTagList} from "@/components/YakitCheckableTagList/YakitCheckableTagList"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {Panel} = Collapse
 export interface QueryCVERequest {
@@ -32,6 +33,7 @@ export interface QueryCVERequest {
 export interface CVEViewerProp {}
 const {ipcRenderer} = window.require("electron")
 export const CVEViewer: React.FC<CVEViewerProp> = (props) => {
+    const {t} = useI18nNamespaces(["cve"])
     const [params, setParams] = useState<QueryCVERequest>(defQueryCVERequest)
     const [advancedQuery, setAdvancedQuery] = useState<boolean>(true)
     const [loading, setLoading] = useState(false)
@@ -92,6 +94,7 @@ export const defQueryCVERequest:QueryCVERequest = {
 }
 const CVEQuery: React.FC<CVEQueryProp> = (props) => {
     const {advancedQuery, setAdvancedQuery} = props
+    const {t} = useI18nNamespaces(["cve"])
     const [params, setParams] = useState<QueryCVERequest>(props.defaultParams || defQueryCVERequest)
 
     useEffect(() => {
@@ -104,29 +107,29 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
     return (
         <div className={styles["cve-query"]}>
             <div className={styles["cve-query-heard"]}>
-                <span>高级查询</span>
+                <span>{t("CVEViewer.advancedQuery")}</span>
                 <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} />
             </div>
             <div className={styles["cve-query-body"]}>
                 <div className={styles["cve-query-text"]}>
-                    <span>CVE 查询条件</span>
+                    <span>{t("CVEViewer.cveQueryConditions")}</span>
                     <span
                         className={styles["cve-query-resetting"]}
                         onClick={() => {
                             setParams(defQueryCVERequest)
                         }}
                     >
-                        重置
+                        {t("CVEViewer.reset")}
                     </span>
                 </div>
                 <div className={styles["cve-query-item"]}>
-                    <div>利用路径</div>
+                    <div>{t("CVEViewer.exploitPath")}</div>
                     <YakitCheckableTagList
                         data={[
-                            {value: "NETWORK", label: "网络"},
-                            {value: "ADJACENT_NETWORK", label: "局域网"},
-                            {value: "LOCAL", label: "本地"},
-                            {value: "PHYSICAL", label: "物理"}
+                            {value: "NETWORK", label: t("CVEViewer.network")},
+                            {value: "ADJACENT_NETWORK", label: t("CVEViewer.adjacentNetwork")},
+                            {value: "LOCAL", label: t("CVEViewer.local")},
+                            {value: "PHYSICAL", label: t("CVEViewer.physical")}
                         ]}
                         value={params.AccessVector ? params.AccessVector.split(",") : []}
                         setValue={(AccessVector) => setParams({...params, AccessVector: AccessVector.join(",")})}
@@ -140,9 +143,9 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
                         }
                         value={params.AccessComplexity ? params.AccessComplexity.split(",") : []}
                         data={[
-                            {value: "HIGH", label: "困难"},
-                            {value: "MEDIUM", label: "一般"},
-                            {value: "LOW", label: "容易"}
+                            {value: "HIGH", label: t("CVEViewer.difficult")},
+                            {value: "MEDIUM", label: t("CVEViewer.medium")},
+                            {value: "LOW", label: t("CVEViewer.easy")}
                         ]}
                     />
                 </div>
@@ -152,10 +155,10 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
                         setValue={(Severity) => setParams({...params, Severity: Severity.join(",")})}
                         value={params.Severity ? params.Severity.split(",") : []}
                         data={[
-                            {value: "CRITICAL", label: "严重"},
-                            {value: "HIGH", label: "高危"},
-                            {value: "MEDIUM", label: "中危"},
-                            {value: "LOW", label: "低危"}
+                            {value: "CRITICAL", label: t("CVEViewer.critical")},
+                            {value: "HIGH", label: t("CVEViewer.high")},
+                            {value: "MEDIUM", label: t("CVEViewer.medium")},
+                            {value: "LOW", label: t("CVEViewer.low")}
                         ]}
                     />
                 </div>

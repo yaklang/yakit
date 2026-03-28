@@ -5,7 +5,17 @@
     "reset": "重置",
     "exploitPath": "利用路径",
     "exploitDifficulty": "利用难度",
-    "vulnerabilityLevel": "漏洞级别"
+    "vulnerabilityLevel": "漏洞级别",
+    "network": "网络",
+    "adjacentNetwork": "局域网",
+    "local": "本地",
+    "physical": "物理",
+    "difficult": "困难",
+    "medium": "一般",
+    "easy": "容易",
+    "critical": "严重",
+    "high": "高危",
+    "low": "低危"
   },
   "CVETable": {
     "cveDatabaseManagement": "CVE 数据库管理"
