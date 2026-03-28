@@ -3230,11 +3230,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         if (system === "Darwin" || system === "Windows_NT") {
             return [
                 {
-                    label: "性能采样",
+                    label: t("FuncDomain.performanceSampling"),
                     key: "performance-sampling"
                 },
                 {
-                    label: "崩溃日志收集",
+                    label: t("FuncDomain.crashLogCollection"),
                     key: "crash-log"
                 },
                 {
@@ -3245,11 +3245,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                                 ipcRenderer.invoke("cancel-StartScrecorder", token)
                             }}
                         >
-                            停止录屏
+                            {t("FuncDomain.stopScreenRecording")}
                         </div>
                     ) : (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
-                            <span>录屏</span>
+                            <span>{t("FuncDomain.screenRecording")}</span>
                             {/* <span className={styles["shortcut-keys"]}>
                                 {system === "Darwin"
                                     ? `${MacKeyborad[17]} ${MacKeyborad[16]} X`
@@ -3262,7 +3262,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 {
                     label: (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
-                            <span>截屏</span>
+                            <span>{t("FuncDomain.screenshot")}</span>
                             {
                                 screenshotLoading && (
                                     <div
@@ -3288,14 +3288,14 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     type: "divider"
                 },
                 {
-                    label: "录屏管理",
+                    label: t("FuncDomain.screenRecordingManagement"),
                     key: "screen-recorder"
                 }
             ]
         }
         return [
             {
-                label: "性能采样",
+                label: t("FuncDomain.performanceSampling"),
                 key: "performance-sampling"
             },
             {
@@ -3306,11 +3306,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                             ipcRenderer.invoke("cancel-StartScrecorder", token)
                         }}
                     >
-                        停止录屏
+                        {t("FuncDomain.stopScreenRecording")}
                     </div>
                 ) : (
                     <div className={styles["screen-and-screenshot-menu-item"]}>
-                        <span>录屏</span>
+                        <span>{t("FuncDomain.screenRecording")}</span>
                         <span className={styles["shortcut-keys"]}>{`${WinKeyborad[17]} ${WinKeyborad[16]} X`}</span>
                     </div>
                 ),
@@ -3320,7 +3320,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 type: "divider"
             },
             {
-                label: <span>录屏管理</span>,
+                label: <span>{t("FuncDomain.screenRecordingManagement")}</span>,
                 key: "screen-recorder"
             }
         ]
