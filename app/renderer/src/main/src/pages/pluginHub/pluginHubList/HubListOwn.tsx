@@ -51,6 +51,7 @@ import {statusTag} from "@/pages/plugins/baseTemplate"
 import {DefaultOnlinePlugin, PluginOperateHint} from "../defaultConstant"
 import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "../utils/grpc"
 import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./PluginHubList.module.scss"
@@ -61,6 +62,7 @@ interface HubListOwnProps extends HubListBaseProps {}
 /** @name 我的插件 */
 export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     const {hiddenFilter, isDetailList, hiddenDetailList, onPluginDetail} = props
+    const {t} = useI18nNamespaces(["pluginHub"])
     const emptyImageTarget = useEmptyImage("search")
 
     const divRef = useRef<HTMLDivElement>(null)
@@ -355,7 +357,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     const onFooterExtraDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
         const findIndex = singleDownload.findIndex((item) => item.uuid === info.uuid)
         if (findIndex > -1) {
-            yakitNotify("error", "该插件正在执行下载操作,请稍后再试")
+            yakitNotify("error", t("HubListOwn.downloadingBusy"))
             return
         }
         setSingleDownload((arr) => {
@@ -543,7 +545,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     const onFooterExtraDel = useMemoizedFn((info: YakitPluginOnlineDetail) => {
         const findIndex = singleDel.findIndex((item) => item.uuid === info.uuid)
         if (findIndex > -1) {
-            yakitNotify("error", "该插件正在执行删除操作,请稍后再试")
+            yakitNotify("error", t("HubListOwn.deletingBusy"))
             return
         }
         setSingleDel((arr) => {
@@ -613,7 +615,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
     // 进入插件详情
     const onOptClick = useMemoizedFn((info: YakitPluginOnlineDetail, index: number) => {
         if (!info.script_name && !info.uuid) {
-            yakitNotify("error", "未获取到插件信息，请刷新列表重试")
+            yakitNotify("error", t("HubListOwn.refreshListRetry"))
             return
         }
         setShowIndex(index)
@@ -653,7 +655,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                     icon={<OutlineClouddownloadIcon />}
                     type='outline2'
                     size='large'
-                    name={selectedNum > 0 ? "下载" : "一键下载"}
+                    name={selectedNum > 0 ? t("HubListOwn.download") : t("HubListOwn.oneClickDownload")}
                     loading={batchDownloadLoading}
                     disabled={listTotal === 0}
                     onClick={onHeaderExtraDownload}
@@ -663,7 +665,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                     iconWidth={900}
                     icon={<OutlineTrashIcon />}
                     size='large'
-                    name={selectedNum > 0 ? "删除" : "清空"}
+                    name={selectedNum > 0 ? t("HubListOwn.delete") : t("HubListOwn.clear")}
                     disabled={listTotal === 0}
                     loading={batchDelLoading}
                     onClick={onHeaderExtraDel}
@@ -673,7 +675,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                     iconWidth={900}
                     icon={<SolidPluscircleIcon />}
                     size='large'
-                    name='新建插件'
+                    name={t("HubListOwn.newPlugin")}
                     onClick={onNewPlugin}
                 />
             </div>
@@ -720,7 +722,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
 
                         <div className={styles["list-body"]}>
                             <HubOuterList
-                                title='我的插件'
+                                title={t("HubListOwn.myPlugins")}
                                 headerExtra={headerExtra()}
                                 allChecked={allChecked}
                                 setAllChecked={onCheck}
@@ -773,14 +775,14 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                                     <YakitEmpty
                                         image={emptyImageTarget}
                                         imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
-                                        title='搜索结果“空”'
+                                        title={t("HubListOwn.searchEmpty")}
                                         className={styles["hub-list-empty"]}
                                     />
                                 ) : (
                                     <div className={styles["hub-list-empty"]}>
                                         <YakitEmpty
-                                            title='暂无数据'
-                                            description='可新建插件同步至云端，创建属于自己的插件'
+                                            title={t("HubListOwn.noData")}
+                                            description={t("HubListOwn.noDataDesc")}
                                         />
                                         <div className={styles["refresh-buttons"]}>
                                             <YakitButton
@@ -788,14 +790,14 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                                                 icon={<OutlinePlusIcon />}
                                                 onClick={onNewPlugin}
                                             >
-                                                新建插件
+                                                {t("HubListOwn.newPlugin")}
                                             </YakitButton>
                                             <YakitButton
                                                 type='outline1'
                                                 icon={<OutlineRefreshIcon />}
                                                 onClick={onRefresh}
                                             >
-                                                刷新
+                                                {t("HubListOwn.refresh")}
                                             </YakitButton>
                                         </div>
                                     </div>
@@ -820,7 +822,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                                     <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type='user' />
                                     <div className={styles["divider-style"]}></div>
                                     <Tooltip
-                                        title={selectedNum > 0 ? "下载" : "一键下载"}
+                                        title={selectedNum > 0 ? t("HubListOwn.download") : t("HubListOwn.oneClickDownload")}
                                         overlayClassName='plugins-tooltip'
                                     >
                                         <YakitButton
@@ -833,7 +835,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                                     </Tooltip>
                                     {/* <div className={styles["divider-style"]}></div>
                                     <Tooltip
-                                        title={selectedNum > 0 ? "删除" : "清空"}
+                                        title={selectedNum > 0 ? t("HubListOwn.delete") : t("HubListOwn.clear")}
                                         overlayClassName='plugins-tooltip'
                                     >
                                         <YakitButton
@@ -887,7 +889,7 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
 
             <NoPromptHint
                 visible={delHint}
-                title='是否要删除插件'
+                    title={t("HubListOwn.deleteConfirm")}
                 content={PluginOperateHint["delOnline"]}
                 cacheKey={RemotePluginGV.UserPluginRemoveCheck}
                 onCallback={delHintCallback}
@@ -907,8 +909,8 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             {/* 批量下载同名覆盖提示 */}
             <NoPromptHint
                 visible={batchSameNameHint}
-                title='同名覆盖提示'
-                content='如果本地存在同名插件会直接进行覆盖'
+                    title={t("HubListOwn.sameNameHintTitle")}
+                    content={t("HubListOwn.batchSameNameContent")}
                 cacheKey={RemotePluginGV.BatchDownloadPluginSameNameOverlay}
                 onCallback={handleBatchSameNameHint}
             />
@@ -916,8 +918,8 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
             {/* 单个下载同名覆盖提示 */}
             <NoPromptHint
                 visible={singleSameNameHint}
-                title='同名覆盖提示'
-                content='本地有插件同名，下载将会覆盖，是否下载'
+                title={t("HubListOwn.sameNameHintTitle")}
+                content={t("HubListOwn.sameNameDownloadContent")}
                 cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
                 onCallback={handleSingleSameNameHint}
             />
