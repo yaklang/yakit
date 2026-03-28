@@ -49,7 +49,9 @@ import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {CodeScanTaskList} from "../yakRunnerCodeScan/CodeScanTaskListDrawer/CodeScanTaskListDrawer"
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "assetViewer")
 
 interface ReportViewerPageProp {}
 export const ReportViewerPage: React.FC<ReportViewerPageProp> = (props) => {
@@ -178,7 +180,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", "Query Reports Failed：" + e)
+                yakitNotify("error", `Query Reports Failed: ${e}`)
             })
             .finally(() => setLoading(false))
     }
@@ -214,12 +216,12 @@ const ReportList: React.FC<ReportListProp> = (props) => {
             bodyStyle={{padding: 12, paddingLeft: 0, width: "100%", height: "calc(100% - 32px)"}}
             title={
                 <div className={styles["card-title"]}>
-                    <span className={styles["card-title-text"]}>报告列表</span>
+                    <span className={styles["card-title-text"]}>{t("ReportViewerPage.reportList")}</span>
                 </div>
             }
             extra={
                 <div className={styles["card-extra"]}>
-                    <Tooltip title='点击列表中的报告检查内容' placement='bottom'>
+                    <Tooltip title={t("ReportViewerPage.clickToInspect")} placement='bottom'>
                         <YakitButton type='text' icon={<QuestionMarkCircleIcon />} size='small'></YakitButton>
                     </Tooltip>
                     <YakitButton
@@ -233,8 +235,8 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                     <YakitPopconfirm
                         title={
                             selectedRowKeys.length > 0
-                                ? "确定删除选择的报告吗？不可恢复"
-                                : "确定删除所有报告吗? 不可恢复"
+                                ? t("ReportViewerPage.deleteSelectedConfirm")
+                                : t("ReportViewerPage.deleteAllConfirm")
                         }
                         onConfirm={onRemove}
                         disabled={!response.Data.length}
@@ -254,7 +256,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                             size='small'
                             onClick={() => setCreateVisible(true)}
                         >
-                            生成报告
+                            {t("ReportViewerPage.generateReport")}
                         </YakitButton>
                     )}
                 </div>
@@ -309,7 +311,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                                             selectReportId == item.Id ? "var(--Colors-Use-Main-Bg-Hover)" : undefined
                                     }}
                                 >
-                                    <Tooltip title='点击选中后，可删除'>
+                                    <Tooltip title={t("ReportViewerPage.selectToDelete")}>
                                         <SelectIcon
                                             // @ts-ignore
                                             className={classNames(styles["icon-select"], {
@@ -323,8 +325,8 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                                     </Tooltip>
                                     <Space wrap={false}>
                                         {item.Id && <YakitTag color='red'>ID:{item.Id}</YakitTag>}
-                                        {item.Owner && <YakitTag color='green'>发起人:{item.Owner}</YakitTag>}
-                                        {item.From && <YakitTag color='warning'>来源:{item.From}</YakitTag>}
+                                        {item.Owner && <YakitTag color='green'>{t("ReportViewerPage.owner")}: {item.Owner}</YakitTag>}
+                                        {item.From && <YakitTag color='warning'>{t("ReportViewerPage.source")}: {item.From}</YakitTag>}
                                     </Space>
                                 </YakitCard>
                             </div>
@@ -333,7 +335,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
                 ></RollingLoadList>
             </div>
             <YakitModal
-                title='生成报告'
+                title={t("ReportViewerPage.generateReport")}
                 visible={createVisible}
                 width={"45%"}
                 footer={null}
@@ -484,7 +486,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
     // 下载HTML
     const downloadHtml = () => {
-        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+        handleOpenFileSystemDialog({title: t("ReportViewerPage.selectFolder"), properties: ["openDirectory"]}).then((data) => {
             if (data.filePaths.length) {
                 setDownloadLoading(true)
                 let absolutePath = data.filePaths[0].replace(/\\/g, "\\")
@@ -496,7 +498,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                     })
                     .then((r) => {
                         if (r?.ok) {
-                            yakitNotify("success", "报告导出成功")
+                            yakitNotify("success", t("ReportViewerPage.exportSuccess"))
                             r?.outputDir && openABSFileLocated(r.outputDir)
                         }
                     })
@@ -622,7 +624,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     return (
         <div className={styles["report-viewer"]}>
             {report.Id <= 0 ? (
-                <YakitEmpty title='选择报告以在此查看内容' className={styles["report-empty"]}></YakitEmpty>
+                <YakitEmpty title={t("ReportViewerPage.selectReport")} className={styles["report-empty"]}></YakitEmpty>
             ) : loading ? (
                 <YakitSpin spinning={loading} wrapperClassName={styles["loading-wrapper"]}></YakitSpin>
             ) : (
@@ -691,7 +693,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                         placement: "bottom"
                                     }}
                                 >
-                                    <YakitButton size='small'>下载</YakitButton>
+                                    <YakitButton size='small'>{t("ReportViewerPage.download")}</YakitButton>
                                 </YakitDropdownMenu>
                             </div>
                         }
@@ -712,7 +714,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                                     pageSize={1}
                                     showTotal={(total) => (
                                         <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
-                                            共 {total} 页
+                                            {t("ReportViewerPage.pages")} {total}
                                         </div>
                                     )}
                                     onChange={onChangePagination}

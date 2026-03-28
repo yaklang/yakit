@@ -21,6 +21,7 @@ i18n.use(HttpBackend)
             "aiAgent",
             "screenRecorder",
             "pluginHub",
+            "assetViewer",
             "notepad",
             "risk",
             "utils",
