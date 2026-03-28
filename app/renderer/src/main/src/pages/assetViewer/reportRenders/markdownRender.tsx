@@ -234,24 +234,32 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
         const wrapper = wrapperRef.current
         if (!wrapper) return
 
-        const preventZoom = (e: WheelEvent) => {
-            if ((e.target as HTMLElement).closest('[data-streamdown="mermaid-block"]')) {
-                e.stopPropagation()
-            }
+        const getMermaidBlock = (target: EventTarget | null) => {
+            if (!(target instanceof HTMLElement)) return null
+            return target.closest('[data-streamdown="mermaid-block"]') as HTMLElement | null
         }
-        wrapper.addEventListener("wheel", preventZoom, {capture: true})
 
-        const preventPointer = (e: PointerEvent) => {
-            const t = e.target as HTMLElement
-            if (
-                t.closest('[data-streamdown="mermaid"]') &&
-                !t.closest("button") &&
-                !t.closest("[data-mermaid-action]")
-            ) {
+        const preventMermaidZoomIntent = (e: WheelEvent) => {
+            const mermaidBlock = getMermaidBlock(e.target)
+            if (!mermaidBlock) return
+
+            // Ctrl/Cmd-modified wheel and high-level pinch gestures should not zoom the chart or page.
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault()
                 e.stopPropagation()
             }
         }
-        wrapper.addEventListener("pointerdown", preventPointer, {capture: true})
+        wrapper.addEventListener("wheel", preventMermaidZoomIntent, {capture: true, passive: false})
+
+        const preventMermaidGestureZoom = (e: Event) => {
+            if (getMermaidBlock(e.target)) {
+                e.preventDefault()
+                e.stopPropagation()
+            }
+        }
+        wrapper.addEventListener("gesturestart", preventMermaidGestureZoom as EventListener, {capture: true, passive: false} as AddEventListenerOptions)
+        wrapper.addEventListener("gesturechange", preventMermaidGestureZoom as EventListener, {capture: true, passive: false} as AddEventListenerOptions)
+        wrapper.addEventListener("gestureend", preventMermaidGestureZoom as EventListener, {capture: true, passive: false} as AddEventListenerOptions)
 
         const injectButtons = () => {
             const blocks = wrapper.querySelectorAll('[data-streamdown="mermaid-block"]')
@@ -291,8 +299,10 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
         return () => {
             observer.disconnect()
             wrapper.removeEventListener("click", handleMermaidAction)
-            wrapper.removeEventListener("wheel", preventZoom, {capture: true} as any)
-            wrapper.removeEventListener("pointerdown", preventPointer, {capture: true} as any)
+            wrapper.removeEventListener("wheel", preventMermaidZoomIntent, {capture: true} as any)
+            wrapper.removeEventListener("gesturestart", preventMermaidGestureZoom as EventListener, {capture: true} as any)
+            wrapper.removeEventListener("gesturechange", preventMermaidGestureZoom as EventListener, {capture: true} as any)
+            wrapper.removeEventListener("gestureend", preventMermaidGestureZoom as EventListener, {capture: true} as any)
         }
     }, [handleMermaidAction])
 

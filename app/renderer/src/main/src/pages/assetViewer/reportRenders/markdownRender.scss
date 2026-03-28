@@ -1599,6 +1599,8 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         padding: 0 !important;
         border-radius: 6px !important;
         overflow: hidden !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
 
         > .flex.items-center.justify-end.gap-2 {
             height: 22px !important;
@@ -1622,33 +1624,114 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
         }
 
         [data-streamdown="mermaid"] {
-            overflow: visible !important;
+            width: 100% !important;
+            overflow: hidden !important;
             padding: 8px !important;
+            box-sizing: border-box !important;
+            cursor: default !important;
 
             > div {
-                transform: none !important;
-                touch-action: auto !important;
-                will-change: auto !important;
-                cursor: default !important;
-                pointer-events: none;
+                width: 100% !important;
+                min-height: 220px !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                pointer-events: none !important;
+                user-select: none !important;
+                -webkit-user-select: none !important;
+            }
 
-                > div {
-                    pointer-events: auto;
-                }
+            > div > div:last-child {
+                width: 100% !important;
+                min-width: 0 !important;
+                justify-content: center !important;
+                overflow: hidden !important;
+                pointer-events: none !important;
+            }
+
+            > div > div:last-child > div {
+                display: inline-flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                min-width: 100% !important;
+                pointer-events: none !important;
             }
 
             svg {
+                min-width: min(100%, 720px) !important;
                 max-width: 100% !important;
                 height: auto !important;
                 display: block;
+                pointer-events: none !important;
+                user-select: none !important;
+                -webkit-user-select: none !important;
+                -webkit-user-drag: none !important;
             }
         }
     }
 
     .fixed.inset-0 {
+        background: rgba(15, 23, 42, 0.98) !important;
+        backdrop-filter: none !important;
+        padding: 24px !important;
+
+        > .flex.size-full.items-center.justify-center.p-4 {
+            padding: 16px !important;
+            align-items: stretch !important;
+        }
+
+        [title="Exit fullscreen"] {
+            top: 20px !important;
+            right: 20px !important;
+            z-index: 20 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            background: rgba(15, 23, 42, 0.96) !important;
+            color: #fff !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+
+            &:hover {
+                background: rgba(30, 41, 59, 0.98) !important;
+            }
+
+            svg {
+                width: 20px !important;
+                height: 20px !important;
+            }
+        }
+
+        [data-streamdown="mermaid"] {
+            width: min(96vw, 1800px) !important;
+            height: min(92vh, 1200px) !important;
+            padding: 20px !important;
+            border-radius: 16px !important;
+            background: #ffffff !important;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45) !important;
+            overflow: hidden !important;
+        }
+
+        [data-streamdown="mermaid"] > div {
+            min-height: 100% !important;
+            height: 100% !important;
+        }
+
+        [data-streamdown="mermaid"] > div > div:last-child {
+            height: 100% !important;
+        }
+
+        [data-streamdown="mermaid"] > div > div:last-child > div {
+            min-width: 100% !important;
+            min-height: 100% !important;
+        }
+
         [data-streamdown="mermaid"] svg {
-            max-width: 90vw !important;
-            max-height: 85vh !important;
+            min-width: min(92vw, 1440px) !important;
+            max-width: min(92vw, 1440px) !important;
+            max-height: calc(92vh - 88px) !important;
             width: auto !important;
             height: auto !important;
         }
