@@ -1,0 +1,14 @@
+{
+  "BottomSideBar": {
+    "syntaxCheck": "Syntax Check",
+    "terminal": "Terminal",
+    "helpInfo": "Help Information"
+  },
+  "YakRunner": {
+    "resourceExplorer": "Resource Explorer",
+    "helpDocumentation": "Help Documentation",
+    "fileTooLargeWarning": "File Warning",
+    "fileTooLargeContent": "File is too large to operate with YakRunner",
+    "okButton": "Got it"
+  }
+}

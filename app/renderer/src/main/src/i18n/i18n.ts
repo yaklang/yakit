@@ -19,7 +19,8 @@ i18n.use(HttpBackend)
             "history",
             "webFuzzer",
             "aiAgent",
-            "cve"
+            "cve",
+            "yakRunner"
         ], // 这几个需要预加载
         defaultNS: "",
         interpolation: {

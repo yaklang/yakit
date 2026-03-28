@@ -1,0 +1,14 @@
+{
+  "BottomSideBar": {
+    "syntaxCheck": "语法检查",
+    "terminal": "终端",
+    "helpInfo": "帮助信息"
+  },
+  "YakRunner": {
+    "resourceExplorer": "资源管理器",
+    "helpDocumentation": "帮助文档",
+    "fileTooLargeWarning": "文件警告",
+    "fileTooLargeContent": "文件过大，无法使用YakRunner进行操作",
+    "okButton": "知道了"
+  }
+}
