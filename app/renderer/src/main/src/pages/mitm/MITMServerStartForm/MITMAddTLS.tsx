@@ -5,6 +5,7 @@ import {yakitFailed} from "@/utils/notification"
 import {StringToUint8Array} from "@/utils/str"
 import {Form} from "antd"
 import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {ClientCertificate} from "./MITMServerStartForm"
 import styles from "./MITMServerStartForm.module.scss"
 
@@ -16,10 +17,11 @@ interface AddTLSProps {
 }
 const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
     const {visible, setVisible, certs, setCerts} = props
+    const {t} = useI18nNamespaces(["mitm"])
     const cerFormRef = useRef<any>()
     return (
         <YakitModal
-            title='添加客户端 TLS'
+            title={t("MITMAddTLS.add_client_tls")}
             visible={visible}
             onCancel={() => setVisible(false)}
             closable={true}
@@ -35,7 +37,7 @@ const MITMAddTLS: React.FC<AddTLSProps> = React.memo((props) => {
                         KeyPem: StringToUint8Array(values.KeyPem)
                     }
                     if (certs.findIndex((ele) => ele.CerName === params.CerName) !== -1) {
-                        yakitFailed("该名称已存在")
+                        yakitFailed(t("MITMAddTLS.name_exists"))
                         return
                     }
                     setCerts([...certs, params])
@@ -62,6 +64,7 @@ interface InputCertificateFormProp {
 
 export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.forwardRef((props, ref) => {
     const {isShowCerName = true, formProps} = props
+    const {t} = useI18nNamespaces(["mitm"])
     const [form] = Form.useForm()
     useImperativeHandle(
         ref,
@@ -74,14 +77,14 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
     return (
         <Form className={styles["input-certificate-form"]} form={form} {...formProps}>
             {isShowCerName && (
-                <Form.Item name='CerName' rules={[{required: true, message: "该项必填"}]}>
-                    <YakitInput placeholder='请为你的证书对取一个名字（必填）' />
+                <Form.Item name='CerName' rules={[{required: true, message: t("MITMAddTLS.required_field")}]}>
+                    <YakitInput placeholder={t("MITMAddTLS.name_placeholder")} />
                 </Form.Item>
             )}
             <Form.Item
-                label={"客户端证书(PEM)"}
+                label={t("MITMAddTLS.client_cert_pem")}
                 name='CrtPem'
-                rules={[{required: true, message: "该项必填"}]}
+                rules={[{required: true, message: t("MITMAddTLS.required_field")}]} 
                 className={styles["pem-code-wrapper"]}
             >
                 <YakEditor
@@ -96,9 +99,9 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
                 />
             </Form.Item>
             <Form.Item
-                label={"客户端私钥(PEM)"}
+                label={t("MITMAddTLS.client_key_pem")}
                 name='KeyPem'
-                rules={[{required: true, message: "该项必填"}]}
+                rules={[{required: true, message: t("MITMAddTLS.required_field")}]} 
                 className={styles["pem-code-wrapper"]}
             >
                 <YakEditor
@@ -113,7 +116,7 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
                 />
             </Form.Item>
             <Form.Item
-                label={"CA 根证书"}
+                label={t("MITMAddTLS.ca_root_cert")}
                 name='CaCertificates'
                 required={false}
                 className={styles["pem-code-wrapper"]}
@@ -129,8 +132,8 @@ export const InputCertificateForm: React.FC<InputCertificateFormProp> = React.fo
                     noWordWrap={true}
                 />
             </Form.Item>
-            <Form.Item label={"指定host地址"} name={"Host"}>
-                <YakitInput placeholder='例如baidu.com或者*.baidu.com' />
+            <Form.Item label={t("MITMAddTLS.specify_host_address")} name={"Host"}>
+                <YakitInput placeholder={t("MITMAddTLS.host_placeholder")} />
             </Form.Item>
         </Form>
     )
