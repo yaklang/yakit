@@ -36,6 +36,10 @@
     "editTagSuccess": "Edit tag successful",
     "shareData": "Share Data",
     "uploadingDataCannotClickAgain": "Data is being uploaded. Please wait until the upload is complete before clicking again",
+    "sentSuccessfully": "Sent Successfully",
+    "setColorSuccessfully": "Set HTTPFlow color successfully",
+    "clearColorSuccessfully": "Clear HTTPFlow color successfully",
+    "maxSendEntries": "You can only send a maximum of {maxLength} data entries at a time",
     "missingParameter": "Missing parameter",
     "dataUploading": "Data is being uploaded",
     "uploadResult": "{SuccessCount} data entries uploaded successfully, {FailedCount} failed",
@@ -231,6 +235,7 @@
     "sendToWSFuzzer": "Send to WS Fuzzer",
     "sendAndRedirect": "Send and Redirect",
     "sendOnly": "Send Only",
-    "packetEmpty": "Packet is empty"
+    "packetEmpty": "Packet is empty",
+    "editorExecFailed": "Failed to execute editor and open fuzzer"
   }
 }

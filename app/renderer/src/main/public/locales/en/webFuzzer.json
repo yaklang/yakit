@@ -693,7 +693,25 @@
   "WebsocketFuzzer": {
     "clear_send_data": "Clear Send Data",
     "selectDataFrame": "Select Websocket Data Frame to view details",
-    "sentSuccessfully": "Sent Successfully"
+    "sentSuccessfully": "Sent Successfully",
+    "request": "Request",
+    "response": "Response",
+    "connected": "Connected",
+    "notConnected": "Connection not established",
+    "extraParams": "Extra Parameters",
+    "setProxy": "Set Proxy",
+    "setTimeout": "Set Timeout (s)",
+    "closeConnectionConfirm": "Are you sure you want to close the WebSocket connection?",
+    "disconnect": "Disconnect",
+    "connect": "Connect",
+    "buildingConnection": "Building WebSocket connection",
+    "sendData": "Send Data",
+    "sendToServer": "Send to Server",
+    "realtimePreview": "WebSocket data frame live preview",
+    "serverResponse": "Server Response",
+    "clientRequest": "Client Request",
+    "frameDetails": "Data Frame Details",
+    "dataSize": "Data Size: {size}"
   },
   "HTTPFuzzerHosts": {
     "modalTitle": "Add DNS Hosts Configuration",

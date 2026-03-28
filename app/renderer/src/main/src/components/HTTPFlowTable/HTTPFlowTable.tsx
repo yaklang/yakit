@@ -142,6 +142,7 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {SystemInfo} from "@/constants/hardware"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "history")
 
 export interface codecHistoryPluginProps {
     key: string
@@ -5057,7 +5058,7 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
             }
         })
         .then(() => {
-            openFlag === false && info(i18n.language === "zh" ? "发送成功" : "Sent Successfully")
+            openFlag === false && info(t("HTTPFlowTable.sentSuccessfully"))
         })
 }
 
@@ -5075,10 +5076,7 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
             Tags: existedTags
         })
         .then(() => {
-            yakitNotify(
-                "success",
-                i18n.language === "zh" ? `设置 HTTPFlow 颜色成功` : "Set HTTPFlow color successfully"
-            )
+            yakitNotify("success", t("HTTPFlowTable.setColorSuccessfully"))
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
@@ -5107,10 +5105,7 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
             Tags: existedTags
         })
         .then(() => {
-            yakitNotify(
-                "success",
-                i18n.language === "zh" ? `清除 HTTPFlow 颜色成功` : "Clear HTTPFlow color successfully"
-            )
+            yakitNotify("success", t("HTTPFlowTable.clearColorSuccessfully"))
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
@@ -5132,12 +5127,7 @@ const onBatchExecPacketScan = (params: {
 }) => {
     const {httpFlowIds, maxLength, currentPacketScan} = params
     if (httpFlowIds.length > maxLength) {
-        yakitNotify(
-            "warning",
-            i18n.language === "zh"
-                ? `最多同时只能发送${maxLength}条数据`
-                : `You can only send a maximum of ${maxLength} data entries at a time`
-        )
+        yakitNotify("warning", t("HTTPFlowTable.maxSendEntries", {maxLength}))
         return
     }
     execPacketScanWithNewTab({

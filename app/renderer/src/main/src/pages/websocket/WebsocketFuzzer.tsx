@@ -31,6 +31,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {OutlineCogIcon} from "@/assets/icon/outline"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "webFuzzer")
 
 interface WebsocketFuzzerProp {
     pageId: string
@@ -229,27 +230,27 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                                 buttonStyle='solid'
                                 value={mode}
                                 options={[
-                                    {value: "request", label: "请求"},
-                                    {value: "response", label: "响应"}
+                                    {value: "request", label: t("WebsocketFuzzer.request")},
+                                    {value: "response", label: t("WebsocketFuzzer.response")}
                                 ]}
                                 onChange={(e) => setMode(e.target.value)}
                             />
                             {executing && !!ursp ? (
-                                <YakitTag color='green'>已建立连接</YakitTag>
+                                <YakitTag color='green'>{t("WebsocketFuzzer.connected")}</YakitTag>
                             ) : (
-                                <YakitTag color='yellow'>连接未建立</YakitTag>
+                                <YakitTag color='yellow'>{t("WebsocketFuzzer.notConnected")}</YakitTag>
                             )}
                         </div>
                     }
                     extra={
                         <div className={styles["websocketClientOperator-card-extra"]}>
                             <YakitPopover
-                                title='设置额外参数'
+                                title={t("WebsocketFuzzer.extraParams")}
                                 trigger={["click"]}
                                 content={
                                     <>
                                         <Form form={form} layout='vertical' initialValues={{proxy, timeoutSeconds}}>
-                                            <Form.Item label='设置代理' name='proxy'>
+                                            <Form.Item label={t("WebsocketFuzzer.setProxy")} name='proxy'>
                                                 <YakitAutoComplete
                                                     options={[
                                                         {
@@ -283,7 +284,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                                                     ]}
                                                 ></YakitAutoComplete>
                                             </Form.Item>
-                                            <Form.Item label='设置超时(s)' name='timeoutSeconds'>
+                                            <Form.Item label={t("WebsocketFuzzer.setTimeout")} name='timeoutSeconds'>
                                                 <YakitInputNumber type='horizontal' size='small' min={10} />
                                             </Form.Item>
                                         </Form>
@@ -309,14 +310,14 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                                 TLS
                             </YakitCheckbox>
                             {executing ? (
-                                <YakitPopconfirm title='确定要关闭 Websocket 连接吗？' onConfirm={handleDisConnect}>
+                                <YakitPopconfirm title={t("WebsocketFuzzer.closeConnectionConfirm")} onConfirm={handleDisConnect}>
                                     <YakitButton type='primary' size='small' colors='danger'>
-                                        断开
+                                        {t("WebsocketFuzzer.disconnect")}
                                     </YakitButton>
                                 </YakitPopconfirm>
                             ) : (
                                 <YakitButton type='primary' size='small' onClick={handleConnect}>
-                                    连接
+                                    {t("WebsocketFuzzer.connect")}
                                 </YakitButton>
                             )}
                         </div>
@@ -335,7 +336,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                             />
                         </div>
                         <div style={{display: mode === "response" ? "block" : "none", height: "100%"}}>
-                            <YakitSpin spinning={!ursp} tip='正在构建 Websocket 连接'>
+                                <YakitSpin spinning={!ursp} tip={t("WebsocketFuzzer.buildingConnection")}>
                                 <YakitEditor
                                     type='http'
                                     value={ursp}
@@ -362,7 +363,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                     bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
                     title={
                         <div className={styles["websocketClientOperator-card-title"]}>
-                            <span className={styles["websocketClientOperator-card-title-text"]}>发送数据</span>
+                            <span className={styles["websocketClientOperator-card-title-text"]}>{t("WebsocketFuzzer.sendData")}</span>
                         </div>
                     }
                     extra={
@@ -391,7 +392,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                                 size='small'
                                 onClick={handleSendToServer}
                             >
-                                发送到服务器
+                                {t("WebsocketFuzzer.sendToServer")}
                             </YakitButton>
                         </div>
                     }
@@ -528,9 +529,7 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                     bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
                     title={
                         <div className={styles["websocketClientOperator-card-title"]}>
-                            <span className={styles["websocketClientOperator-card-title-text"]}>
-                                Websocket 数据帧实时预览
-                            </span>
+                                <span className={styles["websocketClientOperator-card-title-text"]}>{t("WebsocketFuzzer.realtimePreview")}</span>
                         </div>
                     }
                 >
@@ -552,9 +551,9 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                                                 {item.data.DataFrameIndex}
                                                 <YakitTag color='blue'>{item.data.DataSizeVerbose}</YakitTag>
                                                 {item.data.FromServer ? (
-                                                    <YakitTag color='purple'>服务器响应</YakitTag>
+                                                    <YakitTag color='purple'>{t("WebsocketFuzzer.serverResponse")}</YakitTag>
                                                 ) : (
-                                                    <YakitTag color='green'>客户端请求</YakitTag>
+                                                    <YakitTag color='green'>{t("WebsocketFuzzer.clientRequest")}</YakitTag>
                                                 )}
                                                 {item.data.IsJson && <YakitTag color='bluePurple'>JSON</YakitTag>}
                                                 {item.data.IsProtobuf && <YakitTag color='danger'>Protobuf</YakitTag>}
@@ -585,14 +584,14 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                         bodyStyle={{padding: 0, width: "100%", height: "calc(100% - 32px)"}}
                         title={
                             <div className={styles["websocketClientOperator-card-title"]}>
-                                <span className={styles["websocketClientOperator-card-title-text"]}>数据帧详情</span>
+                                <span className={styles["websocketClientOperator-card-title-text"]}>{t("WebsocketFuzzer.frameDetails")}</span>
                                 {currSelected.FromServer ? (
-                                    <YakitTag color='yellow'>服务器响应</YakitTag>
+                                    <YakitTag color='yellow'>{t("WebsocketFuzzer.serverResponse")}</YakitTag>
                                 ) : (
-                                    <YakitTag color='green'>客户端请求</YakitTag>
+                                    <YakitTag color='green'>{t("WebsocketFuzzer.clientRequest")}</YakitTag>
                                 )}
                                 <YakitTag color='info'>index: {currSelected.DataFrameIndex}</YakitTag>
-                                <YakitTag color='info'>数据大小: {currSelected.DataSizeVerbose}</YakitTag>
+                                <YakitTag color='info'>{t("WebsocketFuzzer.dataSize", {size: currSelected.DataSizeVerbose})}</YakitTag>
                             </div>
                         }
                         extra={
@@ -612,7 +611,7 @@ const WebsocketFlowViewer: React.FC<WebsocketFlowViewerProp> = memo((props) => {
                     </YakitCard>
                 ) : (
                     <YakitEmpty
-                        title='选择 Websocket Data Frame 以查看详情'
+                        title={t("WebsocketFuzzer.selectDataFrame")}
                         className={styles["webSocket-fuzzer-empty"]}
                     />
                 )
@@ -635,6 +634,6 @@ export const newWebsocketFuzzerTab = (
             data: {tls: isHttps, request: request, openFlag, toServer}
         })
         .then(() => {
-            openFlag === false && yakitNotify("info", i18n.language === "zh" ? "发送成功" : "Sent Successfully")
+            openFlag === false && yakitNotify("info", t("WebsocketFuzzer.sentSuccessfully"))
         })
 }
