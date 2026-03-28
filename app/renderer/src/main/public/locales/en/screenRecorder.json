@@ -1,33 +1,27 @@
 {
+  "ScreenRecorderPage": {
+    "notInstalled": "Not installed",
+    "installRecorder": "Install Screen Recorder",
+    "installing": "Screen recorder is installing...",
+    "installFailed": "IsScrecorderReady failed: {error}",
+    "installHint": "Click 'Install Screen Recorder' to start recording after the tool is installed",
+    "timeout": "connection timeout",
+    "downloadFailed": "Download failed: ",
+    "downloaded": "Downloaded"
+  },
+  "ScreenRecorderList": {
+    "getListFailed": "Failed to get screen recorder list: {error}",
+    "loginRequired": "Please log in before uploading screen recordings"
+  },
   "ScrecorderModal": {
     "recommended": "Recommended",
     "speed": "Speed",
     "screenRecorderDesc": "On Windows, all screens will be recorded and merged into one file; on MacOS, multiple screens will generate multiple files",
     "framerate": "Framerate",
-    "framerateHelp": "Low framerate (below 5fps) is recommended for pentesting to avoid high CPU usage",
-    "framerateTooltip": "Framerate is the number of screenshots per second",
-    "speedHelp": "Record high-speed videos directly, no post-processing needed",
-    "mouseCapture": "Mouse Capture",
-    "startRecording": "Start Recording"
-  },
-  "ScreenRecorderList": {
-    "getListFailed": "Get list data failed: {error}",
-    "loginRequired": "Please login first",
-    "screenRecorder": "Screen Recorder",
-    "stopRecording": "Stop Recording",
-    "deleteTitle": "Delete Recording",
-    "deleteDesc": "Local video files will also be cleared"
-  },
-  "ScreenRecorderListItem": {
-    "fileNotFound": "Target file does not exist!",
-    "playFailed": "Play failed: {error}",
-    "editVideoInfo": "Edit Video Info",
-    "updateFailed": "Update failed: {error}",
-    "video": "Video",
-    "videoName": "Video Name",
-    "notes": "Notes",
-    "noImage": "No Image",
-    "openDirectory": "Click to open video directory",
-    "deletePopconfirm": "Deleting the recording will also delete the local recording file"
+    "framerateHelp": "Higher framerate means smoother video but larger files",
+    "framerateTooltip": "Recommended: 7fps",
+    "speedHelp": "Lower values are slower, higher values are faster",
+    "mouseCapture": "Mouse capture",
+    "startRecording": "Start recording"
   }
 }

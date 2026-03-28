@@ -94,6 +94,7 @@
   "EditorInfo": {
     "basicInfo": "Basic Information",
     "collapseBasicInfo": "Collapse Basic Information",
+    "functionError": "Function error, please try again",
     "templateExamples": "Template Examples",
     "faq": "FAQ",
     "iKnow": "Got it",

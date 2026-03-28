@@ -275,6 +275,20 @@
     },
     "Duplex": {
       "databaseTooLarge": "Slow write detected. The current project database is too large. You can delete HTTPFlow history traffic and then click Settings at the top, or reclaim database space from the home page."
+    },
+    "ImportExportModal": {
+      "error": "Error",
+      "exportDone": "Export completed",
+      "exporting": "Exporting...",
+      "importDone": "Import completed",
+      "importing": "Importing...",
+      "finished": "finished",
+      "exportHint": "After exporting in remote mode, open the ~Yakit\\yakit-projects\\projects path to view the exported file. No file suffix is needed.",
+      "importHint": "Importing external resources carries potential risks. They may contain malicious code or payloads that can cause data leakage or system compromise. Please consider whether external resources are necessary, and ensure the source is trusted and safe. If you must use external resources, prefer official safe versions or write a controlled data source yourself. Keep your system and software up to date and patch known vulnerabilities promptly.",
+      "cancel": "Cancel",
+      "import": "Import",
+      "confirm": "Confirm",
+      "finish": "Finish"
     }
   }
 }

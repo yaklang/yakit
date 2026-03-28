@@ -14,10 +14,12 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
+import i18n from "@/i18n/i18n"
 
 export interface ScreenRecorderPageProp {}
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "screenRecorder")
 
 export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
     const screcorderEmptyImageTarget = useEmptyImage("screenRecording")
@@ -35,7 +37,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
                 setAvailable(data.Ok)
             })
             .catch((err) => {
-                yakitFailed("IsScrecorderReady失败:" + err)
+                yakitFailed(t("ScreenRecorderPage.installFailed", {error: String(err)}))
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     }
@@ -53,8 +55,8 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
                     <YakitEmpty
                         image={<img src={screcorderEmptyImageTarget} alt='' />}
                         imageStyle={{height: 200, margin: "auto", marginBottom: 24}}
-                        title={<div style={{fontSize: 14}}>未安装录屏</div>}
-                        description='点击“安装录屏”，录屏工具安装成功后即可开始录屏'
+                        title={<div style={{fontSize: 14}}>{t("ScreenRecorderPage.notInstalled")}</div>}
+                        description={t("ScreenRecorderPage.installHint")}
                     />
                     <div className={styles["not-installed-buttons"]}>
                         <YakitButton
@@ -64,14 +66,14 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
                                 setInstallVisible(true)
                             }}
                         >
-                            安装录屏
+                            {t("ScreenRecorderPage.installRecorder")}
                         </YakitButton>
                     </div>
                 </div>
             )}
             <YakitHint
                 visible={installVisible}
-                title='录屏工具安装中...'
+                title={t("ScreenRecorderPage.installing")}
                 heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
                 onCancel={() => {
                     setInstallVisible(false)
@@ -122,14 +124,14 @@ const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
                 timer.current = 0
             }
             if (timer.current > 30) {
-                yakitFailed(`[InstallScrecorder] error:连接超时`)
+                yakitFailed(`[InstallScrecorder] error:${t("ScreenRecorderPage.timeout")}`)
                 timer.current = 0
             }
             setPercent(Math.ceil(data.Progress))
             setResults([Uint8ArrayToString(data.Message), ...getResult()])
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
-            yakitFailed("下载失败：" + error)
+            yakitFailed(`${t("ScreenRecorderPage.downloadFailed")}${error}`)
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
             onFinish()
@@ -165,7 +167,7 @@ const InstallFFmpeg: React.FC<InstallFFmpegProp> = (props) => {
                     strokeColor='var(--Colors-Use-Main-Primary)'
                     trailColor='var(--Colors-Use-Neutral-Bg-Hover)'
                     percent={percent}
-                    format={(percent) => `已下载 ${percent}%`}
+                    format={(percent) => `${t("ScreenRecorderPage.downloaded")} ${percent}%`}
                 />
             </div>
             <div className={styles["download-progress-messages"]}>

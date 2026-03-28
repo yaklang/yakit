@@ -94,6 +94,7 @@
   "EditorInfo": {
     "basicInfo": "基础信息",
     "collapseBasicInfo": "收起基础信息",
+    "functionError": "功能异常，请重试",
     "templateExamples": "模板案例",
     "faq": "常见问题",
     "iKnow": "我知道了",

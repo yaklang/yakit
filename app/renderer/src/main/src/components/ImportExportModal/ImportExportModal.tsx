@@ -7,8 +7,10 @@ import {randomString} from "@/utils/randomUtil"
 import {useMemoizedFn, useSafeState} from "ahooks"
 import {Form, FormInstance, FormProps} from "antd"
 import styles from "./ImportExportModal.module.scss"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "utils")
 
 const ImportExportModalSize = {
     export: {
@@ -92,7 +94,7 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
             await ipcRenderer.invoke(extra.apiKey, params, token.current)
             setShowProgressStream(true)
         } catch (e) {
-            yakitNotify("error", `[${extra.apiKey}] error:  ${e}`)
+            yakitNotify("error", `[${extra.apiKey}] ${t("ImportExportModal.error")}:  ${e}`)
         }
     })
 
@@ -123,14 +125,14 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
         return extra.type === "export"
             ? progressStream.length
                 ? isProgressFinished(progressStream[0])
-                    ? "导出完成"
-                    : "导出中..."
-                : "导出中..."
+                    ? t("ImportExportModal.exportDone")
+                    : t("ImportExportModal.exporting")
+                : t("ImportExportModal.exporting")
             : progressStream.length
             ? isProgressFinished(progressStream[0])
-                ? "导入完成"
-                : "导入中..."
-            : "导入中..."
+                ? t("ImportExportModal.importDone")
+                : t("ImportExportModal.importing")
+            : t("ImportExportModal.importing")
     }, [extra.type, progressStream.length])
 
     const handleListeners = useMemoizedFn(() => {
@@ -146,10 +148,10 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
             importExportStreamRef.current.unshift(data)
         })
         ipcRenderer.on(`${token.current}-error`, (_, error) => {
-            yakitNotify("error", `[${typeTitle}] error:  ${error}`)
+            yakitNotify("error", `[${typeTitle}] ${t("ImportExportModal.error")}:  ${error}`)
         })
         ipcRenderer.on(`${token.current}-end`, () => {
-            yakitNotify("info", `[${typeTitle}] finished`)
+            yakitNotify("info", `[${typeTitle}] ${t("ImportExportModal.finished")}`)
         })
     })
 
@@ -164,13 +166,13 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
             case "export":
                 return (
                     <div className={styles["export-hint"]}>
-                        远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
+                        {t("ImportExportModal.exportHint")}
                     </div>
                 )
             case "import":
                 return (
                     <div className={styles["import-hint"]}>
-                        导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。如果确实需要使用外部资源，建议优先选择官方发布的安全版本，或自行编写可控的数据源。同时，请保持系统和软件的最新版本，及时修复已知漏洞，做好日常安全防护。
+                        {t("ImportExportModal.importHint")}
                     </div>
                 )
 
@@ -216,11 +218,11 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
                             <>
                                 {extra.type === "export" && (
                                     <YakitButton type={"outline2"} onClick={onCancel} style={{marginRight: 8}}>
-                                        取消
+                                        {t("ImportExportModal.cancel")}
                                     </YakitButton>
                                 )}
                                 <YakitButton onClick={onSubmit}>
-                                    {extra.type === "import" ? "导入" : "确定"}
+                                    {extra.type === "import" ? t("ImportExportModal.import") : t("ImportExportModal.confirm")}
                                 </YakitButton>
                             </>
                         ) : (
@@ -233,9 +235,9 @@ const ImportExportModalInner = <F, R, P>(props: ImportExportModalProps<F, R, P>)
                             >
                                 {progressStream.length
                                     ? isProgressFinished(progressStream[0])
-                                        ? "完成"
-                                        : "取消"
-                                    : "取消"}
+                                        ? t("ImportExportModal.finish")
+                                        : t("ImportExportModal.cancel")
+                                    : t("ImportExportModal.cancel")}
                             </YakitButton>
                         )}
                     </>

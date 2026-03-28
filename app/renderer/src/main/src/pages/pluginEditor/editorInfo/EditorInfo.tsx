@@ -74,7 +74,7 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
         const handleSubmit: () => Promise<YakitPluginBaseInfo | undefined> = useMemoizedFn(() => {
             return new Promise(async (resolve, reject) => {
                 if (!formRef || !formRef.current) {
-                    yakitNotify("error", "功能异常，请重试")
+                    yakitNotify("error", t("EditorInfo.functionError"))
                     resolve(undefined)
                 }
                 try {
