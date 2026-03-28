@@ -9,7 +9,7 @@ const http = require("http")
 let server = null
 module.exports = {
     register: (win, getClient) => {
-        const commonSignIn = (res) => {
+        const commonSignIn = (res, type) => {
             const info = res.data
             const user = {
                 isLogin: true,
@@ -40,8 +40,15 @@ module.exports = {
             USER_INFO.user_id = user.user_id
             USER_INFO.companyName = user.companyName
             USER_INFO.companyHeadImg = user.companyHeadImg
-            win.webContents.send("fetch-signin-token", user)
-            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            win.webContents.send("fetch-signin-token", user) 
+            if(type === "ccb"){
+                win.webContents.send("fetch-signin-ccb-data", {ok: true, info: "登录成功"})
+            }
+            else{
+                win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            }
+
+            
         }
         // login modal
         ipcMain.on("user-sign-in", (event, arg) => {
@@ -49,7 +56,8 @@ module.exports = {
             const typeApi = {
                 github: "auth/from-github/callback",
                 wechat: "auth/from-wechat/callback",
-                qq: "auth/from-qq/callback"
+                qq: "auth/from-qq/callback",
+                ccb: "auth/from-ccb/callback"
             }
 
             const {url = "", type} = arg
@@ -105,7 +113,7 @@ module.exports = {
                                 authWindow.close()
                                 return
                             }
-                            commonSignIn(res)
+                            commonSignIn(res, type)
 
                             authWindow.webContents.session.clearStorageData()
                             setTimeout(() => authWindow.close(), 200)
@@ -122,7 +130,7 @@ module.exports = {
                     authWindow = null
                 })
             }
-            if (type === "github") {
+            if (["github", "ccb"].includes(type)) {
                 if (server) {
                     // 关闭之前 HTTP 服务器
                     server.close()
@@ -167,7 +175,7 @@ module.exports = {
                                             resolve()
                                             return
                                         }
-                                        commonSignIn(resp)
+                                        commonSignIn(resp, type)
                                         res.end(
                                             JSON.stringify({
                                                 login: true
@@ -280,6 +288,7 @@ module.exports = {
         })
 
         ipcMain.on("sync-update-user", (event, user) => {
+            const isCCB = user.platform === "ccb"
             USER_INFO.isLogin = user.isLogin
             USER_INFO.platform = user.platform
             USER_INFO.githubName = user.githubName
@@ -291,8 +300,8 @@ module.exports = {
             USER_INFO.role = user.role
             USER_INFO.token = user.token
             USER_INFO.user_id = user.user_id
-            USER_INFO.companyName = user.companyName
-            USER_INFO.companyHeadImg = user.companyHeadImg
+            USER_INFO.companyName = isCCB ? user.ccbName : user.companyName 
+            USER_INFO.companyHeadImg = isCCB? user.ccbHeadImg : user.companyHeadImg
             event.returnValue = user
         })
 
