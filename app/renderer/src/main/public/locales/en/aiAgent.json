@@ -125,6 +125,12 @@
     "memfitUpdateNotice": "Memfit session data upgraded, all historical session records in the system will be deleted.",
     "clearHistoryConfirm": "Whether to clear database history records"
   },
+  "AIFocusMode": {
+    "focusMode": "Focus Mode",
+    "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope",
+    "pleaseSelect": "Please select",
+    "noDescription": "No description"
+  },
   "AIModelTestResult": {
     "quickPreview": "quick preview",
     "modelTesting": "Model testing",

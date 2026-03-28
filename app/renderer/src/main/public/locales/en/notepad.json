@@ -26,5 +26,9 @@
   "NotepadLocalList": {
     "title": "Title",
     "lastUpdateTime": "Last Updated"
+  },
+  "NotepadMenu": {
+    "cloudDocs": "Cloud Docs",
+    "notepad": "Notepad"
   }
 }

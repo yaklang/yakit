@@ -26,5 +26,9 @@
   "NotepadLocalList": {
     "title": "标题",
     "lastUpdateTime": "最近更新时间"
+  },
+  "NotepadMenu": {
+    "cloudDocs": "云文档",
+    "notepad": "记事本"
   }
 }

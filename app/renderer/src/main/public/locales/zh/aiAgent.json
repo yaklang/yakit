@@ -125,6 +125,12 @@
     "memfitUpdateNotice": "Memfit会话数据升级，会删除系统内的所有历史会话记录",
     "clearHistoryConfirm": "是否清除数据库历史记录"
   },
+  "AIFocusMode": {
+    "focusMode": "专注模式",
+    "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围",
+    "pleaseSelect": "请选择",
+    "noDescription": "暂无描述"
+  },
   "AIModelTestResult": {
     "quickPreview": "快速预览",
     "modelTesting": "模型检测",
