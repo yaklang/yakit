@@ -19,6 +19,8 @@ i18n.use(HttpBackend)
             "history",
             "webFuzzer",
             "aiAgent",
+            "screenRecorder",
+            "pluginHub",
             "notepad",
             "risk",
             "utils",

@@ -131,6 +131,37 @@
     "pleaseSelect": "Please select",
     "noDescription": "No description"
   },
+  "HistoryChat": {
+    "title": "History Chat",
+    "noChatsToClear": "No sessions to clear",
+    "allChatsCleared": "All sessions cleared",
+    "clearFailed": "Failed to clear sessions: {error}",
+    "noChatsBeforeDays": "No sessions from {days} days ago",
+    "clearedBeforeDays": "Cleared sessions from {days} days ago",
+    "oneDay": "One day ago",
+    "oneWeek": "One week ago",
+    "thirtyDays": "30 days ago",
+    "clearConfirm": "Are you sure you want to clear sessions from {days}? This cannot be undone",
+    "clearAll": "Clear all",
+    "clearAllConfirm": "Are you sure you want to clear all sessions? This cannot be undone",
+    "clearChats": "Clear sessions",
+    "delete": "Delete",
+    "newChat": "New session",
+    "searchPlaceholder": "Enter keywords to search"
+  },
+  "HistoryChatList": {
+    "justNow": "Just now",
+    "oneHour": "One hour ago",
+    "oneDay": "One day ago",
+    "oneWeek": "One week ago",
+    "thirtyDays": "30 days ago",
+    "updateTitleFailed": "Failed to update session title: {error}",
+    "chatNotFound": "Corresponding session not found",
+    "deleteFailed": "Failed to delete session: {error}",
+    "editTitle": "Edit session title",
+    "deleteConfirm": "Are you sure you want to delete this session? This cannot be recovered",
+    "loading": "Loading..."
+  },
   "AIModelTestResult": {
     "quickPreview": "quick preview",
     "modelTesting": "Model testing",

@@ -131,6 +131,37 @@
     "pleaseSelect": "请选择",
     "noDescription": "暂无描述"
   },
+  "HistoryChat": {
+    "title": "历史会话",
+    "noChatsToClear": "暂无可清除的会话",
+    "allChatsCleared": "已清空全部会话",
+    "clearFailed": "清除会话失败：{error}",
+    "noChatsBeforeDays": "暂无{days}天前的会话",
+    "clearedBeforeDays": "已清除{days}天前的会话",
+    "oneDay": "一天前",
+    "oneWeek": "一周前",
+    "thirtyDays": "30天前",
+    "clearConfirm": "确定要清除{days}的会话吗？此操作不可恢复",
+    "clearAll": "清空全部",
+    "clearAllConfirm": "确定要清除全部会话吗？此操作不可恢复",
+    "clearChats": "清除会话",
+    "delete": "删除",
+    "newChat": "新建会话",
+    "searchPlaceholder": "请输入关键词搜索"
+  },
+  "HistoryChatList": {
+    "justNow": "刚刚",
+    "oneHour": "一小时前",
+    "oneDay": "一天前",
+    "oneWeek": "一周前",
+    "thirtyDays": "30天前",
+    "updateTitleFailed": "修改对话标题失败：{error}",
+    "chatNotFound": "未找到对应的对话",
+    "deleteFailed": "删除会话失败：{error}",
+    "editTitle": "编辑对话标题",
+    "deleteConfirm": "是否确认删除该历史对话，删除后将无法恢复",
+    "loading": "加载中..."
+  },
   "AIModelTestResult": {
     "quickPreview": "快速预览",
     "modelTesting": "模型检测",
