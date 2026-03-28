@@ -138,6 +138,25 @@
     "download": "Download",
     "deletePluginConfirm": "Are you sure you want to delete the plugin?"
   },
+  "FuncTemplate": {
+    "localOnlyTitle": "This operation is local only",
+    "localOnlyActions": "Edit, add to menu, remove from menu, export",
+    "localOnlyContent": "These are all local operations. Clicking will automatically download the plugin and perform the corresponding action",
+    "ok": "OK",
+    "dontRemindAgain": "Don't remind me again",
+    "getMenuFailed": "Failed to get menu: {error}",
+    "removeMenuFailed": "Failed to remove menu: {error}",
+    "removeFromMenu": "Remove from {element}",
+    "noDataOrNotAdded": "No data or the plugin has not been added to the menu bar",
+    "maxTopMenus": "You can add at most 50 top-level menus",
+    "maxSubMenus": "You can add at most 50 submenus to a single top-level menu",
+    "addSuccess": "Added successfully",
+    "menuOptionName": "Menu option name (display name)",
+    "required": "This field is required",
+    "menuGroup": "Menu group",
+    "cancel": "Cancel",
+    "add": "Add"
+  },
   "PluginManageDetail": {
     "preview": "Preview",
     "attachment": "Attachment",

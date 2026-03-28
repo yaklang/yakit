@@ -138,6 +138,25 @@
     "download": "下载",
     "deletePluginConfirm": "是否要删除插件"
   },
+  "FuncTemplate": {
+    "localOnlyTitle": "该操作为本地功能",
+    "localOnlyActions": "编辑、添加到菜单栏、移除菜单栏、导出",
+    "localOnlyContent": "均为本地操作，点击后会自动下载插件并进行对应操作",
+    "ok": "好的",
+    "dontRemindAgain": "下次不再提醒",
+    "getMenuFailed": "获取菜单失败：{error}",
+    "removeMenuFailed": "移除菜单失败：{error}",
+    "removeFromMenu": "从 {element} 中移除",
+    "noDataOrNotAdded": "暂无数据或插件未被添加到菜单栏",
+    "maxTopMenus": "最多添加50个一级菜单",
+    "maxSubMenus": "同一个一级菜单最多添加50个二级菜单",
+    "addSuccess": "添加成功",
+    "menuOptionName": "菜单选项名(展示名称)",
+    "required": "该项为必填",
+    "menuGroup": "菜单分组",
+    "cancel": "取消",
+    "add": "添加"
+  },
   "PluginManageDetail": {
     "preview": "预览",
     "attachment": "附件",
