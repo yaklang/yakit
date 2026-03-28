@@ -27,6 +27,7 @@ import {cataloguePlugin} from "@/components/MilkdownEditor/utils/cataloguePlugin
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {defaultModifyNotepadPageInfo, defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {FuncFilterPopover} from "@/pages/plugins/funcTemplate"
 import {cloneDeep} from "lodash"
@@ -57,6 +58,7 @@ const highlightPulseClass = "highlight-pulse"
 
 const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props) => {
     const {pageId} = props
+    const {t} = useI18nNamespaces(["notepad"])
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById,
@@ -524,7 +526,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                             maxLength={50}
                         />
                         <div className={styles["notepad-heard-subTitle"]}>
-                            <span>最近修改时间:{formatTimestamp(note?.UpdateAt)}</span>
+                            <span>{t("NotepadLocalList.lastUpdateTime")}:{formatTimestamp(note?.UpdateAt)}</span>
                         </div>
                     </div>
                     <div className={styles["notepad-editor"]} ref={notepadEditorRef}>

@@ -26,6 +26,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {getMarkdown} from "@milkdown/kit/utils"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {cloneDeep} from "lodash"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {
     apiDeleteNotepadDetail,
     apiGetNotepadDetail,
@@ -52,6 +53,7 @@ const NotepadOnlineList = React.lazy(() => import("./NotepadOnlineList/NotepadOn
 
 const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((props) => {
     const {pageId} = props
+    const {t} = useI18nNamespaces(["notepad"])
 
     const userInfo = useStore((s) => s.userInfo)
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
@@ -535,7 +537,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         <span>{notepadDetail?.userName || "-"}</span>
                         <AuthorIcon />
                         <Divider type='vertical' style={{margin: "0 8px"}} />
-                        <span>最近修改时间:{formatTimestamp(notepadDetail?.updated_at)}</span>
+                        <span>{t("NotepadLocalList.lastUpdateTime")}:{formatTimestamp(notepadDetail?.updated_at)}</span>
                         <Divider type='vertical' style={{margin: "0 8px"}} />
                         {renderOnlineStatus}
                     </div>
