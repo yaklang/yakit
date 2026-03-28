@@ -3,6 +3,9 @@ import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import { addScopeShow } from "../global"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 /** 代码审计快捷键 */
 export enum AuditCodeShortcutKey {
@@ -25,31 +28,31 @@ type EventsType = Record<`${AuditCodeShortcutKey}`, ShortcutKeyEventInfo>
 
 const AuditCodeShortcutKeyEvents: EventsType = {
     "search*aduit": {
-        name: "呼出搜索（双击）",
+        name: t("ShortcutKey.openSearchDoubleClick"),
         keys: [YakitKeyMod.Shift]
     },
     "searchTab*aduit": {
-        name: "搜索栏切换",
+        name: t("ShortcutKey.switchSearchBar"),
         keys: [YakitKeyBoard.Tab]
     },
     "searchArrowUp*aduit": {
-        name: "搜索列表上切换",
+        name: t("ShortcutKey.searchListUp"),
         keys: [YakitKeyBoard.UpArrow]
     },
     "searchArrowDown*aduit": {
-        name: "搜索列表下切换",
+        name: t("ShortcutKey.searchListDown"),
         keys: [YakitKeyBoard.DownArrow]
     },
     "searchEscape*aduit": {
-        name: "关闭搜索",
+        name: t("ShortcutKey.closeSearch"),
         keys: [YakitKeyBoard.Escape]
     },
     "searchEnter*aduit": {
-        name: "搜索跳转",
+        name: t("ShortcutKey.searchJump"),
         keys: [YakitKeyBoard.Enter]
     },
     "submit*aduit": {
-        name: "开始审计",
+        name: t("ShortcutKey.startAudit"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.Enter]
     }
 }
@@ -87,5 +90,4 @@ export const resetAuditCodeShortcutKeyEvents = () => {
     currentKeyEvents = null
     setLocalValue(LocalStorageKey, JSON.stringify(AuditCodeShortcutKeyEvents))
 }
-
 
