@@ -68,5 +68,58 @@
   },
   "PluginHasParamsDrawer": {
     "parameter_Settings": "Parameter Settings{colon}"
+  },
+  "PluginEditor": {
+    "newPlugin": "New Plugin",
+    "helpDoc": "Help Documentation",
+    "copyToCloud": "Copy to Cloud",
+    "submitAndSave": "Submit and Save",
+    "syncToCloud": "Sync to Cloud",
+    "saveAndExit": "Save and Exit",
+    "save": "Save",
+    "loadingPluginDetail": "Loading plugin details...",
+    "oldDataMigrationTitle": "Old Data Migration Prompt",
+    "oldDataMigrationContent": "The parameter design has been upgraded. The database-stored parameters differ from the plugin source parameters. This may cause issues. Please click \"Copy Code\" to copy the parameters into the plugin source.",
+    "copyCode": "Copy Code",
+    "ignore": "Ignore",
+    "fetchOldDataFailed": "Failed to fetch old data migration info: ",
+    "fetchPluginDetailEmpty": "Plugin detail query error: request is empty",
+    "fetchPluginNameEmpty": "Plugin detail query error: plugin name is empty",
+    "copyToCloudDesc": "Copy the plugin to your private cloud plugins without author approval and save the modified content to the cloud.",
+    "pluginName": "Plugin Name",
+    "pleaseEnter": "Please enter...",
+    "enterCopyName": "Please enter the name of the plugin to copy",
+    "pluginNameMaxLength": "Plugin name can be at most 100 characters"
+  },
+  "EditorInfo": {
+    "basicInfo": "Basic Information",
+    "collapseBasicInfo": "Collapse Basic Information",
+    "templateExamples": "Template Examples",
+    "faq": "FAQ",
+    "iKnow": "Got it",
+    "scriptType": "Script Type",
+    "scriptTypeRequired": "Script type is required",
+    "pluginName": "Plugin Name",
+    "pluginNameRequired": "Plugin name is required",
+    "nameMaxLength": "Name can be at most 100 characters",
+    "pleaseEnter": "Please enter...",
+    "descriptionLabel": "Description:",
+    "descriptionRequired": "Plugin description is required",
+    "tags": "Tags",
+    "tagsRequired": "Tags are required",
+    "pluginConfig": "Plugin Configuration:",
+    "enablePluginSelectorUI": "Enable Plugin Linkage UI",
+    "invalidItem": "Invalid item",
+    "linkedPluginType": "Linked Plugin Type",
+    "linkedPluginTypeRequired": "Linked plugin type is required",
+    "switchScriptType": "Switch Script Type",
+    "switchScriptTypeContent": "Switching script type will clear the source code. Are you sure?"
+  },
+  "TempExampleHelp": {
+    "fileRead": "File Read (String Match)",
+    "codeExecution": "Code Execution (Match Processed Result)",
+    "binaryData": "Binary Data Request",
+    "noEchoByDelay": "No-echo Detection (Delay)",
+    "noEchoByDnslog": "No-echo Detection (DNSLOG)"
   }
 }

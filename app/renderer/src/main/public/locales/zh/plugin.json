@@ -68,5 +68,58 @@
   },
   "PluginHasParamsDrawer": {
     "parameter_Settings": "参数设置{colon}"
+  },
+  "PluginEditor": {
+    "newPlugin": "新建插件",
+    "helpDoc": "帮助文档",
+    "copyToCloud": "复制至云端",
+    "submitAndSave": "提交并保存",
+    "syncToCloud": "同步至云端",
+    "saveAndExit": "保存并退出",
+    "save": "保存",
+    "loadingPluginDetail": "获取插件详情中...",
+    "oldDataMigrationTitle": "旧数据迁移提示",
+    "oldDataMigrationContent": "由于参数设计升级，检测到数据库存储参数与插件源码里参数不同，使用会有问题，请点击“复制代码”将参数复制到插件源码中。",
+    "copyCode": "复制代码",
+    "ignore": "忽略",
+    "fetchOldDataFailed": "查询旧数据迁移失败: ",
+    "fetchPluginDetailEmpty": "获取插件详情异常，请求为空",
+    "fetchPluginNameEmpty": "获取插件详情异常，请求插件名为空",
+    "copyToCloudDesc": "复制插件并同步到自己的私密插件，无需作者同意，即可保存修改内容至云端",
+    "pluginName": "插件名称",
+    "pleaseEnter": "请输入...",
+    "enterCopyName": "请输入复制插件的名称",
+    "pluginNameMaxLength": "插件名最长100位"
+  },
+  "EditorInfo": {
+    "basicInfo": "基础信息",
+    "collapseBasicInfo": "收起基础信息",
+    "templateExamples": "模板案例",
+    "faq": "常见问题",
+    "iKnow": "我知道了",
+    "scriptType": "脚本类型",
+    "scriptTypeRequired": "脚本类型必填",
+    "pluginName": "插件名称",
+    "pluginNameRequired": "插件名称必填",
+    "nameMaxLength": "名称最长100位",
+    "pleaseEnter": "请输入...",
+    "descriptionLabel": "描述 :",
+    "descriptionRequired": "插件描述必填",
+    "tags": "Tags",
+    "tagsRequired": "Tags必填",
+    "pluginConfig": "插件配置 :",
+    "enablePluginSelectorUI": "启用插件联动 UI",
+    "invalidItem": "异常项",
+    "linkedPluginType": "联动插件类型",
+    "linkedPluginTypeRequired": "联动插件类型必填",
+    "switchScriptType": "切换脚本类型",
+    "switchScriptTypeContent": "切换脚本类型会清空源码内容，确定切换吗？"
+  },
+  "TempExampleHelp": {
+    "fileRead": "文件读取(普通特征字符串匹配)",
+    "codeExecution": "代码执行(匹配二次处理后的结果)",
+    "binaryData": "二进制数据发包",
+    "noEchoByDelay": "无回显检测(通过延时判断)",
+    "noEchoByDnslog": "无回显检测(通过DNSLOG判断)"
   }
 }
