@@ -28,7 +28,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp> = (props) => {
     const {responses, sendPayloadsType} = props
-    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
+    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi", "utils"])
     const sampleResponse = responses[0]
     const [editor, setEditor] = useGetState<editor.IStandaloneCodeEditor>()
     const [selected, setSelected] = useGetState<string>("")
@@ -70,7 +70,7 @@ export const WebFuzzerResponseExtractor: React.FC<WebFuzzerResponseExtractorProp
                 // 这里能获取到选择到的内容
                 setSelected(model.getValueInRange(selection))
             } catch (e) {
-                console.info("提取选择数据错误")
+                console.info(t("Extractor.selectionError"))
                 console.info(e)
             }
         }

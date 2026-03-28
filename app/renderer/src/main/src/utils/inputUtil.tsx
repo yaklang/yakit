@@ -34,6 +34,9 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 type TooltipPlacement =
     | "top"
@@ -284,10 +287,10 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
     return (
         <div>
             <SelectOne
-                label={props.label + "[Type]"}
+                label={props.label + t("InputUtil.typeSuffix")}
                 data={[
-                    {text: "RawString", value: "string"},
-                    {text: "KeyValue", value: "json"}
+                    {text: t("InputUtil.rawString"), value: "string"},
+                    {text: t("InputUtil.keyValue"), value: "json"}
                 ]}
                 value={mode}
                 setValue={(mode) => setMode(mode)}
@@ -309,7 +312,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                 <>
                     {items.map((item, index) => {
                         return (
-                            <Form.Item label={`参数[${index}]`}>
+                            <Form.Item label={t("InputUtil.parameterIndex", {index})}>
                                 <Input.Group>
                                     <Row gutter={10}>
                                         <Col span={6}>
@@ -332,7 +335,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                                                             style={{width: "100%"}}
                                                             allowClear={true}
                                                             autoClearSearchValue={true}
-                                                            placeholder={"参数使用 | 分割数组"}
+                                                            placeholder={t("InputUtil.splitArrayHint")}
                                                             dropdownMatchSelectWidth={200}
                                                             mode={"tags"}
                                                             value={items[index].value?.split("|") || []}
@@ -403,7 +406,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                                 setItems([...items, {key: "", value: undefined}])
                             }}
                         >
-                            添加 Key-Value Pair
+                            {t("InputUtil.addKeyValuePair")}
                         </Button>
                     </Item>
                 </>
@@ -704,15 +707,16 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
                             value={p.content}
                             textarea={true}
                             textareaRow={6}
-                            placeholder='请输入绝对路径'
+                            placeholder={t("InputUtil.enterAbsolutePath")}
                             isBubbing={true}
                             help={
                                 p.hint ? (
                                     p.hint
                                 ) : (
                                     <div>
-                                        可将文件拖入框内或<span style={{color: "var(--yakit-primary-5"}}>点击此处</span>
-                                        上传
+                                        {t("InputUtil.dragFilePrefix")}
+                                        <span style={{color: "var(--yakit-primary-5"}}>{t("InputUtil.clickHere")}</span>
+                                        {t("InputUtil.upload")}
                                     </div>
                                 )
                             }
@@ -723,7 +727,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
                             label={""}
                             value={p.filename}
                             setValue={(f) => p.setFileName && p.setFileName(f)}
-                            placeholder='请输入绝对路径'
+                            placeholder={t("InputUtil.enterAbsolutePath")}
                             isBubbing={true}
                             allowClear={false}
                             help={
@@ -731,8 +735,9 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
                                     p.hint
                                 ) : (
                                     <div>
-                                        可将文件拖入框内或<span style={{color: "var(--yakit-primary-5"}}>点击此处</span>
-                                        上传
+                                        {t("InputUtil.dragFilePrefix")}
+                                        <span style={{color: "var(--yakit-primary-5"}}>{t("InputUtil.clickHere")}</span>
+                                        {t("InputUtil.upload")}
                                     </div>
                                 )
                             }
@@ -859,7 +864,7 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
             {tags.map((tag, tagIndex) => {
                 return (
                     <Popover
-                        title={"Operations"}
+                        title={t("InputUtil.operations")}
                         visible={p.noOperations ? false : undefined}
                         content={[
                             <Button
@@ -875,7 +880,7 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
                                     }
                                 }}
                             >
-                                删除 Tag
+                                {t("InputUtil.deleteTag")}
                             </Button>
                         ]}
                     >

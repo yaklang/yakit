@@ -1,6 +1,8 @@
 import i18n from "@/i18n/i18n"
 import {yakitNotify} from "./notification"
 
+const t = i18n.getFixedT(null, "utils")
+
 const {ipcRenderer} = window.require("electron")
 
 interface SetClipboardTextExtraParams {
@@ -27,7 +29,7 @@ export const setClipboardText = (text?: string, extra?: SetClipboardTextExtraPar
             .invoke("set-clipboard-text", text)
             .then(() => {
                 if (!hiddenHint)
-                    yakitNotify("success", hintText || (i18n.language === "zh" ? "复制成功" : "Copied successfully"))
+                    yakitNotify("success", hintText || t("Clipboard.copySuccess"))
                 successCallback && successCallback()
             })
             .catch(() => {

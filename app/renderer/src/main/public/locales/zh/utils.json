@@ -67,6 +67,73 @@
       "setChromeStartPathSuccess": "设置 Chrome 启动路径成功",
       "confirm": "确定"
     },
+    "ConfigPcapPermission": {
+      "unavailable": "无法获取 PCAP 支持信息",
+      "fetchStatusFailed": "获取 Pcap 权限状态失败：{error}",
+      "fetchPlatformFailed": "获取 {name} 操作系统失败：{error}",
+      "promoteFailed": "提升 Pcap 用户权限失败：{error}",
+      "tooltip": "原理：MacOS 通过设置 /dev/bpf* 权限组，可参考 Wireshark ChmodBPF 相关配置，Linux 可通过 setcap 命令设置 pcap 权限，Windows 推荐直接以 UAC 提升管理员权限启动",
+      "windowsHint": "Windows 可用管理员权限启动 {name} 以获取对 Pcap 的使用权限",
+      "unixHint": "Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限",
+      "privilegedHint": "您可以正常试用 SYN 扫描等功能，无需修复",
+      "notPrivilegedHint": "当前引擎不具有网卡操作权限",
+      "ok": "知道了～",
+      "enablePcap": "开启 PCAP 权限",
+      "manualFix": "手动修复",
+      "modalTitle": "修复 Pcap 权限"
+    },
+    "ConfigEngineProxy": {
+      "saveSuccess": "设置引擎代理成功",
+      "currentProxy": "当前引擎代理为：",
+      "hint": "本配置将会对绝大部分 Yak 插件自动生效，如果在扫描模块中配置代理，一般来说，配置的代理将会自动覆盖这个配置。",
+      "proxyLabel": "代理",
+      "proxyHelp": "例如 http://127.0.0.1:7890 或 socks://127.0.0.1:7890 等配置均可",
+      "updateProxy": "更新引擎代理",
+      "modalTitle": "配置引擎扫描代理"
+    },
+    "ConfigSystemMcp": {
+      "title": "Yak Mcp",
+      "currentStatus": "当前状态：",
+      "enabled": "已启用",
+      "disabled": "未启用",
+      "startAddress": "启动地址：",
+      "startAddressHelp": "yak以SSE方式启动mcp，在需要使用mcp的地方填入启动地址即可",
+      "cancel": "取消",
+      "disable": "停用",
+      "enable": "启用"
+    },
+    "InputUtil": {
+      "typeSuffix": "[Type]",
+      "rawString": "RawString",
+      "keyValue": "KeyValue",
+      "parameterIndex": "参数[{index}]",
+      "splitArrayHint": "参数使用 | 分割数组",
+      "addKeyValuePair": "添加 Key-Value Pair",
+      "enterAbsolutePath": "请输入绝对路径",
+      "dragFilePrefix": "可将文件拖入框内或",
+      "clickHere": "点击此处",
+      "upload": "上传",
+      "deleteTag": "删除 Tag",
+      "operations": "Operations"
+    },
+    "SelectItem": {
+      "fetchListFailed": "获取字典列表失败！",
+      "fetchContentFailed": "获取字典内容失败：{error}"
+    },
+    "OpenWebsite": {
+      "openingNewWindow": "新窗口打开中...",
+      "downloadFinished": "下载完成",
+      "downloadFailed": "下载失败"
+    },
+    "Clipboard": {
+      "copySuccess": "复制成功"
+    },
+    "Exporter": {
+      "exportData": "导出数据"
+    },
+    "Extractor": {
+      "selectionError": "提取选择数据错误"
+    },
     "InvalidCacheAndUserData": {
       "title": "重置用户数据与缓存",
       "resetHint": "如果你的 {name} 出现异常，可使用此功能删除所有本地缓存和用户数据，重连重启。",

@@ -10,6 +10,9 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {SystemInfo} from "@/constants/hardware"
 import {localMcpDefalutUrl, mcpStreamHooks, remoteMcpDefalutUrl} from "@/components/layout/hooks/useMcp/useMcp"
 import styles from "./ConfigSystemProxy.module.scss"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 interface ConfigMcpModalProps {
     onClose: () => void
     mcp: mcpStreamHooks
@@ -54,7 +57,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         >
             <div className={styles["config-system-proxy"]}>
                 <div className={styles["config-system-proxy-heard"]}>
-                    <div className={styles["config-system-proxy-title"]}>Yak Mcp</div>
+                    <div className={styles["config-system-proxy-title"]}>{t("ConfigSystemMcp.title")}</div>
                     <OutlineXIcon className={styles["close-icon"]} onClick={onCloseModal} />
                 </div>
                 <div
@@ -62,11 +65,11 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                         [styles["config-system-proxy-status-danger"]]: !enableMcp
                     })}
                 >
-                    当前状态：
-                    <span>{enableMcp ? "已启用" : "未启用"}</span>
+                    {t("ConfigSystemMcp.currentStatus")}
+                    <span>{enableMcp ? t("ConfigSystemMcp.enabled") : t("ConfigSystemMcp.disabled")}</span>
                 </div>
                 <Form layout='vertical' style={{padding: "0 24px 24px"}}>
-                    <Form.Item label='启动地址：' help='yak以SSE方式启动mcp，在需要使用mcp的地方填入启动地址即可'>
+                    <Form.Item label={t("ConfigSystemMcp.startAddress")} help={t("ConfigSystemMcp.startAddressHelp")}>
                         {enableMcp ? (
                             <YakitTag
                                 enableCopy={true}
@@ -76,7 +79,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                             ></YakitTag>
                         ) : (
                             <YakitInput
-                                addonBefore='http://'
+                            addonBefore='http://'
                                 value={mcpStreamInfo.mcpUrl}
                                 onChange={(e) => {
                                     mcpStreamEvent.onSetMcpUrl(e.target.value)
@@ -87,7 +90,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                     </Form.Item>
                     <div className={styles["config-system-proxy-btns"]}>
                         <YakitButton type='outline2' size='large' onClick={onCloseModal}>
-                            取消
+                            {t("ConfigSystemMcp.cancel")}
                         </YakitButton>
                         {enableMcp ? (
                             <YakitButton
@@ -97,11 +100,11 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                                     mcpStreamEvent.onCancel()
                                 }}
                             >
-                                停用
+                                {t("ConfigSystemMcp.disable")}
                             </YakitButton>
                         ) : (
                             <YakitButton colors='primary' size='large' onClick={onSetMcp}>
-                                启用
+                                {t("ConfigSystemMcp.enable")}
                             </YakitButton>
                         )}
                     </div>
