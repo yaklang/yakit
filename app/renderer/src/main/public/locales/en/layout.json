@@ -89,6 +89,35 @@
   },
   "MainOperatorContent": {
     "save_fuzzer_history_success": "Fuzzer history saved successfully",
+    "switchTab": "Switch tab",
+    "SelectFirstMenuTabKeyFailed": "Failed to fetch SelectFirstMenuTabKey data: {error}",
+    "noWFHistoryData": "No WebFuzzer history data available",
+    "restoreHistoryFailed": "WebFuzzer history restore failed: {error}",
+    "TabMenu": {
+      "rename": "Rename",
+      "moveToGroup": "Move tab to group",
+      "batchNewGroup": "Batch New Group",
+      "removeFromGroup": "Remove from group",
+      "restoreTab": "Restore tab",
+      "closeCurrentTab": "Close current tab",
+      "closeOtherTabs": "Close other tabs"
+    },
+    "Modal": {
+      "importPlugin": "Import Plugin",
+      "restoreTab": "Restore Tab",
+      "rename": "Rename",
+      "createGroup": "Create Group"
+    },
+    "GroupMenu": {
+      "cancelGroup": "Ungroup",
+      "closeGroup": "Close group",
+      "closeOtherTabs": "Close other tabs",
+      "editGroup": "Edit group"
+    },
+    "CloseGroupContent": {
+      "closeGroupConfirm": "Close this group? Closing it will also close the pages inside.",
+      "dontAskAgain": "Don't ask again"
+    },
     "SubTabs": {
       "save_webfuzzer_history": "Save WebFuzzer history data"
     }

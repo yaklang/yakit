@@ -89,6 +89,35 @@
   },
   "MainOperatorContent": {
     "save_fuzzer_history_success": "保存fuzzer历史成功",
+    "switchTab": "切换标签页",
+    "SelectFirstMenuTabKeyFailed": "SelectFirstMenuTabKey获取数据失败: {error}",
+    "noWFHistoryData": "暂无WF历史数据",
+    "restoreHistoryFailed": "WF历史数据恢复失败: {error}",
+    "TabMenu": {
+      "rename": "重命名",
+      "moveToGroup": "将标签页移动到组",
+      "batchNewGroup": "批量新建组",
+      "removeFromGroup": "从组中移出",
+      "restoreTab": "恢复标签页",
+      "closeCurrentTab": "关闭当前标签页",
+      "closeOtherTabs": "关闭其他标签页"
+    },
+    "Modal": {
+      "importPlugin": "导入插件",
+      "restoreTab": "恢复标签页",
+      "rename": "重命名",
+      "createGroup": "创建新组"
+    },
+    "GroupMenu": {
+      "cancelGroup": "取消组合",
+      "closeGroup": "关闭组",
+      "closeOtherTabs": "关闭其他标签页",
+      "editGroup": "编辑组合"
+    },
+    "CloseGroupContent": {
+      "closeGroupConfirm": "是否关闭当前组,关闭后,组内的页面也会关闭",
+      "dontAskAgain": "不再提示"
+    },
     "SubTabs": {
       "save_webfuzzer_history": "保存WebFuzzer历史数据"
     }
