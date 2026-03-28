@@ -10,5 +10,39 @@
     "fileTooLargeWarning": "File Warning",
     "fileTooLargeContent": "File is too large to operate with YakRunner",
     "okButton": "Got it"
+  },
+  "AuditCode": {
+    "loadMore": "Load more...",
+    "loadMoreFailed": "Failed to load more data: {error}",
+    "debugTaskStarted": "Debug task started successfully, runtime ID: {rId}",
+    "compileDebugTaskStarted": "Compile debug task started successfully, runtime ID: {rId}",
+    "enterRule": "Please enter the rule",
+    "projectPath": "Project path",
+    "enterProjectPath": "Please enter the project path",
+    "cancel": "Cancel",
+    "save": "Save",
+    "selectDeleteMode": "Please select a delete mode",
+    "clearCompileHistoryOnly": "Clear compile history only",
+    "clearCompileHistoryAndProject": "Clear compile history and project info"
+  },
+  "RunnerFileTree": {
+    "all": "All",
+    "vulnFile": "Vulnerability Files",
+    "ruleSummary": "Rule Summary",
+    "globalFilterFn": "Global Filter Function",
+    "endReached": "Already reached the end~",
+    "codeScan": "Code Scan",
+    "compileProject": "Compile Project",
+    "recompile": "Recompile",
+    "viewAll": "View All",
+    "recentCompile": "Recent Compile",
+    "projectConfigMissing": "No matching project configuration was found. Due to project management updates, please recompile the project.",
+    "fileList": "File List",
+    "viewUnprocessed": "View Unprocessed",
+    "viewNewOnly": "New Only",
+    "locate": "Locate",
+    "search": "Search",
+    "refreshExplorer": "Refresh Explorer",
+    "openedEditors": "Opened Editors"
   }
 }

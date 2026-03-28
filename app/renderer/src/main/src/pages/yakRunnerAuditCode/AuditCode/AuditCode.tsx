@@ -130,9 +130,11 @@ import {checkProxyVersion, isValidUrlWithProtocol} from "@/utils/proxyConfigUtil
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {useProxy} from "@/hook/useProxy"
 import {JSONParseLog} from "@/utils/tool"
+import i18n from "@/i18n/i18n"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "yakRunner")
 
 export const isBugFun = (info: AuditNodeProps) => {
     try {
@@ -237,7 +239,7 @@ export const AuditTreeNode: React.FC<AuditTreeNodeProps> = memo((props) => {
         } else if (info.hasMore) {
             return (
                 <div className={styles["tree-more"]} onClick={() => loadTreeMore(info)}>
-                    加载更多...
+                    {t("AuditCode.loadMore")}
                 </div>
             )
         } else {
@@ -748,7 +750,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
                 }
             }
         } catch (error) {
-            failed(`加载更多数据错误: ${error}`)
+            failed(t("AuditCode.loadMoreFailed", {error: String(error)}))
         }
     })
 
@@ -894,7 +896,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
         },
         onError: () => {},
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", t("AuditCode.debugTaskStarted", {rId}))
             setRuntimeId(rId)
         }
     })
@@ -933,7 +935,7 @@ export const AuditCode: React.FC<AuditCodeProps> = (props) => {
     // 流式审计 PS:流式审计成功后，根据result_id走正常结构查询
     const onAuditStreamRuleSubmitFun = useMemoizedFn(async (textArea: string = "") => {
         if (!textArea) {
-            warn("请输入规则")
+            warn(t("AuditCode.enterRule"))
             return
         }
         logInfoRef.current = []
@@ -1665,7 +1667,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                 }}
                 className={styles["audit-modal-form"]}
             >
-                <Form.Item name='target' label='项目路径' rules={[{required: true, message: "请输入项目路径"}]}>
+                <Form.Item name='target' label={t("AuditCode.projectPath")} rules={[{required: true, message: t("AuditCode.enterProjectPath")}]}>
                     <YakitDragger
                         isShowPathNumber={false}
                         selectType='all'
@@ -1792,7 +1794,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
             </Form>
             <div className={styles["audit-form-footer"]}>
                 <YakitButton type='outline2' onClick={onCancel}>
-                    取消
+                            {t("AuditCode.cancel")}
                 </YakitButton>
                 <YakitButton onClick={onStartExecute} loading={isVerifyForm}>
                     {isVerifyForm ? "正在校验" : "添加项目"}
@@ -1830,7 +1832,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         },
         onError: () => {},
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", t("AuditCode.debugTaskStarted", {rId}))
             setRuntimeId(rId)
         }
     })
@@ -1886,7 +1888,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         },
         onError: () => {},
         setRuntimeId: (rId) => {
-            yakitNotify("info", `Compile调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", t("AuditCode.compileDebugTaskStarted", {rId}))
         }
     })
     // 通过插件（SSA 项目编译）执行
@@ -2134,7 +2136,7 @@ export const AfreshAuditModal: React.FC<AfreshAuditModalProps> = (props) => {
         },
         onError: () => {},
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", t("AuditCode.debugTaskStarted", {rId}))
             setRuntimeId(rId)
         }
     })
@@ -2393,10 +2395,10 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
                             }}
                             type='outline2'
                         >
-                            取消
+                            {t("AuditCode.cancel")}
                         </YakitButton>
                         <YakitButton size='large' type='primary' onClick={onSubmit}>
-                            保存
+                            {t("AuditCode.save")}
                         </YakitButton>
                     </div>
                 </>
@@ -2889,19 +2891,19 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             <YakitHint
                 visible={!!deleteParams}
                 title={deleteParams?.titile}
-                content={"请选择删除模式"}
+                content={t("AuditCode.selectDeleteMode")}
                 width={520}
                 footer={
                     <div className={styles["hint-right-btn"]}>
                         <YakitButton size='max' type='outline2' onClick={() => setDeleteParams(undefined)}>
-                            取消
+                            {t("AuditCode.cancel")}
                         </YakitButton>
                         <div className={styles["btn-group-wrapper"]}>
                             <YakitButton size='max' danger onClick={onDeleteHistoryOnly}>
-                                只清空编译历史
+                                {t("AuditCode.clearCompileHistoryOnly")}
                             </YakitButton>
                             <YakitButton size='max' danger onClick={onDeleteAll}>
-                                清空编译历史和项目信息
+                                {t("AuditCode.clearCompileHistoryAndProject")}
                             </YakitButton>
                         </div>
                     </div>

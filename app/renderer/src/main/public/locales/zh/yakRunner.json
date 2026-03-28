@@ -10,5 +10,39 @@
     "fileTooLargeWarning": "文件警告",
     "fileTooLargeContent": "文件过大，无法使用YakRunner进行操作",
     "okButton": "知道了"
+  },
+  "AuditCode": {
+    "loadMore": "加载更多...",
+    "loadMoreFailed": "加载更多数据错误：{error}",
+    "debugTaskStarted": "调试任务启动成功，运行时 ID: {rId}",
+    "compileDebugTaskStarted": "Compile调试任务启动成功，运行时 ID: {rId}",
+    "enterRule": "请输入规则",
+    "projectPath": "项目路径",
+    "enterProjectPath": "请输入项目路径",
+    "cancel": "取消",
+    "save": "保存",
+    "selectDeleteMode": "请选择删除模式",
+    "clearCompileHistoryOnly": "只清空编译历史",
+    "clearCompileHistoryAndProject": "清空编译历史和项目信息"
+  },
+  "RunnerFileTree": {
+    "all": "全部",
+    "vulnFile": "漏洞文件",
+    "ruleSummary": "规则汇总",
+    "globalFilterFn": "全局过滤函数",
+    "endReached": "已经到底啦~",
+    "codeScan": "代码扫描",
+    "compileProject": "编译项目",
+    "recompile": "重新编译",
+    "viewAll": "查看全部",
+    "recentCompile": "最近编译",
+    "projectConfigMissing": "未找到对应的项目配置，由于项目管理功能更新，请重新编译项目",
+    "fileList": "文件列表",
+    "viewUnprocessed": "查看未处置",
+    "viewNewOnly": "只看新增",
+    "locate": "定位",
+    "search": "搜索",
+    "refreshExplorer": "刷新资源管理器",
+    "openedEditors": "打开的编辑器"
   }
 }
