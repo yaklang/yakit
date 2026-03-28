@@ -967,23 +967,23 @@ interface UIOpSettingProp {
 }
 
 /** @name 菜单模式切换 目前只有Yakit 社区版有 */
-const ModeSwitch = () => {
+const ModeSwitch = (t: TFunction) => {
     if (isCommunityYakit()) {
         return {
             key: "modeSwitching",
-            label: "模式切换",
+            label: t("FuncDomain.modeSwitching"),
             children: [
                 {
                     key: YakitModeEnum.Classic,
-                    label: "经典模式"
+                    label: t("FuncDomain.classicMode")
                 },
                 {
                     key: YakitModeEnum.SecurityExpert,
-                    label: "安全专家模式"
+                    label: t("FuncDomain.securityExpertMode")
                 },
                 {
                     key: YakitModeEnum.Scan,
-                    label: "扫描模式"
+                    label: t("FuncDomain.scanMode")
                 }
             ]
         }
@@ -992,71 +992,71 @@ const ModeSwitch = () => {
     return null
 }
 
-const DBCacheManager = () => {
+const DBCacheManager = (t: TFunction) => {
     if (SystemInfo.mode === "local") {
         return {
             key: "db-cache-manager",
-            label: "数据库与缓存管理",
+            label: t("FuncDomain.databaseCacheManagement"),
             children: [
-                {key: "invalidCache", label: "删除缓存数据"},
-                {key: "reclaimDatabaseSpace", label: "回收数据库空间"}
+                {key: "invalidCache", label: t("FuncDomain.deleteCacheData")},
+                {key: "reclaimDatabaseSpace", label: t("FuncDomain.reclaimDatabaseSpace")}
             ]
         }
     }
     return {
         key: "db-cache-manager",
-        label: "数据库与缓存管理",
-        children: [{key: "invalidCache", label: "删除缓存数据"}]
+        label: t("FuncDomain.databaseCacheManagement"),
+        children: [{key: "invalidCache", label: t("FuncDomain.deleteCacheData")}]
     }
 }
 
-const GetUIOpSettingMenu = () => {
+const GetUIOpSettingMenu = (t: TFunction) => {
     // 便携版
     if (isEnpriTraceAgent()) {
         return [
             {
                 key: "pcapfix",
-                label: "网卡权限修复"
+                label: t("FuncDomain.pcapfix")
             },
             {
                 key: "store",
-                label: "配置插件源"
+                label: t("FuncDomain.configurePluginSource")
             },
-            DBCacheManager(),
+            DBCacheManager(t),
             {
                 key: "diagnose-network",
-                label: "网络诊断"
+                label: t("FuncDomain.networkDiagnostics")
             },
             {
                 key: "link",
-                label: "切换连接模式",
+                label: t("FuncDomain.switchConnectionMode"),
                 children: [
-                    {label: "本地", key: "local"},
-                    {label: "远程", key: "remote"}
+                    {label: t("FuncDomain.local"), key: "local"},
+                    {label: t("FuncDomain.remote"), key: "remote"}
                 ]
             },
             {
                 key: "i18nSwitching",
-                label: "语言切换",
+                label: t("FuncDomain.languageSwitching"),
                 children: [
                     {
                         key: "zh",
-                        label: "中文"
+                        label: t("FuncDomain.chinese")
                     },
                     {
                         key: "en",
-                        label: "英文"
+                        label: t("FuncDomain.english")
                     }
                 ]
             },
             {type: "divider"},
             {
                 key: "logs",
-                label: " 日志收集",
+                label: t("FuncDomain.logCollection"),
                 children: [
-                    {label: "渲染端日志", key: "renderLog"},
-                    {label: "引擎日志", key: "engineLog"},
-                    {label: "调试信息日志", key: "printLog"}
+                    {label: t("FuncDomain.renderLog"), key: "renderLog"},
+                    {label: t("FuncDomain.engineLog"), key: "engineLog"},
+                    {label: t("FuncDomain.debugLog"), key: "printLog"}
                 ]
             }
         ]
@@ -1066,24 +1066,24 @@ const GetUIOpSettingMenu = () => {
     return [
         {
             key: "pcapfix",
-            label: "网卡权限修复"
+            label: t("FuncDomain.pcapfix")
         },
         {
             key: "project",
-            label: "项目管理",
+            label: t("FuncDomain.projectManagement"),
             children: [
-                {label: "切换项目", key: "changeProject"},
-                {label: "加密导出", key: "encryptionProject"},
-                {label: "明文导出", key: "plaintextProject"}
+                {label: t("FuncDomain.switchProject"), key: "changeProject"},
+                {label: t("FuncDomain.encryptedExport"), key: "encryptionProject"},
+                {label: t("FuncDomain.plaintextExport"), key: "plaintextProject"}
             ]
         },
         {
             key: "explab",
-            label: "试验性功能",
+            label: t("FuncDomain.experimentalFeatures"),
             children: [
                 {
                     key: "bas-chaosmaker",
-                    label: "BAS实验室"
+                    label: t("FuncDomain.BASLab")
                 },
                 {
                     key: "debug-monaco-editor",
@@ -1095,103 +1095,103 @@ const GetUIOpSettingMenu = () => {
                 },
                 {
                     key: "debug-traffic-analize",
-                    label: "流量分析"
+                    label: t("FuncDomain.trafficAnalysis")
                 },
                 {
                     key: "run-node",
-                    label: "运行节点"
+                    label: t("FuncDomain.runNode")
                 },
                 {
                     key: "webshell-manager",
-                    label: "网站管理"
+                    label: t("FuncDomain.websiteManagement")
                 },
                 {key: "mcp", label: "Yak Mcp"},
                 {key: "ai-agent", label: "AI Agent"},
                 {key: "ssa-result-diff", label: "ssa-result-diff"},
-                {key: "ai-repository", label: "知识库"},
-                {key: "ssa-compile-history", label: "SSA项目编译历史"},
-                {key: "memory-base", label: "记忆库"}
+                {key: "ai-repository", label: t("FuncDomain.knowledgeBase")},
+                {key: "ssa-compile-history", label: t("FuncDomain.ssaCompileHistory")},
+                {key: "memory-base", label: t("FuncDomain.memoryBase")}
             ]
         },
-        ModeSwitch(),
+        ModeSwitch(t),
         {
             key: "themeSwitching",
-            label: "主题切换",
+            label: t("FuncDomain.themeSwitching"),
             children: [
                 {
                     key: "light",
-                    label: "亮色"
+                    label: t("FuncDomain.lightTheme")
                 },
                 {
                     key: "dark",
-                    label: "暗色"
+                    label: t("FuncDomain.darkTheme")
                 }
             ]
         },
         {
             key: "i18nSwitching",
-            label: "语言切换",
+            label: t("FuncDomain.languageSwitching"),
             children: [
                 {
                     key: "zh",
-                    label: "中文"
+                    label: t("FuncDomain.chinese")
                 },
                 {
                     key: "en",
-                    label: "英文"
+                    label: t("FuncDomain.english")
                 }
             ]
         },
         {type: "divider"},
-        DBCacheManager(),
+        DBCacheManager(t),
         {
             key: "store",
-            label: "配置插件源"
+            label: t("FuncDomain.configurePluginSource")
         },
         {
             key: "cve-database",
-            label: "CVE 数据库",
+            label: t("FuncDomain.cveDatabase"),
             children: [
-                {label: "全量更新", key: "cve-database-all-update"},
-                {label: "差量更新", key: "cve-database-differential-update"}
+                {label: t("FuncDomain.fullUpdate"), key: "cve-database-all-update"},
+                {label: t("FuncDomain.differentialUpdate"), key: "cve-database-differential-update"}
             ]
         },
         {
             key: "link",
-            label: "切换连接模式",
+            label: t("FuncDomain.switchConnectionMode"),
             children: [
-                {label: "本地", key: "local"},
-                {label: "远程", key: "remote"}
+                {label: t("FuncDomain.local"), key: "local"},
+                {label: t("FuncDomain.remote"), key: "remote"}
             ]
         },
         {type: "divider"},
         {
             key: "systemSet",
-            label: "系统设置",
+            label: t("FuncDomain.systemSettings"),
             children: [
-                {key: "reverse", label: "全局反连"},
-                {key: "agent", label: "系统代理"},
+                {key: "reverse", label: t("FuncDomain.globalReverse")},
+                {key: "agent", label: t("FuncDomain.systemProxy")},
                 // { key: "engineVar",label: "引擎环境变量" },
-                {key: "config-network", label: "全局配置"},
-                {key: "setShortcutKey", label: "快捷键设置"}
+                {key: "config-network", label: t("FuncDomain.globalConfig")},
+                {key: "setShortcutKey", label: t("FuncDomain.shortcutSettings")}
             ]
         },
         {
             key: "diagnose-network",
-            label: "网络诊断"
+            label: t("FuncDomain.networkDiagnostics")
         },
         {
             key: "refreshMenu",
-            label: "刷新菜单"
+            label: t("FuncDomain.refreshMenu")
         },
         {type: "divider"},
         {
             key: "logs",
-            label: " 日志收集",
+            label: t("FuncDomain.logCollection"),
             children: [
-                {label: "渲染端日志", key: "renderLog"},
-                {label: "引擎日志", key: "engineLog"},
-                {label: "调试信息日志", key: "printLog"}
+                {label: t("FuncDomain.renderLog"), key: "renderLog"},
+                {label: t("FuncDomain.engineLog"), key: "engineLog"},
+                {label: t("FuncDomain.debugLog"), key: "printLog"}
             ]
         }
     ].filter((item) => item)
@@ -1409,7 +1409,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             width={142}
             selectedKeys={[]}
             // triggerSubMenuAction={'click'}
-            data={GetUIOpSettingMenu() as YakitMenuItemProps[]}
+            data={GetUIOpSettingMenu(t) as YakitMenuItemProps[]}
             onClick={({key}) => menuSelect(key)}
         />
     )
@@ -2714,6 +2714,7 @@ const RiskType: {[key: string]: string} = {
 }
 const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     const {isEngineLink} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -2891,7 +2892,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
                     <div className={styles["risk-header"]}>
-                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.Unread || 0} 条）
+                        {t("FuncDomain.vulnerabilityRiskStatistics", {total: risks.Total || 0, unread: risks.Unread || 0})}
                     </div>
 
                     <div className={styles["risk-info"]}>
@@ -2966,6 +2967,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 })
 const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     const {isEngineLink} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -3132,7 +3134,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
                     <div className={styles["risk-header"]}>
-                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.Unread || 0} 条）
+                        {t("FuncDomain.vulnerabilityRiskStatistics", {total: risks.Total || 0, unread: risks.Unread || 0})}
                     </div>
 
                     <div className={styles["risk-info"]}>

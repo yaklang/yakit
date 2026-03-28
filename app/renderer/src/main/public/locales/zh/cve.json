@@ -1,0 +1,13 @@
+{
+  "CVEViewer": {
+    "advancedQuery": "高级查询",
+    "cveQueryConditions": "CVE 查询条件",
+    "reset": "重置",
+    "exploitPath": "利用路径",
+    "exploitDifficulty": "利用难度",
+    "vulnerabilityLevel": "漏洞级别"
+  },
+  "CVETable": {
+    "cveDatabaseManagement": "CVE 数据库管理"
+  }
+}

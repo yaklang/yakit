@@ -1,0 +1,13 @@
+{
+  "CVEViewer": {
+    "advancedQuery": "Advanced Query",
+    "cveQueryConditions": "CVE Query Conditions",
+    "reset": "Reset",
+    "exploitPath": "Exploit Path",
+    "exploitDifficulty": "Exploit Difficulty",
+    "vulnerabilityLevel": "Vulnerability Level"
+  },
+  "CVETable": {
+    "cveDatabaseManagement": "CVE Database Management"
+  }
+}
