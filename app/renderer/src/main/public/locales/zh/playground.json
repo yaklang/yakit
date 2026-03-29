@@ -289,5 +289,48 @@
     "linkLayerProtocol": "链路层协议",
     "networkLayerProtocol": "网络层协议",
     "transportLayerProtocol": "传输层协议"
+  },
+  "DemoPacketTable": {
+    "id": "ID",
+    "source": "来源",
+    "destination": "目标",
+    "protocol": "协议",
+    "length": "长度",
+    "info": "信息"
+  },
+  "DemoTCPReassembled": {
+    "id": "ID",
+    "source": "来源",
+    "destination": "目标",
+    "protocol": "协议",
+    "length": "长度"
+  },
+  "DemoTrafficSessionTable": {
+    "id": "ID",
+    "type": "类型",
+    "deviceType": "设备类型",
+    "source": "来源",
+    "destination": "目标",
+    "protocol": "协议"
+  },
+  "PacketListDemo": {
+    "packet": "数据包",
+    "tcpReassembled": "TCP数据帧",
+    "searchPlaceholder": "请输入...",
+    "realtime": "实时",
+    "clear": "清空"
+  },
+  "KnowledgeBaseManager": {
+    "title": "知识库管理",
+    "aiQa": "AI问答",
+    "qaTitle": "AI问答 - {name}",
+    "knowledgeBase": "知识库"
+  },
+  "RagManager": {
+    "title": "RAG 向量存储管理"
+  },
+  "RiskTableDemo": {
+    "id": "ID",
+    "name": "漏洞名称"
   }
 }

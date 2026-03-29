@@ -289,5 +289,48 @@
     "linkLayerProtocol": "Link layer protocol",
     "networkLayerProtocol": "Network layer protocol",
     "transportLayerProtocol": "Transport layer protocol"
+  },
+  "DemoPacketTable": {
+    "id": "ID",
+    "source": "Source",
+    "destination": "Destination",
+    "protocol": "Protocol",
+    "length": "Length",
+    "info": "Info"
+  },
+  "DemoTCPReassembled": {
+    "id": "ID",
+    "source": "Source",
+    "destination": "Destination",
+    "protocol": "Protocol",
+    "length": "Length"
+  },
+  "DemoTrafficSessionTable": {
+    "id": "ID",
+    "type": "Type",
+    "deviceType": "Device type",
+    "source": "Source",
+    "destination": "Destination",
+    "protocol": "Protocol"
+  },
+  "PacketListDemo": {
+    "packet": "Packet",
+    "tcpReassembled": "TCP reassembled frame",
+    "searchPlaceholder": "Please enter...",
+    "realtime": "Realtime",
+    "clear": "Clear"
+  },
+  "KnowledgeBaseManager": {
+    "title": "Knowledge base management",
+    "aiQa": "AI Q&A",
+    "qaTitle": "AI Q&A - {name}",
+    "knowledgeBase": "Knowledge base"
+  },
+  "RagManager": {
+    "title": "RAG vector store management"
+  },
+  "RiskTableDemo": {
+    "id": "ID",
+    "name": "Vulnerability name"
   }
 }

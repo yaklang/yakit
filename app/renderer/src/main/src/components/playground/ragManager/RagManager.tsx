@@ -5,8 +5,10 @@ import {RagCollectionList} from "./RagCollectionList"
 import {RagEntryTable} from "./RagEntryTable"
 import {RagManagerProps, VectorStoreCollection} from "./types"
 import styles from "./RagManager.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const RagManager: React.FC<RagManagerProps> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [selectedCollection, setSelectedCollection] = useState<VectorStoreCollection>()
     const [refreshKey, setRefreshKey] = useState(0)
 
@@ -21,7 +23,7 @@ export const RagManager: React.FC<RagManagerProps> = (props) => {
     return (
         <div className={styles["rag-manager"]}>
             <AutoCard
-                title="RAG 向量存储管理"
+                title={t("RagManager.title")}
                 bodyStyle={{padding: 0, overflow: "hidden"}}
                 style={{height: "100%"}}
             >

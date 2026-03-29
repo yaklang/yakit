@@ -9,10 +9,12 @@ import {KnowledgeBaseQA} from "./KnowledgeBaseQA"
 import {KnowledgeBase, KnowledgeBaseManagerProps} from "./types"
 import styles from "./KnowledgeBaseManager.module.scss"
 import {OutlineChatalt2Icon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<KnowledgeBase>()
     const [refreshKey, setRefreshKey] = useState(0)
     const [qaDrawerVisible, setQaDrawerVisible] = useState(false)
@@ -38,7 +40,7 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
     return (
         <div className={styles["knowledge-base-manager"]}>
             <AutoCard
-                title='知识库管理'
+                title={t("KnowledgeBaseManager.title")}
                 bodyStyle={{padding: 0, overflow: "hidden"}}
                 style={{height: "100%"}}
                 extra={
@@ -48,7 +50,7 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
                         icon={<OutlineChatalt2Icon />}
                         onClick={() => handleOpenQADrawer(true)}
                     >
-                        AI问答
+                        {t("KnowledgeBaseManager.aiQa")}
                     </YakitButton>
                 }
             >
@@ -73,7 +75,7 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
 
             {/* AI问答抽屉 */}
             <YakitDrawer
-                title={`AI问答 - ${selectedKnowledgeBase?.KnowledgeBaseName || "知识库"}`}
+                title={t("KnowledgeBaseManager.qaTitle", {name: selectedKnowledgeBase?.KnowledgeBaseName || t("KnowledgeBaseManager.knowledgeBase")})}
                 placement='right'
                 width={600}
                 visible={qaDrawerVisible}
