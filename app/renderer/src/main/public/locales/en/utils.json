@@ -102,6 +102,89 @@
       "disable": "Disable",
       "enable": "Enable"
     },
+    "useDownloadUrlToLocal": {
+      "downloadFailed": "Download failed: {error}",
+      "cancelDownloadFailed": "Failed to cancel download: {error}"
+    },
+    "useUploadOSSHooks": {
+      "uploadFailed": "Project upload failed: {error}",
+      "notepadFiledHashRequired": "When type is notepad, filedHash is required",
+      "cancelUploadFailed": "Failed to cancel upload: {error}"
+    },
+    "servicesFetch": {
+      "requestTimeout": "Request timed out, please try again",
+      "loginExpired": "401, login expired/not logged in, please log in again"
+    },
+    "apiUtilsHttp": {
+      "parameterError": "Parameter error",
+      "unknownError": "Unknown error",
+      "notepadFiledHashRequired": "When type is notepad, filedHash is required",
+      "uploadImgFailed": "Failed to upload image: {error}",
+      "uploadFileFailed": "Failed to upload file: {error}",
+      "deleteOSSFailed": "Failed to delete OSS resource: {error}"
+    },
+    "grpc": {
+      "fetchLatestYakitVersionFailed": "Failed to get latest software version: {error}",
+      "fetchIntranetYakitVersionFailed": "Failed to get latest intranet software version: {error}",
+      "fetchLatestYakVersionFailed": "Failed to get latest engine version: {error}",
+      "fetchLocalYakitVersionFailed": "Failed to get local software version: {error}",
+      "fetchLocalYakVersionFailed": "Failed to get local engine version: {error}",
+      "fetchYakInstallResultFailed": "Failed to get local engine install result: {error}",
+      "fetchBuildInYakVersionFailed": "Failed to get built-in engine version: {error}",
+      "fetchSpecifiedYakVersionHashFailed": "Failed to get latest software version: {error}",
+      "fetchLocalYakVersionHashFailed": "Failed to get local engine hash: {error}",
+      "fetchAvailablePortFailed": "Failed to get available port: {error}",
+      "determineAdaptedVersionEngineFailed": "Failed to determine adapted version of running engine: {error}"
+    },
+    "envfile": {
+      "setReleaseEditionSuccess": "Set {edition} release edition successfully"
+    },
+    "pageInfo": {
+      "parseFailed": "page-info parse data error: {error}",
+      "webFuzzerCacheFailed": "webFuzzer cache data failed: {error}"
+    },
+    "fuzzerSequence": {
+      "cacheFailed": "webFuzzer sequence cache data failed: {error}"
+    },
+    "DemoVirtualTable": {
+      "noData": "No data"
+    },
+    "DemoLayout": {
+      "singleSelect": "Single Select Dropdown",
+      "multiSelect": "Multi Select Dropdown",
+      "switch": "Switch",
+      "radioGroup": "Radio Group",
+      "radioButtonGroup": "Radio Button Group",
+      "checkbox": "Checkbox",
+      "input": "Input",
+      "textarea": "Textarea",
+      "autoComplete": "Auto Complete",
+      "integer": "Integer",
+      "float": "Float",
+      "inputFile": "Input File Field",
+      "textareaFile": "Textarea File Field",
+      "textareaFolder": "Textarea Folder Field",
+      "help": "Help text here",
+      "pleaseSelect": "Please select",
+      "placeholder": "Hint text",
+      "extra1": "Extra 1",
+      "extra2": "Extra 2",
+      "extra3": "Extra 3",
+      "extra4": "Extra 4",
+      "clearData": "Clear Data",
+      "startUpdate": "Start Update",
+      "stopUpdate": "Stop Update",
+      "name": "Name",
+      "time": "Time",
+      "content": "Content",
+      "action": "Action",
+      "details": "Details"
+    },
+    "useHoldGRPCStream": {
+      "httpTraffic": "HTTP traffic",
+      "vulnerabilitiesAndRisks": "Vulnerabilities and risks",
+      "log": "Log"
+    },
     "InputUtil": {
       "typeSuffix": "[Type]",
       "rawString": "RawString",

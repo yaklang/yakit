@@ -1,7 +1,7 @@
 import {yakitNotify} from "@/utils/notification"
 import {useEffect} from "react"
 import {UploadImgType, UploadFileType} from "./constants"
-import i18n from "@/i18n/i18n"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -27,7 +27,7 @@ export interface UploadOSSStartProps {
 // 大文件上传,目前文件上传和图片上传分开的
 export default function useUploadOSSHooks(props: useUploadOSSHooks) {
     const {taskToken, setUrl, onUploadData, onUploadSuccess, onUploadEnd, onUploadError} = props
-    const t = i18n.getFixedT(null, "utils")
+    const {t} = useI18nNamespaces(["utils"])
 
     useEffect(() => {
         let errorReason = ""

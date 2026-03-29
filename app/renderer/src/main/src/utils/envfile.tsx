@@ -4,6 +4,7 @@ import {RemoteGV} from "@/yakitGV"
 import {RemotePrivateDomainGV} from "@/enums/privateDomain"
 import {RemoteI18nGV} from "@/enums/i18n"
 import { Theme } from "@/hook/useTheme"
+import i18n from "@/i18n/i18n"
 
 export enum PRODUCT_RELEASE_EDITION {
     Yakit = 0,
@@ -166,9 +167,10 @@ export const fetchEnv = () => {
  * 在导入的时候，就马上设置，不用等到组件加载
  * */
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "utils")
 ipcRenderer.invoke("set-release-edition-raw", fetchEnv() || "").then(() => {
     if (isEnpriTraceAgent()) {
-        info(`设置 ${getReleaseEditionName()} 发行版成功`)
+        info(t("envfile.setReleaseEditionSuccess", {edition: getReleaseEditionName()}))
     }
 })
 

@@ -18,6 +18,7 @@ import {FilterLibRuleKind} from "@/pages/ruleManagement/RuleManagementType"
 import { JSONParseLog } from "@/utils/tool"
 import { configManagementTabType } from "."
 import {AIMentionCommandParams} from "@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
+import i18n from "@/i18n/i18n"
 
 /**
  * @description 页面暂存数据
@@ -44,6 +45,8 @@ export interface PageNodeItemProps {
     color?: string
     // pageChildrenList: PageNodeItemProps[]
 }
+
+const t = i18n.getFixedT(null, "utils")
 
 /** 页面保存的数据*/
 interface PageParamsInfoProps {
@@ -585,7 +588,7 @@ export const usePageInfo = createWithEqualityFn<PageInfoStoreProps>()(
                                 }
                             }
                         } catch (error) {
-                            yakitNotify("error", "page-info解析数据错误:" + error)
+    yakitNotify("error", t("pageInfo.parseFailed", {error: String(error)}))
                             return null
                         }
                     },
@@ -618,7 +621,7 @@ export const saveFuzzerCache = debounce(
             const cache = getFuzzerProcessedCacheData(pageList)
             setRemoteProjectValue(FuzzerRemoteGV.FuzzerCache, JSON.stringify(cache)).catch((error) => {})
         } catch (error) {
-            yakitNotify("error", "webFuzzer缓存数据失败:" + error)
+    yakitNotify("error", t("pageInfo.webFuzzerCacheFailed", {error: String(error)}))
         }
     },
     500,

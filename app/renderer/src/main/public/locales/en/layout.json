@@ -187,6 +187,13 @@
     "migrateDataDesc": "Due to the reconstruction of the IRify function, in order not to affect the use, you need to click OK to migrate the old data. Data migration will not cause any data loss.",
     "setPassword": "Set Password"
   },
+  "NewApp": {
+    "userClickEvent": "User Click Event",
+    "fetchFailed": "Failed to fetch: {error}",
+    "setPrivateDomainFailed": "Failed to set private domain: {error}",
+    "remoteControlClosing": "Remote control is closing...",
+    "loadingMain": "Loading Main"
+  },
   "FuncDomain": {
     "remoteInProgress": "Remote in progress",
     "signOut": "Sign Out",

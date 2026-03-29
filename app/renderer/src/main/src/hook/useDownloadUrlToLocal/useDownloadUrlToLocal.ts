@@ -2,7 +2,7 @@ import {safeFormatDownloadProcessState} from "@/components/layout/utils"
 import {yakitNotify} from "@/utils/notification"
 import {DownloadingState} from "@/yakitGVDefine"
 import {useEffect, useRef} from "react"
-import i18n from "@/i18n/i18n"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -28,7 +28,7 @@ export interface DownloadUrlToLocal {
 
 export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHooks) {
     const {path, taskToken, onUploadData, onUploadSuccess, onUploadEnd, onUploadError} = props
-    const t = i18n.getFixedT(null, "utils")
+    const {t} = useI18nNamespaces(["utils"])
 
     useEffect(() => {
         let isSuccess = true

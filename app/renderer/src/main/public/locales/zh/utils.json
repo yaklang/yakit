@@ -102,6 +102,89 @@
       "disable": "停用",
       "enable": "启用"
     },
+    "useDownloadUrlToLocal": {
+      "downloadFailed": "下载失败：{error}",
+      "cancelDownloadFailed": "取消下载失败：{error}"
+    },
+    "useUploadOSSHooks": {
+      "uploadFailed": "项目上传失败：{error}",
+      "notepadFiledHashRequired": "type为notepad时，filedHash必传",
+      "cancelUploadFailed": "取消上传失败：{error}"
+    },
+    "servicesFetch": {
+      "requestTimeout": "请求超时，请重试",
+      "loginExpired": "401,登录过期/未登录，请重新登录"
+    },
+    "apiUtilsHttp": {
+      "parameterError": "参数错误",
+      "unknownError": "未知错误",
+      "notepadFiledHashRequired": "type为notepad,filedHash必传",
+      "uploadImgFailed": "上传图片失败: {error}",
+      "uploadFileFailed": "上传文件失败: {error}",
+      "deleteOSSFailed": "删除OSS资源失败: {error}"
+    },
+    "grpc": {
+      "fetchLatestYakitVersionFailed": "获取最新软件版本失败: {error}",
+      "fetchIntranetYakitVersionFailed": "获取内网最新软件版本失败: {error}",
+      "fetchLatestYakVersionFailed": "获取最新引擎版本失败: {error}",
+      "fetchLocalYakitVersionFailed": "获取本地软件版本失败: {error}",
+      "fetchLocalYakVersionFailed": "获取本地引擎版本失败: {error}",
+      "fetchYakInstallResultFailed": "获取本地是否存在引擎结果失败: {error}",
+      "fetchBuildInYakVersionFailed": "获取内置引擎版本失败: {error}",
+      "fetchSpecifiedYakVersionHashFailed": "获取最新软件版本失败: {error}",
+      "fetchLocalYakVersionHashFailed": "获取本地引擎 hash 失败: {error}",
+      "fetchAvailablePortFailed": "获取可用端口失败: {error}",
+      "determineAdaptedVersionEngineFailed": "判断已运行引擎的适配版本失败: {error}"
+    },
+    "envfile": {
+      "setReleaseEditionSuccess": "设置 {edition} 发行版成功"
+    },
+    "pageInfo": {
+      "parseFailed": "page-info解析数据错误: {error}",
+      "webFuzzerCacheFailed": "webFuzzer缓存数据失败: {error}"
+    },
+    "fuzzerSequence": {
+      "cacheFailed": "webFuzzer序列化数据缓存数据失败: {error}"
+    },
+    "DemoVirtualTable": {
+      "noData": "暂无数据"
+    },
+    "DemoLayout": {
+      "singleSelect": "单选下拉框",
+      "multiSelect": "多选下拉框",
+      "switch": "开关",
+      "radioGroup": "单选组",
+      "radioButtonGroup": "单选按钮组",
+      "checkbox": "复选框",
+      "input": "输入框",
+      "textarea": "文本域",
+      "autoComplete": "提示输入框",
+      "integer": "整数框",
+      "float": "浮点数框",
+      "inputFile": "input文件框",
+      "textareaFile": "textarea文件框",
+      "textareaFolder": "textarea文件夹框",
+      "help": "这里是帮助信息",
+      "pleaseSelect": "请选择",
+      "placeholder": "提示信息",
+      "extra1": "真的加的1",
+      "extra2": "真的加的2",
+      "extra3": "真的加的3",
+      "extra4": "真的加的4",
+      "clearData": "清空数据",
+      "startUpdate": "开始更新",
+      "stopUpdate": "停止更新",
+      "name": "名字",
+      "time": "时间",
+      "content": "内容",
+      "action": "操作",
+      "details": "详情"
+    },
+    "useHoldGRPCStream": {
+      "httpTraffic": "HTTP 流量",
+      "vulnerabilitiesAndRisks": "漏洞与风险",
+      "log": "日志"
+    },
     "InputUtil": {
       "typeSuffix": "[Type]",
       "rawString": "RawString",

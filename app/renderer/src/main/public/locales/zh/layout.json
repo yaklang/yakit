@@ -187,6 +187,13 @@
     "migrateDataDesc": "由于IRify功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。",
     "setPassword": "修改密码"
   },
+  "NewApp": {
+    "userClickEvent": "用户点击事件",
+    "fetchFailed": "获取失败: {error}",
+    "setPrivateDomainFailed": "设置私有域失败: {error}",
+    "remoteControlClosing": "远程控制关闭中...",
+    "loadingMain": "加载主界面"
+  },
   "FuncDomain": {
     "remoteInProgress": "远程中",
     "signOut": "退出登录",
