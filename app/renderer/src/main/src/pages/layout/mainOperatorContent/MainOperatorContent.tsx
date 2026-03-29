@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef, useMemo, useImperativeHandle} from "react"
 import {Layout, Form, Tooltip} from "antd"
 import {ExclamationCircleOutlined} from "@ant-design/icons"
+import i18n from "@/i18n/i18n"
 import {
     MainOperatorContentProps,
     OnlyPageCache,
@@ -177,6 +178,13 @@ import {JSONParseLog} from "@/utils/tool"
 import {SoftMode, useSoftMode, YakitModeEnum} from "@/store/softMode"
 import {RemoteSoftModeGV} from "@/enums/softMode"
 import {debugToPrintLogs} from "@/utils/logCollection"
+
+const getRoutePageLabel = (route: YakitRoute, pluginName = "") => {
+    if (route === YakitRoute.Plugin_OP) return pluginName
+    const pageInfo = YakitRouteToPageInfo[route]
+    if (!pageInfo) return ""
+    return pageInfo.labelUi ? i18n.t(pageInfo.labelUi) : pageInfo.label
+}
 
 const BatchAddNewGroup = React.lazy(() => import("./BatchAddNewGroup"))
 const BatchEditGroup = React.lazy(() => import("./BatchEditGroup/BatchEditGroup"))
@@ -445,7 +453,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
             {
                 routeKey: routeConvertKey(YakitRoute.NewHome, ""),
                 verbose: "首页",
-                menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                menuName: getRoutePageLabel(YakitRoute.NewHome),
                 route: YakitRoute.NewHome,
                 singleNode: true,
                 multipleNode: []
@@ -458,7 +466,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
             {
                 routeKey: routeConvertKey(YakitRoute.AI_Agent, ""),
                 verbose: "AIAgent",
-                menuName: YakitRouteToPageInfo[YakitRoute.AI_Agent].label,
+                menuName: getRoutePageLabel(YakitRoute.AI_Agent),
                 route: YakitRoute.AI_Agent,
                 singleNode: true,
                 multipleNode: []
@@ -466,7 +474,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
             {
                 routeKey: routeConvertKey(YakitRoute.AI_REPOSITORY, ""),
                 verbose: "知识库",
-                menuName: YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY].label,
+                menuName: getRoutePageLabel(YakitRoute.AI_REPOSITORY),
                 route: YakitRoute.AI_REPOSITORY,
                 singleNode: true,
                 multipleNode: []
@@ -483,7 +491,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                 {
                     routeKey: routeConvertKey(YakitRoute.NewHome, ""),
                     verbose: "首页",
-                    menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                    menuName: getRoutePageLabel(YakitRoute.NewHome),
                     route: YakitRoute.NewHome,
                     singleNode: true,
                     multipleNode: []
@@ -491,7 +499,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                 {
                     routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
                     verbose: "History",
-                    menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                    menuName: getRoutePageLabel(YakitRoute.DB_HTTPHistory),
                     route: YakitRoute.DB_HTTPHistory,
                     singleNode: true,
                     multipleNode: []
@@ -504,7 +512,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     {
                         routeKey: routeConvertKey(YakitRoute.NewHome, ""),
                         verbose: "首页",
-                        menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                        menuName: getRoutePageLabel(YakitRoute.NewHome),
                         route: YakitRoute.NewHome,
                         singleNode: true,
                         multipleNode: []
@@ -512,7 +520,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     {
                         routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
                         verbose: "History",
-                        menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                        menuName: getRoutePageLabel(YakitRoute.DB_HTTPHistory),
                         route: YakitRoute.DB_HTTPHistory,
                         singleNode: true,
                         multipleNode: []
@@ -524,7 +532,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     {
                         routeKey: routeConvertKey(YakitRoute.MITMHacker, ""),
                         verbose: "MITM 交互式劫持",
-                        menuName: YakitRouteToPageInfo[YakitRoute.MITMHacker].label,
+                        menuName: getRoutePageLabel(YakitRoute.MITMHacker),
                         route: YakitRoute.MITMHacker,
                         singleNode: true,
                         multipleNode: []
@@ -532,7 +540,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     {
                         routeKey: routeConvertKey(YakitRoute.HTTPFuzzer, ""),
                         verbose: "Web Fuzzer",
-                        menuName: YakitRouteToPageInfo[YakitRoute.HTTPFuzzer].label,
+                        menuName: getRoutePageLabel(YakitRoute.HTTPFuzzer),
                         route: YakitRoute.HTTPFuzzer,
                         singleNode: false,
                         multipleLength: 0,
@@ -541,7 +549,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     {
                         routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
                         verbose: "History",
-                        menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                        menuName: getRoutePageLabel(YakitRoute.DB_HTTPHistory),
                         route: YakitRoute.DB_HTTPHistory,
                         singleNode: true,
                         multipleNode: []
@@ -553,7 +561,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     {
                         routeKey: routeConvertKey(YakitRoute.NewHome, ""),
                         verbose: "首页",
-                        menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+                        menuName: getRoutePageLabel(YakitRoute.NewHome),
                         route: YakitRoute.NewHome,
                         singleNode: true,
                         multipleNode: []
@@ -561,7 +569,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     {
                         routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
                         verbose: "History",
-                        menuName: YakitRouteToPageInfo[YakitRoute.DB_HTTPHistory].label,
+                        menuName: getRoutePageLabel(YakitRoute.DB_HTTPHistory),
                         route: YakitRoute.DB_HTTPHistory,
                         singleNode: true,
                         multipleNode: []
@@ -970,7 +978,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     routeKey: YakitRoute.Rule_Management,
                     pageGroupId: "0",
                     pageId: YakitRoute.Rule_Management,
-                    pageName: YakitRouteToPageInfo[YakitRoute.Rule_Management]?.label || "",
+                    pageName: getRoutePageLabel(YakitRoute.Rule_Management),
                     pageParamsInfo: {
                         ruleManagementPageInfo: data
                     },
@@ -1019,7 +1027,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     routeKey: YakitRoute.YakRunner_Audit_Code,
                     pageGroupId: "0",
                     pageId: YakitRoute.YakRunner_Audit_Code,
-                    pageName: YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code]?.label || "",
+                    pageName: getRoutePageLabel(YakitRoute.YakRunner_Audit_Code),
                     pageParamsInfo: {
                         auditCodePageInfo: data
                     },
@@ -1057,7 +1065,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     routeKey: YakitRoute.YakRunner_Audit_Hole,
                     pageGroupId: "0",
                     pageId: YakitRoute.YakRunner_Audit_Hole,
-                    pageName: YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Hole]?.label || "",
+                    pageName: getRoutePageLabel(YakitRoute.YakRunner_Audit_Hole),
                     pageParamsInfo: {
                         auditHoleInfo: data
                     },
@@ -1089,7 +1097,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     routeKey: YakitRoute.HTTPHacker,
                     pageGroupId: "0",
                     pageId: YakitRoute.HTTPHacker,
-                    pageName: YakitRouteToPageInfo[YakitRoute.HTTPHacker]?.label || "",
+                    pageName: getRoutePageLabel(YakitRoute.HTTPHacker),
                     pageParamsInfo: {
                         hTTPHackerPageInfo: data
                     },
@@ -1122,7 +1130,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     routeKey: YakitRoute.MITMHacker,
                     pageGroupId: "0",
                     pageId: YakitRoute.MITMHacker,
-                    pageName: YakitRouteToPageInfo[YakitRoute.MITMHacker]?.label || "",
+                    pageName: getRoutePageLabel(YakitRoute.MITMHacker),
                     pageParamsInfo: {
                         mitmHackerPageInfo: data
                     },
@@ -1165,7 +1173,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     routeKey: YakitRoute.DB_Risk,
                     pageGroupId: "0",
                     pageId: YakitRoute.DB_Risk,
-                    pageName: YakitRouteToPageInfo[YakitRoute.DB_Risk]?.label || "",
+                    pageName: getRoutePageLabel(YakitRoute.DB_Risk),
                     pageParamsInfo: {
                         riskPageInfo: data
                     },
@@ -1297,7 +1305,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     routeKey: YakitRoute.Plugin_Hub,
                     pageGroupId: "0",
                     pageId: YakitRoute.Plugin_Hub,
-                    pageName: YakitRouteToPageInfo[YakitRoute.Plugin_Hub]?.label || "",
+                    pageName: getRoutePageLabel(YakitRoute.Plugin_Hub),
                     pageParamsInfo: {
                         pluginHubPageInfo: data
                     },
@@ -1764,7 +1772,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     menuName:
                         data.route === YakitRoute.Plugin_OP
                             ? data.pluginName || ""
-                            : YakitRouteToPageInfo[data.route]?.label || "",
+                            : getRoutePageLabel(data.route),
                     pluginId: data.pluginId,
                     pluginName: data.pluginName
                 }
@@ -1804,7 +1812,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
             let selectSubItem = openFlag ? true : nodeParams?.selectSubItem
             // 菜单在代码内的名字
-            const menuName = route === YakitRoute.Plugin_OP ? pluginName : YakitRouteToPageInfo[route]?.label || ""
+            const menuName = getRoutePageLabel(route, pluginName)
             if (!menuName) return
 
             const filterPage = pageCache.filter((item) => item.route === route && item.menuName === menuName)
@@ -2566,7 +2574,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             }
 
             // 菜单在代码内的名字
-            const menuName = YakitRouteToPageInfo[YakitRoute.HTTPFuzzer]?.label || ""
+            const menuName = getRoutePageLabel(YakitRoute.HTTPFuzzer)
             const key = routeConvertKey(YakitRoute.HTTPFuzzer, "")
             const tabName = routeKeyToLabel.get(key) || menuName
             let pageNodeInfo: PageProps = {
