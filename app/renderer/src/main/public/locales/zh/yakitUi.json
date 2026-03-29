@@ -181,6 +181,10 @@
         "end_of_list": "已经到底啦～",
         "searchEmpty": "搜索结果“空”"
     },
+    "YakitXterm": {
+        "noCopiedContent": "暂无复制内容",
+        "editNotAllowed": "不允许编辑"
+    },
     "YakitDatePicker": {
         "oneMinute": "1分钟",
         "oneHour": "1小时",
@@ -207,6 +211,17 @@
         "closePrompt": "关闭提示",
         "closeContent": "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
         "doNotRemindAgain": "不再提醒"
+    },
+    "YakitModalConfirm": {
+        "unknownError": "未知错误",
+        "modalCrashRetry": "弹框内逻辑性崩溃，请关闭重试！",
+        "debugInfo": "调试信息"
+    },
+    "YakitUploadModal": {
+        "progress": "进度",
+        "remainingTime": "剩余时间 :",
+        "elapsedTime": "耗时 :",
+        "downloadSpeed": "下载速度 :"
     },
     "YakitTag": {
         "critical": "严重",

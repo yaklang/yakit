@@ -470,6 +470,25 @@
     "slogan17": "Don't let boredom take over your time, come explore a new world! — Chelth",
     "slogan18": "<script>alert('Hello {edition}!')</script> — Hongludianxue"
   },
+  "YakitWindow": {
+    "dockPosition": "Dock position",
+    "floatWindow": "Float window",
+    "dockBottom": "Dock bottom",
+    "dockLeft": "Dock left",
+    "dockRight": "Dock right",
+    "ok": "OK",
+    "cancel": "Cancel"
+  },
+  "WinUIOp": {
+    "closeNodesTitle": "Confirm closing nodes?",
+    "closeNodesContent": "Closing {edition} will close all enabled nodes by default",
+    "closeEditionTitle": "Close {edition}",
+    "closeTempProjectContent": "Closing {edition} will automatically exit the temporary project. No temporary project data will be saved. You can export data in Settings > Project Management before exiting.",
+    "exitTempProject": "Exit temporary project",
+    "noPrompt": "Don't remind me again",
+    "exitTempProjectContent": "After confirming, all temporary project data will not be saved, including traffic, port, domain, and vulnerability data.",
+    "exportBeforeExit": "You can export data in Settings > Project Management before exiting"
+  },
   "UIOpSetting": {
     "remoteModeCannotModify": "Cannot modify in remote control",
     "configPrivateDomain": "Configure Private Domain",

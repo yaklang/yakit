@@ -26,8 +26,10 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>) => {
+    const {t} = useI18nNamespaces(["yakitUi"])
     const {
         className,
         columns,
@@ -250,7 +252,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                                     <LoadingOutlined />
                                 </div>
                             )}
-                            {!loading && !hasMore && <div className={styles["no-more-text"]}>暂无更多数据</div>}
+                            {!loading && !hasMore && <div className={styles["no-more-text"]}>{t("YakitEmpty.noMoreData")}</div>}
                         </div>
                     </div>
                 </div>
@@ -271,6 +273,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
  */
 export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = React.memo((props) => {
     const {children, option = [], placement, filterOption, onSetValue} = props
+    const {t} = useI18nNamespaces(["yakitUi"])
     const emptyImageTarget = useEmptyImage("search")
     const [selectKeys, setSelectKeys] = useControllableValue<string[]>(props, {
         defaultValue: []
@@ -344,7 +347,7 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
                 <div className={styles["filter-popover-content"]}>
                     <div className={styles["search-wrapper"]}>
                         <YakitInput
-                            placeholder='请输入关键词搜索'
+                            placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                             prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
@@ -354,7 +357,7 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
                         <YakitEmpty
                             image={emptyImageTarget}
                             imageStyle={{margin: "24px auto 12px", width: 160}}
-                            title='搜索结果“空”'
+                            title={t("YakitEmpty.searchEmpty")}
                         />
                     )}
                     {option.length === 0 && <YakitEmpty imageStyle={{margin: "24px auto 12px", width: 160}} />}
@@ -391,10 +394,10 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
                     </div>
                     <div className={styles["option-list-footer"]}>
                         <YakitButton type='text' onClick={onClear}>
-                            清空
+                            {t("YakitButton.clear")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={onSave}>
-                            确定
+                            {t("YakitButton.confirm")}
                         </YakitButton>
                     </div>
                 </div>

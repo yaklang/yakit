@@ -9,7 +9,10 @@ import {ExclamationCircleOutlined} from "@ant-design/icons"
 import {OutlineXIcon} from "@/assets/icon/outline"
 import {createRoot} from "react-dom/client"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 import {useUpdateEffect} from "ahooks"
+
+const fixedT = i18n.getFixedT(null, "yakitUi")
 
 interface YakitBaseModalProp extends Omit<YakitModalProp, "okType">, React.ComponentProps<any> {
     onVisibleSetter?: (setter: (i: boolean) => any) => any
@@ -36,6 +39,7 @@ interface YakitBaseModalProps extends YakitModalProp, React.ComponentProps<any> 
 }
 
 export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
+    const t = i18n.getFixedT(null, "yakitUi")
     const div = document.createElement("div")
     document.body.appendChild(div)
     let setter: (r: boolean) => any = () => {}
@@ -68,11 +72,11 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
                                 if (!error) {
-                                    return <div>未知错误</div>
+                                    return <div>{t("YakitModalConfirm.unknownError")}</div>
                                 }
                                 return (
                                     <div>
-                                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                                        <p>{t("YakitModalConfirm.modalCrashRetry")}</p>
                                         <pre>{error?.message}</pre>
                                     </div>
                                 )
@@ -200,7 +204,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
 
 export const debugYakitModal = (y: any) => {
     const m = showYakitModal({
-        title: "调试信息",
+        title: fixedT("YakitModalConfirm.debugInfo"),
         width: "50%",
         content: (
             <div style={{marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20}}>{JSON.stringify(y)}</div>
@@ -213,7 +217,7 @@ export const debugYakitModal = (y: any) => {
 
 export const debugYakitModalAny = (y: any) => {
     const m = showYakitModal({
-        title: "调试信息",
+        title: fixedT("YakitModalConfirm.debugInfo"),
         width: "50%",
         content: <div style={{marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20}}>{y}</div>,
         onOk: () => {

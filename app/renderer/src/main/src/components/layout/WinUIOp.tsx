@@ -6,6 +6,7 @@ import {useRunNodeStore} from "@/store/runNode"
 import {YakitCheckbox} from "../yakitUI/YakitCheckbox/YakitCheckbox"
 import {yakitFailed} from "@/utils/notification"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./uiOperate.module.scss"
 import { getReleaseEditionName } from "@/utils/envfile"
@@ -18,6 +19,7 @@ export interface WinUIOpProp {
 }
 
 export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["layout"])
     const [isMax, setIsMax] = useState<boolean>(false)
 
     const operate = useMemoizedFn((type: "close" | "min" | "max") => {
@@ -124,8 +126,8 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
                 {/* 关闭运行节点确认弹框 */}
                 <YakitHint
                     visible={closeRunNodeItemVerifyVisible}
-                    title='是否确认关闭节点'
-                    content={`关闭${getReleaseEditionName()}会默认关掉所有启用的节点`}
+                    title={t("WinUIOp.closeNodesTitle")}
+                    content={t("WinUIOp.closeNodesContent", {edition: getReleaseEditionName()})}
                     onOk={async () => {
                         await handleKillAllRunNode()
                         setCloseRunNodeItemVerifyVisible(false)
@@ -139,8 +141,8 @@ export const WinUIOp: React.FC<WinUIOpProp> = React.memo((props) => {
                 {/* 退出临时项目确认弹框 */}
                 {closeTemporaryProjectVisible && (
                     <TemporaryProjectPop
-                        title={`关闭${getReleaseEditionName()}`}
-                        content={`关闭${getReleaseEditionName()}会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据`}
+                        title={t("WinUIOp.closeEditionTitle", {edition: getReleaseEditionName()})}
+                        content={t("WinUIOp.closeTempProjectContent", {edition: getReleaseEditionName()})}
                         onOk={async () => {
                             setCloseTemporaryProjectVisible(false)
                             operate("close")
@@ -163,6 +165,7 @@ interface TemporaryProjectPopProp {
 }
 
 export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = (props) => {
+    const {t} = useI18nNamespaces(["layout"])
     const [temporaryProjectNoPrompt, setTemporaryProjectNoPrompt] = useState<boolean>(false)
 
     const {setTemporaryProjectNoPromptFlag} = useTemporaryProjectStore()
@@ -175,13 +178,13 @@ export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = (props) =>
     return (
         <YakitHint
             visible={true}
-            title={props.title || "退出临时项目"}
+            title={props.title || t("WinUIOp.exitTempProject")}
             footerExtra={
                 <YakitCheckbox
                     checked={temporaryProjectNoPrompt}
                     onChange={(e) => setTemporaryProjectNoPrompt(e.target.checked)}
                 >
-                    下次不再提醒
+                    {t("WinUIOp.noPrompt")}
                 </YakitCheckbox>
             }
             content={
@@ -189,10 +192,8 @@ export const TemporaryProjectPop: React.FC<TemporaryProjectPopProp> = (props) =>
                     props.content
                 ) : (
                     <>
-                        <div>
-                            确认退出后，临时项目所有数据都不会保存，包括流量数据、端口数据、域名数据和漏洞数据等。
-                        </div>
-                        <div>退出前可在设置-项目管理中导出数据</div>
+                        <div>{t("WinUIOp.exitTempProjectContent")}</div>
+                        <div>{t("WinUIOp.exportBeforeExit")}</div>
                     </>
                 )
             }

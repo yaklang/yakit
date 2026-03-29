@@ -470,6 +470,25 @@
     "slogan17": "别让无聊占据你的时间，来探索新世界吧！——Chelth",
     "slogan18": "<script>alert('Hello {edition}!')</script> ——红炉点雪"
   },
+  "YakitWindow": {
+    "dockPosition": "停靠方位",
+    "floatWindow": "浮窗",
+    "dockBottom": "向下",
+    "dockLeft": "向左",
+    "dockRight": "向右",
+    "ok": "确定",
+    "cancel": "取消"
+  },
+  "WinUIOp": {
+    "closeNodesTitle": "是否确认关闭节点",
+    "closeNodesContent": "关闭{edition}会默认关掉所有启用的节点",
+    "closeEditionTitle": "关闭{edition}",
+    "closeTempProjectContent": "关闭{edition}会自动退出临时项目，临时项目所有数据都不会保存。退出前可在设置-项目管理中导出数据",
+    "exitTempProject": "退出临时项目",
+    "noPrompt": "下次不再提醒",
+    "exitTempProjectContent": "确认退出后，临时项目所有数据都不会保存，包括流量数据、端口数据、域名数据和漏洞数据等。",
+    "exportBeforeExit": "退出前可在设置-项目管理中导出数据"
+  },
   "UIOpSetting": {
     "remoteModeCannotModify": "远程控制中，暂无法修改",
     "configPrivateDomain": "配置私有域",

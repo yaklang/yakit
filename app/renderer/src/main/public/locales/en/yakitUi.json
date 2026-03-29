@@ -181,6 +181,10 @@
         "end_of_list": "You've reached the end~",
         "searchEmpty": "Search result is empty"
     },
+    "YakitXterm": {
+        "noCopiedContent": "No content to copy",
+        "editNotAllowed": "Editing is not allowed"
+    },
     "YakitDatePicker": {
         "oneMinute": "1 Minute",
         "oneHour": "1 Hour",
@@ -207,6 +211,17 @@
         "closePrompt": "Close Prompt",
         "closeContent": "Closing the top-level menu will close all sub-menus under it?",
         "doNotRemindAgain": "Do not remind again"
+    },
+    "YakitModalConfirm": {
+        "unknownError": "Unknown error",
+        "modalCrashRetry": "The modal logic crashed. Please close and try again!",
+        "debugInfo": "Debug info"
+    },
+    "YakitUploadModal": {
+        "progress": "Progress",
+        "remainingTime": "Remaining time:",
+        "elapsedTime": "Elapsed time:",
+        "downloadSpeed": "Download speed:"
     },
     "YakitTag": {
         "critical": "critical",

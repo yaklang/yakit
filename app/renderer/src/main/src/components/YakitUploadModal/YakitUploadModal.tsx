@@ -2,6 +2,7 @@ import React, {memo} from "react"
 import {Progress} from "antd"
 import styles from "./YakitUploadModal.module.scss"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface SaveProgressStream {
@@ -25,6 +26,7 @@ export interface ImportAndExportStatusInfo {
 }
 
 export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = memo((props) => {
+    const {t} = useI18nNamespaces(["yakitUi"])
     const {title, streamData, logListInfo, showDownloadDetail} = props
 
     return (
@@ -45,7 +47,9 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
                             percent={Math.floor((streamData.Progress || 0) * 100)}
                             showInfo={false}
                         />
-                        <div className={styles["progress-title"]}>进度 {Math.round(streamData.Progress * 100)}%</div>
+                        <div className={styles["progress-title"]}>
+                            {t("YakitUploadModal.progress")} {Math.round(streamData.Progress * 100)}%
+                        </div>
                     </div>
                     {showDownloadDetail && (
                         <div className={styles["download-info-wrapper"]}>
@@ -53,7 +57,7 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
                                 {streamData.RestDurationVerbose && (
                                     <>
                                         <div>
-                                            剩余时间 :{" "}
+                                            {t("YakitUploadModal.remainingTime")} {" "}
                                             {streamData.Progress === 1 ? "0s" : streamData.RestDurationVerbose}
                                         </div>
                                         <div className={styles["divider-wrapper"]}>
@@ -65,7 +69,9 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
                             <>
                                 {streamData.CostDurationVerbose && (
                                     <>
-                                        <div>耗时 : {streamData.CostDurationVerbose}</div>
+                                        <div>
+                                            {t("YakitUploadModal.elapsedTime")} {streamData.CostDurationVerbose}
+                                        </div>
                                         <div className={styles["divider-wrapper"]}>
                                             <div className={styles["divider-style"]}></div>
                                         </div>
@@ -75,7 +81,9 @@ export const ImportAndExportStatusInfo: React.FC<ImportAndExportStatusInfo> = me
                             <>
                                 {streamData.Speed && (
                                     <>
-                                        <div>下载速度 : {streamData.Speed}M/s</div>
+                                        <div>
+                                            {t("YakitUploadModal.downloadSpeed")} {streamData.Speed}M/s
+                                        </div>
                                         <div className={styles["divider-wrapper"]}>
                                             <div className={styles["divider-style"]}></div>
                                         </div>
