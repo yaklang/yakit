@@ -464,5 +464,24 @@
     "hunter": "Hunter",
     "shodan": "Shodan",
     "quake": "Quake"
+  },
+  "KnowledgeBaseGraphDemo": {
+    "techDocs": "yakit 技术文档",
+    "scanH": "yak.scan-h",
+    "scanDesign": "yak_scan_design",
+    "yakPull": "yak_pull",
+    "type": "type",
+    "concurrent": "concurrent",
+    "pocTimeout": "poc-timeout",
+    "totalTimeout": "total-timeout",
+    "rawPacketFile": "raw-packet-file",
+    "keyword": "keyword",
+    "scanConfigurationComponents": "scan_configuration_components",
+    "list": "list",
+    "plugin": "plugin",
+    "proxy": "proxy",
+    "concurrentDefault": "concurrent_default",
+    "pocTimeoutDefault": "poc_timeout_default",
+    "totalTimeoutDefault": "total_timeout_default"
   }
 }

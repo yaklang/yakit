@@ -1,25 +1,27 @@
 import ReactECharts from "echarts-for-react"
 import { Children } from "react"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const GraphDemo = () => {
+    const {t} = useI18nNamespaces(["playground"])
     const nodes = [
-        {id: "1", name: "yakit 技术文档", symbolSize: 60},
-        {id: "2", name: "yak.scan-h", symbolSize: 50},
-        {id: "3", name: "yak_scan_design", symbolSize: 30},
-        {id: "4", name: "yak_pull", symbolSize: 30},
-        {id: "5", name: "type", symbolSize: 20},
-        {id: "6", name: "concurrent", symbolSize: 30},
-        {id: "7", name: "poc-timeout", symbolSize: 30},
-        {id: "8", name: "total-timeout", symbolSize: 30},
-        {id: "9", name: "raw-packet-file", symbolSize: 20},
-        {id: "10", name: "keyword", symbolSize: 20},
-        {id: "11", name: "scan_configuration_components", symbolSize: 20},
-        {id: "12", name: "list", symbolSize: 20},
-        {id: "13", name: "plugin", symbolSize: 20},
-        {id: "14", name: "proxy", symbolSize: 20},
-        {id: "15", name: "concurrent_default", symbolSize: 20},
-        {id: "16", name: "poc_timeout_default", symbolSize: 20},
-        {id: "17", name: "total_timeout_default", symbolSize: 20}
+        {id: "1", name: t("KnowledgeBaseGraphDemo.techDocs"), symbolSize: 60},
+        {id: "2", name: t("KnowledgeBaseGraphDemo.scanH"), symbolSize: 50},
+        {id: "3", name: t("KnowledgeBaseGraphDemo.scanDesign"), symbolSize: 30},
+        {id: "4", name: t("KnowledgeBaseGraphDemo.yakPull"), symbolSize: 30},
+        {id: "5", name: t("KnowledgeBaseGraphDemo.type"), symbolSize: 20},
+        {id: "6", name: t("KnowledgeBaseGraphDemo.concurrent"), symbolSize: 30},
+        {id: "7", name: t("KnowledgeBaseGraphDemo.pocTimeout"), symbolSize: 30},
+        {id: "8", name: t("KnowledgeBaseGraphDemo.totalTimeout"), symbolSize: 30},
+        {id: "9", name: t("KnowledgeBaseGraphDemo.rawPacketFile"), symbolSize: 20},
+        {id: "10", name: t("KnowledgeBaseGraphDemo.keyword"), symbolSize: 20},
+        {id: "11", name: t("KnowledgeBaseGraphDemo.scanConfigurationComponents"), symbolSize: 20},
+        {id: "12", name: t("KnowledgeBaseGraphDemo.list"), symbolSize: 20},
+        {id: "13", name: t("KnowledgeBaseGraphDemo.plugin"), symbolSize: 20},
+        {id: "14", name: t("KnowledgeBaseGraphDemo.proxy"), symbolSize: 20},
+        {id: "15", name: t("KnowledgeBaseGraphDemo.concurrentDefault"), symbolSize: 20},
+        {id: "16", name: t("KnowledgeBaseGraphDemo.pocTimeoutDefault"), symbolSize: 20},
+        {id: "17", name: t("KnowledgeBaseGraphDemo.totalTimeoutDefault"), symbolSize: 20}
     ]
 
     const links = [
