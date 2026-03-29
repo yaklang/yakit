@@ -18,11 +18,13 @@ import styles from "./KnowledgeBaseQA.module.scss"
 import {PaperAirplaneIcon} from "@/assets/newIcon"
 import {OutlineRefreshIcon} from "@/assets/icon/outline"
 import { JSONParseLog } from "@/utils/tool"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 const {Panel} = Collapse
 
 export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, queryAllCollectionsDefault}) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [messages, setMessages] = useState<QAMessage[]>([])
     const [loading, setLoading] = useState(false)
     const [inputValue, setInputValue] = useState("")
@@ -110,10 +112,10 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                             }
                             lastMessage.entries.push(...toAppend)
                         } catch (error) {
-                            console.error("解析结果数据失败:", error)
+                            console.error(t("KnowledgeBaseQA.parseResultFailed"), error)
                             // @ts-ignore
                             lastMessage.processLog =
-                                (lastMessage.processLog || "") + `结果数据解析失败: ${String(Data)}\n`
+                                (lastMessage.processLog || "") + `${t("KnowledgeBaseQA.parseResultDataFailed", {data: String(Data)})}\n`
                             // @ts-ignore
                             lastMessage.content = lastMessage.processLog
                         }
@@ -129,7 +131,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
 
                     case "error":
                         // @ts-ignore 扩展字段
-                        lastMessage.processLog = (lastMessage.processLog || "") + "\n**错误:** " + Message
+                        lastMessage.processLog = (lastMessage.processLog || "") + `\n**${t("KnowledgeBaseQA.error")}** ` + Message
                         // @ts-ignore 扩展字段
                         lastMessage.content = lastMessage.processLog
                         lastMessage.isStreaming = false
@@ -144,7 +146,9 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
     // 启动问答
     const handleAsk = useMemoizedFn(async () => {
         if ((!knowledgeBase && !queryAllCollections) || !inputValue.trim()) {
-            message.warning("请输入问题" + (queryAllCollections ? "" : "并选择知识库"))
+            message.warning(
+                t("KnowledgeBaseQA.enterQuestion") + (queryAllCollections ? "" : t("KnowledgeBaseQA.selectKnowledgeBase"))
+            )
             return
         }
 
@@ -158,7 +162,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
         const assistantMessage: QAMessage = {
             id: generateId(),
             type: "assistant",
-            content: "正在思考中...\n",
+            content: t("KnowledgeBaseQA.thinking") + "\n",
             timestamp: Date.now(),
             entries: [],
             isStreaming: true,
@@ -201,12 +205,12 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                 handleStreamResponse(token, data)
             })
             ipcRenderer.on(`${token}-error`, (e, err) => {
-                failed(`查询失败: ${err?.message || err}`)
+                failed(t("KnowledgeBaseQA.queryFailed", {error: String(err?.message || err)}))
                 setMessages((prev) => {
                     const newMessages = [...prev]
                     const lastMessage = newMessages[newMessages.length - 1]
                     if (lastMessage && lastMessage.type === "assistant" && lastMessage.isStreaming) {
-                        lastMessage.content += `\n**错误:** ${err?.message || err}`
+                        lastMessage.content += `\n**${t("KnowledgeBaseQA.error")}** ${err?.message || err}`
                         lastMessage.isStreaming = false
                     }
                     return newMessages
@@ -236,12 +240,12 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
             // 启动流式查询（注意：流式 IPC 约定为 invoke("方法名", params, token)）
             await ipcRenderer.invoke("QueryKnowledgeBaseByAI", request, token)
         } catch (error) {
-            failed(`查询失败: ${error}`)
+            failed(t("KnowledgeBaseQA.queryFailed", {error: String(error)}))
             setMessages((prev) => {
                 const newMessages = [...prev]
                 const lastMessage = newMessages[newMessages.length - 1]
                 if (lastMessage && lastMessage.type === "assistant" && lastMessage.isStreaming) {
-                    lastMessage.content = `查询失败: ${error}`
+                    lastMessage.content = t("KnowledgeBaseQA.queryFailed", {error: String(error)})
                     lastMessage.isStreaming = false
                 }
                 return newMessages
@@ -260,13 +264,13 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                     const newMessages = [...prev]
                     const lastMessage = newMessages[newMessages.length - 1]
                     if (lastMessage && lastMessage.type === "assistant" && lastMessage.isStreaming) {
-                        lastMessage.content += "\n\n**查询已停止**"
+                        lastMessage.content += `\n\n**${t("KnowledgeBaseQA.queryStopped")}**`
                         lastMessage.isStreaming = false
                     }
                     return newMessages
                 })
             } catch (error) {
-                console.error("停止查询失败:", error)
+                    console.error(t("KnowledgeBaseQA.stopQueryFailed"), error)
             } finally {
                 setLoading(false)
                 ipcRenderer.removeAllListeners(`${streamingTokenRef.current}-data`)
@@ -314,7 +318,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
         return (
             <div className={styles["knowledge-entries"]}>
                 <Divider orientation='left' style={{fontSize: "12px", margin: "8px 0"}}>
-                    相关知识 ({entries.length}条)
+                    {t("KnowledgeBaseQA.relatedKnowledge", {count: entries.length})}
                 </Divider>
                 <Collapse ghost>
                     {entries.map((entry, index) => (
@@ -325,7 +329,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                                     <span className={styles["entry-title"]}>{entry.KnowledgeTitle}</span>
                                     <Space size={4}>
                                         <Tag color='blue'>{entry.KnowledgeType}</Tag>
-                                        <Tag color='orange'>重要性: {entry.ImportanceScore}</Tag>
+                                        <Tag color='orange'>{t("KnowledgeBaseQA.importance")} {entry.ImportanceScore}</Tag>
                                     </Space>
                                 </div>
                             }
@@ -333,17 +337,17 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                             <div className={styles["entry-content"]}>
                                 {entry.Summary && (
                                     <div className={styles["entry-summary"]}>
-                                        <strong>摘要:</strong> {entry.Summary}
+                                        <strong>{t("KnowledgeBaseQA.summary")}:</strong> {entry.Summary}
                                     </div>
                                 )}
                                 {entry.KnowledgeDetails && (
                                     <div className={styles["entry-details"]}>
-                                        <strong>详情:</strong> {entry.KnowledgeDetails}
+                                        <strong>{t("KnowledgeBaseQA.details")}:</strong> {entry.KnowledgeDetails}
                                     </div>
                                 )}
                                 {entry.Keywords && entry.Keywords.length > 0 && (
                                     <div className={styles["entry-keywords"]}>
-                                        <strong>关键词:</strong>
+                                        <strong>{t("KnowledgeBaseQA.keywords")}:</strong>
                                         <Space size={4} wrap>
                                             {entry.Keywords.map((keyword, idx) => (
                                                 <Tag key={idx}>{keyword}</Tag>
@@ -353,7 +357,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                                 )}
                                 {entry.SourcePage && (
                                     <div className={styles["entry-source"]}>
-                                        <strong>来源页码:</strong> {entry.SourcePage}
+                                        <strong>{t("KnowledgeBaseQA.sourcePage")}:</strong> {entry.SourcePage}
                                     </div>
                                 )}
                             </div>
@@ -374,12 +378,12 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                     onClick={handleClear}
                     disabled={loading}
                 >
-                    清空对话
+                    {t("KnowledgeBaseQA.clearChat")}
                 </YakitButton>
             </div>
             {!knowledgeBase && !queryAllCollections ? (
                 <div className={styles["no-kb-selected"]}>
-                    <YakitEmpty description='请先选择一个知识库' />
+                    <YakitEmpty description={t("KnowledgeBaseQA.selectKnowledgeBaseFirst")} />
                 </div>
             ) : (
                 <>
@@ -388,9 +392,9 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                         {messages.length === 0 ? (
                             <div className={styles["welcome-message"]}>
                                 <YakitEmpty
-                                    description={`开始与 ${
-                                        knowledgeBase ? knowledgeBase.KnowledgeBaseName : "所有集合"
-                                    } 对话吧！`}
+                                    description={t("KnowledgeBaseQA.startChat", {
+                                        name: knowledgeBase ? knowledgeBase.KnowledgeBaseName : t("KnowledgeBaseQA.allCollections")
+                                    })}
                                     imageStyle={{height: 60}}
                                 />
                             </div>
@@ -434,7 +438,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                                                             )
                                                         }}
                                                     >
-                                                        {msg.showDetails ? "隐藏详细信息" : "查看详细信息"}
+                                        {msg.showDetails ? t("KnowledgeBaseQA.hideDetails") : t("KnowledgeBaseQA.viewDetails")}
                                                     </YakitButton>
                                                     {msg.entries && msg.entries.length > 0 && (
                                                         <YakitButton
@@ -453,7 +457,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                                                                 )
                                                             }}
                                                         >
-                                                            {msg.showRelated ? "隐藏" : "相关知识"}
+                                                            {msg.showRelated ? t("KnowledgeBaseQA.hide") : t("KnowledgeBaseQA.relatedKnowledgeToggle")}
                                                         </YakitButton>
                                                     )}
                                                 </div>
@@ -487,14 +491,14 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                                 style={{minWidth: 220}}
                             >
                                 <YakitSelect.Option value='hypothetical_answer'>
-                                    hypothetical_answer：假设回答
+                                    {t("KnowledgeBaseQA.hypotheticalAnswer")}
                                 </YakitSelect.Option>
                                 <YakitSelect.Option value='generalize_query'>
-                                    generalize_query：泛化回答
+                                    {t("KnowledgeBaseQA.generalizeQuery")}
                                 </YakitSelect.Option>
-                                <YakitSelect.Option value='split_query'>split_query：多次查询</YakitSelect.Option>
+                                <YakitSelect.Option value='split_query'>{t("KnowledgeBaseQA.splitQuery")}</YakitSelect.Option>
                                 <YakitSelect.Option value='hypothetical_answer_with_split'>
-                                    hypothetical_answer_with_split：假设并多次查询
+                                    {t("KnowledgeBaseQA.hypotheticalAnswerWithSplit")}
                                 </YakitSelect.Option>
                             </YakitSelect>
                         </div>
@@ -504,7 +508,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                     <div className={styles["input-area"]}>
                         <div className={styles["input-row"]}>
                             <YakitInput.TextArea
-                                placeholder='请输入您的问题...'
+                                placeholder={t("KnowledgeBaseQA.questionPlaceholder")}
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
                                 onKeyPress={handleKeyPress}
@@ -516,7 +520,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                             <div className={styles["input-actions"]}>
                                 {loading ? (
                                     <YakitButton type='primary' size='small' onClick={handleStop} danger>
-                                        停止
+                                        {t("KnowledgeBaseQA.stop")}
                                     </YakitButton>
                                 ) : (
                                     <YakitButton
@@ -526,7 +530,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({knowledgeBase, 
                                         onClick={handleAsk}
                                         disabled={!inputValue.trim()}
                                     >
-                                        发送
+                                        {t("KnowledgeBaseQA.send")}
                                     </YakitButton>
                                 )}
                             </div>

@@ -21,6 +21,7 @@ import styles from "./KnowledgeBaseList.module.scss"
 import {PlusIcon, TrashIcon} from "@/assets/newIcon"
 import {OutlinePencilaltIcon, OutlineChatalt2Icon} from "@/assets/icon/outline"
 import {SolidPlayIcon} from "@/assets/icon/solid"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -30,6 +31,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     onRefresh,
     onOpenQA
 }) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([])
     const [loading, setLoading] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
@@ -68,7 +70,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                 setTotal(0)
             }
         } catch (error) {
-            failed(`获取知识库列表失败: ${error}`)
+            failed(t("KnowledgeBaseList.fetchFailed", {error: String(error)}))
             setKnowledgeBases([])
             setTotal(0)
         } finally {
@@ -105,7 +107,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                         prev.set(streamKey, {
                             token: "",
                             loading: true,
-                            progress: "正在为知识库建立索引..."
+                            progress: t("KnowledgeBaseList.indexingInProgress")
                         })
                     )
             )
@@ -120,14 +122,14 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                 newMap.delete(streamKey)
                 return newMap
             })
-            success("知识库索引建立完成")
+            success(t("KnowledgeBaseList.indexBuildSuccess"))
         } catch (error) {
             setEmbedStreams((prev) => {
                 const newMap = new Map(prev)
                 newMap.delete(streamKey)
                 return newMap
             })
-            failed(`建立索引失败: ${error}`)
+            failed(t("KnowledgeBaseList.indexBuildFailed", {error: String(error)}))
         }
     })
 
@@ -140,20 +142,20 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             newMap.delete(streamKey)
             return newMap
         })
-        message.info("已取消索引建立状态显示")
+        message.info(t("KnowledgeBaseList.indexBuildCancelled"))
     })
 
     // 创建知识库
     const handleCreate = useMemoizedFn(async (values: KnowledgeBaseFormData) => {
         try {
             await ipcRenderer.invoke("CreateKnowledgeBase", values)
-            success("创建知识库成功")
+            success(t("KnowledgeBaseList.createSuccess"))
             setModalVisible(false)
             form.resetFields()
             fetchKnowledgeBases()
             onRefresh()
         } catch (error) {
-            failed(`创建知识库失败: ${error}`)
+            failed(t("KnowledgeBaseList.createFailed", {error: String(error)}))
         }
     })
 
@@ -165,14 +167,14 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                 KnowledgeBaseId: editingKb.ID,
                 ...values
             })
-            success("更新知识库成功")
+            success(t("KnowledgeBaseList.updateSuccess"))
             setModalVisible(false)
             setEditingKb(undefined)
             form.resetFields()
             fetchKnowledgeBases()
             onRefresh()
         } catch (error) {
-            failed(`更新知识库失败: ${error}`)
+            failed(t("KnowledgeBaseList.updateFailed", {error: String(error)}))
         }
     })
 
@@ -182,11 +184,11 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             await ipcRenderer.invoke("DeleteKnowledgeBase", {
                 KnowledgeBaseId: kb.ID
             })
-            success("删除知识库成功")
+            success(t("KnowledgeBaseList.deleteSuccess"))
             fetchKnowledgeBases()
             onRefresh()
         } catch (error) {
-            failed(`删除知识库失败: ${error}`)
+            failed(t("KnowledgeBaseList.deleteFailed", {error: String(error)}))
         }
     })
 
@@ -222,13 +224,13 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
     return (
         <div className={styles["knowledge-base-list"]}>
             <AutoCard
-                title='知识库列表'
+                title={t("KnowledgeBaseList.title")}
                 size='small'
                 bodyStyle={{padding: 12}}
                 extra={
                     <Space>
                         <YakitInput.Search
-                            placeholder='搜索知识库'
+                            placeholder={t("KnowledgeBaseList.searchPlaceholder")}
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             onSearch={handleSearch}
@@ -236,14 +238,14 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                             size='small'
                         />
                         <YakitButton type='primary' size='small' icon={<PlusIcon />} onClick={handleOpenCreate}>
-                            新增知识库
+                            {t("KnowledgeBaseList.addKnowledgeBase")}
                         </YakitButton>
                     </Space>
                 }
             >
                 <YakitSpin spinning={loading}>
                     {knowledgeBases.length === 0 ? (
-                        <YakitEmpty description='暂无知识库' />
+                        <YakitEmpty description={t("KnowledgeBaseList.empty")} />
                     ) : (
                         <div className={styles["kb-list"]}>
                             {knowledgeBases.map((kb) => (
@@ -257,9 +259,9 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                     <div className={styles["kb-info"]}>
                                         <div className={styles["kb-name"]}>{kb.KnowledgeBaseName}</div>
                                         <div className={styles["kb-description"]}>
-                                            {kb.KnowledgeBaseDescription || "暂无描述"}
+                                            {kb.KnowledgeBaseDescription || t("KnowledgeBaseList.noDescription")}
                                         </div>
-                                        <div className={styles["kb-type"]}>类型: {kb.KnowledgeBaseType}</div>
+                                        <div className={styles["kb-type"]}>{t("KnowledgeBaseList.type")}: {kb.KnowledgeBaseType}</div>
                                     </div>
                                     <div className={styles["kb-actions"]}>
                                         {(() => {
@@ -281,7 +283,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                                                 handleCancelEmbed(streamKey)
                                                             }}
                                                         >
-                                                            取消
+                                                            {t("KnowledgeBaseList.cancel")}
                                                         </YakitButton>
                                                     </div>
                                                 )
@@ -297,7 +299,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                                             e.stopPropagation()
                                                             handleEmbedKnowledgeBase(kb)
                                                         }}
-                                                        title='建立索引'
+                                                        title={t("KnowledgeBaseList.buildIndex")}
                                                     />
                                                     {onOpenQA && (
                                                         <YakitButton
@@ -309,7 +311,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                                                 // 列表入口：默认仅查询当前知识库
                                                                 onOpenQA(kb, false)
                                                             }}
-                                                            title='AI问答'
+                                                            title={t("KnowledgeBaseList.aiQa")}
                                                         />
                                                     )}
                                                     <YakitButton
@@ -322,7 +324,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                                                         }}
                                                     />
                                                     <YakitPopconfirm
-                                                        title='删除后无法恢复，确认删除此知识库吗？'
+                                                        title={t("KnowledgeBaseList.deleteConfirm")}
                                                         onConfirm={(e) => {
                                                             e?.stopPropagation()
                                                             handleDelete(kb)
@@ -356,7 +358,9 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                             showSizeChanger={true}
                             showQuickJumper={true}
                             showTotal={(total) => (
-                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 条记录</div>
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                    {t("KnowledgeBaseList.totalRecords", {count: total})}
+                                </div>
                             )}
                             onChange={handlePageChange}
                             pageSizeOptions={["10", "20", "50", "100"]}
@@ -366,7 +370,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             </AutoCard>
 
             <YakitModal
-                title={editingKb ? "编辑知识库" : "新增知识库"}
+                title={editingKb ? t("KnowledgeBaseList.editKnowledgeBase") : t("KnowledgeBaseList.addKnowledgeBase")}
                 visible={modalVisible}
                 onCancel={() => {
                     setModalVisible(false)
@@ -375,26 +379,26 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
                 }}
                 onOk={handleSubmit}
                 width={600}
-                okText='确认'
-                cancelText='取消'
+                okText={t("KnowledgeBaseList.confirm")}
+                cancelText={t("KnowledgeBaseList.cancel")}
             >
                 <Form form={form} layout='vertical' style={{marginTop: 16}}>
                     <Form.Item
-                        label='知识库名称'
+                        label={t("KnowledgeBaseList.knowledgeBaseName")}
                         name='KnowledgeBaseName'
-                        rules={[{required: true, message: "请输入知识库名称"}]}
+                        rules={[{required: true, message: t("KnowledgeBaseList.enterKnowledgeBaseName")} ]}
                     >
-                        <YakitInput placeholder='请输入知识库名称' />
+                        <YakitInput placeholder={t("KnowledgeBaseList.enterKnowledgeBaseName")} />
                     </Form.Item>
-                    <Form.Item label='知识库描述' name='KnowledgeBaseDescription'>
-                        <YakitInput.TextArea placeholder='请输入知识库描述' rows={3} maxLength={500} showCount />
+                    <Form.Item label={t("KnowledgeBaseList.knowledgeBaseDescription")} name='KnowledgeBaseDescription'>
+                        <YakitInput.TextArea placeholder={t("KnowledgeBaseList.enterKnowledgeBaseDescription")} rows={3} maxLength={500} showCount />
                     </Form.Item>
                     <Form.Item
-                        label='知识库类型'
+                        label={t("KnowledgeBaseList.knowledgeBaseType")}
                         name='KnowledgeBaseType'
-                        rules={[{required: true, message: "请输入知识库类型"}]}
+                        rules={[{required: true, message: t("KnowledgeBaseList.enterKnowledgeBaseType")} ]}
                     >
-                        <YakitInput placeholder='请输入知识库类型' />
+                        <YakitInput placeholder={t("KnowledgeBaseList.enterKnowledgeBaseType")} />
                     </Form.Item>
                 </Form>
             </YakitModal>
