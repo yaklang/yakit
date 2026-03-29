@@ -254,7 +254,7 @@ export const onExpandHTTPFlow = (
     pageType?: HTTPHistorySourcePageType
 ) => {
     if (!flow) {
-        return <YakitEmpty title={t?.("HTTPFlowTable.requestDetailsNotFound") || "找不到该请求详情"}></YakitEmpty>
+        return <YakitEmpty title={t?.("HTTPFlowTable.requestDetailsNotFound") || "Request details not found"}></YakitEmpty>
     }
 
     return (
@@ -398,7 +398,7 @@ const TableRowColor = (key: string) => {
 export const availableColors = [
     {
         color: "RED",
-        title: "红色[#F4736B]",
+        title: "Red [#F4736B]",
         className: TableRowColor("RED"),
         searchWord: TableCellToColorTag["RED"],
         render: (t) => (
@@ -410,7 +410,7 @@ export const availableColors = [
     },
     {
         color: "GREEN",
-        title: "绿色[#56C991]",
+        title: "Green [#56C991]",
         className: TableRowColor("GREEN"),
         searchWord: TableCellToColorTag["GREEN"],
         render: (t) => (
@@ -422,7 +422,7 @@ export const availableColors = [
     },
     {
         color: "BLUE",
-        title: "蓝色[#4A94F8]",
+        title: "Blue [#4A94F8]",
         className: TableRowColor("BLUE"),
         searchWord: TableCellToColorTag["BLUE"],
         render: (t) => (
@@ -434,7 +434,7 @@ export const availableColors = [
     },
     {
         color: "YELLOW",
-        title: "黄色[#FFD583]",
+        title: "Yellow [#FFD583]",
         searchWord: TableCellToColorTag["YELLOW"],
         className: TableRowColor("YELLOW"),
         render: (t) => (
@@ -446,7 +446,7 @@ export const availableColors = [
     },
     {
         color: "ORANGE",
-        title: "橙色[#FFB660]",
+        title: "Orange [#FFB660]",
         searchWord: TableCellToColorTag["ORANGE"],
         className: TableRowColor("ORANGE"),
         render: (t) => (
@@ -458,7 +458,7 @@ export const availableColors = [
     },
     {
         color: "PURPLE",
-        title: "紫色[#8863F7]",
+        title: "Purple [#8863F7]",
         searchWord: TableCellToColorTag["PURPLE"],
         className: TableRowColor("PURPLE"),
         render: (t) => (
@@ -470,7 +470,7 @@ export const availableColors = [
     },
     {
         color: "CYAN",
-        title: "青色[#35D8EE]",
+        title: "Cyan [#35D8EE]",
         searchWord: TableCellToColorTag["CYAN"],
         className: TableRowColor("CYAN"),
         render: (t) => (
@@ -482,7 +482,7 @@ export const availableColors = [
     },
     {
         color: "GREY",
-        title: "灰色[#B4BBCA]",
+        title: "Grey [#B4BBCA]",
         searchWord: TableCellToColorTag["GREY"],
         className: TableRowColor("GREY"),
         render: (t) => (
