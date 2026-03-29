@@ -17,6 +17,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton";
 import {randomString} from "@/utils/randomUtil";
 import {failed, info} from "@/utils/notification";
 import {useGetState, useMemoizedFn} from "ahooks";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces";
 
 export interface HybridScanTaskTableProp {
 
@@ -25,6 +26,7 @@ export interface HybridScanTaskTableProp {
 const {ipcRenderer} = window.require("electron");
 
 export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [selected, setSelected] = React.useState<HybridScanTask>();
     const [token, setToken] = useState(randomString(40))
     const [loading, setLoading] = useState(false)
@@ -60,11 +62,11 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
             }
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
-            failed(`[HybridScan] error:  ${error}`)
+            failed(t("HybridScanTaskTable.error", {error: String(error)}))
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
             setLoading(false)
-            info("[HybridScan] finished")
+            info(t("HybridScanTaskTable.finished"))
         })
         return () => {
             ipcRenderer.invoke("cancel-HybridScan", token)
@@ -81,9 +83,9 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
     return <YakitResizeBox
         firstNode={<DemoVirtualTable<HybridScanTask>
             columns={[
-                {headerTitle: "ID", key: "Id", width: 80, colRender: i => i.Id},
-                {headerTitle: "任务ID", key: "Title", width: 300, colRender: i => i.TaskId},
-                {headerTitle: "当前状态", key: "Status", width: 300, colRender: i => i.Status},
+                {headerTitle: t("HybridScanTaskTable.id"), key: "Id", width: 80, colRender: i => i.Id},
+                {headerTitle: t("HybridScanTaskTable.taskId"), key: "Title", width: 300, colRender: i => i.TaskId},
+                {headerTitle: t("HybridScanTaskTable.status"), key: "Status", width: 300, colRender: i => i.Status},
             ]}
             rowClick={item => {
                 setSelected(item)
@@ -126,7 +128,7 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
             isScrollUpdate={true}
         />}
         secondNode={selected ? <AutoCard
-            size={"small"} title={`TASK:${selected?.TaskId}`}
+            size={"small"} title={t("HybridScanTaskTable.taskTitle", {taskId: selected?.TaskId})}
             extra={<Space>
                 <YakitTag>{selected?.Status}</YakitTag>
                 <YakitButton
@@ -136,31 +138,31 @@ export const HybridScanTaskTable: React.FC<HybridScanTaskTableProp> = (props) =>
                     } as HybridScanControlRequest, token).then(() => {
                         setLoading(true)
                     })
-                }}>启动任务</YakitButton>
+                }}>{t("HybridScanTaskTable.startTask")}</YakitButton>
                 <YakitButton
                     disabled={!loading} danger={true}
                     onClick={() => {
                         cancel()
                     }}
-                >停止任务</YakitButton>
+                >{t("HybridScanTaskTable.stopTask")}</YakitButton>
             </Space>}
         >
             <Space direction={"vertical"}>
                 <Space>
-                    <YakitTag>{"总目标"}: {status.TotalTargets}</YakitTag>
-                    <YakitTag>{"已完成目标"}: {status.FinishedTargets}</YakitTag>
-                    <YakitTag>{"正在执行的目标"}: {status.ActiveTargets}</YakitTag>
-                    <YakitTag>{"总任务量"}: {status.TotalTasks}</YakitTag>
-                    <YakitTag>{"正在执行的任务"}: {status.ActiveTasks}</YakitTag>
-                    <YakitTag>{"已经完成的任务"}: {status.FinishedTasks}</YakitTag>
+                    <YakitTag>{t("HybridScanTaskTable.totalTargets")}: {status.TotalTargets}</YakitTag>
+                    <YakitTag>{t("HybridScanTaskTable.finishedTargets")}: {status.FinishedTargets}</YakitTag>
+                    <YakitTag>{t("HybridScanTaskTable.activeTargets")}: {status.ActiveTargets}</YakitTag>
+                    <YakitTag>{t("HybridScanTaskTable.totalTasks")}: {status.TotalTasks}</YakitTag>
+                    <YakitTag>{t("HybridScanTaskTable.activeTasks")}: {status.ActiveTasks}</YakitTag>
+                    <YakitTag>{t("HybridScanTaskTable.finishedTasks")}: {status.FinishedTasks}</YakitTag>
                 </Space>
                 <Divider/>
                 <Space direction={"vertical"}>
                     {activeTasks.map(i => {
-                        return <YakitTag>{i.Index}: [{i.PluginName}] 执行目标: {i.Url}</YakitTag>
+                        return <YakitTag key={i.Index}>{i.Index}: [{i.PluginName}] {t("HybridScanTaskTable.target")}: {i.Url}</YakitTag>
                     })}
                 </Space>
             </Space>
-        </AutoCard> : "请选择一个任务"}
+        </AutoCard> : t("HybridScanTaskTable.selectTask")}
     />
 };
