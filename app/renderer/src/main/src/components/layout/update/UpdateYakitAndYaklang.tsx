@@ -12,11 +12,13 @@ import {LocalGVS} from "@/enums/localGlobal"
 import {safeFormatDownloadProcessState} from "../utils"
 import {API} from "@/services/swagger/resposeType"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import i18n from "@/i18n/i18n"
 
 import styles from "./UpdateYakitAndYaklang.module.scss"
 import {JSONParseLog} from "@/utils/tool"
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "layout")
 
 // 去除版本号里的v字符
 const removePrefixV = (version: string) => {
@@ -112,7 +114,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
                 isMemfit: isMemfit()
             })
             .then(() => {
-                success("下载完毕")
+                success(t("UpdateYakitAndYaklang.downloadCompleted"))
                 setYakitProgress((old) => {
                     if (!old) return undefined
                     return {
@@ -128,7 +130,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
                 setStatus("installed")
             })
             .catch((e: any) => {
-                failed(`下载失败: ${e}`)
+                failed(t("UpdateYakitAndYaklang.downloadFailed", {error: String(e)}))
                 setYakitProgress(undefined)
                 setStatus("ready")
             })
@@ -160,17 +162,17 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
     }
 
     const title = useMemo(() => {
-        if (status === "ready") return `检测到 ${getReleaseEditionName()} 版本升级`
-        if (status === "install") return `${getReleaseEditionName()} 下载中...`
-        if (status === "installed") return `${getReleaseEditionName()} 下载成功`
-        return "异常错误，请关闭!"
+        if (status === "ready") return t("UpdateYakitAndYaklang.detectedUpdate", {edition: getReleaseEditionName()})
+        if (status === "install") return t("UpdateYakitAndYaklang.downloading", {edition: getReleaseEditionName()})
+        if (status === "installed") return t("UpdateYakitAndYaklang.downloadSuccess", {edition: getReleaseEditionName()})
+        return t("UpdateYakitAndYaklang.unexpectedError")
     }, [status])
 
     const extraBtn = useMemo(() => {
         if (status === "ready") {
             return (
                 <YakitButton size='max' type='outline2' onClick={noHint}>
-                    不再提示
+                    {t("UpdateYakitAndYaklang.dontAskAgain")}
                 </YakitButton>
             )
         }
@@ -182,10 +184,10 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
             return (
                 <>
                     <YakitButton size='max' type='outline2' onClick={handleCancel}>
-                        稍后再说
+                        {t("UpdateYakitAndYaklang.later")}
                     </YakitButton>
                     <YakitButton size='max' onClick={handleDownload}>
-                        立即更新
+                        {t("UpdateYakitAndYaklang.updateNow")}
                     </YakitButton>
                 </>
             )
@@ -193,7 +195,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
         if (status === "install") {
             return (
                 <YakitButton loading={breakLoading} size='max' type='outline2' onClick={yakitBreak}>
-                    取消
+                    {t("UpdateYakitAndYaklang.cancel")}
                 </YakitButton>
             )
         }
@@ -201,10 +203,10 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
             return (
                 <>
                     <YakitButton size='max' type='outline2' onClick={handleCancel}>
-                        取消
+                    {t("UpdateYakitAndYaklang.cancel")}
                     </YakitButton>
                     <YakitButton size='max' onClick={yakitUpdate}>
-                        确定
+                        {t("UpdateYakitAndYaklang.ok")}
                     </YakitButton>
                 </>
             )
@@ -224,10 +226,10 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
                     <div className={styles["content"]}>
                         <div
                             className={styles["hint-right-content"]}
-                        >{`${getReleaseEditionName()} ${latest} 更新说明 :`}</div>
+                        >{t("UpdateYakitAndYaklang.updateNotesTitle", {edition: getReleaseEditionName(), latest})}</div>
                         <div className={styles["hint-right-update-content"]}>
                             {yakitContent.length === 0
-                                ? "管理员未编辑更新通知"
+                                ? t("UpdateYakitAndYaklang.noUpdateNotice")
                                 : yakitContent.map((item, index) => {
                                       return <div key={`${item}-${index}`}>{item}</div>
                                   })}
@@ -238,7 +240,7 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
                 {status === "installed" && (
                     <div className={styles["content"]}>
                         <div className={styles["hint-right-content"]}>
-                            安装需关闭软件，双击安装包即可安装完成，是否立即安装？
+                            {t("UpdateYakitAndYaklang.installPrompt")}
                         </div>
                     </div>
                 )}
@@ -251,12 +253,12 @@ export const UpdateYakitHint: React.FC<UpdateYakitHintProps> = React.memo((props
                             percent={Math.floor((yakitProgress?.percent || 0) * 100)}
                         />
                         <div className={styles["download-info-wrapper"]}>
-                            <div>剩余时间 : {(yakitProgress?.time.remaining || 0).toFixed(2)}s</div>
+                            <div>{t("UpdateYakitAndYaklang.remainingTime", {time: (yakitProgress?.time.remaining || 0).toFixed(2)})}</div>
                             <div className={styles["divider-wrapper"]}></div>
-                            <div>耗时 : {(yakitProgress?.time.elapsed || 0).toFixed(2)}s</div>
+                            <div>{t("UpdateYakitAndYaklang.elapsedTime", {time: (yakitProgress?.time.elapsed || 0).toFixed(2)})}</div>
                             <div className={styles["divider-wrapper"]}></div>
                             <div>
-                                下载速度 : {((yakitProgress?.speed || 0) / 1000000).toFixed(2)}
+                                {t("UpdateYakitAndYaklang.downloadSpeed", {speed: ((yakitProgress?.speed || 0) / 1000000).toFixed(2)})}
                                 M/s
                             </div>
                         </div>
@@ -307,7 +309,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
         ipcRenderer
             .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
-                info(`解压内置引擎成功`)
+                info(t("InstallEngine.unpackBuiltinEngineSuccess"))
                 ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
                     // onCallback(true)
                     setYakitStatus("")
@@ -316,7 +318,7 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
                 })
             })
             .catch((e) => {
-                failed(`初始化内置引擎失败：${e}`)
+                failed(t("InstallEngine.initBuiltinEngineFailed", {error: String(e)}))
             })
             .finally(() => setTimeout(() => setUpdateLoading(false), 300))
     })
@@ -324,28 +326,28 @@ export const UpdateYakHint: React.FC<UpdateYakHintProps> = React.memo((props) =>
     return (
         <YakitHint
             getContainer={document.getElementById("yakit-uilayout-body") || undefined}
-            title={"引擎提示"}
+            title={t("UpdateYakitAndYaklang.enginePrompt")}
             content={
                 <div>
-                    当前核心引擎版本低于Yakit内置版本, 将自动切换为内置引擎版本
+                    {t("UpdateYakitAndYaklang.switchToBuiltin")}
                     <div className={styles["version-wrapper"]}>
                         <div className={styles["version-header"]}>
-                            本地版本 <span>:</span>
+                            {t("UpdateYakitAndYaklang.localVersion")} <span>:</span>
                         </div>
                         {current}
                     </div>
                     <div style={{fontWeight: 500}} className={styles["version-wrapper"]}>
                         <div className={styles["version-header"]}>
-                            内置版本(新) <span>:</span>
+                            {t("UpdateYakitAndYaklang.builtinVersion")} <span>:</span>
                         </div>
                         {buildIn}
                     </div>
                 </div>
             }
             visible={visible}
-            okButtonText='OK'
+            okButtonText={t("UpdateYakitAndYaklang.ok")}
             okButtonProps={{loading: updateLoading}}
-            cancelButtonText='忽略'
+            cancelButtonText={t("UpdateYakitAndYaklang.ignore")}
             cancelButtonProps={{style: {display: updateLoading ? "none" : ""}}}
             onOk={yakitUpdate}
             onCancel={handleCancel}

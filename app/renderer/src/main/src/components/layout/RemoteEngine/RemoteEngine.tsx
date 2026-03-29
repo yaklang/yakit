@@ -36,7 +36,7 @@ const DefaultRemoteLink: RemoteLinkInfo = {
 }
 
 export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
-    const {t} = useI18nNamespaces(["remote", "yakitUi"])
+    const {t} = useI18nNamespaces(["remote", "yakitUi", "layout"])
     const {loading, setLoading, installedEngine, onSubmit, onSwitchLocalEngine} = props
 
     /** 远程主机参数 */
@@ -152,12 +152,12 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                         )}
                         {isEnpriTrace() && (
                             <div className={styles["logo-img"]}>
-                                {isIRify() ? <SolidIrifyMiniLogoIcon /> : <img src={yakitEE} alt='暂无图片' />}
+                                 {isIRify() ? <SolidIrifyMiniLogoIcon /> : <img src={yakitEE} alt={t("noImage")} />}
                             </div>
                         )}
                         {isEnpriTraceAgent() && (
                             <div className={styles["logo-img"]}>
-                                <img src={yakitSE} alt='暂无图片' />
+                                <img src={yakitSE} alt={t("noImage")} />
                             </div>
                         )}
                         <div className={styles["title-style"]}>{t("RemoteEngine.remoteMode")}</div>

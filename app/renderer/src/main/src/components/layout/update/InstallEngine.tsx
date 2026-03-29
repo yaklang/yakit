@@ -20,8 +20,10 @@ import emiter from "@/utils/eventBus/eventBus"
 import {setClipboardText} from "@/utils/clipboard"
 import classNames from "classnames"
 import styles from "./InstallEngine.module.scss"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "layout")
 
 export interface InstallEngineProps {
     system: YakitSystem
@@ -57,13 +59,13 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
             .invoke("RestoreEngineAndPlugin", {})
             .then(() => {
                 ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
-                    info(`解压内置引擎成功`)
+                    info(t("InstallEngine.unpackBuiltinEngineSuccess"))
                     showYakitModal({
                         closable: false,
                         maskClosable: false,
                         keyboard: false,
                         type: "white",
-                        title: "引擎解压成功，需要重启",
+                        title: t("InstallEngine.unpackNeedRestart"),
                         content: (
                             <div className={styles["relaunch-hint"]}>
                                 <YakitButton
@@ -72,11 +74,11 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                             .invoke("relaunch")
                                             .then(() => {})
                                             .catch((e) => {
-                                                failed(`重启失败: ${e}`)
+                                                failed(t("InstallEngine.restartFailed", {error: String(e)}))
                                             })
                                     }}
                                 >
-                                    点此立即重启
+                                    {t("InstallEngine.restartNow")}
                                 </YakitButton>
                             </div>
                         ),
@@ -85,7 +87,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                 })
             })
             .catch((e) => {
-                failed(`初始化内置引擎失败：${e}`)
+                failed(t("InstallEngine.initBuiltinEngineFailed", {error: String(e)}))
             })
             .finally(() => setTimeout(() => setExtractingBuildInEngine(false), 300))
     })
@@ -239,12 +241,12 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                     // @ts-ignore
                     size: getDownloadProgress().size
                 })
-                success("下载完毕")
+                success(t("InstallEngine.downloadCompleted"))
                 yaklangUpdate()
             })
             .catch((e: any) => {
                 if (isBreakDownload.current) return
-                failed(`引擎下载失败: ${e}`)
+                failed(t("InstallEngine.downloadFailed", {error: String(e)}))
                 onInstallClose()
                 checkEngineDownloadLatestVersionCancel()
             })
@@ -257,11 +259,11 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
             .invoke("install-yak-engine", `${latestVersionRef.current}`)
             .then(() => {
                 if (isBreakDownload.current) return
-                success(`安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
+                success(t("InstallEngine.installSuccess", {edition: getReleaseEditionName()}))
                 onSuccess()
             })
             .catch((err: any) => {
-                failed(`安装失败: ${err}`)
+                failed(t("InstallEngine.installFailed", {error: String(err)}))
                 onInstallClose()
                 if (err.message === "operation not permitted") {
                     checkEngineDownloadLatestVersionCancel()
@@ -340,23 +342,23 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                     <div
                                         className={classNames(styles["hint-right-download"], "yakit-progress-wrapper")}
                                     >
-                                        <div className={styles["hint-right-title"]}>引擎安装中...</div>
+                                        <div className={styles["hint-right-title"]}>{t("InstallEngine.installing")}</div>
                                         <Progress
                                             strokeColor='var(--Colors-Use-Main-Primary)'
                                             trailColor='var(--Colors-Use-Neutral-Bg)'
                                             percent={Math.floor((downloadProgress?.percent || 0) * 100)}
                                         />
                                         <div className={styles["download-info-wrapper"]}>
-                                            <div>剩余时间 : {(downloadProgress?.time.remaining || 0).toFixed(2)}s</div>
+                                            <div>{t("InstallEngine.remainingTime", {time: (downloadProgress?.time.remaining || 0).toFixed(2)})}</div>
                                             <div className={styles["divider-wrapper"]}>
                                                 <div className={styles["divider-style"]}></div>
                                             </div>
-                                            <div>耗时 : {(downloadProgress?.time.elapsed || 0).toFixed(2)}s</div>
+                                            <div>{t("InstallEngine.elapsedTime", {time: (downloadProgress?.time.elapsed || 0).toFixed(2)})}</div>
                                             <div className={styles["divider-wrapper"]}>
                                                 <div className={styles["divider-style"]}></div>
                                             </div>
                                             <div>
-                                                下载速度 : {((downloadProgress?.speed || 0) / 1000000).toFixed(2)}M/s
+                                                {t("InstallEngine.downloadSpeed", {speed: ((downloadProgress?.speed || 0) / 1000000).toFixed(2)})}
                                             </div>
                                         </div>
                                         <div className={styles["download-btn"]}>
@@ -366,31 +368,30 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 type='outline2'
                                                 onClick={onClose}
                                             >
-                                                取消
+                                                {t("InstallEngine.cancel")}
                                             </YakitButton>
                                         </div>
                                     </div>
                                 ) : (
                                     <>
                                         <div className={styles["hint-right-title"]}>
-                                            {haveBuildInEngine ? "本地引擎未初始化" : "未安装引擎"}
+                                            {haveBuildInEngine ? t("InstallEngine.localEngineNotInitialized") : t("InstallEngine.engineNotInstalled")}
                                         </div>
                                         <div className={styles["hint-right-content"]}>
                                             {haveBuildInEngine
-                                                ? `授权使用内置引擎: ${buildInEngineVersion}，或远程连接启动`
-                                                : "你可选择安装 Yak 引擎启动软件，或远程连接"}
+                                                ? t("InstallEngine.authorizedBuiltinEngine", {version: buildInEngineVersion})
+                                                : t("InstallEngine.chooseInstallOrRemote")}
                                         </div>
 
                                         {platformArch === "darwin-arm64" && (
                                             <div className={styles["hint-right-macarm"]}>
                                                 <div>
                                                     <div className={styles["mac-arm-hint"]}>
-                                                        当前系统为(darwin-arm64)
+                                                        {t("InstallEngine.currentSystemDarwinArm64")}
                                                         <br />
-                                                        如用户需要使用 intel(x86/amd64) 版本的 yak 引擎，请先安装
-                                                        Rosetta 2, 否则将无法运行 Yak 核心引擎
+                                                        {t("InstallEngine.rosettaRequired")}
                                                         <br />
-                                                        运行以下命令可手动安装 Rosetta，如已安装可忽略
+                                                        {t("InstallEngine.rosettaCommandHint")}
                                                     </div>
                                                     <div className={styles["mac-arm-command"]}>
                                                         softwareupdate --install-rosetta
@@ -419,7 +420,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                 onChange={(e) => setAgrCheck(e.target.checked)}
                                             ></Checkbox>
                                             <span>
-                                                勾选同意{" "}
+                                                {t("InstallEngine.agreeTo")}{" "}
                                                 <span
                                                     className={styles["agreement-style"]}
                                                     onClick={(e) => {
@@ -428,23 +429,21 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                         setIsTop(1)
                                                     }}
                                                 >
-                                                    《用户协议》
+                                                    {t("InstallEngine.userAgreement")}
                                                 </span>
-                                                以继续使用
+                                                {t("InstallEngine.toContinue")}
                                             </span>
                                         </div>
 
                                         <div className={styles["hint-right-btn"]}>
                                             <div>
                                                 <YakitButton size='max' type='outline2' onClick={remoteLink}>
-                                                    远程连接
+                                                    {t("InstallEngine.remoteLink")}
                                                 </YakitButton>
                                                 {haveBuildInEngine && (
                                                     <YakitPopconfirm
                                                         placement='top'
-                                                        title={
-                                                            "网络安装需要公网环境，请知晓，请优先使用内置引擎（初始化引擎）"
-                                                        }
+                                                        title={t("InstallEngine.networkInstallNotice")}
                                                         onConfirm={installEngine}
                                                     >
                                                         <YakitButton
@@ -453,7 +452,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                             style={{fontSize: 12}}
                                                             disabled={!agrCheck}
                                                         >
-                                                            联网安装
+                                                            {t("InstallEngine.networkInstall")}
                                                         </YakitButton>
                                                     </YakitPopconfirm>
                                                 )}
@@ -464,13 +463,13 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                     type='outline2'
                                                     onClick={() => ipcRenderer.invoke("UIOperate", "close")}
                                                 >
-                                                    取消
+                                                    {t("InstallEngine.cancel")}
                                                 </YakitButton>
 
                                                 {!haveBuildInEngine && (
                                                     // 无内置引擎
                                                     <YakitButton size='max' onClick={installEngine}>
-                                                        一键安装
+                                                        {t("InstallEngine.oneClickInstall")}
                                                     </YakitButton>
                                                 )}
                                                 {haveBuildInEngine && (
@@ -481,7 +480,7 @@ export const InstallEngine: React.FC<InstallEngineProps> = React.memo((props) =>
                                                         disabled={!agrCheck}
                                                         onClick={initBuildInEngine}
                                                     >
-                                                        初始化引擎
+                                                        {t("InstallEngine.initEngine")}
                                                     </YakitButton>
                                                 )}
                                             </div>
@@ -573,7 +572,7 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                                         </div>
                                     )}
                                 </div>
-                                <span>用户协议</span>
+                                <span>{t("InstallEngine.userAgreement")}</span>
                             </div>
                         ) : (
                             <div
@@ -584,43 +583,34 @@ const AgreementContentModal: React.FC<AgrAndQSModalProps> = React.memo((props) =
                                 onMouseOut={() => setDisabled(true)}
                                 onMouseDown={() => setIsTop(1)}
                             >
-                                <span className={styles["header-title"]}>用户协议</span>
+                                <span className={styles["header-title"]}>{t("InstallEngine.userAgreement")}</span>
                                 <div className={styles["close-wrapper"]} onClick={() => setVisible(false)}>
                                     <WinUIOpCloseSvgIcon className={styles["icon-style"]} />
                                 </div>
                             </div>
                         )}
                         <div className={styles["modal-body"]}>
-                            <div className={styles["body-title"]}>免责声明</div>
+                            <div className={styles["body-title"]}>{t("InstallEngine.disclaimer")}</div>
                             <div className={styles["body-content"]}>
-                                1. 本工具仅面向 <span className={styles["sign-content"]}>合法授权</span>{" "}
-                                的企业安全建设行为与个人学习行为，如您需要测试本工具的可用性，请自行搭建靶机环境。
+                                {t("InstallEngine.disclaimer1")}
                                 <br />
-                                2. 在使用本工具进行检测时，您应确保该行为符合当地的法律法规，并且已经取得了足够的授权。
-                                <span className={styles["underline-content"]}>请勿对非授权目标进行扫描。</span>
+                                {t("InstallEngine.disclaimer2")}
                                 <br />
-                                3. 禁止对本软件实施逆向工程、反编译、试图破译源代码，植入后门传播恶意软件等行为。
+                                {t("InstallEngine.disclaimer3")}
                                 <br />
-                                4. 如果您需要使用Yakit
-                                <span className={styles["sign-bold-content"]}>用于商业化目的</span>，请确保你们已经
-                                <span className={styles["sign-bold-content"]}>获得官方授权</span>
-                                ，否则我们将追究您的相关责任。
+                                {t("InstallEngine.disclaimer4")}
                                 <br />
                                 <span className={styles["sign-bold-content"]}>
-                                    如果发现上述禁止行为，我们将保留追究您法律责任的权利。
+                                    {t("InstallEngine.disclaimer5")}
                                 </span>
                                 <br />
-                                如您在使用本工具的过程中存在任何非法行为，您需自行承担相应后果，我们将不承担任何法律及连带责任。
+                                {t("InstallEngine.disclaimer6")}
                                 <br />
-                                在安装并使用本工具前，请您{" "}
-                                <span className={styles["sign-bold-content"]}>务必审慎阅读、充分理解各条款内容。</span>
+                                {t("InstallEngine.disclaimer7")}
                                 <br />
-                                限制、免责条款或者其他涉及您重大权益的条款可能会以{" "}
-                                <span className={styles["sign-bold-content"]}>加粗</span>、
-                                <span className={styles["underline-content"]}>加下划线</span>
-                                等形式提示您重点注意。
+                                {t("InstallEngine.disclaimer8")}
                                 <br />
-                                除非您已充分阅读、完全理解并接受本协议所有条款，否则，请您不要安装并使用本工具。您的使用行为或者您以其他任何明示或者默示方式表示接受本协议的，即视为您已阅读并同意本协议的约束。
+                                {t("InstallEngine.disclaimer9")}
                             </div>
                         </div>
                     </div>
@@ -718,7 +708,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                         </div>
                                     )}
                                 </div>
-                                <span>Yak 核心引擎下载链接</span>
+                                <span>{t("InstallEngine.engineDownloadLink")}</span>
                             </div>
                         ) : (
                             <div
@@ -729,7 +719,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                 onMouseOut={() => setDisabled(true)}
                                 onMouseDown={() => setIsTop(2)}
                             >
-                                <span className={styles["header-title"]}>Yak 核心引擎下载链接</span>
+                                <span className={styles["header-title"]}>{t("InstallEngine.engineDownloadLink")}</span>
                                 <div className={styles["close-wrapper"]} onClick={() => setVisible(false)}>
                                     <WinUIOpCloseSvgIcon className={styles["icon-style"]} />
                                 </div>
@@ -737,16 +727,15 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                         )}
                         <div className={styles["modal-body"]}>
                             <div className={styles["body-hint"]}>
-                                <span className={styles["hint-sign"]}>如遇网络问题无法下载，可手动下载安装：</span>
+                                <span className={styles["hint-sign"]}>{t("InstallEngine.manualDownloadHint")}</span>
                                 <br />
-                                Windows 用户可以把引擎放在 安装目录(一般为%HOME%)/yakit-projects/yak-engine/yak.exe
-                                即可识别 MacOS / Linux 用户可以把引擎放在 ~/yakit-projects/yak-engine/yak 即可识别
+                                {t("InstallEngine.manualInstallPathHint")}
                             </div>
 
                             <div className={styles["body-link"]}>
                                 <div className={styles["link-opt"]}>
                                     <div style={{width: 107}} className={styles["link-title"]}>
-                                        Windows(x64)下载
+                                        {t("InstallEngine.windowsDownload")}
                                     </div>
                                     <div className={styles["link-style"]}>
                                         https://{ossDomain}/yak/{latestVersion || "latest"}
@@ -758,7 +747,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                 </div>
                                 <div className={styles["link-opt"]}>
                                     <div style={{width: 122}} className={styles["link-title"]}>
-                                        MacOS(intel/m1)下载
+                                        {t("InstallEngine.macosDownload")}
                                     </div>
                                     <div className={styles["link-style"]}>
                                         https://{ossDomain}/yak/{latestVersion || "latest"}
@@ -770,7 +759,7 @@ export const QuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) =>
                                 </div>
                                 <div className={styles["link-opt"]}>
                                     <div style={{width: 87}} className={styles["link-title"]}>
-                                        Linux(x64)下载
+                                        {t("InstallEngine.linuxDownload")}
                                     </div>
                                     <div className={styles["link-style"]}>
                                         https://{ossDomain}/yak/{latestVersion || "latest"}

@@ -581,7 +581,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             emiter.on("onRefreshQueryYakScript", updatePluginTotal)
         } else {
             // init
-            setPcap({Advice: "unknown", AdviceVerbose: "无法获取 PCAP 支持信息", IsPrivileged: false})
+            setPcap({Advice: "unknown", AdviceVerbose: t("GlobalState.cannotGetPcapInfo"), IsPrivileged: false})
             setPluginTotal(0)
             setReverseState(false)
             setReverseDetails({
@@ -638,7 +638,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 setPcapResult(true)
             })
             .catch((e) => {
-                failed(`提升 Pcap 用户权限失败：${e}`)
+                failed(t("GlobalState.promotePcapUserPermissionFailed", {error: String(e)}))
             })
             .finally(() => setPcapHintLoading(false))
     })
@@ -1021,7 +1021,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                             <div className={styles["info-left"]}>
                                 <SuccessIcon />
                                 <div className={styles["left-body"]}>
-                                    <div className={styles["system-proxy-title"]}>所有配置均正常</div>
+                                        <div className={styles["system-proxy-title"]}>{t("GlobalState.allConfigsNormal")}</div>
                                 </div>
                             </div>
                             <div></div>
@@ -1035,9 +1035,9 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <SuccessIcon />
                                     <div className={styles["left-body"]}>
                                         <div className={styles["title-style"]}>
-                                            启用节点
+                                            {t("GlobalState.enabledNodes")}
                                             <YakitTag color='success' style={{marginLeft: 8}}>
-                                                已启用
+                                                {t("GlobalState.enabled")}
                                             </YakitTag>
                                         </div>
                                     </div>
@@ -1049,7 +1049,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                         className={styles["btn-style"]}
                                         onClick={onCloseAllRunNode}
                                     >
-                                        全部关闭
+                                        {t("GlobalState.closeAll")}
                                     </YakitButton>
                                 </div>
                             </div>
@@ -1071,7 +1071,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                                     className={styles["btn-style"]}
                                                     onClick={() => onCloseRunNodeItem(key, value)}
                                                 >
-                                                    关闭
+                                                    {t("GlobalState.close")}
                                                 </YakitButton>
                                             </Col>
                                         </Row>
@@ -1125,7 +1125,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <div className={styles["header-title"]}>系统检测</div>
                     <div className={styles["header-hint"]}>
                         <span className={styles["hint-title"]}>
-                            {isChecking ? "自检中..." : stateNum === 0 ? `暂无异常` : `检测到${stateNum}项异常`}
+                    {isChecking
+                        ? t("GlobalState.checking")
+                        : stateNum === 0
+                        ? t("GlobalState.noException")
+                        : t("GlobalState.exceptionsDetected", {count: stateNum})}
                         </span>
                         {isChecking ? ShowIcon["loading"] : ShowIcon[state]}
                     </div>
@@ -1163,12 +1167,14 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                     <ErrorIcon />
                                     <div className={styles["left-body"]}>
                                         <div className={styles["title-style"]}>
-                                            {ruleUpdate.State === "empty" ? "暂无本地规则" : "本地规则库需要更新"}
+                                            {ruleUpdate.State === "empty"
+                                                ? t("GlobalState.noLocalRules")
+                                                : t("GlobalState.localRuleLibraryNeedsUpdate")}
                                         </div>
                                         <div className={styles["subtitle-style"]}>
                                             {ruleUpdate.State === "empty"
-                                                ? "检测到本地规则库为空，请点击确定重置规则"
-                                                : "检测到需更新本地规则库，请点击更新规则"}
+                                                ? t("GlobalState.resetRulesHint")
+                                                : t("GlobalState.updateRulesHint")}
                                         </div>
                                     </div>
                                 </div>
@@ -1178,7 +1184,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                         className={styles["btn-style"]}
                                         onClick={downloadRuleUpdate}
                                     >
-                                        {ruleUpdate.State === "empty" ? "一键重置" : "一键更新"}
+                                        {ruleUpdate.State === "empty" ? t("GlobalState.oneClickReset") : t("GlobalState.oneClickUpdate")}
                                     </YakitButton>
                                 </div>
                             </div>
@@ -1283,11 +1289,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             {/* 规则更新确认弹框 */}
             <YakitHint
                 visible={openFristRuleUpdateModal}
-                title={ruleUpdate?.State === "empty" ? "暂无本地规则" : "本地规则库需要更新"}
+                title={ruleUpdate?.State === "empty" ? t("GlobalState.noLocalRules") : t("GlobalState.localRuleLibraryNeedsUpdate")}
                 content={
                     ruleUpdate?.State === "empty"
-                        ? "检测到本地规则库为空，请点击确定重置规则"
-                        : "检测到需更新本地规则库，请点击更新规则"
+                        ? t("GlobalState.resetRulesHint")
+                        : t("GlobalState.updateRulesHint")
                 }
                 onOk={() => {
                     setFristRuleUpdateModal(false)
@@ -1300,11 +1306,11 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
             {/* 关闭运行节点确认弹框 */}
             <YakitHint
                 visible={closeRunNodeItemVerifyVisible}
-                title='是否确认关闭节点'
-                content='确认后节点将会关闭，运行在节点上的任务也会停止'
+                title={t("GlobalState.closeRunNodeConfirmTitle")}
+                content={t("GlobalState.closeRunNodeConfirmContent")}
                 footerExtra={
                     <YakitCheckbox checked={noPrompt} onChange={(e) => setNoPrompt(e.target.checked)}>
-                        下次不再提醒
+                        {t("GlobalState.dontRemindAgain")}
                     </YakitCheckbox>
                 }
                 onOk={() => {

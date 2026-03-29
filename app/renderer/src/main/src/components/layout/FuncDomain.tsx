@@ -3590,7 +3590,7 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
             }, 300)
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", `Debug task started successfully, runtime ID: ${rId}`)
             setRuntimeId(rId)
         }
     })

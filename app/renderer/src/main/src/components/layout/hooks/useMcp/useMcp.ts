@@ -2,7 +2,9 @@ import {SystemInfo} from "@/constants/hardware"
 import {yakitNotify} from "@/utils/notification"
 import {randomString} from "@/utils/randomUtil"
 import {useEffect, useState} from "react"
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "layout")
 
 export interface mcpStreamHooks {
     mcpStreamInfo: {
@@ -51,11 +53,11 @@ export default function useMcpStream(props: useMcpHooks) {
             // 后端只在running状态返回地址，此处单独存
             if (data.Status === "running" && data.ServerUrl) {
                 setMcpServerUrl(data.ServerUrl)
-                yakitNotify("success", `MCP 服务已启动: ${data.ServerUrl}`)
+                yakitNotify("success", t("McpHook.started", {serverUrl: data.ServerUrl}))
             } else if (data.Status === "error") {
-                yakitNotify("error", `MCP 服务错误: ${data.Message}`)
+                yakitNotify("error", t("McpHook.error", {message: data.Message}))
             } else if (data.Status === "stopped") {
-                yakitNotify("info", `MCP 服务已停止: ${data.Message}`)
+                yakitNotify("info", t("McpHook.stopped", {message: data.Message}))
             }
         })
 
@@ -67,7 +69,7 @@ export default function useMcpStream(props: useMcpHooks) {
 
         ipcRenderer.on(`${mcpToken}-end`, () => {
             setMcpServerUrl("")
-            setMcpCurrent({Status: "stopped", Message: "服务已停止", ServerUrl: ""})
+            setMcpCurrent({Status: "stopped", Message: t("McpHook.serviceStopped"), ServerUrl: ""})
             yakitNotify("info", `[StartMcpServer] finished`)
         })
         return () => {
@@ -84,19 +86,19 @@ export default function useMcpStream(props: useMcpHooks) {
 
     const onStart = () => {
         if (mcpUrl.trim() === "") {
-            yakitNotify("error", "启动地址不能为空")
+            yakitNotify("error", t("McpHook.urlRequired"))
             return
         }
         // 校验 host:port 格式
         const match = mcpUrl.match(/^([a-zA-Z0-9.\-]+):(\d{1,5})$/)
         if (!match) {
-            yakitNotify("error", "启动地址格式错误，例如：127.0.0.1:11432")
+            yakitNotify("error", t("McpHook.urlFormatError"))
             return
         }
         const host = match[1]
         const port = parseInt(match[2], 10)
         if (port < 1 || port > 65535) {
-            yakitNotify("error", "端口号必须在1~65535之间")
+            yakitNotify("error", t("McpHook.portRangeError"))
             return
         }
 
@@ -109,7 +111,7 @@ export default function useMcpStream(props: useMcpHooks) {
         const token = randomString(40)
         setMcpToken(token)
         ipcRenderer.invoke("StartMcpServer", params, token).catch((err) => {
-            yakitNotify("error", "启用MCP失败: " + err)
+            yakitNotify("error", t("McpHook.enableFailed", {error: String(err)}))
         })
     }
 

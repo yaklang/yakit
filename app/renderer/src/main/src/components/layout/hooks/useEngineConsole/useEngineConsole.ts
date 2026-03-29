@@ -8,8 +8,10 @@ import {useMemoizedFn} from "ahooks"
 import {setClipboardText} from "@/utils/clipboard"
 import {useTheme} from "@/hook/useTheme"
 import {getXtermTheme} from "@/hook/useXTermOptions/useXTermOptions"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "layout")
 
 export let clickEngineConsoleFlag = false
 export const changeClickEngineConsoleFlag = (flag: boolean) => {
@@ -79,7 +81,7 @@ export default function useEngineConsole(props: useEngineConsoleHooks) {
         const newToken = randomString(40)
         setEngineConsoleToken(newToken)
         ipcRenderer.invoke("AttachCombinedOutput", {}, newToken).then(() => {
-            yakitNotify("info", "启动输出监控成功")
+            yakitNotify("info", t("EngineConsole.outputMonitorStarted"))
         })
     }
 
@@ -93,11 +95,11 @@ export default function useEngineConsole(props: useEngineConsoleHooks) {
         })
 
         ipcRenderer.on(`${engineConsoleToken}-error`, (_, error) => {
-            yakitNotify("error", `[AttachCombinedOutput] error:  ${error}`)
+            yakitNotify("error", t("EngineConsole.attachError", {error: String(error)}))
         })
 
         ipcRenderer.on(`${engineConsoleToken}-end`, () => {
-            yakitNotify("info", "[AttachCombinedOutput] finished")
+            yakitNotify("info", t("EngineConsole.attachFinished"))
         })
     }, [engineConsoleToken])
 

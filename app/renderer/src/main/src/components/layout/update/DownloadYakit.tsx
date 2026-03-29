@@ -25,8 +25,10 @@ import {WebsiteGV} from "@/enums/website"
 import classNames from "classnames"
 import styles from "./DownloadYakit.module.scss"
 import {apiDownloadStorageType} from "@/pages/notepadManage/notepadManage/utils"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "layout")
 
 interface useDownloadYakitProps {
     intranetYakit?: boolean
@@ -107,7 +109,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                             })
                             .then(() => {
                                 if (!isBreakRef.current) return
-                                success("下载完毕")
+                                success(t("DownloadYakit.downloadCompleted"))
                                 if (!getDownloadProgress()?.size) return
                                 setDownloadProgress({
                                     time: {
@@ -124,7 +126,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                             })
                             .catch((e: any) => {
                                 if (!isBreakRef.current) return
-                                failed(`下载失败: ${e}`)
+                                failed(t("DownloadYakit.downloadFailed", {error: String(e)}))
                             })
                             .finally(() => setVisible?.(false))
                     })
@@ -261,7 +263,7 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                             <div className={styles["hint-right-wrapper"]}>
                                 <div className={classNames(styles["hint-right-download"], "yakit-progress-wrapper")}>
                                     <div className={styles["hint-right-title"]}>
-                                        {getReleaseEditionName()} 软件下载中...
+                                        {t("DownloadYakit.downloading", {edition: getReleaseEditionName()})}
                                     </div>
                                     <Progress
                                         strokeColor='var(--Colors-Use-Main-Primary)'
@@ -269,19 +271,19 @@ export const DownloadYakit: React.FC<DownloadYakitProps> = React.memo((props) =>
                                         percent={Math.floor((downloadProgress?.percent || 0) * 100)}
                                     />
                                     <div className={styles["download-info-wrapper"]}>
-                                        <div>剩余时间 : {(downloadProgress?.time.remaining || 0).toFixed(2)}s</div>
+                                        <div>{t("DownloadYakit.remainingTime", {time: (downloadProgress?.time.remaining || 0).toFixed(2)})}</div>
                                         <div className={styles["divider-wrapper"]}>
                                             <div className={styles["divider-style"]}></div>
                                         </div>
-                                        <div>耗时 : {(downloadProgress?.time.elapsed || 0).toFixed(2)}s</div>
+                                        <div>{t("DownloadYakit.elapsedTime", {time: (downloadProgress?.time.elapsed || 0).toFixed(2)})}</div>
                                         <div className={styles["divider-wrapper"]}>
                                             <div className={styles["divider-style"]}></div>
                                         </div>
-                                        <div>下载速度 : {((downloadProgress?.speed || 0) / 1000000).toFixed(2)}M/s</div>
+                                        <div>{t("DownloadYakit.downloadSpeed", {speed: ((downloadProgress?.speed || 0) / 1000000).toFixed(2)})}</div>
                                     </div>
                                     <div style={{marginTop: 24}}>
                                         <YakitButton size='max' type='outline2' onClick={onCancel}>
-                                            取消
+                                            {t("DownloadYakit.cancel")}
                                         </YakitButton>
                                     </div>
                                 </div>
@@ -370,7 +372,7 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                                         </div>
                                     )}
                                 </div>
-                                <span>Yakit 软件官网下载链接</span>
+                                <span>{t("DownloadYakit.officialDownloadLink")}</span>
                             </div>
                         ) : (
                             <div
@@ -381,17 +383,17 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
                                 onMouseOut={() => setDisabled(true)}
                                 onMouseDown={() => setIsTop(2)}
                             >
-                                <span className={styles["header-title"]}>Yakit 软件官网下载链接</span>
+                                <span className={styles["header-title"]}>{t("DownloadYakit.officialDownloadLink")}</span>
                                 <div className={styles["close-wrapper"]} onClick={() => setVisible(false)}>
                                     <WinUIOpCloseSvgIcon className={styles["icon-style"]} />
                                 </div>
                             </div>
                         )}
                         <div className={styles["modal-body"]}>
-                            <div className={styles["yakit-update-hint"]}>如遇网络问题无法下载，可到官网下载安装：</div>
+                            <div className={styles["yakit-update-hint"]}>{t("DownloadYakit.officialDownloadHint")}</div>
 
                             <div className={styles["yakit-update-link"]}>
-                                官网地址
+                                {t("DownloadYakit.website")}
                                 <div className={styles["link-wrapper"]}>
                                     {WebsiteGV.OfficialWebsite}
                                     <CopyComponents
