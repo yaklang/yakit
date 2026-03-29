@@ -122,5 +122,49 @@
     "binaryData": "Binary Data Request",
     "noEchoByDelay": "No-echo Detection (Delay)",
     "noEchoByDnslog": "No-echo Detection (DNSLOG)"
+  },
+  "FuncTemplate": {
+    "reset": "Reset",
+    "author": "Author",
+    "applicant": "Applicant",
+    "expandFilter": "Expand filter",
+    "selectAll": "Select All",
+    "switchToGrid": "Switch to grid view",
+    "switchToList": "Switch to list view",
+    "searchEmpty": "Search Results Empty",
+    "noMoreData": "No more data",
+    "loginRequiredDelete": "Please log in before deleting",
+    "loginRequiredRestore": "Please log in before restoring",
+    "restore": "Restore",
+    "resetSearch": "Reset Search",
+    "search": "Search",
+    "sourceCode": "Source Code",
+    "sourceCodeDesc": "You can define the plugin input principle and write output UI here",
+    "escFullScreen": "Press Esc to exit full screen",
+    "noDescription": "No Description about it.",
+    "anonymous": "anonymous",
+    "filterCondition": "Filter Condition"
+  },
+  "PluginHubList": {
+    "clickToEnter": "Click to enter {target}",
+    "list": "list",
+    "expandDetailList": "Expand detail list",
+    "collapseDetailList": "Collapse detail list",
+    "expandAdvancedFilter": "Expand advanced filter",
+    "collapseAdvancedFilter": "Collapse advanced filter"
+  },
+  "HubListOnline": {
+    "downloadBusy": "This plugin is currently downloading, please try again later",
+    "loginRequiredUpload": "Please log in first to upload",
+    "noPermission": "No permission for this operation",
+    "pluginInfoMissingRefresh": "Plugin information not found, please refresh the list and try again",
+    "download": "Download",
+    "oneClickDownload": "One-click Download",
+    "newPlugin": "New Plugin",
+    "noData": "No Data",
+    "bulkUploadHint": "You can upload all local plugins at once",
+    "oneClickUpload": "One-click Upload",
+    "refresh": "Refresh",
+    "searchEmpty": "Search Results Empty"
   }
 }

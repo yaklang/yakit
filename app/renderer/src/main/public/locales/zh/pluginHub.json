@@ -115,6 +115,28 @@
     "refresh": "刷新",
     "deleteConfirm": "是否要删除插件"
   },
+  "HubListFilter": {
+    "advancedFilter": "高级筛选",
+    "clear": "清空",
+    "endReached": "已经到底啦～",
+    "noData": "暂无数据"
+  },
+  "HubListOuterList": {
+    "selectAll": "全选",
+    "filterCondition": "筛选条件",
+    "switchToGrid": "切换至宫格视图",
+    "switchToList": "切换至列表视图",
+    "searchEmpty": "搜索结果“空”",
+    "total": "总数 {count}",
+    "selected": "已选 {count}"
+  },
+  "HubGridList": {
+    "noMoreData": "暂无更多数据"
+  },
+  "HubDetailListOpt": {
+    "noDescription": "暂无描述",
+    "anonymous": "匿名"
+  },
   "PluginManage": {
     "download": "下载",
     "delete": "删除",
@@ -210,7 +232,38 @@
     "upload": "上传",
     "update": "更新",
     "download": "下载",
-    "deletePluginConfirm": "是否要删除插件"
+    "deletePluginConfirm": "是否要删除插件",
+    "contributors": "{count}位协作者",
+    "source": "来源:",
+    "copyPlugin": "复制插件 “{basePluginName}” 为 “{pluginName}”",
+    "copy": "复制",
+    "updatedAt": "更新时间 : {date}"
+  },
+  "HubListOnline": {
+    "pluginInfoErrorLike": "插件信息错误，无法进行点赞操作",
+    "loginRequiredLike": "登录后才可以进行点赞",
+    "pluginInfoErrorDownload": "插件信息错误，无法进行下载操作",
+    "shareUuidMissing": "分享插件的UUID不存在",
+    "uuidCopied": "插件UUID已粘贴到剪切板",
+    "loginRequiredDelete": "登录后才可以进行删除",
+    "loginRequiredChange": "登录后才可以改变状态",
+    "keyInfoError": "插件关键信息获取错误",
+    "pluginBasicDetection": "插件基础检测",
+    "pluginStore": "插件商店",
+    "downloadPlugin": "下载插件",
+    "sameNameHint": "同名覆盖提示",
+    "sameNameHintDesc": "如果本地存在同名插件会直接进行覆盖",
+    "sameNameHintDownload": "本地有插件同名，下载将会覆盖，是否下载",
+    "makePublic": "改为公开",
+    "makePrivate": "改为私密",
+    "deleteOnline": "删除线上",
+    "loginRequiredRestore": "登录后才可以进行还原",
+    "pluginInfoErrorUpload": "插件信息错误，无法进行上传操作",
+    "loginRequiredUpload": "登录后才可以进行上传",
+    "pluginInfoRefreshError": "插件信息错误，请刷新列表后重试",
+    "pluginInfoErrorDelete": "插件信息错误，无法进行删除操作,请刷新列表重试",
+    "export": "导出",
+    "deleteLocal": "删除本地"
   },
   "FuncTemplate": {
     "localOnlyTitle": "该操作为本地功能",

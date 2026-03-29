@@ -28,6 +28,7 @@ import classNames from "classnames"
 import UnLogin from "@/assets/unLogin.png"
 import styles from "./HubExtraOperate.module.scss"
 import i18n from "@/i18n/i18n"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const t = i18n.getFixedT(null, "pluginHub")
 
@@ -376,6 +377,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
         basePluginName,
         infoExtra
     } = props
+    const {t} = useI18nNamespaces(["pluginHub"])
 
     const tagList = useMemo(() => {
         if (!tags) return []
@@ -410,7 +412,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                             {pluginName || "-"}
                         </div>
                         <div className={styles["subtitle-wrapper"]}>
-                            <Tooltip title={help || "No Description about it."} overlayClassName='plugins-tooltip'>
+                            <Tooltip title={help || t("HubDetailListOpt.noDescription")} overlayClassName='plugins-tooltip'>
                                 <OutlineQuestionmarkcircleIcon className={styles["help-icon"]} />
                             </Tooltip>
                         </div>
@@ -438,9 +440,9 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                                     styles["text-style"],
                                     "yakit-content-single-ellipsis"
                                 )}
-                                title={user || "anonymous"}
+                                title={user || t("HubDetailListOpt.anonymous")}
                             >
-                                {user || "anonymous"}
+                                {user || t("HubDetailListOpt.anonymous")}
                             </div>
                             <AuthorIcon />
                         </div>
@@ -466,7 +468,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                                     onVisibleChange={setPrShow}
                                 >
                                     <YakitButton type='text2' isActive={prShow}>
-                                        {`${contributes.length}位协作者`}
+                                        {t("HubExtraOperate.contributors", {count: contributes.length})}
                                         {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
                                     </YakitButton>
                                 </YakitPopover>
@@ -477,12 +479,12 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                         <>
                             <div className={styles["divider-style"]} />
                             <div className={styles["copy-wrapper"]}>
-                                <span className={styles["text-style"]}>来源:</span>
+                                <span className={styles["text-style"]}>{t("HubExtraOperate.source")}</span>
                                 <Tooltip
-                                    title={`复制插件 “${basePluginName}” 为 “${pluginName}”`}
+                                    title={t("HubExtraOperate.copyPlugin", {basePluginName, pluginName})}
                                     overlayClassName='plugins-tooltip'
                                 >
-                                    <YakitTag style={{marginRight: 0, cursor: "pointer"}}>复制</YakitTag>
+                                    <YakitTag style={{marginRight: 0, cursor: "pointer"}}>{t("HubExtraOperate.copy")}</YakitTag>
                                 </Tooltip>
                             </div>
                         </>
@@ -492,7 +494,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                 <div className={styles["divider-style"]}></div>
                 <div
                     className={classNames(styles["text-style"], {[styles["constant-wrapper"]]: !infoExtra})}
-                >{`更新时间 : ${formatDate(updated_at)}`}</div>
+                >{t("HubExtraOperate.updatedAt", {date: formatDate(updated_at)})}</div>
 
                 {!!infoExtra && (
                     <>

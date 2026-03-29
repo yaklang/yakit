@@ -122,5 +122,49 @@
     "binaryData": "二进制数据发包",
     "noEchoByDelay": "无回显检测(通过延时判断)",
     "noEchoByDnslog": "无回显检测(通过DNSLOG判断)"
+  },
+  "FuncTemplate": {
+    "reset": "重置",
+    "author": "作者",
+    "applicant": "申请人",
+    "expandFilter": "展开筛选",
+    "selectAll": "全选",
+    "switchToGrid": "切换至宫格视图",
+    "switchToList": "切换至列表视图",
+    "searchEmpty": "搜索结果“空”",
+    "noMoreData": "暂无更多数据",
+    "loginRequiredDelete": "登录才可以进行删除",
+    "loginRequiredRestore": "登录才可以进行还原",
+    "restore": "还原",
+    "resetSearch": "重置搜索",
+    "search": "搜索",
+    "sourceCode": "源码",
+    "sourceCodeDesc": "可在此定义插件输入原理，并编写输出 UI",
+    "escFullScreen": "按 Esc 即可退出全屏",
+    "noDescription": "暂无描述",
+    "anonymous": "匿名",
+    "filterCondition": "筛选条件"
+  },
+  "PluginHubList": {
+    "clickToEnter": "点击进入{target}",
+    "list": "列表",
+    "expandDetailList": "展开详情列表",
+    "collapseDetailList": "收起详情列表",
+    "expandAdvancedFilter": "展开高级筛选",
+    "collapseAdvancedFilter": "收起高级筛选"
+  },
+  "HubListOnline": {
+    "downloadBusy": "该插件正在执行下载操作,请稍后再试",
+    "loginRequiredUpload": "请先登录后才可一键上传",
+    "noPermission": "暂无权限使用该操作",
+    "pluginInfoMissingRefresh": "未获取到插件信息，请刷新列表重试",
+    "download": "下载",
+    "oneClickDownload": "一键下载",
+    "newPlugin": "新建插件",
+    "noData": "暂无数据",
+    "bulkUploadHint": "可将本地所有插件一键上传",
+    "oneClickUpload": "一键上传",
+    "refresh": "刷新",
+    "searchEmpty": "搜索结果“空”"
   }
 }

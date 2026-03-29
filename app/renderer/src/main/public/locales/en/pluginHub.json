@@ -115,6 +115,28 @@
     "refresh": "Refresh",
     "deleteConfirm": "Are you sure you want to delete the plugin?"
   },
+  "HubListFilter": {
+    "advancedFilter": "Advanced Filter",
+    "clear": "Clear",
+    "endReached": "Already reached the end~",
+    "noData": "No Data"
+  },
+  "HubListOuterList": {
+    "selectAll": "Select All",
+    "filterCondition": "Filter Condition",
+    "switchToGrid": "Switch to grid view",
+    "switchToList": "Switch to list view",
+    "searchEmpty": "Search Results Empty",
+    "total": "Total {count}",
+    "selected": "Selected {count}"
+  },
+  "HubGridList": {
+    "noMoreData": "No more data"
+  },
+  "HubDetailListOpt": {
+    "noDescription": "No Description about it.",
+    "anonymous": "anonymous"
+  },
   "PluginManage": {
     "download": "Download",
     "delete": "Delete",
@@ -210,7 +232,38 @@
     "upload": "Upload",
     "update": "Update",
     "download": "Download",
-    "deletePluginConfirm": "Are you sure you want to delete the plugin?"
+    "deletePluginConfirm": "Are you sure you want to delete the plugin?",
+    "contributors": "{count} collaborators",
+    "source": "Source:",
+    "copyPlugin": "Copy plugin \"{basePluginName}\" as \"{pluginName}\"",
+    "copy": "Copy",
+    "updatedAt": "Updated at: {date}"
+  },
+  "HubListOnline": {
+    "pluginInfoErrorLike": "Plugin information error, unable to like",
+    "loginRequiredLike": "Please log in before liking",
+    "pluginInfoErrorDownload": "Plugin information error, unable to download",
+    "shareUuidMissing": "The plugin UUID to share is missing",
+    "uuidCopied": "Plugin UUID copied to clipboard",
+    "loginRequiredDelete": "Please log in before deleting",
+    "loginRequiredChange": "Please log in before changing status",
+    "keyInfoError": "Failed to retrieve key plugin information",
+    "pluginBasicDetection": "Plugin Basic Detection",
+    "pluginStore": "Plugin Store",
+    "downloadPlugin": "Download plugin",
+    "sameNameHint": "Duplicate Name Warning",
+    "sameNameHintDesc": "If a local plugin with the same name exists, it will be overwritten",
+    "sameNameHintDownload": "A plugin with the same name exists locally and will be overwritten. Continue download?",
+    "makePublic": "Make public",
+    "makePrivate": "Make private",
+    "deleteOnline": "Delete online",
+    "loginRequiredRestore": "Please log in before restoring",
+    "pluginInfoErrorUpload": "Plugin information error, unable to upload",
+    "loginRequiredUpload": "Please log in before uploading",
+    "pluginInfoRefreshError": "Plugin information error, please refresh the list and try again",
+    "pluginInfoErrorDelete": "Plugin information error, unable to delete, please refresh the list and try again",
+    "export": "Export",
+    "deleteLocal": "Delete local"
   },
   "FuncTemplate": {
     "localOnlyTitle": "This operation is local only",
