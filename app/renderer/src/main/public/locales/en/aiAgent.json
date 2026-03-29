@@ -125,6 +125,39 @@
     "memfitUpdateNotice": "Memfit session data upgraded, all historical session records in the system will be deleted.",
     "clearHistoryConfirm": "Whether to clear database history records"
   },
+  "KnowledgeSidebarList": {
+    "searchPlaceholder": "Search knowledge bases",
+    "building": "Building",
+    "defaultKnowledgeBase": "Default",
+    "manual": "Manual",
+    "external": "External",
+    "other": "Other",
+    "noMore": "That's all~",
+    "addKnowledgeBase": "Add Knowledge Base",
+    "buildDetail": "Build Details",
+    "startBuildFailed": "Failed to start build: {error}",
+    "entryBuildFailed": "Failed to build entry: {error}"
+  },
+  "DragKnowledge": {
+    "dragHintPrefix": "Drag files here or ",
+    "dragHintHighlight": "click to import",
+    "dragHintSuffix": " to start building the knowledge base",
+    "dragSubHint": "Data will be stored in the default base, and multiple files can be selected",
+    "defaultKnowledgeBaseDescription": "The system default knowledge base stores common knowledge for additional context in AI conversations.",
+    "downloadAll": "Download All Online Knowledge Bases",
+    "downloadingAll": "Downloading... ({progress}%)",
+    "downloadAllSuccess": "All online knowledge bases downloaded",
+    "downloadAllFailed": "Failed to download all online knowledge bases: {error}",
+    "createKnowledgeBaseSuccess": "Knowledge base created successfully",
+    "createKnowledgeBaseFailed": "Failed to create knowledge base: {error}",
+    "getKnowledgeBaseListFailed": "Failed to get knowledge base list: {error}"
+  },
+  "KnowledgeBaseFormModal": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "createKnowledgeBaseSuccess": "Knowledge base created successfully",
+    "createKnowledgeBaseFailed": "Failed to create knowledge base: {error}"
+  },
   "AIAgentTabs": {
     "historyChat": "History Chat",
     "config": "Settings",

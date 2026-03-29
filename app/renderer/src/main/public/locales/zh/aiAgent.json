@@ -125,6 +125,39 @@
     "memfitUpdateNotice": "Memfit会话数据升级，会删除系统内的所有历史会话记录",
     "clearHistoryConfirm": "是否清除数据库历史记录"
   },
+  "KnowledgeSidebarList": {
+    "searchPlaceholder": "搜索知识库",
+    "building": "构建中",
+    "defaultKnowledgeBase": "默认",
+    "manual": "手动添加",
+    "external": "外部导入",
+    "other": "其他",
+    "noMore": "已经到底啦~",
+    "addKnowledgeBase": "添加知识库",
+    "buildDetail": "构建详情",
+    "startBuildFailed": "启动构建失败: {error}",
+    "entryBuildFailed": "条目构建失败: {error}"
+  },
+  "DragKnowledge": {
+    "dragHintPrefix": "可将文件拖入框内，或",
+    "dragHintHighlight": "点击此处导入",
+    "dragHintSuffix": "即可开始创建知识库",
+    "dragSubHint": "数据会存到默认库，可选择多个文件",
+    "defaultKnowledgeBaseDescription": "系统默认知识库，存储常用知识内容，为AI对话提供上下文增强。",
+    "downloadAll": "一键下载在线知识库",
+    "downloadingAll": "下载中... ({progress}%)",
+    "downloadAllSuccess": "所有线上知识库下载完成",
+    "downloadAllFailed": "一键下载所有线上知识库失败: {error}",
+    "createKnowledgeBaseSuccess": "创建知识库成功",
+    "createKnowledgeBaseFailed": "创建知识库失败: {error}",
+    "getKnowledgeBaseListFailed": "获取知识库列表失败: {error}"
+  },
+  "KnowledgeBaseFormModal": {
+    "cancel": "取消",
+    "confirm": "确定",
+    "createKnowledgeBaseSuccess": "创建知识库成功",
+    "createKnowledgeBaseFailed": "创建知识库失败: {error}"
+  },
   "AIAgentTabs": {
     "historyChat": "历史会话",
     "config": "配置",

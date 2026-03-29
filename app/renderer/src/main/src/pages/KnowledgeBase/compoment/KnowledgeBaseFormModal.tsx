@@ -12,6 +12,7 @@ import {useKnowledgeBase} from "../hooks/useKnowledgeBase"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import styles from "../knowledgeBase.module.scss"
 import {useRequest} from "ahooks"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -32,6 +33,7 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
     setKnowledgeBaseID,
     setAddMode
 }) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {addKnowledgeBase} = useKnowledgeBase()
 
     const {runAsync, loading} = useRequest(
@@ -56,8 +58,8 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
         },
         {
             manual: true,
-            onSuccess: () => success("创建知识库成功"),
-            onError: (err) => failed(`创建知识库失败: ${err}`)
+            onSuccess: () => success(t("KnowledgeBaseFormModal.createKnowledgeBaseSuccess")),
+            onError: (err) => failed(t("KnowledgeBaseFormModal.createKnowledgeBaseFailed", {error: String(err)}))
         }
     )
 
@@ -92,10 +94,10 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
             footer={
                 <div className={styles["delete-yakit-hint"]}>
                     <YakitButton type='outline1' onClick={handOpenKnowledgeBasesModal}>
-                        取消
+                        {t("KnowledgeBaseFormModal.cancel")}
                     </YakitButton>
                     <YakitButton onClick={handleCreateKnowledge} loading={loading}>
-                        确定
+                        {t("KnowledgeBaseFormModal.confirm")}
                     </YakitButton>
                 </div>
             }

@@ -30,6 +30,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import DragKnowledge from "./DragKnowledge/DragKnowledge"
 import {useCheckKnowledgePlugin} from "@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface KnowledgeSidebarListProps {
     api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
@@ -42,6 +43,7 @@ export interface KnowledgeModalRef {
 }
 
 const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Ref<KnowledgeModalRef>) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {knowledgeBases, editKnowledgeBase} = useKnowledgeBase()
     const refRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(refRef)
@@ -110,7 +112,7 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                     })
                 } catch (e) {
                     buildingRef.current.delete(key)
-                    failed(`启动知识库构建失败: ${e + ""}`)
+                    failed(t("KnowledgeSidebarList.startBuildFailed", {error: String(e)}))
                 }
             }
 
@@ -153,13 +155,13 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                             })
                             api.removeStream && api.removeStream(updateItems.streamToken)
                         } catch {
-                            failed(`知识库条目构建流失败: ${e}`)
+                            failed(t("KnowledgeSidebarList.entryBuildFailed", {error: String(e)}))
                         }
                     }
                 })
             }
         } catch (e) {
-            failed(`知识库条目构建流失败: ${e}`)
+            failed(t("KnowledgeSidebarList.entryBuildFailed", {error: String(e)}))
         }
     })
 
@@ -277,7 +279,7 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                     <YakitInput
                         prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                         allowClear
-                        placeholder='请输入关键词搜索'
+                        placeholder={t("KnowledgeSidebarList.searchPlaceholder")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -293,7 +295,11 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                                     : setAddMode((it) => it.filter((tar) => tar !== tag.value))
                             }}
                         >
-                            {tag.label}
+                            {tag.value === "manual"
+                                ? t("KnowledgeSidebarList.manual")
+                                : tag.value === "external"
+                                  ? t("KnowledgeSidebarList.external")
+                                  : t("KnowledgeSidebarList.other")}
                         </YakitCheckableTag>
                     ))}
                 </div>
@@ -335,17 +341,17 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                                                             }}
                                                         >
                                                             <OutlineLoadingIcon className={styles["loading-icon"]} />
-                                                            生成中,点击查看进度
+                                                            {t("KnowledgeSidebarList.building")}
                                                         </div>
                                                     ) : items.IsDefault ? (
-                                                        <div className={styles["default-tag"]}>默认知识库</div>
+                                                        <div className={styles["default-tag"]}>{t("KnowledgeSidebarList.defaultKnowledgeBase")}</div>
                                                     ) : (
                                                         <div className={styles["type-tag"]}>
                                                             {items.CreatedFromUI
-                                                                ? "手动创建"
+                                                                ? t("KnowledgeSidebarList.manual")
                                                                 : items.IsImported
-                                                                ? "外部导入"
-                                                                : "其他"}
+                                                                 ? t("KnowledgeSidebarList.external")
+                                                                 : t("KnowledgeSidebarList.other")}
                                                         </div>
                                                     )}
 
@@ -372,7 +378,7 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                                         </div>
                                     )
                                 })}
-                                <div className={styles["min-reached"]}>已经到底啦~</div>
+                                <div className={styles["min-reached"]}>{t("KnowledgeSidebarList.noMore")}</div>
                             </>
                         ) : (
                             <DragKnowledge setAddMode={setAddMode} />
@@ -381,7 +387,7 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                 </div>
                 <KnowledgeBaseFormModal
                     visible={visible}
-                    title='新增知识库'
+                    title={t("KnowledgeSidebarList.addKnowledgeBase")}
                     handOpenKnowledgeBasesModal={handOpenKnowledgeBasesModal}
                     form={form}
                     setAddMode={setAddMode}
@@ -392,7 +398,7 @@ const KnowledgeSidebarList = ({api, streams}: KnowledgeSidebarListProps, ref: Re
                         onCloseViewBuildProcess={onCloseViewBuildProcess}
                         streams={streams}
                         api={api}
-                        title={"知识条目构建详情"}
+                        title={t("KnowledgeSidebarList.buildDetail")}
                         knowledgeBaseItems={selectedKnowledgeBaseItems}
                     />
                 ) : null}
