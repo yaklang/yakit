@@ -68,6 +68,7 @@ import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUplo
 import {randomString} from "@/utils/randomUtil"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import ReactResizeDetector from "react-resize-detector"
 import {FieldName} from "@/pages/risks/RiskTable"
@@ -138,6 +139,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         setAllTotal
     } = props
     const {userInfo} = useStore()
+    const {t} = useI18nNamespaces(["yakRunner"])
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [scrollToIndex, setScrollToIndex] = useState<number>()

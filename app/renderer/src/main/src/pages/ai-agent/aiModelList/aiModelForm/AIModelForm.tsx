@@ -525,6 +525,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
 
 export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = React.memo((props) => {
     const {formProps, aiType} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [options, setOptions] = useState<YakitAutoCompleteProps["options"]>()
     const [loading, setLoading] = useState<boolean>(false)
 

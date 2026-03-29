@@ -558,6 +558,7 @@ interface CompileHistoryListProps {
 // 编译历史列表
 const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
     const { pageInfo } = props
+    const {t} = useI18nNamespaces(["yakRunner"])
     const [loading, setLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
