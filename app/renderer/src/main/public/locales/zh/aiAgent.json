@@ -289,7 +289,28 @@
   "AIChatContent": {
     "noActiveChat": "当前没有活跃的会话",
     "exportSuccess": "导出成功",
-    "exportFailed": "导出失败: {error}"
+    "exportFailed": "导出失败: {error}",
+    "fileSystem": "文件系统",
+    "expand": "展开",
+    "collapse": "收起",
+    "newChatTitle": "新会话",
+    "newChat": "新建会话",
+    "log": "日志",
+    "exportLog": "导出日志"
+  },
+  "AIContextToken": {
+    "pressure": "上下文压力",
+    "speed": "响应速度",
+    "peak": "峰值",
+    "intelligentModel": "高质模型",
+    "lightweightModel": "轻量模型",
+    "viewDetails": "查看详情",
+    "dataDetails": "数据详情",
+    "limit": "限制",
+    "totalInput": "总输入",
+    "totalOutput": "总输出",
+    "input": "输入",
+    "output": "输出"
   },
   "InstallLlamaServerModelPrompt": {
     "installing": "正在安装模型环境",
@@ -310,7 +331,20 @@
     "startApp": "启动智能应用",
     "params": "参数",
     "summary": "Summary",
-    "details": "详细信息"
+    "details": "详细信息",
+    "enterDetails": "请输入一些细节信息",
+    "tellMeMore": "请告诉我更多信息...",
+    "cancel": "取消",
+    "confirm": "提交",
+    "submitForm": "提交表单内容",
+    "executeNow": "立即执行",
+    "evaluating": "评估中...",
+    "aiRiskScore": "AI 风险评分",
+    "enterPrompt": "请输入...",
+    "loading": "加载中...",
+    "description": "描述",
+    "paramsGroup": "参数组",
+    "requiredField": "{label} 是必填字段"
   },
   "AIReviewResult": {
     "planReview": "计划审阅",

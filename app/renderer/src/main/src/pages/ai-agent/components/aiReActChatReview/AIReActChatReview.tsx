@@ -313,7 +313,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
     const handleAIRequireQSSend = useMemoizedFn(() => {
         if (!isRequireQS) {
-            yakitNotify("error", "请输入一些细节信息")
+            yakitNotify("error", t("AIReActChatReview.enterDetails"))
             return
         }
         setRequireLoading(false)
@@ -395,7 +395,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 <div className={styles["ai-require-input"]}>
                     <Input.TextArea
                         bordered={false}
-                        placeholder='请告诉我更多信息...'
+                        placeholder={t("AIReActChatReview.tellMeMore")}
                         autoSize={{minRows: 4, maxRows: 4}}
                         value={requireQS}
                         onChange={(e) => setRequireQS(e.target.value)}
@@ -434,10 +434,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 return (
                     <>
                         <YakitButton type='outline2' onClick={() => setReviewTreeOption(undefined)}>
-                            取消
+                            {t("AIReActChatReview.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={handleSubmitReviewTree}>
-                            提交
+                            {t("AIReActChatReview.confirm")}
                         </YakitButton>
                     </>
                 )
@@ -446,10 +446,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 return (
                     <>
                         <YakitButton type='outline2' onClick={() => setForgeOption(undefined)}>
-                            取消
+                            {t("AIReActChatReview.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={handleSubmitForge}>
-                            提交表单内容
+                            {t("AIReActChatReview.submitForm")}
                         </YakitButton>
                     </>
                 )
@@ -468,7 +468,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                         </div>
                     )}
                     <button className={styles["continue-btn"]} onClick={handleContinue}>
-                        立即执行
+                        {t("AIReActChatReview.executeNow")}
                         <ColorsOutlineWarpIcon />
                     </button>
                 </>
@@ -479,7 +479,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 {isContinue && renderFooterRightExtra()}
                 {type === "require_user_interactive" && (
                     <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
-                        提交
+                        {t("AIReActChatReview.confirm")}
                     </YakitButton>
                 )}
             </div>
@@ -506,10 +506,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                     const {interactive_id, score, level} = toolReviewData.aiReview
                     node = (
                         <>
-                            {!!interactive_id && !score && !countdown && <div>评估中...</div>}
+                            {!!interactive_id && !score && !countdown && <div>{t("AIReActChatReview.evaluating")}</div>}
                             {!!score && (
                                 <div>
-                                    AI&nbsp;&nbsp;风险评分&nbsp;&nbsp;
+                                    {t("AIReActChatReview.aiRiskScore")}&nbsp;&nbsp;
                                     <span
                                         className={classNames(styles["ai-countdown"], {
                                             [styles["ai-score-low"]]: level === "low",
@@ -571,7 +571,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                         <div className={styles["review-input"]}>
                                             <Input.TextArea
                                                 bordered={false}
-                                                placeholder={editInfo.current?.prompt || "请输入..."}
+                                                placeholder={editInfo.current?.prompt || t("AIReActChatReview.enterPrompt")}
                                                 value={reviewQS}
                                                 autoSize={{minRows: 4, maxRows: 4}}
                                                 onChange={(e) => setReviewQS(e.target.value)}
@@ -624,6 +624,7 @@ const handleFetchParams = (jsonValue: string) => {
 const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo(
     forwardRef((props, ref) => {
         const {forge_name, forge_verbose_name, forge_desc, forge_params, editable} = props
+        const {t} = useI18nNamespaces(["aiAgent"])
         const [loading, setLoading] = useState<boolean>(false)
         const [forge, setForge] = useState<AIForge>()
         const [form] = Form.useForm()
@@ -690,19 +691,19 @@ const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo(
             form.setFieldsValue({...initRequiredFormValue})
         })
         return (
-            <YakitSpin spinning={loading} tip='加载中...'>
+            <YakitSpin spinning={loading} tip={t("AIReActChatReview.loading")}>
                 <div className={styles["forge-wrapper"]}>
                     <div className={styles["forge-header"]}>
                         <div className={styles["name"]}>
                             {forge?.ForgeVerboseName || forge_verbose_name || forge?.ForgeName || forge_name}
                         </div>
-                        <div className={styles["description"]}>描述:{forge?.Description || forge_desc}</div>
+                        <div className={styles["description"]}>{t("AIReActChatReview.description")}:{forge?.Description || forge_desc}</div>
                     </div>
                     <div className={classNames(styles["forge-form-body"])}>
                         {params?.length > 1 && (
                             <div className={styles["forge-form-heard"]}>
                                 <SolidVariableIcon />
-                                参数组
+                                {t("AIReActChatReview.paramsGroup")}
                             </div>
                         )}
                         <div
@@ -715,7 +716,7 @@ const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo(
                                 labelWrap={true}
                                 validateMessages={{
                                     /* eslint-disable no-template-curly-in-string */
-                                    required: "${label} 是必填字段"
+                                    required: t("AIReActChatReview.requiredField", {label: "${label}"})
                                 }}
                                 disabled={editable}
                                 layout='vertical'

@@ -289,7 +289,28 @@
   "AIChatContent": {
     "noActiveChat": "There is no active session",
     "exportSuccess": "Export successful",
-    "exportFailed": "Export failed: {error}"
+    "exportFailed": "Export failed: {error}",
+    "fileSystem": "File System",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "newChatTitle": "New Session",
+    "newChat": "New Session",
+    "log": "Log",
+    "exportLog": "Export Log"
+  },
+  "AIContextToken": {
+    "pressure": "Context Pressure",
+    "speed": "Response Speed",
+    "peak": "Peak",
+    "intelligentModel": "High-Quality Model",
+    "lightweightModel": "Lightweight Model",
+    "viewDetails": "View Details",
+    "dataDetails": "Data Details",
+    "limit": "Limit",
+    "totalInput": "Total Input",
+    "totalOutput": "Total Output",
+    "input": "Input",
+    "output": "Output"
   },
   "InstallLlamaServerModelPrompt": {
     "installing": "Installing model environment",
@@ -310,7 +331,20 @@
     "startApp": "Start App",
     "params": "Parameters",
     "summary": "Summary",
-    "details": "Details"
+    "details": "Details",
+    "enterDetails": "Please enter some details",
+    "tellMeMore": "Tell me more...",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "submitForm": "Submit Form",
+    "executeNow": "Execute Now",
+    "evaluating": "Evaluating...",
+    "aiRiskScore": "AI Risk Score",
+    "enterPrompt": "Please enter...",
+    "loading": "Loading...",
+    "description": "Description",
+    "paramsGroup": "Parameters",
+    "requiredField": "{label} is required"
   },
   "AIReviewResult": {
     "planReview": "Plan Review",
