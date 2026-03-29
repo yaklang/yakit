@@ -1447,7 +1447,10 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                     />
                                 </Tooltip>
                                 {/* <div className={styles["divider-style"]}></div>
-                                <Tooltip title={selectedNum > 0 ? "删除" : "清空"} overlayClassName='plugins-tooltip'>
+                                <Tooltip
+                                    title={selectedNum > 0 ? t("HubListLocal.delete") : t("HubListLocal.clear")}
+                                    overlayClassName='plugins-tooltip'
+                                >
                                     <YakitButton
                                         type='text2'
                                         loading={batchDelLoading}

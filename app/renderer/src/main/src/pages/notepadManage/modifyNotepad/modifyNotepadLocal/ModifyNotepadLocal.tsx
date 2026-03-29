@@ -72,7 +72,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         if (currentItem && currentItem.pageName) {
             return currentItem.pageName
         }
-        return "未命名文档"
+        return t("ModifyNotepad.unnamedDocument")
     })
     const initPageInfo = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
@@ -229,13 +229,13 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
         setNote((v) => ({...v, Id: 0}))
         // 关闭/保存按钮
         const s = showYakitModal({
-            title: "数据异常/文档不存在/已经被删除",
-            content: <span>错误原因:{message}</span>,
+            title: t("ModifyNotepad.dataErrorMissingDeleted"),
+            content: <span>{t("ModifyNotepad.errorReason", {message})}</span>,
             maskClosable: false,
             closable: false,
-            showConfirmLoading: true,
-            onOkText: "保存当前文档",
-            onCancelText: "不保存",
+            confirmLoading: true,
+            okText: t("ModifyNotepad.saveCurrentDocument"),
+            cancelText: t("ModifyNotepad.doNotSave"),
             onOk: () => {
                 const markdownContent = editor?.action(getMarkdown()) || ""
                 // 有内容才保存，没有内容新建
@@ -346,7 +346,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     const onSaveNewContent: APIFunc<string, DbOperateMessage> = useMemoizedFn((markdownContent) => {
         return new Promise(async (resolve, reject) => {
             if (!note.Id) {
-                reject("NoteId不存在")
+                reject(t("ModifyNotepad.noteIdMissing"))
                 return
             }
             const params: UpdateNoteRequest = {
@@ -370,7 +370,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     ).run
     const onSave = useMemoizedFn(() => {
         onSaveNewContent(notepadContentRef.current).then(() => {
-            yakitNotify("success", "保存成功")
+            yakitNotify("success", t("ModifyNotepad.saveSuccess"))
             emiter.emit("refreshNotepadLocalList")
         })
     })
@@ -385,7 +385,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     /**设置标题 */
     const onSetTabName = useMemoizedFn((title) => {
         if (title.length > 50) {
-            yakitNotify("error", "标题不超过50个字符")
+            yakitNotify("error", t("ModifyNotepad.titleTooLong"))
             return
         }
         if (title) {
@@ -477,10 +477,10 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
 
                         <Divider type='vertical' /> */}
                         <YakitButton type='outline2' icon={<OutlineExportIcon />} size='large' onClick={onExport}>
-                            导出
+                            {t("ModifyNotepad.export")}
                         </YakitButton>
                         <YakitButton type='primary' icon={<OutlineStoreIcon />} size='large' onClick={onSave}>
-                            保存
+                            {t("ModifyNotepad.save")}
                         </YakitButton>
                         <FuncFilterPopover
                             icon={<OutlineDotshorizontalIcon />}
@@ -490,7 +490,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                                 data: [
                                     {
                                         key: "remove",
-                                        label: "删除",
+                                        label: t("ModifyNotepad.delete"),
                                         type: "danger",
                                         itemIcon: <OutlineTrashIcon />
                                     }
@@ -514,7 +514,7 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
                 <div className={styles["notepad-content"]}>
                     <div className={styles["notepad-heard"]}>
                         <YakitInput
-                            placeholder='请输入标题'
+                        placeholder={t("ModifyNotepad.enterTitle")}
                             size='large'
                             bordered={false}
                             className={styles["notepad-input"]}

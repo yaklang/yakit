@@ -29,6 +29,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import useGetSetState from "../hooks/useGetSetState"
 import emiter from "@/utils/eventBus/eventBus"
 import {PluginOperateHint} from "../defaultConstant"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./PluginHubList.module.scss"
 import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
@@ -37,6 +38,7 @@ interface HubListRecycleProps {}
 /** @name 插件回收站 */
 export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
     const {} = props
+    const {t} = useI18nNamespaces(["pluginHub"])
     const emptyImageTarget = useEmptyImage("search")
 
     const divRef = useRef<HTMLDivElement>(null)
@@ -290,7 +292,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
     const onFooterExtraDel = useMemoizedFn((info: YakitPluginOnlineDetail) => {
         const findIndex = singleDel.findIndex((item) => item.uuid === info.uuid)
         if (findIndex > -1) {
-            yakitNotify("error", "该插件正在执行删除操作,请稍后再试")
+            yakitNotify("error", t("HubListRecycle.deleteBusy"))
             return
         }
         setSingleDel((arr) => {
@@ -383,7 +385,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
             <OnlineJudgment isJudgingLogin={true}>
                 <YakitSpin spinning={loading && isInitLoading.current}>
                     <HubOuterList
-                        title='回收站'
+                        title={t("HubListRecycle.title")}
                         headerExtra={
                             <div className={styles["hub-list-header-extra"]}>
                                 <HubButton
@@ -392,7 +394,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
                                     icon={<OutlineTrashIcon />}
                                     type='outline2'
                                     size='large'
-                                    name={selectedNum > 0 ? "删除" : "清空"}
+                                    name={selectedNum > 0 ? t("HubListRecycle.delete") : t("HubListRecycle.clear")}
                                     disabled={listTotal === 0}
                                     loading={batchDelLoading}
                                     onClick={onHeaderExtraDel}
@@ -402,7 +404,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
                                     iconWidth={900}
                                     icon={<OutlineDatabasebackupIcon />}
                                     size='large'
-                                    name={"还原"}
+                                    name={t("HubListRecycle.restore")}
                                     disabled={listTotal === 0}
                                     loading={batchRestoreLoading}
                                     onClick={onHeaderExtraRestore}
@@ -457,15 +459,15 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
                             <YakitEmpty
                                 image={emptyImageTarget}
                                 imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
-                                title='搜索结果“空”'
+                                title={t("HubListRecycle.searchEmpty")}
                                 className={styles["hub-list-empty"]}
                             />
                         ) : (
                             <div className={styles["hub-list-empty"]}>
-                                <YakitEmpty title='暂无数据' />
+                                <YakitEmpty title={t("HubListRecycle.noData")} />
                                 <div className={styles["refresh-buttons"]}>
                                     <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefresh}>
-                                        刷新
+                                        {t("HubListRecycle.refresh")}
                                     </YakitButton>
                                 </div>
                             </div>
@@ -476,7 +478,7 @@ export const HubListRecycle: React.FC<HubListRecycleProps> = memo((props) => {
 
             <NoPromptHint
                 visible={delHint}
-                title='是否要删除插件'
+                title={t("HubListRecycle.deleteConfirm")}
                 content={PluginOperateHint["delRecycle"]}
                 cacheKey={RemotePluginGV.RecyclePluginRemoveCheck}
                 onCallback={delHintCallback}

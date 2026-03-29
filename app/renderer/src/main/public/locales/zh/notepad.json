@@ -27,6 +27,32 @@
     "title": "标题",
     "lastUpdateTime": "最近更新时间"
   },
+  "ModifyNotepad": {
+    "list": "列表",
+    "catalogue": "目录",
+    "unnamedDocument": "未命名文档",
+    "dataErrorMissingDeleted": "数据异常/文档不存在/已经被删除",
+    "errorReason": "错误原因:{message}",
+    "saveCurrentDocument": "保存当前文档",
+    "doNotSave": "不保存",
+    "noteIdMissing": "NoteId不存在",
+    "saveSuccess": "保存成功",
+    "titleTooLong": "标题不超过50个字符",
+    "delete": "删除",
+    "export": "导出",
+    "save": "保存",
+    "enterTitle": "请输入标题",
+    "noPermissionMessage": "没有阅读和编辑权限,请联系作者 {userName}",
+    "downloadFailed": "下载失败：{error}",
+    "online": "在线",
+    "savedToCloud": "已经保存到云端",
+    "saving": "保存中...",
+    "connecting": "连接中...",
+    "offline": "离线",
+    "share": "分享",
+    "download": "下载",
+    "noData": "暂无数据"
+  },
   "NotepadMenu": {
     "cloudDocs": "云文档",
     "notepad": "记事本"
