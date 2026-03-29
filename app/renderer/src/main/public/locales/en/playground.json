@@ -332,5 +332,45 @@
   "RiskTableDemo": {
     "id": "ID",
     "name": "Vulnerability name"
+  },
+  "Vitest__Test__": {
+    "page": "vitest test page"
+  },
+  "JavaDecompilerOperator": {
+    "title": "Java Decompiler",
+    "dropHint": "Click or drag JAR file to this area to decompile",
+    "supportHint": "Support for .jar, .war, .ear files",
+    "reset": "Reset",
+    "decompiledClassTitle": "Decompiled: {selectedClassName}",
+    "decompiledCodeTitle": "Decompiled Java Code",
+    "selectClassHint": "Select a .class file to view decompiled code",
+    "invalidFilePath": "Invalid file path",
+    "loadedJarFile": "Loaded JAR file: {filePath}",
+    "loadJarStructureFailed": "Failed to load JAR structure: {error}",
+    "decompileClassFailed": "Failed to decompile class: {error}",
+    "loadFileContentFailed": "Failed to load file content: {error}",
+    "noDecompiledContent": "// No decompiled content available",
+    "error": "// Error: {error}",
+    "errorDecodingFileContent": "// Error decoding file content: {error}",
+    "noContentForFileType": "// No content available for this file type",
+    "noContentForFile": "// No content available for file: {resourceName}"
+  },
+  "TrafficDemo": {
+    "id": "Id",
+    "sessionType": "SessionType",
+    "uuid": "Uuid",
+    "deviceName": "DeviceName",
+    "linkLayerSrc": "LinkLayerSrc",
+    "linkLayerDst": "LinkLayerDst",
+    "networkSrcIP": "NetworkSrcIP",
+    "networkDstIP": "NetworkDstIP",
+    "transportLayerSrcPort": "TransportLayerSrcPort",
+    "transportLayerDstPort": "TransportLayerDstPort",
+    "isTCPReassembled": "IsTCPReassembled",
+    "isHalfOpen": "IsHalfOpen",
+    "isClosed": "IsClosed",
+    "isForceClosed": "IsForceClosed",
+    "haveClientHello": "HaveClientHello",
+    "sni": "SNI"
   }
 }

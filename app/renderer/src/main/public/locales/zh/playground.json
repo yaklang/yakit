@@ -332,5 +332,45 @@
   "RiskTableDemo": {
     "id": "ID",
     "name": "漏洞名称"
+  },
+  "Vitest__Test__": {
+    "page": "vitest 测试页"
+  },
+  "JavaDecompilerOperator": {
+    "title": "Java 反编译器",
+    "dropHint": "点击或拖拽 JAR 文件到此区域进行反编译",
+    "supportHint": "支持 .jar、.war、.ear 文件",
+    "reset": "重置",
+    "decompiledClassTitle": "已反编译：{selectedClassName}",
+    "decompiledCodeTitle": "已反编译的 Java 代码",
+    "selectClassHint": "选择一个 .class 文件以查看反编译代码",
+    "invalidFilePath": "无效的文件路径",
+    "loadedJarFile": "已加载 JAR 文件：{filePath}",
+    "loadJarStructureFailed": "加载 JAR 结构失败：{error}",
+    "decompileClassFailed": "反编译类失败：{error}",
+    "loadFileContentFailed": "加载文件内容失败：{error}",
+    "noDecompiledContent": "// 没有可用的反编译内容",
+    "error": "// 错误：{error}",
+    "errorDecodingFileContent": "// 解码文件内容出错：{error}",
+    "noContentForFileType": "// 此文件类型没有可用内容",
+    "noContentForFile": "// 文件没有可用内容：{resourceName}"
+  },
+  "TrafficDemo": {
+    "id": "Id",
+    "sessionType": "SessionType",
+    "uuid": "Uuid",
+    "deviceName": "DeviceName",
+    "linkLayerSrc": "LinkLayerSrc",
+    "linkLayerDst": "LinkLayerDst",
+    "networkSrcIP": "NetworkSrcIP",
+    "networkDstIP": "NetworkDstIP",
+    "transportLayerSrcPort": "TransportLayerSrcPort",
+    "transportLayerDstPort": "TransportLayerDstPort",
+    "isTCPReassembled": "IsTCPReassembled",
+    "isHalfOpen": "IsHalfOpen",
+    "isClosed": "IsClosed",
+    "isForceClosed": "IsForceClosed",
+    "haveClientHello": "HaveClientHello",
+    "sni": "SNI"
   }
 }

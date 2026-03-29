@@ -10,6 +10,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {failed, yakitInfo} from "@/utils/notification"
 import {InboxOutlined} from "@ant-design/icons"
 import {TreeNode} from "@/components/WebTree/WebTree"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {DirectoryTree} = Tree
 const {ipcRenderer} = window.require("electron")
@@ -17,6 +18,7 @@ const {ipcRenderer} = window.require("electron")
 export interface JavaDecompilerOperatorProp {}
 
 export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [treeData, setTreeData] = useState<TreeNode[]>([])
     const [jarPath, setJarPath] = useState<string>("")
     const [selectedResource, setSelectedResource] = useState<YakURLResource>()
@@ -47,7 +49,7 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
             )
             setLoading(false)
         }).catch((e) => {
-            failed(`Failed to load JAR structure: ${e}`)
+            failed(t("JavaDecompilerOperator.loadJarStructureFailed", {error: String(e)}))
             setTreeData([])
             setLoading(false)
         })
@@ -83,12 +85,12 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
     const handleJarUpload = async (file: any) => {
         const filePath = file.path
         if (!filePath) {
-            failed("Invalid file path")
+            failed(t("JavaDecompilerOperator.invalidFilePath"))
             return false
         }
 
         setJarPath(filePath)
-        yakitInfo(`Loaded JAR file: ${filePath}`)
+        yakitInfo(t("JavaDecompilerOperator.loadedJarFile", {filePath}))
         return false // Prevent default upload behavior
     }
 
@@ -123,15 +125,15 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
                         const content = Buffer.from(decompiled.Value, "hex")
                         setDecompileContent(content.toString("utf8"))
                     } else {
-                        setDecompileContent("// No decompiled content available")
+                        setDecompileContent(t("JavaDecompilerOperator.noDecompiledContent"))
                     }
                 } else {
-                    setDecompileContent("// No decompiled content available")
+                    setDecompileContent(t("JavaDecompilerOperator.noDecompiledContent"))
                 }
                 setLoading(false)
             }).catch((e) => {
-                failed(`Failed to decompile class: ${e}`)
-                setDecompileContent(`// Error: ${e}`)
+                failed(t("JavaDecompilerOperator.decompileClassFailed", {error: String(e)}))
+                setDecompileContent(t("JavaDecompilerOperator.error", {error: String(e)}))
                 setLoading(false)
             })
         } else {
@@ -147,18 +149,18 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
                             const content = Buffer.from(fileContent.Value, "hex")
                             setDecompileContent(content.toString("utf8"))
                         } catch (err) {
-                            setDecompileContent(`// Error decoding file content: ${err}`)
+                            setDecompileContent(t("JavaDecompilerOperator.errorDecodingFileContent", {error: String(err)}))
                         }
                     } else {
-                        setDecompileContent(`// No content available for this file type`)
+                        setDecompileContent(t("JavaDecompilerOperator.noContentForFileType"))
                     }
                 } else {
-                    setDecompileContent(`// No content available for file: ${resource.ResourceName}`)
+                    setDecompileContent(t("JavaDecompilerOperator.noContentForFile", {resourceName: resource.ResourceName}))
                 }
                 setLoading(false)
             }).catch((e) => {
-                failed(`Failed to load file content: ${e}`)
-                setDecompileContent(`// Error: ${e}`)
+                failed(t("JavaDecompilerOperator.loadFileContentFailed", {error: String(e)}))
+                setDecompileContent(t("JavaDecompilerOperator.error", {error: String(e)}))
                 setLoading(false)
             })
         }
@@ -168,7 +170,7 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
         <AutoCard style={{backgroundColor: "#fff"}} bodyStyle={{overflow: "hidden", padding: 0}}>
             <YakitResizeBox
                 firstNode={
-                    <AutoCard title='Java Decompiler' size='small' bodyStyle={{padding: 8}}>
+                    <AutoCard title={t("JavaDecompilerOperator.title")} size='small' bodyStyle={{padding: 8}}>
                         {!jarPath ? (
                             <Upload.Dragger
                                 name='file'
@@ -180,8 +182,8 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
                                 <p className='ant-upload-drag-icon'>
                                     <InboxOutlined />
                                 </p>
-                                <p className='ant-upload-text'>Click or drag JAR file to this area to decompile</p>
-                                <p className='ant-upload-hint'>Support for .jar, .war, .ear files</p>
+                                <p className='ant-upload-text'>{t("JavaDecompilerOperator.dropHint")}</p>
+                                <p className='ant-upload-hint'>{t("JavaDecompilerOperator.supportHint")}</p>
                             </Upload.Dragger>
                         ) : (
                             <div style={{height: "100%", overflowY: "auto"}}>
@@ -195,7 +197,7 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
                                             setSelectedClassName("")
                                         }}
                                     >
-                                        Reset
+                                        {t("JavaDecompilerOperator.reset")}
                                     </YakitButton>
                                     <div style={{wordBreak: "break-all"}}>{jarPath}</div>
                                 </Space>
@@ -245,7 +247,7 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
                 firstRatio='350px'
                 secondNode={
                     <AutoCard
-                        title={selectedClassName ? `Decompiled: ${selectedClassName}` : "Decompiled Java Code"}
+                        title={selectedClassName ? t("JavaDecompilerOperator.decompiledClassTitle", {selectedClassName}) : t("JavaDecompilerOperator.decompiledCodeTitle")}
                         size='small'
                         bodyStyle={{padding: 0}}
                     >
@@ -253,7 +255,7 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
                             <YakEditor type='java' value={decompileContent} readOnly={true} />
                         ) : (
                             <Empty
-                                description='Select a .class file to view decompiled code'
+                                description={t("JavaDecompilerOperator.selectClassHint")}
                                 style={{
                                     height: "100%",
                                     display: "flex",

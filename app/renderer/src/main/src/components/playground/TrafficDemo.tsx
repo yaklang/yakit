@@ -4,6 +4,7 @@ import {TrafficSession} from "@/models/Traffic";
 import {useMemoizedFn} from "ahooks";
 import {QueryGeneralResponse} from "@/pages/invoker/schema";
 import styles from "./TrafficSessionTable.module.css"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface TrafficDemoProp {
 
@@ -12,6 +13,7 @@ export interface TrafficDemoProp {
 const {ipcRenderer} = window.require("electron");
 
 export const TrafficDemo: React.FC<TrafficDemoProp> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [data, setData] = React.useState<TrafficSession[]>([]);
     const [loading, setLoading] = React.useState(false);
     const [pagination, setPagination] = React.useState({Page: 1, Limit: 50});
@@ -40,22 +42,22 @@ export const TrafficDemo: React.FC<TrafficDemoProp> = React.memo((props) => {
     return <Table
         className={styles.styledTrafficSessionTable}
         columns={[
-            {title: "Id", dataIndex: "Id"},
-            {title: "SessionType", dataIndex: "SessionType"},
-            {title: "Uuid", dataIndex: "Uuid"},
-            {title: "DeviceName", dataIndex: "DeviceName"},
-            {title: "LinkLayerSrc", dataIndex: "LinkLayerSrc"},
-            {title: "LinkLayerDst", dataIndex: "LinkLayerDst"},
-            {title: "NetworkSrcIP", dataIndex: "NetworkSrcIP"},
-            {title: "NetworkDstIP", dataIndex: "NetworkDstIP"},
-            {title: "TransportLayerSrcPort", dataIndex: "TransportLayerSrcPort"},
-            {title: "TransportLayerDstPort", dataIndex: "TransportLayerDstPort"},
-            {title: "IsTCPReassembled", dataIndex: "IsTCPReassembled"},
-            {title: "IsHalfOpen", dataIndex: "IsHalfOpen"},
-            {title: "IsClosed", dataIndex: "IsClosed"},
-            {title: "IsForceClosed", dataIndex: "IsForceClosed"},
-            {title: "HaveClientHello", dataIndex: "HaveClientHello"},
-            {title: "SNI", dataIndex: "SNI"},
+            {title: t("TrafficDemo.id"), dataIndex: "Id"},
+            {title: t("TrafficDemo.sessionType"), dataIndex: "SessionType"},
+            {title: t("TrafficDemo.uuid"), dataIndex: "Uuid"},
+            {title: t("TrafficDemo.deviceName"), dataIndex: "DeviceName"},
+            {title: t("TrafficDemo.linkLayerSrc"), dataIndex: "LinkLayerSrc"},
+            {title: t("TrafficDemo.linkLayerDst"), dataIndex: "LinkLayerDst"},
+            {title: t("TrafficDemo.networkSrcIP"), dataIndex: "NetworkSrcIP"},
+            {title: t("TrafficDemo.networkDstIP"), dataIndex: "NetworkDstIP"},
+            {title: t("TrafficDemo.transportLayerSrcPort"), dataIndex: "TransportLayerSrcPort"},
+            {title: t("TrafficDemo.transportLayerDstPort"), dataIndex: "TransportLayerDstPort"},
+            {title: t("TrafficDemo.isTCPReassembled"), dataIndex: "IsTCPReassembled"},
+            {title: t("TrafficDemo.isHalfOpen"), dataIndex: "IsHalfOpen"},
+            {title: t("TrafficDemo.isClosed"), dataIndex: "IsClosed"},
+            {title: t("TrafficDemo.isForceClosed"), dataIndex: "IsForceClosed"},
+            {title: t("TrafficDemo.haveClientHello"), dataIndex: "HaveClientHello"},
+            {title: t("TrafficDemo.sni"), dataIndex: "SNI"},
         ]}
         data={data}
     />;
