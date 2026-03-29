@@ -191,7 +191,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     <YakitButton
                         type={avtiveKey === "decode" ? "primary" : "outline2"}
                         onClick={(e) => e.preventDefault()}
-                        style={{height: 28, padding: "0 12px"}}
+                        style={{height: 24, padding: "0 12px"}}
                     >
                         <div className={styles["codec-menu-btn"]}>
                             {t("Layout.MenuCodec.decode")}
@@ -210,7 +210,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     <YakitButton
                         type={avtiveKey === "code" ? "primary" : "outline2"}
                         onClick={(e) => e.preventDefault()}
-                        style={{height: 28, padding: "0 12px"}}
+                        style={{height: 24, padding: "0 12px"}}
                     >
                         <div className={styles["encode-menu-btn"]}>
                             {t("Layout.MenuCodec.encode")}
@@ -222,7 +222,7 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
                     size='small'
                     type={avtiveKey === "fuzztag" ? "primary" : "outline2"}
                     onClick={() => onCodec("fuzztag")}
-                    style={{height: 28, padding: "0 12px"}}
+                    style={{height: 24, padding: "0 12px"}}
                 >
                     {t("Layout.MenuCodec.fuzztag")}
                 </YakitButton>
