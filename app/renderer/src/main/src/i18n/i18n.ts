@@ -12,6 +12,7 @@ i18n.use(HttpBackend)
             "yakitRoute",
             "core",
             "layout",
+            "playground",
             "plugin",
             "yakitStore",
             "customizeMenu",
