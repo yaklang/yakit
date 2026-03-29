@@ -430,6 +430,7 @@
       "settingsTitle": "ERM Diagram Generation Settings",
       "tip": "Tip: You can select specific entities from the Entities tab, or enter entity IDs manually. Leave entity IDs empty to generate diagram for all entities.",
       "depth": "Depth:",
+      "depthPlaceholder": "2",
       "selectedEntityIds": "Selected Entity IDs:",
       "selectedEntityIdsPlaceholder": "Enter entity IDs (comma separated)",
       "selectedEntitiesLabel": "Selected entities:",
@@ -449,5 +450,19 @@
       "entitiesTotal": "Total {total} entities",
       "relationshipsTotal": "Total {total} relationships"
     }
+  },
+  "ChaosMakerRulesDemo": {
+    "id": "ID",
+    "rule": "Rule",
+    "type": "Type",
+    "cve": "CVE",
+    "protocol": "Protocol"
+  },
+  "SpaceEngineOperator": {
+    "zoomeye": "ZoomEye",
+    "fofa": "Fofa",
+    "hunter": "Hunter",
+    "shodan": "Shodan",
+    "quake": "Quake"
   }
 }

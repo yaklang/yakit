@@ -861,7 +861,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                             value={ermDepth}
                                             onChange={(e) => setErmDepth(parseInt(e.target.value) || 2)}
                                             style={{width: 80}}
-                                            placeholder='2'
+                                            placeholder={t("EntityRepositoryPage.erm.depthPlaceholder")}
                                         />
                                         <span style={{fontSize: 12}}>{t("EntityRepositoryPage.erm.selectedEntityIds")}</span>
                                         <Input

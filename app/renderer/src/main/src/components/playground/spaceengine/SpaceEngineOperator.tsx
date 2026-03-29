@@ -89,11 +89,11 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
                     label={t("SpaceEngineOperator.engine")}
                     formItemStyle={{margin: 0, width: 180}}
                     data={[
-                        {label: "ZoomEye", value: "zoomeye"},
-                        {label: "Fofa", value: "fofa"},
-                        {label: "Hunter", value: "hunter"},
-                        {label: "Shodan", value: "shodan"},
-                        {label: "Quake", value: "quake"},
+                        {label: t("SpaceEngineOperator.zoomeye"), value: "zoomeye"},
+                        {label: t("SpaceEngineOperator.fofa"), value: "fofa"},
+                        {label: t("SpaceEngineOperator.hunter"), value: "hunter"},
+                        {label: t("SpaceEngineOperator.shodan"), value: "shodan"},
+                        {label: t("SpaceEngineOperator.quake"), value: "quake"},
                         {label: t("SpaceEngineOperator.zone"), value: "zone"},
                         {label: t("SpaceEngineOperator.unset"), value: ""},
                     ]}

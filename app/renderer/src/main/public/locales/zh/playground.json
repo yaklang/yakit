@@ -430,6 +430,7 @@
       "settingsTitle": "ERM 图生成设置",
       "tip": "提示：你可以在实体页签中选择特定实体，也可以手动输入实体ID。留空实体ID将为全部实体生成图。",
       "depth": "深度：",
+      "depthPlaceholder": "2",
       "selectedEntityIds": "已选实体ID：",
       "selectedEntityIdsPlaceholder": "输入实体ID（逗号分隔）",
       "selectedEntitiesLabel": "已选实体：",
@@ -449,5 +450,19 @@
       "entitiesTotal": "共 {total} 个实体",
       "relationshipsTotal": "共 {total} 条关系"
     }
+  },
+  "ChaosMakerRulesDemo": {
+    "id": "ID",
+    "rule": "规则",
+    "type": "类型",
+    "cve": "CVE",
+    "protocol": "协议"
+  },
+  "SpaceEngineOperator": {
+    "zoomeye": "ZoomEye",
+    "fofa": "Fofa",
+    "hunter": "Hunter",
+    "shodan": "Shodan",
+    "quake": "Quake"
   }
 }
