@@ -66,7 +66,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                                 onDownloadFinish(newFilePath, true)
                                 return
                             }
-                            success("下载完毕")
+                            success(t("DownloadYakit.downloadCompleted"))
                             if (!isAlready) {
                                 if (!getDownloadProgress()?.size) return
                                 setDownloadProgress({
@@ -86,7 +86,7 @@ export const useDownloadYakit = (props: useDownloadYakitProps) => {
                         .catch((e: any) => {
                             if (!isBreakRef.current) return
                             onDownloadFinish?.(newFilePath, false)
-                            failed(`下载失败: ${e}`)
+                            failed(t("DownloadYakit.downloadFailed", {error: String(e)}))
                         })
                         .finally(() => {
                             setVisible?.(false)

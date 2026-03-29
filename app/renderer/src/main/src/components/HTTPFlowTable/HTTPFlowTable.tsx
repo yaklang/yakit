@@ -2992,7 +2992,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 webSocket: false,
                 onClickSingle: () => {},
                 onClickBatch: () => {},
-                children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
+                children: GetPacketScanByCursorMenuItem(
+                    selected?.Id || 0,
+                    t("HTTPFlowTable.RowContextMenu.packetScan")
+                )?.subMenuItems?.map((ele) => ({
                     key: ele.title,
                     label: t(ele.title)
                 }))

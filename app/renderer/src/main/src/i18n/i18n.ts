@@ -12,6 +12,7 @@ i18n.use(HttpBackend)
             "yakitRoute",
             "core",
             "layout",
+            "yakChat",
             "configNetwork",
             "playground",
             "plugin",

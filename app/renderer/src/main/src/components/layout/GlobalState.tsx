@@ -889,7 +889,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                                     : t("GlobalState.notEnabled")}
                                             </YakitTag>
                                         </div>
-                                        <div className={styles["subtitle-style"]}>可能会影响部分功能的使用</div>
+                                        <div className={styles["subtitle-style"]}>{t("GlobalState.reverseNotConfiguredDesc")}</div>
                                     </div>
                                 </div>
                                 <div className={styles["info-right"]}>
@@ -1122,7 +1122,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         return (
             <div className={styles["global-state-content-wrapper"]}>
                 <div className={styles["body-header"]}>
-                    <div className={styles["header-title"]}>系统检测</div>
+                    <div className={styles["header-title"]}>{t("GlobalState.systemCheck")}</div>
                     <div className={styles["header-hint"]}>
                         <span className={styles["hint-title"]}>
                     {isChecking
@@ -1142,8 +1142,8 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                 <div className={styles["info-left"]}>
                                     <ErrorIcon />
                                     <div className={styles["left-body"]}>
-                                        <div className={styles["title-style"]}>引擎不是官方发布版本</div>
-                                        <div className={styles["subtitle-style"]}>可能会造成本地使用出现问题</div>
+                                        <div className={styles["title-style"]}>{t("GlobalState.engineNotOfficial")}</div>
+                                        <div className={styles["subtitle-style"]}>{t("GlobalState.engineNotOfficialDesc")}</div>
                                     </div>
                                 </div>
                                 <div className={styles["info-right"]}>
@@ -1155,7 +1155,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                                             onUseOfficialEngine()
                                         }}
                                     >
-                                        使用官方引擎
+                                        {t("GlobalState.useOfficialEngine")}
                                     </YakitButton>
                                 </div>
                             </div>
