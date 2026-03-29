@@ -570,10 +570,7 @@
     "useInstructions": "Instructions for Use",
     "matchersAndExtractorsUseInstructions": "Instructions for Using Web Fuzzer Matchers and Extractors",
     "understand": "I understand"
-  },
-  "FuzzerSequence": {
-    "pleaseSendMultipleRequestsBeforeApply": "Please send multiple request packets before applying"
-  },
+ },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "This matcher already has an empty condition",
     "addMatcherConditionFailed": "Failed to add matcher condition:",
@@ -590,7 +587,7 @@
     "debugExecute": "Debug Execute",
     "no_condition_set": "No conditions set yet",
     "keyword": "Keyword",
-    "regex": "Regular Expression",
+    "regex": "Regex",
     "status_code": "Status Code",
     "hex": "Hexadecimal",
     "expression": "Expression",
@@ -635,7 +632,7 @@
     "response_header": "Response Header",
     "response_body": "Response Body",
     "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones",
-    "regex": "Regular Expression",
+    "regex": "Regex",
     "keyValuePair": "Key-Value Pair",
     "expression": "Expression"
   },
@@ -643,6 +640,7 @@
     "hit_color": "Hit Color"
   },
   "FuzzerSequence": {
+    "pleaseSendMultipleRequestsBeforeApply": "Please send multiple request packets before applying",
     "fuzz_request_fail": "Failed to submit fuzz test request:",
     "execute_after_sequence": "Please configure the sequence before executing",
     "configure_before_adding": "There is an empty node. Please configure it before adding a new one",

@@ -289,6 +289,15 @@
       "import": "Import",
       "confirm": "Confirm",
       "finish": "Finish"
+    },
+    "useUploadOSSHooks": {
+      "uploadFailed": "Project upload failed: {error}",
+      "notepadFiledHashRequired": "When type is notepad, filedHash is required",
+      "cancelUploadFailed": "Failed to cancel upload: {error}"
+    },
+    "useDownloadUrlToLocal": {
+      "downloadFailed": "Download failed: {error}",
+      "cancelDownloadFailed": "Failed to cancel download: {error}"
     }
   }
 }

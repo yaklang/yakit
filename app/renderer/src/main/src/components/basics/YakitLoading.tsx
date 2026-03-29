@@ -16,6 +16,8 @@ import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {setLocalValue} from "@/utils/kv"
 import {getEnginePortCacheKey} from "@/utils/localCache/engine"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 
 import IRifyPrimaryBg from "../../assets/uiLayout/IRifyPrimaryBg.png"
 import MemfitAIPrimaryBg from "@/assets/uiLayout/MemfitAIPrimaryBg.png"
@@ -28,41 +30,18 @@ import styles from "./yakitLoading.module.scss"
 
 const {ipcRenderer} = window.require("electron")
 
-/** 首屏加载蒙层展示语 */
-const LoadingTitle: string[] = [
-    "没有困难的工作，只有勇敢的打工人。",
-    "打工累吗？累！但我不能哭，因为骑电动车擦眼泪不安全。",
-    "打工不仅能致富，还能交友娶媳妇",
-    "今天搬砖不狠，明天地位不稳",
-    "打工可能会少活十年，不打工你一天也活不下去。",
-    "有人相爱，有人夜里看海，有人七八个闹钟起不来，早安打工人!",
-    "打工人，打工魂，打工人是人上人",
-    `@所有人，据说用了${getReleaseEditionName()}后就不必再卷了！`,
-    `再不用${getReleaseEditionName()}，卷王就是别人的了`,
-    `来用${getReleaseEditionName()}啦？安全圈还是你最成功`,
-    `这届网安人，人手一个${getReleaseEditionName()}，香惨了！`,
-
-    "webfuzzer时根目录插入字典，会有意想不到的收获 ——是果实菌啊",
-    `${getReleaseEditionName()}写监听参数时不必写socks的版本号 ——是果实菌啊`,
-    "使用热标签，可以中间处理des aes等加密，无需再碰py ——是果实菌啊",
-    `${getReleaseEditionName()}，为您提供渗透问题的完美解决方案 ——酒零`,
-    "热加载fuzz快速定位，轻松挖洞无压力 ——k1115h0t",
-    "别让无聊占据你的时间，来探索新世界吧！——Chelth",
-    `<script>alert(‘Hello ${getReleaseEditionName()}!’)</script> ——红炉点雪`,
-    "你的鼠标，掌控世界！——Chelth"
-]
-
 export const EngineModeVerbose = (m: YaklangEngineMode, n?: DynamicStatusProps) => {
+    const t = i18n.getFixedT(null, "layout")
     if (n && n.isDynamicStatus) {
-        return "控制模式"
+        return t("YakitLoading.controlMode")
     }
     switch (m) {
         case "local":
-            return "本地模式"
+            return t("YakitLoading.localMode")
         case "remote":
-            return "远程模式"
+            return t("YakitLoading.remoteMode")
         default:
-            return "未知模式"
+            return t("YakitLoading.unknownMode")
     }
 }
 
@@ -97,8 +76,29 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         btnClickCallback,
         checkLog
     } = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const [form] = Form.useForm()
+    const loadingTitles = [
+        t("YakitLoading.slogan1"),
+        t("YakitLoading.slogan2"),
+        t("YakitLoading.slogan3"),
+        t("YakitLoading.slogan4"),
+        t("YakitLoading.slogan5"),
+        t("YakitLoading.slogan6"),
+        t("YakitLoading.slogan7"),
+        t("YakitLoading.slogan8", {edition: getReleaseEditionName()}),
+        t("YakitLoading.slogan9", {edition: getReleaseEditionName()}),
+        t("YakitLoading.slogan10", {edition: getReleaseEditionName()}),
+        t("YakitLoading.slogan11", {edition: getReleaseEditionName()}),
+        t("YakitLoading.slogan12"),
+        t("YakitLoading.slogan13", {edition: getReleaseEditionName()}),
+        t("YakitLoading.slogan14"),
+        t("YakitLoading.slogan15", {edition: getReleaseEditionName()}),
+        t("YakitLoading.slogan16"),
+        t("YakitLoading.slogan17", {edition: getReleaseEditionName()}),
+        t("YakitLoading.slogan18")
+    ]
 
     const changePortBtn = () => {
         return (
@@ -109,13 +109,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     <div style={{margin: 15}}>
                         <Form form={form} layout={"horizontal"} labelCol={{span: 6}} wrapperCol={{span: 18}}>
                             <Form.Item
-                                label={"端口号"}
+                                label={t("YakitLoading.portNumber")}
                                 rules={[
-                                    {required: true, message: `请输入端口号`},
+                                    {required: true, message: t("YakitLoading.enterPortNumber")},
                                     {
                                         pattern:
                                             /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
-                                        message: "请输入正确的端口号"
+                                        message: t("YakitLoading.enterValidPort")
                                     }
                                 ]}
                                 name={"newLinkport"}
@@ -134,7 +134,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                     })
                                 }}
                             >
-                                确定
+                                {t("YakitLoading.confirm")}
                             </YakitButton>
                         </div>
                     </div>
@@ -142,7 +142,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 overlayClassName={styles["change-port-dropdown-menu"]}
             >
                 <YakitButton size='max' type='text'>
-                    切换端口
+                    {t("YakitLoading.switchPort")}
                 </YakitButton>
             </Dropdown>
         )
@@ -158,7 +158,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         loading={restartLoading}
                         onClick={() => btnClickCallback("checkError")}
                     >
-                        手动连接引擎
+                        {t("YakitLoading.manualConnectEngine")}
                     </YakitButton>
 
                     <YakitButton
@@ -168,12 +168,12 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         loading={restartLoading}
                         onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
                     >
-                        切换为{engineMode === "local" ? "远程" : "本地"}模式
+                        {t("YakitLoading.switchMode", {mode: engineMode === "local" ? t("YakitLoading.remoteModeShort") : t("YakitLoading.localModeShort")})}
                     </YakitButton>
 
                     <div>
                         <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                            {showEngineLog ? t("YakitLoading.hideLog") : t("YakitLoading.viewLog")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         {changePortBtn()}
@@ -191,7 +191,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         loading={restartLoading}
                         onClick={() => btnClickCallback("break")}
                     >
-                        手动连接引擎
+                        {t("YakitLoading.manualConnectEngine")}
                     </YakitButton>
 
                     <YakitButton
@@ -201,12 +201,12 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         loading={restartLoading}
                         onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
                     >
-                        切换为{engineMode === "local" ? "远程" : "本地"}模式
+                        {t("YakitLoading.switchMode", {mode: engineMode === "local" ? t("YakitLoading.remoteModeShort") : t("YakitLoading.localModeShort")})}
                     </YakitButton>
 
                     <div>
                         <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                            {showEngineLog ? t("YakitLoading.hideLog") : t("YakitLoading.viewLog")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         {changePortBtn()}
@@ -223,7 +223,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         loading={restartLoading}
                         onClick={() => btnClickCallback("error")}
                     >
-                        手动连接引擎
+                        {t("YakitLoading.manualConnectEngine")}
                     </YakitButton>
 
                     <YakitButton
@@ -233,12 +233,12 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         loading={restartLoading}
                         onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
                     >
-                        切换为{engineMode === "local" ? "远程" : "本地"}模式
+                        {t("YakitLoading.switchMode", {mode: engineMode === "local" ? t("YakitLoading.remoteModeShort") : t("YakitLoading.localModeShort")})}
                     </YakitButton>
 
                     <div>
                         <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                            {showEngineLog ? t("YakitLoading.hideLog") : t("YakitLoading.viewLog")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         {changePortBtn()}
@@ -255,7 +255,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         loading={restartLoading}
                         onClick={() => btnClickCallback("engine-error")}
                     >
-                        重置引擎版本
+                        {t("YakitLoading.resetEngineVersion")}
                     </YakitButton>
 
                     <YakitButton
@@ -265,12 +265,12 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         loading={restartLoading}
                         onClick={() => btnClickCallback(engineMode === "local" ? "remote" : "local")}
                     >
-                        切换为{engineMode === "local" ? "远程" : "本地"}模式
+                        {t("YakitLoading.switchMode", {mode: engineMode === "local" ? t("YakitLoading.remoteModeShort") : t("YakitLoading.localModeShort")})}
                     </YakitButton>
 
                     <div>
                         <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                            {showEngineLog ? "隐藏日志" : "查看日志"}
+                            {showEngineLog ? t("YakitLoading.hideLog") : t("YakitLoading.viewLog")}
                         </YakitButton>
                         <Divider type='vertical' style={{margin: 0}} />
                         {changePortBtn()}
@@ -288,7 +288,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         size='max'
                         onClick={() => btnClickCallback("control-remote")}
                     >
-                        刷新
+                        {t("YakitLoading.refresh")}
                     </YakitButton>
                     <YakitButton
                         loading={remoteControlRefreshLoading}
@@ -297,7 +297,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         size='max'
                         onClick={() => btnClickCallback("local")}
                     >
-                        返回
+                        {t("YakitLoading.back")}
                     </YakitButton>
                 </>
             )
@@ -312,7 +312,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     size='max'
                     onClick={() => btnClickCallback("local")}
                 >
-                    返回本地连接
+                    {t("YakitLoading.backToLocal")}
                 </YakitButton>
             )
         }
@@ -320,7 +320,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         return (
             <div>
                 <YakitButton size='max' type='text' onClick={() => setShowEngineLog(!showEngineLog)}>
-                    {showEngineLog ? "隐藏日志" : "查看日志"}
+                    {showEngineLog ? t("YakitLoading.hideLog") : t("YakitLoading.viewLog")}
                 </YakitButton>
                 {!["ready", "link"].includes(yakitStatus) && (
                     <>
@@ -333,10 +333,10 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     }, [yakitStatus, restartLoading, remoteControlRefreshLoading, engineMode, showEngineLog])
 
     /** 加载页随机宣传语 */
-    const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
+    const loadingTitle = useMemo(() => loadingTitles[Math.floor(Math.random() * loadingTitles.length)], [loadingTitles])
     /** Title */
     const Title = useMemo(
-        () => (yakitStatus === "control-remote" ? "远程控制中 ..." : `欢迎使用 ${getReleaseEditionName()}`),
+            () => (yakitStatus === "control-remote" ? t("YakitLoading.remoteControlling") : t("YakitLoading.welcome", {edition: getReleaseEditionName()})),
         [yakitStatus]
     )
 
@@ -362,7 +362,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <div className={styles["body-content"]} style={{backgroundImage: primaryBg}}>
                     <div className={styles["yakit-loading-title"]}>
                         <div className={styles["title-style"]}>{Title}</div>
-                        {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>}
+                        {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitles[Math.floor(Math.random() * loadingTitles.length)]}</div>}
                     </div>
 
                     {/* 社区版 - 启动Logo */}
@@ -436,8 +436,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                                     ipcRenderer.invoke("open-yaklang-path")
                                 }}
                             >
-                                打开引擎所在文件
-                                <Tooltip title={`打开文件夹后运行'start-engine-grpc'，命令行启动引擎查看具体问题`}>
+                                {t("YakitLoading.openEngineFolder")}
+                                <Tooltip title={t("YakitLoading.openEngineFolderTip")}>
                                     <OutlineQuestionmarkcircleIcon />
                                 </Tooltip>
                             </div>
