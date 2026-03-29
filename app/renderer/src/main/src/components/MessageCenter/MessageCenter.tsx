@@ -31,6 +31,7 @@ import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
 import {LoginMessageIcon, NoLoginMessageIcon} from "./IconMessageCenter"
 import {JSONParseLog} from "@/utils/tool"
 import {isEnpriTrace} from "@/utils/envfile"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {
     getEnvTypeByProjects,
     ProjectParamsProp,
@@ -51,32 +52,33 @@ export interface MessageItemProps {
 
 export const MessageItem: React.FC<MessageItemProps> = (props) => {
     const {onClose, data, isEllipsis, onRedTaskItem, removeItem} = props
+    const {t} = useI18nNamespaces(["layout"])
     const {goEditNotepad} = useGoEditNotepad()
     const getDescription = useMemo(() => {
         switch (data.upPluginType) {
             case "delete":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["delete"])}>删除</span>
+                        <span className={classNames(styles["tag"], styles["delete"])}>{t("MessageCenter.delete")}</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
                             })}
                         >
-                            了您的插件：{data.scriptName}
+                            {t("MessageCenter.yourPlugin", {scriptName: data.scriptName})}
                         </span>
                     </>
                 )
             case "update":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["merge"])}>修改</span>
+                        <span className={classNames(styles["tag"], styles["merge"])}>{t("MessageCenter.modify")}</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
                             })}
                         >
-                            了您的插件：{data.scriptName}
+                            {t("MessageCenter.yourPlugin", {scriptName: data.scriptName})}
                         </span>
                     </>
                 )
@@ -84,39 +86,39 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                 if (data.status === 0) {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["merge"])}>申请修改</span>
+                            <span className={classNames(styles["tag"], styles["merge"])}>{t("MessageCenter.applyModify")}</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
                                 })}
                             >
-                                了您的插件：{data.scriptName}
+                                {t("MessageCenter.yourPlugin", {scriptName: data.scriptName})}
                             </span>
                         </>
                     )
                 } else if (data.status === 1) {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["check"])}>审核通过</span>
+                            <span className={classNames(styles["tag"], styles["check"])}>{t("MessageCenter.approved")}</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
                                 })}
                             >
-                                了您的插件：{data.scriptName}
+                                {t("MessageCenter.yourPlugin", {scriptName: data.scriptName})}
                             </span>
                         </>
                     )
                 } else {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["delete"])}>审核不通过</span>
+                            <span className={classNames(styles["tag"], styles["delete"])}>{t("MessageCenter.rejected")}</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
                                 })}
                             >
-                                了您的插件：{data.scriptName}
+                                {t("MessageCenter.yourPlugin", {scriptName: data.scriptName})}
                             </span>
                         </>
                     )
@@ -125,26 +127,26 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             case "applyMerge":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["merge"])}>申请修改</span>
+                        <span className={classNames(styles["tag"], styles["merge"])}>{t("MessageCenter.applyModify")}</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
                             })}
                         >
-                            了你的插件：{data.scriptName}，请在日志中审核
+                            {t("MessageCenter.yourPluginReview", {scriptName: data.scriptName})}
                         </span>
                     </>
                 )
             case "comment":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["merge"])}>评论</span>
+                        <span className={classNames(styles["tag"], styles["merge"])}>{t("MessageCenter.comment")}</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
                             })}
                         >
-                            了您的插件：{data.scriptName}
+                            {t("MessageCenter.yourPlugin", {scriptName: data.scriptName})}
                         </span>
                     </>
                 )
@@ -152,26 +154,26 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                 if (data.status === 1) {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["check"])}>通过合并</span>
+                            <span className={classNames(styles["tag"], styles["check"])}>{t("MessageCenter.mergeApproved")}</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
                                 })}
                             >
-                                了您的插件：{data.scriptName}
+                                {t("MessageCenter.yourPlugin", {scriptName: data.scriptName})}
                             </span>
                         </>
                     )
                 } else {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["delete"])}>拒绝合并</span>
+                            <span className={classNames(styles["tag"], styles["delete"])}>{t("MessageCenter.mergeRejected")}</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
                                 })}
                             >
-                                了您的插件：{data.scriptName}
+                                {t("MessageCenter.yourPlugin", {scriptName: data.scriptName})}
                             </span>
                         </>
                     )
@@ -179,13 +181,13 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             case "replyComment":
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["merge"])}>回复了</span>
+                        <span className={classNames(styles["tag"], styles["merge"])}>{t("MessageCenter.replied")}</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
                             })}
                         >
-                            您的评论
+                            {t("MessageCenter.yourComment")}
                         </span>
                     </>
                 )
@@ -193,14 +195,14 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                 const {text, imgs} = pluginSupplementJSONConvertToData(data.description) || {}
                 return (
                     <>
-                        <span className={classNames(styles["tag"], styles["delete"])}>删除了</span>
+                        <span className={classNames(styles["tag"], styles["delete"])}>{t("MessageCenter.deleted")}</span>
                         <span
                             className={classNames(styles["text"], {
                                 "yakit-single-line-ellipsis": isEllipsis
                             })}
                         >
-                            您的评论：{text}
-                            {imgs && imgs.length > 0 && `[图片] * ${imgs.length}`}
+                            {t("MessageCenter.yourCommentWithText", {text: String(text || "")})}
+                            {imgs && imgs.length > 0 && t("MessageCenter.imageCount", {count: imgs.length})}
                         </span>
                     </>
                 )
@@ -221,7 +223,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                             "yakit-single-line-ellipsis": isEllipsis
                         })}
                     >
-                        {data.handlerUserName}在{data.notepadTitle}文档@你
+                        {t("MessageCenter.atYou", {user: String(data.handlerUserName || ""), title: String(data.notepadTitle || "")})}
                     </span>
                 )
             case "task":
@@ -229,42 +231,42 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                 if (status === 1) {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["merge"])}>收到新任务</span>
+                            <span className={classNames(styles["tag"], styles["merge"])}>{t("MessageCenter.newTask")}</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
                                 })}
                             >
-                                任务名称：{taskName}；下发时间：{moment.unix(created_at).format("YYYY-MM-DD HH:mm")}；
-                                {description &&
-                                    `任务描述：
-                                ${description}；`}
+                                {t("MessageCenter.taskName", {taskName: String(taskName || "")})}；
+                                {t("MessageCenter.issueTime", {time: moment.unix(created_at).format("YYYY-MM-DD HH:mm")})}；
+                                {description && t("MessageCenter.taskDescription", {description: String(description || "")})}
                             </span>
                         </>
                     )
                 } else if (status === 2) {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["merge"])}>结束任务</span>
+                            <span className={classNames(styles["tag"], styles["merge"])}>{t("MessageCenter.endTask")}</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
                                 })}
                             >
-                                任务名称：{taskName}；结束时间：{moment.unix(updated_at).format("YYYY-MM-DD HH:mm")}；
+                                {t("MessageCenter.taskName", {taskName: String(taskName || "")})}；
+                                {t("MessageCenter.endTime", {time: moment.unix(updated_at).format("YYYY-MM-DD HH:mm")})}；
                             </span>
                         </>
                     )
                 } else if (status === 3) {
                     return (
                         <>
-                            <span className={classNames(styles["tag"], styles["merge"])}>任务取消</span>
+                            <span className={classNames(styles["tag"], styles["merge"])}>{t("MessageCenter.taskCanceled")}</span>
                             <span
                                 className={classNames(styles["text"], {
                                     "yakit-single-line-ellipsis": isEllipsis
                                 })}
                             >
-                                任务名称：{taskName}； 已取消，可以自行删除对应项目
+                                {t("MessageCenter.taskName", {taskName: String(taskName || "")})}； {t("MessageCenter.canceledHint")}
                             </span>
                         </>
                     )
@@ -348,7 +350,7 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
                         case "notepad":
                         case "notepadEit":
                             if (!data.notepadHash) {
-                                yakitNotify("error", "未找到笔记本信息")
+                                yakitNotify("error", t("MessageCenter.notepadNotFound"))
                                 break
                             }
                             apiGetNotepadDetail(data.notepadHash).then((res) => {
@@ -400,9 +402,9 @@ export const MessageItem: React.FC<MessageItemProps> = (props) => {
             <div className={styles["message-item-main"]}>
                 <div className={styles["header"]}>
                     <div className={styles["user-name"]}>{data.handlerUserName}</div>
-                    {data.handlerRole === "admin" && <div className={styles["role"]}>管理员</div>}
-                    {data.handlerRole === "auditor" && <div className={styles["role"]}>审核员</div>}
-                    {data.handlerRole === "trusted" && <div className={styles["role"]}>信任用户</div>}
+                    {data.handlerRole === "admin" && <div className={styles["role"]}>{t("MessageCenter.admin")}</div>}
+                    {data.handlerRole === "auditor" && <div className={styles["role"]}>{t("MessageCenter.auditor")}</div>}
+                    {data.handlerRole === "trusted" && <div className={styles["role"]}>{t("MessageCenter.trusted")}</div>}
                     <div className={styles["split"]}>·</div>
                     <div className={styles["time"]}>{formatTimestampJudge(data.created_at * 1000)}</div>
                 </div>
@@ -426,6 +428,7 @@ export interface MessageCenterProps {
 }
 export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
     const {messageList, getAllMessage, onLogin, onClose} = props
+    const {t} = useI18nNamespaces(["layout"])
     const {userInfo} = useStore()
     const [newMessageList, setNewMessageList] = useState<API.MessageLogDetail[]>(messageList)
     const [taskLoading, taskModalInfo, taskErrModalInfo, debugTaskEvent] = useEETaskNotificationHook({})
@@ -463,7 +466,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
 
                             <div className={styles["footer-btn"]}>
                                 <YakitButton type='text2' onClick={getAllMessage}>
-                                    查看全部
+                                {t("MessageCenter.viewAll")}
                                 </YakitButton>
                             </div>
                         </div>
@@ -471,7 +474,7 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                         <div className={styles["meeage-no-data"]}>
                             {/* <img src={LoginMessage} alt='' /> */}
                             <LoginMessageIcon />
-                            <div className={styles["text"]}>暂无消息</div>
+                            <div className={styles["text"]}>{t("MessageCenter.noMessages")}</div>
                         </div>
                     )}
                 </>
@@ -479,10 +482,10 @@ export const MessageCenter: React.FC<MessageCenterProps> = (props) => {
                 <div className={styles["meeage-no-login"]}>
                     {/* <img src={LightIconNoLoginMessage} alt='' /> */}
                     <NoLoginMessageIcon />
-                    <div className={styles["text"]}>登录后才可查看消息</div>
+                    <div className={styles["text"]}>{t("MessageCenter.loginToView")}</div>
                     <div>
                         <YakitButton type='primary' onClick={onLogin}>
-                            立即登录
+                            {t("MessageCenter.loginNow")}
                         </YakitButton>
                     </div>
                 </div>
@@ -521,6 +524,7 @@ export interface MessageCenterModalProps {
 }
 export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => {
     const {visible, setVisible} = props
+    const {t} = useI18nNamespaces(["layout"])
     const [loading, setLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(true)
     const [width, setWidth] = useState<number>(481)
@@ -748,7 +752,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
         >
             <div className={styles["message-center-layout"]}>
                 <div className={styles["message-header"]}>
-                    <div className={styles["title"]}>消息中心</div>
+                    <div className={styles["title"]}>{t("MessageCenter.title")}</div>
                     <div className={styles["extra"]}>
                         <YakitButton
                             size='small'
@@ -767,12 +771,12 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                         <>
                             {activeKey === "unread" && dataSorce.length > 0 && (
                                 <YakitButton type='outline2' loading={taskLoading} onClick={onRedAllMessage}>
-                                    全部已读
+                                    {t("MessageCenter.markAllRead")}
                                 </YakitButton>
                             )}
                             {activeKey === "all" && dataSorce.length > 0 && (
                                 <YakitButton type='outline1' colors='danger' onClick={onClearAllMessage}>
-                                    全部清空
+                                    {t("MessageCenter.clearAll")}
                                 </YakitButton>
                             )}
                         </>
@@ -781,7 +785,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                     <YakitTabs.YakitTabPane
                         tab={
                             <div className={styles["info-tab"]}>
-                                未读
+                                 {t("MessageCenter.unread")}
                                 {typeof noRedDataTotal === "number" && (
                                     <div className={styles["info-tab-dot"]}>{noRedDataTotal}</div>
                                 )}
@@ -791,7 +795,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
                     >
                         {virtualList()}
                     </YakitTabs.YakitTabPane>
-                    <YakitTabs.YakitTabPane tab={"全部"} key={"all"}>
+                    <YakitTabs.YakitTabPane tab={t("MessageCenter.all")} key={"all"}>
                         {virtualList()}
                     </YakitTabs.YakitTabPane>
                 </YakitTabs>
@@ -806,18 +810,19 @@ interface TaskErrNotificationProps {
 
 export const TaskErrNotification: React.FC<TaskErrNotificationProps> = (props) => {
     const {reNames} = props
+    const {t} = useI18nNamespaces(["layout"])
     return (
         <div className={styles["task-err-notification"]}>
-            <div className={styles["title"]}>存在重名项目：</div>
+            <div className={styles["title"]}>{t("MessageCenter.duplicateProjectTitle")}</div>
             <div className={styles["content"]}>
                 {reNames.map((item) => (
                     <div key={item} className={styles["task-err-item"]}>
-                        任务名称：{item}
+                        {t("MessageCenter.taskName", {taskName: item})}
                     </div>
                 ))}
             </div>
             <div className={styles["hint"]}>
-                可覆盖项目，将删除本地项目后重建项目；或自行修改本地项目名称后，点击消息中心对应任务通知重新创建任务
+                {t("MessageCenter.duplicateProjectHint")}
             </div>
         </div>
     )
@@ -829,6 +834,7 @@ interface TaskNotificationProps {
 
 export const TaskNotification: React.FC<TaskNotificationProps> = (props) => {
     const {taskList} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     // 新任务列表
     const newTaskList = useMemo(() => {
@@ -844,16 +850,14 @@ export const TaskNotification: React.FC<TaskNotificationProps> = (props) => {
         <div className={styles["task-notification"]}>
             {newTaskList.length > 0 && (
                 <div className={styles["new-task"]}>
-                    <div className={styles["title"]}>收到新任务（将自动创建任务项目）：</div>
+                    <div className={styles["title"]}>{t("MessageCenter.receivedNewTasks")}</div>
                     <div className={styles["content"]}>
                         {newTaskList.map((item) => (
                             <div key={item.id} className={styles["task-item"]}>
                                 <div className={classNames("yakit-single-line-ellipsis")}>
-                                    任务名称：{item.taskName}；下发时间：
-                                    {moment.unix(item.created_at).format("YYYY-MM-DD HH:mm")}；
-                                    {item.description &&
-                                        `任务描述：
-                                ${item.description}；`}
+                                    {t("MessageCenter.taskName", {taskName: String(item.taskName || "")})}；
+                                    {t("MessageCenter.issueTime", {time: moment.unix(item.created_at).format("YYYY-MM-DD HH:mm")})}；
+                                    {item.description && t("MessageCenter.taskDescription", {description: String(item.description || "")})}
                                 </div>
                             </div>
                         ))}
@@ -862,16 +866,14 @@ export const TaskNotification: React.FC<TaskNotificationProps> = (props) => {
             )}
             {endTaskList.length > 0 && (
                 <div className={styles["end-task"]} style={{marginTop: newTaskList.length > 0 ? 8 : 0}}>
-                    <div className={styles["title"]}>结束任务：</div>
+                    <div className={styles["title"]}>{t("MessageCenter.endTasks")}</div>
                     <div className={styles["content"]}>
                         {endTaskList.map((item) => (
                             <div key={item.id} className={styles["task-item"]}>
                                 <div className={classNames("yakit-single-line-ellipsis")}>
-                                    任务名称：{item.taskName}； 结束时间：
-                                    {moment.unix(item.updated_at).format("YYYY-MM-DD HH:mm")}；
-                                    {item.description &&
-                                        `任务描述：
-                                ${item.description}；`}
+                                    {t("MessageCenter.taskName", {taskName: String(item.taskName || "")})}；
+                                    {t("MessageCenter.endTime", {time: moment.unix(item.updated_at).format("YYYY-MM-DD HH:mm")})}；
+                                    {item.description && t("MessageCenter.taskDescription", {description: String(item.description || "")})}
                                 </div>
                             </div>
                         ))}
@@ -916,6 +918,7 @@ interface useEETaskNotificationHookProps {
 /** @name 企业版任务通知 */
 export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps) => {
     const {refresh} = props
+    const {t} = useI18nNamespaces(["layout"])
     const {userInfo} = useStore()
     const [params, setParams, getParams] = useGetState<ProjectParamsProp>({
         Type: "all",
@@ -930,9 +933,9 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
     const [taskModalInfo, setTaskModalInfo] = useState<TaskModalInfoProps>({
         visible: false,
         loading: false,
-        title: "任务通知",
+        title: t("MessageCenter.taskNotification"),
         data: [],
-        okButtonText: "好的",
+        okButtonText: t("MessageCenter.ok"),
         cancelButtonProps: {
             style: {display: "none"}
         }
@@ -942,10 +945,10 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
     const [taskErrModalInfo, setTaskErrModalInfo] = useState<TaskErrorModalInfoProps>({
         visible: false,
         loading: false,
-        title: "创建任务项目异常",
+        title: t("MessageCenter.createTaskError"),
         data: [],
-        okButtonText: "覆盖项目",
-        cancelButtonText: "稍后处理"
+        okButtonText: t("MessageCenter.coverProject"),
+        cancelButtonText: t("MessageCenter.later")
     })
 
     /** @name 校验任务重名 */
@@ -970,7 +973,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
                     resolve(newReNames)
                 })
                 .catch((err) => {
-                    yakitNotify("error", `校验任务重名错误：${err}`)
+                    yakitNotify("error", t("MessageCenter.judgeRepeatError", {err: String(err)}))
                     reject(err)
                 })
         })
@@ -1015,7 +1018,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
             // 打开任务通知Modal
             setTaskModalInfo((v) => ({...v, visible: true, data}))
         } catch (error: any) {
-            yakitNotify("error", `获取任务通知错误：${error?.message || error}`)
+            yakitNotify("error", t("MessageCenter.getTaskNotificationError", {error: String(error?.message || error)}))
             setLoading(false)
         }
     })
@@ -1060,7 +1063,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
                 if (success.length > 0) {
                     const successHashes = success.map((item) => item.hash)
                     const successInfo = success.map((item) => `${item.taskName}`).join("，")
-                    yakitNotify("success", `创建任务项目成功：${successInfo}`)
+                    yakitNotify("success", t("MessageCenter.createTaskProjectSuccess", {successInfo}))
                     await apiFetchMessageRead({
                         isAll: false,
                         hash: successHashes.join(",")
@@ -1071,7 +1074,7 @@ export const useEETaskNotificationHook = (props: useEETaskNotificationHookProps)
                 // 创建失败的项目提示错误
                 if (failed.length > 0) {
                     const failedInfo = failed.map((item) => `${item.taskName}`).join("，")
-                    yakitNotify("error", `创建任务项目失败：${failedInfo}`)
+                    yakitNotify("error", t("MessageCenter.createTaskProjectFailed", {failedInfo}))
                 }
                 resolve(null)
             } catch (error) {

@@ -153,7 +153,9 @@
     "rawHTTPRequest": "原始 HTTP 请求",
     "rawHTTPResponse": "原始 HTTP 响应",
     "batchDeletion": "批量删除",
-    "deduplicate": "去重"
+    "deduplicate": "去重",
+    "manualModifyTag": "手动修改",
+    "responseDroppedTag": "响应被丢弃"
   },
   "HTTPFlowRiskViewer": {
     "details": "详情"

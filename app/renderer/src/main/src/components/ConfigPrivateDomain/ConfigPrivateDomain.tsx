@@ -20,6 +20,7 @@ import {getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace} from "@/
 import {useUploadInfoByEnpriTrace} from "../layout/utils"
 import { JSONParseLog } from "@/utils/tool"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
 
 interface OnlineProfileProps {
@@ -76,6 +77,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     // 企业登录
     const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
     const loginUser = useMemoizedFn(() => {
+        const zhT = i18n.getFixedT("zh", "layout")
         const {user_name, pwd} = getFormValue()
         NetWorkApi<API.UrmLoginRequest, API.UserData>({
             method: "post",
@@ -121,7 +123,11 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             .catch((err) => {
                 setTimeout(() => setLoading(false), 300)
                 failed(t("ConfigPrivateDomain.enterpriseLoginFailed", {error: String(err)}))
-                if (typeof err === "string" && skipShow && (err.includes("密码不正确") || err.includes("用户不存在"))) {
+                if (
+                    typeof err === "string" &&
+                    skipShow &&
+                    (err.includes(zhT("ConfigPrivateDomain.passwordIncorrect")) || err.includes(zhT("ConfigPrivateDomain.userNotFound")))
+                ) {
                     return
                 }
                 setShowSkip(true)

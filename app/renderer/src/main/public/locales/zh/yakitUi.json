@@ -212,12 +212,33 @@
         "closeContent": "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
         "doNotRemindAgain": "不再提醒"
     },
-    "YakitModalConfirm": {
-        "unknownError": "未知错误",
-        "modalCrashRetry": "弹框内逻辑性崩溃，请关闭重试！",
-        "debugInfo": "调试信息"
-    },
-    "YakitUploadModal": {
+  "YakitModalConfirm": {
+    "unknownError": "未知错误",
+    "modalCrashRetry": "弹框内逻辑性崩溃，请关闭重试！",
+    "debugInfo": "调试信息"
+  },
+  "YakitDrawer": {
+    "unknownError": "未知错误",
+    "modalCrashRetry": "弹框内逻辑性崩溃，请关闭重试！"
+  },
+  "YakitDiffEditor": {
+    "initFailed": "对比器初始化失败，请关闭重试!"
+  },
+  "YakitSideTab": {
+    "unknownType": "未知type"
+  },
+  "YakitSwitch": {
+    "on": "开",
+    "off": "关"
+  },
+  "YakitResizeBox": {
+    "collapse": "收起"
+  },
+  "YakitCollapseText": {
+    "collapse": "收起",
+    "expand": "展开"
+  },
+  "YakitUploadModal": {
         "progress": "进度",
         "remainingTime": "剩余时间 :",
         "elapsedTime": "耗时 :",
@@ -236,7 +257,8 @@
     "YakitSelect": {
         "pleaseSelect": "请选择...",
         "YakitSelectCustom": {
-            "cache_field_save_error": "缓存字段保存失败："
+            "cache_field_save_error": "缓存字段保存失败：",
+            "cache_field_convert_error": "缓存字段转换失败："
         }
     },
     "YakitCheckbox": {

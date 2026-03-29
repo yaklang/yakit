@@ -1494,7 +1494,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         reqEditor?.setScrollTop(0)
         resEditor?.setScrollTop(0)
         const existedTags = flow?.Tags ? flow?.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
-        if (existedTags.includes("[手动修改]") || existedTags.includes("[响应被丢弃]")) {
+        if (
+            existedTags.includes(i18n.getFixedT("zh", "history")("HTTPFlowDetail.manualModifyTag")) ||
+            existedTags.includes(i18n.getFixedT("zh", "history")("HTTPFlowDetail.responseDroppedTag"))
+        ) {
             setShowBeforeData(true)
             handleGetHTTPFlowBare("request")
             handleGetHTTPFlowBare("response")

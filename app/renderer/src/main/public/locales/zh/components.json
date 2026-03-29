@@ -2,6 +2,7 @@
   "ExportExcel": {
     "dataExport": "数据导出",
     "pageNumber": "第{page}页",
-    "totalItems": "共 {total} 条"
+    "totalItems": "共 {total} 条",
+    "xlsxTooLarge": "XLSX 过大：{error}"
   }
 }

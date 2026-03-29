@@ -4,6 +4,7 @@ import ReactResizeDetector from "react-resize-detector"
 import classNames from "classnames"
 import {OutlineChevrondoubledownIcon} from "@/assets/icon/outline"
 import styles from "./YakitResizeBox.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 // 将像素与number都返回为number
 const convertToNumber = (value: string | number): number | null => {
@@ -264,6 +265,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
         onMouseUp,
         onClickHiddenBox,
     } = props
+    const {t} = useI18nNamespaces(["yakitUi"])
 
     const bodyRef = useRef<HTMLDivElement>(null)
     const firstRef = useRef<HTMLDivElement>(null)
@@ -503,7 +505,7 @@ export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) 
                             onClick={onClickHiddenBox}
                         >
                             <OutlineChevrondoubledownIcon />
-                            <span className={styles["resize-split-handle-text"]}>收起</span>
+                            <span className={styles["resize-split-handle-text"]}>{t("YakitResizeBox.collapse")}</span>
                         </div>
                     }
                     <div

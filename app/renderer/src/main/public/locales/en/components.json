@@ -2,6 +2,7 @@
   "ExportExcel": {
     "dataExport": "Data Export",
     "pageNumber": "Page {page}",
-    "totalItems": "Total {total} items"
+    "totalItems": "Total {total} items",
+    "xlsxTooLarge": "XLSX is too large: {error}"
   }
 }

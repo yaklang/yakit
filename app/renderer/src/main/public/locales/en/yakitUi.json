@@ -212,12 +212,33 @@
         "closeContent": "Closing the top-level menu will close all sub-menus under it?",
         "doNotRemindAgain": "Do not remind again"
     },
-    "YakitModalConfirm": {
-        "unknownError": "Unknown error",
-        "modalCrashRetry": "The modal logic crashed. Please close and try again!",
-        "debugInfo": "Debug info"
-    },
-    "YakitUploadModal": {
+  "YakitModalConfirm": {
+    "unknownError": "Unknown error",
+    "modalCrashRetry": "The modal logic crashed. Please close and try again!",
+    "debugInfo": "Debug info"
+  },
+  "YakitDrawer": {
+    "unknownError": "Unknown error",
+    "modalCrashRetry": "The modal logic crashed. Please close and try again!"
+  },
+  "YakitDiffEditor": {
+    "initFailed": "Failed to initialize the diff editor. Please close and try again!"
+  },
+  "YakitSideTab": {
+    "unknownType": "Unknown type"
+  },
+  "YakitSwitch": {
+    "on": "On",
+    "off": "Off"
+  },
+  "YakitResizeBox": {
+    "collapse": "Collapse"
+  },
+  "YakitCollapseText": {
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
+  "YakitUploadModal": {
         "progress": "Progress",
         "remainingTime": "Remaining time:",
         "elapsedTime": "Elapsed time:",
@@ -236,7 +257,8 @@
     "YakitSelect": {
         "pleaseSelect": "Please select...",
         "YakitSelectCustom": {
-            "cache_field_save_error": " Error saving data in cache field:"
+            "cache_field_save_error": " Error saving data in cache field:",
+            "cache_field_convert_error": " Error converting data in cache field:"
         }
     },
     "YakitCheckbox": {

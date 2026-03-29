@@ -72,11 +72,11 @@ export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
                                 if (!error) {
-                                    return <div>{t("YakitModalConfirm.unknownError")}</div>
+                                    return <div>{fixedT("YakitModalConfirm.unknownError")}</div>
                                 }
                                 return (
                                     <div>
-                                        <p>{t("YakitModalConfirm.modalCrashRetry")}</p>
+                                        <p>{fixedT("YakitModalConfirm.modalCrashRetry")}</p>
                                         <pre>{error?.message}</pre>
                                     </div>
                                 )
@@ -261,11 +261,11 @@ export const showYakitModal = (props: ShowModalProps) => {
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
                                 if (!error) {
-                                    return <div>未知错误</div>
+                                    return <div>{fixedT("YakitModalConfirm.unknownError")}</div>
                                 }
                                 return (
                                     <div>
-                                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                                        <p>{fixedT("YakitModalConfirm.modalCrashRetry")}</p>
                                         <pre>{error?.message}</pre>
                                     </div>
                                 )

@@ -152,7 +152,9 @@
     "rawHTTPRequest": "Raw HTTP Request",
     "rawHTTPResponse": "Raw HTTP Response",
     "batchDeletion": "Batch Deletion",
-    "deduplicate": "Deduplicate"
+    "deduplicate": "Deduplicate",
+    "manualModifyTag": "Manual Modify",
+    "responseDroppedTag": "Response Dropped"
   },
   "HTTPFlowRiskViewer": {
     "details": "Details"
