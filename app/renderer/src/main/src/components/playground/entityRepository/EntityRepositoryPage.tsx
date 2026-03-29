@@ -25,12 +25,14 @@ import {showByContextMenu} from "../../functionTemplate/showByContext"
 import styles from "./EntityRepository.module.scss"
 import {instance} from "@viz-js/viz"
 import {a} from "@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 const {Paragraph, Title} = Typography
 const {TabPane} = Tabs
 
 const GraphComponent = ({dot}) => {
+    const {t} = useI18nNamespaces(["playground"])
     const containerRef = useRef<HTMLDivElement>(null)
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -72,8 +74,8 @@ const GraphComponent = ({dot}) => {
     }, [dot]) // 当 dot 字符串变化时，重新渲染
     return (
         <div style={{textAlign: "center"}}>
-            {loading && <p>Loading graph...</p>}
-            {error && <pre style={{color: "red"}}>Error: {error}</pre>}
+            {loading && <p>{t("EntityRepositoryPage.messages.loadingGraph")}</p>}
+            {error && <pre style={{color: "red"}}>{t("EntityRepositoryPage.messages.graphError", {error})}</pre>}
 
             {/* 这个 div 是一个“黑盒”，React 只负责创建它，
                 不会干涉它的子元素，因为内部没有 JSX */}
@@ -173,6 +175,7 @@ export interface GenerateERMDotResponse {
 }
 
 export const EntityRepositoryPage: React.FC = () => {
+    const {t} = useI18nNamespaces(["playground"])
     const [activeTab, setActiveTab] = useState("repositories")
     const [repositories, setRepositories] = useState<EntityRepository[]>([])
     const [entities, setEntities] = useState<Entity[]>([])
@@ -211,7 +214,7 @@ export const EntityRepositoryPage: React.FC = () => {
             const response: ListEntityRepositoryResponse = await ipcRenderer.invoke("ListEntityRepository", {})
             setRepositories(response.EntityRepositories || [])
         } catch (e) {
-            failed(`Failed to load repositories: ${e}`)
+            failed(t("EntityRepositoryPage.messages.loadRepositoriesFailed", {error: String(e)}))
         } finally {
             setLoading(false)
         }
@@ -241,7 +244,7 @@ export const EntityRepositoryPage: React.FC = () => {
             setEntityPagination(response.Pagination)
             setEntityTotal(response.Total)
         } catch (e) {
-            failed(`Failed to load entities: ${e}`)
+            failed(t("EntityRepositoryPage.messages.loadEntitiesFailed", {error: String(e)}))
         } finally {
             setLoading(false)
         }
@@ -271,7 +274,7 @@ export const EntityRepositoryPage: React.FC = () => {
             setRelationshipPagination(response.Pagination)
             setRelationshipTotal(response.Total)
         } catch (e) {
-            failed(`Failed to load relationships: ${e}`)
+            failed(t("EntityRepositoryPage.messages.loadRelationshipsFailed", {error: String(e)}))
         } finally {
             setLoading(false)
         }
@@ -300,7 +303,7 @@ export const EntityRepositoryPage: React.FC = () => {
             const dotCode = response.Dot || ""
             setErmDot(dotCode)
         } catch (e) {
-            failed(`Failed to generate ERM dot: ${e}`)
+            failed(t("EntityRepositoryPage.messages.generateERMFailed", {error: String(e)}))
         } finally {
             setLoading(false)
         }
@@ -403,27 +406,27 @@ export const EntityRepositoryPage: React.FC = () => {
     // Repository columns
     const repositoryColumns = [
         {
-            title: "ID",
+            title: t("EntityRepositoryPage.table.id"),
             dataIndex: "ID",
             key: "ID",
             width: 80
         },
         {
-            title: "Name",
+            title: t("EntityRepositoryPage.table.name"),
             dataIndex: "Name",
             key: "Name",
             width: 200,
             render: (text: string) => <span style={{fontWeight: "bold"}}>{text}</span>
         },
         {
-            title: "Description",
+            title: t("EntityRepositoryPage.table.description"),
             dataIndex: "Description",
             key: "Description",
             width: 400,
             render: (text: string) => <Paragraph ellipsis={{rows: 2}}>{text}</Paragraph>
         },
         {
-            title: "Actions",
+            title: t("EntityRepositoryPage.table.actions"),
             key: "actions",
             width: 120,
             render: (_, record: EntityRepository) => (
@@ -436,7 +439,7 @@ export const EntityRepositoryPage: React.FC = () => {
                             setActiveTab("entities")
                         }}
                     >
-                        View Entities
+                        {t("EntityRepositoryPage.buttons.viewEntities")}
                     </Button>
                 </Space>
             )
@@ -446,34 +449,34 @@ export const EntityRepositoryPage: React.FC = () => {
     // Entity columns
     const entityColumns = [
         {
-            title: "ID",
+            title: t("EntityRepositoryPage.table.id"),
             dataIndex: "ID",
             key: "ID",
             width: 80
         },
         {
-            title: "Type",
+            title: t("EntityRepositoryPage.table.type"),
             dataIndex: "Type",
             key: "Type",
             width: 150,
             render: (text: string) => <Tag color='blue'>{text}</Tag>
         },
         {
-            title: "Name",
+            title: t("EntityRepositoryPage.table.name"),
             dataIndex: "Name",
             key: "Name",
             width: 200,
             render: (text: string) => <span style={{fontWeight: "bold"}}>{text}</span>
         },
         {
-            title: "Description",
+            title: t("EntityRepositoryPage.table.description"),
             dataIndex: "Description",
             key: "Description",
             width: 400,
             render: (text: string) => <Paragraph ellipsis={{rows: 2, tooltip: true}}>{text}</Paragraph>
         },
         {
-            title: "Attributes",
+            title: t("EntityRepositoryPage.table.attributes"),
             dataIndex: "Attributes",
             key: "Attributes",
             width: 200,
@@ -488,13 +491,13 @@ export const EntityRepositoryPage: React.FC = () => {
             )
         },
         {
-            title: "Actions",
+            title: t("EntityRepositoryPage.table.actions"),
             key: "actions",
             width: 120,
             render: (_, record: Entity) => (
                 <Space>
                     <Button type='primary' size='small' onClick={() => handleEntitySelectForERM(record.ID)}>
-                        Generate ERM
+                        {t("EntityRepositoryPage.buttons.generateERM")}
                     </Button>
                 </Space>
             )
@@ -504,32 +507,32 @@ export const EntityRepositoryPage: React.FC = () => {
     // Relationship columns
     const relationshipColumns = [
         {
-            title: "ID",
+            title: t("EntityRepositoryPage.table.id"),
             dataIndex: "ID",
             key: "ID",
             width: 80
         },
         {
-            title: "Type",
+            title: t("EntityRepositoryPage.table.type"),
             dataIndex: "Type",
             key: "Type",
             width: 150,
             render: (text: string) => <Tag color='green'>{text}</Tag>
         },
         {
-            title: "Source Entity ID",
+            title: t("EntityRepositoryPage.table.sourceEntityId"),
             dataIndex: "SourceEntityID",
             key: "SourceEntityID",
             width: 120
         },
         {
-            title: "Target Entity ID",
+            title: t("EntityRepositoryPage.table.targetEntityId"),
             dataIndex: "TargetEntityID",
             key: "TargetEntityID",
             width: 120
         },
         {
-            title: "Attributes",
+            title: t("EntityRepositoryPage.table.attributes"),
             dataIndex: "Attributes",
             key: "Attributes",
             render: (attributes: KVPair[]) => (
@@ -561,10 +564,10 @@ export const EntityRepositoryPage: React.FC = () => {
     }, [selectedRepository, activeTab])
 
     return (
-        <div className={styles.entityRepositoryContainer}>
+            <div className={styles.entityRepositoryContainer}>
             <div className={styles.header}>
                 <Title level={2} className={styles.title}>
-                    <DatabaseOutlined /> Entity Repository
+                    <DatabaseOutlined /> {t("EntityRepositoryPage.title")}
                 </Title>
             </div>
 
@@ -573,7 +576,7 @@ export const EntityRepositoryPage: React.FC = () => {
                     tab={
                         <span>
                             <DatabaseOutlined />
-                            Repositories
+                            {t("EntityRepositoryPage.tabs.repositories")}
                         </span>
                     }
                     key='repositories'
@@ -588,7 +591,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                         onClick={loadRepositories}
                                         loading={loading}
                                     >
-                                        Refresh
+                                        {t("EntityRepositoryPage.buttons.refresh")}
                                     </Button>
                                 </Space>
                             </div>
@@ -605,7 +608,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                         pageSize: 20,
                                         showSizeChanger: true,
                                         showQuickJumper: true,
-                                        showTotal: (total) => `Total ${total} repositories`
+                                        showTotal: (total) => t("EntityRepositoryPage.pagination.repositoriesTotal", {total})
                                     }}
                                 />
                             </div>
@@ -617,7 +620,7 @@ export const EntityRepositoryPage: React.FC = () => {
                     tab={
                         <span>
                             <FileTextOutlined />
-                            Entities
+                            {t("EntityRepositoryPage.tabs.entities")}
                         </span>
                     }
                     key='entities'
@@ -627,7 +630,7 @@ export const EntityRepositoryPage: React.FC = () => {
                         <Card className={styles.card}>
                             {selectedRepository && (
                                 <div className={styles.repositoryInfo}>
-                                    <div className={styles.repositoryName}>Entities in: {selectedRepository.Name}</div>
+                                    <div className={styles.repositoryName}>{t("EntityRepositoryPage.repositoryInfo.entitiesIn", {name: selectedRepository.Name})}</div>
                                     <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
                                 </div>
                             )}
@@ -640,7 +643,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                         onClick={() => loadEntities()}
                                         loading={loading}
                                     >
-                                        Refresh
+                                        {t("EntityRepositoryPage.buttons.refresh")}
                                     </Button>
                                     {selectedEntityIds.length > 0 && (
                                         <Button
@@ -652,7 +655,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                                 }, 100)
                                             }}
                                         >
-                                            Generate ERM for Selected ({selectedEntityIds.length})
+                                            {t("EntityRepositoryPage.buttons.generateERMForSelected", {count: selectedEntityIds.length})}
                                         </Button>
                                     )}
                                 </Space>
@@ -661,24 +664,24 @@ export const EntityRepositoryPage: React.FC = () => {
                             {/* Entity Filter Form */}
                             <Card size='small' className={styles.filterCard} style={{marginBottom: 16}}>
                                 <div style={{marginBottom: 8, fontSize: 12, color: "#666"}}>
-                                    <SearchOutlined /> Filter entities (all fields are optional)
+                                    <SearchOutlined /> {t("EntityRepositoryPage.filters.entitiesHint")}
                                 </div>
                                 <Form layout='inline' className={styles.filterForm} onFinish={handleEntityFilterChange}>
-                                    <Form.Item label='Entity Type' name='entityType'>
-                                        <Input placeholder='Enter entity type' style={{width: 150}} />
+                                    <Form.Item label={t("EntityRepositoryPage.filters.entityType")} name='entityType'>
+                                        <Input placeholder={t("EntityRepositoryPage.filters.entityTypePlaceholder")} style={{width: 150}} />
                                     </Form.Item>
-                                    <Form.Item label='Entity Name' name='entityName'>
-                                        <Input placeholder='Enter entity name' style={{width: 150}} />
+                                    <Form.Item label={t("EntityRepositoryPage.filters.entityName")} name='entityName'>
+                                        <Input placeholder={t("EntityRepositoryPage.filters.entityNamePlaceholder")} style={{width: 150}} />
                                     </Form.Item>
-                                    <Form.Item label='Entity IDs' name='entityIds'>
-                                        <Input placeholder='Enter IDs (comma separated)' style={{width: 200}} />
+                                    <Form.Item label={t("EntityRepositoryPage.filters.entityIds")} name='entityIds'>
+                                        <Input placeholder={t("EntityRepositoryPage.filters.entityIdsPlaceholder")} style={{width: 200}} />
                                     </Form.Item>
                                     <Form.Item>
                                         <Space>
                                             <Button type='primary' htmlType='submit' icon={<SearchOutlined />}>
-                                                Search
+                                                {t("EntityRepositoryPage.buttons.search")}
                                             </Button>
-                                            <Button onClick={clearEntityFilters}>Clear</Button>
+                                            <Button onClick={clearEntityFilters}>{t("EntityRepositoryPage.buttons.clear")}</Button>
                                         </Space>
                                     </Form.Item>
                                 </Form>
@@ -703,7 +706,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                         total: entityTotal,
                                         showSizeChanger: true,
                                         showQuickJumper: true,
-                                        showTotal: (total) => `Total ${total} entities`,
+                                        showTotal: (total) => t("EntityRepositoryPage.pagination.entitiesTotal", {total}),
                                         onChange: (page, pageSize) => {
                                             setEntityPagination({
                                                 ...entityPagination,
@@ -723,7 +726,7 @@ export const EntityRepositoryPage: React.FC = () => {
                     tab={
                         <span>
                             <NodeIndexOutlined />
-                            Relationships
+                            {t("EntityRepositoryPage.tabs.relationships")}
                         </span>
                     }
                     key='relationships'
@@ -734,7 +737,7 @@ export const EntityRepositoryPage: React.FC = () => {
                             {selectedRepository && (
                                 <div className={styles.repositoryInfo}>
                                     <div className={styles.repositoryName}>
-                                        Relationships in: {selectedRepository.Name}
+                                        {t("EntityRepositoryPage.repositoryInfo.relationshipsIn", {name: selectedRepository.Name})}
                                     </div>
                                     <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
                                 </div>
@@ -748,7 +751,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                         onClick={() => loadRelationships()}
                                         loading={loading}
                                     >
-                                        Refresh
+                                        {t("EntityRepositoryPage.buttons.refresh")}
                                     </Button>
                                 </Space>
                             </div>
@@ -756,34 +759,34 @@ export const EntityRepositoryPage: React.FC = () => {
                             {/* Relationship Filter Form */}
                             <Card size='small' className={styles.filterCard} style={{marginBottom: 16}}>
                                 <div style={{marginBottom: 8, fontSize: 12, color: "#666"}}>
-                                    <SearchOutlined /> Filter relationships (all fields are optional)
+                                    <SearchOutlined /> {t("EntityRepositoryPage.filters.relationshipsHint")}
                                 </div>
                                 <Form
                                     layout='inline'
                                     className={styles.filterForm}
                                     onFinish={handleRelationshipFilterChange}
                                 >
-                                    <Form.Item label='Relationship Type' name='relationshipType'>
-                                        <Input placeholder='Enter relationship type' style={{width: 150}} />
+                                    <Form.Item label={t("EntityRepositoryPage.filters.relationshipType")} name='relationshipType'>
+                                        <Input placeholder={t("EntityRepositoryPage.filters.relationshipTypePlaceholder")} style={{width: 150}} />
                                     </Form.Item>
-                                    <Form.Item label='Source Entity IDs' name='sourceEntityIds'>
-                                        <Input placeholder='Enter source IDs (comma separated)' style={{width: 200}} />
+                                    <Form.Item label={t("EntityRepositoryPage.filters.sourceEntityIds")} name='sourceEntityIds'>
+                                        <Input placeholder={t("EntityRepositoryPage.filters.sourceEntityIdsPlaceholder")} style={{width: 200}} />
                                     </Form.Item>
-                                    <Form.Item label='Target Entity IDs' name='targetEntityIds'>
-                                        <Input placeholder='Enter target IDs (comma separated)' style={{width: 200}} />
+                                    <Form.Item label={t("EntityRepositoryPage.filters.targetEntityIds")} name='targetEntityIds'>
+                                        <Input placeholder={t("EntityRepositoryPage.filters.targetEntityIdsPlaceholder")} style={{width: 200}} />
                                     </Form.Item>
-                                    <Form.Item label='Relationship IDs' name='relationshipIds'>
+                                    <Form.Item label={t("EntityRepositoryPage.filters.relationshipIds")} name='relationshipIds'>
                                         <Input
-                                            placeholder='Enter relationship IDs (comma separated)'
+                                            placeholder={t("EntityRepositoryPage.filters.relationshipIdsPlaceholder")}
                                             style={{width: 200}}
                                         />
                                     </Form.Item>
                                     <Form.Item>
                                         <Space>
                                             <Button type='primary' htmlType='submit' icon={<SearchOutlined />}>
-                                                Search
+                                                {t("EntityRepositoryPage.buttons.search")}
                                             </Button>
-                                            <Button onClick={clearRelationshipFilters}>Clear</Button>
+                                            <Button onClick={clearRelationshipFilters}>{t("EntityRepositoryPage.buttons.clear")}</Button>
                                         </Space>
                                     </Form.Item>
                                 </Form>
@@ -802,7 +805,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                         total: relationshipTotal,
                                         showSizeChanger: true,
                                         showQuickJumper: true,
-                                        showTotal: (total) => `Total ${total} relationships`,
+                                        showTotal: (total) => t("EntityRepositoryPage.pagination.relationshipsTotal", {total}),
                                         onChange: (page, pageSize) => {
                                             setRelationshipPagination({
                                                 ...relationshipPagination,
@@ -822,7 +825,7 @@ export const EntityRepositoryPage: React.FC = () => {
                     tab={
                         <span>
                             <FileTextOutlined />
-                            ERM Diagram
+                            {t("EntityRepositoryPage.tabs.erm")}
                         </span>
                     }
                     key='erm'
@@ -833,7 +836,7 @@ export const EntityRepositoryPage: React.FC = () => {
                             {selectedRepository && (
                                 <div className={styles.repositoryInfo}>
                                     <div className={styles.repositoryName}>
-                                        ERM Diagram for: {selectedRepository.Name}
+                                        {t("EntityRepositoryPage.repositoryInfo.ermDiagramFor", {name: selectedRepository.Name})}
                                     </div>
                                     <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
                                 </div>
@@ -842,16 +845,15 @@ export const EntityRepositoryPage: React.FC = () => {
                             {/* ERM Generation Form */}
                             <Card size='small' className={styles.filterCard} style={{marginBottom: 16}}>
                                 <div style={{marginBottom: 8, fontSize: 12, color: "#666"}}>
-                                    <FileTextOutlined /> ERM Diagram Generation Settings
+                                    <FileTextOutlined /> {t("EntityRepositoryPage.erm.settingsTitle")}
                                 </div>
                                 <div style={{marginBottom: 12, fontSize: 11, color: "#999"}}>
-                                    Tip: You can select specific entities from the Entities tab, or enter entity IDs
-                                    manually. Leave entity IDs empty to generate diagram for all entities.
+                                    {t("EntityRepositoryPage.erm.tip")}
                                 </div>
 
                                 <Space direction='vertical' className={styles.ermSettings} style={{width: "100%"}}>
                                     <Space>
-                                        <span style={{fontSize: 12}}>Depth:</span>
+                                        <span style={{fontSize: 12}}>{t("EntityRepositoryPage.erm.depth")}</span>
                                         <Input
                                             type='number'
                                             min={1}
@@ -861,7 +863,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                             style={{width: 80}}
                                             placeholder='2'
                                         />
-                                        <span style={{fontSize: 12}}>Selected Entity IDs:</span>
+                                        <span style={{fontSize: 12}}>{t("EntityRepositoryPage.erm.selectedEntityIds")}</span>
                                         <Input
                                             value={selectedEntityIds.join(", ")}
                                             onChange={(e) => {
@@ -872,12 +874,12 @@ export const EntityRepositoryPage: React.FC = () => {
                                                 setSelectedEntityIds(ids)
                                             }}
                                             style={{width: 200}}
-                                            placeholder='Enter entity IDs (comma separated)'
+                                            placeholder={t("EntityRepositoryPage.erm.selectedEntityIdsPlaceholder")}
                                         />
                                     </Space>
                                     {selectedEntityIds.length > 0 && (
                                         <div style={{fontSize: 11, color: "#666"}}>
-                                            Selected entities:{" "}
+                                            {t("EntityRepositoryPage.erm.selectedEntitiesLabel")} {" "}
                                             {selectedEntityIds
                                                 .map((id) => {
                                                     const entity = entities.find((e) => e.ID === id)
@@ -898,7 +900,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                             }
                                             loading={loading}
                                         >
-                                            Generate ERM Diagram
+                                            {t("EntityRepositoryPage.buttons.generateERMDiagram")}
                                         </Button>
                                         <Button
                                             onClick={() => {
@@ -906,7 +908,7 @@ export const EntityRepositoryPage: React.FC = () => {
                                                 setErmDepth(2)
                                             }}
                                         >
-                                            Clear Selection
+                                            {t("EntityRepositoryPage.buttons.clearSelection")}
                                         </Button>
                                     </Space>
                                 </Space>
@@ -921,14 +923,14 @@ export const EntityRepositoryPage: React.FC = () => {
                                             icon={<EyeOutlined />}
                                             onClick={() => setErmViewMode("svg")}
                                         >
-                                            SVG View
+                                            {t("EntityRepositoryPage.buttons.svgView")}
                                         </Button>
                                         <Button
                                             type={ermViewMode === "dot" ? "primary" : "default"}
                                             icon={<CodeOutlined />}
                                             onClick={() => setErmViewMode("dot")}
                                         >
-                                            DOT Code
+                                            {t("EntityRepositoryPage.buttons.dotCode")}
                                         </Button>
                                     </Space>
                                 </div>
@@ -937,7 +939,7 @@ export const EntityRepositoryPage: React.FC = () => {
                             {/* SVG Display */}
                             {ermViewMode === "svg" && ermDot && (
                                 <div className={styles.ermDiagram}>
-                                    <Card title='ERM Diagram (SVG)' size='small'>
+                                    <Card title={t("EntityRepositoryPage.erm.svgTitle")} size='small'>
                                         <div className={styles.svgContainer}>
                                             <GraphComponent dot={ermDot} />
                                         </div>
@@ -948,7 +950,7 @@ export const EntityRepositoryPage: React.FC = () => {
                             {/* DOT Code Display */}
                             {ermViewMode === "dot" && ermDot && (
                                 <div className={styles.ermDiagram}>
-                                    <Card title='DOT Format' size='small'>
+                                    <Card title={t("EntityRepositoryPage.erm.dotTitle")} size='small'>
                                         <pre className={styles.dotContent}>{ermDot}</pre>
                                     </Card>
                                 </div>

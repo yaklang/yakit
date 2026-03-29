@@ -372,5 +372,82 @@
     "isForceClosed": "IsForceClosed",
     "haveClientHello": "HaveClientHello",
     "sni": "SNI"
+  },
+  "EntityRepositoryPage": {
+    "title": "Entity Repository",
+    "tabs": {
+      "repositories": "Repositories",
+      "entities": "Entities",
+      "relationships": "Relationships",
+      "erm": "ERM Diagram"
+    },
+    "buttons": {
+      "viewEntities": "View Entities",
+      "refresh": "Refresh",
+      "search": "Search",
+      "clear": "Clear",
+      "generateERM": "Generate ERM",
+      "generateERMForSelected": "Generate ERM for Selected ({count})",
+      "generateERMDiagram": "Generate ERM Diagram",
+      "clearSelection": "Clear Selection",
+      "svgView": "SVG View",
+      "dotCode": "DOT Code"
+    },
+    "table": {
+      "id": "ID",
+      "name": "Name",
+      "description": "Description",
+      "actions": "Actions",
+      "type": "Type",
+      "attributes": "Attributes",
+      "sourceEntityId": "Source Entity ID",
+      "targetEntityId": "Target Entity ID"
+    },
+    "filters": {
+      "entitiesHint": "Filter entities (all fields are optional)",
+      "entityType": "Entity Type",
+      "entityTypePlaceholder": "Enter entity type",
+      "entityName": "Entity Name",
+      "entityNamePlaceholder": "Enter entity name",
+      "entityIds": "Entity IDs",
+      "entityIdsPlaceholder": "Enter IDs (comma separated)",
+      "relationshipsHint": "Filter relationships (all fields are optional)",
+      "relationshipType": "Relationship Type",
+      "relationshipTypePlaceholder": "Enter relationship type",
+      "sourceEntityIds": "Source Entity IDs",
+      "sourceEntityIdsPlaceholder": "Enter source IDs (comma separated)",
+      "targetEntityIds": "Target Entity IDs",
+      "targetEntityIdsPlaceholder": "Enter target IDs (comma separated)",
+      "relationshipIds": "Relationship IDs",
+      "relationshipIdsPlaceholder": "Enter relationship IDs (comma separated)"
+    },
+    "repositoryInfo": {
+      "entitiesIn": "Entities in: {name}",
+      "relationshipsIn": "Relationships in: {name}",
+      "ermDiagramFor": "ERM Diagram for: {name}"
+    },
+    "erm": {
+      "settingsTitle": "ERM Diagram Generation Settings",
+      "tip": "Tip: You can select specific entities from the Entities tab, or enter entity IDs manually. Leave entity IDs empty to generate diagram for all entities.",
+      "depth": "Depth:",
+      "selectedEntityIds": "Selected Entity IDs:",
+      "selectedEntityIdsPlaceholder": "Enter entity IDs (comma separated)",
+      "selectedEntitiesLabel": "Selected entities:",
+      "svgTitle": "ERM Diagram (SVG)",
+      "dotTitle": "DOT Format"
+    },
+    "messages": {
+      "loadingGraph": "Loading graph...",
+      "graphError": "Error: {error}",
+      "loadRepositoriesFailed": "Failed to load repositories: {error}",
+      "loadEntitiesFailed": "Failed to load entities: {error}",
+      "loadRelationshipsFailed": "Failed to load relationships: {error}",
+      "generateERMFailed": "Failed to generate ERM dot: {error}"
+    },
+    "pagination": {
+      "repositoriesTotal": "Total {total} repositories",
+      "entitiesTotal": "Total {total} entities",
+      "relationshipsTotal": "Total {total} relationships"
+    }
   }
 }

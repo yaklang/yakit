@@ -372,5 +372,82 @@
     "isForceClosed": "IsForceClosed",
     "haveClientHello": "HaveClientHello",
     "sni": "SNI"
+  },
+  "EntityRepositoryPage": {
+    "title": "实体仓库",
+    "tabs": {
+      "repositories": "仓库",
+      "entities": "实体",
+      "relationships": "关系",
+      "erm": "ERM 图"
+    },
+    "buttons": {
+      "viewEntities": "查看实体",
+      "refresh": "刷新",
+      "search": "搜索",
+      "clear": "清空",
+      "generateERM": "生成 ERM",
+      "generateERMForSelected": "为已选实体生成 ERM ({count})",
+      "generateERMDiagram": "生成 ERM 图",
+      "clearSelection": "清除选择",
+      "svgView": "SVG 视图",
+      "dotCode": "DOT 代码"
+    },
+    "table": {
+      "id": "ID",
+      "name": "名称",
+      "description": "描述",
+      "actions": "操作",
+      "type": "类型",
+      "attributes": "属性",
+      "sourceEntityId": "源实体ID",
+      "targetEntityId": "目标实体ID"
+    },
+    "filters": {
+      "entitiesHint": "筛选实体（所有字段均可选）",
+      "entityType": "实体类型",
+      "entityTypePlaceholder": "输入实体类型",
+      "entityName": "实体名称",
+      "entityNamePlaceholder": "输入实体名称",
+      "entityIds": "实体ID",
+      "entityIdsPlaceholder": "输入ID（逗号分隔）",
+      "relationshipsHint": "筛选关系（所有字段均可选）",
+      "relationshipType": "关系类型",
+      "relationshipTypePlaceholder": "输入关系类型",
+      "sourceEntityIds": "源实体ID",
+      "sourceEntityIdsPlaceholder": "输入源ID（逗号分隔）",
+      "targetEntityIds": "目标实体ID",
+      "targetEntityIdsPlaceholder": "输入目标ID（逗号分隔）",
+      "relationshipIds": "关系ID",
+      "relationshipIdsPlaceholder": "输入关系ID（逗号分隔）"
+    },
+    "repositoryInfo": {
+      "entitiesIn": "实体列表：{name}",
+      "relationshipsIn": "关系列表：{name}",
+      "ermDiagramFor": "ERM 图：{name}"
+    },
+    "erm": {
+      "settingsTitle": "ERM 图生成设置",
+      "tip": "提示：你可以在实体页签中选择特定实体，也可以手动输入实体ID。留空实体ID将为全部实体生成图。",
+      "depth": "深度：",
+      "selectedEntityIds": "已选实体ID：",
+      "selectedEntityIdsPlaceholder": "输入实体ID（逗号分隔）",
+      "selectedEntitiesLabel": "已选实体：",
+      "svgTitle": "ERM 图（SVG）",
+      "dotTitle": "DOT 格式"
+    },
+    "messages": {
+      "loadingGraph": "加载图形中...",
+      "graphError": "错误：{error}",
+      "loadRepositoriesFailed": "加载仓库失败：{error}",
+      "loadEntitiesFailed": "加载实体失败：{error}",
+      "loadRelationshipsFailed": "加载关系失败：{error}",
+      "generateERMFailed": "生成 ERM dot 失败：{error}"
+    },
+    "pagination": {
+      "repositoriesTotal": "共 {total} 个仓库",
+      "entitiesTotal": "共 {total} 个实体",
+      "relationshipsTotal": "共 {total} 条关系"
+    }
   }
 }
