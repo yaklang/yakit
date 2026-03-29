@@ -3,6 +3,9 @@ import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import { addScopeShow } from "../global"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 export enum MitmShortcutKey {
     /** 劫持响应 */
@@ -17,15 +20,15 @@ type EventsType = Record<`${MitmShortcutKey}`, ShortcutKeyEventInfo>
 
 const MitmShortcutKeyEvents: EventsType = {
     "hijackResponse*mitm": {
-        name: "劫持响应",
+        name: t("ShortcutKey.hijackResponse"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.UpArrow]
     },
     "dropData*mitm": {
-        name: "丢弃",
+        name: t("ShortcutKey.dropData"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.DownArrow]
     },
     "submitData*mitm": {
-        name: "放行",
+        name: t("ShortcutKey.submitData"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.RightArrow]
     }
 }
@@ -63,5 +66,4 @@ export const resetMitmShortcutKeyEvents = () => {
     currentKeyEvents = null
     setLocalValue(LocalStorageKey, JSON.stringify(MitmShortcutKeyEvents))
 }
-
 

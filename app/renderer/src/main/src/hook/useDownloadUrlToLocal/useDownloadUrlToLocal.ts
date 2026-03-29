@@ -2,6 +2,7 @@ import {safeFormatDownloadProcessState} from "@/components/layout/utils"
 import {yakitNotify} from "@/utils/notification"
 import {DownloadingState} from "@/yakitGVDefine"
 import {useEffect, useRef} from "react"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -27,6 +28,7 @@ export interface DownloadUrlToLocal {
 
 export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHooks) {
     const {path, taskToken, onUploadData, onUploadSuccess, onUploadEnd, onUploadError} = props
+    const {t} = useI18nNamespaces(["utils"])
 
     useEffect(() => {
         let isSuccess = true
@@ -39,7 +41,7 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
         ipcRenderer.on(`download-url-to-path-progress-error`, (e, error) => {
             isSuccess = false
             onUploadError && onUploadError()
-            yakitNotify("error", `下载失败:${error}`)
+            yakitNotify("error", t("useDownloadUrlToLocal.downloadFailed", {error: String(error)}))
         })
         ipcRenderer.on(`download-url-to-path-progress-finished`, (e) => {
             if (isSuccess) {
@@ -68,7 +70,7 @@ export default function useDownloadUrlToLocalHooks(props: DownloadUrlToLocalHook
                 .invoke("cancel-download-url-to-path", {path})
                 .then(resolve)
                 .catch((e) => {
-                    yakitNotify("error", `取消下载失败: ${e}`)
+                    yakitNotify("error", t("useDownloadUrlToLocal.cancelDownloadFailed", {error: String(e)}))
                     reject(e)
                 })
         })

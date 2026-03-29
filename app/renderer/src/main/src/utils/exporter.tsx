@@ -17,6 +17,8 @@ import {getRemoteValue, setRemoteValue} from "./kv"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import i18n from "@/i18n/i18n"
 
+const t = i18n.getFixedT(null, "utils")
+
 export interface ExtractableValue {
     StringValue?: string
     BytesValue?: Uint8Array
@@ -110,7 +112,7 @@ const GeneralExporter: React.FC<GeneralExporterProp> = (props) => {
 export type ExportDataType = "all" | "payload" | "extracted"
 export const exportData = (data: ExtractableData[], exportType: ExportDataType = "all") => {
     const m = showYakitModal({
-        title: i18n.language === "zh" ? "导出数据" : "Export Data",
+        title: t("Exporter.exportData"),
         width: 700,
         footer: null,
         content: (

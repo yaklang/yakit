@@ -7,12 +7,14 @@ import {writeXTerm, xtermFit} from "@/utils/xtermUtils"
 import {XTerm} from "xterm-for-react"
 import ReactResizeDetector from "react-resize-detector"
 import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface EngineConsoleProp {}
 
 const {ipcRenderer} = window.require("electron")
 
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
+    const {t} = useI18nNamespaces(["yakitUi"])
     const xtermRef = useRef<any>(null)
 
     const terminalOptions = useXTermOptions({
@@ -40,7 +42,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
         })
 
         ipcRenderer.invoke("AttachCombinedOutput", {}, token).then(() => {
-            info(`启动输出监控成功`)
+            info(t("EngineConsole.monitorStarted"))
         })
 
         return () => {

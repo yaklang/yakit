@@ -51,6 +51,17 @@
         "openInNewWindow": "新窗口打开"
     }
   },
+  "RiskTable": {
+    "queryFailed": "查询失败：{error}",
+    "queryRisksTotalByRuntimeIdFailed": "apiQueryRisksTotalByRuntimeId 获取总数失败：{error}",
+    "queryRisksTotalByRuntimeIdsFailed": "apiQueryRisksTotalByRuntimeIds 获取总数失败：{error}",
+    "markReadFailed": "已读失败：{error}",
+    "deleteFailed": "删除失败：{error}",
+    "exportFailed": "导出失败：{error}",
+    "queryRiskTagsFailed": "查询QueryRiskTags失败：{error}",
+    "settingFailed": "设置失败：{error}",
+    "feedbackFailed": "反馈失败：{error}"
+  },
   "YakitRiskSelectTag": {
     "false_positive": "误报",
     "ignore": "忽略",

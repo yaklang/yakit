@@ -26,6 +26,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {getMarkdown} from "@milkdown/kit/utils"
 import {defaultModifyNotepadPageInfo} from "@/defaultConstants/ModifyNotepad"
 import {cloneDeep} from "lodash"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {
     apiDeleteNotepadDetail,
     apiGetNotepadDetail,
@@ -52,6 +53,7 @@ const NotepadOnlineList = React.lazy(() => import("./NotepadOnlineList/NotepadOn
 
 const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((props) => {
     const {pageId} = props
+    const {t} = useI18nNamespaces(["notepad"])
 
     const userInfo = useStore((s) => s.userInfo)
     const {queryPagesDataById, updatePagesDataCacheById} = usePageInfo(
@@ -66,7 +68,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
         if (currentItem && currentItem.pageName) {
             return currentItem.pageName
         }
-        return "未命名文档"
+        return t("ModifyNotepad.unnamedDocument")
     })
     const initPageInfo = useMemoizedFn(() => {
         const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Modify_Notepad, pageId)
@@ -126,7 +128,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         // 当前登录人不是文档的协作者也不是作者，应该弹窗错误提示
                         showOnlineErrorNotification({
                             code: 403,
-                            reason: `没有阅读和编辑权限,请联系作者${res.userName}`,
+                            reason: t("ModifyNotepad.noPermissionMessage", {userName: res.userName}),
                             onOk: () => {
                                 emiter.emit("onCloseCurrentPage", pageId)
                             }
@@ -243,7 +245,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                     })
                 })
                 .catch((err) => {
-                    failed(`下载失败：${err?.message || err}`)
+                    failed(t("ModifyNotepad.downloadFailed", {error: err?.message || err}))
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -307,7 +309,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
     /**设置标题 */
     const onSetTabName = useMemoizedFn((title) => {
         if (title.length > 50) {
-            yakitNotify("error", "标题不超过50个字符")
+            yakitNotify("error", t("ModifyNotepad.titleTooLong"))
             return
         }
         if (title) {
@@ -384,15 +386,19 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
             case "connected":
                 return (
                     <>
-                        <YakitTag color='green'>在线</YakitTag>
+                        <YakitTag color='green'>{t("ModifyNotepad.online")}</YakitTag>
                         {/* 暂时不显示保存失败的显示文案 */}
-                        <span>{saveStatus === notepadSaveStatus.saveSuccess ? "已经保存到云端" : "保存中..."}</span>
+                        <span>
+                            {saveStatus === notepadSaveStatus.saveSuccess
+                                ? t("ModifyNotepad.savedToCloud")
+                                : t("ModifyNotepad.saving")}
+                        </span>
                     </>
                 )
             case "connecting":
-                return <YakitTag color='blue'>连接中...</YakitTag>
+                return <YakitTag color='blue'>{t("ModifyNotepad.connecting")}</YakitTag>
             default:
-                return collabProps.enableCollab ? <YakitTag color='red'>离线</YakitTag> : <></>
+                return collabProps.enableCollab ? <YakitTag color='red'>{t("ModifyNotepad.offline")}</YakitTag> : <></>
         }
     }, [documentLinkStatus, collabProps.enableCollab])
 
@@ -447,7 +453,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                     </div>
                     {currentRole === notepadRole.adminPermission && (
                         <YakitButton type='outline1' icon={<OutlineShareIcon />} size='large' onClick={() => onShare(notepadDetail)}>
-                            分享
+                            {t("ModifyNotepad.share")}
                         </YakitButton>
                     )}
                     <YakitButton
@@ -457,7 +463,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         onClick={onDownNotepad}
                         loading={downItemLoading}
                     >
-                        下载
+                        {t("ModifyNotepad.download")}
                     </YakitButton>
                     {currentRole === notepadRole.adminPermission && (
                         <FuncFilterPopover
@@ -468,7 +474,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                                 data: [
                                     {
                                         key: "remove",
-                                        label: "删除",
+                                        label: t("ModifyNotepad.delete"),
                                         type: "danger",
                                         itemIcon: <OutlineTrashIcon />
                                     }
@@ -502,7 +508,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         2.删除键不会进入onCompositionEnd
                     */}
                     <YakitInput
-                        placeholder='请输入标题'
+                        placeholder={t("ModifyNotepad.enterTitle")}
                         size='large'
                         bordered={false}
                         className={styles["notepad-input"]}
@@ -535,7 +541,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
                         <span>{notepadDetail?.userName || "-"}</span>
                         <AuthorIcon />
                         <Divider type='vertical' style={{margin: "0 8px"}} />
-                        <span>最近修改时间:{formatTimestamp(notepadDetail?.updated_at)}</span>
+                        <span>{t("NotepadLocalList.lastUpdateTime")}:{formatTimestamp(notepadDetail?.updated_at)}</span>
                         <Divider type='vertical' style={{margin: "0 8px"}} />
                         {renderOnlineStatus}
                     </div>

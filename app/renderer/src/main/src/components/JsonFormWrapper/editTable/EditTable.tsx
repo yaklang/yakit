@@ -13,6 +13,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {DefaultOptionType} from "antd/lib/select"
 import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
 import {showByRightContext} from "@/components/yakitUI/YakitMenu/showByRightContext"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface Item {
     _id: string
@@ -51,6 +52,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
     setFoucusFun,
     ...restProps
 }) => {
+    const {t} = useI18nNamespaces(["layout"])
     const onFocus = useMemoizedFn(() => {
         setFoucusFun(true)
     })
@@ -63,7 +65,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                         <YakitInput.TextArea
                             className={styles["input-textarea"]}
                             rows={3}
-                            placeholder={`请输入 ${typeof title === "object" ? "该字段" : title}`}
+                            placeholder={t("EditTable.enterField", {field: typeof title === "object" ? t("EditTable.field") : title})}
                             onFocus={onFocus}
                         />
                     )
@@ -95,7 +97,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
                     rules={[
                         {
                             required,
-                            message: `请填写${typeof title === "object" ? "该字段" : title}`
+                            message: t("EditTable.fillField", {field: typeof title === "object" ? t("EditTable.field") : title})
                         }
                     ]}
                     valuePropName={type === "boolean" ? "checked" : undefined}
@@ -159,6 +161,7 @@ export interface EditTableProps {
 }
 export const EditTable: React.FC<EditTableProps> = (props) => {
     const {columnSchema, uiSchema, onChange, value} = props
+    const {t} = useI18nNamespaces(["layout"])
     const [form] = Form.useForm()
     const [data, setData] = useState<Item[]>([])
     const [cacheData, setCacheData] = useState<Item[]>([])
@@ -265,7 +268,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 form.setFieldsValue({...newItem})
             }
         } catch (error) {
-            failed(`解析表格失败:${error}`)
+            failed(t("EditTable.parseTableFailed", {error: String(error)}))
         }
     }, [columnSchema, uiSchema])
 
@@ -349,7 +352,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 }
                 setData([...data, newRecord])
             } catch (error) {
-                warn("当前行校验未通过")
+                warn(t("EditTable.currentRowInvalid"))
             }
         } else {
             const newRecord = {
@@ -378,7 +381,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
 
     const addCell = useMemoizedFn(async () => {
         if (typeof maxItems === "number" && data.length >= maxItems) {
-            warn(`已达最大数量${maxItems}`)
+            warn(t("EditTable.maxItemsReached", {maxItems}))
             return
         }
         if (cacheData.length !== 0) {
@@ -401,7 +404,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
         return [
             ...columns,
             {
-                title: <div style={{fontSize: 12}}>操作</div>,
+                title: <div style={{fontSize: 12}}>{t("EditTable.operation")}</div>,
                 dataIndex: "operation",
                 width: 45,
                 fixed: "right",
@@ -410,27 +413,27 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                     const editData = [
                         {
                             key: "save",
-                            label: "保存"
+                            label: t("EditTable.save")
                         },
                         {
                             key: "cancel",
-                            label: "取消"
+                            label: t("EditTable.cancel")
                         }
                     ]
                     const showData = [
                         {
                             key: "edit",
-                            label: "编辑"
+                            label: t("EditTable.edit")
                         },
                         {
                             key: "copy",
-                            label: "复制"
+                            label: t("EditTable.copy")
                         }
                     ]
                     const delData = [
                         {
                             key: "delete",
-                            label: "删除"
+                            label: t("EditTable.delete")
                         }
                     ]
                     return (
@@ -542,10 +545,10 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                             e.preventDefault()
                             showByRightContext({
                                 data: [
-                                    {label: "编辑", key: "edit"},
-                                    {label: "复制", key: "copy"},
-                                    {label: "保存", key: "save"},
-                                    {label: "删除", key: "delete"}
+                                    {label: t("EditTable.edit"), key: "edit"},
+                                    {label: t("EditTable.copy"), key: "copy"},
+                                    {label: t("EditTable.save"), key: "save"},
+                                    {label: t("EditTable.delete"), key: "delete"}
                                 ],
                                 width: 80,
                                 onClick: async (e) => {
@@ -576,7 +579,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                                             try {
                                                 await onSave(record)
                                             } catch (error) {
-                                                warn("当前行校验未通过")
+                                                warn(t("EditTable.currentRowInvalid"))
                                             }
 
                                             return
@@ -599,7 +602,7 @@ export const EditTable: React.FC<EditTableProps> = (props) => {
                 icon={<PlusOutlined />}
                 type='outline1'
             >
-                添加一行数据
+                {t("EditTable.addRow")}
             </YakitButton>
         </Form>
     )

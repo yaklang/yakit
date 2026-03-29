@@ -9,6 +9,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {UpdateYakHint, UpdateYakitHint} from "../update/UpdateYakitAndYaklang"
 import emiter from "@/utils/eventBus/eventBus"
 import {SystemInfo} from "@/constants/hardware"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {
     grpcDetermineAdaptedVersionEngine,
     grpcFetchAvaiableProt,
@@ -28,6 +29,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
     forwardRef((props, ref) => {
         const {setLog, onLinkEngine, setYakitStatus, checkEngineDownloadLatestVersion, setOldLink, openEngineLinkWin} =
             props
+        const {t} = useI18nNamespaces(["layout"])
 
         /**
          * 只在软件打开时|引擎从无到有时执行该逻辑
@@ -35,22 +37,22 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          */
         const handleCheckDataBase = useMemoizedFn(() => {
             debugToPrintLog(`------ 检查数据库权限(mac) ------`)
-            setLog(["检查数据库权限是否正常(非WIN系统检查)..."])
+            setLog([t("LocalEngine.checkDatabasePermission")])
             let isError: boolean = false
             ipcRenderer
                 .invoke("check-local-database")
                 .then((e) => {
                     isError = e === "not allow to write" && SystemInfo.system !== "Windows_NT"
                     if (isError) {
-                        setLog((old) => old.concat(["数据库权限错误，开始进行修复操作(非WIN系统检查)"]))
+                        setLog((old) => old.concat([t("LocalEngine.databasePermissionError")]))
                         setDatabaseErrorVisible(true)
                     } else {
-                        setLog((old) => old.concat(["数据库权限无问题"]))
+                        setLog((old) => old.concat([t("LocalEngine.databasePermissionOk")]))
                         handleLinkEnginePort(true)
                     }
                 })
                 .catch((e) => {
-                    setLog((old) => old.concat([`检查出错: ${e}`]))
+                    setLog((old) => old.concat([t("LocalEngine.checkFailed", {error: String(e)})]))
                     handleLinkEnginePort(true)
                 })
         })
@@ -82,8 +84,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     debugToPrintLog(`------ 获取到缓存本地端口逻辑-1 ------`)
                     continueExe = false
                     setLog([
-                        `获取可用端口失败: ${err}`,
-                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复或手动切换端口` : ""
+                        t("LocalEngine.getPortFailed", {error: String(err)}),
+                        builtInVersion ? t("LocalEngine.updateVersionRequired", {version: builtInVersion}) : ""
                     ])
                     setYakitStatus("engine-error")
                     return
@@ -104,8 +106,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 if (localPort.current === 0) {
                     continueExe = false
                     setLog([
-                        `获取可用端口失败: ${err}`,
-                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复或手动切换端口` : ""
+                        t("LocalEngine.getPortFailed", {error: String(err)}),
+                        builtInVersion ? t("LocalEngine.updateVersionRequired", {version: builtInVersion}) : ""
                     ])
                     setYakitStatus("engine-error")
                 }
@@ -116,8 +118,8 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 } else {
                     continueExe = false
                     setLog([
-                        `获取可用端口失败: ${err}`,
-                        builtInVersion ? `请确认引擎版本在${builtInVersion}以上，可点击重置引擎修复或手动切换端口` : ""
+                        t("LocalEngine.getPortFailed", {error: String(err)}),
+                        builtInVersion ? t("LocalEngine.updateVersionRequired", {version: builtInVersion}) : ""
                     ])
                     setYakitStatus("engine-error")
                 }
@@ -138,11 +140,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          * - 先进行 yakit 检查，在进行引擎检查
          */
         const handlePreCheckForLinkEngine = useMemoizedFn(() => {
-            if (!isEnpriTraceAgent()) setLog(["检查软件是否有更新..."])
+            if (!isEnpriTraceAgent()) setLog([t("LocalEngine.checkSoftwareUpdate")])
             else setLog([])
 
             if (SystemInfo.isDev) {
-                setLog((old) => old.concat(["开发环境，直接连接引擎"]))
+                setLog((old) => old.concat([t("LocalEngine.devDirectConnect")]))
                 setTimeout(() => {
                     handleLinkLocalEnging()
                 }, 500)
@@ -192,16 +194,16 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         } catch (error) {}
                     } else {
                         debugToPrintLog(`------ 跳过检查软件版本更新逻辑 ------`)
-                        setLog((old) => old.concat(["跳过检查(可在软件更新处设置启动)，开始检查引擎是否有更新..."]))
+                        setLog((old) => old.concat([t("LocalEngine.skipSoftwareUpdateCheck")]))
                     }
                 })
                 .catch(() => {})
                 .finally(() => {
                     if (showUpdateYakit) {
-                        setLog((old) => old.concat(["软件存在新版本, 启动更新弹框..."]))
+                        setLog((old) => old.concat([t("LocalEngine.newSoftwareVersion")]))
                         setShowYakit(true)
                     } else {
-                        setLog((old) => old.concat(["软件无更新"]))
+                        setLog((old) => old.concat([t("LocalEngine.softwareUpToDate")]))
                         setTimeout(() => {
                             handleCheckEngineVersion()
                         }, 500)
@@ -216,7 +218,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          */
         const handleCheckEngineVersion = useMemoizedFn(async () => {
             debugToPrintLog(`------ 开始检查引擎内置版本逻辑 ------`)
-            setLog(["获取引擎版本号并检查更新..."])
+            setLog([t("LocalEngine.checkEngineVersion")])
             try {
                 const [res1, res2] = await Promise.allSettled([
                     // 本地
@@ -234,7 +236,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     debugToPrintLog(`------ 当前版本: ${currentYak.current} ------`)
                     setLog((old) =>
                         old.concat([
-                            currentYak.current ? `本地引擎版本——${currentYak.current}` : "未获取到本地引擎版本号"
+                            currentYak.current ? t("LocalEngine.currentEngineVersion", {version: currentYak.current}) : t("LocalEngine.noLocalEngineVersion")
                         ])
                     )
 
@@ -251,20 +253,20 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     }
 
                     if (!!currentYak.current && !!buildInYak.current && buildInYak.current > currentYak.current) {
-                        setLog((old) => old.concat(["检测到引擎有更新，打开更新弹框"]))
+                        setLog((old) => old.concat([t("LocalEngine.engineUpdateDetected")]))
                         setShowYak(true)
                     } else {
-                        setLog((old) => old.concat(["引擎无更新"]))
+                        setLog((old) => old.concat([t("LocalEngine.engineUpToDate")]))
                         handleCheckEngineSource(currentYak.current)
                     }
                 } else {
-                    setLog((old) => old.concat([`错误: ${res1.reason}`]))
+                    setLog((old) => old.concat([t("LocalEngine.error", {error: String(res1.reason)})]))
                     setTimeout(() => {
                         handleLinkLocalEnging()
                     }, 500)
                 }
             } catch (error) {
-                setLog((old) => old.concat([`错误: ${error}`]))
+                setLog((old) => old.concat([t("LocalEngine.error", {error: String(error)})]))
                 setYakitStatus("checkError")
             }
         })
@@ -275,7 +277,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             ipcRenderer
                 .invoke("RestoreEngineAndPlugin", {})
                 .then(() => {
-                    info("解压内置引擎成功")
+                    info(t("LocalEngine.unpackBuiltinEngineSuccess"))
                     ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
                         // onCancelUpdateYak(true)
                         setYakitStatus("")
@@ -284,7 +286,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                     })
                 })
                 .catch((e) => {
-                    failed(`恢复引擎失败：${e}`)
+                    failed(t("LocalEngine.restoreEngineFailed", {error: String(e)}))
                 })
         })
 
@@ -294,7 +296,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          */
         const handleCheckEngineSource = useMemoizedFn(async (version: string) => {
             debugToPrintLog(`------ 开始校验引擎来源逻辑 ------`)
-            setLog(["开始校验引擎来源..."])
+            setLog([t("LocalEngine.checkEngineSource")])
             try {
                 const promise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error("Fetch engine online hash request timed out")), 2100)
@@ -311,19 +313,19 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 ])
 
                 if (!res1 || !Array.isArray(res2) || res2.length === 0) {
-                    setLog((old) => old.concat(["未知异常情况，无法检测来源，准备连接引擎"]))
+                    setLog((old) => old.concat([t("LocalEngine.unknownSourcePrepareConnect")]))
                     handleLinkLocalEnging()
                 } else {
                     if (res2.includes(res1 as string)) {
-                        setLog((old) => old.concat(["引擎来源正确，准备连接引擎"]))
+                        setLog((old) => old.concat([t("LocalEngine.sourceCorrectPrepareConnect")]))
                         handleLinkLocalEnging()
                     } else {
-                        setLog((old) => old.concat(["引擎非官方来源，启动提示框"]))
+                        setLog((old) => old.concat([t("LocalEngine.nonOfficialSourcePrompt")]))
                         setVersionAbnormalVisible(true)
                     }
                 }
             } catch (error) {
-                setLog((old) => old.concat(["异常情况，无法检测来源，准备连接引擎"]))
+                setLog((old) => old.concat([t("LocalEngine.errorSourcePrepareConnect")]))
                 handleLinkLocalEnging()
             }
         })
@@ -333,13 +335,13 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
          */
         const handleFetchYakLocalVersionToLink = useMemoizedFn(async () => {
             try {
-                setLog(["获取引擎版本号..."])
+                setLog([t("LocalEngine.getEngineVersion")])
                 let localYaklang = (await grpcFetchLocalYakVersion(true)) || ""
                 localYaklang = localYaklang.startsWith("v") ? localYaklang.slice(1) : localYaklang
-                setLog((old) => old.concat([`引擎版本号——${localYaklang}`, "准备开始本地连接中"]))
+                setLog((old) => old.concat([t("LocalEngine.localEngineVersion", {version: localYaklang}), t("LocalEngine.prepareLocalConnect")]))
                 currentYak.current = localYaklang
             } catch (error) {
-                setLog((old) => old.concat([`错误: ${error}`]))
+                setLog((old) => old.concat([t("LocalEngine.error", {error: String(error)})]))
             }
             setTimeout(() => {
                 handleLinkLocalEnging()
@@ -350,7 +352,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleLinkLocalEnging = useMemoizedFn(() => {
             if (localPort.current === 0) {
                 debugToPrintLog(`------ 启动端口异常(port: ${localPort.current}) ------`)
-                setLog(["本地引擎-端口：0，请尝试切换端口"])
+                setLog([t("LocalEngine.zeroPortSwitch")])
                 setYakitStatus("")
             } else {
                 debugToPrintLog(`------ 准备开始启动引擎逻辑 ------`)
@@ -414,10 +416,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
             ipcRenderer
                 .invoke("fix-local-database")
                 .then((e) => {
-                    info("修复数据库权限成功")
+                    info(t("LocalEngine.fixDatabasePermissionSuccess"))
                 })
                 .catch((e) => {
-                    failed(`修复数据库权限错误：${e}`)
+                    failed(t("LocalEngine.fixDatabasePermissionFailed", {error: String(e)}))
                 })
                 .finally(() => {
                     setTimeout(() => {
@@ -457,7 +459,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 if (currentYak.current) {
                     handleCheckEngineSource(result ? buildInYak.current : currentYak.current)
                 } else {
-                    setLog((old) => old.concat(["未获取到引擎版本号，请重试!"]))
+                    setLog((old) => old.concat([t("LocalEngine.noEngineVersionRetry")]))
                     setYakitStatus("checkError")
                 }
             }
@@ -472,7 +474,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
         const handleCancelVersionAbnormal = useMemoizedFn(() => {
             setVersionAbnormalVisible(false)
             setVersionAbnormalLoading(false)
-            setLog((old) => old.concat(["主动跳过，准备连接引擎"]))
+            setLog((old) => old.concat([t("LocalEngine.skipAndConnect")]))
             handleLinkLocalEnging()
         })
         const handleOKVersionAbnormal = useMemoizedFn(() => {
@@ -483,7 +485,7 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                 ipcRenderer
                     .invoke("RestoreEngineAndPlugin", {})
                     .then(() => {
-                        info(`解压内置引擎成功`)
+                        info(t("LocalEngine.unpackBuiltinEngineSuccess"))
                         ipcRenderer.invoke("write-engine-key-to-yakit-projects").finally(() => {
                             setVersionAbnormalVisible(false)
                             setYakitStatus("")
@@ -492,11 +494,11 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         })
                     })
                     .catch((e) => {
-                        failed(`初始化内置引擎失败：${e}`)
+                        failed(t("LocalEngine.initBuiltinEngineFailed", {error: String(e)}))
                     })
                     .finally(() => setTimeout(() => setVersionAbnormalLoading(false), 300))
             } else {
-                setLog(["无内置引擎包，开始寻找本地引擎包源..."])
+                setLog([t("LocalEngine.noBuiltinEnginePackage")])
                 setVersionAbnormalVisible(false)
                 setVersionAbnormalLoading(false)
                 checkEngineDownloadLatestVersion()
@@ -523,9 +525,9 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         mask={false}
                         isDrag={true}
                         visible={databaseErrorVisible}
-                        title='yaklang 数据库错误'
-                        content='尝试修复数据库写权限（可能要求 ROOT 权限）'
-                        okButtonText='立即修复'
+                        title={t("LocalEngine.databaseErrorTitle")}
+                        content={t("LocalEngine.databaseErrorContent")}
+                        okButtonText={t("LocalEngine.fixNow")}
                         okButtonProps={{loading: databaseErrorLoading}}
                         cancelButtonProps={{style: {display: "none"}}}
                         onOk={onFixDatabaseError}
@@ -560,10 +562,10 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
                         mask={true}
                         isDrag={false}
                         visible={versionAbnormalVisible}
-                        title='引擎版本异常'
-                        content='当前引擎非官方发布版本，为避免出现问题，不建议使用'
-                        okButtonText='使用官方引擎'
-                        cancelButtonText='使用当前引擎'
+                        title={t("LocalEngine.versionAbnormalTitle")}
+                        content={t("LocalEngine.versionAbnormalContent")}
+                        okButtonText={t("LocalEngine.useOfficialEngine")}
+                        cancelButtonText={t("LocalEngine.useCurrentEngine")}
                         okButtonProps={{loading: versionAbnormalLoading}}
                         cancelButtonProps={{loading: versionAbnormalLoading}}
                         onOk={handleOKVersionAbnormal}

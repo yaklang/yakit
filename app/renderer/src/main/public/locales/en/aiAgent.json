@@ -51,6 +51,19 @@
     "notConfigured": "If not configured",
     "clickToConfigure": "Please click here to configure"
   },
+  "AIChatTemplate": {
+    "dropToAddToChat": "Release to add to chat",
+    "openFolder": "Open Folder"
+  },
+  "AIToolList": {
+    "all": "All",
+    "collect": "Favorites",
+    "searchPlaceholder": "Search by keyword",
+    "copy": "Copy",
+    "delete": "Delete",
+    "deleteSuccess": "Deleted successfully",
+    "templateIdError": "Template ID('{id}') is invalid and cannot be edited"
+  },
   "AIModelSelect": {
     "configTitle": "AI Model Not Configured",
     "toConfigure": "Go to Configure",
@@ -58,26 +71,6 @@
     "openModelTabSuccess": "AI sidebar model configuration opened",
     "selectModel": "Select AI Model",
     "openConfigTooltip": "Open AI sidebar model configuration"
-  },
-  "AIModelList": {
-    "intelligentModels": "High-Quality Models",
-    "intelligentModelsDesc": "Used for high-complexity tasks, switchable in dialog",
-    "lightweightModels": "Lightweight Models",
-    "lightweightModelsDesc": "Used for simple tasks and sessions",
-    "visionModels": "Vision Models",
-    "visionModelsDesc": "Used for image recognition, knowledge base generation, and task execution",
-    "addModel": "Add Model",
-    "addThirdPartyApp": "Add Third-Party Application",
-    "addLocalModel": "Add Local Model",
-    "clearConfirm": "Are you sure to clear all {type} model configurations?",
-    "online": "Online",
-    "local": "Local",
-    "clearModelsTitle": "Clear Models",
-    "clearModelsDesc": "Are you sure you want to delete all downloaded and added models? Confirming deletion of source files will also delete custom added model files.",
-    "policyAuto": "Automatically select the most suitable model based on request content",
-    "policyPerformance": "Prioritize high-intelligence models",
-    "policyCost": "Prioritize lightweight/low-cost models",
-    "policyBalance": "Balance between response speed, intelligence, and cost"
   },
   "AIOnlineModeSetting": {
     "configUpdateFailed": "Configuration update failed, global AI configuration not obtained, please try again",
@@ -101,16 +94,332 @@
     "localManagerDesc": "Local AI model manager for managing local AI models, supports one-click download and installation, status monitoring and management. Localized AI services without cloud dependency.",
     "llamaInstalling": "Llama server installing..."
   },
+  "AIModelList": {
+    "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",
+    "localTooltip": "Local AI model manager for managing local AI models, supports one-click download and installation, status monitoring and management. Localized AI services without cloud dependency.",
+    "online": "Online",
+    "local": "Local",
+    "intelligentModels": "High-Quality Models",
+    "intelligentModelsDesc": "Used for high-complexity tasks, switchable in dialog",
+    "lightweightModels": "Lightweight Models",
+    "lightweightModelsDesc": "Used for simple tasks and sessions",
+    "visionModels": "Vision Models",
+    "visionModelsDesc": "Used for image recognition, knowledge base generation, and task execution",
+    "addModel": "Add Model",
+    "addThirdPartyApp": "Add Third-Party Application",
+    "addLocalModel": "Add Local Model",
+    "clearConfirm": "Are you sure to clear all {type} model configurations?",
+    "clearModelsTitle": "Clear Models",
+    "clearModelsDesc": "Are you sure you want to delete all downloaded and added models? Confirming deletion of source files will also delete custom added model files.",
+    "policyAuto": "Automatically select the most suitable model based on request content",
+    "policyPerformance": "Prioritize high-intelligence models",
+    "policyCost": "Prioritize lightweight/low-cost models",
+    "policyBalance": "Balance between response speed, intelligence, and cost"
+  },
   "AILocalModelListItem": {
     "startModel": "Start Model - {name}",
+    "openFileLocation": "Open file location",
+    "edit": "Edit",
+    "delete": "Delete",
     "downloadModel": "Download Model",
-    "editLocalModel": "Edit Local Model"
+    "deleteConfirm": "Are you sure you want to delete model {name} from vendor {type}?",
+    "download": "Download",
+    "disable": "Disable",
+    "enable": "Enable",
+    "enabled": "Enabled",
+    "ipPort": "IP/Port: {host}:{port}",
+    "deleteModel": "Delete Model",
+    "editLocalModel": "Edit Local Model",
+    "deleteModelConfirm": "Are you sure you want to delete model {name}? Confirming deletion of the source file will also delete custom added model files.",
+    "deleteSourceFile": "Delete source file",
+    "disableConfirm": "Are you sure you want to disable model {name}?",
+    "downloadingModel": "Downloading model {name}..."
   },
   "AIAgent": {
     "getKnowledgeBaseFailed": "Failed to get knowledge base list: {error}",
     "tip": "Tip",
     "memfitUpdateNotice": "Memfit session data upgraded, all historical session records in the system will be deleted.",
     "clearHistoryConfirm": "Whether to clear database history records"
+  },
+  "KnowledgeSidebarList": {
+    "searchPlaceholder": "Search knowledge bases",
+    "building": "Building",
+    "defaultKnowledgeBase": "Default",
+    "manual": "Manual",
+    "external": "External",
+    "other": "Other",
+    "noMore": "That's all~",
+    "addKnowledgeBase": "Add Knowledge Base",
+    "buildDetail": "Build Details",
+    "startBuildFailed": "Failed to start build: {error}",
+    "entryBuildFailed": "Failed to build entry: {error}"
+  },
+  "DragKnowledge": {
+    "dragHintPrefix": "Drag files here or ",
+    "dragHintHighlight": "click to import",
+    "dragHintSuffix": " to start building the knowledge base",
+    "dragSubHint": "Data will be stored in the default base, and multiple files can be selected",
+    "defaultKnowledgeBaseDescription": "The system default knowledge base stores common knowledge for additional context in AI conversations.",
+    "downloadAll": "Download All Online Knowledge Bases",
+    "downloadingAll": "Downloading... ({progress}%)",
+    "downloadAllSuccess": "All online knowledge bases downloaded",
+    "downloadAllFailed": "Failed to download all online knowledge bases: {error}",
+    "createKnowledgeBaseSuccess": "Knowledge base created successfully",
+    "createKnowledgeBaseFailed": "Failed to create knowledge base: {error}",
+    "getKnowledgeBaseListFailed": "Failed to get knowledge base list: {error}"
+  },
+  "KnowledgeBaseFormModal": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "createKnowledgeBaseSuccess": "Knowledge base created successfully",
+    "createKnowledgeBaseFailed": "Failed to create knowledge base: {error}"
+  },
+  "GuideFooter": {
+    "start": "Start Experience",
+    "next": "Next",
+    "prev": "Previous"
+  },
+  "KnowledgeBaseTable": {
+    "getGlobalKnowledgeBaseFailed": "Failed to get global knowledge base: {error}",
+    "add": "Add"
+  },
+  "PluginExecuteDetailDrawer": {
+    "log": "Log"
+  },
+  "AIAgentTabs": {
+    "historyChat": "History Chat",
+    "config": "Settings",
+    "skill": "Skill",
+    "tool": "Tool",
+    "aiModel": "AI Model"
+  },
+  "AIMentionTabs": {
+    "skill": "Skill",
+    "tool": "Tool",
+    "knowledgeBase": "Knowledge Base",
+    "fileSystem": "File System",
+    "focusMode": "Focus Mode"
+  },
+  "AITabs": {
+    "taskContent": "Task Content",
+    "fileSystem": "File System",
+    "httpTraffic": "HTTP Traffic",
+    "riskAndVulnerability": "Vulnerabilities and Risks",
+    "readWriteLog": "Read/Write Log"
+  },
+  "AIReviewRuleOptions": {
+    "manualDesc": "All reviews are handled manually by the user",
+    "yoloDesc": "All reviews are executed by default without prompting",
+    "aiDesc": "AI judges review risk, low risk runs by default, high risk is handled by the user"
+  },
+  "AIModelPolicyOptions": {
+    "auto": "Auto Select",
+    "performance": "Performance First",
+    "cost": "Cost First",
+    "balance": "Balanced"
+  },
+  "AIAgentChatTemplate": {
+    "thinking": "Thinking...",
+    "timeline": "Timeline",
+    "taskTree": "Task Tree",
+    "historyTask": "History Tasks"
+  },
+  "HistoryTaskTree": {
+    "noHistoryTask": "No historical tasks",
+    "stopCurrentTask": "Stop the current task and restore this one",
+    "restoreTaskConfirm": "Are you sure you want to restore this task?",
+    "continueTask": "Continue Task",
+    "updateTime": "Updated: {time}"
+  },
+  "AITree": {
+    "cancelSubtaskConfirm": "Are you sure you want to cancel this subtask? The next subtask will be executed in order after cancellation"
+  },
+  "AIMemoryList": {
+    "recentMemory": "Recent Memory ({count})",
+    "scoreTitle": "C.O.R.E. P.A.C.T. Scores (Memory Traits)",
+    "tags": "Tags",
+    "potentialQuestions": "Potential Questions"
+  },
+  "AIEcharts": {
+    "intelligentModel": "High-Quality Model",
+    "lightweightModel": "Lightweight Model",
+    "pressureValue": "Pressure Value",
+    "latencyMs": "Latency (ms)",
+    "thresholdLine": "Threshold Line ({value})"
+  },
+  "AddAIModel": {
+    "aichat": "aichat",
+    "embedding": "embedding",
+    "modelName": "Model Name",
+    "enterModelName": "Please enter the model name",
+    "modelType": "Model Type",
+    "enterModelType": "Please enter the model type",
+    "filePath": "File Path",
+    "enterFilePath": "Please enter the file path",
+    "modelDescription": "Model Description",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "AIChatListItem": {
+    "thinking": "Thinking: ",
+    "toolCall": "Tool Call",
+    "taskEnd": "Task End",
+    "taskEndDesc": "The current task has ended, below is the new task data"
+  },
+  "ToolInvokerCard": {
+    "skipConfirm": "Skipping will cancel the tool call and use the current output for follow-up decisions. Confirm skip?",
+    "success": "Success",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "FileTreeSystemItem": {
+    "joinPathFailed": "Path join failed",
+    "createFailed": "Creation failed",
+    "createSuccess": "Created successfully",
+    "renameSame": "Rename target is the same",
+    "renameJoinPathFailed": "Rename path join failed",
+    "renameFailed": "Rename failed",
+    "renameSuccess": "Renamed successfully",
+    "refresh": "Refresh",
+    "sendToChat": "Send to free chat",
+    "copyPath": "Copy path",
+    "showInFolder": "Show in folder",
+    "remove": "Remove"
+  },
+  "OperationCardFooter": {
+    "details": "Details",
+    "viewFile": "View file",
+    "viewDetails": "View details"
+  },
+  "OperationLog": {
+    "folder": "Folder",
+    "nonFolder": "Non-folder"
+  },
+  "FilePreview": {
+    "fileSystem": "File System",
+    "chooseFile": "Please select a file on the left",
+    "openFile": "Open File",
+    "openFolder": "Open Folder",
+    "recentOpen": "Recently Opened",
+    "loadFailed": "Failed to load file: {error}",
+    "binaryNotice": "This file is a binary file or uses an unsupported text encoding, so it cannot be displayed in the text editor.",
+    "openAnyway": "Open Anyway",
+    "warningTitle": "File Warning",
+    "tooLarge": "The file is too large to preview",
+    "gotIt": "Got it"
+  },
+  "AIFileChatContent": {
+    "relatedFiles": "Related Files",
+    "relatedForges": "Related Forges",
+    "relatedTools": "Related Tools",
+    "relatedKnowledgeBases": "Related Knowledge Bases"
+  },
+  "AIChatContent": {
+    "noActiveChat": "There is no active session",
+    "exportSuccess": "Export successful",
+    "exportFailed": "Export failed: {error}",
+    "fileSystem": "File System",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "newChatTitle": "New Session",
+    "newChat": "New Session",
+    "log": "Log",
+    "exportLog": "Export Log"
+  },
+  "AIContextToken": {
+    "pressure": "Context Pressure",
+    "speed": "Response Speed",
+    "peak": "Peak",
+    "intelligentModel": "High-Quality Model",
+    "lightweightModel": "Lightweight Model",
+    "viewDetails": "View Details",
+    "dataDetails": "Data Details",
+    "limit": "Limit",
+    "totalInput": "Total Input",
+    "totalOutput": "Total Output",
+    "input": "Input",
+    "output": "Output"
+  },
+  "InstallLlamaServerModelPrompt": {
+    "installing": "Installing model environment",
+    "proxySettings": "Proxy Settings",
+    "proxyHelp": "Optional, used to speed up downloads. Format: http://proxy:port or socks5://proxyport",
+    "proxyPlaceholder": "Leave blank to not use a proxy",
+    "downloadAndInstall": "Download and Install",
+    "progress": "Progress {percent}%",
+    "downloadModel": "Download Model"
+  },
+  "AIReActChatReview": {
+    "autoExecuteSuffix": "will be executed automatically",
+    "error": "Error",
+    "toolCall": "Tool Call",
+    "userPrompt": "User Prompt",
+    "planReview": "Plan Review",
+    "taskReview": "Task Review",
+    "startApp": "Start App",
+    "params": "Parameters",
+    "summary": "Summary",
+    "details": "Details",
+    "enterDetails": "Please enter some details",
+    "tellMeMore": "Tell me more...",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "submitForm": "Submit Form",
+    "executeNow": "Execute Now",
+    "evaluating": "Evaluating...",
+    "aiRiskScore": "AI Risk Score",
+    "enterPrompt": "Please enter...",
+    "loading": "Loading...",
+    "description": "Description",
+    "paramsGroup": "Parameters",
+    "requiredField": "{label} is required"
+  },
+  "AIReviewResult": {
+    "planReview": "Plan Review",
+    "taskReview": "Task Review",
+    "toolReview": "Tool Review",
+    "appReview": "App Review",
+    "userPrompt": "User Prompt",
+    "reviewDecision": "Review Decision",
+    "executeNow": "Execute Now",
+    "unknownAction": "Unknown Action"
+  },
+  "AIFocusMode": {
+    "focusMode": "Focus Mode",
+    "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope",
+    "pleaseSelect": "Please select",
+    "noDescription": "No description"
+  },
+  "HistoryChat": {
+    "title": "History Chat",
+    "noChatsToClear": "No sessions to clear",
+    "allChatsCleared": "All sessions cleared",
+    "clearFailed": "Failed to clear sessions: {error}",
+    "noChatsBeforeDays": "No sessions from {days} days ago",
+    "clearedBeforeDays": "Cleared sessions from {days} days ago",
+    "oneDay": "One day ago",
+    "oneWeek": "One week ago",
+    "thirtyDays": "30 days ago",
+    "clearConfirm": "Are you sure you want to clear sessions from {days}? This cannot be undone",
+    "clearAll": "Clear all",
+    "clearAllConfirm": "Are you sure you want to clear all sessions? This cannot be undone",
+    "clearChats": "Clear sessions",
+    "delete": "Delete",
+    "newChat": "New session",
+    "searchPlaceholder": "Enter keywords to search"
+  },
+  "HistoryChatList": {
+    "justNow": "Just now",
+    "oneHour": "One hour ago",
+    "oneDay": "One day ago",
+    "oneWeek": "One week ago",
+    "thirtyDays": "30 days ago",
+    "updateTitleFailed": "Failed to update session title: {error}",
+    "chatNotFound": "Corresponding session not found",
+    "deleteFailed": "Failed to delete session: {error}",
+    "editTitle": "Edit session title",
+    "deleteConfirm": "Are you sure you want to delete this session? This cannot be recovered",
+    "loading": "Loading..."
   },
   "AIModelTestResult": {
     "quickPreview": "quick preview",
@@ -121,6 +430,86 @@
     "request": "Request",
     "response": "Response",
     "testSuccess": "Test success",
-    "testFailed": "Test failed"
+    "testFailed": "Test failed",
+    "testPrompt": "Hello, please reply with 'Test successful'"
+  },
+  "AIMCP": {
+    "enableServerRefreshTools": "Please enable this MCP server and refresh the tool list",
+    "toolList": "Tool List",
+    "protocolInfo": "Model Context Protocol (MCP) provides a standardized AI model context communication protocol, supporting SSE and WebSocket connections",
+    "back": "Back",
+    "noData": "No Data",
+    "disabledRefreshTools": "Disabled, please enable and refresh the tool list",
+    "refresh": "Refresh",
+    "enableTools": "Enable Tools",
+    "paramIntro": "Parameter Introduction",
+    "addMcpServer": "Add MCP Server",
+    "mcpServerConfig": "MCP Server Configuration",
+    "editMcp": "Edit MCP",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "deleteMcpServer": "Delete MCP Server",
+    "deleteMcpServerConfirm": "Are you sure you want to delete this MCP server?",
+    "address": "Address: {url}",
+    "command": "Command: {command}",
+    "edit": "Edit",
+    "toolFetchFailed": "Tool fetch failed",
+    "toolCount": "{count} tools",
+    "disableConfirm": "Are you sure you want to disable {name}?",
+    "disable": "Disable",
+    "enable": "Enable",
+    "deleteModel": "Delete Model",
+    "deleteModelConfirm": "Are you sure you want to delete model {name}? Confirming deletion of the source file will also delete custom added model files"
+  },
+  "AIMCPForm": {
+    "serverUrl": "Server URL",
+    "enterServerUrl": "Please enter the server URL",
+    "runCommand": "Run Command",
+    "enterRunCommand": "Please enter the run command",
+    "completeBeforeAdd": "Please complete it before adding",
+    "add": "Add",
+    "reset": "Reset",
+    "serverName": "Server Name",
+    "enterServerName": "Please enter the server name",
+    "enable": "Enable",
+    "serverType": "Server Type",
+    "selectServerType": "Please select the server type",
+    "serverUrlExample": "e.g. http://localhost:3000/sse",
+    "runCommandExample": "e.g. npx -y @modelcontextprotocol/server-filesystem /path",
+    "envVariables": "Environment Variables",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "AIMarkdown": {
+    "openFromNotepad": "Open from Notepad",
+    "downloadMd": "Download md file",
+    "switchToPreview": "Switch to preview mode",
+    "switchToSource": "Switch to source mode",
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
+  "AIMilkdownInput": {
+    "placeholder": "Tell me what you want to do... (shift + enter for a new line)"
+  },
+  "ForgeName": {
+    "exportForge": "Export Forge",
+    "importForge": "Import Forge",
+    "exportSuccess": "Export successful",
+    "importSuccess": "Import successful",
+    "deleteForgeSuccess": "Forge deleted successfully",
+    "templateIdError": "Template ID('{id}') is invalid and cannot be edited",
+    "searchPlaceholder": "Search by keyword",
+    "noMoreDescription": "No more description",
+    "relatedTools": "Related Tools",
+    "editForge": "Edit Forge",
+    "deleteForge": "Delete Forge",
+    "deleteForgeConfirm": "Are you sure you want to delete this Forge template?",
+    "noMore": "That's all~",
+    "fileName": "File Name",
+    "tool": "Tool",
+    "chooseTool": "Select tool",
+    "password": "Password",
+    "localPath": "Local Path",
+    "enterLocalPath": "Please enter the local path"
   }
 }

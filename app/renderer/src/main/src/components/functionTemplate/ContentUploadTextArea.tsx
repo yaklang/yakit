@@ -6,6 +6,7 @@ import {
     ItemDraggerTextArea,
     ItemDraggerTextAreaProps
 } from "../baseTemplate/FormItemUtil"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import "./ContentUploadTextArea.css"
 
@@ -18,6 +19,7 @@ export interface ContentUploadInputProps extends ItemDraggerTextAreaProps, ItemD
 
 export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => {
     const {type = "input", beforeUpload, dragger, item, textarea, input,otherHelpNode,uploadHelpText, ...restProps} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     if (type === "input") {
         return (
@@ -26,7 +28,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                 item={{
                     help: (
                         <div className='content-upload-input-help'>
-                            {uploadHelpText||"可将TXT文件拖入框内或"}
+                            {uploadHelpText||t("ContentUploadTextArea.dragTxt")}
                             <Upload
                                 // accept={"text/plain"}
                                 multiple={false}
@@ -38,9 +40,9 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                                 }}
                                 {...dragger}
                             >
-                                <span className='help-hint-title'>点击此处</span>
+                                <span className='help-hint-title'>{t("ContentUploadTextArea.clickHere")}</span>
                             </Upload>
-                            上传
+                            {t("ContentUploadTextArea.upload")}
                             {otherHelpNode}
                         </div>
                     ),
@@ -58,7 +60,7 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                 item={{
                     help: (
                         <div className='content-upload-input-help'>
-                            {uploadHelpText||"可将TXT、Excel文件拖入框内或"}
+                            {uploadHelpText||t("ContentUploadTextArea.dragTxtExcel")}
                             <Upload
                                 // accept={"text/plain"}
                                 multiple={false}
@@ -70,9 +72,9 @@ export const ContentUploadInput: React.FC<ContentUploadInputProps> = (props) => 
                                 }}
                                 {...dragger}
                             >
-                                <span className='help-hint-title'>点击此处</span>
+                                <span className='help-hint-title'>{t("ContentUploadTextArea.clickHere")}</span>
                             </Upload>
-                            上传
+                            {t("ContentUploadTextArea.upload")}
                             {otherHelpNode}
                         </div>
                     ),

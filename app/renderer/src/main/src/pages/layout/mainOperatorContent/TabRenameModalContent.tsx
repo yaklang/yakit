@@ -13,6 +13,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
 import {yakitNotify} from "@/utils/notification"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 interface TabRenameModalProps {
     title: string
     onClose: () => void
@@ -21,6 +22,7 @@ interface TabRenameModalProps {
 }
 const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) => {
     const {title, onClose, name, onOk} = props
+    const {t} = useI18nNamespaces(["layout"])
     const [value, setValue] = useState<string>(name)
     const textareaRef = useRef<TextAreaRef>(null)
     useEffect(() => {
@@ -67,10 +69,10 @@ const TabRenameModalContent: React.FC<TabRenameModalProps> = React.memo((props) 
                         setValue("")
                     }}
                 >
-                    取消
+                    {t("TabRenameModalContent.cancel")}
                 </YakitButton>
                 <YakitButton type='primary' onClick={() => onOk(value)}>
-                    确定
+                    {t("TabRenameModalContent.confirm")}
                 </YakitButton>
             </div>
         </div>
@@ -88,11 +90,12 @@ interface RestoreTabContentProps {
 }
 export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((props) => {
     const {setRecoveryModel, onClose, onRestore} = props
+    const {t} = useI18nNamespaces(["layout"])
     const [number, setNumber] = useState<number>(20)
     const [loading, setLoading] = useState<boolean>(false)
     const onOK = useMemoizedFn(() => {
         if (number > secondaryTabsNum) {
-            yakitNotify("info", "恢复标签数超过上限")
+            yakitNotify("info", t("TabRenameModalContent.restoreLimitExceeded", {count: number}))
             return
         }
         setLoading(true)
@@ -124,7 +127,7 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
     return (
         <div className={styles["restore-tab-content"]}>
             <div className={styles["item"]}>
-                <span>恢复最近</span>
+                <span>{t("TabRenameModalContent.restoreRecent")}</span>
                 <YakitInputNumber
                     min={1}
                     max={secondaryTabsNum}
@@ -132,17 +135,17 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
                     value={number}
                     onChange={(v) => setNumber(v as number)}
                 />
-                <span>个标签页</span>
+                <span>{t("TabRenameModalContent.tabPage")}</span>
             </div>
-            <div className={styles["item-tip"]}>恢复标签页不能超过{secondaryTabsNum}个</div>
+            <div className={styles["item-tip"]}>{t("TabRenameModalContent.restoreLimitExceeded", {count: secondaryTabsNum})}</div>
             <div className={styles["item"]}>
-                <span>恢复模式</span>
+                <span>{t("TabRenameModalContent.restoreMode")}</span>
                 <YakitRadioButtons
                     buttonStyle='solid'
                     defaultValue='coverage'
                     options={[
-                        {value: "coverage", label: "覆盖当前标签"},
-                        {value: "new", label: "新增恢复标签页"}
+                        {value: "coverage", label: t("TabRenameModalContent.overwriteCurrentTab")},
+                        {value: "new", label: t("TabRenameModalContent.addRestoreTab")}
                     ]}
                     onChange={(e) => {
                         setRecoveryModel(e.target.value)
@@ -151,10 +154,10 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
             </div>
             <div className={styles["footer"]}>
                 <YakitButton type='outline2' onClick={onClose}>
-                    取消
+                    {t("TabRenameModalContent.cancel")}
                 </YakitButton>
                 <YakitButton type='primary' onClick={onOK} loading={loading}>
-                    确定
+                    {t("TabRenameModalContent.confirm")}
                 </YakitButton>
             </div>
         </div>

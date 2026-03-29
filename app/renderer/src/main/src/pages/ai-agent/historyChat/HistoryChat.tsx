@@ -18,6 +18,7 @@ import {grpcDeleteAISession} from "../grpc"
 import {AIChatInfo} from "../type/aiChat"
 import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import HistoryChatList, {DAY_MS, getChatTimestamp} from "./HistoryChatList/HistoryChatList"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const clearLocalChats = (sessions: AIChatInfo[]) =>
     emiter.emit("onDelChats", JSON.stringify(sessions.map((item) => item.SessionID)))
@@ -38,6 +39,7 @@ export const onNewChat = () => {
     emiter.emit("onReActChatEvent", JSON.stringify(info))
 }
 const HistoryChat = memo(() => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {chats, activeChat} = useAIAgentStore()
     const {setChats, setActiveChat} = useAIAgentDispatcher()
 
@@ -48,7 +50,7 @@ const HistoryChat = memo(() => {
     const handleClearAllChat = useMemoizedFn(async () => {
         if (clearLoading) return
         if (chats.length === 0) {
-            yakitNotify("info", "暂无可清除的会话")
+            yakitNotify("info", t("HistoryChat.noChatsToClear"))
             return
         }
 
@@ -60,9 +62,9 @@ const HistoryChat = memo(() => {
             setActiveChat?.(undefined)
             setChats?.([])
             setSearch("")
-            yakitNotify("success", "已清空全部会话")
+            yakitNotify("success", t("HistoryChat.allChatsCleared"))
         } catch (e) {
-            yakitNotify("error", "清除会话失败:" + e)
+            yakitNotify("error", t("HistoryChat.clearFailed", {error: String(e)}))
         } finally {
             setClearLoading(false)
         }
@@ -75,7 +77,7 @@ const HistoryChat = memo(() => {
         const deletedChats = chats.filter((item) => getChatTimestamp(item) <= beforeTimestamp)
 
         if (deletedChats.length === 0) {
-            yakitNotify("info", `暂无${days}天前的会话`)
+            yakitNotify("info", t("HistoryChat.noChatsBeforeDays", {days}))
             return
         }
 
@@ -97,9 +99,9 @@ const HistoryChat = memo(() => {
             }
 
             setChats?.(nextChats)
-            yakitNotify("success", `已清除${days}天前的会话`)
+            yakitNotify("success", t("HistoryChat.clearedBeforeDays", {days}))
         } catch (e) {
-            yakitNotify("error", "清除会话失败:" + e)
+            yakitNotify("error", t("HistoryChat.clearFailed", {error: String(e)}))
         } finally {
             setClearLoading(false)
         }
@@ -110,7 +112,7 @@ const HistoryChat = memo(() => {
             <div className={styles["header-wrapper"]}>
                 <div className={styles["haeder-first"]}>
                     <div className={styles["first-title"]}>
-                        历史会话
+                        {t("HistoryChat.title")}
                         <YakitRoundCornerTag>{chats.length}</YakitRoundCornerTag>
                     </div>
                     <div className={styles["header-actions"]}>
@@ -120,24 +122,24 @@ const HistoryChat = memo(() => {
                                     {
                                         key: "1",
                                         label: renderClearConfirm(
-                                            "一天前",
-                                            "确定要清除一天前的会话吗？此操作不可恢复",
+                                            t("HistoryChat.oneDay"),
+                                            t("HistoryChat.clearConfirm", {days: t("HistoryChat.oneDay")}),
                                             () => handleClearChatByDays(1)
                                         )
                                     },
                                     {
                                         key: "7",
                                         label: renderClearConfirm(
-                                            "一周前",
-                                            "确定要清除一周前的会话吗？此操作不可恢复",
+                                            t("HistoryChat.oneWeek"),
+                                            t("HistoryChat.clearConfirm", {days: t("HistoryChat.oneWeek")}),
                                             () => handleClearChatByDays(7)
                                         )
                                     },
                                     {
                                         key: "30",
                                         label: renderClearConfirm(
-                                            "30天前",
-                                            "确定要清除30天前的会话吗？此操作不可恢复",
+                                            t("HistoryChat.thirtyDays"),
+                                            t("HistoryChat.clearConfirm", {days: t("HistoryChat.thirtyDays")}),
                                             () => handleClearChatByDays(30)
                                         )
                                     },
@@ -145,8 +147,8 @@ const HistoryChat = memo(() => {
                                     {
                                         key: "all",
                                         label: renderClearConfirm(
-                                            "清空全部",
-                                            "确定要清除全部会话吗？此操作不可恢复",
+                                            t("HistoryChat.clearAll"),
+                                            t("HistoryChat.clearAllConfirm"),
                                             handleClearAllChat
                                         )
                                     }
@@ -158,18 +160,18 @@ const HistoryChat = memo(() => {
                                 disabled: clearLoading || chats.length === 0
                             }}
                         >
-                            <Tooltip title='清除会话' placement='topRight'>
+                            <Tooltip title={t("HistoryChat.clearChats")} placement='topRight'>
                                 <YakitButton
                                     disabled={clearLoading || chats.length === 0}
                                     colors='danger'
                                     type='outline1'
                                     loading={clearLoading}
                                 >
-                                    删除
+                                    {t("HistoryChat.delete")}
                                 </YakitButton>
                             </Tooltip>
                         </YakitDropdownMenu>
-                        <Tooltip title='新建会话' placement='topRight'>
+                        <Tooltip title={t("HistoryChat.newChat")} placement='topRight'>
                             <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={() => onNewChat()} />
                         </Tooltip>
                         <SideSettingButton />
@@ -179,7 +181,7 @@ const HistoryChat = memo(() => {
                 <div className={styles["header-second"]}>
                     <YakitInput
                         prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
-                        placeholder='请输入关键词搜索'
+                        placeholder={t("HistoryChat.searchPlaceholder")}
                         allowClear
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}

@@ -3,6 +3,7 @@ import {YakitCollapseTextProps} from "./YakitCollapseTextType"
 import {useMemoizedFn} from "ahooks"
 import classNames from "classnames"
 import styles from "./YakitCollapseText.module.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /**
  * @name 可展开收起的段落组件
@@ -10,6 +11,7 @@ import styles from "./YakitCollapseText.module.scss"
  */
 export const YakitCollapseText: React.FC<YakitCollapseTextProps> = memo((props) => {
     const {content, rows = 3, lineHeight = 16, fontSize = 12, wrapperClassName} = props
+    const {t} = useI18nNamespaces(["yakitUi"])
 
     /** 内容行高 */
     const textStyle = useMemo(() => {
@@ -59,7 +61,7 @@ export const YakitCollapseText: React.FC<YakitCollapseTextProps> = memo((props) 
             </div>
             {showExpand && (
                 <div className={styles["expand-btn"]} onClick={onExpand} title={content}>
-                    {isExpand ? "收起" : "展开"}
+                    {isExpand ? t("YakitCollapseText.collapse") : t("YakitCollapseText.expand")}
                 </div>
             )}
         </div>

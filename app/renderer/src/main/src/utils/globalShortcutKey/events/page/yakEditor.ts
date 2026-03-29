@@ -10,6 +10,9 @@ import {
 import {System, SystemInfo} from "@/constants/hardware"
 import {addScopeShow} from "../global"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 interface MonacoShortcutKeyEventInfo extends ShortcutKeyEventInfo {
     type?: System
@@ -19,182 +22,182 @@ interface MonacoShortcutKeyEventInfo extends ShortcutKeyEventInfo {
 export const YakEditorDefaultShortcut: MonacoShortcutKeyEventInfo[] = [
     // 基础编辑
     {
-        name: "撤销",
+        name: t("basic.ShortcutKey.undo"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_Z]
     },
     {
-        name: "重做",
+        name: t("basic.ShortcutKey.redo"),
         keys: [YakitKeyMod.Control, YakitKeyBoard.KEY_Y],
         type: "Windows_NT"
     },
     {
-        name: "重做",
+        name: t("basic.ShortcutKey.redo"),
         keys: [YakitKeyMod.Meta, YakitKeyMod.Shift, YakitKeyBoard.KEY_Z],
         type: "Darwin"
     },
     {
-        name: "剪切",
+        name: t("basic.ShortcutKey.cut"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_X]
     },
     {
-        name: "复制",
+        name: t("basic.ShortcutKey.copy"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_C]
     },
     {
-        name: "粘贴",
+        name: t("basic.ShortcutKey.paste"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_V]
     },
     {
-        name: "全选",
+        name: t("basic.ShortcutKey.selectAll"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_A]
     },
     // 导航
     {
-        name: "打开命令面板",
+        name: t("basic.ShortcutKey.openCommandPalette"),
         keys: [YakitKeyBoard.F1],
         type: "Windows_NT"
     },
     {
-        name: "打开命令面板",
+        name: t("basic.ShortcutKey.openCommandPalette"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_P],
         type: "Darwin"
     },
     {
-        name: "跳转到行",
+        name: t("basic.ShortcutKey.jumpToLine"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_G]
     },
     {
-        name: "快速打开文件",
+        name: t("basic.ShortcutKey.quickOpenFile"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_P]
     },
     {
-        name: "查找",
+        name: t("basic.ShortcutKey.find"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_F]
     },
     {
-        name: "查找下一个",
+        name: t("basic.ShortcutKey.findNext"),
         keys: [YakitKeyBoard.F3],
         type: "Windows_NT"
     },
     {
-        name: "查找下一个",
+        name: t("basic.ShortcutKey.findNext"),
         keys: [YakitKeyMod.Meta, YakitKeyBoard.KEY_G],
         type: "Darwin"
     },
     {
-        name: "查找上一个",
+        name: t("basic.ShortcutKey.findPrev"),
         keys: [YakitKeyMod.Shift, YakitKeyBoard.F3],
         type: "Windows_NT"
     },
     {
-        name: "查找上一个",
+        name: t("basic.ShortcutKey.findPrev"),
         keys: [YakitKeyMod.Meta, YakitKeyMod.Shift, YakitKeyBoard.KEY_G],
         type: "Darwin"
     },
     {
-        name: "选择下一个匹配项",
+        name: t("basic.ShortcutKey.selectNextMatch"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_D]
     },
     {
-        name: "选择所有匹配项",
+        name: t("basic.ShortcutKey.selectAllMatches"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_L]
     },
     {
-        name: "选择所有匹配的单词",
+        name: t("basic.ShortcutKey.selectAllWords"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.F2]
     },
     {
-        name: "扩展选择",
+        name: t("basic.ShortcutKey.expandSelection"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyMod.Alt, YakitKeyBoard.RightArrow]
     },
     {
-        name: "缩小选择",
+        name: t("basic.ShortcutKey.shrinkSelection"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyMod.Alt, YakitKeyBoard.LeftArrow]
     },
     {
-        name: "跳转到匹配的括号",
+        name: t("basic.ShortcutKey.matchBracket"),
         keys: [YakitKeyMod.Control, YakitKeyMod.Shift, YakitKeyBoard.Backslash],
         type: "Windows_NT"
     },
     {
-        name: "跳转到匹配的括号",
+        name: t("basic.ShortcutKey.matchBracket"),
         keys: [YakitKeyMod.Meta, YakitKeyMod.Alt, YakitKeyBoard.Backslash],
         type: "Darwin"
     },
     {
-        name: "向上添加光标",
+        name: t("basic.ShortcutKey.addCursorUp"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.UpArrow]
     },
     {
-        name: "向下添加光标",
+        name: t("basic.ShortcutKey.addCursorDown"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.DownArrow]
     },
     {
-        name: "选择当前行",
+        name: t("basic.ShortcutKey.selectCurrentLine"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_L]
     },
     {
-        name: "撤销上一个光标操作",
+        name: t("basic.ShortcutKey.undoLastCursor"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_U]
     },
     {
-        name: "向上选中",
+        name: t("basic.ShortcutKey.selectUp"),
         keys: [YakitKeyMod.Shift, YakitKeyBoard.UpArrow]
     },
     {
-        name: "向下选中",
+        name: t("basic.ShortcutKey.selectDown"),
         keys: [YakitKeyMod.Shift, YakitKeyBoard.DownArrow]
     },
     // 代码操作
     {
-        name: "替换",
+        name: t("basic.ShortcutKey.replace"),
         keys: [YakitKeyMod.Control, YakitKeyBoard.KEY_H],
         type: "Windows_NT"
     },
     {
-        name: "替换",
+        name: t("basic.ShortcutKey.replace"),
         keys: [YakitKeyMod.Meta, YakitKeyMod.Alt, YakitKeyBoard.KEY_F],
         type: "Darwin"
     },
     {
-        name: "注释/取消注释",
+        name: t("basic.ShortcutKey.commentToggle"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.Slash]
     },
     {
-        name: "缩进",
+        name: t("basic.ShortcutKey.indent"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.BracketRight]
     },
     {
-        name: "取消缩进",
+        name: t("basic.ShortcutKey.outdent"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.BracketLeft]
     },
     {
-        name: "删除行",
+        name: t("basic.ShortcutKey.deleteLine"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_K]
     },
     {
-        name: "向上移动行",
+        name: t("basic.ShortcutKey.moveLineUp"),
         keys: [YakitKeyMod.Alt, YakitKeyBoard.UpArrow]
     },
     {
-        name: "向下移动行",
+        name: t("basic.ShortcutKey.moveLineDown"),
         keys: [YakitKeyMod.Alt, YakitKeyBoard.DownArrow]
     },
     {
-        name: "向上复制行",
+        name: t("basic.ShortcutKey.copyLineUp"),
         keys: [YakitKeyMod.Shift, YakitKeyMod.Alt, YakitKeyBoard.UpArrow]
     },
     {
-        name: "向下复制行",
+        name: t("basic.ShortcutKey.copyLineDown"),
         keys: [YakitKeyMod.Shift, YakitKeyMod.Alt, YakitKeyBoard.DownArrow]
     },
     {
-        name: "替换所有匹配项",
+        name: t("basic.ShortcutKey.replaceAll"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.Enter]
     },
     // 其他
     {
-        name: "跳转到定义",
+        name: t("basic.ShortcutKey.goToDefinition"),
         keys: [YakitKeyBoard.F12],
         type: "Windows_NT"
     }
@@ -211,11 +214,11 @@ export const isConflictToYakEditor = (Shortcut: string[]) => {
             let newKeys = item.keys.filter((item) => item !== YakitKeyMod.CtrlCmd)
             let newShortcut = Shortcut.filter((item) => item !== YakitKeyMod.Control && item !== YakitKeyMod.Meta)
             if (JSON.stringify(sortKeysCombination(newKeys)) === JSON.stringify(sortKeysCombination(newShortcut))) {
-                result = `编辑器冲突：${item.name} - 此快捷键设置将会在编辑器中被覆盖`
+                result = t("basic.ShortcutKey.editorConflict", {name: item.name})
             }
         } else {
             if (JSON.stringify(sortKeysCombination(item.keys)) === JSON.stringify(sortKeysCombination(Shortcut))) {
-                result = `编辑器冲突：${item.name} - 此快捷键设置将会在编辑器中被覆盖`
+                result = t("basic.ShortcutKey.editorConflict", {name: item.name})
             }
         }
     })
@@ -249,35 +252,35 @@ type EventsType = Record<`${YakEditorBaseShortcutKey | YakEditorOptionShortcutKe
 
 const YakEditorShortcutKeyEvents: EventsType = {
     "sendAndJump*common": {
-        name: "发送并跳转",
+        name: t("basic.ShortcutKey.sendAndJump"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_R]
     },
     "send*common": {
-        name: "仅发送",
+        name: t("basic.ShortcutKey.sendOnly"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_R]
     },
     "mutate-http-method-get": {
-        name: "改变 HTTP 方法成 GET",
+        name: t("basic.Encodec.changeHttpMethodGet"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_H]
     },
     "trigger-auto-hijacked": {
-        name: "切换为自动劫持模式",
+        name: t("basic.ShortcutKey.triggerAutoHijacked"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_T]
     },
     "forward-response": {
-        name: "放行该 HTTP Response",
+        name: t("basic.ShortcutKey.forwardResponse"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_F]
     },
     "hijackResponse*common": {
-        name: "劫持响应",
+        name: t("basic.ShortcutKey.hijackResponse"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.UpArrow]
     },
     "dropData*common": {
-        name: "丢弃",
+        name: t("basic.ShortcutKey.dropData"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.DownArrow]
     },
     "submitData*common": {
-        name: "放行",
+        name: t("basic.ShortcutKey.submitData"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.RightArrow]
     }
 }

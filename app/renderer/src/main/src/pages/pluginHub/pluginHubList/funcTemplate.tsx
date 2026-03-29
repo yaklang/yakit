@@ -63,10 +63,12 @@ import "../../plugins/plugins.scss"
 import styles from "./PluginHubList.module.scss"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {debugToPrintLogs} from "@/utils/logCollection"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
 const {TabPane} = PluginTabs
+const t = i18n.getFixedT(null, "pluginHub")
 
 interface HubListFilterProps {
     wrapperClassName?: string
@@ -114,7 +116,7 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                 wrapperClassName
             )}
         >
-            <div className={styles["hub-list-filter-header"]}>高级筛选</div>
+            <div className={styles["hub-list-filter-header"]}>{t("HubListFilter.advancedFilter")}</div>
             <div className={styles["hub-list-filter-body"]}>
                 <YakitCollapse
                     activeKey={activeKey}
@@ -137,7 +139,7 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                                             onClear(item.groupKey)
                                         }}
                                     >
-                                        清空
+                                        {t("HubListFilter.clear")}
                                     </YakitButton>
                                 </>
                             }
@@ -176,8 +178,8 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                         </YakitPanel>
                     ))}
                 </YakitCollapse>
-                {groupList.length > 0 && <div className={styles["to-end"]}>已经到底啦～</div>}
-                {groupList.length === 0 && <YakitEmpty style={{paddingTop: 48}} title={noDataHint || "暂无数据"} />}
+                {groupList.length > 0 && <div className={styles["to-end"]}>{t("HubListFilter.endReached")}</div>}
+                {groupList.length === 0 && <YakitEmpty style={{paddingTop: 48}} title={noDataHint || t("HubListFilter.noData")} />}
             </div>
         </div>
     )
@@ -284,17 +286,13 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                                 checked={allChecked}
                                 onChange={(e) => setAllChecked(e.target.checked)}
                             />
-                            全选
+                            {t("HubListOuterList.selectAll")}
                         </div>
 
                         <div className={styles["total-and-selected"]}>
-                            <div>
-                                Total <span className={styles["num-style"]}>{Number(total) || 0}</span>
-                            </div>
+                                <div>{t("HubListOuterList.total", {count: Number(total) || 0})}</div>
                             <div className={styles["divider-style"]} />
-                            <div>
-                                Selected <span className={styles["num-style"]}>{Number(selected) || 0}</span>
-                            </div>
+                                <div>{t("HubListOuterList.selected", {count: Number(selected) || 0})}</div>
                         </div>
 
                         {tagLength > 0 && (
@@ -343,7 +341,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                                             })}
                                         >
                                             <span>
-                                                筛选条件 <span className={styles["total-style"]}>{tagLength}</span>
+                                                {t("HubListOuterList.filterCondition")} <span className={styles["total-style"]}>{tagLength}</span>
                                             </span>
                                             <OutlineXIcon onClick={() => onDelAllTag()} />
                                         </div>
@@ -553,7 +551,7 @@ export const HubGridList: <T>(props: HubGridListProps<T>) => any = memo((props) 
                     )
                 })}
 
-                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
+                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>{t("HubListGridList.noMoreData")}</div>}
                 {data.length > 0 && loading && (
                     <div className={styles["loading-wrapper"]}>
                         <YakitSpin wrapperClassName={styles["loading-style"]} />
@@ -724,14 +722,14 @@ export const HubGridOpt: React.FC<HubGridOptProps> = memo((props) => {
                         </div>
 
                         <div className={classNames(styles["help-wrapper"], "yakit-content-multiLine-ellipsis")}>
-                            {help || "No Description about it."}
+                            {help || t("HubDetailListOpt.noDescription")}
                         </div>
 
                         <div className={styles["user-wrapper"]}>
                             <div className={styles["user-body"]}>
                                 {authorImgNode}
                                 <div className={classNames(styles["user-style"], "yakit-content-single-ellipsis")}>
-                                    {user || "anonymous"}
+                                    {user || t("HubDetailListOpt.anonymous")}
                                 </div>
                                 <AuthorIcon />
                             </div>
@@ -830,14 +828,14 @@ export const HubDetailList: <T>(props: HubDetailListProps<T>) => any = memo((pro
                                 checked={checked}
                                 onChange={(e) => onCheck(e.target.checked)}
                             />
-                            全选
+                            {t("HubListOuterList.selectAll")}
                         </div>
                         <div className={styles["count-num"]}>
-                            Total <span className={styles["num-style"]}>{total}</span>
+                            {t("HubListOuterList.total", {count: total})}
                         </div>
                         <div className={styles["divider-style"]}></div>
                         <div className={styles["count-num"]}>
-                            Selected <span className={styles["num-style"]}>{selected}</span>
+                            {t("HubListOuterList.selected", {count: selected})}
                         </div>
                     </div>
                     {filterExtra || null}
@@ -961,7 +959,7 @@ export const HubDetailListOpt: <T>(props: HubDetailListOptProps<T>) => any = mem
                 <div className={styles["plugin-details-item-show"]}>
                     {extraNode()}
                     <Tooltip
-                        title={help || "No Description about it."}
+                        title={help || t("HubDetailListOpt.noDescription")}
                         placement='topRight'
                         overlayClassName='plugins-tooltip'
                     >
@@ -1026,11 +1024,11 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
         e.stopPropagation()
         if (starLoading) return
         if (!info.uuid) {
-            yakitNotify("error", "插件信息错误，无法进行点赞操作")
+            yakitNotify("error", t("HubListOnline.pluginInfoErrorLike"))
             return
         }
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行点赞")
+            yakitNotify("error", t("HubListOnline.loginRequiredLike"))
             return
         }
 
@@ -1061,7 +1059,7 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
         e.stopPropagation()
         if (downloadLoading) return
         if (!info.uuid) {
-            yakitNotify("error", "插件信息错误，无法进行下载操作")
+            yakitNotify("error", t("HubListOnline.pluginInfoErrorDownload"))
             return
         }
         onDownload(info)
@@ -1113,7 +1111,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
         e.stopPropagation()
         if (downloadLoading) return
         if (!info.uuid) {
-            yakitNotify("error", "插件信息错误，无法进行下载操作")
+            yakitNotify("error", t("HubListOnline.pluginInfoErrorDownload"))
             return
         }
         onDownload(info)
@@ -1123,10 +1121,10 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
     const onShare = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!info.uuid) {
-            yakitNotify("error", "分享插件的UUID不存在")
+            yakitNotify("error", t("HubListOnline.shareUuidMissing"))
             return
         }
-        setClipboardText(info.uuid, {hintText: "插件UUID已粘贴到剪切板"})
+        setClipboardText(info.uuid, {hintText: t("HubListOnline.uuidCopied")})
     })
 
     const delLoading = useMemo(() => {
@@ -1138,7 +1136,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
     const handleDel = useMemoizedFn(() => {
         if (delLoading) return
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行删除")
+            yakitNotify("error", t("HubListOnline.loginRequiredDelete"))
             return
         }
         onDel(info)
@@ -1148,18 +1146,18 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
     const onState = useMemoizedFn(() => {
         if (stateLoading) return
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以改变状态")
+            yakitNotify("error", t("HubListOnline.loginRequiredChange"))
             return
         }
         if (!info.uuid) {
-            yakitNotify("error", "插件关键信息获取错误")
+            yakitNotify("error", t("HubListOnline.keyInfoError"))
             return
         }
 
         setStateLoading(true)
         if (info.is_private) {
             const m = showYakitModal({
-                title: "插件基础检测",
+                title: t("HubListOnline.pluginBasicDetection"),
                 type: "white",
                 width: "50%",
                 centered: true,
@@ -1247,13 +1245,13 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
                     data: [
                         {
                             key: "state",
-                            label: info.is_private ? "改为公开" : "改为私密",
+                            label: info.is_private ? t("HubListOnline.makePublic") : t("HubListOnline.makePrivate"),
                             itemIcon: info.is_private ? <OutlineLockopenIcon /> : <OutlineLockclosedIcon />,
                             disabled: stateLoading
                         },
                         {
                             key: "del",
-                            label: "删除线上",
+                            label: t("HubListOnline.deleteOnline"),
                             type: "danger",
                             itemIcon: <OutlineTrashIcon />,
                             disabled: delLoading
@@ -1290,7 +1288,7 @@ export const RecycleOptFooterExtra: React.FC<RecycleOptFooterExtraProps> = memo(
     const onRemove = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行删除")
+            yakitNotify("error", t("HubListOnline.loginRequiredDelete"))
             return
         }
         if (delLoading) return
@@ -1302,7 +1300,7 @@ export const RecycleOptFooterExtra: React.FC<RecycleOptFooterExtraProps> = memo(
         e.stopPropagation()
         if (restoreLoading) return
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行还原")
+            yakitNotify("error", t("HubListOnline.loginRequiredRestore"))
             return
         }
 
@@ -1361,11 +1359,11 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         e.stopPropagation()
         if (!isShowUpload || uploadLoading) return
         if (!info.ScriptName) {
-            yakitNotify("error", "插件信息错误，无法进行上传操作")
+            yakitNotify("error", t("HubListOnline.pluginInfoErrorUpload"))
             return
         }
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行上传")
+            yakitNotify("error", t("HubListOnline.loginRequiredUpload"))
             return
         }
         setUploadTipShow(false)
@@ -1375,7 +1373,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
     const handleEdit = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!info.ScriptName) {
-            yakitNotify("error", "插件信息错误，请刷新列表后重试")
+            yakitNotify("error", t("HubListOnline.pluginInfoRefreshError"))
             return
         }
         onEdit(info)
@@ -1400,7 +1398,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
     const handleDel = useMemoizedFn(() => {
         if (delLoading) return
         if (!info.ScriptName) {
-            yakitNotify("error", "插件信息错误，无法进行删除操作,请刷新列表重试")
+            yakitNotify("error", t("HubListOnline.pluginInfoErrorDelete"))
             return
         }
         onDel(info)
@@ -1411,7 +1409,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
             return [
                 {
                     key: "export",
-                    label: "导出",
+                    label: t("HubListOnline.export"),
                     itemIcon: <OutlineExportIcon />
                 }
             ]
@@ -1419,12 +1417,12 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         return [
             {
                 key: "export",
-                label: "导出",
+                label: t("HubListOnline.export"),
                 itemIcon: <OutlineExportIcon />
             },
             {
                 key: "del",
-                label: "删除本地",
+                label: t("HubListOnline.deleteLocal"),
                 type: "danger",
                 itemIcon: <OutlineTrashIcon />,
                 disabled: delLoading

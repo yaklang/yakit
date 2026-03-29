@@ -19,6 +19,7 @@ import {System, SystemInfo, handleFetchSystem} from "@/constants/hardware"
 import {getClipboardText, setClipboardText} from "@/utils/clipboard"
 import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
 import {useCampare} from "@/hook/useCompare/useCompare"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface YakitXtermRefProps {
     terminal: Terminal
@@ -153,6 +154,7 @@ export const TERMINAL_KEYBOARD_Map = {
     }
 }
 const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
+    const {t} = useI18nNamespaces(["yakitUi"])
     const {isWrite = true, wrapperClassName = "", className = "", options = {}, addons = []} = props
     const terminalDivRef = useRef<HTMLDivElement>(null)
     const terminalRef = useRef<Terminal>(
@@ -280,7 +282,7 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
         useMemoizedFn((isShowTip?: boolean) => {
             const selectedText: string = (terminalRef.current && terminalRef.current.getSelection()) || ""
             if (selectedText.length === 0) {
-                if (isShowTip) warn("暂无复制内容")
+                if (isShowTip) warn(t("YakitXterm.noCopiedContent"))
                 return
             }
             loading.current = true
@@ -308,7 +310,7 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
                     .catch(() => {})
                     .finally(() => (loading.current = false))
             } else {
-                warn("不允许编辑")
+                warn(t("YakitXterm.editNotAllowed"))
             }
         }),
         {wait: 200}
@@ -317,11 +319,11 @@ const YakitXterm: React.FC<IProps> = forwardRef((props, ref) => {
     const menuData: YakitMenuItemType[] = useMemo(() => {
         return [
             {
-                label: "复制",
+                label: t("YakitButton.copy"),
                 key: "copy"
             },
             {
-                label: "粘贴",
+                label: t("YakitEditor.paste"),
                 key: "paste"
             }
         ] as YakitMenuItemType[]

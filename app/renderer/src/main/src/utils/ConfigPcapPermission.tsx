@@ -5,6 +5,9 @@ import {getReleaseEditionName} from "./envfile"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {QuestionMarkCircleIcon} from "@/assets/newIcon"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 const {ipcRenderer} = window.require("electron")
 
 export interface ConfigPcapPermissionFormProp {
@@ -16,7 +19,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
         IsPrivileged: boolean
         Advice: string
         AdviceVerbose: string
-    }>({Advice: "unknown", AdviceVerbose: "无法获取 PCAP 支持信息", IsPrivileged: false})
+    }>({Advice: "unknown", AdviceVerbose: t("ConfigPcapPermission.unavailable"), IsPrivileged: false})
     const [platform, setPlatform] = useState("")
 
     useEffect(() => {
@@ -24,14 +27,14 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
             .invoke("IsPrivilegedForNetRaw", {})
             .then(setResponse)
             .catch((e) => {
-                yakitNotify("error", `获取 Pcap 权限状态失败：${e}`)
+                yakitNotify("error", t("ConfigPcapPermission.fetchStatusFailed", {error: String(e)}))
             })
             .finally(() => {
                 ipcRenderer
                     .invoke("fetch-system-and-arch")
                     .then((e: string) => setPlatform(e))
                     .catch((e) => {
-                        yakitNotify("error", `获取 ${getReleaseEditionName()} 操作系统失败：${e}`)
+                        yakitNotify("error", t("ConfigPcapPermission.fetchPlatformFailed", {name: getReleaseEditionName(), error: String(e)}))
                     })
             })
     }, [])
@@ -54,7 +57,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
                         }
                     })
                     .catch((e) => {
-                        yakitNotify("error", `提升 Pcap 用户权限失败：${e}`)
+                        yakitNotify("error", t("ConfigPcapPermission.promoteFailed", {error: String(e)}))
                     })
             }}
         >
@@ -65,21 +68,21 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
                     <>
                         <Tooltip
                             title={
-                                "原理：MacOS 通过设置 /dev/bpf* 权限组，可参考 Wireshark ChmodBPF 相关配置，Linux 可通过 setcap 命令设置 pcap 权限，Windows 推荐直接以 UAC 提升管理员权限启动"
+                                t("ConfigPcapPermission.tooltip")
                             }
                         >
                             <YakitButton type={"text"} icon={<QuestionMarkCircleIcon />} />
                         </Tooltip>
                         {isWindows
-                            ? `Windows 可用管理员权限启动 ${getReleaseEditionName()} 以获取对 Pcap 的使用权限`
-                            : "Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限"}
+                            ? t("ConfigPcapPermission.windowsHint", {name: getReleaseEditionName()})
+                            : t("ConfigPcapPermission.unixHint")}
                     </>
                 }
             >
                 {response.IsPrivileged ? (
-                    <Alert type={"success"} message={`您可以正常试用 SYN 扫描等功能，无需修复`} />
+                    <Alert type={"success"} message={t("ConfigPcapPermission.privilegedHint")} />
                 ) : (
-                    <Alert type={"warning"} message={`当前引擎不具有网卡操作权限`} />
+                    <Alert type={"warning"} message={t("ConfigPcapPermission.notPrivilegedHint")} />
                 )}
             </Form.Item>
             {response.IsPrivileged ? (
@@ -90,17 +93,17 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
                                 props.onClose()
                             }}
                         >
-                            知道了～
+                            {t("ConfigPcapPermission.ok")}
                         </YakitButton>
                     )}
                 </Form.Item>
             ) : (
                 <Form.Item label={" "} colon={false}>
                     <YakitButton htmlType={"submit"} type={"primary"}>
-                        开启 PCAP 权限
+                        {t("ConfigPcapPermission.enablePcap")}
                     </YakitButton>
                     <Tooltip title={`${response.AdviceVerbose}: ${response.Advice}`}>
-                        <YakitButton type={"text"}>手动修复</YakitButton>
+                        <YakitButton type={"text"}>{t("ConfigPcapPermission.manualFix")}</YakitButton>
                     </Tooltip>
                 </Form.Item>
             )}
@@ -111,7 +114,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
 export const showPcapPermission = () => {
     const m = showYakitModal({
         type: "white",
-        title: "修复 Pcap 权限",
+        title: t("ConfigPcapPermission.modalTitle"),
         width: "50%",
         content: (
             <ConfigPcapPermissionForm

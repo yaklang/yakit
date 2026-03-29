@@ -13,12 +13,14 @@ import {
     OutlineXcircleIcon
 } from "@/assets/icon/outline"
 import useStore from "../hooks/useStore"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
     const {onOpenEditorDetails} = props
     const {activeFile} = useStore()
+    const {t} = useI18nNamespaces(["yakRunner"])
     const showSyntaxInfo = useMemo(() => {
         let data = {
             hint: 0,
@@ -70,7 +72,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                         }}
                     >
                         <OutlineStethoscopeIcon />
-                        语法检查
+                        {t("BottomSideBar.syntaxCheck")}
                     </div>
                     <div
                         className={styles["left-check-info"]}
@@ -116,7 +118,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                     }}
                 >
                     <OutlineCodeIcon />
-                    终端
+                    {t("BottomSideBar.terminal")}
                 </div>
                 <div
                     className={classNames(styles["left-item"], styles["left-terminal-and-help"])}
@@ -125,7 +127,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
                     }}
                 >
                     <OutlineAnnotationIcon />
-                    帮助信息
+                    {t("BottomSideBar.helpInfo")}
                 </div>
             </div>
 

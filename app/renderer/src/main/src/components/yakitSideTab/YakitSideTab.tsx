@@ -108,7 +108,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
                     </>
                 )
             default:
-                return <div>未知type</div>
+                return <div>{t?.("YakitSideTab.unknownType") || "Unknown type"}</div>
         }
     })
     return (

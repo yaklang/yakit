@@ -183,6 +183,8 @@ const PluginDebugDrawer = React.lazy(() => import("./components/PluginDebugDrawe
 const WebFuzzerSynSetting = React.lazy(() => import("./components/WebFuzzerSynSetting/WebFuzzerSynSetting"))
 const HTTPHistoryAnalysis = React.lazy(() => import("../hTTPHistoryAnalysis/HTTPHistoryAnalysis").then(({ HTTPHistoryAnalysis }) => ({ default: HTTPHistoryAnalysis })))
 
+const t = i18n.getFixedT(null, "webFuzzer")
+
 // 保留数组中非重复数据
 type TFilterNonUnique = <T>(arr: T[]) => T[]
 const filterNonUnique: TFilterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
@@ -193,7 +195,7 @@ const httpFuzzerLog = ({ name, title, content, status }: Partial<LoggerData>) =>
     return {
         name: name || "HTTPFuzzerPage",
         title: title || "sendRequest",
-        content: content || (i18n.language === "zh" ? "发送请求" : "Send Request"),
+        content: content || t("HTTPFuzzerPage.send_request"),
         status,
         time: formatTimeYMD(Date.now())
     }
@@ -410,9 +412,7 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
         .then((res: { Nodes: PayloadGroupNodeProps[] }) => {
             if (res.Nodes.length === 0) {
                 warn(
-                    i18n.language === "zh"
-                        ? "暂无字典，请先添加后再使用"
-                        : "No dictionary available, please add one before using"
+                    t("HTTPFuzzerPage.noDictionary")
                 )
             } else {
                 const y = showYakitModal({
@@ -438,7 +438,7 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
             }
         })
         .catch((e: any) => {
-            failed(`${i18n.language === "zh" ? "获取字典列表失败：" : "Failed to get dictionary list:"}${e}`)
+            failed(t("HTTPFuzzerPage.getDictionaryListFailed", {error: String(e)}))
         })
         .finally()
 }
@@ -451,9 +451,7 @@ export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
         })
         .catch((e) => {
             failed(
-                i18n.language === "zh"
-                    ? "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整"
-                    : "Failed to copy URL: including Fuzz tags may result in an incomplete URL"
+                t("HTTPFuzzerPage.copyUrlIncomplete")
             )
         })
 }
@@ -629,7 +627,7 @@ export const newWebFuzzerTab = async (params: {
             data: { ...params }
         })
         .then(() => {
-            params.openFlag && info(i18n.language === "zh" ? "发送成功" : "Sent Successfully")
+            params.openFlag && info(t("HTTPFuzzerPage.sentSuccessfully"))
         })
 }
 
@@ -638,7 +636,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
     const stringFuzzerRef = createRef<StringFuzzerRef>()
 
     const m = showYakitModal({
-        title: i18n.language === "zh" ? "Fuzzer Tag 调试工具" : "Fuzzer Tag Debug Tool",
+        title: t("HTTPFuzzerPage.fuzzerTagDebugTool"),
         width: "70%",
         footer: null,
         maskClosable: false,
@@ -648,9 +646,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
             stringFuzzerRef.current?.handleCancel();
         },
         subTitle:
-            i18n.language === "zh"
-                ? "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag"
-                : 'Debug mode is suitable for generating or modifying payloads. Nesting defaults to the outermost level, but you can select a position to nest. "Insert" simply inserts the fuzztag at the cursor position.',
+            t("HTTPFuzzerPage.fuzzerTagDebugSubTitle"),
         content: (
             <StringFuzzer
                 ref={stringFuzzerRef}
@@ -658,9 +654,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
                     if (!template) {
                         yakitNotify(
                             "warning",
-                            i18n.language === "zh"
-                                ? "Payload 为空 / Fuzz 模版为空"
-                                : "Payload is empty / Fuzz template is empty"
+                            t("HTTPFuzzerPage.payloadEmpty")
                         )
                     } else {
                         if (reqEditor && template) {
@@ -668,7 +662,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
                                 text: template
                             })
                         } else {
-                            yakitNotify("error", i18n.language === "zh" ? "BUG: 编辑器失效" : "BUG: Editor not working")
+                            yakitNotify("error", t("HTTPFuzzerPage.editorNotWorking"))
                         }
                         m.destroy()
                     }

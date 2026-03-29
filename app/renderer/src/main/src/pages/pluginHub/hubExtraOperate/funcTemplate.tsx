@@ -27,6 +27,10 @@ import {formatDate} from "@/utils/timeUtil"
 import classNames from "classnames"
 import UnLogin from "@/assets/unLogin.png"
 import styles from "./HubExtraOperate.module.scss"
+import i18n from "@/i18n/i18n"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+
+const t = i18n.getFixedT(null, "pluginHub")
 
 const {ipcRenderer} = window.require("electron")
 
@@ -93,19 +97,19 @@ export const HubOperateHint: React.FC<HubOperateHintProps> = memo((props) => {
         <YakitHint
             visible={visible}
             wrapClassName={styles["hub-operate-hint"]}
-            title='该操作为本地功能'
+            title={t("FuncTemplate.localOnlyTitle")}
             content={
                 <>
-                    <span className={styles["operate-style"]}>编辑、添加到菜单栏、移除菜单栏、导出</span>
-                    <span className={styles["content-style"]}>均为本地操作，点击后会自动下载插件并进行对应操作</span>
+                    <span className={styles["operate-style"]}>{t("FuncTemplate.localOnlyActions")}</span>
+                    <span className={styles["content-style"]}>{t("FuncTemplate.localOnlyContent")}</span>
                 </>
             }
-            okButtonText='好的'
+            okButtonText={t("FuncTemplate.ok")}
             onOk={handleOk}
             cancelButtonProps={{style: {display: "none"}}}
             footerExtra={
                 <YakitCheckbox value={cache} onChange={(e) => setCache(e.target.checked)}>
-                    下次不再提醒
+                    {t("FuncTemplate.dontRemindAgain")}
                 </YakitCheckbox>
             }
         />
@@ -147,7 +151,7 @@ export const RemovePluginMenuContent: React.FC<RemovePluginMenuContentProps> = m
             })
             .catch((e: any) => {
                 setGroups([])
-                yakitNotify("error", "获取菜单失败：" + e)
+                yakitNotify("error", t("FuncTemplate.getMenuFailed", {error: String(e)}))
             })
     })
     const onClickRemove = useMemoizedFn((element: string) => {
@@ -163,7 +167,7 @@ export const RemovePluginMenuContent: React.FC<RemovePluginMenuContentProps> = m
                 updateGroups()
             })
             .catch((e: any) => {
-                yakitNotify("error", "移除菜单失败：" + e)
+                yakitNotify("error", t("FuncTemplate.removeMenuFailed", {error: String(e)}))
             })
     })
     return (
@@ -172,11 +176,11 @@ export const RemovePluginMenuContent: React.FC<RemovePluginMenuContentProps> = m
                 ? groups.map((element) => {
                       return (
                           <YakitButton type='outline2' key={element} onClick={() => onClickRemove(element)}>
-                              从 {element} 中移除
+                              {t("FuncTemplate.removeFromMenu", {element})}
                           </YakitButton>
                       )
                   })
-                : "暂无数据或插件未被添加到菜单栏"}
+                : t("FuncTemplate.noDataOrNotAdded")}
         </div>
     )
 })
@@ -226,7 +230,7 @@ export const AddPluginMenuContent: React.FC<AddPluginMenuContentProps> = (props)
                 })
             })
             .catch((err) => {
-                yakitNotify("error", "获取菜单失败：" + err)
+                yakitNotify("error", t("FuncTemplate.getMenuFailed", {error: String(err)}))
             })
     })
 
@@ -244,7 +248,7 @@ export const AddPluginMenuContent: React.FC<AddPluginMenuContentProps> = (props)
 
         if (index === -1) {
             if (menusLength >= 50) {
-                yakitNotify("error", "最多添加50个一级菜单")
+                yakitNotify("error", t("FuncTemplate.maxTopMenus"))
                 return
             }
             params = {
@@ -261,7 +265,7 @@ export const AddPluginMenuContent: React.FC<AddPluginMenuContentProps> = (props)
         } else {
             const groupInfo = menus.current[index]
             if (groupInfo.Items.length >= 50) {
-                yakitNotify("error", "同一个一级菜单最多添加50个二级菜单")
+                yakitNotify("error", t("FuncTemplate.maxSubMenus"))
                 return
             }
             params = {
@@ -285,7 +289,7 @@ export const AddPluginMenuContent: React.FC<AddPluginMenuContentProps> = (props)
             .then(() => {
                 if (isCommunityEdition()) ipcRenderer.invoke("refresh-public-menu")
                 else ipcRenderer.invoke("change-main-menu")
-                yakitNotify("success", "添加成功")
+                yakitNotify("success", t("FuncTemplate.addSuccess"))
                 onCancel()
             })
             .catch((e: any) => {
@@ -302,24 +306,24 @@ export const AddPluginMenuContent: React.FC<AddPluginMenuContentProps> = (props)
         <div className={styles["add-plugin-menu-content"]}>
             <Form form={form} layout='vertical' onFinish={onFinsh}>
                 <Form.Item
-                    label={"菜单选项名(展示名称)"}
+                    label={t("FuncTemplate.menuOptionName")}
                     name='Verbose'
-                    rules={[{required: true, message: "该项为必填"}]}
+                    rules={[{required: true, message: t("FuncTemplate.required")}]}
                 >
                     <YakitInput />
                 </Form.Item>
-                <Form.Item label={"菜单分组"} name='Group' rules={[{required: true, message: "该项为必填"}]}>
+                <Form.Item label={t("FuncTemplate.menuGroup")} name='Group' rules={[{required: true, message: t("FuncTemplate.required")}]}> 
                     <YakitAutoComplete options={option} />
                 </Form.Item>
                 <div className={styles["form-btn-group"]}>
                     <Form.Item colon={false} noStyle>
                         <YakitButton type='outline1' onClick={onCancel}>
-                            取消
+                            {t("FuncTemplate.cancel")}
                         </YakitButton>
                     </Form.Item>
                     <Form.Item colon={false} noStyle>
                         <YakitButton type='primary' htmlType='submit' loading={loading}>
-                            添加
+                            {t("FuncTemplate.add")}
                         </YakitButton>
                     </Form.Item>
                 </div>
@@ -373,6 +377,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
         basePluginName,
         infoExtra
     } = props
+    const {t} = useI18nNamespaces(["pluginHub"])
 
     const tagList = useMemo(() => {
         if (!tags) return []
@@ -407,7 +412,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                             {pluginName || "-"}
                         </div>
                         <div className={styles["subtitle-wrapper"]}>
-                            <Tooltip title={help || "No Description about it."} overlayClassName='plugins-tooltip'>
+                            <Tooltip title={help || t("HubDetailListOpt.noDescription")} overlayClassName='plugins-tooltip'>
                                 <OutlineQuestionmarkcircleIcon className={styles["help-icon"]} />
                             </Tooltip>
                         </div>
@@ -435,9 +440,9 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                                     styles["text-style"],
                                     "yakit-content-single-ellipsis"
                                 )}
-                                title={user || "anonymous"}
+                                title={user || t("HubDetailListOpt.anonymous")}
                             >
-                                {user || "anonymous"}
+                                {user || t("HubDetailListOpt.anonymous")}
                             </div>
                             <AuthorIcon />
                         </div>
@@ -463,7 +468,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                                     onVisibleChange={setPrShow}
                                 >
                                     <YakitButton type='text2' isActive={prShow}>
-                                        {`${contributes.length}位协作者`}
+                                        {t("HubExtraOperate.contributors", {count: contributes.length})}
                                         {prShow ? <SolidChevronupIcon /> : <SolidChevrondownIcon />}
                                     </YakitButton>
                                 </YakitPopover>
@@ -474,12 +479,12 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                         <>
                             <div className={styles["divider-style"]} />
                             <div className={styles["copy-wrapper"]}>
-                                <span className={styles["text-style"]}>来源:</span>
+                                <span className={styles["text-style"]}>{t("HubExtraOperate.source")}</span>
                                 <Tooltip
-                                    title={`复制插件 “${basePluginName}” 为 “${pluginName}”`}
+                                    title={t("HubExtraOperate.copyPlugin", {basePluginName, pluginName})}
                                     overlayClassName='plugins-tooltip'
                                 >
-                                    <YakitTag style={{marginRight: 0, cursor: "pointer"}}>复制</YakitTag>
+                                    <YakitTag style={{marginRight: 0, cursor: "pointer"}}>{t("HubExtraOperate.copy")}</YakitTag>
                                 </Tooltip>
                             </div>
                         </>
@@ -489,7 +494,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                 <div className={styles["divider-style"]}></div>
                 <div
                     className={classNames(styles["text-style"], {[styles["constant-wrapper"]]: !infoExtra})}
-                >{`更新时间 : ${formatDate(updated_at)}`}</div>
+                >{t("HubExtraOperate.updatedAt", {date: formatDate(updated_at)})}</div>
 
                 {!!infoExtra && (
                     <>

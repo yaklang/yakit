@@ -101,6 +101,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
 
     const {theme: themeGlobal} = useTheme()
     const {fontSize: globalFontSize} = useEditorFontSize()
+    const {t, i18n} = useI18nNamespaces(["utils"])
 
     useLayoutEffect(() => {
         applyYakitMonacoTheme(props?.propsTheme ?? themeGlobal)
@@ -234,7 +235,7 @@ export const YakEditor: React.FC<EditorProps> = (props) => {
             editor.addAction({
                 contextMenuGroupId: "yaklang",
                 id: YAK_FORMATTER_COMMAND_ID,
-                label: "Yak 代码格式化",
+                label: t("basic.Editors.yakFormat"),
                 run: () => {
                     yakCompileAndFormat.run(editor, model)
                     return undefined
@@ -805,7 +806,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
             monacoEditor.revealRangeNearTop(range)
             monacoEditor.trigger("", "actions.find", undefined)
         } catch (e) {
-            console.info("加载默认搜索字符串失败", props.defaultSearchKeyword)
+            console.info(t("Editors.loadDefaultSearchFailed"), props.defaultSearchKeyword)
         }
     }, [props.defaultSearchKeyword, monacoEditor])
 

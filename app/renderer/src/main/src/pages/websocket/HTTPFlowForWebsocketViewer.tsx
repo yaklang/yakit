@@ -176,12 +176,12 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                         label: t("HTTPFlowForWebsocketViewer.sendToWSFuzzer"),
                         children: [
                             {
-                                key: "发送并跳转",
+                                key: "send-and-redirect",
                                 label: t("HTTPFlowForWebsocketViewer.sendAndRedirect"),
                                 keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer
                             },
                             {
-                                key: "仅发送",
+                                key: "send-only",
                                 label: t("HTTPFlowForWebsocketViewer.sendOnly"),
                                 keybindings: YakEditorOptionShortcutKey.CommonSendToWebFuzzer
                             }
@@ -195,13 +195,13 @@ export const WebSocketEditor: React.FC<WebSocketEditorProps> = (props) => {
                             yakitNotify("info", t("HTTPFlowForWebsocketViewer.packetEmpty"))
                             return
                         }
-                        if (key === "发送并跳转") {
+                        if (key === "send-and-redirect") {
                             newWebsocketFuzzerTab(flow.IsHTTPS, text)
-                        } else if (key === "仅发送") {
+                        } else if (key === "send-only") {
                             newWebsocketFuzzerTab(flow.IsHTTPS, text, false)
                         }
                     } catch (e) {
-                        yakitNotify("error", "editor exec new-open-fuzzer failed")
+                        yakitNotify("error", t("HTTPFlowForWebsocketViewer.editorExecFailed"))
                     }
                 }
             }

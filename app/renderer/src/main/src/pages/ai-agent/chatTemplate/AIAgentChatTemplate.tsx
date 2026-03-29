@@ -34,6 +34,8 @@ import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitRes
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import {HistoryTaskTree} from "./historyTaskTree/HistoryTaskTree"
 
+const t = i18n.getFixedT(null, "aiAgent")
+
 export enum AIChatLeft {
     TaskTree = "task-tree",
     Timeline = "timeline",
@@ -88,7 +90,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
                 return tasks.length > 0 ? (
                     <AITree tasks={tasks} />
                 ) : (
-                    <YakitEmpty style={{marginTop: "20%"}} title='思考中...' description='' />
+                    <YakitEmpty style={{marginTop: "20%"}} title={t("AIAgentChatTemplate.thinking")} description='' />
                 )
             case AIChatLeft.Timeline:
                 return <TimelineCard />
@@ -107,17 +109,17 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     })
 
     const button = useMemo(() => {
-        if (!hasTaskTree && !chatIPCData.execute) return <YakitButton size='middle'>时间线</YakitButton>
+        if (!hasTaskTree && !chatIPCData.execute) return <YakitButton size='middle'>{t("AIAgentChatTemplate.timeline")}</YakitButton>
         let options = [
             // {label: "任务树", value: AIChatLeft.TaskTree},
-            {label: "时间线", value: AIChatLeft.Timeline}
+            {label: t("AIAgentChatTemplate.timeline"), value: AIChatLeft.Timeline}
             // {label: "历史任务", value: AIChatLeft.HistoryTaskTree}
         ]
         if (hasTaskTree) {
-            options.unshift({label: "任务树", value: AIChatLeft.TaskTree})
+            options.unshift({label: t("AIAgentChatTemplate.taskTree"), value: AIChatLeft.TaskTree})
         }
         if (chatIPCData.execute) {
-            options.push({label: "历史任务", value: AIChatLeft.HistoryTaskTree})
+            options.push({label: t("AIAgentChatTemplate.historyTask"), value: AIChatLeft.HistoryTaskTree})
         }
         return (
             <YakitRadioButtons

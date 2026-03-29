@@ -26,5 +26,35 @@
   "NotepadLocalList": {
     "title": "Title",
     "lastUpdateTime": "Last Updated"
+  },
+  "ModifyNotepad": {
+    "list": "List",
+    "catalogue": "Catalogue",
+    "unnamedDocument": "Untitled document",
+    "dataErrorMissingDeleted": "Data error / document missing / already deleted",
+    "errorReason": "Error reason: {message}",
+    "saveCurrentDocument": "Save current document",
+    "doNotSave": "Don't save",
+    "noteIdMissing": "NoteId missing",
+    "saveSuccess": "Saved successfully",
+    "titleTooLong": "Title cannot exceed 50 characters",
+    "delete": "Delete",
+    "export": "Export",
+    "save": "Save",
+    "enterTitle": "Please enter a title",
+    "noPermissionMessage": "No read or edit permission, please contact author {userName}",
+    "downloadFailed": "Download failed: {error}",
+    "online": "Online",
+    "savedToCloud": "Saved to cloud",
+    "saving": "Saving...",
+    "connecting": "Connecting...",
+    "offline": "Offline",
+    "share": "Share",
+    "download": "Download",
+    "noData": "No data"
+  },
+  "NotepadMenu": {
+    "cloudDocs": "Cloud Docs",
+    "notepad": "Notepad"
   }
 }

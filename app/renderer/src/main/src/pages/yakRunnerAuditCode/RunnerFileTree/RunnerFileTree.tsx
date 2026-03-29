@@ -57,23 +57,26 @@ import {warn} from "@/utils/notification"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "yakRunner")
 
 const GlobalFilterFunction = React.lazy(() => import("../GlobalFilterFunction/GlobalFilterFunction"))
 const RunnerFileTreeTab: YakitTabsProps[] = [
     {
-        label: "全部",
+        label: t("RunnerFileTree.all"),
         value: "all"
     },
     {
-        label: "漏洞文件",
+        label: t("RunnerFileTree.vulnFile"),
         value: "file"
     },
     {
-        label: "规则汇总",
+        label: t("RunnerFileTree.ruleSummary"),
         value: "rule"
     },
     {
-        label: "全局过滤函数",
+        label: t("RunnerFileTree.globalFilterFn"),
         value: "global-filtering-function"
     }
 ]
@@ -157,7 +160,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         if (initTree.length > 0) {
             initTree.push({
                 parent: null,
-                name: "已经到底啦~",
+                name: t("RunnerFileTree.endReached"),
                 path: "",
                 isFolder: false,
                 icon: "",
@@ -207,15 +210,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         let newMenu: YakitMenuItemType[] = [
             {
                 key: "codeScan",
-                label: "代码扫描"
+                label: t("RunnerFileTree.codeScan")
             },
             {
                 key: "auditCode",
-                label: "编译项目"
+                label: t("RunnerFileTree.compileProject")
             },
             {
                 key: "auditAgain",
-                label: "重新编译",
+                label: t("RunnerFileTree.recompile"),
                 disabled: fileTree.length === 0
             }
         ]
@@ -228,14 +231,14 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                 },
                 {
                     key: "aduitAllList",
-                    label: "查看全部",
+                    label: t("RunnerFileTree.viewAll"),
                     type: "text"
                 }
             ]
 
             newMenu.push({
                 key: "auditHistory",
-                label: "最近编译",
+                label: t("RunnerFileTree.recentCompile"),
                 children
             })
         }
@@ -271,7 +274,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                         compileProjectName = res.Data[0].Name
                     }
                     if (parseInt(String(projectId)) === 0) {
-                        warn("未找到对应的项目配置，由于项目管理功能更新，请重新编译项目")
+                        warn(t("RunnerFileTree.projectConfigMissing"))
                         return
                     }
                     
@@ -357,17 +360,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     const getActiveName = useMemoizedFn((type: ActiveProps) => {
         switch (type) {
             case "file":
-                return "漏洞文件"
+                return t("RunnerFileTree.vulnFile")
             case "rule":
-                return "规则汇总"
+                return t("RunnerFileTree.ruleSummary")
             case "global-filtering-function":
-                return "全局过滤函数"
+                return t("RunnerFileTree.globalFilterFn")
             default:
-                return "文件列表"
+                return t("RunnerFileTree.fileList")
         }
     })
 
-    const [options, setOptions] = useState<SelectOptionsProps[]>([{label: "全部", value: ""}])
+    const [options, setOptions] = useState<SelectOptionsProps[]>([{label: t("RunnerFileTree.all"), value: ""}])
     const [checkItem, setCheckItem] = useState<string>("")
     const [isShowCompare, setShowCompare] = useState<boolean>(false)
 
@@ -391,7 +394,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                             CreatedAt: item.CreatedAt
                         }
                     })
-                    setOptions([{label: "全部", value: ""}, ...newOptions])
+                    setOptions([{label: t("RunnerFileTree.all"), value: ""}, ...newOptions])
                     setTimeout(() => {
                         if (pageInfo && pageInfo.isShowCompare) {
                             setShowCompare(true)
@@ -447,7 +450,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                             }}
                         >
                             <span style={{fontSize: 12, whiteSpace: "nowrap"}}>
-                                {checkItem === "" ? "查看未处置" : "只看新增"}
+                                {checkItem === "" ? t("RunnerFileTree.viewUnprocessed") : t("RunnerFileTree.viewNewOnly")}
                             </span>
                         </YakitCheckbox>
                     </div>
@@ -475,7 +478,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                             </div>
                             <div className={styles["extra"]}>
                                 {active === "all" && (
-                                    <Tooltip title={"定位"}>
+                                    <Tooltip title={t("RunnerFileTree.locate")}>
                                         <YakitButton
                                             disabled={fileTreeLoad || fileTree.length === 0}
                                             type='text2'
@@ -484,7 +487,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         />
                                     </Tooltip>
                                 )}
-                                <Tooltip title={"搜索"}>
+                                <Tooltip title={t("RunnerFileTree.search")}>
                                     <YakitButton
                                         disabled={fileTree.length === 0}
                                         type='text2'
@@ -494,7 +497,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
                                         }}
                                     />
                                 </Tooltip>
-                                <Tooltip title={"刷新资源管理器"}>
+                                <Tooltip title={t("RunnerFileTree.refreshExplorer")}>
                                     <YakitButton
                                         type='text2'
                                         disabled={fileTree.length === 0}
@@ -639,7 +642,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
     const {areaInfo, activeFile} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const titleRender = () => {
-        return <div className={styles["opened-file-header"]}>打开的编辑器</div>
+        return <div className={styles["opened-file-header"]}>{t("RunnerFileTree.openedEditors")}</div>
     }
 
     const removeItem = useMemoizedFn((e, data: FileDetailInfo) => {
@@ -776,7 +779,7 @@ export const RiskTree: React.FC<RiskTreeProps> = memo((props) => {
         if (initTree.length > 0) {
             initTree.push({
                 parent: null,
-                name: "已经到底啦~",
+                name: t("RunnerFileTree.endReached"),
                 path: "",
                 isFolder: false,
                 icon: "",

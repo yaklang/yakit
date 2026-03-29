@@ -35,6 +35,7 @@ import {defaultAddYakitScriptPageInfo} from "@/defaultConstants/AddYakitScript"
 import {PluginLogRefProps} from "../pluginLog/PluginLogType"
 import {PluginEnvVariables} from "../pluginEnvVariables/PluginEnvVariables"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./PluginHubDetail.module.scss"
@@ -65,6 +66,7 @@ interface PluginHubDetailProps {
 export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
     forwardRef((props, ref) => {
         const {rootElementId, active, onBack, autoOpenDetailTab, setAutoOpenDetailTab} = props
+        const {t} = useI18nNamespaces(["pluginHub"])
 
         const userinfo = useStore((s) => s.userInfo)
         const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -128,7 +130,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                 if (PluginDetailAvailableTab.local.includes(activeKey)) return
                                 setActiveKey("exectue")
                             } else {
-                                onError(true, false, "请从左侧列表重新选择插件")
+                        onError(true, false, t("PluginHubDetail.reselectPlugin"))
                             }
                         })
                         .finally(() => {
@@ -217,11 +219,11 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 const error = isOnline ? !info.name || !info.uuid : !info.name
                 if (error) {
                     if (currentRequest.current) {
-                        yakitNotify("error", "未获取到插件的关键信息，请重试!")
+                        yakitNotify("error", t("PluginHubDetail.pluginInfoMissing"))
                         return
                     } else {
                         currentRequest.current = {...info}
-                        onError(true, false, "未获取到插件的关键信息，请重试!")
+                        onError(true, false, t("PluginHubDetail.pluginInfoMissing"))
                         return
                     }
                 }
@@ -265,12 +267,12 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
          */
         const onFetchPlugin = useMemoizedFn((banUpdateActiveTab?: boolean) => {
             if (!currentRequest.current) {
-                onError(true, false, "插件请求信息异常，请重新选择插件!")
+                onError(true, false, t("PluginHubDetail.pluginRequestError"))
                 return
             }
             const {name, uuid} = currentRequest.current
             if (!name && !uuid) {
-                onError(true, false, "未获取到插件的关键信息，请重新选择插件!")
+                onError(true, false, t("PluginHubDetail.pluginInfoMissingReselect"))
                 return
             }
 
@@ -345,11 +347,11 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         }
                         onError(false)
                     } else {
-                        onError(true, true, "未获取到插件信息，请刷新重试!")
+                        onError(true, true, t("PluginHubDetail.refreshPluginInfo"))
                     }
                 })
                 .catch((err) => {
-                    onError(true, true, `获取信息异常，请刷新重试\n${err}`)
+                    onError(true, true, `${t("PluginHubDetail.infoErrorRefresh")}\n${err}`)
                 })
                 .finally(() => {
                     if (name !== currentRequest.current?.name) return
@@ -391,7 +393,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
         const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
         // 下载插件
         const onDownload = useMemoizedFn((uuid: string) => {
-            yakitNotify("info", "开始下载插件")
+            yakitNotify("info", t("PluginHubDetail.startDownload"))
             let flag: boolean = false
             grpcDownloadOnlinePlugin({uuid: uuid})
                 .then((res) => {
@@ -406,11 +408,11 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             downloadedTotalString: thousandthConversion(plugin.downloaded_total + 1)
                         }
                     })
-                    yakitNotify("success", "下载插件成功")
+                    yakitNotify("success", t("PluginHubDetail.downloadSuccess"))
                 })
                 .catch((err) => {
                     if (onlinePlugin?.uuid !== uuid) return
-                    yakitNotify("error", `下载插件失败: ${err}`)
+                    yakitNotify("error", `${t("PluginHubDetail.downloadFailed")}${err}`)
                     flag = false
                 })
                 .finally(() => {
@@ -453,7 +455,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 setLocalPlugin(undefined)
                 if (PluginDetailAvailableTab.local.includes(activeKey)) {
                     if (!!onlinePlugin) onTabChange("online")
-                    else onError(true, false, "请选择插件查看详情")
+                    else onError(true, false, t("PluginHubDetail.selectPluginDetail"))
                 }
                 try {
                     if (info) emiter.emit("detailDeleteLocalPlugin", JSON.stringify(info))
@@ -465,7 +467,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 setOnlinePlugin(undefined)
                 if (PluginDetailAvailableTab.online.includes(activeKey)) {
                     if (!!localPlugin) onTabChange("exectue")
-                    else onError(true, false, "请选择插件查看详情")
+                    else onError(true, false, t("PluginHubDetail.selectPluginDetail"))
                 }
                 try {
                     if (info) emiter.emit("detailDeleteOwnPlugin", JSON.stringify(info))
@@ -492,7 +494,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                         }
                     })
                     .catch((e) => {
-                        yakitNotify("error", "查询插件最新数据失败: " + e)
+                yakitNotify("error", t("PluginHubDetail.queryLatestDataFailed") + e)
                     })
                 // 获取最新的线上信息
                 apiFetchOnlinePluginInfo({scriptName: localPlugin.ScriptName}, true)
@@ -541,11 +543,11 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
             if (starLoading) return
             if (!onlinePlugin) return
             if (!onlinePlugin.uuid) {
-                yakitNotify("error", "插件信息错误，无法进行点赞操作")
+                yakitNotify("error", t("PluginHubDetail.pluginInfoLikeError"))
                 return
             }
             if (!isLogin) {
-                yakitNotify("error", "登录后才可以进行点赞")
+                yakitNotify("error", t("PluginHubDetail.likeAfterLogin"))
                 return
             }
 
@@ -711,19 +713,19 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 className={classNames(styles["plugin-hub-detail"], {[styles["plugin-hub-detail-error"]]: isError})}
             >
                 <div className={styles["detail-header"]}>
-                    <div className={styles["header-title"]}>插件详情</div>
+                    <div className={styles["header-title"]}>{t("PluginHubDetail.pluginDetail")}</div>
                     <div className={styles["header-btn"]}>
                         <YakitButton size='large' icon={<SolidPluscircleIcon />} onClick={onNewPlugin}>
-                            新建插件
+                            {t("PluginHubDetail.newPlugin")}
                         </YakitButton>
                         <YakitButton size='large' type='outline2' icon={<OutlineReplyIcon />} onClick={onBack}>
-                            返回
+                            {t("PluginHubDetail.back")}
                         </YakitButton>
                     </div>
                 </div>
 
                 <div className={styles["detail-body"]}>
-                    <YakitSpin spinning={loading} tip='获取插件中...'>
+                    <YakitSpin spinning={loading} tip={t("PluginHubDetail.loadingPlugin")}>
                         <PluginTabs
                             wrapperClassName={styles["plugin-hub-container"]}
                             tabPosition='right'
@@ -731,7 +733,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                             onChange={onTabChange}
                             renderTabBar={bar}
                         >
-                            <TabPane tab='线上' key='online' disabled={!hasOnline}>
+                            <TabPane tab={t("PluginHubDetail.online")} key='online' disabled={!hasOnline}>
                                 {!!onlinePlugin ? (
                                     <div className={styles["tab-pane-wrapper"]}>
                                         <HubDetailHeader
@@ -762,11 +764,11 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                     </div>
                                 ) : (
                                     <div className={styles["tab-pane-empty"]}>
-                                        <YakitEmpty title='暂无插件信息' />
+                                         <YakitEmpty title={t("PluginHubDetail.noPluginInfo")} />
                                     </div>
                                 )}
                             </TabPane>
-                            <TabPane tab='执行' key='exectue' disabled={!hasLocal}>
+                            <TabPane tab={t("PluginHubDetail.execute")} key='exectue' disabled={!hasLocal}>
                                 <div className={styles["tab-pane-exectue"]}>
                                     {!loading ? (
                                         <>
@@ -780,18 +782,18 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                                 />
                                             ) : (
                                                 <div className={styles["tab-pane-empty"]}>
-                                                    <YakitEmpty title='暂无插件信息' />
+                                                    <YakitEmpty title={t("PluginHubDetail.noPluginInfo")} />
                                                 </div>
                                             )}
                                         </>
                                     ) : (
                                         <div className={styles["tab-pane-empty"]}>
-                                            <YakitEmpty title='暂无插件信息' />
+                                            <YakitEmpty title={t("PluginHubDetail.noPluginInfo")} />
                                         </div>
                                     )}
                                 </div>
                             </TabPane>
-                            <TabPane tab='本地' key='local' disabled={!hasLocal}>
+                            <TabPane tab={t("PluginHubDetail.local")} key='local' disabled={!hasLocal}>
                                 {!!localPlugin ? (
                                     <div className={styles["tab-pane-wrapper"]}>
                                         <HubDetailHeader
@@ -822,12 +824,12 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                     </div>
                                 ) : (
                                     <div className={styles["tab-pane-empty"]}>
-                                        <YakitEmpty title='暂无插件信息' />
+                                        <YakitEmpty title={t("PluginHubDetail.noPluginInfo")} />
                                     </div>
                                 )}
                             </TabPane>
 
-                            <TabPane tab='日志' key='log' disabled={!hasOnline}>
+                            <TabPane tab={t("PluginHubDetail.log")} key='log' disabled={!hasOnline}>
                                 <div className={styles["tab-pane-wrapper"]}>
                                     <HubDetailHeader
                                         pluginName={onlinePlugin?.script_name || "-"}
@@ -849,13 +851,13 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                         <PluginLog ref={pluginLogRef} getContainer={wrapperId} plugin={onlinePlugin} />
                                     ) : (
                                         <div className={styles["tab-pane-empty"]}>
-                                            <YakitEmpty title='暂无日志信息' />
+                                            <YakitEmpty title={t("PluginHubDetail.noLogInfo")} />
                                         </div>
                                     )}
                                 </div>
                             </TabPane>
 
-                            <TabPane tab='配置' key='setting' disabled={!hasLocal}>
+                            <TabPane tab={t("PluginHubDetail.setting")} key='setting' disabled={!hasLocal}>
                                 {!!localPlugin ? (
                                     <div className={styles["tab-pane-wrapper"]}>
                                         <HubDetailHeader
@@ -883,7 +885,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                                     </div>
                                 ) : (
                                     <div className={styles["tab-pane-empty"]}>
-                                        <YakitEmpty title='暂无环境变量信息' />
+                                        <YakitEmpty title={t("PluginHubDetail.noEnvInfo")} />
                                     </div>
                                 )}
                             </TabPane>
@@ -891,13 +893,13 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
 
                         <div className={styles["plugin-hub-detail-empty"]}>
                             <YakitEmpty
-                                title={errorInfo.current || "未获取到插件信息"}
+                                title={errorInfo.current || t("PluginHubDetail.fetchPluginInfoEmpty")}
                                 titleClassName={styles["hint-style"]}
                             />
                             {isRefresh.current && (
                                 <div className={styles["refresh-buttons"]}>
                                     <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefresh}>
-                                        刷新
+                                        {t("PluginHubDetail.refresh")}
                                     </YakitButton>
                                 </div>
                             )}
@@ -917,8 +919,8 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
                 {/* 单个下载同名覆盖提示 */}
                 <NoPromptHint
                     visible={singleSameNameHint}
-                    title='同名覆盖提示'
-                    content='本地有插件同名，下载将会覆盖，是否下载'
+                    title={t("PluginHubDetail.sameNameHintTitle")}
+                    content={t("PluginHubDetail.sameNameHintContent")}
                     cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
                     onCallback={handleSingleSameNameHint}
                 />

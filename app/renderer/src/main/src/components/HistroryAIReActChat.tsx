@@ -28,6 +28,7 @@ import {getRemoteValue} from "@/utils/kv"
 import {AIInputInnerFeatureEnum} from "@/pages/ai-agent/template/type"
 import {AIModelForm} from "@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface HistoryAIReActChatProps {
     refRef: React.RefObject<HTMLDivElement>
@@ -65,6 +66,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
         setSetting,
         className
     } = props
+    const {t} = useI18nNamespaces(["history"])
 
     const [globalNetworkConfig, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
 
@@ -171,7 +173,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
                     isOpen: false,
                     rightIcon: (
                         <>
-                            <Tooltip title='新建对话'>
+                            <Tooltip title={t("HistoryAIReActChat.newChat")}>
                                 <YakitButton
                                     type='text2'
                                     icon={<OutlinePlusIcon />}

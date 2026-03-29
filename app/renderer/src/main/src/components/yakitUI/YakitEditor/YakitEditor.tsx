@@ -213,6 +213,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         propsTheme
     } = props
     const {t, i18n} = useI18nNamespaces(["yakitUi"])
+    const zhT = i18n.getFixedT("zh", "yakitUi")
 
     const isInitRef = useRef<boolean>(false)
     const {shortcutIds} = useFocusContextStore()
@@ -324,7 +325,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                     i.map((script) => {
                         return {
                             key: script.ScriptName,
-                            verbose: "CODEC 社区插件: " + script.ScriptName,
+                            verbose: zhT("YakitEditor.codecCommunityPlugin") + script.ScriptName,
                             isYakScript: true
                         } as CodecTypeProps
                     })
@@ -350,7 +351,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
                 }
                 setContextMenuPlugin(
                     i.map((script) => {
-                        const isAiPlugin: boolean = script.Tags.includes("AI工具")
+                        const isAiPlugin: boolean = script.Tags.includes(zhT("YakitEditor.aiToolTag"))
                         return {
                             key: script.ScriptName,
                             value: script.ScriptName,
@@ -1519,14 +1520,14 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         const insertLabelFun = (v: QueryFuzzerLabelResponseProps) => {
             if (v.Label) {
                 editor && editor.trigger("keyboard", "type", {text: v.Label})
-            } else if (v.DefaultDescription === "插入文件-fixed") {
+            } else if (v.DefaultDescription === zhT("YakitEditor.insertFileFixed")) {
                 editor && insertFileFuzzTag((i) => monacoEditorWrite(editor, i), "file:line")
-            } else if (v.DefaultDescription === "插入字典-fixed") {
+            } else if (v.DefaultDescription === zhT("YakitEditor.insertDictFixed")) {
                 editor &&
                     showDictsAndSelect((i) => {
                         monacoEditorWrite(editor, i, editor.getSelection())
                     })
-            } else if (v.DefaultDescription === "插入临时字典-fixed") {
+            } else if (v.DefaultDescription === zhT("YakitEditor.insertTempDictFixed")) {
                 editor && insertTemporaryFileFuzzTag((i) => monacoEditorWrite(editor, i))
             }
         }

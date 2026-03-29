@@ -1,6 +1,7 @@
 import {yakitNotify} from "@/utils/notification"
 import {useEffect} from "react"
 import {UploadImgType, UploadFileType} from "./constants"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,6 +27,7 @@ export interface UploadOSSStartProps {
 // 大文件上传,目前文件上传和图片上传分开的
 export default function useUploadOSSHooks(props: useUploadOSSHooks) {
     const {taskToken, setUrl, onUploadData, onUploadSuccess, onUploadEnd, onUploadError} = props
+    const {t} = useI18nNamespaces(["utils"])
 
     useEffect(() => {
         let errorReason = ""
@@ -41,7 +43,7 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
         ipcRenderer.on(`oss-split-upload-${taskToken}-error`, async (e, error) => {
             errorReason = error
             onUploadError && onUploadError(`${error}`)
-            yakitNotify("error", `项目上传失败:${error}`)
+            yakitNotify("error", t("useUploadOSSHooks.uploadFailed", {error: String(error)}))
         })
         ipcRenderer.on(`oss-split-upload-${taskToken}-end`, async (e, error) => {
             if (!errorReason) {
@@ -62,7 +64,7 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
             case UploadFileType.Notepad:
                 if (!filedHash) {
                     enable = false
-                    yakitNotify("error", "useUploadOSSHooks:type为notepad,filedHash必传")
+                    yakitNotify("error", t("useUploadOSSHooks.notepadFiledHashRequired"))
                 }
                 break
             default:
@@ -85,7 +87,7 @@ export default function useUploadOSSHooks(props: useUploadOSSHooks) {
                 .invoke("cancel-oss-split-upload", taskToken)
                 .then(resolve)
                 .catch((e) => {
-                    yakitNotify("error", `取消上传失败: ${e}`)
+                    yakitNotify("error", t("useUploadOSSHooks.cancelUploadFailed", {error: String(e)}))
                     reject(e)
                 })
         })

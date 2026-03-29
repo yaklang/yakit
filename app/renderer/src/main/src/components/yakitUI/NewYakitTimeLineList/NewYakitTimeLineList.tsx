@@ -13,6 +13,7 @@ import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitSpin} from "../YakitSpin/YakitSpin"
 import {YakitTimeLineListProps, YakitVirtualListPositionProps, YakitVirtualListProps} from "./NewYakitTimeLineListType"
 import {YakitTimeLineItemIcon} from "./icon"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./NewYakitTimeLineList.module.scss"
 
@@ -37,6 +38,7 @@ const DefaultState: YakitVirtualListProps = {
  */
 export const NewYakitTimeLineList: <T>(props: YakitTimeLineListProps<T>) => any = memo(
     forwardRef((props, ref) => {
+        const {t} = useI18nNamespaces(["yakitUi"])
         const {loading = false, data = [], renderItem, hasMore = true, loadMore, DefaultItemHeight = 44} = props
 
         useImperativeHandle(
@@ -275,7 +277,9 @@ export const NewYakitTimeLineList: <T>(props: YakitTimeLineListProps<T>) => any 
                             <YakitSpin spinning={true} wrapperClassName={styles["spin-style"]} />
                         </div>
                     )}
-                    {!loading && !hasMore && <div className={styles["time-line-item-bottom"]}>已经到底啦 ~</div>}
+                    {!loading && !hasMore && (
+                        <div className={styles["time-line-item-bottom"]}>{t("YakitEmpty.end_of_list")}</div>
+                    )}
                 </div>
             </div>
         )

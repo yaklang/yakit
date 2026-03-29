@@ -19,8 +19,10 @@ import {useCampare} from "@/hook/useCompare/useCompare"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {SolidPaperairplaneIcon} from "@/assets/icon/solid"
 import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 import styles from "./DomainAssetPage.module.scss"
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "assetViewer")
 
 const batchRefreshMenuData = (t: TFunction): YakitMenuItemProps[] => [
     {
@@ -201,7 +203,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                 }
             })
             .catch((e: any) => {
-                yakitNotify("error", "QueryExecHistory failed: " + `${e}`)
+                yakitNotify("error", t("DomainAssetPage.exportFailed", {error: String(e)}))
             })
     })
 
@@ -252,16 +254,16 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                     })
                 })
                 .catch((e) => {
-                    yakitNotify("error", "数据导出失败 " + `${e}`)
+                    yakitNotify("error", t("DomainAssetPage.exportFailed", {error: String(e)}))
                 })
         })
     })
 
     const onSendMenuSelect = (key: string) => {
         switch (key) {
-            case "发送到漏洞检测":
+            case t("DomainAssetPage.sendToVulnDetection"):
                 if (allCheck) {
-                    yakitNotify("warning", "该批量操作不支持全选")
+                    yakitNotify("warning", t("DomainAssetPage.batchNotSupportSelectAll"))
                     return
                 }
                 emiter.emit(
@@ -274,9 +276,9 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                     })
                 )
                 break
-            case "发送到爆破":
+            case t("DomainAssetPage.sendToBruteForce"):
                 if (allCheck) {
-                    yakitNotify("warning", "该批量操作不支持全选")
+                    yakitNotify("warning", t("DomainAssetPage.batchNotSupportSelectAll"))
                     return
                 }
                 emiter.emit(
@@ -352,12 +354,12 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                 }
                 extra={
                     <div className={styles["domainAsset-table-extra"]}>
-                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName='域名资产' />
+                        <ExportExcel getData={getData} btnProps={{size: "small"}} fileName={t("DomainAssetPage.exportName")} />
                         <YakitDropdownMenu
                             menu={{
                                 data: [
-                                    {key: "发送到漏洞检测", label: "发送到漏洞检测"},
-                                    {key: "发送到爆破", label: "发送到爆破"}
+                                    {key: t("DomainAssetPage.sendToVulnDetection"), label: t("DomainAssetPage.sendToVulnDetection")},
+                                    {key: t("DomainAssetPage.sendToBruteForce"), label: t("DomainAssetPage.sendToBruteForce")}
                                 ],
                                 onClick: ({key}) => {
                                     onSendMenuSelect(key)
@@ -370,18 +372,18 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
                             }}
                         >
                             <YakitButton type='primary' icon={<SolidPaperairplaneIcon />}>
-                                发送到...
+                                {t("DomainAssetPage.sendTo")}
                             </YakitButton>
                         </YakitDropdownMenu>
                         <YakitPopconfirm
-                            title={selectNum > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
+                            title={selectNum > 0 ? t("DomainAssetPage.deleteSelectedConfirm") : t("DomainAssetPage.clearListConfirm")}
                             onConfirm={() => {
                                 onRemoveMultiple()
                             }}
                             placement='bottomRight'
                         >
                             <YakitButton type='outline1' colors='danger' icon={<TrashIcon />}>
-                                {selectNum > 0 ? "删除" : "清空"}
+                                {selectNum > 0 ? t("DomainAssetPage.delete") : t("DomainAssetPage.clear")}
                             </YakitButton>
                         </YakitPopconfirm>
                         <YakitDropdownMenu

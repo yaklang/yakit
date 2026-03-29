@@ -9,8 +9,7 @@ import {AIInputEvent} from "../hooks/grpcApi"
 import styles from "./AIFocusMode.module.scss"
 import {grpcQueryAIFocus} from "@/pages/ai-agent/grpc"
 import {AIFocus} from "@/pages/ai-agent/type/forge"
-
-import i18n from "@/i18n/i18n"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Tooltip} from "antd"
 import {DefaultOptionType} from "antd/lib/select"
 
@@ -19,8 +18,9 @@ type FocusModeListType = DefaultOptionType & {
 }
 
 export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
-    const lang = i18n.language
     const {value, onChange, className} = props
+    const {t, i18n} = useI18nNamespaces(["aiAgent"])
+    const lang = i18n.language
 
     const [focusModeList, setFocusModeList] = useState<FocusModeListType[]>([])
     const [focusModeRaw, setFocusModeRaw] = useState<AIFocus[]>([])
@@ -36,7 +36,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
 
     useEffect(() => {
         const list = focusModeRaw.map((item) => {
-            const description = item.Description.length ? item.Description : "暂无描述"
+            const description = item.Description.length ? item.Description : t("AIFocusMode.noDescription")
             const resultVerboseNameZh = item?.VerboseNameZh?.length ? item.VerboseNameZh : item.Name
             return {
                 label: lang === "zh" ? resultVerboseNameZh : item.Name,
@@ -75,8 +75,8 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                         <div className={styles["drop-select-wrapper"]}>
                             <div className={styles["select-title"]}>
                                 <OutlineMicroscopeIcon />
-                                专注模式
-                                <Tooltip title={"复杂场景限定使用框架，限制AI思考范围"}>
+                                {t("AIFocusMode.focusMode")}
+                                <Tooltip title={t("AIFocusMode.focusModeTooltip")}>
                                     <OutlineQuestionmarkcircleIcon />
                                 </Tooltip>
                             </div>
@@ -89,7 +89,7 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                         label: (
                             <div className={styles["select-option"]}>
                                 <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
-                                <span className={styles["select-option-text"]}>请选择</span>
+                                <span className={styles["select-option-text"]}>{t("AIFocusMode.pleaseSelect")}</span>
                             </div>
                         ),
                         value: ""

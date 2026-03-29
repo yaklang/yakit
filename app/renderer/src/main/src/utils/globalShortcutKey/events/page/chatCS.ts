@@ -3,6 +3,9 @@ import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import { addScopeShow } from "../global"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 export enum ChatCSShortcutKey {
     /** 退出chatCS */
@@ -17,15 +20,15 @@ type EventsType = Record<`${ChatCSShortcutKey}`, ShortcutKeyEventInfo>
 
 const ChatCSShortcutKeyEvents: EventsType = {
     "exit*chatCS": {
-        name: "退出chatCS",
+        name: t("ShortcutKey.exitChatCS"),
         keys: [YakitKeyBoard.Escape]
     },
     "nextLine*chatCS": {
-        name: "提问区域换行",
+        name: t("ShortcutKey.chatCSNewLine"),
         keys: [YakitKeyMod.Shift, YakitKeyBoard.Enter]
     },
     "submit*chatCS": {
-        name: "问题提问",
+        name: t("ShortcutKey.chatCSSubmit"),
         keys: [YakitKeyBoard.Enter]
     }
 }
@@ -63,5 +66,4 @@ export const resetChatCSShortcutKeyEvents = () => {
     currentKeyEvents = null
     setLocalValue(LocalStorageKey, JSON.stringify(ChatCSShortcutKeyEvents))
 }
-
 

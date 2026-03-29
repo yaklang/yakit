@@ -101,8 +101,10 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Trans} from "react-i18next"
 import {debugToPrintLogs} from "@/utils/logCollection"
 import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "plugin")
 
 /** @name 标题栏的搜索选项组件 */
 export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
@@ -194,7 +196,7 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
                                 </div>
                                 <div className={styles["list-btn-wrapper"]}>
                                     <div className={styles["btn-style"]} onClick={() => setActive([])}>
-                                        重置
+                                        {t("FuncTemplate.reset")}
                                     </div>
                                 </div>
                             </div>
@@ -466,11 +468,11 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
 
 /** @name 代表作者的图标ICON */
 export const AuthorIcon: React.FC<{}> = memo((props) => {
-    return <div className={styles["author-icon-wrapper"]}>作者</div>
+    return <div className={styles["author-icon-wrapper"]}>{t("FuncTemplate.author")}</div>
 })
 /** @name 代表申请人的图标ICON */
 export const ApplicantIcon: React.FC<{}> = memo((props) => {
-    return <div className={styles["applicant-icon-wrapper"]}>申请人</div>
+    return <div className={styles["applicant-icon-wrapper"]}>{t("FuncTemplate.applicant")}</div>
 })
 
 /** @name 插件主要部分组件 */
@@ -537,7 +539,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                 <div className={styles["header-body"]}>
                     {!visible && (
                         <div className={styles["header-body-filter"]}>
-                            <Tooltip title='展开筛选' placement='topLeft' overlayClassName='plugins-tooltip'>
+                            <Tooltip title={t("FuncTemplate.expandFilter")} placement='topLeft' overlayClassName='plugins-tooltip'>
                                 <YakitButton
                                     type='text2'
                                     onClick={onExpend}
@@ -554,7 +556,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                             checked={checked}
                             onChange={(e) => onCheck(e.target.checked)}
                         />
-                        全选
+                            {t("FuncTemplate.selectAll")}
                     </div>
                     <div className={styles["body-total-selected"]}>
                         <div>
@@ -606,7 +608,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                                         })}
                                     >
                                         <span>
-                                            筛选条件 <span className={styles["total-style"]}>{tagLength}</span>
+                                            {t("FuncTemplate.filterCondition")} <span className={styles["total-style"]}>{tagLength}</span>
                                         </span>
                                         <OutlineXIcon onClick={() => onDelAllTag()} />
                                     </div>
@@ -621,7 +623,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                     <Tooltip
                         className='plugins-tooltip'
                         placement='topRight'
-                        title={isList ? "切换至宫格视图" : "切换至列表视图"}
+                                        title={isList ? t("FuncTemplate.switchToGrid") : t("FuncTemplate.switchToList")}
                     >
                         <div className={styles["is-list-btn"]} onClick={() => setIsList(!isList)}>
                             {isList ? <OutlineViewgridIcon /> : <OutlineViewlistIcon />}
@@ -672,7 +674,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
         <YakitEmpty
             image={emptyImageTarget}
             imageStyle={{width: 274, height: 180, marginBottom: 24}}
-            title='搜索结果“空”'
+            title={t("FuncTemplate.searchEmpty")}
             style={{paddingTop: "10%"}}
             className={styles["empty-list"]}
         />
@@ -823,7 +825,7 @@ export const ListList: <T>(props: ListListProps<T>) => any = memo((props) => {
                         </div>
                     )
                 })}
-                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
+                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>{t("FuncTemplate.noMoreData")}</div>}
                 {data.length > 0 && loading && (
                     <div className={styles["loading-wrapper"]}>
                         <YakitSpin wrapperClassName={styles["loading-style"]} />
@@ -906,7 +908,7 @@ export const ListLayoutOpt: React.FC<ListLayoutOptProps> = memo((props) => {
                             {subtitle()}
                         </div>
                         <div className={classNames(styles["help-style"], "yakit-content-single-ellipsis")}>
-                            {help || "No Description about it."}
+                            {help || t("FuncTemplate.noDescription")}
                         </div>
                     </div>
                 </div>
@@ -1058,7 +1060,7 @@ export const GridList: <T>(props: GridListProps<T>) => any = memo((props) => {
                         </div>
                     )
                 })}
-                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
+                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>{t("FuncTemplate.noMoreData")}</div>}
                 {data.length > 0 && loading && (
                     <div className={styles["loading-wrapper"]}>
                         <YakitSpin wrapperClassName={styles["loading-style"]} />
@@ -1194,14 +1196,14 @@ export const GridLayoutOpt: React.FC<GridLayoutOptProps> = memo((props) => {
                         </div>
 
                         <div className={classNames(styles["help-wrapper"], "yakit-content-multiLine-ellipsis")}>
-                            {help || "No Description about it."}
+                            {help || t("FuncTemplate.noDescription")}
                         </div>
 
                         <div className={styles["user-wrapper"]}>
                             <div className={styles["user-body"]}>
                                 {authorImgNode}
                                 <div className={classNames(styles["user-style"], "yakit-content-single-ellipsis")}>
-                                    {user || "anonymous"}
+                                    {user || t("FuncTemplate.anonymous")}
                                 </div>
                                 <AuthorIcon />
                             </div>
@@ -1354,7 +1356,7 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
     const onRemove = useMemoizedFn(async (e) => {
         e.stopPropagation()
         if (!isLogin) {
-            yakitNotify("error", "登录才可以进行删除")
+            yakitNotify("error", t("FuncTemplate.loginRequiredDelete"))
             return
         }
         try {
@@ -1372,7 +1374,7 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
     const onReduction = useMemoizedFn(async (e) => {
         e.stopPropagation()
         if (!isLogin) {
-            yakitNotify("error", "登录才可以进行还原")
+            yakitNotify("error", t("FuncTemplate.loginRequiredRestore"))
             return
         }
         try {
@@ -1391,7 +1393,7 @@ export const OnlineRecycleExtraOperate: React.FC<OnlineRecycleExtraOperateProps>
                 <YakitButton type='text2' icon={<OutlineTrashIcon />} onClick={onRemove} />
             )}
             <YakitButton icon={<OutlineDatabasebackupIcon />} onClick={onReduction} loading={reductionLoading}>
-                还原
+                {t("FuncTemplate.restore")}
             </YakitButton>
         </div>
     )
@@ -1530,10 +1532,10 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
 
                         <div className={styles["form-btns"]}>
                             <YakitButton type='text' onClick={onReset}>
-                                重置搜索
+                                {t("FuncTemplate.resetSearch")}
                             </YakitButton>
                             <YakitButton type='primary' htmlType='submit'>
-                                搜索
+                                {t("FuncTemplate.search")}
                             </YakitButton>
                         </div>
                     </Form>
@@ -1847,11 +1849,11 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
 
     return (
         <YakitModal
-            title='源码'
+            title={t("FuncTemplate.sourceCode")}
             subTitle={
                 <div className={styles["plugin-editor-modal-subtitle"]}>
-                    <span>可在此定义插件输入原理，并编写输出 UI</span>
-                    <span>按 Esc 即可退出全屏</span>
+                    <span>{t("FuncTemplate.sourceCodeDesc")}</span>
+                    <span>{t("FuncTemplate.escFullScreen")}</span>
                 </div>
             }
             type='white'
@@ -1891,11 +1893,11 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
 
     return (
         <YakitModal
-            title='源码'
+            title={t("FuncTemplate.sourceCode")}
             subTitle={
                 <div className={styles["plugin-editor-modal-subtitle"]}>
-                    <span>可在此定义插件输入原理，并编写输出 UI</span>
-                    <span>按 Esc 即可退出全屏</span>
+                    <span>{t("FuncTemplate.sourceCodeDesc")}</span>
+                    <span>{t("FuncTemplate.escFullScreen")}</span>
                 </div>
             }
             type='white'

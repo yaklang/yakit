@@ -19,6 +19,7 @@ import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 import classNames from "classnames"
 import {
     YakitMenuItemDividerProps,
@@ -42,6 +43,7 @@ import {PortTableRefProps} from "./PortTable/PortTableType"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
+const tAsset = i18n.getFixedT(null, "assetViewer")
 export interface PortAssetTableProp {
     closed?: boolean
     onClicked?: (i: PortAsset) => any
@@ -138,7 +140,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 setAdvancedConfig(data.PortsGroupList.length > 0)
             })
             .catch((e: any) => {
-                failed("getPortsGroup failed: " + e)
+                failed(`getPortsGroup failed: ${e}`)
             })
             .finally(() => setTimeout(() => setAdvancedQueryLoading(false), 200))
     })
@@ -184,10 +186,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         <div ref={portAssetRef} className={styles["portAsset-content"]} style={{display: "flex", flexDirection: "row"}}>
             <div className={styles["portAsset"]}>
                 <div className={styles["portAsset-head"]}>
-                    <div className={styles["head-title"]}>{t("PortAssetPage.PortAssetTable.title")}</div>
+                    <div className={styles["head-title"]}>{tAsset("PortAssetPage.title")}</div>
                     <div className={styles["head-extra"]}>
                         <YakitInput.Search
-                            placeholder={t("PortAssetPage.PortAssetTable.searchPlaceholder")}
+                            placeholder={tAsset("PortAssetPage.searchPlaceholder")}
                             style={{width: 320}}
                             onSearch={onSearch}
                             onPressEnter={() => onSearch(keywords)}
@@ -444,7 +446,7 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
     const {t} = useI18nNamespaces(["database"])
     return (
         <>
-            <Descriptions size={"small"} bordered={true} column={!port.ServiceType ? 1 : 2} title={"端口资产详情"}>
+            <Descriptions size={"small"} bordered={true} column={!port.ServiceType ? 1 : 2} title={tAsset("PortAssetPage.detailTitle")}>
                 <Descriptions.Item label={t("PortAssetPage.PortAssetDescription.state")}>
                     <YakitCopyText showText={port.State} />
                 </Descriptions.Item>
@@ -454,12 +456,12 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
                     </Descriptions.Item>
                 )}
                 {port.ServiceType && (
-                    <Descriptions.Item span={2} label='应用'>
+                    <Descriptions.Item span={2} label={tAsset("PortAssetPage.application")}>
                         <YakitCopyText showText={port.ServiceType} />
                     </Descriptions.Item>
                 )}
                 {port.Reason && (
-                    <Descriptions.Item span={2} label='失败原因'>
+                    <Descriptions.Item span={2} label={tAsset("PortAssetPage.failureReason")}>
                         <YakitCopyText showText={port.Reason} />
                     </Descriptions.Item>
                 )}
@@ -477,14 +479,14 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
                     </Descriptions.Item>
                 ) : undefined}
                 {port.Fingerprint && (
-                    <Descriptions.Item span={2} label='指纹信息'>
+                    <Descriptions.Item span={2} label={tAsset("PortAssetPage.fingerprintInfo")}>
                         <div style={{height: 200}}>
                             <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true} readOnly />
                         </div>
                     </Descriptions.Item>
                 )}
             </Descriptions>
-            <div className='descriptions-no-more'>暂无更多</div>
+            <div className='descriptions-no-more'>{tAsset("PortAssetPage.noMore")}</div>
         </>
     )
 }

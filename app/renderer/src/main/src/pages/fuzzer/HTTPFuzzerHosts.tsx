@@ -12,6 +12,7 @@ import {saveABSFileToOpen} from "@/utils/openWebsite"
 import {hostsExampleTemplate} from "@/defaultConstants/HTTPFuzzerHosts"
 import styles from "./HTTPFuzzerHistory.module.scss"
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "webFuzzer")
 
 interface HTTPFuzzerHostInputProp {
     onAdd: (obj: {Key: string; Value: string}) => any
@@ -24,7 +25,7 @@ export const inputHTTPFuzzerHostConfigItem = (
     batchHandler?: (items: {Key: string; Value: string}[]) => void
 ) => {
     const m = showYakitModal({
-        title: i18n.language === "zh" ? "输入 DNS Hosts 配置" : "Enter DNS Hosts Configuration",
+        title: t("HTTPFuzzerHosts.dnsHostsConfigTitle"),
         width: "500px",
         footer: null,
         content: (

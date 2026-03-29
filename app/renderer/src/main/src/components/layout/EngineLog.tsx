@@ -7,6 +7,7 @@ import ReactResizeDetector from "react-resize-detector"
 import styles from "./EngineLog.module.scss"
 import {getReleaseEditionName} from "@/utils/envfile"
 import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -17,6 +18,7 @@ export interface EngineLogProps {
 
 export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
     const {visible, setVisible} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const xtermRef = useRef<any>(null)
     const terminalOptions = useXTermOptions({
@@ -41,7 +43,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
             return
         }
 
-        writeToConsole(`欢迎使用 ${getReleaseEditionName()}!\n`)
+        writeToConsole(t("EngineLog.welcome", {edition: getReleaseEditionName()}) + "\n")
 
         ipcRenderer.on("live-engine-stdio", (e, stdout) => {
             writeToConsole(stdout)
@@ -53,7 +55,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners("live-engine-stdio")
             ipcRenderer.removeAllListeners("live-engine-log")
         }
-    }, [xtermRef])
+    }, [xtermRef, t])
 
     const onCancel = () => {
         setVisible(false)
@@ -62,7 +64,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
     return (
         <div className={styles["engine-log-wrapper"]}>
             <div className={styles["engine-log-header"]}>
-                <div className={styles["header-title"]}>连接日志</div>
+                <div className={styles["header-title"]}>{t("EngineLog.connectionLog")}</div>
                 <div className={styles["header-close"]} onClick={onCancel}>
                     <EngineLogCloseSvgIcon />
                 </div>

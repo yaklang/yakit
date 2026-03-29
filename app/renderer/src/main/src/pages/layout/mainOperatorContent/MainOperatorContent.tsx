@@ -192,13 +192,13 @@ const Close_Group_Tip = "close-group_tip"
 const colorList = ["purple", "blue", "lakeBlue", "green", "red", "orange", "bluePurple", "grey"]
 const droppable = "droppable"
 const droppableGroup = "droppableGroup"
-const pageTabItemRightOperation: YakitMenuItemType[] = [
+const pageTabItemRightOperation = (t: any): YakitMenuItemType[] => [
     {
-        label: "重命名",
+        label: t("MainOperatorContent.TabMenu.rename"),
         key: "rename"
     },
     {
-        label: "将标签页移动到组",
+        label: t("MainOperatorContent.TabMenu.moveToGroup"),
         key: "addToGroup",
         children: [
             // {
@@ -207,7 +207,7 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
             //     key: "newGroup"
             // },
             {
-                label: "批量新建组",
+                label: t("MainOperatorContent.TabMenu.batchNewGroup"),
                 itemIcon: <OutlinePlusIcon />,
                 key: "batchNewGroup"
             }
@@ -222,11 +222,11 @@ const pageTabItemRightOperation: YakitMenuItemType[] = [
         type: "divider"
     },
     {
-        label: "关闭当前标签页",
+        label: t("MainOperatorContent.TabMenu.closeCurrentTab"),
         key: "remove"
     },
     {
-        label: "关闭其他标签页",
+        label: t("MainOperatorContent.TabMenu.closeOtherTabs"),
         key: "removeOtherItems"
     }
 ]
@@ -718,7 +718,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         setCurrentPageTabRouteKey(currentTabKey)
         debugToPrintLogs({
             status: "INFO",
-            title: "切换标签页",
+            title: t("MainOperatorContent.switchTab"),
             content: currentTabKey
         })
     }, [currentTabKey])
@@ -2396,7 +2396,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             ipcRenderer.invoke("QueryYakScript", newParams).then((item: QueryYakScriptsResponse) => {
                 if (item.Data.length === 0) {
                     const m = showYakitModal({
-                        title: "导入插件",
+                        title: t("MainOperatorContent.Modal.importPlugin"),
                         type: "white",
                         content: <DownloadAllPlugin onClose={() => m.destroy()} />,
                         bodyStyle: {padding: 24},
@@ -2462,7 +2462,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     }
                 })
                 .catch((error) => {
-                    yakitNotify("error", `SelectFirstMenuTabKey获取数据失败:${error}`)
+                    yakitNotify("error", t("MainOperatorContent.SelectFirstMenuTabKeyFailed", {error}))
                 })
         }
         // 开启fuzzer-tab页内数据的订阅事件
@@ -3018,7 +3018,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             case YakitRoute.HTTPFuzzer:
                 setRecoveryModel("coverage")
                 const m = showYakitModal({
-                    title: "恢复标签页",
+                    title: t("MainOperatorContent.Modal.restoreTab"),
                     footer: null,
                     content: (
                         <RestoreTabContent
@@ -3057,12 +3057,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                 await onSetFuzzerSequenceCacheData(itemSequence)
                             }
                         }
-                    } else {
-                        yakitNotify("info", `暂无WF历史数据`)
-                    }
-                    resolve(null)
-                } catch (error) {
-                    yakitNotify("error", `WF历史数据恢复失败:${error}`)
+                        } else {
+                            yakitNotify("info", t("MainOperatorContent.noWFHistoryData"))
+                        }
+                        resolve(null)
+                    } catch (error) {
+                        yakitNotify("error", t("MainOperatorContent.restoreHistoryFailed", {error: String(error)}))
                 }
             })
         })
@@ -4567,7 +4567,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
          * @description 页面节点的右键点击事件
          */
         const onRightClickOperation = useMemoizedFn((event: React.MouseEvent, item: MultipleNodeInfo) => {
-            let menuData: YakitMenuItemType[] = _.cloneDeepWith(pageTabItemRightOperation)
+            let menuData: YakitMenuItemType[] = _.cloneDeepWith(pageTabItemRightOperation(t))
             const groupList = subPage.filter((ele) => (ele.groupChildren?.length || 0) > 0)
             groupList.forEach((groupItem) => {
                 let labelText = groupItem.verbose
@@ -4592,14 +4592,14 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             })
             const {subIndex, index} = getPageItemById(subPage, item.id)
             if (subIndex !== -1) {
-                menuData.splice(2, 0, {
-                    label: "从组中移出",
-                    key: "removeFromGroup"
-                })
+                    menuData.splice(2, 0, {
+                        label: t("MainOperatorContent.TabMenu.removeFromGroup"),
+                        key: "removeFromGroup"
+                    })
             }
             if (currentTabKey === YakitRoute.HTTPFuzzer) {
                 menuData.push({
-                    label: "恢复标签页",
+                    label: t("MainOperatorContent.TabMenu.restoreTab"),
                     key: "restoreTab"
                 })
             }
@@ -4660,14 +4660,14 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
         /**重命名 */
         const onShowRenameModal = useMemoizedFn((item: MultipleNodeInfo) => {
-            const m = showYakitModal({
-                footer: null,
-                closable: false,
-                hiddenHeader: true,
-                content: (
-                    <React.Suspense fallback={<div>loading...</div>}>
-                        <TabRenameModalContent
-                            title='重命名'
+                const m = showYakitModal({
+                    footer: null,
+                    closable: false,
+                    hiddenHeader: true,
+                    content: (
+                        <React.Suspense fallback={<div>loading...</div>}>
+                            <TabRenameModalContent
+                            title={t("MainOperatorContent.Modal.rename")}
                             onClose={() => {
                                 m.destroy()
                             }}
@@ -4766,7 +4766,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
         const openBatchNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
             const m = showYakitModal({
-                title: "创建新组",
+                title: t("MainOperatorContent.Modal.createGroup"),
                 footer: null,
                 content: (
                     <BatchAddNewGroup
@@ -5966,6 +5966,7 @@ const onVerifyGroupName = (val: string) => {
 }
 const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = React.memo((props) => {
     const {groupItem, onOperateGroup, onUpdateGroup} = props
+    const {t} = useI18nNamespaces(["layout"])
     const [group, setGroup] = useState<MultipleNodeInfo>({...groupItem})
     const [name, setName] = useState<string>(group.verbose)
     useEffect(() => {
@@ -5979,19 +5980,19 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
     const menu = useCreation(() => {
         return [
             {
-                label: "取消组合",
+                label: t("MainOperatorContent.GroupMenu.cancelGroup"),
                 key: "cancelGroup"
             },
             {
-                label: "关闭组",
+                label: t("MainOperatorContent.GroupMenu.closeGroup"),
                 key: "closeGroup"
             },
             {
-                label: "关闭其他标签页",
+                label: t("MainOperatorContent.GroupMenu.closeOtherTabs"),
                 key: "closeOtherTabs"
             },
             {
-                label: "编辑组合",
+                label: t("MainOperatorContent.GroupMenu.editGroup"),
                 key: "editGroup"
             }
         ]
@@ -6054,6 +6055,7 @@ const GroupRightClickShowContent: React.FC<GroupRightClickShowContentProps> = Re
 })
 
 const CloseGroupContent: React.FC = React.memo(() => {
+    const {t} = useI18nNamespaces(["layout"])
     const [tipChecked, setTipChecked] = useState<boolean>(false)
     const onChecked = useMemoizedFn((check: boolean) => {
         setTipChecked(check)
@@ -6061,10 +6063,10 @@ const CloseGroupContent: React.FC = React.memo(() => {
     })
     return (
         <div className={styles["close-group-content"]}>
-            <div>是否关闭当前组,关闭后,组内的页面也会关闭</div>
+            <div>{t("MainOperatorContent.CloseGroupContent.closeGroupConfirm")}</div>
             <label className={styles["close-group-check"]}>
                 <YakitCheckbox checked={tipChecked} onChange={(e) => onChecked(e.target.checked)} />
-                不再提示
+                {t("MainOperatorContent.CloseGroupContent.dontAskAgain")}
             </label>
         </div>
     )

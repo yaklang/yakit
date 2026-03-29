@@ -43,6 +43,7 @@ import {isString} from "lodash"
 import OpenFileDropdown, {OpenFileDropdownItem} from "../aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {UploadFileButton} from "@/pages/ai-re-act/aiReActChat/AIReActComponent"
 import {insertAtCurrentPosition} from "../components/aiMilkdownInput/customPlugin"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -79,6 +80,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             isOpen,
             filterMentionType
         } = props
+        const {t} = useI18nNamespaces(["aiAgent"])
 
         const footerLeftTypes: FooterLeftTypesComponentProps[] = useCreation(() => {
             if (!!props.footerLeftTypes?.length) {
@@ -308,7 +310,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 onClick={handleSetTextareaFocus}
                 ref={dropRef}
             >
-                {isHovering && <div className={styles["drag-hint"]}>松开以添加到对话</div>}
+                {isHovering && <div className={styles["drag-hint"]}>{t("AIChatTemplate.dropToAddToChat")}</div>}
                 <div className={classNames(styles["textarea-wrapper"])} onKeyDown={handleTextareaKeyDown}>
                     <AIMilkdownInput
                         defaultValue={defaultValue}
@@ -327,7 +329,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                                     onClick={onMention}
                                 />
                                 <OpenFileDropdown cb={onSetFileMention}>
-                                    <UploadFileButton title='打开文件夹' />
+                                    <UploadFileButton title={t("AIChatTemplate.openFolder")} />
                                 </OpenFileDropdown>
                             </div>
                         )}
