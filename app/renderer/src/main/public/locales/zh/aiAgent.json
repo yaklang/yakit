@@ -72,26 +72,6 @@
     "selectModel": "AI 模型选择",
     "openConfigTooltip": "打开ai侧边栏模型配置"
   },
-  "AIModelList": {
-    "intelligentModels": "高质模型",
-    "intelligentModelsDesc": "用于执行复杂度高的任务,对话框中可切换该模型",
-    "lightweightModels": "轻量模型",
-    "lightweightModelsDesc": "用于执行简单任务和会话",
-    "visionModels": "视觉模式",
-    "visionModelsDesc": "用于识别图片等,生成知识库和任务执行都会用到",
-    "addModel": "添加模型",
-    "addThirdPartyApp": "添加第三方应用",
-    "addLocalModel": "添加本地模型",
-    "clearConfirm": "是否确认清空所有{type}模型配置",
-    "online": "线上",
-    "local": "本地",
-    "clearModelsTitle": "清空模型",
-    "clearModelsDesc": "确认要删除所有下载和添加的模型吗？确认删除源文件则自定义添加的模型文件会被一起删除",
-    "policyAuto": "根据请求内容自动选择最合适的模型",
-    "policyPerformance": "优先使用高智能模型",
-    "policyCost": "优先使用轻量级/低成本模型",
-    "policyBalance": "在响应速度、智能程度和成本之间取得平衡"
-  },
   "AIOnlineModeSetting": {
     "configUpdateFailed": "配置更新失败,未获取到全局ai配置,请重试",
     "callingMode": "调用模式",
@@ -114,10 +94,46 @@
     "localManagerDesc": "本地 AI 模型管理器用于管理本地 Al 模型，支持一键下载和安装模型，支持模型状态监控和管理。通过本地模型服务，可以实现本地化 AI 服务，无需依赖云端服务。",
     "llamaInstalling": "LIama 服务器安装中..."
   },
+  "AIModelList": {
+    "onlineTooltip": "通过api访问模型,接受AI信息或向AI发送消息,可配置多个",
+    "localTooltip": "本地AI模型管理器用于管理本地AI模型,支持一键下载和安装模型,支持模型状态监控和管理。通过本地模型服务,可以实现本地化AI服务,无需依赖云端服务",
+    "online": "线上",
+    "local": "本地",
+    "intelligentModels": "高质模型",
+    "intelligentModelsDesc": "用于执行复杂度高的任务,对话框中可切换该模型",
+    "lightweightModels": "轻量模型",
+    "lightweightModelsDesc": "用于执行简单任务和会话",
+    "visionModels": "视觉模式",
+    "visionModelsDesc": "用于识别图片等,生成知识库和任务执行都会用到",
+    "addModel": "添加模型",
+    "addThirdPartyApp": "添加第三方应用",
+    "addLocalModel": "添加本地模型",
+    "clearConfirm": "是否确认清空所有{type}模型配置",
+    "clearModelsTitle": "清空模型",
+    "clearModelsDesc": "确认要删除所有下载和添加的模型吗？确认删除源文件则自定义添加的模型文件会被一起删除",
+    "policyAuto": "根据请求内容自动选择最合适的模型",
+    "policyPerformance": "优先使用高智能模型",
+    "policyCost": "优先使用轻量级/低成本模型",
+    "policyBalance": "在响应速度、智能程度和成本之间取得平衡"
+  },
   "AILocalModelListItem": {
     "startModel": "启动模型 - {name}",
+    "openFileLocation": "打开文件位置",
+    "edit": "编辑",
+    "delete": "删除",
     "downloadModel": "下载模型",
-    "editLocalModel": "修改本地模型"
+    "deleteConfirm": "确定要删除厂商{type},模型名称为{name} 吗？",
+    "download": "下载",
+    "disable": "停用",
+    "enable": "启用",
+    "enabled": "已启用",
+    "ipPort": "IP/端口: {host}:{port}",
+    "deleteModel": "删除模型",
+    "editLocalModel": "修改本地模型",
+    "deleteModelConfirm": "确认删除模型{name}吗？确认删除源文件则自定义添加的模型文件会被一起删除",
+    "deleteSourceFile": "是否删除源文件",
+    "disableConfirm": "确定要停用模型 {name} 吗？",
+    "downloadingModel": "模型 {name} 下载中..."
   },
   "AIAgent": {
     "getKnowledgeBaseFailed": "获取知识库列表失败: {error}",
@@ -157,6 +173,18 @@
     "confirm": "确定",
     "createKnowledgeBaseSuccess": "创建知识库成功",
     "createKnowledgeBaseFailed": "创建知识库失败: {error}"
+  },
+  "GuideFooter": {
+    "start": "开始体验",
+    "next": "下一个",
+    "prev": "上一个"
+  },
+  "KnowledgeBaseTable": {
+    "getGlobalKnowledgeBaseFailed": "获取全局知识库失败: {error}",
+    "add": "添加"
+  },
+  "PluginExecuteDetailDrawer": {
+    "log": "日志"
   },
   "AIAgentTabs": {
     "historyChat": "历史会话",
@@ -462,43 +490,6 @@
   },
   "AIMilkdownInput": {
     "placeholder": "请告诉我，你想做什么...(shift + enter 换行)"
-  },
-  "AIModelList": {
-    "onlineTooltip": "通过api访问模型,接受AI信息或向AI发送消息,可配置多个",
-    "localTooltip": "本地AI模型管理器用于管理本地AI模型,支持一键下载和安装模型,支持模型状态监控和管理。通过本地模型服务,可以实现本地化AI服务,无需依赖云端服务",
-    "online": "线上",
-    "local": "本地",
-    "intelligentModels": "高质模型",
-    "intelligentModelsDesc": "用于执行复杂度高的任务,对话框中可切换该模型",
-    "lightweightModels": "轻量模型",
-    "lightweightModelsDesc": "用于执行简单任务和会话",
-    "visionModels": "视觉模式",
-    "visionModelsDesc": "用于识别图片等,生成知识库和任务执行都会用到",
-    "addModel": "添加模型",
-    "addLocalModel": "添加本地模型",
-    "clearConfirm": "是否确认清空所有{type}模型配置",
-    "clearModelsTitle": "清空模型",
-    "clearModelsDesc": "确认要删除所有下载和添加的模型吗？确认删除源文件则自定义添加的模型文件会被一起删除",
-    "policyAuto": "根据请求内容自动选择最合适的模型",
-    "policyPerformance": "优先使用高智能模型",
-    "policyCost": "优先使用轻量级/低成本模型",
-    "policyBalance": "在响应速度、智能程度和成本之间取得平衡"
-  },
-  "AILocalModelListItem": {
-    "openFileLocation": "打开文件位置",
-    "edit": "编辑",
-    "delete": "删除",
-    "deleteConfirm": "确定要删除厂商{type},模型名称为{name} 吗？",
-    "download": "下载",
-    "disable": "停用",
-    "enable": "启用",
-    "enabled": "已启用",
-    "ipPort": "IP/端口: {host}:{port}",
-    "deleteModel": "删除模型",
-    "deleteModelConfirm": "确认删除模型{name}吗？确认删除源文件则自定义添加的模型文件会被一起删除",
-    "deleteSourceFile": "是否删除源文件",
-    "disableConfirm": "确定要停用模型 {name} 吗？",
-    "downloadingModel": "模型 {name} 下载中..."
   },
   "ForgeName": {
     "exportForge": "导出技能",

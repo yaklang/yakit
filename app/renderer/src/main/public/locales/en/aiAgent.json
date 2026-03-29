@@ -72,26 +72,6 @@
     "selectModel": "Select AI Model",
     "openConfigTooltip": "Open AI sidebar model configuration"
   },
-  "AIModelList": {
-    "intelligentModels": "High-Quality Models",
-    "intelligentModelsDesc": "Used for high-complexity tasks, switchable in dialog",
-    "lightweightModels": "Lightweight Models",
-    "lightweightModelsDesc": "Used for simple tasks and sessions",
-    "visionModels": "Vision Models",
-    "visionModelsDesc": "Used for image recognition, knowledge base generation, and task execution",
-    "addModel": "Add Model",
-    "addThirdPartyApp": "Add Third-Party Application",
-    "addLocalModel": "Add Local Model",
-    "clearConfirm": "Are you sure to clear all {type} model configurations?",
-    "online": "Online",
-    "local": "Local",
-    "clearModelsTitle": "Clear Models",
-    "clearModelsDesc": "Are you sure you want to delete all downloaded and added models? Confirming deletion of source files will also delete custom added model files.",
-    "policyAuto": "Automatically select the most suitable model based on request content",
-    "policyPerformance": "Prioritize high-intelligence models",
-    "policyCost": "Prioritize lightweight/low-cost models",
-    "policyBalance": "Balance between response speed, intelligence, and cost"
-  },
   "AIOnlineModeSetting": {
     "configUpdateFailed": "Configuration update failed, global AI configuration not obtained, please try again",
     "callingMode": "Calling Mode",
@@ -114,10 +94,46 @@
     "localManagerDesc": "Local AI model manager for managing local AI models, supports one-click download and installation, status monitoring and management. Localized AI services without cloud dependency.",
     "llamaInstalling": "Llama server installing..."
   },
+  "AIModelList": {
+    "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",
+    "localTooltip": "Local AI model manager for managing local AI models, supports one-click download and installation, status monitoring and management. Localized AI services without cloud dependency.",
+    "online": "Online",
+    "local": "Local",
+    "intelligentModels": "High-Quality Models",
+    "intelligentModelsDesc": "Used for high-complexity tasks, switchable in dialog",
+    "lightweightModels": "Lightweight Models",
+    "lightweightModelsDesc": "Used for simple tasks and sessions",
+    "visionModels": "Vision Models",
+    "visionModelsDesc": "Used for image recognition, knowledge base generation, and task execution",
+    "addModel": "Add Model",
+    "addThirdPartyApp": "Add Third-Party Application",
+    "addLocalModel": "Add Local Model",
+    "clearConfirm": "Are you sure to clear all {type} model configurations?",
+    "clearModelsTitle": "Clear Models",
+    "clearModelsDesc": "Are you sure you want to delete all downloaded and added models? Confirming deletion of source files will also delete custom added model files.",
+    "policyAuto": "Automatically select the most suitable model based on request content",
+    "policyPerformance": "Prioritize high-intelligence models",
+    "policyCost": "Prioritize lightweight/low-cost models",
+    "policyBalance": "Balance between response speed, intelligence, and cost"
+  },
   "AILocalModelListItem": {
     "startModel": "Start Model - {name}",
+    "openFileLocation": "Open file location",
+    "edit": "Edit",
+    "delete": "Delete",
     "downloadModel": "Download Model",
-    "editLocalModel": "Edit Local Model"
+    "deleteConfirm": "Are you sure you want to delete model {name} from vendor {type}?",
+    "download": "Download",
+    "disable": "Disable",
+    "enable": "Enable",
+    "enabled": "Enabled",
+    "ipPort": "IP/Port: {host}:{port}",
+    "deleteModel": "Delete Model",
+    "editLocalModel": "Edit Local Model",
+    "deleteModelConfirm": "Are you sure you want to delete model {name}? Confirming deletion of the source file will also delete custom added model files.",
+    "deleteSourceFile": "Delete source file",
+    "disableConfirm": "Are you sure you want to disable model {name}?",
+    "downloadingModel": "Downloading model {name}..."
   },
   "AIAgent": {
     "getKnowledgeBaseFailed": "Failed to get knowledge base list: {error}",
@@ -157,6 +173,18 @@
     "confirm": "Confirm",
     "createKnowledgeBaseSuccess": "Knowledge base created successfully",
     "createKnowledgeBaseFailed": "Failed to create knowledge base: {error}"
+  },
+  "GuideFooter": {
+    "start": "Start Experience",
+    "next": "Next",
+    "prev": "Previous"
+  },
+  "KnowledgeBaseTable": {
+    "getGlobalKnowledgeBaseFailed": "Failed to get global knowledge base: {error}",
+    "add": "Add"
+  },
+  "PluginExecuteDetailDrawer": {
+    "log": "Log"
   },
   "AIAgentTabs": {
     "historyChat": "History Chat",
@@ -462,43 +490,6 @@
   },
   "AIMilkdownInput": {
     "placeholder": "Tell me what you want to do... (shift + enter for a new line)"
-  },
-  "AIModelList": {
-    "onlineTooltip": "Access models via API, receive AI info or send messages to AI, multiple configurations possible.",
-    "localTooltip": "Local AI model manager for managing local AI models, supports one-click download and installation, status monitoring and management. Localized AI services without cloud dependency.",
-    "online": "Online",
-    "local": "Local",
-    "intelligentModels": "High-Quality Models",
-    "intelligentModelsDesc": "Used for high-complexity tasks, switchable in dialog",
-    "lightweightModels": "Lightweight Models",
-    "lightweightModelsDesc": "Used for simple tasks and sessions",
-    "visionModels": "Vision Models",
-    "visionModelsDesc": "Used for image recognition, knowledge base generation, and task execution",
-    "addModel": "Add Model",
-    "addLocalModel": "Add Local Model",
-    "clearConfirm": "Are you sure to clear all {type} model configurations?",
-    "clearModelsTitle": "Clear Models",
-    "clearModelsDesc": "Are you sure you want to delete all downloaded and added models? Confirming deletion of source files will also delete custom added model files.",
-    "policyAuto": "Automatically select the most suitable model based on request content",
-    "policyPerformance": "Prioritize high-intelligence models",
-    "policyCost": "Prioritize lightweight/low-cost models",
-    "policyBalance": "Balance between response speed, intelligence, and cost"
-  },
-  "AILocalModelListItem": {
-    "openFileLocation": "Open file location",
-    "edit": "Edit",
-    "delete": "Delete",
-    "deleteConfirm": "Are you sure you want to delete model {name} from vendor {type}?",
-    "download": "Download",
-    "disable": "Disable",
-    "enable": "Enable",
-    "enabled": "Enabled",
-    "ipPort": "IP/Port: {host}:{port}",
-    "deleteModel": "Delete Model",
-    "deleteModelConfirm": "Are you sure you want to delete model {name}? Confirming deletion of the source file will also delete custom added model files.",
-    "deleteSourceFile": "Delete source file",
-    "disableConfirm": "Are you sure you want to disable model {name}?",
-    "downloadingModel": "Downloading model {name}..."
   },
   "ForgeName": {
     "exportForge": "Export Forge",

@@ -9,6 +9,7 @@ import {RoundedStopButton} from "@/pages/ai-re-act/aiReActChat/AIReActComponent"
 import {KnowledgeBaseTableHeaderProps} from "./KnowledgeBaseTableHeader"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
 import {useKnowledgeBase} from "../hooks/useKnowledgeBase"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface PluginExecuteDetailDrawerProps {
     buildingDrawer: {
@@ -26,6 +27,7 @@ interface PluginExecuteDetailDrawerProps {
 
 const PluginExecuteDetailDrawer: FC<PluginExecuteDetailDrawerProps> = (props) => {
     const {buildingDrawer, streams, knowledgeBaseItems} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {editKnowledgeBase} = useKnowledgeBase()
 
     const resultPluginExecuteResult = useMemo(() => {
@@ -35,7 +37,7 @@ const PluginExecuteDetailDrawer: FC<PluginExecuteDetailDrawerProps> = (props) =>
                     streamInfo={streams[buildingDrawer.streamToken]}
                     runtimeId={streams[buildingDrawer.streamToken]?.runtimeId ?? ""}
                     loading={streams[buildingDrawer.streamToken]?.loading ?? false}
-                    defaultActiveKey='日志'
+                    defaultActiveKey={t("PluginExecuteDetailDrawer.log")}
                 />
             )
         }

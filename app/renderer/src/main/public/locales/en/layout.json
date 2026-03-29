@@ -305,7 +305,6 @@
     "details": "Details",
     "samplingCompleted": "Sampling completed, click the top green button to view the results",
     "coreEngineSamplingPluginName": "Core engine performance sampling",
-    "performanceSampling": "Performance Sampling",
     "startDetection": "Start Detection",
     "detectionTimeMustBeGreaterThanZero": "Detection time must be greater than 0",
     "pluginNotFoundCoreEngineSampling": "Could not find Yak native plugin: Core engine performance sampling",
@@ -313,7 +312,6 @@
     "pluginNotFoundCrashLog": "Could not find Yak native plugin: Crash log collection",
     "crashLogCapture": "Crash Log Collection",
     "log": "Log",
-    "cancel": "Cancel",
     "updateNoticeTitleYakit": "{edition} {version} Update Notice",
     "updateNoticeTitleYaklang": "Yaklang {version} Update Notice"
   },

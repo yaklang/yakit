@@ -152,7 +152,6 @@
     "disposalStatus": "处置状态",
     "foundAt": "发现时间",
     "operation": "操作",
-    "openInAudit": "在代码审计中打开",
     "misstatementFeedback": "误报反馈",
     "loginFirst": "请先登录账号",
     "feedbackSuccess": "反馈成功",

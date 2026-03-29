@@ -305,7 +305,6 @@
     "details": "详情",
     "samplingCompleted": "采样完成，点击顶部绿色按钮可查看结果",
     "coreEngineSamplingPluginName": "核心引擎性能采样",
-    "performanceSampling": "性能采样",
     "startDetection": "开始检测",
     "detectionTimeMustBeGreaterThanZero": "检测时间必须大于0",
     "pluginNotFoundCoreEngineSampling": "找不到Yak 原生插件：核心引擎性能采样",
@@ -313,7 +312,6 @@
     "pluginNotFoundCrashLog": "找不到Yak 原生插件：崩溃日志收集",
     "crashLogCapture": "崩溃日志采集",
     "log": "日志",
-    "cancel": "取消",
     "updateNoticeTitleYakit": "{edition} {version} 更新通知",
     "updateNoticeTitleYaklang": "Yaklang {version} 更新通知"
   },
