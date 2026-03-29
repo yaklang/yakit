@@ -27,6 +27,8 @@ import {
     normalizeAIAPIType
 } from "@/pages/ai-agent/aiModelList/utils"
 import {cloneDeep} from "lodash"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -82,7 +84,7 @@ const defaultFormItems: ThirdPartyAppConfigItemTemplate[] = [
         Name: "api_key",
         Required: true,
         Type: "string",
-        Verbose: "ApiKey"
+        Verbose: i18n.t("ConfigNetworkPage.apiKey", {ns: "configNetwork"})
     },
     {
         DefaultValue: "",
@@ -91,14 +93,14 @@ const defaultFormItems: ThirdPartyAppConfigItemTemplate[] = [
         Name: "user_identifier",
         Required: false,
         Type: "string",
-        Verbose: "用户信息"
+        Verbose: i18n.t("ConfigNetworkPage.userInfo", {ns: "configNetwork"})
     }
 ]
 
 const aiModelTypeOptions: SelectOptionsProps[] = [
-    {label: "高质模型:执行复杂任务", value: AIModelTypeEnum.TierIntelligent},
-    {label: "轻量模型:用于执行简单任务和会话", value: AIModelTypeEnum.TierLightweight},
-    {label: "视觉模式:用于识别图片等,生成知识库和任务执行都会用到", value: AIModelTypeEnum.TierVision}
+    {label: i18n.t("ConfigNetworkPage.highQualityModelDesc", {ns: "configNetwork"}), value: AIModelTypeEnum.TierIntelligent},
+    {label: i18n.t("ConfigNetworkPage.lightweightModelDesc", {ns: "configNetwork"}), value: AIModelTypeEnum.TierLightweight},
+    {label: i18n.t("ConfigNetworkPage.visionModelDesc", {ns: "configNetwork"}), value: AIModelTypeEnum.TierVision}
 ]
 const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({label: item, value: item}))
 const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
@@ -110,18 +112,18 @@ const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
     Extra: `${JSON.stringify({
         options: aiModelTypeOptions
     })}`,
-    Verbose: "模型类型"
+    Verbose: i18n.t("ConfigNetworkPage.modelType", {ns: "configNetwork"})
 }
 const aiAPITypeItem: ThirdPartyAppConfigItemTemplate = {
     Name: "api_type",
     Required: true,
     Type: "list",
     DefaultValue: DEFAULT_AI_API_TYPE,
-    Desc: "可选值: chat_completions / responses",
+    Desc: i18n.t("ConfigNetworkPage.apiTypeDesc", {ns: "configNetwork"}),
     Extra: `${JSON.stringify({
         options: aiAPITypeOptions
     })}`,
-    Verbose: "API类型"
+    Verbose: i18n.t("ConfigNetworkPage.apiType", {ns: "configNetwork"})
 }
 const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     cloneDeep(aiModelTypeItem),
@@ -142,7 +144,7 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
         Name: "user_identifier",
         Required: false,
         Type: "string",
-        Verbose: "用户信息"
+        Verbose: i18n.t("ConfigNetworkPage.userInfo", {ns: "configNetwork"})
     }
 ]
 
@@ -168,6 +170,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
             FormProps,
             footer
         } = props
+        const {t} = useI18nNamespaces(["configNetwork"])
         const [form] = Form.useForm()
         const typeVal = Form.useWatch("Type", form)
         const typeValRef = useRef<string>(typeVal)
@@ -245,7 +248,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                             ? [{label: name, value: name}, ...modalNamelist]
                             : modalNamelist
                         setModelNameAllOptions(newOptions)
-                        yakitNotify("success", "获取成功")
+                        yakitNotify("success", t("ConfigNetworkPage.fetchSuccess"))
                     })
                     .catch((error) => {
                         if (!execModelNameOption.current) return
@@ -297,7 +300,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
         })
         const renderSingleFormItem = (item: ThirdPartyAppConfigItemTemplate, modelType?: string) => {
             const formProps = {
-                rules: [{required: item.Required, message: `请填写${item.Verbose}`}],
+                rules: [{required: item.Required, message: t("ConfigNetworkPage.pleaseFill", {name: item.Verbose})}],
                 label: item.Verbose,
                 name: item.Name,
                 tooltip: item.Desc
@@ -328,7 +331,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                                 {...formProps}
                                 help={
                                     <div style={{height: 30}}>
-                                        如无法自动获取，请
+                                        {t("ConfigNetworkPage.ifCannotAutoFetch")}
                                         <YakitButton
                                             type='text'
                                             onClick={() => {
@@ -337,9 +340,9 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                                             }}
                                             style={{padding: 0, fontSize: 14}}
                                         >
-                                            点击刷新
+                                            {t("ConfigNetworkPage.clickRefresh")}
                                         </YakitButton>
-                                        重新获取
+                                        {t("ConfigNetworkPage.refetch")}
                                     </div>
                                 }
                             >
@@ -436,8 +439,8 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                     className={styles["config-form"]}
                 >
                     <Form.Item
-                        label={isMemfit() ? "厂商" : "类型"}
-                        rules={[{required: true, message: `请${canAddType ? "填写" : "选择"}类型`}]}
+                        label={isMemfit() ? t("ConfigNetworkPage.vendor") : t("ConfigNetworkPage.type")}
+                        rules={[{required: true, message: t("ConfigNetworkPage.pleaseEnterOrSelectType", {mode: canAddType ? t("ConfigNetworkPage.enter") : t("ConfigNetworkPage.select")})}]}
                         name={"Type"}
                     >
                         {canAddType ? (
@@ -482,6 +485,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
 
 const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> = React.memo((props) => {
     const {onCancel, onAdd, ...rest} = props
+    const {t} = useI18nNamespaces(["configNetwork"])
     const formRef = useRef<{form: FormInstance}>(null)
     return (
         <NewThirdPartyApplicationConfigBase
@@ -490,7 +494,7 @@ const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> 
             footer={
                 <>
                     <YakitButton size='large' type='outline2' onClick={onCancel}>
-                        取消
+                        {t("ConfigNetworkPage.cancel")}
                     </YakitButton>
                     <YakitButton
                         size='large'
@@ -507,7 +511,7 @@ const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> 
                             })
                         }}
                     >
-                        确定添加
+                        {t("ConfigNetworkPage.confirmAdd")}
                     </YakitButton>
                 </>
             }
