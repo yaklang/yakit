@@ -186,6 +186,109 @@
     "latencyMs": "Latency (ms)",
     "thresholdLine": "Threshold Line ({value})"
   },
+  "AddAIModel": {
+    "aichat": "aichat",
+    "embedding": "embedding",
+    "modelName": "Model Name",
+    "enterModelName": "Please enter the model name",
+    "modelType": "Model Type",
+    "enterModelType": "Please enter the model type",
+    "filePath": "File Path",
+    "enterFilePath": "Please enter the file path",
+    "modelDescription": "Model Description",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "AIChatListItem": {
+    "thinking": "Thinking: ",
+    "toolCall": "Tool Call",
+    "taskEnd": "Task End",
+    "taskEndDesc": "The current task has ended, below is the new task data"
+  },
+  "ToolInvokerCard": {
+    "skipConfirm": "Skipping will cancel the tool call and use the current output for follow-up decisions. Confirm skip?",
+    "success": "Success",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "FileTreeSystemItem": {
+    "joinPathFailed": "Path join failed",
+    "createFailed": "Creation failed",
+    "createSuccess": "Created successfully",
+    "renameSame": "Rename target is the same",
+    "renameJoinPathFailed": "Rename path join failed",
+    "renameFailed": "Rename failed",
+    "renameSuccess": "Renamed successfully",
+    "refresh": "Refresh",
+    "sendToChat": "Send to free chat",
+    "copyPath": "Copy path",
+    "showInFolder": "Show in folder",
+    "remove": "Remove"
+  },
+  "OperationCardFooter": {
+    "details": "Details",
+    "viewFile": "View file",
+    "viewDetails": "View details"
+  },
+  "OperationLog": {
+    "folder": "Folder",
+    "nonFolder": "Non-folder"
+  },
+  "FilePreview": {
+    "fileSystem": "File System",
+    "chooseFile": "Please select a file on the left",
+    "openFile": "Open File",
+    "openFolder": "Open Folder",
+    "recentOpen": "Recently Opened",
+    "loadFailed": "Failed to load file: {error}",
+    "binaryNotice": "This file is a binary file or uses an unsupported text encoding, so it cannot be displayed in the text editor.",
+    "openAnyway": "Open Anyway",
+    "warningTitle": "File Warning",
+    "tooLarge": "The file is too large to preview",
+    "gotIt": "Got it"
+  },
+  "AIFileChatContent": {
+    "relatedFiles": "Related Files",
+    "relatedForges": "Related Forges",
+    "relatedTools": "Related Tools",
+    "relatedKnowledgeBases": "Related Knowledge Bases"
+  },
+  "AIChatContent": {
+    "noActiveChat": "There is no active session",
+    "exportSuccess": "Export successful",
+    "exportFailed": "Export failed: {error}"
+  },
+  "InstallLlamaServerModelPrompt": {
+    "installing": "Installing model environment",
+    "proxySettings": "Proxy Settings",
+    "proxyHelp": "Optional, used to speed up downloads. Format: http://proxy:port or socks5://proxyport",
+    "proxyPlaceholder": "Leave blank to not use a proxy",
+    "downloadAndInstall": "Download and Install",
+    "progress": "Progress {percent}%",
+    "downloadModel": "Download Model"
+  },
+  "AIReActChatReview": {
+    "autoExecuteSuffix": "will be executed automatically",
+    "error": "Error",
+    "toolCall": "Tool Call",
+    "userPrompt": "User Prompt",
+    "planReview": "Plan Review",
+    "taskReview": "Task Review",
+    "startApp": "Start App",
+    "params": "Parameters",
+    "summary": "Summary",
+    "details": "Details"
+  },
+  "AIReviewResult": {
+    "planReview": "Plan Review",
+    "taskReview": "Task Review",
+    "toolReview": "Tool Review",
+    "appReview": "App Review",
+    "userPrompt": "User Prompt",
+    "reviewDecision": "Review Decision",
+    "executeNow": "Execute Now",
+    "unknownAction": "Unknown Action"
+  },
   "AIFocusMode": {
     "focusMode": "Focus Mode",
     "focusModeTooltip": "Use a framework for complex scenarios and limit the AI's thinking scope",

@@ -20,14 +20,16 @@ import {
 } from "../utils"
 import {SolidCloudDownloadIcon} from "@/assets/newIcon"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export const InstallLlamaServerModelPrompt: React.FC<InstallLlamaServerModelPromptProps> = React.memo((props) => {
     const {onStart, token} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const startInstall = useMemoizedFn((value) => {
         grpcInstallLlamaServer({Proxy: value.proxy, token}).then(() => {
-            yakitNotify("success", "正在安装模型环境")
+            yakitNotify("success", t("InstallLlamaServerModelPrompt.installing"))
             onStart()
         })
     })
@@ -37,16 +39,16 @@ export const InstallLlamaServerModelPrompt: React.FC<InstallLlamaServerModelProm
             <div className={styles["install-llama-server-model-prompt"]}>
                 <Form onFinish={startInstall} layout='vertical'>
                     <Form.Item
-                        label='代理设置'
-                        help='非必填，用于下载加速，格式：http://proxy:port 或 socks5://proxyport'
+                        label={t("InstallLlamaServerModelPrompt.proxySettings")}
+                        help={t("InstallLlamaServerModelPrompt.proxyHelp")}
                         name='proxy'
                     >
-                        <YakitInput placeholder='留空则不使用代理' />
+                        <YakitInput placeholder={t("InstallLlamaServerModelPrompt.proxyPlaceholder")} />
                     </Form.Item>
 
                     <div className={styles["button-group"]}>
                         <YakitButton type='primary' htmlType='submit' size='large'>
-                            下载并安装
+                            {t("InstallLlamaServerModelPrompt.downloadAndInstall")}
                         </YakitButton>
                     </div>
                 </Form>
@@ -57,6 +59,7 @@ export const InstallLlamaServerModelPrompt: React.FC<InstallLlamaServerModelProm
 
 export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo((props) => {
     const {onFinished, onCancel, token, title, grpcInterface, getContainer} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const [percent, setPercent] = useState<number>(0)
     const [data, setData] = useState<string[]>([])
@@ -124,7 +127,11 @@ export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo(
             wrapClassName={styles["installLlamaServerModal"]}
         >
             <div className={styles["download-progress"]}>
-                <Progress trailColor='var(--Colors-Use-Neutral-Bg-Hover)' percent={percent} format={(p) => `进度 ${p}%`} />
+                <Progress
+                    trailColor='var(--Colors-Use-Neutral-Bg-Hover)'
+                    percent={percent}
+                    format={(p) => t("InstallLlamaServerModelPrompt.progress", {percent: p || 0})}
+                />
                 <div className={styles["download-progress-messages"]}>
                     {data.map((item, index) => (
                         <p key={item}>{item}</p>
@@ -137,10 +144,11 @@ export const InstallLlamaServer: React.FC<InstallLlamaServerProps> = React.memo(
 
 export const DownloadLlamaServerModelPrompt: React.FC<DownloadLlamaServerModelPromptProps> = React.memo((props) => {
     const {modelName, onStart, token} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const startDownload = useMemoizedFn((value) => {
         grpcDownloadLocalModel({ModelName: modelName, Proxy: value.proxy, token}).then(() => {
-            yakitNotify("success", "正在安装模型环境")
+            yakitNotify("success", t("InstallLlamaServerModelPrompt.installing"))
             onStart()
         })
     })
@@ -150,15 +158,15 @@ export const DownloadLlamaServerModelPrompt: React.FC<DownloadLlamaServerModelPr
             <Form onFinish={startDownload} size='small' layout='vertical'>
                 <Form.Item
                     name='proxy'
-                    label='代理设置'
-                    help='非必填，用于下载加速，格式：http://proxy:port 或 socks5://proxyport'
+                    label={t("InstallLlamaServerModelPrompt.proxySettings")}
+                    help={t("InstallLlamaServerModelPrompt.proxyHelp")}
                 >
-                    <YakitInput placeholder='留空则不使用代理' />
+                    <YakitInput placeholder={t("InstallLlamaServerModelPrompt.proxyPlaceholder")} />
                 </Form.Item>
 
                 <div className={styles["button-group"]}>
                     <YakitButton type='primary' htmlType='submit' size='large' style={{marginBottom: 8}}>
-                        开始下载模型
+                        {t("InstallLlamaServerModelPrompt.downloadModel")}
                     </YakitButton>
                 </div>
             </Form>

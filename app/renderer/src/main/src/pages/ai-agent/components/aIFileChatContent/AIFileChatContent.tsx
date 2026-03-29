@@ -20,6 +20,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import classNames from "classnames"
 import {FileToChatQuestionList} from "../../template/type"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface AIFileChatContentProps {
     qs: string
@@ -38,6 +39,7 @@ const getFileIcon = (data: FileToChatQuestionList) => {
 }
 /**@deprecated 废弃 由md编辑器代替 */
 const AIFileChatContent: FC<AIFileChatContentProps> = ({qs, setting, extraValue}) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const attachedFilePathList: FileToChatQuestionList[] = useCreation(() => {
         return isHaveFreeDialogFileList(extraValue)
     }, [extraValue?.["freeDialogFileList"]])
@@ -99,7 +101,7 @@ const AIFileChatContent: FC<AIFileChatContentProps> = ({qs, setting, extraValue}
             </div>
             {!!attachedFilePathList?.length && (
                 <div className={styles.file}>
-                    <div>相关操作文件</div>
+                    <div>{t("AIFileChatContent.relatedFiles")}</div>
                     <div className={styles["file-content"]}>
                         {attachedFilePathList.map((file) => {
                             return (
@@ -124,20 +126,20 @@ const AIFileChatContent: FC<AIFileChatContentProps> = ({qs, setting, extraValue}
             )}
             {!!selectForges?.length &&
                 renderList({
-                    title: "相关智能体",
+                    title: t("AIFileChatContent.relatedForges"),
                     list: selectForges,
                     type: "forge"
                 })}
 
             {!!selectTools?.length &&
                 renderList({
-                    title: "相关工具",
+                    title: t("AIFileChatContent.relatedTools"),
                     list: selectTools,
                     type: "tool"
                 })}
             {!!selectKnowledgeBases?.length && (
                 <div className={styles.file}>
-                    <div>相关知识库</div>
+                    <div>{t("AIFileChatContent.relatedKnowledgeBases")}</div>
 
                     <div className={styles["file-content"]}>
                         {selectKnowledgeBases.map((item) => {

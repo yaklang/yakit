@@ -26,6 +26,7 @@ import {OutlineHandleColorsIcon, ColorsOutlineWarpIcon} from "@/assets/icon/colo
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {AIReviewType} from "../../../ai-re-act/hooks/aiRender"
 import {AIForge} from "@/pages/ai-agent/type/forge"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {
@@ -37,6 +38,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         expand,
         className
     } = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {chatIPCData} = useChatIPCStore()
     const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
     const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
@@ -85,27 +87,27 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         const subTitle = !!countdown ? (
             <>
                 <span className={styles["ai-countdown"]}>{Math.round(countdown / 1000)}s</span>
-                <span>后将自动执行</span>
+                <span>{t("AIReActChatReview.autoExecuteSuffix")}</span>
             </>
         ) : (
             <></>
         )
-        let title = "异常错误"
+        let title = t("AIReActChatReview.error")
         switch (type) {
             case "tool_use_review_require":
-                title = "工具调用"
+                title = t("AIReActChatReview.toolCall")
                 break
             case "require_user_interactive":
-                title = "主动询问"
+                title = t("AIReActChatReview.userPrompt")
                 break
             case "plan_review_require":
-                title = "计划审阅"
+                title = t("AIReActChatReview.planReview")
                 break
             case "task_review_require":
-                title = "任务审阅"
+                title = t("AIReActChatReview.taskReview")
                 break
             case "exec_aiforge_review_require":
-                title = "启动智能应用"
+                title = t("AIReActChatReview.startApp")
                 break
             default:
                 break
@@ -128,9 +130,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 </div>
 
                 <div className={styles["tool-params"]}>
-                    <div className={styles["params-title"]}>
-                        <SolidVariableIcon /> 参数
-                    </div>
+                        <div className={styles["params-title"]}>
+                            <SolidVariableIcon /> {t("AIReActChatReview.params")}
+                        </div>
                     <div className={styles["params-content"]}>{paramsValue}</div>
                 </div>
             </div>
@@ -162,9 +164,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                     </div>
 
                     <div className={styles["task-summary"]}>
-                        <div className={styles["summary-header"]}>
-                            <SolidAnnotationIcon /> Summary
-                        </div>
+                            <div className={styles["summary-header"]}>
+                                <SolidAnnotationIcon /> {t("AIReActChatReview.summary")}
+                            </div>
                         <div className={styles["summary-content"]}>{short_summary}</div>
                         <div className={styles["summary-detail"]}>
                             <YakitPopover
@@ -172,13 +174,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                 content={
                                     <div className={styles["task-long-summary"]}>
                                         <div className={styles["summary-header"]}>
-                                            <SolidAnnotationIcon /> Summary
+                                            <SolidAnnotationIcon /> {t("AIReActChatReview.summary")}
                                         </div>
                                         <div className={styles["summary-content"]}>{long_summary}</div>
                                     </div>
                                 }
                             >
-                                <div className={styles["detail-style"]}>详细信息</div>
+                                <div className={styles["detail-style"]}>{t("AIReActChatReview.details")}</div>
                             </YakitPopover>
                         </div>
                     </div>

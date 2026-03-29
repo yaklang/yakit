@@ -35,6 +35,7 @@ import useAIAgentStore from "../useContext/useStore"
 import {useAIChatResizeBox} from "./hooks/useAIChatResizeBox"
 import {ExportAILogsModal} from "../components/ExportAILogsModal/ExportAILogsModal"
 import {failed, yakitNotify} from "@/utils/notification"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {
     AIHandleStartParams,
     AIHandleStartResProps,
@@ -47,6 +48,7 @@ import OperationLog from "../components/aiFileSystemList/OperationLog/OperationL
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {onChat, onChatFromHistory} = props
+        const {t} = useI18nNamespaces(["aiAgent"])
         const {chatIPCData} = useChatIPCStore()
         const {runTimeIDs: initRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute} = chatIPCData
         const {activeChat} = useAIAgentStore()
@@ -95,7 +97,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
         const onExportOk = useMemoizedFn(async (data: {types: string[]; outputPath: string}) => {
             if (!activeChat?.Id) {
-                failed("当前没有活跃的会话")
+                failed(t("AIChatContent.noActiveChat"))
                 return
             }
             setExportLoading(true)
@@ -111,10 +113,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                     },
                     true
                 )
-                yakitNotify("success", "导出成功")
+                yakitNotify("success", t("AIChatContent.exportSuccess"))
                 setExportModalVisible(false)
             } catch (error) {
-                failed(`导出失败: ${error}`)
+                failed(t("AIChatContent.exportFailed", {error: String(error)}))
             } finally {
                 setExportLoading(false)
             }

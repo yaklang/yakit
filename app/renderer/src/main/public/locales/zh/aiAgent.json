@@ -186,6 +186,109 @@
     "latencyMs": "延迟(ms)",
     "thresholdLine": "阈值分割线 ({value})"
   },
+  "AddAIModel": {
+    "aichat": "aichat",
+    "embedding": "embedding",
+    "modelName": "模型名称",
+    "enterModelName": "请输入模型名称",
+    "modelType": "模型类型",
+    "enterModelType": "请输入模型类型",
+    "filePath": "文件地址",
+    "enterFilePath": "请输入文件地址",
+    "modelDescription": "模型描述",
+    "cancel": "取消",
+    "confirm": "确定"
+  },
+  "AIChatListItem": {
+    "thinking": "思考：",
+    "toolCall": "工具调用",
+    "taskEnd": "任务结束标志",
+    "taskEndDesc": "当前任务已经结束，下面为新的任务数据"
+  },
+  "ToolInvokerCard": {
+    "skipConfirm": "跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过",
+    "success": "成功",
+    "failed": "失败",
+    "cancelled": "已取消"
+  },
+  "FileTreeSystemItem": {
+    "joinPathFailed": "路径拼接失败",
+    "createFailed": "创建失败",
+    "createSuccess": "创建成功",
+    "renameSame": "重命名相同",
+    "renameJoinPathFailed": "重命名路径拼接失败",
+    "renameFailed": "重命名失败",
+    "renameSuccess": "重命名成功",
+    "refresh": "刷新",
+    "sendToChat": "发送到自由对话",
+    "copyPath": "复制路径",
+    "showInFolder": "在文件夹中显示",
+    "remove": "移除"
+  },
+  "OperationCardFooter": {
+    "details": "详情",
+    "viewFile": "查看文件",
+    "viewDetails": "查看详情"
+  },
+  "OperationLog": {
+    "folder": "文件夹",
+    "nonFolder": "非文件夹"
+  },
+  "FilePreview": {
+    "fileSystem": "文件系统",
+    "chooseFile": "请在左侧选择文件",
+    "openFile": "打开文件",
+    "openFolder": "打开文件夹",
+    "recentOpen": "最近打开",
+    "loadFailed": "加载文件失败: {error}",
+    "binaryNotice": "此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。",
+    "openAnyway": "仍然打开",
+    "warningTitle": "文件警告",
+    "tooLarge": "文件过大，无法预览",
+    "gotIt": "知道了"
+  },
+  "AIFileChatContent": {
+    "relatedFiles": "相关操作文件",
+    "relatedForges": "相关智能体",
+    "relatedTools": "相关工具",
+    "relatedKnowledgeBases": "相关知识库"
+  },
+  "AIChatContent": {
+    "noActiveChat": "当前没有活跃的会话",
+    "exportSuccess": "导出成功",
+    "exportFailed": "导出失败: {error}"
+  },
+  "InstallLlamaServerModelPrompt": {
+    "installing": "正在安装模型环境",
+    "proxySettings": "代理设置",
+    "proxyHelp": "非必填，用于下载加速，格式：http://proxy:port 或 socks5://proxyport",
+    "proxyPlaceholder": "留空则不使用代理",
+    "downloadAndInstall": "下载并安装",
+    "progress": "进度 {percent}%",
+    "downloadModel": "开始下载模型"
+  },
+  "AIReActChatReview": {
+    "autoExecuteSuffix": "后将自动执行",
+    "error": "异常错误",
+    "toolCall": "工具调用",
+    "userPrompt": "主动询问",
+    "planReview": "计划审阅",
+    "taskReview": "任务审阅",
+    "startApp": "启动智能应用",
+    "params": "参数",
+    "summary": "Summary",
+    "details": "详细信息"
+  },
+  "AIReviewResult": {
+    "planReview": "计划审阅",
+    "taskReview": "任务审阅",
+    "toolReview": "工具审阅",
+    "appReview": "智能应用审阅",
+    "userPrompt": "主动询问",
+    "reviewDecision": "Review 决策",
+    "executeNow": "立即执行",
+    "unknownAction": "未知操作"
+  },
   "AIFocusMode": {
     "focusMode": "专注模式",
     "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围",
