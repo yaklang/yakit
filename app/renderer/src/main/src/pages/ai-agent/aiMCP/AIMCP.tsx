@@ -50,6 +50,9 @@ import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {SolidToolIcon} from "@/assets/icon/solid"
 import {yakitNotify} from "@/utils/notification"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "aiAgent")
 
 const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
     const [listType, setListType] = useState<"mcp" | "mcp-tool">("mcp")
@@ -95,7 +98,7 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
                 if (res.Enable) {
                     setMCPItem(res)
                 } else {
-                    yakitNotify("info", "请启用该mcp服务器后刷新工具列表")
+                    yakitNotify("info", t("AIMCP.enableServerRefreshTools"))
                 }
             })
             .finally(() =>
@@ -135,14 +138,14 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
         <div className={styles["ai-mcp-list-wrapper"]}>
             <div className={styles["ai-mcp-list-header"]}>
                 <div className={styles["ai-mcp-list-header-left"]}>
-                    <span>工具列表</span>
-                    <Tooltip title='Model Context Protocol(MCP)提供了标准化的Al模型上下文通信协议,支持SSE和WebSocket连接方式'>
+                    <span>{t("AIMCP.toolList")}</span>
+                    <Tooltip title={t("AIMCP.protocolInfo")}>
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </Tooltip>
                     <YakitRoundCornerTag>{toolLis.length}</YakitRoundCornerTag>
                 </div>
                 <YakitButton type='text' icon={<OutlineReplyIcon />} onClick={onBack}>
-                    返回
+                    {t("AIMCP.back")}
                 </YakitButton>
             </div>
             <div className={styles["ai-tool-list-container"]}>
@@ -166,7 +169,7 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
                         loading={false}
                     />
                 ) : (
-                    <YakitEmpty title='暂无数据' description='未启用,请启用后刷新工具列表'>
+                    <YakitEmpty title={t("AIMCP.noData")} description={t("AIMCP.disabledRefreshTools")}>
                         <div className={styles["ai-mcp-tool-empty-btns"]}>
                             <YakitButton
                                 type='outline1'
@@ -174,7 +177,7 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
                                 loading={loading}
                                 onClick={getMcpItem}
                             >
-                                刷新
+                                {t("AIMCP.refresh")}
                             </YakitButton>
                             <YakitButton
                                 type='primary'
@@ -182,7 +185,7 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
                                 loading={updateLoading}
                                 onClick={updateMCPServer}
                             >
-                                启用工具
+                                {t("AIMCP.enableTools")}
                             </YakitButton>
                         </div>
                     </YakitEmpty>
@@ -215,7 +218,7 @@ const AIMCPToolItemPopoverContent: React.FC<AIMCPToolItemPopoverContentProps> = 
             <div className={styles["ai-mcp-tool-popover-description"]}>{toolItem.Description}</div>
             {toolItem.Params.length > 0 ? (
                 <div className={styles["ai-mcp-tool-param-list-wrapper"]}>
-                    <div className={styles["list-heard"]}>参数介绍</div>
+                    <div className={styles["list-heard"]}>{t("AIMCP.paramIntro")}</div>
                     <div className={styles["ai-mcp-tool-param-list"]}>
                         {toolItem.Params.map((item) => {
                             return (
@@ -311,7 +314,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
     })
     const handleNewAIMCP = useMemoizedFn(() => {
         const m = showYakitModal({
-            title: "添加MCP Server",
+            title: t("AIMCP.addMcpServer"),
             width: 600,
             content: (
                 <AIMCPForm
@@ -340,8 +343,8 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
         <div className={styles["ai-mcp-list-wrapper"]} ref={mcpListRef}>
             <div className={styles["ai-mcp-list-header"]}>
                 <div className={styles["ai-mcp-list-header-left"]}>
-                    <span>MCP服务器配置</span>
-                    <Tooltip title='Model Context Protocol(MCP)提供了标准化的Al模型上下文通信协议,支持SSE和WebSocket连接方式'>
+                <span>{t("AIMCP.mcpServerConfig")}</span>
+                <Tooltip title={t("AIMCP.protocolInfo")}>
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </Tooltip>
                     <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
@@ -446,7 +449,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         if (item.Enable) return
         const defaultValues: UpdateMCPServerRequest = omit(item, ["Tools"])
         const m = showYakitModal({
-            title: "修改MCP",
+            title: t("AIMCP.editMcp"),
             width: "50%",
             content: (
                 <AIMCPForm
@@ -465,11 +468,11 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         const m = YakitModalConfirm({
             width: 420,
             type: "white",
-            onCancelText: "取消",
-            onOkText: "删除",
+            onCancelText: t("AIMCP.cancel"),
+            onOkText: t("AIMCP.delete"),
             okButtonProps: {colors: "danger"},
-            title: "删除MCP Server",
-            content: "确定删除该MCP Server吗?",
+            title: t("AIMCP.deleteMcpServer"),
+            content: t("AIMCP.deleteMcpServerConfirm"),
             onOk: () => {
                 grpcDeleteMCPServer({ID: item.ID}).then(() => {
                     onRefresh()
@@ -485,7 +488,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         let typeNode: ReactNode = <></>
         switch (item.Type) {
             case AIMCPServerTypeEnum.SSE:
-                desc = `地址: ${item.URL}`
+                desc = t("AIMCP.address", {url: item.URL})
                 typeNode = (
                     <YakitTag size='small' color='blue' className={styles["ai-mcp-type-tag"]}>
                         <OutlineGlobealtIcon className={styles["type-icon"]} />
@@ -495,7 +498,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                 break
 
             case AIMCPServerTypeEnum.Stdio:
-                desc = `命令: ${item.Command}`
+                desc = t("AIMCP.command", {command: item.Command})
                 typeNode = (
                     <YakitTag size='small' color='green' className={styles["ai-mcp-type-tag"]}>
                         <OutlineDesktopcomputerIcon className={styles["type-icon"]} />
@@ -516,12 +519,12 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         let menu: YakitMenuItemType[] = [
             {
                 key: "edit",
-                label: "编辑",
+                label: t("AIMCP.edit"),
                 itemIcon: <OutlinePencilaltIcon />
             },
             {
                 key: "delete",
-                label: "删除",
+                label: t("AIMCP.delete"),
                 type: "danger",
                 itemIcon: <OutlineTrashIcon />
             }
@@ -537,13 +540,13 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                     {!!item.ErrorMsg ? (
                         <Tooltip title={item.ErrorMsg}>
                             <YakitTag size='small' color='danger' fullRadius>
-                                工具获取失败
+                                {t("AIMCP.toolFetchFailed")}
                             </YakitTag>
                         </Tooltip>
                     ) : (
                         item.Tools.length > 0 && (
                             <YakitTag size='small' color='success' fullRadius>
-                                {item.Tools.length}个工具
+                                {t("AIMCP.toolCount", {count: item.Tools.length})}
                             </YakitTag>
                         )
                     )}
@@ -560,7 +563,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                     >
                         {item.Enable ? (
                             <YakitPopconfirm
-                                title={`确定要停用 ${item.Name} 吗？`}
+                                title={t("AIMCP.disableConfirm", {name: item.Name})}
                                 onConfirm={onStop}
                                 onCancel={() => setStopVisible(false)}
                                 visible={stopVisible}
@@ -569,12 +572,12 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                                 okButtonProps={{loading: stopLoading}}
                             >
                                 <YakitButton type='text' colors='danger' icon={<OutlineExitIcon />}>
-                                    停用
+                                    {t("AIMCP.disable")}
                                 </YakitButton>
                             </YakitPopconfirm>
                         ) : (
                             <YakitButton type='text' onClick={onStart} icon={<OutlinePlayIcon />}>
-                                启用
+                                {t("AIMCP.enable")}
                             </YakitButton>
                         )}
                         {!item.Enable && (
@@ -605,8 +608,8 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
 
             {/* {removeVisible && (
                 <AILocalModelListItemPromptHint
-                    title='删除模型'
-                    content={`确认删除模型${item.Name}吗？确认删除源文件则自定义添加的模型文件会被一起删除`}
+                    title={t("AIMCP.deleteModel")}
+                    content={t("AIMCP.deleteModelConfirm", {name: item.Name})}
                     onOk={onDelete}
                     onCancel={onCancelRemove}
                 />

@@ -10,6 +10,9 @@ import ReactECharts, {EChartsOption} from "echarts-for-react"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import classNames from "classnames"
 import ReactResizeDetector from "react-resize-detector"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "aiAgent")
 
 const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
     return [
@@ -64,7 +67,7 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
 
     return (
         <div className={styles["ai-memory-list-wrapper"]}>
-            <div className={styles["ai-memory-list-heard"]}>近期记忆({list.length})</div>
+                <div className={styles["ai-memory-list-heard"]}>{t("AIMemoryList.recentMemory", {count: list.length})}</div>
             <div className={styles["ai-memory-list-body-wrapper"]}>
                 <RollingLoadList<AIAgentGrpcApi.MemoryEntry>
                     data={list}
@@ -137,7 +140,7 @@ export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props
                 <div className={styles["heard-content"]}>{item.content}</div>
             </div>
             <div className={styles["memory-popover-score-wrapper"]}>
-                <div className={styles["title"]}>C.O.R.E. P.A.C.T. Scores（记忆特征）</div>
+                <div className={styles["title"]}>{t("AIMemoryList.scoreTitle")}</div>
                 <div className={styles["score-list"]}>
                     {getScoreList(item).map((score, index) => (
                         <div
@@ -158,7 +161,7 @@ export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props
                 </div>
             </div>
             <div className={styles["memory-popover-tags-wrapper"]}>
-                <div className={styles["title"]}>Tags</div>
+                <div className={styles["title"]}>{t("AIMemoryList.tags")}</div>
                 <div className={styles["memory-popover-tags-list"]}>
                     {item.tags.map((tag) => (
                         <YakitTag key={tag} fullRadius={true} border={false} className={styles["tag-item"]}>
@@ -168,7 +171,7 @@ export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props
                 </div>
             </div>
             <div className={styles["memory-popover-potential-questions"]}>
-                <div className={styles["title"]}>Potential Questions</div>
+                <div className={styles["title"]}>{t("AIMemoryList.potentialQuestions")}</div>
                 {item.potential_questions.map((ele) => (
                     <div className={styles["potential-questions-item"]} key={ele} title={ele}>
                         <span className={styles["label"]}>{ele}</span>

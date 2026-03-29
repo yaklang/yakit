@@ -13,6 +13,9 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "aiAgent")
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -105,10 +108,10 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({data, position, onClick}) =
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </YakitPopover>
                     {data.isLeaf && data.progress === "processing" && (
-                        <YakitPopconfirm
-                            title={"是否确认取消该子任务，取消后会按顺序执行下一个子任务?"}
-                            onConfirm={() => onCancelTask()}
-                        >
+                            <YakitPopconfirm
+                                title={t("AITree.cancelSubtaskConfirm")}
+                                onConfirm={() => onCancelTask()}
+                            >
                             <OutlineExitIcon />
                         </YakitPopconfirm>
                     )}

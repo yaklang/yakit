@@ -144,6 +144,7 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
 }
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     const {item, aiModelType, onSuccess, onClose} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -203,7 +204,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     const onOk = useMemoizedFn(() => {
         formRef.current?.form?.validateFields().then((res) => {
             if (!aiGlobalConfigRef.current) {
-                yakitNotify("error", "AI全局配置获取失败，请稍后再试")
+                yakitNotify("error", t("AIModelForm.globalConfigFailed"))
                 return
             }
 
@@ -248,7 +249,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         const index = newConfig[fileName].findIndex((i) => isEqualAIModel(i, newItem))
         if (index !== -1) {
             isShowSaveLoadingRef.current = true
-            yakitNotify("error", "已存在相同配置的AI模型，请勿重复添加")
+                yakitNotify("error", t("AIModelForm.duplicateModelConfig"))
             return
         }
         newConfig[fileName].push(newItem)
@@ -288,7 +289,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 const isHave = newConfig[fileName].find((i) => isEqualAIModel(i, newUpdateItem))
                 if (isHave) {
                     isShowSaveLoadingRef.current = true
-                    yakitNotify("error", "已存在相同配置的AI模型，请勿重复添加")
+                    yakitNotify("error", t("AIModelForm.duplicateModelConfig"))
                     return
                 }
                 // 修改了模型类型,需要先把原来模型从列表中删除,然后再新的列表末尾添加
@@ -304,7 +305,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             onSetAIGlobalConfig(newConfig, item)
         } catch (error) {
             isShowSaveLoadingRef.current = true
-            yakitNotify("error", `更新AI模型配置失败:${error}`)
+            yakitNotify("error", t("AIModelForm.updateConfigFailed", {error: String(error)}))
         }
     })
     const onSetAIGlobalConfig = useMemoizedFn((config: AIGlobalConfig, option: AIModelFormSetAIGlobalConfigOptions) => {
@@ -344,12 +345,12 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             const config = buildAIConfigHealthCheckConfig(res)
             grpcAIConfigHealthCheck({
                 Config: config,
-                Content: "你好,请简单回复'测试成功'"
+                Content: t("AIModelForm.testPrompt")
             })
                 .then((response) => {
                     const isSuccess = response.ResponseStatusCode === 200
                     if (isSuccess) {
-                        yakitNotify("success", "测试成功")
+                        yakitNotify("success", t("AIModelForm.testSuccess"))
                         isShowSaveLoadingRef.current = false
                         onOk()
                     } else {
@@ -381,7 +382,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 <>
                     <div ref={footerRef} />
                     <YakitButton size='large' type='outline2' onClick={onCheckAndSave} loading={testLoading}>
-                        测试并添加
+                        {t("AIModelForm.testAndAdd")}
                     </YakitButton>
                     <YakitButton
                         size='large'
@@ -390,7 +391,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                         loading={loading}
                         disabled={testLoading || !isShowSaveLoadingRef.current}
                     >
-                        确定添加
+                        {t("AIModelForm.confirmAdd")}
                     </YakitButton>
                 </>
             }
@@ -584,15 +585,15 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
                 help={
                     !!aiType ? (
                         <div style={{height: 30}}>
-                            如无法自动获取，请
+                            {t("AIModelForm.autoFetchHintPrefix")}
                             <YakitButton
                                 type='text'
                                 onClick={() => getOptions(aiType)}
                                 style={{padding: 0, fontSize: 14}}
                             >
-                                点击刷新
+                                {t("AIModelForm.refresh")}
                             </YakitButton>
-                            重新获取
+                            {t("AIModelForm.autoFetchHintSuffix")}
                         </div>
                     ) : undefined
                 }

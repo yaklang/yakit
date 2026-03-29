@@ -14,6 +14,9 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import {OutlineLoadingIcon} from "@/assets/icon/outline"
 import {AIChatLeft} from "../AIAgentChatTemplate"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "aiAgent")
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     const {data, handleTabChange} = props
@@ -84,7 +87,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     return (
         <div className={styles["history-task-tree-container"]} ref={historyContainerRef}>
             {data.records.length === 0 ? (
-                <YakitEmpty style={{marginTop: "20%"}} title='暂无历史任务' />
+                <YakitEmpty style={{marginTop: "20%"}} title={t("HistoryTaskTree.noHistoryTask")} />
             ) : (
                 <YakitCollapse
                     destroyInactivePanel
@@ -145,7 +148,7 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
     }, [isExecuting, currentCoordinatorId])
     return (
         <YakitPopconfirm
-            title={isExecuting ? "停掉当前正在执行的任务，恢复此任务" : "是否确认恢复该此任务"}
+            title={isExecuting ? t("HistoryTaskTree.stopCurrentTask") : t("HistoryTaskTree.restoreTaskConfirm")}
             onConfirm={(e) => {
                 e?.stopPropagation()
                 setVisible(false)
@@ -167,7 +170,7 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
                 loading={loading}
                 disabled={disabled}
             >
-                继续任务
+                {t("HistoryTaskTree.continueTask")}
             </YakitButton>
         </YakitPopconfirm>
     )
@@ -182,7 +185,7 @@ const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => 
     }, [item.created_at_unix])
     return (
         <div className={styles["tree-item"]}>
-            <div className={styles["time"]}>更新时间:{time}</div>
+            <div className={styles["time"]}>{t("HistoryTaskTree.updateTime", {time})}</div>
             <AITree tasks={item.task_tree} className={styles["tree-wrapper"]} />
         </div>
     )

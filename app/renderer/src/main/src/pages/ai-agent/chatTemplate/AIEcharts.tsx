@@ -7,6 +7,9 @@ import moment from "moment"
 import {formatNumberUnits} from "../utils"
 import EChartsReact from "echarts-for-react"
 import useGetColorsByTheme from "@/hook/useGetColorsByTheme"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "aiAgent")
 
 export interface AIEchartsDataKey {
     modelName: string
@@ -259,7 +262,7 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
         series: [
             {
                 ...seriesBase,
-                name: "高质模型",
+                name: t("AIEcharts.intelligentModel"),
                 xAxisIndex: 0,
                 data: intelligent.data.map((val, index) => {
                     if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
@@ -277,7 +280,7 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
             },
             {
                 ...seriesBase,
-                name: "轻量模型",
+                name: t("AIEcharts.lightweightModel"),
                 xAxisIndex: 1,
                 data: lightweight.data.map((val, index) => {
                     if (lightweight.lightweightIndex - 1 === index && val >= lightweight.maxValueLightweight) {
@@ -397,7 +400,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
                 color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
                 formatter: (v: number) => {
                     if (v >= max) {
-                        return "压力值"
+                        return t("AIEcharts.pressureValue")
                     }
                     return `${formatNumberUnits(v)}`
                 }
@@ -438,7 +441,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         series: [
             {
                 ...seriesBase,
-                name: "高质模型",
+                name: t("AIEcharts.intelligentModel"),
                 xAxisIndex: 0,
                 data: intelligent.data.map((val, index) => {
                     if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
@@ -458,7 +461,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
             },
             {
                 ...seriesBase,
-                name: "轻量模型",
+                name: t("AIEcharts.lightweightModel"),
                 xAxisIndex: 1,
                 data: lightweight.data.map((val, index) => {
                     if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {
@@ -477,7 +480,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
                 }) // 轻量
             },
             {
-                name: `阈值分割线 (${formatNumberUnits(threshold)})`,
+                name: t("AIEcharts.thresholdLine", {value: formatNumberUnits(threshold)}),
                 type: "line",
                 markLine: {
                     silent: true,
@@ -575,7 +578,7 @@ const getResponseSpeedOption = (
         series: [
             {
                 ...seriesBase,
-                name: "高质模型",
+                name: t("AIEcharts.intelligentModel"),
                 xAxisIndex: 0,
                 data: intelligent.data.map((val, index) => {
                     if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
@@ -604,7 +607,7 @@ const getResponseSpeedOption = (
             },
             {
                 ...seriesBase,
-                name: "轻量模型",
+                name: t("AIEcharts.lightweightModel"),
                 xAxisIndex: 1,
                 data: lightweight.data.map((val, index) => {
                     if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {
@@ -717,7 +720,7 @@ const getResponseSpeedDetailsOption = (
                 color: colors["--Colors-Use-Neutral-Text-3-Secondary"],
                 formatter: (v: number) => {
                     if (v >= max) {
-                        return "延迟(ms)"
+                        return t("AIEcharts.latencyMs")
                     }
                     return v
                 }
@@ -732,7 +735,7 @@ const getResponseSpeedDetailsOption = (
         series: [
             {
                 ...seriesBase,
-                name: "高质模型",
+                name: t("AIEcharts.intelligentModel"),
                 xAxisIndex: 0,
                 data: intelligent.data.map((val, index) => {
                     if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
@@ -759,7 +762,7 @@ const getResponseSpeedDetailsOption = (
             },
             {
                 ...seriesBase,
-                name: "轻量模型",
+                name: t("AIEcharts.lightweightModel"),
                 xAxisIndex: 1,
                 data: lightweight.data.map((val, index) => {
                     if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {
