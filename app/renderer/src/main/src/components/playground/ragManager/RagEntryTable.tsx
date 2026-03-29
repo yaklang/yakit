@@ -13,10 +13,12 @@ import {failed} from "@/utils/notification"
 import {RagEntryTableProps, VectorStoreEntry, Paging} from "./types"
 import styles from "./RagEntryTable.module.scss"
 import {OutlineSearchIcon, OutlineEyeIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection, onRefresh}) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [entries, setEntries] = useState<VectorStoreEntry[]>([])
     const [loading, setLoading] = useState(false)
     const [searchKeyword, setSearchKeyword] = useState("")
@@ -55,7 +57,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
                 setTotal(0)
             }
         } catch (error) {
-            failed(`获取向量存储条目失败: ${error}`)
+            failed(t("RagEntryTable.fetchFailed", {error: String(error)}))
             setEntries([])
             setTotal(0)
         } finally {
@@ -86,7 +88,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
                 })
                 setEntryDocument(response.Document || null)
             } catch (error) {
-                failed(`获取文档内容失败: ${error}`)
+                failed(t("RagEntryTable.fetchDocumentFailed", {error: String(error)}))
                 setEntryDocument(null)
             }
         }
@@ -101,13 +103,13 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
 
     const columns: ColumnsTypeProps[] = [
         {
-            title: "ID",
+            title: t("RagEntryTable.id"),
             dataKey: "ID",
             width: 100,
             render: (text, item: VectorStoreEntry) => <div className={styles["id-cell"]}>{item.ID}</div>
         },
         {
-            title: "UID",
+            title: t("RagEntryTable.uid"),
             dataKey: "UID",
             width: 120,
             render: (text, item: VectorStoreEntry) => (
@@ -115,7 +117,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
             )
         },
         {
-            title: "内容预览",
+            title: t("RagEntryTable.contentPreview"),
             dataKey: "Content",
             width: 300,
             render: (text, item: VectorStoreEntry) => (
@@ -125,7 +127,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
             )
         },
         {
-            title: "元数据",
+            title: t("RagEntryTable.metadata"),
             dataKey: "Metadata",
             width: 200,
             render: (text, item: VectorStoreEntry) => (
@@ -138,13 +140,13 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
                             </YakitTag>
                         </div>
                     ) : (
-                        <span className={styles["no-metadata"]}>无元数据</span>
+                        <span className={styles["no-metadata"]}>{t("RagEntryTable.noMetadata")}</span>
                     )}
                 </div>
             )
         },
         {
-            title: "向量维度",
+            title: t("RagEntryTable.vectorDimension"),
             dataKey: "VectorDimension",
             width: 100,
             render: (text, item: VectorStoreEntry) => (
@@ -152,13 +154,13 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
             )
         },
         {
-            title: "创建时间",
+            title: t("RagEntryTable.createdAt"),
             dataKey: "CreatedAt",
             width: 150,
             render: (text, item: VectorStoreEntry) => <div className={styles["time-cell"]}>-</div>
         },
         {
-            title: "操作",
+            title: t("RagEntryTable.actions"),
             dataKey: "actions",
             width: 100,
             fixed: "right",
@@ -169,7 +171,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
                         size='small'
                         icon={<OutlineEyeIcon />}
                         onClick={() => handleViewDetail(item)}
-                        title='查看详情'
+                        title={t("RagEntryTable.viewDetail")}
                     />
                 </Space>
             )
@@ -179,8 +181,8 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
     if (!selectedCollection) {
         return (
             <div className={styles["rag-entry-table"]}>
-                <AutoCard title='RAG 向量条目' bodyStyle={{padding: 24}}>
-                    <YakitEmpty description='请先选择一个向量存储集合' />
+                <AutoCard title={t("RagEntryTable.title")} bodyStyle={{padding: 24}}>
+                    <YakitEmpty description={t("RagEntryTable.selectCollectionFirst")} />
                 </AutoCard>
             </div>
         )
@@ -189,13 +191,13 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
     return (
         <div className={styles["rag-entry-table"]}>
             <AutoCard
-                title={`RAG 向量条目 - ${selectedCollection.Name}`}
+                title={t("RagEntryTable.titleWithCollection", {name: selectedCollection.Name})}
                 size='small'
                 bodyStyle={{padding: 0}}
                 extra={
                     <Space>
                         <YakitInput.Search
-                            placeholder='搜索条目内容...'
+                            placeholder={t("RagEntryTable.searchPlaceholder")}
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             onSearch={handleSearch}
@@ -203,7 +205,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
                             size='small'
                             suffix={<OutlineSearchIcon />}
                         />
-                        <YakitTag color='blue'>共 {selectedCollection.VectorCount} 条</YakitTag>
+                        <YakitTag color='blue'>{t("RagEntryTable.totalCount", {count: selectedCollection.VectorCount || 0})}</YakitTag>
                     </Space>
                 }
             >
@@ -230,12 +232,12 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
 
             {/* 条目详情弹窗 */}
             <YakitModal
-                title='向量存储条目详情'
+                title={t("RagEntryTable.detailTitle")}
                 visible={detailModalVisible}
                 onCancel={handleCloseDetail}
                 footer={[
                     <YakitButton key='close' onClick={handleCloseDetail}>
-                        关闭
+                        {t("RagEntryTable.close")}
                     </YakitButton>
                 ]}
                 width={900}
@@ -244,36 +246,36 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
                 {selectedEntryDetail && (
                     <div className={styles["entry-detail"]}>
                         <div className={styles["detail-section"]}>
-                            <h4>基本信息</h4>
+                            <h4>{t("RagEntryTable.basicInfo")}</h4>
                             <div className={styles["detail-grid"]}>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>条目ID:</span>
+                                    <span className={styles["label"]}>{t("RagEntryTable.entryId")}:</span>
                                     <span className={styles["value"]}>{selectedEntryDetail.ID}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>UID:</span>
-                                    <span className={styles["value"]}>{selectedEntryDetail.UID || "无"}</span>
+                                    <span className={styles["label"]}>{t("RagEntryTable.uid")}:</span>
+                                    <span className={styles["value"]}>{selectedEntryDetail.UID || t("RagEntryTable.none")}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>集合ID:</span>
+                                    <span className={styles["label"]}>{t("RagEntryTable.collectionId")}:</span>
                                     <span className={styles["value"]}>{selectedCollection?.ID}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>向量维度:</span>
+                                    <span className={styles["label"]}>{t("RagEntryTable.vectorDimension")}:</span>
                                     <span className={styles["value"]}>
                                         {selectedEntryDetail.Embedding ? selectedEntryDetail.Embedding.length : 0}
                                     </span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>内容长度:</span>
+                                    <span className={styles["label"]}>{t("RagEntryTable.contentLength")}:</span>
                                     <span className={styles["value"]}>
-                                        {selectedEntryDetail.Content ? selectedEntryDetail.Content.length : 0} 字符
+                                        {selectedEntryDetail.Content ? selectedEntryDetail.Content.length : 0} {t("RagEntryTable.characters")}
                                     </span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>元数据长度:</span>
+                                    <span className={styles["label"]}>{t("RagEntryTable.metadataLength")}:</span>
                                     <span className={styles["value"]}>
-                                        {selectedEntryDetail.Metadata ? selectedEntryDetail.Metadata.length : 0} 字符
+                                        {selectedEntryDetail.Metadata ? selectedEntryDetail.Metadata.length : 0} {t("RagEntryTable.characters")}
                                     </span>
                                 </div>
                             </div>
@@ -281,56 +283,56 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
 
                         {selectedEntryDetail.Content && (
                             <div className={styles["detail-section"]}>
-                                <h4>内容预览</h4>
+                                <h4>{t("RagEntryTable.contentPreview")}</h4>
                                 <div className={styles["content-display"]}>{selectedEntryDetail.Content}</div>
                             </div>
                         )}
 
                         {entryDocument && (
                             <div className={styles["detail-section"]}>
-                                <h4>关联知识库条目</h4>
+                                <h4>{t("RagEntryTable.relatedKnowledgeEntry")}</h4>
                                 <div className={styles["document-display"]}>
                                     {entryDocument.KnowledgeTitle && (
                                         <div>
-                                            <strong>标题:</strong> {entryDocument.KnowledgeTitle}
+                                            <strong>{t("RagEntryTable.titleLabel")}:</strong> {entryDocument.KnowledgeTitle}
                                         </div>
                                     )}
                                     {entryDocument.KnowledgeType && (
                                         <div>
-                                            <strong>类型:</strong> {entryDocument.KnowledgeType}
+                                            <strong>{t("RagEntryTable.typeLabel")}:</strong> {entryDocument.KnowledgeType}
                                         </div>
                                     )}
                                     {entryDocument.Summary && (
                                         <div>
-                                            <strong>摘要:</strong> {entryDocument.Summary}
+                                            <strong>{t("RagEntryTable.summaryLabel")}:</strong> {entryDocument.Summary}
                                         </div>
                                     )}
                                     {entryDocument.KnowledgeDetails && (
                                         <div>
-                                            <strong>详细内容:</strong>
+                                            <strong>{t("RagEntryTable.detailsLabel")}:</strong>
                                             <br />
                                             {entryDocument.KnowledgeDetails}
                                         </div>
                                     )}
                                     {entryDocument.Keywords && entryDocument.Keywords.length > 0 && (
                                         <div>
-                                            <strong>关键词:</strong> {entryDocument.Keywords.join(", ")}
+                                            <strong>{t("RagEntryTable.keywordsLabel")}:</strong> {entryDocument.Keywords.join(", ")}
                                         </div>
                                     )}
                                     {entryDocument.ImportanceScore !== undefined && (
                                         <div>
-                                            <strong>重要度:</strong> {entryDocument.ImportanceScore}
+                                            <strong>{t("RagEntryTable.importanceLabel")}:</strong> {entryDocument.ImportanceScore}
                                         </div>
                                     )}
                                     {entryDocument.SourcePage && (
                                         <div>
-                                            <strong>源页码:</strong> {entryDocument.SourcePage}
+                                            <strong>{t("RagEntryTable.sourcePageLabel")}:</strong> {entryDocument.SourcePage}
                                         </div>
                                     )}
                                     {entryDocument.PotentialQuestions &&
                                         entryDocument.PotentialQuestions.length > 0 && (
                                             <div>
-                                                <strong>潜在问题:</strong> {entryDocument.PotentialQuestions.join("; ")}
+                                                <strong>{t("RagEntryTable.potentialQuestionsLabel")}:</strong> {entryDocument.PotentialQuestions.join("; ")}
                                             </div>
                                         )}
                                 </div>
@@ -339,7 +341,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
 
                         {selectedEntryDetail.Metadata && (
                             <div className={styles["detail-section"]}>
-                                <h4>元数据</h4>
+                                <h4>{t("RagEntryTable.metadata")}</h4>
                                 <div className={styles["metadata-display"]}>
                                     <div className={styles["metadata-item"]}>
                                         <span className={styles["metadata-value"]}>{selectedEntryDetail.Metadata}</span>
@@ -350,7 +352,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
 
                         {selectedEntryDetail.Embedding && selectedEntryDetail.Embedding.length > 0 && (
                             <div className={styles["detail-section"]}>
-                                <h4>向量数据 (前20维)</h4>
+                                <h4>{t("RagEntryTable.vectorDataFirst20")}</h4>
                                 <div className={styles["vector-display"]}>
                                     {selectedEntryDetail.Embedding.slice(0, 20).map((value, index) => (
                                         <YakitTag key={index} size='small'>
@@ -359,7 +361,7 @@ export const RagEntryTable: React.FC<RagEntryTableProps> = ({selectedCollection,
                                     ))}
                                     {selectedEntryDetail.Embedding.length > 20 && (
                                         <YakitTag size='small' color='blue'>
-                                            ... 还有 {selectedEntryDetail.Embedding.length - 20} 维
+                                            {t("RagEntryTable.moreDimensions", {count: selectedEntryDetail.Embedding.length - 20})}
                                         </YakitTag>
                                     )}
                                 </div>
