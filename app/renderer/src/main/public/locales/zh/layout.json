@@ -489,6 +489,22 @@
     "exitTempProjectContent": "确认退出后，临时项目所有数据都不会保存，包括流量数据、端口数据、域名数据和漏洞数据等。",
     "exportBeforeExit": "退出前可在设置-项目管理中导出数据"
   },
+  "EngineLog": {
+    "welcome": "欢迎使用 {edition}!",
+    "connectionLog": "连接日志"
+  },
+  "AllKillEngineConfirm": {
+    "title": "更新引擎，需关闭所有本地进程",
+    "content": "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。",
+    "fetchPortError": "获取连接引擎端口错误：{error}",
+    "fetchProcessError": "获取引擎进程失败：{error}",
+    "noProcess": "未识别到已启动的引擎进程",
+    "killProcessFailed": "引擎进程(pid:{pid},port:{port})关闭失败 {error}",
+    "killProcessInfo": "关闭引擎进程：{pid}",
+    "closing": "进程关闭中，请稍等 ...",
+    "closeNow": "立即关闭",
+    "later": "稍后再说"
+  },
   "UIOpSetting": {
     "remoteModeCannotModify": "远程控制中，暂无法修改",
     "configPrivateDomain": "配置私有域",

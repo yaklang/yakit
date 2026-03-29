@@ -5,6 +5,7 @@ import {yakProcess} from "./PerformanceDisplay"
 import {useTemporaryProjectStore} from "@/store/temporaryProject"
 import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {OutlineLoadingIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./AllKillEngineConfirm.module.scss"
 
@@ -20,9 +21,10 @@ export interface AllKillEngineConfirmProps {
 }
 /** 更新引擎-确认二次弹窗和kill操作 */
 export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["layout"])
     const {
-        title = "更新引擎，需关闭所有本地进程",
-        content = "关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。",
+        title = t("AllKillEngineConfirm.title"),
+        content = t("AllKillEngineConfirm.content"),
         visible,
         setVisible,
         onSuccess,
@@ -51,7 +53,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
                 if (+hosts[1]) setCurrentPort(+hosts[1] || 0)
             })
             .catch((e) => {
-                failed(`获取连接引擎端口错误 ${e}`)
+                failed(t("AllKillEngineConfirm.fetchPortError", {error: e}))
             })
             .finally(() => {
                 ipcRenderer
@@ -70,7 +72,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
                         )
                     })
                     .catch((e) => {
-                        failed(`PS | GREP yak failed ${e}`)
+                        failed(t("AllKillEngineConfirm.fetchProcessError", {error: e}))
                     })
                     .finally(() => {
                         setTimeout(() => {
@@ -82,7 +84,7 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
 
     const onExecute = useMemoizedFn(async () => {
         if (process.length === 0) {
-            warn("未识别到已启动的引擎进程")
+            warn(t("AllKillEngineConfirm.noProcess"))
             onLoadingToFalse()
             return
         }
@@ -98,11 +100,11 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
                     killFlag = await ipcRenderer.invoke("kill-yak-grpc", i.pid)
                 } catch (error) {}
                 if (!!killFlag) {
-                    failed(`引擎进程(pid:${i.pid},port:${i.port})关闭失败 ${killFlag}`)
+                    failed(t("AllKillEngineConfirm.killProcessFailed", {pid: i.pid, port: i.port, error: killFlag}))
                     onLoadingToFalse()
                     return
                 } else {
-                    info(`KILL yak PROCESS: ${i.pid}`)
+                    info(t("AllKillEngineConfirm.killProcessInfo", {pid: i.pid}))
                 }
             }
         }
@@ -112,11 +114,17 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
                 killFlag = await ipcRenderer.invoke("kill-yak-grpc", currentPS.pid)
             } catch (error) {}
             if (!!killFlag) {
-                failed(`引擎进程(pid:${currentPS.pid},port:${currentPS.port})关闭失败 ${killFlag}`)
+                failed(
+                    t("AllKillEngineConfirm.killProcessFailed", {
+                        pid: currentPS.pid,
+                        port: currentPS.port,
+                        error: killFlag
+                    })
+                )
                 onLoadingToFalse()
                 return
             }
-            info(`KILL yak PROCESS: ${currentPS.pid}`)
+            info(t("AllKillEngineConfirm.killProcessInfo", {pid: currentPS.pid}))
         }
 
         onSuccess()
@@ -143,12 +151,12 @@ export const AllKillEngineConfirm: React.FC<AllKillEngineConfirmProps> = React.m
         <YakitHint
             visible={visible}
             heardIcon={loading ? <OutlineLoadingIcon className={styles["icon-rotate-animation"]} /> : undefined}
-            title={loading ? "进程关闭中，请稍等 ..." : title}
+            title={loading ? t("AllKillEngineConfirm.closing") : title}
             content={content}
-            okButtonText='立即关闭'
+            okButtonText={t("AllKillEngineConfirm.closeNow")}
             okButtonProps={{loading: loading}}
             onOk={onOK}
-            cancelButtonText='稍后再说'
+            cancelButtonText={t("AllKillEngineConfirm.later")}
             cancelButtonProps={{loading: loading}}
             onCancel={onCancel}
         />

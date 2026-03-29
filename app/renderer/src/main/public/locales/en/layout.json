@@ -489,6 +489,22 @@
     "exitTempProjectContent": "After confirming, all temporary project data will not be saved, including traffic, port, domain, and vulnerability data.",
     "exportBeforeExit": "You can export data in Settings > Project Management before exiting"
   },
+  "EngineLog": {
+    "welcome": "Welcome to {edition}!",
+    "connectionLog": "Connection Log"
+  },
+  "AllKillEngineConfirm": {
+    "title": "Update engine: all local processes must be closed",
+    "content": "Closing all engines, including the connected local engine process, will switch the page to the loading screen.",
+    "fetchPortError": "Failed to get connected engine port: {error}",
+    "fetchProcessError": "Failed to fetch engine processes: {error}",
+    "noProcess": "No running engine process was detected",
+    "killProcessFailed": "Failed to close engine process (pid: {pid}, port: {port}): {error}",
+    "killProcessInfo": "Killing engine process: {pid}",
+    "closing": "Closing processes, please wait...",
+    "closeNow": "Close now",
+    "later": "Maybe later"
+  },
   "UIOpSetting": {
     "remoteModeCannotModify": "Cannot modify in remote control",
     "configPrivateDomain": "Configure Private Domain",
