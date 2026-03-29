@@ -1,13 +1,17 @@
 import React from "react"
 import {YakitButton, YakitButtonProp} from "../../yakitUI/YakitButton/YakitButton"
 import {PlusIcon, TrashIcon} from "@/assets/newIcon"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 // import {SolidArrownarrowdownIcon, SolidArrownarrowupIcon} from "@/assets/icon/solid"
 
-const AddButton: React.FC<YakitButtonProp> = (props) => (
-    <YakitButton {...props} type="outline1" icon={<PlusIcon />}>
-        添加
-    </YakitButton>
-)
+const AddButton: React.FC<YakitButtonProp> = (props) => {
+    const {t} = useI18nNamespaces(["layout"])
+    return (
+        <YakitButton {...props} type="outline1" icon={<PlusIcon />}>
+            {t("ArrayFieldTemplate.add")}
+        </YakitButton>
+    )
+}
 
 const ArrayFieldTemplate: React.FC<any> = (props: any) => {
     return <DefaultNormalArrayFieldTemplate {...props} />

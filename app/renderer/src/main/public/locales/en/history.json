@@ -154,6 +154,12 @@
     "batchDeletion": "Batch Deletion",
     "deduplicate": "Deduplicate"
   },
+  "HTTPFlowRiskViewer": {
+    "details": "Details"
+  },
+  "HistoryAIReActChat": {
+    "newChat": "New Chat"
+  },
   "HTTPFlowMiniTable": {
     "id": "ID",
     "method": "Method",
@@ -197,6 +203,7 @@
     "collapseRight": "Collapse Right",
     "previousRule": "Previous Rule",
     "nextRule": "Next Rule",
+    "rootDomains": "Root Domains",
     "domain": "Domain",
     "object": "Object",
     "rule": "Rule",

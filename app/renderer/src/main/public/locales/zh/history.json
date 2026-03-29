@@ -155,6 +155,12 @@
     "batchDeletion": "批量删除",
     "deduplicate": "去重"
   },
+  "HTTPFlowRiskViewer": {
+    "details": "详情"
+  },
+  "HistoryAIReActChat": {
+    "newChat": "新建对话"
+  },
   "HTTPFlowMiniTable": {
     "id": "ID",
     "method": "方法",
@@ -198,6 +204,7 @@
     "collapseRight": "向右收起",
     "previousRule": "上一个规则",
     "nextRule": "下一个规则",
+    "rootDomains": "根域",
     "domain": "域名",
     "object": "对象",
     "rule": "规则",

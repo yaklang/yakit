@@ -67,7 +67,8 @@
     "localPlugin": "本地插件"
   },
   "PluginHasParamsDrawer": {
-    "parameter_Settings": "参数设置{colon}"
+    "parameter_Settings": "参数设置{colon}",
+    "jsonSchemaValidateFailed": "jsonSchema校验失败"
   },
   "PluginEditor": {
     "newPlugin": "新建插件",

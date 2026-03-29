@@ -489,6 +489,32 @@
     "delete": "Delete",
     "addRow": "Add a row"
   },
+  "ArrayFieldTemplate": {
+    "add": "Add"
+  },
+  "FilterPanel": {
+    "advancedFilter": "Advanced Filter",
+    "collapseFilter": "Collapse Filter",
+    "clear": "Clear",
+    "noMore": "No more results",
+    "noData": "No data"
+  },
+  "ContentUploadTextArea": {
+    "dragTxt": "You can drag TXT files here or",
+    "dragTxtExcel": "You can drag TXT or Excel files here or",
+    "clickHere": "click here",
+    "upload": "upload"
+  },
+  "JsonFormWrapper": {
+    "folderHelp": "You can drag a folder here or click here"
+  },
+  "ShowInBrowser": {
+    "buildParamsFailed": "Failed to show Response: failed to build parameters, make sure HTTPFlow or HTTPResponse Uint8Array was passed",
+    "confirmOpenTitle": "Confirm opening in browser",
+    "infoMessage": "This will start a local server on a high port, set the Response to preview the page rendering, and no proxy is required.",
+    "confirmOpen": "Open",
+    "showResponseFailed": "Failed to show Response: {error}"
+  },
   "YakitWindow": {
     "dockPosition": "Dock position",
     "floatWindow": "Float window",

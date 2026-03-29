@@ -10,6 +10,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {Tooltip} from "antd"
 import {OutlineCloseIcon} from "@/assets/icon/outline"
 import {API} from "@/services/swagger/resposeType"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import styles from "./FilterPanel.module.scss"
 import classNames from "classnames"
@@ -28,6 +29,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
         noDataHint,
         listClassName
     } = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const [activeKey, setActiveKey] = useState<string[]>([])
     const groupListStrRef = useRef<string>("[]")
@@ -64,8 +66,8 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
         <div className={classNames(styles["filter-panel-wrapper"], wrapperClassName || "")}>
             <div className={styles["filter-panel-container"]}>
                 <div className={styles["panel-header"]}>
-                    <span className={styles["header-title"]}>高级筛选</span>
-                    <Tooltip title='收起筛选' placement='top' overlayClassName='plugins-tooltip'>
+                    <span className={styles["header-title"]}>{t("FilterPanel.advancedFilter")}</span>
+                    <Tooltip title={t("FilterPanel.collapseFilter")} placement='top' overlayClassName='plugins-tooltip'>
                         <YakitButton
                             type='text2'
                             onClick={onClose}
@@ -97,7 +99,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                                                         onClear(item.groupKey)
                                                     }}
                                                 >
-                                                    清空
+                                                    {t("FilterPanel.clear")}
                                                 </YakitButton>
                                             </>
                                         }
@@ -138,9 +140,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = React.memo((props) => {
                                     </YakitPanel>
                                 ))}
                             </YakitCollapse>
-                            {groupList.length > 0 && <div className={styles["to-end"]}>已经到底啦～</div>}
+                            {groupList.length > 0 && <div className={styles["to-end"]}>{t("FilterPanel.noMore")}</div>}
                             {groupList.length === 0 && (
-                                <YakitEmpty style={{paddingTop: 48}} title={noDataHint || "暂无数据"} />
+                                <YakitEmpty style={{paddingTop: 48}} title={noDataHint || t("FilterPanel.noData")} />
                             )}
                         </div>
                     </YakitSpin>

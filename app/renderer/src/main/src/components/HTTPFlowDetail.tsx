@@ -1102,9 +1102,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                         switch (infoType) {
                                                             case "domains":
                                                                 return (
-                                                                    "# 根域 (Root-Domains)\r\n" +
+                                                                    `# ${t("HTTPFlowDetailMini.rootDomains")} (Root-Domains)\r\n` +
                                                                     (flow?.RootDomains || []).join("\r\n") +
-                                                                    "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                                    `\r\n\r\n# ${t("HTTPFlowDetailMini.domain")} (Domain) \r\n` +
                                                                     (flow?.Domains || []).join("\r\n")
                                                                 )
                                                             case "json":
