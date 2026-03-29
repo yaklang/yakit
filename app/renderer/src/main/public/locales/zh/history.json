@@ -155,6 +155,17 @@
     "batchDeletion": "批量删除",
     "deduplicate": "去重"
   },
+  "HTTPFlowMiniTable": {
+    "id": "ID",
+    "method": "方法",
+    "status": "状态",
+    "bodyLength": "Body大小",
+    "actions": "操作",
+    "details": "详情",
+    "getParams": "Get 参数",
+    "postParams": "Post 参数",
+    "sendToWebFuzzer": "发送到Fuzzer"
+  },
   "RandomChunkedDataTable": {
     "chunkDetails": "分块详情",
     "content": "内容",

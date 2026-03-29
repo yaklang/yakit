@@ -154,6 +154,17 @@
     "batchDeletion": "Batch Deletion",
     "deduplicate": "Deduplicate"
   },
+  "HTTPFlowMiniTable": {
+    "id": "ID",
+    "method": "Method",
+    "status": "Status",
+    "bodyLength": "Body Length",
+    "actions": "Actions",
+    "details": "Details",
+    "getParams": "GET Params",
+    "postParams": "POST Params",
+    "sendToWebFuzzer": "Send to Web Fuzzer"
+  },
   "RandomChunkedDataTable": {
     "chunkDetails": "Chunk Details",
     "content": "Content",

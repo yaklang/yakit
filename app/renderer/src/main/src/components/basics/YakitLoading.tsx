@@ -79,26 +79,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     const {t} = useI18nNamespaces(["layout"])
 
     const [form] = Form.useForm()
-    const loadingTitles = [
-        t("YakitLoading.slogan1"),
-        t("YakitLoading.slogan2"),
-        t("YakitLoading.slogan3"),
-        t("YakitLoading.slogan4"),
-        t("YakitLoading.slogan5"),
-        t("YakitLoading.slogan6"),
-        t("YakitLoading.slogan7"),
-        t("YakitLoading.slogan8", {edition: getReleaseEditionName()}),
-        t("YakitLoading.slogan9", {edition: getReleaseEditionName()}),
-        t("YakitLoading.slogan10", {edition: getReleaseEditionName()}),
-        t("YakitLoading.slogan11", {edition: getReleaseEditionName()}),
-        t("YakitLoading.slogan12"),
-        t("YakitLoading.slogan13", {edition: getReleaseEditionName()}),
-        t("YakitLoading.slogan14"),
-        t("YakitLoading.slogan15", {edition: getReleaseEditionName()}),
-        t("YakitLoading.slogan16"),
-        t("YakitLoading.slogan17", {edition: getReleaseEditionName()}),
-        t("YakitLoading.slogan18")
-    ]
+    const loadingTitles = useMemo(
+        () =>
+            (((t("YakitLoading.slogans", {returnObjects: true}) as unknown) as string[]) || []).map((item) =>
+                item.replaceAll("{edition}", getReleaseEditionName())
+            ),
+        [t]
+    )
 
     const changePortBtn = () => {
         return (
@@ -337,7 +324,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     /** Title */
     const Title = useMemo(
             () => (yakitStatus === "control-remote" ? t("YakitLoading.remoteControlling") : t("YakitLoading.welcome", {edition: getReleaseEditionName()})),
-        [yakitStatus]
+        [yakitStatus, t]
     )
 
     const primaryBg = useMemo(() => {
@@ -362,7 +349,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <div className={styles["body-content"]} style={{backgroundImage: primaryBg}}>
                     <div className={styles["yakit-loading-title"]}>
                         <div className={styles["title-style"]}>{Title}</div>
-                        {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitles[Math.floor(Math.random() * loadingTitles.length)]}</div>}
+                        {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>}
                     </div>
 
                     {/* 社区版 - 启动Logo */}
@@ -371,7 +358,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             {isIRify() ? (
                                 <div className={styles["yakit-loading-icon-wrapper"]}>
                                     <div className={styles["white-icon"]}>
-                                        <img src={yakitSS} alt='暂无图片' />
+                                        <img src={yakitSS} alt={t("YakitLoading.noImage")} />
                                     </div>
                                 </div>
                             ) : (
@@ -394,13 +381,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                             {isIRify() ? (
                                 <div className={styles["yakit-loading-icon-wrapper"]}>
                                     <div className={styles["white-icon"]}>
-                                        <img src={yakitSS} alt='暂无图片' />
+                                        <img src={yakitSS} alt={t("YakitLoading.noImage")} />
                                     </div>
                                 </div>
                             ) : (
                                 <div className={styles["yakit-loading-icon-wrapper"]}>
                                     <div className={styles["white-icon"]}>
-                                        <img src={yakitEE} alt='暂无图片' />
+                                        <img src={yakitEE} alt={t("YakitLoading.noImage")} />
                                     </div>
                                 </div>
                             )}
@@ -410,7 +397,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     {isEnpriTraceAgent() && (
                         <div className={styles["yakit-loading-icon-wrapper"]}>
                             <div className={styles["white-icon"]}>
-                                <img src={yakitSE} alt='暂无图片' />
+                                <img src={yakitSE} alt={t("YakitLoading.noImage")} />
                             </div>
                         </div>
                     )}

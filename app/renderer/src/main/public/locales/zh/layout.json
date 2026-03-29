@@ -428,6 +428,27 @@
     "confirm": "确定"
   },
   "YakitLoading": {
+    "slogans": [
+      "没有困难的工作，只有勇敢的打工人。",
+      "打工累吗？累！但我不能哭，因为骑电动车擦眼泪不安全。",
+      "打工不仅能致富，还能交友娶媳妇",
+      "今天搬砖不狠，明天地位不稳",
+      "打工可能会少活十年，不打工你一天也活不下去。",
+      "有人相爱，有人夜里看海，有人七八个闹钟起不来，早安打工人!",
+      "打工人，打工魂，打工人是人上人",
+      "用了{edition}，你就不必再卷了！",
+      "不用{edition}，卷王就是别人的了",
+      "来用{edition}啦？安全圈还是你最成功",
+      "这届网安人，人手一个{edition}，香惨了！",
+      "webfuzzer时根目录插入字典，会有意想不到的收获 ——是果实菌啊",
+      "{edition}写监听参数时不必写socks的版本号 ——是果实菌啊",
+      "使用热标签，可以中间处理des aes等加密，无需再碰py ——是果实菌啊",
+      "{edition}，为您提供渗透问题的完美解决方案 ——酒零",
+      "热加载fuzz快速定位，轻松挖洞无压力 ——k1115h0t",
+      "别让无聊占据你的时间，来探索新世界吧！——Chelth",
+      "<script>alert('Hello {edition}!')</script> ——红炉点雪",
+      "你的鼠标，掌控世界！——Chelth"
+    ],
     "controlMode": "控制模式",
     "localMode": "本地模式",
     "remoteMode": "远程模式",
@@ -451,24 +472,22 @@
     "welcome": "欢迎使用 {edition}",
     "openEngineFolder": "打开引擎所在文件",
     "openEngineFolderTip": "打开文件夹后运行'start-engine-grpc'，命令行启动引擎查看具体问题",
-    "slogan1": "没有困难的工作，只有勇敢的打工人。",
-    "slogan2": "打工累吗？累！但我不能哭，因为骑电动车擦眼泪不安全。",
-    "slogan3": "打工不仅能致富，还能交友娶媳妇",
-    "slogan4": "今天搬砖不狠，明天地位不稳",
-    "slogan5": "打工可能会少活十年，不打工你一天也活不下去。",
-    "slogan6": "有人相爱，有人夜里看海，有人七八个闹钟起不来，早安打工人!",
-    "slogan7": "打工人，打工魂，打工人是人上人",
-    "slogan8": "@所有人，据说用了{edition}后就不必再卷了！",
-    "slogan9": "再不用{edition}，卷王就是别人的了",
-    "slogan10": "来用{edition}啦？安全圈还是你最成功",
-    "slogan11": "这届网安人，人手一个{edition}，香惨了！",
-    "slogan12": "webfuzzer时根目录插入字典，会有意想不到的收获 ——是果实菌啊",
-    "slogan13": "{edition}写监听参数时不必写socks的版本号 ——是果实菌啊",
-    "slogan14": "使用热标签，可以中间处理des aes等加密，无需再碰py ——是果实菌啊",
-    "slogan15": "{edition}，为您提供渗透问题的完美解决方案 ——酒零",
-    "slogan16": "热加载fuzz快速定位，轻松挖洞无压力 ——k1115h0t",
-    "slogan17": "别让无聊占据你的时间，来探索新世界吧！——Chelth",
-    "slogan18": "<script>alert('Hello {edition}!')</script> ——红炉点雪"
+    "noImage": "暂无图片"
+  },
+  "EditTable": {
+    "field": "该字段",
+    "enterField": "请输入{field}",
+    "fillField": "请填写{field}",
+    "parseTableFailed": "解析表格失败：{error}",
+    "currentRowInvalid": "当前行校验未通过",
+    "maxItemsReached": "已达最大数量{maxItems}",
+    "operation": "操作",
+    "save": "保存",
+    "cancel": "取消",
+    "edit": "编辑",
+    "copy": "复制",
+    "delete": "删除",
+    "addRow": "添加一行数据"
   },
   "YakitWindow": {
     "dockPosition": "停靠方位",
@@ -492,6 +511,15 @@
   "EngineLog": {
     "welcome": "欢迎使用 {edition}!",
     "connectionLog": "连接日志"
+  },
+  "BaseConsole": {
+    "outputMonitorStarted": "启动输出监控成功"
+  },
+  "FuncDomain": {
+    "noYakitLatestVersion": "未获取{edition}最新版本",
+    "noYaklangLatestVersion": "未获取引擎最新版本",
+    "updateContentSuccess": "修改更新内容成功",
+    "updateContentFailed": "修改错误：{error}"
   },
   "AllKillEngineConfirm": {
     "title": "更新引擎，需关闭所有本地进程",

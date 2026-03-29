@@ -55,7 +55,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
             ipcRenderer.removeAllListeners("live-engine-stdio")
             ipcRenderer.removeAllListeners("live-engine-log")
         }
-    }, [xtermRef])
+    }, [xtermRef, t])
 
     const onCancel = () => {
         setVisible(false)

@@ -2302,11 +2302,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     })
     const onSubmitEdit = useMemoizedFn(() => {
         if (editShow.type === "yakit" && yakitLastVersion.length === 0) {
-            warn(`未获取${getReleaseEditionName()}最新版本`)
+            warn(t("FuncDomain.noYakitLatestVersion", {edition: getReleaseEditionName()}))
             return
         }
         if (editShow.type !== "yakit" && yaklangLastVersion.length === 0) {
-            warn(`未获取引擎最新版本`)
+            warn(t("FuncDomain.noYaklangLatestVersion"))
             return
         }
         setEditLoading(true)
@@ -2325,13 +2325,13 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             data: params
         })
             .then((res) => {
-                info("修改更新内容成功")
+                info(t("FuncDomain.updateContentSuccess"))
                 fetchYakitAndYaklangVersionInfo()
                 if (editShow.type === "yakit") fetchYakitLastVersion()
                 else fetchYaklangLastVersion()
                 setTimeout(() => setEditShow({visible: false, type: "yakit"}), 100)
             })
-            .catch((e) => failed(`修改错误 ${e}`))
+            .catch((e) => failed(t("FuncDomain.updateContentFailed", {error: e})))
             .finally(() => {
                 setTimeout(() => setEditLoading(false), 300)
             })

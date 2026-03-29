@@ -428,6 +428,27 @@
     "confirm": "Confirm"
   },
   "YakitLoading": {
+    "slogans": [
+      "There is no difficult work, only brave workers.",
+      "Tired of working? Yes! But I can't cry, because wiping tears on an e-bike is unsafe.",
+      "Working can make you rich and help you make friends and find a spouse",
+      "If you don't work hard today, your status won't be stable tomorrow",
+      "Working may shorten your life by ten years; without work you can't survive a single day.",
+      "Some people are in love, some watch the sea at night, some can't get up after seven alarms. Good morning, workers!",
+      "Workers, worker souls, workers are the best",
+      "With {edition}, you don't need to keep grinding anymore!",
+      "If you don't use {edition} now, the grind king will belong to someone else",
+      "Using {edition}? You are the most successful in security",
+      "Everyone in this security crowd has one {edition}, it feels amazing!",
+      "When inserting dictionaries at the root in webfuzzer, you'll get unexpected gains — from Guoshigu",
+      "When writing listener parameters in {edition}, there's no need to write the socks version — from Guoshigu",
+      "Using hot tags, you can process des/aes encryption in the middle without touching py again — from Guoshigu",
+      "{edition} offers you a perfect solution to penetration problems — Jiuling",
+      "Hot-loaded fuzz quickly finds the location, making hole-hunting easy — k1115h0t",
+      "Don't let boredom take over your time, come explore a new world! — Chelth",
+      "<script>alert('Hello {edition}!')</script> — Hongludianxue",
+      "Your mouse, your world! — Chelth"
+    ],
     "controlMode": "Control mode",
     "localMode": "Local mode",
     "remoteMode": "Remote mode",
@@ -451,24 +472,22 @@
     "welcome": "Welcome to {edition}",
     "openEngineFolder": "Open engine folder",
     "openEngineFolderTip": "Open the folder and run 'start-engine-grpc' to start the engine from the command line and see specific issues",
-    "slogan1": "There is no difficult work, only brave workers.",
-    "slogan2": "Tired of working? Yes! But I can't cry, because wiping tears on an e-bike is unsafe.",
-    "slogan3": "Working can make you rich and help you make friends and find a spouse",
-    "slogan4": "If you don't work hard today, your status won't be stable tomorrow",
-    "slogan5": "Working may shorten your life by ten years; without work you can't survive a single day.",
-    "slogan6": "Some people are in love, some watch the sea at night, some can't get up after seven alarms. Good morning, workers!",
-    "slogan7": "Workers, worker souls, workers are the best",
-    "slogan8": "With {edition}, you don't need to keep grinding anymore!",
-    "slogan9": "If you don't use {edition} now, the grind king will belong to someone else",
-    "slogan10": "Using {edition}? You are the most successful in security",
-    "slogan11": "Everyone in this security crowd has one {edition}, it feels amazing!",
-    "slogan12": "When inserting dictionaries at the root in webfuzzer, you'll get unexpected gains — from Guoshigu",
-    "slogan13": "When writing listener parameters in {edition}, there's no need to write the socks version — from Guoshigu",
-    "slogan14": "Using hot tags, you can process des/aes encryption in the middle without touching py again — from Guoshigu",
-    "slogan15": "{edition} offers you a perfect solution to penetration problems — Jiuling",
-    "slogan16": "Hot-loaded fuzz quickly finds the location, making hole-hunting easy — k1115h0t",
-    "slogan17": "Don't let boredom take over your time, come explore a new world! — Chelth",
-    "slogan18": "<script>alert('Hello {edition}!')</script> — Hongludianxue"
+    "noImage": "No image"
+  },
+  "EditTable": {
+    "field": "field",
+    "enterField": "Please enter {field}",
+    "fillField": "Please fill in {field}",
+    "parseTableFailed": "Failed to parse table: {error}",
+    "currentRowInvalid": "Current row validation failed",
+    "maxItemsReached": "Maximum of {maxItems} items reached",
+    "operation": "Actions",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "copy": "Copy",
+    "delete": "Delete",
+    "addRow": "Add a row"
   },
   "YakitWindow": {
     "dockPosition": "Dock position",
@@ -492,6 +511,15 @@
   "EngineLog": {
     "welcome": "Welcome to {edition}!",
     "connectionLog": "Connection Log"
+  },
+  "BaseConsole": {
+    "outputMonitorStarted": "Output monitoring started successfully"
+  },
+  "FuncDomain": {
+    "noYakitLatestVersion": "Failed to fetch the latest {edition} version",
+    "noYaklangLatestVersion": "Failed to fetch the latest engine version",
+    "updateContentSuccess": "Update content modified successfully",
+    "updateContentFailed": "Update failed: {error}"
   },
   "AllKillEngineConfirm": {
     "title": "Update engine: all local processes must be closed",
