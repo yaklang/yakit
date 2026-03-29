@@ -7,8 +7,10 @@ import {CollabStatus} from "./MilkdownEditorType"
 import {yakitNotify} from "@/utils/notification"
 import {NotepadWsRequest} from "./WebsocketProvider/WebsocketProviderType"
 import {notepadActions, notepadSaveStatus} from "./WebsocketProvider/constants"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "components")
 export interface CollabUserInfo {
     userId: number
     name: string
@@ -57,10 +59,10 @@ export class CollabManager extends ObservableV2<CollabManagerEvents> {
         try {
             wsUrl = await ipcRenderer.invoke("get-ws-url")
         } catch (error) {
-            yakitNotify("error", `getWSUrl错误:${error}`)
+            yakitNotify("error", t("MilkdownEditor.collab.getWSUrlError", {error: String(error)}))
         }
         if (!wsUrl) {
-            yakitNotify("error", "wsUrl数据错误")
+            yakitNotify("error", t("MilkdownEditor.collab.wsUrlInvalid"))
             return
         }
         this.doc?.destroy()

@@ -35,6 +35,7 @@ import {useStore} from "@/store"
 import type {VirtualElement} from "@floating-ui/dom"
 import {computePosition, flip, offset} from "@floating-ui/dom"
 import {posToDOMRect} from "@milkdown/prose"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const slash = slashFactory("Commands")
 
@@ -46,6 +47,7 @@ interface SlashViewProps {
 
 export const SlashView: React.FC<SlashViewProps> = (props) => {
     const {type, notepadHash, localProps} = props
+    const {t} = useI18nNamespaces(["components"])
     const ref = useRef<HTMLDivElement>(null)
     const slashProvider = useRef<SlashProvider>()
     const initializedRef = useRef<boolean>(false)
@@ -153,16 +155,16 @@ export const SlashView: React.FC<SlashViewProps> = (props) => {
     const slashList = useCreation(() => {
         if (!!localProps?.local) {
             return {
-                基础: createMilkdownMenuListByKey(baseSlashKey),
-                常用: createMilkdownMenuListByKey(localCommonSlashKey)
+                [t("MilkdownEditor.slash.base")]: createMilkdownMenuListByKey(t, baseSlashKey),
+                [t("MilkdownEditor.slash.common")]: createMilkdownMenuListByKey(t, localCommonSlashKey)
             }
         } else {
             return {
-                基础: createMilkdownMenuListByKey(baseSlashKey),
-                常用: createMilkdownMenuListByKey(onlineCommonSlashKey)
+                [t("MilkdownEditor.slash.base")]: createMilkdownMenuListByKey(t, baseSlashKey),
+                [t("MilkdownEditor.slash.common")]: createMilkdownMenuListByKey(t, onlineCommonSlashKey)
             }
         }
-    }, [localProps?.local])
+    }, [localProps?.local, t])
 
     const onSelect = useMemoizedFn((key: MilkdownMenuType) => {
         switch (key) {

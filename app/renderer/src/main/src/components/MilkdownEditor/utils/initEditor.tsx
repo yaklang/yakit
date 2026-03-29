@@ -31,6 +31,7 @@ import {imageBlockComponent, imageBlockConfig} from "@milkdown/kit/component/ima
 import {imageInlineComponent, inlineImageConfig} from "@milkdown/kit/component/image-inline"
 import {html} from "atomico"
 import {linkTooltipPlugin, linkTooltipConfig} from "@milkdown/kit/component/link-tooltip"
+import i18n from "@/i18n/i18n"
 import {
     blockquoteSchema,
     codeBlockSchema,
@@ -61,6 +62,8 @@ import emiter from "@/utils/eventBus/eventBus"
 import {slash, SlashView} from "../Slash/Slash"
 import {httpUploadImgPath} from "@/apiUtils/http"
 import {customShiftEnterPlugin} from "./utils"
+
+const t = i18n.getFixedT(null, "components")
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -173,7 +176,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                                     continue
                                 }
                                 if (file.size > ImgMaxSize) {
-                                    yakitNotify("error", "图片大小不能超过1M")
+                                    yakitNotify("error", t("MilkdownEditor.initEditor.imageTooLarge"))
                                     continue
                                 }
                                 images.push(file)
@@ -447,7 +450,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             return ""
         }
         if (image.size > ImgMaxSize) {
-            yakitNotify("error", "图片大小不能超过1M")
+            yakitNotify("error", t("MilkdownEditor.initEditor.imageTooLarge"))
             return ""
         }
         try {

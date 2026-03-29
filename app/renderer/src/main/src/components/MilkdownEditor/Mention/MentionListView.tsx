@@ -18,6 +18,7 @@ import {apiNotepadEit} from "./utils"
 import classNames from "classnames"
 import {InputRef} from "antd"
 import {useStore} from "@/store"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 export const mentionFactory = slashFactory("Commands")
 
 interface MentionListViewProps {
@@ -27,6 +28,7 @@ const mentionWidth = 240
 const mentionTarget = "@"
 export const MentionListView: React.FC<MentionListViewProps> = (props) => {
     const {notepadHash} = props
+    const {t} = useI18nNamespaces(["components"])
     const userInfo = useStore((s) => s.userInfo)
     const [isSendMessage, setIsSendMessage] = useState<boolean>(false)
     const [listLoading, setListLoading] = useState<boolean>(false)
@@ -140,7 +142,7 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
 
     const onSure = useMemoizedFn(() => {
         if (!currentSelected) {
-            yakitNotify("info", "请选择用户")
+            yakitNotify("info", t("MilkdownEditor.mention.selectUser"))
             return
         }
         onNotepadEit(currentSelected)
@@ -189,16 +191,16 @@ export const MentionListView: React.FC<MentionListViewProps> = (props) => {
                         defItemHeight={32}
                     />
                 ) : (
-                    <div className='grid-block text-center no-more-text'>请搜索后选择@用户</div>
+                    <div className='grid-block text-center no-more-text'>{t("MilkdownEditor.mention.searchUserHint")}</div>
                 )}
             </div>
             <div className={styles["mention-footer"]}>
                 <div className={styles["checkbox"]}>
                     <YakitCheckbox checked={isSendMessage} onChange={(e) => setIsSendMessage(e.target.checked)} />
-                    同时发送通知
+                    {t("MilkdownEditor.mention.sendNotification")}
                 </div>
                 <YakitButton type='primary' onClick={onSure}>
-                    确定
+                    {t("MilkdownEditor.mention.confirm")}
                 </YakitButton>
             </div>
         </div>

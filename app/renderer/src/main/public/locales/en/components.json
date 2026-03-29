@@ -4,5 +4,95 @@
     "pageNumber": "Page {page}",
     "totalItems": "Total {total} items",
     "xlsxTooLarge": "XLSX is too large: {error}"
+  },
+  "MilkdownEditor": {
+    "menu": {
+      "text": {"label": "Text", "description": "Text"},
+      "heading1": {"label": "Heading 1", "description": "Heading 1: # + space"},
+      "heading2": {"label": "Heading 2", "description": "Heading 2: ## + space"},
+      "heading3": {"label": "Heading 3", "description": "Heading 3: ### + space"},
+      "orderedList": {"label": "Ordered List", "description": "Ordered list: 1. + space"},
+      "unorderedList": {"label": "Unordered List", "description": "Unordered list: - + space or * + space"},
+      "task": {"label": "Task", "description": "Task"},
+      "codeBlock": {"label": "Code Block", "description": "Code block: ``` + space"},
+      "quote": {"label": "Quote", "description": "Quote: > + space"},
+      "highLight": {"label": "Highlight", "description": "Highlight: :::success + space"},
+      "file": {"label": "Upload File", "description": "Upload File"},
+      "divider": {"label": "Divider", "description": "Divider: ***"}
+    },
+    "highlight": {
+      "remove": "Clear highlight",
+      "note": "Gray:  :::note + space",
+      "success": "Green:  :::success + space",
+      "danger": "Red:  :::danger + space",
+      "warning": "Yellow:  :::warning + space"
+    },
+    "tooltip": {
+      "bold": "Bold: **text** + space",
+      "strikethrough": "Strikethrough: ~text~ + space",
+      "italic": "Italic: *text* + space",
+      "underline": "Underline: :u[text]",
+      "codeBlock": "Code block: ``` + space"
+    },
+    "slash": {
+      "base": "Base",
+      "common": "Common"
+    },
+    "mention": {
+      "selectUser": "Please select a user",
+      "searchUserHint": "Please search and then select an @ user",
+      "sendNotification": "Send notifications too",
+      "confirm": "Confirm"
+    },
+    "customMention": {
+      "userIdMissing": "User ID does not exist",
+      "sendMentionPrompt": "Send mention notification?",
+      "notify": "Notify"
+    },
+    "utils": {
+      "selectFile": "Please select a file",
+      "fileTooLarge": "File size cannot exceed 1G",
+      "imageTooLarge": "Image size cannot exceed 1M",
+      "uploadImageFailed": "Failed to upload image: {error}",
+      "convertSelectionFailed": "[{nodeType}] convertSelectionByNode failed: {error}"
+    },
+    "initEditor": {
+      "imageTooLarge": "Image size cannot exceed 1M",
+      "collabRouteRequired": "When enableCollab is true, routeInfo is required",
+      "documentMissing": "Document does not exist / has been deleted",
+      "errorReason": "Error reason:",
+      "saveCurrentDocument": "Save current document",
+      "doNotSave": "Do not save",
+      "closePage": "Close page",
+      "exception": "Exception"
+    },
+    "onlineError": {
+      "exception": "Exception",
+      "errorReason": "Error reason:",
+      "closePage": "Close page"
+    },
+    "collab": {
+      "getWSUrlError": "Failed to get WS URL: {error}",
+      "wsUrlInvalid": "WS URL data is invalid"
+    },
+    "customFile": {
+      "unknownName": "Unknown name",
+      "copyFailed": "Copy failed",
+      "uploadFailedRetry": "Upload failed, click to retry",
+      "downloadFile": "Download file",
+      "copyLink": "Copy link",
+      "refreshFileInfo": "Refresh file info",
+      "loadingFile": "Loading file...",
+      "downloadingFile": "{fileName} downloading...",
+      "downloading": "Downloading...",
+      "downloadedPercent": "Downloaded {percent}%",
+      "getFileInfoErrorTitle": "Failed to get file info",
+      "getLinkInfoError": "Failed to get link info: {error}",
+      "getFileInfoError": "Failed to get file info: {error}",
+      "getLocalFileNameFailed": "getLocalFileName failed: {error}"
+    },
+    "mention": {
+      "apiNotepadEitFailed": "apiNotepadEit failed: {error}"
+    }
   }
 }
