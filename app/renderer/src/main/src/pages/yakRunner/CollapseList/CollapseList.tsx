@@ -15,6 +15,7 @@ import {
 } from "@/utils/monacoSpec/yakCompletionSchema"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
+import i18n from "@/i18n/i18n"
 import {IMonacoEditor} from "@/utils/editors"
 import {getModelContext} from "@/utils/monacoSpec/yakEditor"
 import {monaco} from "react-monaco-editor"
@@ -322,7 +323,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
                     />
                 }
             />
-            {getList.length === 0 && <div className={styles["no-data"]}>暂无帮助信息</div>}
+            {getList.length === 0 && <div className={styles["no-data"]}>{i18n.t("CollapseList.noHelpInfo", {ns: "yakRunner"})}</div>}
         </div>
     )
 })

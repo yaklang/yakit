@@ -32,6 +32,7 @@ import {SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
 import {YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon} from "../icon"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect} from "ahooks"
+import i18n from "@/i18n/i18n"
 import useStore from "../hooks/useStore"
 import useDispatcher from "../hooks/useDispatcher"
 import {AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps} from "../YakRunnerType"
@@ -155,15 +156,15 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const onDirectionToName = useMemoizedFn((v: SplitDirectionProps) => {
         switch (v) {
             case "top":
-                return "向上拆分"
+                return i18n.t("RunnerTabs.splitTop", {ns: "yakRunner"})
             case "right":
-                return "向右拆分"
+                return i18n.t("RunnerTabs.splitRight", {ns: "yakRunner"})
             case "bottom":
-                return "向下拆分"
+                return i18n.t("RunnerTabs.splitBottom", {ns: "yakRunner"})
             case "left":
-                return "向左拆分"
+                return i18n.t("RunnerTabs.splitLeft", {ns: "yakRunner"})
             default:
-                return "无法识别"
+                return i18n.t("RunnerTabs.splitUnknown", {ns: "yakRunner"})
         }
     })
 
@@ -463,7 +464,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     const onRename = useMemoizedFn((info: FileDetailInfo) => {
         let newName: string = info.name
         const m = showYakitModal({
-            title: "重命名",
+            title: i18n.t("rename", {ns: "layout"}),
             content: (
                 <RenameYakitModalBox
                     name={info.name}
@@ -481,7 +482,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                     return
                 }
                 if (newName.length === 0) {
-                    warn("请输入新名称")
+                    warn(i18n.t("RunnerTabs.enterNewName", {ns: "yakRunner"}))
                     return
                 }
                 // 保存后的文件需要根据路径调用改名接口
@@ -526,7 +527,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                         setAreaInfo && setAreaInfo(newAreaInfo)
                         emiter.emit("onRefreshFileTree")
                     } catch (error) {
-                        failed("保存失败")
+                        failed(i18n.t("RunnerTabs.renameFailed", {ns: "yakRunner"}))
                     }
                 } else {
                     // 未保存文件直接更改文件树
@@ -550,24 +551,24 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         const inFileTree = getMapFileDetail(info.path)
         const base: YakitMenuItemType[] = [
             {
-                label: "关闭",
+                label: i18n.t("close", {ns: "yakitUi"}),
                 key: "removeCurrent"
             },
             {
-                label: "关闭其他",
+                label: i18n.t("closeOther", {ns: "layout"}),
                 key: "removeOther"
             },
             {
-                label: "关闭所有",
+                label: i18n.t("closeAll", {ns: "layout"}),
                 key: "removeAll"
             },
             {type: "divider"},
             {
-                label: "重命名",
+                label: i18n.t("rename", {ns: "layout"}),
                 key: "rename"
             },
             {
-                label: "在文件夹中显示",
+                label: i18n.t("FileTree.showInFolder", {ns: "yakRunner"}),
                 key: "openFolder",
                 disabled: info.isUnSave
             }
@@ -631,7 +632,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                     <>
                         {runnerTabsId === tabsId ? (
                             <YakitButton colors='danger' icon={<OutlinePauseIcon />} onClick={onStopYak}>
-                                停止
+                                {i18n.t("stop", {ns: "yakitUi"})}
                             </YakitButton>
                         ) : (
                             <YakitButton
@@ -640,7 +641,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
                                 disabled={!!runnerTabsId && runnerTabsId !== tabsId}
                                 onClick={onRunYak}
                             >
-                                执行
+                                {i18n.t("execute", {ns: "yakitUi"})}
                             </YakitButton>
                         )}
                     </>
@@ -1202,10 +1203,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                     <Result
                         status={"warning"}
                         // title={"此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。"}
-                        subTitle={"此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。"}
+                        subTitle={i18n.t("RunnerTabs.binaryNotice", {ns: "yakRunner"})}
                         extra={[
                             <YakitButton size='max' type='primary' onClick={onOpenBinary}>
-                                仍然打开
+                                {i18n.t("RunnerTabs.openAnyway", {ns: "yakRunner"})}
                             </YakitButton>
                         ]}
                     />
@@ -1266,23 +1267,23 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                 <div className={styles["icon-style"]}>
                     <SolidYakCattleNoBackColorIcon />
                 </div>
-                <div className={styles["header-style"]}>欢迎使用 Yak 语言</div>
+                <div className={styles["header-style"]}>{i18n.t("RunnerTabs.welcomeYak", {ns: "yakRunner"})}</div>
             </div>
             <div className={styles["operate-box"]} style={size && size.width < 600 ? {padding: "0px 20px"} : {}}>
                 <div className={styles["operate"]}>
-                    <div className={styles["title-style"]}>快捷创建</div>
+                    <div className={styles["title-style"]}>{i18n.t("RunnerTabs.quickCreate", {ns: "yakRunner"})}</div>
                     <div className={styles["operate-btn-group"]}>
                         <div className={classNames(styles["btn-style"], styles["btn-new-file"])} onClick={addFileTab}>
                             <div className={styles["btn-title"]}>
                                 <YakRunnerNewFileIcon />
-                                新建文件
+                                {i18n.t("newFile", {ns: "yakitUi"})}
                             </div>
                             <OutlinePlusIcon className={styles["icon-style"]} />
                         </div>
                         <div className={classNames(styles["btn-style"], styles["btn-open-file"])} onClick={openFile}>
                             <div className={styles["btn-title"]}>
                                 <YakRunnerOpenFileIcon />
-                                打开文件
+                                {i18n.t("openFile", {ns: "aiAgent"})}
                             </div>
                             <OutlineImportIcon className={styles["icon-style"]} />
                         </div>
@@ -1292,7 +1293,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                         >
                             <div className={styles["btn-title"]}>
                                 <YakRunnerOpenFolderIcon />
-                                打开文件夹
+                                {i18n.t("openFolder", {ns: "aiAgent"})}
                             </div>
                             <OutlineImportIcon className={styles["icon-style"]} />
                         </div>
@@ -1300,7 +1301,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
                 </div>
 
                 <div className={styles["recent-open"]}>
-                    <div className={styles["title-style"]}>最近打开</div>
+                    <div className={styles["title-style"]}>{i18n.t("recentOpen", {ns: "aiAgent"})}</div>
                     <div className={styles["recent-list"]}>
                         {historyList.slice(0, 3).map((item, index) => {
                             return (
@@ -1425,7 +1426,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     if (result.length > 0) {
                         file.name = result[0].name
                         file.isDelete = false
-                        success(`${file.name} 保存成功`)
+                        success(i18n.t("saveSuccess", {ns: "yakitUi", name: file.name}))
                         // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
                         const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
                         const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
@@ -1446,7 +1447,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                         setYakRunnerHistory(history)
                     }
                 } else {
-                    warn("未获取保存路径，取消保存")
+                    warn(i18n.t("RunnerTabs.savePathMissing", {ns: "yakRunner"}))
                     onCancle()
                 }
             } catch (error) {}
@@ -1456,19 +1457,19 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
     return (
         <YakitHint
             visible={isShowModal}
-            title={"文件未保存"}
-            content={`是否要保存${info.name}里面的内容吗？`}
+            title={i18n.t("RunnerTabs.unsavedTitle", {ns: "yakRunner"})}
+            content={i18n.t("RunnerTabs.unsavedContent", {ns: "yakRunner", name: info.name})}
             footer={
                 <div className={styles["hint-right-btn"]}>
                     <YakitButton size='max' type='outline2' onClick={onCancle}>
-                        取消
+                        {i18n.t("cancel", {ns: "yakitUi"})}
                     </YakitButton>
                     <div className={styles["btn-group-wrapper"]}>
                         <YakitButton size='max' type='outline2' onClick={onUnSave}>
-                            不保存
+                            {i18n.t("doNotSave", {ns: "yakitUi"})}
                         </YakitButton>
                         <YakitButton size='max' onClick={onSaveFile}>
-                            保存
+                            {i18n.t("save", {ns: "yakitUi"})}
                         </YakitButton>
                     </div>
                 </div>
@@ -1495,7 +1496,7 @@ const RenameYakitModalBox: React.FC<RenameYakitModalBoxProps> = (props) => {
                 ref={inputRef}
                 defaultValue={name}
                 autoFocus
-                placeholder='请输入新名称'
+                placeholder={i18n.t("RunnerTabs.enterNewName", {ns: "yakRunner"})}
                 allowClear
                 onChange={(e) => {
                     const {value} = e.target

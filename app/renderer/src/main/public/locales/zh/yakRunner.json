@@ -31,6 +31,13 @@
     "openFileSystem": "在文件夹中显示",
     "openTerminal": "在终端打开",
     "closeFolder": "关闭文件夹",
+    "showInFolder": "在文件夹中显示",
+    "copyPathSuccess": "已获取路径 {path}",
+    "copyRelativePathFailed": "复制相对路径失败",
+    "selectCopiedFileFirst": "请先选择复制文件",
+    "pasteFailed": "粘贴失败 {error}",
+    "saveFailed": "保存失败 {error}",
+    "createFailed": "新建失败 {error}",
     "copyPath": "复制路径",
     "copyRelativePath": "复制相对路径",
     "deleteConfirmTitle": "是否要删除{name}",
@@ -41,7 +48,15 @@
     "helpDocumentation": "帮助文档",
     "fileTooLargeWarning": "文件警告",
     "fileTooLargeContent": "文件过大，无法使用YakRunner进行操作",
-    "okButton": "知道了"
+    "okButton": "知道了",
+    "fetchFileTreeFailed": "获取文件项目失败：{error}",
+    "saveSuccess": "{name} 保存成功",
+    "saveFailed": "保存失败：{name}",
+    "readFileFailed": "无法获取该文件内容，请检查后后重试！",
+    "readFileFailedWithError": "无法获取该文件内容，请检查后后重试: {error}",
+    "selectFile": "请选择文件",
+    "singleSelectOnly": "只支持单选文件",
+    "historyResetFailed": "历史记录异常，重置历史 {error}"
   },
   "AuditCode": {
     "loadMore": "加载更多...",
@@ -141,7 +156,31 @@
     "locate": "定位",
     "search": "搜索",
     "refreshExplorer": "刷新资源管理器",
-    "openedEditors": "打开的编辑器"
+    "openedEditors": "打开的编辑器",
+    "selectLocalFolder": "选择本地文件夹",
+    "enterFolderPath": "请输入文件夹路径",
+    "selectFolder": "请选择文件夹",
+    "deleteSuccess": "{name} 删除成功",
+    "deleteFailed": "{name} 删除失败{error}"
+  },
+  "RunnerTabs": {
+    "splitTop": "向上拆分",
+    "splitRight": "向右拆分",
+    "splitBottom": "向下拆分",
+    "splitLeft": "向左拆分",
+    "splitUnknown": "无法识别",
+    "enterNewName": "请输入新名称",
+    "renameFailed": "保存失败",
+    "binaryNotice": "此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。",
+    "openAnyway": "仍然打开",
+    "welcomeYak": "欢迎使用 Yak 语言",
+    "quickCreate": "快捷创建",
+    "unsavedTitle": "文件未保存",
+    "unsavedContent": "是否要保存{name}里面的内容吗？",
+    "savePathMissing": "未获取保存路径，取消保存"
+  },
+  "CollapseList": {
+    "noHelpInfo": "暂无帮助信息"
   },
   "YakRunnerScanHistory": {
     "fetchFailed": "获取扫描历史失败：{error}",

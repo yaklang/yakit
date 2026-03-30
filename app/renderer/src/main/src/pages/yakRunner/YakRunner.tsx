@@ -66,6 +66,7 @@ import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutK
 import {WatchFolderID} from "./FileTreeMap/watchFolderID"
 import {randomString} from "@/utils/randomUtil"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
@@ -84,11 +85,11 @@ const {ipcRenderer} = window.require("electron")
 
 export const YakRunnerTab: YakitTabsProps[] = [
     {
-        label: "资源管理器",
+        label: i18n.t("YakRunner.resourceExplorer", {ns: "yakRunner"}),
         value: "file-tree"
     },
     {
-        label: "帮助文档",
+        label: i18n.t("YakRunner.helpDocumentation", {ns: "yakRunner"}),
         value: "help-doc"
     }
 ]
@@ -114,7 +115,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 if (callback) callback(res)
             })
             .catch((error) => {
-                yakitNotify("error", `获取文件项目失败: ${error}`)
+                yakitNotify("error", i18n.t("YakRunner.fetchFileTreeFailed", {ns: "yakRunner", error}))
                 if (callback) callback([])
             })
     })
@@ -694,7 +695,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             if (result.length > 0) {
                                 file.name = result[0].name
                                 file.isDelete = false
-                                success(`${result[0].name} 保存成功`)
+                                success(i18n.t("YakRunner.saveSuccess", {ns: "yakRunner", name: result[0].name}))
                                 const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
                                 const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
                                 setAreaInfo && setAreaInfo(newAreaInfo)
@@ -712,7 +713,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     })
             }
         } catch (error) {
-            failed(`${activeFile?.name}保存失败`)
+            failed(i18n.t("YakRunner.saveFailed", {ns: "yakRunner", name: activeFile?.name || ""}))
         }
     })
 

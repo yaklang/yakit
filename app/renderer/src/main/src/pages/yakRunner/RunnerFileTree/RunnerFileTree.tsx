@@ -73,7 +73,7 @@ export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
                 selectType='folder'
                 multiple={false}
                 help=''
-                uploadFolderText='选择本地文件夹'
+                uploadFolderText={i18n.t("RunnerFileTree.selectLocalFolder", {ns: "yakRunner"})}
                 onChange={(value) => {
                     setValue(value)
                     setAbsolutePath(value)
@@ -88,7 +88,7 @@ export const openFolder = () => {
     if (SystemInfo.mode === "remote") {
         let absolutePath = ""
         const m = showYakitModal({
-            title: "请输入文件夹路径",
+            title: i18n.t("RunnerFileTree.enterFolderPath", {ns: "yakRunner"}),
             width: 400,
             type: "white",
             closable: false,
@@ -99,7 +99,7 @@ export const openFolder = () => {
             },
             onOk: async () => {
                 if (absolutePath.length === 0) {
-                    warn("请输入文件夹路径")
+                    warn(i18n.t("RunnerFileTree.enterFolderPath", {ns: "yakRunner"}))
                     return
                 }
                 emiter.emit("onOpenFileTree", absolutePath)
@@ -107,7 +107,7 @@ export const openFolder = () => {
             }
         })
     } else {
-        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+        handleOpenFileSystemDialog({title: i18n.t("RunnerFileTree.selectFolder", {ns: "yakRunner"}), properties: ["openDirectory"]}).then((data) => {
             if (data.filePaths.length) {
                 let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
                 emiter.emit("onOpenFileTree", absolutePath)
@@ -229,7 +229,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             },
             {
                 key: "createFolder",
-                label: i18n.t("yakitUi:newFolder"),
+                label: i18n.t("newFolder", {ns: "yakitUi"}),
                 // 未打开文件夹或无法新建文件夹
                 disabled: fileTree.length === 0
             },
@@ -384,9 +384,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             }
             emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
             emiter.emit("onRefreshFileTree")
-            success(`${info.name} 删除成功`)
+            success(i18n.t("RunnerFileTree.deleteSuccess", {ns: "yakRunner", name: info.name}))
         } catch (error) {
-            failed(`${info.name} 删除失败${error}`)
+            failed(i18n.t("RunnerFileTree.deleteFailed", {ns: "yakRunner", name: info.name, error}))
         }
     })
 
@@ -695,9 +695,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 <div className={styles["file-tree"]}>
                     <div className={styles["file-tree-container"]}>
                         <div className={styles["file-tree-header"]}>
-                            <div className={styles["title-style"]}>文件列表</div>
+                            <div className={styles["title-style"]}>{i18n.t("RunnerFileTree.fileList", {ns: "yakRunner"})}</div>
                             <div className={styles["extra"]}>
-                                <Tooltip title={"刷新资源管理器"}>
+                                <Tooltip title={i18n.t("RunnerFileTree.refreshExplorer", {ns: "yakRunner"})}>
                                     <YakitButton
                                         type='text2'
                                         disabled={fileTree.length === 0}
@@ -748,7 +748,7 @@ export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
     const {areaInfo, activeFile} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const titleRender = () => {
-        return <div className={styles["opened-file-header"]}>打开的编辑器</div>
+        return <div className={styles["opened-file-header"]}>{i18n.t("RunnerFileTree.openedEditors", {ns: "yakRunner"})}</div>
     }
 
     const removeItem = useMemoizedFn((e, data: FileDetailInfo) => {

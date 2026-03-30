@@ -31,6 +31,13 @@
     "openFileSystem": "Show in folder",
     "openTerminal": "Open in terminal",
     "closeFolder": "Close folder",
+    "showInFolder": "Show in folder",
+    "copyPathSuccess": "Path copied: {path}",
+    "copyRelativePathFailed": "Failed to copy relative path",
+    "selectCopiedFileFirst": "Please select a file to copy first",
+    "pasteFailed": "Paste failed: {error}",
+    "saveFailed": "Save failed: {error}",
+    "createFailed": "Create failed: {error}",
     "copyPath": "Copy path",
     "copyRelativePath": "Copy relative path",
     "deleteConfirmTitle": "Delete {name}?",
@@ -41,7 +48,15 @@
     "helpDocumentation": "Help Documentation",
     "fileTooLargeWarning": "File Warning",
     "fileTooLargeContent": "File is too large to operate with YakRunner",
-    "okButton": "Got it"
+    "okButton": "Got it",
+    "fetchFileTreeFailed": "Failed to fetch file tree: {error}",
+    "saveSuccess": "{name} saved successfully",
+    "saveFailed": "Save failed: {name}",
+    "readFileFailed": "Unable to fetch the file content. Please try again later.",
+    "readFileFailedWithError": "Unable to fetch the file content. Please try again later: {error}",
+    "selectFile": "Please select a file",
+    "singleSelectOnly": "Only single file selection is supported",
+    "historyResetFailed": "History reset failed: {error}"
   },
   "AuditCode": {
     "loadMore": "Load more...",
@@ -141,7 +156,31 @@
     "locate": "Locate",
     "search": "Search",
     "refreshExplorer": "Refresh Explorer",
-    "openedEditors": "Opened Editors"
+    "openedEditors": "Opened Editors",
+    "selectLocalFolder": "Select local folder",
+    "enterFolderPath": "Enter folder path",
+    "selectFolder": "Select folder",
+    "deleteSuccess": "{name} deleted successfully",
+    "deleteFailed": "{name} delete failed: {error}"
+  },
+  "RunnerTabs": {
+    "splitTop": "Split up",
+    "splitRight": "Split right",
+    "splitBottom": "Split down",
+    "splitLeft": "Split left",
+    "splitUnknown": "Unknown split direction",
+    "enterNewName": "Please enter a new name",
+    "renameFailed": "Rename failed",
+    "binaryNotice": "This file is binary or uses an unsupported text encoding, so it cannot be displayed in the text editor.",
+    "openAnyway": "Open anyway",
+    "welcomeYak": "Welcome to Yak language",
+    "quickCreate": "Quick create",
+    "unsavedTitle": "File not saved",
+    "unsavedContent": "Do you want to save the content in {name}?",
+    "savePathMissing": "Save path not found, cancel save"
+  },
+  "CollapseList": {
+    "noHelpInfo": "No help information"
   },
   "YakRunnerScanHistory": {
     "fetchFailed": "Failed to fetch scan history: {error}",
