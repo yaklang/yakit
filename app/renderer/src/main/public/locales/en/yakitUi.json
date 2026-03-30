@@ -83,6 +83,26 @@
         "batchRemove": "Batch Remove",
         "keep": "Keep"
     },
+    "DNSLogPage": {
+        "queryFailed": "DNSLog query failed: {error}",
+        "generateAvailableDomainFirst": "Please generate an available domain first",
+        "title": "DNSLog",
+        "subtitle": "Use the built-in DNSLog callback service from {edition}",
+        "builtIn": "Built-in",
+        "custom": "Custom",
+        "builtInDnsLog": "Built-in DNSLog",
+        "pleaseSelect": "Please select...",
+        "useLocal": "Use Local",
+        "generateDomain": "Generate an available domain",
+        "dnslogPlugin": "DNSLog Plugin",
+        "activeDomain": "Active domain:",
+        "onlyARecord": "Only A records",
+        "autoRefreshRecords": "Auto refresh records",
+        "domain": "Domain",
+        "type": "Type",
+        "remoteIP": "Remote IP",
+        "timestamp": "Timestamp"
+    },
     "YakitNotification": {
         "unknown_error": "Unknown Error",
         "success": "Operation successful",

@@ -67,6 +67,7 @@ export const DNS_LOG_PAGE_UPDATE_TOKEN = "DNS_LOG_PAGE_UPDATE_TOKEN"
 export const DNS_LOG_COMMON_CACHE = "DNS_LOG_COMMON_CACHE"
 
 export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
+    const {t} = useI18nNamespaces(["yakitUi"])
     const [token, setToken, getToken] = useGetState("")
     const [domain, setDomain, getDomain] = useGetState("")
     const [records, setRecords, getRecords] = useGetState<DNSLogEvent[]>([])
@@ -82,8 +83,6 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
     const DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE = "DNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE"
     const openDetails = useRef<DNSLogEvent>()
     const clearTimestamp = useRef<number>(0)
-    const {t, i18n} = useI18nNamespaces(["yakitUi"])
-    
 
     useEffect(() => {
         // 初始化-查看菜单是否开启dnslog并请求获取参数fDNS_LOG_PAGE_UPDATE_TOKEN_SCRIPT_CACHE
@@ -180,7 +179,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 })
             })
             .catch((e) => {
-                failed(`error: ${e}`)
+                failed(t("DNSLogPage.queryFailed", {error: `${e}`}))
                 setToken("")
                 setDomain("")
             })
@@ -350,7 +349,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 })
             })
             .catch((e) => {
-                failed(`error: ${e}`)
+                failed(t("DNSLogPage.queryFailed", {error: `${e}`}))
                 setToken("")
                 setDomain("")
             })
@@ -441,7 +440,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
 
     const manuallyRefresh = useMemoizedFn(() => {
         if (token.length === 0) {
-            warn("请先生成可用域名")
+            warn(t("DNSLogPage.generateAvailableDomainFirst"))
             return
         }
         dnsLogType === "builtIn" ? queryDNSLogByToken() : queryDNSLogTokenByScript()
@@ -469,9 +468,9 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                     title={
                         <div className={styles["DNSLogPage-card-title"]}>
                             <Space>
-                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>DNSLog</div>
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>{t("DNSLogPage.title")}</div>
                                 <div style={{color: "var(--Colors-Use-Neutral-Text-3-Secondary)"}}>
-                                    使用 {getReleaseEditionName()} 自带的 DNSLog 反连服务
+                                    {t("DNSLogPage.subtitle", {edition: getReleaseEditionName()})}
                                 </div>
                             </Space>
                             <div
@@ -493,11 +492,11 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                     options={[
                                         {
                                             value: "builtIn",
-                                            label: "内置"
+                                            label: t("DNSLogPage.builtIn")
                                         },
                                         {
                                             value: "custom",
-                                            label: "自定义"
+                                            label: t("DNSLogPage.custom")
                                         }
                                     ]}
                                 />
@@ -510,10 +509,10 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                         layout='inline'
                                         size={"small"}
                                     >
-                                        <Form.Item label={<span>内置DNSLog</span>}>
+                                        <Form.Item label={<span>{t("DNSLogPage.builtInDnsLog")}</span>}>
                                             <YakitSelect
                                                 showSearch
-                                                placeholder='请选择...'
+                                                placeholder={t("DNSLogPage.pleaseSelect")}
                                                 optionFilterProp='children'
                                                 value={selectedMode}
                                                 onChange={(value) => {
@@ -536,7 +535,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                                     marginBottom: 0,
                                                     marginRight: 10 // 添加右侧间隔isLocal
                                                 }}
-                                                label={"使用本地"}
+                                                label={t("DNSLogPage.useLocal")}
                                             >
                                                 <YakitSwitch checked={isLocal} onChange={setIsLocal} />
                                             </Form.Item>
@@ -547,7 +546,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                         />
                                         <Form.Item colon={false} style={{height: 24}}>
                                             <YakitButton type='primary' htmlType='submit' loading={btnLoading}>
-                                                生成一个可用域名
+                                                {t("DNSLogPage.generateDomain")}
                                             </YakitButton>
                                         </Form.Item>
                                     </Form>
@@ -561,11 +560,11 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                         }}
                                         size={"small"}
                                     >
-                                        <Form.Item label={<span>DNSLog插件</span>}>
+                                        <Form.Item label={<span>{t("DNSLogPage.dnslogPlugin")}</span>}>
                                             <YakitSelect
                                                 showSearch
                                                 options={scriptNamesList}
-                                                placeholder='请选择...'
+                                                placeholder={t("DNSLogPage.pleaseSelect")}
                                                 size='small'
                                                 value={params}
                                                 onChange={(ScriptNames) => {
@@ -581,7 +580,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                         />
                                         <Form.Item colon={false} style={{height: 24}}>
                                             <YakitButton type='primary' htmlType='submit' loading={btnLoading}>
-                                                生成一个可用域名
+                                                {t("DNSLogPage.generateDomain")}
                                             </YakitButton>
                                         </Form.Item>
                                     </Form>
@@ -590,7 +589,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             {token !== "" && (
                                 <Row style={{marginTop: 5}} align='bottom'>
                                     <Col style={{fontSize: 12, color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
-                                        当前激活域名为：
+                                        {t("DNSLogPage.activeDomain")}
                                     </Col>
                                     <Col>
                                         <YakitTag enableCopy={true} color='blue' copyText={tokenDomain}></YakitTag>
@@ -611,7 +610,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                                 marginBottom: 0,
                                                 marginRight: 10 // 添加右侧间隔
                                             }}
-                                            label={"只看A记录"}
+                                            label={t("DNSLogPage.onlyARecord")}
                                         >
                                             <YakitSwitch
                                                 checked={onlyARecord}
@@ -645,7 +644,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                                                 marginBottom: 0,
                                                 marginRight: 10 // 添加右侧间隔
                                             }}
-                                            label={"自动刷新记录"}
+                                            label={t("DNSLogPage.autoRefreshRecords")}
                                         >
                                             <YakitSwitch
                                                 checked={autoQuery}
@@ -687,11 +686,11 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                             }}
                             loading={loading}
                             columns={[
-                                {title: "域名", dataKey: "Domain"},
-                                {title: "类型", dataKey: "DNSType"},
-                                {title: "远端IP", dataKey: "RemoteIP"},
+                                {title: t("DNSLogPage.domain"), dataKey: "Domain"},
+                                {title: t("DNSLogPage.type"), dataKey: "DNSType"},
+                                {title: t("DNSLogPage.remoteIP"), dataKey: "RemoteIP"},
                                 {
-                                    title: "Timestamp",
+                                    title: t("DNSLogPage.timestamp"),
                                     dataKey: "Timestamp",
                                     render: (i: number) => {
                                         return <YakitTag color={"blue"}>{formatTimestamp(i)}</YakitTag>

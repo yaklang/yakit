@@ -156,6 +156,14 @@
     },
     "SubTabs": {
       "save_webfuzzer_history": "Save WebFuzzer history data"
+    },
+    "HeardMenu": {
+      "plugin": "Plugin",
+      "scanMode": "Scan Mode",
+      "restoreScanMode": "Restore Scan Mode",
+      "expertMode": "Expert Mode",
+      "restoreExpertMode": "Restore Expert Mode",
+      "loading": "Loading..."
     }
   },
   "UILayout": {

@@ -156,6 +156,14 @@
     },
     "SubTabs": {
       "save_webfuzzer_history": "保存WebFuzzer历史数据"
+    },
+    "HeardMenu": {
+      "plugin": "插件",
+      "scanMode": "扫描模式",
+      "restoreScanMode": "复原扫描模式",
+      "expertMode": "专家模式",
+      "restoreExpertMode": "复原专家模式",
+      "loading": "Loading..."
     }
   },
   "UILayout": {
