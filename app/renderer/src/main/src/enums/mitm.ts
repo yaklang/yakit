@@ -3,5 +3,6 @@ export enum RemoteMitmGV {
     MitmHijackFilter = "Mitm_Hijack_Filter",
     MitmStartChromeCheck = "Mitm_Start_Chrome_Check",
     MitmTraceResizeBox = "MitmTrace_ResizeBox",
-    MitmSNI = "MitmSNI"
+    MitmSNI = "MitmSNI",
+    MitmAdvancedConfig = "MitmAdvancedConfig"
 }

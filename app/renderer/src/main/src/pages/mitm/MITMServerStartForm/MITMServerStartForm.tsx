@@ -14,7 +14,7 @@ import {CogIcon, RefreshIcon} from "@/assets/newIcon"
 import {RuleExportAndImportButton} from "../MITMRule/MITMRule"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect} from "ahooks"
-import {AdvancedConfigurationFromValue} from "./MITMFormAdvancedConfiguration"
+import {AdvancedConfigurationFromValue, buildMitmExtra} from "../MITMAdvancedConfig"
 import ReactResizeDetector from "react-resize-detector"
 import {useWatch} from "antd/es/form/Form"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
@@ -274,29 +274,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
             ...advancedFormValue,
             ...advancedValue
         }
-        const extra: ExtraMITMServerProps = {
-            onlyEnableGMTLS: params.onlyEnableGMTLS,
-            preferGMTLS: params.preferGMTLS,
-            enableProxyAuth: params.enableProxyAuth,
-            proxyUsername: params.proxyUsername,
-            proxyPassword: params.proxyPassword,
-            dnsServers: params.dnsServers,
-            hosts: params.etcHosts,
-            EnableHostsMappingBeforeDownstreamProxy: params.EnableHostsMappingBeforeDownstreamProxy,
-            filterWebsocket: params.filterWebsocket,
-            disableCACertPage: params.disableCACertPage,
-            DisableSystemProxy: params.DisableSystemProxy,
-            DisableWebsocketCompression: params.DisableWebsocketCompression,
-            PluginConcurrency: params.PluginConcurrency,
-            OverwriteSNI: params.OverwriteSNI,
-            SNI: params.OverwriteSNI ? params.SNI : "",
-            SNIMapping: (params.SNIMapping || []).filter(({Key}) => Key && Key.trim())
-        }
-        if (params.stateSecretHijacking === "enableGMTLS") {
-            extra.enableGMTLS = true
-        } else if (params.stateSecretHijacking === "randomJA3") {
-            extra.RandomJA3 = true
-        }
+        const extra: ExtraMITMServerProps = buildMitmExtra(params as AdvancedConfigurationFromValue)
         const {downstreamProxy = []} = params
         const {proxyEndpoints: downstreamProxyValue, ProxyRuleIds: downstreamProxyRuleId} =
             getProxyValue(downstreamProxy)
