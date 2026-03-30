@@ -1,0 +1,8 @@
+{
+  "YakURLTree": {
+    "label": "YakURL",
+    "selected": "已选择",
+    "notSelected": "未选择",
+    "loadFailed": "加载失败：{error}"
+  }
+}

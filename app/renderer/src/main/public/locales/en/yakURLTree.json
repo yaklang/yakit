@@ -1,0 +1,8 @@
+{
+  "YakURLTree": {
+    "label": "YakURL",
+    "selected": "Selected",
+    "notSelected": "Not selected",
+    "loadFailed": "Load failed: {error}"
+  }
+}
