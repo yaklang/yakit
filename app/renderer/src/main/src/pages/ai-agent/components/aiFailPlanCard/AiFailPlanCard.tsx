@@ -5,14 +5,16 @@ import styles from "./AiFailPlanCard.module.scss"
 import useAINodeLabel from "@/pages/ai-re-act/hooks/useAINodeLabel"
 import {TaskErrorIcon} from "../../aiTree/icon"
 import {PreWrapper} from "../ToolInvokerCard"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const AiFailPlanCard: FC<{item: FailTaskChatError}> = ({item}) => {
     const {content} = item
     const {nodeLabel} = useAINodeLabel(item.NodeIdVerbose)
+    const {t} = useI18nNamespaces(["aiAgent"])
     return (
         <ChatCard className={styles["ai-fail-plan-wrapper"]} titleText={nodeLabel} titleIcon={<TaskErrorIcon />}>
             <div className={styles["ai-fail-plan-card"]}>
-                <div className={styles["ai-fail-plan-card-title"]}>失败原因</div>
+                <div className={styles["ai-fail-plan-card-title"]}>{t("AiFailPlanCard.failureReason")}</div>
                 <div className={styles["ai-fail-plan-card-content"]}>
                     {content && <PreWrapper code={content} autoScrollBottom />}
                 </div>

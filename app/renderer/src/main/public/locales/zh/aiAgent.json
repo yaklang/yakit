@@ -94,6 +94,9 @@
     "dropToAddToChat": "松开以添加到对话",
     "openFolder": "打开文件夹"
   },
+  "AiFailPlanCard": {
+    "failureReason": "失败原因"
+  },
   "AIToolList": {
     "all": "全部",
     "collect": "收藏",

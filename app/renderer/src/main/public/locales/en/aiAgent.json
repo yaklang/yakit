@@ -94,6 +94,9 @@
     "dropToAddToChat": "Release to add to chat",
     "openFolder": "Open Folder"
   },
+  "AiFailPlanCard": {
+    "failureReason": "Failure Reason"
+  },
   "AIToolList": {
     "all": "All",
     "collect": "Favorites",
