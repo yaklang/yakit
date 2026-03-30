@@ -19,6 +19,7 @@ import {RefreshIcon} from "@/assets/newIcon"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {RiskTree} from "@/pages/yakRunnerAuditCode/RunnerFileTree/RunnerFileTree"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
 
 const renderTreeNodeIcon = (treeNodeType: HoleResourceType) => {
     const iconsEle = {
@@ -94,7 +95,7 @@ export const DocumentCollect: React.FC<DocumentCollectProps> = (props) => {
                 <YakitInput.Search
                     allowClear
                     wrapperStyle={{width: "calc(100% - 40px)", marginBottom: 15}}
-                    placeholder={"请输入文件名或函数进行搜索"}
+                    placeholder={i18n.t("DocumentCollect.searchPlaceholder", {ns: "yakRunnerAuditHole"})}
                     onChange={onSearchChange}
                     onSearch={onSearchTree}
                     value={searchValue}

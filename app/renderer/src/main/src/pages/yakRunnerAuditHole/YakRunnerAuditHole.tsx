@@ -37,14 +37,15 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {DocumentCollect} from "./DocumentCollect/DocumentCollect"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
 
 export const YakRunnerAuditHoleTab: YakitTabsProps[] = [
     {
-        label: "统计",
+        label: i18n.t("YakRunnerAuditHole.statisticTab", {ns: "yakRunnerAuditHole"}),
         value: "statistic"
     },
     {
-        label: "文件汇总",
+        label: i18n.t("YakRunnerAuditHole.documentCollectTab", {ns: "yakRunnerAuditHole"}),
         value: "document-collect"
     }
 ]
@@ -229,7 +230,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     return (
         <div className={classNames(styles["hole-query"])}>
             <div className={styles["hole-query-heard"]}>
-                <span>高级查询</span>
+                <span>{i18n.t("YakRunnerAuditHole.advancedSearch", {ns: "yakRunnerAuditHole"})}</span>
             </div>
             <div className={styles["hole-query-body"]}>
                 <ProgramList
@@ -250,7 +251,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
                     data={typeList}
                     onSelect={(val) => onSelect(val, "RiskType")}
                 />
-                <div className={styles["to-end"]}>已经到底啦～</div>
+                <div className={styles["to-end"]}>{i18n.t("YakRunnerAuditHole.endReached", {ns: "yakRunnerAuditHole"})}</div>
             </div>
         </div>
     )
@@ -262,7 +263,7 @@ const ProgramList: React.FC<ProgramListProps> = React.memo((props) => {
     return (
         <div className={styles["program-list-body"]}>
             <div className={styles["program-list-heard"]}>
-                <div className={styles["program-list-heard-title"]}>文件统计</div>
+                <div className={styles["program-list-heard-title"]}>{i18n.t("YakRunnerAuditHole.fileStatistics", {ns: "yakRunnerAuditHole"})}</div>
                 <YakitButton
                     type='text'
                     colors='danger'
@@ -270,7 +271,7 @@ const ProgramList: React.FC<ProgramListProps> = React.memo((props) => {
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {i18n.t("YakRunnerAuditHole.reset", {ns: "yakRunnerAuditHole"})}
                 </YakitButton>
             </div>
             <div className={styles["program-list-content"]}>
@@ -331,7 +332,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
     return (
         <div className={styles["vulnerability-level"]} ref={levelRef}>
             <div className={styles["vulnerability-level-heard"]}>
-                <div className={styles["vulnerability-level-heard-title"]}>漏洞等级</div>
+                <div className={styles["vulnerability-level-heard-title"]}>{i18n.t("YakRunnerAuditHole.vulnerabilityLevel", {ns: "yakRunnerAuditHole"})}</div>
                 <YakitButton
                     type='text'
                     colors='danger'
@@ -339,7 +340,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {i18n.t("YakRunnerAuditHole.reset", {ns: "yakRunnerAuditHole"})}
                 </YakitButton>
             </div>
             <VulnerabilityLevelPie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />
@@ -364,8 +365,8 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
         <div className={styles["vulnerability-type"]} ref={typeRef}>
             <div className={styles["vulnerability-type-heard"]}>
                 <div className={styles["vulnerability-type-heard-title"]}>
-                    漏洞类型 Top 10
-                    <Tooltip title='手动选择所有漏洞类型后，点击重置即可查看所有数据'>
+                    {i18n.t("YakRunnerAuditHole.vulnerabilityTypeTop10", {ns: "yakRunnerAuditHole"})}
+                    <Tooltip title={i18n.t("YakRunnerAuditHole.vulnerabilityTypeResetTip", {ns: "yakRunnerAuditHole"})}>
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </Tooltip>
                 </div>
@@ -376,7 +377,7 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {i18n.t("YakRunnerAuditHole.reset", {ns: "yakRunnerAuditHole"})}
                 </YakitButton>
             </div>
             <VulnerabilityTypePie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />

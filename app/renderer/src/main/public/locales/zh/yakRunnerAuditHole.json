@@ -1,0 +1,27 @@
+{
+  "YakRunnerAuditHole": {
+    "statisticTab": "统计",
+    "documentCollectTab": "文件汇总",
+    "advancedSearch": "高级搜索",
+    "endReached": "到底了",
+    "fileStatistics": "文件统计",
+    "reset": "重置",
+    "vulnerabilityLevel": "漏洞等级",
+    "vulnerabilityTypeTop10": "漏洞类型 Top10",
+    "vulnerabilityTypeResetTip": "点击可重置筛选项"
+  },
+  "DocumentCollect": {
+    "searchPlaceholder": "请输入文件名或函数进行搜索"
+  },
+  "YakitAuditHoleTable": {
+    "queryFailed": "查询失败：{error}",
+    "deleteFailed": "删除失败：{error}",
+    "settingFailed": "设置失败：{error}",
+    "getFailed": "获取失败：{error}",
+    "readFailed": "已读失败：{error}",
+    "feedbackFailed": "反馈失败：{error}",
+    "noForgeNameMatch": "暂无ForgeName匹配项",
+    "noParamsUIConfig": "暂无ParamsUIConfig配置项",
+    "matchForgeNameError": "匹配ForgeName异常：{error}"
+  }
+}
