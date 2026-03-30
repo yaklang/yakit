@@ -61,6 +61,16 @@
   "VulnerabilitiesRisksTable": {
     "risks_and_vulnerabilities": "风险与漏洞"
   },
+  "PluginExecuteResult": {
+    "portAssetManagement": "端口资产管理",
+    "httpSearchPlaceholder": "请输入域名进行搜索,例baidu.com",
+    "dataCard": "数据卡片",
+    "unknownError": "未知错误",
+    "logicCrashRetry": "弹框内逻辑性崩溃，请关闭重试！",
+    "outputTable": "输出表",
+    "exportAll": "导出全部",
+    "searchFailed": "搜索失败：{error}"
+  },
   "PluginTabName": {
     "allPlugin": "在线插件",
     "officialPlugin": "官方插件",

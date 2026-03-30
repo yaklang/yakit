@@ -61,6 +61,16 @@
   "VulnerabilitiesRisksTable": {
     "risks_and_vulnerabilities": "Risks and Vulnerabilities"
   },
+  "PluginExecuteResult": {
+    "portAssetManagement": "Port Asset Management",
+    "httpSearchPlaceholder": "Search by domain, e.g. baidu.com",
+    "dataCard": "Data Card",
+    "unknownError": "Unknown error",
+    "logicCrashRetry": "The dialog logic crashed. Please close it and try again.",
+    "outputTable": "Output Table",
+    "exportAll": "Export All",
+    "searchFailed": "Search failed: {error}"
+  },
   "PluginTabName": {
     "allPlugin": "Online Plugin",
     "officialPlugin": "Official Plugin",
