@@ -2708,7 +2708,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 setSelectGroupId(YakitRoute.HTTPFuzzer, lastPage.id)
             }
         } catch (error) {
-            yakitNotify("error", "fetchFuzzerList失败:" + error)
+            yakitNotify("error", t("MainOperatorContent.Notifications.fetchFuzzerListFailed", {error: `${error}`}))
         }
     })
 
@@ -3166,11 +3166,11 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
             >
                 <div style={{padding: "0 24px"}}>
                     <Form.Item
-                        label='专项漏洞类型'
+                        label={t("MainOperatorContent.BugTest.specialVulnType")}
                         help={
                             bugList.length === 0 && (
                                 <span className={styles["bug-test-help"]}>
-                                    点击管理新建分组
+                                    {t("MainOperatorContent.BugTest.manageNewGroupHint")}
                                     <span
                                         className={styles["bug-test-help-active"]}
                                         onClick={() => {
@@ -3178,7 +3178,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                                             onToManageGroup()
                                         }}
                                     >
-                                        管理
+                                        {t("MainOperatorContent.BugTest.manage")}
                                     </span>
                                 </span>
                             )
@@ -3363,15 +3363,15 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
                 type: "grey",
                 data: [
                     {
-                        label: "关闭当前标签页",
+                        label: i18n.t("MainOperatorContent.TabMenu.closeCurrentTab", {ns: "layout"}),
                         key: "removeCurrent"
                     },
                     {
-                        label: "关闭所有标签页",
+                        label: i18n.t("MainOperatorContent.TabMenu.closeAllTabs", {ns: "layout"}),
                         key: "removeAll"
                     },
                     {
-                        label: "关闭其他标签页",
+                        label: i18n.t("MainOperatorContent.TabMenu.closeOtherTabs", {ns: "layout"}),
                         key: "removeOther"
                     }
                 ],
@@ -3405,8 +3405,8 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
         const m = YakitModalConfirm({
             width: 420,
             type: "white",
-            onCancelText: "取消",
-            onOkText: "关闭所有",
+            onCancelText: i18n.t("MainOperatorContent.Confirm.cancel", {ns: "layout"}),
+            onOkText: i18n.t("MainOperatorContent.Confirm.closeAll", {ns: "layout"}),
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
                 const fixedTabs = pageCache.filter((ele) => getDefaultFixedTabs(softMode).includes(ele.route))
@@ -3425,7 +3425,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             // onCancel: () => {
             //     m.destroy()
             // },
-            content: "是否关闭所有标签页"
+            content: i18n.t("MainOperatorContent.Confirm.closeAllTabsTitle", {ns: "layout"})
         })
     })
     /**关闭其他标签页 如果有首页需要保留首页*/
@@ -3433,8 +3433,8 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
         const m = YakitModalConfirm({
             width: 420,
             type: "white",
-            onCancelText: "取消",
-            onOkText: "关闭其他",
+            onCancelText: i18n.t("MainOperatorContent.Confirm.cancel", {ns: "layout"}),
+            onOkText: i18n.t("MainOperatorContent.Confirm.closeOther", {ns: "layout"}),
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
                 if (pageCache.length <= 0) return
@@ -3452,7 +3452,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
             // onCancel: () => {
             //     m.destroy()
             // },
-            content: "是否保留当前标签页，关闭其他标签页"
+            content: i18n.t("MainOperatorContent.Confirm.keepCurrentCloseOthers", {ns: "layout"})
         })
     })
     return (
@@ -5043,8 +5043,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 const m = YakitModalConfirm({
                     width: 420,
                     type: "white",
-                    onCancelText: "取消",
-                    onOkText: "关闭其他",
+            onCancelText: i18n.t("MainOperatorContent.Confirm.cancel", {ns: "layout"}),
+            onOkText: i18n.t("MainOperatorContent.Confirm.closeOther", {ns: "layout"}),
                     icon: <ExclamationCircleOutlined />,
                     onOk: () => {
                         const newSubPage: MultipleNodeInfo[] = [item]
@@ -5069,15 +5069,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     // onCancel: () => {
                     //     m.destroy()
                     // },
-                    content: "是否保留当前标签页，关闭其他标签页"
+            content: i18n.t("MainOperatorContent.Confirm.keepCurrentCloseOthers", {ns: "layout"})
                 })
             } else {
                 // 关闭组内的其他tabs
                 const m = YakitModalConfirm({
                     width: 420,
                     type: "white",
-                    onCancelText: "取消",
-                    onOkText: "关闭组内其他",
+                    onCancelText: i18n.t("MainOperatorContent.Confirm.cancel", {ns: "layout"}),
+                    onOkText: i18n.t("MainOperatorContent.Confirm.closeOtherInGroup", {ns: "layout"}),
                     icon: <ExclamationCircleOutlined />,
                     onOk: () => {
                         const groupItem = subPage[index]
@@ -5099,7 +5099,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                     // onCancel: () => {
                     //     m.destroy()
                     // },
-                    content: "是否仅保留当前标签页，关闭组内其他标签页"
+                    content: i18n.t("MainOperatorContent.Confirm.keepCurrentCloseOthersInGroup", {ns: "layout"})
                 })
             }
         })
@@ -5310,8 +5310,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 const m = YakitModalConfirm({
                     width: 420,
                     type: "white",
-                    onCancelText: "取消",
-                    onOkText: "关闭组",
+            onCancelText: i18n.t("MainOperatorContent.Confirm.cancel", {ns: "layout"}),
+            onOkText: i18n.t("MainOperatorContent.Confirm.closeGroup", {ns: "layout"}),
                     icon: <ExclamationCircleOutlined />,
                     onOk: () => {
                         getIsCloseGroupTip()
@@ -5346,8 +5346,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
             const m = YakitModalConfirm({
                 width: 420,
                 type: "white",
-                onCancelText: "取消",
-                onOkText: "关闭其他",
+            onCancelText: i18n.t("MainOperatorContent.Confirm.cancel", {ns: "layout"}),
+            onOkText: i18n.t("MainOperatorContent.Confirm.closeOther", {ns: "layout"}),
                 icon: <ExclamationCircleOutlined />,
                 onOk: () => {
                     const newPage = [{...groupItem}]
@@ -5379,7 +5379,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 // onCancel: () => {
                 //     m.destroy()
                 // },
-                content: "是否保留当前组及其组内标签页，关闭其他组和标签页"
+                    content: i18n.t("MainOperatorContent.Confirm.keepCurrentGroupCloseOthers", {ns: "layout"})
             })
         })
         /**

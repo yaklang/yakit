@@ -106,6 +106,7 @@
       "menuOpenPageFailed": "menu open page failed!",
       "openWFFailed": "打开WF失败: {error}",
       "fetchPluginGroupFailed": "获取插件组失败: {error}",
+      "fetchFuzzerListFailed": "fetchFuzzerList失败: {error}",
       "webFuzzerParseFailed": "webFuzzer序列化获取缓存数据解析失败: {error}",
       "maxTabsReached": "超过标签页数量限制",
       "selectTypeAgain": "请选择类型后再次提交",
@@ -118,7 +119,24 @@
       "removeFromGroup": "从组中移出",
       "restoreTab": "恢复标签页",
       "closeCurrentTab": "关闭当前标签页",
+      "closeAllTabs": "关闭所有标签页",
       "closeOtherTabs": "关闭其他标签页"
+    },
+    "BugTest": {
+      "specialVulnType": "专项漏洞类型",
+      "manageNewGroupHint": "点击管理新建分组",
+      "manage": "管理"
+    },
+    "Confirm": {
+      "cancel": "取消",
+      "closeAll": "关闭所有",
+      "closeAllTabsTitle": "是否关闭所有标签页",
+      "closeOther": "关闭其他",
+      "closeGroup": "关闭组",
+      "closeOtherInGroup": "关闭组内其他",
+      "keepCurrentCloseOthers": "是否保留当前标签页，关闭其他标签页",
+      "keepCurrentCloseOthersInGroup": "是否仅保留当前标签页，关闭组内其他标签页",
+      "keepCurrentGroupCloseOthers": "是否保留当前组及其组内标签页，关闭其他组和标签页"
     },
     "Modal": {
       "importPlugin": "导入插件",

@@ -106,6 +106,7 @@
       "menuOpenPageFailed": "Menu open page failed!",
       "openWFFailed": "Failed to open WF: {error}",
       "fetchPluginGroupFailed": "Failed to fetch plugin groups: {error}",
+      "fetchFuzzerListFailed": "Failed to fetch Fuzzer list: {error}",
       "webFuzzerParseFailed": "Failed to parse cached WebFuzzer data: {error}",
       "maxTabsReached": "Tab limit reached",
       "selectTypeAgain": "Please select a type and submit again",
@@ -118,7 +119,24 @@
       "removeFromGroup": "Remove from group",
       "restoreTab": "Restore tab",
       "closeCurrentTab": "Close current tab",
+      "closeAllTabs": "Close all tabs",
       "closeOtherTabs": "Close other tabs"
+    },
+    "BugTest": {
+      "specialVulnType": "Special Vulnerability Type",
+      "manageNewGroupHint": "Click Manage to create a new group",
+      "manage": "Manage"
+    },
+    "Confirm": {
+      "cancel": "Cancel",
+      "closeAll": "Close All",
+      "closeAllTabsTitle": "Close all tabs?",
+      "closeOther": "Close Other",
+      "closeGroup": "Close Group",
+      "closeOtherInGroup": "Close Other in Group",
+      "keepCurrentCloseOthers": "Keep the current tab and close other tabs?",
+      "keepCurrentCloseOthersInGroup": "Keep the current tab and close other tabs in the group?",
+      "keepCurrentGroupCloseOthers": "Keep the current group and its tabs, and close other groups and tabs?"
     },
     "Modal": {
       "importPlugin": "Import Plugin",
