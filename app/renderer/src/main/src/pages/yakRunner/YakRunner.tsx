@@ -1059,15 +1059,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
             </div>
             {/* 文件过大提示框 */}
-            <YakitHint
+                <YakitHint
                 visible={isShowFileHint}
-                title='文件警告'
-                content='文件过大，无法使用YakRunner进行操作'
+                title={i18n.t("YakRunner.fileTooLargeWarning", {ns: "yakRunner"})}
+                content={i18n.t("YakRunner.fileTooLargeContent", {ns: "yakRunner"})}
                 cancelButtonProps={{style: {display: "none"}}}
                 onOk={() => {
                     setShowFileHint(false)
                 }}
-                okButtonText={"知道了"}
+                okButtonText={i18n.t("YakRunner.okButton", {ns: "yakRunner"})}
             />
         </YakRunnerContext.Provider>
     )

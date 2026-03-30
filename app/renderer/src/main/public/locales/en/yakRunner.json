@@ -182,6 +182,9 @@
   "CollapseList": {
     "noHelpInfo": "No help information"
   },
+  "TerminalBox": {
+    "terminalError": "Terminal {path} error"
+  },
   "YakRunnerScanHistory": {
     "fetchFailed": "Failed to fetch scan history: {error}",
     "ssaReport": "SSA Scan Report",

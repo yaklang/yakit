@@ -182,6 +182,9 @@
   "CollapseList": {
     "noHelpInfo": "暂无帮助信息"
   },
+  "TerminalBox": {
+    "terminalError": "终端{path}错误"
+  },
   "YakRunnerScanHistory": {
     "fetchFailed": "获取扫描历史失败：{error}",
     "ssaReport": "SSA扫描报告",
