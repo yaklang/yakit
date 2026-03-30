@@ -322,7 +322,12 @@
     "skipConfirm": "Skipping will cancel the tool call and use the current output for follow-up decisions. Confirm skip?",
     "success": "Success",
     "failed": "Failed",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "startTime": "Start Time",
+    "duration": "Duration",
+    "relatedRisks": "Related Risks",
+    "httpTraffic": "HTTP Traffic",
+    "refreshCodeBlockData": "Refresh Code Block Data"
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "Path join failed",

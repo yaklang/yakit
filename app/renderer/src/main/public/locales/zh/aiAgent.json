@@ -322,7 +322,12 @@
     "skipConfirm": "跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过",
     "success": "成功",
     "failed": "失败",
-    "cancelled": "已取消"
+    "cancelled": "已取消",
+    "startTime": "开始时间",
+    "duration": "执行时长",
+    "relatedRisks": "相关漏洞",
+    "httpTraffic": "HTTP 流量",
+    "refreshCodeBlockData": "刷新代码块数据"
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "路径拼接失败",

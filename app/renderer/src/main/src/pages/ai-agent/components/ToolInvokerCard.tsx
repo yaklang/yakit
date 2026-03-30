@@ -298,12 +298,12 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                     <div className={styles["tool-invoker-card-extra-time"]}>
                         {!!startTime && (
                             <div>
-                                开始时间:<span>{startTime}</span>
+                                {t("ToolInvokerCard.startTime")}<span>{startTime}</span>
                             </div>
                         )}
                         {!!duration && (
                             <div>
-                                执行时长:<span>{duration}</span>s
+                                {t("ToolInvokerCard.duration")}<span>{duration}</span>s
                             </div>
                         )}
                     </div>
@@ -315,7 +315,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                                     switchAIActTab(AITabsEnum.Risk)
                                 }}
                             >
-                                相关漏洞 <span>{risksLen}</span>
+                                {t("ToolInvokerCard.relatedRisks")} <span>{risksLen}</span>
                             </label>
                             <Divider type='vertical' />
                         </>
@@ -326,10 +326,10 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                                 switchAIActTab(AITabsEnum.HTTP)
                             }}
                         >
-                            HTTP 流量 <span>{trafficLen}</span>
+                            {t("ToolInvokerCard.httpTraffic")} <span>{trafficLen}</span>
                         </label>
                     )}
-                    <Tooltip title='刷新代码块数据'>
+                    <Tooltip title={t("ToolInvokerCard.refreshCodeBlockData")}>
                         <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={getListToolList} />
                     </Tooltip>
                 </div>
