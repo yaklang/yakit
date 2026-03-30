@@ -31,7 +31,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
@@ -48,7 +49,7 @@ jobs:
           yarn i18n:check 2>&1 | tee i18n-output.log
 
       - name: Comment i18n failure on PR
-        if: steps.i18n_check.outcome == 'failure'
+        if: steps.i18n_check.outcome == 'failure' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
@@ -86,13 +87,15 @@ jobs:
       - name: Stop CI on i18n failure
         if: steps.i18n_check.outcome == 'failure'
         run: |
-          echo "i18n check failed. See PR comment for details."
+          echo "i18n check failed."
           exit 1
 
-      - name: Format PR changed files with prettier
+      - name: Format or check PR changed files with prettier
         id: format_step
         continue-on-error: true
         shell: bash
+        env:
+          IS_FORK_PR: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           set -o pipefail
           {
@@ -110,12 +113,17 @@ jobs:
             exit 0
           fi
 
-          echo "Formatting ${#format_targets[@]} file(s)..."
-          npx prettier@3.8.1 --write --ignore-unknown "${format_targets[@]}"
+          if [ "$IS_FORK_PR" = 'true' ]; then
+            echo "Fork PR detected. Checking ${#format_targets[@]} file(s) with prettier..."
+            npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --check --ignore-unknown "${format_targets[@]}"
+          else
+            echo "Same-repo PR detected. Formatting ${#format_targets[@]} file(s) with prettier..."
+            npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --write --ignore-unknown "${format_targets[@]}"
+          fi
           } 2>&1 | tee format-output.log
 
       - name: Comment format failure on PR
-        if: steps.format_step.outcome == 'failure'
+        if: steps.format_step.outcome == 'failure' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
@@ -153,10 +161,11 @@ jobs:
       - name: Stop CI on format failure
         if: steps.format_step.outcome == 'failure'
         run: |
-          echo "prettier format failed. See PR comment for details."
+          echo "prettier format check failed."
           exit 1
 
       - name: Commit formatted files
+        if: success() && github.event.pull_request.head.repo.full_name == github.repository
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -172,7 +181,7 @@ jobs:
           fi
 
       - name: Comment pull_request format and check success on PR
-        if: success()
+        if: success() && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/github-script@v7
         with:
           script: |
