@@ -556,6 +556,11 @@
   "AIMilkdownInput": {
     "placeholder": "请告诉我，你想做什么...(shift + enter 换行)"
   },
+  "AITaskQuery": {
+    "taskQueue": "任务队列",
+    "clear": "清空",
+    "focusMode": "专注模式: {mode}"
+  },
   "ForgeName": {
     "exportForge": "导出技能",
     "importForge": "导入技能",

@@ -556,6 +556,11 @@
   "AIMilkdownInput": {
     "placeholder": "Tell me what you want to do... (shift + enter for a new line)"
   },
+  "AITaskQuery": {
+    "taskQueue": "Task Queue",
+    "clear": "Clear",
+    "focusMode": "Focus Mode: {mode}"
+  },
   "ForgeName": {
     "exportForge": "Export Forge",
     "importForge": "Import Forge",

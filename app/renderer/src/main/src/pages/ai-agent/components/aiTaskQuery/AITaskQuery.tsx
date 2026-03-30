@@ -16,10 +16,12 @@ import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
 import {useCreation, useDebounceFn, useMemoizedFn} from "ahooks"
 import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
 import {Tooltip} from "antd"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
     const {chatIPCData} = useChatIPCStore()
     const {handleSendSyncMessage} = useChatIPCDispatcher()
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -52,7 +54,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
                     <div className={styles["ai-task-query-list-header"]}>
                         <div className={styles["header-left"]}>
                             <OutlineListTodoIcon className={styles["list-todo-icon"]} />
-                            <div className={styles["task-query-title"]}>任务队列</div>
+                            <div className={styles["task-query-title"]}>{t("AITaskQuery.taskQueue")}</div>
                             <YakitTag size='small' fullRadius={true}>
                                 {questionQueue.total}
                             </YakitTag>
@@ -66,7 +68,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
                                 onClick={onClearTaskQueue}
                                 loading={loading}
                             >
-                                清空
+                                {t("AITaskQuery.clear")}
                             </YakitButton>
                             <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => setShowList(false)} />
                         </div>
@@ -84,7 +86,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
                     radius={9999}
                     onClick={() => setShowList(true)}
                 >
-                    任务队列
+                    {t("AITaskQuery.taskQueue")}
                 </YakitButton>
             )}
         </div>
@@ -93,6 +95,7 @@ export const AITaskQuery: React.FC<AITaskQueryProps> = React.memo((props) => {
 
 const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
     const {item} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {chatIPCData} = useChatIPCStore()
     const [upLoading, setUpLoading] = useState<boolean>(false)
     const [removeLoading, setRemoveLoading] = useState<boolean>(false)
@@ -146,7 +149,7 @@ const AITaskQueryItem: React.FC<AITaskQueryItemProps> = React.memo((props) => {
             </div>
             <div className={styles["item-right"]}>
                 {item.focus_mode && (
-                    <Tooltip title={`专注模式: ${item.focus_mode}`}>
+                        <Tooltip title={t("AITaskQuery.focusMode", {mode: item.focus_mode})}>
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </Tooltip>
                 )}
