@@ -1,23 +1,18 @@
 import React, {useEffect, useMemo} from "react"
 import {FC} from "react"
 
-import {OutlineXIcon, OutlineMicroscopeIcon} from "@/assets/icon/outline"
-import {OutlinePlusIcon} from "@/assets/newIcon"
 import {AIReActChat} from "@/pages/ai-re-act/aiReActChat/AIReActChat"
-import {Tooltip} from "antd"
 import classNames from "classnames"
 import styles from "./HTTPHistory.module.scss"
 
-import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {
     AIHandleStartParams,
     AIHandleStartResProps,
+    AIReActChatProps,
     AIReActChatRefProps,
     AISendParams,
     AISendResProps
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
-import {UseChatIPCEvents} from "@/pages/ai-re-act/hooks/type"
-import {AIChatInfo} from "@/pages/ai-agent/type/aiChat"
 import {getAIModelAvailableInfo, isForcedSetAIModal} from "@/pages/ai-agent/aiModelList/utils"
 import {useDebounceFn, useMemoizedFn, useRequest, useSafeState} from "ahooks"
 import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
@@ -25,7 +20,6 @@ import {defaultParams, GlobalNetworkConfig} from "./configNetwork/ConfigNetworkP
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {AIAgentSetting} from "@/pages/ai-agent/aiAgentType"
 import {getRemoteValue} from "@/utils/kv"
-import {AIInputInnerFeatureEnum} from "@/pages/ai-agent/template/type"
 import {AIModelForm} from "@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm"
 import useListenWidth from "@/pages/pluginHub/hooks/useListenWidth"
 
@@ -36,15 +30,10 @@ interface HistoryAIReActChatProps {
     aiReActChatRef: React.RefObject<AIReActChatRefProps>
     onStartRequest: (data: AIHandleStartParams) => Promise<AIHandleStartResProps>
     onSendRequest: (data: AISendParams) => Promise<AISendResProps>
-    activeID?: string
-    onStop: () => void
-    events: UseChatIPCEvents
-    onChatFromHistory: (session: string) => void
-    setActiveChat: React.Dispatch<React.SetStateAction<AIChatInfo | undefined>>
-    setOpenTabsFlag: React.Dispatch<React.SetStateAction<boolean>>
     setSetting: React.Dispatch<React.SetStateAction<AIAgentSetting>>
     inViewport: boolean
     className?: string
+    externalParameters: NonNullable<AIReActChatProps["externalParameters"]>
 }
 
 const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
@@ -55,15 +44,10 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
         aiReActChatRef,
         onStartRequest,
         onSendRequest,
-        activeID,
-        onStop,
-        events,
-        onChatFromHistory,
-        setActiveChat,
-        setOpenTabsFlag,
         inViewport,
         setSetting,
-        className
+        className,
+        externalParameters
     } = props
 
     const [globalNetworkConfig, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
@@ -167,50 +151,24 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
                 startRequest={onStartRequest}
                 sendRequest={onSendRequest}
                 chatContainerHeaderClassName={styles["history-ai-header"]}
-                externalParameters={{
-                    isOpen: false,
-                    rightIcon: (
-                        <>
-                            <Tooltip title='新建对话'>
-                                <YakitButton
-                                    type='text2'
-                                    icon={<OutlinePlusIcon />}
-                                    onClick={() => {
-                                        if (activeID) {
-                                            onStop()
-                                            events.onReset()
-                                            onChatFromHistory(activeID)
-                                            setActiveChat(undefined)
-                                        }
-                                    }}
-                                />
-                            </Tooltip>
-                            <YakitButton type='text2' icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-                        </>
-                    ),
-                    footerLeftTypes: [
-                        AIInputInnerFeatureEnum.AIModelSelect,
-                        {
-                            type: AIInputInnerFeatureEnum.AIFocusMode,
-                            props: {
-                                value: "http_flow_analyze",
-                                onChange: () => {},
-                                disabled: true
-                            }
-                        }
-                    ],
-                    filterMentionType: ["focusMode"]
-                }}
+                externalParameters={externalParameters}
             />
         )
-    }, [activeID, aiReActChatRef, data, events, globalNetworkConfig, loading, showFreeChat, chatWidth])
+    }, [
+        aiReActChatRef,
+        chatWidth,
+        data,
+        externalParameters,
+        loading,
+        onSendRequest,
+        onStartRequest,
+        run,
+        setShowFreeChat,
+        showFreeChat
+    ])
 
     return (
-        <div
-            ref={refRef}
-            className={classNames(styles["ai-wrapper"], className)}
-            id='main-operator-page-body-db-http-request-aiReAct-chat'
-        >
+        <div ref={refRef} className={classNames(styles["ai-wrapper"], className)}>
             {resultRender}
         </div>
     )
