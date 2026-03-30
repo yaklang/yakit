@@ -2,6 +2,7 @@ import React, {useState} from "react"
 import {Form, Space, Table, Tag, Button, Alert} from "antd"
 import {CopyableField, ManyMultiSelectForString, SwitchItem} from "../../utils/inputUtil"
 import {AutoSpin} from "../../components/AutoSpin"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface ReverseNotification {
     uuid: string
@@ -22,6 +23,7 @@ export interface ReverseNotificationTableProps {
 
 export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps>(
     (props: ReverseNotificationTableProps) => {
+        const {t} = useI18nNamespaces(["reverse"])
         let logs = props.logs
         const [withToken, setWithToken] = useState(false)
         const [type, setType] = useState<"rmi" | "rmi-handshake" | "tcp" | "http" | "https" | "ldap_flag" | string>("")
@@ -39,21 +41,21 @@ export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps
             <>
                 {props.loading ? (
                     <>
-                        <Space style={{float: "left", margin: "1rem", fontSize: "18px"}}>反连列表</Space>
+                        <Space style={{float: "left", margin: "1rem", fontSize: "18px"}}>{t("ReverseNotificationTable.title")}</Space>
                         <Space style={{float: "right", margin: "1rem"}}>
                             <AutoSpin spinning={props.loading} size={"small"} />
                             <div>
                                 <Form onSubmitCapture={(e) => e.preventDefault()} layout={"inline"}>
                                     <SwitchItem
                                         size={"small"}
-                                        label={"只看Token"}
+                                        label={t("ReverseNotificationTable.onlyShowToken")}
                                         value={withToken}
                                         setValue={setWithToken}
                                         formItemStyle={{marginBottom: 0}}
                                     />
 
                                     <ManyMultiSelectForString
-                                        label={"类型"}
+                                        label={t("ReverseNotificationTable.typeFilter")}
                                         value={type}
                                         setValue={(e) => {
                                             setWithToken(false)
@@ -61,8 +63,8 @@ export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps
                                         }}
                                         formItemStyle={{marginBottom: 0, minWidth: 200}}
                                         data={[
-                                            {value: "rmi", label: "RMI连接"},
-                                            {value: "rmi-handshake", label: "RMI握手"},
+                                            {value: "rmi", label: t("ReverseTable.rmiConnection")},
+                                            {value: "rmi-handshake", label: t("ReverseTable.rmiHandshake")},
                                             {value: "http", label: "HTTP"},
                                             {value: "https", label: "HTTPS"},
                                             {value: "tcp", label: "TCP"},
@@ -76,7 +78,7 @@ export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps
                                                 props.clearHandle()
                                             }}
                                         >
-                                            清空
+                                            {t("ReverseNotificationTable.clear")}
                                         </Button>
                                     </Form.Item>
                                 </Form>
@@ -94,13 +96,13 @@ export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps
                     rowKey={(i) => i.uuid}
                     columns={[
                         {
-                            title: "反连类型",
+                            title: t("ReverseNotificationTable.reverseType"),
                             render: (i: ReverseNotification) => {
                                 switch (i.type) {
                                     case "rmi":
-                                        return <Tag color={"red"}>RMI连接</Tag>
+                                        return <Tag color={"red"}>{t("ReverseTable.rmiConnection")}</Tag>
                                     case "rmi-handshake":
-                                        return <Tag color={"orange"}>RMI握手</Tag>
+                                        return <Tag color={"orange"}>{t("ReverseTable.rmiHandshake")}</Tag>
                                     case "http":
                                         return <Tag color={"red"}>HTTP</Tag>
                                     case "https":
@@ -117,7 +119,7 @@ export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps
                             }
                         },
                         {
-                            title: "连接来源",
+                            title: t("ReverseTable.connectionSource"),
                             render: (i: ReverseNotification) => (
                                 <CopyableField text={i.remote_addr} noCopy={!i.remote_addr} />
                             )
@@ -127,7 +129,7 @@ export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps
                             render: (i: ReverseNotification) => <CopyableField text={i.token} noCopy={!i.token} />
                         },
                         {
-                            title: "响应",
+                            title: t("ReverseTable.response"),
                             render: (i: ReverseNotification) => <Space>{i.response_info}</Space>
                         }
                     ]}

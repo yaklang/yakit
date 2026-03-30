@@ -47,6 +47,7 @@
         "deleteProjectConfirm": "是否同时清除本地文件?",
         "clear": "清除",
         "hint": "提示",
+        "progress": "进度 {percent}%",
         "enterNewProject": "是否需要进入新建项目",
         "temporaryProjectInUse": "检测到有临时项目正在使用中，是否需要删除并创建新的临时项目"
     },
@@ -92,6 +93,10 @@
         "projectImporting": "项目导入中...",
         "progress": "进度"
     },
+    "syncingData": "同步数据中，请耐心等待...",
+    "syncFailed": "同步失败：{error}",
+    "stopFailed": "停止失败：{error}",
+    "cancel": "取消",
     "SetVariableProjectItem": {
         "remarkName": "备注名称",
         "remarkContent": "备注内容"

@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Col, PageHeader, Row} from "antd";
 import {YakEditor} from "../../utils/editors";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron");
 
@@ -13,6 +14,7 @@ export interface AnalyzerPageProp {
 export const AnalyzerPage: React.FC<AnalyzerPageProp> = (props) => {
     const [response, setResponse] = useState<any>();
     const [error, setError] = useState("");
+    const {t} = useI18nNamespaces(["analyzer"])
 
     useEffect(() => {
         ipcRenderer.invoke("http-analyze", {
@@ -33,7 +35,7 @@ export const AnalyzerPage: React.FC<AnalyzerPageProp> = (props) => {
     }, [])
 
     return <div>
-        <PageHeader title={"HTTP 模糊测试分析器"}/>
+        <PageHeader title={t("AnalyzerPage.title")}/>
         <Row gutter={8}>
             <Col span={12}>
                 <div style={{height: 500}}>

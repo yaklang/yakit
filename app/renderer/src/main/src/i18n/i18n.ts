@@ -14,10 +14,14 @@ i18n.use(HttpBackend)
             "layout",
             "yakChat",
             "configNetwork",
+            "spaceEngine",
             "playground",
             "plugin",
             "yakitStore",
             "customizeMenu",
+            "analyzer",
+            "shortcutKey",
+            "yakURLTree",
             "home",
             "history",
             "webFuzzer",
@@ -29,7 +33,9 @@ i18n.use(HttpBackend)
             "risk",
             "utils",
             "cve",
-            "yakRunner"
+            "yakRunner",
+            "projectManage",
+            "vulinbox"
         ], // 这几个需要预加载
         defaultNS: "",
         interpolation: {

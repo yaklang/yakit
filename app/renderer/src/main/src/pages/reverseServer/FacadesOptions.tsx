@@ -4,6 +4,7 @@ import {InputInteger, InputItem, SwitchItem, InputStringOrJsonItem} from "../../
 import {useGetState, useMemoizedFn} from "ahooks"
 import {getRemoteValue, setRemoteValue} from "../../utils/kv"
 import {NetInterface} from "@/models/Traffic";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 export const BRIDGE_ADDR = "yak-bridge-addr"
 export const BRIDGE_SECRET = "yak-bridge-secret"
@@ -22,6 +23,7 @@ export interface FacadeOptionsProp {
     onStartFacades: (StartFacadeServerParams) => any
 }
 export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
+    const {t} = useI18nNamespaces(["reverse"])
     const [onLoad, setOnLoad] = useState(false)
     const [params, setParams] = useState<StartFacadeServerParams>({
         BridgeParam: {Addr: "", Secret: ""},
@@ -73,13 +75,13 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
                         setParams({...params, IsRemote})
                     }}
                     value={params.IsRemote}
-                    label={"启用公网反连"}
+                    label={t("SettingReverseServer.enablePublicReverse")}
                 ></SwitchItem>
 
                 {params.IsRemote ? (
                     <>
                         <InputItem
-                            label={"Bridge地址"}
+                            label={t("SettingReverseServer.bridgeAddr")}
                             value={params.BridgeParam.Addr}
                             setValue={(BridgeAddr) => {
                                 params.BridgeParam.Addr = BridgeAddr
@@ -88,7 +90,7 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
                         />
                         <InputItem
                             type='password'
-                            label={"密码"}
+                            label={t("SettingReverseServer.password")}
                             value={params.BridgeParam.Secret}
                             setValue={(Secret) => {
                                 params.BridgeParam.Secret = Secret
@@ -96,7 +98,7 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
                             }}
                         />
                         <InputInteger
-                            label={"反连端口"}
+                            label={t("SettingReverseServer.reversePort")}
                             setValue={(ReversePort) => {
                                 setParams({...params, ReversePort})
                             }}
@@ -106,14 +108,14 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
                 ) : (
                     <>
                         <InputItem
-                            label={"反连地址"}
+                            label={t("SettingReverseServer.reverseAddr")}
                             value={params.ReverseHost}
                             setValue={(host) => {
                                 setParams({...params, ReverseHost: host})
                             }}
                         />
                         <InputInteger
-                            label={"反连端口"}
+                            label={t("SettingReverseServer.reversePort")}
                             setValue={(ReversePort) => {
                                 setParams({...params, ReversePort})
                             }}
@@ -124,7 +126,7 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
                 <Form.Item wrapperCol={{offset: 8}}>
                     <Button type='primary' htmlType='submit'>
                         {" "}
-                        启动FacadeServer{" "}
+                        {t("SettingReverseServer.startFacadeServerBtn")}{" "}
                     </Button>
                 </Form.Item>
             </Form>

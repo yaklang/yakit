@@ -2,7 +2,39 @@
   "BottomSideBar": {
     "syntaxCheck": "Syntax Check",
     "terminal": "Terminal",
-    "helpInfo": "Help Information"
+    "helpInfo": "Help Information",
+    "cursorLocation": "Line {line}, Column {column}"
+  },
+  "BottomEditorDetails": {
+    "output": "Output",
+    "syntaxCheck": "Syntax Check",
+    "terminal": "Terminal",
+    "helpInfo": "Help Information",
+    "terminalFontConfig": "Terminal Font Settings",
+    "terminalFontFamilyHelpPrefix": "Control the terminal font family, defaulting to the value of",
+    "terminalFontFamilyHelpSuffix": ".",
+    "enterFont": "Please enter font",
+    "terminalFontSizeHelpPrefix": "Control the terminal font size, defaulting to",
+    "terminalFontSizeHelpSuffix": ".",
+    "selectFileForSyntaxCheck": "Please select a specific file to view syntax check information",
+    "selectYakFileForHelp": "Please select a Yak file to view help information"
+  },
+  "YakHelpDoc": {
+    "goToOfficialDocs": "Go to official docs",
+    "functionKeywordPlaceholder": "Enter a function keyword",
+    "noData": "No data",
+    "error": "Error",
+    "fetchFailed": "Fetch failed"
+  },
+  "FileTree": {
+    "newFile": "New File",
+    "openFileSystem": "Show in folder",
+    "openTerminal": "Open in terminal",
+    "closeFolder": "Close folder",
+    "copyPath": "Copy path",
+    "copyRelativePath": "Copy relative path",
+    "deleteConfirmTitle": "Delete {name}?",
+    "deleteConfirmContent": "This will permanently delete it (Windows will move it to the recycle bin)."
   },
   "YakRunner": {
     "resourceExplorer": "Resource Explorer",

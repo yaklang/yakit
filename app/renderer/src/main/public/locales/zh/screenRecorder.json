@@ -23,5 +23,10 @@
     "speedHelp": "数值越小越慢，数值越大越快",
     "mouseCapture": "鼠标捕捉",
     "startRecording": "开始录屏"
+  },
+  "ReactPlayerVideo": {
+    "fileNotPlayable": "该视频文件不可播放",
+    "previous": "上一个",
+    "next": "下一个"
   }
 }

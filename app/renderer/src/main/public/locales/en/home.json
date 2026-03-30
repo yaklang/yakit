@@ -50,6 +50,8 @@
         "pluginStore": "Plugin Store",
         "pluginsMine": "My Plugins",
         "pluginLocal": "Local Plugins",
+        "notepadManage": "{name} Manage",
+        "addNotepad": "Add {name}",
         "codecDesc": "A data encryption and decryption tool that supports multiple encryption methods and allows users to define custom encryption and decryption workflows.",
         "payloadDesc": "Supports creating, reading, updating, and deleting dictionary entries, enabling centralized and unified management.",
         "informationGathering": "Reconnaissance",

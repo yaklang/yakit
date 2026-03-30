@@ -2,7 +2,39 @@
   "BottomSideBar": {
     "syntaxCheck": "语法检查",
     "terminal": "终端",
-    "helpInfo": "帮助信息"
+    "helpInfo": "帮助信息",
+    "cursorLocation": "行 {line}，  列 {column}"
+  },
+  "BottomEditorDetails": {
+    "output": "输出",
+    "syntaxCheck": "语法检查",
+    "terminal": "终端",
+    "helpInfo": "帮助信息",
+    "terminalFontConfig": "终端字体配置",
+    "terminalFontFamilyHelpPrefix": "控制终端的字体系列，默认为",
+    "terminalFontFamilyHelpSuffix": "的值。",
+    "enterFont": "请输入字体",
+    "terminalFontSizeHelpPrefix": "控制终端的字体大小，默认为",
+    "terminalFontSizeHelpSuffix": "。",
+    "selectFileForSyntaxCheck": "请选中具体文件查看语法检查信息",
+    "selectYakFileForHelp": "请选中yak文件查看帮助信息"
+  },
+  "YakHelpDoc": {
+    "goToOfficialDocs": "跳转到官方文档",
+    "functionKeywordPlaceholder": "请输入函数关键词",
+    "noData": "暂无数据",
+    "error": "错误",
+    "fetchFailed": "获取失败"
+  },
+  "FileTree": {
+    "newFile": "新建文件",
+    "openFileSystem": "在文件夹中显示",
+    "openTerminal": "在终端打开",
+    "closeFolder": "关闭文件夹",
+    "copyPath": "复制路径",
+    "copyRelativePath": "复制相对路径",
+    "deleteConfirmTitle": "是否要删除{name}",
+    "deleteConfirmContent": "确认删除后将会彻底删除（windows系统将会移入回收站）"
   },
   "YakRunner": {
     "resourceExplorer": "资源管理器",

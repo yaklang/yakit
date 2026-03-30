@@ -7,7 +7,8 @@
         "largeInput": "超大输入",
         "replaceOutputToInput": "将Output替换至Input",
         "largeOutputTip": "超大输出，请点击保存下载文件查看",
-        "dataDistortion": "数据失真"
+        "dataDistortion": "数据失真",
+        "hexRawText": "hex原文"
     },
     "NewCodecMiddleTypeItem": {
         "enableBreakpoint": "开启断点",
@@ -30,7 +31,8 @@
     "NewCodecLeftDragList": {
         "codecCategory": "Codec 分类",
         "collapseCodecCategory": "收起Codec分类",
-        "myFavoriteTools": "我收藏的工具"
+        "myFavoriteTools": "我收藏的工具",
+        "other": "其他"
     },
     "NewCodec": {
         "saveUpdateConfirm": "是否保存更新当前模板",

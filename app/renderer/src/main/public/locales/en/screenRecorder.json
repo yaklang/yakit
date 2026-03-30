@@ -23,5 +23,10 @@
     "speedHelp": "Lower values are slower, higher values are faster",
     "mouseCapture": "Mouse capture",
     "startRecording": "Start recording"
+  },
+  "ReactPlayerVideo": {
+    "fileNotPlayable": "This video file cannot be played",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

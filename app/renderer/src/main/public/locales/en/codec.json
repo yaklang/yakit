@@ -7,7 +7,8 @@
         "largeInput": "Large Input",
         "replaceOutputToInput": "Replace Output to Input",
         "largeOutputTip": "Output is too large, please click save to download and view the file",
-        "dataDistortion": "data distortion"
+        "dataDistortion": "data distortion",
+        "hexRawText": "Hex raw text"
     },
     "NewCodecMiddleTypeItem": {
         "enableBreakpoint": "Enable Breakpoint",
@@ -30,7 +31,8 @@
     "NewCodecLeftDragList": {
         "codecCategory": "Codec Categories",
         "collapseCodecCategory": "Collapse Codec Categories",
-        "myFavoriteTools": "My Favorite Tools"
+        "myFavoriteTools": "My Favorite Tools",
+        "other": "Other"
     },
     "NewCodec": {
         "saveUpdateConfirm": "Do you want to save updates to the current template?",

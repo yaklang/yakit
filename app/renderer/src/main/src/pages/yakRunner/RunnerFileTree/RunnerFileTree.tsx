@@ -58,6 +58,7 @@ import {Tooltip} from "antd"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
+import i18n from "@/i18n/i18n"
 import {SystemInfo} from "@/constants/hardware"
 import {WatchFolderID} from "../FileTreeMap/watchFolderID"
 
@@ -175,7 +176,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         if (initTree.length > 0) {
             initTree.push({
                 parent: null,
-                name: "已经到底啦~",
+                name: i18n.t("RunnerFileTree.endReached", {ns: "yakRunner"}),
                 path: "",
                 isFolder: false,
                 icon: "",
@@ -219,16 +220,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         let newMenu: YakitMenuItemType[] = [
             {
                 key: "closeFolder",
-                label: "关闭文件夹",
+                label: i18n.t("RunnerFileTree.closeFolder", {ns: "yakRunner"}),
                 disabled: fileTree.length === 0
             },
             {
                 key: "createFile",
-                label: "新建文件"
+                label: i18n.t("RunnerFileTree.newFile", {ns: "yakRunner"})
             },
             {
                 key: "createFolder",
-                label: "新建文件夹",
+                label: i18n.t("yakitUi:newFolder"),
                 // 未打开文件夹或无法新建文件夹
                 disabled: fileTree.length === 0
             },
@@ -237,17 +238,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             },
             {
                 key: "openFile",
-                label: "打开文件"
+                label: i18n.t("openFile", {ns: "aiAgent"})
             },
             {
                 key: "openFolder",
-                label: "打开文件夹"
+                label: i18n.t("openFolder", {ns: "aiAgent"})
             }
         ]
         if (historyList.length > 0) {
             newMenu.push({
                 key: "history",
-                label: "最近打开",
+                label: i18n.t("recentOpen", {ns: "aiAgent"}),
                 children: [
                     ...historyList.map((item) => {
                         return {key: item.path, label: item.name}

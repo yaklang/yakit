@@ -250,7 +250,10 @@
     "refuse": "Refuse",
     "migrateDataTitle": "Migrate Data",
     "migrateDataDesc": "Due to the reconstruction of the IRify function, in order not to affect the use, you need to click OK to migrate the old data. Data migration will not cause any data loss.",
-    "setPassword": "Set Password"
+    "setPassword": "Set Password",
+    "irifyTechPreviewWatermark": "IRify technical preview is for technical communication only",
+    "enpriTraceTrialWatermark": "EnpriTrace Trial",
+    "enpriTraceAgentTrialWatermark": "EnpriTraceAgent Trial"
   },
   "NewApp": {
     "userClickEvent": "User Click Event",

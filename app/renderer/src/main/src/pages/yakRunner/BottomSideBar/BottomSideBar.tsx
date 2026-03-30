@@ -134,7 +134,7 @@ export const BottomSideBar: React.FC<BottomSideBarProps> = (props) => {
             {/* 光标位置 */}
             <div
                 className={styles["bottom-side-bar-right"]}
-            >{`行 ${showLocationInfo.lineNumber}，  列 ${showLocationInfo.column}`}</div>
+            >{t("BottomSideBar.cursorLocation", {line: showLocationInfo.lineNumber, column: showLocationInfo.column})}</div>
         </div>
     )
 }

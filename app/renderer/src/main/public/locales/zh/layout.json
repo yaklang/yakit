@@ -250,7 +250,10 @@
     "refuse": "拒绝",
     "migrateDataTitle": "迁移数据",
     "migrateDataDesc": "由于IRify功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。",
-    "setPassword": "修改密码"
+    "setPassword": "修改密码",
+    "irifyTechPreviewWatermark": "IRify技术浏览版仅供技术交流使用",
+    "enpriTraceTrialWatermark": "EnpriTrace-试用版",
+    "enpriTraceAgentTrialWatermark": "EnpriTraceAgent-试用版"
   },
   "NewApp": {
     "userClickEvent": "用户点击事件",

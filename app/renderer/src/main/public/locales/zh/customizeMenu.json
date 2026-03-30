@@ -14,6 +14,7 @@
     "editMenuName": "修改菜单名称",
     "emptyMenuDetected": "检测到有空菜单",
     "emptyMenuWarning": "有{emptyMenuLength}个菜单功能为空，空菜单不会{tip}，是否仍要继续{tip}？",
+    "unnamedMenuPrefix": "未命名",
     "SecondMenu": {
       "unnamedMenu1": "未命名1（菜单名建议 4-16 个英文字符内最佳）",
       "deleteMenuConfirm": "是否要删除该菜单",

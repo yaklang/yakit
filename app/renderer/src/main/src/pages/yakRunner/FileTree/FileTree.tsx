@@ -47,14 +47,15 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
 import {OpenFileByPathProps} from "../YakRunnerType"
 import {setClipboardText} from "@/utils/clipboard"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
 const FolderMenu: YakitMenuItemProps[] = [
-    {label: "新建文件", key: "newFile"},
-    {label: "新建文件夹", key: "newFolder"},
-    {label: "在文件夹中显示", key: "openFileSystem"},
-    {label: "在终端打开", key: "openTernimal"}
+    {label: i18n.t("FileTree.newFile", {ns: "yakRunner"}), key: "newFile"},
+    {label: i18n.t("yakitUi:newFolder"), key: "newFolder"},
+    {label: i18n.t("FileTree.openFileSystem", {ns: "yakRunner"}), key: "openFileSystem"},
+    {label: i18n.t("FileTree.openTerminal", {ns: "yakRunner"}), key: "openTernimal"}
 ]
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
