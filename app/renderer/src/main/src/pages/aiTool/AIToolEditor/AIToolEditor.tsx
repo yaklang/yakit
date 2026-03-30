@@ -70,6 +70,7 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
     const {isModify} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const [saveLoading, setSaveLoading] = useState<boolean>(false)
     const [fetchDataLoading, setFetchDataLoading] = useState<boolean>(false)
@@ -114,14 +115,14 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
         if (currentItem && currentItem.pageParamsInfo.modifyAIToolPageInfo) {
             const id = currentItem.pageParamsInfo.modifyAIToolPageInfo?.id
             if (!id) {
-                yakitNotify("error", `尝试编辑的工具异常(ID: ${id}), 请关闭页面重试`)
+                yakitNotify("error", t("AIToolEditor.editToolInvalid", {id}))
                 return
             }
 
             grpcGetAIToolById(id, false)
                 .then((res) => {
                     if (!res) {
-                        yakitNotify("error", `未获取到待编辑工具的详情, 请关闭页面重试`)
+                        yakitNotify("error", t("AIToolEditor.toolDetailMissing"))
                         setDelayCancelFetchDataLoading()
                         return
                     }
@@ -143,7 +144,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                     } catch (error) {}
                 })
                 .catch(() => {
-                    yakitNotify("error", `未获取到待编辑工具的详情, 请关闭页面重试`)
+                    yakitNotify("error", t("AIToolEditor.toolDetailMissing"))
                 })
                 .finally(() => setDelayCancelFetchDataLoading())
         }
@@ -157,7 +158,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
     const handleSave = useMemoizedFn(() => {
         return new Promise<void>(async (resolve, reject) => {
             if (!infoFormRef.current) {
-                reject("表单不存在")
+                reject(t("AIToolEditor.formMissing"))
                 return
             }
             try {
@@ -176,7 +177,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                     Keywords: formData.Keywords ?? []
                 }
                 if (isModify && !params.ID) {
-                    reject("数据错误,编辑状态下ID不能为空")
+                    reject(t("AIToolEditor.editIdRequired"))
                     return
                 }
                 const func = !!toolIdRef.current ? grpcUpdateAITool : grpcSaveAITool
@@ -185,7 +186,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                         if (isAITool(res)) {
                             toolIdRef.current = res.ID
                         }
-                        yakitNotify("success", "保存成功")
+                        yakitNotify("success", t("AIToolEditor.saveSuccess"))
                         resolve()
                     })
                     .catch(reject)
@@ -230,8 +231,8 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
             setSubscribeClose(YakitRoute.ModifyAITool, {
                 close: async () => {
                     return {
-                        title: "工具未保存",
-                        content: "是否要将工具保存?",
+                        title: t("AIToolEditor.toolUnsaved"),
+                        content: t("AIToolEditor.saveToolConfirm"),
                         confirmLoading: saveLoading,
                         maskClosable: false,
                         onOk: (m) => {
@@ -245,8 +246,8 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                 },
                 reset: async () => {
                     return {
-                        title: "工具未保存",
-                        content: "是否要将当前工具保存，并编辑点击的工具?",
+                        title: t("AIToolEditor.toolUnsaved"),
+                        content: t("AIToolEditor.saveCurrentAndEditClicked"),
                         confirmLoading: saveLoading,
                         maskClosable: false,
                         onOk: (m) => {
@@ -267,8 +268,8 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
             setSubscribeClose(YakitRoute.AddAITool, {
                 close: async () => {
                     return {
-                        title: "工具未保存",
-                        content: "是否要将工具保存?",
+                        title: t("AIToolEditor.toolUnsaved"),
+                        content: t("AIToolEditor.saveToolConfirm"),
                         confirmLoading: saveLoading,
                         maskClosable: false,
                         onOk: (m) => {
@@ -376,7 +377,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
             setTimeout(() => setIsExecuting(false), 300)
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", t("AIToolEditor.debugTaskStarted", {rId}))
             setRuntimeId(rId)
         }
     })
@@ -392,7 +393,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                 .then(async (value: any) => {
                     const result = getJsonSchemaListResult(jsonSchemaListRef.current)
                     if (result.jsonSchemaError.length > 0) {
-                        failed(`jsonSchema校验失败`)
+                        failed(t("AIToolEditor.jsonSchemaFailed"))
                         return
                     }
                     result.jsonSchemaSuccess.forEach((item) => {
@@ -431,7 +432,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
             <YakitSpin spinning={fetchDataLoading}>
                 <div className={styles["tool-editor-wrapper"]}>
                     <div className={styles["tool-editor-header"]}>
-                        <div className={styles["header-title"]}>{isModify ? "编辑工具" : "新建工具"}</div>
+                        <div className={styles["header-title"]}>{isModify ? t("AIToolEditor.editTool") : t("AIToolEditor.newTool")}</div>
 
                         <div className={styles["header-btn-group"]}>
                             <YakitButton
@@ -440,10 +441,10 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                 icon={<OutlineExitIcon />}
                                 onClick={() => handleSaveAndExit()}
                             >
-                                保存并退出
+                                {t("AIToolEditor.saveAndExit")}
                             </YakitButton>
                             <YakitButton loading={saveLoading} icon={<SolidStoreIcon />} onClick={handleSave}>
-                                保存
+                                {t("AIToolEditor.save")}
                             </YakitButton>
                         </div>
                     </div>
@@ -456,8 +457,8 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                 buttonStyle='solid'
                                 value={activeTab}
                                 options={[
-                                    {value: "code", label: "源码"},
-                                    {value: "execResult", label: "执行结果"}
+                                    {value: "code", label: t("AIToolEditor.sourceCode")},
+                                    {value: "execResult", label: t("AIToolEditor.execResult")}
                                 ]}
                                 onChange={(e) => setActiveTab(e.target.value)}
                             />
@@ -512,7 +513,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                             ) : (
                                                 <YakitEmpty
                                                     style={{marginTop: 60}}
-                                                    description={"点击【执行】以开始"}
+                                                    description={t("AIToolEditor.clickExecuteToStart")}
                                                 />
                                             )}
                                         </div>
@@ -520,10 +521,10 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                 </div>
                                 <div className={styles["editor-params-preview-wrapper"]}>
                                     <div className={styles["params-preview-header"]}>
-                                        <div className={styles["header-title"]}>参数预览</div>
+                                        <div className={styles["header-title"]}>{t("AIToolEditor.paramPreview")}</div>
                                         <div className={styles["header-extra"]}>
                                             <YakitButton type='text' onClick={handleOpenScoreHint}>
-                                                自动检测
+                                                {t("AIToolEditor.autoDetect")}
                                             </YakitButton>
                                             <div className={styles["divider-style"]} style={{marginRight: 0}}></div>
                                             <YakitButton
@@ -532,16 +533,16 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                                 onClick={() => handleFetchParams()}
                                                 icon={<OutlineRefreshIcon />}
                                             >
-                                                获取参数
+                                                {t("AIToolEditor.getParams")}
                                             </YakitButton>
                                             <div className={styles["divider-style"]}></div>
                                             {isExecuting ? (
                                                 <YakitButton danger onClick={onStopExecute}>
-                                                    停止
+                                                    {t("AIToolEditor.stop")}
                                                 </YakitButton>
                                             ) : (
                                                 <YakitButton icon={<SolidPlayIcon />} onClick={onStartExecute}>
-                                                    执行
+                                                    {t("AIToolEditor.execute")}
                                                 </YakitButton>
                                             )}
                                         </div>
@@ -556,7 +557,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                             labelWrap={true}
                                             validateMessages={{
                                                 /* eslint-disable no-template-curly-in-string */
-                                                required: "${label} 是必填字段"
+                                                required: t("AIToolEditor.requiredField", {label: "${label}"})
                                             }}
                                         >
                                             <div className={styles["custom-params-wrapper"]}>
@@ -569,7 +570,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
 
                                             {!!groupParams.length && (
                                                 <div className={styles["additional-params-divider"]}>
-                                                    <div className={styles["text-style"]}>额外参数 (非必填)</div>
+                                                    <div className={styles["text-style"]}>{t("AIToolEditor.extraParamsOptional")}</div>
                                                     <div className={styles["divider-horizontal-style"]}></div>
                                                 </div>
                                             )}
@@ -580,7 +581,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                                                 />
                                             )}
                                             {(!!requiredParams.length || !!groupParams.length) && (
-                                                <div className={styles["to-end"]}>已经到底啦～</div>
+                                                <div className={styles["to-end"]}>{t("AIToolEditor.endReached")}</div>
                                             )}
                                         </Form>
                                     </div>
@@ -591,7 +592,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                 </div>
                 {/* 代码评分弹窗 */}
                 <CodeScoreModal
-                    title='工具基础检测'
+                    title={t("AIToolEditor.basicCheck")}
                     type='yak'
                     code={content || ""}
                     successHint=' '
@@ -634,7 +635,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
             return new Promise<SaveAIToolRequest | null>(async (resolve, reject) => {
                 try {
                     if (!form) {
-                        yakitNotify("error", "获取不到表单实例数据, 请关闭页面后重试")
+                        yakitNotify("error", t("AIToolEditor.formInstanceMissing"))
                         resolve(null)
                     }
 
@@ -648,14 +649,14 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                                 Content: ""
                             }
                             if (!info.Name) {
-                                yakitNotify("error", "名称不能为空")
+                                yakitNotify("error", t("AIToolEditor.nameRequired"))
                                 resolve(null)
                                 return
                             }
                             resolve(info)
                         })
                         .catch(() => {
-                            reject("表单验证失败，请检查必填项是否填写完整")
+                            reject(t("AIToolEditor.formValidateFailed"))
                         })
                 } catch (error) {
                     if (!expand) setExpand(true)
@@ -754,7 +755,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                             icon={<OutlineChevronrightIcon />}
                         />
 
-                        <div className={styles["header-title"]}>基础信息</div>
+                        <div className={styles["header-title"]}>{t("AIToolEditor.basicInfo")}</div>
                     </div>
 
                     <div className={styles["editor-info-form-body"]}>
@@ -762,7 +763,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                             <Form.Item
                                 label={
                                     <>
-                                        工具名称<span className='form-item-required'>*</span>:
+                                            {t("AIToolEditor.toolName")}<span className='form-item-required'>*</span>:
                                     </>
                                 }
                                 name='Name'
@@ -771,16 +772,16 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                                     {
                                         validator: async (_, value) => {
                                             if (!value || !value.trim())
-                                                return Promise.reject(new Error("工具名称必填"))
+                                                return Promise.reject(new Error(t("AIToolEditor.toolNameRequired")))
                                             if (value.trim().length > 100)
-                                                return Promise.reject(new Error("名称最长100位"))
+                                                return Promise.reject(new Error(t("AIToolEditor.toolNameMax100")))
                                         }
                                     }
                                 ]}
                             >
                                 <YakitInput
                                     wrapperClassName={styles["item-input"]}
-                                    placeholder='请输入...'
+                                            placeholder={t("AIToolEditor.pleaseEnter")}
                                     size='large'
                                     prefix={<OutlineIdentificationIcon />}
                                     maxLength={100}
@@ -790,7 +791,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                             <Form.Item
                                 label={
                                     <>
-                                        描述<span className='form-item-required'>*</span>:
+                                            {t("AIToolEditor.description")}<span className='form-item-required'>*</span>:
                                     </>
                                 }
                                 name='Description'
@@ -798,7 +799,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                                 rules={[
                                     {
                                         validator: async (_, value) => {
-                                            if (!value || !value.trim()) return Promise.reject(new Error("描述必填"))
+                                            if (!value || !value.trim()) return Promise.reject(new Error(t("AIToolEditor.descriptionRequired")))
                                         }
                                     }
                                 ]}
@@ -807,7 +808,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                                     loading: descriptionLoading
                                 })}
                             >
-                                <YakitInput.TextArea rows={3} placeholder='请输入...' />
+                                <YakitInput.TextArea rows={3} placeholder={t("AIToolEditor.pleaseEnter")} />
                             </Form.Item>
 
                             <Form.Item
@@ -821,7 +822,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                                     loading: keywordsLoading
                                 })}
                             >
-                                <Form.Item noStyle name='Keywords' rules={[{required: true, message: "Tag必填"}]}>
+                                <Form.Item noStyle name='Keywords' rules={[{required: true, message: t("AIToolEditor.tagRequired")}]}>
                                     <YakitSelect
                                         wrapperClassName={styles["item-select"]}
                                         mode='tags'
@@ -853,7 +854,7 @@ const AIToolEditorInfoForm: React.FC<AIToolEditorInfoFormProps> = React.memo(
                             className={styles["expand-btn"]}
                             icon={<OutlineChevrondownIcon />}
                         />
-                        <div className={styles["header-title"]}>基础信息</div>
+                        <div className={styles["header-title"]}>{t("AIToolEditor.basicInfo")}</div>
                     </div>
                 </div>
             </div>
