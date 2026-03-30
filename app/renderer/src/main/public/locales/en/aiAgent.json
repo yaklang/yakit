@@ -94,6 +94,9 @@
     "dropToAddToChat": "Release to add to chat",
     "openFolder": "Open Folder"
   },
+  "AIAgent": {
+    "decision": "Decision"
+  },
   "AiFailPlanCard": {
     "failureReason": "Failure Reason"
   },

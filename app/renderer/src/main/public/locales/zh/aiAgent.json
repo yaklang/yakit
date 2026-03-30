@@ -94,6 +94,9 @@
     "dropToAddToChat": "松开以添加到对话",
     "openFolder": "打开文件夹"
   },
+  "AIAgent": {
+    "decision": "决策"
+  },
   "AiFailPlanCard": {
     "failureReason": "失败原因"
   },
