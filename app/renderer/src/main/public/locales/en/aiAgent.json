@@ -249,7 +249,8 @@
     "tool": "Tool",
     "knowledgeBase": "Knowledge Base",
     "fileSystem": "File System",
-    "focusMode": "Focus Mode"
+    "focusMode": "Focus Mode",
+    "allKnowledgeBase": "@All Knowledge Bases"
   },
   "AITabs": {
     "taskContent": "Task Content",

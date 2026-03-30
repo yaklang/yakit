@@ -249,7 +249,8 @@
     "tool": "工具",
     "knowledgeBase": "知识库",
     "fileSystem": "文件系统",
-    "focusMode": "专注模式"
+    "focusMode": "专注模式",
+    "allKnowledgeBase": "@所有知识库"
   },
   "AITabs": {
     "taskContent": "任务内容",

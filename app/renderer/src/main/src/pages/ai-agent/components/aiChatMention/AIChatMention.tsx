@@ -39,6 +39,7 @@ import FileTreeSystemList from "../aiFileSystemList/FileTreeSystemList/FileTreeS
 import {FileNodeProps} from "@/pages/yakRunner/FileTree/FileTreeType"
 import {KnowledgeBaseItem, useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {InputRef} from "antd"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const defaultRef: AIChatMentionListRefProps = {
     onRefresh: () => {}
@@ -582,6 +583,7 @@ const ToolListOfMention: React.FC<ToolListOfMentionProps> = React.memo(
 const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = React.memo(
     forwardRef((props, ref) => {
         const {knowledgeBases} = useKnowledgeBase()
+        const {t} = useI18nNamespaces(["aiAgent"])
 
         const {keyWord, onSelect, getContainer} = props
         const [selected, setSelected] = useState<KnowledgeBaseItem>()
@@ -596,8 +598,8 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
         const [knowledgeBaseList, setKnowledgeBaseList] = useSafeState<KnowledgeBaseItem[]>([])
         const knowledgeList = useCreation(() => {
             const value: KnowledgeBaseItem = {
-                ID: "@所有知识库",
-                KnowledgeBaseName: "@所有知识库",
+                ID: t("AIMentionTabs.allKnowledgeBase"),
+                KnowledgeBaseName: t("AIMentionTabs.allKnowledgeBase"),
                 Description: "",
                 KnowledgeBaseFile: [],
                 KnowledgeBaseType: "",
@@ -673,7 +675,7 @@ const KnowledgeBaseListOfMention: React.FC<KnowledgeBaseListOfMentionProps> = Re
                 setKnowledgeBaseList(
                     knowledgeBases.filter(
                         (it) =>
-                            it?.KnowledgeBaseName === "@所有知识库" ||
+                            it?.KnowledgeBaseName === t("AIMentionTabs.allKnowledgeBase") ||
                             it?.KnowledgeBaseName?.toLowerCase().includes(keyWord.toLowerCase())
                     )
                 )
