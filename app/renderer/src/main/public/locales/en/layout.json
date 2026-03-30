@@ -93,6 +93,24 @@
     "SelectFirstMenuTabKeyFailed": "Failed to fetch SelectFirstMenuTabKey data: {error}",
     "noWFHistoryData": "No WebFuzzer history data available",
     "restoreHistoryFailed": "WebFuzzer history restore failed: {error}",
+    "DefaultPage": {
+      "home": "Home",
+      "aiAgent": "AI Agent",
+      "knowledgeBase": "Knowledge Base",
+      "history": "History",
+      "mitmInteractiveHijack": "MITM Interactive Hijack",
+      "webFuzzer": "Web Fuzzer"
+    },
+    "Notifications": {
+      "switchMenuItemFailed": "Failed to switch menu item: {error}",
+      "menuOpenPageFailed": "Menu open page failed!",
+      "openWFFailed": "Failed to open WF: {error}",
+      "fetchPluginGroupFailed": "Failed to fetch plugin groups: {error}",
+      "webFuzzerParseFailed": "Failed to parse cached WebFuzzer data: {error}",
+      "maxTabsReached": "Tab limit reached",
+      "selectTypeAgain": "Please select a type and submit again",
+      "max50Chars": "Cannot exceed 50 characters"
+    },
     "TabMenu": {
       "rename": "Rename",
       "moveToGroup": "Move tab to group",

@@ -452,7 +452,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
         return [
             {
                 routeKey: routeConvertKey(YakitRoute.NewHome, ""),
-                verbose: "首页",
+                verbose: i18n.t("MainOperatorContent.DefaultPage.home", {ns: "layout"}),
                 menuName: getRoutePageLabel(YakitRoute.NewHome),
                 route: YakitRoute.NewHome,
                 singleNode: true,
@@ -465,7 +465,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
         return [
             {
                 routeKey: routeConvertKey(YakitRoute.AI_Agent, ""),
-                verbose: "AIAgent",
+                verbose: i18n.t("MainOperatorContent.DefaultPage.aiAgent", {ns: "layout"}),
                 menuName: getRoutePageLabel(YakitRoute.AI_Agent),
                 route: YakitRoute.AI_Agent,
                 singleNode: true,
@@ -473,7 +473,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
             },
             {
                 routeKey: routeConvertKey(YakitRoute.AI_REPOSITORY, ""),
-                verbose: "知识库",
+                verbose: i18n.t("MainOperatorContent.DefaultPage.knowledgeBase", {ns: "layout"}),
                 menuName: getRoutePageLabel(YakitRoute.AI_REPOSITORY),
                 route: YakitRoute.AI_REPOSITORY,
                 singleNode: true,
@@ -490,7 +490,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
             return [
                 {
                     routeKey: routeConvertKey(YakitRoute.NewHome, ""),
-                    verbose: "首页",
+                    verbose: i18n.t("MainOperatorContent.DefaultPage.home", {ns: "layout"}),
                     menuName: getRoutePageLabel(YakitRoute.NewHome),
                     route: YakitRoute.NewHome,
                     singleNode: true,
@@ -498,7 +498,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                 },
                 {
                     routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
-                    verbose: "History",
+                    verbose: i18n.t("MainOperatorContent.DefaultPage.history", {ns: "layout"}),
                     menuName: getRoutePageLabel(YakitRoute.DB_HTTPHistory),
                     route: YakitRoute.DB_HTTPHistory,
                     singleNode: true,
@@ -511,7 +511,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                 return [
                     {
                         routeKey: routeConvertKey(YakitRoute.NewHome, ""),
-                        verbose: "首页",
+                        verbose: i18n.t("MainOperatorContent.DefaultPage.home", {ns: "layout"}),
                         menuName: getRoutePageLabel(YakitRoute.NewHome),
                         route: YakitRoute.NewHome,
                         singleNode: true,
@@ -519,7 +519,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     },
                     {
                         routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
-                        verbose: "History",
+                        verbose: i18n.t("MainOperatorContent.DefaultPage.history", {ns: "layout"}),
                         menuName: getRoutePageLabel(YakitRoute.DB_HTTPHistory),
                         route: YakitRoute.DB_HTTPHistory,
                         singleNode: true,
@@ -531,7 +531,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                 return [
                     {
                         routeKey: routeConvertKey(YakitRoute.MITMHacker, ""),
-                        verbose: "MITM 交互式劫持",
+                        verbose: i18n.t("MainOperatorContent.DefaultPage.mitmInteractiveHijack", {ns: "layout"}),
                         menuName: getRoutePageLabel(YakitRoute.MITMHacker),
                         route: YakitRoute.MITMHacker,
                         singleNode: true,
@@ -539,7 +539,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     },
                     {
                         routeKey: routeConvertKey(YakitRoute.HTTPFuzzer, ""),
-                        verbose: "Web Fuzzer",
+                        verbose: i18n.t("MainOperatorContent.DefaultPage.webFuzzer", {ns: "layout"}),
                         menuName: getRoutePageLabel(YakitRoute.HTTPFuzzer),
                         route: YakitRoute.HTTPFuzzer,
                         singleNode: false,
@@ -548,7 +548,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     },
                     {
                         routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
-                        verbose: "History",
+                        verbose: i18n.t("MainOperatorContent.DefaultPage.history", {ns: "layout"}),
                         menuName: getRoutePageLabel(YakitRoute.DB_HTTPHistory),
                         route: YakitRoute.DB_HTTPHistory,
                         singleNode: true,
@@ -560,7 +560,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                 return [
                     {
                         routeKey: routeConvertKey(YakitRoute.NewHome, ""),
-                        verbose: "首页",
+                        verbose: i18n.t("MainOperatorContent.DefaultPage.home", {ns: "layout"}),
                         menuName: getRoutePageLabel(YakitRoute.NewHome),
                         route: YakitRoute.NewHome,
                         singleNode: true,
@@ -568,7 +568,7 @@ export const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) 
                     },
                     {
                         routeKey: routeConvertKey(YakitRoute.DB_HTTPHistory, ""),
-                        verbose: "History",
+                        verbose: i18n.t("MainOperatorContent.DefaultPage.history", {ns: "layout"}),
                         menuName: getRoutePageLabel(YakitRoute.DB_HTTPHistory),
                         route: YakitRoute.DB_HTTPHistory,
                         singleNode: true,
@@ -769,7 +769,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 setCurrentTabKey(value.route)
             }
         } catch (error) {
-            yakitNotify("error", `切换一级菜单选中key失败:${error}`)
+            yakitNotify("error", t("MainOperatorContent.Notifications.switchMenuItemFailed", {error: `${error}`}))
         }
     })
     /**
@@ -816,7 +816,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         } catch (error) {}
 
         if (!data.route) {
-            yakitNotify("error", "menu open page failed!")
+            yakitNotify("error", t("MainOperatorContent.Notifications.menuOpenPageFailed"))
             return
         }
         extraOpenMenuPage(data)
@@ -1607,7 +1607,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 }
             )
         } catch (error) {
-            yakitNotify("error", `打开WF失败:${error}`)
+            yakitNotify("error", t("MainOperatorContent.Notifications.openWFFailed", {error: `${error}`}))
         }
     })
     /** websocket fuzzer 和 Fuzzer 类似 */
@@ -1664,7 +1664,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     setBugList(res)
                     setBugTestShow(true)
                 })
-                .catch((err) => yakitNotify("error", "获取插件组失败:" + err))
+                .catch((err) => yakitNotify("error", t("MainOperatorContent.Notifications.fetchPluginGroupFailed", {error: `${err}`})))
         }
         if (type === 2) {
             openMenuPage(
@@ -2537,7 +2537,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 const cache = JSONParseLog(res || "[]", {page: "MainOperatorContent", fun: "getFuzzerSequenceCache"})
                 onSetFuzzerSequenceCacheData(cache)
             } catch (error) {
-                yakitNotify("error", "webFuzzer序列化获取缓存数据解析失败:" + error)
+                yakitNotify("error", t("MainOperatorContent.Notifications.webFuzzerParseFailed", {error: `${error}`}))
             }
         })
     })
@@ -2691,7 +2691,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                     oldPageCache[index].multipleLength =
                         (oldPageCache[index]?.multipleLength || 0) + multipleNodeListLength
                     if (getSubPageTotal(oldPageCache[index].multipleNode) >= secondaryTabsNum) {
-                        yakitNotify("info", "超过标签页数量限制")
+                        yakitNotify("info", t("MainOperatorContent.Notifications.maxTabsReached"))
                     }
                 } else {
                     oldPageCache.splice(index, 1, webFuzzerPage)
@@ -3153,7 +3153,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
                 onCancel={() => setBugTestShow(false)}
                 onOk={() => {
                     if (!bugTestValue) {
-                        yakitNotify("error", "请选择类型后再次提交")
+                yakitNotify("error", t("MainOperatorContent.Notifications.selectTypeAgain"))
                         return
                     }
                     addBugTest(2)
@@ -4410,7 +4410,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
         const onAddSubPage = useMemoizedFn(() => {
             if (getSubPageTotal(subPage) >= secondaryTabsNumRef.current) {
-                yakitNotify("error", "超过标签页数量限制")
+                yakitNotify("error", t("MainOperatorContent.Notifications.maxTabsReached"))
                 return
             }
 
@@ -4716,7 +4716,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
         const onRename = useMemoizedFn((val: string, item: MultipleNodeInfo) => {
             if (val.length > 50) {
-                yakitNotify("error", "不能超过50个字符")
+                yakitNotify("error", t("MainOperatorContent.Notifications.max50Chars"))
                 return
             }
             const {index, subIndex} = getPageItemById(subPage, item.id)
@@ -5967,7 +5967,7 @@ const SubTabGroupItem: React.FC<SubTabGroupItemProps> = React.memo((props) => {
 /**验证组名是否超过50个字符 */
 const onVerifyGroupName = (val: string) => {
     if (val.length > 50) {
-        yakitNotify("error", "不能超过50个字符")
+        yakitNotify("error", i18n.t("MainOperatorContent.Notifications.max50Chars", {ns: "layout"}))
         return false
     }
     return true

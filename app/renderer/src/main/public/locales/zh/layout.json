@@ -93,6 +93,24 @@
     "SelectFirstMenuTabKeyFailed": "SelectFirstMenuTabKey获取数据失败: {error}",
     "noWFHistoryData": "暂无WF历史数据",
     "restoreHistoryFailed": "WF历史数据恢复失败: {error}",
+    "DefaultPage": {
+      "home": "首页",
+      "aiAgent": "AIAgent",
+      "knowledgeBase": "知识库",
+      "history": "History",
+      "mitmInteractiveHijack": "MITM 交互式劫持",
+      "webFuzzer": "Web Fuzzer"
+    },
+    "Notifications": {
+      "switchMenuItemFailed": "切换一级菜单选中key失败: {error}",
+      "menuOpenPageFailed": "menu open page failed!",
+      "openWFFailed": "打开WF失败: {error}",
+      "fetchPluginGroupFailed": "获取插件组失败: {error}",
+      "webFuzzerParseFailed": "webFuzzer序列化获取缓存数据解析失败: {error}",
+      "maxTabsReached": "超过标签页数量限制",
+      "selectTypeAgain": "请选择类型后再次提交",
+      "max50Chars": "不能超过50个字符"
+    },
     "TabMenu": {
       "rename": "重命名",
       "moveToGroup": "将标签页移动到组",
