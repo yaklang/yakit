@@ -24,6 +24,7 @@ i18n.use(HttpBackend)
             "yakURLTree",
             "yakRunnerAuditHole",
             "simpleDetect",
+            "ruleManagement",
             "home",
             "history",
             "webFuzzer",
