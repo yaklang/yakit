@@ -23,6 +23,7 @@ i18n.use(HttpBackend)
             "shortcutKey",
             "yakURLTree",
             "yakRunnerAuditHole",
+            "simpleDetect",
             "home",
             "history",
             "webFuzzer",

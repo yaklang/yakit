@@ -57,6 +57,8 @@ import {
 import {defaultSimpleDetectPageInfo} from "@/defaultConstants/SimpleDetectConstants"
 import {YakitRouteToPageInfo} from "@/routes/newRoute"
 import {StartBruteParams} from "../securityTool/newBrute/NewBruteType"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 
 const SimpleDetectExtraParamsDrawer = React.lazy(() => import("./SimpleDetectExtraParamsDrawer"))
 const SimpleDetectTaskListDrawer = React.lazy(() => import("./SimpleDetectTaskListDrawer"))
@@ -73,6 +75,7 @@ const scanDeepMapPresetPort = {
 
 export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const {pageId} = props
+    const {t} = useI18nNamespaces(["simpleDetect"])
     // 全局登录状态
     const {userInfo} = useStore()
     const {queryPagesDataById, updatePagesDataCacheById, removePagesDataCacheById} = usePageInfo(
@@ -147,12 +150,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
 
     const defaultTabs = useCreation(() => {
         return [
-            {tabName: "漏洞与风险", type: "risk"},
-            {tabName: "扫描端口列表", type: "port"},
-            {tabName: "日志", type: "log"},
-            {tabName: "Console", type: "console"}
+            {tabName: t("SimpleDetect.riskTab"), type: "risk"},
+            {tabName: t("SimpleDetect.portTab"), type: "port"},
+            {tabName: t("SimpleDetect.logTab"), type: "log"},
+            {tabName: t("SimpleDetect.consoleTab"), type: "console"}
         ]
-    }, [])
+    }, [t])
     const onEnd = useMemoizedFn(() => {
         // 在此之前需要先保存任务
         setTimeout(() => {
@@ -318,12 +321,12 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
             const {runtimeId, pageId: pId} = value
             if (pageId !== pId) return
             if (!runtimeId) {
-                yakitNotify("error", "未设置正常得 runtimeId")
+                yakitNotify("error", t("SimpleDetect.runtimeIdNotSet"))
                 return
             }
             onRecoverSimpleDetectTask(runtimeId)
         } catch (error) {
-            yakitNotify("error", `任务操作参数解析失败${error}`)
+            yakitNotify("error", t("SimpleDetect.taskParamsParseFailed", {error: `${error}`}))
         }
     })
     /**继续任务，先查询再恢复 */
@@ -352,8 +355,8 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                     simpleDetectValuePropsRef.current.formValue = {...formValue}
                     simpleDetectValuePropsRef.current.extraParamsValue = {...simpleDetectValue.extraParamsValue}
 
-                    let taskNameTimeTarget: string = formValue?.Targets.split(/,|\r?\n/)[0] || "漏洞扫描任务"
-                    const taskName = `${formValue.scanType || "基础扫描"}-${taskNameTimeTarget}`
+                    let taskNameTimeTarget: string = formValue?.Targets.split(/,|\r?\n/)[0] || t("SimpleDetect.scanTask")
+                    const taskName = `${formValue.scanType || t("SimpleDetect.basicScan")}-${taskNameTimeTarget}`
                     taskNameRef.current = taskName
                 }
 
@@ -361,7 +364,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                 startBruteParamsRef.current = {...defaultBruteExecuteExtraFormValue, ...StartBruteParams}
                 onRecoverSimpleDetectTask(runtimeId)
             } catch (error) {
-                yakitNotify("error", `继续任务onContinueTask失败:${error}`)
+                yakitNotify("error", t("SimpleDetect.continueTaskFailed", {error: `${error}`}))
             }
         })
     })
@@ -413,10 +416,10 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
         simpleDetectValuePropsRef.current.formValue = {...value}
         simpleDetectValuePropsRef.current.extraParamsValue = {...extraParamsValue}
         if (value.scanType === "专项扫描" && (value.pluginGroup?.length || 0) === 0) {
-            warn("请选择专项扫描项目")
+            warn(t("SimpleDetect.selectSpecialProject"))
             return
         }
-        let taskNameTimeTarget: string = value?.Targets.split(/,|\r?\n/)[0] || "漏洞扫描任务"
+        let taskNameTimeTarget: string = value?.Targets.split(/,|\r?\n/)[0] || t("SimpleDetect.scanTask")
         const taskName = `${value.scanType}-${taskNameTimeTarget}`
         taskNameRef.current = taskName
         const pluginGroup = getPluginGroup(value.scanType, value.pluginGroup)
@@ -586,7 +589,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
     const onImportPlugin = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!userInfo.isLogin) {
-            warn("插件需要先登录才能下载，请先登录")
+            warn(t("SimpleDetect.pleaseLoginToDownload"))
             return
         }
         setVisibleOnline(true)
@@ -652,13 +655,13 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                         {!isExecuting ? (
                             <>
                                 <YakitPopconfirm
-                                    title={"确定将插件商店所有数据导入到本地吗?"}
+                                    title={t("SimpleDetect.importAllPluginsPrompt")}
                                     onConfirm={onImportPlugin}
                                     onCancel={(e) => {
                                         if (e) e.stopPropagation()
                                     }}
-                                    okText='Yes'
-                                    cancelText='No'
+                                    okText={t("SimpleDetect.yes")}
+                                    cancelText={t("SimpleDetect.no")}
                                     placement={"left"}
                                 >
                                     <YakitButton
@@ -667,17 +670,17 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                             e.stopPropagation()
                                         }}
                                     >
-                                        一键导入插件
+                                        {t("SimpleDetect.importAllPlugins")}
                                     </YakitButton>
                                 </YakitPopconfirm>
                                 <YakitPopconfirm
-                                    title={"确定将插件商店所有本地数据清除吗?"}
+                                    title={t("SimpleDetect.clearAllPluginsPrompt")}
                                     onConfirm={onRemoveAllLocalPlugin}
                                     onCancel={(e) => {
                                         if (e) e.stopPropagation()
                                     }}
-                                    okText='Yes'
-                                    cancelText='No'
+                                    okText={t("SimpleDetect.yes")}
+                                    cancelText={t("SimpleDetect.no")}
                                     placement={"left"}
                                 >
                                     <YakitButton
@@ -688,7 +691,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                         }}
                                         loading={removeLoading}
                                     >
-                                        一键清除插件
+                                        {t("SimpleDetect.clearAllPlugins")}
                                     </YakitButton>
                                 </YakitPopconfirm>
                             </>
@@ -700,7 +703,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                 setTaskListVisible(true)
                             }}
                         >
-                            任务列表
+                            {t("SimpleDetect.taskList")}
                         </YakitButton>
                         <div className={styles["divider-style"]}></div>
                         <YakitButton
@@ -709,23 +712,23 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                             onClick={onCreateReport}
                             style={{marginRight: 8}}
                         >
-                            生成报告
+                            {t("SimpleDetect.generateReport")}
                         </YakitButton>
                         {isExecuting
                             ? !isExpand && (
                                   <>
                                       {executeStatus === "paused" && !stopLoading ? (
-                                          <YakitButton onClick={onContinue}>继续</YakitButton>
+                                           <YakitButton onClick={onContinue}>{t("SimpleDetect.continue")}</YakitButton>
                                       ) : (
                                           <YakitButton danger loading={stopLoading} onClick={onStopExecute}>
-                                              停止
+                                               {t("SimpleDetect.stop")}
                                           </YakitButton>
                                       )}
                                   </>
                               )
                             : !isExpand && (
                                   <>
-                                      <YakitButton onClick={onExecuteInTop}>执行</YakitButton>
+                                       <YakitButton onClick={onExecuteInTop}>{t("SimpleDetect.execute")}</YakitButton>
                                   </>
                               )}
                     </div>
@@ -761,7 +764,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                         <>
                                             {executeStatus === "paused" && !stopLoading ? (
                                                 <YakitButton size='large' onClick={onContinue}>
-                                                    继续
+                                                    {t("SimpleDetect.continue")}
                                                 </YakitButton>
                                             ) : (
                                                 <YakitButton
@@ -770,7 +773,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                                     size='large'
                                                     loading={stopLoading}
                                                 >
-                                                    停止
+                                                    {t("SimpleDetect.stop")}
                                                 </YakitButton>
                                             )}
                                         </>
@@ -781,7 +784,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                                 htmlType='submit'
                                                 size='large'
                                             >
-                                                开始执行
+                                                {t("SimpleDetect.startExecute")}
                                             </YakitButton>
                                         </>
                                     )}
@@ -791,7 +794,7 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
                                         disabled={isExecuting}
                                         size='large'
                                     >
-                                        额外参数
+                                        {t("SimpleDetect.extraParameters")}
                                     </YakitButton>
                                 </div>
                             </Form.Item>
@@ -829,26 +832,27 @@ export const SimpleDetect: React.FC<SimpleDetectProps> = React.memo((props) => {
 const ScanTypeOptions = [
     {
         value: "基础扫描",
-        label: "基础扫描"
+        label: i18n.t("SimpleDetect.basicScan", {ns: "simpleDetect"})
     },
     {
         value: "专项扫描",
-        label: "专项扫描"
+        label: i18n.t("SimpleDetect.specialScan", {ns: "simpleDetect"})
     }
 ]
 const marks: SliderMarks = {
     1: {
-        label: <div>慢速</div>
+        label: <div>{i18n.t("SimpleDetect.slow", {ns: "simpleDetect"})}</div>
     },
     2: {
-        label: <div>适中</div>
+        label: <div>{i18n.t("SimpleDetect.medium", {ns: "simpleDetect"})}</div>
     },
     3: {
-        label: <div>快速</div>
+        label: <div>{i18n.t("SimpleDetect.fast", {ns: "simpleDetect"})}</div>
     }
 }
 const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.memo((props) => {
     const {disabled, inViewport, form, refreshGroup, inputType, setInputType} = props
+    const {t} = useI18nNamespaces(["simpleDetect"])
     const [groupOptions, setGroupOptions] = useState<string[]>([])
     const scanType = Form.useWatch("scanType", form)
     useEffect(() => {
@@ -858,10 +862,10 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
         let str: string = ""
         switch (scanType) {
             case "基础扫描":
-                str = "包含合规检测、小字典弱口令检测与部分漏洞检测"
+                str = t("SimpleDetect.basicScanDesc")
                 break
             case "专项扫描":
-                str = "针对不同场景的专项漏洞检测扫描"
+                str = t("SimpleDetect.specialScanDesc")
                 break
         }
         return str
@@ -880,21 +884,21 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
             <YakitFormDraggerContentPath
                 formItemProps={{
                     name: "Targets",
-                    label: "扫描目标",
+                    label: t("SimpleDetect.scanTarget"),
                     rules: [{required: true}]
                 }}
                 accept='.txt,.xlsx,.xls,.csv'
                 textareaProps={{
-                    placeholder: "域名/主机/IP/IP段均可，逗号分隔或按行分割",
+                    placeholder: t("SimpleDetect.scanTargetPlaceholder"),
                     rows: 3
                 }}
-                help='可将TXT、Excel文件拖入框内或'
+                help={t("SimpleDetect.scanTargetHelp")}
                 disabled={disabled}
                 onTextAreaType={setInputType}
                 textAreaType={inputType}
             />
             <Form.Item
-                label='扫描模式'
+                label={t("SimpleDetect.scanMode")}
                 name='scanType'
                 initialValue='基础扫描'
                 extra={
@@ -918,8 +922,8 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
             </Form.Item>
             <Form.Item
                 name='scanDeep'
-                label='扫描速度'
-                extra='扫描速度越慢，扫描结果就越详细，可根据实际情况进行选择'
+                label={t("SimpleDetect.scanSpeed")}
+                extra={t("SimpleDetect.scanSpeedHint")}
                 initialValue={defaultScanDeep}
             >
                 <Slider tipFormatter={null} min={1} max={3} marks={marks} disabled={disabled} />
@@ -927,7 +931,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
             <Form.Item label={" "} colon={false}>
                 <div className={styles["form-extra"]}>
                     <Form.Item name='SkippedHostAliveScan' valuePropName='checked' noStyle>
-                        <YakitCheckbox disabled={disabled}>跳过主机存活检测</YakitCheckbox>
+                        <YakitCheckbox disabled={disabled}>{t("SimpleDetect.skipHostAliveDetection")}</YakitCheckbox>
                     </Form.Item>
                 </div>
             </Form.Item>
@@ -942,6 +946,7 @@ interface DownloadAllPluginProps {
 
 export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
     const {setDownloadPlugin, onClose} = props
+    const {t} = useI18nNamespaces(["simpleDetect"])
     // 全局登录状态
     const {userInfo} = useStore()
     // 全部添加进度条
@@ -973,7 +978,7 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
     }, [taskToken])
     const AddAllPlugin = useMemoizedFn(() => {
         if (!userInfo.isLogin) {
-            warn("插件需要先登录才能下载，请先登录")
+            warn(t("SimpleDetect.pleaseLoginToDownload"))
             return
         }
         // 全部添加
@@ -984,21 +989,21 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
             .invoke("DownloadOnlinePlugins", addParams, taskToken)
             .then(() => {})
             .catch((e) => {
-                failed(`添加失败:${e}`)
+                failed(t("SimpleDetect.addFailed", {error: `${e}`}))
             })
     })
     const StopAllPlugin = () => {
         onClose && onClose()
         setAddLoading(false)
         ipcRenderer.invoke("cancel-DownloadOnlinePlugins", taskToken).catch((e) => {
-            failed(`停止添加失败:${e}`)
+            failed(t("SimpleDetect.stopAddFailed", {error: `${e}`}))
         })
     }
     return (
         <div className={styles["download-all-plugin-modal"]}>
             {addLoading ? (
                 <div>
-                    <div>下载进度</div>
+            <div>{t("SimpleDetect.downloadProgress")}</div>
                     <div className={styles["filter-opt-progress-modal"]}>
                         <Progress
                             strokeColor='var(--Colors-Use-Main-Primary)'
@@ -1010,16 +1015,16 @@ export const DownloadAllPlugin: React.FC<DownloadAllPluginProps> = (props) => {
                     </div>
                     <div style={{textAlign: "center", marginTop: 10}}>
                         <YakitButton type='primary' onClick={StopAllPlugin}>
-                            取消
+                            {t("SimpleDetect.cancel")}
                         </YakitButton>
                     </div>
                 </div>
             ) : (
                 <div>
-                    <div>检测到本地未下载任何插件，无法进行安全检测，请点击“一键导入”进行插件下载</div>
+                    <div>{t("SimpleDetect.noPluginsDownloadedHint")}</div>
                     <div style={{textAlign: "center", marginTop: 10}}>
                         <YakitButton type='primary' onClick={AddAllPlugin}>
-                            一键导入
+                            {t("SimpleDetect.importNow")}
                         </YakitButton>
                     </div>
                 </div>
