@@ -341,6 +341,16 @@
   "FileTreeSystem": {
     "myOpenedFiles": "My Opened Files"
   },
+  "ExportAILogsModal": {
+    "title": "Export AI Logs",
+    "remoteHint": "After exporting in remote mode, please open the exported file in ~memfit\\yakit-projects\\temp",
+    "exportContent": "Export Content"
+  },
+  "FileList": {
+    "relatedFiles": "Related Files ({count})",
+    "viewAll": "View All",
+    "parseError": "PluginExecuteLogFile.FileItem parse error: {error}"
+  },
   "OperationCardFooter": {
     "details": "Details",
     "viewFile": "View file",

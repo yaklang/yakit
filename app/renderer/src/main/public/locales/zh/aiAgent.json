@@ -341,6 +341,16 @@
   "FileTreeSystem": {
     "myOpenedFiles": "我打开的文件"
   },
+  "ExportAILogsModal": {
+    "title": "导出 AI 日志",
+    "remoteHint": "远程模式下导出后请打开~memfit\\yakit-projects\\temp路径查看导出文件",
+    "exportContent": "导出内容"
+  },
+  "FileList": {
+    "relatedFiles": "相关文件 ({count})",
+    "viewAll": "查看全部",
+    "parseError": "PluginExecuteLogFile.FileItem解析错误: {error}"
+  },
   "OperationCardFooter": {
     "details": "详情",
     "viewFile": "查看文件",
