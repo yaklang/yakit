@@ -8,8 +8,10 @@ import styles from "./FileTreeSystem.module.scss"
 import FileTreeDrop from "@/pages/ai-agent/aiChatWelcome/FileTreeDrop/FileTreeDrop"
 import {Divider} from "antd"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const FileTreeSystem = () => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     // 单选
     const [selected, setSelected] = useState<FileNodeProps>()
     // ai的文件夹
@@ -61,7 +63,7 @@ const FileTreeSystem = () => {
                                 <FileTreeSystemListWapper
                                     isOpen
                                     key='customFolder'
-                                    title='我打开的文件'
+                                    title={t("FileTreeSystem.myOpenedFiles")}
                                     selected={selected}
                                     path={customFolder}
                                     setSelected={setSelected}

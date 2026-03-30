@@ -338,6 +338,9 @@
     "showInFolder": "在文件夹中显示",
     "remove": "移除"
   },
+  "FileTreeSystem": {
+    "myOpenedFiles": "我打开的文件"
+  },
   "OperationCardFooter": {
     "details": "详情",
     "viewFile": "查看文件",

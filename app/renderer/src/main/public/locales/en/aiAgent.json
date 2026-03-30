@@ -338,6 +338,9 @@
     "showInFolder": "Show in folder",
     "remove": "Remove"
   },
+  "FileTreeSystem": {
+    "myOpenedFiles": "My Opened Files"
+  },
   "OperationCardFooter": {
     "details": "Details",
     "viewFile": "View file",
