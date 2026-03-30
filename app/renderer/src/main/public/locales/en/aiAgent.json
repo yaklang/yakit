@@ -97,6 +97,9 @@
   "AIAgent": {
     "decision": "Decision"
   },
+  "AIBottomSideBar": {
+    "terminal": "Terminal"
+  },
   "AiFailPlanCard": {
     "failureReason": "Failure Reason"
   },

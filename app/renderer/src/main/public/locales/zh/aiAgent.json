@@ -97,6 +97,9 @@
   "AIAgent": {
     "decision": "决策"
   },
+  "AIBottomSideBar": {
+    "terminal": "终端"
+  },
   "AiFailPlanCard": {
     "failureReason": "失败原因"
   },

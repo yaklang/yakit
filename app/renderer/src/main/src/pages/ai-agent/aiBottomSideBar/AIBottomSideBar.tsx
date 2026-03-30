@@ -2,11 +2,13 @@ import React from "react"
 import styles from "./AIBottomSideBar.module.scss"
 import classNames from "classnames"
 import {OutlineCodeIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 export interface AIBottomSideBarProps {
     setShowAIBottomDetails: React.Dispatch<React.SetStateAction<boolean>>
 }
 export const AIBottomSideBar: React.FC<AIBottomSideBarProps> = (props) => {
     const {setShowAIBottomDetails} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     return (
         <div className={styles["ai-bottom-side-bar"]}>
             <div className={styles["ai-bottom-side-bar-left"]}>
@@ -22,7 +24,7 @@ export const AIBottomSideBar: React.FC<AIBottomSideBarProps> = (props) => {
                         }}
                     >
                         <OutlineCodeIcon />
-                        终端
+                        {t("AIBottomSideBar.terminal")}
                     </div>
                 </div>
             </div>
