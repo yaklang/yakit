@@ -117,6 +117,9 @@ export interface AIChatIPCNotifyMessage {
 }
 
 export interface UseChatIPCParams {
+    /** 切换会话时，是否自动建立会话连接(default:false) */
+    autoConnect?: boolean
+
     /** 文件数据缓存实例类 */
     cacheDataStore?: ChatDataStore
     /** 设置会话的名字 */
@@ -139,6 +142,9 @@ export interface UseChatIPCParams {
 
     /** 同步信息返回 */
     onSyncIDChange?: (syncID: string) => void
+
+    /** 获取当前Agent的全局配置数据 */
+    getSetting?: (() => AIAgentSetting) | undefined
 }
 
 /** 会话文件系统-pin */

@@ -47,6 +47,7 @@ import useAINodeLabel from "./useAINodeLabel"
 import {AIChatData} from "@/pages/ai-agent/type/aiChat"
 import {DeepPartial} from "@/pages/ai-agent/store/ChatDataStore"
 import {ReActChatBaseInfo} from "./aiRender"
+import {formatAIAgentSetting} from "@/pages/ai-agent/utils"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -54,6 +55,7 @@ function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEven
 
 function useChatIPC(params?: UseChatIPCParams) {
     const {
+        autoConnect,
         cacheDataStore,
         setSessionChatName,
         onTaskStart,
@@ -61,7 +63,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         onTaskReviewExtra,
         onReviewRelease,
         onEnd,
-        onSyncIDChange
+        onSyncIDChange,
+        getSetting
     } = params || {}
 
     const {getLabelByParams} = useAINodeLabel()
@@ -498,8 +501,14 @@ function useChatIPC(params?: UseChatIPCParams) {
         taskChatEvent.handleResetData()
     })
 
+    /** 建立会话连接后需要同步的数据 */
+    const handleSyncDataAfterConnect = useMemoizedFn(() => {
+        // 获取任务规划历史任务树
+        sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
+    })
+
     /** 需要轮询获取最新的数据请求 */
-    const handleStartQuestionQueue = useMemoizedFn(() => {
+    const handleStartSyncDataInterval = useMemoizedFn(() => {
         // 获取最新问题队列数据
         sendRequest({IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO})
         // 获取最新记忆列表数据
@@ -917,7 +926,8 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         ipcRenderer.invoke("start-ai-re-act", token, params)
         setTimeout(() => {
-            handleStartQuestionQueue()
+            handleSyncDataAfterConnect()
+            handleStartSyncDataInterval()
         }, 50)
     })
 
@@ -955,6 +965,21 @@ function useChatIPC(params?: UseChatIPCParams) {
         endAfterSession.current = ""
         setTimeout(() => {
             setSwitchLoading(false)
+            if (autoConnect && getSetting) {
+                onStart({
+                    token: session,
+                    params: {
+                        IsStart: true,
+                        Params: {
+                            ...formatAIAgentSetting(getSetting()),
+                            UserQuery: "",
+                            TimelineSessionID: session,
+                            CoordinatorId: "",
+                            Sequence: 1
+                        }
+                    }
+                })
+            }
         }, 200)
     })
 
@@ -996,7 +1021,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     useInterval(
         () => {
-            handleStartQuestionQueue()
+            handleStartSyncDataInterval()
         },
         execute ? 5000 : undefined
     )
