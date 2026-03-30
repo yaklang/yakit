@@ -3,6 +3,7 @@ import {ReactNode} from "react"
 import type {HandleStartParams} from "../aiAgentChat/type"
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {AIReActChatRefProps} from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
+import {AIMentionCommandParams} from "../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 
 export interface AIChatWelcomeProps {
     onTriageSubmit: (data: HandleStartParams) => void
@@ -27,12 +28,12 @@ export interface AIRecommendProps extends Omit<AIRecommendItemProps, "item"> {
 export interface AIRecommendItemProps {
     item: AIRecommendItem
     lineStartDOMRect?: DOMRect
-    checkItems: AIRecommendItem[]
     onCheckItem: (item: AIRecommendItem) => void
 }
 
 export interface AIMaterialsData {
     type: string
+    mentionType: AIMentionCommandParams["mentionType"]
     data: AIRecommendItem[]
     icon: ReactNode
     hoverIcon: ReactNode

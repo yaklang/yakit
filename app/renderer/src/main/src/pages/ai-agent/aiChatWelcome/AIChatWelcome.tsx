@@ -9,7 +9,7 @@ import {
 } from "./type"
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
-import {useCreation, useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useSafeState} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "../template/type"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -36,25 +36,18 @@ import {
     HoverAIKnowledgeBaseIcon,
     HoverAIToolIcon
 } from "./icon"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {Divider, Tooltip} from "antd"
+import {Tooltip} from "antd"
 import ReactResizeDetector from "react-resize-detector"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTabListEnum, SwitchAIAgentTabEventEnum} from "../defaultConstant"
 import {YakitRoute} from "@/enums/yakitRoute"
-import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {randomString} from "@/utils/randomUtil"
 import {grpcGetRandomAIMaterials} from "../grpc"
-import {apiDebugPlugin, DebugPluginRequest} from "@/pages/plugins/utils"
 import {GetRandomAIMaterialsResponse} from "@/pages/ai-re-act/hooks/grpcApi"
 import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import classNames from "classnames"
-import {defPluginExecuteFormValue} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/constants"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {isEqual} from "lodash"
 
-import {usePageInfo} from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import FileTreeList from "./FileTreeList/FileTreeList"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
@@ -67,17 +60,7 @@ import AIToolList from "../aiToolList/AIToolList"
 import {SplitView} from "@/pages/yakRunner/SplitView/SplitView"
 import {InstallPluginModal} from "@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal"
 import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin"
-
-// const sideberRadioOptions = [
-//     {
-//         value: "fileTree",
-//         label: "文件树"
-//     },
-//     {
-//         value: "knoledge",
-//         label: "知识库"
-//     }
-// ]
+import {AIMentionCommandParams} from "../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -118,21 +101,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             []
         )
 
-        // const {queryPagesDataById, removePagesDataCacheById} = usePageInfo(
-        //     (s) => ({
-        //         queryPagesDataById: s.queryPagesDataById,
-        //         updatePagesDataCacheById: s.updatePagesDataCacheById,
-        //         removePagesDataCacheById: s.removePagesDataCacheById
-        //     }),
-        //     shallow
-        // )
-
         // #region 问题相关逻辑
 
         const [randomAIMaterials, setRandomAIMaterials] = useState<GetRandomAIMaterialsResponse>()
         const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
-        const [checkItems, setCheckItems] = useState<AIRecommendItemProps["item"][]>([])
-        const [questionList, setQuestionList] = useState<string[]>([])
         const [loading, setLoading] = useState<boolean>(false)
         const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
         // 控制下拉菜单
@@ -143,104 +115,14 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const questionListAllRef = useRef<StreamResult.Log[]>([])
         const [inViewPort = true] = useInViewport(welcomeRef)
 
-        // const [sidebarSelected, setSidebarSelected] = useSafeState<string>("fileTree")
-
-        const tokenRef = useRef<string>(randomString(40))
-        const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
-            taskName: "debug-plugin",
-            apiKey: "DebugPlugin",
-            token: tokenRef.current,
-            isShowError: false,
-            isShowEnd: false,
-            isLimitLogs: false,
-            onEnd: () => {
-                setLoading(false)
-                debugPluginStreamEvent.stop()
-            }
-        })
-
         useEffect(() => {
             if (inViewPort) {
                 getRandomAIMaterials()
             }
         }, [inViewPort])
 
-        useDebounceEffect(
-            () => {
-                const list = streamInfo.logState.filter((i) => i.level === "text").map((i) => i.data)
-                questionListAllRef.current = [...list]
-                const randList = list.slice(0, 3)
-                if (list.length > 0 && !isEqual(randList, questionList)) {
-                    setQuestionList([...randList])
-                }
-            },
-            [streamInfo.logState],
-            {wait: 500, leading: true}
-        )
-
-        useDebounceEffect(
-            () => {
-                if (checkItems.length > 0) {
-                    onStartExecute()
-                }
-            },
-            [checkItems],
-            {wait: 500, leading: true}
-        )
         const onSetQuestion = useMemoizedFn((value: string) => {
             aiChatTextareaRef.current?.setValue(value ?? "")
-        })
-        const onStartExecute = useMemoizedFn(() => {
-            debugPluginStreamEvent.cancel()
-            debugPluginStreamEvent.stop()
-            debugPluginStreamEvent.reset()
-            const toolNames: string[] = []
-            const forgeNames: string[] = []
-            const knowledgeNames: string[] = []
-            checkItems.forEach((item) => {
-                switch (item.type) {
-                    case "工具":
-                        toolNames.push(item.name)
-                        break
-                    case "技能":
-                        forgeNames.push(item.name)
-                        break
-                    case "知识库":
-                        knowledgeNames.push(item.name)
-                        break
-                    default:
-                        break
-                }
-            })
-            const params: DebugPluginRequest = {
-                Code: "",
-                PluginType: "yak",
-                Input: "",
-                HTTPRequestTemplate: {
-                    ...defPluginExecuteFormValue
-                },
-                ExecParams: [
-                    {
-                        Key: "query",
-                        Value: JSON.stringify({
-                            tools: toolNames,
-                            forges: forgeNames,
-                            knowledge_bases: knowledgeNames
-                        })
-                    }
-                ],
-                PluginName: "简易意图识别"
-            }
-            apiDebugPlugin({
-                params: params,
-                token: tokenRef.current,
-                isShowStartInfo: false
-            }).then(() => {
-                debugPluginStreamEvent.start()
-                setTimeout(() => {
-                    setLoading(true)
-                }, 100)
-            })
         })
 
         const getRandomAIMaterials = useMemoizedFn(() => {
@@ -248,10 +130,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             setLoadingAIMaterials(true)
             grpcGetRandomAIMaterials({Limit: 3})
                 .then((res) => {
-                    debugPluginStreamEvent.stop()
                     setRandomAIMaterials(res)
-                    setCheckItems([])
-                    setQuestionList([])
                     questionListAllRef.current = []
                 })
                 .finally(() =>
@@ -313,17 +192,20 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             )
         })
 
-        const onCheckItem = useMemoizedFn((item: AIRecommendItemProps["item"]) => {
-            if (checkItems.includes(item)) {
-                setCheckItems((c) => c.filter((i) => i.name !== item.name))
-            } else {
-                setCheckItems([...checkItems, item])
+        const onCheckItem = useMemoizedFn(
+            (item: AIRecommendItemProps["item"], mentionType: AIMentionCommandParams["mentionType"]) => {
+                aiChatTextareaRef.current?.setMention({
+                    mentionId: randomString(8),
+                    mentionType: mentionType,
+                    mentionName: item.name
+                })
             }
-        })
+        )
 
         const randomAIMaterialsData: RandomAIMaterialsDataProps = useCreation(() => {
             const tools: AIMaterialsData = {
                 type: "工具",
+                mentionType: "tool",
                 data: (randomAIMaterials?.AITools || []).map((tool) => ({
                     type: "工具",
                     name: tool.VerboseName || tool.Name,
@@ -334,6 +216,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             }
             const forges: AIMaterialsData = {
                 type: "技能",
+                mentionType: "forge",
                 data: (randomAIMaterials?.AIForges || []).map((forge) => ({
                     type: "技能",
                     name: forge.ForgeVerboseName || forge.ForgeName,
@@ -344,6 +227,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             }
             const knowledgeBases: AIMaterialsData = {
                 type: "知识库",
+                mentionType: "knowledgeBase",
                 data: (randomAIMaterials?.KnowledgeBaseEntries || []).map((knowledgeBase) => ({
                     type: "知识库",
                     name: knowledgeBase.KnowledgeTitle || knowledgeBase.Summary,
@@ -361,10 +245,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const isEmptyAIMaterials = useCreation(() => {
             return randomAIMaterialsDataIsEmpty(randomAIMaterialsData)
         }, [randomAIMaterials])
-        const onSwitchQuestion = useMemoizedFn(() => {
-            setCheckItems([])
-            setQuestionList(getRandomItems(questionListAllRef.current))
-        })
 
         const knowledgeSidebarListRef = useRef<KnowledgeModalRef>(null)
         const forgeNameRef = useRef<ForgeNameRef>(null)
@@ -510,40 +390,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                     <div className={styles["line"]} ref={lineStartRef} />
                                 </AIChatTextarea>
                             </div>
-
-                            {checkItems.length > 0 ? (
-                                <div className={styles["suggestion-tips-wrapper"]}>
-                                    <div className={styles["suggestion-tips-title"]}>
-                                        <span>{t("AIChatWelcome.maybeYouWantToAsk")}</span>
-                                        {loading ? (
-                                            <YakitSpin size='small' wrapperClassName={styles["loading-spinner"]} />
-                                        ) : (
-                                            questionList.length > 2 && (
-                                                <YakitButton
-                                                    icon={<OutlineRefreshIcon />}
-                                                    size='small'
-                                                    type='text'
-                                                    className={styles["line2-btn"]}
-                                                    onClick={onSwitchQuestion}
-                                                >
-                                                    {t("AIChatWelcome.refresh")}
-                                                </YakitButton>
-                                            )
-                                        )}
-                                    </div>
-                                    <div className={styles["suggestion-tips-list"]}>
-                                        {questionList.map((item) => (
-                                            <div
-                                                key={item}
-                                                className={styles["suggestion-tips-item"]}
-                                                onClick={() => onSetQuestion(item)}
-                                            >
-                                                <div className={styles["suggestion-tips-item-text"]}>{item}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ) : null}
                         </div>
                         {!isEmptyAIMaterials && (
                             <div className={styles["recommend-wrapper"]}>
@@ -577,8 +423,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                                     data={aiItem.data}
                                                     lineStartDOMRect={lineStartDOMRect}
                                                     onMore={() => onMore(aiItem.type)}
-                                                    onCheckItem={onCheckItem}
-                                                    checkItems={checkItems}
+                                                    onCheckItem={(v) => onCheckItem(v, aiItem.mentionType)}
                                                 />
                                             ) : (
                                                 <React.Fragment key={aiItem.type}></React.Fragment>
@@ -634,7 +479,7 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
 
 const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
     const {t} = useI18nNamespaces(["yakitUi"])
-    const {icon, hoverIcon, title, data, lineStartDOMRect, onMore, onCheckItem, checkItems} = props
+    const {icon, hoverIcon, title, data, lineStartDOMRect, onMore, onCheckItem} = props
     return (
         <div className={styles["recommend-list-wrapper"]}>
             <AIDownAngleLeftIcon className={styles["down-left"]} />
@@ -659,7 +504,6 @@ const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
                         item={item}
                         lineStartDOMRect={lineStartDOMRect}
                         onCheckItem={onCheckItem}
-                        checkItems={checkItems}
                     />
                 ))}
             </div>
@@ -668,7 +512,7 @@ const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
 })
 
 const AIRecommendItem: React.FC<AIRecommendItemProps> = React.memo((props) => {
-    const {item, lineStartDOMRect, onCheckItem, checkItems} = props
+    const {item, lineStartDOMRect, onCheckItem} = props
     const [svgBox, setSvgBox] = useState({width: 0, height: 0, isUp: true})
     const dotRef = useRef<HTMLDivElement>(null)
     const colorLineIconId = useId()
@@ -782,7 +626,6 @@ const AIRecommendItem: React.FC<AIRecommendItemProps> = React.memo((props) => {
                 {/* svg 定位点2/right */}
                 <div className={styles["line-end"]} ref={dotRef} />
             </div>
-            <YakitCheckbox checked={checkItems.includes(item)} onChange={() => onCheckItem(item)} />
             <span className={styles["text"]}>{item.name}</span>
             <Tooltip title={item.description}>
                 <OutlineInformationcircleIcon className={styles["info-icon"]} />
