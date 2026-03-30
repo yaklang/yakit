@@ -100,6 +100,9 @@
   "AIBottomSideBar": {
     "terminal": "终端"
   },
+  "FilePreview": {
+    "viewReference": "[查看文献]"
+  },
   "AiFailPlanCard": {
     "failureReason": "失败原因"
   },
