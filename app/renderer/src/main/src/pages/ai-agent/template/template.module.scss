@@ -112,6 +112,26 @@ textarea.qs-input-textarea {
             align-items: center;
             gap: 4px;
             overflow: hidden;
+            line-height: 16px;
+            .btn-base {
+                width: 24px;
+            }
+            .code-icon {
+                width: 12px;
+                height: 12px;
+                svg {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+            .code-btn-wrapper {
+                cursor: pointer;
+
+                .preset-prompt-tag {
+                    overflow: hidden;
+                    max-width: 200px;
+                }
+            }
         }
         .footer-right {
             display: flex;
@@ -130,4 +150,30 @@ textarea.qs-input-textarea {
     }
 }
 
+// #endregion
+
+// #region AIGlobalCommand
+.ai-global-command {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 300px;
+    &-heard {
+        display: flex;
+        align-items: center;
+
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px; /* 142.857% */
+        letter-spacing: 0.1px;
+    }
+    &-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        padding-top: 4px;
+    }
+}
 // #endregion

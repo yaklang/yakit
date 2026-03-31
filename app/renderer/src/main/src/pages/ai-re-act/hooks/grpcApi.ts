@@ -102,6 +102,8 @@ export interface AIStartParams {
     TimelineSessionID?: string
     // Token pressure limit, 当 AI 对话的 token 数量超过这个限制时，需要警告 （40*1024）
     AICallTokenLimit?: number
+
+    UserPresetPrompt?: string
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */

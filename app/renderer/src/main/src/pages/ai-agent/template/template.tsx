@@ -12,6 +12,7 @@ import React, {
 import {
     AIChatTextareaProps,
     AIChatTextareaSubmit,
+    AIGlobalCommandProps,
     AIInputInnerFeatureEnum,
     FileToChatQuestionList,
     FooterLeftTypesComponentProps,
@@ -19,7 +20,7 @@ import {
 } from "./type"
 import {Input} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {OutlineArrowupIcon, OutlineAtsymbolIcon} from "@/assets/icon/outline"
+import {OutlineArrowupIcon, OutlineAtsymbolIcon, OutlineCodeIcon} from "@/assets/icon/outline"
 import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {TextAreaRef} from "antd/lib/input/TextArea"
 import classNames from "classnames"
@@ -43,6 +44,11 @@ import {isString} from "lodash"
 import OpenFileDropdown, {OpenFileDropdownItem} from "../aiChatWelcome/OpenFileDropdown/OpenFileDropdown"
 import {UploadFileButton} from "@/pages/ai-re-act/aiReActChat/AIReActComponent"
 import {insertAtCurrentPosition} from "../components/aiMilkdownInput/customPlugin"
+import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
+import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
+import useAIAgentDispatcher from "../useContext/useDispatcher"
+import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -80,6 +86,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             filterMentionType
         } = props
 
+        const {chatIPCData} = useChatIPCStore()
+        const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
+
+        const [visible, setVisible] = useState<boolean>(false)
+
         const footerLeftTypes: FooterLeftTypesComponentProps[] = useCreation(() => {
             if (!!props.footerLeftTypes?.length) {
                 const list = props.footerLeftTypes
@@ -115,7 +126,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         }, [props.footerLeftTypes, isOpen])
 
         const {setting} = useAIAgentStore()
-
+        const {setSetting} = useAIAgentDispatcher()
         const [disabled, setDisabled] = useState<boolean>(false)
 
         const {isHovering, dropRef} = useAIChatDrop({
@@ -295,6 +306,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         const onMention = useMemoizedFn(() => {
             editorMilkdown.current?.action(callCommand<string>(insertAtCurrentPosition.key, "@"))
         })
+
+        const onSave = useMemoizedFn((prompt: string) => {
+            setVisible(false)
+            !execute && setSetting?.((v) => ({...v, UserPresetPrompt: prompt}))
+        })
         return (
             <div
                 className={classNames(
@@ -325,10 +341,53 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                                     radius='50%'
                                     icon={<OutlineAtsymbolIcon />}
                                     onClick={onMention}
+                                    className={styles["btn-base"]}
                                 />
                                 <OpenFileDropdown cb={onSetFileMention}>
-                                    <UploadFileButton title='打开文件夹' />
+                                    <UploadFileButton title='打开文件夹' className={styles["btn-base"]} />
                                 </OpenFileDropdown>
+
+                                <YakitPopover
+                                    visible={visible}
+                                    content={
+                                        <AIGlobalCommand
+                                            disabled={execute}
+                                            onCancel={() => setVisible(false)}
+                                            onSave={onSave}
+                                        />
+                                    }
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <div
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setVisible(true)
+                                        }}
+                                        className={styles["code-btn-wrapper"]}
+                                    >
+                                        {setting.UserPresetPrompt ? (
+                                            <YakitTag
+                                                color='purple'
+                                                size='small'
+                                                border={false}
+                                                fullRadius
+                                                className={styles["preset-prompt-tag"]}
+                                            >
+                                                <OutlineCodeIcon className={styles["code-icon"]} />
+                                                <span className='content-ellipsis'>{setting.UserPresetPrompt}</span>
+                                            </YakitTag>
+                                        ) : (
+                                            <YakitButton
+                                                type='text2'
+                                                radius='50%'
+                                                isHover={visible}
+                                                icon={<OutlineCodeIcon />}
+                                                disabled={execute}
+                                                className={styles["btn-base"]}
+                                            />
+                                        )}
+                                    </div>
+                                </YakitPopover>
                             </div>
                         )}
 
@@ -352,6 +411,40 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     {footer ?? <>{renderFooterLeftTypes(footerLeftTypes)}</>}
                 </div>
                 {children}
+            </div>
+        )
+    })
+)
+
+const AIGlobalCommand: React.FC<AIGlobalCommandProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {disabled, onCancel, onSave} = props
+        const {setting} = useAIAgentStore()
+        const [prompt, setPrompt] = useState<string>(setting?.UserPresetPrompt || "")
+        return (
+            <div className={styles["ai-global-command"]} onClick={(e) => e.stopPropagation()}>
+                <div className={styles["ai-global-command-heard"]}>全局命令</div>
+                <YakitInput.TextArea
+                    rows={5}
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    isShowResize={false}
+                    onPressEnter={() => onSave(prompt)}
+                    disabled={disabled}
+                />
+                <div className={styles["ai-global-command-footer"]}>
+                    <YakitButton type='outline2' onClick={onCancel}>
+                        取消
+                    </YakitButton>
+                    <YakitButton
+                        onClick={() => {
+                            onSave(prompt)
+                        }}
+                        disabled={disabled}
+                    >
+                        保存
+                    </YakitButton>
+                </div>
             </div>
         )
     })
