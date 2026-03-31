@@ -16,6 +16,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     OutlineArrowrightIcon,
     OutlineCloseIcon,
+    OutlineExportIcon,
     OutlineImportIcon,
     OutlineInformationcircleIcon,
     OutlineOpenIcon,
@@ -246,6 +247,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             return randomAIMaterialsDataIsEmpty(randomAIMaterialsData)
         }, [randomAIMaterials])
 
+        const [isSelectForgeName, setIsSelectForgeName] = useState<boolean>(false)
         const knowledgeSidebarListRef = useRef<KnowledgeModalRef>(null)
         const forgeNameRef = useRef<ForgeNameRef>(null)
         const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
@@ -289,8 +291,17 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                 {
                     label: t("AIChatWelcome.skillBase"),
                     key: "skills",
-                    children: <ForgeName ref={forgeNameRef} />,
+                    children: <ForgeName ref={forgeNameRef} onSelectChange={setIsSelectForgeName} />,
                     extra: [
+                        <YakitButton
+                            key='batch-import'
+                            onClick={() => {
+                                forgeNameRef.current?.onBatchExport()
+                            }}
+                            type='text2'
+                            icon={<OutlineExportIcon />}
+                            disabled={!isSelectForgeName}
+                        />,
                         <YakitButton
                             key='import'
                             onClick={() => {
@@ -325,7 +336,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     ]
                 }
             ]
-        }, [api, streams, installPlug, i18n.language])
+        }, [api, streams, installPlug, i18n.language, isSelectForgeName])
 
         return (
             <div className={styles["ai-chat-welcome-wrapper"]} ref={welcomeRef}>

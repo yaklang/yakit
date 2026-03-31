@@ -10,7 +10,7 @@
         padding: 8px 12px 0 12px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 8px;
         .haeder-first {
             display: flex;
             justify-content: space-between;
@@ -31,12 +31,23 @@
         }
 
         .header-second {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             .search-icon {
                 svg {
                     width: 16px;
                     height: 16px;
                     color: var(--Colors-Use-Neutral-Text-3-Secondary);
                 }
+            }
+            .select-all {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 12px;
+                font-weight: 400;
             }
         }
     }
@@ -84,6 +95,10 @@
         font-size: 12px;
         font-weight: 400;
         line-height: 16px;
+
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
     .item-extra {
         display: none;
@@ -109,7 +124,7 @@
 .forge-opt-popover {
     padding-left: 4px;
     :global {
-        .ant-popover-inner{
+        .ant-popover-inner {
             border: none;
         }
         .ant-popover-inner-content {

@@ -45,6 +45,7 @@ import {DefaultMemoryList, DefaultPlanHistoryList} from "../ai-re-act/hooks/defa
 import {ColorsAIIcon} from "@/assets/icon/colors"
 import {AIGlobalConfig, AIModelTypeFileName} from "./aiModelList/utils"
 import {cloneDeep} from "lodash"
+import {ExportAIForgeRequest} from "./forgeName/type"
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -374,4 +375,13 @@ export const defaultAIGlobalConfig: AIGlobalConfig = {
     IntelligentModels: [],
     LightweightModels: [],
     VisionModels: []
+}
+
+export const defaultExportAIForgeRequest: ExportAIForgeRequest = {
+    ForgeNames: [],
+    TargetPath: "",
+    OutputName: "",
+    ToolNames: [],
+    Password: "",
+    Filter: {}
 }

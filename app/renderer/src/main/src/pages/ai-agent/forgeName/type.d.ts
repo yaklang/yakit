@@ -1,4 +1,8 @@
-export interface ForgeNameProps {}
+import {QueryAIForgeRequest} from "../type/forge"
+
+export interface ForgeNameProps {
+    onSelectChange: (b:boolean) => void
+}
 export interface ExportAIForgeFormValues {
     OutputName: string
     ToolNames?: string[]
@@ -14,6 +18,7 @@ export interface ExportAIForgeRequest {
     OutputName: string
     ToolNames?: string[]
     Password?: string
+    Filter: QueryAIForgeRequest["Filter"]
 }
 export interface ImportAIForgeRequest {
     InputPath: string

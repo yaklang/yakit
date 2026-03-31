@@ -11,6 +11,7 @@ html {
     white-space: nowrap;
     word-wrap: normal;
     text-overflow: ellipsis;
+    overflow: hidden;
 }
 // 多行内容省略
 // 行数可通过设置 变量 --yakit-ellipsis-row 控制
