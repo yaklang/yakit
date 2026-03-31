@@ -49,7 +49,6 @@ import {grpcDownloadOnlinePlugin, grpcFetchLocalPluginDetail} from "@/pages/plug
 import {apiFetchOnlinePluginInfo} from "@/pages/plugins/utils"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AddYakitScriptPageInfoProps} from "@/store/pageInfo"
-import {YakitSystem} from "@/yakitGVDefine"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {useSubscribeClose} from "@/store/tabSubscribe"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
@@ -211,7 +210,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 .then(async (res) => {
                     setIsEdit(true)
                     const [online, local] = res
-
                     if (online.status === "fulfilled") {
                         initOnlinePlugin.current = {...online.value}
                         setIsAuthors(!!online.value?.isAuthor)
@@ -418,6 +416,10 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 data.Tags = base.Tags
                 data.EnablePluginSelector = base.EnablePluginSelector
                 data.PluginSelectorTypes = base.PluginSelectorTypes
+                data.EnableForAI = base.YakitPluginAIBaseInfo?.EnableForAI
+                data.AIDesc = base.YakitPluginAIBaseInfo?.AIDesc
+                data.AIKeywords = base.YakitPluginAIBaseInfo?.AIKeywords
+                data.AIUsage = base.YakitPluginAIBaseInfo?.AIUsage
             }
 
             if (!codeInfoRef.current) {
@@ -464,7 +466,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 }
 
                 ipcRenderer
-                    .invoke("SaveNewYakScript", data)
+                    .invoke("SaveYakScript", data)
                     .then((res: YakScript) => {
                         handleRefreshMenu()
                         resolve(res)
@@ -559,7 +561,6 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                 handleTimeLoadingToFalse(setLocalLoading)
                 return
             }
-
             const request = pluginConvertUIToLocal(plugin, savedPluginInfo.current)
 
             handleLocalSave(request)
@@ -608,6 +609,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
             setOnlineLoading(true)
 
             const plugin = await handleGetPluginInfo()
+
             if (!plugin) {
                 handleTimeLoadingToFalse(setOnlineLoading)
                 return
@@ -1020,6 +1022,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                                 initType='yak'
                                 setType={handleSwitchTypeUpdateCode}
                                 setName={setName}
+                                getCodeContent={() => codeInfoRef.current?.onSubmit()}
                             />
 
                             <div className={styles["editor-code-container"]}>

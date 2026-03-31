@@ -1,3 +1,4 @@
+import {YakitPluginBaseAIInfo} from "../pluginEditor/base"
 import {YakParamProps, YakRiskInfoProps} from "../plugins/pluginsType"
 
 export interface ExecHistoryRecord {
@@ -79,7 +80,7 @@ export interface YakScriptHookItem {
     YakScriptName: string
 }
 
-export interface YakScript {
+export interface YakScript extends Partial<YakitPluginBaseAIInfo> {
     Id: number
     Content: string
     Type: string

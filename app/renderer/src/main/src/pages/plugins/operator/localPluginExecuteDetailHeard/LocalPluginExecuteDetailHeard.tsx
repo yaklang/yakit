@@ -45,7 +45,7 @@ import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAut
 import {grpcFetchExpressionToResult} from "@/pages/pluginHub/utils/grpc"
 import {getJsonSchemaListResult, JsonFormWrapper} from "@/components/JsonFormWrapper/JsonFormWrapper"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { JSONParseLog } from "@/utils/tool"
+import {JSONParseLog} from "@/utils/tool"
 
 const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
 
@@ -527,7 +527,10 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
     const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
     let extraSetting: FormExtraSettingProps | undefined = undefined
     try {
-        extraSetting = JSONParseLog(item.ExtraSetting || "{}", {page: "LocalPluginExecuteDetailHeard", fun: "FormContentItemByType"}) || {
+        extraSetting = JSONParseLog(item.ExtraSetting || "{}", {
+            page: "LocalPluginExecuteDetailHeard",
+            fun: "FormContentItemByType"
+        }) || {
             double: false,
             data: []
         }
@@ -671,7 +674,10 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
                         const {BoolResult, Result} = res
                         if (BoolResult && Result) {
                             try {
-                                let arr: string[] = JSONParseLog(Result, {page: "LocalPluginExecuteDetailHeard", fun: "grpcFetchExpressionToResult"})
+                                let arr: string[] = JSONParseLog(Result, {
+                                    page: "LocalPluginExecuteDetailHeard",
+                                    fun: "grpcFetchExpressionToResult"
+                                })
                                 !Array.isArray(arr) && (arr = [])
                                 setAdditionalConfig({
                                     inputOption: arr.map((item) => ({
@@ -784,7 +790,10 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
         case "yak":
             let language: string = pluginType || ""
             try {
-                const info = JSONParseLog(item.ExtraSetting || "", {page: "LocalPluginExecuteDetailHeard", fun: "yak"}) as PluginParamDataEditorProps
+                const info = JSONParseLog(item.ExtraSetting || "", {
+                    page: "LocalPluginExecuteDetailHeard",
+                    fun: "yak"
+                }) as PluginParamDataEditorProps
                 language = info?.language || pluginType || ""
             } catch (error) {}
             language = GetPluginLanguage(language || codeType || "yak")
@@ -828,9 +837,15 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
             let value: any = undefined
             try {
                 schema = JSONParseLog(item?.JsonSchema || "{}", {page: "LocalPluginExecuteDetailHeard", fun: "schema"})
-                uiSchema = JSONParseLog(item?.UISchema || "{}", {page: "LocalPluginExecuteDetailHeard", fun: "uiSchema"})
+                uiSchema = JSONParseLog(item?.UISchema || "{}", {
+                    page: "LocalPluginExecuteDetailHeard",
+                    fun: "uiSchema"
+                })
                 if (jsonSchemaInitial && jsonSchemaInitial[item.Field]) {
-                    value = JSONParseLog(jsonSchemaInitial[item.Field], {page: "LocalPluginExecuteDetailHeard", fun: "jsonSchemaInitial"})
+                    value = JSONParseLog(jsonSchemaInitial[item.Field], {
+                        page: "LocalPluginExecuteDetailHeard",
+                        fun: "jsonSchemaInitial"
+                    })
                 }
             } catch (error) {
                 console.error("Parse JsonSchema failed:", error)
@@ -868,7 +883,16 @@ export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React
 })
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
 export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
-    const {form, disabled, type = "single", rawHTTPRequest = "", MockHTTPResponse = "", inputType, setInputType, isShowMockHTTPResponse} = props
+    const {
+        form,
+        disabled,
+        type = "single",
+        rawHTTPRequest = "",
+        MockHTTPResponse = "",
+        inputType,
+        setInputType,
+        isShowMockHTTPResponse
+    } = props
     const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
 
     const requestType: RequestType = Form.useWatch("requestType", form)
@@ -997,17 +1021,17 @@ export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.mem
                     />
                 </Form.Item>
             )}
-            {isShowMockHTTPResponse && <Form.Item label={t("PluginFixFormParams.simulation_response")} name='simulationResponse' valuePropName='checked' initialValue={false}>
-                <YakitSwitch size='large' disabled={disabled} />
-            </Form.Item>}
-            {
-                isShowResponse && (
-                <OutputFormComponentsByType
-                    item={mockItem}
-                    disabled={disabled}
-                />
-            )
-            }
+            {isShowMockHTTPResponse && (
+                <Form.Item
+                    label={t("PluginFixFormParams.simulation_response")}
+                    name='simulationResponse'
+                    valuePropName='checked'
+                    initialValue={false}
+                >
+                    <YakitSwitch size='large' disabled={disabled} />
+                </Form.Item>
+            )}
+            {isShowResponse && <OutputFormComponentsByType item={mockItem} disabled={disabled} />}
         </>
     )
 })
