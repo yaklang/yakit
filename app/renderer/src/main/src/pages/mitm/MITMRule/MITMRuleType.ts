@@ -9,6 +9,8 @@ export interface MITMContentReplacerRule {
     Index: number
     Rule: string
     RegexpGroups: number[]
+    /** @description 捕获组输出模板，支持 $1、\1、{1} */
+    RegexpResultTemplate?: string
     NoReplace: boolean
     Result: string
     EffectiveURL: string

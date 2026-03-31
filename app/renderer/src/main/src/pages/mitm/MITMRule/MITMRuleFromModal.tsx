@@ -78,6 +78,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 currentItem && (currentItem?.ExtraHeaders?.length > 0 || currentItem?.ExtraCookies?.length > 0) ? 2 : 1 //  1 文本  2 HTTP
         })
         ruleContentRef?.current?.onSetValue(currentItem?.Rule)
+        setRegexpGroupsValue(currentItem?.RegexpGroups || [])
     }, [currentItem])
     const onOk = useMemoizedFn(() => {
         form.validateFields()
@@ -199,6 +200,17 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             onSearch={handleRegexpGroupsSearch}
                             onBlur={() => setRegexpGroupsSearchVal("")}
                         ></YakitSelect>
+                    </Form.Item>
+
+                    <Form.Item
+                        label={t("MITMRuleFromModal.regexp_result_template")}
+                        name='RegexpResultTemplate'
+                        help={t("MITMRuleFromModal.regexp_result_template_tip")}
+                    >
+                        <YakitInput.TextArea
+                            autoSize={{minRows: 1, maxRows: 3}}
+                            placeholder={`$1-$2 / \\\\1-\\\\2 / {1}-{2}`}
+                        />
                     </Form.Item>
 
                     <Row>

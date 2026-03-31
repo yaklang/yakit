@@ -46,6 +46,8 @@
     "add_this_rule": "Add this Rule",
     "rule_group": "Rule Group",
     "group_matching_tip": "Enter 0 to match all; enter a number to match the entered group; leave blank to match the first group by default",
+    "regexp_result_template": "Group Output Template",
+    "regexp_result_template_tip": "Use $1 / \\1 / {1} to reference capture groups. When set, it overrides the comma-joined output from “Rule Group”.",
     "replacement_result": "Replacement Result",
     "http_header_cookie_priority_tip": "HTTP Header and HTTP Cookie have a higher priority and will overwrite the body content",
     "text": "Text",

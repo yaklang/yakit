@@ -46,6 +46,8 @@
     "add_this_rule": "添加该规则",
     "rule_group": "规则组",
     "group_matching_tip": "输入0匹配所有，输入数字匹配输入的组，不写默认匹配第一组",
+    "regexp_result_template": "分组输出模板",
+    "regexp_result_template_tip": "可用 $1 / \\1 / {1} 引用捕获组；填写后将覆盖“规则组”的逗号拼接输出",
     "replacement_result": "替换结果",
     "http_header_cookie_priority_tip": "HTTP Header 与 HTTP Cookie 优先级较高，会覆盖文本内容",
     "text": "文本",
