@@ -238,7 +238,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
 
     //  HTTP 流量
     const getHTTPTraffic = useCallback(async () => {
-        const result = await grpcQueryHTTPFlows({RuntimeId: params})
+        const result = await grpcQueryHTTPFlows({RuntimeId: params,AfterUpdatedAt:data.startTime})
         setTrafficLen(+result.Total)
     }, [params])
 
