@@ -101,7 +101,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                 handleFetchParams(true)
             } else {
                 setParams([])
-                if (['nuclei'].includes(getType())) {
+                if (["nuclei"].includes(getType())) {
                     handleParsingYaml(content)
                 }
             }
@@ -181,7 +181,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
             } else {
                 defaultValue = {...formData}
             }
-            
+
             let newFormValue: CustomPluginExecuteFormValue = {}
             params.forEach((ele) => {
                 let initValue = formData[ele.Field] || ele.Value || ele.DefaultValue

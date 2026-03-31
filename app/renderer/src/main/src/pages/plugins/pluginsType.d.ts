@@ -1,6 +1,7 @@
 import {API} from "@/services/swagger/resposeType"
 import {GRPCRange} from "./funcTemplateType"
 import {YaklangInformation} from "@/utils/monacoSpec/yakEditor"
+import {YakitPluginBaseAIInfo} from "../pluginEditor/base"
 
 /** ---------- 前端插件数据结构定义 Start ---------- */
 /** 插件基础信息 */
@@ -56,7 +57,7 @@ export interface PluginDataProps {
 
 /** ---------- grpc插件数据结构定义 Start ---------- */
 /** 插件参数配置数据 */
-export interface YakParamProps {
+export interface YakParamProps extends Partial<YakitPluginBaseAIInfo> {
     /** 参数名 */
     Field: string
     /** 参数展示名 */
@@ -88,7 +89,7 @@ export interface YakParamProps {
 }
 
 /** 本地插件信息 */
-export interface localYakInfo {
+export interface localYakInfo extends Partial<YakitPluginBaseAIInfo> {
     Id?: number
 
     ScriptName: string

@@ -179,6 +179,7 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
             return
         }
         const info = pluginConvertLocalToOnline(localPlugin.current)
+
         setPluginLoading(true)
         handleUpload({...info, is_private: true})
     })

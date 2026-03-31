@@ -33,6 +33,13 @@ export const pluginParamsConvertLocalToOnline = (local: YakParamProps[]) => {
             json_schema: item.JsonSchema || "",
             suggestion_data_expression: item.SuggestionDataExpression || "",
             ui_schema: item.UISchema || ""
+
+            // YakitPluginAIBaseInfo: {
+            //     EnableForAI: item.EnableForAI || false,
+            //     AIDesc: item.AIDesc || "",
+            //     AIKeywords: item.AIKeywords || "",
+            //     AIUsage: item.AIUsage || ""
+            // }
         }
         return obj
     })
@@ -131,7 +138,13 @@ export const pluginConvertLocalToUI = async (value: YakScript) => {
         Help: data.Help || undefined,
         Tags: [...newTags],
         EnablePluginSelector: data.EnablePluginSelector || false,
-        PluginSelectorTypes: newPluginSelectorTypes.length === 0 ? undefined : [...newPluginSelectorTypes]
+        PluginSelectorTypes: newPluginSelectorTypes.length === 0 ? undefined : [...newPluginSelectorTypes],
+        YakitPluginAIBaseInfo: {
+            EnableForAI: data.EnableForAI || false,
+            AIDesc: data.AIDesc || "",
+            AIKeywords: data.AIKeywords || "",
+            AIUsage: data.AIUsage || ""
+        }
     }
 
     return info
@@ -154,7 +167,11 @@ export const pluginConvertUIToLocal = (value: YakitPluginInfo, local?: YakScript
             GeneralModuleVerbose: local.GeneralModuleVerbose,
             GeneralModuleKey: local.GeneralModuleKey,
             FromGit: local.FromGit,
-            IsCorePlugin: local.IsCorePlugin
+            IsCorePlugin: local.IsCorePlugin,
+            EnableForAI: local?.EnableForAI,
+            AIDesc: local?.AIDesc,
+            AIKeywords: local?.AIKeywords,
+            AIUsage: local?.AIUsage
         }
     }
 
@@ -169,6 +186,10 @@ export const pluginConvertUIToLocal = (value: YakitPluginInfo, local?: YakScript
     data.Content = value.Content
     data.RiskInfo = (value.RiskDetail || []).filter((item) => item.CVE && item.TypeVerbose && item.Level)
     data.PluginEnvKey = value.PluginEnvKey
+    data.EnableForAI = value?.EnableForAI
+    data.AIDesc = value?.AIDesc
+    data.AIKeywords = value?.AIKeywords
+    data.AIUsage = value?.AIUsage
 
     // 没有RiskDetail就赋值为undefined
     if (data.RiskInfo.length === 0) {
@@ -212,6 +233,10 @@ export const pluginConvertUIToOnline = (value: YakitPluginInfo, local?: YakScrip
     data.content = value.Content
     data.riskInfo = riskDetailConvertLocalToOnline(value.RiskDetail)
     data.pluginEnvKey = value.PluginEnvKey
+    data.enableForAI = value.YakitPluginAIBaseInfo?.EnableForAI
+    data.aiDesc = value.YakitPluginAIBaseInfo?.AIDesc
+    data.aiKeywords = value.YakitPluginAIBaseInfo?.AIKeywords
+    data.aiUsage = value.YakitPluginAIBaseInfo?.AIUsage
 
     if (data.tags.length === 0) {
         data.tags = undefined
@@ -256,6 +281,10 @@ export const pluginConvertLocalToOnline = (value: YakScript) => {
     data.group = value.OnlineGroup
     data.isCorePlugin = value.IsCorePlugin
     data.pluginEnvKey = value.PluginEnvKey
+    data.enableForAI = value.EnableForAI
+    data.aiDesc = value.AIDesc
+    data.aiKeywords = value.AIKeywords
+    data.aiUsage = value.AIUsage
 
     if (data.tags.length === 0) {
         data.tags = undefined

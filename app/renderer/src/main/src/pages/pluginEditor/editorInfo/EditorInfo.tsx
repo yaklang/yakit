@@ -26,12 +26,13 @@ import {Qadocument, qaDocumentLableList} from "./Qadocument"
 import classNames from "classnames"
 import "../../plugins/plugins.scss"
 import styles from "./EditorInfo.module.scss"
+import {AIPluginComponent} from "./AIPluginComponent"
 export interface EditorInfoFormRefProps {
     onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
     setNameForm: (name: string) => void
     setHelpForm: (help: string) => void
 }
-interface EditorBaseInfoProps {
+export interface EditorBaseInfoProps {
     ref?: ForwardedRef<EditorInfoFormRefProps>
     isEdit?: boolean
     /** 初始默认数据 */
@@ -40,6 +41,7 @@ interface EditorBaseInfoProps {
     initType?: string
     setType: (type: string) => void
     setName: (name: string) => void
+    getCodeContent: () => string | undefined
 }
 
 interface EditorInfoProps extends EditorBaseInfoProps {
@@ -128,7 +130,7 @@ interface EditorInfoFormProps extends EditorBaseInfoProps {}
 /** @name 插件基础信息表单 */
 export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
     forwardRef((props, ref) => {
-        const {isEdit, data, initType, setType, setName} = props
+        const {isEdit, data, initType, setType, setName, getCodeContent} = props
 
         const [form] = Form.useForm()
         useImperativeHandle(
@@ -175,7 +177,8 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                 Help: (data.Help || "").trim() || undefined,
                 Tags: toTagKey(data.Tags || []),
                 EnablePluginSelector: EnablePluginSelector,
-                PluginSelectorTypes: data.PluginSelectorTypes || (EnablePluginSelector ? [] : undefined)
+                PluginSelectorTypes: data.PluginSelectorTypes || (EnablePluginSelector ? [] : undefined),
+                YakitPluginAIBaseInfo: data.YakitPluginAIBaseInfo
             }
             if (!info.Type || !info.ScriptName) return undefined
 
@@ -385,10 +388,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     </Form.Item>
 
                     <Form.Item label='描述 :' name='Help'>
-                        <YakitInput.TextArea
-                            rows={2}
-                            placeholder='请输入...'
-                        />
+                        <YakitInput.TextArea rows={2} placeholder='请输入...' />
                     </Form.Item>
 
                     <Form.Item
@@ -416,7 +416,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
 
                     <div
                         className={classNames(styles["item-setting"], {
-                            [styles["hidden"]]: !["yak", "codec"].includes(type)
+                            // [styles["hidden"]]: !["yak", "codec"].includes(type)
                         })}
                     >
                         <div className={styles["item-setting-header"]}>插件配置 :</div>
@@ -471,6 +471,10 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                                     })}
                                 </>
                             )}
+
+                            <Form.Item name='YakitPluginAIBaseInfo' noStyle>
+                                <AIPluginComponent getCodeContent={getCodeContent} />
+                            </Form.Item>
                         </div>
                     </div>
 

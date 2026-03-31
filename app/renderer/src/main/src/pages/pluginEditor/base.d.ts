@@ -8,6 +8,14 @@ export interface KeyParamsFetchPluginDetail {
     name: string
 }
 
+// 开放给AI使用，开关所需字段定义
+export interface YakitPluginBaseAIInfo {
+    EnableForAI: boolean
+    AIDesc: string
+    AIKeywords: string
+    AIUsage: string
+}
+
 /** @name 插件基础信息(前端逻辑专属) */
 export interface YakitPluginBaseInfo {
     /** 插件类型 */
@@ -22,10 +30,11 @@ export interface YakitPluginBaseInfo {
     EnablePluginSelector?: boolean
     /** 插件联动类型 */
     PluginSelectorTypes?: string[]
+    YakitPluginAIBaseInfo?: YakitPluginBaseAIInfo
 }
 
 /** @name 插件全部信息(前端逻辑专属使用) */
-export interface YakitPluginInfo extends YakitPluginBaseInfo {
+export interface YakitPluginInfo extends YakitPluginBaseInfo, Partial<YakitPluginBaseAIInfo> {
     Id?: string
     Content: string
     /** 漏洞类型详情 */
