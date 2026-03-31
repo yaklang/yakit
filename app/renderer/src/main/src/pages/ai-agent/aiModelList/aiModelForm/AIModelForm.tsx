@@ -614,7 +614,7 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
                     }}
                     onSelect={onSelect}
                     onClear={onClear}
-                ></YakitAutoComplete>
+                />
             </Form.Item>
             <Form.Item name='api_key_id' noStyle style={{display: "none"}}>
                 <YakitInput wrapperStyle={{display: "none"}} />

@@ -60,7 +60,7 @@ import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {JSONParseLog} from "@/utils/tool"
 import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoComGroupSearchWithAll} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll"
 import {StreamUpdateState} from "./PluginsOutput/StreamProcessor"
 
 const MITMManual = React.lazy(() => import("@/pages/mitm/MITMManual/MITMManual"))
@@ -1008,7 +1008,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                         wrapperStyle={{padding: 0}}
                         onQueryParams={(queryParams) => {
                             try {
-                                const processQuery = JSONParseLog(queryParams, {page: "MITMHijackedContent", fun: "onQueryParams"}) || {}
+                                const processQuery =
+                                    JSONParseLog(queryParams, {page: "MITMHijackedContent", fun: "onQueryParams"}) || {}
                                 delete processQuery.Pagination
                                 delete processQuery.AfterId
                                 delete processQuery.BeforeId
@@ -1149,9 +1150,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 <div className={styles["pluginOutput-wrapper"]} style={{height: `calc(100% - ${height}px)`}}>
                     <div className={styles["pluginOutput-select"]}>
                         <span className={styles["pluginOutput-pluginName"]}>当前插件输出：</span>
-                        <YakitAutoComplete
+                        <YakitAutoComGroupSearchWithAll
                             size='small'
                             wrapperStyle={{width: 350}}
+                            groupSearchWithAll
                             placeholder={showPluginStream === "default" ? "其他" : showPluginStream}
                             virtual
                             listHeight={300}
