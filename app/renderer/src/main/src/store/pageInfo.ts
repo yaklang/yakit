@@ -128,6 +128,20 @@ export interface SimpleDetectPageInfoProps {
 
 export interface AIRepositoryProps {
     defualtAIMentionCommandParams: AIMentionCommandParams[]
+    /**
+     * 可选：从其他页面跳转到 AI Agent 并自动触发 Forge 执行
+     * - 主要用于 SyntaxFlow 规则美化等场景
+     */
+    forgeExec?: {
+        /** ForgeName 可能存在别名，按顺序尝试命中 */
+        forgeNameCandidates?: string[]
+        /** 需要处理的规则内容（例如 SyntaxFlow 规则文本） */
+        ruleContent?: string
+        /** 附加参数（KVPair 形式传给后端） */
+        extraParams?: Record<string, string>
+        /** 是否自动执行（无需用户再次点击提交） */
+        autoRun?: boolean
+    }
 }
 
 export interface WebsocketFuzzerPageInfoProps {

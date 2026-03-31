@@ -673,7 +673,15 @@ export interface ComponentParams {
     ruleManagementPageInfo?: RuleManagementPageInfoProps
 
     // TODO  后续补充
-    AIRepository?: {defualtAIMentionCommandParams: AIMentionCommandParams[]}
+    AIRepository?: {
+        defualtAIMentionCommandParams: AIMentionCommandParams[]
+        forgeExec?: {
+            forgeNameCandidates?: string[]
+            ruleContent?: string
+            extraParams?: Record<string, string>
+            autoRun?: boolean
+        }
+    }
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {

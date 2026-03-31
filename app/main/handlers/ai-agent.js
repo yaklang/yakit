@@ -233,6 +233,69 @@ module.exports = (win, getClient) => {
         return await asyncGetAIForge(params)
     })
 
+    /**
+     * @name SyntaxFlow 规则美化（后端统一触发 AI-Forge）
+     * @description
+     * - 前端只传入 ruleContent 和可选的 forgeNameCandidates
+     * - 后端负责查 Forge 并启动 AI-ReAct 流（结果输出仍由 AI Agent 页面展示）
+     * - 返回 token，前端可用该 token 订阅 `${token}-data` / `${token}-end` 事件
+     */
+    ipcMain.handle("BeautifySyntaxFlowRule", async (e, params) => {
+        const ruleContent = (params && params.ruleContent) || ""
+        const forgeNameCandidates = (params && params.forgeNameCandidates) || []
+        const token = (params && params.token) || `beautify-syntaxflow-${Date.now()}`
+
+        // 1) resolve Forge
+        let forgeInfo = null
+        for (const name of forgeNameCandidates) {
+            try {
+                const res = await asyncGetAIForge({ForgeName: name})
+                if (res && res.Id) {
+                    forgeInfo = res
+                    break
+                }
+            } catch (err) {}
+        }
+        if (!forgeInfo) {
+            try {
+                const res = await asyncQueryAIForge({
+                    Pagination: {Page: 1, Limit: 10, OrderBy: "", Order: ""},
+                    Filter: {Keyword: "syntaxflow"}
+                })
+                forgeInfo = (res && res.Data && res.Data[0]) || null
+            } catch (err) {}
+        }
+        if (!forgeInfo || !forgeInfo.Id) {
+            throw new Error("forge not found")
+        }
+
+        // 2) start AI ReAct stream (backend owns triggering)
+        if (aiReActTaskPool.has(token)) {
+            return {token, Forge: forgeInfo}
+        }
+        const stream = getClient().StartAIReAct()
+        aiWriteChainMap.set(token, Promise.resolve())
+        handlerHelper.registerHandler(win, stream, aiReActTaskPool, token)
+
+        // Build start params compatible with renderer hook (useChatIPC expects params.Params.*)
+        const startParams = {
+            Params: {
+                ForgeName: `${forgeInfo.ForgeVerboseName || forgeInfo.ForgeName}(${forgeInfo.ForgeName})`,
+                ForgeParams: [
+                    {Key: "rule", Value: ruleContent},
+                    {Key: "input", Value: ruleContent}
+                ],
+                UserQuery: ""
+            }
+        }
+
+        let writeChain = aiWriteChainMap.get(token)
+        writeChain = writeChain.then(() => safeWrite(stream, startParams, token))
+        aiWriteChainMap.set(token, writeChain)
+
+        return {token, Forge: forgeInfo}
+    })
+
     // 单个导入AIForge
     const importImportAIForgeMap = new Map()
     ipcMain.handle("cancel-ImportAIForge", handlerHelper.cancelHandler(importImportAIForgeMap))
