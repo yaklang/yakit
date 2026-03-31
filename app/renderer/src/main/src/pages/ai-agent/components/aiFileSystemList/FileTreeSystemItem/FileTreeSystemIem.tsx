@@ -22,6 +22,7 @@ import {
 } from "@/pages/yakRunner/utils"
 import {FileMonitorProps} from "@/utils/duplex/duplex"
 import {yakitNotify} from "@/utils/notification"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 // 检测原始路径分隔符
 const detectPathSep = (p: string) => {
@@ -68,6 +69,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
     selected,
     setSelected
 }) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const inputRef = useRef<InputRef>(null)
     // 是否可输入
     const [isInput, setIsInput] = useState<boolean>(false)
@@ -124,14 +126,14 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
         try {
             currentPath = await getPathJoin(data.parent, fileName)
             if (currentPath.length === 0) {
-                throw new Error("路径拼接失败")
+                throw new Error(t("FileTreeSystemItem.joinPathFailed"))
             }
             // 区分新建文件夹 新建文件接口
             const result = data.isFolder
                 ? await grpcFetchCreateFolder(currentPath, data.parent)
                 : await grpcFetchCreateFile(currentPath, null, data.parent)
             if (result.length === 0) {
-                throw new Error("创建失败")
+                throw new Error(t("FileTreeSystemItem.createFailed"))
             }
             flag = true
         } catch (error) {
@@ -152,7 +154,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
                     ChangeEvents: []
                 }
                 emiter.emit("onRefreshYakRunnerFileTree", JSON.stringify(event))
-                yakitNotify("success", "创建成功")
+                yakitNotify("success", t("FileTreeSystemItem.createSuccess"))
             }
             setTimeout(() => {
                 setInputVal("")
@@ -166,14 +168,14 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
         const oldPath = data.path
         try {
             if (inputVal === data.name) {
-                throw new Error("重命名相同")
+                throw new Error(t("FileTreeSystemItem.renameSame"))
             }
             const parentPath = await getPathParent(oldPath)
             const newPath = await getPathJoin(parentPath, inputVal)
-            if (!newPath) throw new Error("重命名路径拼接失败")
+            if (!newPath) throw new Error(t("FileTreeSystemItem.renameJoinPathFailed"))
             // 调接口更新文件/文件夹名字
             const result = await grpcFetchRenameFileTree(oldPath, inputVal, parentPath)
-            if (!result.length) throw new Error("重命名失败")
+            if (!result.length) throw new Error(t("FileTreeSystemItem.renameFailed"))
             // 更新文件树节点数据
             const event: FileMonitorProps = {
                 Id: watchToken,
@@ -190,7 +192,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
                     setSelected(newSelected)
                 }
             }
-            yakitNotify("success", "重命名成功")
+            yakitNotify("success", t("FileTreeSystemItem.renameSuccess"))
         } catch (error) {
             // 回滚旧文件树节点
             const event: FileMonitorProps = {
@@ -227,12 +229,12 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
         const menu = [
             {
                 key: "refreshFolder",
-                label: "刷新",
+                label: t("FileTreeSystemItem.refresh"),
                 isHide: !(data.depth === 1 && isOpen)
             },
             {
                 key: "sendToChat",
-                label: "发送到自由对话",
+                label: t("FileTreeSystemItem.sendToChat"),
                 isHide: false
             },
             {
@@ -240,17 +242,17 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
             },
             {
                 key: "path",
-                label: "复制路径",
+                label: t("FileTreeSystemItem.copyPath"),
                 isHide: false
             },
             {
                 key: "openFolder",
-                label: "在文件夹中显示",
+                label: t("FileTreeSystemItem.showInFolder"),
                 isHide: false
             },
             {
                 key: "closeFolder",
-                label: <span style={{color: "var(--Colors-Use-Error-Primary)"}}>移除</span>,
+                label: <span style={{color: "var(--Colors-Use-Error-Primary)"}}>{t("FileTreeSystemItem.remove")}</span>,
                 isHide: !(data.depth === 1 && isOpen)
             }
         ]

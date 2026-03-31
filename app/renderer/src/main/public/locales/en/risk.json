@@ -50,6 +50,17 @@
         "openInNewWindow": "Open in New Window"
     }
   },
+  "RiskTable": {
+    "queryFailed": "Query failed: {error}",
+    "queryRisksTotalByRuntimeIdFailed": "Failed to get total count in apiQueryRisksTotalByRuntimeId: {error}",
+    "queryRisksTotalByRuntimeIdsFailed": "Failed to get total count in apiQueryRisksTotalByRuntimeIds: {error}",
+    "markReadFailed": "Mark as read failed: {error}",
+    "deleteFailed": "Delete failed: {error}",
+    "exportFailed": "Export failed: {error}",
+    "queryRiskTagsFailed": "Query QueryRiskTags failed: {error}",
+    "settingFailed": "Setting failed: {error}",
+    "feedbackFailed": "Feedback failed: {error}"
+  },
   "YakitRiskSelectTag": {
     "false_positive": "False Positive",
     "ignore": "Ignore",

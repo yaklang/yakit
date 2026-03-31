@@ -8,6 +8,7 @@ import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAut
 import {useMemoizedFn} from "ahooks"
 import {CheckboxValueType} from "antd/es/checkbox/Group"
 import {yakitNotify} from "@/utils/notification"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface BatchAddNewGroupFormItem {
     groupName: string
@@ -23,6 +24,7 @@ export interface BatchAddNewGroupProp {
 }
 const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
     const {initialValues, allGroup, tabs, onFinish, onCancel} = props
+    const {t} = useI18nNamespaces(["layout"])
     const [loading, setLoading] = useState<boolean>(false)
 
     const [groupName, setGroupName] = useState(initialValues.groupName)
@@ -49,7 +51,7 @@ const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
     return (
         <div style={{padding: 15}}>
             <div style={{marginBottom: 5, color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
-                <span style={{color: "#ff4d4f"}}>*</span> 组名：
+                <span style={{color: "#ff4d4f"}}>*</span> {t("BatchAddNewGroup.groupName")}
             </div>
             <YakitAutoComplete
                 value={groupName}
@@ -70,7 +72,7 @@ const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
             </YakitAutoComplete>
             <div style={{maxHeight: 300, overflowY: "auto"}}>
                 <div style={{marginBottom: 5, color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
-                    <span style={{color: "#ff4d4f"}}>*</span> 添加标签页到组：
+                <span style={{color: "#ff4d4f"}}>*</span> {t("BatchAddNewGroup.addTabsToGroup")}
                 </div>
                 <Checkbox.Group value={checkedTabs} onChange={handleTabsChange}>
                     {tabs.map((item) => (
@@ -82,23 +84,23 @@ const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
             </div>
             <div style={{textAlign: "right"}}>
                 <YakitButton type='outline1' style={{marginRight: 8}} onClick={onCancel}>
-                    取消
+                    {t("BatchAddNewGroup.cancel")}
                 </YakitButton>
                 <YakitButton
                     loading={loading}
                     onClick={() => {
                         if (groupName.length === 0) {
-                            yakitNotify("error", "组名不能为空")
+                            yakitNotify("error", t("BatchAddNewGroup.groupNameRequired"))
                             return
                         }
 
                         if (groupName.length > 50) {
-                            yakitNotify("error", "组名不能超过50个字符")
+                            yakitNotify("error", t("BatchAddNewGroup.groupNameTooLong"))
                             return
                         }
 
                         if (checkedTabs.length === 0) {
-                            yakitNotify("error", "请勾选tab页")
+                            yakitNotify("error", t("BatchAddNewGroup.pleaseSelectTabs"))
                             return
                         }
 
@@ -110,7 +112,7 @@ const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
                         })
                     }}
                 >
-                    确定
+                    {t("BatchAddNewGroup.confirm")}
                 </YakitButton>
             </div>
         </div>

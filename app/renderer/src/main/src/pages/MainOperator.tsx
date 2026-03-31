@@ -503,16 +503,18 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         }
         // IRify社区版有水印
         else if (isCommunityIRify()) {
-            return "IRify技术浏览版仅供技术交流使用"
+            return t("Main.irifyTechPreviewWatermark")
         } else if (userInfo.isLogin) {
             if (isEnpriTrace()) {
                 return getEnpriTraceWaterMark(userInfo.companyName || " ")
             }
             return userInfo.companyName || ""
         } else if (isEnpriTrace()) {
-            return getEnpriTraceWaterMark(isIRify() ? "IRify技术浏览版仅供技术交流使用" : "EnpriTrace-试用版")
+            return getEnpriTraceWaterMark(
+                isIRify() ? t("Main.irifyTechPreviewWatermark") : t("Main.enpriTraceTrialWatermark")
+            )
         } else if (isEnpriTraceAgent()) {
-            return "EnpriTraceAgent-试用版"
+            return t("Main.enpriTraceAgentTrialWatermark")
         }
         return ""
     }

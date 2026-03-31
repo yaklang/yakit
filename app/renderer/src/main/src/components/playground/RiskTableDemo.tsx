@@ -7,6 +7,7 @@ import {Risk} from "@/pages/risks/schema";
 import {info} from "@/utils/notification";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {YakEditor} from "@/utils/editors";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces";
 
 export interface RiskTableDemoProp {
 
@@ -15,6 +16,7 @@ export interface RiskTableDemoProp {
 const {ipcRenderer} = window.require("electron");
 
 export const RiskTableDemo: React.FC<RiskTableDemoProp> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [selected, setSelected] = useState<Risk>();
 
     return <YakitResizeBox
@@ -22,8 +24,8 @@ export const RiskTableDemo: React.FC<RiskTableDemoProp> = (props) => {
         firstNode={<div style={{height: "100%", overflowY: "hidden"}}>
             <DemoVirtualTable<Risk>
                 columns={[
-                    {headerTitle: "ID", key: "Id", width: 80, colRender: i => i.Id},
-                    {headerTitle: "漏洞名称", key: "Title", width: 300, colRender: i => i.TitleVerbose || i.Title},
+                    {headerTitle: t("RiskTableDemo.id"), key: "Id", width: 80, colRender: i => i.Id},
+                    {headerTitle: t("RiskTableDemo.name"), key: "Title", width: 300, colRender: i => i.TitleVerbose || i.Title},
                 ]}
                 rowClick={data => {
                     setSelected(data)

@@ -12,6 +12,7 @@ import {failed, success} from "@/utils/notification"
 import {RagCollectionListProps, VectorStoreCollection, Paging} from "./types"
 import styles from "./RagCollectionList.module.scss"
 import {OutlineRefreshIcon, OutlineSearchIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -20,6 +21,7 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
     onSelectCollection,
     onRefresh
 }) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [collections, setCollections] = useState<VectorStoreCollection[]>([])
     const [loading, setLoading] = useState(false)
     const [searchKeyword, setSearchKeyword] = useState<string>("")
@@ -56,7 +58,7 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                 setTotal(0)
             }
         } catch (error) {
-            failed(`获取向量存储集合失败: ${error}`)
+            failed(t("RagCollectionList.fetchFailed", {error: String(error)}))
             setCollections([])
             setTotal(0)
         } finally {
@@ -97,13 +99,13 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
     return (
         <div className={styles["rag-collection-list"]}>
             <AutoCard
-                title="RAG 向量存储集合"
+                title={t("RagCollectionList.title")}
                 size="small"
                 bodyStyle={{padding: 12}}
                 extra={
                     <Space>
                         <YakitInput.Search
-                            placeholder="搜索集合名称"
+                            placeholder={t("RagCollectionList.searchPlaceholder")}
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             onSearch={handleSearch}
@@ -117,14 +119,14 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                             icon={<OutlineRefreshIcon />}
                             onClick={handleRefreshList}
                         >
-                            刷新
+                            {t("RagCollectionList.refresh")}
                         </YakitButton>
                     </Space>
                 }
             >
                 <YakitSpin spinning={loading}>
                     {collections.length === 0 ? (
-                        <YakitEmpty description="暂无向量存储集合" />
+                        <YakitEmpty description={t("RagCollectionList.empty")}/>
                     ) : (
                         <div className={styles["collection-list"]}>
                             {collections.map((collection) => (
@@ -144,22 +146,22 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                                                 color={(collection.VectorCount || 0) > 1000 ? "success" : 
                                                        (collection.VectorCount || 0) > 100 ? "warning" : "info"}
                                             >
-                                                {collection.VectorCount || 0} 条
+                                                {t("RagCollectionList.count", {count: collection.VectorCount || 0})}
                                             </YakitTag>
                                         </div>
                                         
                                         <div className={styles["collection-details"]}>
                                             <div className={styles["detail-item"]}>
-                                                <span className={styles["label"]}>模型:</span>
-                                                <span className={styles["value"]}>{collection.ModelName || "未指定"}</span>
+                                                <span className={styles["label"]}>{t("RagCollectionList.model")}:</span>
+                                                <span className={styles["value"]}>{collection.ModelName || t("RagCollectionList.unspecified")}</span>
                                             </div>
                                             <div className={styles["detail-item"]}>
-                                                <span className={styles["label"]}>维度:</span>
-                                                <span className={styles["value"]}>{collection.Dimension || "未知"}</span>
+                                                <span className={styles["label"]}>{t("RagCollectionList.dimension")}:</span>
+                                                <span className={styles["value"]}>{collection.Dimension || t("RagCollectionList.unknown")}</span>
                                             </div>
                                             <div className={styles["detail-item"]}>
-                                                <span className={styles["label"]}>距离函数:</span>
-                                                <span className={styles["value"]}>{collection.DistanceFuncType || "未指定"}</span>
+                                                <span className={styles["label"]}>{t("RagCollectionList.distanceFunc")}:</span>
+                                                <span className={styles["value"]}>{collection.DistanceFuncType || t("RagCollectionList.unspecified")}</span>
                                             </div>
                                         </div>
                                         
@@ -171,7 +173,7 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                                         
                                         <div className={styles["collection-meta"]}>
                                             <span className={styles["created-at"]}>
-                                                集合ID: {collection.ID}
+                                                {t("RagCollectionList.collectionId")}: {collection.ID}
                                             </span>
                                         </div>
                                     </div>
@@ -185,7 +187,7 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                                                 handleViewDetail(collection)
                                             }}
                                         >
-                                            详情
+                                            {t("RagCollectionList.detail")}
                                         </YakitButton>
                                     </div>
                                 </div>
@@ -202,7 +204,11 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                             total={total}
                             showSizeChanger={true}
                             showQuickJumper={true}
-                            showTotal={(total) => <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>共 {total} 条记录</div>}
+                            showTotal={(total) => (
+                                <div style={{color: "var(--Colors-Use-Neutral-Text-1-Title)"}}>
+                                    {t("RagCollectionList.totalRecords", {count: total})}
+                                </div>
+                            )}
                             onChange={handlePageChange}
                             pageSizeOptions={["10", "20", "50", "100"]}
                             size="small"
@@ -213,7 +219,7 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
 
             {/* 集合详情弹窗 */}
             <YakitModal
-                title="向量存储集合详情"
+                title={t("RagCollectionList.detailTitle")}
                 visible={detailModalVisible}
                 onCancel={() => {
                     setDetailModalVisible(false)
@@ -221,7 +227,7 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                 }}
                 footer={[
                     <YakitButton key="close" onClick={() => setDetailModalVisible(false)}>
-                        关闭
+                        {t("RagCollectionList.close")}
                     </YakitButton>
                 ]}
                 width={700}
@@ -229,54 +235,54 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
                 {selectedCollectionDetail && (
                     <div className={styles["collection-detail"]}>
                         <div className={styles["detail-section"]}>
-                            <h4>基本信息</h4>
+                            <h4>{t("RagCollectionList.basicInfo")}</h4>
                             <div className={styles["detail-grid"]}>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>集合ID:</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.collectionId")}:</span>
                                     <span className={styles["value"]}>{selectedCollectionDetail.ID}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>集合名称:</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.collectionName")}:</span>
                                     <span className={styles["value"]}>{selectedCollectionDetail.Name}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>向量数量:</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.vectorCount")}:</span>
                                     <span className={styles["value"]}>{selectedCollectionDetail.VectorCount}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>嵌入模型:</span>
-                                    <span className={styles["value"]}>{selectedCollectionDetail.ModelName || "未指定"}</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.embeddingModel")}:</span>
+                                    <span className={styles["value"]}>{selectedCollectionDetail.ModelName || t("RagCollectionList.unspecified")}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>向量维度:</span>
-                                    <span className={styles["value"]}>{selectedCollectionDetail.Dimension || "未知"}</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.dimension")}:</span>
+                                    <span className={styles["value"]}>{selectedCollectionDetail.Dimension || t("RagCollectionList.unknown")}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>距离度量:</span>
-                                    <span className={styles["value"]}>{selectedCollectionDetail.DistanceFuncType || "未指定"}</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.distanceMeasure")}:</span>
+                                    <span className={styles["value"]}>{selectedCollectionDetail.DistanceFuncType || t("RagCollectionList.unspecified")}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>M参数:</span>
-                                    <span className={styles["value"]}>{selectedCollectionDetail.M || "未设置"}</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.mParameter")}:</span>
+                                    <span className={styles["value"]}>{selectedCollectionDetail.M || t("RagCollectionList.notSet")}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>Ml参数:</span>
-                                    <span className={styles["value"]}>{selectedCollectionDetail.Ml || "未设置"}</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.mlParameter")}:</span>
+                                    <span className={styles["value"]}>{selectedCollectionDetail.Ml || t("RagCollectionList.notSet")}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>EfSearch:</span>
-                                    <span className={styles["value"]}>{selectedCollectionDetail.EfSearch || "未设置"}</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.efSearch")}:</span>
+                                    <span className={styles["value"]}>{selectedCollectionDetail.EfSearch || t("RagCollectionList.notSet")}</span>
                                 </div>
                                 <div className={styles["detail-row"]}>
-                                    <span className={styles["label"]}>EfConstruct:</span>
-                                    <span className={styles["value"]}>{selectedCollectionDetail.EfConstruct || "未设置"}</span>
+                                    <span className={styles["label"]}>{t("RagCollectionList.efConstruct")}:</span>
+                                    <span className={styles["value"]}>{selectedCollectionDetail.EfConstruct || t("RagCollectionList.notSet")}</span>
                                 </div>
                             </div>
                         </div>
                         
                         {selectedCollectionDetail.Description && (
                             <div className={styles["detail-section"]}>
-                                <h4>描述信息</h4>
+                                <h4>{t("RagCollectionList.description")}</h4>
                                 <div className={styles["description-content"]}>
                                     {selectedCollectionDetail.Description}
                                 </div>

@@ -12,6 +12,8 @@ import {useMemoizedFn, useThrottleFn} from "ahooks"
 import {openExternalWebsite} from "@/utils/openWebsite"
 import {WebsiteGV} from "@/enums/website"
 import { SafeMarkdown, StreamMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
 
 const titleRender = (info: DataProps) => {
     return <div className={styles["title-render"]}>{info.data.ResourceName}</div>
@@ -29,10 +31,10 @@ const renderItem = (info: DataProps) => {
                     </div>
                 )
             } else {
-                return <>暂无数据</>
+                return <>{i18n.t("YakHelpDoc.noData", {ns: "yakRunner"})}</>
             }
         } catch (error) {
-            return <>错误</>
+            return <>{i18n.t("YakHelpDoc.error", {ns: "yakRunner"})}</>
         }
     } else {
         return <YakHelpDocItemLoad info={info} />
@@ -78,7 +80,7 @@ export const YakHelpDocItemLoad: React.FC<YakHelpDocItemLoadProps> = (props) => 
                             renderItem={renderItem}
                         />
                     ) : (
-                        <>获取失败</>
+                        <>{i18n.t("YakHelpDoc.fetchFailed", {ns: "yakRunner"})}</>
                     )}
                 </>
             )}
@@ -90,6 +92,7 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
     const [data, setData] = useState<DataProps[]>([])
     const searchRef = useRef<string>("")
     const [activeKey, setActiveKey] = useState<string | string[]>()
+    const {t} = useI18nNamespaces(["yakRunner"])
 
     useEffect(() => {
         update()
@@ -124,9 +127,9 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
     return (
         <div className={styles["yak-help-doc"]}>
             <div className={styles["header"]}>
-                <div className={styles["title"]}>帮助文档</div>
+                <div className={styles["title"]}>{t("YakRunner.helpDocumentation")}</div>
                 <div className={styles["extra"]}>
-                    <Tooltip title={"跳转到官方文档"}>
+                    <Tooltip title={t("YakHelpDoc.goToOfficialDocs")}>
                         <YakitButton
                             icon={<OutlineGlobealtIcon />}
                             type='text2'
@@ -137,7 +140,7 @@ export const YakHelpDoc: React.FC<YakHelpDocProps> = (props) => {
             </div>
             <div className={styles["filter-box"]}>
                 <YakitInput
-                    placeholder='请输入函数关键词'
+                    placeholder={t("YakHelpDoc.functionKeywordPlaceholder")}
                     prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                     onChange={onSearch.run}
                 />

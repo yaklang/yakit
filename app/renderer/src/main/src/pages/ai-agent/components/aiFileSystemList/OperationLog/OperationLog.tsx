@@ -46,13 +46,14 @@ const VirtuosoListContainer = forwardRef<HTMLDivElement, ListProps>(({children, 
 })
 
 const FilePreview: FC<FilePreviewProps> = ({level, data, content}) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     if (!(level === "file")) return <div>{content}</div>
     if (isPluginExecuteLogFileItem(data)) return <span>{content}</span>
     const {is_dir, file_size, description, path} = data as FileLogShowDataProps
     return (
         <span>
             <div>
-                <YakitTag>{is_dir ? "文件夹" : "非文件夹"}</YakitTag>
+                <YakitTag>{is_dir ? t("OperationLog.folder") : t("OperationLog.nonFolder")}</YakitTag>
                 {file_size && <YakitTag color='blue'>{file_size}K</YakitTag>}
             </div>
             {description && <div className={styles["file-description"]}>{description}</div>}

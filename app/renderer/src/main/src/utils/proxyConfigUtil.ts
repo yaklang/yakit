@@ -1,6 +1,9 @@
 import { grpcFetchLocalYakVersion } from "@/apiUtils/grpc"
 import { yakitFailed } from "./notification"
 import validator from "validator"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 /** 代理规则配置storage key */
 export const PROXY_CONFIG_STORAGE_KEY = "GLOBAL_PROXY_RULES_CONFIG_V1"
@@ -61,13 +64,13 @@ export const checkProxyVersion = async (): Promise<boolean> => {
         const isValid = compareVersion(localVersion, MIN_PROXY_VERSION)
 
         if (!isValid && !localVersion.includes('dev')) {
-            yakitFailed(`引擎版本过低，请更新到 ${MIN_PROXY_VERSION} 及以上`)
+            yakitFailed(t("basic.ProxyConfigUtil.engineVersionTooLow", {version: MIN_PROXY_VERSION}))
             return false
         }
 
         return true
     } catch (error) {
-        yakitFailed("检查引擎版本失败")
+        yakitFailed(t("basic.ProxyConfigUtil.checkEngineVersionFailed"))
         return false
     }
 }

@@ -83,6 +83,26 @@
         "batchRemove": "Batch Remove",
         "keep": "Keep"
     },
+    "DNSLogPage": {
+        "queryFailed": "DNSLog query failed: {error}",
+        "generateAvailableDomainFirst": "Please generate an available domain first",
+        "title": "DNSLog",
+        "subtitle": "Use the built-in DNSLog callback service from {edition}",
+        "builtIn": "Built-in",
+        "custom": "Custom",
+        "builtInDnsLog": "Built-in DNSLog",
+        "pleaseSelect": "Please select...",
+        "useLocal": "Use Local",
+        "generateDomain": "Generate an available domain",
+        "dnslogPlugin": "DNSLog Plugin",
+        "activeDomain": "Active domain:",
+        "onlyARecord": "Only A records",
+        "autoRefreshRecords": "Auto refresh records",
+        "domain": "Domain",
+        "type": "Type",
+        "remoteIP": "Remote IP",
+        "timestamp": "Timestamp"
+    },
     "YakitNotification": {
         "unknown_error": "Unknown Error",
         "success": "Operation successful",
@@ -181,6 +201,10 @@
         "end_of_list": "You've reached the end~",
         "searchEmpty": "Search result is empty"
     },
+    "YakitXterm": {
+        "noCopiedContent": "No content to copy",
+        "editNotAllowed": "Editing is not allowed"
+    },
     "YakitDatePicker": {
         "oneMinute": "1 Minute",
         "oneHour": "1 Hour",
@@ -208,6 +232,38 @@
         "closeContent": "Closing the top-level menu will close all sub-menus under it?",
         "doNotRemindAgain": "Do not remind again"
     },
+  "YakitModalConfirm": {
+    "unknownError": "Unknown error",
+    "modalCrashRetry": "The modal logic crashed. Please close and try again!",
+    "debugInfo": "Debug info"
+  },
+  "YakitDrawer": {
+    "unknownError": "Unknown error",
+    "modalCrashRetry": "The modal logic crashed. Please close and try again!"
+  },
+  "YakitDiffEditor": {
+    "initFailed": "Failed to initialize the diff editor. Please close and try again!"
+  },
+  "YakitSideTab": {
+    "unknownType": "Unknown type"
+  },
+  "YakitSwitch": {
+    "on": "On",
+    "off": "Off"
+  },
+  "YakitResizeBox": {
+    "collapse": "Collapse"
+  },
+  "YakitCollapseText": {
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
+  "YakitUploadModal": {
+        "progress": "Progress",
+        "remainingTime": "Remaining time:",
+        "elapsedTime": "Elapsed time:",
+        "downloadSpeed": "Download speed:"
+    },
     "YakitTag": {
         "critical": "critical",
         "high": "high",
@@ -221,7 +277,8 @@
     "YakitSelect": {
         "pleaseSelect": "Please select...",
         "YakitSelectCustom": {
-            "cache_field_save_error": " Error saving data in cache field:"
+            "cache_field_save_error": " Error saving data in cache field:",
+            "cache_field_convert_error": " Error converting data in cache field:"
         }
     },
     "YakitCheckbox": {
@@ -306,5 +363,22 @@
             "sendOnly": "Send Only",
             "sendToWebFuzzer": "Send to Web Fuzzer"
         }
+    }
+    ,"EngineConsole": {
+        "monitorStarted": "Output monitoring started successfully"
+    },
+    "ICMPSizeLoggerPage": {
+        "title": "ICMP Size Logger",
+        "description": "Determine ICMP reverse connection by sending ping packets with a specific length",
+        "setPingSize": "Set Ping packet size:",
+        "randomLength": "Generate a usable length",
+        "refresh": "Refresh",
+        "pingLength": "ICMP/Ping Length",
+        "remoteIp": "Remote IP",
+        "triggerTime": "Trigger Time",
+        "summary": "ICMP Size Logger is an ICMP recorder that judges ICMP reverse connections by ping packet size:",
+        "windowsCommand": "On Windows, use",
+        "macCommand": "On macOS/Linux/*nix, use",
+        "command": "command"
     }
 }

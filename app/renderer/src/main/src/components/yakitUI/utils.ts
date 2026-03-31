@@ -1,6 +1,9 @@
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {yakitNotify} from "@/utils/notification"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "yakitUi")
 
 export interface YakitOptionTypeProps {
     value: string
@@ -59,12 +62,12 @@ export const onGetRemoteValuesBase: (cacheHistoryDataKey: string) => Promise<Cac
                     }
                     resolve(cacheData)
                 } catch (error) {
-                    yakitNotify("error", `${cacheHistoryDataKey}缓存字段转换数据出错:` + error)
+                    yakitNotify("error", `${cacheHistoryDataKey}${t("YakitAutoComplete.cache_field_convert_error")}` + error)
                     reject(error)
                 }
             })
             .catch((error) => {
-                yakitNotify("error", `${cacheHistoryDataKey}缓存字段转换数据出错:` + error)
+                yakitNotify("error", `${cacheHistoryDataKey}${t("YakitAutoComplete.cache_field_convert_error")}` + error)
                 reject(error)
             })
     })
@@ -147,7 +150,7 @@ export const onSetRemoteValuesBase: (params: SetRemoteValuesBaseProps) => Promis
                     resolve(cacheHistory)
                 })
                 .catch((e) => {
-                    yakitNotify("error", `${cacheHistoryDataKey}缓存字段保存数据出错:` + e)
+                    yakitNotify("error", `${cacheHistoryDataKey}${t("YakitAutoComplete.cache_field_save_error")}` + e)
                     reject(e)
                 })
         })

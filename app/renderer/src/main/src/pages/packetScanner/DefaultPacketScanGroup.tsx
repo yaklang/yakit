@@ -40,9 +40,9 @@ export const packetScanDefaultValue: {Verbose: string; VerboseUi?: string; Keywo
     {Verbose: "SQL注入", VerboseUi: "HTTPFlowTable.RowContextMenu.sQLInjection", Keyword: "SQL注入"}
 ]
 
-export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps => {
+export const GetPacketScanByCursorMenuItem = (id: number, title: string): ByCursorMenuItemProps => {
     return {
-        title: "数据包扫描",
+        title,
         onClick: () => {},
         subMenuItems: packetScanDefaultValue.map((i) => {
             return {
@@ -69,7 +69,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
     const [visible, setVisible] = useState<false | undefined>(undefined)
     return (
         <YakitPopover
-            key={"数据包扫描"}
+            key={t("PacketScanButton.packetScan")}
             title={t("PacketScanButton.packetScan")}
             trigger={["click"]}
             visible={visible}

@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Col, DatePicker, Row} from "antd";
 import moment from "moment";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface TimeRangeProps {
     start?: number
@@ -19,6 +20,7 @@ export interface TimePointProps {
 }
 
 export const TimePoint: React.FC<TimePointProps> = ({value, placeholder, setValue}) => {
+    const {t, i18n} = useI18nNamespaces(["utils"])
     let m;
     if (value && value > 0) {
         m = moment.unix(value)
@@ -30,13 +32,14 @@ export const TimePoint: React.FC<TimePointProps> = ({value, placeholder, setValu
             showTime
             format="YYYY-MM-DD HH:mm:ss"
             value={m}
-            placeholder={placeholder || "设置时间点"}
+            placeholder={placeholder || t("basic.TimeRange.setTimePoint")}
             onChange={e => setValue && e && setValue(e.unix())}
         />
     </div>
 }
 
 const TimeRange: React.FC<TimeRangeProps> = (props: TimeRangeProps) => {
+    const {t, i18n} = useI18nNamespaces(["utils"])
     const { onStart, onEnd } = props;
     const [start, setStart] = useState(props.start);
     const [end, setEnd] = useState(props.end);
@@ -58,7 +61,7 @@ const TimeRange: React.FC<TimeRangeProps> = (props: TimeRangeProps) => {
                         showTime
                         format="YYYY-MM-DD HH:mm:ss"
                         value={(start && start > 0) ? moment.unix(start) : undefined}
-                        placeholder="点击这里设置开始时间"
+                        placeholder={t("basic.TimeRange.setStartTime")}
                         onChange={e => {
                             e != null ? setStart(e.unix()) : setStart(undefined)
                         }}
@@ -72,7 +75,7 @@ const TimeRange: React.FC<TimeRangeProps> = (props: TimeRangeProps) => {
                         showTime
                         format="YYYY-MM-DD HH:mm:ss"
                         value={(end && end > 0) ? moment.unix(end) : undefined}
-                        placeholder="点击这里设置结束时间"
+                        placeholder={t("basic.TimeRange.setEndTime")}
                         onChange={e => e != null ? setEnd(e.unix()) : setEnd(undefined)}
                     />
                 </div>

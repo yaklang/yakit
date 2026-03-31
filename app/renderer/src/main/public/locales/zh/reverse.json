@@ -8,6 +8,8 @@
   "SettingReverseServer": {
     "getRemoteAddrFailed": "获取远程地址失败: ",
     "enablePublicTunnel": "启用公网穿透",
+    "enablePublicReverse": "启用公网反连",
+    "bridgeAddr": "Bridge地址",
     "publicTunnelHelp": "在自己的服务器安装 yak 核心引擎，执行",
     "yakBridgeService": "启动 Yak Bridge 公网服务",
     "yakVersionRequirement": "yak version >= v1.0.11-sp9",
@@ -33,5 +35,12 @@
     "response": "响应",
     "rmiConnection": "RMI连接",
     "rmiHandshake": "RMI握手"
+  },
+  "ReverseNotificationTable": {
+    "title": "反连列表",
+    "onlyShowToken": "只看Token",
+    "typeFilter": "类型",
+    "clear": "清空",
+    "reverseType": "反连类型"
   }
 }

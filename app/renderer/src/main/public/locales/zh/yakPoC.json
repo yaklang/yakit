@@ -2,7 +2,11 @@
   "YakPoC": {
     "byKeyword": "按关键词",
     "byGroup": "按组选",
-    "selectPlugin": "选择插件"
+    "selectPlugin": "选择插件",
+    "selectedPlugin": "已选插件",
+    "pluginLog": "插件日志",
+    "pluginExecute": "插件执行",
+    "timeout": "超时"
   },
   "PluginListByGroup": {
     "selectPrompt": "请选择关键词或插件组进行扫描"

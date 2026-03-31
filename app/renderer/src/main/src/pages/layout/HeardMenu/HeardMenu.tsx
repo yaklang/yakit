@@ -146,7 +146,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
             let currentMenuList: EnhancedPrivateRouteMenuProps[] = [...SimpleMenus]
             if (userInfo.role !== "admin") {
                 // 简易企业版非管理员 无需插件权限
-                currentMenuList = currentMenuList.filter((item) => item.label !== "插件")
+                currentMenuList = currentMenuList.filter((item) => item.label !== t("HeardMenu.plugin"))
             }
             setRouteMenu(currentMenuList)
             setSubMenuData(currentMenuList[0]?.children || [])
@@ -606,19 +606,19 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     const CustomizeMenuData = [
         {
             key: "new",
-            label: "扫描模式",
+            label: t("HeardMenu.scanMode"),
             labelUi: "Layout.HeardMenu.scanMode",
             itemIcon: <UserIcon />,
-            tip: "复原扫描模式",
+            tip: t("HeardMenu.restoreScanMode"),
             tipUi: "Layout.HeardMenu.resetScanMode",
             onRestoreMenu: () => onRestoreMenu()
         },
         {
             key: "expert",
-            label: "专家模式",
+            label: t("HeardMenu.expertMode"),
             labelUi: "Layout.HeardMenu.expertMode",
             itemIcon: <AcademicCapIcon />,
-            tip: "复原专家模式",
+            tip: t("HeardMenu.restoreExpertMode"),
             tipUi: "Layout.HeardMenu.resetExpertMode",
             onRestoreMenu: () => onRestoreMenu()
         }
@@ -762,7 +762,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                                                     </div>
                                                 ))}
                                                 <Divider style={{margin: "6px 0"}} />
-                                                <YakitSpin spinning={loading} tip='Loading...' size='small'>
+                                                <YakitSpin spinning={loading} tip={t("HeardMenu.loading")} size='small'>
                                                     <div
                                                         className={classNames(style["customize-item"])}
                                                         onClick={() =>

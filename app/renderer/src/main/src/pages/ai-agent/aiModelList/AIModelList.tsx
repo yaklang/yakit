@@ -224,22 +224,19 @@ export const onSelectAIModel = (data: {
     } catch (error) {}
 }
 
-const modelTypeOptions: YakitRadioButtonsProps["options"] = [
+const getModelTypeOptions = (t: TFunction): YakitRadioButtonsProps["options"] => [
     {
         label: (
-            <Tooltip placement='topLeft' title='通过api访问模型,接受AI信息或向AI发送消息,可配置多个'>
-                线上
+            <Tooltip placement='topLeft' title={t("AIModelList.onlineTooltip")}>
+                {t("AIModelList.online")}
             </Tooltip>
         ),
         value: "online"
     },
     {
         label: (
-            <Tooltip
-                placement='top'
-                title='本地AI模型管理器用于管理本地AI模型,支持一键下载和安装模型,支持模型状态监控和管理。通过本地模型服务,可以实现本地化AI服务,无需依赖云端服务'
-            >
-                本地
+            <Tooltip placement='top' title={t("AIModelList.localTooltip")}>
+                {t("AIModelList.local")}
             </Tooltip>
         ),
         value: "local"
@@ -375,7 +372,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
                         size='small'
                         buttonStyle='solid'
                         value={modelType}
-                        options={modelTypeOptions}
+                        options={getModelTypeOptions(t)}
                         onChange={onToolQueryTypeChange}
                     />
                     <div className={styles["ai-model-list-total"]}>{total}</div>
@@ -746,6 +743,7 @@ export const AIOnlineModel: React.FC<AIOnlineModelProps> = React.memo((props) =>
 })
 const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((props) => {
     const {item, checked, onEdit, onRemove, modelType} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const [testLoading, setTestLoading] = useState<boolean>(false)
 
@@ -777,7 +775,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
         const config = buildAIConfigHealthCheckConfig(value)
         grpcAIConfigHealthCheck({
             Config: config,
-            Content: "你好,请简单回复'测试成功'"
+            Content: t("AIModelTestResult.testPrompt")
         })
             .then((response) => {
                 const m = showYakitModal({
@@ -814,7 +812,10 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
                     />
                     <YakitButton type='text2' icon={<OutlinePencilaltIcon />} onClick={onEditClick} />
                     <YakitPopconfirm
-                        title={`确定要删除厂商${config.Type},模型名称为${item.ModelName} 吗？`}
+                        title={t("AILocalModelListItem.deleteConfirm", {
+                            type: config.Type,
+                            name: item.ModelName
+                        })}
                         onConfirm={onRemoveClick}
                         onCancel={(e) => {
                             e?.stopPropagation()
@@ -1208,7 +1209,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
         let menu: YakitMenuItemType[] = [
             {
                 key: "path",
-                label: "打开文件位置",
+                label: t("AILocalModelListItem.openFileLocation"),
                 itemIcon: <OutlineClipboardcopyIcon />
             }
         ]
@@ -1217,12 +1218,12 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             menu = menu.concat([
                 {
                     key: "edit",
-                    label: "编辑",
+                    label: t("AILocalModelListItem.edit"),
                     itemIcon: <OutlinePencilaltIcon />
                 },
                 {
                     key: "delete",
-                    label: "删除",
+                    label: t("AILocalModelListItem.delete"),
                     type: "danger",
                     itemIcon: <OutlineTrashIcon />
                 }
@@ -1245,8 +1246,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
 
                 <div className={styles["ai-local-model-heard-extra"]}>
                     {isShowEnable ? (
-                        <YakitButton type='text' onClick={onDown} icon={<OutlineClouddownloadIcon />}>
-                            下载
+                    <YakitButton type='text' onClick={onDown} icon={<OutlineClouddownloadIcon />}>
+                            {t("AILocalModelListItem.download")}
                         </YakitButton>
                     ) : (
                         <div
@@ -1256,7 +1257,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                         >
                             {isRunning ? (
                                 <YakitPopconfirm
-                                    title={`确定要停用模型 ${item.Name} 吗？`}
+                                    title={t("AILocalModelListItem.disableConfirm", {name: item.Name})}
                                     onConfirm={onStop}
                                     onCancel={() => setStopVisible(false)}
                                     visible={stopVisible}
@@ -1265,12 +1266,12 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                                     okButtonProps={{loading: stopLoading}}
                                 >
                                     <YakitButton type='text' colors='danger' icon={<OutlineExitIcon />}>
-                                        停用
+                                        {t("AILocalModelListItem.disable")}
                                     </YakitButton>
                                 </YakitPopconfirm>
                             ) : (
                                 <YakitButton type='text' onClick={onStart} icon={<OutlinePlayIcon />}>
-                                    启用
+                                    {t("AILocalModelListItem.enable")}
                                 </YakitButton>
                             )}
                             <YakitDropdownMenu
@@ -1304,17 +1305,17 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             {isRunning && (
                 <div className={styles["ai-local-model-footer"]}>
                     <YakitTag size='small' className={styles["ai-local-model-type-tag"]} color='green'>
-                        已启用
+                        {t("AILocalModelListItem.enabled")}
                     </YakitTag>
                     <div>
-                        IP/端口: {item?.Status?.Host || ""}:{item?.Status?.Port || ""}
+                        {t("AILocalModelListItem.ipPort", {host: item?.Status?.Host || "", port: item?.Status?.Port || ""})}
                     </div>
                 </div>
             )}
             {downVisible && (
                 <InstallLlamaServer
                     grpcInterface='DownloadLocalModel'
-                    title={`模型 ${item.Name} 下载中...`}
+                    title={t("AILocalModelListItem.downloadingModel", {name: item.Name})}
                     token={downTokenRef.current}
                     onFinished={installFinished}
                     onCancel={installCancel}
@@ -1325,8 +1326,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
             )}
             {removeVisible && (
                 <AILocalModelListItemPromptHint
-                    title='删除模型'
-                    content={`确认删除模型${item.Name}吗？确认删除源文件则自定义添加的模型文件会被一起删除`}
+                    title={t("AILocalModelListItem.deleteModel")}
+                    content={t("AILocalModelListItem.deleteModelConfirm", {name: item.Name})}
                     onOk={onDelete}
                     onCancel={onCancelRemove}
                 />
@@ -1354,6 +1355,7 @@ export const OutlineAtomIconByStatus: React.FC<OutlineAtomIconByStatusProps> = R
 })
 const AILocalModelListItemPromptHint: React.FC<AILocalModelListItemPromptHintProps> = React.memo((props) => {
     const {title, content, onOk, onCancel} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [checked, setChecked] = useState<boolean>(false)
     const [loading, setLoading] = useState<boolean>(false)
 
@@ -1379,7 +1381,7 @@ const AILocalModelListItemPromptHint: React.FC<AILocalModelListItemPromptHintPro
             onCancel={handleCancel}
             footerExtra={
                 <YakitCheckbox checked={checked} onChange={(e) => setChecked(e.target.checked)}>
-                    是否删除源文件
+                    {t("AILocalModelListItem.deleteSourceFile")}
                 </YakitCheckbox>
             }
         />

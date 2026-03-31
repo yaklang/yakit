@@ -83,6 +83,26 @@
         "batchRemove": "批量移除",
         "keep": "保留"
     },
+    "DNSLogPage": {
+        "queryFailed": "DNSLog 查询失败：{error}",
+        "generateAvailableDomainFirst": "请先生成可用域名",
+        "title": "DNSLog",
+        "subtitle": "使用 {edition} 自带的 DNSLog 反连服务",
+        "builtIn": "内置",
+        "custom": "自定义",
+        "builtInDnsLog": "内置DNSLog",
+        "pleaseSelect": "请选择...",
+        "useLocal": "使用本地",
+        "generateDomain": "生成一个可用域名",
+        "dnslogPlugin": "DNSLog插件",
+        "activeDomain": "当前激活域名为：",
+        "onlyARecord": "只看A记录",
+        "autoRefreshRecords": "自动刷新记录",
+        "domain": "域名",
+        "type": "类型",
+        "remoteIP": "远端IP",
+        "timestamp": "Timestamp"
+    },
     "YakitNotification": {
         "unknown_error": "未知错误",
         "success": "操作成功",
@@ -181,6 +201,10 @@
         "end_of_list": "已经到底啦～",
         "searchEmpty": "搜索结果“空”"
     },
+    "YakitXterm": {
+        "noCopiedContent": "暂无复制内容",
+        "editNotAllowed": "不允许编辑"
+    },
     "YakitDatePicker": {
         "oneMinute": "1分钟",
         "oneHour": "1小时",
@@ -208,6 +232,38 @@
         "closeContent": "关闭一级菜单会关闭一级菜单下的所有二级菜单?",
         "doNotRemindAgain": "不再提醒"
     },
+  "YakitModalConfirm": {
+    "unknownError": "未知错误",
+    "modalCrashRetry": "弹框内逻辑性崩溃，请关闭重试！",
+    "debugInfo": "调试信息"
+  },
+  "YakitDrawer": {
+    "unknownError": "未知错误",
+    "modalCrashRetry": "弹框内逻辑性崩溃，请关闭重试！"
+  },
+  "YakitDiffEditor": {
+    "initFailed": "对比器初始化失败，请关闭重试!"
+  },
+  "YakitSideTab": {
+    "unknownType": "未知type"
+  },
+  "YakitSwitch": {
+    "on": "开",
+    "off": "关"
+  },
+  "YakitResizeBox": {
+    "collapse": "收起"
+  },
+  "YakitCollapseText": {
+    "collapse": "收起",
+    "expand": "展开"
+  },
+  "YakitUploadModal": {
+        "progress": "进度",
+        "remainingTime": "剩余时间 :",
+        "elapsedTime": "耗时 :",
+        "downloadSpeed": "下载速度 :"
+    },
     "YakitTag": {
         "critical": "严重",
         "high": "高危",
@@ -221,7 +277,8 @@
     "YakitSelect": {
         "pleaseSelect": "请选择...",
         "YakitSelectCustom": {
-            "cache_field_save_error": "缓存字段保存失败："
+            "cache_field_save_error": "缓存字段保存失败：",
+            "cache_field_convert_error": "缓存字段转换失败："
         }
     },
     "YakitCheckbox": {
@@ -306,5 +363,22 @@
             "sendOnly": "仅发送",
             "sendToWebFuzzer": "发送到 Web Fuzzer"
         }
+    }
+    ,"EngineConsole": {
+        "monitorStarted": "启动输出监控成功"
+    },
+    "ICMPSizeLoggerPage": {
+        "title": "ICMP Size Logger",
+        "description": "使用 ping 携带特定长度数据包判定 ICMP 反连",
+        "setPingSize": "设置 Ping 包大小：",
+        "randomLength": "随机生成可用长度",
+        "refresh": "刷新",
+        "pingLength": "ICMP/Ping 长度",
+        "remoteIp": "远端IP",
+        "triggerTime": "触发时间",
+        "summary": "ICMP Size Logger 是一个通过 Ping 包大小来判断 ICMP 反连的 ICMP 记录器：",
+        "windowsCommand": "在 Windows 系统中，使用",
+        "macCommand": "在 MacOS/Linux/*nix 系统中，使用",
+        "command": "命令"
     }
 }

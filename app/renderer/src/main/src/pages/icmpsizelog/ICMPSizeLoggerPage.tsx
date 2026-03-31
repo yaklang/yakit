@@ -10,6 +10,7 @@ import {formatTimestamp} from "@/utils/timeUtil"
 import style from "./ICMPSizeLoggerPage.module.scss"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -26,6 +27,7 @@ interface ICMPSizeLoggerInfo {
 
 export interface ICMPSizeLoggerPageProp {}
 export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
+    const {t} = useI18nNamespaces(["yakitUi"])
     const [size, setSize] = useState<number>(0)
     const [records, setRecords] = useState<ICMPSizeLoggerInfo[]>([])
     const [loading, setLoading] = useState(false)
@@ -81,38 +83,38 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
             headStyle={{padding: "25px 15px"}}
             title={
                 <Space>
-                    ICMP Size Logger
-                    <div className={style["description-text"]}>使用 ping 携带特定长度数据包判定 ICMP 反连</div>
+                    {t("ICMPSizeLoggerPage.title")}
+                    <div className={style["description-text"]}>{t("ICMPSizeLoggerPage.description")}</div>
                     <Divider type={"vertical"} />
                     <div className={style["set-ping-size-wrap"]}>
-                        设置 Ping 包大小：
+                        {t("ICMPSizeLoggerPage.setPingSize")}
                         <YakitInputNumber disabled={true} value={size} className={style["ping-size-input-number"]} />
                     </div>
                     <YakitButton disabled={loading} onClick={refresh}>
-                        随机生成可用长度
+                        {t("ICMPSizeLoggerPage.randomLength")}
                     </YakitButton>
                     <YakitButton type='text' disabled={loading} icon={<ReloadOutlined />} onClick={update}>
-                        刷新
+                        {t("ICMPSizeLoggerPage.refresh")}
                     </YakitButton>
                 </Space>
             }
         >
             <Row align="middle">
-                <Col>ICMP Size Logger 是一个通过 Ping 包大小来判断 ICMP 反连的 ICMP 记录器：</Col>
+                <Col>{t("ICMPSizeLoggerPage.summary")}</Col>
                 <Col>
                     <Space>
-                        在 Windows 系统中，使用
+                        {t("ICMPSizeLoggerPage.windowsCommand")}
                         {host === "" || sizeNow <= 0 ? (
                             <YakitSpin />
                         ) : (
                             <YakitTag enableCopy={true} color='blue' copyText={`ping -l ${sizeNow} ${host}`}></YakitTag>
                         )}
-                        <div>命令，&nbsp;&nbsp;</div>
+                        <div>{t("ICMPSizeLoggerPage.command")}&nbsp;&nbsp;</div>
                     </Space>
                 </Col>
                 <Col>
                     <Space>
-                        在 MacOS/Linux/*nix 系统中，使用
+                        {t("ICMPSizeLoggerPage.macCommand")}
                         {host === "" || sizeNow <= 0 ? (
                             <YakitSpin />
                         ) : (
@@ -122,7 +124,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
                                 copyText={`ping -c 4 -s ${sizeNow} ${host}`}
                             ></YakitTag>
                         )}
-                        <div>命令</div>
+                        <div>{t("ICMPSizeLoggerPage.command")}</div>
                     </Space>
                 </Col>
             </Row>
@@ -136,16 +138,16 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
                     loading={loading}
                     columns={[
                         {
-                            title: "ICMP/Ping 长度",
+                            title: t("ICMPSizeLoggerPage.pingLength"),
                             dataKey: "Size",
                             render: (text) => <YakitTag color={"bluePurple"}>{text}</YakitTag>
                         },
                         {
-                            title: "远端IP",
+                            title: t("ICMPSizeLoggerPage.remoteIp"),
                             dataKey: "CurrentRemoteAddr"
                         },
                         {
-                            title: "触发时间",
+                            title: t("ICMPSizeLoggerPage.triggerTime"),
                             dataKey: "TriggerTimestamp",
                             render: (text) => <YakitTag color={"bluePurple"}>{formatTimestamp(text)}</YakitTag>
                         }

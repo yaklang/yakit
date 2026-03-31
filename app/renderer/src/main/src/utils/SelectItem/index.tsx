@@ -2,6 +2,9 @@ import React, {useEffect, useState} from "react"
 import {Form, FormItemProps} from "antd"
 import {failed} from "../../utils/notification"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 const {ipcRenderer} = window.require("electron")
 
@@ -33,7 +36,7 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
                 setLists(data.Groups || [])
             })
             .catch((e: any) => {
-                failed(e?.details || "获取字典列表失败！")
+                failed(e?.details || t("SelectItem.fetchListFailed"))
             })
             .finally()
     }
@@ -65,7 +68,7 @@ export const SelectItem: React.FC<SelectItemProps> = (props) => {
                                     if (props.onChange) props.onChange(value, res?.Result || "")
                                 })
                                 .catch((err) => {
-                                    failed(`获取字典内容失败：${err.details}`)
+                                    failed(t("SelectItem.fetchContentFailed", {error: String(err.details)}))
                                 })
                                 .finally(() => {
                                     setTimeout(() => {

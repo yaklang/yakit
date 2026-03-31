@@ -10,6 +10,7 @@ import {RemoteGV} from "@/yakitGV"
 import {yakitNotify} from "@/utils/notification"
 import {createWithEqualityFn} from "zustand/traditional"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
+import i18n from "@/i18n/i18n"
 
 interface FuzzerSequenceProps {
     fuzzerSequenceList: FuzzerSequenceListProps[]
@@ -38,6 +39,8 @@ export interface FuzzerListProps {}
 export interface FuzzerSequenceListProps {
     groupId: string
 }
+
+const t = i18n.getFixedT(null, "utils")
 
 export interface FuzzerSequenceCacheDataProps {
     groupId: string
@@ -202,7 +205,7 @@ try {
         {leading: true}
     )
 } catch (error) {
-    yakitNotify("error", "webFuzzer序列化数据缓存数据失败:" + error)
+    yakitNotify("error", t("fuzzerSequence.cacheFailed", {error: String(error)}))
 }
 
 /**处理WF-Sequence需要缓存的数据 */

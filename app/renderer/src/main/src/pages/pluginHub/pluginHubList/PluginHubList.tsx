@@ -200,14 +200,14 @@ export const PluginHubList: React.FC<PluginHubListProps> = memo((props) => {
     const barHint = useMemoizedFn((key: string) => {
         const item = HubSideBarList.find((item) => item.value === key)
         if (key !== active) {
-            return `点击进入${item ? item.hint?.() : "列表"}`
+            return t("PluginHubList.clickToEnter", {target: item ? item.hint?.() || t("PluginHubList.list") : t("PluginHubList.list")})
         } else {
             if (noDetailTabs.current.includes(key as PluginSourceType)) return ""
             if (key === "own" && !isLogin) return ""
             if (isDetail) {
-                return !show ? "展开详情列表" : "收起详情列表"
+                return !show ? t("PluginHubList.expandDetailList") : t("PluginHubList.collapseDetailList")
             } else {
-                return !show ? "展开高级筛选" : "收起高级筛选"
+                return !show ? t("PluginHubList.expandAdvancedFilter") : t("PluginHubList.collapseAdvancedFilter")
             }
         }
     })

@@ -331,9 +331,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             let tip = ""
             if (downstreamProxyRuleId || downstreamProxy) {
                 const proxyStr = downstreamProxyRuleId
-                    ? `规则组：${Routes.find(({Id}) => Id === downstreamProxyRuleId)?.Name}`
+                    ? `${t("MITMPage.ruleGroup")}${Routes.find(({Id}) => Id === downstreamProxyRuleId)?.Name}`
                     : `${maskProxyPassword(downstreamProxy)}`
-                tip += `下游代理：${proxyStr}`
+                tip += `${t("MITMPage.downstreamProxy")}${proxyStr}`
                 if (downstreamProxyRuleId) {
                     setDownstreamProxyStr(downstreamProxyRuleId)
                 } else {
@@ -353,10 +353,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
             if (extra) {
                 if (extra.onlyEnableGMTLS) {
-                    tip += "|仅国密 TLS"
+                    tip += t("MITMPage.onlyGMTLS")
                 }
                 if (extra.enableProxyAuth) {
-                    tip += "|开启代理认证"
+                    tip += t("MITMPage.enableProxyAuth")
                 }
             }
             setTip(tip)

@@ -1052,11 +1052,11 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                             options={[
                                 {
                                     value: "plugin",
-                                    label: "已选插件"
+                                    label: t("YakPoC.selectedPlugin")
                                 },
                                 {
                                     value: "log",
-                                    label: "插件日志",
+                                    label: t("YakPoC.pluginLog"),
                                     disabled: pluginLogDisabled
                                 }
                             ]}
@@ -1090,11 +1090,11 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             <div className={styles["yak-poc-execute-wrapper"]}>
                 <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                     <div className={styles["yak-poc-executor-title"]}>
-                        <span className={styles["yak-poc-executor-title-text"]}>插件执行</span>
+                        <span className={styles["yak-poc-executor-title-text"]}>{t("YakPoC.pluginExecute")}</span>
                     </div>
                     <div className={styles["yak-poc-executor-btn"]}>
                         {progressList.length === 1 && (
-                            <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
+                        <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
                         )}
                         <YakitButton
                             type='text'
@@ -1181,7 +1181,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
  * @param {number} endTime
  * @returns {TimeConsumingProps}
  */
-const intervalTime = (startTime: number, endTime: number) => {
+const intervalTime = (startTime: number, endTime: number, timeoutLabel: string) => {
     const startMoment = moment(startTime)
     const endMoment = moment(endTime)
 
@@ -1195,7 +1195,7 @@ const intervalTime = (startTime: number, endTime: number) => {
     if (minutes > 60) {
         return {
             type: "danger",
-            value: "超时"
+            value: timeoutLabel
         }
     }
     if (minutes > 0) {
@@ -1235,7 +1235,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
         const logs: PluginLogProps[] = pluginExecuteLog
             .map((item) => {
                 const newTime = Date.now()
-                const timeConsuming: TimeConsumingProps = intervalTime(item.startTime, newTime)
+                const timeConsuming: TimeConsumingProps = intervalTime(item.startTime, newTime, t("YakPoC.timeout"))
                 return {...item, timeConsuming}
             })
             .sort((a, b) => compareAsc(a, b, "Index"))

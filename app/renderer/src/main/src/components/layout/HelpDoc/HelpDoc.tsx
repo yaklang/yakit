@@ -8,6 +8,7 @@ import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
 import {grpcFetchLocalYakitVersion, grpcFetchLocalYakVersion} from "@/apiUtils/grpc"
 import {WebsiteGV} from "@/enums/website"
 import {SystemInfo} from "@/constants/hardware"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./HelpDoc.module.scss"
@@ -21,6 +22,7 @@ interface HelpDocProps {
 /** @name Yakit软件更新下载弹窗 */
 export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
     const {system} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const [show, setShow] = useState<boolean>(false)
     const menu = (
@@ -28,19 +30,19 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
             data={[
                 {
                     key: "official_website",
-                    label: "官方网站"
+                    label: t("HelpDoc.officialWebsite")
                 },
                 {
                     key: "Github",
-                    label: "Github",
+                    label: t("HelpDoc.github"),
                     children: [
-                        {label: "功能建议", key: "feature_request"},
-                        {label: "BUG", key: "report_bug"}
+                        {label: t("HelpDoc.featureRequest"), key: "feature_request"},
+                        {label: t("HelpDoc.bugReport"), key: "report_bug"}
                     ]
                 },
                 {
                     key: "aboutUs",
-                    label: "关于我们"
+                    label: t("HelpDoc.aboutUs")
                 }
             ]}
             onClick={({key}) => menuSelect(key)}

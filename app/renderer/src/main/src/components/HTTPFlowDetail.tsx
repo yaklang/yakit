@@ -1102,9 +1102,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                         switch (infoType) {
                                                             case "domains":
                                                                 return (
-                                                                    "# 根域 (Root-Domains)\r\n" +
+                                                                    `# ${t("HTTPFlowDetailMini.rootDomains")} (Root-Domains)\r\n` +
                                                                     (flow?.RootDomains || []).join("\r\n") +
-                                                                    "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                                    `\r\n\r\n# ${t("HTTPFlowDetailMini.domain")} (Domain) \r\n` +
                                                                     (flow?.Domains || []).join("\r\n")
                                                                 )
                                                             case "json":
@@ -1494,7 +1494,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
         reqEditor?.setScrollTop(0)
         resEditor?.setScrollTop(0)
         const existedTags = flow?.Tags ? flow?.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
-        if (existedTags.includes("[手动修改]") || existedTags.includes("[响应被丢弃]")) {
+        if (
+            existedTags.includes(i18n.getFixedT("zh", "history")("HTTPFlowDetail.manualModifyTag")) ||
+            existedTags.includes(i18n.getFixedT("zh", "history")("HTTPFlowDetail.responseDroppedTag"))
+        ) {
             setShowBeforeData(true)
             handleGetHTTPFlowBare("request")
             handleGetHTTPFlowBare("response")

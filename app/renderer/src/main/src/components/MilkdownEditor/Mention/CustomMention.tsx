@@ -9,17 +9,19 @@ import {API} from "@/services/swagger/resposeType"
 import {apiNotepadEit} from "./utils"
 import {yakitNotify} from "@/utils/notification"
 import {getMentionId} from "../utils/mentionPlugin"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface CustomMentionProps {
     notepadHash: string
 }
 export const CustomMention: React.FC<CustomMentionProps> = (props) => {
     const {notepadHash} = props
+    const {t} = useI18nNamespaces(["components"])
     const {node, setAttrs, selected, contentRef} = useNodeViewContext()
     const [visible, setVisible] = useState<boolean>(false)
     const onSendMessage = useMemoizedFn(() => {
         if (!node.attrs?.userId) {
-            yakitNotify("error", "用户id不存在")
+            yakitNotify("error", t("MilkdownEditor.customMention.userIdMissing"))
             return
         }
         let mentionId = node.attrs?.mentionId
@@ -39,9 +41,9 @@ export const CustomMention: React.FC<CustomMentionProps> = (props) => {
         <YakitPopover
             content={
                 <div className={styles["mention-custom-popover-title"]}>
-                    发送提及通知？
+                    {t("MilkdownEditor.customMention.sendMentionPrompt")}
                     <YakitButton type='primary' onClick={onSendMessage}>
-                        通知
+                        {t("MilkdownEditor.customMention.notify")}
                     </YakitButton>
                 </div>
             }

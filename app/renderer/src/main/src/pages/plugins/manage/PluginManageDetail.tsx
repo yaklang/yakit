@@ -52,6 +52,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitPluginSupplement} from "@/pages/pluginEditor/base"
 import {DownloadingState} from "@/yakitGVDefine"
 import {PluginLog} from "@/pages/pluginHub/pluginLog/PluginLog"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import "../plugins.scss"
@@ -144,6 +145,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             loadMoreData,
             onDetailSearch
         } = props
+        const {t} = useI18nNamespaces(["pluginHub"])
 
         const wrapperWidth = useListenWidth(document.body)
         const admin = useAdmin()
@@ -355,7 +357,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         const isBanOperate = useMemo(() => {
             return {
                 isBan: !!plugin?.disable,
-                hint: !!plugin?.disable ? (plugin?.isAuthor ? "作者无法操作" : "修改者无法操作") : ""
+                hint: !!plugin?.disable ? (plugin?.isAuthor ? t("PluginManageDetail.authorCannotOperate") : t("PluginManageDetail.editorCannotOperate")) : ""
             }
         }, [plugin?.disable, plugin?.isAuthor])
 
@@ -421,12 +423,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             // 基础信息
             if (!infoRef.current) {
-                yakitNotify("error", "未获取到基础信息，请重试")
+                yakitNotify("error", t("PluginManageDetail.baseInfoMissingRetry"))
                 return
             }
             const info = await infoRef.current.onSubmit()
             if (!info) {
-                yakitNotify("error", "请完善必填的基础信息")
+                yakitNotify("error", t("PluginManageDetail.completeBaseInfo"))
                 return
             } else {
                 data.Help = info?.Help
@@ -434,12 +436,12 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             }
             // 配置信息
             if (!settingRef.current) {
-                yakitNotify("error", "未获取到配置信息，请重试")
+                yakitNotify("error", t("PluginManageDetail.settingInfoMissingRetry"))
                 return
             }
             const setting = await settingRef.current.onSubmit()
             if (!setting) {
-                yakitNotify("error", "请完善必填的配置信息")
+                yakitNotify("error", t("PluginManageDetail.completeSettingInfo"))
                 return
             } else {
                 data.EnablePluginSelector = setting?.EnablePluginSelector
@@ -505,7 +507,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     if (callback) callback(cloneDeep(data))
                                 })
                             } else {
-                                yakitNotify("error", "未获取到插件信息，请在左侧列表切换插件获取最新信息")
+                                yakitNotify("error", t("PluginManageDetail.switchPluginForLatest"))
                             }
                         })
                         .catch(() => {
@@ -579,7 +581,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         const handleOpenScoreHint = useMemoizedFn(() => {
             if (scoreHint) return
             if (!plugin) {
-                yakitNotify("error", "未获取到插件信息，请切换插件详情后重试")
+                yakitNotify("error", t("PluginManageDetail.switchPluginDetailRetry"))
                 return
             }
             setScoreHint(true)
@@ -715,14 +717,14 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         const downloadSupplementFile = useMemoizedFn(() => {
             if (downloadFileLoading) return
             if (!supplement) {
-                failed("补充资料里无压缩包附件")
+                failed(t("PluginManageDetail.noZipAttachment"))
                 return
             }
             const {
                 fileInfo: {url, fileName}
             } = supplement
             if (!url || !fileName) {
-                failed("补充资料里无压缩包附件")
+                failed(t("PluginManageDetail.noZipAttachment"))
                 return
             }
             setDownloadFileLoading(true)
@@ -762,13 +764,13 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     [styles["operate-disabled-btn"]]: isBanOperate.isBan
                                 })}
                             >
-                                {extraHeaderInfo.isPass ? "改为未通过" : "改为通过"}
+                                {extraHeaderInfo.isPass ? t("PluginManageDetail.changeToNotPassed") : t("PluginManageDetail.changeToPassed")}
                             </YakitButton>
                             {admin.isAdmin && <div style={{height: 12}} className='divider-style'></div>}
                         </>
                     )}
                     {admin.isAdmin && (
-                        <Tooltip title='删除插件' overlayClassName='plugins-tooltip'>
+                        <Tooltip title={t("PluginManageDetail.deletePlugin")} overlayClassName='plugins-tooltip'>
                             <YakitButton
                                 type='text2'
                                 icon={<OutlineTrashIcon />}
@@ -791,7 +793,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 colors='danger'
                                 icon={<SolidBanIcon />}
                                 loading={statusLoading}
-                                name='不通过'
+                                name={t("PluginManageDetail.notPassed")}
                                 disabled={isBanOperate.isBan}
                                 className={classNames({
                                     [styles["operate-disabled-btn"]]: isBanOperate.isBan
@@ -805,7 +807,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 colors='success'
                                 icon={<SolidBadgecheckIcon />}
                                 loading={statusLoading}
-                                name='通过'
+                                name={t("PluginManageDetail.passed")}
                                 disabled={isBanOperate.isBan}
                                 className={classNames({
                                     [styles["operate-disabled-btn"]]: isBanOperate.isBan
@@ -819,7 +821,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                     width={wrapperWidth}
                                     iconWidth={1100}
                                     icon={<OutlineCodeIcon />}
-                                    name='调试'
+                                    name={t("PluginManageDetail.debug")}
                                     onClick={onDebug}
                                 />
                             )}
@@ -834,7 +836,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         return (
             <PluginDetails<YakitPluginOnlineDetail>
                 pageWrapId={pageWrapId}
-                title='插件管理'
+                title={t("PluginManageDetail.pluginManagement")}
                 spinLoading={spinLoading}
                 search={searchs}
                 setSearch={setSearchs}
@@ -867,7 +869,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                     <div className={"details-filter-extra-wrapper"}>
                         <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type='check' />
                         <div style={{height: 12}} className='divider-style'></div>
-                        <Tooltip title={selectNum > 0 ? "批量下载" : "一键下载"} overlayClassName='plugins-tooltip'>
+                        <Tooltip title={selectNum > 0 ? t("PluginManageDetail.batchDownload") : t("PluginManageDetail.oneClickDownload")} overlayClassName='plugins-tooltip'>
                             <YakitButton
                                 loading={downloadLoading}
                                 type='text2'
@@ -920,7 +922,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             >
                 <div className={styles["details-content-wrapper"]}>
                     <PluginTabs tabPosition='right'>
-                        <TabPane tab='源 码' key='code'>
+                        <TabPane tab={t("PluginManageDetail.sourceCode")} key='code'>
                             <YakitSpin spinning={loading}>
                                 <div className={styles["plugin-info-wrapper"]}>
                                     <PluginDetailHeader
@@ -952,7 +954,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                         <div className={styles["advice-body"]}>
                                                             <div className={styles["advice-content"]}>
                                                                 <div className={styles["content-title"]}>
-                                                                    修改内容描述
+                                                                    {t("PluginManageDetail.modifyContentDesc")}
                                                                 </div>
                                                                 <div className={styles["content-style"]}>
                                                                     {apply?.description || ""}
@@ -976,7 +978,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
 
                                             {/* {supplement && (
                                                 <div className={styles["plugin-supplement"]}>
-                                                    <div className={styles["supplement-header"]}>补充资料</div>
+                                                    <div className={styles["supplement-header"]}>{t("PluginManageDetail.supplementInfo")}</div>
                                                     {supplement.text && (
                                                         <div className={styles["supplement-text"]}>
                                                             {supplement.text}
@@ -1004,7 +1006,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                                                 handlePreview(index)
                                                                             }}
                                                                         >
-                                                                            预览
+                                                                            {t("PluginManageDetail.preview")}
                                                                         </div>
                                                                     </div>
                                                                 )
@@ -1013,7 +1015,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                     )}
                                                     {supplement.fileInfo.url && supplement.fileInfo.fileName && (
                                                         <div className={styles["supplement-file"]}>
-                                                            附件：
+                                                            {t("PluginManageDetail.attachment")}：
                                                             <span
                                                                 className={classNames(styles["span-style"], {
                                                                     [styles["span-bin-style "]]: downloadFileLoading
@@ -1025,7 +1027,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                             {downloadFileLoading && (
                                                                 <div className={styles["loading-icon"]}>
                                                                     <OutlineLoadingIcon className='icon-rotate-animation' />
-                                                                    下载中...
+                                                                    {t("PluginManageDetail.downloading")}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1034,7 +1036,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                             )} */}
 
                                             <div className={styles["plugin-setting-info"]}>
-                                                <div className={styles["setting-header"]}>插件配置</div>
+                                                <div className={styles["setting-header"]}>{t("PluginManageDetail.pluginConfig")}</div>
                                                 <div className={styles["setting-body"]}>
                                                     <PluginModifySetting
                                                         ref={settingRef}
@@ -1072,7 +1074,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                 </div>
                             </YakitSpin>
                         </TabPane>
-                        <TabPane tab='日 志' key='logs'>
+                        <TabPane tab={t("PluginManageDetail.logs")} key='logs'>
                             <div className={styles["plugin-logs-wrapper"]}>
                                 <PluginDetailHeader
                                     pluginName={plugin.script_name}
@@ -1107,7 +1109,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                 {/* 源码评分机制 */}
                 {plugin && scoreHint && (
                     <YakitModal
-                        title='插件基础检测'
+                        title={t("PluginManageDetail.pluginBasicDetection")}
                         type='white'
                         width={"50%"}
                         centered={true}
@@ -1122,16 +1124,16 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                         <CodeScoreModule
                             type={plugin.type}
                             code={content}
-                            successHint='检测合格，插件通过中...'
-                            failedHint='检测不合格，请修改后操作'
+                            successHint={t("PluginManageDetail.scoreSuccessHint")}
+                            failedHint={t("PluginManageDetail.scoreFailedHint")}
                             successWait={1000}
                             isStart={scoreHint}
                             callback={handleScoreModule}
-                            specialHint='(无法判断，请确认是否通过审核)'
-                            specialBtnText='确定通过'
+                            specialHint={t("PluginManageDetail.scoreSpecialHint")}
+                            specialBtnText={t("PluginManageDetail.scoreSpecialBtn")}
                             specialExtraBtn={
                                 <YakitButton type='outline2' onClick={handleCancelScoreHint}>
-                                    关闭
+                                    {t("PluginManageDetail.close")}
                                 </YakitButton>
                             }
                         />

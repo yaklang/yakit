@@ -2,6 +2,7 @@ import React from "react"
 import styles from "../guide-footer.module.scss"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface GuideFooterProps {
     step?: number
@@ -16,6 +17,7 @@ interface GuideFooterProps {
 }
 
 export const GuideFooter = ({step = 1, onPrev, onNext, onFinish, stopList}: GuideFooterProps) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     return (
         <div className={styles.wrapper}>
             {stopList?.[step - 1]?.images && <video src={stopList[step - 1].images} autoPlay loop style={{width: "100%"}} />}
@@ -35,39 +37,39 @@ export const GuideFooter = ({step = 1, onPrev, onNext, onFinish, stopList}: Guid
                 <div className={styles.actions}>
                     {stopList.length === 1 && (
                         <YakitButton type='primary' onClick={onFinish}>
-                            开始体验
+                            {t("GuideFooter.start")}
                         </YakitButton>
                     )}
 
                     {stopList.length === 2 && step !== stopList.length && (
                         <YakitButton type='primary' onClick={onNext}>
-                            下一个
+                            {t("GuideFooter.next")}
                         </YakitButton>
                     )}
 
                     {stopList.length === 2 && step === stopList.length && (
                         <React.Fragment>
-                            <YakitButton onClick={onPrev}>上一个</YakitButton>
+                            <YakitButton onClick={onPrev}>{t("GuideFooter.prev")}</YakitButton>
                             <YakitButton type='primary' onClick={onFinish}>
-                                开始体验
+                                {t("GuideFooter.start")}
                             </YakitButton>
                         </React.Fragment>
                     )}
 
                     {stopList.length > 2 && step !== stopList.length && (
                         <React.Fragment>
-                            {step !== 1 && <YakitButton onClick={onPrev}>上一个</YakitButton>}
+                            {step !== 1 && <YakitButton onClick={onPrev}>{t("GuideFooter.prev")}</YakitButton>}
                             <YakitButton type='primary' onClick={onNext}>
-                                下一个
+                                {t("GuideFooter.next")}
                             </YakitButton>
                         </React.Fragment>
                     )}
 
                     {stopList.length > 2 && step === stopList.length && (
                         <React.Fragment>
-                            {step !== 1 && <YakitButton onClick={onPrev}>上一个</YakitButton>}
+                            {step !== 1 && <YakitButton onClick={onPrev}>{t("GuideFooter.prev")}</YakitButton>}
                             <YakitButton type='primary' onClick={onFinish}>
-                                开始体验
+                                {t("GuideFooter.start")}
                             </YakitButton>
                         </React.Fragment>
                     )}

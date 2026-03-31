@@ -5,6 +5,9 @@ import {Uint8ArrayToString} from "../str"
 import {JSONParseLog} from "../tool"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {OutlineTrashSecondIcon} from "@/assets/icon/outline"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 const {ipcRenderer} = window.require("electron")
 let id = randomString(40)
@@ -125,9 +128,7 @@ export const startupDuplexConn = () => {
                     break
                 case "httpflow_slow_insert_sql":
                 case "httpflow_slow_query_sql":
-                    yakitFailed(
-                        `检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后点击顶部设置或者在首页回收数据库空间。`
-                    )
+                    yakitFailed(t("basic.Duplex.databaseTooLarge"))
                     break
                 case "mitm_slow_rule_hook":
                     emiter.emit("onMitmRuleMoreLimt")

@@ -16,21 +16,22 @@ import useAIAgentDispatcher from "../../useContext/useDispatcher"
 import {yakitNotify} from "@/utils/notification"
 import {onNewChat} from "../HistoryChat"
 import emiter from "@/utils/eventBus/eventBus"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
 export const WEEK_MS = 7 * DAY_MS
 export const THIRTY_DAYS_MS = 30 * DAY_MS
 
-const CHAT_GROUPS = [
-    {key: "justNow", label: "刚刚"},
-    {key: "oneHour", label: "一小时前"},
-    {key: "oneDay", label: "一天前"},
-    {key: "oneWeek", label: "一周前"},
-    {key: "thirtyDays", label: "30天前"}
+const getChatGroups = (t) => [
+    {key: "justNow", label: t("HistoryChatList.justNow")},
+    {key: "oneHour", label: t("HistoryChatList.oneHour")},
+    {key: "oneDay", label: t("HistoryChatList.oneDay")},
+    {key: "oneWeek", label: t("HistoryChatList.oneWeek")},
+    {key: "thirtyDays", label: t("HistoryChatList.thirtyDays")}
 ] as const
 
-type ChatGroupKey = (typeof CHAT_GROUPS)[number]["key"]
+type ChatGroupKey = ReturnType<typeof getChatGroups>[number]["key"]
 
 export const normalizeTimestamp = (timestamp?: number | string) => {
     if (!timestamp) return 0
@@ -72,6 +73,7 @@ const updateChatTitle = (list: AIChatInfo[], info: AIChatInfo) => {
 const HistoryChatList: FC<{
     search: string
 }> = ({search}) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {chats, activeChat} = useAIAgentStore()
     const {setChats, setActiveChat, loadHistoryData, getChats} = useAIAgentDispatcher()
     const listRef = useRef<HTMLDivElement | null>(null)
@@ -109,7 +111,7 @@ const HistoryChatList: FC<{
     }, [chats, search])
 
     const groupedHistory = useMemo(() => {
-        const groupMap = CHAT_GROUPS.reduce<Record<ChatGroupKey, AIChatInfo[]>>((acc, item) => {
+        const groupMap = getChatGroups(t).reduce<Record<ChatGroupKey, AIChatInfo[]>>((acc, item) => {
             acc[item.key] = []
             return acc
         }, {} as Record<ChatGroupKey, AIChatInfo[]>)
@@ -119,11 +121,11 @@ const HistoryChatList: FC<{
             groupMap[groupKey].push(item)
         })
 
-        return CHAT_GROUPS.map((item) => ({
+        return getChatGroups(t).map((item) => ({
             ...item,
             list: groupMap[item.key]
         })).filter((item) => item.list.length > 0)
-    }, [showHistory])
+    }, [showHistory, t])
 
     const handleCallbackEditName = useMemoizedFn(async (result: boolean, info?: AIChatInfo) => {
         if (result && info) {
@@ -131,7 +133,7 @@ const HistoryChatList: FC<{
                 await grpcUpdateAISessionTitle({SessionID: info.SessionID, Title: info.Title})
                 setChats?.((old) => updateChatTitle(old, info))
             } catch (error) {
-                yakitNotify("error", "修改对话标题失败:" + error)
+                yakitNotify("error", t("HistoryChatList.updateTitleFailed", {error: String(error)}))
             }
         }
         setEditShow(false)
@@ -144,7 +146,7 @@ const HistoryChatList: FC<{
         if (isLoading) return
         const findIndex = chats.findIndex((item) => item.SessionID === SessionID)
         if (findIndex === -1) {
-            yakitNotify("error", "未找到对应的对话")
+            yakitNotify("error", t("HistoryChatList.chatNotFound"))
             return
         }
         setDelLoading((old) => [...old, SessionID])
@@ -167,7 +169,7 @@ const HistoryChatList: FC<{
             grpcDeleteAISession({Filter: {SessionID: [SessionID]}}, true)
             emiter.emit("onDelChats", JSON.stringify([SessionID]))
         } catch (error) {
-            yakitNotify("error", "删除会话失败:" + error)
+            yakitNotify("error", t("HistoryChatList.deleteFailed", {error: String(error)}))
         } finally {
             setDelLoading((old) => old.filter((el) => el !== SessionID))
         }
@@ -213,7 +215,7 @@ const HistoryChatList: FC<{
 
                                     <div className={styles["item-extra"]}>
                                         <Tooltip
-                                            title={"编辑对话标题"}
+                                            title={t("HistoryChatList.editTitle")}
                                             placement='topRight'
                                             overlayClassName={styles["history-item-extra-tooltip"]}
                                         >
@@ -227,7 +229,7 @@ const HistoryChatList: FC<{
                                             />
                                         </Tooltip>
                                         <YakitPopconfirm
-                                            title='是否确认删除该历史对话，删除后将无法恢复'
+                                            title={t("HistoryChatList.deleteConfirm")}
                                             placement='bottom'
                                             onConfirm={(e) => {
                                                 e?.stopPropagation()
@@ -248,7 +250,7 @@ const HistoryChatList: FC<{
                     </div>
                 )
             })}
-            {loading && <div className={styles["history-loading"]}>加载中...</div>}
+            {loading && <div className={styles["history-loading"]}>{t("HistoryChatList.loading")}</div>}
 
             {editInfo.current && (
                 <EditChatNameModal

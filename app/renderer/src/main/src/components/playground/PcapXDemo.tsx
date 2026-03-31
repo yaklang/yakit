@@ -13,6 +13,7 @@ import {PacketListDemo} from "@/components/playground/PacketListDemo";
 import {debugYakitModal, debugYakitModalAny} from "@/components/yakitUI/YakitModal/YakitModalConfirm";
 import {DemoItemSelectMultiForString} from "@/demoComponents/itemSelect/ItemSelect";
 import {YakEditor} from "@/utils/editors";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces";
 
 export interface PcapXDemoProp {
 
@@ -26,6 +27,7 @@ interface PcapXRequest {
 }
 
 export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [pcapMeta, setPcapMeta] = useState<PcapMetadata>();
     const [token, setToken] = useState(randomString(40));
     const [loading, setLoading] = useState(false);
@@ -51,10 +53,10 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
 
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
-            failed(`[PcapX] error:  ${error}`)
+            failed(t("PcapXDemo.error", {error: String(error)}))
         })
         ipcRenderer.on(`${token}-end`, (e, data) => {
-            info("[PcapX] finished")
+            info(t("PcapXDemo.finished"))
             setTimeout(() => setLoading(false), 300)
         })
         return () => {
@@ -81,18 +83,18 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
 
     return <YakitResizeBox
         firstNode={<AutoCard
-            size={"small"} bordered={false} title={"设置参数"}
+            size={"small"} bordered={false} title={t("PcapXDemo.configure")}
             extra={<Space>
                 {loading ? <YakitButton
                     colors={"danger"}
                     onClick={() => {
                         cancel()
                     }}>
-                    停止嗅探
+                    {t("PcapXDemo.stopSniffing")}
                 </YakitButton> : <YakitButton onClick={() => {
                     startSniff()
                 }}>
-                    开始嗅探
+                    {t("PcapXDemo.startSniffing")}
                 </YakitButton>}
             </Space>}
             style={{marginTop: 3}}
@@ -104,7 +106,7 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
                     data={(pcapMeta?.AvailablePcapDevices || []).map(i => ({
                         value: i.Name, label: `${i.Name} ${i.IP}`
                     }))}
-                    label={"网卡"}
+                    label={t("PcapXDemo.netInterface")}
                     setValue={(data) => {
                         setFirstRequest({...firstRequest, NetInterfaceList: data.split(",")})
                     }}
@@ -112,7 +114,7 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
                     help={<Space>
                         {
                             pcapMeta?.DefaultPublicNetInterface &&
-                            <div>默认网卡: {pcapMeta?.DefaultPublicNetInterface.Name}</div>
+                            <div>{t("PcapXDemo.defaultInterface")} {pcapMeta?.DefaultPublicNetInterface.Name}</div>
                         }
                     </Space>}
                     disabled={loading}
@@ -120,28 +122,28 @@ export const PcapXDemo: React.FC<PcapXDemoProp> = (props) => {
 
                 {loading ? <>
                     <DemoItemSelectMultiForString
-                        label={"视图表格"}
+                        label={t("PcapXDemo.viewTable")}
                         data={[
-                            {value: "raw", label: "原始数据包"},
-                            {value: "tcp-reassembled", label: "TCP数据"},
-                            {value: "session", label: "活跃会话"},
+                            {value: "raw", label: t("PcapXDemo.rawPacket")},
+                            {value: "tcp-reassembled", label: t("PcapXDemo.tcpData")},
+                            {value: "session", label: t("PcapXDemo.activeSession")},
                         ]}
                     />
                     <DemoItemSelectMultiForString
                         data={(pcapMeta?.AvailableSessionTypes || []).map(i => ({value: i.Value, label: i.Key}))}
-                        label={"会话协议"}
+                        label={t("PcapXDemo.sessionProtocol")}
                     />
                     <DemoItemSelectMultiForString
                         data={(pcapMeta?.AvailableLinkLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
-                        label={"链路层协议"}
+                        label={t("PcapXDemo.linkLayerProtocol")}
                     />
                     <DemoItemSelectMultiForString
                         data={(pcapMeta?.AvailableNetworkLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
-                        label={"网络层协议"}
+                        label={t("PcapXDemo.networkLayerProtocol")}
                     />
                     <DemoItemSelectMultiForString
                         data={(pcapMeta?.AvailableTransportLayerTypes || []).map(i => ({value: i.Value, label: i.Key}))}
-                        label={"传输层协议"}
+                        label={t("PcapXDemo.transportLayerProtocol")}
                     />
                 </> : <>
 

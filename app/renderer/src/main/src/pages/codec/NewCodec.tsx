@@ -102,7 +102,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
     const [outputMenuOpen, setOutputMenuOpen] = useState<boolean>(false)
     const [outputShowType, setOutputShowType] = useState<"editor" | "hex">("editor")
     // hex
-    const [showData, setShowData] = useState<Uint8Array>(new Buffer([]))
+    const [showData, setShowData] = useState<Uint8Array>(new Uint8Array([]))
     const [nonce, setNonce] = useState<number>(0)
 
     const editorBoxRef = useRef<HTMLDivElement>(null)
@@ -449,7 +449,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                                 }
                                             }}
                                         >
-                                            hex原文
+                                            {t("NewCodecRightEditorBox.hexRawText")}
                                         </YakitCheckableTag>
                                     )}
                                     {outPutObj.hidden && (
@@ -2246,7 +2246,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
         })
 
         // 找到 title 为 "其他" 的项的索引
-        const index = data.findIndex((item) => item.title === "其他")
+        const index = data.findIndex((item) => item.title === t("NewCodecLeftDragList.other"))
         // 如果找到了，则将该项移动到数组尾部
         if (index !== -1) {
             const otherItem = data.splice(index, 1)[0]

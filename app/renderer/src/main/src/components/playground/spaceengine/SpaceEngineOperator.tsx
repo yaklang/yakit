@@ -15,6 +15,7 @@ import {randomString} from "@/utils/randomUtil";
 import useHoldingIPCRStream from "@/hook/useHoldingIPCRStream";
 import {useMemoizedFn} from "ahooks";
 import {PluginResultUI} from "@/pages/yakitStore/viewers/base";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces";
 
 export interface SpaceEngineOperatorProp {
 
@@ -23,6 +24,7 @@ export interface SpaceEngineOperatorProp {
 const {ipcRenderer} = window.require("electron");
 
 export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [params, setParams] = useState<SpaceEngineStartParams>(getDefaultSpaceEngineStartParams())
     const [status, setStatus] = useState<SpaceEngineStatus>({
         Info: "",
@@ -84,16 +86,16 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
         <YakitResizeBox
             firstNode={<AutoCard
                 title={<DemoItemSelectOne
-                    label={"引擎"}
+                    label={t("SpaceEngineOperator.engine")}
                     formItemStyle={{margin: 0, width: 180}}
                     data={[
-                        {label: "ZoomEye", value: "zoomeye"},
-                        {label: "Fofa", value: "fofa"},
-                        {label: "Hunter", value: "hunter"},
-                        {label: "Shodan", value: "shodan"},
-                        {label: "Quake", value: "quake"},
-                        {label: "零零测绘", value: "zone"},
-                        {label: "不设置", value: ""},
+                        {label: t("SpaceEngineOperator.zoomeye"), value: "zoomeye"},
+                        {label: t("SpaceEngineOperator.fofa"), value: "fofa"},
+                        {label: t("SpaceEngineOperator.hunter"), value: "hunter"},
+                        {label: t("SpaceEngineOperator.shodan"), value: "shodan"},
+                        {label: t("SpaceEngineOperator.quake"), value: "quake"},
+                        {label: t("SpaceEngineOperator.zone"), value: "zone"},
+                        {label: t("SpaceEngineOperator.unset"), value: ""},
                     ]}
                     setValue={Type => setParams({...params, Type})} value={params.Type}
                 />} size={"small"}
@@ -104,43 +106,43 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
                         ipcRenderer.invoke("FetchPortAssetFromSpaceEngine", params, token).then(() => {
                             setLoading(true)
                         })
-                    }}>执行</YakitButton>
+                    }}>{t("SpaceEngineOperator.execute")}</YakitButton>
                     <YakitButton danger={true} disabled={!loading} onClick={() => {
                         cancel()
-                    }}>停止</YakitButton>
+                    }}>{t("SpaceEngineOperator.stop")}</YakitButton>
                 </Space>}
             >
                 {noEngine ? <Alert
-                    type={"warning"} description={"请先设置空间引擎"}
+                    type={"warning"} description={t("SpaceEngineOperator.setEngineFirst")}
                     style={{marginBottom: 8}}
                 /> : <Alert
                     type={statusFailed === "" ? "success" : "error"} description={<div>
                     {statusFailed}
                     {status.Info}
-                    {status.Used > 0 && <YakitTag>已用额度: {status.Used}</YakitTag>}
-                    {status.Remain > 0 && <YakitTag>剩余额度: {status.Remain}</YakitTag>}
+                    {status.Used > 0 && <YakitTag>{t("SpaceEngineOperator.usedQuota", {count: status.Used})}</YakitTag>}
+                    {status.Remain > 0 && <YakitTag>{t("SpaceEngineOperator.remainingQuota", {count: status.Remain})}</YakitTag>}
                     {statusLoading ? <AutoSpin spinning={true} size={"small"}/> : ""}
                 </div>}
                 />}
                 {!noEngine &&
                     <Form layout={"vertical"} onSubmitCapture={e => (e.preventDefault())} disabled={params.Type === ""}>
-                        <Form.Item label={"搜索条件"}>
+                        <Form.Item label={t("SpaceEngineOperator.searchCondition")}>
                             <YakEditor
                                 type={isRegisteredLanguage(params.Type) ? params.Type : "text"}
                                 value={params.Filter}
                                 setValue={(value) => (setParams({...params, Filter: value}))}
                             />
                         </Form.Item>
-                        <DemoItemSwitch label={"扫描"} value={params.ScanBeforeSave} setValue={i => (
+                        <DemoItemSwitch label={t("SpaceEngineOperator.scan")} value={params.ScanBeforeSave} setValue={i => (
                             setParams({...params, ScanBeforeSave: i})
                         )}/>
-                        <InputInteger label={"最大页数"} setValue={MaxPage => setParams({...params, MaxPage})}
+                        <InputInteger label={t("SpaceEngineOperator.maxPage")} setValue={MaxPage => setParams({...params, MaxPage})}
                                       value={params.MaxPage} min={1} />
-                        <InputInteger label={"最大记录数"} setValue={MaxRecord => setParams({...params, MaxRecord})}
+                        <InputInteger label={t("SpaceEngineOperator.maxRecord")} setValue={MaxRecord => setParams({...params, MaxRecord})}
                                       value={params.MaxRecord} min={1} />
-                        <InputInteger label={"随机延迟(秒)"} setValue={RandomDelay => setParams({...params, RandomDelay})}
+                        <InputInteger label={t("SpaceEngineOperator.randomDelay")} setValue={RandomDelay => setParams({...params, RandomDelay})}
                                       value={params.RandomDelay || 0} min={0}/>
-                        <InputInteger label={"重试次数"} setValue={RetryTimes => setParams({...params, RetryTimes})}
+                        <InputInteger label={t("SpaceEngineOperator.retryTimes")} setValue={RetryTimes => setParams({...params, RetryTimes})}
                                       value={params.RetryTimes || 3} min={0} />
                     </Form>}
             </AutoCard>}

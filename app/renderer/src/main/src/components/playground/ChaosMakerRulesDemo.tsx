@@ -7,12 +7,14 @@ import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {ChaosMakerRule} from "@/models/ChaosMaker"
 import {StringToUint8Array} from "@/utils/str"
 import {useTheme} from "@/hook/useTheme"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface ChaosMakerRulesDemoProp {}
 
 const {ipcRenderer} = window.require("electron")
 
 export const ChaosMakerRulesDemo: React.FC<ChaosMakerRulesDemoProp> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [selected, setSelected] = useState<ChaosMakerRule>()
 
     const {theme} = useTheme()
@@ -52,11 +54,11 @@ export const ChaosMakerRulesDemo: React.FC<ChaosMakerRulesDemoProp> = (props) =>
                 <div style={{height: "100%", overflowY: "hidden"}}>
                     <DemoVirtualTable<ChaosMakerRule>
                         columns={[
-                            {headerTitle: "ID", key: "Id", width: 80, colRender: (i) => i.Id},
-                            {headerTitle: "规则", key: "Name", width: 300, colRender: (i) => i.NameZh || i.Name},
-                            {headerTitle: "类型", key: "RuleType", width: 100, colRender: (i) => i.RuleType},
-                            {headerTitle: "CVE", key: "CVE", width: 110, colRender: (i) => i.CVE},
-                            {headerTitle: "协议", key: "Protocol", width: 50, colRender: (i) => i.Protocol}
+                            {headerTitle: t("ChaosMakerRulesDemo.id"), key: "Id", width: 80, colRender: (i) => i.Id},
+                            {headerTitle: t("ChaosMakerRulesDemo.rule"), key: "Name", width: 300, colRender: (i) => i.NameZh || i.Name},
+                            {headerTitle: t("ChaosMakerRulesDemo.type"), key: "RuleType", width: 100, colRender: (i) => i.RuleType},
+                            {headerTitle: t("ChaosMakerRulesDemo.cve"), key: "CVE", width: 110, colRender: (i) => i.CVE},
+                            {headerTitle: t("ChaosMakerRulesDemo.protocol"), key: "Protocol", width: 50, colRender: (i) => i.Protocol}
                         ]}
                         rowClick={(data) => {
                             setSelected(data)

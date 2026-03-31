@@ -13,6 +13,7 @@ import {useEngineConsoleStore} from "../../store/baseConsole"
 import {YakitSystem} from "@/yakitGVDefine"
 import {setClipboardText} from "@/utils/clipboard"
 import {useXTermOptions} from "@/hook/useXTermOptions/useXTermOptions"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -22,6 +23,7 @@ export interface EngineConsoleProp {
 
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     const {isMini} = props
+    const {t} = useI18nNamespaces(["layout"])
     const timeRef = useRef<ReturnType<typeof setTimeout>>()
     const xtermRef = useRef<any>(null)
     // 缓存Console日志信息
@@ -63,7 +65,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
         })
 
         ipcRenderer.invoke("AttachCombinedOutput", {}, token).then(() => {
-            info(`启动输出监控成功`)
+            info(t("BaseConsole.outputMonitorStarted"))
         })
 
         return () => {
@@ -73,7 +75,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
             ipcRenderer.removeAllListeners(`${token}-end`)
             clearInterval(timeRef.current)
         }
-    }, [xtermRef])
+    }, [xtermRef, t])
 
     const systemRef = useRef<YakitSystem>("Darwin")
     useEffect(() => {

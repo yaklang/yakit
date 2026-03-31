@@ -2,6 +2,7 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {getRemoteValue} from "@/utils/kv"
 import {useSafeState} from "ahooks"
 import {FC, useEffect} from "react"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface VitestTestProps {
     editorOperationRecord?: string
@@ -9,6 +10,7 @@ interface VitestTestProps {
 
 const Vitest__Test__: FC<VitestTestProps> = (props) => {
     const {editorOperationRecord} = props
+    const {t} = useI18nNamespaces(["playground"])
     const [typeLoading, setTypeLoading] = useSafeState<boolean>(true)
 
     useEffect(() => {
@@ -21,7 +23,7 @@ const Vitest__Test__: FC<VitestTestProps> = (props) => {
                         if (!data) return
                     } catch (error) {
                         setTypeLoading(false)
-                        fail(error + "")
+                        console.error(error)
                     }
                 })
                 .finally(() => {
@@ -33,7 +35,7 @@ const Vitest__Test__: FC<VitestTestProps> = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editorOperationRecord])
 
-    return <YakitSpin spinning={typeLoading}>vitest test page</YakitSpin>
+    return <YakitSpin spinning={typeLoading}>{t("Vitest__Test__.page")}</YakitSpin>
 }
 
 export {Vitest__Test__}

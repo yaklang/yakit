@@ -8,6 +8,8 @@
   "SettingReverseServer": {
     "getRemoteAddrFailed": "Get Remote Address Failed: ",
     "enablePublicTunnel": "Enable Public Tunnel",
+    "enablePublicReverse": "Enable public reverse",
+    "bridgeAddr": "Bridge Address",
     "publicTunnelHelp": "Install yak core engine on your own server, execute to",
     "yakBridgeService": "Start Yak Bridge Public Service",
     "yakVersionRequirement": "yak version >= v1.0.11-sp9",
@@ -33,5 +35,12 @@
     "response": "Response",
     "rmiConnection": "RMI Connection",
     "rmiHandshake": "RMI Handshake"
+  },
+  "ReverseNotificationTable": {
+    "title": "Reverse list",
+    "onlyShowToken": "Only show Token",
+    "typeFilter": "Type",
+    "clear": "Clear",
+    "reverseType": "Reverse Type"
   }
 }

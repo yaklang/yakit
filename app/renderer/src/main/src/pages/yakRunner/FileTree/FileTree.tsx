@@ -47,14 +47,15 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
 import {OpenFileByPathProps} from "../YakRunnerType"
 import {setClipboardText} from "@/utils/clipboard"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
 
 const FolderMenu: YakitMenuItemProps[] = [
-    {label: "新建文件", key: "newFile"},
-    {label: "新建文件夹", key: "newFolder"},
-    {label: "在文件夹中显示", key: "openFileSystem"},
-    {label: "在终端打开", key: "openTernimal"}
+    {label: i18n.t("FileTree.newFile", {ns: "yakRunner"}), key: "newFile"},
+    {label: i18n.t("yakitUi:newFolder"), key: "newFolder"},
+    {label: i18n.t("FileTree.openFileSystem", {ns: "yakRunner"}), key: "openFileSystem"},
+    {label: i18n.t("FileTree.openTerminal", {ns: "yakRunner"}), key: "openTernimal"}
 ]
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
@@ -321,7 +322,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 复制
     const onCopy = useMemoizedFn(() => {
         setCopyPath(info.path)
-        success(`已获取路径 ${info.path}`)
+        success(i18n.t("FileTree.copyPathSuccess", {ns: "yakRunner", path: info.path}))
     })
 
     // 复制绝对路径
@@ -332,7 +333,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 复制相对路径
     const onCopyRelativePath = useMemoizedFn(async () => {
         if (fileTree.length === 0) {
-            failed(`复制相对路径失败`)
+            failed(i18n.t("FileTree.copyRelativePathFailed", {ns: "yakRunner"}))
             return
         }
         try {
@@ -346,7 +347,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const onPaste = useMemoizedFn(async () => {
         try {
             if (!copyPath) {
-                warn("请先选择复制文件")
+                warn(i18n.t("FileTree.selectCopiedFileFirst", {ns: "yakRunner"}))
                 return
             }
             const fileDetail = getMapFileDetail(copyPath)
@@ -382,7 +383,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             emiter.emit("onRefreshFileTree")
         } catch (error) {
             setCopyPath("")
-            failed(`粘贴失败 ${error}`)
+            failed(i18n.t("FileTree.pasteFailed", {ns: "yakRunner", error}))
         }
     })
 
@@ -544,7 +545,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             }
         } catch (error) {
             resetRename()
-            failed(`保存失败 ${error}`)
+                failed(i18n.t("FileTree.saveFailed", {ns: "yakRunner", error}))
         }
     })
 
@@ -607,7 +608,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 emiter.emit("onRefreshFileTree")
             } catch (error) {
                 resetCreate()
-                failed(`新建失败 ${error}`)
+                failed(i18n.t("FileTree.createFailed", {ns: "yakRunner", error}))
             }
         }
         // 没有内容 新建失效
@@ -665,19 +666,19 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const menuData: YakitMenuItemType[] = useMemo(() => {
         const base: YakitMenuItemType[] = [
             {
-                label: "删除",
+                label: i18n.t("delete", {ns: "yakitUi"}),
                 key: "delete",
                 type: "danger"
             },
             {
-                label: "重命名",
+                label: i18n.t("rename", {ns: "layout"}),
                 key: "rename"
             }
         ]
         const CloseFolder: YakitMenuItemType[] = []
         if (fileTree.length > 0 && info.path === fileTree[0].path) {
             CloseFolder.push({
-                label: "关闭文件夹",
+                label: i18n.t("FileTree.closeFolder", {ns: "yakRunner"}),
                 key: "closeFolder"
             })
         }
@@ -687,21 +688,21 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 ...FolderMenu,
                 {type: "divider"},
                 // {label: "复制", key: "copy"},
-                {label: "粘贴", key: "paste", disabled: copyPath.length === 0},
-                {label: "复制路径", key: "copyAbsolutePath"},
-                {label: "复制相对路径", key: "copyRelativePath"},
+                {label: i18n.t("paste", {ns: "yakitUi"}), key: "paste", disabled: copyPath.length === 0},
+                {label: i18n.t("FileTree.copyPath", {ns: "yakRunner"}), key: "copyAbsolutePath"},
+                {label: i18n.t("FileTree.copyRelativePath", {ns: "yakRunner"}), key: "copyRelativePath"},
                 {type: "divider"},
                 ...base
             ]
         } else {
             return [
-                {label: "在文件夹中显示", key: "openFileSystem"},
-                {label: "在终端打开", key: "openTernimal"},
+                {label: i18n.t("FileTree.showInFolder", {ns: "yakRunner"}), key: "openFileSystem"},
+                {label: i18n.t("FileTree.openTerminal", {ns: "yakRunner"}), key: "openTernimal"},
                 {type: "divider"},
-                {label: "复制", key: "copy"},
-                {label: "粘贴", key: "paste", disabled: copyPath.length === 0},
-                {label: "复制路径", key: "copyAbsolutePath"},
-                {label: "复制相对路径", key: "copyRelativePath"},
+                {label: i18n.t("copy", {ns: "yakitUi"}), key: "copy"},
+                {label: i18n.t("paste", {ns: "yakitUi"}), key: "paste", disabled: copyPath.length === 0},
+                {label: i18n.t("FileTree.copyPath", {ns: "yakRunner"}), key: "copyAbsolutePath"},
+                {label: i18n.t("FileTree.copyRelativePath", {ns: "yakRunner"}), key: "copyRelativePath"},
                 {type: "divider"},
                 ...base
             ]
@@ -838,8 +839,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             )}
             <YakitHint
                 visible={removeCheckVisible}
-                title={`是否要删除${info.name}`}
-                content={`确认删除后将会彻底删除（windows系统将会移入回收站）`}
+                title={i18n.t("FileTree.deleteConfirmTitle", {ns: "yakRunner", name: info.name})}
+                content={i18n.t("FileTree.deleteConfirmContent", {ns: "yakRunner"})}
                 onOk={onDelete}
                 onCancel={() => setRemoveCheckVisible(false)}
             />

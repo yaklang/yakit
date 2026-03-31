@@ -143,7 +143,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 setTotal(item.Total)
             })
             .catch((e) => {
-                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: e}))
+                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: String(e)}))
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -198,7 +198,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 setIsShowScreenRecording(!(item.Total > 0))
             })
             .catch((e) => {
-                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: e}))
+                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: String(e)}))
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     })

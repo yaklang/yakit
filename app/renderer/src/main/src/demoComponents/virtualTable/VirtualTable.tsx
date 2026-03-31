@@ -2,6 +2,7 @@ import {memo, useEffect, useMemo, useRef} from "react"
 import {VirtualTableProps} from "./VirtualTableType"
 import {useGetState, useMemoizedFn, useThrottleFn, useVirtualList} from "ahooks"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import "../demoStyle.scss"
 
@@ -22,6 +23,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
 
     const [loading, setLoading, getLoading] = useGetState<boolean>(false)
     const [data, setData, getData] = useGetState<any[]>([])
+    const {t} = useI18nNamespaces(["utils"])
 
     const containerRef = useRef<HTMLDivElement>(null)
     const fetchListHeight = useMemoizedFn(() => {
@@ -173,7 +175,7 @@ export const DemoVirtualTable: <T>(props: VirtualTableProps<T>) => any = memo((p
             <div className='list-body'>
                 <div ref={containerRef} className='list-container' onScroll={() => onScrollCapture.run()}>
                     <div ref={wrapperRef}>
-                        {!loading && data.length === 0 && <div className={"no-more-wrapper"}>暂无数据</div>}
+                        {!loading && data.length === 0 && <div className={"no-more-wrapper"}>{t("DemoVirtualTable.noData")}</div>}
                         {/* {isTopLoadMore && loading && (
                             <div className='loading-wrapper'>
                                 <YakitSpin className='loading-style' />

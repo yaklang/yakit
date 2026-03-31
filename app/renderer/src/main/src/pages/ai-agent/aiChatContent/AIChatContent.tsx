@@ -35,6 +35,7 @@ import useAIAgentStore from "../useContext/useStore"
 import {useAIChatResizeBox} from "./hooks/useAIChatResizeBox"
 import {ExportAILogsModal} from "../components/ExportAILogsModal/ExportAILogsModal"
 import {failed, yakitNotify} from "@/utils/notification"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {
     AIHandleStartParams,
     AIHandleStartResProps,
@@ -47,6 +48,7 @@ import OperationLog from "../components/aiFileSystemList/OperationLog/OperationL
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {onChat, onChatFromHistory} = props
+        const {t} = useI18nNamespaces(["aiAgent"])
         const {chatIPCData} = useChatIPCStore()
         const {runTimeIDs: initRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute} = chatIPCData
         const {activeChat} = useAIAgentStore()
@@ -95,7 +97,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
         const onExportOk = useMemoizedFn(async (data: {types: string[]; outputPath: string}) => {
             if (!activeChat?.Id) {
-                failed("当前没有活跃的会话")
+                failed(t("AIChatContent.noActiveChat"))
                 return
             }
             setExportLoading(true)
@@ -111,10 +113,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                     },
                     true
                 )
-                yakitNotify("success", "导出成功")
+                yakitNotify("success", t("AIChatContent.exportSuccess"))
                 setExportModalVisible(false)
             } catch (error) {
-                failed(`导出失败: ${error}`)
+                failed(t("AIChatContent.exportFailed", {error: String(error)}))
             } finally {
                 setExportLoading(false)
             }
@@ -258,7 +260,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 const isShow = activeKey !== AITabsEnum.File_System && showHot
                 return (
                     <div className={styles["file-system-label"]}>
-                        文件系统
+                        {t("AIChatContent.fileSystem")}
                         <span hidden={!isShow} />
                     </div>
                 )
@@ -361,31 +363,31 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                     animationWrapperClassName={classNames(styles["expand-retract-animation-wrapper"], {
                         [styles["expand-retract-animation-wrapper-hidden"]]: !yakExecResult.card.length
                     })}
-                    expandText='展开'
-                    retractText='收起'
+                    expandText={t("AIChatContent.expand")}
+                    retractText={t("AIChatContent.collapse")}
                 >
                     <div className={styles["expand-retract-content"]}>
                         <div className={styles["header"]}>
                             <div className={styles["title"]}>
                                 <SolidChatalt2Icon className={styles["chat-alt-icon"]} />
-                                <div className={styles["chat-title"]}>{activeChat?.Title || "新会话"}</div>
+                                <div className={styles["chat-title"]}>{activeChat?.Title || t("AIChatContent.newChatTitle")}</div>
                                 <Divider type='vertical' />
                                 <YakitButton type='secondary2' icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
-                                    新建会话
+                                    {t("AIChatContent.newChat")}
                                 </YakitButton>
                                 {/* <SideSettingButton /> */}
                             </div>
                             <div className={styles["extra"]}>
                                 <AIContextToken execute={execute} session={activeChat?.SessionID} />
                                 <YakitButton type='secondary2' icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
-                                    日志
+                                    {t("AIChatContent.log")}
                                 </YakitButton>
                                 <YakitButton
                                     type='secondary2'
                                     icon={<OutlineClouddownloadIcon />}
                                     onClick={onOpenExportModal}
                                 >
-                                    导出日志
+                                    {t("AIChatContent.exportLog")}
                                 </YakitButton>
                             </div>
                         </div>

@@ -23,6 +23,7 @@ import cloneDeep from "lodash/cloneDeep"
 import classNames from "classnames"
 import styles from "./YakitWindow.module.scss"
 import { JSONParseLog } from "@/utils/tool"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const DefaultCacheSize: YakitWindowCacheSizes = {
     shrink: {width: 0, height: 0},
@@ -449,6 +450,7 @@ export const YakitWindow: React.FC<YakitWindowProps> = memo((props) => {
 
 /** @name 窗体展示位置-操作组件 */
 export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) => {
+    const {t} = useI18nNamespaces(["layout"])
     const {defaultDockSide = ["shrink", "left", "right", "bottom"], activeDockSide, onDockSide} = props
 
     const onType = (v: WindowPositionType) => {
@@ -459,7 +461,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
 
     return (
         <div className={styles["window-position-op-wrapper"]}>
-            <Tooltip title={"浮窗"}>
+            <Tooltip title={t("Layout.YakitWindow.floatWindow")}>
                 {defaultDockSide.includes("shrink") && (
                     <YakitButton
                         type='text2'
@@ -470,7 +472,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
                 )}
             </Tooltip>
 
-            <Tooltip title={"向下"}>
+            <Tooltip title={t("Layout.YakitWindow.dockBottom")}>
                 {defaultDockSide.includes("bottom") && (
                     <YakitButton
                         type='text2'
@@ -481,7 +483,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
                 )}
             </Tooltip>
 
-            <Tooltip title={"向左"}>
+            <Tooltip title={t("Layout.YakitWindow.dockLeft")}>
                 {defaultDockSide.includes("left") && (
                     <YakitButton
                         type='text2'
@@ -492,7 +494,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
                 )}
             </Tooltip>
 
-            <Tooltip title={"向右"}>
+            <Tooltip title={t("Layout.YakitWindow.dockRight")}>
                 {defaultDockSide.includes("right") && (
                     <YakitButton
                         type='text2'
@@ -507,6 +509,7 @@ export const WindowPositionOP: React.FC<WindowPositionOPProps> = memo((props) =>
 })
 /** @name 窗体展示位置-操作组件(小尺寸模式) */
 export const WindowPositionOPMenu: React.FC<WindowPositionOPProps> = memo((props) => {
+    const {t} = useI18nNamespaces(["layout"])
     const {defaultDockSide = ["shrink", "left", "right", "bottom"], activeDockSide, onDockSide} = props
 
     const [show, setShow] = useState<boolean>(false)
@@ -528,7 +531,7 @@ export const WindowPositionOPMenu: React.FC<WindowPositionOPProps> = memo((props
         <YakitPopover
             overlayClassName={styles["window-position-op-popover"]}
             overlayStyle={{paddingTop: 2}}
-            title={<span>停靠方位</span>}
+            title={<span>{t("Layout.YakitWindow.dockPosition")}</span>}
             placement={"bottomRight"}
             content={content}
             trigger='hover'
@@ -542,6 +545,7 @@ export const WindowPositionOPMenu: React.FC<WindowPositionOPProps> = memo((props
 
 /** @name 窗体内容组件 */
 const YakitWindowContent: React.FC<YakitWindowContentProps> = memo((props) => {
+    const {t} = useI18nNamespaces(["layout"])
     const {
         defaultDockSide = [],
         activeDockSide,
@@ -554,10 +558,10 @@ const YakitWindowContent: React.FC<YakitWindowContentProps> = memo((props) => {
         title,
         subtitle,
         footerExtra,
-        okButtonText = "确定",
+        okButtonText = t("Layout.YakitWindow.ok"),
         okButtonProps,
         onOk,
-        cancelButtonText = "取消",
+        cancelButtonText = t("Layout.YakitWindow.cancel"),
         cancelButtonProps,
         onCancel
     } = props

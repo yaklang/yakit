@@ -15,8 +15,10 @@ import {getClipboardText, setClipboardText} from "@/utils/clipboard"
 import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
 import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
+const zhT = i18n.getFixedT("zh", "yakitUi")
 
 /** @name 基础菜单组配置信息 */
 export const baseMenuLists: (t: (text: string) => string) => OtherMenuListProps = (t) => {
@@ -161,14 +163,14 @@ const httpSubmenu: (t: (text: string) => string) => {
             key: "mutate-chunked",
             label: t("YakitEditor.httpChunkEncode"),
             params: {
-                WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "Chunk 编码"}]}]
+                WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: zhT("YakitEditor.httpChunkEncode")}]}]
             } as MutateHTTPRequestParams
         },
         {
             key: "mutate-upload",
             label: t("YakitEditor.modifyToUploadPacket"),
             params: {
-                WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "上传数据包"}]}]
+                WorkFlow: [{CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: zhT("YakitEditor.modifyToUploadPacket")}]}]
             } as MutateHTTPRequestParams
         },
         {
@@ -176,7 +178,7 @@ const httpSubmenu: (t: (text: string) => string) => {
             label: t("YakitEditor.modifyToUploadPacketPostOnly"),
             params: {
                 WorkFlow: [
-                    {CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: "上传数据包(仅POST参数)"}]}
+                    {CodecType: "HTTPRequestMutate", Params: [{Key: "transform", Value: zhT("YakitEditor.modifyToUploadPacketPostOnly")}]} 
                 ]
             } as MutateHTTPRequestParams
         }

@@ -45,6 +45,9 @@ import {DefaultMemoryList, DefaultPlanHistoryList} from "../ai-re-act/hooks/defa
 import {ColorsAIIcon} from "@/assets/icon/colors"
 import {AIGlobalConfig, AIModelTypeFileName} from "./aiModelList/utils"
 import {cloneDeep} from "lodash"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "aiAgent")
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = "yakit-ai-agent"
@@ -59,11 +62,11 @@ export enum AIAgentTabListEnum {
     KnowledgeBase = "knowledgeBase"
 }
 export const AiAgentTabList: YakitTabsProps[] = [
-    {value: AIAgentTabListEnum.History, label: "历史会话", icon: <OutlineSparklesIcon />},
-    {value: AIAgentTabListEnum.Setting, label: "配置", icon: <OutlineCogIcon />},
-    // {value: AIAgentTabListEnum.Forge_Name, label: "技能", icon: <OutlineTemplateIcon />},
-    // {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
-    {value: AIAgentTabListEnum.AI_Model, label: "AI模型", icon: <OutlineChipIcon />},
+    {value: AIAgentTabListEnum.History, label: t("AIAgentTabs.historyChat"), icon: <OutlineSparklesIcon />},
+    {value: AIAgentTabListEnum.Setting, label: t("AIAgentTabs.config"), icon: <OutlineCogIcon />},
+    // {value: AIAgentTabListEnum.Forge_Name, label: t("AIAgentTabs.skill"), icon: <OutlineTemplateIcon />},
+    // {value: AIAgentTabListEnum.Tool, label: t("AIAgentTabs.tool"), icon: <OutlineWrenchIcon />},
+    {value: AIAgentTabListEnum.AI_Model, label: t("AIAgentTabs.aiModel"), icon: <OutlineChipIcon />},
     {value: AIAgentTabListEnum.MCP, label: "MCP", icon: <OutlineMCPIcon />}
 ]
 export enum AIMentionTabsEnum {
@@ -79,11 +82,11 @@ export enum AIMentionTabsEnum {
     FocusMode = "focusMode"
 }
 export const AIMentionTabs: YakitSideTabProps["yakitTabs"] = [
-    {value: AIMentionTabsEnum.Forge_Name, label: "技能"},
-    {value: AIMentionTabsEnum.Tool, label: "工具"},
-    {value: AIMentionTabsEnum.KnowledgeBase, label: "知识库"},
-    {value: AIMentionTabsEnum.File_System, label: "文件系统"},
-    {value: AIMentionTabsEnum.FocusMode, label: "专注模式"}
+    {value: AIMentionTabsEnum.Forge_Name, label: t("AIMentionTabs.skill")},
+    {value: AIMentionTabsEnum.Tool, label: t("AIMentionTabs.tool")},
+    {value: AIMentionTabsEnum.KnowledgeBase, label: t("AIMentionTabs.knowledgeBase")},
+    {value: AIMentionTabsEnum.File_System, label: t("AIMentionTabs.fileSystem")},
+    {value: AIMentionTabsEnum.FocusMode, label: t("AIMentionTabs.focusMode")}
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -167,11 +170,11 @@ export enum AITabsEnum {
 }
 /** @name AI 默认展示的tab集合 */
 export const AITabs = {
-    "task-content": {label: "任务内容", value: AITabsEnum.Task_Content},
-    "file-system": {label: "文件系统", value: AITabsEnum.File_System},
-    http: {label: "HTTP 流量", value: AITabsEnum.HTTP},
-    risk: {label: "漏洞与风险", value: AITabsEnum.Risk},
-    "operation-log": {label: "读写日志", value: AITabsEnum.Operation_Log}
+    "task-content": {label: t("AITabs.taskContent"), value: AITabsEnum.Task_Content},
+    "file-system": {label: t("AITabs.fileSystem"), value: AITabsEnum.File_System},
+    http: {label: t("AITabs.httpTraffic"), value: AITabsEnum.HTTP},
+    risk: {label: t("AITabs.riskAndVulnerability"), value: AITabsEnum.Risk},
+    "operation-log": {label: t("AITabs.readWriteLog"), value: AITabsEnum.Operation_Log}
 }
 
 /** AI-Forge 列表查询条件里的页码默认条件 */
@@ -220,17 +223,17 @@ export const AIReviewRuleOptions = [
     {
         value: "manual",
         label: "Manual",
-        describe: "所有审阅都由用户自己操作"
+        describe: t("AIReviewRuleOptions.manualDesc")
     },
     {
         value: "yolo",
         label: "Yolo",
-        describe: "所有审阅默认执行，不进行询问"
+        describe: t("AIReviewRuleOptions.yoloDesc")
     },
     {
         value: "ai",
         label: "AI",
-        describe: "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
+        describe: t("AIReviewRuleOptions.aiDesc")
     }
 ] as const
 export type AIReviewRuleOptionsType = (typeof AIReviewRuleOptions)[number]["value"]
@@ -339,10 +342,10 @@ export enum AIModelPolicyEnum {
 }
 
 export const AIModelPolicyOptions = [
-    {value: AIModelPolicyEnum.PolicyAuto, label: "自动选择"},
-    {value: AIModelPolicyEnum.PolicyPerformance, label: "性能优先"},
-    {value: AIModelPolicyEnum.PolicyCost, label: "成本优先"},
-    {value: AIModelPolicyEnum.PolicyBalance, label: "平衡策略"}
+    {value: AIModelPolicyEnum.PolicyAuto, label: t("AIModelPolicyOptions.auto")},
+    {value: AIModelPolicyEnum.PolicyPerformance, label: t("AIModelPolicyOptions.performance")},
+    {value: AIModelPolicyEnum.PolicyCost, label: t("AIModelPolicyOptions.cost")},
+    {value: AIModelPolicyEnum.PolicyBalance, label: t("AIModelPolicyOptions.balance")}
 ]
 
 /**ai model type,下拉选择的值 */

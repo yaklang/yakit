@@ -129,7 +129,10 @@ import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutK
 import {JSONParseLog} from "@/utils/tool"
 import {StreamMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
+import i18n from "@/i18n/i18n"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "yakChat")
 
 export interface CodecParamsProps {
     text?: string
@@ -161,14 +164,15 @@ export interface ScriptsProps {
 
 export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const {visible, setVisible} = props
+    const {t} = useI18nNamespaces(["yakChat"])
 
     const {userInfo} = useStore()
     const showName = useMemo(() => {
         if (userInfo.platform === "github") return userInfo.githubName
         if (userInfo.platform === "wechat") return userInfo.wechatName
         if (userInfo.platform === "company") return userInfo.companyName
-        return "游客"
-    }, [userInfo])
+        return t("YakChatCS.guest")
+    }, [userInfo, t])
 
     /** 获取缓存中的对话内容 */
     useEffect(() => {
@@ -243,7 +247,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
 
         const lists: CacheChatCSProps = {
             token: randomString(10),
-            name: `临时对话窗-${randomString(4)}`,
+            name: t("YakChatCS.tempChatWithSuffix", {suffix: randomString(4)}),
             isRename: false,
             is_bing: isBing,
             is_plugin: isPlugin,
@@ -468,9 +472,9 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 // } else {
                 chatHistory.push({
                     role: "assistant",
-                    content: ["暂无可用解答", "该类型请求异常，请稍后重试"].includes(stag)
-                        ? "回答中断"
-                        : stag || "回答中断"
+                    content: [t("YakChatCS.noAvailableAnswer"), t("YakChatCS.requestTypeError")].includes(stag)
+                        ? t("YakChatCS.answerInterrupted")
+                        : stag || t("YakChatCS.answerInterrupted")
                 })
                 chatHistory.push({role: "user", content: info.content})
                 // }
@@ -635,7 +639,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         /** 流式输出逻辑 */
                         if (cs.content.length === 0) {
                             cs.is_plugin = false
-                            cs.content = "暂无可用解答"
+                            cs.content = t("YakChatCS.noAvailableAnswer")
                             cs.end = true
                             setContentPluginList(cs, contents, group)
                         } else {
@@ -650,7 +654,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         // console.log("catch---",e);
                         if (!cs.content) {
                             cs.is_plugin = false
-                            cs.content = "该类型请求异常，请稍后重试"
+                            cs.content = t("YakChatCS.requestTypeError")
                         }
                         cs.end = true
                         setContentPluginList(cs, contents, group)
@@ -711,7 +715,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     .then((res: any) => {
                         // /** 流式输出逻辑 */
                         if (cs.content.length === 0) {
-                            cs.content = "暂无可用解答"
+                        cs.content = t("YakChatCS.noAvailableAnswer")
                             cs.end = true
                             setContentList(cs, contents, group)
                         } else {
@@ -722,7 +726,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     })
                     .catch((e) => {
                         if (!cs.content) {
-                            cs.content = "该类型请求异常，请稍后重试"
+                            cs.content = t("YakChatCS.requestTypeError")
                         }
                         cs.end = true
                         setContentList(cs, contents, group)
@@ -734,7 +738,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
     const onSubmit = useMemoizedFn(async (info: ChatInfoProps) => {
         // 缓存的会话历史名称
         // @ts-ignore
-        const cacheName: string = (info.info?.content || info.info?.input || "临时对话窗").slice(0, 45)
+        const cacheName: string = (info.info?.content || info.info?.input || t("YakChatCS.tempChatWindow")).slice(0, 45)
         const group = [...history]
         const filterIndex = group.findIndex((item) => item.token === active)
 
@@ -1135,7 +1139,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                         <Tooltip
                             overlayClassName={classNames(styles["tooltip-wrapper"], styles["info-hint-popover"])}
                             overlayStyle={{paddingTop: 4}}
-                            title={"ChatCS模型参数：6.5b，训练Token: 1.5T 显卡资源：A40*4，使用文心增强知识推理能力"}
+                            title={t("YakChatCS.modelTooltip")}
                         >
                             <OutlineInformationcircleIcon className={styles["info-hint"]} />
                         </Tooltip> */}
@@ -1143,7 +1147,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             value={chatcsType}
                             onChange={(e) => {
                                 if (!userInfo.isLogin) {
-                                    yakitNotify("warning", "请登录后使用")
+                                    yakitNotify("warning", t("YakChatCS.loginFirst"))
                                     return
                                 }
                                 setChatcsType(e.target.value)
@@ -1156,22 +1160,22 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 },
                                 {
                                     value: "PluginAI",
-                                    label: "插件输出"
+                                    label: t("YakChatCS.pluginOutput")
                                 }
                             ]}
                         /> */}
-                        插件输出
+                        {t("YakChatCS.pluginOutput")}
                     </div>
                     <div className={styles["header-extra"]}>
                         {chatcsType === "ChatCS" && history.length !== 0 && (
                             <YakitButton disabled={loading} icon={<PlusIcon />} onClick={onAddChat}>
-                                {(+width || 351) < 350 ? undefined : "新会话"}
+                                {(+width || 351) < 350 ? undefined : t("YakChatCS.newChat")}
                             </YakitButton>
                         )}
                         <div className={styles["extra-base-btn"]}>
                             {chatcsType === "ChatCS" && history.length !== 0 && (
                                 <>
-                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"会话历史记录"}>
+                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={t("YakChatCS.chatHistory")}>
                                         <div
                                             className={classNames(styles["big-btn"], styles["btn-style"], {
                                                 [styles["disable-style"]]: loading
@@ -1189,7 +1193,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             )}
                             {chatcsType === "PluginAI" && pluginAIList.length > 0 && !showOnly && (
                                 <>
-                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"清空插件输出"}>
+                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={t("YakChatCS.clearPluginOutput")}>
                                         <div
                                             className={classNames(styles["small-btn"], styles["btn-style"])}
                                             onClick={() => {
@@ -1204,7 +1208,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                             )}
                             {chatcsType === "PluginAI" && showOnly && (
                                 <>
-                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"历史"}>
+                                    <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={t("YakChatCS.history")}>
                                         <div
                                             className={classNames(styles["big-btn"], styles["btn-style"])}
                                             onClick={() => {
@@ -1255,18 +1259,17 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                         <div className={styles["welcome-header"]}>
                                             <div className={styles["header-title"]}>
                                                 <div className={classNames(styles["title-style"], "content-ellipsis")}>
-                                                    {`你好,${showName}`}
+                                                    {t("YakChatCS.helloUser", {name: showName || ""})}
                                                 </div>
                                                 👋
                                             </div>
-                                            <div className={styles["header-subTitle"]}>有什么我能帮助你的吗？</div>
+                                            <div className={styles["header-subTitle"]}>{t("YakChatCS.headerSubtitle")}</div>
                                         </div>
                                         <div className={styles["welcome-preset-list"]}>
                                             <div className={styles["list-wrapper"]}>
                                                 <div className={styles["info-hint-wrapper"]}>
                                                     <OutlineInformationcircleIcon />
-                                                    ChatCS模型参数：6.5b，训练Token: 1.5T
-                                                    显卡资源：A40*4，使用文心增强知识推理能力
+                                                    {t("YakChatCS.modelHint")}
                                                 </div>
                                             </div>
                                         </div>
@@ -1334,9 +1337,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                     <Input.TextArea
                                         className={styles["text-area-wrapper"]}
                                         bordered={false}
-                                        placeholder={`问我任何问题...(${convertKeyboardToUIKey(
-                                            getChatCSShortcutKeyEvents()["nextLine*chatCS"].keys
-                                        )} 换行)`}
+                                        placeholder={t("YakChatCS.questionPlaceholder", {
+                                            key: String(
+                                                convertKeyboardToUIKey(getChatCSShortcutKeyEvents()["nextLine*chatCS"].keys || "") || ""
+                                            )
+                                        })}
                                         value={question}
                                         autoSize={true}
                                         onChange={(e) => setQuestion(e.target.value)}
@@ -1364,10 +1369,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                     <div className={styles["footer-popover-wrapper"]}>
                                                         <div className={styles["footer-type-wrapper"]}>
                                                             <div className={styles["type-title"]}>
-                                                                回答类型
+                                                                {t("YakChatCS.answerType")}
                                                                 <Tooltip
                                                                     overlayClassName={styles["tooltip-wrapper"]}
-                                                                    title={"ChatCS 将根据选择的类型回答你的问题"}
+                                                                    title={t("YakChatCS.answerTypeTip")}
                                                                 >
                                                                     <QuestionMarkCircleIcon />
                                                                 </Tooltip>
@@ -1379,7 +1384,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                                 })}
                                                                 onClick={() => setBing(!isBing)}
                                                             >
-                                                                搜索引擎增强
+                                                                 {t("YakChatCS.searchEngineEnhance")}
                                                             </div>
                                                             <div
                                                                 className={classNames(styles["single-btn"], {
@@ -1387,12 +1392,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                                 })}
                                                                 onClick={() => setPlugin(!isPlugin)}
                                                             >
-                                                                插件调试执行
+                                                                 {t("YakChatCS.pluginDebugExecute")}
                                                             </div>
                                                         </div>
                                                         {isPlugin && (
                                                             <div className={styles["plugin-run-max-number-box"]}>
-                                                                <div className={styles["title"]}>最大执行数量：</div>
+                                                                <div className={styles["title"]}>{t("YakChatCS.maxExecutions")}</div>
                                                                 <div>
                                                                     <YakitInputNumber
                                                                         className={styles["input-left"]}
@@ -1417,10 +1422,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                         ) : (
                                             <div className={styles["footer-type-wrapper"]}>
                                                 <div className={styles["type-title"]}>
-                                                    回答类型
+                                                    {t("YakChatCS.answerType")}
                                                     <Tooltip
                                                         overlayStyle={{paddingBottom: 5}}
-                                                        title={"ChatCS 将根据选择的类型回答你的问题"}
+                                                        title={t("YakChatCS.answerTypeTip")}
                                                     >
                                                         <QuestionMarkCircleIcon />
                                                     </Tooltip>
@@ -1432,7 +1437,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                     })}
                                                     onClick={() => setBing(!isBing)}
                                                 >
-                                                    搜索引擎增强
+                                                    {t("YakChatCS.searchEngineEnhance")}
                                                 </div>
                                                 <div
                                                     className={classNames(styles["single-btn"], {
@@ -1440,16 +1445,16 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                                     })}
                                                     onClick={() => setPlugin(!isPlugin)}
                                                 >
-                                                    插件调试执行
+                                                    {t("YakChatCS.pluginDebugExecute")}
                                                 </div>
                                                 {isPlugin && (
                                                     <YakitPopover
-                                                        title={"插件配置"}
+                                                        title={t("YakChatCS.pluginConfig")}
                                                         // placement="topLeft"
                                                         overlayClassName={styles["chatcs-plugin-option-popover"]}
                                                         content={
                                                             <div className={styles["option-box"]}>
-                                                                <div>最大执行数量：</div>
+                                                                 <div>{t("YakChatCS.maxExecutions")}</div>
                                                                 <div>
                                                                     <YakitInputNumber
                                                                         className={styles["input-left"]}
@@ -1531,11 +1536,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                     width={modalWidth}
                     getContainer={divRef.current}
                     visible={addShow}
-                    title='超过对话框个数限制'
-                    content='新建会默认删除最早的对话框，确认新建吗？'
-                    okButtonText='仍要新建'
+                title={t("YakChatCS.chatLimitTitle")}
+                content={t("YakChatCS.chatLimitContent")}
+                okButtonText={t("YakChatCS.createAnyway")}
                     okButtonProps={{loading: delLoading}}
-                    cancelButtonText='稍后再说'
+                cancelButtonText={t("YakChatCS.later")}
                     cancelButtonProps={{loading: delLoading}}
                     onOk={delToAdd}
                     onCancel={() => setAddShow(false)}
@@ -1638,13 +1643,13 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
         let defaultActiveKey: string = ""
         switch (status) {
             case "info":
-                defaultActiveKey = "漏洞与风险"
+                defaultActiveKey = t("YakChatCS.vulnerabilitiesAndRisks")
                 break
             case "succee":
-                defaultActiveKey = "HTTP 流量"
+                defaultActiveKey = t("YakChatCS.httpFlow")
                 break
             case "fail":
-                defaultActiveKey = "Console"
+                defaultActiveKey = t("YakChatCS.console")
                 break
         }
         emiter.emit(
@@ -1664,9 +1669,9 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
         <div className={styles["plugin-run-status"]}>
             {status === "loading" && (
                 <div className={styles["plugin-run"]}>
-                    <div className={styles["title"]}>{pluginNameList.length}个插件执行中，请耐心等待...</div>
+                    <div className={styles["title"]}>{t("YakChatCS.pluginsExecuting", {count: pluginNameList.length})}</div>
                     <div className={styles["sub-title"]}>
-                        一般来说，检测将会在 <span className={styles["highlight"]}>10-20s</span> 内结束
+                        {t("YakChatCS.executionDuration")}
                     </div>
                     {progressList && progressList.length === 1 && (
                         <Progress
@@ -1686,11 +1691,11 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                             <div className={styles["icon"]}>
                                 <SolidExclamationIcon />
                             </div>
-                            <div className={styles["text"]}>检测到 {(infoList || []).length} 个风险项</div>
+                            <div className={styles["text"]}>{t("YakChatCS.riskCount", {count: (infoList || []).length})}</div>
                         </div>
                         <div className={styles["extra"]}>
                             <YakitButton type='text' style={{padding: 0}} onClick={onDetail}>
-                                查看详情
+                                {t("YakChatCS.viewDetails")}
                             </YakitButton>
                         </div>
                     </div>
@@ -1704,17 +1709,17 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                                     const getSeverity = (type) => {
                                         switch (type) {
                                             case "low":
-                                                return "低危"
+                                                return t("YakChatCS.low")
                                             case "middle":
-                                                return "中危"
+                                                return t("YakChatCS.medium")
                                             case "high":
-                                                return "高危"
+                                                return t("YakChatCS.high")
                                             case "critical":
-                                                return "严重"
+                                                return t("YakChatCS.critical")
                                             case "info":
-                                                return "信息"
+                                                return t("YakChatCS.info")
                                             default:
-                                                return "未知"
+                                                return t("YakChatCS.unknown")
                                         }
                                     }
                                     const getSeverityColor = (type) => {
@@ -1758,16 +1763,16 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                             <div className={styles["icon"]}>
                                 <SolidCheckCircleIcon />
                             </div>
-                            <div className={styles["text"]}>执行完成</div>
+                            <div className={styles["text"]}>{t("YakChatCS.executionCompleted")}</div>
                         </div>
                         <div className={styles["extra"]}>
                             <YakitButton type='text' style={{padding: 0}} onClick={onDetail}>
-                                查看详情
+                                {t("YakChatCS.viewDetails")}
                             </YakitButton>
                         </div>
                     </div>
                     <div className={styles["content"]}>
-                        <div className={styles["result"]}>无结果</div>
+                        <div className={styles["result"]}>{t("YakChatCS.noResult")}</div>
                     </div>
                 </div>
             )}
@@ -1778,16 +1783,16 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
                             <div className={styles["icon"]}>
                                 <SolidXcircleIcon />
                             </div>
-                            <div className={styles["text"]}>执行失败</div>
+                            <div className={styles["text"]}>{t("YakChatCS.executionFailed")}</div>
                         </div>
                         <div className={styles["extra"]}>
                             <YakitButton type='text' style={{padding: 0}} onClick={onDetail}>
-                                查看日志
+                                {t("YakChatCS.viewLogs")}
                             </YakitButton>
                         </div>
                     </div>
                     <div className={styles["content"]}>
-                        <div className={styles["result"]}>无结果</div>
+                        <div className={styles["result"]}>{t("YakChatCS.noResult")}</div>
                     </div>
                 </div>
             )}
@@ -1826,7 +1831,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                 if (arr.data.length === 0) return
                 setDatsSource(arr)
             } catch (error) {
-                yakitNotify("error", `解析失败|${error}`)
+                yakitNotify("error", t("YakChatCS.parseFailed", {error: String(error)}))
                 // console.log("解析失败|",data);
             }
         })
@@ -1848,7 +1853,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
             if (value) setCheckedList([...checkedList, data.ScriptName])
             else setCheckedList(checkedList.filter((item) => item !== data.ScriptName))
         } catch (error) {
-            yakitNotify("error", "勾选失败:" + error)
+            yakitNotify("error", t("YakChatCS.checkFailed", {error: String(error)}))
         }
     })
 
@@ -1876,7 +1881,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
         <>
             {datsSource.data.length !== 0 && (
                 <>
-                    <div>好的，我为你匹配到 {datsSource.data.length} 个可用插件，是否要开始执行？</div>
+                    <div>{t("YakChatCS.pluginMatched", {count: datsSource.data.length})}</div>
                     <div className={styles["plugin-list-content"]}>
                         <div className={"plugin-details-opt-wrapper"}>
                             {datsSource.data.map((info, i) => {
@@ -1920,16 +1925,16 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                                             }
                                         }}
                                     />
-                                    <div className={styles["text"]}>全选</div>
+                                    <div className={styles["text"]}>{t("YakChatCS.selectAll")}</div>
                                 </div>
                                 <div className={styles["show-box"]}>
                                     <div className={styles["show"]}>
-                                        <div className={styles["title"]}>Total</div>
+                                        <div className={styles["title"]}>{t("YakChatCS.total")}</div>
                                         <div className={styles["count"]}>{datsSource.data.length}</div>
                                     </div>
                                     <div className={styles["line"]} />
                                     <div className={styles["show"]}>
-                                        <div className={styles["title"]}>Selected</div>
+                                        <div className={styles["title"]}>{t("YakChatCS.selected")}</div>
                                         <div className={styles["count"]}>{checkedList.length}</div>
                                     </div>
                                 </div>
@@ -1943,7 +1948,7 @@ const PluginListContent: React.FC<PluginListContentProps> = memo((props) => {
                                         onStartExecute(checkedList, datsSource.input)
                                     }}
                                 >
-                                    开始执行
+                                    {t("YakChatCS.startExecute")}
                                 </YakitButton>
                             </div>
                         </div>
@@ -2093,15 +2098,15 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
         let content: string = ""
         for (let item of info.content) {
             if (item.is_bing) {
-                content = `${content}# 搜索引擎增强\n${item.content}\n`
+                content = `${content}# ${t("YakChatCS.searchEngineEnhance")}\n${item.content}\n`
             } else if (item.is_plugin) {
-                content = `${content}# "插件调试执行"\n${item.content}\n`
+                content = `${content}# "${t("YakChatCS.pluginDebugExecute")}"\n${item.content}\n`
             } else {
                 content = `${content}${item.content}\n`
             }
         }
         return content
-    }, [resTime, info])
+    }, [info, t])
 
     const showLoading = useMemo(() => {
         return token === loadingToken && loading
@@ -2127,7 +2132,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                         onStopExecute(e)
                                     }}
                                 >
-                                    停止
+                                    {t("YakChatCS.stop")}
                                 </YakitButton>
                             </div>
                         )}
@@ -2159,7 +2164,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                         <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
                             {showLoading ? (
                                 <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
-                                    停止
+                                    {t("YakChatCS.stop")}
                                 </YakitButton>
                             ) : (
                                 <>
@@ -2217,7 +2222,7 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                 token === loadingToken ? (
                                     <></>
                                 ) : (
-                                    "请求出现错误，请稍候再试"
+                                    t("YakChatCS.requestErrorRetry")
                                 )
                             ) : (
                                 <>
@@ -2228,12 +2233,12 @@ const ChatCSContent: React.FC<ChatCSContentProps> = memo((props) => {
                                                     {item.is_bing && (
                                                         <div
                                                             className={styles["content-type-title"]}
-                                                        >{`# ${"搜索引擎增强"}`}</div>
+                                                        >{`# ${t("YakChatCS.searchEngineEnhance")}`}</div>
                                                     )}
                                                     {item.is_plugin && (
                                                         <div
                                                             className={styles["content-type-title"]}
-                                                        >{`# ${"插件调试执行"}`}</div>
+                                                        >{`# ${t("YakChatCS.pluginDebugExecute")}`}</div>
                                                     )}
                                                     <>
                                                         {/* 兼容之前版本没有end load_content数据导致load_content遍历失败的问题 */}
@@ -2317,7 +2322,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
         >
             <div className={styles["drawer-body"]}>
                 <div className={styles["body-header"]}>
-                    <div className={styles["header-title"]}>会话历史记录</div>
+                    <div className={styles["header-title"]}>{t("YakChatCS.chatHistory")}</div>
                     <div className={styles["header-close"]} onClick={() => setVisible(false)}>
                         <RemoveIcon />
                     </div>
@@ -2345,7 +2350,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                                         <div className={styles["opt-operate"]}>
                                             <Tooltip
                                                 overlayClassName={styles["tooltip-wrapper"]}
-                                                title={"编辑对话标题"}
+                                                title={t("YakChatCS.editChatTitle")}
                                             >
                                                 <div
                                                     className={styles["operate-btn"]}
@@ -2357,7 +2362,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                                                     <PencilAltIcon />
                                                 </div>
                                             </Tooltip>
-                                            <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={"删除该对话"}>
+                                            <Tooltip overlayClassName={styles["tooltip-wrapper"]} title={t("YakChatCS.deleteChat")}>
                                                 <div
                                                     className={styles["operate-btn"]}
                                                     onClick={(e) => {
@@ -2373,7 +2378,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                                 )
                             })}
                         </div>
-                        <div className={styles["body-footer"]}>仅展示最近 5 个对话窗口</div>
+                        <div className={styles["body-footer"]}>{t("YakChatCS.recentChatsLimitNotice")}</div>
                     </div>
                 </div>
             </div>
@@ -2519,19 +2524,19 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
     const getLabelText = useMemoizedFn((v: PromptLabelItem) => {
         switch (v) {
             case "Team_all":
-                return "全部"
+                return t("YakChatCS.labelAll")
             case "RedTeam_vuln":
-                return "漏洞情报"
+                return t("YakChatCS.labelVulnIntel")
             case "BlueTeam_com":
-                return "应急响应"
+                return t("YakChatCS.labelIncidentResponse")
             case "RedTeam_code":
-                return "代码生成"
+                return t("YakChatCS.labelCodeGen")
             case "BlueTeam_code":
-                return "数据研判"
+                return t("YakChatCS.labelDataAnalysis")
             case "yak_memo":
-                return "Yak"
+                return t("YakChatCS.labelYak")
             default:
-                return "其他"
+                return t("YakChatCS.labelOther")
         }
     })
 
@@ -2608,10 +2613,10 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
             <div className={styles["prompt-title"]}>
                 <div className={styles["title"]}>
                     <YakChatBookIcon />
-                    <span className={styles["sub-title"]}>Prompt</span>
+                    <span className={styles["sub-title"]}>{t("YakChatCS.prompt")}</span>
                 </div>
                 <div className={styles["extra"]}>
-                    <Tooltip placement='left' title='向右收起'>
+                    <Tooltip placement='left' title={t("YakChatCS.collapseRight")}>
                         <OutlineOpenIcon
                             className={styles["fold-icon"]}
                             onClick={() => {
@@ -2623,7 +2628,7 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
             </div>
             <div className={styles["prompt-search"]}>
                 <YakitInput.Search
-                    placeholder='请输入关键词搜索'
+                    placeholder={t("YakChatCS.searchPlaceholder")}
                     size='large'
                     value={searchValue}
                     onChange={(e) => {
@@ -2672,13 +2677,13 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
                         {!isOther(item.prompt_type) && (
                             <>
                                 <div className={styles["sub-title"]}>
-                                    只需输入
+                                    {t("YakChatCS.justInput")}
                                     {item.templateArr.map((itemIn, indexIn) => (
                                         <span key={`${itemIn}-${indexIn}`} className={styles["span-label"]}>
                                             {itemIn}
                                         </span>
                                     ))}
-                                    将自动为你生成 Prompt
+                                    {t("YakChatCS.autoGeneratePrompt")}
                                 </div>
                                 <ExampleCard content={item.eg[0]} />
                             </>
@@ -2725,7 +2730,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
     const onSubmit = useMemoizedFn(() => {
         if (Object.keys(inputObj).length !== selectItem.templateArr.length) {
             let arr = selectItem.templateArr.filter((item) => !Object.keys(inputObj).includes(item))
-            yakitNotify("error", `请输入${arr.join()}`)
+            yakitNotify("error", t("YakChatCS.enterRequiredFields", {fields: arr.join(", ")}))
             return
         }
 
@@ -2761,7 +2766,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                                     autoSize={true}
                                     bordered={false}
                                     className={styles["text-area-wrapper"]}
-                                    placeholder={`请输入${item}`}
+                                    placeholder={t("YakChatCS.enterField", {field: item})}
                                     onChange={(e) => {
                                         if (e.target.value.length === 0 && inputObj.hasOwnProperty(item)) {
                                             const newInputObj = JSON.parse(JSON.stringify(inputObj))
@@ -2794,7 +2799,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                 <ExampleCard content={selectItem.eg[0]} background='#F8F8F8' />
             </div>
             <YakitButton icon={<SolidPaperairplaneIcon />} onClick={onSubmit} className={styles["submit"]} size='large'>
-                发送
+                {t("YakChatCS.send")}
             </YakitButton>
         </div>
     )
@@ -2813,7 +2818,7 @@ const ExampleCard: React.FC<ExampleCardProps> = memo((props) => {
     })
     return (
         <div className={styles["example-card"]} style={background ? {background} : {}}>
-            <div className={styles["example"]}>示例</div>
+            <div className={styles["example"]}>{t("YakChatCS.example")}</div>
             {/* markdown显示 */}
             <div className={styles["detail-content"]}>
                 <StreamMarkdown content={highlightStr(content)} />
@@ -2850,7 +2855,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
 
     const onSubmit = useMemoizedFn(() => {
         if (!name) {
-            yakitNotify("error", "请输入对话标题")
+            yakitNotify("error", t("YakChatCS.enterChatTitle"))
             return
         }
         setLoading(true)
@@ -2873,7 +2878,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
         >
             <div className={styles["name-edit-modal"]}>
                 <div className={styles["name-edit-modal-heard"]}>
-                    <div className={styles["name-edit-modal-title"]}>修改对话标题</div>
+                    <div className={styles["name-edit-modal-title"]}>{t("YakChatCS.editChatTitle")}</div>
                     <div className={styles["close-icon"]} onClick={() => setVisible(false)}>
                         <RemoveIcon />
                     </div>
@@ -2896,10 +2901,10 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
                 </div>
                 <div className={styles["name-edit-modal-footer"]}>
                     <YakitButton type='outline2' loading={loading} onClick={() => setVisible(false)}>
-                        取消
+                        {t("YakChatCS.cancel")}
                     </YakitButton>
                     <YakitButton type='primary' loading={loading} onClick={onSubmit}>
-                        确定
+                        {t("YakChatCS.confirm")}
                     </YakitButton>
                 </div>
             </div>
@@ -3044,8 +3049,8 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
 
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         tabs: [
-            {tabName: "日志", type: "log"},
-            {tabName: "Console", type: "console"}
+            {tabName: t("YakChatCS.log"), type: "log"},
+            {tabName: t("YakChatCS.console"), type: "console"}
         ],
         taskName: "debug-plugin",
         apiKey: "DebugPlugin",
@@ -3059,7 +3064,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             }
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", t("YakChatCS.debugTaskStarted", {runtimeId: rId}))
             setRuntimeId(rId)
         },
         isShowError: false,
@@ -3106,7 +3111,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                 debugPluginStreamEvent.start()
             })
             .catch((e: any) => {
-                yakitNotify("error", "本地插件执行出错:" + e)
+                yakitNotify("error", t("YakChatCS.localPluginExecuteError", {error: String(e)}))
             })
     })
 
@@ -3222,7 +3227,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                             streamInfo={streamInfo}
                                             runtimeId={runtimeId}
                                             loading={loading}
-                                            defaultActiveKey={"Codec结果"}
+                                            defaultActiveKey={t("YakChatCS.codecResult")}
                                             pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
                                         />
                                     </div>
@@ -3267,7 +3272,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                 <div className={styles["welcome-plugin-ai"]}>
                                     <div className={styles["header-title"]}>
                                         <div className={classNames(styles["title-style"])}>
-                                            可在数据包或History右键调用插件进行体验噢~👋
+                                            {t("YakChatCS.tryPluginInPacketOrHistory")}
                                         </div>
                                     </div>
                                 </div>
@@ -3316,7 +3321,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                 <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
                     {showLoading ? (
                         <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
-                            停止
+                            {t("YakChatCS.stop")}
                         </YakitButton>
                     ) : (
                         <>
@@ -3370,7 +3375,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                                 <StreamMarkdown content={info.content} />
                             </React.Fragment>
                         ) : (
-                            "请求出现错误，请稍候再试"
+                            t("YakChatCS.requestErrorRetry")
                         )}
                     </div>
                 )}

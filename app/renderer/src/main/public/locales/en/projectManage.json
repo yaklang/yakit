@@ -47,6 +47,7 @@
         "deleteProjectConfirm": "Do you want to clear local files at the same time?",
         "clear": "Clear",
         "hint": "Hint",
+        "progress": "Progress {percent}%",
         "enterNewProject": "Do you want to enter the new project",
         "temporaryProjectInUse": "Temporary project is in use, do you want to delete and create a new temporary project?"
     },
@@ -92,6 +93,10 @@
         "projectImporting": "Project importing...",
         "progress": "Progress"
     },
+    "syncingData": "Syncing data, please wait...",
+    "syncFailed": "Sync failed: {error}",
+    "stopFailed": "Stop failed: {error}",
+    "cancel": "Cancel",
     "SetVariableProjectItem": {
         "remarkName": "Remark Name",
         "remarkContent": "Remark Content"

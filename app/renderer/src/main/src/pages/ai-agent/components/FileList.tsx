@@ -12,6 +12,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import emiter from "@/utils/eventBus/eventBus"
 import {AITabsEnum} from "../defaultConstant"
 import {TabKey} from "./aiFileSystemList/type"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface FileListItem {
     name: string
@@ -46,15 +47,16 @@ const getFileName = (path: string, isDir: boolean): string => {
 }
 
 const FileList: FC<FileListProps> = ({title, fileList}) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const switchAIActTab = () => {
         emiter.emit("switchAIActTab", JSON.stringify({key: AITabsEnum.Operation_Log}))
     }
     return (
         <div className={styles["file-list"]}>
             <div className={styles["file-list-title"]}>
-                <span>{title ?? `相关文件 (${fileList?.length})`}</span>
+                <span>{title ?? t("FileList.relatedFiles", {count: fileList?.length || 0})}</span>
                 <YakitButton hidden={fileList!.length < 6} type='text' onClick={switchAIActTab}>
-                    查看全部
+                    {t("FileList.viewAll")}
                 </YakitButton>
             </div>
             <div className={styles["file-list-content"]}>
@@ -93,7 +95,7 @@ const FileList: FC<FileListProps> = ({title, fileList}) => {
                             </div>
                         )
                     } catch (error) {
-                        return <div>PluginExecuteLogFile.FileItem解析错误:{JSON.stringify(error)}</div>
+                        return <div>{t("FileList.parseError", {error: JSON.stringify(error)})}</div>
                     }
                 })}
             </div>

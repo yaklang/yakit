@@ -18,10 +18,12 @@ import {PlusIcon, TrashIcon} from "@/assets/newIcon"
 import {OutlinePencilaltIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {SolidPlayIcon} from "@/assets/icon/solid"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowledgeBase, onRefresh}) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [entries, setEntries] = useState<KnowledgeBaseEntry[]>([])
     const [searchLoading, setSearchLoading] = useState(false)
     const [modalVisible, setModalVisible] = useState(false)
@@ -59,7 +61,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
             setEntries(response.KnowledgeBaseEntries || [])
             setTotal(response.Total || 0)
         } catch (error) {
-            failed(`搜索知识条目失败: ${error}`)
+            failed(t("KnowledgeEntryTable.searchFailed", {error: String(error)}))
             setEntries([])
             setTotal(0)
         } finally {
@@ -84,13 +86,13 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                 PotentialQuestionsVector: [] // 向量会由后端生成
             }
             await ipcRenderer.invoke("CreateKnowledgeBaseEntry", params)
-            success("创建知识条目成功")
+            success(t("KnowledgeEntryTable.createSuccess"))
             setModalVisible(false)
             form.resetFields()
             searchEntries()
             onRefresh()
         } catch (error) {
-            failed(`创建知识条目失败: ${error}`)
+            failed(t("KnowledgeEntryTable.createFailed", {error: String(error)}))
         }
     })
 
@@ -108,14 +110,14 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                 PotentialQuestions: values.PotentialQuestions.filter((q) => q.trim() !== "")
             }
             await ipcRenderer.invoke("UpdateKnowledgeBaseEntry", params)
-            success("更新知识条目成功")
+            success(t("KnowledgeEntryTable.updateSuccess"))
             setModalVisible(false)
             setEditingEntry(undefined)
             form.resetFields()
             searchEntries()
             onRefresh()
         } catch (error) {
-            failed(`更新知识条目失败: ${error}`)
+            failed(t("KnowledgeEntryTable.updateFailed", {error: String(error)}))
         }
     })
 
@@ -127,11 +129,11 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                 KnowledgeBaseId: entry.KnowledgeBaseId,
                 KnowledgeBaseEntryHiddenIndex: entry.HiddenIndex
             })
-            success("删除知识条目成功")
+            success(t("KnowledgeEntryTable.deleteSuccess"))
             searchEntries()
             onRefresh()
         } catch (error) {
-            failed(`删除知识条目失败: ${error}`)
+            failed(t("KnowledgeEntryTable.deleteFailed", {error: String(error)}))
         }
     })
 
@@ -187,9 +189,9 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                 DistanceFuncType: "cosine"
             })
 
-            success(`为知识条目 "${entry.KnowledgeTitle}" 创建索引成功`)
+            success(t("KnowledgeEntryTable.createIndexSuccess", {title: entry.KnowledgeTitle}))
         } catch (error) {
-            failed(`为知识条目创建索引失败: ${error}`)
+            failed(t("KnowledgeEntryTable.createIndexFailed", {error: String(error)}))
         } finally {
             setIndexingEntries((prev) => {
                 const newSet = new Set(prev)
@@ -201,13 +203,13 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
 
     const columns: ColumnsTypeProps[] = [
         {
-            title: "ID",
+            title: t("KnowledgeEntryTable.id"),
             dataKey: "ID",
             width: 80,
             render: (text, item: KnowledgeBaseEntry) => item.ID
         },
         {
-            title: "标题",
+            title: t("KnowledgeEntryTable.title"),
             dataKey: "KnowledgeTitle",
             width: 200,
             render: (text, item: KnowledgeBaseEntry) => (
@@ -215,13 +217,13 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
             )
         },
         {
-            title: "类型",
+            title: t("KnowledgeEntryTable.type"),
             dataKey: "KnowledgeType",
             width: 120,
             render: (text, item: KnowledgeBaseEntry) => <YakitTag>{item.KnowledgeType}</YakitTag>
         },
         {
-            title: "重要度",
+            title: t("KnowledgeEntryTable.importance"),
             dataKey: "ImportanceScore",
             width: 100,
             render: (text, item: KnowledgeBaseEntry) => (
@@ -233,7 +235,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
             )
         },
         {
-            title: "关键词",
+            title: t("KnowledgeEntryTable.keywords"),
             dataKey: "Keywords",
             width: 200,
             render: (_, item: KnowledgeBaseEntry) => (
@@ -248,7 +250,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
             )
         },
         {
-            title: "摘要",
+            title: t("KnowledgeEntryTable.summary"),
             dataKey: "Summary",
             width: 300,
             render: (text, item: KnowledgeBaseEntry) => (
@@ -258,21 +260,21 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
             )
         },
         {
-            title: "页码",
+            title: t("KnowledgeEntryTable.sourcePage"),
             dataKey: "SourcePage",
             width: 80,
             render: (text, item: KnowledgeBaseEntry) => item.SourcePage
         },
         {
-            title: "操作",
+            title: t("KnowledgeEntryTable.actions"),
             dataKey: "actions",
             width: 160,
             fixed: "right",
             render: (text, item: KnowledgeBaseEntry) => (
                 <Space>
                     {indexingEntries.has(item.ID) ? (
-                        <YakitButton type='text2' size='small' loading={true} title='正在创建索引...'>
-                            索引中...
+                        <YakitButton type='text2' size='small' loading={true} title={t("KnowledgeEntryTable.indexing") }>
+                            {t("KnowledgeEntryTable.indexing")}
                         </YakitButton>
                     ) : (
                         <YakitButton
@@ -280,9 +282,9 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                             size='small'
                             icon={<SolidPlayIcon />}
                             onClick={() => handleCreateIndex(item)}
-                            title='为此条目创建向量索引'
+                            title={t("KnowledgeEntryTable.createIndexForEntry")}
                         >
-                            索引
+                            {t("KnowledgeEntryTable.index")}
                         </YakitButton>
                     )}
                     <YakitButton
@@ -290,14 +292,14 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                         size='small'
                         icon={<OutlinePencilaltIcon />}
                         onClick={() => handleOpenEdit(item)}
-                        title='编辑'
+                        title={t("KnowledgeEntryTable.edit")}
                     />
                     <YakitPopconfirm
-                        title='确认删除此知识条目吗？'
+                        title={t("KnowledgeEntryTable.deleteConfirm")}
                         onConfirm={() => handleDelete(item)}
                         placement='topRight'
                     >
-                        <YakitButton type='text2' size='small' colors='danger' icon={<TrashIcon />} title='删除' />
+                        <YakitButton type='text2' size='small' colors='danger' icon={<TrashIcon />} title={t("KnowledgeEntryTable.delete")} />
                     </YakitPopconfirm>
                 </Space>
             )
@@ -307,8 +309,8 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
     if (!knowledgeBase) {
         return (
             <div className={styles["knowledge-entry-table"]}>
-                <AutoCard title='知识条目' bodyStyle={{padding: 24}}>
-                    <YakitEmpty description='请先选择一个知识库' />
+                <AutoCard title={t("KnowledgeEntryTable.title")} bodyStyle={{padding: 24}}>
+                    <YakitEmpty description={t("KnowledgeEntryTable.selectKnowledgeBaseFirst")} />
                 </AutoCard>
             </div>
         )
@@ -317,20 +319,20 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
     return (
         <div className={styles["knowledge-entry-table"]}>
             <AutoCard
-                title={`知识条目 - ${knowledgeBase.KnowledgeBaseName}`}
+                title={t("KnowledgeEntryTable.titleWithBase", {name: knowledgeBase.KnowledgeBaseName})}
                 size='small'
                 bodyStyle={{padding: 0}}
                 extra={
                     <Space>
                         <YakitInput
-                            placeholder='搜索知识条目...'
+                            placeholder={t("KnowledgeEntryTable.searchPlaceholder")}
                             value={searchKeyword}
                             onChange={(e) => setSearchKeyword(e.target.value)}
                             style={{width: 200}}
                             suffix={<OutlineSearchIcon />}
                         />
                         <YakitButton type='primary' size='small' icon={<PlusIcon />} onClick={handleOpenCreate}>
-                            新增条目
+                            {t("KnowledgeEntryTable.addEntry")}
                         </YakitButton>
                     </Space>
                 }
@@ -357,7 +359,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
             </AutoCard>
 
             <YakitModal
-                title={editingEntry ? "编辑知识条目" : "新增知识条目"}
+                title={editingEntry ? t("KnowledgeEntryTable.editEntry") : t("KnowledgeEntryTable.addEntry")}
                 visible={modalVisible}
                 onCancel={() => {
                     setModalVisible(false)
@@ -366,42 +368,42 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                 }}
                 onOk={handleSubmit}
                 width={800}
-                okText='确认'
-                cancelText='取消'
+                okText={t("KnowledgeEntryTable.confirm")}
+                cancelText={t("KnowledgeEntryTable.cancel")}
             >
                 <Form form={form} layout='vertical' style={{marginTop: 16}}>
                     <Form.Item
-                        label='知识标题'
+                        label={t("KnowledgeEntryTable.knowledgeTitle")}
                         name='KnowledgeTitle'
-                        rules={[{required: true, message: "请输入知识标题"}]}
+                        rules={[{required: true, message: t("KnowledgeEntryTable.enterKnowledgeTitle")} ]}
                     >
-                        <YakitInput placeholder='请输入知识标题' />
+                        <YakitInput placeholder={t("KnowledgeEntryTable.enterKnowledgeTitle")} />
                     </Form.Item>
 
                     <Form.Item
-                        label='知识类型'
+                        label={t("KnowledgeEntryTable.knowledgeType")}
                         name='KnowledgeType'
-                        rules={[{required: true, message: "请输入知识类型"}]}
+                        rules={[{required: true, message: t("KnowledgeEntryTable.enterKnowledgeType")} ]}
                     >
-                        <YakitInput placeholder='请输入知识类型' />
+                        <YakitInput placeholder={t("KnowledgeEntryTable.enterKnowledgeType")} />
                     </Form.Item>
 
                     <Form.Item
-                        label='重要度评分'
+                        label={t("KnowledgeEntryTable.importanceScore")}
                         name='ImportanceScore'
-                        rules={[{required: true, message: "请输入重要度评分"}]}
+                        rules={[{required: true, message: t("KnowledgeEntryTable.enterImportanceScore")} ]}
                     >
                         <YakitInputNumber min={1} max={10} style={{width: "100%"}} />
                     </Form.Item>
 
-                    <Form.Item label='关键词' name='Keywords'>
+                    <Form.Item label={t("KnowledgeEntryTable.keywords")} name='Keywords'>
                         <Form.List name='Keywords'>
                             {(fields, {add, remove}) => (
                                 <>
                                     {fields.map(({key, name, ...restField}) => (
                                         <Space key={key} style={{display: "flex", marginBottom: 8}} align='baseline'>
                                             <Form.Item {...restField} name={[name]} style={{marginBottom: 0, flex: 1}}>
-                                                <YakitInput placeholder='请输入关键词' />
+                                                <YakitInput placeholder={t("KnowledgeEntryTable.enterKeyword")} />
                                             </Form.Item>
                                             <YakitButton
                                                 type='text2'
@@ -412,7 +414,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                                         </Space>
                                     ))}
                                     <YakitButton type='outline1' onClick={() => add()} icon={<PlusIcon />}>
-                                        添加关键词
+                                        {t("KnowledgeEntryTable.addKeyword")}
                                     </YakitButton>
                                 </>
                             )}
@@ -420,29 +422,29 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                     </Form.Item>
 
                     <Form.Item
-                        label='知识详情'
+                        label={t("KnowledgeEntryTable.knowledgeDetails")}
                         name='KnowledgeDetails'
-                        rules={[{required: true, message: "请输入知识详情"}]}
+                        rules={[{required: true, message: t("KnowledgeEntryTable.enterKnowledgeDetails")} ]}
                     >
-                        <YakitInput.TextArea placeholder='请输入知识详情' rows={6} maxLength={5000} showCount />
+                        <YakitInput.TextArea placeholder={t("KnowledgeEntryTable.enterKnowledgeDetails")} rows={6} maxLength={5000} showCount />
                     </Form.Item>
 
-                    <Form.Item label='摘要' name='Summary'>
-                        <YakitInput.TextArea placeholder='请输入摘要' rows={3} maxLength={500} showCount />
+                    <Form.Item label={t("KnowledgeEntryTable.summary")} name='Summary'>
+                        <YakitInput.TextArea placeholder={t("KnowledgeEntryTable.enterSummary")} rows={3} maxLength={500} showCount />
                     </Form.Item>
 
-                    <Form.Item label='源页码' name='SourcePage'>
+                    <Form.Item label={t("KnowledgeEntryTable.sourcePage")} name='SourcePage'>
                         <InputNumber min={1} style={{width: "100%"}} />
                     </Form.Item>
 
-                    <Form.Item label='潜在问题' name='PotentialQuestions'>
+                    <Form.Item label={t("KnowledgeEntryTable.potentialQuestions")} name='PotentialQuestions'>
                         <Form.List name='PotentialQuestions'>
                             {(fields, {add, remove}) => (
                                 <>
                                     {fields.map(({key, name, ...restField}) => (
                                         <Space key={key} style={{display: "flex", marginBottom: 8}} align='baseline'>
                                             <Form.Item {...restField} name={[name]} style={{marginBottom: 0, flex: 1}}>
-                                                <YakitInput placeholder='请输入潜在问题' />
+                                                <YakitInput placeholder={t("KnowledgeEntryTable.enterPotentialQuestion")} />
                                             </Form.Item>
                                             <YakitButton
                                                 type='text2'
@@ -453,7 +455,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({knowled
                                         </Space>
                                     ))}
                                     <YakitButton type='outline1' onClick={() => add()} icon={<PlusIcon />}>
-                                        添加问题
+                                        {t("KnowledgeEntryTable.addQuestion")}
                                     </YakitButton>
                                 </>
                             )}

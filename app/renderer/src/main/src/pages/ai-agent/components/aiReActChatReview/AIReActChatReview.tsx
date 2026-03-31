@@ -26,6 +26,7 @@ import {OutlineHandleColorsIcon, ColorsOutlineWarpIcon} from "@/assets/icon/colo
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {AIReviewType} from "../../../ai-re-act/hooks/aiRender"
 import {AIForge} from "@/pages/ai-agent/type/forge"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
     const {
@@ -37,6 +38,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         expand,
         className
     } = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {chatIPCData} = useChatIPCStore()
     const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
     const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
@@ -85,27 +87,27 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         const subTitle = !!countdown ? (
             <>
                 <span className={styles["ai-countdown"]}>{Math.round(countdown / 1000)}s</span>
-                <span>后将自动执行</span>
+                <span>{t("AIReActChatReview.autoExecuteSuffix")}</span>
             </>
         ) : (
             <></>
         )
-        let title = "异常错误"
+        let title = t("AIReActChatReview.error")
         switch (type) {
             case "tool_use_review_require":
-                title = "工具调用"
+                title = t("AIReActChatReview.toolCall")
                 break
             case "require_user_interactive":
-                title = "主动询问"
+                title = t("AIReActChatReview.userPrompt")
                 break
             case "plan_review_require":
-                title = "计划审阅"
+                title = t("AIReActChatReview.planReview")
                 break
             case "task_review_require":
-                title = "任务审阅"
+                title = t("AIReActChatReview.taskReview")
                 break
             case "exec_aiforge_review_require":
-                title = "启动智能应用"
+                title = t("AIReActChatReview.startApp")
                 break
             default:
                 break
@@ -128,9 +130,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 </div>
 
                 <div className={styles["tool-params"]}>
-                    <div className={styles["params-title"]}>
-                        <SolidVariableIcon /> 参数
-                    </div>
+                        <div className={styles["params-title"]}>
+                            <SolidVariableIcon /> {t("AIReActChatReview.params")}
+                        </div>
                     <div className={styles["params-content"]}>{paramsValue}</div>
                 </div>
             </div>
@@ -162,9 +164,9 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                     </div>
 
                     <div className={styles["task-summary"]}>
-                        <div className={styles["summary-header"]}>
-                            <SolidAnnotationIcon /> Summary
-                        </div>
+                            <div className={styles["summary-header"]}>
+                                <SolidAnnotationIcon /> {t("AIReActChatReview.summary")}
+                            </div>
                         <div className={styles["summary-content"]}>{short_summary}</div>
                         <div className={styles["summary-detail"]}>
                             <YakitPopover
@@ -172,13 +174,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                 content={
                                     <div className={styles["task-long-summary"]}>
                                         <div className={styles["summary-header"]}>
-                                            <SolidAnnotationIcon /> Summary
+                                            <SolidAnnotationIcon /> {t("AIReActChatReview.summary")}
                                         </div>
                                         <div className={styles["summary-content"]}>{long_summary}</div>
                                     </div>
                                 }
                             >
-                                <div className={styles["detail-style"]}>详细信息</div>
+                                <div className={styles["detail-style"]}>{t("AIReActChatReview.details")}</div>
                             </YakitPopover>
                         </div>
                     </div>
@@ -311,7 +313,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
 
     const handleAIRequireQSSend = useMemoizedFn(() => {
         if (!isRequireQS) {
-            yakitNotify("error", "请输入一些细节信息")
+            yakitNotify("error", t("AIReActChatReview.enterDetails"))
             return
         }
         setRequireLoading(false)
@@ -393,7 +395,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 <div className={styles["ai-require-input"]}>
                     <Input.TextArea
                         bordered={false}
-                        placeholder='请告诉我更多信息...'
+                        placeholder={t("AIReActChatReview.tellMeMore")}
                         autoSize={{minRows: 4, maxRows: 4}}
                         value={requireQS}
                         onChange={(e) => setRequireQS(e.target.value)}
@@ -432,10 +434,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 return (
                     <>
                         <YakitButton type='outline2' onClick={() => setReviewTreeOption(undefined)}>
-                            取消
+                            {t("AIReActChatReview.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={handleSubmitReviewTree}>
-                            提交
+                            {t("AIReActChatReview.confirm")}
                         </YakitButton>
                     </>
                 )
@@ -444,10 +446,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 return (
                     <>
                         <YakitButton type='outline2' onClick={() => setForgeOption(undefined)}>
-                            取消
+                            {t("AIReActChatReview.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' onClick={handleSubmitForge}>
-                            提交表单内容
+                            {t("AIReActChatReview.submitForm")}
                         </YakitButton>
                     </>
                 )
@@ -466,7 +468,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                         </div>
                     )}
                     <button className={styles["continue-btn"]} onClick={handleContinue}>
-                        立即执行
+                        {t("AIReActChatReview.executeNow")}
                         <ColorsOutlineWarpIcon />
                     </button>
                 </>
@@ -477,7 +479,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                 {isContinue && renderFooterRightExtra()}
                 {type === "require_user_interactive" && (
                     <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
-                        提交
+                        {t("AIReActChatReview.confirm")}
                     </YakitButton>
                 )}
             </div>
@@ -504,10 +506,10 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                     const {interactive_id, score, level} = toolReviewData.aiReview
                     node = (
                         <>
-                            {!!interactive_id && !score && !countdown && <div>评估中...</div>}
+                            {!!interactive_id && !score && !countdown && <div>{t("AIReActChatReview.evaluating")}</div>}
                             {!!score && (
                                 <div>
-                                    AI&nbsp;&nbsp;风险评分&nbsp;&nbsp;
+                                    {t("AIReActChatReview.aiRiskScore")}&nbsp;&nbsp;
                                     <span
                                         className={classNames(styles["ai-countdown"], {
                                             [styles["ai-score-low"]]: level === "low",
@@ -569,7 +571,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                                         <div className={styles["review-input"]}>
                                             <Input.TextArea
                                                 bordered={false}
-                                                placeholder={editInfo.current?.prompt || "请输入..."}
+                                                placeholder={editInfo.current?.prompt || t("AIReActChatReview.enterPrompt")}
                                                 value={reviewQS}
                                                 autoSize={{minRows: 4, maxRows: 4}}
                                                 onChange={(e) => setReviewQS(e.target.value)}
@@ -622,6 +624,7 @@ const handleFetchParams = (jsonValue: string) => {
 const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo(
     forwardRef((props, ref) => {
         const {forge_name, forge_verbose_name, forge_desc, forge_params, editable} = props
+        const {t} = useI18nNamespaces(["aiAgent"])
         const [loading, setLoading] = useState<boolean>(false)
         const [forge, setForge] = useState<AIForge>()
         const [form] = Form.useForm()
@@ -688,19 +691,19 @@ const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo(
             form.setFieldsValue({...initRequiredFormValue})
         })
         return (
-            <YakitSpin spinning={loading} tip='加载中...'>
+            <YakitSpin spinning={loading} tip={t("AIReActChatReview.loading")}>
                 <div className={styles["forge-wrapper"]}>
                     <div className={styles["forge-header"]}>
                         <div className={styles["name"]}>
                             {forge?.ForgeVerboseName || forge_verbose_name || forge?.ForgeName || forge_name}
                         </div>
-                        <div className={styles["description"]}>描述:{forge?.Description || forge_desc}</div>
+                        <div className={styles["description"]}>{t("AIReActChatReview.description")}:{forge?.Description || forge_desc}</div>
                     </div>
                     <div className={classNames(styles["forge-form-body"])}>
                         {params?.length > 1 && (
                             <div className={styles["forge-form-heard"]}>
                                 <SolidVariableIcon />
-                                参数组
+                                {t("AIReActChatReview.paramsGroup")}
                             </div>
                         )}
                         <div
@@ -713,7 +716,7 @@ const ForgeReviewForm: React.FC<ForgeReviewFormProps> = React.memo(
                                 labelWrap={true}
                                 validateMessages={{
                                     /* eslint-disable no-template-curly-in-string */
-                                    required: "${label} 是必填字段"
+                                    required: t("AIReActChatReview.requiredField", {label: "${label}"})
                                 }}
                                 disabled={editable}
                                 layout='vertical'

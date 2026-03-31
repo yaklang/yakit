@@ -11,6 +11,8 @@ import i18n from "@/i18n/i18n"
 import { Risk } from "@/pages/risks/schema"
 import { SSARisk } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 
+const t = i18n.getFixedT(null, "utils")
+
 const {ipcRenderer} = window.require("electron")
 
 export const openExternalWebsite = (u: string) => {
@@ -21,7 +23,7 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
     if (childWindowHash) {
         minWinSendToChildWin({type: "openPacketNewWindow", data})
     } else {
-        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
+        yakitNotify("info", t("OpenWebsite.openingNewWindow"))
         ipcRenderer.send("open-new-child-window", {
             type: "openPacketNewWindow",
             data: data
@@ -33,7 +35,7 @@ export const openRiskNewWindow = (data?: Risk) => {
     if (childWindowHash) {
         minWinSendToChildWin({type: "openRiskNewWindow", data})
     } else {
-        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
+        yakitNotify("info", t("OpenWebsite.openingNewWindow"))
         ipcRenderer.send("open-new-child-window", {
             type: "openRiskNewWindow",
             data: data
@@ -45,7 +47,7 @@ export const openSSARiskNewWindow = (data?: SSARisk) => {
     if (childWindowHash) {
         minWinSendToChildWin({type: "openSSARiskNewWindow", data})
     } else {
-        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
+        yakitNotify("info", t("OpenWebsite.openingNewWindow"))
         ipcRenderer.send("open-new-child-window", {
             type: "openSSARiskNewWindow",
             data: data
@@ -90,7 +92,7 @@ export const saveABSFileToOpen = (name: string, data?: Uint8Array | string) => {
                 data: isArr ? new Buffer((data || []) as Uint8Array).toString() : data || ""
             })
             .then(() => {
-                success("下载完成")
+                success(t("OpenWebsite.downloadFinished"))
                 ipcRenderer.invoke("open-specified-file", res.filePath)
             })
     })
@@ -103,7 +105,7 @@ export const saveABSFileAnotherOpen = async (params: {
     errorMsg: string
     isOpenSpecifiedFile?: boolean
 }) => {
-    const {name, data, successMsg = "下载完成", errorMsg = "下载失败", isOpenSpecifiedFile = false} = params
+    const {name, data, successMsg = t("OpenWebsite.downloadFinished"), errorMsg = t("OpenWebsite.downloadFailed"), isOpenSpecifiedFile = false} = params
     const isArr = Array.isArray(data)
     const showSaveDialogRes = await ipcRenderer.invoke("show-save-dialog", name)
     if (showSaveDialogRes.canceled) return

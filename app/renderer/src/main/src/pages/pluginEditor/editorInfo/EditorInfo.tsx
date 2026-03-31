@@ -8,6 +8,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
 import {DefaultTypeList} from "@/pages/plugins/builtInData"
 import cloneDeep from "lodash/cloneDeep"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {
     CodecTypePluginSwitchs,
     PluginEditorBuiltInTags,
@@ -19,7 +20,7 @@ import {yakitNotify} from "@/utils/notification"
 import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {TempExampleHelp, TempExampleInfo, tempExampleList} from "./TempExampleHelp"
+import {TempExampleHelp, TempExampleInfo, getTempExampleList} from "./TempExampleHelp"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
 import {Qadocument, qaDocumentLableList} from "./Qadocument"
 
@@ -49,6 +50,7 @@ interface EditorInfoProps extends EditorBaseInfoProps {
 export const EditorInfo: React.FC<EditorInfoProps> = memo(
     forwardRef((props, ref) => {
         const {expand, onExpand, ...rest} = props
+        const {t} = useI18nNamespaces(["plugin"])
 
         const [visible, setVisible] = useState<boolean>(false)
         const handleFold = useMemoizedFn(() => {
@@ -72,7 +74,7 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
         const handleSubmit: () => Promise<YakitPluginBaseInfo | undefined> = useMemoizedFn(() => {
             return new Promise(async (resolve, reject) => {
                 if (!formRef || !formRef.current) {
-                    yakitNotify("error", "功能异常，请重试")
+                    yakitNotify("error", t("EditorInfo.functionError"))
                     resolve(undefined)
                 }
                 try {
@@ -103,9 +105,9 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
                 })}
             >
                 <div className={styles["editor-info-header"]}>
-                    基础信息
+                    {t("EditorInfo.basicInfo")}
                     <Tooltip
-                        title='收起基础信息'
+                        title={t("EditorInfo.collapseBasicInfo")}
                         overlayClassName='plugins-tooltip'
                         visible={visible}
                         onVisibleChange={(show) => setVisible(show)}
@@ -129,6 +131,7 @@ interface EditorInfoFormProps extends EditorBaseInfoProps {}
 export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
     forwardRef((props, ref) => {
         const {isEdit, data, initType, setType, setName} = props
+        const {t} = useI18nNamespaces(["plugin"])
 
         const [form] = Form.useForm()
         useImperativeHandle(
@@ -292,6 +295,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         /** ---------- 案例文档 Start ---------- */
         const [documentType, setDocumentType] = useState<number>(1)
         const [searchTempExampleVal, setSearchTempExampleVal] = useState<string>("")
+        const tempExampleList = useMemo(() => getTempExampleList(t), [t])
         const renderTempExampleList = useMemo(() => {
             return searchTempExampleVal
                 ? tempExampleList.filter((v) =>
@@ -301,12 +305,12 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         }, [searchTempExampleVal, tempExampleList])
         const onOpenHelpModal = (tempExampleItem: TempExampleInfo) => {
             const m = showYakitModal({
-                title: "模板案例",
+                title: t("EditorInfo.templateExamples"),
                 type: "white",
                 width: "60vw",
                 centered: true,
                 cancelButtonProps: {style: {display: "none"}},
-                onOkText: "我知道了",
+                onOkText: t("EditorInfo.iKnow"),
                 onOk: () => m.destroy(),
                 bodyStyle: {padding: "8px 24px"},
                 content: <TempExampleHelp tempExampleItem={tempExampleItem} />
@@ -323,12 +327,12 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         }, [searchQaDocumentVal, qaDocumentLableList])
         const onOpenQaDocModal = (label: string) => {
             const m = showYakitModal({
-                title: "常见问题",
+                title: t("EditorInfo.faq"),
                 type: "white",
                 width: "60vw",
                 centered: true,
                 cancelButtonProps: {style: {display: "none"}},
-                onOkText: "我知道了",
+                onOkText: t("EditorInfo.iKnow"),
                 onOk: () => m.destroy(),
                 bodyStyle: {padding: "8px 24px"},
                 content: <Qadocument label={label} />
@@ -342,11 +346,11 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     <Form.Item
                         label={
                             <>
-                                脚本类型<span className='form-item-required'>*</span>:
+                                {t("EditorInfo.scriptType")}<span className='form-item-required'>*</span>:
                             </>
                         }
                         name='Type'
-                        rules={[{required: true, message: "脚本类型必填"}]}
+                        rules={[{required: true, message: t("EditorInfo.scriptTypeRequired")} ]}
                     >
                         <PluginTypeSelect
                             size='large'
@@ -361,7 +365,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     <Form.Item
                         label={
                             <>
-                                插件名称<span className='form-item-required'>*</span>:
+                                {t("EditorInfo.pluginName")}<span className='form-item-required'>*</span>:
                             </>
                         }
                         name='ScriptName'
@@ -369,36 +373,36 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                         rules={[
                             {
                                 validator: async (_, value) => {
-                                    if (!value || !value.trim()) return Promise.reject(new Error("插件名称必填"))
-                                    if (value.trim().length > 100) return Promise.reject(new Error("名称最长100位"))
+                                    if (!value || !value.trim()) return Promise.reject(new Error(t("EditorInfo.pluginNameRequired")))
+                                    if (value.trim().length > 100) return Promise.reject(new Error(t("EditorInfo.nameMaxLength")))
                                 }
                             }
                         ]}
                     >
                         <YakitInput
                             wrapperClassName={styles["item-input"]}
-                            placeholder='请输入...'
+                            placeholder={t("EditorInfo.pleaseEnter")}
                             size='large'
                             prefix={<OutlineIdentificationIcon />}
                             maxLength={100}
                         />
                     </Form.Item>
 
-                    <Form.Item label='描述 :' name='Help'>
+                    <Form.Item label={t("EditorInfo.descriptionLabel")} name='Help'>
                         <YakitInput.TextArea
                             rows={2}
-                            placeholder='请输入...'
+                            placeholder={t("EditorInfo.pleaseEnter")}
                         />
                     </Form.Item>
 
                     <Form.Item
                         label={
                             <>
-                                Tags<span className='form-item-required'>*</span>:
+                                {t("EditorInfo.tags")}<span className='form-item-required'>*</span>:
                             </>
                         }
                     >
-                        <Form.Item noStyle name='Tags' rules={[{required: true, message: "Tags必填"}]}>
+                        <Form.Item noStyle name='Tags' rules={[{required: true, message: t("EditorInfo.tagsRequired")}]}>
                             <YakitSelect wrapperClassName={styles["item-select"]} mode='tags' allowClear size='large'>
                                 {PluginEditorBuiltInTags.map((item) => {
                                     return (
@@ -419,7 +423,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                             [styles["hidden"]]: !["yak", "codec"].includes(type)
                         })}
                     >
-                        <div className={styles["item-setting-header"]}>插件配置 :</div>
+                        <div className={styles["item-setting-header"]}>{t("EditorInfo.pluginConfig")}</div>
 
                         <div className={styles["item-switch-group"]}>
                             {/* yak 插件专用 ↓↓↓ */}
@@ -430,7 +434,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                                             checked={EnablePluginSelector}
                                             onChange={handleEnablePluginSelector}
                                         />
-                                        启用插件联动 UI
+                                        {t("EditorInfo.enablePluginSelectorUI")}
                                     </div>
                                     {YakTypePluginSwitchs.map((item) => {
                                         const check = tags.findIndex((tag) => {
@@ -444,7 +448,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                                                         handleSwitchToTags(check, item)
                                                     }}
                                                 />
-                                                {PluginSwitchTagToContent[item] || "异常项"}
+                                                {PluginSwitchTagToContent[item] || t("EditorInfo.invalidItem")}
                                             </div>
                                         )
                                     })}
@@ -465,7 +469,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                                                         handleSwitchToTags(check, item)
                                                     }}
                                                 />
-                                                {PluginSwitchTagToContent[item] || "异常项"}
+                                                {PluginSwitchTagToContent[item] || t("EditorInfo.invalidItem")}
                                             </div>
                                         )
                                     })}
@@ -479,11 +483,11 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                             name='PluginSelectorTypes'
                             label={
                                 <>
-                                    联动插件类型<span className='form-item-required'>*</span>:
+                                    {t("EditorInfo.linkedPluginType")}<span className='form-item-required'>*</span>:
                                 </>
                             }
                             required={true}
-                            rules={[{required: true, message: "联动插件类型必填"}]}
+                             rules={[{required: true, message: t("EditorInfo.linkedPluginTypeRequired")}]} 
                         >
                             <YakitSelect
                                 wrapperClassName={styles["linkage-plugin-type-select"]}
@@ -511,11 +515,11 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                             options={[
                                 {
                                     value: 1,
-                                    label: "模板案例"
+                                    label: t("EditorInfo.templateExamples")
                                 },
                                 {
                                     value: 2,
-                                    label: "常见问题"
+                                    label: t("EditorInfo.faq")
                                 }
                             ]}
                         />
@@ -582,8 +586,8 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                 </div>
                 <YakitHint
                     visible={typeSwitchPopShow}
-                    title='切换脚本类型'
-                    content='切换脚本类型会清空源码内容，确定切换吗？'
+                    title={t("EditorInfo.switchScriptType")}
+                    content={t("EditorInfo.switchScriptTypeContent")}
                     onOk={() => {
                         setType(tempType.current)
                         setTypeSwitchPopShow(false)

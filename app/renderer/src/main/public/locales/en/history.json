@@ -36,6 +36,10 @@
     "editTagSuccess": "Edit tag successful",
     "shareData": "Share Data",
     "uploadingDataCannotClickAgain": "Data is being uploaded. Please wait until the upload is complete before clicking again",
+    "sentSuccessfully": "Sent Successfully",
+    "setColorSuccessfully": "Set HTTPFlow color successfully",
+    "clearColorSuccessfully": "Clear HTTPFlow color successfully",
+    "maxSendEntries": "You can only send a maximum of {maxLength} data entries at a time",
     "missingParameter": "Missing parameter",
     "dataUploading": "Data is being uploaded",
     "uploadResult": "{SuccessCount} data entries uploaded successfully, {FailedCount} failed",
@@ -148,7 +152,26 @@
     "rawHTTPRequest": "Raw HTTP Request",
     "rawHTTPResponse": "Raw HTTP Response",
     "batchDeletion": "Batch Deletion",
-    "deduplicate": "Deduplicate"
+    "deduplicate": "Deduplicate",
+    "manualModifyTag": "Manual Modify",
+    "responseDroppedTag": "Response Dropped"
+  },
+  "HTTPFlowRiskViewer": {
+    "details": "Details"
+  },
+  "HistoryAIReActChat": {
+    "newChat": "New Chat"
+  },
+  "HTTPFlowMiniTable": {
+    "id": "ID",
+    "method": "Method",
+    "status": "Status",
+    "bodyLength": "Body Length",
+    "actions": "Actions",
+    "details": "Details",
+    "getParams": "GET Params",
+    "postParams": "POST Params",
+    "sendToWebFuzzer": "Send to Web Fuzzer"
   },
   "RandomChunkedDataTable": {
     "chunkDetails": "Chunk Details",
@@ -182,6 +205,7 @@
     "collapseRight": "Collapse Right",
     "previousRule": "Previous Rule",
     "nextRule": "Next Rule",
+    "rootDomains": "Root Domains",
     "domain": "Domain",
     "object": "Object",
     "rule": "Rule",
@@ -231,6 +255,7 @@
     "sendToWSFuzzer": "Send to WS Fuzzer",
     "sendAndRedirect": "Send and Redirect",
     "sendOnly": "Send Only",
-    "packetEmpty": "Packet is empty"
+    "packetEmpty": "Packet is empty",
+    "editorExecFailed": "Failed to execute editor and open fuzzer"
   }
 }

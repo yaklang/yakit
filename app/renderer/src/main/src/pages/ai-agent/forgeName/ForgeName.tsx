@@ -48,6 +48,7 @@ import {AITool, GetAIToolListRequest} from "../type/aiTool"
 import {genDefaultPagination, PaginationSchema} from "@/pages/invoker/schema"
 import {grpcGetAIToolList} from "../aiToolList/utils"
 import {LogListInfo} from "@/components/YakitUploadModal/YakitUploadModal"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
@@ -60,6 +61,7 @@ export interface ForgeNameRef {
 
 const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
     // const {} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     // #region AIForge 模板增删改功能 使用功能
     // 新建 forge 模板
@@ -70,7 +72,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
     const handleModifyAIForge = useMemoizedFn((info: AIForge) => {
         const id = Number(info.Id) || 0
         if (!id) {
-            yakitNotify("error", `该模板 ID('${info.Id}') 异常, 无法编辑`)
+            yakitNotify("error", t("ForgeName.templateIdError", {id: info.Id}))
             return
         }
         emiter.emit(
@@ -88,7 +90,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
     const handleDeleteAIForge = useMemoizedFn((info: AIForge) => {
         const id = Number(info.Id) || 0
         if (!id) {
-            yakitNotify("error", `该模板 ID('${info.Id}') 异常, 无法编辑`)
+            yakitNotify("error", t("ForgeName.templateIdError", {id: info.Id}))
             return
         }
         const isLoading = delStatus.includes(id)
@@ -96,7 +98,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
         setDelStatus((old) => [...old, id])
         grpcDeleteAIForge({Id: id})
             .then(() => {
-                yakitNotify("success", "删除Forge模板成功")
+                yakitNotify("success", t("ForgeName.deleteForgeSuccess"))
                 setData((old) => {
                     return {
                         ...old,
@@ -283,7 +285,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
     // #region AIForge单个导入导出
     const [importExportExtra, setImportExportExtra] = useState<ImportExportModalExtra>({
         hint: false,
-        title: "导出技能",
+        title: t("ForgeName.exportForge"),
         type: "export",
         apiKey: "ExportAIForge"
     })
@@ -308,7 +310,10 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                     openABSFileLocated(exportPath.current)
                 }
             }
-            yakitNotify("success", (importExportExtra.type === "export" ? "导出" : "导入") + "成功")
+            yakitNotify(
+                "success",
+                importExportExtra.type === "export" ? t("ForgeName.exportSuccess") : t("ForgeName.importSuccess")
+            )
         }
         exportPath.current = ""
 
@@ -402,7 +407,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
         openAdd: handleNewAIForge,
         openImport: () =>
             handleOpenImportExportHint({
-                title: "导入技能",
+                title: t("ForgeName.importForge"),
                 type: "import",
                 apiKey: "ImportAIForge"
             })
@@ -432,10 +437,10 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                 </div> */}
 
                 <div className={styles["header-second"]}>
-                    <YakitInput
+                        <YakitInput
                         prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                         allowClear
-                        placeholder='请输入关键词搜索'
+                        placeholder={t("ForgeName.searchPlaceholder")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -470,14 +475,14 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
 
                                                 <div className={styles["detail-content"]}>
                                                     <div className={styles["content-description"]}>
-                                                        {Description || "暂无更多说明"}
+                                                        {Description || t("ForgeName.noMoreDescription")}
                                                     </div>
 
                                                     {tools.length > 0 && (
                                                         <div className={styles["content-tools"]}>
                                                             <div className={styles["tools-header"]}>
                                                                 <SolidToolIcon />
-                                                                关联工具
+                                                                {t("ForgeName.relatedTools")}
                                                             </div>
 
                                                             <div className={styles["tools-body"]}>
@@ -511,7 +516,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
 
                                             <div className={styles["item-extra"]}>
                                                 <Tooltip
-                                                    title={"导出技能"}
+                                                    title={t("ForgeName.exportForge")}
                                                     placement='topRight'
                                                     overlayClassName={styles["item-extra-tooltip"]}
                                                 >
@@ -524,7 +529,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                                                             toolNames.current = tools
                                                             outputNameRef.current = ForgeVerboseName || ForgeName || ""
                                                             handleOpenImportExportHint({
-                                                                title: "导出技能",
+                                                                title: t("ForgeName.exportForge"),
                                                                 type: "export",
                                                                 apiKey: "ExportAIForge"
                                                             })
@@ -532,7 +537,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                                                     />
                                                 </Tooltip>
                                                 <Tooltip
-                                                    title={"编辑Forge"}
+                                                    title={t("ForgeName.editForge")}
                                                     placement='topRight'
                                                     overlayClassName={styles["item-extra-tooltip"]}
                                                 >
@@ -546,12 +551,12 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                                                     />
                                                 </Tooltip>
                                                 <Tooltip
-                                                    title={"删除Forge"}
+                                                    title={t("ForgeName.deleteForge")}
                                                     placement='topRight'
                                                     overlayClassName={styles["item-extra-tooltip"]}
                                                 >
                                                     <YakitPopconfirm
-                                                        title={"是否删除该 Forge 模板?"}
+                                                        title={t("ForgeName.deleteForgeConfirm")}
                                                         onConfirm={(e) => {
                                                             e?.stopPropagation()
                                                             handleDeleteAIForge(data)
@@ -579,7 +584,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
 
                         {!isMore.current && !loading && (
                             <div className={styles["forge-list-no-more"]}>
-                                <div className={styles["no-more-title"]}>已经到底啦~</div>
+                                <div className={styles["no-more-title"]}>{t("ForgeName.noMore")}</div>
                             </div>
                         )}
                         {loading && (
@@ -598,13 +603,13 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                     }}
                     renderForm={() => (
                         <>
-                            <Form.Item label='文件名' name='OutputName' rules={[{required: true}]}>
+                            <Form.Item label={t("ForgeName.fileName")} name='OutputName' rules={[{required: true}]}>
                                 <YakitInput />
                             </Form.Item>
-                            <Form.Item label='工具' name='ToolNames'>
+                            <Form.Item label={t("ForgeName.tool")} name='ToolNames'>
                                 <YakitSelect
                                     showSearch
-                                    placeholder='请选择工具'
+                                    placeholder={t("ForgeName.chooseTool")}
                                     optionFilterProp='children'
                                     filterOption={false}
                                     onSearch={debouncedSearch}
@@ -637,7 +642,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                                     ))}
                                 </YakitSelect>
                             </Form.Item>
-                            <Form.Item label='密码' name='Password'>
+                            <Form.Item label={t("ForgeName.password")} name='Password'>
                                 <YakitInput />
                             </Form.Item>
                         </>
@@ -666,14 +671,14 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                             <YakitFormDragger
                                 formItemProps={{
                                     name: "InputPath",
-                                    label: "本地路径",
-                                    rules: [{required: true, message: "请输入本地路径"}]
+                                    label: t("ForgeName.localPath"),
+                                    rules: [{required: true, message: t("ForgeName.enterLocalPath")}]
                                 }}
                                 multiple={false}
                                 selectType={commonImportExportProps?.extra?.apiKey === "ImportAIForge" ? "all" : "file"}
                                 fileExtensionIsExist={false}
                             />
-                            <Form.Item label='密码' name='Password'>
+                            <Form.Item label={t("ForgeName.password")} name='Password'>
                                 <YakitInput />
                             </Form.Item>
                         </>

@@ -13,10 +13,12 @@ import {KnowledgeBaseContentProps} from "@/pages/KnowledgeBase/TKnowledgeBase"
 import {mergeKnowledgeBaseList} from "@/pages/KnowledgeBase/utils"
 import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin"
 import {InstallPluginModal} from "@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({setAddMode}) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {knowledgeBases, addKnowledgeBase, editKnowledgeBase, initialize} = useKnowledgeBase()
     const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
     const [allDownloadToken, setAllDownloadToken] = useState<string>("")
@@ -56,13 +58,13 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
                     KnowledgeBaseName: findDefaultKnowledgeBase?.KnowledgeBaseName ?? "default",
                     KnowledgeBaseDescription:
                         findDefaultKnowledgeBase?.KnowledgeBaseDescription ??
-                        "系统默认知识库，存储常用知识内容，为AI对话提供上下文增强。",
+                        t("DragKnowledge.defaultKnowledgeBaseDescription"),
                     Tags: findDefaultKnowledgeBase?.Tags ?? [],
                     IsDefault: findDefaultKnowledgeBase?.IsDefault ?? true,
                     CreatedFromUI: findDefaultKnowledgeBase?.CreatedFromUI ?? true
                 })
             } catch (error) {
-                failed(`知识库创建失败:` + error)
+                failed(t("DragKnowledge.createKnowledgeBaseFailed", {error: String(error)}))
             }
         },
         {
@@ -94,8 +96,8 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
         },
         {
             manual: true,
-            onSuccess: () => success("创建知识库成功"),
-            onError: (err) => failed(`创建知识库失败: ${err}`)
+            onSuccess: () => success(t("DragKnowledge.createKnowledgeBaseSuccess")),
+            onError: (err) => failed(t("DragKnowledge.createKnowledgeBaseFailed", {error: String(err)}))
         }
     )
 
@@ -149,10 +151,10 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
                 })
             })
             run()
-            success("所有线上知识库下载完成")
+            success(t("DragKnowledge.downloadAllSuccess"))
             setAddMode([])
         } catch (err) {
-            failed("一键下载所有线上知识库失败: " + err)
+            failed(t("DragKnowledge.downloadAllFailed", {error: String(err)}))
         } finally {
             setAllDownloadToken("")
             setAllDownloadProgress(0)
@@ -203,7 +205,7 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
         },
         {
             onError: (error) => {
-                failed("获取知识库列表失败:" + error)
+                failed(t("DragKnowledge.getKnowledgeBaseListFailed", {error: String(error)}))
             },
             onSuccess: (value) => {
                 if (value) {
@@ -245,11 +247,11 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
                         </div>
                         <div className={styles["content"]}>
                             <div className={styles["title"]}>
-                                可将文件拖入框内，或
-                                <span className={styles["hight-light"]}>点击此处导入</span>
-                                即可开始创建知识库
+                                {t("DragKnowledge.dragHintPrefix")}
+                                <span className={styles["hight-light"]}>{t("DragKnowledge.dragHintHighlight")}</span>
+                                {t("DragKnowledge.dragHintSuffix")}
                             </div>
-                            <div className={styles["sub-title"]}>数据会存到默认库，可选择多个文件</div>
+                            <div className={styles["sub-title"]}>{t("DragKnowledge.dragSubHint")}</div>
                         </div>
                     </div>
                 </Dragger>
@@ -268,7 +270,9 @@ const DragKnowledge: FC<{setAddMode: Dispatch<SetStateAction<string[]>>}> = ({se
                 loading={!!allDownloadToken}
                 disabled={!!allDownloadToken}
             >
-                {allDownloadToken ? `下载中... (${allDownloadProgress}%)` : "一键下载在线知识库"}
+                {allDownloadToken
+                    ? t("DragKnowledge.downloadingAll", {progress: allDownloadProgress})
+                    : t("DragKnowledge.downloadAll")}
             </YakitButton>
         </div>
     )

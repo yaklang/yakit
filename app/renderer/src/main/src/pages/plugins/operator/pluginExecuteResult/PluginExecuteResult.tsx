@@ -191,7 +191,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         <div className={classNames(styles["plugin-execute-result"], pluginExecuteResultWrapper)}>
             {cardState.length > 0 && (
                 <div className={styles["plugin-execute-result-wrapper"]}>
-                    <HorizontalScrollCard title={"Data Card"} data={cardState} />
+                    <HorizontalScrollCard title={t("PluginExecuteResult.dataCard")} data={cardState} />
                 </div>
             )}
             {showTabs.length > 0 && (
@@ -212,6 +212,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
 })
 const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo((props) => {
     const {runtimeId} = props
+    const {t} = useI18nNamespaces(["plugin"])
     const [params, setParams] = useState<QueryPortsRequest>({
         ...cloneDeep(defQueryPortsRequest),
         RuntimeId: runtimeId
@@ -229,7 +230,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
             tableTitleExtraOperate={
                 <>
                     <YakitButton type='primary' icon={<SolidViewgridIcon />} size='small' onClick={onJumpPort}>
-                        端口资产管理
+                        {t("PluginExecuteResult.portAssetManagement")}
                     </YakitButton>
                 </>
             }
@@ -242,6 +243,7 @@ const PluginExecutePortTable: React.FC<PluginExecutePortTableProps> = React.memo
 /**HTTP 流量 */
 export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = React.memo((props) => {
     const {runtimeId, filterTagDom, website = false, isCrawler = false} = props
+    const {t} = useI18nNamespaces(["plugin"])
 
     const [height, setHeight] = useState<number>(300) //表格所在div高度
 
@@ -286,7 +288,7 @@ export const PluginExecuteHttpFlow: React.FC<PluginExecuteWebsiteTreeProps> = Re
                         <WebTree
                             ref={webTreeRef}
                             height={height}
-                            searchPlaceholder='请输入域名进行搜索,例baidu.com'
+                            searchPlaceholder={t("PluginExecuteResult.httpSearchPlaceholder")}
                             treeExtraQueryparams={treeQueryparams}
                             refreshTreeFlag={refreshTreeFlag}
                             onSelectNodesKeys={(selectKeys) => setIncludeInUrl(selectKeys.map((i) => i + ""))}
@@ -503,6 +505,7 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
 /**审计漏洞tab表 */
 export const AuditHoleTableOnTab: React.FC<AuditHoleTableOnTabProps> = React.memo((props) => {
     const {runtimeId} = props
+    const {t} = useI18nNamespaces(["plugin", "yakitUi"])
     const [allTotal, setAllTotal] = useState<number>(0)
 
     const onJumpAuditHole = useMemoizedFn(() => {
@@ -530,11 +533,11 @@ export const AuditHoleTableOnTab: React.FC<AuditHoleTableOnTabProps> = React.mem
                 renderTitle={
                     <div className={styles["table-renderTitle"]}>
                         <div className={styles["table-renderTitle-left"]}>
-                            <span>风险与漏洞</span>
+                            <span>{t("VulnerabilitiesRisksTable.risks_and_vulnerabilities")}</span>
                             <TableTotalAndSelectNumber total={allTotal} />
                         </div>
                         <YakitButton type='outline2' size='small' onClick={onJumpAuditHole}>
-                            查看全部
+                            {t("YakitButton.view_all_button", {ns: "yakitUi"})}
                         </YakitButton>
                     </div>
                 }
@@ -564,6 +567,7 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
     const {
         tableInfo: {columns = [], data = [], name = ""}
     } = props
+    const {t} = useI18nNamespaces(["plugin"])
     const [tableData, setTableData] = useState(data)
     const [columnsData, setColumnsData] = useState(columns)
 
@@ -620,7 +624,7 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
                 }
             })
                 .catch((e) => {
-                    yakitFailed("搜索失败:" + e)
+                    yakitFailed(t("PluginExecuteResult.searchFailed", {error: e}))
                 })
                 .finally(() => {
                     setTimeout(() => {
@@ -668,7 +672,7 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
             const newDataTable = sorterTable?.order === "none" ? list : sorterFunction(list, sorterTable, "") || []
             setTableData(newDataTable)
         } catch (error) {
-            yakitFailed("搜索失败:" + error)
+            yakitFailed(t("PluginExecuteResult.searchFailed", {error: `${error}`}))
         }
     })
     const getData = useMemoizedFn(() => {
@@ -697,11 +701,11 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
         <ErrorBoundary
             FallbackComponent={({error, resetErrorBoundary}) => {
                 if (!error) {
-                    return <div>未知错误</div>
+                    return <div>{t("PluginExecuteResult.unknownError")}</div>
                 }
                 return (
                     <div>
-                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                        <p>{t("PluginExecuteResult.logicCrashRetry")}</p>
                         <pre>{error?.message}</pre>
                     </div>
                 )
@@ -721,8 +725,8 @@ const PluginExecuteCustomTable: React.FC<PluginExecuteCustomTableProps> = React.
                             type: "outline2"
                         }}
                         getData={getData}
-                        fileName={name || "输出表"}
-                        text='导出全部'
+                        fileName={name || t("PluginExecuteResult.outputTable")}
+                        text={t("PluginExecuteResult.exportAll")}
                     />
                 }
                 className={styles["plugin-execute-custom-table"]}

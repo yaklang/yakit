@@ -150,7 +150,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
         }
     })
 
-    const {t, i18n} = useI18nNamespaces(["plugin"])
+    const {t, i18n} = useI18nNamespaces(["plugin", "pluginHub"])
 
     // 监听外部传入的搜索参数
     useUpdateEffect(() => {
@@ -388,7 +388,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const onFooterExtraDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
         const findIndex = singleDownload.findIndex((item) => item.uuid === info.uuid)
         if (findIndex > -1) {
-            yakitNotify("error", "该插件正在执行下载操作,请稍后再试")
+            yakitNotify("error", t("HubListOnline.downloadBusy"))
             return
         }
         setSingleDownload((arr) => {
@@ -536,11 +536,11 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     const openUploadAll = useMemoizedFn(() => {
         if (uploadModal) return
         if (!isLogin) {
-            yakitNotify("error", "请先登录后才可一键上传")
+            yakitNotify("error", t("HubListOnline.loginRequiredUpload"))
             return
         }
         if (userinfo.role !== "admin") {
-            yakitNotify("error", "暂无权限使用该操作")
+            yakitNotify("error", t("HubListOnline.noPermission"))
             return
         }
         setUploadModal(true)
@@ -565,7 +565,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
     // 进入插件详情
     const onOptClick = useMemoizedFn((info: YakitPluginOnlineDetail, index: number) => {
         if (!info.script_name && !info.uuid) {
-            yakitNotify("error", "未获取到插件信息，请刷新列表重试")
+            yakitNotify("error", t("HubListOnline.pluginInfoMissingRefresh"))
             return
         }
         setShowIndex(index)
@@ -618,7 +618,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                     icon={<OutlineClouddownloadIcon />}
                     type='outline2'
                     size='large'
-                    name={selectedNum > 0 ? "下载" : "一键下载"}
+                    name={selectedNum > 0 ? t("HubListOnline.download") : t("HubListOnline.oneClickDownload")}
                     loading={batchDownloadLoading}
                     disabled={listTotal === 0}
                     onClick={headerExtraDownload}
@@ -628,7 +628,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                     iconWidth={900}
                     icon={<SolidPluscircleIcon />}
                     size='large'
-                    name='新建插件'
+                name={t("HubListOnline.newPlugin")}
                     onClick={onNewPlugin}
                 />
             </div>
@@ -673,7 +673,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
 
                         <div className={styles["list-body"]}>
                             <HubOuterList
-                                title='插件商店'
+                                title={t("HubListOnline.pluginStore")}
                                 headerExtra={headerExtra()}
                                 allChecked={allChecked}
                                 setAllChecked={onCheck}
@@ -747,9 +747,9 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                 ) : listTotal === 0 ? (
                                     <div className={styles["hub-list-empty"]}>
                                         <YakitEmpty
-                                            title='暂无数据'
+                                            title={t("HubListOnline.noData")}
                                             description={
-                                                isCommunityEdition() || !showUpload ? "" : "可将本地所有插件一键上传"
+                                                isCommunityEdition() || !showUpload ? "" : t("HubListOnline.bulkUploadHint")
                                             }
                                         />
                                         <div className={styles["refresh-buttons"]}>
@@ -759,7 +759,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                                     icon={<OutlineClouduploadIcon />}
                                                     onClick={openUploadAll}
                                                 >
-                                                    一键上传
+                                                    {t("HubListOnline.oneClickUpload")}
                                                 </YakitButton>
                                             )}
                                             <YakitButton
@@ -767,7 +767,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                                 icon={<OutlineRefreshIcon />}
                                                 onClick={onRefresh}
                                             >
-                                                刷新
+                                                {t("HubListOnline.refresh")}
                                             </YakitButton>
                                         </div>
                                     </div>
@@ -775,7 +775,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                     <YakitEmpty
                                         image={emptyImageTarget}
                                         imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
-                                        title='搜索结果“空”'
+                                        title={t("HubListOnline.searchEmpty")}
                                         className={styles["hub-list-empty"]}
                                     />
                                 )}
@@ -808,7 +808,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                                 <div className={styles["hub-detail-list-extra"]}>
                                     <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type='online' />
                                     <div className={styles["divider-style"]}></div>
-                                    <Tooltip title='下载插件' overlayClassName='plugins-tooltip'>
+                                    <Tooltip title={t("HubListOnline.downloadPlugin")} overlayClassName='plugins-tooltip'>
                                         <YakitButton
                                             type='text2'
                                             loading={batchDownloadLoading}
@@ -884,8 +884,8 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
             {/* 批量下载同名覆盖提示 */}
             <NoPromptHint
                 visible={batchSameNameHint}
-                title='同名覆盖提示'
-                content='如果本地存在同名插件会直接进行覆盖'
+                title={t("HubListOnline.sameNameHint")}
+                content={t("HubListOnline.sameNameHintDesc")}
                 cacheKey={RemotePluginGV.BatchDownloadPluginSameNameOverlay}
                 onCallback={handleBatchSameNameHint}
             />
@@ -893,8 +893,8 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
             {/* 单个下载同名覆盖提示 */}
             <NoPromptHint
                 visible={singleSameNameHint}
-                title='同名覆盖提示'
-                content='本地有插件同名，下载将会覆盖，是否下载'
+                title={t("HubListOnline.sameNameHint")}
+                content={t("HubListOnline.sameNameHintDownload")}
                 cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
                 onCallback={handleSingleSameNameHint}
             />

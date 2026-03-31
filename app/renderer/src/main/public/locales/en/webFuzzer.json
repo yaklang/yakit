@@ -92,7 +92,15 @@
     "send_request": "Send Request",
     "parameter": "Parameter",
     "trafficAnalysisMode": "TrafficAnalysis Mode",
-    "trafficAnalysis": "TrafficAnalysis"
+    "trafficAnalysis": "TrafficAnalysis",
+    "noDictionary": "No dictionary available, please add one before using",
+    "getDictionaryListFailed": "Failed to get dictionary list: {error}",
+    "copyUrlIncomplete": "Failed to copy URL: including Fuzz tags may result in an incomplete URL",
+    "sentSuccessfully": "Sent Successfully",
+    "fuzzerTagDebugTool": "Fuzzer Tag Debug Tool",
+    "fuzzerTagDebugSubTitle": "Debug mode is suitable for generating or modifying payloads. Nesting defaults to the outermost level, but you can select a position to nest. \"Insert\" simply inserts the fuzztag at the cursor position.",
+    "payloadEmpty": "Payload is empty / Fuzz template is empty",
+    "editorNotWorking": "BUG: Editor not working"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{droppedCount}] responses",
@@ -173,7 +181,9 @@
     "readFileByLine": "Read file by line",
     "allInFolder": "All in Folder",
     "selectPath": "Select Path",
-    "confirmSelection": "Confirm Selection"
+    "confirmSelection": "Confirm Selection",
+    "selectFileInsert": "Select File and Insert",
+    "copyDictionaryText": "Copy the text you want to use as a dictionary"
   },
   "InsertTextToFuzzTag": {
     "generateTempDictionaryFile": "Generate temporary dictionary file:",
@@ -560,7 +570,7 @@
     "useInstructions": "Instructions for Use",
     "matchersAndExtractorsUseInstructions": "Instructions for Using Web Fuzzer Matchers and Extractors",
     "understand": "I understand"
-  },
+ },
   "MatcherCollapse": {
     "emptyMatcherConditionExists": "This matcher already has an empty condition",
     "addMatcherConditionFailed": "Failed to add matcher condition:",
@@ -577,7 +587,7 @@
     "debugExecute": "Debug Execute",
     "no_condition_set": "No conditions set yet",
     "keyword": "Keyword",
-    "regex": "Regular Expression",
+    "regex": "Regex",
     "status_code": "Status Code",
     "hex": "Hexadecimal",
     "expression": "Expression",
@@ -622,7 +632,7 @@
     "response_header": "Response Header",
     "response_body": "Response Body",
     "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones",
-    "regex": "Regular Expression",
+    "regex": "Regex",
     "keyValuePair": "Key-Value Pair",
     "expression": "Expression"
   },
@@ -630,6 +640,7 @@
     "hit_color": "Hit Color"
   },
   "FuzzerSequence": {
+    "pleaseSendMultipleRequestsBeforeApply": "Please send multiple request packets before applying",
     "fuzz_request_fail": "Failed to submit fuzz test request:",
     "execute_after_sequence": "Please configure the sequence before executing",
     "configure_before_adding": "There is an empty node. Please configure it before adding a new one",
@@ -681,10 +692,31 @@
     "get_config_key_failed": "Failed to get activation key for concurrency config collapsible panel:"
   },
   "WebsocketFuzzer": {
-    "clear_send_data": "Clear Send Data"
+    "clear_send_data": "Clear Send Data",
+    "selectDataFrame": "Select Websocket Data Frame to view details",
+    "sentSuccessfully": "Sent Successfully",
+    "request": "Request",
+    "response": "Response",
+    "connected": "Connected",
+    "notConnected": "Connection not established",
+    "extraParams": "Extra Parameters",
+    "setProxy": "Set Proxy",
+    "setTimeout": "Set Timeout (s)",
+    "closeConnectionConfirm": "Are you sure you want to close the WebSocket connection?",
+    "disconnect": "Disconnect",
+    "connect": "Connect",
+    "buildingConnection": "Building WebSocket connection",
+    "sendData": "Send Data",
+    "sendToServer": "Send to Server",
+    "realtimePreview": "WebSocket data frame live preview",
+    "serverResponse": "Server Response",
+    "clientRequest": "Client Request",
+    "frameDetails": "Data Frame Details",
+    "dataSize": "Data Size: {size}"
   },
   "HTTPFuzzerHosts": {
     "modalTitle": "Add DNS Hosts Configuration",
+    "dnsHostsConfigTitle": "Enter DNS Hosts Configuration",
     "inputConfig": "Input Config",
     "uploadFile": "Upload File",
     "hostsConfig": "hosts config",

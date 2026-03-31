@@ -1,0 +1,12 @@
+{
+  "ShortcutKey": {
+    "global": "Global",
+    "multiple": "Multiple pages",
+    "chatCS": "ChatCS",
+    "editor": "Editor",
+    "loadFailed": "Failed to get shortcuts",
+    "restoreDefault": "Restore defaults",
+    "editShortcut": "Edit shortcut",
+    "hint": "Press the desired key combination first, then Enter to confirm, or Esc to cancel"
+  }
+}

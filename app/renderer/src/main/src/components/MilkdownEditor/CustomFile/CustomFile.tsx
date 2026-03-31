@@ -39,6 +39,9 @@ import {httpDeleteNotepadFile} from "@/apiUtils/http"
 import {useStore} from "@/store"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {LogNodeStatusFileIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "components")
 
 interface CustomFileItem {
     name: string
@@ -61,7 +64,7 @@ export const getTypeAndNameByPath = (path) => {
     }
     const index = newPath.lastIndexOf(".")
     const fileType = newPath.substring(index, newPath.length)
-    const fileName = newPath.split("\\").pop() || "未知命名"
+    const fileName = newPath.split("\\").pop() || t("MilkdownEditor.customFile.unknownName")
     return {fileType, fileName}
 }
 interface CustomFileProps {
@@ -241,11 +244,11 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
         if (fileInfo?.url) {
             setClipboardText(fileInfo.url, {
                 failedCallback: () => {
-                    yakitNotify("error", "复制失败")
+                    yakitNotify("error", t("MilkdownEditor.customFile.copyFailed"))
                 }
             })
         } else {
-            yakitNotify("error", "复制失败")
+            yakitNotify("error", t("MilkdownEditor.customFile.copyFailed"))
         }
     })
     const onRemoveFile = useMemoizedFn(() => {
@@ -325,7 +328,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                             errorReason ? (
                                 <div className={styles["error-action"]}>
                                     {errorNode(errorReason)}
-                                    <Tooltip title='上传失败，点击重新上传'>
+                                    <Tooltip title={t("MilkdownEditor.customFile.uploadFailedRetry")}>
                                         <YakitButton
                                             type='text2'
                                             icon={<OutlineUploadIcon />}
@@ -360,13 +363,13 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                                         <div className={styles["success-action"]}>
                                             {fileInfo.url && (
                                                 <TooltipIcon
-                                                    title='下载文件'
+                                                title={t("MilkdownEditor.customFile.downloadFile")}
                                                     icon={<OutlineDownloadIcon />}
                                                     onClick={onDown}
                                                 />
                                             )}
                                             <TooltipIcon
-                                                title={`复制链接`}
+                                                title={t("MilkdownEditor.customFile.copyLink")}
                                                 icon={<OutlineDocumentduplicateIcon />}
                                                 onClick={onCopyLink}
                                             />
@@ -379,12 +382,12 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                 ) : queryFileErrorInfo ? (
                     <CustomFileItem
                         title={renderFileTypeIcon({type: fileInfo?.type})}
-                        subTitle='获取文件信息错误'
+                        subTitle={t("MilkdownEditor.customFile.getFileInfoErrorTitle")}
                         extra={
                             <>
                                 <div className={styles["error-action"]}>
                                     {errorNode(queryFileErrorInfo)}
-                                    <Tooltip title='重新获取文件信息'>
+                                    <Tooltip title={t("MilkdownEditor.customFile.refreshFileInfo")}>
                                         <YakitButton
                                             type='text2'
                                             icon={<OutlineRefreshIcon />}
@@ -400,7 +403,7 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
                     <YakitSpin
                         size='small'
                         spinning={true}
-                        tip='文件加载中...'
+                        tip={t("MilkdownEditor.customFile.loadingFile")}
                         wrapperClassName={styles["file-spinning"]}
                     />
                 )}
@@ -511,7 +514,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
             okButtonProps={{style: {display: "none"}}}
             isDrag={true}
             mask={false}
-            title={fileName ? <div className='content-ellipsis'>{`${fileName}下载中...`}</div> : "下载中"}
+            title={fileName ? <div className='content-ellipsis'>{t("MilkdownEditor.customFile.downloadingFile", {fileName})}</div> : t("MilkdownEditor.customFile.downloading")}
             {...(yakitHintProps || {})}
             onCancel={onCancel}
             visible={visible}
@@ -520,7 +523,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
                 strokeColor='var(--Colors-Use-Main-Primary)'
                 trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={percent}
-                format={(percent) => `已下载 ${percent}%`}
+                format={(percent) => t("MilkdownEditor.customFile.downloadedPercent", {percent})}
             />
         </YakitHint>
     )

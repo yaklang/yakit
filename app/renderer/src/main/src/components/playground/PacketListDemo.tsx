@@ -20,6 +20,7 @@ import styles from "./PacketListDemo.module.scss"
 import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
 import {useTheme} from "@/hook/useTheme"
 import { JSONParseLog } from "@/utils/tool"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const DirectoryTree = Tree.DirectoryTree
 const MemoTooltip = Tooltip || React.memo(Tooltip)
 export interface PacketListProp {
@@ -36,6 +37,7 @@ interface PacketScrollData {
 }
 
 export const PacketListDemo: React.FC<PacketListProp> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [clearTrigger, setClearTrigger] = useState(false)
     const clear = useMemoizedFn(() => {
         setClearTrigger(!clearTrigger)
@@ -48,7 +50,7 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
     const [selected, setSelected] = useState<TrafficPacket | TrafficSession | TrafficTCPReassembled>()
     const HexEditorRef = React.useRef<any>(null)
     const [treeData, setTreeData] = useState<TreeNode[]>()
-    const [showData, setShowData] = useState<Uint8Array>(new Buffer([]))
+    const [showData, setShowData] = useState<Uint8Array>(new Uint8Array([]))
     const [nonce, setNonce] = useState(0)
     const [viewer, setViewer] = useState("packet")
     const [keyToScope, setKeyToScope] = useState<{[key: string]: any}>({})
@@ -184,9 +186,9 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                         <Form layout={"inline"} onSubmitCapture={(e) => e.preventDefault()}>
                             <DemoItemRadioButton
                                 data={[
-                                    {value: "packet", label: "数据包"},
+                                    {value: "packet", label: t("PacketListDemo.packet")},
                                     // {value: "session", label: "会话"},
-                                    {value: "tcp-reassembled", label: "TCP数据帧"}
+                                    {value: "tcp-reassembled", label: t("PacketListDemo.tcpReassembled")}
                                 ]}
                                 value={viewer}
                                 setValue={setViewer}
@@ -196,11 +198,11 @@ export const PacketListDemo: React.FC<PacketListProp> = (props) => {
                     extra={
                         <Form layout={"inline"} size={"small"}>
                             <Form.Item>
-                                <YakitInput size='small' placeholder='请输入...' />
+                                <YakitInput size='small' placeholder={t("PacketListDemo.searchPlaceholder")} />
                             </Form.Item>
-                            <DemoItemSwitch label={"实时"} value={realtime} setValue={setRealtime} />
+                            <DemoItemSwitch label={t("PacketListDemo.realtime")} value={realtime} setValue={setRealtime} />
                             <YakitButton danger={true} onClick={clear}>
-                                清空
+                                {t("PacketListDemo.clear")}
                             </YakitButton>
                         </Form>
                     }

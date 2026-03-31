@@ -32,11 +32,13 @@ import {AIAgentGrpcApi} from "@/pages/ai-re-act/hooks/grpcApi"
 import {AIChatData} from "../../type/aiChat"
 import {AIDetailsDashIcon} from "../../aiChatWelcome/icon"
 import {Tooltip} from "antd"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const AIContextToken: FC<{
     session?: string
     execute: boolean
 }> = ({session, execute}) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [visible, setVisible] = useState<boolean>(false)
     const getPerfData = useCallback(() => {
         const data = aiChatDataStore.get(session ?? "")?.aiPerfData ?? null
@@ -131,10 +133,11 @@ const AIContextToken: FC<{
                 <div className={styles["echarts-wrapper"]}>
                     <div className={styles["title"]}>
                         <span className={styles["text"]}>
-                            上下文压力<span className={styles["tip"]}>(峰值)</span>
+                            {t("AIContextToken.pressure")}
+                            <span className={styles["tip"]}>({t("AIContextToken.peak")})</span>
                         </span>
                         {!!maxIntelligentPressure && (
-                            <Tooltip title='高质模型'>
+                            <Tooltip title={t("AIContextToken.intelligentModel")}>
                                 <span
                                     className={classNames(styles["intelligent"], {
                                         [styles["intelligent-height"]]: maxIntelligentPressure > pressureThreshold
@@ -145,7 +148,7 @@ const AIContextToken: FC<{
                             </Tooltip>
                         )}
                         {!!maxLightweightPressure && (
-                            <Tooltip title='轻量模型'>
+                            <Tooltip title={t("AIContextToken.lightweightModel")}>
                                 <span
                                     className={classNames(styles["lightweight"], {
                                         [styles["lightweight-height"]]: maxLightweightPressure > pressureThreshold
@@ -163,14 +166,15 @@ const AIContextToken: FC<{
                 <div className={styles["echarts-wrapper"]}>
                     <div className={styles["title"]}>
                         <span className={styles["text"]}>
-                            响应速度<span className={styles["tip"]}>(峰值)</span>
+                            {t("AIContextToken.speed")}
+                            <span className={styles["tip"]}>({t("AIContextToken.peak")})</span>
                         </span>
-                        <Tooltip title='高质模型'>
+                        <Tooltip title={t("AIContextToken.intelligentModel")}>
                             {!!maxIntelligentCost && (
                                 <span className={classNames(styles["intelligent"])}>{`${maxIntelligentCost}ms`}</span>
                             )}
                         </Tooltip>
-                        <Tooltip title='轻量模型'>
+                        <Tooltip title={t("AIContextToken.lightweightModel")}>
                             {!!maxLightweightCost && (
                                 <span className={classNames(styles["lightweight"])}>{`${maxLightweightCost}ms`}</span>
                             )}
@@ -207,7 +211,7 @@ const AIContextToken: FC<{
                 visible={visible}
                 onVisibleChange={setVisible}
             >
-                <Tooltip title='查看详情'>
+                <Tooltip title={t("AIContextToken.viewDetails")}>
                     <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type='outline2' />
                 </Tooltip>
             </YakitPopover>
@@ -236,6 +240,7 @@ interface AIEchartsDetailsProps {
 }
 const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
     const {overallToken, tierConsumption, pressure, firstCost, onClose, renderNumber} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [currentModel, setCurrentModel] = useState<CurrentModel>()
     const ref = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(ref)
@@ -283,20 +288,20 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
     const getEchartsHeard = useMemoizedFn((title: string) => {
         return (
             <div className={styles["echarts-heard"]}>
-                <div className={styles["echarts-heard-left"]}>
+                    <div className={styles["echarts-heard-left"]}>
                     <div className={styles["title"]}>{title}</div>
-                    {title === "上下文压力" && (
-                        <div className={styles["threshold"]}>限制:{formatNumberUnits(threshold)}</div>
+                    {title === t("AIContextToken.pressure") && (
+                        <div className={styles["threshold"]}>{t("AIContextToken.limit")}:{formatNumberUnits(threshold)}</div>
                     )}
                 </div>
                 <div className={styles["extra"]}>
                     <div className={styles["intelligent"]}>
                         <AIDetailsDashIcon className={styles["intelligent-icon"]} />
-                        <span>高质模型</span>
+                        <span>{t("AIContextToken.intelligentModel")}</span>
                     </div>
                     <div className={styles["lightweight"]}>
                         <AIDetailsDashIcon className={styles["lightweight-icon"]} />
-                        <span>轻量模型</span>
+                        <span>{t("AIContextToken.lightweightModel")}</span>
                     </div>
                 </div>
             </div>
@@ -321,7 +326,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
             <div className={styles["echarts-details-heard"]}>
                 <div className={styles["echarts-details-title"]}>
                     <OutlinePresentationchartlineIcon />
-                    <span>数据详情</span>
+                    <span>{t("AIContextToken.dataDetails")}</span>
                 </div>
                 <YakitButton icon={<OutlineXIcon />} type='text2' onClick={onClose} />
             </div>
@@ -331,14 +336,14 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
                         <span>Tokens:</span>
                         <div className={styles["token-overall-wrapper"]}>
                             <div className={styles["token-overall"]}>
-                                <span>总输入</span>
+                                <span>{t("AIContextToken.totalInput")}</span>
                                 <div className={classNames(styles["token-tag"], styles["upload-token"])}>
                                     <OutlineArrowupIcon />
                                     {overallToken[0]}
                                 </div>
                             </div>
                             <div className={styles["token-overall"]}>
-                                <span>总输出</span>
+                                <span>{t("AIContextToken.totalOutput")}</span>
                                 <div className={classNames(styles["token-tag"], styles["download-token"])}>
                                     <OutlineArrowdownIcon />
                                     {overallToken[1]}
@@ -348,12 +353,12 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
                     </div>
                     <div className={styles["token-content"]}>
                         <AITokens
-                            modelType={"高质模型"}
+                            modelType={t("AIContextToken.intelligentModel")}
                             aiModel={currentModel?.intelligentModels}
                             token={[intelligentToken[0], intelligentToken[1]]}
                         />
                         <AITokens
-                            modelType={"轻量模型"}
+                            modelType={t("AIContextToken.lightweightModel")}
                             aiModel={currentModel?.lightweightModels}
                             token={[lightweightToken[0], lightweightToken[1]]}
                         />
@@ -361,13 +366,13 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
                 </div>
                 {isShowPressure && (
                     <div className={styles["pressure-wrapper"]}>
-                        {getEchartsHeard("上下文压力")}
+                        {getEchartsHeard(t("AIContextToken.pressure"))}
                         <AIPressureDetailsEcharts dataEcharts={pressuresEcharts} threshold={threshold} />
                     </div>
                 )}
                 {isShowCost && (
                     <div className={styles["cost-wrapper"]}>
-                        {getEchartsHeard("响应速度")}
+                        {getEchartsHeard(t("AIContextToken.speed"))}
                         <AICostDetailsEcharts dataEcharts={costEcharts} />
                     </div>
                 )}
@@ -383,6 +388,7 @@ interface AITokensProps {
 }
 const AITokens: React.FC<AITokensProps> = memo((props) => {
     const {modelType, aiModel, token} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const icon = useCreation(() => {
         if (!aiModel?.Provider?.Type) return <></>
         return getIconByAI(aiModel?.Provider?.Type)
@@ -404,7 +410,7 @@ const AITokens: React.FC<AITokensProps> = memo((props) => {
             <div className={styles["ai-tokens-content"]}>
                 <div className={styles["ai-tokens-item"]}>
                     <div className={styles["token-item"]}>
-                        输入
+                        {t("AIContextToken.input")}
                         <OutlineArrowupIcon />
                     </div>
                     <div className={classNames(styles["token-tag"], styles["upload-token"])}>{token[0]}</div>
@@ -412,7 +418,7 @@ const AITokens: React.FC<AITokensProps> = memo((props) => {
                 <div className={styles["diver"]} />
                 <div className={styles["ai-tokens-item"]}>
                     <div className={styles["token-item"]}>
-                        输出
+                        {t("AIContextToken.output")}
                         <OutlineArrowdownIcon />
                     </div>
                     <div className={classNames(styles["token-tag"], styles["download-token"])}>{token[1]}</div>

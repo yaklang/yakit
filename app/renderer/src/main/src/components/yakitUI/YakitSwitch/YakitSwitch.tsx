@@ -5,6 +5,7 @@ import styles from "./YakitSwitch.module.scss"
 import classNames from "classnames"
 import {CheckIcon, RemoveIcon} from "@/assets/newIcon"
 import "./yakitSwitchAnimation.scss"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /**
  * 更新说明
@@ -29,11 +30,12 @@ const showExtraSize: string[] = ["large", "middle"];
 
 export const YakitSwitch: React.FC<YakitSwitchProps> = (props) => {
     const {size = "middle", showInnerText, showInnerIcon, className = "", wrapperClassName = "",...reset} = props
+    const {t} = useI18nNamespaces(["yakitUi"])
     let children = {}
     if (showInnerText && showExtraSize.findIndex((ele) => ele === size) !== -1) {
         children = {
-            checkedChildren: "开",
-            unCheckedChildren: "关"
+            checkedChildren: t("YakitSwitch.on"),
+            unCheckedChildren: t("YakitSwitch.off")
         }
     }
     if (showInnerIcon && showExtraSize.findIndex((ele) => ele === size) !== -1) {

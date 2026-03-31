@@ -13,6 +13,8 @@
     "installTitle": "安装靶场",
     "installOrUpgrade": "安装/升级靶场",
     "downloadAddresses": "靶场下载地址",
+    "viewDownloadAddresses": "查看下载地址",
+    "downloadedPercent": "已下载 {percent}%",
     "info": {
       "title": "Vulinbox Agent - Web安全漏洞靶场",
       "description": "Vulinbox 是一个精心设计的 Web 安全漏洞靶场，它模拟了各类真实场景中可能出现的安全漏洞，为安全研究人员和渗透测试工程师提供了一个理想的学习和实践平台。",

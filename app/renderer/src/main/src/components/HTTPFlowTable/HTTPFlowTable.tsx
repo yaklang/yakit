@@ -142,6 +142,7 @@ import {YakitHint} from "../yakitUI/YakitHint/YakitHint"
 import {SystemInfo} from "@/constants/hardware"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "history")
 
 export interface codecHistoryPluginProps {
     key: string
@@ -253,7 +254,7 @@ export const onExpandHTTPFlow = (
     pageType?: HTTPHistorySourcePageType
 ) => {
     if (!flow) {
-        return <YakitEmpty title={t?.("HTTPFlowTable.requestDetailsNotFound") || "找不到该请求详情"}></YakitEmpty>
+        return <YakitEmpty title={t?.("HTTPFlowTable.requestDetailsNotFound") || "Request details not found"}></YakitEmpty>
     }
 
     return (
@@ -397,7 +398,7 @@ const TableRowColor = (key: string) => {
 export const availableColors = [
     {
         color: "RED",
-        title: "红色[#F4736B]",
+        title: "Red [#F4736B]",
         className: TableRowColor("RED"),
         searchWord: TableCellToColorTag["RED"],
         render: (t) => (
@@ -409,7 +410,7 @@ export const availableColors = [
     },
     {
         color: "GREEN",
-        title: "绿色[#56C991]",
+        title: "Green [#56C991]",
         className: TableRowColor("GREEN"),
         searchWord: TableCellToColorTag["GREEN"],
         render: (t) => (
@@ -421,7 +422,7 @@ export const availableColors = [
     },
     {
         color: "BLUE",
-        title: "蓝色[#4A94F8]",
+        title: "Blue [#4A94F8]",
         className: TableRowColor("BLUE"),
         searchWord: TableCellToColorTag["BLUE"],
         render: (t) => (
@@ -433,7 +434,7 @@ export const availableColors = [
     },
     {
         color: "YELLOW",
-        title: "黄色[#FFD583]",
+        title: "Yellow [#FFD583]",
         searchWord: TableCellToColorTag["YELLOW"],
         className: TableRowColor("YELLOW"),
         render: (t) => (
@@ -445,7 +446,7 @@ export const availableColors = [
     },
     {
         color: "ORANGE",
-        title: "橙色[#FFB660]",
+        title: "Orange [#FFB660]",
         searchWord: TableCellToColorTag["ORANGE"],
         className: TableRowColor("ORANGE"),
         render: (t) => (
@@ -457,7 +458,7 @@ export const availableColors = [
     },
     {
         color: "PURPLE",
-        title: "紫色[#8863F7]",
+        title: "Purple [#8863F7]",
         searchWord: TableCellToColorTag["PURPLE"],
         className: TableRowColor("PURPLE"),
         render: (t) => (
@@ -469,7 +470,7 @@ export const availableColors = [
     },
     {
         color: "CYAN",
-        title: "青色[#35D8EE]",
+        title: "Cyan [#35D8EE]",
         searchWord: TableCellToColorTag["CYAN"],
         className: TableRowColor("CYAN"),
         render: (t) => (
@@ -481,7 +482,7 @@ export const availableColors = [
     },
     {
         color: "GREY",
-        title: "灰色[#B4BBCA]",
+        title: "Grey [#B4BBCA]",
         searchWord: TableCellToColorTag["GREY"],
         className: TableRowColor("GREY"),
         render: (t) => (
@@ -2254,7 +2255,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         return orderFlag1 || orderFlag2 || isBackgroundRefresh
     }, [isBackgroundRefresh, excludeColumnsKey, columnsOrder])
 
-    // 标注颜色批量
+    // mark-color批量
     const CalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number, i: any) => {
         if (flowList.length === 0) {
             yakitNotify("warning", t("HTTPFlowTable.pleaseSelectData"))
@@ -2293,7 +2294,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 setSelectedRows([])
             })
     })
-    // 移除颜色  批量
+    // remove-color  批量
     const onRemoveCalloutColorBatch = useMemoizedFn((flowList: HTTPFlow[], number: number) => {
         if (flowList.length === 0) {
             yakitNotify("warning", t("HTTPFlowTable.pleaseSelectData"))
@@ -2481,7 +2482,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [total])
 
     /**
-     * @description 导出为Excel
+     * @description export-excel
      */
     const initExcelData = (resolve, newExportData: HTTPFlow[], rsp, arrList) => {
         let exportData: any = []
@@ -2624,7 +2625,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
 
     /**
-     * @description 导出为HAR
+     * @description export-har
      */
     const [exportToken, setExportToken] = useState<string>("")
     const [percentVisible, setPercentVisible] = useState<boolean>(false)
@@ -2735,7 +2736,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         openPacketNewWindow(getPacketNewWindow(r))
     })
 
-    // 插件扩展(单选)
+    // plugin-extension(单选)
     const [codecSingleHistoryPlugin, setCodecSingleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
     const searchCodecSingleHistoryPlugin = useMemoizedFn((): any => {
         queryYakScriptList(
@@ -2766,7 +2767,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     })
 
-    // 插件扩展(多选)
+    // plugin-extension(多选)
     const [codecMultipleHistoryPlugin, setCodecMultipleHistoryPlugin] = useState<codecHistoryPluginProps[]>([])
     const searchCodecMultipleHistoryPlugin = useMemoizedFn((): any => {
         queryYakScriptList(
@@ -2944,7 +2945,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const menuData = useMemo(() => {
         let menu = [
             {
-                key: "发送到 Web Fuzzer",
+                key: "send-to-web-fuzzer",
                 label: t("HTTPFlowTable.RowContextMenu.sendToWebFuzzer"),
                 number: 10,
                 default: true,
@@ -2964,7 +2965,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 onClickBatch: () => {}
             },
             {
-                key: "发送到 WS Fuzzer",
+                key: "send-to-ws-fuzzer",
                 label: t("HTTPFlowTable.RowContextMenu.sendToWSFuzzer"),
                 number: 10,
                 webSocket: true,
@@ -2984,20 +2985,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 onClickBatch: () => {}
             },
             {
-                key: "数据包扫描",
+                key: "packet-scan",
                 label: t("HTTPFlowTable.RowContextMenu.packetScan"),
                 number: 200,
                 default: true,
                 webSocket: false,
                 onClickSingle: () => {},
                 onClickBatch: () => {},
-                children: GetPacketScanByCursorMenuItem(selected?.Id || 0)?.subMenuItems?.map((ele) => ({
+                children: GetPacketScanByCursorMenuItem(
+                    selected?.Id || 0,
+                    t("HTTPFlowTable.RowContextMenu.packetScan")
+                )?.subMenuItems?.map((ele) => ({
                     key: ele.title,
                     label: t(ele.title)
                 }))
             },
             {
-                key: "插件扩展",
+                key: "plugin-extension",
                 label: t("HTTPFlowTable.RowContextMenu.pluginExtension"),
                 default: true,
                 webSocket: false,
@@ -3006,7 +3010,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 children: getCodecHistoryPlugin()
             },
             {
-                key: "AI插件",
+                key: "ai-plugin",
                 label: (
                     <>
                         <IconSolidAIIcon className={"ai-plugin-menu-icon-default"} />
@@ -3021,7 +3025,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 children: getCodecAIPlugin()
             },
             {
-                key: "复制 URL",
+                key: "copy-url",
                 label: t("HTTPFlowTable.RowContextMenu.copyURL"),
                 number: 30,
                 webSocket: true,
@@ -3042,7 +3046,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             },
             {
-                key: "下载 Response Body",
+                key: "download-response-body",
                 label: t("HTTPFlowTable.RowContextMenu.downloadResponseBody"),
                 default: true,
                 webSocket: false,
@@ -3053,7 +3057,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             },
             {
-                key: "浏览器中打开URL",
+                key: "open-url-in-browser",
                 label: t("HTTPFlowTable.RowContextMenu.openURLInBrowser"),
                 default: true,
                 webSocket: false,
@@ -3062,7 +3066,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             },
             {
-                key: "浏览器中查看响应",
+                key: "view-response-in-browser",
                 label: t("HTTPFlowTable.RowContextMenu.viewResponseInBrowser"),
                 default: true,
                 webSocket: false,
@@ -3071,7 +3075,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             },
             {
-                key: "复制为 CSRF Poc",
+                key: "copy-as-csrf-poc",
                 label: t("YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc"),
                 default: true,
                 webSocket: false,
@@ -3087,24 +3091,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ]
             },
             {
-                key: "复制为 Yak PoC 模版",
+                key: "copy-as-yak-poc-template",
                 label: t("HTTPFlowTable.RowContextMenu.copyAsYakPoCTemplate"),
                 default: true,
                 webSocket: false,
                 onClickSingle: () => {},
                 children: [
                     {
-                        key: "数据包 PoC 模版",
+                        key: "packet-poc-template",
                         label: t("HTTPFlowTable.RowContextMenu.packetPoCTemplate")
                     },
                     {
-                        key: "批量检测 PoC 模版",
+                        key: "batch-detect-poc-template",
                         label: t("HTTPFlowTable.RowContextMenu.batchTestPoCTemplate")
                     }
                 ]
             },
             {
-                key: "标注颜色",
+                key: "mark-color",
                 label: t("HTTPFlowTable.RowContextMenu.tagColor"),
                 default: true,
                 webSocket: false,
@@ -3121,7 +3125,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 })
             },
             {
-                key: "移除颜色",
+                key: "remove-color",
                 label: t("HTTPFlowTable.RowContextMenu.removeColor"),
                 default: true,
                 webSocket: false,
@@ -3130,19 +3134,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n)
             },
             {
-                key: "发送到对比器",
+                key: "send-to-diff",
                 label: t("HTTPFlowTable.RowContextMenu.sendToComparer"),
                 default: true,
                 webSocket: false,
                 onClickSingle: () => {},
                 children: [
                     {
-                        key: "发送到对比器左侧",
+                        key: "send-to-diff左侧",
                         label: t("HTTPFlowTable.RowContextMenu.sendToComparerLeft")
                         // disabled: [false, true, false][compareState]
                     },
                     {
-                        key: "发送到对比器右侧",
+                        key: "send-to-diff右侧",
                         label: t("HTTPFlowTable.RowContextMenu.sendToComparerRight")
                         // disabled: [false, false, true][compareState]
                     }
@@ -3156,15 +3160,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 onClickSingle: () => {},
                 children: [
                     {
-                        key: "屏蔽该记录",
+                        key: "shield-record",
                         label: t("HTTPFlowTable.RowContextMenu.blockRecord")
                     },
                     {
-                        key: "屏蔽URL",
+                        key: "shield-url",
                         label: t("HTTPFlowTable.RowContextMenu.blockURL")
                     },
                     {
-                        key: "屏蔽域名",
+                        key: "shield-domain",
                         label: t("HTTPFlowTable.RowContextMenu.blockDomain")
                     }
                 ]
@@ -3179,7 +3183,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 all: true,
                 children: [
                     {
-                        key: "删除记录",
+                        key: "delete-record",
                         label: t("HTTPFlowTable.RowContextMenu.deleteRecord"),
                         onClick: (v) => onRemoveHttpHistory({Id: [v.Id]}),
                         onClickBatch: (list) => {
@@ -3187,7 +3191,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         }
                     },
                     {
-                        key: "删除URL",
+                        key: "delete-url",
                         label: t("HTTPFlowTable.RowContextMenu.deleteURL"),
                         onClick: (v) => onRemoveHttpHistory({URLPrefix: v.Url}),
                         onClickBatch: (list) => {
@@ -3200,7 +3204,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         }
                     },
                     {
-                        key: "删除域名",
+                        key: "delete-domain",
                         label: t("HTTPFlowTable.RowContextMenu.deleteDomain"),
                         onClick: (v) => onRemoveHttpHistory({URLPrefix: v?.HostPort?.split(":")[0]}),
                         onClickBatch: (list) => {
@@ -3215,7 +3219,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ]
             },
             {
-                key: "分享数据包",
+                key: "share-packet",
                 label: t("HTTPFlowTable.RowContextMenu.sharePacket"),
                 number: 30,
                 default: true,
@@ -3227,7 +3231,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 }
             },
             {
-                key: "导出数据",
+                key: "export-data",
                 label: t("HTTPFlowTable.RowContextMenu.exportData"),
                 default: true,
                 webSocket: false,
@@ -3235,7 +3239,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 onClickBatch: () => {},
                 children: [
                     {
-                        key: "导出为Excel",
+                        key: "export-excel",
                         label: t("HTTPFlowTable.RowContextMenu.exportToExcel"),
                         onClick: (v) => onExcelExport([v]),
                         onClickBatch: (list) => {
@@ -3243,7 +3247,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         }
                     },
                     {
-                        key: "导出为HAR",
+                        key: "export-har",
                         label: t("HTTPFlowTable.RowContextMenu.exportToHAR"),
                         onClick: (v) => onHarExport([v.Id]),
                         onClickBatch: (list) => {
@@ -3253,14 +3257,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 ]
             },
             {
-                key: "编辑tag",
+                key: "edit-tag",
                 label: t("HTTPFlowTable.RowContextMenu.editTag"),
                 default: true,
                 webSocket: true,
                 onClickSingle: (v) => onEditTags(v)
             },
             {
-                key: "新窗口打开",
+                key: "open-in-new-window",
                 label: t("HTTPFlowTable.RowContextMenu.openInNewWindow"),
                 default: true,
                 webSocket: true,
@@ -3271,7 +3275,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         ]
         if (isEnpriTrace() && userInfo.isLogin) {
             menu.push({
-                key: "上传数据",
+                key: "upload-data",
                 label: t("HTTPFlowTable.RowContextMenu.uploadData"),
                 number: 30,
                 default: true,
@@ -3349,7 +3353,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             {
                 width: 180,
                 data: rowContextmenu,
-                // openKeys:['复制为 Yak PoC 模版',],
+                // openKeys:['copy-as-yak-poc-template',],
                 onClick: ({key, keyPath}) => {
                     if (selectedRowKeys.length > 0) {
                         onMultipleClick(key, keyPath)
@@ -3358,7 +3362,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     if (keyPath.length === 2) {
                         const menuName = keyPath[1]
                         let menuItemName = keyPath[0]
-                        if (menuName === "插件扩展" || menuName === "AI插件") {
+                        if (menuName === "plugin-extension" || menuName === "ai-plugin") {
                             // 没有插件 下载codec插件
                             if (key === "Get*plug-in" || key === "Get*ai-plug-in") {
                                 emiter.emit(
@@ -3377,7 +3381,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                         item.children.forEach((itemIn) => {
                                             if (itemIn.key === menuItemName) {
                                                 // 由于为保持key值唯一 添加了特定字符 现在移除掉
-                                                if (menuName === "AI插件" && menuItemName.startsWith("aiplugin-")) {
+                                                if (menuName === "ai-plugin" && menuItemName.startsWith("aiplugin-")) {
                                                     menuItemName = menuItemName.slice("aiplugin-".length)
                                                 }
                                                 emiter.emit(
@@ -3398,7 +3402,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         }
                     }
 
-                    if (keyPath.includes("数据包扫描")) {
+                    if (keyPath.includes("packet-scan")) {
                         const scanItem = packetScanDefaultValue.find((e) => e.Verbose === key || e.VerboseUi === key)
                         if (!scanItem) return
                         execPacketScan({
@@ -3408,7 +3412,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         })
                         return
                     }
-                    if (keyPath.includes("标注颜色")) {
+                    if (keyPath.includes("mark-color")) {
                         const colorItem = availableColors.find((e) => e.title === key)
                         if (!colorItem) return
                         CalloutColor(rowData, colorItem, data, setData)
@@ -3425,37 +3429,37 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                                 setClipboardText(e)
                             }, true)
                             break
-                        case "数据包 PoC 模版":
+                        case "packet-poc-template":
                             onPocMould(rowData)
                             break
-                        case "批量检测 PoC 模版":
+                        case "batch-detect-poc-template":
                             onBatchPocMould(rowData)
                             break
-                        case "屏蔽该记录":
+                        case "shield-record":
                             onShieldRecord(rowData)
                             break
-                        case "屏蔽URL":
+                        case "shield-url":
                             onShieldURL(rowData)
                             break
-                        case "屏蔽域名":
+                        case "shield-domain":
                             onShieldDomain(rowData)
                             break
-                        case "删除记录":
+                        case "delete-record":
                             onRemoveHttpHistory({Id: [rowData.Id]})
                             break
-                        case "删除URL":
+                        case "delete-url":
                             onRemoveHttpHistory({URLPrefix: rowData.Url})
                             break
-                        case "删除域名":
+                        case "delete-domain":
                             onRemoveHttpHistory({URLPrefix: rowData?.HostPort?.split(":")[0]})
                             break
-                        case "发送到对比器左侧":
+                        case "send-to-diff左侧":
                             setCompareLeft({
                                 content: new Buffer(rowData.Request).toString("utf8"),
                                 language: "http"
                             })
                             break
-                        case "发送到对比器右侧":
+                        case "send-to-diff右侧":
                             setCompareRight({
                                 content: new Buffer(rowData.Request).toString("utf8"),
                                 language: "http"
@@ -3473,10 +3477,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         case "sendToWS":
                             newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
                             break
-                        case "导出为Excel":
+                        case "export-excel":
                             onExcelExport([rowData])
                             break
-                        case "导出为HAR":
+                        case "export-har":
                             onHarExport([rowData.Id])
                             break
                         default:
@@ -3492,7 +3496,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     }
     /**
-     * @description 数据包 PoC 模版
+     * @description packet-poc-template
      */
     const onPocMould = useMemoizedFn((v: HTTPFlow) => {
         const flow = v
@@ -3507,7 +3511,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     })
     /**
-     * @description 批量检测 PoC 模版
+     * @description batch-detect-poc-template
      */
     const onBatchPocMould = useMemoizedFn((v: HTTPFlow) => {
         const flow = v as HTTPFlow
@@ -3522,7 +3526,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         )
     })
     /**
-     * @description 屏蔽该记录
+     * @description shield-record
      */
     const onShieldRecord = useMemoizedFn((v: HTTPFlow) => {
         if (!(v && v.Id)) return
@@ -3532,7 +3536,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setShieldData(newObj)
     })
     /**
-     * @description 屏蔽URL
+     * @description shield-url
      */
     const onShieldURL = useMemoizedFn((v: HTTPFlow) => {
         let Url = v?.Url
@@ -3542,7 +3546,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setShieldData(newObj)
     })
     /**
-     * @description 屏蔽域名
+     * @description shield-domain
      */
     const onShieldDomain = useMemoizedFn((v: HTTPFlow) => {
         const host = v?.HostPort?.split(":")[0] || ""
@@ -3605,7 +3609,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }, [importRefresh])
 
     /**
-     * @description 分享数据包
+     * @description share-packet
      * @param ids 分享数据得ids
      */
     const onShareData = useMemoizedFn((ids: string[], number: number) => {
@@ -3635,8 +3639,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
     const isUploadingRef = useRef<boolean>(false)
     /**
-     * @description 上传数据（仅在企业版中生效）
-     * @param ids 上传数据的ids
+     * @description upload-data（仅在企业版中生效）
+     * @param ids upload-data的ids
      */
 
     const onUploadData = useMemoizedFn((ids: string[]) => {
@@ -3702,7 +3706,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (keyPath.length === 2) {
             const menuName = keyPath[1]
             let menuItemName = keyPath[0]
-            if (menuName === "插件扩展" || menuName === "AI插件") {
+            if (menuName === "plugin-extension" || menuName === "ai-plugin") {
                 // 没有插件 下载codec插件
                 if (key === "Get*plug-in" || key === "Get*ai-plug-in") {
                     emiter.emit("onOpenFuzzerModal", JSON.stringify({scriptName: key, isAiPlugin: "isGetPlugin"}))
@@ -3718,7 +3722,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                             item.children.forEach((itemIn) => {
                                 if (itemIn.key === menuItemName) {
                                     // 由于为保持key值唯一 添加了特定字符 现在移除掉
-                                    if (menuName === "AI插件" && menuItemName.startsWith("aiplugin-")) {
+                                    if (menuName === "ai-plugin" && menuItemName.startsWith("aiplugin-")) {
                                         menuItemName = menuItemName.slice("aiplugin-".length)
                                     }
                                     emiter.emit(
@@ -3747,7 +3751,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             }
         }
 
-        if (keyPath.includes("数据包扫描")) {
+        if (keyPath.includes("packet-scan")) {
             let sendIds: string[] = selectedRowKeys
             if (isAllSelect) {
                 if (total > 200) {
@@ -3762,7 +3766,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     return
                 }
             }
-            const currentItemScan = menuData.find((f) => f.onClickBatch && f.key === "数据包扫描")
+            const currentItemScan = menuData.find((f) => f.onClickBatch && f.key === "packet-scan")
             const currentItemPacketScan = packetScanDefaultValue.find((f) => f.Verbose === key || f.VerboseUi === key)
             if (!currentItemScan || !currentItemPacketScan) return
 
@@ -3773,20 +3777,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             })
             return
         }
-        if (keyPath.includes("标注颜色")) {
-            const currentItemColor = menuData.find((f) => f.onClickBatch && f.key === "标注颜色")
+        if (keyPath.includes("mark-color")) {
+            const currentItemColor = menuData.find((f) => f.onClickBatch && f.key === "mark-color")
             const colorItem = availableColors.find((e) => e.title === key)
             if (!currentItemColor || !colorItem) return
             CalloutColorBatch(selectedRows, currentItemColor?.number || 0, colorItem)
             return
         }
         switch (key) {
-            case "删除记录":
+            case "delete-record":
                 onRemoveHttpHistory({
                     Id: selectedRowKeys
                 })
                 break
-            case "删除URL":
+            case "delete-url":
                 const urls = selectedRows.map((ele) => ele.Url)
                 onRemoveHttpHistory({
                     Filter: {
@@ -3794,7 +3798,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     }
                 })
                 break
-            case "删除域名":
+            case "delete-domain":
                 const hosts = selectedRows.map((ele) => ele.HostPort?.split(":")[0])
                 onRemoveHttpHistory({
                     Filter: {
@@ -3803,7 +3807,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 })
                 break
             case "sendAndJumpToWebFuzzer":
-                const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
+                const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "send-to-web-fuzzer")
                 if (!currentItemJumpToFuzzer) return
                 onBatch(
                     (el) => onSendToTab(el, true, downstreamProxyStr, fromMITM),
@@ -3813,7 +3817,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
                 break
             case "sendToWebFuzzer":
-                const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "发送到 Web Fuzzer")
+                const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === "send-to-web-fuzzer")
                 if (!currentItemToFuzzer) return
                 onBatch(
                     (el) => onSendToTab(el, false, downstreamProxyStr, fromMITM),
@@ -3822,7 +3826,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 )
                 break
             case "sendAndJumpToWS":
-                const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === "发送到 WS Fuzzer")
+                const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === "send-to-ws-fuzzer")
                 if (!currentItemJumpToWS) return
                 onBatch(
                     (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
@@ -3832,7 +3836,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
                 break
             case "sendToWS":
-                const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === "发送到 WS Fuzzer")
+                const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === "send-to-ws-fuzzer")
                 if (!currentItemToWS) return
                 onBatch(
                     (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request, false),
@@ -3840,10 +3844,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                     selectedRowKeys.length === total
                 )
                 break
-            case "导出为Excel":
+            case "export-excel":
                 onExcelExport(selectedRows)
                 break
-            case "导出为HAR":
+            case "export-har":
                 onHarExport(isAllSelect ? [] : selectedRows.map((item) => item.Id))
                 break
             default:
@@ -5057,11 +5061,11 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
             }
         })
         .then(() => {
-            openFlag === false && info(i18n.language === "zh" ? "发送成功" : "Sent Successfully")
+            openFlag === false && info(t("HTTPFlowTable.sentSuccessfully"))
         })
 }
 
-// 标注颜色
+// mark-color
 export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) => {
     if (!flow) {
         return
@@ -5075,10 +5079,7 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
             Tags: existedTags
         })
         .then(() => {
-            yakitNotify(
-                "success",
-                i18n.language === "zh" ? `设置 HTTPFlow 颜色成功` : "Set HTTPFlow color successfully"
-            )
+            yakitNotify("success", t("HTTPFlowTable.setColorSuccessfully"))
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
@@ -5096,7 +5097,7 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
         })
 }
 
-// 移除颜色
+// remove-color
 export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) => {
     if (!flow) return
     const existedTags = flow.Tags ? flow.Tags.split("|").filter((i) => !!i && !i.startsWith("YAKIT_COLOR_")) : []
@@ -5107,10 +5108,7 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
             Tags: existedTags
         })
         .then(() => {
-            yakitNotify(
-                "success",
-                i18n.language === "zh" ? `清除 HTTPFlow 颜色成功` : "Clear HTTPFlow color successfully"
-            )
+            yakitNotify("success", t("HTTPFlowTable.clearColorSuccessfully"))
             let newData: HTTPFlow[] = []
             const l = data.length
             for (let index = 0; index < l; index++) {
@@ -5132,12 +5130,7 @@ const onBatchExecPacketScan = (params: {
 }) => {
     const {httpFlowIds, maxLength, currentPacketScan} = params
     if (httpFlowIds.length > maxLength) {
-        yakitNotify(
-            "warning",
-            i18n.language === "zh"
-                ? `最多同时只能发送${maxLength}条数据`
-                : `You can only send a maximum of ${maxLength} data entries at a time`
-        )
+        yakitNotify("warning", t("HTTPFlowTable.maxSendEntries", {maxLength}))
         return
     }
     execPacketScanWithNewTab({

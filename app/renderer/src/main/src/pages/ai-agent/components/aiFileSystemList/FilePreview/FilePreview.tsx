@@ -23,8 +23,10 @@ import type {FileInfo} from "../type"
 import {getLocalFileName} from "@/components/MilkdownEditor/CustomFile/utils"
 import {onOpenFileFolder} from "../utils"
 import {historyStore, useHistoryItems} from "../store/useHistoryFolder"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const FilePreviewEmpty: FC = () => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     // 历史文件夹
     const historyItems = useHistoryItems()
     const [fileNames, setFileNames] = useState<string[]>([])
@@ -45,8 +47,8 @@ const FilePreviewEmpty: FC = () => {
     return (
         <div className={styles["file-preview-empty"]}>
             <div className={styles["file-preview-empty-title"]}>
-                <div className={styles["file-preview-empty-title-text"]}>文件系统</div>
-                <div className={styles["file-preview-empty-title-subtitle"]}>请在左侧选择文件</div>
+                <div className={styles["file-preview-empty-title-text"]}>{t("FilePreview.fileSystem")}</div>
+                <div className={styles["file-preview-empty-title-subtitle"]}>{t("FilePreview.chooseFile")}</div>
             </div>
             <div className={styles["file-preview-empty-content"]}>
                 <YakitButton
@@ -56,7 +58,7 @@ const FilePreviewEmpty: FC = () => {
                     type='secondary2'
                     onClick={() => onOpenFileFolder(false)}
                 >
-                    打开文件
+                    {t("FilePreview.openFile")}
                 </YakitButton>
                 <YakitButton
                     className={styles["file-preview-empty-content-button"]}
@@ -65,10 +67,10 @@ const FilePreviewEmpty: FC = () => {
                     type='secondary2'
                     onClick={() => onOpenFileFolder(true)}
                 >
-                    打开文件夹
+                    {t("FilePreview.openFolder")}
                 </YakitButton>
                 <div className={styles["file-preview-empty-content-recent"]}>
-                    <div className={styles["file-preview-empty-content-recent-title"]}>最近打开</div>
+                    <div className={styles["file-preview-empty-content-recent-title"]}>{t("FilePreview.recentOpen")}</div>
                     <div className={styles["file-preview-empty-content-recent-list"]}>
                         {historyItems.map((item, index) => {
                             return (
@@ -89,6 +91,7 @@ const FilePreviewEmpty: FC = () => {
 }
 
 const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const path = data?.path ?? ""
     const name = data?.name ?? ""
     const icon = data?.icon ?? "default"
@@ -117,7 +120,7 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
             const file = await getLocalFileName(path)
             setFileInfo({path, size, isPlainText, content, language: monacaLanguageType(file.suffix)})
         } catch (err) {
-            yakitNotify("error", `Failed to load file:${err}`)
+            yakitNotify("error", t("FilePreview.loadFailed", {error: String(err)}))
         } finally {
             setLoading(false)
         }
@@ -162,10 +165,10 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
                     {isBinary ? (
                         <Result
                             status={"warning"}
-                            subTitle={"此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。"}
+                            subTitle={t("FilePreview.binaryNotice")}
                             extra={[
                                 <YakitButton size='max' type='primary' onClick={() => setIsBinary(false)}>
-                                    仍然打开
+                                    {t("FilePreview.openAnyway")}
                                 </YakitButton>
                             ]}
                         />
@@ -183,14 +186,14 @@ const FilePreview: FC<{data?: FileNodeProps}> = ({data}) => {
                 {/* 文件过大弹窗 */}
                 <YakitHint
                     visible={showFileHint}
-                    title='文件警告'
-                    content='文件过大，无法预览'
+                    title={t("FilePreview.warningTitle")}
+                    content={t("FilePreview.tooLarge")}
                     cancelButtonProps={{style: {display: "none"}}}
                     onOk={() => {
                         setFileInfo(null)
                         setShowFileHint(false)
                     }}
-                    okButtonText={"知道了"}
+                    okButtonText={t("FilePreview.gotIt")}
                 />
             </div>
         </div>

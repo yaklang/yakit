@@ -307,15 +307,14 @@ const Home: React.FC<HomeProp> = (props) => {
                 onClick: () => onMenu({route: YakitRoute.DB_Domain})
             },
             {
-                label:
-                    i18n.language === "en" ? `${getNotepadNameByEdition()} Manage` : `${getNotepadNameByEdition()}管理`,
+                label: t("Home.notepadManage", {name: getNotepadNameByEdition()}),
                 icon: <PublicNotepadIcon />,
                 desc: t("YakitRoute.penetrationRecordDescription"),
                 rightIcon: <OutlineArrowrightIcon />,
                 onClick: () => onMenu({route: YakitRoute.Notepad_Manage})
             },
             {
-                label: i18n.language === "en" ? `Add ${getNotepadNameByEdition()}` : `新建${getNotepadNameByEdition()}`,
+                label: t("Home.addNotepad", {name: getNotepadNameByEdition()}),
                 icon: <PublicNotepadIcon />,
                 desc: t("YakitRoute.penetrationRecordDescription"),
                 rightIcon: <OutlineArrowrightIcon />,
@@ -1556,9 +1555,7 @@ const Home: React.FC<HomeProp> = (props) => {
                                                 <PublicNotepadManagerIcon className={styles["small-tools-item-icon"]} />
                                                 <div className={styles["small-tools-item-cont-right"]}>
                                                     <div className={styles["small-tools-cont-title"]}>
-                                                        {i18n.language === "en"
-                                                            ? `${getNotepadNameByEdition()} Manage`
-                                                            : `${getNotepadNameByEdition()}管理`}
+                                                        {t("Home.notepadManage", {name: getNotepadNameByEdition()})}
                                                     </div>
                                                     <div className={styles["small-tools-cont-desc"]}>
                                                         {t("YakitRoute.penetrationRecordDescription")}

@@ -1,4 +1,5 @@
 import {failed, warn, yakitNotify} from "@/utils/notification"
+import i18n from "@/i18n/i18n"
 import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType"
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "./FileTree/FileTreeType"
@@ -320,7 +321,7 @@ const getCodeByNode = (path: string): Promise<string> => {
                 resolve(res)
             })
             .catch(() => {
-                failed("无法获取该文件内容，请检查后后重试！")
+                failed(i18n.t("YakRunner.readFileFailed", {ns: "yakRunner"}))
                 reject()
             })
     })
@@ -351,7 +352,7 @@ export const getCodeByPath = (path: string, loadTreeType?: "file" | "audit"): Pr
                     let newContent = await getCodeByNode(path)
                     resolve(newContent)
                 } catch (error) {
-                    failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
+                     failed(i18n.t("YakRunner.readFileFailedWithError", {ns: "yakRunner", error}))
                     reject()
                 }
             })
@@ -759,7 +760,7 @@ export const getDefaultActiveFile = async (info: FileDetailInfo) => {
  */
 export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> => {
     return new Promise(async (resolve, reject) => {
-        handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
+        handleOpenFileSystemDialog({title: i18n.t("YakRunner.selectFile", {ns: "yakRunner"}), properties: ["openFile"]})
             .then(async (data) => {
                 try {
                     const filesLength = data.filePaths.length
@@ -771,7 +772,7 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
                             name
                         })
                     } else if (filesLength > 1) {
-                        warn("只支持单选文件")
+                        warn(i18n.t("YakRunner.singleSelectOnly", {ns: "yakRunner"}))
                     }
                     resolve(null)
                 } catch (error) {
@@ -807,7 +808,7 @@ export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
             setRemoteValue(YakRunnerOpenHistory, JSON.stringify(newHistoryData))
             emiter.emit("onRefreshRunnerHistory", JSON.stringify(newHistoryData))
         } catch (error) {
-            failed(`历史记录异常，重置历史 ${error}`)
+            failed(i18n.t("YakRunner.historyResetFailed", {ns: "yakRunner", error}))
             setRemoteValue(YakRunnerOpenHistory, JSON.stringify([]))
         }
     })

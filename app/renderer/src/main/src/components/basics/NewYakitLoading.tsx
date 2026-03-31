@@ -21,36 +21,13 @@ import styles from "./newYakitLoading.module.scss"
 import {useTheme} from "@/hook/useTheme"
 import classNames from "classnames"
 import {SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon} from "@/assets/icon/colors"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import IRifyPrimaryBg from "../../assets/uiLayout/IRifyPrimaryBg.png"
 import MemfitAIPrimaryBg from "@/assets/uiLayout/MemfitAIPrimaryBg.png"
 import YakitPrimaryBg from "@/assets/uiLayout/YakitPrimaryBg.png"
 
 const {ipcRenderer} = window.require("electron")
-
-/** 首屏加载蒙层展示语 */
-const LoadingTitle: string[] = [
-    "没有困难的工作，只有勇敢的打工人。",
-    "打工累吗？累！但我不能哭，因为骑电动车擦眼泪不安全。",
-    "打工不仅能致富，还能交友娶媳妇",
-    "今天搬砖不狠，明天地位不稳",
-    "打工可能会少活十年，不打工你一天也活不下去。",
-    "有人相爱，有人夜里看海，有人七八个闹钟起不来，早安打工人!",
-    "打工人，打工魂，打工人是人上人",
-    `@所有人，据说用了${getReleaseEditionName()}后就不必再卷了！`,
-    `再不用${getReleaseEditionName()}，卷王就是别人的了`,
-    `来用${getReleaseEditionName()}啦？安全圈还是你最成功`,
-    `这届网安人，人手一个${getReleaseEditionName()}，香惨了！`,
-
-    "webfuzzer时根目录插入字典，会有意想不到的收获 ——是果实菌啊",
-    `${getReleaseEditionName()}写监听参数时不必写socks的版本号 ——是果实菌啊`,
-    "使用热标签，可以中间处理des aes等加密，无需再碰py ——是果实菌啊",
-    `${getReleaseEditionName()}，为您提供渗透问题的完美解决方案 ——酒零`,
-    "热加载fuzz快速定位，轻松挖洞无压力 ——k1115h0t",
-    "别让无聊占据你的时间，来探索新世界吧！——Chelth",
-    `<script>alert(‘Hello ${getReleaseEditionName()}!’)</script> ——红炉点雪`,
-    "你的鼠标，掌控世界！——Chelth"
-]
 
 export interface NewYakitLoadingProp {
     /** yakit模式 */
@@ -63,6 +40,7 @@ export interface NewYakitLoadingProp {
 
 export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
     const {yakitStatus, checkLog, restartLoading, remoteControlRefreshLoading, btnClickCallback} = props
+    const {t} = useI18nNamespaces(["layout"])
     const {theme} = useTheme()
 
     const btns = useMemo(() => {
@@ -75,7 +53,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                         size='max'
                         onClick={() => btnClickCallback("control-remote")}
                     >
-                        刷新
+                        {t("YakitLoading.refresh")}
                     </YakitButton>
                     <YakitButton
                         loading={remoteControlRefreshLoading}
@@ -84,7 +62,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                         size='max'
                         onClick={() => btnClickCallback("local")}
                     >
-                        返回本地连接
+                        {t("YakitLoading.backToLocal")}
                     </YakitButton>
                 </>
             )
@@ -99,20 +77,31 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                     size='max'
                     onClick={() => btnClickCallback("local")}
                 >
-                    返回本地连接
+                    {t("YakitLoading.backToLocal")}
                 </YakitButton>
             )
         }
 
         return null
-    }, [yakitStatus, remoteControlRefreshLoading, restartLoading])
+    }, [yakitStatus, remoteControlRefreshLoading, restartLoading, t, btnClickCallback])
 
     /** 加载页随机宣传语 */
-    const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
+    const loadingTitles = useMemo(
+        () => ((t("YakitLoading.slogans", {returnObjects: true}) as unknown) as string[]) || [],
+        [t]
+    )
+    const loadingTitle = useMemo(
+        () => loadingTitles[Math.floor(Math.random() * loadingTitles.length)] || "",
+        [loadingTitles]
+    )
+    const loadingTitleText = useMemo(
+        () => loadingTitle.replaceAll("{edition}", getReleaseEditionName()),
+        [loadingTitle]
+    )
     /** Title */
     const Title = useMemo(
-        () => (yakitStatus === "control-remote" ? "远程控制中 ..." : `欢迎使用 ${getReleaseEditionName()}`),
-        [yakitStatus]
+        () => (yakitStatus === "control-remote" ? t("YakitLoading.remoteControlling") : t("YakitLoading.welcome", {edition: getReleaseEditionName()})),
+        [yakitStatus, t]
     )
 
     const startLogo = useMemo(() => {
@@ -139,7 +128,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
             return (
                 <div className={styles["yakit-loading-icon-wrapper"]}>
                     <div className={styles["white-icon"]}>
-                        <img src={yakitCE} alt='暂无图片' />
+                         <img src={yakitCE} alt={t("YakitLoading.noImage")} />
                     </div>
                 </div>
             )
@@ -168,7 +157,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
             return (
                 <div className={styles["yakit-loading-icon-wrapper"]}>
                     <div className={styles["white-icon"]}>
-                        <img src={yakitEE} alt='暂无图片' />
+                        <img src={yakitEE} alt={t("YakitLoading.noImage")} />
                     </div>
                 </div>
             )
@@ -179,14 +168,14 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
             return (
                 <div className={styles["yakit-loading-icon-wrapper"]}>
                     <div className={styles["white-icon"]}>
-                        <img src={yakitSE} alt='暂无图片' />
+                        <img src={yakitSE} alt={t("YakitLoading.noImage")} />
                     </div>
                 </div>
             )
         }
 
         return null
-    }, [])
+    }, [t])
 
     const primaryBg = useMemo(() => {
         switch (fetchEnv()) {
@@ -212,7 +201,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
 
                     <div className={styles["yakit-loading-title"]}>
                         <div className={styles["title-style"]}>{Title}</div>
-                        {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>}
+                        {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitleText}</div>}
                     </div>
 
                     <div className={styles["yakit-loading-content"]}>
@@ -244,8 +233,8 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
                                 }}
                                 style={{position: "fixed", bottom: 32}}
                             >
-                                打开引擎所在文件
-                                <Tooltip title={`打开文件夹后运行'start-engine-grpc'，命令行启动引擎查看具体问题`}>
+                                {t("YakitLoading.openEngineFolder")}
+                                <Tooltip title={t("YakitLoading.openEngineFolderTip")}>
                                     <OutlineQuestionmarkcircleIcon />
                                 </Tooltip>
                             </div>

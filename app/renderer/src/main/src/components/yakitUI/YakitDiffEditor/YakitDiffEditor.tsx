@@ -113,7 +113,7 @@ export const YakitDiffEditor: React.FC<YakitDiffEditorProps> = memo((props) => {
 
         // 获取不到对比器元素节点
         if (!diffDivRef || !diffDivRef.current) {
-            yakitNotify("error", "对比器初始化失败，请关闭重试!")
+            yakitNotify("error", t("YakitDiffEditor.initFailed"))
             return
         }
 

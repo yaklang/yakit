@@ -1,5 +1,8 @@
 import {APIFunc} from "@/apiUtils/type"
 import {yakitNotify} from "@/utils/notification"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "components")
 
 const {ipcRenderer} = window.require("electron")
 
@@ -15,7 +18,7 @@ export const getHttpFileLinkInfo: APIFunc<string, HttpFileInfoRespose> = (online
             .invoke("get-http-file-link-info", encodeURI(onlineUrl))
             .then(resolve)
             .catch((error) => {
-                if (!hiddenError) yakitNotify("error", `获取链接信息错误${error}`)
+                if (!hiddenError) yakitNotify("error", t("MilkdownEditor.customFile.getLinkInfoError", {error: String(error)}))
                 reject(error)
             })
     })
@@ -35,7 +38,7 @@ export const getLocalFileLinkInfo: APIFunc<string, LocalFileInfoRespose> = (path
                 })
             })
             .catch((error) => {
-                if (!hiddenError) yakitNotify("error", `获取文件信息失败:${error}`)
+                if (!hiddenError) yakitNotify("error", t("MilkdownEditor.customFile.getFileInfoError", {error: String(error)}))
                 reject(error)
             })
     })
@@ -52,7 +55,7 @@ export const getLocalFileName: APIFunc<string, GetLocalFileTypeRespose> = (path,
             .invoke("fetch-file-name-by-path", path)
             .then(resolve)
             .catch((error) => {
-                if (!hiddenError) yakitNotify("error", `getLocalFileName 失败: ${error}`)
+                if (!hiddenError) yakitNotify("error", t("MilkdownEditor.customFile.getLocalFileNameFailed", {error: String(error)}))
                 reject(error)
             })
     })

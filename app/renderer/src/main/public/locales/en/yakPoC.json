@@ -2,7 +2,11 @@
   "YakPoC": {
     "byKeyword": "By Keyword",
     "byGroup": "By Group",
-    "selectPlugin": "Select Plugins"
+    "selectPlugin": "Select Plugins",
+    "selectedPlugin": "Selected Plugins",
+    "pluginLog": "Plugin Log",
+    "pluginExecute": "Plugin Execution",
+    "timeout": "Timeout"
   },
   "PluginListByGroup": {
     "selectPrompt": "Please select keywords or plugin groups to scan"

@@ -6,6 +6,381 @@
     "StartToExecYakScriptViewer": {
       "executeSuccess": "Execution of {verbose} succeeded",
       "executeError": "Execution of {verbose} encountered an issue:"
+    },
+    "ConfigGlobalReverse": {
+      "dnslogSuccess": "Global DNSLog configured successfully",
+      "dnslogFailed": "Failed to configure global DNSLog: {error}",
+      "configFailed": "Failed to configure global reverse server: {error}",
+      "localReverseIP": "Local reverse IP",
+      "updateYakEngineLocalIP": "Update Yak engine local IP",
+      "publicReverseConfig": "Public reverse connection config",
+      "runOnPublicServer": "Run on a public server",
+      "or": "or",
+      "configured": "Configured",
+      "yakBridgeAddress": "Yak Bridge address",
+      "yakBridgeAddressHelp": "Format: host:port, e.g. cybertunnel.run:64333",
+      "yakBridgePassword": "Yak Bridge password",
+      "yakBridgePasswordHelp": "The --secret value for the yak bridge command",
+      "globalDNSLogConfig": "Global DNSLog config",
+      "reuseYakBridgeConfig": "Reuse Yak Bridge config",
+      "dnslogConfig": "DNSLog config",
+      "dnslogAddressHelp": "DNSLog system address configured in Yak Bridge: [ip]:[port]",
+      "dnslogPassword": "DNSLog password",
+      "configureReverseConnection": "Configure reverse connection",
+      "stop": "Stop"
+    },
+    "ConfigYaklangEnvironment": {
+      "variableName": "Variable name",
+      "variableValue": "Variable value",
+      "setEnvironmentVariable": "Set environment variable",
+      "environmentVariableList": "Environment variable list",
+      "setNewVariable": "Set new variable",
+      "environmentVariableName": "Environment variable name",
+      "expiredTime": "Expiration time",
+      "operation": "Operate",
+      "modify": "Modify",
+      "deleteThisEnvironmentVariable": "Delete this environment variable",
+      "deleteSuccess": "Deleted successfully",
+      "configYaklangSystemEnvironmentVariable": "Configure Yaklang system environment variable",
+      "newVariableTitle": "Set new variable",
+      "editVariableTitle": "Modify variable",
+      "delete": "Delete"
+    },
+    "ConfigSystemProxy": {
+      "getSystemProxyFailed": "Failed to get system proxy: {error}",
+      "setSystemProxySuccess": "System proxy configured successfully",
+      "setSystemProxyFailed": "Failed to configure system proxy: {error}",
+      "configSystemProxy": "Configure system proxy",
+      "currentSystemProxyStatus": "Current system proxy status:",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "systemProxy": "System proxy",
+      "oneClickConfig": "One-click configure system proxy",
+      "proxyHint": "Due to OS and Yak kernel limitations, the native MacOS OC/Swift interface cannot be used to set the proxy. Yak engine will open an osascript authorization page to change the system proxy. MacOS users can authorize it.",
+      "cancel": "Cancel",
+      "disable": "Disable",
+      "enable": "Enable",
+      "chromeStartPath": "Chrome start path",
+      "chromeStartPathHint": "If Chrome cannot start, please configure the Chrome start path",
+      "startPath": "Start path",
+      "selectStartPath": "Select start path",
+      "setChromeStartPathSuccess": "Chrome start path set successfully",
+      "confirm": "Confirm"
+    },
+    "ConfigPcapPermission": {
+      "unavailable": "Unable to get PCAP support information",
+      "fetchStatusFailed": "Failed to get Pcap permission status: {error}",
+      "fetchPlatformFailed": "Failed to get operating system for {name}: {error}",
+      "promoteFailed": "Failed to elevate Pcap user permissions: {error}",
+      "tooltip": "Principle: on MacOS, set permissions for /dev/bpf* groups; refer to Wireshark ChmodBPF configuration. On Linux, you can use setcap to set pcap permissions. On Windows, it is recommended to start with elevated administrator privileges via UAC.",
+      "windowsHint": "Windows can use administrator privileges to start {name} to gain Pcap access",
+      "unixHint": "Linux and MacOS can grant full network interface permissions to the user via permission and group settings",
+      "privilegedHint": "You can use features such as SYN scan normally without fixing anything",
+      "notPrivilegedHint": "The current engine does not have network interface access permissions",
+      "ok": "Got it~",
+      "enablePcap": "Enable PCAP permissions",
+      "manualFix": "Manual fix",
+      "modalTitle": "Fix Pcap permissions"
+    },
+    "ConfigEngineProxy": {
+      "saveSuccess": "Engine proxy configured successfully",
+      "currentProxy": "Current engine proxy:",
+      "hint": "This configuration will automatically apply to most Yak plugins. If a proxy is configured in the scan module, that proxy will generally override this one.",
+      "proxyLabel": "Proxy",
+      "proxyHelp": "For example, http://127.0.0.1:7890 or socks://127.0.0.1:7890 are both valid",
+      "updateProxy": "Update engine proxy",
+      "modalTitle": "Configure engine scan proxy"
+    },
+    "ConfigSystemMcp": {
+      "title": "Yak Mcp",
+      "currentStatus": "Current status:",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "startAddress": "Start address:",
+      "startAddressHelp": "yak starts mcp via SSE; enter the start address where mcp is needed",
+      "cancel": "Cancel",
+      "disable": "Disable",
+      "enable": "Enable"
+    },
+    "useDownloadUrlToLocal": {
+      "downloadFailed": "Download failed: {error}",
+      "cancelDownloadFailed": "Failed to cancel download: {error}"
+    },
+    "useUploadOSSHooks": {
+      "uploadFailed": "Project upload failed: {error}",
+      "notepadFiledHashRequired": "When type is notepad, filedHash is required",
+      "cancelUploadFailed": "Failed to cancel upload: {error}"
+    },
+    "servicesFetch": {
+      "requestTimeout": "Request timed out, please try again",
+      "loginExpired": "401, login expired/not logged in, please log in again"
+    },
+    "apiUtilsHttp": {
+      "parameterError": "Parameter error",
+      "unknownError": "Unknown error",
+      "notepadFiledHashRequired": "When type is notepad, filedHash is required",
+      "uploadImgFailed": "Failed to upload image: {error}",
+      "uploadFileFailed": "Failed to upload file: {error}",
+      "deleteOSSFailed": "Failed to delete OSS resource: {error}"
+    },
+    "grpc": {
+      "fetchLatestYakitVersionFailed": "Failed to get latest software version: {error}",
+      "fetchIntranetYakitVersionFailed": "Failed to get latest intranet software version: {error}",
+      "fetchLatestYakVersionFailed": "Failed to get latest engine version: {error}",
+      "fetchLocalYakitVersionFailed": "Failed to get local software version: {error}",
+      "fetchLocalYakVersionFailed": "Failed to get local engine version: {error}",
+      "fetchYakInstallResultFailed": "Failed to get local engine install result: {error}",
+      "fetchBuildInYakVersionFailed": "Failed to get built-in engine version: {error}",
+      "fetchSpecifiedYakVersionHashFailed": "Failed to get latest software version: {error}",
+      "fetchLocalYakVersionHashFailed": "Failed to get local engine hash: {error}",
+      "fetchAvailablePortFailed": "Failed to get available port: {error}",
+      "determineAdaptedVersionEngineFailed": "Failed to determine adapted version of running engine: {error}"
+    },
+    "envfile": {
+      "setReleaseEditionSuccess": "Set {edition} release edition successfully"
+    },
+    "pageInfo": {
+      "parseFailed": "page-info parse data error: {error}",
+      "webFuzzerCacheFailed": "webFuzzer cache data failed: {error}"
+    },
+    "fuzzerSequence": {
+      "cacheFailed": "webFuzzer sequence cache data failed: {error}"
+    },
+    "DemoVirtualTable": {
+      "noData": "No data"
+    },
+    "DemoLayout": {
+      "singleSelect": "Single Select Dropdown",
+      "multiSelect": "Multi Select Dropdown",
+      "switch": "Switch",
+      "radioGroup": "Radio Group",
+      "radioButtonGroup": "Radio Button Group",
+      "checkbox": "Checkbox",
+      "input": "Input",
+      "textarea": "Textarea",
+      "autoComplete": "Auto Complete",
+      "integer": "Integer",
+      "float": "Float",
+      "inputFile": "Input File Field",
+      "textareaFile": "Textarea File Field",
+      "textareaFolder": "Textarea Folder Field",
+      "help": "Help text here",
+      "pleaseSelect": "Please select",
+      "placeholder": "Hint text",
+      "extra1": "Extra 1",
+      "extra2": "Extra 2",
+      "extra3": "Extra 3",
+      "extra4": "Extra 4",
+      "clearData": "Clear Data",
+      "startUpdate": "Start Update",
+      "stopUpdate": "Stop Update",
+      "name": "Name",
+      "time": "Time",
+      "content": "Content",
+      "action": "Action",
+      "details": "Details"
+    },
+    "useHoldGRPCStream": {
+      "httpTraffic": "HTTP traffic",
+      "vulnerabilitiesAndRisks": "Vulnerabilities and risks",
+      "log": "Log"
+    },
+    "InputUtil": {
+      "typeSuffix": "[Type]",
+      "rawString": "RawString",
+      "keyValue": "KeyValue",
+      "parameterIndex": "Parameter[{index}]",
+      "splitArrayHint": "Use | to split arrays",
+      "addKeyValuePair": "Add Key-Value Pair",
+      "enterAbsolutePath": "Please enter an absolute path",
+      "dragFilePrefix": "You can drag the file into the box or ",
+      "clickHere": "click here",
+      "upload": " upload",
+      "deleteTag": "Delete Tag",
+      "operations": "Operations"
+    },
+    "SelectItem": {
+      "fetchListFailed": "Failed to fetch dictionary list!",
+      "fetchContentFailed": "Failed to fetch dictionary content: {error}"
+    },
+    "OpenWebsite": {
+      "openingNewWindow": "Opening new window...",
+      "downloadFinished": "Download finished",
+      "downloadFailed": "Download failed"
+    },
+    "Clipboard": {
+      "copySuccess": "Copied successfully"
+    },
+    "Exporter": {
+      "exportData": "Export Data"
+    },
+    "Extractor": {
+      "selectionError": "Error extracting selected data"
+    },
+    "InvalidCacheAndUserData": {
+      "title": "Reset user data and cache",
+      "resetHint": "If your {name} is behaving abnormally, you can use this feature to delete all local cache and user data, then reconnect and restart.",
+      "warning": "Warning: this action will permanently delete cache data and is difficult to recover. Please proceed with caution.",
+      "syncDeleteDatabase": "Also delete all data in the database",
+      "confirmDelete": "I understand the risk, delete now",
+      "resetSuccess": "User data reset completed successfully"
+    },
+    "TimeRange": {
+      "setTimePoint": "Set time point",
+      "setStartTime": "Click here to set the start time",
+      "setEndTime": "Click here to set the end time"
+    },
+    "TimeUtil": {
+      "secondsAgo": "seconds ago",
+      "minutesAgo": "minutes ago",
+      "hoursAgo": "hours ago",
+      "daysAgo": "days ago"
+    },
+    "ShowModal": {
+      "unknownError": "Unknown error",
+      "modalLogicCrash": "The dialog logic has crashed, please close and try again!"
+    },
+    "ProxyConfigUtil": {
+      "engineVersionTooLow": "Engine version is too low, please update to {version} or above",
+      "checkEngineVersionFailed": "Failed to check engine version"
+    },
+    "Encodec": {
+      "urlencode": "URL encode",
+      "urlescape": "URL encode (special chars only)",
+      "base64": "Base64 encode",
+      "base64Decode": "Base64 decode",
+      "htmlencode": "HTML encode",
+      "htmldecode": "HTML decode",
+      "urlDecode": "URL decode",
+      "doubleUrlEncode": "Double URL encode",
+      "unicodeDecode": "Unicode decode (\\uXXXX)",
+      "unicodeEncode": "Unicode encode (\\uXXXX)",
+      "base64UrlEncode": "Base64 then URL encode",
+      "urlBase64Decode": "URL then Base64 decode",
+      "hexDecode": "HEX decode",
+      "hexEncode": "HEX encode",
+      "jwtParseWeak": "JWT parse (test weak keys)",
+      "changeHttpMethodGet": "Change HTTP method to GET",
+      "changeHttpMethodPost": "Change HTTP method to POST",
+      "changeHttpMethodHead": "Change HTTP method to HEAD",
+      "httpChunkEncode": "HTTP chunk encoding",
+      "modifyToUploadPacket": "Modify to upload packet",
+      "selectContent": "Select content",
+      "decodeStep": "Decode step [{index}]: {verbose} ({type})",
+      "originText": "Original text",
+      "viewOriginalText": "View original text",
+      "autoDecodeFailed": "Automatic decode failed: {error}",
+      "autoDecodeSmart": "Automatic decode (smart decode)",
+      "codeResult": "Encoded result",
+      "replaceContent": "Replace content",
+      "codecExecutionFailed": "CODEC[{type}] execution failed: {error}",
+      "editorExecCodecFailed": "Editor codec execution failed",
+      "mutateRequestFailed": "Mutate request failed: {error}"
+    },
+    "ShortcutKey": {
+      "editorConflict": "Editor conflict: {name} - this shortcut will be overridden in the editor",
+      "screenshot": "Screenshot",
+      "closeCurrentPage": "Close current page",
+      "addSubPage": "Add sub page",
+      "sendAndJump": "Send and jump",
+      "sendOnly": "Send only",
+      "tableVirtualUp": "Table select up",
+      "tableVirtualDown": "Table select down",
+      "undo": "Undo",
+      "redo": "Redo",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "selectAll": "Select all",
+      "openCommandPalette": "Open command palette",
+      "jumpToLine": "Go to line",
+      "quickOpenFile": "Quick open file",
+      "find": "Find",
+      "findNext": "Find next",
+      "findPrev": "Find previous",
+      "selectNextMatch": "Select next match",
+      "selectAllMatches": "Select all matches",
+      "selectAllWords": "Select all matching words",
+      "expandSelection": "Expand selection",
+      "shrinkSelection": "Shrink selection",
+      "matchBracket": "Go to matching bracket",
+      "addCursorUp": "Add cursor above",
+      "addCursorDown": "Add cursor below",
+      "selectCurrentLine": "Select current line",
+      "undoLastCursor": "Undo last cursor operation",
+      "selectUp": "Select up",
+      "selectDown": "Select down",
+      "replace": "Replace",
+      "commentToggle": "Toggle comment",
+      "indent": "Indent",
+      "outdent": "Outdent",
+      "deleteLine": "Delete line",
+      "moveLineUp": "Move line up",
+      "moveLineDown": "Move line down",
+      "copyLineUp": "Copy line up",
+      "copyLineDown": "Copy line down",
+      "replaceAll": "Replace all matches",
+      "goToDefinition": "Go to definition",
+      "triggerAutoHijacked": "Switch to automatic hijack mode",
+      "forwardResponse": "Forward this HTTP response",
+      "hijackResponse": "Hijack response",
+      "dropData": "Drop",
+      "submitData": "Forward",
+      "newTemporaryFile": "New temporary file",
+      "saveFile": "Save file",
+      "closeOpenedFile": "Close opened file",
+      "openTerminal": "Open terminal",
+      "renameFile": "Rename file",
+      "deleteFile": "Delete file",
+      "copyFile": "Copy file",
+      "pasteFile": "Paste file",
+      "sendRequest": "Send request",
+      "saveWebFuzzerHistory": "Save WebFuzzer history data",
+      "exitChatCS": "Exit chatCS",
+      "chatCSNewLine": "New line in question area",
+      "chatCSSubmit": "Ask question",
+      "newPlugin": "New plugin",
+      "openSearchDoubleClick": "Open search (double-click)",
+      "switchSearchBar": "Switch search bar",
+      "searchListUp": "Search list up",
+      "searchListDown": "Search list down",
+      "closeSearch": "Close search",
+      "searchJump": "Search jump",
+      "startAudit": "Start audit",
+      "savePlugin": "Save plugin"
+    },
+    "Editors": {
+      "yakFormat": "Yak code formatting",
+      "loadDefaultSearchFailed": "Failed to load default search string"
+    },
+    "PrettifyPacket": {
+      "lossyBeautifyWarning": "Original data may have issues; beautification lost some content"
+    },
+    "Duplex": {
+      "databaseTooLarge": "Slow write detected. The current project database is too large. You can delete HTTPFlow history traffic and then click Settings at the top, or reclaim database space from the home page."
+    },
+    "ImportExportModal": {
+      "error": "Error",
+      "exportDone": "Export completed",
+      "exporting": "Exporting...",
+      "importDone": "Import completed",
+      "importing": "Importing...",
+      "finished": "finished",
+      "exportHint": "After exporting in remote mode, open the ~Yakit\\yakit-projects\\projects path to view the exported file. No file suffix is needed.",
+      "importHint": "Importing external resources carries potential risks. They may contain malicious code or payloads that can cause data leakage or system compromise. Please consider whether external resources are necessary, and ensure the source is trusted and safe. If you must use external resources, prefer official safe versions or write a controlled data source yourself. Keep your system and software up to date and patch known vulnerabilities promptly.",
+      "cancel": "Cancel",
+      "import": "Import",
+      "confirm": "Confirm",
+      "finish": "Finish"
+    },
+    "useUploadOSSHooks": {
+      "uploadFailed": "Project upload failed: {error}",
+      "notepadFiledHashRequired": "When type is notepad, filedHash is required",
+      "cancelUploadFailed": "Failed to cancel upload: {error}"
+    },
+    "useDownloadUrlToLocal": {
+      "downloadFailed": "Download failed: {error}",
+      "cancelDownloadFailed": "Failed to cancel download: {error}"
     }
   }
 }

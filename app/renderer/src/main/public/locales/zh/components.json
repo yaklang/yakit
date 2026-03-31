@@ -2,6 +2,97 @@
   "ExportExcel": {
     "dataExport": "数据导出",
     "pageNumber": "第{page}页",
-    "totalItems": "共 {total} 条"
+    "totalItems": "共 {total} 条",
+    "xlsxTooLarge": "XLSX 过大：{error}"
+  },
+  "MilkdownEditor": {
+    "menu": {
+      "text": {"label": "文本", "description": "文本"},
+      "heading1": {"label": "一级标题", "description": "一级标题: #空格"},
+      "heading2": {"label": "二级标题", "description": "二级标题: ##空格"},
+      "heading3": {"label": "三级标题", "description": "三级标题: ###空格"},
+      "orderedList": {"label": "有序列表", "description": "有序列表: 1.空格"},
+      "unorderedList": {"label": "无序列表", "description": "无序列表: -空格或*空格"},
+      "task": {"label": "任务", "description": "任务"},
+      "codeBlock": {"label": "代码块", "description": "代码块:```空格"},
+      "quote": {"label": "引用", "description": "引用: >空格"},
+      "highLight": {"label": "高亮", "description": "高亮: :::success空格"},
+      "file": {"label": "上传文件", "description": "上传文件"},
+      "divider": {"label": "分割线", "description": "分割线: ***"}
+    },
+    "highlight": {
+      "remove": "清除高亮",
+      "note": "灰色:  :::note空格",
+      "success": "绿色:  :::success空格",
+      "danger": "红色:  :::danger空格",
+      "warning": "黄色:  :::warning空格"
+    },
+    "tooltip": {
+      "bold": "粗体:**文本**空格",
+      "strikethrough": "删除线:~文本~空格",
+      "italic": "斜体:*文本*空格",
+      "underline": "下划线: :u[文本]",
+      "codeBlock": "代码块:```空格"
+    },
+    "slash": {
+      "base": "基础",
+      "common": "常用"
+    },
+    "mention": {
+      "selectUser": "请选择用户",
+      "searchUserHint": "请搜索后选择@用户",
+      "sendNotification": "同时发送通知",
+      "confirm": "确定"
+    },
+    "customMention": {
+      "userIdMissing": "用户id不存在",
+      "sendMentionPrompt": "发送提及通知？",
+      "notify": "通知"
+    },
+    "utils": {
+      "selectFile": "请选择文件",
+      "fileTooLarge": "文件大小不能超过1G",
+      "imageTooLarge": "图片大小不能超过1M",
+      "uploadImageFailed": "上传图片失败：{error}",
+      "convertSelectionFailed": "[{nodeType}]convertSelectionByNode执行失败：{error}"
+    },
+    "initEditor": {
+      "imageTooLarge": "图片大小不能超过1M",
+      "collabRouteRequired": "当enableCollab为true,routeInfo必传",
+      "documentMissing": "文档不存在/已经被删除",
+      "errorReason": "错误原因:",
+      "saveCurrentDocument": "保存当前文档",
+      "doNotSave": "不保存",
+      "closePage": "关闭页面",
+      "exception": "异常"
+    },
+    "onlineError": {
+      "exception": "异常",
+      "errorReason": "错误原因:",
+      "closePage": "关闭页面"
+    },
+    "collab": {
+      "getWSUrlError": "getWSUrl错误：{error}",
+      "wsUrlInvalid": "wsUrl数据错误"
+    },
+    "customFile": {
+      "unknownName": "未知命名",
+      "copyFailed": "复制失败",
+      "uploadFailedRetry": "上传失败，点击重新上传",
+      "downloadFile": "下载文件",
+      "copyLink": "复制链接",
+      "refreshFileInfo": "重新获取文件信息",
+      "loadingFile": "文件加载中...",
+      "downloadingFile": "{fileName}下载中...",
+      "downloading": "下载中",
+      "downloadedPercent": "已下载 {percent}%",
+      "getFileInfoErrorTitle": "获取文件信息错误",
+      "getLinkInfoError": "获取链接信息错误：{error}",
+      "getFileInfoError": "获取文件信息失败：{error}",
+      "getLocalFileNameFailed": "getLocalFileName 失败：{error}"
+    },
+    "mention": {
+      "apiNotepadEitFailed": "apiNotepadEit 失败：{error}"
+    }
   }
 }

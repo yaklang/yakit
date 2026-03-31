@@ -11,8 +11,10 @@ import {yakitNotify} from "@/utils/notification"
 import {DownloadingState} from "@/yakitGVDefine"
 import {useMemoizedFn} from "ahooks"
 import omit from "lodash/omit"
+import i18n from "@/i18n/i18n"
 
 const {ipcRenderer} = window.require("electron")
+const t = i18n.getFixedT(null, "layout")
 
 /** @name 处理进度条数据(防止异常数据) */
 export const safeFormatDownloadProcessState = (state: DownloadingState) => {
@@ -47,7 +49,7 @@ export const apiSystemConfig: APINoRequestFunc<API.SystemConfigResponse> = (hidd
         })
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", "apiSystemConfig 失败:" + e)
+                if (!hiddenError) yakitNotify("error", t("LayoutUtils.apiSystemConfigFailed", {error: String(e)}))
                 reject(e)
             })
     })
@@ -68,7 +70,7 @@ export const grpcExportProject: APIFunc<ExportProjectRequest, null> = (params, h
             .invoke("ExportProject", value, token)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", `grpcExportProject 失败:${e}`)
+                if (!hiddenError) yakitNotify("error", t("LayoutUtils.grpcExportProjectFailed", {error: String(e)}))
                 reject(e)
             })
     })
@@ -80,7 +82,7 @@ export const grpcCancelExportProject: APIFunc<string, null> = (token, hiddenErro
             .invoke("cancel-ExportProject", token)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", `grpcCancelExportProject 失败:${e}`)
+                if (!hiddenError) yakitNotify("error", t("LayoutUtils.grpcCancelExportProjectFailed", {error: String(e)}))
                 reject(e)
             })
     })
@@ -92,7 +94,7 @@ export const grpcGetProjects: APIFunc<ProjectParamsProp, ProjectsResponse> = (pa
             .invoke("GetProjects", params)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", `grpcGetProjects 失败:${e}`)
+                if (!hiddenError) yakitNotify("error", t("LayoutUtils.grpcGetProjectsFailed", {error: String(e)}))
                 reject(e)
             })
     })
@@ -117,7 +119,7 @@ export const apiSplitUpload: APIFunc<SplitUploadRequest, SplitUploadResponse> = 
             .invoke("split-upload", params)
             .then(resolve)
             .catch((e) => {
-                if (!hiddenError) yakitNotify("error", `apiSplitUpload 失败:${e}`)
+                if (!hiddenError) yakitNotify("error", t("LayoutUtils.apiSplitUploadFailed", {error: String(e)}))
                 reject(e)
             })
     })

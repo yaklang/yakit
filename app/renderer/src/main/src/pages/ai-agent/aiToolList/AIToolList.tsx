@@ -31,18 +31,10 @@ import {ReActChatEventEnum, tagColors} from "../defaultConstant"
 import {YakitRoundCornerTag} from "@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag"
 import {yakitNotify} from "@/utils/notification"
 import {AIToolEditorPageInfoProps} from "@/store/pageInfo"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-const toolTypeOptions = [
-    {
-        label: "全部",
-        value: "all"
-    },
-    {
-        label: "收藏",
-        value: "collect"
-    }
-]
 const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [toolQueryType, setToolQueryType] = useState<ToolQueryType>("all")
     const [keyWord, setKeyWord] = useState<string>("")
     const [loading, setLoading] = useState<boolean>(false)
@@ -58,6 +50,16 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
 
     const toolListRef = useRef<HTMLDivElement>(null)
     const [inViewPort = true] = useInViewport(toolListRef)
+    const toolTypeOptions = [
+        {
+            label: t("AIToolList.all"),
+            value: "all"
+        },
+        {
+            label: t("AIToolList.collect"),
+            value: "collect"
+        }
+    ]
 
     useEffect(() => {
         getList()
@@ -171,7 +173,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                 <YakitInput
                     prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                     allowClear
-                    placeholder='请输入关键词搜索'
+                    placeholder={t("AIToolList.searchPlaceholder")}
                     value={keyWord}
                     onChange={(e) => onSearch(e.target.value)}
                 />
@@ -212,6 +214,7 @@ export default AIToolList
 
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
     const {item, onSetData, onRefresh, onSelect} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [visible, setVisible] = useState<boolean>(false)
     const onFavorite = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -249,12 +252,12 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
         return [
             {
                 key: "copy",
-                label: "复制",
+                label: t("AIToolList.copy"),
                 itemIcon: <OutlineClipboardcopyIcon />
             },
             {
                 key: "delete",
-                label: "删除",
+                label: t("AIToolList.delete"),
                 type: "danger",
                 itemIcon: <OutlineTrashIcon />
             }
@@ -275,13 +278,13 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
     const onRemove = useMemoizedFn(() => {
         grpcDeleteAITool({IDs: [item.ID]}).then(() => {
             onRefresh()
-            yakitNotify("success", "删除成功")
+            yakitNotify("success", t("AIToolList.deleteSuccess"))
         })
     })
     const onEdit = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!item.ID) {
-            yakitNotify("error", `该模板 ID('${item.ID}') 异常, 无法编辑`)
+            yakitNotify("error", t("AIToolList.templateIdError", {id: item.ID}))
             return
         }
         emiter.emit(

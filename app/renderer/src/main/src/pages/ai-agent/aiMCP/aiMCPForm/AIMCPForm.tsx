@@ -17,8 +17,10 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {InputHTTPHeaderForm} from "@/pages/mitm/MITMRule/MITMRuleFromModal"
 import {HTTPHeader} from "@/pages/mitm/MITMContentReplacerHeaderOperator"
 import {KVPair} from "@/models/kv"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
     const {onCancel, defaultValues} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [loading, setLoading] = useState<boolean>(false)
     const tableRef = useRef<HTMLDivElement>(null)
     const [form] = Form.useForm<AddMCPServerRequest>()
@@ -78,8 +80,8 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
             case AIMCPServerTypeEnum.SSE:
                 content = (
                     <>
-                        <Form.Item label='服务器URL' name='URL' rules={[{required: true, message: "请输入服务器URL"}]}>
-                            <YakitInput placeholder='例如: http://localhost:3000/sse' />
+                        <Form.Item label={t("AIMCPForm.serverUrl")} name='URL' rules={[{required: true, message: t("AIMCPForm.enterServerUrl")}]}>
+                            <YakitInput placeholder={t("AIMCPForm.serverUrlExample")} />
                         </Form.Item>
                         <Form.Item label={"Header"} name='Headers'>
                             {(headers || []).map((i, index) => {
@@ -111,7 +113,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                                     setVisibleHTTPHeader(true)
                                 }}
                             >
-                                添加
+                                {t("AIMCPForm.add")}
                             </YakitButton>
                         </Form.Item>
                     </>
@@ -121,13 +123,12 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                 content = (
                     <>
                         <Form.Item
-                            label='执行命令'
+                            label={t("AIMCPForm.runCommand")}
                             name='Command'
-                            rules={[{required: true, message: "请输入执行命令"}]}
-                        >
-                            <YakitInput placeholder='例如: npx -y @modelcontextprotocol/server-filesystem /path' />
+                            rules={[{required: true, message: t("AIMCPForm.enterRunCommand")}]}>
+                            <YakitInput placeholder={t("AIMCPForm.runCommandExample")} />
                         </Form.Item>
-                        <Form.Item label='环境变量' className={styles["envs-rules"]}>
+                        <Form.Item label={t("AIMCPForm.envVariables")} className={styles["envs-rules"]}>
                             <Form.List name='Envs'>
                                 {(fields, {add, remove}) => (
                                     <>
@@ -141,7 +142,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                                                     if (envs.length > 0) {
                                                         const {Key, Value} = envs[envs.length - 1]
                                                         if (!Key && !Value) {
-                                                            yakitNotify("error", "请设置完成后再添加")
+                                                            yakitNotify("error", t("AIMCPForm.completeBeforeAdd"))
                                                             return
                                                         }
                                                     }
@@ -153,7 +154,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                                                     }, 100)
                                                 }}
                                             >
-                                                添加
+                                                {t("AIMCPForm.add")}
                                             </YakitButton>
                                             <Divider type='vertical' style={{margin: 0}} />
                                             <YakitButton
@@ -163,7 +164,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                                                     form.setFieldsValue({Envs: [{Key: "", Value: ""}]})
                                                 }}
                                             >
-                                                重置
+                                                {t("AIMCPForm.reset")}
                                             </YakitButton>
                                         </div>
                                         <div ref={tableRef} className={styles["envs-rules-table"]}>
@@ -235,16 +236,16 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
     return (
         <div>
             <Form form={form} labelCol={{span: 6}} wrapperCol={{span: 18}} className={styles["ai-mcp-form"]}>
-                <Form.Item label='服务器名称' name='Name' rules={[{required: true, message: "请输入服务器名称"}]}>
+                <Form.Item label={t("AIMCPForm.serverName")} name='Name' rules={[{required: true, message: t("AIMCPForm.enterServerName")}]}>
                     <YakitInput />
                 </Form.Item>
-                <Form.Item label='启用' name='Enable' valuePropName='checked' initialValue={false}>
+                <Form.Item label={t("AIMCPForm.enable")} name='Enable' valuePropName='checked' initialValue={false}>
                     <YakitSwitch />
                 </Form.Item>
                 <Form.Item
-                    label='服务器类型'
+                    label={t("AIMCPForm.serverType")}
                     name='Type'
-                    rules={[{required: true, message: "请选择服务器类型"}]}
+                    rules={[{required: true, message: t("AIMCPForm.selectServerType")}]}
                     initialValue={AIMCPServerTypeEnum.SSE}
                 >
                     <YakitSelect options={typeOptions} />
@@ -262,10 +263,10 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
             />
             <div className={styles["button-group"]}>
                 <YakitButton type='outline2' size='large' onClick={onCancel}>
-                    取消
+                    {t("AIMCPForm.cancel")}
                 </YakitButton>
                 <YakitButton type='primary' size='large' loading={loading} onClick={handleSubmit}>
-                    确定
+                    {t("AIMCPForm.confirm")}
                 </YakitButton>
             </div>
         </div>

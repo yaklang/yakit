@@ -11,6 +11,7 @@ import {writeExecResultXTerm, writeXTerm, xtermClear} from "@/utils/xtermUtils"
 import {Uint8ArrayToString} from "@/utils/str"
 import {ExecResult} from "@/pages/invoker/schema"
 import {TerminalDetailsProps} from "./TerminalMap"
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
 
 export const defaultTerminaFont = "Consolas, 'Courier New', monospace"
@@ -403,7 +404,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
         }
 
         const onError = (e, data) => {
-            warn(`终端${data.path}错误`)
+            warn(i18n.t("TerminalBox.terminalError", {ns: "yakRunner", path: data.path}))
         }
 
         ipcRenderer.on(key, onData)

@@ -3,6 +3,9 @@ import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import { addScopeShow } from "../global"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 export enum YakitMultipleShortcutKey {
     /** 多页面快捷键 */
@@ -13,7 +16,7 @@ type EventsType = Record<`${YakitMultipleShortcutKey}`, ShortcutKeyEventInfo>
 
 const YakitMultipleShortcutKeyEvents: EventsType = {
     "save*pluginEditor": {
-        name: "插件保存",
+        name: t("ShortcutKey.savePlugin"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_S]
     }
 }
@@ -51,5 +54,4 @@ export const resetYakitMultipleShortcutKeyEvents = () => {
     currentKeyEvents = null
     setLocalValue(LocalStorageKey, JSON.stringify(YakitMultipleShortcutKeyEvents))
 }
-
 

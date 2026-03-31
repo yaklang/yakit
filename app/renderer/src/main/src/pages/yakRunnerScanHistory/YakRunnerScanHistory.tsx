@@ -44,6 +44,7 @@ import { CheckboxChangeEvent } from "antd/lib/checkbox"
 import { apiQuerySSAPrograms } from "./utils"
 import { getGroupNamesTotal } from "../yakRunnerCodeScan/utils"
 import { JSONParseLog } from "@/utils/tool"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const { ipcRenderer } = window.require("electron")
 export interface GenerateSSAReportResponse {
     Success: boolean
@@ -53,6 +54,7 @@ export interface GenerateSSAReportResponse {
 
 interface YakRunnerScanHistoryProp { }
 const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
+    const { t } = useI18nNamespaces(["yakRunner"])
     const { queryPagesDataById } = usePageInfo(
         (s) => ({
             queryPagesDataById: s.queryPagesDataById
@@ -180,7 +182,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                 }
             })
             .catch((e) => {
-                yakitNotify("error", "获取扫描历史失败：" + e)
+                yakitNotify("error", t("YakRunnerScanHistory.fetchFailed", {error: String(e)}))
             })
             .finally(() => {
                 setLoading(false)
@@ -203,14 +205,14 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
     })
 
     const exportReport = useMemoizedFn((record: SyntaxFlowScanTask) => {
-        let reportName = !!query.Filter?.Programs?.length ? `${query.Filter?.Programs[0]}-SSA扫描报告` : undefined
+        let reportName = !!query.Filter?.Programs?.length ? `${query.Filter?.Programs[0]}-${t("YakRunnerScanHistory.ssaReport")}` : undefined
         const m = showYakitModal({
-            title: "导出报告",
+            title: t("YakRunnerScanHistory.exportReport"),
             content: (
                 <div style={{ padding: 20 }}>
                     <YakitInput
                         defaultValue={reportName}
-                        placeholder='请输入报告名称'
+                        placeholder={t("YakRunnerScanHistory.reportNamePlaceholder")}
                         onChange={(e) => {
                             reportName = e.target.value
                         }}
@@ -232,7 +234,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                         m.destroy()
                     })
                     .catch((e) => {
-                        yakitNotify("error", "导出报告失败：" + e)
+                        yakitNotify("error", t("YakRunnerScanHistory.exportReportFailed", {error: String(e)}))
                     })
             }
         })
@@ -241,13 +243,13 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(
         () => [
             {
-                title: "扫描时间",
+                title: t("YakRunnerScanHistory.scanTime"),
                 dataKey: "CreatedAt",
                 width: 150,
                 render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? "-" : formatTimestamp(text)}</div>
             },
             {
-                title: "漏洞数",
+                title: t("YakRunnerScanHistory.riskCount"),
                 dataKey: "oldRisk",
                 render: (_, record: SyntaxFlowScanTask) => {
                     return (
@@ -256,27 +258,27 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                                 {
                                     risk: "info",
                                     count: +record.InfoCount,
-                                    text: "信息"
+                                    text: t("YakRunnerScanHistory.info")
                                 },
                                 {
                                     risk: "low",
                                     count: +record.LowCount,
-                                    text: "低危"
+                                    text: t("YakRunnerScanHistory.low")
                                 },
                                 {
                                     risk: "warning",
                                     count: +record.WarningCount,
-                                    text: "中危"
+                                    text: t("YakRunnerScanHistory.medium")
                                 },
                                 {
                                     risk: "high",
                                     count: +record.HighCount,
-                                    text: "高危"
+                                    text: t("YakRunnerScanHistory.high")
                                 },
                                 {
                                     risk: "critical",
                                     count: +record.CriticalCount,
-                                    text: "严重"
+                                    text: t("YakRunnerScanHistory.critical")
                                 }
                             ])}
                         </div>
@@ -284,7 +286,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                 }
             },
             {
-                title: "新增漏洞（与上次扫描对比）",
+                title: t("YakRunnerScanHistory.newRisk"),
                 dataKey: "newRisk",
                 render: (_, record: SyntaxFlowScanTask) => {
                     return (
@@ -293,27 +295,27 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                                 {
                                     risk: "info",
                                     count: +record.NewInfoCount,
-                                    text: "信息"
+                                    text: t("YakRunnerScanHistory.info")
                                 },
                                 {
                                     risk: "low",
                                     count: +record.NewLowCount,
-                                    text: "低危"
+                                    text: t("YakRunnerScanHistory.low")
                                 },
                                 {
                                     risk: "warning",
                                     count: +record.NewWarningCount,
-                                    text: "中危"
+                                    text: t("YakRunnerScanHistory.medium")
                                 },
                                 {
                                     risk: "high",
                                     count: +record.NewHighCount,
-                                    text: "高危"
+                                    text: t("YakRunnerScanHistory.high")
                                 },
                                 {
                                     risk: "critical",
                                     count: +record.NewCriticalCount,
-                                    text: "严重"
+                                    text: t("YakRunnerScanHistory.critical")
                                 }
                             ])}
                         </div>
@@ -321,7 +323,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                 }
             },
             {
-                title: "操作",
+                title: t("YakRunnerScanHistory.operation"),
                 dataKey: "action",
                 width: 160,
                 fixed: "right",
@@ -349,7 +351,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                                 )
                             }}
                         >
-                            查看详情
+                            {t("YakRunnerScanHistory.viewDetails")}
                         </YakitButton>
                         <YakitButton
                             type='text'
@@ -358,7 +360,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                                 exportReport(record)
                             }}
                         >
-                            导出报告
+                            {t("YakRunnerScanHistory.exportReport")}
                         </YakitButton>
                     </>
                 )
@@ -376,7 +378,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
     return (
         <div className={styles["YakRunnerScanHistory"]} ref={yakRunnerScanHistoryRef} id='yakrunner-scan-history'>
             <div className={classNames("yakit-content-single-ellipsis", styles["YakRunnerScanHistory-title"])}>
-                {pageInfo.Programs.length > 0 ? pageInfo.Programs[0] : "未识别项目名"}
+                {pageInfo.Programs.length > 0 ? pageInfo.Programs[0] : t("YakRunnerScanHistory.unrecognizedProjectName")}
             </div>
             <div className={styles["YakRunnerScanHistory-main"]}>
                 <YakitResizeBox
@@ -392,7 +394,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
                             titleHeight={42}
                             renderTitle={
                                 <div className={styles["YakRunnerScanHistory-table-title"]}>
-                                    扫描历史
+                                    {t("YakRunnerScanHistory.scanHistory")}
                                     <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={() => update(1)} />
                                 </div>
                             }
@@ -556,6 +558,7 @@ interface CompileHistoryListProps {
 // 编译历史列表
 const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
     const { pageInfo } = props
+    const {t} = useI18nNamespaces(["yakRunner"])
     const [loading, setLoading] = useState<boolean>(false)
     const [hasMore, setHasMore] = useState<boolean>(false)
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -663,11 +666,11 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
             .then(() => {
                 update(1)
                 setCheckedList([])
-                success("删除成功")
+                success(t("YakRunnerScanHistory.deleteSuccess"))
             })
             .catch((error) => {
                 setLoading(false)
-                failed(`删除失败${error}`)
+                failed(t("YakRunnerScanHistory.deleteFailed", {error: String(error)}))
             })
     })
 
@@ -679,7 +682,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                 if(isHasChildren){
                     update(1)
                     setCheckedList([])
-                    success("删除成功")
+                    success(t("YakRunnerScanHistory.deleteSuccess"))
                     return
                 }
                 setResponse((prevResponse) => {
@@ -694,11 +697,11 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                 })
                 setCheckedList([])
                 setLoading(false)
-                success("删除成功")
+                success(t("YakRunnerScanHistory.deleteSuccess"))
             })
         } catch (error) {
             setLoading(false)
-            failed(`删除失败${error}`)
+            failed(t("YakRunnerScanHistory.deleteFailed", {error: String(error)}))
         }
     })
 
@@ -778,7 +781,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                     </div>
 
                     <div className={styles["option"]}>
-                        <Tooltip title={"代码扫描"}>
+                        <Tooltip title={t("YakRunnerScanHistory.codeScan")}>
                             <div
                                 className={classNames(styles["icon-wrapper"], {
                                     [styles["icon-wrapper-active"]]: isClick
@@ -795,7 +798,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                                     projectName:
                                                         pageInfo.Programs.length > 0
                                                             ? pageInfo.Programs[0]
-                                                            : "项目名异常",
+                                                            : t("YakRunnerScanHistory.projectNameError"),
                                                     projectId:
                                                         pageInfo.ProjectIds.length > 0
                                                             ? pageInfo.ProjectIds[0]
@@ -807,14 +810,14 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                             })
                                         )
                                     } catch (error) {
-                                        failed(`跳转代码扫描页失败${error}`)
+                                        failed(t("YakRunnerScanHistory.jumpToScanFailed", {error: String(error)}))
                                     }
                                 }}
                             >
                                 <OutlineScanIcon />
                             </div>
                         </Tooltip>
-                        <Tooltip title={"打开项目"}>
+                        <Tooltip title={t("YakRunnerScanHistory.openProject")}>
                             <div
                                 className={classNames(styles["icon-wrapper"], {
                                     [styles["icon-wrapper-active"]]: isClick
@@ -860,13 +863,13 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
         <div className={styles["compile-history"]}>
             <div className={styles["compile-history-header"]}>
                 <div className={classNames("yakit-content-single-ellipsis", styles["compile-history-title"])}>
-                    编译历史
+                    {t("YakRunnerScanHistory.compileHistory")}
                     <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={() => update(1)} />
                 </div>
                 <div className={styles["compile-history-sub-title"]}>
                     <div className={styles["modal-sub-title"]}>
                         <YakitPopconfirm
-                            title={checkedList.length > 0 ? "确定删除勾选数据吗？" : "确定清空列表数据吗?"}
+                            title={checkedList.length > 0 ? t("YakRunnerScanHistory.confirmDeleteSelected") : t("YakRunnerScanHistory.confirmClearList")}
                             onConfirm={() => {
                                 onRemoveMultiple()
                             }}
@@ -878,7 +881,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
                                 type='text'
                                 colors='danger'
                             >
-                                {checkedList.length > 0 ? "删除" : "清空"}
+                                {checkedList.length > 0 ? t("YakRunnerScanHistory.delete") : t("YakRunnerScanHistory.clear")}
                             </YakitButton>
                         </YakitPopconfirm>
                     </div>

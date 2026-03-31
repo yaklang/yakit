@@ -3,6 +3,9 @@ import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import {addScopeShow} from "../global"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 export enum HttpFuzzerShortcutKey {
     /** 发送请求 */
@@ -15,11 +18,11 @@ type EventsType = Record<`${HttpFuzzerShortcutKey}`, ShortcutKeyEventInfo>
 
 const HttpFuzzerShortcutKeyEvents: EventsType = {
     "sendRequest*httpFuzzer": {
-        name: "发送请求",
+        name: t("ShortcutKey.sendRequest"),
         keys: [YakitKeyMod.Alt, YakitKeyBoard.Enter]
     },
     "saveHistoryData*httpFuzzer": {
-        name: "保存WebFuzzer历史数据",
+        name: t("ShortcutKey.saveWebFuzzerHistory"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_S]
     }
 }

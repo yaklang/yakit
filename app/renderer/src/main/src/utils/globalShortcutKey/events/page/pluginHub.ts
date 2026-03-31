@@ -3,6 +3,9 @@ import {YakitKeyBoard, YakitKeyMod} from "../../keyboard"
 import {ShortcutKeyEventInfo} from "../pageMaps"
 import { addScopeShow } from "../global"
 import { JSONParseLog } from "@/utils/tool"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 
 export enum PluginHubShortcutKey {
     /** 新建插件 */
@@ -13,7 +16,7 @@ type EventsType = Record<`${PluginHubShortcutKey}`, ShortcutKeyEventInfo>
 
 const PluginHubShortcutKeyEvents: EventsType = {
     newPlugin: {
-        name: "新建插件",
+        name: t("ShortcutKey.newPlugin"),
         keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Alt, YakitKeyBoard.KEY_B]
     }
 }
@@ -51,5 +54,4 @@ export const resetPluginHubShortcutKeyEvents = () => {
     currentKeyEvents = null
     setLocalValue(LocalStorageKey, JSON.stringify(PluginHubShortcutKeyEvents))
 }
-
 

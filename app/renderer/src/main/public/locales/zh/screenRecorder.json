@@ -1,33 +1,32 @@
 {
+  "ScreenRecorderPage": {
+    "notInstalled": "未安装录屏",
+    "installRecorder": "安装录屏",
+    "installing": "录屏工具安装中...",
+    "installFailed": "IsScrecorderReady失败：{error}",
+    "installHint": "点击“安装录屏”，录屏工具安装成功后即可开始录屏",
+    "timeout": "连接超时",
+    "downloadFailed": "下载失败：",
+    "downloaded": "已下载"
+  },
+  "ScreenRecorderList": {
+    "getListFailed": "获取录屏列表失败：{error}",
+    "loginRequired": "登录后才可上传录屏"
+  },
   "ScrecorderModal": {
     "recommended": "推荐",
     "speed": "倍速",
-    "screenRecorderDesc": "本录屏在 Windows 下，会同时录制所有屏幕，合并在一个文件中；在 MacOS 下多屏会生成多个文件",
+    "screenRecorderDesc": "Windows 下会录制所有屏幕并合并成一个文件，MacOS 下多个屏幕会生成多个文件",
     "framerate": "帧率",
-    "framerateHelp": "渗透测试过程记录推荐使用低帧率（5fps 以下）以免 CPU 占用过高",
-    "framerateTooltip": "帧率即每秒截屏次数",
-    "speedHelp": "直接录制倍速视频，免视频后期处理",
+    "framerateHelp": "帧率越高视频越流畅，但文件体积更大",
+    "framerateTooltip": "推荐：7fps",
+    "speedHelp": "数值越小越慢，数值越大越快",
     "mouseCapture": "鼠标捕捉",
     "startRecording": "开始录屏"
   },
-  "ScreenRecorderList": {
-    "getListFailed": "获取列表数据失败：{error}",
-    "loginRequired": "请先登录，登录后方可使用",
-    "screenRecorder": "录屏管理",
-    "stopRecording": "停止录屏",
-    "deleteTitle": "删除录屏",
-    "deleteDesc": "删除录屏的同时会清除本地视频文件"
-  },
-  "ScreenRecorderListItem": {
-    "fileNotFound": "目标文件已不存在!",
-    "playFailed": "播放失败：{error}",
-    "editVideoInfo": "编辑视频信息",
-    "updateFailed": "修改失败：{error}",
-    "video": "视频",
-    "videoName": "视频名称",
-    "notes": "备注",
-    "noImage": "暂无图片",
-    "openDirectory": "点击打开视频所在目录",
-    "deletePopconfirm": "删除录屏的同时会删除本地录屏文件"
+  "ReactPlayerVideo": {
+    "fileNotPlayable": "该视频文件不可播放",
+    "previous": "上一个",
+    "next": "下一个"
   }
 }

@@ -37,6 +37,10 @@
     "editTagSuccess": "编辑tag成功",
     "shareData": "分享数据",
     "uploadingDataCannotClickAgain": "上传数据中，上传完成前无法再次点击上传数据",
+    "sentSuccessfully": "发送成功",
+    "setColorSuccessfully": "设置 HTTPFlow 颜色成功",
+    "clearColorSuccessfully": "清除 HTTPFlow 颜色成功",
+    "maxSendEntries": "最多同时只能发送{maxLength}条数据",
     "missingParameter": "参数缺失",
     "dataUploading": "数据正在上传中",
     "uploadResult": "上传成功{SuccessCount}条数据，上传失败{FailedCount}条数据",
@@ -149,7 +153,26 @@
     "rawHTTPRequest": "原始 HTTP 请求",
     "rawHTTPResponse": "原始 HTTP 响应",
     "batchDeletion": "批量删除",
-    "deduplicate": "去重"
+    "deduplicate": "去重",
+    "manualModifyTag": "手动修改",
+    "responseDroppedTag": "响应被丢弃"
+  },
+  "HTTPFlowRiskViewer": {
+    "details": "详情"
+  },
+  "HistoryAIReActChat": {
+    "newChat": "新建对话"
+  },
+  "HTTPFlowMiniTable": {
+    "id": "ID",
+    "method": "方法",
+    "status": "状态",
+    "bodyLength": "Body大小",
+    "actions": "操作",
+    "details": "详情",
+    "getParams": "Get 参数",
+    "postParams": "Post 参数",
+    "sendToWebFuzzer": "发送到Fuzzer"
   },
   "RandomChunkedDataTable": {
     "chunkDetails": "分块详情",
@@ -183,6 +206,7 @@
     "collapseRight": "向右收起",
     "previousRule": "上一个规则",
     "nextRule": "下一个规则",
+    "rootDomains": "根域",
     "domain": "域名",
     "object": "对象",
     "rule": "规则",
@@ -232,6 +256,7 @@
     "sendToWSFuzzer": "发送到 WS Fuzzer",
     "sendAndRedirect": "发送并跳转",
     "sendOnly": "仅发送",
-    "packetEmpty": "数据包为空"
+    "packetEmpty": "数据包为空",
+    "editorExecFailed": "执行编辑器打开 fuzzer 失败"
   }
 }

@@ -3,6 +3,7 @@ import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
 import {useMemoizedFn} from "ahooks"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface ExportAILogsModalProps {
     visible: boolean
@@ -20,6 +21,7 @@ const ExportTypes = [
 
 export const ExportAILogsModal: React.FC<ExportAILogsModalProps> = (props) => {
     const {visible, onCancel, onOk, loading} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const [types, setTypes] = useState<string[]>(["checkpoints", "memory", "timeline", "output_event"])
     // const [outputPath, setOutputPath] = useState<string>("")
 
@@ -37,7 +39,7 @@ export const ExportAILogsModal: React.FC<ExportAILogsModalProps> = (props) => {
 
     return (
         <YakitModal
-            title='导出 AI 日志'
+            title={t("ExportAILogsModal.title")}
             visible={visible}
             onCancel={onCancel}
             onOk={handleOk}
@@ -57,11 +59,11 @@ export const ExportAILogsModal: React.FC<ExportAILogsModalProps> = (props) => {
                     backgroundColor: "var(--Colors-Use-Success-Bg)"
                 }}
             >
-                远程模式下导出后请打开~memfit\yakit-projects\temp路径查看导出文件
+                {t("ExportAILogsModal.remoteHint")}
             </div>
             <div style={{display: "flex", flexDirection: "column", gap: 24, padding: "8px 16px"}}>
                 <div style={{display: "flex", flexDirection: "column", gap: 12}}>
-                    <div style={{color: "var(--text-title-color)", fontWeight: 500}}>导出内容</div>
+                    <div style={{color: "var(--text-title-color)", fontWeight: 500}}>{t("ExportAILogsModal.exportContent")}</div>
                     <div style={{display: "flex", gap: 16, flexWrap: "wrap"}}>
                         {ExportTypes.map((opt) => (
                             <YakitCheckbox

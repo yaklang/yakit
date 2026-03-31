@@ -17,16 +17,17 @@ import {GetReleaseEdition} from "@/utils/envfile"
 import {GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {failed} from "@/utils/notification"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-const getShortcutPageName = (page) => {
+const getShortcutPageName = (page, t) => {
     if (page === "global") {
-        return "全局"
+        return t("ShortcutKey.global")
     } else if (page === "yakit-multiple") {
-        return "多页面"
+        return t("ShortcutKey.multiple")
     } else if (page === "chat-cs") {
-        return "ChatCS"
+        return t("ShortcutKey.chatCS")
     } else if (page === "yak-editor") {
-        return "编辑器"
+        return t("ShortcutKey.editor")
     } else {
         return `${YakitRouteToPageInfo[page].label}`
     }
@@ -34,6 +35,7 @@ const getShortcutPageName = (page) => {
 
 export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
     const {page} = props
+    const {t} = useI18nNamespaces(["shortcutKey"])
 
     const wrapper = useRef<HTMLDivElement>(null)
 
@@ -49,7 +51,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
                 setLoading(false)
             }, 200)
         } catch (error) {
-            failed("获取快捷键失败")
+            failed(t("ShortcutKey.loadFailed"))
             setData({})
             setLoading(false)
         }
@@ -123,7 +125,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
     return (
         <div ref={wrapper} className={styles["shortcut-key"]}>
             <Spin spinning={loading}>
-                <div className={styles["header"]}>{getShortcutPageName(page)}</div>
+                <div className={styles["header"]}>{getShortcutPageName(page, t)}</div>
 
                 <div className={styles["shortcut-key-content"]}>
                     {eventKeys.map((key) => {
@@ -148,14 +150,14 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
                             getData(page)
                         }}
                     >
-                        恢复默认设置
+                        {t("ShortcutKey.restoreDefault")}
                     </YakitButton>
                 </div>
 
                 <YakitModal
                     getContainer={wrapper.current || undefined}
                     type='white'
-                    title='编辑快捷键'
+                    title={t("ShortcutKey.editShortcut")}
                     centered={true}
                     keyboard={false}
                     // closable={false}
@@ -168,7 +170,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
                     }}
                 >
                     <div className={styles["set-shortcut-key-wrapper"]}>
-                        <div className={styles["title"]}>先按所需的组合键, 再按 Enter 键, 按 Esc 键取消</div>
+                        <div className={styles["title"]}>{t("ShortcutKey.hint")}</div>
                         {/* <div className={styles["title"]}>
                             注：编辑器快捷键需以"Alt", "Shift", "Control", "Meta"进行组合使用
                         </div> */}
@@ -190,6 +192,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
 // 快捷键列表
 export const ShortcutKeyList: React.FC<ShortcutKeyListProps> = memo(() => {
     const [activePage, setActivePage] = useState<ShortcutKeyPageName>("global")
+    const {t} = useI18nNamespaces(["shortcutKey"])
 
     const newPageEventMaps = useMemo(() => {
         return Object.keys(pageEventMaps).filter((item) => {
@@ -213,7 +216,7 @@ export const ShortcutKeyList: React.FC<ShortcutKeyListProps> = memo(() => {
                                 setActivePage(page)
                             }}
                         >
-                            {getShortcutPageName(page)}
+                            {getShortcutPageName(page, t)}
                         </div>
                     )
                 })}

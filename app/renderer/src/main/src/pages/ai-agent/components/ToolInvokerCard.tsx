@@ -34,6 +34,7 @@ import {AIChatIPCSendParams} from "../useContext/ChatIPCContent/ChatIPCContent"
 import {useTypedStream} from "./aiChatListItem/StreamingChatContent/hooks/useTypedStream"
 import {AIReferenceNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import {useStreamingChatContent} from "./aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -85,6 +86,7 @@ export default memo(ToolInvokerCard)
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
     const {titleText, modalInfo, operationInfo, fileList, chatType, data} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const {activeChat} = useAIAgentStore()
     const {handleSend} = useChatIPCDispatcher()
@@ -134,7 +136,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
                             {selectors?.selectors?.map((item) => {
                                 return (
                                     <YakitPopconfirm
-                                        title='跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过'
+                                        title={t("ToolInvokerCard.skipConfirm")}
                                         key={item.value}
                                         onConfirm={() => onToolExtra(item)}
                                     >
@@ -172,6 +174,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     const {titleText, modalInfo, operationInfo, fileList, data, chatType, token} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
 
     const {activeChat} = useAIAgentStore()
     const {fetchChatDataStore} = useChatIPCDispatcher().chatIPCEvents
@@ -195,9 +198,9 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     }, [data?.tool?.status])
 
     const [statusColor, statusText] = useMemo(() => {
-        if (status === "success") return ["success", "成功"]
-        if (status === "failed") return ["danger", "失败"]
-        return ["white", "已取消"]
+        if (status === "success") return ["success", t("ToolInvokerCard.success")]
+        if (status === "failed") return ["danger", t("ToolInvokerCard.failed")]
+        return ["white", t("ToolInvokerCard.cancelled")]
     }, [status])
 
     const params = useCreation(() => {
@@ -295,12 +298,12 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                     <div className={styles["tool-invoker-card-extra-time"]}>
                         {!!startTime && (
                             <div>
-                                开始时间:<span>{startTime}</span>
+                                {t("ToolInvokerCard.startTime")}<span>{startTime}</span>
                             </div>
                         )}
                         {!!duration && (
                             <div>
-                                执行时长:<span>{duration}</span>s
+                                {t("ToolInvokerCard.duration")}<span>{duration}</span>s
                             </div>
                         )}
                     </div>
@@ -312,7 +315,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                                     switchAIActTab(AITabsEnum.Risk)
                                 }}
                             >
-                                相关漏洞 <span>{risksLen}</span>
+                                {t("ToolInvokerCard.relatedRisks")} <span>{risksLen}</span>
                             </label>
                             <Divider type='vertical' />
                         </>
@@ -323,10 +326,10 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                                 switchAIActTab(AITabsEnum.HTTP)
                             }}
                         >
-                            HTTP 流量 <span>{trafficLen}</span>
+                            {t("ToolInvokerCard.httpTraffic")} <span>{trafficLen}</span>
                         </label>
                     )}
-                    <Tooltip title='刷新代码块数据'>
+                    <Tooltip title={t("ToolInvokerCard.refreshCodeBlockData")}>
                         <YakitButton type='text' icon={<OutlineRefreshIcon />} onClick={getListToolList} />
                     </Tooltip>
                 </div>

@@ -1,0 +1,27 @@
+{
+  "YakRunnerAuditHole": {
+    "statisticTab": "Statistic",
+    "documentCollectTab": "Document Collect",
+    "advancedSearch": "Advanced Search",
+    "endReached": "End reached",
+    "fileStatistics": "File Statistics",
+    "reset": "Reset",
+    "vulnerabilityLevel": "Vulnerability Level",
+    "vulnerabilityTypeTop10": "Top 10 Vulnerability Types",
+    "vulnerabilityTypeResetTip": "Click to reset the selection"
+  },
+  "DocumentCollect": {
+    "searchPlaceholder": "Search by file name or function"
+  },
+  "YakitAuditHoleTable": {
+    "queryFailed": "Query failed: {error}",
+    "deleteFailed": "Delete failed: {error}",
+    "settingFailed": "Set failed: {error}",
+    "getFailed": "Get failed: {error}",
+    "readFailed": "Mark as read failed: {error}",
+    "feedbackFailed": "Feedback failed: {error}",
+    "noForgeNameMatch": "No ForgeName matches found",
+    "noParamsUIConfig": "No ParamsUIConfig configuration found",
+    "matchForgeNameError": "ForgeName matching error: {error}"
+  }
+}

@@ -92,7 +92,15 @@
     "send_request": "发送请求",
     "parameter": "参数",
     "trafficAnalysisMode": "流量分析模式",
-    "trafficAnalysis": "流量分析"
+    "trafficAnalysis": "流量分析",
+    "noDictionary": "暂无字典，请先添加后再使用",
+    "getDictionaryListFailed": "获取字典列表失败：{error}",
+    "copyUrlIncomplete": "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整",
+    "sentSuccessfully": "发送成功",
+    "fuzzerTagDebugTool": "Fuzzer Tag 调试工具",
+    "fuzzerTagDebugSubTitle": "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
+    "payloadEmpty": "Payload 为空 / Fuzz 模版为空",
+    "editorNotWorking": "BUG: 编辑器失效"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{droppedCount}]个响应",
@@ -173,7 +181,9 @@
     "readFileByLine": "按行读取文件",
     "allInFolder": "文件夹内所有",
     "selectPath": "选择路径",
-    "confirmSelection": "确定所选内容"
+    "confirmSelection": "确定所选内容",
+    "selectFileInsert": "选择文件并插入",
+    "copyDictionaryText": "复制你想要作为字典的文本"
   },
   "InsertTextToFuzzTag": {
     "generateTempDictionaryFile": "生成临时字典文件：",
@@ -681,10 +691,31 @@
     "get_config_key_failed": "获取并发配置折叠面板的激活key失败："
   },
   "WebsocketFuzzer": {
-    "clear_send_data": "清空发送数据"
+    "clear_send_data": "清空发送数据",
+    "selectDataFrame": "选择 Websocket Data Frame 以查看详情",
+    "sentSuccessfully": "发送成功",
+    "request": "请求",
+    "response": "响应",
+    "connected": "已建立连接",
+    "notConnected": "连接未建立",
+    "extraParams": "设置额外参数",
+    "setProxy": "设置代理",
+    "setTimeout": "设置超时(s)",
+    "closeConnectionConfirm": "确定要关闭 Websocket 连接吗？",
+    "disconnect": "断开",
+    "connect": "连接",
+    "buildingConnection": "正在构建 Websocket 连接",
+    "sendData": "发送数据",
+    "sendToServer": "发送到服务器",
+    "realtimePreview": "Websocket 数据帧实时预览",
+    "serverResponse": "服务器响应",
+    "clientRequest": "客户端请求",
+    "frameDetails": "数据帧详情",
+    "dataSize": "数据大小: {size}"
   },
   "HTTPFuzzerHosts": {
     "modalTitle": "添加 DNS Hosts 配置",
+    "dnsHostsConfigTitle": "输入 DNS Hosts 配置",
     "inputConfig": "输入配置",
     "uploadFile": "上传文件",
     "hostsConfig": "hosts 配置",

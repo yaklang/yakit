@@ -17,6 +17,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {ReActChatEventEnum} from "@/pages/ai-agent/defaultConstant"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
+import i18n from "@/i18n/i18n"
 const {ipcRenderer} = window.require("electron")
 /** QuerySSARisks */
 export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySSARisksResponse> = (query) => {
@@ -25,7 +26,7 @@ export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySS
             .invoke("QuerySSARisks", query)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `查询失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.queryFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -38,7 +39,7 @@ export const apiDeleteSSARisks: (query?: DeleteSSARisksRequest) => Promise<null>
             .invoke("DeleteSSARisks", query)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `删除失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.deleteFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -56,7 +57,7 @@ export const apiCreateSSARiskDisposals: (params: CreateSSARiskDisposalsRequest) 
             .invoke("CreateSSARiskDisposals", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `设置失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.settingFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -85,7 +86,7 @@ export const apiGetSSARiskDisposal: (params: {
             .invoke("GetSSARiskDisposal", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `获取失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.getFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -114,7 +115,7 @@ export const apiDeleteSSARiskDisposals: (
             .invoke("DeleteSSARiskDisposals", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `删除失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.deleteFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -138,7 +139,7 @@ export const apiGetSSARiskFieldGroupEx: (
             .invoke("GetSSARiskFieldGroupEx", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `查询失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.queryFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -150,7 +151,7 @@ export const apiNewRiskRead: (query?: SSARisksFilter) => Promise<null> = (query)
             .invoke("NewSSARiskRead", {Filter: query})
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `已读失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.readFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -172,7 +173,7 @@ export const apiGroupTableColumn: (query: GroupTableColumnRequest) => Promise<Gr
             .invoke("GroupTableColumn", query)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `已读失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.readFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -189,7 +190,7 @@ export const apiSSARiskFeedbackToOnline: (params: SSARiskFeedbackToOnlineRequest
             .invoke("SSARiskFeedbackToOnline", params)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `反馈失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.feedbackFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -202,7 +203,7 @@ export const apiQueryNewSSARisks: (query?: QueryNewSSARisksRequest) => Promise<Q
             .invoke("QueryNewSSARisks", query)
             .then(resolve)
             .catch((e) => {
-                yakitNotify("error", `查询失败: ${e}`)
+                yakitNotify("error", i18n.t("YakitAuditHoleTable.queryFailed", {ns: "yakRunnerAuditHole", error: e}))
                 reject(e)
             })
     })
@@ -263,11 +264,11 @@ export const openAIForge = (params: {
     grpcGetAIForge(query, true)
         .then((res) => {
             if (!res) {
-                yakitNotify("warning", "暂无ForgeName匹配项")
+                yakitNotify("warning", i18n.t("YakitAuditHoleTable.noForgeNameMatch", {ns: "yakRunnerAuditHole"}))
                 return
             }
             if (!res.ParamsUIConfig) {
-                yakitNotify("warning", "暂无ParamsUIConfig配置项")
+                yakitNotify("warning", i18n.t("YakitAuditHoleTable.noParamsUIConfig", {ns: "yakRunnerAuditHole"}))
                 return
             }
             let paramsUIConfig: YakParamProps = JSONParseLog(res.ParamsUIConfig, jsonParseLogParams)
@@ -286,6 +287,6 @@ export const openAIForge = (params: {
             }, 100)
         })
         .catch((e) => {
-            yakitNotify("error", "匹配ForgeName异常:" + e)
+            yakitNotify("error", i18n.t("YakitAuditHoleTable.matchForgeNameError", {ns: "yakRunnerAuditHole", error: e}))
         })
 }

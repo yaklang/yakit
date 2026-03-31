@@ -7,6 +7,9 @@ import emiter from "./eventBus/eventBus"
 import {HTML5Backend} from "react-dnd-html5-backend"
 import {DndProvider} from "react-dnd"
 import {YakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
+import i18n from "@/i18n/i18n"
+
+const t = i18n.getFixedT(null, "utils")
 const {ipcRenderer} = window.require("electron")
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
@@ -76,11 +79,11 @@ export const showModal = (props: ShowModalProps) => {
                         <ErrorBoundary
                             FallbackComponent={({error, resetErrorBoundary}) => {
                                 if (!error) {
-                                    return <div>未知错误</div>
+                                    return <div>{t("basic.ShowModal.unknownError")}</div>
                                 }
                                 return (
                                     <div>
-                                        <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                                        <p>{t("basic.ShowModal.modalLogicCrash")}</p>
                                         <pre>{error?.message}</pre>
                                     </div>
                                 )

@@ -24,6 +24,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {AddKnowledgeBaseModal} from "./AddKnowledgeBaseModal"
 import {InstallPluginModal} from "./InstallPluginModal/InstallPluginModal"
 import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "../hooks/useCheckKnowledgePlugin"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 type UseMultipleHoldGRPCStreamReturn = ReturnType<typeof useMultipleHoldGRPCStream>
 
@@ -102,6 +103,7 @@ const loadTotals = async (knowledgeBaseItems: KnowledgeBaseTableProps["knowledge
 
 const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
     const {streams, knowledgeBaseItems, setOpenQA, setStructureTableHeaderGroupOptions, hasBuildDataProps} = props
+    const {t} = useI18nNamespaces(["aiAgent"])
     const {installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync} = useCheckKnowledgePlugin()
 
     const [query, setQuery] = useSafeState("")
@@ -140,7 +142,7 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
                 })
             },
             manual: true,
-            onError: (err) => failed(`获取全局知识库失败: ${err}`)
+            onError: (err) => failed(t("KnowledgeBaseTable.getGlobalKnowledgeBaseFailed", {error: String(err)}))
         }
     )
 
@@ -333,7 +335,7 @@ const KnowledgeBaseTable: FC<KnowledgeBaseTableProps> = (props) => {
                             } catch (error) {}
                         }}
                     >
-                        添加
+                        {t("KnowledgeBaseTable.add")}
                     </YakitButton>
                 </YakitEmpty>
             )}

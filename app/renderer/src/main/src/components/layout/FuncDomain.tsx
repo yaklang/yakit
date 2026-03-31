@@ -967,23 +967,23 @@ interface UIOpSettingProp {
 }
 
 /** @name 菜单模式切换 目前只有Yakit 社区版有 */
-const ModeSwitch = () => {
+const ModeSwitch = (t: TFunction) => {
     if (isCommunityYakit()) {
         return {
             key: "modeSwitching",
-            label: "模式切换",
+            label: t("FuncDomain.modeSwitching"),
             children: [
                 {
                     key: YakitModeEnum.Classic,
-                    label: "经典模式"
+                    label: t("FuncDomain.classicMode")
                 },
                 {
                     key: YakitModeEnum.SecurityExpert,
-                    label: "安全专家模式"
+                    label: t("FuncDomain.securityExpertMode")
                 },
                 {
                     key: YakitModeEnum.Scan,
-                    label: "扫描模式"
+                    label: t("FuncDomain.scanMode")
                 }
             ]
         }
@@ -992,71 +992,71 @@ const ModeSwitch = () => {
     return null
 }
 
-const DBCacheManager = () => {
+const DBCacheManager = (t: TFunction) => {
     if (SystemInfo.mode === "local") {
         return {
             key: "db-cache-manager",
-            label: "数据库与缓存管理",
+            label: t("FuncDomain.databaseCacheManagement"),
             children: [
-                {key: "invalidCache", label: "删除缓存数据"},
-                {key: "reclaimDatabaseSpace", label: "回收数据库空间"}
+                {key: "invalidCache", label: t("FuncDomain.deleteCacheData")},
+                {key: "reclaimDatabaseSpace", label: t("FuncDomain.reclaimDatabaseSpace")}
             ]
         }
     }
     return {
         key: "db-cache-manager",
-        label: "数据库与缓存管理",
-        children: [{key: "invalidCache", label: "删除缓存数据"}]
+        label: t("FuncDomain.databaseCacheManagement"),
+        children: [{key: "invalidCache", label: t("FuncDomain.deleteCacheData")}]
     }
 }
 
-const GetUIOpSettingMenu = () => {
+const GetUIOpSettingMenu = (t: TFunction) => {
     // 便携版
     if (isEnpriTraceAgent()) {
         return [
             {
                 key: "pcapfix",
-                label: "网卡权限修复"
+                label: t("FuncDomain.pcapfix")
             },
             {
                 key: "store",
-                label: "配置插件源"
+                label: t("FuncDomain.configurePluginSource")
             },
-            DBCacheManager(),
+            DBCacheManager(t),
             {
                 key: "diagnose-network",
-                label: "网络诊断"
+                label: t("FuncDomain.networkDiagnostics")
             },
             {
                 key: "link",
-                label: "切换连接模式",
+                label: t("FuncDomain.switchConnectionMode"),
                 children: [
-                    {label: "本地", key: "local"},
-                    {label: "远程", key: "remote"}
+                    {label: t("FuncDomain.local"), key: "local"},
+                    {label: t("FuncDomain.remote"), key: "remote"}
                 ]
             },
             {
                 key: "i18nSwitching",
-                label: "语言切换",
+                label: t("FuncDomain.languageSwitching"),
                 children: [
                     {
                         key: "zh",
-                        label: "中文"
+                        label: t("FuncDomain.chinese")
                     },
                     {
                         key: "en",
-                        label: "英文"
+                        label: t("FuncDomain.english")
                     }
                 ]
             },
             {type: "divider"},
             {
                 key: "logs",
-                label: " 日志收集",
+                label: t("FuncDomain.logCollection"),
                 children: [
-                    {label: "渲染端日志", key: "renderLog"},
-                    {label: "引擎日志", key: "engineLog"},
-                    {label: "调试信息日志", key: "printLog"}
+                    {label: t("FuncDomain.renderLog"), key: "renderLog"},
+                    {label: t("FuncDomain.engineLog"), key: "engineLog"},
+                    {label: t("FuncDomain.debugLog"), key: "printLog"}
                 ]
             }
         ]
@@ -1066,132 +1066,132 @@ const GetUIOpSettingMenu = () => {
     return [
         {
             key: "pcapfix",
-            label: "网卡权限修复"
+            label: t("FuncDomain.pcapfix")
         },
         {
             key: "project",
-            label: "项目管理",
+            label: t("FuncDomain.projectManagement"),
             children: [
-                {label: "切换项目", key: "changeProject"},
-                {label: "加密导出", key: "encryptionProject"},
-                {label: "明文导出", key: "plaintextProject"}
+                {label: t("FuncDomain.switchProject"), key: "changeProject"},
+                {label: t("FuncDomain.encryptedExport"), key: "encryptionProject"},
+                {label: t("FuncDomain.plaintextExport"), key: "plaintextProject"}
             ]
         },
         {
             key: "explab",
-            label: "试验性功能",
+            label: t("FuncDomain.experimentalFeatures"),
             children: [
                 {
                     key: "bas-chaosmaker",
-                    label: "BAS实验室"
+                    label: t("FuncDomain.BASLab")
                 },
                 {
                     key: "debug-monaco-editor",
-                    label: "(DEV)调试Playground"
+                    label: t("FuncDomain.devPlayground")
                 },
                 {
                     key: "vulinbox-manager",
-                    label: "(靶场)Vulinbox"
+                    label: t("FuncDomain.vulinbox")
                 },
                 {
                     key: "debug-traffic-analize",
-                    label: "流量分析"
+                    label: t("FuncDomain.trafficAnalysis")
                 },
                 {
                     key: "run-node",
-                    label: "运行节点"
+                    label: t("FuncDomain.runNode")
                 },
                 {
                     key: "webshell-manager",
-                    label: "网站管理"
+                    label: t("FuncDomain.websiteManagement")
                 },
                 {key: "mcp", label: "Yak Mcp"},
                 {key: "ai-agent", label: "AI Agent"},
                 {key: "ssa-result-diff", label: "ssa-result-diff"},
-                {key: "ai-repository", label: "知识库"},
-                {key: "ssa-compile-history", label: "SSA项目编译历史"},
-                {key: "memory-base", label: "记忆库"}
+                {key: "ai-repository", label: t("FuncDomain.knowledgeBase")},
+                {key: "ssa-compile-history", label: t("FuncDomain.ssaCompileHistory")},
+                {key: "memory-base", label: t("FuncDomain.memoryBase")}
             ]
         },
-        ModeSwitch(),
+        ModeSwitch(t),
         {
             key: "themeSwitching",
-            label: "主题切换",
+            label: t("FuncDomain.themeSwitching"),
             children: [
                 {
                     key: "light",
-                    label: "亮色"
+                    label: t("FuncDomain.lightTheme")
                 },
                 {
                     key: "dark",
-                    label: "暗色"
+                    label: t("FuncDomain.darkTheme")
                 }
             ]
         },
         {
             key: "i18nSwitching",
-            label: "语言切换",
+            label: t("FuncDomain.languageSwitching"),
             children: [
                 {
                     key: "zh",
-                    label: "中文"
+                    label: t("FuncDomain.chinese")
                 },
                 {
                     key: "en",
-                    label: "英文"
+                    label: t("FuncDomain.english")
                 }
             ]
         },
         {type: "divider"},
-        DBCacheManager(),
+        DBCacheManager(t),
         {
             key: "store",
-            label: "配置插件源"
+            label: t("FuncDomain.configurePluginSource")
         },
         {
             key: "cve-database",
-            label: "CVE 数据库",
+            label: t("FuncDomain.cveDatabase"),
             children: [
-                {label: "全量更新", key: "cve-database-all-update"},
-                {label: "差量更新", key: "cve-database-differential-update"}
+                {label: t("FuncDomain.fullUpdate"), key: "cve-database-all-update"},
+                {label: t("FuncDomain.differentialUpdate"), key: "cve-database-differential-update"}
             ]
         },
         {
             key: "link",
-            label: "切换连接模式",
+            label: t("FuncDomain.switchConnectionMode"),
             children: [
-                {label: "本地", key: "local"},
-                {label: "远程", key: "remote"}
+                {label: t("FuncDomain.local"), key: "local"},
+                {label: t("FuncDomain.remote"), key: "remote"}
             ]
         },
         {type: "divider"},
         {
             key: "systemSet",
-            label: "系统设置",
+            label: t("FuncDomain.systemSettings"),
             children: [
-                {key: "reverse", label: "全局反连"},
-                {key: "agent", label: "系统代理"},
+                {key: "reverse", label: t("FuncDomain.globalReverse")},
+                {key: "agent", label: t("FuncDomain.systemProxy")},
                 // { key: "engineVar",label: "引擎环境变量" },
-                {key: "config-network", label: "全局配置"},
-                {key: "setShortcutKey", label: "快捷键设置"}
+                {key: "config-network", label: t("FuncDomain.globalConfig")},
+                {key: "setShortcutKey", label: t("FuncDomain.shortcutSettings")}
             ]
         },
         {
             key: "diagnose-network",
-            label: "网络诊断"
+            label: t("FuncDomain.networkDiagnostics")
         },
         {
             key: "refreshMenu",
-            label: "刷新菜单"
+            label: t("FuncDomain.refreshMenu")
         },
         {type: "divider"},
         {
             key: "logs",
-            label: " 日志收集",
+            label: t("FuncDomain.logCollection"),
             children: [
-                {label: "渲染端日志", key: "renderLog"},
-                {label: "引擎日志", key: "engineLog"},
-                {label: "调试信息日志", key: "printLog"}
+                {label: t("FuncDomain.renderLog"), key: "renderLog"},
+                {label: t("FuncDomain.engineLog"), key: "engineLog"},
+                {label: t("FuncDomain.debugLog"), key: "printLog"}
             ]
         }
     ].filter((item) => item)
@@ -1224,7 +1224,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
                 setAvailable(rsp.Ok)
             })
             .catch((err) => {
-                yakitFailed("IsCVEDatabaseReady失败：" + err)
+                yakitFailed(t("FuncDomain.isCVEDatabaseReadyFailed", {error: String(err)}))
             })
     })
 
@@ -1409,7 +1409,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
             width={142}
             selectedKeys={[]}
             // triggerSubMenuAction={'click'}
-            data={GetUIOpSettingMenu() as YakitMenuItemProps[]}
+            data={GetUIOpSettingMenu(t) as YakitMenuItemProps[]}
             onClick={({key}) => menuSelect(key)}
         />
     )
@@ -1460,6 +1460,7 @@ interface UIDevTool {
 const UIDevTool: React.FC<UIDevTool> = React.memo((props) => {
     const {onDevToolRefresh} = props
     const [show, setShow] = useState<boolean>(false)
+    const {t} = useI18nNamespaces(["layout"])
 
     const {delTemporaryProject} = useTemporaryProjectStore()
 
@@ -1494,15 +1495,15 @@ const UIDevTool: React.FC<UIDevTool> = React.memo((props) => {
             data={[
                 {
                     key: "devtool",
-                    label: "控制台"
+                    label: t("FuncDomain.console")
                 },
                 {
                     key: "reload",
-                    label: "刷新"
+                    label: t("FuncDomain.refresh")
                 },
                 {
                     key: "reloadCache",
-                    label: "强制刷新"
+                    label: t("FuncDomain.forceRefresh")
                 }
             ]}
             onClick={({key}) => menuSelect(key)}
@@ -1564,6 +1565,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
         intranet,
         onResetUpdateWait
     } = props
+    const {t} = useI18nNamespaces(["home", "layout"])
 
     // 是否可编辑
     const isShowModify = useMemo(() => {
@@ -1583,10 +1585,10 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
 
     const versionTitle = useMemoizedFn(() => {
         if (isCommunityEdition()) {
-            return "社区版"
+            return t("FuncDomain.communityEdition")
         } else {
-            if (intranet) return "内网版"
-            return "官方版"
+            if (intranet) return t("FuncDomain.intranetEdition")
+            return t("FuncDomain.officialEdition")
         }
     })
 
@@ -1622,25 +1624,25 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         <div className={styles["update-title"]}>{`${versionTitle()} ${getReleaseEditionName()} ${
                             lastVersion || version
                         }`}</div>
-                        <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
+                        <div className={styles["update-time"]}>{t("FuncDomain.currentVersion", {version})}</div>
                     </div>
                 </div>
 
                 <div className={styles["header-btn"]}>
                     {isUpdateWait ? (
-                        <YakitButton onClick={handleOpenPath}>{`安装 `}</YakitButton>
+                        <YakitButton onClick={handleOpenPath}>{t("FuncDomain.install")}</YakitButton>
                     ) : lastVersion === "" ? (
-                        "获取失败"
+                        t("FuncDomain.fetchFailed")
                     ) : isUpdate ? (
                         <div
                             className={styles["update-btn"]}
                             onClick={() => onDownload(intranet ? "intranetYakit" : "yakit")}
                         >
                             <UpdateSvgIcon style={{marginRight: 4}} />
-                            立即下载
+                            {t("FuncDomain.downloadNow")}
                         </div>
                     ) : (
-                        "已是最新"
+                        t("FuncDomain.alreadyLatest")
                     )}
                     {isShowModify && (
                         <div
@@ -1664,7 +1666,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         })}
                     >
                         {content.length === 0 ? (
-                            <div className={isShowModify ? styles["empty-content"] : ""}>管理员未编辑更新通知</div>
+                            <div className={isShowModify ? styles["empty-content"] : ""}>{t("FuncDomain.noUpdateNotice")}</div>
                         ) : (
                             content.map((item, index) => {
                                 return (
@@ -1699,6 +1701,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
         isUpdate,
         isUpdateYakit
     } = props
+    const {t} = useI18nNamespaces(["home", "layout"])
 
     const [updateHint, setUpdateHint] = useState<boolean>(false)
     const [moreVersionPopShow, setMoreVersionPopShow] = useState<boolean>(false)
@@ -1756,13 +1759,13 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                         }}
                     >
                         <div className={styles["update-title"]}>{`Yaklang ${lastVersion || version}`}</div>
-                        <div className={styles["update-time"]}>{`当前版本: ${version}`}</div>
+                        <div className={styles["update-time"]}>{t("FuncDomain.currentVersion", {version})}</div>
                     </div>
                 </div>
 
                 <div className={styles["header-btn"]}>
                     {isRemoteMode ? (
-                        <>{isUpdate && "远程连接无法更新"}</>
+                        <>{isUpdate && t("FuncDomain.remoteCannotUpdate")}</>
                     ) : (
                         <>
                             <YakitPopover
@@ -1783,7 +1786,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                                     setMoreVersionPopShow(visible)
                                 }}
                             >
-                                <div className={styles["more-version-btn"]}>更多版本</div>
+                                <div className={styles["more-version-btn"]}>{t("FuncDomain.moreVersions")}</div>
                             </YakitPopover>
                             {isUpdate && (
                                 <div
@@ -1798,15 +1801,15 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                                     }}
                                 >
                                     <UpdateSvgIcon style={{marginRight: 4}} />
-                                    立即更新
+                                    {t("FuncDomain.updateNow")}
                                 </div>
                             )}
                             <YakitHint
                                 visible={updateHint}
-                                title='更新提示'
-                                content={`更新${getReleaseEditionName()}可同步更新引擎，建议先更新${getReleaseEditionName()}`}
-                                okButtonText={`更新${getReleaseEditionName()}`}
-                                cancelButtonText='更新引擎'
+                                title={t("FuncDomain.updateHintTitle")}
+                                content={t("FuncDomain.updateHintContent", {edition: getReleaseEditionName()})}
+                                okButtonText={t("FuncDomain.updateHintOk", {edition: getReleaseEditionName()})}
+                                cancelButtonText={t("FuncDomain.updateEngine")}
                                 footerExtra={
                                     <YakitButton
                                         size='max'
@@ -1815,7 +1818,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                                             setUpdateHint(false)
                                         }}
                                     >
-                                        取消
+                                        {t("FuncDomain.cancel")}
                                     </YakitButton>
                                 }
                                 onOk={() => {
@@ -1830,9 +1833,9 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                             {isKillEngine && (
                                 <YakitButton
                                     onClick={() => ipcRenderer.invoke("kill-old-engine-process")}
-                                >{`更新 `}</YakitButton>
+                                >{t("FuncDomain.update")}</YakitButton>
                             )}
-                            {!lastVersion ? "获取失败" : !isUpdate && !isKillEngine && "已是最新"}
+                            {!lastVersion ? t("FuncDomain.fetchFailed") : !isUpdate && !isKillEngine && t("FuncDomain.alreadyLatest")}
                         </>
                     )}
                     {isShowModify && (
@@ -1856,7 +1859,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     })}
                 >
                     {content.length === 0 ? (
-                        <div className={isShowModify ? styles["empty-content"] : ""}>管理员未编辑更新通知</div>
+                            <div className={isShowModify ? styles["empty-content"] : ""}>{t("FuncDomain.noUpdateNotice")}</div>
                     ) : (
                         content.map((item, index) => {
                             return (
@@ -1879,6 +1882,7 @@ interface MoreYaklangVersionProps {
 /** @name 更多Yaklang版本 */
 const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props) => {
     const {moreYaklangVersionList, onClosePop} = props
+    const {t} = useI18nNamespaces(["layout"])
     const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
     const [searchVersionVal, setSearchVersionVal] = useState<string>("")
     const [searchVersionList, setSearchVersionList] = useState<string[]>([])
@@ -1904,9 +1908,9 @@ const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo((props)
             JSON.stringify({
                 version,
                 killPssText: {
-                    title: "替换引擎，需关闭所有本地进程",
+                    title: t("FuncDomain.replaceEngineTitle"),
                     content:
-                        "确认下载并安装此版本引擎，将会关闭所有引擎，包括正在连接的本地引擎进程，同时页面将进入加载页。"
+                        t("FuncDomain.replaceEngineContent")
                 }
             })
         )
@@ -1976,6 +1980,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     const {isEngineLink, isRemoteMode, onLogin} = props
 
     const {userInfo} = useStore()
+    const {t} = useI18nNamespaces(["home", "layout"])
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -2297,11 +2302,11 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     })
     const onSubmitEdit = useMemoizedFn(() => {
         if (editShow.type === "yakit" && yakitLastVersion.length === 0) {
-            warn(`未获取${getReleaseEditionName()}最新版本`)
+            warn(t("FuncDomain.noYakitLatestVersion", {edition: getReleaseEditionName()}))
             return
         }
         if (editShow.type !== "yakit" && yaklangLastVersion.length === 0) {
-            warn(`未获取引擎最新版本`)
+            warn(t("FuncDomain.noYaklangLatestVersion"))
             return
         }
         setEditLoading(true)
@@ -2320,13 +2325,13 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             data: params
         })
             .then((res) => {
-                info("修改更新内容成功")
+                info(t("FuncDomain.updateContentSuccess"))
                 fetchYakitAndYaklangVersionInfo()
                 if (editShow.type === "yakit") fetchYakitLastVersion()
                 else fetchYaklangLastVersion()
                 setTimeout(() => setEditShow({visible: false, type: "yakit"}), 100)
             })
-            .catch((e) => failed(`修改错误 ${e}`))
+            .catch((e) => failed(t("FuncDomain.updateContentFailed", {error: e})))
             .finally(() => {
                 setTimeout(() => setEditLoading(false), 300)
             })
@@ -2422,18 +2427,18 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                             buttonStyle='solid'
                             options={[
                                 {
-                                    label: "消息中心",
+                                    label: t("FuncDomain.messageCenter"),
                                     value: "message"
                                 },
                                 {
-                                    label: "更新通知",
+                                    label: t("FuncDomain.updateNotice"),
                                     value: "update"
                                 }
                             ]}
                         />
                         {noticeType === "update" ? (
                             <div className={styles["switch-title"]}>
-                                启动检测更新
+                                {t("FuncDomain.autoCheckUpdate")}
                                 <YakitSwitch
                                     style={{marginLeft: 4}}
                                     showInnerText={true}
@@ -2456,7 +2461,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                                     style={{fontWeight: 400}}
                                                     onClick={onRedAllMessage}
                                                 >
-                                                    全部已读
+                                                    {t("FuncDomain.allRead")}
                                                 </YakitButton>
                                                 <Divider type={"vertical"} style={{margin: "0px 8px 0px"}} />
                                             </>
@@ -2466,7 +2471,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                             style={{fontWeight: 400, color: "#85899E"}}
                                             onClick={getAllMessage}
                                         >
-                                            查看全部
+                                            {t("FuncDomain.viewAll")}
                                         </YakitButton>
                                     </>
                                 )}
@@ -2522,7 +2527,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                     className={styles["content-style"]}
                                     onClick={() => ipcRenderer.invoke("open-url", WebsiteGV.YakitHistoryVersionAddress)}
                                 >
-                                    <GithubSvgIcon className={styles["icon-style"]} /> 历史版本
+                                    <GithubSvgIcon className={styles["icon-style"]} /> {t("FuncDomain.historyVersion")}
                                 </div>
                             </div>
                         </div>
@@ -2591,8 +2596,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             <YakitModal
                 title={
                     editShow.type === "yakit"
-                        ? `${getReleaseEditionName()} ${yakitLastVersion} 更新通知`
-                        : `Yaklang ${yaklangLastVersion} 更新通知`
+                        ? t("FuncDomain.updateNoticeTitleYakit", {edition: getReleaseEditionName(), version: yakitLastVersion})
+                        : t("FuncDomain.updateNoticeTitleYaklang", {version: yaklangLastVersion})
                 }
                 centered={true}
                 closable={true}
@@ -2618,8 +2623,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 type='white'
                 size='large'
                 visible={isShowEnpriTraceUpdateVisible}
-                title='检测到 内网版 EnpriTrace 版本升级'
-                children={`检测到有新版本${yakitLastIntranetVersion}，请立即更新`}
+                title={t("FuncDomain.intranetUpdateTitle")}
+                children={t("FuncDomain.intranetUpdateContent", {version: yakitLastIntranetVersion})}
                 onCancel={() => {
                     setShowEnpriTraceUpdateVisible(false)
                 }}
@@ -2627,7 +2632,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                 footer={
                     <div style={{display: "flex", justifyContent: "flex-end", gap: 12, width: "100%"}}>
                         <YakitButton size='max' type='outline1' onClick={() => ipcRenderer.invoke("open-yakit-path")}>
-                            打开路径
+                            {t("FuncDomain.openPath")}
                         </YakitButton>
                         <YakitButton
                             loading={intranetHintLoading}
@@ -2640,14 +2645,14 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                                         setShowEnpriTraceUpdateVisible(false)
                                     })
                                     .catch((e) => {
-                                        failed(`内网版更新失败：${e}`)
+                                        failed(t("FuncDomain.intranetUpdateFailed", {error: String(e)}))
                                     })
                                     .finally(() => {
                                         setIntranetHintLoading(false)
                                     })
                             }}
                         >
-                            立即更新
+                            {t("FuncDomain.updateNow")}
                         </YakitButton>
                     </div>
                 }
@@ -2714,6 +2719,7 @@ const RiskType: {[key: string]: string} = {
 }
 const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     const {isEngineLink} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -2848,7 +2854,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
                 if (!res) return
                 showYakitModal({
                     width: "80%",
-                    title: "详情",
+                    title: t("FuncDomain.details"),
                     content: (
                         <div style={{overflow: "auto", maxHeight: "70vh"}}>
                             {isShowCodeScanDetail(res) ? (
@@ -2891,7 +2897,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
                     <div className={styles["risk-header"]}>
-                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.Unread || 0} 条）
+                        {t("FuncDomain.vulnerabilityRiskStatistics", {total: risks.Total || 0, unread: risks.Unread || 0})}
                     </div>
 
                     <div className={styles["risk-info"]}>
@@ -2935,10 +2941,10 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
                     <div className={styles["risk-footer"]}>
                         <div className={styles["risk-footer-btn"]} onClick={allRead}>
-                            全部已读
+                            {t("FuncDomain.allRead")}
                         </div>
                         <div className={styles["risk-footer-btn"]} onClick={viewAll}>
-                            查看全部
+                            {t("FuncDomain.viewAll")}
                         </div>
                     </div>
                 </div>
@@ -2966,6 +2972,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 })
 const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     const {isEngineLink} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const [show, setShow] = useState<boolean>(false)
 
@@ -3097,7 +3104,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             setShow(false)
             let m = showModal({
                 width: "80%",
-                title: "详情",
+                    title: t("FuncDomain.details"),
                 content: (
                     <div style={{overflow: "auto", maxHeight: "70vh"}}>
                         <YakitAuditRiskDetails info={res.Data[0]} isShowExtra={true} isExtraClick={() => m.destroy()} />
@@ -3132,7 +3139,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
             <div className={styles["ui-op-plus-wrapper"]}>
                 <div className={styles["ui-op-risk-body"]}>
                     <div className={styles["risk-header"]}>
-                        漏洞和风险统计（共 {risks.Total || 0} 条，其中未读 {risks.Unread || 0} 条）
+                        {t("FuncDomain.vulnerabilityRiskStatistics", {total: risks.Total || 0, unread: risks.Unread || 0})}
                     </div>
 
                     <div className={styles["risk-info"]}>
@@ -3179,10 +3186,10 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
                     <div className={styles["risk-footer"]}>
                         <div className={styles["risk-footer-btn"]} onClick={allRead}>
-                            全部已读
+                            {t("FuncDomain.allRead")}
                         </div>
                         <div className={styles["risk-footer-btn"]} onClick={viewAll}>
-                            查看全部
+                            {t("FuncDomain.viewAll")}
                         </div>
                     </div>
                 </div>
@@ -3228,11 +3235,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         if (system === "Darwin" || system === "Windows_NT") {
             return [
                 {
-                    label: "性能采样",
+                    label: t("FuncDomain.performanceSampling"),
                     key: "performance-sampling"
                 },
                 {
-                    label: "崩溃日志收集",
+                    label: t("FuncDomain.crashLogCollection"),
                     key: "crash-log"
                 },
                 {
@@ -3243,11 +3250,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                                 ipcRenderer.invoke("cancel-StartScrecorder", token)
                             }}
                         >
-                            停止录屏
+                            {t("FuncDomain.stopScreenRecording")}
                         </div>
                     ) : (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
-                            <span>录屏</span>
+                            <span>{t("FuncDomain.screenRecording")}</span>
                             {/* <span className={styles["shortcut-keys"]}>
                                 {system === "Darwin"
                                     ? `${MacKeyborad[17]} ${MacKeyborad[16]} X`
@@ -3260,7 +3267,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 {
                     label: (
                         <div className={styles["screen-and-screenshot-menu-item"]}>
-                            <span>截屏</span>
+                            <span>{t("FuncDomain.screenshot")}</span>
                             {
                                 screenshotLoading && (
                                     <div
@@ -3286,14 +3293,14 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     type: "divider"
                 },
                 {
-                    label: "录屏管理",
+                    label: t("FuncDomain.screenRecordingManagement"),
                     key: "screen-recorder"
                 }
             ]
         }
         return [
             {
-                label: "性能采样",
+                label: t("FuncDomain.performanceSampling"),
                 key: "performance-sampling"
             },
             {
@@ -3304,11 +3311,11 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                             ipcRenderer.invoke("cancel-StartScrecorder", token)
                         }}
                     >
-                        停止录屏
+                        {t("FuncDomain.stopScreenRecording")}
                     </div>
                 ) : (
                     <div className={styles["screen-and-screenshot-menu-item"]}>
-                        <span>录屏</span>
+                        <span>{t("FuncDomain.screenRecording")}</span>
                         <span className={styles["shortcut-keys"]}>{`${WinKeyborad[17]} ${WinKeyborad[16]} X`}</span>
                     </div>
                 ),
@@ -3318,7 +3325,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 type: "divider"
             },
             {
-                label: <span>录屏管理</span>,
+                label: <span>{t("FuncDomain.screenRecordingManagement")}</span>,
                 key: "screen-recorder"
             }
         ]
@@ -3386,7 +3393,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     }
                 })
                 setPerformanceSamplingLog(logs)
-                yakitNotify("success", "采样完成，点击顶部绿色按钮可查看结果")
+                yakitNotify("success", t("FuncDomain.samplingCompleted"))
             }
         } catch (error) {
             setPerformanceSamplingLog([])
@@ -3397,7 +3404,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         if (performanceSamplingInfo.isPerformanceSampling) return
         if (performanceModalRef.current || performanceModalLoading.current) return // 已有弹窗或正在请求
         performanceModalLoading.current = true
-        grpcFetchLocalPluginDetail({Name: "核心引擎性能采样"}, true)
+        grpcFetchLocalPluginDetail({Name: t("FuncDomain.coreEngineSamplingPluginName")}, true)
             .then((res) => {
                 const samplingPlugin = res
                 const requiredParams = samplingPlugin.Params.filter(
@@ -3415,7 +3422,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                     }
                 })
                 let m = showYakitModal({
-                    title: "性能采样",
+                    title: t("FuncDomain.performanceSampling"),
                     width: 400,
                     closable: true,
                     centered: true,
@@ -3430,12 +3437,12 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                         ></PerformanceSampleForm>
                     ),
                     okButtonProps: {icon: <SolidPlayIcon />},
-                    onOkText: "开始检测",
+                    onOkText: t("FuncDomain.startDetection"),
                     onOk: () => {
                         const yakExecutorParams: YakExecutorParam[] = []
                         initRequiredFormValue["timeout"] = Number(performanceParamsRef.current.timeout) || 0
                         if (!initRequiredFormValue["timeout"]) {
-                            yakitNotify("error", "检测时间必须大于0")
+                            yakitNotify("error", t("FuncDomain.detectionTimeMustBeGreaterThanZero"))
                             return
                         }
                         const executeParams: DebugPluginRequest = {
@@ -3471,7 +3478,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
             })
             .catch(() => {
                 performanceModalLoading.current = false
-                yakitNotify("info", "找不到Yak 原生插件：核心引擎性能采样")
+                yakitNotify("info", t("FuncDomain.pluginNotFoundCoreEngineSampling"))
             })
     }
     const cancelPerformanceSampling = () => {
@@ -3494,7 +3501,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
         pluginCustomParams?: YakParamProps[]
     }>()
     const handleCrashLog = () => {
-        grpcFetchLocalPluginDetail({Name: "崩溃日志收集"}, true)
+        grpcFetchLocalPluginDetail({Name: t("FuncDomain.crashLogPluginName")}, true)
             .then((res) => {
                 const executeParams: DebugPluginRequest = {
                     Code: "",
@@ -3511,7 +3518,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
                 setCrashLogVisible(true)
             })
             .catch(() => {
-                yakitNotify("info", "找不到Yak 原生插件：崩溃日志收集")
+                yakitNotify("info", t("FuncDomain.pluginNotFoundCrashLog"))
             })
     }
 
@@ -3566,6 +3573,7 @@ interface CrashLogModalProps {
 }
 const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
     const {crashLogParams, onClose} = props
+    const {t} = useI18nNamespaces(["layout"])
 
     const tokenRef = useRef<string>(randomString(40))
     const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
@@ -3582,7 +3590,7 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
             }, 300)
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", `Debug task started successfully, runtime ID: ${rId}`)
             setRuntimeId(rId)
         }
     })
@@ -3618,14 +3626,14 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
 
     return (
         <YakitModal
-            title='崩溃日志采集'
+            title={t("FuncDomain.crashLogCapture")}
             width={"70%"}
             visible={!!runtimeId}
             destroyOnClose
             onCancel={onCancel}
             footer={
                 <div className={styles["crash-log-footer"]}>
-                    <YakitButton onClick={onCancel}>取消</YakitButton>
+                    <YakitButton onClick={onCancel}>{t("FuncDomain.cancel")}</YakitButton>
                 </div>
             }
         >
@@ -3642,7 +3650,7 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
                     streamInfo={streamInfo}
                     runtimeId={runtimeId}
                     loading={isExecuting}
-                    defaultActiveKey='日志'
+                    defaultActiveKey={t("FuncDomain.log")}
                     pluginExecuteResultWrapper={styles["plugin-execute-result-wrapper"]}
                 />
             </div>

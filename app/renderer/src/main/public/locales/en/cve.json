@@ -1,0 +1,23 @@
+{
+  "CVEViewer": {
+    "advancedQuery": "Advanced Query",
+    "cveQueryConditions": "CVE Query Conditions",
+    "reset": "Reset",
+    "exploitPath": "Exploit Path",
+    "exploitDifficulty": "Exploit Difficulty",
+    "vulnerabilityLevel": "Vulnerability Level",
+    "network": "Network",
+    "adjacentNetwork": "Adjacent Network",
+    "local": "Local",
+    "physical": "Physical",
+    "difficult": "Difficult",
+    "medium": "Medium",
+    "easy": "Easy",
+    "critical": "Critical",
+    "high": "High",
+    "low": "Low"
+  },
+  "CVETable": {
+    "cveDatabaseManagement": "CVE Database Management"
+  }
+}

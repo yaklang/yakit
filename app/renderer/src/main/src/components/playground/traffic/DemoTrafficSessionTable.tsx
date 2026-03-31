@@ -5,12 +5,14 @@ import {Paging} from "@/utils/yakQueryHTTPFlow"
 import {DemoVirtualTable} from "@/demoComponents/virtualTable/VirtualTable"
 import {TrafficSession} from "@/models/Traffic"
 import {TrafficViewerControlIf} from "@/components/playground/traffic/base"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 export interface DemoTrafficSessionTableProp extends TrafficViewerControlIf {}
 
 const {ipcRenderer} = window.require("electron")
 
 export const DemoTrafficSessionTable: React.FC<DemoTrafficSessionTableProp> = (props) => {
+    const {t} = useI18nNamespaces(["playground"])
     const [selected, setSelected] = useState<TrafficSession>()
 
     useEffect(() => {
@@ -26,24 +28,24 @@ export const DemoTrafficSessionTable: React.FC<DemoTrafficSessionTableProp> = (p
     return (
         <DemoVirtualTable<TrafficSession>
             columns={[
-                {headerTitle: "ID", key: "Id", width: 80, colRender: (i) => i.Id},
-                {headerTitle: "类型", key: "Id", width: 80, colRender: (i) => i.SessionType},
-                {headerTitle: "设备类型", key: "Id", width: 80, colRender: (i) => i.DeviceType},
+                {headerTitle: t("DemoTrafficSessionTable.id"), key: "Id", width: 80, colRender: (i) => i.Id},
+                {headerTitle: t("DemoTrafficSessionTable.type"), key: "Id", width: 80, colRender: (i) => i.SessionType},
+                {headerTitle: t("DemoTrafficSessionTable.deviceType"), key: "Id", width: 80, colRender: (i) => i.DeviceType},
 
-                {headerTitle: "ID", key: "id", width: 80, colRender: (i) => i.Id},
+                {headerTitle: t("DemoTrafficSessionTable.id"), key: "id", width: 80, colRender: (i) => i.Id},
                 {
-                    headerTitle: "来源",
+                    headerTitle: t("DemoTrafficSessionTable.source"),
                     key: "source",
                     width: 160,
                     colRender: (i) => i.NetworkSrcIP + ":" + i.TransportLayerSrcPort
                 },
                 {
-                    headerTitle: "目标",
+                    headerTitle: t("DemoTrafficSessionTable.destination"),
                     key: "destination",
                     width: 160,
                     colRender: (i) => i.NetworkDstIP + ":" + i.TransportLayerDstPort
                 },
-                {headerTitle: "协议", key: "protocol", width: 160, colRender: (i) => i.Protocol}
+                {headerTitle: t("DemoTrafficSessionTable.protocol"), key: "protocol", width: 160, colRender: (i) => i.Protocol}
             ]}
             rowClick={(data) => {
                 setSelected(data)

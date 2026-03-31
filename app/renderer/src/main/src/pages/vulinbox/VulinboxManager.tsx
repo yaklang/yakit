@@ -307,7 +307,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                                 })
                             }}
                         >
-                            查看下载地址
+                            {t("VulinboxManager.viewDownloadAddresses")}
                         </YakitButton>
                     </Space>
                 }
@@ -655,7 +655,7 @@ const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
                     strokeColor='var(--Colors-Use-Main-Primary)'
                     trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
-                    format={(percent) => `已下载 ${percent}%`}
+                    format={(percent) => t("VulinboxManager.downloadedPercent", {percent: percent ?? 0})}
                 />
             </div>
             <div className={styles["download-progress-messages"]}>
