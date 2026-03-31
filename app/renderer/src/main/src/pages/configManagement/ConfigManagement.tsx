@@ -28,6 +28,10 @@ import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 import { configManagementTabType, useConfigManagementTab, useStore } from "@/store"
 import { YakitRoute } from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import { getStorageHotPatchManagementShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/hotPatchManagement"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
 import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
 import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -580,6 +584,30 @@ export const HotPatchManagement: React.FC = () => {
         }
     })
 
+    
+    useEffect(() => {
+        if (!inViewport) return
+        registerShortcutKeyHandle(ShortcutKeyPage.HotPatchManagement)
+        getStorageHotPatchManagementShortcutKeyEvents()
+
+        return () => {
+            unregisterShortcutKeyHandle(ShortcutKeyPage.HotPatchManagement)
+        }
+    }, [inViewport])
+
+    useShortcutKeyTrigger(
+        "saveHotPatch*hotPatchManagement",
+        useMemoizedFn(() => {
+            if (inViewport) {
+                if(disableSaveTemplate) {
+                    yakitFailed(t("HotCodeTemplate.save_disable_tip"))
+                    return
+                }
+                onSaveTemplate()
+            }
+        })
+    )
+
     const onSaveAsSuccess = useMemoizedFn((tempName?: string) => {
         if (!tempName) return
         if (activeType === "global") {
@@ -850,6 +878,10 @@ export const HotPatchManagement: React.FC = () => {
         return list.find((item) => item.name === selectedTemplate)
     }, [activeType, globalTemplateList, templateList, templateListOnline, selectedTemplate, selectedTemplateSource])
 
+    const disableSaveTemplate = useMemo(
+        () => !!(currentTemplate?.isDefault || selectedTemplateSource === "online"),
+        [currentTemplate?.isDefault, selectedTemplateSource]
+    )
 
     const hideTemplateContent = useMemo(()=> isGlobalType || activeType === 'mitm', [isGlobalType, activeType])
 
@@ -916,7 +948,7 @@ export const HotPatchManagement: React.FC = () => {
                         <YakitButton type='outline1' onClick={() => setAddHotCodeTemplateVisible(true)} disabled={selectedTemplateSource === "online"}>
                             {t("YakitButton.save_as")}
                         </YakitButton>
-                        <YakitButton type='primary' onClick={onSaveTemplate} disabled={currentTemplate?.isDefault || selectedTemplateSource === "online"}>
+                        <YakitButton type='primary' onClick={onSaveTemplate} disabled={disableSaveTemplate}>
                             {t("YakitButton.save")}
                         </YakitButton>
                     </div>

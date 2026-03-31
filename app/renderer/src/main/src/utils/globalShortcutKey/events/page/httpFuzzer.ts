@@ -8,7 +8,9 @@ export enum HttpFuzzerShortcutKey {
     /** 发送请求 */
     HttpFuzzerSendRequest = "sendRequest*httpFuzzer",
     /** 保存WebFuzzer历史数据 */
-    SaveHistoryData = "saveHistoryData*httpFuzzer"
+    SaveHistoryData = "saveHistoryData*httpFuzzer",
+    /** 保存热加载模板 */
+    SaveHotPatch = "saveHotPatch*httpFuzzer"
 }
 
 type EventsType = Record<`${HttpFuzzerShortcutKey}`, ShortcutKeyEventInfo>
@@ -20,6 +22,10 @@ const HttpFuzzerShortcutKeyEvents: EventsType = {
     },
     "saveHistoryData*httpFuzzer": {
         name: "保存WebFuzzer历史数据",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.Shift, YakitKeyBoard.KEY_S]
+    },
+    "saveHotPatch*httpFuzzer": {
+        name: "保存热加载模板",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_S]
     }
 }

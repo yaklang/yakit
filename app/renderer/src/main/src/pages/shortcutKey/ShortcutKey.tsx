@@ -27,6 +27,8 @@ const getShortcutPageName = (page) => {
         return "ChatCS"
     } else if (page === "yak-editor") {
         return "编辑器"
+    } else if(page === "hot-patch-management"){
+        return "热加载管理"
     } else {
         return `${YakitRouteToPageInfo[page].label}`
     }

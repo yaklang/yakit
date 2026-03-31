@@ -11,7 +11,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {yakitNotify} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {
     OutlineChevrondownIcon,
     OutlineClouddownloadIcon,
@@ -50,6 +50,10 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {getHotPatchCache, setHotPatchCache} from "./hotPatchCache"
+import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import { getStorageHttpFuzzerShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/httpFuzzer"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
     onInsert: (s: string) => any
@@ -708,6 +712,29 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
         props.onHotPatchEnabledChange(checked)
         persistHotPatchState(checked, getCode())
     })
+
+    useEffect(() => {
+            if (!visible) return
+            registerShortcutKeyHandle(ShortcutKeyPage.HTTPFuzzer)
+            getStorageHttpFuzzerShortcutKeyEvents()
+    
+            return () => {
+                unregisterShortcutKeyHandle(ShortcutKeyPage.HTTPFuzzer)
+            }
+        }, [visible])
+    
+    useShortcutKeyTrigger(
+        "saveHotPatch*httpFuzzer",
+        useMemoizedFn(() => {
+            if (visible) {
+                if(!canSaveSelectedTemplate) {
+                    yakitFailed(t("HotCodeTemplate.save_disable_tip"))
+                    return
+                }
+                onUpdateTemplate()
+            }
+        })
+    )
 
     return (
         <div

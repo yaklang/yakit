@@ -10,7 +10,9 @@ export enum MitmShortcutKey {
     /** 丢弃 */
     DropDataMitm = "dropData*mitm",
     /** 放行 */
-    SubmitDataMitm = "submitData*mitm"
+    SubmitDataMitm = "submitData*mitm",
+    /** 保存热加载模板 */
+    SaveHotPatch = "saveHotPatch*mitm"
 }
 
 type EventsType = Record<`${MitmShortcutKey}`, ShortcutKeyEventInfo>
@@ -27,6 +29,10 @@ const MitmShortcutKeyEvents: EventsType = {
     "submitData*mitm": {
         name: "放行",
         keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.RightArrow]
+    },
+    "saveHotPatch*mitm": {
+        name: "保存热加载模板",
+        keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_S]
     }
 }
 

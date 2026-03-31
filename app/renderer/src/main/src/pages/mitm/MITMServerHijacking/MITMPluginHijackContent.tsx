@@ -11,6 +11,7 @@ import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useDebounceEffect, useInViewport, useMap, useMemoizedFn} from "ahooks"
 import React, {ReactElement, useEffect, useRef, useState, useContext} from "react"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MitmStatus} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
 import {
@@ -59,6 +60,10 @@ import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
+import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
+import {getStorageMitmShortcutKeyEvents} from "@/utils/globalShortcutKey/events/page/mitm"
+import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
 const {ipcRenderer} = window.require("electron")
@@ -235,6 +240,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const [hooks, handlers] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件名
     const [hooksID, handlersID] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件id
     const [loading, setLoading] = useState(false)
+
+    const {t} = useI18nNamespaces(["webFuzzer"])
 
     // 是否允许获取默认勾选值
     const isDefaultCheck = useRef<boolean>(false)
@@ -425,6 +432,15 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(MITMHotPatchTempDefault))
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
     const tempNameRef = useRef<string>("")
+
+    useEffect(() => {
+        registerShortcutKeyHandle(ShortcutKeyPage.Mitm)
+        getStorageMitmShortcutKeyEvents()
+        return () => {
+            unregisterShortcutKeyHandle(ShortcutKeyPage.Mitm)
+        }
+    }, [])
+
     const onUpdateTemplate = useMemoizedFn(() => {
         ipcRenderer
             .invoke("UpdateHotPatchTemplate", {
@@ -445,6 +461,19 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 yakitNotify("error", "更新模板 " + tempNameRef.current + " 失败：" + error)
             })
     })
+
+    useShortcutKeyTrigger(
+        "saveHotPatch*mitm",
+        useMemoizedFn(() => {
+            if (curTabKey === "hot-patch") {
+                if(!tempNameRef.current) {
+                    yakitFailed(t("HotCodeTemplate.save_disable_tip"))
+                    return
+                }
+                onUpdateTemplate()
+            }
+        })
+    )
 
     const onRenderHeardExtra = useMemoizedFn(() => {
         switch (curTabKey) {

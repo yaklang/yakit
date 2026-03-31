@@ -520,7 +520,8 @@
     "local_template": "本地模板",
     "online_template": "线上模板",
     "confirm_overwrite_hot_reload_code": "是否确认覆盖当前热加载代码",
-    "code_template": "代码模板"
+    "code_template": "代码模板",
+    "save_disable_tip": "默认模板不支持修改，建议另存为新模板"
   },
   "AddHotCodeTemplate": {
     "hot_reload_template_name_empty": "热加载模板名为空",

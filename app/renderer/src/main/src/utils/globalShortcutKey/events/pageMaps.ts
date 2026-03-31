@@ -54,6 +54,12 @@ import {
     resetMitmShortcutKeyEvents,
     setStorageMitmShortcutKeyEvents
 } from "./page/mitm"
+import {
+    getHotPatchManagementShortcutKeyEvents,
+    getStorageHotPatchManagementShortcutKeyEvents,
+    resetHotPatchManagementShortcutKeyEvents,
+    setStorageHotPatchManagementShortcutKeyEvents
+} from "./page/hotPatchManagement"
 
 export interface ShortcutKeyEventInfo {
     name: string
@@ -92,6 +98,8 @@ export enum ShortcutKeyPage {
     YakRunner = YakitRoute.YakScript,
     // MITM
     Mitm = YakitRoute.MITMHacker,
+    // 热加载管理
+    HotPatchManagement = "hot-patch-management",
     // ChatCS
     ChatCS = "chat-cs",
     // 编辑器
@@ -165,5 +173,11 @@ export const pageEventMaps: Record<`${ShortcutKeyPage}`, PageToEventInfo> = {
         getStorage: getStorageYakitMultipleShortcutKeyEvents,
         setStorage: setStorageYakitMultipleShortcutKeyEvents,
         scopeShow: [Yakit, EnpriTrace]
+    },
+    "hot-patch-management": {
+        getEvents: getHotPatchManagementShortcutKeyEvents,
+        resetEvents: resetHotPatchManagementShortcutKeyEvents,
+        getStorage: getStorageHotPatchManagementShortcutKeyEvents,
+        setStorage: setStorageHotPatchManagementShortcutKeyEvents
     }
 }
