@@ -20,10 +20,8 @@ function useGetSetState<S>(target?: S) {
     const onSetValue = useMemoizedFn((initState: SetStateAction<S>) => {
         try {
             if (typeof initState === "function") {
-                setValue((old) => {
-                    valueRef.current = (initState as Function)(old)
-                    return (initState as Function)(old)
-                })
+                valueRef.current = (initState as Function)(valueRef.current)
+                setValue(JSON.parse(JSON.stringify(valueRef.current)))
             } else {
                 valueRef.current = initState
                 setValue(initState)

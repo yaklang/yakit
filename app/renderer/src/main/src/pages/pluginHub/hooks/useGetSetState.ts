@@ -1,5 +1,6 @@
 import {Dispatch, SetStateAction, useRef, useState} from "react"
 import {useMemoizedFn} from "ahooks"
+import {cloneDeep} from "lodash"
 
 type GetStateAction<S> = () => S
 
@@ -20,10 +21,8 @@ function useGetSetState<S>(target?: S) {
     const onSetValue = useMemoizedFn((initState: SetStateAction<S>) => {
         try {
             if (typeof initState === "function") {
-                setValue((old) => {
-                    valueRef.current = (initState as Function)(old)
-                    return (initState as Function)(old)
-                })
+                valueRef.current = (initState as Function)(valueRef.current)
+                setValue(cloneDeep(valueRef.current))
             } else {
                 valueRef.current = initState
                 setValue(initState)
