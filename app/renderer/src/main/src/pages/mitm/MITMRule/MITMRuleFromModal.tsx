@@ -53,6 +53,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
 
     const ruleContentRef = useRef<any>()
     const [form] = Form.useForm()
+    const [regexpType, setRegexpType] = useState<"group" | "template">("group")
 
     const [regexpGroupsValue, setRegexpGroupsValue] = useState<number[]>([])
     const [regexpGroupsSearchVal, setRegexpGroupsSearchVal] = useState("")
@@ -79,6 +80,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
         })
         ruleContentRef?.current?.onSetValue(currentItem?.Rule)
         setRegexpGroupsValue(currentItem?.RegexpGroups || [])
+        setRegexpType(currentItem?.RegexpResultTemplate ? "template" : "group")
     }, [currentItem])
     const onOk = useMemoizedFn(() => {
         form.validateFields()
@@ -89,7 +91,13 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                 } else {
                     newValues.NoReplace = true
                 }
-                newValues.RegexpGroups = newValues.RegexpGroups.map((item) => Number(item))
+                if (regexpType === "group") {
+                    newValues.RegexpGroups = (newValues.RegexpGroups || []).map((item) => Number(item))
+                    newValues.RegexpResultTemplate = ""
+                } else {
+                    newValues.RegexpGroups = []
+                    newValues.RegexpResultTemplate = newValues.RegexpResultTemplate || ""
+                }
                 onSave(newValues)
             })
             .catch((errorInfo) => {})
@@ -185,6 +193,19 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                         <RuleContent getRule={getRule} ref={ruleContentRef} />
                     </Form.Item>
 
+                    <Form.Item label={t("MITMRuleFromModal.format_type")}>
+                        <YakitRadioButtons
+                            size='large'
+                            value={regexpType}
+                            onChange={(e) => setRegexpType(e.target.value)}
+                            options={[
+                                {label: t("MITMRuleFromModal.format_by_group"), value: "group"},
+                                {label: t("MITMRuleFromModal.format_by_template"), value: "template"}
+                            ]}
+                            buttonStyle='solid'
+                        />
+                    </Form.Item>
+                    {regexpType === "group" ? (
                     <Form.Item
                         label={t("MITMRuleFromModal.rule_group")}
                         name='RegexpGroups'
@@ -201,7 +222,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             onBlur={() => setRegexpGroupsSearchVal("")}
                         ></YakitSelect>
                     </Form.Item>
-
+                    ) : (
                     <Form.Item
                         label={t("MITMRuleFromModal.regexp_result_template")}
                         name='RegexpResultTemplate'
@@ -212,7 +233,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                             placeholder={`$1-$2 / \\\\1-\\\\2 / {1}-{2}`}
                         />
                     </Form.Item>
-
+                    )}
                     <Row>
                         <Col span={5}>&nbsp;</Col>
                         <Col span={16}>
