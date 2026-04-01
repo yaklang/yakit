@@ -950,6 +950,52 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         onReset()
     })
 
+    const handleBeautify = useMemoizedFn(() => {
+        if (beautifyLoading) return
+        setBeautifyLoading(true)
+        ipcRenderer
+            .invoke("BeautifySyntaxFlowRule", {
+                ruleContent: content || "",
+                forgeNameCandidates: ["syntaxflow-rule-beautify", "syntaxflow 规则美化", "SyntaxFlow 规则美化"]
+            })
+            .then((res: any) => {
+                yakitNotify("success", "已提交规则美化任务，可在 AI Agent 查看执行过程")
+                emiter.emit(
+                    "openPage",
+                    JSON.stringify({
+                        route: YakitRoute.AI_Agent,
+                        params: {defualtAIMentionCommandParams: []}
+                    })
+                )
+
+                const token = res?.token
+                if (token) {
+                    const onCancle = () => {
+                        setBeautifyLoading(false)
+                        ipcRenderer.removeAllListeners(`${token}-error`)
+                        ipcRenderer.removeAllListeners(`${token}-end`)
+                    }
+
+                    const onError = (_, err) => {
+                        yakitNotify("error", `规则美化失败: ${err}`)
+                        onCancle()
+                    }
+                    const onEnd = () => {
+                        yakitNotify("success", "规则美化任务已结束")
+                        onCancle()
+                    }
+                    ipcRenderer.on(`${token}-error`, onError)
+                    ipcRenderer.on(`${token}-end`, onEnd)
+                } else {
+                    setBeautifyLoading(false)
+                }
+            })
+            .catch((e) => {
+                yakitNotify("error", `提交规则美化失败: ${e}`)
+                setBeautifyLoading(false)
+            })
+    })
+
     return (
         <>
             <YakitDrawer
@@ -1092,63 +1138,19 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
                             <div className={styles["header-extra"]}>
                                 {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
-                                <YakitButton type='text' onClick={handleOpenScoreHint}>
-                                    自动检测
-                                </YakitButton>
-                                        <YakitButton
-                                            type='outline2'
-                                            onClick={() => {
-                                                if (beautifyLoading) return
-                                                setBeautifyLoading(true)
-                                                ipcRenderer
-                                                    .invoke("BeautifySyntaxFlowRule", {
-                                                        ruleContent: content || "",
-                                                        forgeNameCandidates: [
-                                                            "syntaxflow-rule-beautify",
-                                                            "syntaxflow 规则美化",
-                                                            "SyntaxFlow 规则美化"
-                                                        ]
-                                                    })
-                                                    .then((res: any) => {
-                                                        yakitNotify("success", "已提交规则美化任务，可在 AI Agent 查看执行过程")
-                                                        emiter.emit(
-                                                            "openPage",
-                                                            JSON.stringify({
-                                                                route: YakitRoute.AI_Agent,
-                                                                params: {defualtAIMentionCommandParams: []}
-                                                            })
-                                                        )
-
-                                                        const token = res?.token
-                                                        if (token) {
-                                                            const onError = (_: any, err: any) => {
-                                                                yakitNotify("error", `规则美化失败: ${err}`)
-                                                                setBeautifyLoading(false)
-                                                                ipcRenderer.removeAllListeners(`${token}-error`)
-                                                                ipcRenderer.removeAllListeners(`${token}-end`)
-                                                            }
-                                                            const onEnd = () => {
-                                                                yakitNotify("success", "规则美化任务已结束")
-                                                                setBeautifyLoading(false)
-                                                                ipcRenderer.removeAllListeners(`${token}-error`)
-                                                                ipcRenderer.removeAllListeners(`${token}-end`)
-                                                            }
-                                                            ipcRenderer.on(`${token}-error`, onError)
-                                                            ipcRenderer.on(`${token}-end`, onEnd)
-                                                        } else {
-                                                            setBeautifyLoading(false)
-                                                        }
-                                                    })
-                                                    .catch((e: any) => {
-                                                        yakitNotify("error", `提交规则美化失败: ${e}`)
-                                                        setBeautifyLoading(false)
-                                                    })
-                                            }}
-                                            loading={beautifyLoading}
-                                            disabled={beautifyLoading}
-                                        >
-                                            美化
-                                        </YakitButton>
+                                <div className={styles["header-extra-btns"]}>
+                                    <YakitButton
+                                        type='text'
+                                        onClick={handleBeautify}
+                                        loading={beautifyLoading}
+                                        disabled={beautifyLoading}
+                                    >
+                                        美化
+                                    </YakitButton>
+                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                        自动检测
+                                    </YakitButton>
+                                </div>
                                 {isShowResult && (
                                     <YakitButton type='outline2' onClick={goBackForm} icon={<OutlineReplyIcon />}>
                                         返回
