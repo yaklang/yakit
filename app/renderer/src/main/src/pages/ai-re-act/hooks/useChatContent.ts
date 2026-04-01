@@ -49,7 +49,10 @@ function useChatContent(params: UseChatContentParams) {
                         (item) => item.token === sub.mapKey && item.type === sub.type
                     )
                     if (subIndex >= 0) {
-                        newChildren[subIndex] = {...newChildren[subIndex], renderNum: newChildren[subIndex].renderNum + 1}
+                        newChildren[subIndex] = {
+                            ...newChildren[subIndex],
+                            renderNum: newChildren[subIndex].renderNum + 1
+                        }
                     } else {
                         newChildren.push({
                             chatType: chatType,
@@ -449,7 +452,7 @@ function useChatContent(params: UseChatContentParams) {
                 }
                 // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
                 toolForStreamData.data.status = "end"
-                const isShowAll = toolForStreamData.data.content.length > 25600// 50KB大概字符数25600
+                const isShowAll = toolForStreamData.data.content.length > 25600 // 50KB大概字符数25600
                 const displayContent = isShowAll
                     ? "..." + toolForStreamData.data.content.slice(-25600) + "..."
                     : toolForStreamData.data.content
@@ -741,6 +744,48 @@ function useChatContent(params: UseChatContentParams) {
             })
         }
     })
+
+    /** 工具执行过程产生的流量数据计数逻辑 */
+    const handleTrafficCount = useMemoizedFn((res: AIOutputEvent) => {
+        try {
+            const ipcContent = Uint8ArrayToString(res.Content) || ""
+            const {runtime_id} = JSON.parse(ipcContent) as
+                | AIAgentGrpcApi.HTTPTrafficNotice
+                | AIAgentGrpcApi.RiskTrafficNotice
+
+            if (!runtime_id) {
+                pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, runtime_id 为空`))
+                return
+            }
+            const toolResult = getContentMap(runtime_id)
+            if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+                pushLog(
+                    genErrorLogData(
+                        res.Timestamp,
+                        `${res.Type}数据(call_tool_id:${runtime_id}), 没有对应的工具执行结果数据`
+                    )
+                )
+                return
+            }
+
+            switch (res.Type) {
+                case "yak_httpflow":
+                    toolResult.data.httpFlowDataCount += 1
+                    break
+                case "yak_risk":
+                    toolResult.data.riskFlowDataCount += 1
+                    break
+                default:
+                    break
+            }
+            updateElements({mapKey: toolResult.id, type: toolResult.type})
+        } catch (error) {
+            handleGrpcDataPushLog({
+                info: res,
+                pushLog: pushLog
+            })
+        }
+    })
     // #endregion
 
     // #region 自由对话和任务规划的公共类型数据处理逻辑
@@ -916,10 +961,15 @@ function useChatContent(params: UseChatContentParams) {
                 return
             }
 
+            // 工具执行结果-总结
             if (res.Type === "tool_call_summary") {
-                // 工具执行结果-总结
                 handleToolSummary(res)
                 return
+            }
+
+            // 产生一条(http|risk)流量数据时的通知
+            if (["yak_httpflow", "yak_risk"].includes(res.Type)) {
+                handleTrafficCount(res)
             }
             // #endregion
 

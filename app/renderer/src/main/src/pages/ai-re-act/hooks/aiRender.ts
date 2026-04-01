@@ -62,6 +62,10 @@ export interface AIToolResult {
         /** 工具执行结果详情数据 */
         resultDetails: string
     }
+    /** http流量数据总数 */
+    httpFlowDataCount: number
+    /** risk流量数据总数 */
+    riskFlowDataCount: number
 }
 
 /** 任务开始节点的信息 */

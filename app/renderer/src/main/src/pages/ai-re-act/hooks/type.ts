@@ -169,8 +169,10 @@ export interface PlanLoadingStatus {
 export interface UseChatIPCState {
     /** 流执行状态 */
     execute: boolean
-    /** 运行时的runtimeid合集 */
-    runTimeIDs: string[]
+    /** 运行时产生http数据的run_time_id合集 */
+    httpRunTimeIDs: string[]
+    /** 运行时产生risk数据的run_time_id合集 */
+    riskRunTimeIDs: string[]
     /** 插件输出的卡片数据 */
     yakExecResult: UseYakExecResultState
     /** 自由对话相关数据 */

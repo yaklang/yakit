@@ -25,7 +25,8 @@ export class ChatDataStore {
     private initDefaultData(): AIChatData {
         return {
             coordinatorIDs: [],
-            runTimeIDs: [],
+            httpRunTimeIDs: [],
+            riskRunTimeIDs: [],
             yakExecResult: {card: [], execFileRecord: new Map(), yakExecResultLogs: []},
             aiPerfData: {
                 consumption: {

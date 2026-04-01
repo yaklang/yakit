@@ -33,7 +33,6 @@ import styles from "./AIAgent.module.scss"
 import {grpcDeleteAISession, grpcQueryAISession} from "./grpc"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {AIBottomSideBar} from "./aiBottomSideBar/AIBottomSideBar"
-import {YakitResizeBox, YakitResizeBoxProps} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {SplitView} from "../yakRunner/SplitView/SplitView"
 import {AIBottomDetails} from "./aiBottomDetails/AIBottomDetails"
 
@@ -89,8 +88,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
         setDelCacheLoading(true)
         // 清空无效的用户缓存数据-全局配置数据
         setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, "")
-        // 清空无效的用户缓存数据-taskChat历史对话数据
-        // setRemoteValue(RemoteAIAgentGV.AIAgentChatHistory, "")
         // 设置清空标志位
         setRemoteValue(RemoteAIAgentGV.AIAgentCacheClear, AIAgentCacheClearValue)
 

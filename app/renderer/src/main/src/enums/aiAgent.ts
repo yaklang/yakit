@@ -1,8 +1,6 @@
 export enum RemoteAIAgentGV {
     /** @name ai-agent-chat 全局配置 */
     AIAgentChatSetting = "ai-agent-chat-setting",
-    /** @name 历史对话 */
-    AIAgentChatHistory = "ai-agent-chat-history",
 
     /**
      * 清空用户缓存数据的依据
@@ -20,5 +18,5 @@ export enum RemoteAIAgentGV {
     /** @name 记忆库快捷删除 */
     AIMemoryRemove = "ai-memory-remove",
     /** @name AIModel检测结果中的编辑器的美化 */
-    AIModelCheckResultEditorBeautify = "ai-model-check-result-editor-beautify",
+    AIModelCheckResultEditorBeautify = "ai-model-check-result-editor-beautify"
 }
