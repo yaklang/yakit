@@ -60,7 +60,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
         const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
         const [timeLine, setTimeLine] = useState<boolean>(true)
-        const [runTimeIDs, setRunTimeIDs] = useState<string[]>(initRunTimeIDs)
+        const [runTimeId, setRunTimeId] = useState<string>() // 工具卡片跳转自带runTimeID
 
         const [exportModalVisible, setExportModalVisible] = useState(false)
         const [exportLoading, setExportLoading] = useState(false)
@@ -123,10 +123,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         const handleTabStateChange = useMemoizedFn((key: AITabsEnumType, value: AIAgentTabPayload["value"]) => {
             setActiveKey(key)
             if (!value) {
-                setRunTimeIDs(initRunTimeIDs)
+                setRunTimeId(undefined)
                 return
             }
-            setRunTimeIDs([value])
+            setRunTimeId(value)
         })
 
         const onSwitchAIAgentTab = useMemoizedFn((data) => {
@@ -153,15 +153,15 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         }, [onSwitchAIAgentTab])
 
         const filterTagDom = useMemo(() => {
-            if (initRunTimeIDs === runTimeIDs) return null
+            if (!runTimeId) return null
             // 超过20字符截取，显示...
-            const showId = runTimeIDs.at(0)?.slice(0, 30) + "…"
+            const showId = runTimeId.slice(0, 30) + "…"
             return (
-                <YakitTag color='info' closable onClose={() => setRunTimeIDs(initRunTimeIDs)}>
+                <YakitTag color='info' closable onClose={() => setRunTimeId(undefined)}>
                     {showId}
                 </YakitTag>
             )
-        }, [initRunTimeIDs, runTimeIDs])
+        }, [initRunTimeIDs, runTimeId])
 
         useEffect(() => {
             if (initRunTimeIDs.length > 0) {
@@ -274,24 +274,25 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         }, [yakExecResult.execFileRecord])
 
         const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
+            const runTimeIds = !!runTimeId ? [runTimeId] : initRunTimeIDs
             switch (key) {
                 case AITabsEnum.Task_Content:
                     return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
                 case AITabsEnum.File_System:
                     return <AIFileSystemList />
                 case AITabsEnum.Risk:
-                    return !!runTimeIDs.length ? (
-                        <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIDs} />
+                    return !!runTimeIds.length ? (
+                        <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIds} />
                     ) : (
                         <>
                             <YakitEmpty style={{paddingTop: 48}} />
                         </>
                     )
                 case AITabsEnum.HTTP:
-                    return !!runTimeIDs.length ? (
+                    return !!runTimeIds.length ? (
                         <PluginExecuteHttpFlow
                             filterTagDom={filterTagDom}
-                            runtimeId={runTimeIDs.join(",")}
+                            runtimeId={runTimeIds.join(",")}
                             website={true}
                         />
                     ) : (
@@ -315,7 +316,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             } else {
                 setActiveKey(key)
             }
-            setRunTimeIDs(initRunTimeIDs)
+            setRunTimeId(undefined)
         })
         const onOpenLog = useMemoizedFn((e) => {
             e.stopPropagation()
