@@ -43,11 +43,13 @@ import {
 import {aiChatDataStore} from "../store/ChatDataStore"
 import AIContextToken from "./AIContextToken/AIContextToken"
 import OperationLog from "../components/aiFileSystemList/OperationLog/OperationLog"
+import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {onChat, onChatFromHistory} = props
         const {chatIPCData} = useChatIPCStore()
+        const {fetchChatDataStore} = useChatIPCDispatcher().chatIPCEvents
         const {runTimeIDs: initRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute} = chatIPCData
         const {activeChat} = useAIAgentStore()
         const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -179,7 +181,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             getHTTPTotal()
         }, intervalHTTP)
         const getRiskTotal = useMemoizedFn(() => {
-            if (!initRunTimeIDs.length) return
+            if (!initRunTimeIDs.length || !execute) return
             apiQueryRisksTotalByRuntimeIds(initRunTimeIDs).then((allRes) => {
                 if (+allRes.Total > 0) {
                     setTempRiskTotal(+allRes.Total)
@@ -190,9 +192,21 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                 }
             })
         })
+
         const getHTTPTotal = useMemoizedFn(() => {
-            if (!initRunTimeIDs.length) return
-            grpcQueryHTTPFlows({RuntimeIDs: initRunTimeIDs}).then((allRes) => {
+            if (!initRunTimeIDs.length || !execute) return
+            const element = taskChat?.elements[0]
+            if (!element || !activeChat) return
+            const raw = fetchChatDataStore()?.getContentMap({
+                session: activeChat?.SessionID,
+                chatType: "task",
+                mapKey: element.token
+            })
+            if (!raw) return
+            grpcQueryHTTPFlows({
+                RuntimeIDs: initRunTimeIDs,
+                AfterUpdatedAt: raw?.Timestamp
+            }).then((allRes) => {
                 if (+allRes.Total > 0) {
                     setTempHTTPTotal(+allRes.Total)
                     if (intervalHTTP) setIntervalHTTP(undefined)
