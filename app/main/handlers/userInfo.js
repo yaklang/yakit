@@ -174,10 +174,18 @@ module.exports = {
                                     .then((resp) => {
                                         printLogOutputFile("ccb-------响应:" + JSON.stringify(resp))
                                         if (resp.code !== 200) {
-                                            win.webContents.send("fetch-signin-data", {
-                                                ok: false,
-                                                info: resp.data.reason || "请求异常，请重新登录！"
-                                            })
+                                            if(type === "ccb"){
+                                                win.webContents.send("fetch-signin-ccb-data", {
+                                                    ok: false,
+                                                    info: resp.data.reason || "请求异常，请重新登录！"
+                                                })
+                                            }
+                                            else{
+                                                win.webContents.send("fetch-signin-data", {
+                                                    ok: false,
+                                                    info: resp.data.reason || "请求异常，请重新登录！"
+                                                })
+                                            }
                                             res.end(
                                                 JSON.stringify({
                                                     login: false
@@ -196,7 +204,15 @@ module.exports = {
                                     })
                                     .catch((err) => {
                                         printLogOutputFile("ccb-------错误:" + JSON.stringify(err))
-                                        win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
+                                        if(type === "ccb"){
+                                            win.webContents.send("fetch-signin-ccb-data", {
+                                                ok: false,
+                                                info: "登录错误:" + err
+                                            })
+                                        }
+                                        else{
+                                            win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
+                                        }
                                         res.end(
                                             JSON.stringify({
                                                 login: false
@@ -260,7 +276,12 @@ module.exports = {
             USER_INFO.companyName = user.companyName
             USER_INFO.companyHeadImg = user.companyHeadImg
             win.webContents.send("fetch-signin-token", user)
-            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            if(USER_INFO.platform === "ccb"){
+                win.webContents.send("fetch-signin-ccb-data", {ok: true, info: "登录成功"})
+            }
+            else{
+                win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            }
 
             return new Promise((resolve, reject) => {
                 resolve({next: true})
@@ -269,7 +290,12 @@ module.exports = {
 
         ipcMain.on("company-refresh-in", (event) => {
             win.webContents.send("fetch-signin-token", USER_INFO)
-            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            if(USER_INFO.platform === "ccb"){
+                win.webContents.send("fetch-signin-ccb-data", {ok: true, info: "登录成功"})
+            }
+            else{
+                win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            }
         })
 
         ipcMain.handle("get-login-user-info", async (e) => {
