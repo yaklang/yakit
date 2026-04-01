@@ -73,3 +73,7 @@ export interface AIGlobalCommandProps {
     onSave: (v:string) => void
     onCancel: () => void
 }
+
+export interface AIManualAdditionProps{
+    onCancel: () => void
+}

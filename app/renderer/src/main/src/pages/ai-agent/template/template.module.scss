@@ -152,8 +152,9 @@ textarea.qs-input-textarea {
 
 // #endregion
 
-// #region AIGlobalCommand
-.ai-global-command {
+// #region AIGlobalCommand/AIManualAddition
+.ai-global-command,
+.ai-manual-addition {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -174,6 +175,13 @@ textarea.qs-input-textarea {
         justify-content: flex-end;
         gap: 8px;
         padding-top: 4px;
+    }
+    .add-and-re-execute-btn {
+        :global {
+            .ant-btn > .ant-btn-loading-icon {
+                width: auto !important;
+            }
+        }
     }
 }
 // #endregion
