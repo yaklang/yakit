@@ -5752,6 +5752,11 @@ message YakScript {
   bool IsUpdate = 37;
   repeated string PluginEnvKey = 38;
   bool SkipUpdate = 39;
+
+  bool EnableForAI = 40;
+  string AIDesc = 41;
+  string AIKeywords = 42;
+  string AIUsage = 43;
 }
 
 message Collaborator {
