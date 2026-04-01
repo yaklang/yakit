@@ -36,7 +36,7 @@ export const getReleaseEditionName = () => {
         case PRODUCT_RELEASE_EDITION.MEMFIT:
             return "Memfit AI"
         default:
-            return "Yakit"
+            return "YAKIT网络安全单兵测试系统"
     }
 }
 /**只有yakit 社区版和企业版有WF缓存 */

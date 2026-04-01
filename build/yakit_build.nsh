@@ -102,8 +102,8 @@ FunctionEnd
 
 !macro customInit 
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
-    StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
-    StrCpy $EXE_NAME "Yakit"
+    StrCpy $INSTALL_PATH_REG_KEY_NAME "YAKIT网络安全单兵测试系统_InstallPath"
+    StrCpy $EXE_NAME "YAKIT网络安全单兵测试系统"
     ${StrStr} $0 $EXEFILE "EnpriTraceAgent"
     ${If} $0 != "" ; se
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
@@ -143,8 +143,8 @@ FunctionEnd
 
 !macro customUnInit 
     ; 根据不同版本设置不同的RegKey 社区版/SE/EE
-    StrCpy $INSTALL_PATH_REG_KEY_NAME "InstallPath"
-    StrCpy $EXE_NAME "Yakit"
+    StrCpy $INSTALL_PATH_REG_KEY_NAME "YAKIT网络安全单兵测试系统_InstallPath"
+    StrCpy $EXE_NAME "YAKIT网络安全单兵测试系统"
     ${If} ${FileExists} `$INSTDIR\EnpriTraceAgent.exe` ; se 
         StrCpy $INSTALL_PATH_REG_KEY_NAME "EnpriTraceAgent_InstallPath"
         StrCpy $EXE_NAME "EnpriTraceAgent"
