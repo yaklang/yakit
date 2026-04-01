@@ -190,7 +190,7 @@ jobs:
             - name: Generate software prefix name
               run: |
                   if [ "${{ inputs.version }}" = "ce" ]; then
-                    echo "ENV_Software_Name=YAKIT" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=YAKIT网络安全单兵测试系统" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "ee" ]; then
                     echo "ENV_Software_Name=EnpriTrace" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "se" ]; then
