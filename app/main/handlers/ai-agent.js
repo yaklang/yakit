@@ -2,6 +2,7 @@ const {ipcMain, shell} = require("electron")
 const handlerHelper = require("./handleStreamWithContext")
 const {yakProjects} = require("../filePath")
 const fs = require("fs")
+const crypto = require("crypto")
 
 module.exports = (win, getClient) => {
     // #region AI-Task
@@ -243,7 +244,9 @@ module.exports = (win, getClient) => {
     ipcMain.handle("BeautifySyntaxFlowRule", async (e, params) => {
         const ruleContent = (params && params.ruleContent) || ""
         const forgeNameCandidates = (params && params.forgeNameCandidates) || []
-        const token = (params && params.token) || `beautify-syntaxflow-${Date.now()}`
+        const token =
+            (params && params.token) ||
+            `beautify-syntaxflow-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`}`
 
         // 1) resolve Forge
         let forgeInfo = null
@@ -266,7 +269,11 @@ module.exports = (win, getClient) => {
             } catch (err) {}
         }
         if (!forgeInfo || !forgeInfo.Id) {
-            throw new Error("forge not found")
+            const candidatesHint = Array.isArray(forgeNameCandidates) ? forgeNameCandidates.join(", ") : ""
+            throw new Error(
+                `forge not found (BeautifySyntaxFlowRule). Attempted ForgeName candidates: [${candidatesHint}]. ` +
+                    `Please ensure the SyntaxFlow beautify forge template is installed/enabled (e.g. syntaxflow-rule-beautify / syntaxflow 规则美化 / SyntaxFlow 规则美化).`
+            )
         }
 
         // 2) start AI ReAct stream (backend owns triggering)

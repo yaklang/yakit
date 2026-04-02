@@ -17,8 +17,7 @@ import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAu
 import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {openSSARiskNewWindow} from "@/utils/openWebsite"
 import {JSONParseLog} from "@/utils/tool"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {yakitNotify} from "@/utils/notification"
+import {useSyntaxFlowRuleBeautify} from "@/utils/useSyntaxFlowRuleBeautify"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -33,7 +32,9 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // 展示所需的BugHash
     const [bugHash, setBugHash] = useState<string>("")
     const [info, setInfo] = useState<SSARisk>()
-    const [beautifyLoading, setBeautifyLoading] = useState(false)
+    const {beautifyLoading, handleBeautify} = useSyntaxFlowRuleBeautify({
+        getRuleContent: () => ruleEditor || ""
+    })
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -108,51 +109,6 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
         if (isShowEditorDetails && showItem === "ruleEditor") {
             onAuditRuleSubmit()
         }
-    })
-
-    const handleBeautify = useMemoizedFn(() => {
-        if (beautifyLoading) return
-        setBeautifyLoading(true)
-        ipcRenderer
-            .invoke("BeautifySyntaxFlowRule", {
-                ruleContent: ruleEditor || "",
-                forgeNameCandidates: ["syntaxflow-rule-beautify", "syntaxflow 规则美化", "SyntaxFlow 规则美化"]
-            })
-            .then((res: any) => {
-                yakitNotify("success", "已提交规则美化任务，可在 AI Agent 查看执行过程")
-                // 后端已负责触发 AI-ReAct，前端只打开 AI Agent 页面用于展示
-                emiter.emit(
-                    "openPage",
-                    JSON.stringify({route: YakitRoute.AI_Agent, params: {defualtAIMentionCommandParams: []}})
-                )
-
-                const token = res?.token
-                if (token) {
-                    const onCancel = () => {
-                        setBeautifyLoading(false)
-                        ipcRenderer.removeAllListeners(`${token}-error`)
-                        ipcRenderer.removeAllListeners(`${token}-end`)
-                    }
-
-                    const onError = (_: any, err: any) => {
-                        yakitNotify("error", `规则美化失败: ${err}`)
-                        onCancel()
-                    }
-                    const onEnd = () => {
-                        yakitNotify("success", "规则美化任务已结束")
-                        onCancel()
-                    }
-                    ipcRenderer.on(`${token}-error`, onError)
-                    ipcRenderer.on(`${token}-end`, onEnd)
-                } else {
-                    // 未返回 token 也不要一直转圈
-                    setBeautifyLoading(false)
-                }
-            })
-            .catch((e: any) => {
-                yakitNotify("error", `提交规则美化失败: ${e}`)
-                setBeautifyLoading(false)
-            })
     })
 
     return (
