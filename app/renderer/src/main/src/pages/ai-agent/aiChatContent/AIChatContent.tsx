@@ -2,7 +2,7 @@ import React, {forwardRef, ReactNode, useEffect, useImperativeHandle, useMemo, u
 import {AIAgentTabPayload, AIChatContentProps} from "./type"
 import styles from "./AIChatContent.module.scss"
 import {ExpandAndRetract} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useCreation, useInterval, useMemoizedFn} from "ahooks"
+import {useCreation, useMemoizedFn} from "ahooks"
 import {HorizontalScrollCard} from "@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard"
 import classNames from "classnames"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
@@ -16,7 +16,6 @@ import {
     VulnerabilitiesRisksTable
 } from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {apiQueryRisksTotalByRuntimeIds} from "@/pages/risks/YakitRiskTable/utils"
 import AIReActTaskChat from "@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat"
 import emiter from "@/utils/eventBus/eventBus"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -24,10 +23,9 @@ import {OutlineClouddownloadIcon, OutlineNewspaperIcon, OutlinePlussmIcon} from 
 import {SolidChatalt2Icon} from "@/assets/icon/solid"
 import useAiChatLog from "@/hook/useAiChatLog/useAiChatLog.ts"
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {grpcExportAILogs, grpcQueryHTTPFlows} from "../grpc"
+import {grpcExportAILogs} from "../grpc"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {TabKey} from "../components/aiFileSystemList/type"
 import {onNewChat} from "../historyChat/HistoryChat"
 // import {SideSettingButton} from "../aiChatWelcome/AIChatWelcome"
 import {Divider} from "antd"
@@ -40,25 +38,17 @@ import {
     AIHandleStartResProps,
     AIReActChatRefProps
 } from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
-import {aiChatDataStore} from "../store/ChatDataStore"
 import AIContextToken from "./AIContextToken/AIContextToken"
 import OperationLog from "../components/aiFileSystemList/OperationLog/OperationLog"
-import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {onChat, onChatFromHistory} = props
         const {chatIPCData} = useChatIPCStore()
-        const {fetchChatDataStore} = useChatIPCDispatcher().chatIPCEvents
-        const {httpRunTimeIDs: initRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute} = chatIPCData
+        const {httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute} = chatIPCData
         const {activeChat} = useAIAgentStore()
         const [isExpand, setIsExpand] = useState<boolean>(true)
         const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
-
-        const [tempRiskTotal, setTempRiskTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数,现在不显示具体数量了
-        const [tempHTTPTotal, setTempHTTPTotal] = useState<number>(0) // HTTP流量表tab是否显示，大于0就显示
-        const [intervalRisk, setIntervalRisk] = useState<number | undefined>(undefined)
-        const [intervalHTTP, setIntervalHTTP] = useState<number | undefined>(undefined)
 
         const [showFreeChat, setShowFreeChat] = useState<boolean>(true) //自由对话展开收起
         const [timeLine, setTimeLine] = useState<boolean>(true)
@@ -142,8 +132,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             }
             const {key, value} = payload
 
-            if (key === AITabsEnum.HTTP && !tempHTTPTotal) return
-            if (key === AITabsEnum.Risk && !tempRiskTotal) return
+            if (key === AITabsEnum.HTTP && httpRunTimeIDs.length === 0) return
+            if (key === AITabsEnum.Risk && riskRunTimeIDs.length === 0) return
             handleTabStateChange(key, value)
         })
 
@@ -163,59 +153,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                     {showId}
                 </YakitTag>
             )
-        }, [initRunTimeIDs, runTimeId])
-
-        useEffect(() => {
-            if (initRunTimeIDs.length > 0) {
-                if (!tempRiskTotal) setIntervalRisk(1000)
-                if (!tempHTTPTotal) setIntervalHTTP(1000)
-            } else {
-                setTempRiskTotal(0)
-                setTempHTTPTotal(0)
-            }
-        }, [initRunTimeIDs])
-        useInterval(() => {
-            getRiskTotal()
-        }, intervalRisk)
-        useInterval(() => {
-            getHTTPTotal()
-        }, intervalHTTP)
-        const getRiskTotal = useMemoizedFn(() => {
-            if (!initRunTimeIDs.length || !execute) return
-            apiQueryRisksTotalByRuntimeIds(initRunTimeIDs).then((allRes) => {
-                if (+allRes.Total > 0) {
-                    setTempRiskTotal(+allRes.Total)
-                    if (intervalRisk) setIntervalRisk(undefined)
-                }
-                if (!chatIPCData.execute) {
-                    if (intervalRisk) setIntervalRisk(undefined)
-                }
-            })
-        })
-
-        const getHTTPTotal = useMemoizedFn(() => {
-            if (!initRunTimeIDs.length || !execute) return
-            const element = taskChat?.elements[0]
-            if (!element || !activeChat) return
-            const raw = fetchChatDataStore()?.getContentMap({
-                session: activeChat?.SessionID,
-                chatType: "task",
-                mapKey: element.token
-            })
-            if (!raw) return
-            grpcQueryHTTPFlows({
-                RuntimeIDs: initRunTimeIDs,
-                AfterUpdatedAt: raw?.Timestamp
-            }).then((allRes) => {
-                if (+allRes.Total > 0) {
-                    setTempHTTPTotal(+allRes.Total)
-                    if (intervalHTTP) setIntervalHTTP(undefined)
-                }
-                if (!chatIPCData.execute) {
-                    if (intervalHTTP) setIntervalHTTP(undefined)
-                }
-            })
-        })
+        }, [httpRunTimeIDs, runTimeId])
 
         const onExpand = useMemoizedFn((e) => {
             e.stopPropagation()
@@ -223,17 +161,17 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         })
         const yakitTabs = useCreation(() => {
             let tab: YakitSideTabProps["yakitTabs"] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
-            if (!!tempHTTPTotal) {
+            if (httpRunTimeIDs.length > 0) {
                 tab.push(AITabs[AITabsEnum.HTTP])
             }
-            if (!!tempRiskTotal) {
+            if (riskRunTimeIDs.length > 0) {
                 tab.push(AITabs[AITabsEnum.Risk])
             }
             if (yakExecResult.execFileRecord.size > 0) {
                 tab.push(AITabs[AITabsEnum.Operation_Log])
             }
             return tab
-        }, [tempRiskTotal, tempHTTPTotal, yakExecResult.execFileRecord, taskChat?.elements?.length])
+        }, [httpRunTimeIDs, riskRunTimeIDs, yakExecResult.execFileRecord, taskChat?.elements?.length])
 
         const [showHot, setShowHot] = useState(false)
         const prevRef = useRef<{
@@ -288,15 +226,16 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         }, [yakExecResult.execFileRecord])
 
         const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
-            const runTimeIds = !!runTimeId ? [runTimeId] : initRunTimeIDs
+            const runTimeIds = !!runTimeId ? [runTimeId] : httpRunTimeIDs
+            const riskRunTimeIds = !!runTimeId ? [runTimeId] : riskRunTimeIDs
             switch (key) {
                 case AITabsEnum.Task_Content:
                     return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
                 case AITabsEnum.File_System:
                     return <AIFileSystemList />
                 case AITabsEnum.Risk:
-                    return !!runTimeIds.length ? (
-                        <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={runTimeIds} />
+                    return !!riskRunTimeIds.length ? (
+                        <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />
                     ) : (
                         <>
                             <YakitEmpty style={{paddingTop: 48}} />

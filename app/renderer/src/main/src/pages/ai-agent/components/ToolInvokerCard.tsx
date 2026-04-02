@@ -1,12 +1,11 @@
 import {SolidToolIcon} from "@/assets/icon/solid"
-import {FC, memo, ReactNode, useCallback, useEffect, useMemo, useRef, useState} from "react"
+import {FC, memo, ReactNode, useEffect, useMemo, useRef, useState} from "react"
 import ChatCard from "./ChatCard"
 import styles from "./ToolInvokerCard.module.scss"
 import classNames from "classnames"
 import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import type {YakitTagColor} from "@/components/yakitUI/YakitTag/YakitTagType"
-import {grpcQueryAIToolDetails, grpcQueryHTTPFlows} from "../grpc"
-import {apiQueryRisksTotalByRuntimeId} from "@/pages/risks/YakitRiskTable/utils"
+import {grpcQueryAIToolDetails} from "../grpc"
 import {
     AIChatQSData,
     AIChatQSDataTypeEnum,
@@ -31,7 +30,6 @@ import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useAIAgentStore from "../useContext/useStore"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIChatIPCSendParams} from "../useContext/ChatIPCContent/ChatIPCContent"
-import {useTypedStream} from "./aiChatListItem/StreamingChatContent/hooks/useTypedStream"
 import {AIReferenceNode} from "@/pages/ai-re-act/aiReActChatContents/AIReActChatContents"
 import {useStreamingChatContent} from "./aiChatListItem/StreamingChatContent/hooks/useStreamingChatContent"
 
@@ -172,11 +170,18 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     const {titleText, modalInfo, operationInfo, fileList, data, chatType, token} = props
-
     const {activeChat} = useAIAgentStore()
     const {fetchChatDataStore} = useChatIPCDispatcher().chatIPCEvents
 
     const [loading, setLoading] = useState<boolean>(false)
+
+    const httpFlowDataCount = useCreation(() => {
+        return data.httpFlowDataCount
+    }, [data.httpFlowDataCount])
+    
+    const riskFlowDataCount = useCreation(() => {
+        return data.riskFlowDataCount
+    }, [data.riskFlowDataCount])
 
     const summary = useCreation(() => {
         return data?.tool?.summary || ""
@@ -209,8 +214,6 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
     const startTime = useCreation(() => {
         return formatTimestamp(data.startTime)
     }, [data.startTime])
-    const [trafficLen, setTrafficLen] = useState<number>(0)
-    const [risksLen, setRisksLen] = useState<number>(0)
 
     const getListToolList = useMemoizedFn(() => {
         if (!data?.callToolId || !activeChat) return
@@ -235,24 +238,6 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                 }, 100)
             )
     })
-
-    //  HTTP 流量
-    const getHTTPTraffic = useCallback(async () => {
-        const result = await grpcQueryHTTPFlows({RuntimeId: params,AfterUpdatedAt:data.startTime})
-        setTrafficLen(+result.Total)
-    }, [params])
-
-    // 相关漏洞
-    const getQueryRisksTotalByRuntimeId = useCallback(async () => {
-        const result = await apiQueryRisksTotalByRuntimeId(params)
-        setRisksLen(+result.Total)
-    }, [params])
-
-    useEffect(() => {
-        Promise.all([getHTTPTraffic(), getQueryRisksTotalByRuntimeId()]).catch((error) => {
-            console.error("error:", error)
-        })
-    }, [getHTTPTraffic, getQueryRisksTotalByRuntimeId])
 
     const switchAIActTab = (key: AITabsEnum) => {
         emiter.emit(
@@ -305,25 +290,25 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                         )}
                     </div>
 
-                    {!!risksLen && (
+                    {!!riskFlowDataCount && (
                         <>
                             <label
                                 onClick={() => {
                                     switchAIActTab(AITabsEnum.Risk)
                                 }}
                             >
-                                相关漏洞 <span>{risksLen}</span>
+                                相关漏洞 <span>{riskFlowDataCount}</span>
                             </label>
                             <Divider type='vertical' />
                         </>
                     )}
-                    {!!trafficLen && (
+                    {!!httpFlowDataCount && (
                         <label
                             onClick={() => {
                                 switchAIActTab(AITabsEnum.HTTP)
                             }}
                         >
-                            HTTP 流量 <span>{trafficLen}</span>
+                            HTTP 流量 <span>{httpFlowDataCount}</span>
                         </label>
                     )}
                     <Tooltip title='刷新代码块数据'>
