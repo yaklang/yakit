@@ -61,7 +61,19 @@ import AIToolList from "../aiToolList/AIToolList"
 import {SplitView} from "@/pages/yakRunner/SplitView/SplitView"
 import {InstallPluginModal} from "@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal"
 import {reseultKnowledgePlugin, useCheckKnowledgePlugin} from "@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin"
+import useGetAIMaterialsData, {getAIRecommendIconByType} from "@/pages/ai-re-act/hooks/useGetAIMaterialsData"
 import {AIMentionCommandParams} from "../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
+
+// const sideberRadioOptions = [
+//     {
+//         value: "fileTree",
+//         label: "文件树"
+//     },
+//     {
+//         value: "knoledge",
+//         label: "知识库"
+//     }
+// ]
 
 const getRandomItems = (array, count = 3) => {
     const shuffled = [...array].sort(() => 0.5 - Math.random())
@@ -102,43 +114,25 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             []
         )
 
+        const [{randomAIMaterials, randomAIMaterialsData, loadingAIMaterials}, {onRefresh}] = useGetAIMaterialsData()
         // #region 问题相关逻辑
 
-        const [randomAIMaterials, setRandomAIMaterials] = useState<GetRandomAIMaterialsResponse>()
         const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
-        const [loading, setLoading] = useState<boolean>(false)
-        const [loadingAIMaterials, setLoadingAIMaterials] = useState<boolean>(false)
         // 控制下拉菜单
         const [openDrawer, setOpenDrawer] = useState<boolean>(true)
 
         const lineStartRef = useRef<HTMLDivElement>(null)
         const welcomeRef = useRef<HTMLDivElement>(null)
-        const questionListAllRef = useRef<StreamResult.Log[]>([])
         const [inViewPort = true] = useInViewport(welcomeRef)
 
         useEffect(() => {
             if (inViewPort) {
-                getRandomAIMaterials()
+                onRefresh()
             }
         }, [inViewPort])
 
         const onSetQuestion = useMemoizedFn((value: string) => {
             aiChatTextareaRef.current?.setValue(value ?? "")
-        })
-
-        const getRandomAIMaterials = useMemoizedFn(() => {
-            if (loadingAIMaterials) return
-            setLoadingAIMaterials(true)
-            grpcGetRandomAIMaterials({Limit: 3})
-                .then((res) => {
-                    setRandomAIMaterials(res)
-                    questionListAllRef.current = []
-                })
-                .finally(() =>
-                    setTimeout(() => {
-                        setLoadingAIMaterials(false)
-                    }, 200)
-                )
         })
 
         const resizeUpdate = useMemoizedFn(() => {
@@ -203,46 +197,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
             }
         )
 
-        const randomAIMaterialsData: RandomAIMaterialsDataProps = useCreation(() => {
-            const tools: AIMaterialsData = {
-                type: "工具",
-                mentionType: "tool",
-                data: (randomAIMaterials?.AITools || []).map((tool) => ({
-                    type: "工具",
-                    name: tool.VerboseName || tool.Name,
-                    description: tool.Description || ""
-                })),
-                icon: <AIToolIcon />,
-                hoverIcon: <HoverAIToolIcon />
-            }
-            const forges: AIMaterialsData = {
-                type: "技能",
-                mentionType: "forge",
-                data: (randomAIMaterials?.AIForges || []).map((forge) => ({
-                    type: "技能",
-                    name: forge.ForgeVerboseName || forge.ForgeName,
-                    description: forge.Description || ""
-                })),
-                icon: <AIForgeIcon />,
-                hoverIcon: <HoverAIForgeIcon />
-            }
-            const knowledgeBases: AIMaterialsData = {
-                type: "知识库",
-                mentionType: "knowledgeBase",
-                data: (randomAIMaterials?.KnowledgeBaseEntries || []).map((knowledgeBase) => ({
-                    type: "知识库",
-                    name: knowledgeBase.KnowledgeTitle || knowledgeBase.Summary,
-                    description: knowledgeBase.KnowledgeDetails || ""
-                })),
-                icon: <AIKnowledgeBaseIcon />,
-                hoverIcon: <HoverAIKnowledgeBaseIcon />
-            }
-            return {
-                tools,
-                forges,
-                knowledgeBases
-            }
-        }, [randomAIMaterials])
         const isEmptyAIMaterials = useCreation(() => {
             return randomAIMaterialsDataIsEmpty(randomAIMaterialsData)
         }, [randomAIMaterials])
@@ -415,7 +369,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                         size='small'
                                         type='text'
                                         className={styles["line2-btn"]}
-                                        onClick={getRandomAIMaterials}
+                                        onClick={onRefresh}
                                     >
                                         {t("AIChatWelcome.refresh")}
                                     </YakitButton>
@@ -427,8 +381,6 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                                                 randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
                                             return aiItem.data.length > 0 ? (
                                                 <AIRecommend
-                                                    icon={aiItem.icon}
-                                                    hoverIcon={aiItem.hoverIcon}
                                                     key={aiItem.type}
                                                     title={aiItem.type}
                                                     data={aiItem.data}
@@ -490,7 +442,10 @@ export const SideSettingButton: React.FC<SideSettingButtonProps> = React.memo((p
 
 const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
     const {t} = useI18nNamespaces(["yakitUi"])
-    const {icon, hoverIcon, title, data, lineStartDOMRect, onMore, onCheckItem} = props
+    const {title, data, lineStartDOMRect, onMore, onCheckItem} = props
+    const icons = useCreation(() => {
+        return getAIRecommendIconByType(title)
+    }, [title])
     return (
         <div className={styles["recommend-list-wrapper"]}>
             <AIDownAngleLeftIcon className={styles["down-left"]} />
@@ -499,8 +454,8 @@ const AIRecommend: React.FC<AIRecommendProps> = React.memo((props) => {
             <AIUpAngleRightIcon className={styles["up-right"]} />
             <div className={styles["recommend-list-heard"]}>
                 <div className={styles["title"]}>
-                    <div className={styles["icon"]}>{icon}</div>
-                    <div className={styles["hover-icon"]}>{hoverIcon}</div>
+                    <div className={styles["icon"]}>{icons.icon}</div>
+                    <div className={styles["hover-icon"]}>{icons.hoverIcon}</div>
                     {title}
                 </div>
                 <YakitButton className={styles["more-btn"]} type='text' size='small' onClick={onMore}>

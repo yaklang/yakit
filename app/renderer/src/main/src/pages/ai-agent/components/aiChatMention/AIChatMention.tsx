@@ -6,7 +6,6 @@ import {
     FileSystemTreeOfMentionProps,
     FocusModeOfMentionProps,
     ForgeNameListOfMentionProps,
-    iconMapType,
     KnowledgeBaseListOfMentionProps,
     ToolListOfMentionProps
 } from "./type"

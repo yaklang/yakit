@@ -1,5 +1,4 @@
 import {YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
-import {ReactNode} from "react"
 import type {HandleStartParams} from "../aiAgentChat/type"
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {AIReActChatRefProps} from "@/pages/ai-re-act/aiReActChat/AIReActChatType"
@@ -12,15 +11,13 @@ export interface AIChatWelcomeProps {
     streams?: ReturnType<typeof useMultipleHoldGRPCStream>[0]
     ref?: React.ForwardedRef<AIReActChatRefProps>
 }
-interface AIRecommendItem {
+export interface AIRecommendItem {
     type: string
     name: string
     description: string
 }
 export interface AIRecommendProps extends Omit<AIRecommendItemProps, "item"> {
-    icon: ReactNode
-    hoverIcon: ReactNode
-    title: ReactNode
+    title: string
     data: AIRecommendItem[]
     onMore: () => void
 }
@@ -35,8 +32,6 @@ export interface AIMaterialsData {
     type: string
     mentionType: AIMentionCommandParams["mentionType"]
     data: AIRecommendItem[]
-    icon: ReactNode
-    hoverIcon: ReactNode
 }
 export interface RandomAIMaterialsDataProps {
     tools: AIMaterialsData
