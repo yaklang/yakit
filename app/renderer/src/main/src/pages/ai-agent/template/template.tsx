@@ -508,7 +508,7 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
     useEffect(() => {
         if (
             (syncIdOfAddToContext.current && !syncIdInfoMap?.get(syncIdOfAddToContext.current)) ||
-            (syncIdOfAddAndReExecute.current && syncIdInfoMap?.get(syncIdOfAddAndReExecute.current))
+            (syncIdOfAddAndReExecute.current && !syncIdInfoMap?.get(syncIdOfAddAndReExecute.current))
         ) {
             onCancel()
             setPrompt("")
