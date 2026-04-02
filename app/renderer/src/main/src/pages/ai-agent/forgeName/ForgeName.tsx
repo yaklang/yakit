@@ -22,6 +22,7 @@ import {
     useDebounceFn,
     useInViewport,
     useMemoizedFn,
+    useSelections,
     useThrottleFn,
     useUpdateEffect,
     useVirtualList
@@ -37,7 +38,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {Form, Tooltip} from "antd"
 import {yakitNotify} from "@/utils/notification"
-import {AIForgeListDefaultPagination, ReActChatEventEnum} from "../defaultConstant"
+import {AIForgeListDefaultPagination, defaultExportAIForgeRequest, ReActChatEventEnum} from "../defaultConstant"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {AIForge, QueryAIForgeRequest, QueryAIForgeResponse} from "../type/forge"
 import ImportExportModal, {ImportExportModalExtra} from "@/components/ImportExportModal/ImportExportModal"
@@ -51,14 +52,18 @@ import {LogListInfo} from "@/components/YakitUploadModal/YakitUploadModal"
 
 import classNames from "classnames"
 import styles from "./ForgeName.module.scss"
+import {YakitProtoCheckbox} from "@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox"
+import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
+import {cloneDeep} from "lodash"
 const {ipcRenderer} = window.require("electron")
 
 export interface ForgeNameRef {
     openAdd: () => void
     openImport: () => void
+    onBatchExport: () => void
 }
 
-const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
+const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRef>) => {
     // const {} = props
 
     // #region AIForge 模板增删改功能 使用功能
@@ -288,9 +293,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
         apiKey: "ExportAIForge"
     })
     const logListRef = useRef<LogListInfo[]>([])
-    const forgeNamesRef = useRef<string[]>([])
-    const toolNames = useRef<string[]>([])
-    const outputNameRef = useRef<string>("")
+    const forgeExtraParams = useRef<ExportAIForgeRequest>(cloneDeep(defaultExportAIForgeRequest))
     const handleOpenImportExportHint = useMemoizedFn((extra: Omit<ImportExportModalExtra, "hint">) => {
         if (importExportExtra.hint) return
         setImportExportExtra({...extra, hint: true})
@@ -298,6 +301,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
 
     const exportPath = useRef<string>("")
     const handleFinishedImportExportHint = useMemoizedFn((result: boolean) => {
+        onResetExportExtraParams()
         if (result) {
             const type = importExportExtra.type
             if (type === "import") {
@@ -397,16 +401,56 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
         }
     }
     // #endregion
+    // #region AIForge 批量导出
+    const {selected, allSelected, isSelected, toggle, toggleAll, partiallySelected} = useSelections(data.Data)
+    useEffect(() => {
+        props.onSelectChange(selected.length > 0)
+    }, [selected.length])
+    const onBatchExport = useMemoizedFn(() => {
+        const query: ExportAIForgeRequest = {
+            ForgeNames: [],
+            OutputName: "",
+            Filter: {
+                Keyword: ""
+            }
+        }
+        if (allSelected) {
+            query.Filter = {
+                Keyword: search
+            }
+        } else {
+            query.ForgeNames = selected.map((item) => item.ForgeName)
+        }
+        forgeExtraParams.current = {
+            ...forgeExtraParams.current,
+            ...query
+        }
+        handleOpenImportExportHint({
+            title: "导出技能",
+            type: "export",
+            apiKey: "ExportAIForge"
+        })
+    })
 
-    useImperativeHandle(ref, () => ({
-        openAdd: handleNewAIForge,
-        openImport: () =>
-            handleOpenImportExportHint({
-                title: "导入技能",
-                type: "import",
-                apiKey: "ImportAIForge"
-            })
-    }))
+    const onResetExportExtraParams = useMemoizedFn(() => {
+        forgeExtraParams.current = cloneDeep(defaultExportAIForgeRequest)
+    })
+    //#endregion
+
+    useImperativeHandle(
+        ref,
+        () => ({
+            openAdd: handleNewAIForge,
+            openImport: () =>
+                handleOpenImportExportHint({
+                    title: "导入技能",
+                    type: "import",
+                    apiKey: "ImportAIForge"
+                }),
+            onBatchExport: () => onBatchExport()
+        }),
+        []
+    )
 
     return (
         <div ref={wrapper} className={styles["forge-name"]}>
@@ -439,6 +483,14 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
+                    <div className={styles["select-all"]}>
+                        <YakitCheckbox
+                            checked={allSelected}
+                            onChange={() => toggleAll()}
+                            indeterminate={partiallySelected}
+                        />
+                        <span>全选</span>
+                    </div>
                 </div>
             </div>
 
@@ -500,13 +552,17 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                                     >
                                         <div className={styles["forge-list-opt"]} onClick={() => handleOnClick(data)}>
                                             <div
-                                                className={classNames(
-                                                    styles["opt-title"],
-                                                    "yakit-content-single-ellipsis"
-                                                )}
+                                                className={classNames(styles["opt-title"])}
                                                 title={ForgeVerboseName || ForgeName}
                                             >
-                                                {ForgeVerboseName || ForgeName}
+                                                <YakitProtoCheckbox
+                                                    checked={isSelected(data)}
+                                                    onChange={() => toggle(data)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                />
+                                                <div className='yakit-content-single-ellipsis'>
+                                                    {ForgeVerboseName || ForgeName}
+                                                </div>
                                             </div>
 
                                             <div className={styles["item-extra"]}>
@@ -520,9 +576,12 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                                                         icon={<OutlineExportIcon />}
                                                         onClick={(e) => {
                                                             e.stopPropagation()
-                                                            forgeNamesRef.current = [ForgeName]
-                                                            toolNames.current = tools
-                                                            outputNameRef.current = ForgeVerboseName || ForgeName || ""
+                                                            forgeExtraParams.current = {
+                                                                ...forgeExtraParams.current,
+                                                                ForgeNames: [ForgeName],
+                                                                ToolNames: tools,
+                                                                OutputName: ForgeVerboseName || ForgeName || ""
+                                                            }
                                                             handleOpenImportExportHint({
                                                                 title: "导出技能",
                                                                 type: "export",
@@ -594,7 +653,10 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                 <ImportExportModal<ExportAIForgeFormValues, ExportAIForgeRequest, ExportImportAIForgeProgress>
                     {...commonImportExportProps}
                     formProps={{
-                        initialValues: {OutputName: outputNameRef.current || "", ToolNames: toolNames.current}
+                        initialValues: {
+                            OutputName: forgeExtraParams.current?.OutputName || "",
+                            ToolNames: forgeExtraParams.current?.ToolNames || []
+                        }
                     }}
                     renderForm={() => (
                         <>
@@ -650,7 +712,7 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
                         } catch (error) {}
                     }}
                     onSubmitForm={(values) => ({
-                        ForgeNames: forgeNamesRef.current,
+                        ...forgeExtraParams.current,
                         ...values
                     })}
                     isProgressFinished={(p: ExportImportAIForgeProgress) =>
@@ -687,8 +749,6 @@ const ForgeName = (props, ref: Ref<ForgeNameRef>) => {
             )}
         </div>
     )
-}
-
-const ForwardForgeName = forwardRef<ForgeNameRef, {}>(ForgeName)
+})
 
 export default memo(ForwardForgeName)

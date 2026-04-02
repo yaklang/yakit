@@ -2087,6 +2087,7 @@ message ExportAIForgeRequest {
   string OutputName = 3;
   string Password = 4;
   repeated string ToolNames = 5;
+  AIForgeFilter Filter = 6;
 }
 
 message ImportAIForgeRequest {
