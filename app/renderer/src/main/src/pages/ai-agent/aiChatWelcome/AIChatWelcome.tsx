@@ -294,7 +294,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                     children: <ForgeName ref={forgeNameRef} onSelectChange={setIsSelectForgeName} />,
                     extra: [
                         <YakitButton
-                            key='batch-import'
+                            key='batch-export'
                             onClick={() => {
                                 forgeNameRef.current?.onBatchExport()
                             }}
