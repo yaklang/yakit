@@ -230,7 +230,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                     >
                         <YakitInput.TextArea
                             autoSize={{minRows: 1, maxRows: 3}}
-                            placeholder={`$1-$2 / \\\\1-\\\\2 / {1}-{2}`}
+                            placeholder={t("MITMRuleFromModal.regexp_result_template_placeholder")}
                         />
                     </Form.Item>
                     )}
