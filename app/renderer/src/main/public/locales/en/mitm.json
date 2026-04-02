@@ -25,6 +25,10 @@
     "existing_mitm_content_rules": "Rules",
     "total_rules_count": "Total {count}",
     "no_replace_all": "No Replacement for All",
+    "white_list": "Whitelist",
+    "white_list_modal_title": "Rule Whitelist Configuration",
+    "white_list_label": "Rule Whitelist",
+    "white_list_tip": "After configuring the whitelist, the rules will no longer apply to the file extensions in the whitelist",
     "add_rule": "Add Rule",
     "default_Configuration": "Default Configuration"
   },

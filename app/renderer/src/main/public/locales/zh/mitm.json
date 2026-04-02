@@ -25,6 +25,10 @@
     "existing_mitm_content_rules": "现有 MITM 内容规则",
     "total_rules_count": "共 {count} 条规则",
     "no_replace_all": "全部不替换",
+    "white_list": "白名单",
+    "white_list_modal_title": "规则白名单配置",
+    "white_list_label": "规则白名单",
+    "white_list_tip": "配置白名单后，规则不再对白名单的后缀名生效",
     "add_rule": "新增规则",
     "default_Configuration": "默认配置"
   },
