@@ -19,12 +19,7 @@ import ChatIPCContent, {
 } from "../useContext/ChatIPCContent/ChatIPCContent"
 import {AIReActChatReview} from "@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {
-    OutlineChevrondoubledownIcon,
-    OutlineChevrondoubleupIcon,
-    OutlineExitIcon,
-    RedoDotIcon
-} from "@/assets/icon/outline"
+import {OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon} from "@/assets/icon/outline"
 import {AIChatIPCStartParams, ChatIPCSendType, UseTaskChatState} from "@/pages/ai-re-act/hooks/type"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
@@ -42,12 +37,10 @@ import {AIChatContent} from "../aiChatContent/AIChatContent"
 import {AITabsEnum, ReActChatEventEnum} from "../defaultConstant"
 import {grpcGetAIToolById} from "../aiToolList/utils"
 import {isEqual} from "lodash"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import useMultipleHoldGRPCStream from "@/pages/KnowledgeBase/hooks/useMultipleHoldGRPCStream"
 import {useKnowledgeBase} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {apiCancelDebugPlugin} from "@/pages/plugins/utils"
-import {Tooltip} from "antd"
 import {aiChatDataStore} from "@/pages/ai-agent/store/ChatDataStore"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import classNames from "classnames"
@@ -69,8 +62,8 @@ const taskChatIsEmpty = (taskChat?: UseTaskChatState) => {
 
 export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     const {t} = useI18nNamespaces(["aiAgent", "yakitUi"])
-    const {} = props
-    const {activeChat, setting} = useAIAgentStore()
+
+    const {activeChat} = useAIAgentStore()
     const {setChats, setActiveChat, getSetting} = useAIAgentDispatcher()
 
     const aiReActChatRef = useRef<AIChatContentRefProps>(null)
@@ -181,6 +174,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         }
     })
     const [chatIPCData, events] = useChatIPC({
+        autoConnect: true,
         onEnd: handleChatingEnd,
         onTaskReview: handleShowReview,
         onTaskReviewExtra: handleShowReviewExtra,
@@ -188,7 +182,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         onTaskStart: handleTaskStart,
         setSessionChatName,
         onSyncIDChange,
-        cacheDataStore: aiChatDataStore
+        cacheDataStore: aiChatDataStore,
+        getSetting
     })
     const {execute} = chatIPCData
 
