@@ -178,8 +178,8 @@ export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props
     const {referenceList} = props
     const [expand, setExpand] = useState<boolean>(false)
     const code = useCreation(() => {
-        return referenceList.map((item) => item.payload).join("\n")
-    }, [referenceList])
+        return expand ? referenceList.map((item) => item.payload).join("\n") : ""
+    }, [expand, referenceList])
     return (
         <>
             <YakitModal
@@ -195,6 +195,7 @@ export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props
                     setExpand(false)
                 }}
                 bodyStyle={{height: 500}}
+                destroyOnClose
             >
                 <YakitEditor type='plaintext' readOnly={true} value={code} />
             </YakitModal>
