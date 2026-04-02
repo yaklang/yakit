@@ -33,7 +33,7 @@ import {AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem} from "@/pages/fuz
 import {cloneDeep} from "lodash"
 import {MITMHotPatchTempDefault} from "@/defaultConstants/mitm"
 import {SolidPlayIcon, SolidStopIcon} from "@/assets/icon/solid"
-import {OutlineFileUpIcon, OutlineRefreshIcon, OutlineStoreIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
+import {OutlineChevrondownIcon, OutlineFileUpIcon, OutlineRefreshIcon, OutlineStoreIcon, OutlineTerminalIcon} from "@/assets/icon/outline"
 import MITMContext, {MITMVersion} from "../Context/MITMContext"
 import {
     grpcClientMITMHooks,
@@ -432,6 +432,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>(cloneDeep(MITMHotPatchTempDefault))
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
     const tempNameRef = useRef<string>("")
+    const [selectedTemplateName, setSelectedTemplateName] = useState<string>("")
 
     useEffect(() => {
         registerShortcutKeyHandle(ShortcutKeyPage.Mitm)
@@ -486,10 +487,20 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                             onSetHotPatchTempLocal={setHotPatchTempLocal}
                             onClickHotCode={(temp, tempName) => {
                                 tempNameRef.current = tempName || ""
+                                setSelectedTemplateName(tempName || "")
                                 setScript({...HotLoadDefaultData, Content: temp})
                             }}
+                            triggerNode={
+                                <YakitButton type='text' size='small' className={styles["hotPatch-sidebar-template-trigger"]}>
+                                    <span className={classNames(styles["hotPatch-sidebar-template-text"], "content-ellipsis")}>
+                                        {selectedTemplateName ? t(selectedTemplateName) : t("HotCodeTemplate.code_template")}
+                                    </span>
+                                    <OutlineChevrondownIcon />
+                                </YakitButton>
+                            }
                             onDeleteLocalTempOk={() => {
                                 tempNameRef.current = ""
+                                setSelectedTemplateName("")
                             }}
                         ></HotCodeTemplate>
                         <div className={styles["hot-patch-heard-extra"]}>
@@ -505,6 +516,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 title={"确认重置热加载代码？"}
                                 onConfirm={() => {
                                     tempNameRef.current = ""
+                                    setSelectedTemplateName("")
                                     setScript(HotLoadDefaultData)
                                 }}
                                 placement='top'
@@ -537,6 +549,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                                 onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
                                 onSaveHotCodeOk={(tempName) => {
                                     tempNameRef.current = tempName || ""
+                                    setSelectedTemplateName(tempName || "")
                                 }}
                             ></AddHotCodeTemplate>
                             {mitmHotStatus === "success" ? (

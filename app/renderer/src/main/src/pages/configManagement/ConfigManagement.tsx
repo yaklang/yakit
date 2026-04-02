@@ -5,9 +5,9 @@ import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
 import { yakitFailed, yakitNotify } from "@/utils/notification"
-import { HotPatchTempItem, AddHotCodeTemplate } from "@/pages/fuzzer/HTTPFuzzerHotPatch"
+import { HotPatchTempItem, AddHotCodeTemplate, HotCodeType } from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 import { HotPatchDefaultContent, HotPatchTempDefault } from "@/defaultConstants/HTTPFuzzerPage"
-import { MITMHotPatchTempDefault } from "@/defaultConstants/mitm"
+import { AnalyzeHotPatchTempDefault, MITMHotPatchTempDefault } from "@/defaultConstants/mitm"
 import { cloneDeep } from "lodash"
 import {
     OutlinePlusIcon,
@@ -118,7 +118,6 @@ const ConfigManagement: React.FC = memo(() => {
 
 export default ConfigManagement
 
-type HotCodeType = "fuzzer" | "mitm" | "global"
 type PanelHotCodeType = Exclude<HotCodeType, "global">
 
 interface QueryHotPatchTemplateListResponse {
@@ -202,7 +201,16 @@ export const HotPatchManagement: React.FC = () => {
     const isGlobalType = useMemo(()=> activeType === "global", [activeType])
 
     const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType) => {
-        return cloneDeep(type === "fuzzer" ? HotPatchTempDefault : MITMHotPatchTempDefault)
+        switch (type) {
+            case "fuzzer":
+                return cloneDeep(HotPatchTempDefault)
+            case "mitm":
+                return cloneDeep(MITMHotPatchTempDefault)
+            case "httpflow-analyze": 
+                return AnalyzeHotPatchTempDefault
+            default: 
+                return []
+        }
     })
 
     const getDefaultTemplateContentByType = useMemoizedFn((type: HotCodeType) => {
@@ -213,6 +221,8 @@ export const HotPatchManagement: React.FC = () => {
                 return HotPatchDefaultContent
             case "mitm":
                 return HotPatchTemplate
+            case "httpflow-analyze":
+                return HotPatchDefaultContent
             default:
                 return ""
         }
@@ -674,6 +684,10 @@ export const HotPatchManagement: React.FC = () => {
             {
                 label: t("AddHotCodeTemplate.WebFuzzer_hot_template"),
                 value: "fuzzer"
+            },
+            {
+                label: t("YakitRoute.historyAnalyzer"),
+                value: "httpflow-analyze"
             }
         ],
         [t]
@@ -883,7 +897,7 @@ export const HotPatchManagement: React.FC = () => {
         [currentTemplate?.isDefault, selectedTemplateSource]
     )
 
-    const hideTemplateContent = useMemo(()=> isGlobalType || activeType === 'mitm', [isGlobalType, activeType])
+    const hideTemplateContent = useMemo(()=> isGlobalType || ['mitm', "httpflow-analyze"].includes(activeType), [isGlobalType, activeType])
 
     return (
         <div className={styles["hot-patch-management"]} ref={selectRef}>
