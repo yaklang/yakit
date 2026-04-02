@@ -251,7 +251,8 @@ export const AIReviewRuleIconMap: Record<AIReviewRuleOptionsType, {icon: ReactNo
 }
 export enum AIMCPServerTypeEnum {
     SSE = "sse",
-    Stdio = "stdio"
+    Stdio = "stdio",
+    StreamableHTTP = "streamable_http"
 }
 //#region ai hooks 默认值
 export const defaultChatIPCData: UseChatIPCState = {

@@ -70,4 +70,4 @@ export interface DeleteMCPServerRequest {
     ID: number
 }
 
-export type MCPServerType = "sse" | "stdio"
+export type MCPServerType = "sse" | "stdio" | "streamable_http"

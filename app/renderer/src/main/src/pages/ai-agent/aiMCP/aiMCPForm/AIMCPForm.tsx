@@ -44,7 +44,8 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
     const typeOptions: YakitSelectProps["options"] = useCreation(() => {
         return [
             {label: "sse", value: AIMCPServerTypeEnum.SSE},
-            {label: "stdio", value: AIMCPServerTypeEnum.Stdio}
+            {label: "stdio", value: AIMCPServerTypeEnum.Stdio},
+            {label: "streamable_http", value: AIMCPServerTypeEnum.StreamableHTTP}
         ]
     }, [])
     const handleSubmit = useMemoizedFn(() => {
@@ -76,6 +77,7 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
         let content: ReactNode = <></>
         switch (key) {
             case AIMCPServerTypeEnum.SSE:
+            case AIMCPServerTypeEnum.StreamableHTTP:
                 content = (
                     <>
                         <Form.Item label='服务器URL' name='URL' rules={[{required: true, message: "请输入服务器URL"}]}>
@@ -242,9 +244,9 @@ export const AIMCPForm: React.FC<AIMCPFormProps> = React.memo((props) => {
                     <YakitSwitch />
                 </Form.Item>
                 <Form.Item
-                    label='服务器类型'
+                    label='协议类型'
                     name='Type'
-                    rules={[{required: true, message: "请选择服务器类型"}]}
+                    rules={[{required: true, message: "请选择协议类型"}]}
                     initialValue={AIMCPServerTypeEnum.SSE}
                 >
                     <YakitSelect options={typeOptions} />
