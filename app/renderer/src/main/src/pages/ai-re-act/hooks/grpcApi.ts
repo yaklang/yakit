@@ -102,6 +102,8 @@ export interface AIStartParams {
     TimelineSessionID?: string
     // Token pressure limit, 当 AI 对话的 token 数量超过这个限制时，需要警告 （40*1024）
     AICallTokenLimit?: number
+
+    UserPresetPrompt?: string
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
@@ -144,7 +146,9 @@ export enum AIInputEventSyncTypeEnum {
     /** 重跑指定的任务树上的某个节点 */
     SYNC_TYPE_REDO_SUBTASK_IN_PLAN = "redo_subtask_in_plan",
     /** 获取历史任务列表 */
-    SYNC_TYPE_PLAN_EXEC_TASKS = "plan_exec_tasks"
+    SYNC_TYPE_PLAN_EXEC_TASKS = "plan_exec_tasks",
+    /** 加入上下文,这个sync_type,后端返回带sync_id时代表这个操作已经执行;后端那边不存在异步逻辑 */
+    SYNC_TYPE_USER_INTERVENTION = "user_intervention"
 }
 
 export interface AIInputEvent {

@@ -334,7 +334,7 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
                             theme: theme === "dark" ? "dark" : "default"
                         }
                     }}
-                    rehypePlugins={[rehypeSlug as any]}
+                    rehypePlugins={[rehypeSlug as any, rehypeSanitize]}
                     components={{
                         a: (aProps) => {
                             return (
