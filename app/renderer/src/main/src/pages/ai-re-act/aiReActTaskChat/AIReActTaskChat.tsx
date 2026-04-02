@@ -1,8 +1,9 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, {useEffect, useRef, useState} from "react"
 import {
     AIReActTaskChatContentProps,
     AIReActTaskChatLeftSideProps,
     AIReActTaskChatProps,
+    AIReActTaskRecommendProps,
     AIRenderTaskFooterExtraProps
 } from "./AIReActTaskChatType"
 import styles from "./AIReActTaskChat.module.scss"
@@ -18,6 +19,7 @@ import {
     OutlineArrowsexpandIcon,
     OutlineExitIcon,
     OutlinePlay2Icon,
+    OutlinePlussmIcon,
     OutlinePositionIcon,
     RedoDotIcon
 } from "@/assets/icon/outline"
@@ -30,9 +32,17 @@ import {Tooltip} from "antd"
 import useAIAgentStore from "@/pages/ai-agent/useContext/useStore"
 import emiter from "@/utils/eventBus/eventBus"
 import {randomString} from "@/utils/randomUtil"
+import useGetAIMaterialsData, {getAIRecommendIconByType} from "../hooks/useGetAIMaterialsData"
+import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
+import {AIMaterialsData, AIRecommendItem} from "@/pages/ai-agent/aiChatWelcome/type"
+import {YakitRoute} from "@/enums/yakitRoute"
+import {AIMentionCommandParams} from "@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {setShowFreeChat, setTimeLine} = props
+
+    const [{randomAIMaterialsData, loadingAIMaterials}] = useGetAIMaterialsData()
+
     const {taskChat} = useChatIPCStore().chatIPCData
     const [leftExpand, setLeftExpand] = useState(true)
     const [expand, setExpand] = useState(false)
@@ -47,10 +57,24 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
         setTimeLine(leftExpand)
     }, [leftExpand])
 
+    const onClickItem = useMemoizedFn((item: AIRecommendItem, mentionType: AIMentionCommandParams["mentionType"]) => {
+        const params: AIMentionCommandParams = {
+            mentionId: randomString(8),
+            mentionType,
+            mentionName: item.name
+        }
+        emiter.emit(
+            "setAIInputByType",
+            JSON.stringify({
+                type: "mention",
+                params
+            })
+        )
+    })
     return (
         <div className={styles["ai-re-act-task-chat"]}>
             <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
-            {!!taskChat?.elements?.length && (
+            {!!taskChat?.elements?.length ? (
                 <div className={styles["chat-content-wrapper"]}>
                     <div className={styles["header"]}>
                         <div className={styles["title"]}>
@@ -67,12 +91,85 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
                     </div>
                     <AIReActTaskChatContent />
                 </div>
+            ) : (
+                <YakitSpin spinning={loadingAIMaterials}>
+                    <div className={styles["re-act-task-empty-wrapper"]}>
+                        <div className={styles["heard"]}>
+                            <div className={styles["title"]}>扩展资源</div>
+                            <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
+                        </div>
+                        <div className={styles["list-wrapper"]}>
+                            {Object.keys(randomAIMaterialsData).map((key) => {
+                                const aiItem: AIMaterialsData =
+                                    randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
+                                return aiItem.data.length > 0 ? (
+                                    <AIReActTaskRecommend
+                                        key={aiItem.type}
+                                        title={aiItem.type}
+                                        data={aiItem.data}
+                                        onClickItem={(item) => onClickItem(item, aiItem.mentionType)}
+                                    />
+                                ) : (
+                                    <React.Fragment key={aiItem.type}></React.Fragment>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </YakitSpin>
             )}
         </div>
     )
 })
 
 export default AIReActTaskChat
+
+const AIReActTaskRecommend: React.FC<AIReActTaskRecommendProps> = React.memo((props) => {
+    const {title, data, onClickItem} = props
+    const icons = useCreation(() => {
+        return getAIRecommendIconByType(title)
+    }, [title])
+    const onAdd = useMemoizedFn(() => {
+        switch (title) {
+            case "技能":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AddAIForge}))
+                break
+            case "知识库":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AI_REPOSITORY}))
+                break
+            case "工具":
+                emiter.emit("menuOpenPage", JSON.stringify({route: YakitRoute.AddAITool}))
+                break
+
+            default:
+                break
+        }
+    })
+    return (
+        <div className={styles["re-act-recommend-list-wrapper"]}>
+            <div className={styles["re-act-recommend-list-heard"]}>
+                <div className={styles["title"]}>
+                    <div className={styles["icon"]}>{icons.icon}</div>
+                    <div className={styles["hover-icon"]}>{icons.hoverIcon}</div>
+                    {title}
+                </div>
+                <YakitButton icon={<OutlinePlussmIcon />} className={styles["add-btn"]} type='text' onClick={onAdd}>
+                    新建
+                </YakitButton>
+            </div>
+            <div className={styles["re-act-recommend-list"]}>
+                {data.map((item, index) => (
+                    <div
+                        key={index} //不需要缓存，每次刷新重新渲染
+                        className={styles["re-act-recommend-list-item"]}
+                        onClick={() => onClickItem(item)}
+                    >
+                        <span className={styles["text"]}>{item.name}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+})
 
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
     const {reviewInfo, planReviewTreeKeywordsMap, chatIPCData} = useChatIPCStore()
@@ -337,16 +434,12 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         valuePropName: "leftExpand",
         trigger: "setLeftExpand"
     })
-    const hasStreams = useMemo(() => {
-        return (taskChat?.elements?.length ?? 0) > 0
-    }, [taskChat?.elements?.length])
 
     return (
         <div
             className={classNames(styles["content-left-side"], {
                 [styles["content-left-side-hidden"]]: !leftExpand
             })}
-            style={hasStreams ? undefined : {width: "100%"}}
         >
             <AIChatLeftSide expand={leftExpand} setExpand={setLeftExpand} tasks={taskChat.plan} />
             <div className={styles["open-wrapper"]} onClick={() => setLeftExpand(true)}>

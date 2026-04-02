@@ -54,10 +54,10 @@ export function useAIChatResizeBox(params: Params) {
             // } else {
             // secondRatio = "432px"
             // }
-            if(!isTaskStreamsEmpty){
+            if (!isTaskStreamsEmpty) {
                 secondRatio = "432px"
-            }else{
-              firstRatio = "300px"
+            } else {
+                firstRatio = "70%"
             }
         }
         // if (isTaskContentKey && isTaskStreamsEmpty) {

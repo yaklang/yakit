@@ -1,6 +1,6 @@
 import {EditorMilkdownProps} from "@/components/MilkdownEditor/MilkdownEditorType"
 import {AIMentionCommandParams} from "./aiMilkdownMention/aiMentionPlugin"
-import {AIChatMentionProps, iconMapType} from "../aiChatMention/type"
+import {AIChatMentionProps} from "../aiChatMention/type"
 
 export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 

@@ -1,4 +1,5 @@
 import {YakitButtonProp} from "@/components/yakitUI/YakitButton/YakitButton"
+import {AIRecommendItem} from "@/pages/ai-agent/aiChatWelcome/type"
 import {ReactNode} from "react"
 
 export interface AIReActTaskChatProps {
@@ -17,4 +18,10 @@ export interface AIRenderTaskFooterExtraProps {
     btnProps?: YakitButtonProp
     subTaskBtnProps?: YakitButtonProp
     onExtraAction: (type: "stopTask" | "stopSubTask" | "recover", syncID: string) => void
+}
+
+export interface AIReActTaskRecommendProps {
+    title: string
+    data: AIRecommendItem[]
+    onClickItem: (item: AIRecommendItem) => void
 }
