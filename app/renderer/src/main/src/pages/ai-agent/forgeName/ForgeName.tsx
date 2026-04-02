@@ -419,7 +419,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                 Keyword: search
             }
         } else {
-            query.ForgeNames = selected.map((item) => item.ForgeName) as any
+            query.ForgeNames = selected.map((item) => item.ForgeName)
         }
         forgeExtraParams.current = {
             ...forgeExtraParams.current,
