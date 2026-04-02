@@ -54,6 +54,7 @@ import useChatIPCStore from "../useContext/ChatIPCContent/useStore"
 import useChatIPCDispatcher from "../useContext/ChatIPCContent/useDispatcher"
 import {AIInputEventSyncTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
 import {randomString} from "@/utils/randomUtil"
+import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -564,14 +565,19 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
                 placeholder='输入补充内容会加入上下文影响任务执行'
             />
             <div className={styles["ai-manual-addition-footer"]}>
-                <YakitButton
-                    type='outline2'
-                    onClick={onAddAndReExecute}
-                    loading={!!syncIdInfoMap?.get(syncIdOfAddAndReExecute.current)}
-                    className={styles["add-and-reexecute-btn"]}
+                <YakitPopconfirm
+                    title='如果当前有任务正在执行,确认后会停止当前任务并重新执行'
+                    onConfirm={onAddAndReExecute}
                 >
-                    加入并重新执行
-                </YakitButton>
+                    <YakitButton
+                        type='outline2'
+                        onClick={(e) => e.stopPropagation()}
+                        loading={!!syncIdInfoMap?.get(syncIdOfAddAndReExecute.current)}
+                        className={styles["add-and-reexecute-btn"]}
+                    >
+                        加入并重新执行
+                    </YakitButton>
+                </YakitPopconfirm>
                 <YakitButton
                     onClick={() => {
                         syncIdOfAddToContext.current = randomString(8)
