@@ -795,7 +795,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 mainTitle={t("FuncDomain.remoteControl")}
                 secondTitle={t("FuncDomain.selectRole")}
                 isShow={dynamicControlModal}
-                onCancle={() => setDynamicControlModal(false)}
+                onCancel={() => setDynamicControlModal(false)}
                 width={345}
             >
                 <SelectControlType
@@ -814,7 +814,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 mainTitle={t("FuncDomain.controlledSide")}
                 secondTitle={t("FuncDomain.controlledSideDesc")}
                 isShow={controlMyselfModal}
-                onCancle={() => setControlMyselfModal(false)}
+                onCancel={() => setControlMyselfModal(false)}
             >
                 <ControlMyself
                     goBack={() => {
@@ -828,7 +828,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                 mainTitle={t("FuncDomain.controllerSide")}
                 secondTitle={t("FuncDomain.controllerSideDesc")}
                 isShow={controlOtherModal}
-                onCancle={() => setControlOtherModal(false)}
+                onCancel={() => setControlOtherModal(false)}
             >
                 <ControlOther
                     goBack={() => {

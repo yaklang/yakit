@@ -970,7 +970,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
                 const token = res?.token
                 if (token) {
-                    const onCancle = () => {
+                    const onCancel = () => {
                         setBeautifyLoading(false)
                         ipcRenderer.removeAllListeners(`${token}-error`)
                         ipcRenderer.removeAllListeners(`${token}-end`)
@@ -978,11 +978,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
                     const onError = (_, err) => {
                         yakitNotify("error", `规则美化失败: ${err}`)
-                        onCancle()
+                        onCancel()
                     }
                     const onEnd = () => {
                         yakitNotify("success", "规则美化任务已结束")
-                        onCancle()
+                        onCancel()
                     }
                     ipcRenderer.on(`${token}-error`, onError)
                     ipcRenderer.on(`${token}-end`, onEnd)

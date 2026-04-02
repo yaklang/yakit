@@ -128,7 +128,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
 
                 const token = res?.token
                 if (token) {
-                    const onCancle = () => {
+                    const onCancel = () => {
                         setBeautifyLoading(false)
                         ipcRenderer.removeAllListeners(`${token}-error`)
                         ipcRenderer.removeAllListeners(`${token}-end`)
@@ -136,11 +136,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
 
                     const onError = (_: any, err: any) => {
                         yakitNotify("error", `规则美化失败: ${err}`)
-                        onCancle()
+                        onCancel()
                     }
                     const onEnd = () => {
                         yakitNotify("success", "规则美化任务已结束")
-                        onCancle()
+                        onCancel()
                     }
                     ipcRenderer.on(`${token}-error`, onError)
                     ipcRenderer.on(`${token}-end`, onEnd)

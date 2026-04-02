@@ -346,7 +346,7 @@ export const SelectControlType: React.FC<SelectControlTypeProps> = (props) => {
 
 export interface DynamicControlProps {
     isShow: boolean
-    onCancle: () => void
+    onCancel: () => void
     mainTitle: string
     secondTitle: string
     children?: ReactNode
@@ -354,7 +354,7 @@ export interface DynamicControlProps {
 }
 
 export const DynamicControl: React.FC<DynamicControlProps> = (props) => {
-    const {isShow, onCancle, children, mainTitle, secondTitle, width} = props
+    const {isShow, onCancel, children, mainTitle, secondTitle, width} = props
     return (
         <YakitModal
             visible={isShow}
@@ -362,7 +362,7 @@ export const DynamicControl: React.FC<DynamicControlProps> = (props) => {
             maskClosable={false}
             bodyStyle={{padding: "18px 24px 24px 24px"}}
             width={width || 448}
-            onCancel={() => onCancle()}
+            onCancel={() => onCancel()}
             footer={null}
             centered
             title={mainTitle}
