@@ -344,6 +344,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                                 }
                             >
                                 <YakitAutoComGroupSearchWithAll
+                                    defaultOpen={true}
                                     options={modelNameAllOptions}
                                     groupSearchWithAll={true}
                                     onFocus={() => {

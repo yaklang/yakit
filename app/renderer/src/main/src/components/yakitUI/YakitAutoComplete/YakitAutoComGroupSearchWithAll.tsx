@@ -7,7 +7,7 @@ import {
 } from "./YakitAutoCompleteType"
 import styles from "./YakitAutoComplete.module.scss"
 import classNames from "classnames"
-import {useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
 import {YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase} from "../utils"
 import {OutlineXIcon} from "@/assets/icon/outline"
 
@@ -101,7 +101,9 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
         })
         useEffect(() => {
             inViewport && onGetRemoteValues(isInit)
-        }, [initValue, inViewport])
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [initValue, inViewport, isInit])
+
         useImperativeHandle(
             ref,
             () => ({
@@ -179,7 +181,9 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
             }
         )
 
-        const historyRowDeletable = Boolean(cacheHistoryDataKey && cacheHistoryData.options.length > 0)
+        const historyRowDeletable = useCreation(() => {
+            return Boolean(cacheHistoryDataKey && cacheHistoryData.options.length > 0)
+        }, [cacheHistoryDataKey, cacheHistoryData])
 
         const renderItem = useMemoizedFn((item: YakitOptionTypeProps, deletable: boolean) => {
             const copyItem = {...item}

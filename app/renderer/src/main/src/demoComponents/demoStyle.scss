@@ -1,36 +1,3 @@
-// ---------- DemoItemRadio ----------
-.demo-item-radio-wrapper {
-    .ant-radio-wrapper {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-    }
-    .ant-radio:hover .ant-radio-inner {
-        border-color: var(--Colors-Use-Main-Border);
-    }
-    .ant-radio-checked .ant-radio-inner {
-        border-color: var(--Colors-Use-Main-Border);
-    }
-    .ant-radio-checked::after {
-        border-color: var(--Colors-Use-Main-Border);
-    }
-    .ant-radio-inner::after {
-        background-color: var(--Colors-Use-Main-Background);
-    }
-    .ant-radio-input:focus + .ant-radio-inner {
-        box-shadow: 0 0 0 3px var(--Colors-Use-Main-Focus);
-    }
-    .ant-radio.ant-radio-disabled .ant-radio-inner {
-        background-color: var(--Colors-Use-Neutral-Bg);
-        border-color: var(--Colors-Use-Neutral-Border);
-    }
-    .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner {
-        border-color: var(--Colors-Use-Neutral-Border);
-        background-color: transparent;
-    }
-    .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner:after {
-        background-color: var(--Colors-Use-Neutral-Bg);
-    }
-}
-
 // ---------- DemoItemRadioButton ----------
 .demo-item-radio-button-wrapper {
     display: inline-flex;
@@ -43,14 +10,6 @@
         border-left-width: 1px;
         border-radius: 4px !important;
     }
-}
-
-// ---------- DemoItemCheckBox ----------
-.demo-item-checkbox-wrapper {
-    width: 100%;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
 }
 
 // ---------- DemoVirtualTable ----------
