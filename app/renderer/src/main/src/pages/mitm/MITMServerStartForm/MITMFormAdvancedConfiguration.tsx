@@ -30,6 +30,7 @@ import {
     loadAdvancedConfig,
     saveAdvancedConfig
 } from "../MITMAdvancedConfig"
+import { KVPair } from "@/models/kv"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -55,7 +56,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
 
         // 保存初始默认值
         const defFieldsRef = useRef<AdvancedConfigurationFromValue>(cloneDeep(createDefaultAdvancedConfig()))
-        const [etcHosts, setEtcHosts] = useState<any[]>([])
+        const [etcHosts, setEtcHosts] = useState<KVPair[]>([])
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
 
@@ -181,7 +182,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         })
         const onClose = useMemoizedFn((jumpPage?: boolean) => {
             const formValue = form.getFieldsValue()
-            const oldValue: any = {...defFieldsRef.current}
+            const oldValue: AdvancedConfigurationFromValue = {...defFieldsRef.current}
             if (enableGMTLS) {
                 oldValue.preferGMTLS = defFieldsRef.current.preferGMTLS
                 oldValue.onlyEnableGMTLS = defFieldsRef.current.onlyEnableGMTLS
