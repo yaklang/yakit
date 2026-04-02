@@ -94,7 +94,6 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {API} from "@/services/swagger/resposeType"
 import Login from "../Login"
 import {isEnpriTraceIRify} from "@/utils/envfile"
-import {useSyntaxFlowRuleBeautify} from "@/utils/useSyntaxFlowRuleBeautify"
 
 import classNames from "classnames"
 import styles from "./RuleManagement.module.scss"
@@ -104,6 +103,7 @@ import {QuerySSARisksResponse, SSARisk} from "../yakRunnerAuditHole/YakitAuditHo
 import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
 import {MilkdownEditorLocal} from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
 import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
+import { openAIForge } from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -761,8 +761,32 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
     // 规则源码
     const [content, setContent] = useState<string>(DefaultRuleContent)
-    const {beautifyLoading, handleBeautify} = useSyntaxFlowRuleBeautify({
-        getRuleContent: () => content || ""
+
+    const toAI = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (!content) {
+            yakitNotify("warning", "未找到规则内容，无法进行AI美化")
+            return
+        }
+        const params = {
+            query: {
+                ForgeName: "sf_rule_completion"
+            },
+            handleParamsUIConfig: (paramsUIConfig) => {
+                paramsUIConfig.map((item) => {
+                    if (item.Field === "file_content") {
+                        item.DefaultValue = content
+                    }
+                    return item
+                })
+                return paramsUIConfig
+            },
+            jsonParseLogParams: {
+                page: "YakRunnerAuditCode",
+                fun: "toAI"
+            }
+        }
+        openAIForge(params)
     })
 
     /** ---------- 规则代码调试 Start ---------- */
@@ -1094,17 +1118,20 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                             <div className={styles["header-extra"]}>
                                 {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
                                 <div className={styles["header-extra-btns"]}>
-                                    <YakitButton
-                                        type='text'
-                                        onClick={handleBeautify}
-                                        loading={beautifyLoading}
-                                        disabled={beautifyLoading}
-                                    >
-                                        美化
-                                    </YakitButton>
-                                    <YakitButton type='text' onClick={handleOpenScoreHint}>
-                                        自动检测
-                                    </YakitButton>
+                                    {
+                                        activeTab === "code" && <>
+                                            <YakitButton
+                                                type='text'
+                                                onClick={toAI}
+                                            >
+                                                美化
+                                            </YakitButton>
+                                            <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                                自动检测
+                                            </YakitButton>
+                                        </>
+                                    }
+                                    
                                 </div>
                                 {isShowResult && (
                                     <YakitButton type='outline2' onClick={goBackForm} icon={<OutlineReplyIcon />}>

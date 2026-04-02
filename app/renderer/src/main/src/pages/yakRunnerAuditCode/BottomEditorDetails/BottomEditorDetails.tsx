@@ -17,7 +17,8 @@ import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAu
 import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
 import {openSSARiskNewWindow} from "@/utils/openWebsite"
 import {JSONParseLog} from "@/utils/tool"
-import {useSyntaxFlowRuleBeautify} from "@/utils/useSyntaxFlowRuleBeautify"
+import { yakitNotify } from "@/utils/notification"
+import { openAIForge } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -32,8 +33,32 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // 展示所需的BugHash
     const [bugHash, setBugHash] = useState<string>("")
     const [info, setInfo] = useState<SSARisk>()
-    const {beautifyLoading, handleBeautify} = useSyntaxFlowRuleBeautify({
-        getRuleContent: () => ruleEditor || ""
+
+    const toAI = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (!ruleEditor) {
+            yakitNotify("warning", "未找到规则内容，无法进行AI美化")
+            return
+        }
+        const params = {
+            query: {
+                ForgeName: "sf_rule_completion"
+            },
+            handleParamsUIConfig: (paramsUIConfig) => {
+                paramsUIConfig.map((item) => {
+                    if (item.Field === "file_content") {
+                        item.DefaultValue = ruleEditor
+                    }
+                    return item
+                })
+                return paramsUIConfig
+            },
+            jsonParseLogParams: {
+                page: "YakRunnerAuditCode",
+                fun: "toAI"
+            }
+        }
+        openAIForge(params)
     })
 
     // 数组去重
@@ -147,9 +172,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     {showItem === "ruleEditor" && (
                         <>
                             <YakitButton
-                                onClick={handleBeautify}
-                                loading={beautifyLoading}
-                                disabled={auditExecuting || beautifyLoading}
+                                onClick={toAI}
+                                disabled={auditExecuting}
                             >
                                 美化
                             </YakitButton>
