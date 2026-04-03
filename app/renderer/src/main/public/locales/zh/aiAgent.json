@@ -120,6 +120,7 @@
     "responseStatusCode": "响应状态码",
     "request": "请求",
     "response": "响应",
+    "responseContent": "响应内容",
     "testSuccess": "测试成功",
     "testFailed": "测试失败"
   }
