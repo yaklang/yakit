@@ -72,7 +72,7 @@
         .form-item-required {
             margin: 0 4px;
             padding-top: 4px;
-            color: #f4736b;
+            color: var(--Colors-Use-Error-Primary);
             font-size: 14px;
             line-height: 14px;
         }
@@ -151,6 +151,28 @@
                 color: var(--Colors-Use-Neutral-Text-1-Title);
                 font-size: 14px;
                 line-height: 20px;
+            }
+            .switch-ai-wrapper {
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+                font-size: 14px;
+                line-height: 20px;
+                .wrapper-label {
+                    .wrapper-label-highlight {
+                        display: flex;
+                        flex-direction: row;
+                        flex-wrap: wrap;
+                        align-items: center;
+                    }
+                    .ai-items-wrapper {
+                        margin-top: 4px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 4px;
+                    }
+                }
             }
         }
     }
