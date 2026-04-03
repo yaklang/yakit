@@ -10,7 +10,7 @@ import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {info, yakitFailed, yakitNotify} from "@/utils/notification"
 import {useCreation, useDebounceEffect, useInViewport, useMap, useMemoizedFn} from "ahooks"
-import React, {ReactElement, useEffect, useRef, useState, useContext} from "react"
+import React, {ReactElement, useEffect, useRef, useState, useContext, useMemo} from "react"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 import {CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, MitmStatus} from "../MITMPage"
 import {MITMYakScriptLoader} from "../MITMYakScriptLoader"
@@ -452,11 +452,21 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
             })
     })
 
+    const disableSaveTemplate = useMemo(() => {
+        const currentTemplateName = selectedTemplateName || tempNameRef.current
+        if (!script.Content || !currentTemplateName) return true
+
+        return (
+            hotPatchTempLocal.find((item) => item.name === currentTemplateName)?.isDefault ??
+            MITMHotPatchTempDefault.some((item) => item.name === currentTemplateName)
+        )
+    }, [script.Content, hotPatchTempLocal, selectedTemplateName])
+
     useShortcutKeyTrigger(
         "saveHotPatch*mitm",
         useMemoizedFn(() => {
             if (curTabKey === "hot-patch") {
-                if(!tempNameRef.current) {
+                if (disableSaveTemplate) {
                     yakitFailed(t("HotCodeTemplate.save_disable_tip"))
                     return
                 }
@@ -516,7 +526,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                             </YakitPopconfirm>
                             <Tooltip title='更新当前模板并保存' placement='top'>
                                 <YakitButton
-                                    disabled={!script.Content || !tempNameRef.current}
+                                    disabled={disableSaveTemplate}
                                     type='text'
                                     onClick={onUpdateTemplate}
                                     icon={<OutlineFileUpIcon />}
