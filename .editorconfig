@@ -1,0 +1,21 @@
+root = true
+
+[*.{js,ts,tsx,jsx,css,scss,html,json,md}]
+# 对应 printWidth: 120 (部分编辑器支持此提示线)
+max_line_length = 120
+# 对应 tabWidth: 2
+indent_size = 2
+# 对应 useTabs: false
+indent_style = space
+# 对应 charset (Prettier 默认读取 UTF-8)
+charset = utf-8
+# 对应 endOfLine: 'lf'
+end_of_line = lf
+# 对应 Prettier 默认行为：文件末尾插入新行
+insert_final_newline = true
+# 对应 Prettier 默认行为：修剪行尾空格
+trim_trailing_whitespace = true
+
+[*.md]
+# Markdown 通常建议保持原始换行
+trim_trailing_whitespace = false

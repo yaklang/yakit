@@ -1,0 +1,36 @@
+## OS
+.DS_Store
+.idea
+.editorconfig
+pnpm-lock.yaml
+.npmrc
+
+# Ignored suffix
+*.log
+*.md
+*.svg
+*.png
+*.ico
+*ignore
+
+## Local
+site/public
+test/base/no-cond-assign/bad.js
+test/base/no-irregular-whitespace/bad.js
+test/base/no-labels/bad.js
+test/base/no-sequences/bad.js
+test/base/no-useless-rename/bad.js
+test/react/jsx-fragments/bad.js
+test/react/self-closing-comp/bad.js
+test/vue/no-irregular-whitespace/bad.vue
+test/vue/no-irregular-whitespace/good.vue
+.husky
+
+## Built-files
+.cache
+dist
+app/renderer/src/main/src/alibaba/ali-react-table-dist
+
+
+## workflows
+.github/workflows

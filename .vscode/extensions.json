@@ -1,0 +1,5 @@
+{
+  "_comment": "vscode 相关的插件推荐，安装后会在 vscode 中提示安装",
+  "description": "如果在cursor上不弹框提示安装，可在扩展中心搜索框输入@recommended来查看推荐安装的插件",
+  "recommendations": ["editorconfig.editorconfig", "esbenp.prettier-vscode", "streetsidesoftware.code-spell-checker"]
+}
