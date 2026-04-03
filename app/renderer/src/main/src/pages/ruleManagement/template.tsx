@@ -782,7 +782,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 return paramsUIConfig
             },
             jsonParseLogParams: {
-                page: "YakRunnerAuditCode",
+                page: "RuleManagement",
                 fun: "toAI"
             }
         }
