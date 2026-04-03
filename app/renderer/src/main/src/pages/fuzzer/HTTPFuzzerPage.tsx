@@ -163,6 +163,7 @@ import {
 } from "@/utils/globalShortcutKey/events/page/httpFuzzer"
 import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
 import { useSelectionByteCount } from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
+import { loadAdvancedConfig } from "@/pages/mitm/MITMAdvancedConfig"
 import { updateConcurrentLoad } from "@/utils/duplex/duplex"
 import { debugToPrintLog } from "@/utils/logCollection"
 import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
@@ -602,15 +603,16 @@ export const newWebFuzzerTab = async (params: {
     // 只有从 MITM 页面调用时才获取HTTPS 配置&禁用系统代理
     if (params.fromMITM) {
         try {
-            const [stateSecretHijackingResult, disableSystemProxyResult] = await Promise.allSettled([
+            const [stateSecretHijackingResult, advancedConfigResult] = await Promise.allSettled([
                 getRemoteValue(MITMConsts.MITMDefaultEnableGMTLS),
-                getRemoteValue(RemoteGV.MITMDisableSystemProxy)
+                loadAdvancedConfig()
             ])
             const stateSecretHijacking =
                 stateSecretHijackingResult.status === "fulfilled" ? stateSecretHijackingResult.value : ""
-            const disableSystemProxy = disableSystemProxyResult.status === "fulfilled" ? disableSystemProxyResult.value : ""
+            const disableSystemProxy =
+                advancedConfigResult.status === "fulfilled" ? advancedConfigResult.value.DisableSystemProxy : false
 
-            const MITMData = {noSystemProxy: disableSystemProxy === "true"}
+            const MITMData = {noSystemProxy: disableSystemProxy}
 
             if (stateSecretHijacking) {
                 if (["enableGMTLS", "1"].includes(stateSecretHijacking)) {

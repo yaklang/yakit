@@ -52,6 +52,7 @@ import { useGlobalHotPatchTag, useGlobalHotPatch } from "@/store/globalHotPatch"
 import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
 import {StreamUpdateState} from "./PluginsOutput/StreamProcessor"
+import {loadAdvancedConfig, updateAdvancedConfig} from "../MITMAdvancedConfig"
 
 type MITMStatus = "hijacking" | "hijacked" | "idle"
 const {Text} = Typography
@@ -272,15 +273,9 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     },[])
 
     useEffect(() => {
-        // 获取 ws 开关状态
-        getRemoteValue(MITMConsts.MITMDefaultFilterWebsocket).then((e) => {
-            const v = e === "true" ? true : false
-            setFilterWebsocket(v)
-        })
-        // 获取禁用系统代理状态
-        getRemoteValue(RemoteGV.MITMDisableSystemProxy).then((e) => {
-            const v = e === "true" ? true : false
-            setDisableSystemProxy(v)
+        loadAdvancedConfig().then((config) => {
+            setFilterWebsocket(config.filterWebsocket)
+            setDisableSystemProxy(config.DisableSystemProxy)
         })
     }, [])
 
@@ -392,7 +387,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                     checked={filterWebsocket}
                                     onChange={(value) => {
                                         setFilterWebsocket(value)
-                                        setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${value}`)
+                                        updateAdvancedConfig({filterWebsocket: value})
                                         const params: MITMFilterWebsocketRequest = {
                                             filterWebsocket: value,
                                             version: mitmVersion
@@ -423,7 +418,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                                         checked={disableSystemProxy}
                                         onChange={(checked) => {
                                             setDisableSystemProxy(checked)
-                                            setRemoteValue(RemoteGV.MITMDisableSystemProxy, checked ? "true" : "")
+                                            updateAdvancedConfig({DisableSystemProxy: checked})
                                             // 调用grpc设置禁用系统代理
                                             grpcMITMSetDisableSystemProxy({
                                                 version: mitmVersion,

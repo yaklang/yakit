@@ -112,7 +112,7 @@ const fieldConfigs: RemoteFieldConfig[] = [
     {field: "filterWebsocket", key: MITMConsts.MITMDefaultFilterWebsocket, read: parseBoolean},
     {field: "disableCACertPage", key: RemoteGV.MITMDisableCACertPage, read: parseBoolean},
     {field: "DisableSystemProxy", key: RemoteGV.MITMDisableSystemProxy, read: parseBoolean},
-    {field: "DisableWebsocketCompression", key: RemoteGV.MITMDisableWebsocketCompression, read: parseBoolean},
+    {field: "DisableWebsocketCompression", key: RemoteGV.MITMDisableWebsocketCompression, read: (raw) => !!raw ? parseBoolean(raw) : true},
     {field: "PluginConcurrency", key: RemoteGV.MITMPluginConcurrency, read: (raw) => parseNumber(raw, 20)}
 ]
 
@@ -185,6 +185,16 @@ const saveAdvancedConfig = (values: AdvancedConfigurationFromValue) => {
             SNIMapping: value.SNIMapping
         })
     )
+}
+
+const updateAdvancedConfig = async (patch: Partial<AdvancedConfigurationFromValue>) => {
+    const current = await loadAdvancedConfig()
+    const next = normalizeConfig({
+        ...current,
+        ...patch
+    })
+    saveAdvancedConfig(next)
+    return next
 }
 
 const buildMitmExtra = (params: AdvancedConfigurationFromValue): ExtraMITMServerProps => {
@@ -291,6 +301,7 @@ export {
     createDefaultAdvancedConfig,
     loadAdvancedConfig,
     saveAdvancedConfig,
+    updateAdvancedConfig,
     buildMitmExtra,
     buildMitmExtraV2
 }
