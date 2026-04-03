@@ -1,5 +1,6 @@
 import {KVPair} from "@/models/kv"
 import {PaginationSchema} from "@/pages/invoker/schema"
+import { AIMCPServerTypeEnum } from "../defaultConstant"
 
 export interface GetAllMCPServersRequest {
     Keyword: string
@@ -70,4 +71,4 @@ export interface DeleteMCPServerRequest {
     ID: number
 }
 
-export type MCPServerType = "sse" | "stdio" | "streamable_http"
+export type MCPServerType = `${AIMCPServerTypeEnum}`
