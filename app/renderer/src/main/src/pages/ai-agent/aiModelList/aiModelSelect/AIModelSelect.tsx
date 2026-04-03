@@ -32,6 +32,7 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
 import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import useAIAgentDispatcher from "../../useContext/useDispatcher"
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {
     const m = YakitModalConfirm({
@@ -68,6 +69,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     const {t} = useI18nNamespaces(["aiAgent", "yakitUi"])
     const {isOpen = true, mountContainer} = props
 
+    const {setSetting} = useAIAgentDispatcher()
     const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
     //#region AI model
     const {chatIPCData} = useChatIPCStore()
@@ -111,8 +113,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             const {type, params} = data
             setAIType(type as AISelectType)
             const fileName = params?.fileName as AIModelTypeFileName
-            if (execute) {
-                if (fileName === AIModelTypeInterFileNameEnum.IntelligentModels) {
+
+            if (fileName === AIModelTypeInterFileNameEnum.IntelligentModels) {
+                if (execute) {
                     handleSendConfigHotpatch({
                         hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
                         params: {
@@ -121,8 +124,13 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         }
                     })
                 }
-            } else {
-                onRefreshAvailableAIModelList()
+                setSetting?.((old) => {
+                    return {
+                        ...old,
+                        AIService: params?.AIService || "",
+                        AIModelName: params?.AIModelName || ""
+                    }
+                })
             }
         } catch (error) {}
     })
@@ -147,13 +155,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         {wait: 200, leading: true}
     ).run
 
-    const onSetGlobalConfig = useMemoizedFn(() => {
-        grpcSetAIGlobalConfig(aiModelOptions.onlineModels).then(() => {
-            setAIModelOptions((v) => ({...v, onlineModels: cloneDeep(aiModelOptions.onlineModels)}))
-            aiGlobalConfigRef.current = cloneDeep(aiModelOptions.onlineModels)
-            emiter.emit("onRefreshAIModelList")
-        })
-    })
     const onSetOpen = useMemoizedFn((v: boolean) => {
         setOpen(v)
 
@@ -161,11 +162,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
             case "online":
                 if (!v) {
                     if (isEqual(aiGlobalConfigRef.current, aiModelOptions.onlineModels)) break
-                    if (execute) {
-                        onHotpatchAI()
-                    } else {
-                        onSetGlobalConfig()
-                    }
+                    onSetAI()
                 }
                 break
 
@@ -173,22 +170,40 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 break
         }
     })
-    /**热更新ai配置,热更新只支持 intelligentModels */
-    const onHotpatchAI = useMemoizedFn(() => {
+    /**
+     * execute为true:热更新ai配置,热更新只支持 intelligentModels
+     * execute为false:更新全局配置
+     * */
+    const onSetAI = useMemoizedFn(() => {
         if (intelligentModels.length === 0) return
+        const aiService = intelligentModels[0]?.Provider.Type || ""
+        const aiModelName = intelligentModels[0]?.ModelName || ""
         if (execute) {
             handleSendConfigHotpatch({
                 hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
                 params: {
-                    AIService: intelligentModels[0]?.Provider.Type || "",
-                    AIModelName: intelligentModels[0]?.ModelName || ""
+                    AIService: aiService,
+                    AIModelName: aiModelName
                 }
             })
             setTimeout(() => {
                 getAIModelListOption()
                 emiter.emit("onRefreshAIModelList")
             }, 500)
+        } else {
+            grpcSetAIGlobalConfig(aiModelOptions.onlineModels).then(() => {
+                setAIModelOptions((v) => ({...v, onlineModels: cloneDeep(aiModelOptions.onlineModels)}))
+                aiGlobalConfigRef.current = cloneDeep(aiModelOptions.onlineModels)
+                emiter.emit("onRefreshAIModelList")
+            })
         }
+        setSetting?.((old) => {
+            return {
+                ...old,
+                AIService: aiService,
+                AIModelName: aiModelName
+            }
+        })
     })
 
     const isHaveData = useCreation(() => {
