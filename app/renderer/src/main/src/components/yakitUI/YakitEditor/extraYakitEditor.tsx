@@ -154,10 +154,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                 key: "copy-as-curl",
                                 label: t("YakitEditor.HTTPPacketYakitEditor.copyCurlCommand")
                             },
-                            {
-                                key: "copyUrl",
-                                label: t("YakitEditor.HTTPPacketYakitEditor.copyUrl")
-                            },
                             ...(showDownBodyMenu
                                 ? [
                                       {
@@ -198,13 +194,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                             })
                             return
                         }
-                        case "copyUrl":
-                            if (onClickUrlMenu) {
-                                onClickUrlMenu()
-                            } else {
-                                setClipboardText(url || "")
-                            }
-                            return
                         case "copyBodyBase64": {
                             const text = editor.getModel()?.getValue()
                             if (!text) {
@@ -242,6 +231,21 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                         }
                         default:
                             break
+                    }
+                }
+            },
+            copyUrl: {
+                menu: [
+                    {
+                        key: "copyUrl",
+                        label: t("YakitEditor.HTTPPacketYakitEditor.copyUrl")
+                    }
+                ],
+                onRun: (editor: YakitIMonacoEditor, key: string) => {
+                    if (onClickUrlMenu) {
+                        onClickUrlMenu()
+                    } else {
+                        setClipboardText(url || "")
                     }
                 }
             },

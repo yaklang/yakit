@@ -2,8 +2,6 @@ import React, {ForwardedRef, useEffect, useImperativeHandle, useRef, useState} f
 import classNames from "classnames"
 import styles from "./MITMServerStartForm.module.scss"
 import {ClientCertificate} from "./MITMServerStartForm"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {MITMConsts} from "../MITMConsts"
 import {useMemoizedFn} from "ahooks"
 import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
 import {saveABSFileToOpen} from "@/utils/openWebsite"
@@ -22,13 +20,17 @@ import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {inputHTTPFuzzerHostConfigItem} from "@/pages/fuzzer/HTTPFuzzerHosts"
 import {YakitRoute} from "@/enums/yakitRoute"
-import {RemoteGV} from "@/yakitGV"
 import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { JSONParseLog } from "@/utils/tool"
 import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {RemoteMitmGV} from "@/enums/mitm"
 import {cloneDeep, isEqual} from "lodash"
+import {
+    AdvancedConfigurationFromValue,
+    createDefaultAdvancedConfig,
+    loadAdvancedConfig,
+    saveAdvancedConfig
+} from "../MITMAdvancedConfig"
+import { KVPair } from "@/models/kv"
 
 const MITMAddTLS = React.lazy(() => import("./MITMAddTLS"))
 const MITMFiltersModal = React.lazy(() => import("./MITMFiltersModal"))
@@ -47,52 +49,14 @@ interface MITMFormAdvancedConfigurationProps {
     onSave: (v: AdvancedConfigurationFromValue) => void
     enableGMTLS: boolean
 }
-export interface AdvancedConfigurationFromValue {
-    certs: ClientCertificate[]
-    preferGMTLS: boolean
-    onlyEnableGMTLS: boolean
-    enableProxyAuth: boolean
-    proxyUsername: string
-    proxyPassword: string
-    dnsServers: string[]
-    etcHosts: any[]
-    EnableHostsMappingBeforeDownstreamProxy: boolean
-    filterWebsocket: boolean
-    disableCACertPage: boolean
-    DisableSystemProxy: boolean
-    DisableWebsocketCompression: boolean
-    PluginConcurrency: number
-    OverwriteSNI: boolean
-    SNI: string
-    SNIMapping: {Key: string, Value: string}[]
-}
-const DefFieldsVal: AdvancedConfigurationFromValue = {
-    certs: [],
-    preferGMTLS: false,
-    onlyEnableGMTLS: false,
-    enableProxyAuth: false,
-    proxyUsername: "",
-    proxyPassword: "",
-    dnsServers: ["8.8.8.8", "114.114.114.114"],
-    etcHosts: [],
-    EnableHostsMappingBeforeDownstreamProxy: false,
-    filterWebsocket: false,
-    disableCACertPage: false,
-    DisableSystemProxy: false,
-    DisableWebsocketCompression: false,
-    PluginConcurrency: 20,
-    OverwriteSNI: false,
-    SNI: "",
-    SNIMapping: [{Key: '', Value: ''}]
-}
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
     React.forwardRef((props, ref) => {
         const {visible, setVisible, onSave, enableGMTLS} = props
         const [certs, setCerts] = useState<ClientCertificate[]>([])
 
         // 保存初始默认值
-        const defFieldsRef = useRef<AdvancedConfigurationFromValue>(cloneDeep(DefFieldsVal))
-        const [etcHosts, setEtcHosts] = useState<any[]>([])
+        const defFieldsRef = useRef<AdvancedConfigurationFromValue>(cloneDeep(createDefaultAdvancedConfig()))
+        const [etcHosts, setEtcHosts] = useState<KVPair[]>([])
         const [certificateFormVisible, setCertificateFormVisible] = useState<boolean>(false)
         const [filtersVisible, setFiltersVisible] = useState<boolean>(false)
 
@@ -106,30 +70,19 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
 
         const getValue = useMemoizedFn(() => {
             const v = form.getFieldsValue()
-            if (Object.keys(v).length > 0) {
-                return {...v, etcHosts}
-            } else {
-                return {
-                    certs: defFieldsRef.current.certs,
-                    etcHosts: defFieldsRef.current.etcHosts,
-                    preferGMTLS: defFieldsRef.current.preferGMTLS,
-                    onlyEnableGMTLS: defFieldsRef.current.onlyEnableGMTLS,
-                    enableProxyAuth: defFieldsRef.current.enableProxyAuth,
-                    dnsServers: defFieldsRef.current.dnsServers,
-                    proxyUsername: defFieldsRef.current.enableProxyAuth ? defFieldsRef.current.proxyUsername : "",
-                    proxyPassword: defFieldsRef.current.enableProxyAuth ? defFieldsRef.current.proxyPassword : "",
-                    EnableHostsMappingBeforeDownstreamProxy:
-                        defFieldsRef.current.EnableHostsMappingBeforeDownstreamProxy,
-                    filterWebsocket: defFieldsRef.current.filterWebsocket,
-                    disableCACertPage: defFieldsRef.current.disableCACertPage,
-                    DisableSystemProxy: defFieldsRef.current.DisableSystemProxy,
-                    DisableWebsocketCompression: defFieldsRef.current.DisableWebsocketCompression,
-                    PluginConcurrency: defFieldsRef.current.PluginConcurrency,
-                    OverwriteSNI: defFieldsRef.current.OverwriteSNI,
-                    SNI: defFieldsRef.current.SNI,
-                    SNIMapping: defFieldsRef.current.SNIMapping,
-                }
+            const value = {
+                ...defFieldsRef.current,
+                ...v,
+                certs,
+                etcHosts
             }
+
+            value.proxyUsername = value.enableProxyAuth ? value.proxyUsername || "" : ""
+            value.proxyPassword = value.enableProxyAuth ? value.proxyPassword || "" : ""
+            value.SNI = value.OverwriteSNI ? value.SNI || "" : ""
+            value.SNIMapping = value.SNIMapping || defFieldsRef.current.SNIMapping
+
+            return value
         })
 
         useImperativeHandle(
@@ -141,122 +94,12 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         )
 
         useEffect(() => {
-            defFieldsRef.current = cloneDeep(DefFieldsVal)
-            // 证书
-            getRemoteValue(MITMConsts.MITMDefaultClientCertificates).then((e) => {
-                if (!!e) {
-                    try {
-                        const certsRaw = JSONParseLog(e, {page: "MITMFormAdvancedConfiguration", fun: "MITMDefaultClientCertificates"}) as ClientCertificate[]
-                        defFieldsRef.current.certs = certsRaw
-                    } catch (e) {
-                        setCerts([])
-                    }
-                } else {
-                    setCerts([])
-                }
-            })
-            // 国密TLS优先
-            getRemoteValue(MITMConsts.MITMDefaultPreferGMTLS).then((e) => {
-                const v = e === "true" ? true : false
-                defFieldsRef.current.preferGMTLS = v
-                form.setFieldsValue({preferGMTLS: v})
-            })
-            // 仅国密 TLS
-            getRemoteValue(MITMConsts.MITMDefaultOnlyEnableGMTLS).then((e) => {
-                const v = e === "true" ? true : false
-                defFieldsRef.current.onlyEnableGMTLS = v
-                form.setFieldsValue({onlyEnableGMTLS: v})
-            })
-            // 代理认证
-            getRemoteValue(MITMConsts.MITMDefaultEnableProxyAuth).then((e) => {
-                const v = e === "true" ? true : false
-                defFieldsRef.current.enableProxyAuth = v
-                form.setFieldsValue({enableProxyAuth: v})
-            })
-            // 代理认证用户名
-            getRemoteValue(MITMConsts.MITMDefaultProxyUsername).then((e) => {
-                defFieldsRef.current.proxyUsername = e
-                form.setFieldsValue({proxyUsername: e})
-            })
-            // 代理认证用户密码
-            getRemoteValue(MITMConsts.MITMDefaultProxyPassword).then((e) => {
-                defFieldsRef.current.proxyPassword = e
-                form.setFieldsValue({proxyPassword: e})
-            })
-            // DNS服务器
-            getRemoteValue(MITMConsts.MITMDefaultDnsServers).then((e) => {
-                if (!!e) {
-                    const dnsServers = JSON.parse(e)
-                    defFieldsRef.current.dnsServers = dnsServers
-                    form.setFieldsValue({dnsServers})
-                }
-            })
-            // Host配置
-            getRemoteValue(MITMConsts.MITMDefaultEtcHosts).then((e) => {
-                if (!!e) {
-                    const etcHosts = JSON.parse(e)
-                    defFieldsRef.current.etcHosts = etcHosts
-                    setEtcHosts(etcHosts)
-                    form.setFieldsValue({etcHosts})
-                }
-            })
-            // Hosts映射优先
-            getRemoteValue(RemoteGV.MITMEnableHostsMappingBeforeDownstreamProxy).then((e) => {
-                const v = e === "true" ? true : false
-                defFieldsRef.current.EnableHostsMappingBeforeDownstreamProxy = v
-                form.setFieldsValue({EnableHostsMappingBeforeDownstreamProxy: v})
-            })
-            // 过滤WebSocket
-            getRemoteValue(MITMConsts.MITMDefaultFilterWebsocket).then((e) => {
-                const v = e === "true" ? true : false
-                defFieldsRef.current.filterWebsocket = v
-                form.setFieldsValue({filterWebsocket: v})
-            })
-            // 禁用初始页
-            getRemoteValue(RemoteGV.MITMDisableCACertPage).then((e) => {
-                const v = e === "true" ? true : false
-                defFieldsRef.current.disableCACertPage = v
-                form.setFieldsValue({disableCACertPage: v})
-            })
-            // 禁用系统代理
-            getRemoteValue(RemoteGV.MITMDisableSystemProxy).then((e) => {
-                const v = e === "true" ? true : false
-                defFieldsRef.current.DisableSystemProxy = v
-                form.setFieldsValue({DisableSystemProxy: v})
-            })
-            // 启用webSocket压缩
-            getRemoteValue(RemoteGV.MITMDisableWebsocketCompression).then((e) => {
-                let v = true
-                if (e) {
-                    v = e === "true" ? true : false
-                }
-                defFieldsRef.current.DisableWebsocketCompression = v
-                form.setFieldsValue({DisableWebsocketCompression: v})
-            })
-            // 插件并发进程
-            getRemoteValue(RemoteGV.MITMPluginConcurrency).then((e) => {
-                let v = 20
-                if (e) {
-                    v = Number(e)
-                }
-                defFieldsRef.current.PluginConcurrency = v
-                form.setFieldsValue({PluginConcurrency: v})
-            })
-            // SNI
-            getRemoteValue(RemoteMitmGV.MitmSNI).then((e) => {
-                try {
-                    const { OverwriteSNI = false, SNI = '', SNIMapping = [{Key:'', Value: ''}]  } = JSON.parse(e)
-                    const overwriteSNIValue = typeof OverwriteSNI === 'boolean' ? OverwriteSNI : OverwriteSNI === 'true'
-                    defFieldsRef.current.OverwriteSNI = overwriteSNIValue
-                    defFieldsRef.current.SNI = SNI
-                    defFieldsRef.current.SNIMapping = SNIMapping
-                    form.setFieldsValue({
-                        OverwriteSNI: overwriteSNIValue,
-                        SNI,
-                        SNIMapping
-                    })
-                } catch {
-                }
+            defFieldsRef.current = cloneDeep(createDefaultAdvancedConfig())
+            loadAdvancedConfig().then((value) => {
+                defFieldsRef.current = value
+                setCerts(value.certs || [])
+                setEtcHosts(value.etcHosts || [])
+                form.setFieldsValue(value)
             })
         }, [visible])
         /**
@@ -333,49 +176,13 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                     etcHosts,
                     SNIMapping: formValue.SNIMapping || defFieldsRef.current.SNIMapping
                 }
-                setRemoteValue(MITMConsts.MITMDefaultClientCertificates, JSON.stringify(certs))
-                setRemoteValue(MITMConsts.MITMDefaultPreferGMTLS, `${params.preferGMTLS}`)
-                setRemoteValue(MITMConsts.MITMDefaultOnlyEnableGMTLS, `${params.onlyEnableGMTLS}`)
-                setRemoteValue(MITMConsts.MITMDefaultEnableProxyAuth, `${params.enableProxyAuth}`)
-                setRemoteValue(MITMConsts.MITMDefaultProxyUsername, params.proxyUsername)
-                setRemoteValue(MITMConsts.MITMDefaultProxyPassword, params.proxyPassword)
-                setRemoteValue(MITMConsts.MITMDefaultDnsServers, JSON.stringify(params.dnsServers))
-                setRemoteValue(MITMConsts.MITMDefaultEtcHosts, JSON.stringify(etcHosts))
-                setRemoteValue(
-                    RemoteGV.MITMEnableHostsMappingBeforeDownstreamProxy,
-                    params.EnableHostsMappingBeforeDownstreamProxy ? "true" : ""
-                )
-                setRemoteValue(MITMConsts.MITMDefaultFilterWebsocket, `${params.filterWebsocket}`)
-                setRemoteValue(RemoteGV.MITMDisableCACertPage, params.disableCACertPage ? "true" : "")
-                setRemoteValue(RemoteGV.MITMDisableSystemProxy, params.DisableSystemProxy ? "true" : "")
-                setRemoteValue(RemoteGV.MITMDisableWebsocketCompression, params.DisableWebsocketCompression + "")
-                setRemoteValue(RemoteGV.MITMPluginConcurrency, params.PluginConcurrency + "")
-                setRemoteValue(
-                    RemoteMitmGV.MitmSNI,
-                    JSON.stringify({OverwriteSNI: params.OverwriteSNI, SNI: params.SNI, SNIMapping: params.SNIMapping})
-                )
+                saveAdvancedConfig(params)
                 onSave(params)
             })
         })
         const onClose = useMemoizedFn((jumpPage?: boolean) => {
             const formValue = form.getFieldsValue()
-            const oldValue: any = {
-                certs: defFieldsRef.current.certs,
-                dnsServers: defFieldsRef.current.dnsServers,
-                etcHosts: defFieldsRef.current.etcHosts,
-                EnableHostsMappingBeforeDownstreamProxy: defFieldsRef.current.EnableHostsMappingBeforeDownstreamProxy,
-                enableProxyAuth: defFieldsRef.current.enableProxyAuth,
-                filterWebsocket: defFieldsRef.current.filterWebsocket,
-                disableCACertPage: defFieldsRef.current.disableCACertPage,
-                DisableSystemProxy: defFieldsRef.current.DisableSystemProxy,
-                DisableWebsocketCompression: defFieldsRef.current.DisableWebsocketCompression,
-                PluginConcurrency: defFieldsRef.current.PluginConcurrency,
-                proxyUsername: defFieldsRef.current.proxyUsername,
-                proxyPassword: defFieldsRef.current.proxyPassword,
-                OverwriteSNI: defFieldsRef.current.OverwriteSNI,
-                SNI: defFieldsRef.current.SNI,
-                SNIMapping: defFieldsRef.current.SNIMapping,
-            }
+            const oldValue: AdvancedConfigurationFromValue = {...defFieldsRef.current}
             if (enableGMTLS) {
                 oldValue.preferGMTLS = defFieldsRef.current.preferGMTLS
                 oldValue.onlyEnableGMTLS = defFieldsRef.current.onlyEnableGMTLS

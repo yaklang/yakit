@@ -34,6 +34,7 @@ import {useGoogleChromePluginPath} from "@/store"
 import {RemoteMitmGV} from "@/enums/mitm"
 import { handleOpenFileSystemDialog } from "@/utils/fileSystemDialog"
 import { JSONParseLog } from "@/utils/tool"
+import {loadAdvancedConfig} from "./MITMAdvancedConfig"
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -131,10 +132,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         setRemoteValue(RemoteMitmGV.MitmStartChromeCheck, chormeCheck)
     })
     const startChrome = useMemoizedFn(async (baseStart: boolean) => {
-        // 代理认证用户名
-        let username = (await getRemoteValue(MITMConsts.MITMDefaultProxyUsername)) || ""
-        // 代理认证用户密码
-        let password = (await getRemoteValue(MITMConsts.MITMDefaultProxyPassword)) || ""
+        const { proxyUsername: username = "", proxyPassword: password = "" } = await loadAdvancedConfig()
         let newParams: {
             host: string
             port: number

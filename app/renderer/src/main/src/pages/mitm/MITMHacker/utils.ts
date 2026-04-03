@@ -3,8 +3,8 @@ import {ExecResult, YakScriptHooks} from "@/pages/invoker/schema"
 import {yakitNotify} from "@/utils/notification"
 import {ClientCertificate} from "../MITMServerStartForm/MITMServerStartForm"
 import {ExtraMITMServerProps, MITMResponse, TraceInfo} from "../MITMPage"
-import {isEmpty, omit} from "lodash"
-import {KVPair} from "@/models/kv"
+import {omit} from "lodash"
+import {buildMitmExtraV2} from "../MITMAdvancedConfig"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
 import {MITMFilterData, MITMFilterSchema} from "../MITMServerStartForm/MITMFilters"
 import {MITMContentReplacerRule} from "../MITMRule/MITMRuleType"
@@ -146,35 +146,7 @@ export interface MITMStartCallRequestV2 {
     Certificates: ClientCertificate[]
     extra?: ExtraMITMServerV2
 }
-interface ExtraMITMServerV2 {
-    /**@name 国密劫持*/
-    EnableGMTLS?: boolean
-    /**@name 随机TLS指纹*/
-    RandomJA3?: boolean
-    /**@name 代理认证 */
-    EnableProxyAuth: boolean
-    /**@name 仅国密 TLS */
-    OnlyEnableGMTLS: boolean
-    /**@name 国密TLS优先 TLS */
-    PreferGMTLS: boolean
-    ProxyPassword: string
-    ProxyUsername: string
-    DnsServers: string[]
-
-    HostsMapping: KVPair[]
-    EnableHostsMappingBeforeDownstreamProxy: boolean
-    /**@name 过滤WebSocket */
-    FilterWebsocket: boolean
-    /**禁用初始页 */
-    DisableCACertPage: boolean
-    /**禁用系统代理 */
-    DisableSystemProxy: boolean
-    DisableWebsocketCompression: boolean
-    PluginConcurrency: number
-    OverwriteSNI: boolean
-    SNI: string
-    SNIMapping: { Key: string, Value: string }[]
-}
+type ExtraMITMServerV2 = NonNullable<ReturnType<typeof buildMitmExtraV2>>
 /**转 mitm v1版本grpc参数 */
 export const convertMITMStartCallV1 = (oldData: MITMStartCallRequest): MITMStartCallRequestV1 => {
     const data: MITMStartCallRequestV1 = omit(oldData, ["version", "downstreamProxyRuleId"]) as MITMStartCallRequestV1
@@ -190,28 +162,7 @@ export const convertMITMStartCallV2 = (value: MITMStartCallRequest): MITMStartCa
         EnableHttp2: value.enableHttp2,
         ForceDisableKeepAlive: value.ForceDisableKeepAlive,
         Certificates: value.certificates,
-        extra: isEmpty(value.extra)
-            ? undefined
-            : {
-                  EnableGMTLS: value.extra.enableGMTLS,
-                  RandomJA3: value.extra.RandomJA3,
-                  EnableProxyAuth: value.extra.enableProxyAuth,
-                  OnlyEnableGMTLS: value.extra.onlyEnableGMTLS,
-                  PreferGMTLS: value.extra.preferGMTLS,
-                  ProxyPassword: value.extra.proxyPassword,
-                  ProxyUsername: value.extra.proxyUsername,
-                  DnsServers: value.extra.dnsServers,
-                  HostsMapping: value.extra.hosts,
-                  EnableHostsMappingBeforeDownstreamProxy: value.extra.EnableHostsMappingBeforeDownstreamProxy,
-                  FilterWebsocket: value.extra.filterWebsocket,
-                  DisableCACertPage: value.extra.disableCACertPage,
-                  DisableSystemProxy: value.extra.DisableSystemProxy,
-                  DisableWebsocketCompression: value.extra.DisableWebsocketCompression,
-                  PluginConcurrency: value.extra.PluginConcurrency,
-                  OverwriteSNI: value.extra.OverwriteSNI,
-                  SNI: value.extra.SNI,
-                  SNIMapping: value.extra.SNIMapping,
-              }
+        extra: buildMitmExtraV2(value.extra)
     }
     return data
 }
