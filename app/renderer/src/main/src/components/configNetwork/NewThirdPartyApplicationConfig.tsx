@@ -703,8 +703,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
                                     </div>
                                 }
                             >
-                                <YakitAutoComplete
+                                <YakitAutoComGroupSearchWithAll
                                     options={modelNameAllOptions}
+                                    groupSearchWithAll={true}
                                     onFocus={() => {
                                         execModelNameOption.current = true
                                         getModelNameOption()
@@ -722,7 +723,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
                                         }
                                         return false
                                     }}
-                                ></YakitAutoComplete>
+                                />
                             </Form.Item>
                         )
                     }
@@ -812,8 +813,9 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
                         name={"Type"}
                     >
                         {canAddType ? (
-                            <YakitAutoComplete
+                            <YakitAutoComGroupSearchWithAll
                                 options={options}
+                                groupSearchWithAll={true}
                                 disabled={disabledType}
                                 filterOption={(inputValue, option) => {
                                     if (option?.label && typeof option?.label === "string") {
