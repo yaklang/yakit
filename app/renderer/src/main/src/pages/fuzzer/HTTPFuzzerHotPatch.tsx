@@ -778,24 +778,24 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                                     />
                                 </Tooltip>
                             </YakitPopconfirm>
+                            <Tooltip title={t("HTTPFuzzerHotPatch.updateAndSaveTemplate")}>
+                                <YakitButton
+                                    disabled={!canSaveSelectedTemplate}
+                                    type='text'
+                                    size='small'
+                                    icon={<OutlineFileUpIcon />}
+                                    className={styles["hotPatch-sidebar-icon-button"]}
+                                    onClick={onUpdateTemplate}
+                                />
+                            </Tooltip>
                             <Tooltip title={t("YakitButton.save_as")}>
                                 <YakitButton
                                     disabled={!code}
                                     type='text'
                                     size='small'
-                                    icon={<OutlineFileUpIcon />}
-                                    className={styles["hotPatch-sidebar-icon-button"]}
-                                    onClick={() => setAddHotCodeTemplateVisible(true)}
-                                />
-                            </Tooltip>
-                            <Tooltip title={t("YakitButton.save")}>
-                                <YakitButton
-                                    disabled={!canSaveSelectedTemplate}
-                                    type='text'
-                                    size='small'
                                     icon={<OutlineStorageIcon />}
                                     className={styles["hotPatch-sidebar-icon-button"]}
-                                    onClick={onUpdateTemplate}
+                                    onClick={() => setAddHotCodeTemplateVisible(true)}
                                 />
                             </Tooltip>
                         </div>
