@@ -54,12 +54,14 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         valuePropName: "expand",
         trigger: "setExpand"
     })
-
+    const hasTaskTree = useCreation(() => {
+        return (taskChat?.elements?.length ?? 0) > 0
+    }, [taskChat?.elements?.length])
     useEffect(() => {
-        if (activeTab === AIChatLeft.HistoryTaskTree && !chatIPCData.execute) {
+        if ((activeTab === AIChatLeft.HistoryTaskTree && !chatIPCData.execute) || !hasTaskTree) {
             setActiveTab(AIChatLeft.Timeline)
         }
-    }, [chatIPCData.execute])
+    }, [chatIPCData.execute, hasTaskTree])
     const planHistoryList = useCreation(() => {
         return (
             chatIPCData.planHistoryList || {
@@ -81,7 +83,6 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         handleSendSyncMessage({syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS})
     })
 
-    const hasTaskTree = (taskChat?.elements?.length ?? 0) > 0
     const renderDom = useMemoizedFn(() => {
         switch (activeTab) {
             case AIChatLeft.TaskTree:

@@ -24,8 +24,17 @@
     flex: 1;
     // overflow: auto hidden;
     height: 100%;
+
     @include AIReActChat.content-side("left") {
-        width: 340px;
+        width: 100%;
+        border-right: 0;
+    }
+    .spin-wrapper {
+        :global {
+            .ant-spin-nested-loading > div > .ant-spin {
+                max-height: fit-content;
+            }
+        }
     }
     .chat-content-wrapper {
         @extend %display-column-center;

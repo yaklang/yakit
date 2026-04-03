@@ -4,12 +4,11 @@ import {
     AIMaterialsData,
     AIRecommendItemProps,
     AIRecommendProps,
-    RandomAIMaterialsDataProps,
     SideSettingButtonProps
 } from "./type"
 import styles from "./AIChatWelcome.module.scss"
 import {AIChatTextarea} from "../template/template"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
+import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import {AIChatTextareaRefProps, AIChatTextareaSubmit} from "../template/type"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
@@ -25,27 +24,13 @@ import {
     OutlinePluscircleIcon,
     OutlineRefreshIcon
 } from "@/assets/icon/outline"
-import {
-    AIDownAngleLeftIcon,
-    AIDownAngleRightIcon,
-    AIForgeIcon,
-    AIKnowledgeBaseIcon,
-    AIToolIcon,
-    AIUpAngleLeftIcon,
-    AIUpAngleRightIcon,
-    HoverAIForgeIcon,
-    HoverAIKnowledgeBaseIcon,
-    HoverAIToolIcon
-} from "./icon"
+import {AIDownAngleLeftIcon, AIDownAngleRightIcon, AIUpAngleLeftIcon, AIUpAngleRightIcon} from "./icon"
 import {Tooltip} from "antd"
 import ReactResizeDetector from "react-resize-detector"
 import emiter from "@/utils/eventBus/eventBus"
 import {AIAgentTabListEnum, SwitchAIAgentTabEventEnum} from "../defaultConstant"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {randomString} from "@/utils/randomUtil"
-import {grpcGetRandomAIMaterials} from "../grpc"
-import {GetRandomAIMaterialsResponse} from "@/pages/ai-re-act/hooks/grpcApi"
-import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import classNames from "classnames"
 import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 
@@ -125,7 +110,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         const welcomeRef = useRef<HTMLDivElement>(null)
         const [inViewPort = true] = useInViewport(welcomeRef)
 
-        useEffect(() => {
+        useUpdateEffect(() => {
             if (inViewPort) {
                 onRefresh()
             }

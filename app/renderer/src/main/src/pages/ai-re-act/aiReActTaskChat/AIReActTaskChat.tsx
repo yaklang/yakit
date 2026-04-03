@@ -9,7 +9,7 @@ import {
 import styles from "./AIReActTaskChat.module.scss"
 import {ColorsBrainCircuitIcon} from "@/assets/icon/colors"
 import {AIAgentChatStream, AIChatLeftSide} from "@/pages/ai-agent/chatTemplate/AIAgentChatTemplate"
-import {useControllableValue, useCreation, useMemoizedFn} from "ahooks"
+import {useControllableValue, useCreation, useInViewport, useMemoizedFn, useUpdateEffect} from "ahooks"
 import classNames from "classnames"
 import useChatIPCStore from "@/pages/ai-agent/useContext/ChatIPCContent/useStore"
 import {ChevrondownButton} from "../aiReActChat/AIReActComponent"
@@ -37,11 +37,20 @@ import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
 import {AIMaterialsData, AIRecommendItem} from "@/pages/ai-agent/aiChatWelcome/type"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AIMentionCommandParams} from "@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
+import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     const {setShowFreeChat, setTimeLine} = props
+    const [{randomAIMaterialsData, loadingAIMaterials}, {onRefresh}] = useGetAIMaterialsData()
 
-    const [{randomAIMaterialsData, loadingAIMaterials}] = useGetAIMaterialsData()
+    const taskEmptyRef = useRef<HTMLDivElement>(null)
+    const [inViewPort = true] = useInViewport(taskEmptyRef)
+
+    useUpdateEffect(() => {
+        if (inViewPort) {
+            onRefresh()
+        }
+    }, [inViewPort])
 
     const {taskChat} = useChatIPCStore().chatIPCData
     const [leftExpand, setLeftExpand] = useState(true)
@@ -73,50 +82,68 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
     })
     return (
         <div className={styles["ai-re-act-task-chat"]}>
-            <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
-            {!!taskChat?.elements?.length ? (
-                <div className={styles["chat-content-wrapper"]}>
-                    <div className={styles["header"]}>
-                        <div className={styles["title"]}>
-                            <ColorsBrainCircuitIcon />
-                            深度规划
-                        </div>
-                        <div className={styles["extra"]}>
-                            <YakitButton
-                                type='text2'
-                                icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                                onClick={onIsExpand}
-                            />
-                        </div>
-                    </div>
-                    <AIReActTaskChatContent />
-                </div>
-            ) : (
-                <YakitSpin spinning={loadingAIMaterials}>
-                    <div className={styles["re-act-task-empty-wrapper"]}>
-                        <div className={styles["heard"]}>
-                            <div className={styles["title"]}>扩展资源</div>
-                            <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
-                        </div>
-                        <div className={styles["list-wrapper"]}>
-                            {Object.keys(randomAIMaterialsData).map((key) => {
-                                const aiItem: AIMaterialsData =
-                                    randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
-                                return aiItem.data.length > 0 ? (
-                                    <AIReActTaskRecommend
-                                        key={aiItem.type}
-                                        title={aiItem.type}
-                                        data={aiItem.data}
-                                        onClickItem={(item) => onClickItem(item, aiItem.mentionType)}
-                                    />
-                                ) : (
-                                    <React.Fragment key={aiItem.type}></React.Fragment>
-                                )
-                            })}
-                        </div>
-                    </div>
-                </YakitSpin>
-            )}
+            <YakitResizeBox
+                firstRatio={"30%"}
+                lineDirection='right'
+                firstMinSize={leftExpand ? 300 : 30}
+                lineStyle={{width: leftExpand ? 4 : 0}}
+                freeze={leftExpand}
+                firstNodeStyle={{
+                    width: "30%",
+                    overflow: "hidden",
+                    maxWidth: leftExpand ? "" : "30px",
+                    borderRight: leftExpand ? "none" : "1px solid var(--Colors-Use-Neutral-Border)"
+                }}
+                secondNodeStyle={{width: leftExpand ? "100%" : "calc(100% - 30px)", overflow: "auto hidden"}}
+                firstNode={<AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />}
+                secondNode={
+                    <>
+                        {!!taskChat?.elements?.length ? (
+                            <div className={styles["chat-content-wrapper"]}>
+                                <div className={styles["header"]}>
+                                    <div className={styles["title"]}>
+                                        <ColorsBrainCircuitIcon />
+                                        深度规划
+                                    </div>
+                                    <div className={styles["extra"]}>
+                                        <YakitButton
+                                            type='text2'
+                                            icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                                            onClick={onIsExpand}
+                                        />
+                                    </div>
+                                </div>
+                                <AIReActTaskChatContent />
+                            </div>
+                        ) : (
+                            <YakitSpin spinning={loadingAIMaterials} wrapperClassName={styles["spin-wrapper"]}>
+                                <div className={styles["re-act-task-empty-wrapper"]} ref={taskEmptyRef}>
+                                    <div className={styles["heard"]}>
+                                        <div className={styles["title"]}>扩展资源</div>
+                                        <div className={styles["sub-title"]}>专注于安全编码与漏洞分析的智能助手</div>
+                                    </div>
+                                    <div className={styles["list-wrapper"]}>
+                                        {Object.keys(randomAIMaterialsData).map((key) => {
+                                            const aiItem: AIMaterialsData =
+                                                randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
+                                            return aiItem.data.length > 0 ? (
+                                                <AIReActTaskRecommend
+                                                    key={aiItem.type}
+                                                    title={aiItem.type}
+                                                    data={aiItem.data}
+                                                    onClickItem={(item) => onClickItem(item, aiItem.mentionType)}
+                                                />
+                                            ) : (
+                                                <React.Fragment key={aiItem.type}></React.Fragment>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            </YakitSpin>
+                        )}
+                    </>
+                }
+            />
         </div>
     )
 })

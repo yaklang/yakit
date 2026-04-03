@@ -54,11 +54,8 @@ export function useAIChatResizeBox(params: Params) {
             // } else {
             // secondRatio = "432px"
             // }
-            if (!isTaskStreamsEmpty) {
-                secondRatio = "432px"
-            } else {
-                firstRatio = "70%"
-            }
+            secondRatio = "432px"
+            firstRatio = "70%"
         }
         // if (isTaskContentKey && isTaskStreamsEmpty) {
         //     firstRatio = timeLine ? "30%" : "30"
@@ -75,16 +72,11 @@ export function useAIChatResizeBox(params: Params) {
             // lineStyle: showFreeChat ? {backgroundColor: "var(--Colors-Use-Neutral-Bg)"} : undefined,
             firstNodeStyle: {
                 padding: 0,
-                ...(!showFreeChat && {width: "100%"}),
-                ...(!timeLine && isTaskStreamsEmpty && {width: 30})
+                ...(!showFreeChat && {width: "100%"})
             },
             secondNodeStyle: {
                 padding: 0,
-                ...(!showFreeChat && {minWidth: 30, maxWidth: 30}),
-                ...(!timeLine &&
-                    isTaskStreamsEmpty && {
-                        width: "calc(100% - 30px)"
-                    })
+                ...(!showFreeChat && {minWidth: 30, maxWidth: 30})
             }
         }
 

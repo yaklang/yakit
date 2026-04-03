@@ -446,7 +446,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                             </div>
                         )
                     }}
-                    // getList={() => getAIModelListOption()}
                     open={open}
                     setOpen={onSetOpen}
                     optionLabelProp='label'
@@ -489,7 +488,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
 })
 
 export const getIconByAI = (value) => {
-    return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus isRunning={true} size='small' />
+    return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus size='small' />
 }
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
     const {value, aiService, checked} = props
