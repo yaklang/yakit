@@ -796,12 +796,12 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     return (
         <div className={styles["ai-online-model-list-item"]}>
             <div className={styles["ai-online-model-list-item-header"]}>
-                {AIOnlineModelIconMap[config.Type]}
-                <div className={styles["ai-online-model-list-item-type"]}>{config.Type}</div>
+                {AIOnlineModelIconMap[config.Type] || <OutlineAtomIconByStatus />}
+                <div className={styles["ai-online-model-list-item-type"]}>{item.ModelName}</div>
 
                 <div className={styles["ai-online-model-list-item-model"]}>
                     <OutlineAtomIcon className={styles["atom-icon"]} />
-                    <span className={styles["ai-online-model-list-item-model-text"]}>{item.ModelName}</span>
+                    <span className={styles["ai-online-model-list-item-model-text"]}>{config.Type}</span>
                 </div>
             </div>
             <div className={styles["ai-online-model-list-item-extra"]}>
