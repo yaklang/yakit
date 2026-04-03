@@ -1,4 +1,4 @@
-import {Divider, Modal, Tooltip} from "antd"
+import {Divider, Form, Modal, Tooltip} from "antd"
 import React, {ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
 import {
     MITMContentReplacerRule,
@@ -30,6 +30,7 @@ import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {YakitMenu} from "@/components/yakitUI/YakitMenu/YakitMenu"
 import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
@@ -53,7 +54,7 @@ import {
 import MITMContext from "../Context/MITMContext"
 import ReactResizeDetector from "react-resize-detector"
 import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {OutlineSearchIcon} from "@/assets/icon/outline"
+import {OutlineCogIcon, OutlineSearchIcon} from "@/assets/icon/outline"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { JSONParseLog } from "@/utils/tool"
 
@@ -197,6 +198,9 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         const [currentItem, setCurrentItem] = useState<MITMContentReplacerRule>()
         const [currentIndex, setCurrentIndex] = useState<number>()
         const [isUseDefRules, setIsUseDefRules] = useState<boolean>(false)
+        const [whiteListVisible, setWhiteListVisible] = useState<boolean>(false)
+        const [whiteList, setWhiteList] = useState<string[]>([])
+        const [originalWhiteList, setOriginalWhiteList] = useState<string[]>([])
         const ruleButtonRef = useRef<RuleExportAndImportHandle | null>(null)
         
         useImperativeHandle(
@@ -229,6 +233,9 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             ipcRenderer.invoke("GetCurrentRules", {}).then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                 const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
                 setOriginalRules(newRules)
+                const nextWhiteList = newRules?.[0]?.ExcludeSuffix || []
+                setWhiteList(nextWhiteList)
+                setOriginalWhiteList(nextWhiteList)
             })
         }, [visible])
         useEffect(() => {
@@ -242,6 +249,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             grpcClientMITMContentReplacerUpdate(mitmVersion).on((replacers) => {
                 const newRules = (replacers || []).map((ele) => ({...ele, Id: ele.Index}))
                 setRules(onSortRules(newRules))
+                setWhiteList(newRules?.[0]?.ExcludeSuffix || [])
             })
             return () => {
                 grpcClientMITMContentReplacerUpdate(mitmVersion).remove()
@@ -254,6 +262,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 .then((rsp: {Rules: MITMContentReplacerRule[]}) => {
                     const newRules = rsp.Rules.map((ele) => ({...ele, Id: ele.Index}))
                     setRules(onSortRules(newRules))
+                    setWhiteList(newRules?.[0]?.ExcludeSuffix || [])
                     setIsRefresh(!isRefresh)
                 })
                 .finally(() => setTimeout(() => setLoading(false), 100))
@@ -627,6 +636,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     Result: "",
                     Rule: "",
                     RegexpGroups: [],
+                    RegexpResultTemplate: "",
                     ExtraTag: [],
                     Disabled: false,
                     VerboseName: "RULE:" + randomString(10),
@@ -669,7 +679,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             }
         }
         const onSaveToDataBase = useMemoizedFn((saveOk?: () => void) => {
-            const newRules: MITMContentReplacerRule[] = rules.map((item, index) => ({...item, Index: index + 1}))
+            const newRules: MITMContentReplacerRule[] = rules.map((item, index) => ({
+                ...item,
+                Index: index + 1,
+                ExcludeSuffix: whiteList
+            }))
             if (status === "idle") {
                 // 劫持未开启
                 ipcRenderer
@@ -884,7 +898,10 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         })
 
         const onClose = useMemoizedFn(() => {
-            if (JSON.stringify(originalRules) !== JSON.stringify(rules)) {
+            if (
+                JSON.stringify(originalRules) !== JSON.stringify(rules) ||
+                JSON.stringify(originalWhiteList) !== JSON.stringify(whiteList)
+            ) {
                 Modal.confirm({
                     title: t("YakitModal.friendlyReminder"),
                     icon: <ExclamationCircleOutlined />,
@@ -923,6 +940,14 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
         const extra = () => {
             return (
                 <div className={styles["heard-right-operation"]}>
+                    <YakitButton 
+                        type='text' 
+                        icon={<OutlineCogIcon />} 
+                        onClick={() => setWhiteListVisible(true)}
+                    >
+                        {t("MITMRule.white_list")}
+                    </YakitButton>
+                    <Divider type='vertical' className={styles["heard-right-operation_divider"]} />
                     <YakitButton 
                         type='text' 
                         icon={<RefreshIcon />} 
@@ -1212,11 +1237,60 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                         currentItem={currentItem}
                     />
                 )}
+                <MITMRuleWhiteListModal
+                    visible={whiteListVisible}
+                    setVisible={setWhiteListVisible}
+                    value={whiteList}
+                    onOk={setWhiteList}
+                />
             </>
         )
     })
 )
 export default MITMRule
+
+interface MITMRuleWhiteListModalProps {
+    visible: boolean
+    setVisible: (visible: boolean) => void
+    value: string[]
+    onOk: (value: string[]) => void
+}
+
+const MITMRuleWhiteListModal: React.FC<MITMRuleWhiteListModalProps> = React.memo((props) => {
+    const {visible, setVisible, value, onOk} = props
+    const {t} = useI18nNamespaces(["mitm"])
+    const [currentWhiteList, setCurrentWhiteList] = useState<string[]>([])
+
+    useEffect(() => {
+        if (!visible) return
+        setCurrentWhiteList(value)
+    }, [value, visible])
+
+    return (
+        <YakitModal
+            title={t("MITMRule.white_list_modal_title")}
+            visible={visible}
+            onCancel={() => setVisible(false)}
+            onOk={() => {
+                onOk(currentWhiteList)
+                setVisible(false)
+            }}
+        >
+            <Form labelCol={{span: 5}} wrapperCol={{span: 16}}>
+                <Form.Item
+                    label={t("MITMRule.white_list_label")}
+                    help={t("MITMRule.white_list_tip")}
+                >
+                    <YakitSelect
+                        mode='tags'
+                        value={currentWhiteList}
+                        onChange={setCurrentWhiteList}
+                    />
+                </Form.Item>
+            </Form>
+        </YakitModal>
+    )
+})
 
 export const RuleExportAndImportButton: React.FC<RuleExportAndImportButtonProps> = React.forwardRef((props, ref) => {
     const {onOkImport, onBeforeNode, isUseDefRules, setIsUseDefRules} = props

@@ -7067,6 +7067,10 @@ message MITMContentReplacer {
   string EffectiveURL = 18;
 
   repeated int64 RegexpGroups = 19;
+  repeated string ExcludeSuffix = 20;
+
+  // Regex capture group output template, supports $1, \1, {1}
+  string RegexpResultTemplate = 21;
 }
 
 message RemoveHookParams {
