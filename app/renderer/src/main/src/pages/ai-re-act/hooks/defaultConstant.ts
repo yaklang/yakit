@@ -25,7 +25,9 @@ export const DefaultAIToolResult: AIToolResult = {
         execError: "",
         dirPath: "",
         resultDetails: ""
-    }
+    },
+    httpFlowDataCount: 0,
+    riskFlowDataCount: 0
 }
 /** 工作执行结果总结-不同阶段的默认展示内容 */
 export const DefaultToolResultSummary: Record<string, {wait: string; result: string}> = {

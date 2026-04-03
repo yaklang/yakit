@@ -158,10 +158,14 @@ function useChatIPC(params?: UseChatIPCParams) {
     // #endregion
 
     // #region grpc流里所有的runtimeIDs集合
-    const [runTimeIDs, setRunTimeIDs] = useState<string[]>([])
+    // http数据的run_time_id合集
+    const [httpRunTimeIDs, setHttpRunTimeIDs] = useState<string[]>([])
+    // risk数据的run_time_id合集
+    const [riskRunTimeIDs, setRiskRunTimeIDs] = useState<string[]>([])
 
     const handleResetRunTimeIDs = useMemoizedFn(() => {
-        setRunTimeIDs([])
+        setHttpRunTimeIDs([])
+        setRiskRunTimeIDs([])
     })
     // #endregion
 
@@ -550,7 +554,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         const answer: DeepPartial<AIChatData> = {
-            runTimeIDs: cloneDeep(runTimeIDs),
+            httpRunTimeIDs: cloneDeep(httpRunTimeIDs),
+            riskRunTimeIDs: cloneDeep(riskRunTimeIDs),
             yakExecResult: cloneDeep(yakExecResult),
             casualChat: cloneDeep(casualChat),
             taskChat: cloneDeep(taskChat),
@@ -591,14 +596,28 @@ function useChatIPC(params?: UseChatIPCParams) {
                     onSyncIDChange?.(res.SyncID)
                 }
 
-                // 记录会话中所有的RunTimeID
-                setRunTimeIDs((old) => {
-                    if (!res.CallToolID || old.includes(res.CallToolID)) return old
-                    return [...old, res.CallToolID]
-                })
-
                 let ipcContent = Uint8ArrayToString(res.Content) || ""
                 // console.log("onStart-res", res, ipcContent)
+
+                if (res.Type === "yak_httpflow") {
+                    // 产生一条http流量数据时的通知
+                    // 不能在这个if里return，因为这个数据在工具卡片中还要进行计数逻辑使用
+                    const httpNotice = JSON.parse(ipcContent) as AIAgentGrpcApi.HTTPTrafficNotice
+                    setHttpRunTimeIDs((old) => {
+                        if (old.includes(httpNotice.runtime_id)) return old
+                        return [...old, httpNotice.runtime_id]
+                    })
+                }
+
+                if (res.Type === "yak_risk") {
+                    // 产生一条risk流量数据时的通知
+                    // 不能在这个if里return，因为这个数据在工具卡片中还要进行计数逻辑使用
+                    const riskNotice = JSON.parse(ipcContent) as AIAgentGrpcApi.RiskTrafficNotice
+                    setRiskRunTimeIDs((old) => {
+                        if (old.includes(riskNotice.runtime_id)) return old
+                        return [...old, riskNotice.runtime_id]
+                    })
+                }
 
                 if (res.Type === "structured" && res.NodeId === "session_title") {
                     // 生成会话的名称
@@ -954,7 +973,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         if (chatData) {
             chatID.current = session
             setGrpcFolders(chatData.grpcFolders || [])
-            setRunTimeIDs(chatData.runTimeIDs || [])
+            setHttpRunTimeIDs(chatData.httpRunTimeIDs || [])
+            setRiskRunTimeIDs(chatData.riskRunTimeIDs || [])
             setReActTimelines(() => chatData.reActTimelines || [])
             yakExecResultEvent.handleSetYakResult(chatData.yakExecResult || {})
             casualChatEvent.handleSetElements(chatData.casualChat?.elements || [])
@@ -1039,7 +1059,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     const state: UseChatIPCState = useCreation(() => {
         return {
             execute,
-            runTimeIDs,
+            httpRunTimeIDs,
+            riskRunTimeIDs,
             yakExecResult,
             casualChat,
             taskChat,
@@ -1058,7 +1079,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
     }, [
         execute,
-        runTimeIDs,
+        httpRunTimeIDs,
+        riskRunTimeIDs,
         yakExecResult,
         casualChat,
         taskChat,

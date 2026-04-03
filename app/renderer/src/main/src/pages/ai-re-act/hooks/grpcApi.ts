@@ -689,6 +689,18 @@ export declare namespace AIAgentGrpcApi {
         total: number
         session_id: string
     }
+
+    /** http流量数据产生时的通知 */
+    export interface HTTPTrafficNotice {
+        hidden_index: string
+        runtime_id: string
+    }
+    /** risk流量数据产生时的通知 */
+    export interface RiskTrafficNotice {
+        risk_id: number
+        runtime_id: string
+        title: string
+    }
 }
 
 // #region AI相关普通接口的请求和定义结构

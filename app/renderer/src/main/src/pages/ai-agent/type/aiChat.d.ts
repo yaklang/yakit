@@ -6,8 +6,10 @@ import {AIChatQSData} from "@/pages/ai-re-act/hooks/aiRender"
 export interface AIChatData {
     /** 记录数据里所有的coordinatorIDs */
     coordinatorIDs: string[]
-    /** 记录数据里所有的runTimeIDs */
-    runTimeIDs: UseChatIPCState["runTimeIDs"]
+    /** 记录数据里所有的httpRunTimeIDs */
+    httpRunTimeIDs: UseChatIPCState["httpRunTimeIDs"]
+    /** 记录数据里所有的riskRunTimeIDs */
+    riskRunTimeIDs: UseChatIPCState["riskRunTimeIDs"]
     yakExecResult: UseChatIPCState["yakExecResult"]
     /** 性能相关数据 */
     aiPerfData: {

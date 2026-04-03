@@ -256,7 +256,8 @@ export enum AIMCPServerTypeEnum {
 //#region ai hooks 默认值
 export const defaultChatIPCData: UseChatIPCState = {
     execute: false,
-    runTimeIDs: [],
+    httpRunTimeIDs: [],
+    riskRunTimeIDs: [],
     casualChat: {
         elements: []
     },
