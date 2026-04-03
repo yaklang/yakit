@@ -2,7 +2,7 @@ import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useS
 import {Form} from "antd"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {KVPair} from "@/models/kv"
-import {YakitAutoComplete} from "../yakitUI/YakitAutoComplete/YakitAutoComplete"
+import {YakitAutoComGroupSearchWithAll} from "../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll"
 import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
 import {SelectOptionsProps} from "@/demoComponents/itemSelect/ItemSelectType"
 import {useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks"
@@ -343,8 +343,9 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                                     </div>
                                 }
                             >
-                                <YakitAutoComplete
+                                <YakitAutoComGroupSearchWithAll
                                     options={modelNameAllOptions}
+                                    groupSearchWithAll={true}
                                     onFocus={() => {
                                         execModelNameOption.current = true
                                         getModelNameOption()
@@ -362,7 +363,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                                         }
                                         return false
                                     }}
-                                ></YakitAutoComplete>
+                                />
                             </Form.Item>
                         )
                     }
@@ -441,8 +442,9 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                         name={"Type"}
                     >
                         {canAddType ? (
-                            <YakitAutoComplete
+                            <YakitAutoComGroupSearchWithAll
                                 options={options}
+                                groupSearchWithAll={true}
                                 disabled={disabledType}
                                 filterOption={(inputValue, option) => {
                                     if (option?.label && typeof option?.label === "string") {

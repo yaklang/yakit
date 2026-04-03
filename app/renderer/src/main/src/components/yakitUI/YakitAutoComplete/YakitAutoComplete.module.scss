@@ -37,7 +37,7 @@
         }
 
         .ant-select-disabled:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            color: var(--Colors-Use-Neutral-Disable)
+            color: var(--Colors-Use-Neutral-Disable);
         }
 
         .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
@@ -113,7 +113,24 @@
             font-size: 12px;
             color: var(--Colors-Use-Neutral-Text-1-Title);
         }
+
+        .ant-select-item-group {
+            padding: 4px 8px 2px;
+            font-size: 12px;
+            min-height: auto;
+        }
     }
+}
+
+.group-section-title {
+    color: var(--Colors-Use-Main-Primary);
+    font-size: 12px;
+    line-height: 20px;
+}
+
+.group-empty-placeholder {
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
 .yakit-auto-complete-popup-y {
