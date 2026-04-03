@@ -640,7 +640,7 @@ service Yak {
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
   /*
     ChaosMakerRule: Bas
   */
@@ -2748,6 +2748,7 @@ message GlobalNetworkConfig {
   TieredAIModelConfigDescriptor TieredAIModelConfig = 225;
   repeated ThirdPartyApplicationConfig IntelligentAIModelConfig = 26;
   repeated ThirdPartyApplicationConfig LightweightAIModelConfig = 27;
+  bool DisableHTTPFlowSlowQueryNotification = 28;
   repeated ThirdPartyApplicationConfig VisionAIModelConfig = 29;
 }
 
@@ -2826,6 +2827,10 @@ message ThirdPartyApplicationConfig {
   string Proxy = 10;
   bool NoHttps = 11;
   string APIType = 12;
+  string BaseURL = 13;
+  string Endpoint = 14;
+  bool EnableEndpoint = 15;
+  repeated KVPair Headers = 16;
 }
 
 message DiagnoseNetworkRequest {
@@ -5755,6 +5760,11 @@ message YakScript {
   bool IsUpdate = 37;
   repeated string PluginEnvKey = 38;
   bool SkipUpdate = 39;
+
+  bool EnableForAI = 40;
+  string AIDesc = 41;
+  string AIKeywords = 42;
+  string AIUsage = 43;
 }
 
 message Collaborator {
@@ -8505,6 +8515,8 @@ message AIConfigHealthCheckResponse{
   int32 ResponseStatusCode = 4;
   string ResponseContent = 5;
   string ErrorMessage = 6;
+  string RawResponse = 7;
+  ThirdPartyApplicationConfig RecommendConfig = 8;
 }
 
 message AIProvider {
