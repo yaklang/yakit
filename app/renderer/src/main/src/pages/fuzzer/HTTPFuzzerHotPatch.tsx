@@ -50,9 +50,6 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {getHotPatchCache, setHotPatchCache} from "./hotPatchCache"
-import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
-import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
-import { getStorageHttpFuzzerShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/httpFuzzer"
 import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
@@ -713,16 +710,6 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
         persistHotPatchState(checked, getCode())
     })
 
-    useEffect(() => {
-            if (!visible) return
-            registerShortcutKeyHandle(ShortcutKeyPage.HTTPFuzzer)
-            getStorageHttpFuzzerShortcutKeyEvents()
-    
-            return () => {
-                unregisterShortcutKeyHandle(ShortcutKeyPage.HTTPFuzzer)
-            }
-        }, [visible])
-    
     useShortcutKeyTrigger(
         "saveHotPatch*httpFuzzer",
         useMemoizedFn(() => {

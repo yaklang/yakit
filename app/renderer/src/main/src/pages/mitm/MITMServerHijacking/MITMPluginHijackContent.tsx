@@ -60,9 +60,6 @@ import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {HoldGRPCStreamInfo} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
 import {ManualHijackTypeProps} from "../MITMManual/MITMManualType"
-import {ShortcutKeyPage} from "@/utils/globalShortcutKey/events/pageMaps"
-import {getStorageMitmShortcutKeyEvents} from "@/utils/globalShortcutKey/events/page/mitm"
-import {registerShortcutKeyHandle, unregisterShortcutKeyHandle} from "@/utils/globalShortcutKey/utils"
 import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const PluginTrace = React.lazy(() => import("./PluginTrace/PluginTrace"))
 
@@ -433,14 +430,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
     const tempNameRef = useRef<string>("")
     const [selectedTemplateName, setSelectedTemplateName] = useState<string>("")
-
-    useEffect(() => {
-        registerShortcutKeyHandle(ShortcutKeyPage.Mitm)
-        getStorageMitmShortcutKeyEvents()
-        return () => {
-            unregisterShortcutKeyHandle(ShortcutKeyPage.Mitm)
-        }
-    }, [])
 
     const onUpdateTemplate = useMemoizedFn(() => {
         ipcRenderer
