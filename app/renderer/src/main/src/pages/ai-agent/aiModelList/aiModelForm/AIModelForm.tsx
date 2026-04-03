@@ -105,7 +105,11 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
         Proxy: values.proxy || "",
         NoHttps: !!values.no_https,
         APIType: values.api_type || "",
-        ExtraParams: []
+        ExtraParams: [],
+        BaseURL: values.base_url || "",
+        Endpoint: values.endpoint || "",
+        EnableEndpoint: !!values.enable_endpoint,
+        Headers: values.headers || [],
         /** 下面这些字段ai中没有 */
         // UserIdentifier: values.user_identifier || "",
         // UserSecret: values.user_secret || "",
@@ -216,7 +220,11 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                     Domain: res.domain,
                     Proxy: res.proxy,
                     NoHttps: res.no_https,
-                    ExtraParams: []
+                    ExtraParams: [],
+                    BaseURL: res.base_url,
+                    Endpoint: res.endpoint,
+                    EnableEndpoint: res.enable_endpoint,
+                    Headers: res.headers,
                     /** 下面这些字段ai中没有 */
                     // UserIdentifier: "",
                     // UserSecret: "",
