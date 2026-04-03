@@ -15,6 +15,7 @@ import {RemoteHistoryGV} from "@/enums/history"
 import {
     OutlineArrowscollapseIcon,
     OutlineArrowsexpandIcon,
+    OutlineChevrondownIcon,
     OutlineEyeIcon,
     OutlineInformationcircleIcon,
     OutlineLightningboltIcon,
@@ -22,6 +23,7 @@ import {
     OutlineRefreshIcon,
     OutlineReplyIcon,
     OutlineSearchIcon,
+    OutlineTerminalIcon,
     OutlineTrashIcon,
     OutlineXIcon
 } from "@/assets/icon/outline"
@@ -34,6 +36,7 @@ import {
     footerTabs,
     HotPatchDefaultContent
 } from "@/defaultConstants/hTTPHistoryAnalysis"
+import {AnalyzeHotPatchTempDefault} from "@/defaultConstants/mitm"
 import {MITMContentReplacerRule, MITMRulePropRef} from "../mitm/MITMRule/MITMRuleType"
 import {yakitNotify} from "@/utils/notification"
 import useGetSetState from "../pluginHub/hooks/useGetSetState"
@@ -49,7 +52,7 @@ import {HTTPFlow, ImportExportProgress} from "@/components/HTTPFlowTable/HTTPFlo
 import {randomString} from "@/utils/randomUtil"
 import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
 import {useCampare} from "@/hook/useCompare/useCompare"
-import {minWinSendToChildWin, openABSFileLocated, openPacketNewWindow} from "@/utils/openWebsite"
+import {minWinSendToChildWin, openABSFileLocated, openConsoleNewWindow, openPacketNewWindow} from "@/utils/openWebsite"
 import {parseStatusCodes, sorterFunction} from "../fuzzer/components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
 import emiter from "@/utils/eventBus/eventBus"
 import {HTTPHistoryAnalysisPageInfo, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
@@ -337,8 +340,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
 
     // #region 热加载
     const [curHotPatch, setCurHotPatch, getCurHotPatch] = useGetSetState<string>("")
-    const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>([])
+    const [hotPatchTempLocal, setHotPatchTempLocal] = useState<HotPatchTempItem[]>([...AnalyzeHotPatchTempDefault])
     const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
+    const [selectedTemplateName, setSelectedTemplateName] = useState<string>("")
     const getRemoteValueHotCode = useMemoizedFn(() => {
         getRemoteValue(RemoteHistoryGV.HistoryAnalysisHotPatchCodeSave).then((setting: string) => {
             let code = HotPatchDefaultContent
@@ -348,6 +352,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                     code = obj.code
                 }
             } catch (error) {}
+            setSelectedTemplateName("")
             setCurHotPatch(code)
             setTimeout(() => {
                 onSaveHotCode(false)
@@ -849,13 +854,32 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                     type='httpflow-analyze'
                                                     hotPatchTempLocal={hotPatchTempLocal}
                                                     onSetHotPatchTempLocal={setHotPatchTempLocal}
-                                                    onClickHotCode={setCurHotPatch}
+                                                    onClickHotCode={(temp, tempName) => {
+                                                        setSelectedTemplateName(tempName || "")
+                                                        setCurHotPatch(temp)
+                                                    }}
+                                                    triggerNode={
+                                                        <YakitButton type='text' size='small' className={styles["hotPatch-sidebar-template-trigger"]}>
+                                                            <span className={classNames(styles["hotPatch-sidebar-template-text"], "content-ellipsis")}>
+                                                                {selectedTemplateName ? t(selectedTemplateName) : t("HotCodeTemplate.code_template")}
+                                                            </span>
+                                                            <OutlineChevrondownIcon />
+                                                        </YakitButton>
+                                                    }
                                                 ></HotCodeTemplate>
                                             </div>
                                             <div className={styles["hotPatch-header-right"]}>
+                                                <Tooltip placement='bottom' title={t("HTTPFuzzerHotPatch.engineConsole")}>
+                                                    <YakitButton
+                                                        type='text'
+                                                        onClick={openConsoleNewWindow}
+                                                        icon={<OutlineTerminalIcon />}
+                                                    />
+                                                </Tooltip>
                                                 <YakitPopconfirm
                                                     title={t("AnalysisMain.confirm_reset_hot_reload_code")}
                                                     onConfirm={() => {
+                                                        setSelectedTemplateName("")
                                                         setCurHotPatch(HotPatchDefaultContent)
                                                     }}
                                                     placement='top'
@@ -876,6 +900,9 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                                     hotPatchCode={curHotPatch}
                                                     visible={addHotCodeTemplateVisible}
                                                     onSetAddHotCodeTemplateVisible={setAddHotCodeTemplateVisible}
+                                                    onSaveHotCodeOk={(tempName) => {
+                                                        setSelectedTemplateName(tempName || "")
+                                                    }}
                                                 ></AddHotCodeTemplate>
                                                 <YakitButton type='outline1' onClick={() => onSaveHotCode()}>
                                                     {t("YakitButton.save")}

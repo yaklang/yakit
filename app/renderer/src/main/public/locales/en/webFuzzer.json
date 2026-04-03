@@ -520,7 +520,8 @@
     "local_template": "Local Template",
     "online_template": "Online Template",
     "confirm_overwrite_hot_reload_code": "Confirm overwriting the current hot-reload code?",
-    "code_template": "Code Template"
+    "code_template": "Code Template",
+    "save_disable_tip": "The default template cannot be modified; it is recommended to save it as a new template"
   },
   "AddHotCodeTemplate": {
     "hot_reload_template_name_empty": "Hot-reload template name is empty",

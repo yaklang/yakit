@@ -5,9 +5,9 @@ import { YakitInput } from "@/components/yakitUI/YakitInput/YakitInput"
 import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
 import { YakitModal } from "@/components/yakitUI/YakitModal/YakitModal"
 import { yakitFailed, yakitNotify } from "@/utils/notification"
-import { HotPatchTempItem, AddHotCodeTemplate } from "@/pages/fuzzer/HTTPFuzzerHotPatch"
+import { HotPatchTempItem, AddHotCodeTemplate, HotCodeType } from "@/pages/fuzzer/HTTPFuzzerHotPatch"
 import { HotPatchDefaultContent, HotPatchTempDefault } from "@/defaultConstants/HTTPFuzzerPage"
-import { MITMHotPatchTempDefault } from "@/defaultConstants/mitm"
+import { AnalyzeHotPatchTempDefault, MITMHotPatchTempDefault } from "@/defaultConstants/mitm"
 import { cloneDeep } from "lodash"
 import {
     OutlinePlusIcon,
@@ -28,6 +28,10 @@ import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 import { configManagementTabType, useConfigManagementTab, useStore } from "@/store"
 import { YakitRoute } from "@/enums/yakitRoute"
 import emiter from "@/utils/eventBus/eventBus"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
+import { getStorageHotPatchManagementShortcutKeyEvents } from "@/utils/globalShortcutKey/events/page/hotPatchManagement"
+import { ShortcutKeyPage } from "@/utils/globalShortcutKey/events/pageMaps"
+import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from "@/utils/globalShortcutKey/utils"
 import { YakitPopover } from "@/components/yakitUI/YakitPopover/YakitPopover"
 import { YakitResizeBox } from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import { YakitRadioButtons } from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
@@ -114,7 +118,6 @@ const ConfigManagement: React.FC = memo(() => {
 
 export default ConfigManagement
 
-type HotCodeType = "fuzzer" | "mitm" | "global"
 type PanelHotCodeType = Exclude<HotCodeType, "global">
 
 interface QueryHotPatchTemplateListResponse {
@@ -198,7 +201,16 @@ export const HotPatchManagement: React.FC = () => {
     const isGlobalType = useMemo(()=> activeType === "global", [activeType])
 
     const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType) => {
-        return cloneDeep(type === "fuzzer" ? HotPatchTempDefault : MITMHotPatchTempDefault)
+        switch (type) {
+            case "fuzzer":
+                return cloneDeep(HotPatchTempDefault)
+            case "mitm":
+                return cloneDeep(MITMHotPatchTempDefault)
+            case "httpflow-analyze": 
+                return AnalyzeHotPatchTempDefault
+            default: 
+                return []
+        }
     })
 
     const getDefaultTemplateContentByType = useMemoizedFn((type: HotCodeType) => {
@@ -209,6 +221,8 @@ export const HotPatchManagement: React.FC = () => {
                 return HotPatchDefaultContent
             case "mitm":
                 return HotPatchTemplate
+            case "httpflow-analyze":
+                return HotPatchDefaultContent
             default:
                 return ""
         }
@@ -580,6 +594,30 @@ export const HotPatchManagement: React.FC = () => {
         }
     })
 
+    
+    useEffect(() => {
+        if (!inViewport) return
+        registerShortcutKeyHandle(ShortcutKeyPage.HotPatchManagement)
+        getStorageHotPatchManagementShortcutKeyEvents()
+
+        return () => {
+            unregisterShortcutKeyHandle(ShortcutKeyPage.HotPatchManagement)
+        }
+    }, [inViewport])
+
+    useShortcutKeyTrigger(
+        "saveHotPatch*hotPatchManagement",
+        useMemoizedFn(() => {
+            if (inViewport) {
+                if(disableSaveTemplate) {
+                    yakitFailed(t("HotCodeTemplate.save_disable_tip"))
+                    return
+                }
+                onSaveTemplate()
+            }
+        })
+    )
+
     const onSaveAsSuccess = useMemoizedFn((tempName?: string) => {
         if (!tempName) return
         if (activeType === "global") {
@@ -646,6 +684,10 @@ export const HotPatchManagement: React.FC = () => {
             {
                 label: t("AddHotCodeTemplate.WebFuzzer_hot_template"),
                 value: "fuzzer"
+            },
+            {
+                label: t("YakitRoute.historyAnalyzer"),
+                value: "httpflow-analyze"
             }
         ],
         [t]
@@ -850,8 +892,12 @@ export const HotPatchManagement: React.FC = () => {
         return list.find((item) => item.name === selectedTemplate)
     }, [activeType, globalTemplateList, templateList, templateListOnline, selectedTemplate, selectedTemplateSource])
 
+    const disableSaveTemplate = useMemo(
+        () => !!(currentTemplate?.isDefault || selectedTemplateSource === "online"),
+        [currentTemplate?.isDefault, selectedTemplateSource]
+    )
 
-    const hideTemplateContent = useMemo(()=> isGlobalType || activeType === 'mitm', [isGlobalType, activeType])
+    const hideTemplateContent = useMemo(()=> isGlobalType || ['mitm', "httpflow-analyze"].includes(activeType), [isGlobalType, activeType])
 
     return (
         <div className={styles["hot-patch-management"]} ref={selectRef}>
@@ -916,7 +962,7 @@ export const HotPatchManagement: React.FC = () => {
                         <YakitButton type='outline1' onClick={() => setAddHotCodeTemplateVisible(true)} disabled={selectedTemplateSource === "online"}>
                             {t("YakitButton.save_as")}
                         </YakitButton>
-                        <YakitButton type='primary' onClick={onSaveTemplate} disabled={currentTemplate?.isDefault || selectedTemplateSource === "online"}>
+                        <YakitButton type='primary' onClick={onSaveTemplate} disabled={disableSaveTemplate}>
                             {t("YakitButton.save")}
                         </YakitButton>
                     </div>

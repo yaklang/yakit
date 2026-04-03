@@ -1,6 +1,7 @@
 import {ChromeLauncherParams} from "@/pages/mitm/MITMChromeLauncher"
 import {MITMAdvancedFilter, MITMFilterData, MITMFilterSchema} from "@/pages/mitm/MITMServerStartForm/MITMFilters"
 import {v4 as uuidv4} from "uuid"
+import {HotPatchDefaultContent} from "@/defaultConstants/HTTPFuzzerPage"
 
 // 浏览器启动最小参数配置
 export const chromeLauncherMinParams: ChromeLauncherParams[] = [
@@ -565,6 +566,14 @@ mockHTTPRequest = func(isHttps, url, req, mockResponse) {
     }
     // 如果以上 if 条件都没有命中，函数会默认结束，Yakit将正常处理该请求（即将其发往后端服务器）。
 }`,
+        isDefault: true
+    }
+]
+
+export const AnalyzeHotPatchTempDefault = [
+    {
+        name: "代码模板",
+        temp: HotPatchDefaultContent,
         isDefault: true
     }
 ]

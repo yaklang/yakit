@@ -11,7 +11,7 @@ import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import styles from "./HTTPFuzzerHotPatch.module.scss"
 import {showYakitDrawer} from "@/components/yakitUI/YakitDrawer/YakitDrawer"
-import {yakitNotify} from "@/utils/notification"
+import {yakitFailed, yakitNotify} from "@/utils/notification"
 import {
     OutlineChevrondownIcon,
     OutlineClouddownloadIcon,
@@ -50,6 +50,7 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {openConsoleNewWindow} from "@/utils/openWebsite"
 import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {getHotPatchCache, setHotPatchCache} from "./hotPatchCache"
+import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
 interface HTTPFuzzerHotPatchProp {
     pageId: string
     onInsert: (s: string) => any
@@ -709,6 +710,19 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
         persistHotPatchState(checked, getCode())
     })
 
+    useShortcutKeyTrigger(
+        "saveHotPatch*httpFuzzer",
+        useMemoizedFn(() => {
+            if (visible) {
+                if(!canSaveSelectedTemplate) {
+                    yakitFailed(t("HotCodeTemplate.save_disable_tip"))
+                    return
+                }
+                onUpdateTemplate()
+            }
+        })
+    )
+
     return (
         <div
             className={classNames(styles["hotPatch-sidebar"], {[styles["hotPatch-sidebar-full-screen"]]: isFullScreen})}
@@ -938,7 +952,7 @@ interface DeleteHotPatchTemplateRequest {
 
 interface GetOnlineHotPatchTemplateRequest extends API.HotPatchTemplateRequest, PluginListPageMeta {}
 
-type HotCodeType = "fuzzer" | "mitm" | "httpflow-analyze" | "global"
+export type HotCodeType = "fuzzer" | "mitm" | "httpflow-analyze" | "global"
 interface HotCodeTemplateProps {
     type: HotCodeType
     hotPatchTempLocal: HotPatchTempItem[]
