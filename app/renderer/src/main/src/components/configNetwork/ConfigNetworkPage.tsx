@@ -145,6 +145,10 @@ export interface ThirdPartyApplicationConfig {
     Proxy?: string
     NoHttps?: boolean
     APIType?: string
+    BaseURL?: string
+    Endpoint?: string
+    EnableEndpoint?: boolean
+    Headers?: KVPair[]
 }
 type TenumBuffer = Buffer | Uint8Array
 
