@@ -409,7 +409,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
     const {testResult, onClose} = props
 
     const {t, i18n} = useI18nNamespaces(["aiAgent"])
-    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("response") //选中的表格项
+    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response" | "responseContent">("response") //选中的表格项
     const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
 
     const testStatus = useCreation(() => {
@@ -465,6 +465,17 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
             setRemoteValue(RemoteAIAgentGV.AIModelCheckResultEditorBeautify, "")
         }
     })
+
+    const renderContent = useCreation(() => {
+        if (currentSelectShowType === "request") {
+            return testResult?.RawRequest || ""
+        } else if (currentSelectShowType === "response") {
+            return testResult?.RawResponse || ""
+        } else if (currentSelectShowType === "responseContent") {
+            return testResult?.ResponseContent || ""
+        }
+        return ""
+    }, [currentSelectShowType, testResult])
     return (
         <div className={styles["test-result-wrapper"]}>
             <div className={styles["test-result-heard"]}>
@@ -485,11 +496,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
                 <HorizontalScrollCard hiddenHeard={true} data={data} />
                 <div className={styles["test-result-packet"]}>
                     <NewHTTPPacketEditor
-                        originValue={
-                            currentSelectShowType === "request"
-                                ? testResult?.RawRequest || ""
-                                : testResult?.ResponseContent || ""
-                        }
+                        originValue={renderContent}
                         title={
                             <div className={styles["packet-title-wrapper"]}>
                                 <span className={styles["packet-title-text"]}>
@@ -511,6 +518,10 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
                                             {
                                                 value: "response",
                                                 label: t("AIModelTestResult.response")
+                                            },
+                                            {
+                                                value: "responseContent",
+                                                label: t("AIModelTestResult.responseContent")
                                             }
                                         ]}
                                     />
