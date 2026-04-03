@@ -439,6 +439,33 @@
 .config-form-wrapper {
     .config-form {
         padding: 24px 24px 0 24px;
+        .ai-third-party-application-config-collapse {
+            :global {
+                .ant-collapse-item {
+                    background-color: var(--Colors-Use-Basic-Background);
+                    .ant-collapse-header {
+                        padding: 0;
+                        &:hover {
+                            background-color: var(--Colors-Use-Basic-Background);
+                            color: var(--Colors-Use-Main-Primary);
+                            .ant-collapse-expand-icon {
+                                span {
+                                    svg {
+                                        color: var(--Colors-Use-Main-Primary);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .ant-collapse-content-box {
+                        padding: 0;
+                    }
+                }
+            }
+        }
+    }
+    .config-form-ai{
+        padding: 24px 24px 16px 24px;
     }
 
     .config-footer {
