@@ -9,7 +9,7 @@ import {
 } from "./AIModelFormType"
 import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
 import {Form, FormInstance} from "antd"
-import {NewThirdPartyApplicationConfigBase} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
+import {NewAIThirdPartyApplicationConfigBase} from "@/components/configNetwork/NewThirdPartyApplicationConfig"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {
     AIGlobalConfig,
@@ -372,9 +372,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         })
     })
     return (
-        <NewThirdPartyApplicationConfigBase
+        <NewAIThirdPartyApplicationConfigBase
             ref={formRef}
-            isOnlyShowAiType={true}
             {...props.thirdPartyApplicationConfig}
             formValues={formValues}
             footer={

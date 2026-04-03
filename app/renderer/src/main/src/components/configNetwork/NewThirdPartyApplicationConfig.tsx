@@ -1,5 +1,5 @@
 import React, {forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {Form} from "antd"
+import {Collapse, Form} from "antd"
 import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
 import {KVPair} from "@/models/kv"
 import {YakitAutoComGroupSearchWithAll} from "../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll"
@@ -27,6 +27,11 @@ import {
     normalizeAIAPIType
 } from "@/pages/ai-agent/aiModelList/utils"
 import {cloneDeep} from "lodash"
+import { InputHTTPHeaderForm } from "@/pages/mitm/MITMRule/MITMRuleFromModal"
+import { YakitTag } from "../yakitUI/YakitTag/YakitTag"
+import { HTTPHeader } from "@/pages/mitm/MITMContentReplacerHeaderOperator"
+import YakitCollapse from "../yakitUI/YakitCollapse/YakitCollapse"
+import classNames from "classnames"
 const {ipcRenderer} = window.require("electron")
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -37,6 +42,7 @@ export interface ThirdPartyAppConfigItemTemplate {
     DefaultValue: string
     Desc: string
     Extra: string
+    Placeholder?: string
 }
 export interface GetThirdPartyAppConfigTemplate {
     Name: string
@@ -112,17 +118,7 @@ const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
     })}`,
     Verbose: "模型类型"
 }
-const aiAPITypeItem: ThirdPartyAppConfigItemTemplate = {
-    Name: "api_type",
-    Required: true,
-    Type: "list",
-    DefaultValue: DEFAULT_AI_API_TYPE,
-    Desc: "可选值: chat_completions / responses",
-    Extra: `${JSON.stringify({
-        options: aiAPITypeOptions
-    })}`,
-    Verbose: "API类型"
-}
+
 const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     cloneDeep(aiModelTypeItem),
     {
@@ -134,7 +130,6 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
         Type: "list",
         Verbose: "ApiKey"
     },
-    // cloneDeep(aiAPITypeItem),
     {
         DefaultValue: "",
         Desc: "email / username",
@@ -146,16 +141,7 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     }
 ]
 
-const aiOptionItems: ThirdPartyAppConfigItemTemplate[] = [cloneDeep(aiModelTypeItem)]
-const buildAIFormItems = (items: ThirdPartyAppConfigItemTemplate[]) => {
-    let nextItems = [...items].filter((item) => item.Name !== "api_type")
-    const apiKeyIndex = nextItems.findIndex((item) => item.Name === "api_key")
-    const insertIndex = apiKeyIndex === -1 ? 0 : apiKeyIndex + 1
-    // TODO - aiAPITypeItem项是需要后端控制返回的，目前先固定插入
-    nextItems.splice(insertIndex, 0, cloneDeep(aiAPITypeItem))
-    return [...aiOptionItems, ...nextItems]
-}
-interface NewThirdPartyApplicationConfigBaseProps extends Omit<ThirdPartyApplicationConfigProp, "onAdd" | "onCancel"> {
+interface NewThirdPartyApplicationConfigBaseProps extends Omit<ThirdPartyApplicationConfigProp, "onAdd" | "onCancel" | "isOnlyShowAiType"> {
     ref?: React.ForwardedRef<{form: FormInstance}>
 }
 export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicationConfigBaseProps> = React.memo(
@@ -164,7 +150,6 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
             formValues = defautFormValues,
             disabledType = false,
             canAddType = true,
-            isOnlyShowAiType = false,
             FormProps,
             footer
         } = props
@@ -188,29 +173,20 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
 
         // 获取类型
         useEffect(() => {
-            if (isOnlyShowAiType) {
-                grpcGetAIThirdPartyAppConfigTemplate().then((res: GetThirdPartyAppConfigTemplateResponse) => {
-                    const templates = res.Templates
-                    let newOptions: SelectOptionsProps[] = []
-                    setTemplates(templates.map((ele) => ({...ele, Items: buildAIFormItems(ele.Items)})))
-                    newOptions = templates.map((item) => ({label: item.Verbose, value: item.Name}))
-                    setOptions(newOptions)
-                })
-            } else {
+            
                 ipcRenderer
                     .invoke("GetThirdPartyAppConfigTemplate")
                     .then((res: GetThirdPartyAppConfigTemplateResponse) => {
                         const templates = res.Templates
                         let newOptions: SelectOptionsProps[] = []
-
                         setTemplates(templates)
                         newOptions = templates
                             .filter((item) => item.Type !== "ai")
                             .map((item) => ({label: item.Verbose, value: item.Name}))
                         setOptions(newOptions)
                     })
-            }
-        }, [isOnlyShowAiType])
+            
+        }, [])
 
         useUpdateEffect(() => {
             const templatesobj = getTemplates().find((item) => item.Name === typeValRef.current)
@@ -367,9 +343,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                             </Form.Item>
                         )
                     }
-                    if (isOnlyShowAiType && modelType === "ai" && item.Name === "api_key") {
-                        return <AIConfigAPIKeyFormItem aiType={typeVal} formProps={formProps} />
-                    } else {
+                    
                         let selectProps: YakitSelectProps = {}
                         try {
                             selectProps.options = item.Extra ? JSONParseLog(item.Extra)?.options : []
@@ -379,7 +353,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                                 <YakitSelect {...selectProps} />
                             </Form.Item>
                         )
-                    }
+                    
                 default:
                     return <></>
             }
@@ -391,10 +365,6 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
 
         const initialValues = useMemo(() => {
             const copyFormValues = {...formValues}
-            if (isOnlyShowAiType) {
-                const aiFormValues = copyFormValues as typeof copyFormValues & {api_type?: string}
-                aiFormValues.api_type = normalizeAIAPIType(aiFormValues.api_type)
-            }
             Object.keys(copyFormValues).forEach((key) => {
                 if (copyFormValues[key] === "true") {
                     copyFormValues[key] = true
@@ -406,9 +376,8 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
         }, [formValues])
 
         const defaultFormList = useCreation(() => {
-            if (!!isOnlyShowAiType) return [...defaultFormItemsOfAI]
             return [...defaultFormItems]
-        }, [isOnlyShowAiType])
+        }, [])
         return (
             <div className={styles["config-form-wrapper"]}>
                 <Form
@@ -477,6 +446,444 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                     )}
                 </Form>
                 <div className={styles["config-footer"]}>{footer}</div>
+            </div>
+        )
+    })
+)
+
+const defaultAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
+    cloneDeep(aiModelTypeItem),
+    {
+        Name: "api_type",
+        Required: true,
+        Type: "list",
+        DefaultValue: DEFAULT_AI_API_TYPE,
+        Desc: "可选值: chat_completions / responses",
+        Extra: `${JSON.stringify({
+            options: aiAPITypeOptions
+        })}`,
+        Verbose: "API类型"
+    },
+    {
+        DefaultValue: "memfit-light-free",
+        Desc: "",
+        Extra: "",
+        Name: "model",
+        Required: true,
+        Type: "list",
+        Verbose: "模型名称"
+    },
+]
+
+const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
+    {
+        DefaultValue: "free-user",
+        Desc: "APIKey / Token",
+        Extra: "",
+        Name: "api_key",
+        Required: false,
+        Type: "list",
+        Verbose: "ApiKey"
+    },
+    {
+        DefaultValue: "",
+        Desc: "对于非标准openai风格的第三方api，可以自定义endpoint",
+        Extra: "",
+        Name: "enable_endpoint",
+        Required: false,
+        Type: "bool",
+        Verbose: "启用Endpoint"
+    },
+    {
+        DefaultValue: "",
+        Desc: "BaseURL",
+        Extra: "",
+        Name: "base_url",
+        Required: false,
+        Type: "string",
+        Verbose: "BaseURL",
+        Placeholder: "例如 https://api.openai.com/"
+    },
+    {
+        DefaultValue: "",
+        Desc: "Endpoint",
+        Extra: "",
+        Name: "endpoint",
+        Required: false,
+        Type: "string",
+        Verbose: "Endpoint",
+        Placeholder: "例如 https://api.openai.com/v1/chat/completions"
+    },
+    {
+        DefaultValue: "",
+        Desc: "代理地址",
+        Extra: "",
+        Name: "proxy",
+        Required: false,
+        Type: "string",
+        Verbose: "代理地址"
+    },
+]
+
+export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicationConfigBaseProps> = React.memo(
+    forwardRef((props, ref) => {
+        const {
+            formValues = defautFormValues,
+            disabledType = false,
+            canAddType = true,
+            FormProps,
+            footer
+        } = props
+        const [form] = Form.useForm()
+        const typeVal = Form.useWatch("Type", form)
+        const [options, setOptions] = useState<SelectOptionsProps[]>([])
+        const [modelOptionLoading, setModelOptionLoading] = useState<boolean>(false)
+        const [modelNameAllOptions, setModelNameAllOptions] = useState<SelectOptionsProps[]>([])
+        const apiKeyWatch = Form.useWatch("api_key", form)
+        const execModelNameOption = useRef<boolean>(false)
+        const enableEndpointWatch = Form.useWatch("enable_endpoint", form)
+        const headers = Form.useWatch("Headers", form) || []
+        const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
+        const headerItemRef = useRef<HTTPHeader>()
+        const headerItemIndexRef = useRef<number>()
+        useImperativeHandle(
+            ref,
+            () => ({
+                form
+            }),
+            [form]
+        )
+
+        // 获取类型
+        useEffect(() => {
+            grpcGetAIThirdPartyAppConfigTemplate().then((res: GetThirdPartyAppConfigTemplateResponse) => {
+                const templates = res.Templates
+                let newOptions: SelectOptionsProps[] = []
+                newOptions = templates.map((item) => ({label: item.Verbose, value: item.Name}))
+                setOptions(newOptions)
+            })
+        }, [])
+
+        useUpdateEffect(() => {
+            if (apiKeyWatch) {
+                execModelNameOption.current = true
+                getModelNameOption()
+            } else {
+                handleDefaultModalNameOption()
+            }
+        }, [apiKeyWatch])
+
+        const {run: getModelNameOption, cancel: cancelModelNameOption} = useDebounceFn(
+            useMemoizedFn(() => {
+                if (!execModelNameOption.current) return
+                setModelOptionLoading(true)
+                const v = form.getFieldsValue()
+                ipcRenderer
+                    .invoke("ListAiModel", {Config: JSON.stringify(v)})
+                    .then((res) => {
+                        if (!execModelNameOption.current) return
+                        const modalNamelist: SelectOptionsProps[] = res.ModelName.map((modelName: string) => ({
+                            label: modelName,
+                            value: modelName
+                        }))
+                        const name = getModelNameDefaultName()
+                        // 确保默认值在选项里
+                        const hasDefault = modalNamelist.some((item) => item.value === name)
+                        const newOptions = hasDefault
+                            ? modalNamelist
+                            : name
+                            ? [{label: name, value: name}, ...modalNamelist]
+                            : modalNamelist
+                        setModelNameAllOptions(newOptions)
+                        yakitNotify("success", "获取成功")
+                    })
+                    .catch((error) => {
+                        if (!execModelNameOption.current) return
+                        yakitNotify("error", error + "")
+                        handleDefaultModalNameOption()
+                    })
+                    .finally(() => {
+                        setModelOptionLoading(false)
+                    })
+            }),
+            {wait: 500}
+        )
+
+        const newOptionalAIFormItemsOfAI = useCreation(() => {
+            if (enableEndpointWatch){
+                return cloneDeep(optionalAIFormItemsOfAI).filter((item) => item.Name !== "base_url")
+            }
+            return cloneDeep(optionalAIFormItemsOfAI).filter((item) => item.Name !== "endpoint")
+        }, [enableEndpointWatch])
+
+        const allAIFormItemsOfAI = useCreation(() => {
+            return [...defaultAIFormItemsOfAI, ...newOptionalAIFormItemsOfAI]
+        }, [])
+
+        const getModelNameDefaultName = () => {
+            const obj = allAIFormItemsOfAI.find((item) => item.Type === "list" && item.Name === "model")
+            return obj?.DefaultValue
+        }
+        const handleDefaultModalNameOption = () => {
+            const name = getModelNameDefaultName()
+            if (name) {
+                setModelNameAllOptions([{label: name, value: name}])
+            } else {
+                setModelNameAllOptions([])
+            }
+        }
+        useDebounceEffect(
+            () => {
+                handleDefaultModalNameOption()
+            },
+            [typeVal],
+            {wait: 300}
+        )
+        useEffect(() => {
+            execModelNameOption.current = false
+            cancelModelNameOption()
+        }, [typeVal])
+
+        // 切换类型，渲染不同表单项（目前只有输入框、开关、下拉）
+        const renderAllFormItems = useMemoizedFn(() => {
+            return defaultAIFormItemsOfAI.map((item, index) => (
+                <React.Fragment key={index}>{renderSingleFormItem(item)}</React.Fragment>
+            ))
+        })
+        const renderOptionalFormItems = useMemoizedFn(() => {
+            return newOptionalAIFormItemsOfAI.map((item, index) => (
+                <React.Fragment key={index}>{renderSingleFormItem(item)}</React.Fragment>
+            ))
+        })
+        const renderSingleFormItem = (item: ThirdPartyAppConfigItemTemplate) => {
+            const formProps = {
+                rules: [{required: item.Required, message: `请填写${item.Verbose}`}],
+                label: item.Verbose,
+                name: item.Name,
+                tooltip: item.Desc
+                    ? {
+                          icon: <OutlineInformationcircleIcon />,
+                          title: item.Desc
+                      }
+                    : null
+            }
+            switch (item.Type) {
+                case "string":
+                    return (
+                        <Form.Item {...formProps}>
+                            <YakitInput placeholder={item.Placeholder} />
+                        </Form.Item>
+                    )
+                case "bool":
+                    return (
+                        <Form.Item {...formProps} valuePropName='checked'>
+                            <YakitSwitch />
+                        </Form.Item>
+                    )
+                case "list":
+                    if (item.Name === "model") {
+                        // 模型名称
+                        return (
+                            <Form.Item
+                                {...formProps}
+                                help={
+                                    <div style={{height: 30}}>
+                                        如无法自动获取，请
+                                        <YakitButton
+                                            type='text'
+                                            onClick={() => {
+                                                execModelNameOption.current = true
+                                                getModelNameOption()
+                                            }}
+                                            style={{padding: 0, fontSize: 14}}
+                                        >
+                                            点击刷新
+                                        </YakitButton>
+                                        重新获取
+                                    </div>
+                                }
+                            >
+                                <YakitAutoComplete
+                                    options={modelNameAllOptions}
+                                    onFocus={() => {
+                                        execModelNameOption.current = true
+                                        getModelNameOption()
+                                    }}
+                                    dropdownRender={(menu) => {
+                                        return (
+                                            <>
+                                                <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>
+                                            </>
+                                        )
+                                    }}
+                                    filterOption={(inputValue, option) => {
+                                        if (option?.value && typeof option?.value === "string") {
+                                            return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                        }
+                                        return false
+                                    }}
+                                ></YakitAutoComplete>
+                            </Form.Item>
+                        )
+                    }
+                    if (item.Name === "api_key") {
+                        return <AIConfigAPIKeyFormItem aiType={typeVal} formProps={formProps} />
+                    } else {
+                        let selectProps: YakitSelectProps = {}
+                        try {
+                            selectProps.options = item.Extra ? JSONParseLog(item.Extra)?.options : []
+                        } catch (error) {}
+                        return (
+                            <Form.Item {...formProps}>
+                                <YakitSelect {...selectProps} />
+                            </Form.Item>
+                        )
+                    }
+                default:
+                    return <></>
+            }
+        }
+
+        const initialValues = useMemo(() => {
+            const copyFormValues = {...formValues}
+            const aiFormValues = copyFormValues as typeof copyFormValues & {api_type?: string}
+            aiFormValues.api_type = normalizeAIAPIType(aiFormValues.api_type)
+            
+            Object.keys(copyFormValues).forEach((key) => {
+                if (copyFormValues[key] === "true") {
+                    copyFormValues[key] = true
+                } else if (copyFormValues[key] === "false") {
+                    copyFormValues[key] = false
+                }
+            })
+            return copyFormValues
+        }, [formValues])
+
+        const onSaveHeaders = useMemoizedFn((val, updateIndex) => {
+            const obj = {
+                Key: val.Header,
+                Value: val.Value
+            }
+            let headersList: KVPair[] = []
+            if (updateIndex === undefined) {
+                headersList = [...headers, obj]
+            } else {
+                headers[updateIndex] = obj
+                headersList = [...headers]
+            }
+            form.setFieldsValue({
+                Headers: headersList
+            })
+        })
+
+        const onRemoveHeaders = useMemoizedFn((index: number) => {
+            form.setFieldsValue({
+                Headers: headers.filter((_, i) => i !== index)
+            })
+        })
+        return (
+            <div className={styles["config-form-wrapper"]}>
+                <Form
+                    form={form}
+                    layout={FormProps?.layout ?? "horizontal"}
+                    labelCol={{span: FormProps?.labelCol ?? 5}}
+                    wrapperCol={{span: FormProps?.wrapperCol ?? 18}}
+                    initialValues={initialValues}
+                    onValuesChange={(changedValues, allValues) => {
+                        // 当类型改变时，表单项的值采用默认值
+                        if (changedValues.Type !== undefined) {
+                            allAIFormItemsOfAI.forEach((item) => {
+                                form.setFieldsValue({
+                                    [item.Name]: ["string", "list"].includes(item.Type)
+                                        ? item.DefaultValue
+                                        : item.DefaultValue === "true"
+                                })
+                            })
+                        }
+                    }}
+                    onSubmitCapture={(e) => {
+                        e.preventDefault()
+                    }}
+                    className={classNames(styles["config-form"],styles["config-form-ai"]) }
+                >
+                    <Form.Item
+                        label={isMemfit() ? "厂商" : "类型"}
+                        rules={[{required: true, message: `请${canAddType ? "填写" : "选择"}类型`}]}
+                        name={"Type"}
+                    >
+                        {canAddType ? (
+                            <YakitAutoComplete
+                                options={options}
+                                disabled={disabledType}
+                                filterOption={(inputValue, option) => {
+                                    if (option?.label && typeof option?.label === "string") {
+                                        return option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                    }
+                                    return false
+                                }}
+                            />
+                        ) : (
+                            <YakitSelect
+                                disabled={disabledType}
+                                options={options}
+                                filterOption={(inputValue, option) => {
+                                    if (option?.label && typeof option?.label === "string") {
+                                        return option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+                                    }
+                                    return false
+                                }}
+                            ></YakitSelect>
+                        )}
+                    </Form.Item>
+                    {renderAllFormItems()}
+                    <YakitCollapse bordered={false} className={styles["ai-third-party-application-config-collapse"]}>
+                    <Collapse.Panel header='高级配置' key='1'>
+                    {/* 可选的表单项 */}
+                    {renderOptionalFormItems()}
+                    <Form.Item label={"Header"} name='Headers'>
+                            {(headers || []).map((i, index) => {
+                                return (
+                                    <YakitTag
+                                        key={index}
+                                        onClick={() => {
+                                            headerItemRef.current = {
+                                                Header: i.Key,
+                                                Value: i.Value
+                                            }
+                                            headerItemIndexRef.current = index
+                                            setVisibleHTTPHeader(true)
+                                        }}
+                                        closable
+                                        onClose={() => {
+                                            onRemoveHeaders(index)
+                                        }}
+                                    >
+                                        {i.Key}
+                                    </YakitTag>
+                                )
+                            })}
+                            <YakitButton
+                                type={"outline1"}
+                                onClick={() => {
+                                    headerItemRef.current = undefined
+                                    headerItemIndexRef.current = undefined
+                                    setVisibleHTTPHeader(true)
+                                }}
+                            >
+                                添加
+                            </YakitButton>
+                        </Form.Item>
+                        </Collapse.Panel>
+                        </YakitCollapse>
+                </Form>
+                <div className={styles["config-footer"]}>{footer}</div>
+                <InputHTTPHeaderForm
+                    initFormVal={headerItemRef.current}
+                    updateIndex={headerItemIndexRef.current}
+                    visible={visibleHTTPHeader}
+                    setVisible={setVisibleHTTPHeader}
+                    onSave={onSaveHeaders}
+                />
             </div>
         )
     })
