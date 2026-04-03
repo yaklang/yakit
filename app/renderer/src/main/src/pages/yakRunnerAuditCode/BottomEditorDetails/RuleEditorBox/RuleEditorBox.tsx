@@ -1,14 +1,10 @@
-import React, {useEffect, useRef, useState} from "react"
-import {useGetState, useMemoizedFn, useUpdateEffect} from "ahooks"
+import React, {useEffect} from "react"
+import {useMemoizedFn, useUpdateEffect} from "ahooks"
 import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
 import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import useStore from "../../hooks/useStore"
 import {apiFetchQuerySyntaxFlowResult} from "@/pages/yakRunnerCodeScan/utils"
 import {QuerySyntaxFlowResultResponse} from "@/pages/yakRunnerCodeScan/YakRunnerCodeScanType"
-import {monaco} from "react-monaco-editor"
-import { randomString } from "@/utils/randomUtil"
-import { handleShortcutKey } from "@/utils/globalShortcutKey/utils"
-const {ipcRenderer} = window.require("electron")
 export interface RuleEditorBoxProps {
     ruleEditor: string
     setRuleEditor: (value: string) => void
@@ -16,7 +12,7 @@ export interface RuleEditorBoxProps {
     onAuditRuleSubmit: () => void
 }
 export const RuleEditorBox: React.FC<RuleEditorBoxProps> = (props) => {
-    const {ruleEditor, setRuleEditor, disabled,onAuditRuleSubmit} = props
+    const {ruleEditor, setRuleEditor, disabled, onAuditRuleSubmit} = props
     const {projectName, pageInfo} = useStore()
 
     // 获取文本域输入框

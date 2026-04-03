@@ -1366,7 +1366,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
         })
     }, [])
 
-    const onCancle = useMemoizedFn(() => {
+    const onCancel = useMemoizedFn(() => {
         // 重置保存队列
         setWaitRemoveAll(false)
         setWaitRemoveOtherItem(undefined)
@@ -1447,7 +1447,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
                     }
                 } else {
                     warn("未获取保存路径，取消保存")
-                    onCancle()
+                    onCancel()
                 }
             } catch (error) {}
         })
@@ -1460,7 +1460,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
             content={`是否要保存${info.name}里面的内容吗？`}
             footer={
                 <div className={styles["hint-right-btn"]}>
-                    <YakitButton size='max' type='outline2' onClick={onCancle}>
+                    <YakitButton size='max' type='outline2' onClick={onCancel}>
                         取消
                     </YakitButton>
                     <div className={styles["btn-group-wrapper"]}>

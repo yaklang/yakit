@@ -15,8 +15,10 @@ import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutK
 import {HoleDispose} from "./HoleDispose/HoleDispose"
 import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
 import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
-import { openSSARiskNewWindow } from "@/utils/openWebsite"
-import { JSONParseLog } from "@/utils/tool"
+import {openSSARiskNewWindow} from "@/utils/openWebsite"
+import {JSONParseLog} from "@/utils/tool"
+import { yakitNotify } from "@/utils/notification"
+import { openAIForge } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
 const {ipcRenderer} = window.require("electron")
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
@@ -31,6 +33,33 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     // 展示所需的BugHash
     const [bugHash, setBugHash] = useState<string>("")
     const [info, setInfo] = useState<SSARisk>()
+
+    const toAI = useMemoizedFn((e) => {
+        e.stopPropagation()
+        if (!ruleEditor) {
+            yakitNotify("warning", "未找到规则内容，无法进行AI美化")
+            return
+        }
+        const params = {
+            query: {
+                ForgeName: "sf_rule_completion"
+            },
+            handleParamsUIConfig: (paramsUIConfig) => {
+                paramsUIConfig.map((item) => {
+                    if (item.Field === "file_content") {
+                        item.DefaultValue = ruleEditor
+                    }
+                    return item
+                })
+                return paramsUIConfig
+            },
+            jsonParseLogParams: {
+                page: "YakRunnerAuditCode",
+                fun: "toAI"
+            }
+        }
+        openAIForge(params)
+    })
 
     // 数组去重
     const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
@@ -55,7 +84,10 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
 
     const onOpenBottomDetailFun = useMemoizedFn((v: string) => {
         try {
-            const {type}: {type: ShowItemType} = JSONParseLog(v, {page: "BottomEditorDetails", fun: "onOpenBottomDetailFun"})
+            const {type}: {type: ShowItemType} = JSONParseLog(v, {
+                page: "BottomEditorDetails",
+                fun: "onOpenBottomDetailFun"
+            })
             setEditorDetails(true)
             setShowItem(type)
         } catch (error) {}
@@ -139,6 +171,12 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                 <div className={styles["extra"]}>
                     {showItem === "ruleEditor" && (
                         <>
+                            <YakitButton
+                                onClick={toAI}
+                                disabled={auditExecuting}
+                            >
+                                美化
+                            </YakitButton>
                             {auditExecuting ? (
                                 <YakitButton danger icon={<PaperAirplaneIcon />} onClick={onStopAuditRule}>
                                     暂停执行
@@ -185,11 +223,23 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                     >
                         {bugHash ? (
-                            <>{info && <RightBugAuditResult info={info} extra={
-                                <YakitButton type="primary" onClick={()=>{
-                                    openSSARiskNewWindow(info)
-                                }}>新窗口打开</YakitButton>
-                            }/>}</>
+                            <>
+                                {info && (
+                                    <RightBugAuditResult
+                                        info={info}
+                                        extra={
+                                            <YakitButton
+                                                type='primary'
+                                                onClick={() => {
+                                                    openSSARiskNewWindow(info)
+                                                }}
+                                            >
+                                                新窗口打开
+                                            </YakitButton>
+                                        }
+                                    />
+                                )}
+                            </>
                         ) : (
                             <div className={styles["no-audit"]}>
                                 <YakitEmpty title='暂无漏洞' />

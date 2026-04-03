@@ -145,7 +145,8 @@ import {
     AIToolEditorPageInfoProps,
     YakRunnerScanHistoryPageInfoProps,
     RuleManagementPageInfoProps,
-    AuditHoleInfoProps
+    AuditHoleInfoProps,
+    AIRepositoryProps
 } from "@/store/pageInfo"
 import {SpaceEnginePage} from "@/pages/spaceEngine/SpaceEnginePage"
 import {SinglePluginExecution} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
@@ -673,7 +674,7 @@ export interface ComponentParams {
     ruleManagementPageInfo?: RuleManagementPageInfoProps
 
     // TODO  后续补充
-    AIRepository?: {defualtAIMentionCommandParams: AIMentionCommandParams[]}
+    AIRepository?: AIRepositoryProps
 }
 function withRouteToPage(WrappedComponent) {
     return function WithPage(props) {
