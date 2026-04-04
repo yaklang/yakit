@@ -4,12 +4,13 @@ const {USER_INFO, HttpSetting} = require("../state")
 const {templateStr} = require("./wechatWebTemplate/index")
 const urltt = require("url")
 const http = require("http")
+const {printLogOutputFile} = require("../logFile")
 
 // http 服务
 let server = null
 module.exports = {
     register: (win, getClient) => {
-        const commonSignIn = (res) => {
+        const commonSignIn = (res, type) => {
             const info = res.data
             const user = {
                 isLogin: true,
@@ -40,8 +41,15 @@ module.exports = {
             USER_INFO.user_id = user.user_id
             USER_INFO.companyName = user.companyName
             USER_INFO.companyHeadImg = user.companyHeadImg
-            win.webContents.send("fetch-signin-token", user)
-            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            win.webContents.send("fetch-signin-token", user) 
+            if(type === "ccb"){
+                win.webContents.send("fetch-signin-ccb-data", {ok: true, info: "登录成功"})
+            }
+            else{
+                win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            }
+
+            
         }
         // login modal
         ipcMain.on("user-sign-in", (event, arg) => {
@@ -49,7 +57,8 @@ module.exports = {
             const typeApi = {
                 github: "auth/from-github/callback",
                 wechat: "auth/from-wechat/callback",
-                qq: "auth/from-qq/callback"
+                qq: "auth/from-qq/callback",
+                ccb: "auth/from-ccb/callback"
             }
 
             const {url = "", type} = arg
@@ -105,7 +114,7 @@ module.exports = {
                                 authWindow.close()
                                 return
                             }
-                            commonSignIn(res)
+                            commonSignIn(res, type)
 
                             authWindow.webContents.session.clearStorageData()
                             setTimeout(() => authWindow.close(), 200)
@@ -122,7 +131,7 @@ module.exports = {
                     authWindow = null
                 })
             }
-            if (type === "github") {
+            if (["github", "ccb"].includes(type)) {
                 if (server) {
                     // 关闭之前 HTTP 服务器
                     server.close()
@@ -135,9 +144,14 @@ module.exports = {
                             res.end()
                         } else if (pathname === "/judgeSignin") {
                             const {query} = urltt.parse(req.url, true)
+                            printLogOutputFile("ccb-------judgeSignin", JSON.stringify({
+                                url: req.url,
+                                query
+                            }))
                             // 处理回调的逻辑
                             const ghCode = query.code
                             if (!ghCode) {
+                                printLogOutputFile("ccb-------ghCode:" + ghCode)
                                 res.end(
                                     JSON.stringify({
                                         login: false,
@@ -147,6 +161,10 @@ module.exports = {
                                 return
                             }
                             await new Promise((resolve, reject) => {
+                                printLogOutputFile("ccb-------请求:" + JSON.stringify({
+                                    url: typeApi[type],
+                                    params: {code: ghCode},
+                                }))
                                 httpApi({
                                     method: "get",
                                     url: typeApi[type],
@@ -154,11 +172,20 @@ module.exports = {
                                     headers: {Accept: "application/json, text/plain, */*"}
                                 })
                                     .then((resp) => {
+                                        printLogOutputFile("ccb-------响应:" + JSON.stringify(resp))
                                         if (resp.code !== 200) {
-                                            win.webContents.send("fetch-signin-data", {
-                                                ok: false,
-                                                info: resp.data.reason || "请求异常，请重新登录！"
-                                            })
+                                            if(type === "ccb"){
+                                                win.webContents.send("fetch-signin-ccb-data", {
+                                                    ok: false,
+                                                    info: resp.data.reason || "请求异常，请重新登录！"
+                                                })
+                                            }
+                                            else{
+                                                win.webContents.send("fetch-signin-data", {
+                                                    ok: false,
+                                                    info: resp.data.reason || "请求异常，请重新登录！"
+                                                })
+                                            }
                                             res.end(
                                                 JSON.stringify({
                                                     login: false
@@ -167,7 +194,7 @@ module.exports = {
                                             resolve()
                                             return
                                         }
-                                        commonSignIn(resp)
+                                        commonSignIn(resp, type)
                                         res.end(
                                             JSON.stringify({
                                                 login: true
@@ -176,7 +203,16 @@ module.exports = {
                                         resolve()
                                     })
                                     .catch((err) => {
-                                        win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
+                                        printLogOutputFile("ccb-------错误:" + JSON.stringify(err))
+                                        if(type === "ccb"){
+                                            win.webContents.send("fetch-signin-ccb-data", {
+                                                ok: false,
+                                                info: "登录错误:" + err
+                                            })
+                                        }
+                                        else{
+                                            win.webContents.send("fetch-signin-data", {ok: false, info: "登录错误:" + err})
+                                        }
                                         res.end(
                                             JSON.stringify({
                                                 login: false
@@ -240,7 +276,12 @@ module.exports = {
             USER_INFO.companyName = user.companyName
             USER_INFO.companyHeadImg = user.companyHeadImg
             win.webContents.send("fetch-signin-token", user)
-            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            if(USER_INFO.platform === "ccb"){
+                win.webContents.send("fetch-signin-ccb-data", {ok: true, info: "登录成功"})
+            }
+            else{
+                win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            }
 
             return new Promise((resolve, reject) => {
                 resolve({next: true})
@@ -249,7 +290,12 @@ module.exports = {
 
         ipcMain.on("company-refresh-in", (event) => {
             win.webContents.send("fetch-signin-token", USER_INFO)
-            win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            if(USER_INFO.platform === "ccb"){
+                win.webContents.send("fetch-signin-ccb-data", {ok: true, info: "登录成功"})
+            }
+            else{
+                win.webContents.send("fetch-signin-data", {ok: true, info: "登录成功"})
+            }
         })
 
         ipcMain.handle("get-login-user-info", async (e) => {
@@ -280,6 +326,7 @@ module.exports = {
         })
 
         ipcMain.on("sync-update-user", (event, user) => {
+            const isCCB = user.platform === "ccb"
             USER_INFO.isLogin = user.isLogin
             USER_INFO.platform = user.platform
             USER_INFO.githubName = user.githubName
@@ -291,8 +338,8 @@ module.exports = {
             USER_INFO.role = user.role
             USER_INFO.token = user.token
             USER_INFO.user_id = user.user_id
-            USER_INFO.companyName = user.companyName
-            USER_INFO.companyHeadImg = user.companyHeadImg
+            USER_INFO.companyName = isCCB ? user.ccbName : user.companyName 
+            USER_INFO.companyHeadImg = isCCB? user.ccbHeadImg : user.companyHeadImg
             event.returnValue = user
         })
 
