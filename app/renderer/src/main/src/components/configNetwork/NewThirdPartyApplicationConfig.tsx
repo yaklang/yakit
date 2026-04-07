@@ -503,13 +503,13 @@ const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     },
     {
         DefaultValue: "",
-        Desc: "BaseURL",
+        Desc: "可填写域名和URL，例如api.openai.com、https://api.openai.com/、https://api.openai.com/v1、https://api.openai.com//v1/chat/completions",
         Extra: "",
         Name: "base_url",
         Required: false,
         Type: "string",
         Verbose: "BaseURL",
-        Placeholder: "例如 https://api.openai.com/"
+        Placeholder: "例如 api.openai.com、https://api.openai.com/"
     },
     {
         DefaultValue: "",
