@@ -475,16 +475,23 @@ const defaultAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     },
 ]
 
+const isShowRequiredApiKey = (typeVal: string) => {
+    let Required = !["aibalance", "comate"].includes(typeVal)
+    return {
+        isRequired: Required,
+        data:{
+            DefaultValue: "free-user",
+            Desc: "APIKey / Token",
+            Extra: "",
+            Name: "api_key",
+            Required,
+            Type: "list",
+            Verbose: "ApiKey"   
+        }
+    }
+}
+
 const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
-    {
-        DefaultValue: "free-user",
-        Desc: "APIKey / Token",
-        Extra: "",
-        Name: "api_key",
-        Required: false,
-        Type: "list",
-        Verbose: "ApiKey"
-    },
     {
         DefaultValue: "",
         Desc: "对于非标准openai风格的第三方api，可以自定义endpoint",
@@ -609,16 +616,30 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
             {wait: 500}
         )
 
-        const newOptionalAIFormItemsOfAI = useCreation(() => {
-            if (enableEndpointWatch){
-                return cloneDeep(optionalAIFormItemsOfAI).filter((item) => item.Name !== "base_url")
+        const newDefaultAIFormItemsOfAI = useCreation(() => {
+            let newAIFormItemsOfAI = cloneDeep(defaultAIFormItemsOfAI)
+            const {isRequired, data} = isShowRequiredApiKey(typeVal)
+            if(isRequired){
+                newAIFormItemsOfAI.push(data)
             }
-            return cloneDeep(optionalAIFormItemsOfAI).filter((item) => item.Name !== "endpoint")
-        }, [enableEndpointWatch])
+            return newAIFormItemsOfAI
+        }, [typeVal])
+
+        const newOptionalAIFormItemsOfAI = useCreation(() => {
+            let newData = cloneDeep(optionalAIFormItemsOfAI)
+            const {isRequired, data} = isShowRequiredApiKey(typeVal)
+            if(!isRequired){
+                newData.unshift(data)
+            }
+            if (enableEndpointWatch){
+                return newData.filter((item) => item.Name !== "base_url")
+            }
+            return newData.filter((item) => item.Name !== "endpoint")
+        }, [enableEndpointWatch, typeVal])
 
         const allAIFormItemsOfAI = useCreation(() => {
-            return [...defaultAIFormItemsOfAI, ...newOptionalAIFormItemsOfAI]
-        }, [])
+            return [...newDefaultAIFormItemsOfAI, ...newOptionalAIFormItemsOfAI]
+        }, [newDefaultAIFormItemsOfAI, newOptionalAIFormItemsOfAI])
 
         const getModelNameDefaultName = () => {
             const obj = allAIFormItemsOfAI.find((item) => item.Type === "list" && item.Name === "model")
@@ -646,7 +667,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
 
         // 切换类型，渲染不同表单项（目前只有输入框、开关、下拉）
         const renderAllFormItems = useMemoizedFn(() => {
-            return defaultAIFormItemsOfAI.map((item, index) => (
+            return newDefaultAIFormItemsOfAI.map((item, index) => (
                 <React.Fragment key={index}>{renderSingleFormItem(item)}</React.Fragment>
             ))
         })
