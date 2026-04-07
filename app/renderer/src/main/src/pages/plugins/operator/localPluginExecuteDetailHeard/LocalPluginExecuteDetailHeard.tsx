@@ -1,1037 +1,1016 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
-    ExecuteEnterNodeByPluginParamsProps,
-    FormExtraSettingProps,
-    OutputFormComponentsByTypeProps,
-    PluginExecuteDetailHeardProps,
-    PluginExecuteExtraFormValue,
-    CustomPluginExecuteFormValue,
-    PluginExecuteProgressProps,
-    YakExtraParamProps,
-    FormContentItemByTypeProps,
-    PluginFixFormParamsProps,
-    RequestType
-} from "./LocalPluginExecuteDetailHeardType"
-import {PluginDetailHeader} from "../../baseTemplate"
-import styles from "./LocalPluginExecuteDetailHeard.module.scss"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn, useNetwork} from "ahooks"
-import {Divider, Form, Input, Progress} from "antd"
-import {PluginParamDataEditorProps, YakParamProps} from "../../pluginsType"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {HTTPPacketYakitEditor} from "@/components/yakitUI/YakitEditor/extraYakitEditor"
+  ExecuteEnterNodeByPluginParamsProps,
+  FormExtraSettingProps,
+  OutputFormComponentsByTypeProps,
+  PluginExecuteDetailHeardProps,
+  PluginExecuteExtraFormValue,
+  CustomPluginExecuteFormValue,
+  PluginExecuteProgressProps,
+  YakExtraParamProps,
+  FormContentItemByTypeProps,
+  PluginFixFormParamsProps,
+  RequestType,
+} from './LocalPluginExecuteDetailHeardType'
+import { PluginDetailHeader } from '../../baseTemplate'
+import styles from './LocalPluginExecuteDetailHeard.module.scss'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useNetwork } from 'ahooks'
+import { Divider, Form, Input, Progress } from 'antd'
+import { PluginParamDataEditorProps, YakParamProps } from '../../pluginsType'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
+import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { HTTPPacketYakitEditor } from '@/components/yakitUI/YakitEditor/extraYakitEditor'
 import {
-    YakitFormDragger,
-    YakitFormDraggerContent,
-    YakitFormDraggerContentPath
-} from "@/components/yakitUI/YakitForm/YakitForm"
-import {failed} from "@/utils/notification"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import classNames from "classnames"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {YakitSelectProps} from "@/components/yakitUI/YakitSelect/YakitSelectType"
-import {OutlineInformationcircleIcon} from "@/assets/icon/outline"
-import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
-import {PluginExecuteExtraParamsRefProps} from "./PluginExecuteExtraParams"
-import {DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, apiFetchOnlinePluginInfo} from "../../utils"
-import {YakitEditor} from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {GetPluginLanguage} from "../../builtInData"
-import {ParamsToGroupByGroupName, getValueByType, getYakExecutorParam} from "../../editDetails/utils"
-import {ExpandAndRetract} from "../expandAndRetract/ExpandAndRetract"
-import {defPluginExecuteFormValue} from "./constants"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {grpcFetchExpressionToResult} from "@/pages/pluginHub/utils/grpc"
-import {getJsonSchemaListResult, JsonFormWrapper} from "@/components/JsonFormWrapper/JsonFormWrapper"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {JSONParseLog} from "@/utils/tool"
+  YakitFormDragger,
+  YakitFormDraggerContent,
+  YakitFormDraggerContentPath,
+} from '@/components/yakitUI/YakitForm/YakitForm'
+import { failed } from '@/utils/notification'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import classNames from 'classnames'
+import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
+import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectType'
+import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
+import { PluginExecuteExtraParamsRefProps } from './PluginExecuteExtraParams'
+import { DebugPluginRequest, apiCancelDebugPlugin, apiDebugPlugin, apiFetchOnlinePluginInfo } from '../../utils'
+import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { GetPluginLanguage } from '../../builtInData'
+import { ParamsToGroupByGroupName, getValueByType, getYakExecutorParam } from '../../editDetails/utils'
+import { ExpandAndRetract } from '../expandAndRetract/ExpandAndRetract'
+import { defPluginExecuteFormValue } from './constants'
+import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
+import { grpcFetchExpressionToResult } from '@/pages/pluginHub/utils/grpc'
+import { getJsonSchemaListResult, JsonFormWrapper } from '@/components/JsonFormWrapper/JsonFormWrapper'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { JSONParseLog } from '@/utils/tool'
 
-const PluginExecuteExtraParams = React.lazy(() => import("./PluginExecuteExtraParams"))
+const PluginExecuteExtraParams = React.lazy(() => import('./PluginExecuteExtraParams'))
 
 /**插件执行头部 */
 export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardProps> = React.memo((props) => {
-    const {
-        token,
-        plugin,
-        extraNode,
-        debugPluginStreamEvent,
-        progressList,
-        setRuntimeId,
-        runtimeId,
-        executeStatus,
-        setExecuteStatus,
-        linkPluginConfig,
-        onDownPlugin,
-        isHiddenUUID,
-        infoExtra,
-        hiddenUpdateBtn
-    } = props
+  const {
+    token,
+    plugin,
+    extraNode,
+    debugPluginStreamEvent,
+    progressList,
+    setRuntimeId,
+    runtimeId,
+    executeStatus,
+    setExecuteStatus,
+    linkPluginConfig,
+    onDownPlugin,
+    isHiddenUUID,
+    infoExtra,
+    hiddenUpdateBtn,
+  } = props
 
-    const [form] = Form.useForm()
-    const requestType = Form.useWatch("requestType", form)
+  const [form] = Form.useForm()
+  const requestType = Form.useWatch('requestType', form)
 
-    /**是否显示更新按钮 */
-    const [isShowUpdate, setIsShowUpdate] = useState<boolean>(false)
+  /**是否显示更新按钮 */
+  const [isShowUpdate, setIsShowUpdate] = useState<boolean>(false)
 
-    const [isExpand, setIsExpand] = useState<boolean>(true)
-    /**额外参数弹出框 */
-    const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
-    const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
-        ...defPluginExecuteFormValue
+  const [isExpand, setIsExpand] = useState<boolean>(true)
+  /**额外参数弹出框 */
+  const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+  const [extraParamsValue, setExtraParamsValue] = useState<PluginExecuteExtraFormValue>({
+    ...defPluginExecuteFormValue,
+  })
+
+  const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>({})
+
+  const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
+  const localPluginExecuteDetailHeardRef = useRef<HTMLDivElement>(null)
+
+  const jsonSchemaListRef = useRef<{
+    [key: string]: any
+  }>({})
+
+  const [inViewport = true] = useInViewport(localPluginExecuteDetailHeardRef)
+  const networkState = useNetwork()
+
+  /**必填的参数,作为页面上主要显示 */
+  const requiredParams: YakParamProps[] = useMemo(() => {
+    return plugin.Params?.filter((ele) => ele.Required) || []
+  }, [plugin.Params])
+  /** 选填参数数据 */
+  const customParams: YakParamProps[] = useMemo(() => {
+    return plugin.Params?.filter((ele) => !ele.Required) || []
+  }, [plugin.Params])
+  /**额外参数,根据参数组分类 */
+  const extraParamsGroup: YakExtraParamProps[] = useMemo(() => {
+    const paramsList = plugin.Params?.filter((ele) => !ele.Required) || []
+    return ParamsToGroupByGroupName(paramsList)
+  }, [plugin.Params])
+  useEffect(() => {
+    if (['yak', 'lua', 'mitm', 'codec'].includes(plugin.Type)) {
+      initFormValue()
+    } else {
+      form.resetFields()
+    }
+  }, [plugin.Params, plugin.ScriptName, plugin.Type])
+  useEffect(() => {
+    if (inViewport && networkState.online) {
+      getOnlinePlugin()
+    }
+  }, [inViewport, networkState.online])
+  const isExecuting = useCreation(() => {
+    if (executeStatus === 'process') return true
+    return false
+  }, [executeStatus])
+  /**本地插件和内置插件不做更新相关逻辑 */
+  const getOnlinePlugin = useMemoizedFn(() => {
+    if (!!plugin.isLocalPlugin) return
+    if (!!plugin.IsCorePlugin) return
+    apiFetchOnlinePluginInfo({ uuid: plugin.UUID }, true).then((info) => {
+      if (Number(info.updated_at || 0) > Number(plugin.UpdatedAt || 0)) {
+        setIsShowUpdate(true)
+      }
+    })
+  })
+  /**初始表单初始值 */
+  const initFormValue = useMemoizedFn(() => {
+    initRequiredFormValue()
+    initExtraFormValue()
+  })
+  const initRequiredFormValue = useMemoizedFn(() => {
+    // 必填参数
+    let initRequiredFormValue: CustomPluginExecuteFormValue = { ...defPluginExecuteFormValue, requestType: 'input' }
+    requiredParams.forEach((ele) => {
+      const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+      initRequiredFormValue = {
+        ...initRequiredFormValue,
+        [ele.Field]: value,
+      }
+    })
+    form.setFieldsValue({ ...initRequiredFormValue })
+  })
+  const initExtraFormValue = useMemoizedFn(() => {
+    // 额外参数
+    let initExtraFormValue: CustomPluginExecuteFormValue = {}
+    const extraParamsList = plugin.Params?.filter((ele) => !ele.Required) || []
+    extraParamsList.forEach((ele) => {
+      const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
+      initExtraFormValue = {
+        ...initExtraFormValue,
+        [ele.Field]: value,
+      }
+    })
+    switch (plugin.Type) {
+      case 'yak':
+      case 'lua':
+      case 'mitm':
+      case 'codec':
+        setCustomExtraParamsValue({ ...initExtraFormValue })
+        break
+
+      default:
+        break
+    }
+  })
+  /**yak/lua 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
+  const pluginParamsNodeByPluginType = useMemoizedFn((type: string) => {
+    switch (type) {
+      case 'yak':
+      case 'lua':
+        return (
+          <ExecuteEnterNodeByPluginParams
+            paramsList={requiredParams}
+            pluginType={plugin.Type}
+            isExecuting={isExecuting}
+            jsonSchemaListRef={jsonSchemaListRef}
+          />
+        )
+      case 'codec':
+        const codecItem: YakParamProps = {
+          Field: 'Input',
+          FieldVerbose: 'Input',
+          Required: true,
+          TypeVerbose: 'yak',
+          DefaultValue: '',
+          Help: 'Input',
+        }
+        return (
+          <>
+            {plugin.Params.length > 0 && requiredParams.length > 0 ? (
+              <ExecuteEnterNodeByPluginParams
+                paramsList={requiredParams}
+                pluginType={plugin.Type}
+                isExecuting={isExecuting}
+                jsonSchemaListRef={jsonSchemaListRef}
+              />
+            ) : null}
+            <OutputFormComponentsByType
+              key="Input-Input"
+              item={codecItem}
+              codeType="plaintext"
+              disabled={isExecuting}
+            />
+          </>
+        )
+      case 'mitm':
+        return (
+          <>
+            {plugin.Params.length > 0 && requiredParams.length > 0 ? (
+              <ExecuteEnterNodeByPluginParams
+                paramsList={requiredParams}
+                pluginType={plugin.Type}
+                isExecuting={isExecuting}
+                jsonSchemaListRef={jsonSchemaListRef}
+              />
+            ) : null}
+            <PluginFixFormParams form={form} disabled={isExecuting} />
+          </>
+        )
+      case 'port-scan':
+      case 'nuclei':
+        return <PluginFixFormParams form={form} disabled={isExecuting} />
+      default:
+        return <></>
+    }
+  })
+  /**开始执行 */
+  const onStartExecute = useMemoizedFn((value) => {
+    let yakExecutorParams: YakExecutorParam[] = []
+    yakExecutorParams = getYakExecutorParam({ ...value, ...customExtraParamsValue })
+    const input = value['Input']
+    const result = getJsonSchemaListResult(jsonSchemaListRef.current)
+
+    if (result.jsonSchemaError.length > 0) {
+      failed(`jsonSchema校验失败`)
+      return
+    }
+    result.jsonSchemaSuccess.forEach((item) => {
+      yakExecutorParams.push({
+        Key: item.key,
+        Value: JSON.stringify(item.value),
+      })
     })
 
-    const [customExtraParamsValue, setCustomExtraParamsValue] = useState<CustomPluginExecuteFormValue>({})
-
-    const pluginExecuteExtraParamsRef = useRef<PluginExecuteExtraParamsRefProps>()
-    const localPluginExecuteDetailHeardRef = useRef<HTMLDivElement>(null)
-
-    const jsonSchemaListRef = useRef<{
-        [key: string]: any
-    }>({})
-
-    const [inViewport = true] = useInViewport(localPluginExecuteDetailHeardRef)
-    const networkState = useNetwork()
-
-    /**必填的参数,作为页面上主要显示 */
-    const requiredParams: YakParamProps[] = useMemo(() => {
-        return plugin.Params?.filter((ele) => ele.Required) || []
-    }, [plugin.Params])
-    /** 选填参数数据 */
-    const customParams: YakParamProps[] = useMemo(() => {
-        return plugin.Params?.filter((ele) => !ele.Required) || []
-    }, [plugin.Params])
-    /**额外参数,根据参数组分类 */
-    const extraParamsGroup: YakExtraParamProps[] = useMemo(() => {
-        const paramsList = plugin.Params?.filter((ele) => !ele.Required) || []
-        return ParamsToGroupByGroupName(paramsList)
-    }, [plugin.Params])
-    useEffect(() => {
-        if (["yak", "lua", "mitm", "codec"].includes(plugin.Type)) {
-            initFormValue()
-        } else {
-            form.resetFields()
-        }
-    }, [plugin.Params, plugin.ScriptName, plugin.Type])
-    useEffect(() => {
-        if (inViewport && networkState.online) {
-            getOnlinePlugin()
-        }
-    }, [inViewport, networkState.online])
-    const isExecuting = useCreation(() => {
-        if (executeStatus === "process") return true
+    let executeParams: DebugPluginRequest = {
+      Code: '',
+      PluginType: plugin.Type,
+      Input: input,
+      HTTPRequestTemplate: {
+        ...extraParamsValue,
+        IsHttps: !!value.IsHttps,
+        IsRawHTTPRequest: value.requestType === 'original',
+        IsHttpFlowId: false,
+        HTTPFlowId: [],
+        RawHTTPRequest: value.rawHTTPRequest ? Buffer.from(value.rawHTTPRequest, 'utf8') : Buffer.from('', 'utf8'),
+      },
+      ExecParams: yakExecutorParams,
+      LinkPluginConfig: linkPluginConfig,
+      PluginName: plugin.ScriptName,
+    }
+    debugPluginStreamEvent.reset()
+    setRuntimeId('')
+    apiDebugPlugin({
+      params: executeParams,
+      token: token,
+      pluginCustomParams: plugin.Params,
+    }).then(() => {
+      setExecuteStatus('process')
+      setIsExpand(false)
+      debugPluginStreamEvent.start()
+    })
+  })
+  /**取消执行 */
+  const onStopExecute = useMemoizedFn((e) => {
+    e.stopPropagation()
+    apiCancelDebugPlugin(token).then(() => {
+      debugPluginStreamEvent.stop()
+      setExecuteStatus('finished')
+    })
+  })
+  /**在顶部的执行按钮 */
+  const onExecuteInTop = useMemoizedFn((e) => {
+    e.stopPropagation()
+    form
+      .validateFields()
+      .then(onStartExecute)
+      .catch(() => {
+        setIsExpand(true)
+      })
+  })
+  /**保存额外参数 */
+  const onSaveExtraParams = useMemoizedFn(
+    (v: { customValue: CustomPluginExecuteFormValue; fixedValue: PluginExecuteExtraFormValue }) => {
+      switch (plugin.Type) {
+        case 'yak':
+        case 'lua':
+          setCustomExtraParamsValue({ ...v.customValue })
+          break
+        case 'codec':
+        case 'mitm':
+          setCustomExtraParamsValue({ ...v.customValue })
+          setExtraParamsValue({ ...v.fixedValue })
+          break
+        case 'port-scan':
+        case 'nuclei':
+          setExtraParamsValue({ ...v.fixedValue })
+          break
+        default:
+          break
+      }
+      setExtraParamsVisible(false)
+    },
+  )
+  /**打开额外参数抽屉 */
+  const openExtraPropsDrawer = useMemoizedFn(() => {
+    if (isExecuting) return
+    setExtraParamsVisible(true)
+  })
+  const isShowExtraParamsButton = useMemo(() => {
+    switch (plugin.Type) {
+      case 'codec':
+        if (extraParamsGroup.length > 0) return true
         return false
-    }, [executeStatus])
-    /**本地插件和内置插件不做更新相关逻辑 */
-    const getOnlinePlugin = useMemoizedFn(() => {
-        if (!!plugin.isLocalPlugin) return
-        if (!!plugin.IsCorePlugin) return
-        apiFetchOnlinePluginInfo({uuid: plugin.UUID}, true).then((info) => {
-            if (Number(info.updated_at || 0) > Number(plugin.UpdatedAt || 0)) {
-                setIsShowUpdate(true)
-            }
-        })
-    })
-    /**初始表单初始值 */
-    const initFormValue = useMemoizedFn(() => {
-        initRequiredFormValue()
-        initExtraFormValue()
-    })
-    const initRequiredFormValue = useMemoizedFn(() => {
-        // 必填参数
-        let initRequiredFormValue: CustomPluginExecuteFormValue = {...defPluginExecuteFormValue, requestType: "input"}
-        requiredParams.forEach((ele) => {
-            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-            initRequiredFormValue = {
-                ...initRequiredFormValue,
-                [ele.Field]: value
-            }
-        })
-        form.setFieldsValue({...initRequiredFormValue})
-    })
-    const initExtraFormValue = useMemoizedFn(() => {
-        // 额外参数
-        let initExtraFormValue: CustomPluginExecuteFormValue = {}
-        const extraParamsList = plugin.Params?.filter((ele) => !ele.Required) || []
-        extraParamsList.forEach((ele) => {
-            const value = getValueByType(ele.DefaultValue, ele.TypeVerbose)
-            initExtraFormValue = {
-                ...initExtraFormValue,
-                [ele.Field]: value
-            }
-        })
-        switch (plugin.Type) {
-            case "yak":
-            case "lua":
-            case "mitm":
-            case "codec":
-                setCustomExtraParamsValue({...initExtraFormValue})
-                break
+      case 'mitm':
+        if (extraParamsGroup.length > 0) return true
+        return requestType === 'input'
+      case 'port-scan':
+      case 'nuclei':
+        if (requestType !== 'input') return false
+        return true
+      default:
+        return extraParamsGroup.length > 0
+    }
+  }, [extraParamsGroup.length, plugin.Type, requestType])
+  const executeExtraParams: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue = useMemo(() => {
+    switch (plugin.Type) {
+      case 'yak':
+      case 'lua':
+        return customExtraParamsValue
+      case 'codec':
+      case 'mitm':
+        return { ...customExtraParamsValue, ...extraParamsValue }
+      case 'port-scan':
+      case 'nuclei':
+        return extraParamsValue
+      default:
+        return {}
+    }
+  }, [plugin.Type, extraParamsValue, customExtraParamsValue])
+  const onExpand = useMemoizedFn((e) => {
+    e.stopPropagation()
+    setIsExpand(!isExpand)
+  })
+  const onDown = useMemoizedFn((e) => {
+    e.stopPropagation()
+    onDownPlugin()
+  })
 
-            default:
-                break
-        }
-    })
-    /**yak/lua 根据后端返的生成;codec/mitm/port-scan/nuclei前端固定*/
-    const pluginParamsNodeByPluginType = useMemoizedFn((type: string) => {
-        switch (type) {
-            case "yak":
-            case "lua":
-                return (
-                    <ExecuteEnterNodeByPluginParams
-                        paramsList={requiredParams}
-                        pluginType={plugin.Type}
-                        isExecuting={isExecuting}
-                        jsonSchemaListRef={jsonSchemaListRef}
-                    />
-                )
-            case "codec":
-                const codecItem: YakParamProps = {
-                    Field: "Input",
-                    FieldVerbose: "Input",
-                    Required: true,
-                    TypeVerbose: "yak",
-                    DefaultValue: "",
-                    Help: "Input"
-                }
-                return (
+  return (
+    <>
+      <ExpandAndRetract
+        isExpand={isExpand}
+        onExpand={onExpand}
+        className={styles['expand-retract']}
+        animationWrapperClassName={styles['expand-retract-animation-wrapper']}
+        status={executeStatus}
+      >
+        <PluginDetailHeader
+          pluginName={plugin.ScriptName}
+          help={plugin.Help}
+          tagMinWidth={120}
+          tags={plugin.Tags}
+          extraNode={
+            <div className={styles['plugin-head-executing-wrapper']} ref={localPluginExecuteDetailHeardRef}>
+              <div className={styles['plugin-head-executing']}>
+                {progressList.length === 1 && (
+                  <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
+                )}
+                {isExecuting ? (
+                  !isExpand && (
                     <>
-                        {plugin.Params.length > 0 && requiredParams.length > 0 ? (
-                            <ExecuteEnterNodeByPluginParams
-                                paramsList={requiredParams}
-                                pluginType={plugin.Type}
-                                isExecuting={isExecuting}
-                                jsonSchemaListRef={jsonSchemaListRef}
-                            />
-                        ) : null}
-                        <OutputFormComponentsByType
-                            key='Input-Input'
-                            item={codecItem}
-                            codeType='plaintext'
-                            disabled={isExecuting}
-                        />
+                      <YakitButton danger onClick={onStopExecute}>
+                        停止
+                      </YakitButton>
                     </>
-                )
-            case "mitm":
-                return (
-                    <>
-                        {plugin.Params.length > 0 && requiredParams.length > 0 ? (
-                            <ExecuteEnterNodeByPluginParams
-                                paramsList={requiredParams}
-                                pluginType={plugin.Type}
-                                isExecuting={isExecuting}
-                                jsonSchemaListRef={jsonSchemaListRef}
-                            />
-                        ) : null}
-                        <PluginFixFormParams form={form} disabled={isExecuting} />
-                    </>
-                )
-            case "port-scan":
-            case "nuclei":
-                return <PluginFixFormParams form={form} disabled={isExecuting} />
-            default:
-                return <></>
-        }
-    })
-    /**开始执行 */
-    const onStartExecute = useMemoizedFn((value) => {
-        let yakExecutorParams: YakExecutorParam[] = []
-        yakExecutorParams = getYakExecutorParam({...value, ...customExtraParamsValue})
-        const input = value["Input"]
-        const result = getJsonSchemaListResult(jsonSchemaListRef.current)
-
-        if (result.jsonSchemaError.length > 0) {
-            failed(`jsonSchema校验失败`)
-            return
-        }
-        result.jsonSchemaSuccess.forEach((item) => {
-            yakExecutorParams.push({
-                Key: item.key,
-                Value: JSON.stringify(item.value)
-            })
-        })
-
-        let executeParams: DebugPluginRequest = {
-            Code: "",
-            PluginType: plugin.Type,
-            Input: input,
-            HTTPRequestTemplate: {
-                ...extraParamsValue,
-                IsHttps: !!value.IsHttps,
-                IsRawHTTPRequest: value.requestType === "original",
-                IsHttpFlowId: false,
-                HTTPFlowId: [],
-                RawHTTPRequest: value.rawHTTPRequest
-                    ? Buffer.from(value.rawHTTPRequest, "utf8")
-                    : Buffer.from("", "utf8")
-            },
-            ExecParams: yakExecutorParams,
-            LinkPluginConfig: linkPluginConfig,
-            PluginName: plugin.ScriptName
-        }
-        debugPluginStreamEvent.reset()
-        setRuntimeId("")
-        apiDebugPlugin({
-            params: executeParams,
-            token: token,
-            pluginCustomParams: plugin.Params
-        }).then(() => {
-            setExecuteStatus("process")
-            setIsExpand(false)
-            debugPluginStreamEvent.start()
-        })
-    })
-    /**取消执行 */
-    const onStopExecute = useMemoizedFn((e) => {
-        e.stopPropagation()
-        apiCancelDebugPlugin(token).then(() => {
-            debugPluginStreamEvent.stop()
-            setExecuteStatus("finished")
-        })
-    })
-    /**在顶部的执行按钮 */
-    const onExecuteInTop = useMemoizedFn((e) => {
-        e.stopPropagation()
-        form.validateFields()
-            .then(onStartExecute)
-            .catch(() => {
-                setIsExpand(true)
-            })
-    })
-    /**保存额外参数 */
-    const onSaveExtraParams = useMemoizedFn(
-        (v: {customValue: CustomPluginExecuteFormValue; fixedValue: PluginExecuteExtraFormValue}) => {
-            switch (plugin.Type) {
-                case "yak":
-                case "lua":
-                    setCustomExtraParamsValue({...v.customValue})
-                    break
-                case "codec":
-                case "mitm":
-                    setCustomExtraParamsValue({...v.customValue})
-                    setExtraParamsValue({...v.fixedValue})
-                    break
-                case "port-scan":
-                case "nuclei":
-                    setExtraParamsValue({...v.fixedValue})
-                    break
-                default:
-                    break
-            }
-            setExtraParamsVisible(false)
-        }
-    )
-    /**打开额外参数抽屉 */
-    const openExtraPropsDrawer = useMemoizedFn(() => {
-        if (isExecuting) return
-        setExtraParamsVisible(true)
-    })
-    const isShowExtraParamsButton = useMemo(() => {
-        switch (plugin.Type) {
-            case "codec":
-                if (extraParamsGroup.length > 0) return true
-                return false
-            case "mitm":
-                if (extraParamsGroup.length > 0) return true
-                return requestType === "input"
-            case "port-scan":
-            case "nuclei":
-                if (requestType !== "input") return false
-                return true
-            default:
-                return extraParamsGroup.length > 0
-        }
-    }, [extraParamsGroup.length, plugin.Type, requestType])
-    const executeExtraParams: PluginExecuteExtraFormValue | CustomPluginExecuteFormValue = useMemo(() => {
-        switch (plugin.Type) {
-            case "yak":
-            case "lua":
-                return customExtraParamsValue
-            case "codec":
-            case "mitm":
-                return {...customExtraParamsValue, ...extraParamsValue}
-            case "port-scan":
-            case "nuclei":
-                return extraParamsValue
-            default:
-                return {}
-        }
-    }, [plugin.Type, extraParamsValue, customExtraParamsValue])
-    const onExpand = useMemoizedFn((e) => {
-        e.stopPropagation()
-        setIsExpand(!isExpand)
-    })
-    const onDown = useMemoizedFn((e) => {
-        e.stopPropagation()
-        onDownPlugin()
-    })
-
-    return (
-        <>
-            <ExpandAndRetract
-                isExpand={isExpand}
-                onExpand={onExpand}
-                className={styles["expand-retract"]}
-                animationWrapperClassName={styles["expand-retract-animation-wrapper"]}
-                status={executeStatus}
-            >
-                <PluginDetailHeader
-                    pluginName={plugin.ScriptName}
-                    help={plugin.Help}
-                    tagMinWidth={120}
-                    tags={plugin.Tags}
-                    extraNode={
-                        <div className={styles["plugin-head-executing-wrapper"]} ref={localPluginExecuteDetailHeardRef}>
-                            <div className={styles["plugin-head-executing"]}>
-                                {progressList.length === 1 && (
-                                    <PluginExecuteProgress
-                                        percent={progressList[0].progress}
-                                        name={progressList[0].id}
-                                    />
-                                )}
-                                {isExecuting ? (
-                                    !isExpand && (
-                                        <>
-                                            <YakitButton danger onClick={onStopExecute}>
-                                                停止
-                                            </YakitButton>
-                                        </>
-                                    )
-                                ) : (
-                                    <>
-                                        {!isExpand && <YakitButton onClick={onExecuteInTop}>执行</YakitButton>}
-                                        {extraNode}
-                                        {!hiddenUpdateBtn && isShowUpdate && (
-                                            <>
-                                                <div className='divider-style' />
-                                                <YakitButton type='primary' onClick={onDown}>
-                                                    更新
-                                                </YakitButton>
-                                            </>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    }
-                    img={plugin.HeadImg || ""}
-                    user={plugin.Author}
-                    pluginId={plugin.UUID}
-                    updated_at={plugin.UpdatedAt || 0}
-                    prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
-                        headImg: ele.HeadImg,
-                        userName: ele.UserName
-                    }))}
-                    type={plugin.Type}
-                    isHiddenUUID={isHiddenUUID}
-                    infoExtra={infoExtra}
-                />
-            </ExpandAndRetract>
-            <div
-                className={classNames(styles["plugin-execute-form-wrapper"], {
-                    [styles["plugin-execute-form-wrapper-hidden"]]: !isExpand
-                })}
-            >
-                <Form
-                    form={form}
-                    onFinish={onStartExecute}
-                    labelCol={{span: 6}}
-                    wrapperCol={{span: 12}} //这样设置是为了让输入框居中
-                    validateMessages={{
-                        /* eslint-disable no-template-curly-in-string */
-                        required: "${label} 是必填字段"
-                    }}
-                    labelWrap={true}
-                >
-                    {pluginParamsNodeByPluginType(plugin.Type)}
-                    <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                        <div className={styles["plugin-execute-form-operate"]}>
-                            {isExecuting ? (
-                                <YakitButton danger onClick={onStopExecute} size='large'>
-                                    停止
-                                </YakitButton>
-                            ) : (
-                                <YakitButton
-                                    className={styles["plugin-execute-form-operate-start"]}
-                                    htmlType='submit'
-                                    size='large'
-                                >
-                                    开始执行
-                                </YakitButton>
-                            )}
-                            {isShowExtraParamsButton && (
-                                <YakitButton
-                                    type='text'
-                                    onClick={openExtraPropsDrawer}
-                                    disabled={isExecuting}
-                                    size='large'
-                                >
-                                    额外参数
-                                </YakitButton>
-                            )}
-                        </div>
-                    </Form.Item>
-                </Form>
+                  )
+                ) : (
+                  <>
+                    {!isExpand && <YakitButton onClick={onExecuteInTop}>执行</YakitButton>}
+                    {extraNode}
+                    {!hiddenUpdateBtn && isShowUpdate && (
+                      <>
+                        <div className="divider-style" />
+                        <YakitButton type="primary" onClick={onDown}>
+                          更新
+                        </YakitButton>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-            {progressList.length > 1 && (
-                <div className={styles["plugin-head-executing-progress"]}>
-                    {progressList.map((ele, index) => (
-                        <React.Fragment key={ele.id}>
-                            {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
-                            <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                        </React.Fragment>
-                    ))}
-                </div>
-            )}
-            <React.Suspense fallback={<div>loading...</div>}>
-                <PluginExecuteExtraParams
-                    ref={pluginExecuteExtraParamsRef}
-                    pluginType={plugin.Type}
-                    customPluginParams={customParams}
-                    hiddenFixedParams={requestType !== "input"}
-                    extraParamsValue={executeExtraParams}
-                    extraParamsGroup={extraParamsGroup}
-                    visible={extraParamsVisible}
-                    setVisible={setExtraParamsVisible}
-                    onSave={onSaveExtraParams}
-                    jsonSchemaListRef={jsonSchemaListRef}
-                />
-            </React.Suspense>
-        </>
-    )
+          }
+          img={plugin.HeadImg || ''}
+          user={plugin.Author}
+          pluginId={plugin.UUID}
+          updated_at={plugin.UpdatedAt || 0}
+          prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
+            headImg: ele.HeadImg,
+            userName: ele.UserName,
+          }))}
+          type={plugin.Type}
+          isHiddenUUID={isHiddenUUID}
+          infoExtra={infoExtra}
+        />
+      </ExpandAndRetract>
+      <div
+        className={classNames(styles['plugin-execute-form-wrapper'], {
+          [styles['plugin-execute-form-wrapper-hidden']]: !isExpand,
+        })}
+      >
+        <Form
+          form={form}
+          onFinish={onStartExecute}
+          labelCol={{ span: 6 }}
+          wrapperCol={{ span: 12 }} //这样设置是为了让输入框居中
+          validateMessages={{
+            /* eslint-disable no-template-curly-in-string */
+            required: '${label} 是必填字段',
+          }}
+          labelWrap={true}
+        >
+          {pluginParamsNodeByPluginType(plugin.Type)}
+          <Form.Item colon={false} label={' '} style={{ marginBottom: 0 }}>
+            <div className={styles['plugin-execute-form-operate']}>
+              {isExecuting ? (
+                <YakitButton danger onClick={onStopExecute} size="large">
+                  停止
+                </YakitButton>
+              ) : (
+                <YakitButton className={styles['plugin-execute-form-operate-start']} htmlType="submit" size="large">
+                  开始执行
+                </YakitButton>
+              )}
+              {isShowExtraParamsButton && (
+                <YakitButton type="text" onClick={openExtraPropsDrawer} disabled={isExecuting} size="large">
+                  额外参数
+                </YakitButton>
+              )}
+            </div>
+          </Form.Item>
+        </Form>
+      </div>
+      {progressList.length > 1 && (
+        <div className={styles['plugin-head-executing-progress']}>
+          {progressList.map((ele, index) => (
+            <React.Fragment key={ele.id}>
+              {index !== 0 && <Divider type="vertical" style={{ margin: 0, top: 2 }} />}
+              <PluginExecuteProgress percent={ele.progress} name={ele.id} />
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+      <React.Suspense fallback={<div>loading...</div>}>
+        <PluginExecuteExtraParams
+          ref={pluginExecuteExtraParamsRef}
+          pluginType={plugin.Type}
+          customPluginParams={customParams}
+          hiddenFixedParams={requestType !== 'input'}
+          extraParamsValue={executeExtraParams}
+          extraParamsGroup={extraParamsGroup}
+          visible={extraParamsVisible}
+          setVisible={setExtraParamsVisible}
+          onSave={onSaveExtraParams}
+          jsonSchemaListRef={jsonSchemaListRef}
+        />
+      </React.Suspense>
+    </>
+  )
 })
 
 /**执行的入口通过插件参数生成组件 */
 export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
-    const {paramsList, pluginType, isExecuting, jsonSchemaListRef, jsonSchemaInitial} = props
+  const { paramsList, pluginType, isExecuting, jsonSchemaListRef, jsonSchemaInitial } = props
 
-    return (
-        <>
-            {paramsList.map((item) => (
-                <React.Fragment key={item.Field + item.FieldVerbose}>
-                    <FormContentItemByType
-                        item={item}
-                        pluginType={pluginType}
-                        disabled={isExecuting}
-                        jsonSchemaListRef={jsonSchemaListRef}
-                        jsonSchemaInitial={jsonSchemaInitial}
-                    />
-                </React.Fragment>
-            ))}
-        </>
-    )
+  return (
+    <>
+      {paramsList.map((item) => (
+        <React.Fragment key={item.Field + item.FieldVerbose}>
+          <FormContentItemByType
+            item={item}
+            pluginType={pluginType}
+            disabled={isExecuting}
+            jsonSchemaListRef={jsonSchemaListRef}
+            jsonSchemaInitial={jsonSchemaInitial}
+          />
+        </React.Fragment>
+      ))}
+    </>
+  )
 })
 /**插件执行输入》输出form表单的组件item */
 export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React.memo((props) => {
-    const {item, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial} = props
-    const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
-    let extraSetting: FormExtraSettingProps | undefined = undefined
-    try {
-        extraSetting = JSONParseLog(item.ExtraSetting || "{}", {
-            page: "LocalPluginExecuteDetailHeard",
-            fun: "FormContentItemByType"
-        }) || {
-            double: false,
-            data: []
-        }
-        if (extraSetting && extraSetting.data) {
-            extraSetting.data = extraSetting.data.map((item) => {
-                return {
-                    key: item?.key,
-                    label: item?.label || item?.key || item?.value,
-                    value: item?.value
-                }
-            })
-        }
-    } catch (error) {
-        failed(t("FormContentItemByType.parameter_config_data_error"))
+  const { item, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial } = props
+  const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi'])
+  let extraSetting: FormExtraSettingProps | undefined = undefined
+  try {
+    extraSetting = JSONParseLog(item.ExtraSetting || '{}', {
+      page: 'LocalPluginExecuteDetailHeard',
+      fun: 'FormContentItemByType',
+    }) || {
+      double: false,
+      data: [],
     }
-    switch (item.TypeVerbose) {
-        // 单选并获取文件内容
-        case "upload-file-content":
-            return (
-                <YakitFormDraggerContent
-                    className={styles["plugin-execute-form-item"]}
-                    formItemProps={{
-                        name: item.Field,
-                        label: item.FieldVerbose || item.Field,
-                        rules: [{required: item.Required}]
-                    }}
-                    accept='.txt,.xlsx,.xls,.csv'
-                    textareaProps={{
-                        placeholder: t("FormContentItemByType.enter_content_comma_separated"),
-                        rows: 3
-                    }}
-                    help={t("YakitDraggerContent.drag_files_tip")}
-                    disabled={disabled}
-                />
-            )
-        // 单选文件-路径
-        case "upload-path":
-            return (
-                <YakitFormDragger
-                    className={styles["plugin-execute-form-item"]}
-                    formItemProps={{
-                        name: item.Field,
-                        label: item.FieldVerbose || item.Field,
-                        rules: [{required: item.Required}]
-                    }}
-                    isShowPathNumber={false}
-                    selectType='file'
-                    multiple={false}
-                    disabled={disabled}
-                />
-            )
-        // 批量文件-路径
-        case "multiple-file-path":
-            return (
-                <YakitFormDragger
-                    className={styles["plugin-execute-form-item"]}
-                    formItemProps={{
-                        name: item.Field,
-                        label: item.FieldVerbose || item.Field,
-                        rules: [{required: item.Required}]
-                    }}
-                    renderType='textarea'
-                    selectType='file'
-                    disabled={disabled}
-                />
-            )
-        // 单选文件夹-路径
-        case "upload-folder-path":
-            return (
-                <YakitFormDragger
-                    className={styles["plugin-execute-form-item"]}
-                    formItemProps={{
-                        name: item.Field,
-                        label: item.FieldVerbose || item.Field,
-                        rules: [{required: item.Required}]
-                    }}
-                    isShowPathNumber={false}
-                    selectType='folder'
-                    multiple={false}
-                    help={t("YakitFormDragger.drag_folder_or_click_here")}
-                    disabled={disabled}
-                    autoCompleteProps={{
-                        ref: item.cacheRef,
-                        cacheHistoryDataKey: item.cacheHistoryDataKey
-                    }}
-                    renderType={item.cacheHistoryDataKey ? "autoComplete" : undefined}
-                />
-            )
-        // 其他基础类型
-        default:
-            return (
-                <OutputFormComponentsByType
-                    item={item}
-                    extraSetting={extraSetting}
-                    codeType={pluginType}
-                    disabled={disabled}
-                    jsonSchemaListRef={jsonSchemaListRef}
-                    jsonSchemaInitial={jsonSchemaInitial}
-                />
-            )
+    if (extraSetting && extraSetting.data) {
+      extraSetting.data = extraSetting.data.map((item) => {
+        return {
+          key: item?.key,
+          label: item?.label || item?.key || item?.value,
+          value: item?.value,
+        }
+      })
     }
+  } catch (error) {
+    failed(t('FormContentItemByType.parameter_config_data_error'))
+  }
+  switch (item.TypeVerbose) {
+    // 单选并获取文件内容
+    case 'upload-file-content':
+      return (
+        <YakitFormDraggerContent
+          className={styles['plugin-execute-form-item']}
+          formItemProps={{
+            name: item.Field,
+            label: item.FieldVerbose || item.Field,
+            rules: [{ required: item.Required }],
+          }}
+          accept=".txt,.xlsx,.xls,.csv"
+          textareaProps={{
+            placeholder: t('FormContentItemByType.enter_content_comma_separated'),
+            rows: 3,
+          }}
+          help={t('YakitDraggerContent.drag_files_tip')}
+          disabled={disabled}
+        />
+      )
+    // 单选文件-路径
+    case 'upload-path':
+      return (
+        <YakitFormDragger
+          className={styles['plugin-execute-form-item']}
+          formItemProps={{
+            name: item.Field,
+            label: item.FieldVerbose || item.Field,
+            rules: [{ required: item.Required }],
+          }}
+          isShowPathNumber={false}
+          selectType="file"
+          multiple={false}
+          disabled={disabled}
+        />
+      )
+    // 批量文件-路径
+    case 'multiple-file-path':
+      return (
+        <YakitFormDragger
+          className={styles['plugin-execute-form-item']}
+          formItemProps={{
+            name: item.Field,
+            label: item.FieldVerbose || item.Field,
+            rules: [{ required: item.Required }],
+          }}
+          renderType="textarea"
+          selectType="file"
+          disabled={disabled}
+        />
+      )
+    // 单选文件夹-路径
+    case 'upload-folder-path':
+      return (
+        <YakitFormDragger
+          className={styles['plugin-execute-form-item']}
+          formItemProps={{
+            name: item.Field,
+            label: item.FieldVerbose || item.Field,
+            rules: [{ required: item.Required }],
+          }}
+          isShowPathNumber={false}
+          selectType="folder"
+          multiple={false}
+          help={t('YakitFormDragger.drag_folder_or_click_here')}
+          disabled={disabled}
+          autoCompleteProps={{
+            ref: item.cacheRef,
+            cacheHistoryDataKey: item.cacheHistoryDataKey,
+          }}
+          renderType={item.cacheHistoryDataKey ? 'autoComplete' : undefined}
+        />
+      )
+    // 其他基础类型
+    default:
+      return (
+        <OutputFormComponentsByType
+          item={item}
+          extraSetting={extraSetting}
+          codeType={pluginType}
+          disabled={disabled}
+          jsonSchemaListRef={jsonSchemaListRef}
+          jsonSchemaInitial={jsonSchemaInitial}
+        />
+      )
+  }
 })
 
 /**执行表单单个项 */
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
-    const {item, extraSetting, codeType, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi"])
-    const [validateStatus, setValidateStatus] = useState<"success" | "error">("success")
+  const { item, extraSetting, codeType, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial } = props
+  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const [validateStatus, setValidateStatus] = useState<'success' | 'error'>('success')
 
-    const formProps = {
-        rules: [{required: item.Required}],
-        label: item.FieldVerbose || item.Field,
-        name: item.Field,
-        className: styles["plugin-execute-form-item"],
-        tooltip: item.Help
-            ? {
-                  icon: <OutlineInformationcircleIcon />,
-                  title: item.Help
-              }
-            : null
-    }
-    const onValidateStatus = useDebounceFn(
-        (value: "success" | "error") => {
-            setValidateStatus(value)
-        },
-        {wait: 200, leading: true}
-    ).run
-
-    const [additionalConfig, setAdditionalConfig] = useState<{inputOption: {label: string; value: any}[]}>()
-    useEffect(() => {
-        const {TypeVerbose, SuggestionDataExpression} = item
-        setAdditionalConfig(undefined)
-        if (TypeVerbose === "string") {
-            if (SuggestionDataExpression) {
-                // 输入框提供可选择选项
-                grpcFetchExpressionToResult({
-                    Expression: item.SuggestionDataExpression || "",
-                    ImportYaklangLibs: true
-                })
-                    .then((res) => {
-                        const {BoolResult, Result} = res
-                        if (BoolResult && Result) {
-                            try {
-                                let arr: string[] = JSONParseLog(Result, {
-                                    page: "LocalPluginExecuteDetailHeard",
-                                    fun: "grpcFetchExpressionToResult"
-                                })
-                                !Array.isArray(arr) && (arr = [])
-                                setAdditionalConfig({
-                                    inputOption: arr.map((item) => ({
-                                        label: item,
-                                        value: item
-                                    }))
-                                })
-                            } catch (error) {}
-                        }
-                    })
-                    .catch(() => {})
-            }
+  const formProps = {
+    rules: [{ required: item.Required }],
+    label: item.FieldVerbose || item.Field,
+    name: item.Field,
+    className: styles['plugin-execute-form-item'],
+    tooltip: item.Help
+      ? {
+          icon: <OutlineInformationcircleIcon />,
+          title: item.Help,
         }
-    }, [item])
+      : null,
+  }
+  const onValidateStatus = useDebounceFn(
+    (value: 'success' | 'error') => {
+      setValidateStatus(value)
+    },
+    { wait: 200, leading: true },
+  ).run
 
-    switch (item.TypeVerbose) {
-        case "string":
-            return (
-                <Form.Item {...formProps}>
-                    <YakitAutoComplete options={additionalConfig?.inputOption || []} disabled={disabled}>
-                        <YakitInput placeholder={t("YakitInput.please_enter")} />
-                    </YakitAutoComplete>
-                </Form.Item>
-            )
-        case "text":
-            return (
-                <Form.Item {...formProps}>
-                    <YakitInput.TextArea placeholder={t("YakitInput.please_enter")} disabled={disabled} />
-                </Form.Item>
-            )
-        case "uint":
-            return (
-                <Form.Item
-                    {...formProps}
-                    normalize={(value) => {
-                        return String(value).replace(/\D/g, "")
-                    }}
-                >
-                    <YakitInputNumber precision={0} min={0} disabled={disabled} />
-                </Form.Item>
-            )
-        case "float":
-            return (
-                <Form.Item {...formProps}>
-                    <YakitInputNumber step={0.1} disabled={disabled} min={0} />
-                </Form.Item>
-            )
-        case "boolean":
-            return (
-                <Form.Item {...formProps} valuePropName='checked'>
-                    <YakitSwitch size='large' disabled={disabled} />
-                </Form.Item>
-            )
-        case "select":
-            let selectProps: YakitSelectProps = {
-                options: extraSetting?.data || []
-            }
-            if (extraSetting?.double) {
-                selectProps = {
-                    ...selectProps,
-                    mode: "tags"
-                }
-            }
-            return (
-                <Form.Item {...formProps}>
-                    <YakitSelect {...selectProps} disabled={disabled} />
-                </Form.Item>
-            )
-        case "http-packet":
-            const defaultValue = item.DefaultValue || ""
-            return (
-                <Form.Item
-                    {...formProps}
-                    rules={[
-                        {required: item.Required},
-                        {
-                            validator: async (rule, value) => {
-                                if (item.Required && value.length === 0) {
-                                    onValidateStatus("error")
-                                    return Promise.reject()
-                                }
-                                if (validateStatus === "error") onValidateStatus("success")
-                                return Promise.resolve()
-                            }
-                        }
-                    ]}
-                    className={classNames(formProps.className, styles["code-wrapper"], {
-                        [styles["code-error-wrapper"]]: validateStatus === "error"
-                    })}
-                    initialValue={defaultValue}
-                    trigger='setValue'
-                    validateTrigger='setValue'
-                    validateStatus={validateStatus}
-                    help={
-                        validateStatus === "error"
-                            ? t("YakitForm.field_required_with_label", {label: formProps.label})
-                            : ""
-                    }
-                >
-                    <HTTPPacketYakitEditor
-                        type='http'
-                        originValue={defaultValue}
-                        readOnly={disabled}
-                        onlyBasicMenu={true}
-                        noLineNumber={true}
-                        noMiniMap={true}
-                    />
-                </Form.Item>
-            )
-        case "yak":
-            let language: string = pluginType || ""
-            try {
-                const info = JSONParseLog(item.ExtraSetting || "", {
-                    page: "LocalPluginExecuteDetailHeard",
-                    fun: "yak"
-                }) as PluginParamDataEditorProps
-                language = info?.language || pluginType || ""
-            } catch (error) {}
-            language = GetPluginLanguage(language || codeType || "yak")
-
-            return (
-                <Form.Item
-                    {...formProps}
-                    rules={[
-                        {required: item.Required},
-                        {
-                            validator: async (rule, value) => {
-                                if (item.Required && value.length === 0) {
-                                    onValidateStatus("error")
-                                    return Promise.reject()
-                                }
-                                if (validateStatus === "error") onValidateStatus("success")
-                                return Promise.resolve()
-                            }
-                        }
-                    ]}
-                    className={classNames(formProps.className, styles["code-wrapper"], {
-                        [styles["code-error-wrapper"]]: validateStatus === "error"
-                    })}
-                    initialValue={item.DefaultValue || ""}
-                    trigger='setValue'
-                    validateTrigger='setValue'
-                    validateStatus={validateStatus}
-                    help={
-                        validateStatus === "error"
-                            ? t("YakitForm.field_required_with_label", {label: formProps.label})
-                            : ""
-                    }
-                >
-                    <YakitEditor type={language} readOnly={disabled} noLineNumber={true} noMiniMap={true} />
-                </Form.Item>
-            )
-        case "json":
-            if (typeof jsonSchemaListRef?.current !== "object") return <></>
-            let schema: any = {}
-            let uiSchema: any = {}
-            let value: any = undefined
-            try {
-                schema = JSONParseLog(item?.JsonSchema || "{}", {page: "LocalPluginExecuteDetailHeard", fun: "schema"})
-                uiSchema = JSONParseLog(item?.UISchema || "{}", {
-                    page: "LocalPluginExecuteDetailHeard",
-                    fun: "uiSchema"
+  const [additionalConfig, setAdditionalConfig] = useState<{ inputOption: { label: string; value: any }[] }>()
+  useEffect(() => {
+    const { TypeVerbose, SuggestionDataExpression } = item
+    setAdditionalConfig(undefined)
+    if (TypeVerbose === 'string') {
+      if (SuggestionDataExpression) {
+        // 输入框提供可选择选项
+        grpcFetchExpressionToResult({
+          Expression: item.SuggestionDataExpression || '',
+          ImportYaklangLibs: true,
+        })
+          .then((res) => {
+            const { BoolResult, Result } = res
+            if (BoolResult && Result) {
+              try {
+                let arr: string[] = JSONParseLog(Result, {
+                  page: 'LocalPluginExecuteDetailHeard',
+                  fun: 'grpcFetchExpressionToResult',
                 })
-                if (jsonSchemaInitial && jsonSchemaInitial[item.Field]) {
-                    value = JSONParseLog(jsonSchemaInitial[item.Field], {
-                        page: "LocalPluginExecuteDetailHeard",
-                        fun: "jsonSchemaInitial"
-                    })
-                }
-            } catch (error) {
-                console.error("Parse JsonSchema failed:", error)
+                !Array.isArray(arr) && (arr = [])
+                setAdditionalConfig({
+                  inputOption: arr.map((item) => ({
+                    label: item,
+                    value: item,
+                  })),
+                })
+              } catch (error) {}
             }
-            return (
-                <JsonFormWrapper
-                    field={item.Field}
-                    schema={schema}
-                    uiSchema={uiSchema}
-                    jsonSchemaListRef={jsonSchemaListRef}
-                    disabled={disabled}
-                    value={value}
-                />
-            )
-        default:
-            return <></>
+          })
+          .catch(() => {})
+      }
     }
+  }, [item])
+
+  switch (item.TypeVerbose) {
+    case 'string':
+      return (
+        <Form.Item {...formProps}>
+          <YakitAutoComplete options={additionalConfig?.inputOption || []} disabled={disabled}>
+            <YakitInput placeholder={t('YakitInput.please_enter')} />
+          </YakitAutoComplete>
+        </Form.Item>
+      )
+    case 'text':
+      return (
+        <Form.Item {...formProps}>
+          <YakitInput.TextArea placeholder={t('YakitInput.please_enter')} disabled={disabled} />
+        </Form.Item>
+      )
+    case 'uint':
+      return (
+        <Form.Item
+          {...formProps}
+          normalize={(value) => {
+            return String(value).replace(/\D/g, '')
+          }}
+        >
+          <YakitInputNumber precision={0} min={0} disabled={disabled} />
+        </Form.Item>
+      )
+    case 'float':
+      return (
+        <Form.Item {...formProps}>
+          <YakitInputNumber step={0.1} disabled={disabled} min={0} />
+        </Form.Item>
+      )
+    case 'boolean':
+      return (
+        <Form.Item {...formProps} valuePropName="checked">
+          <YakitSwitch size="large" disabled={disabled} />
+        </Form.Item>
+      )
+    case 'select':
+      let selectProps: YakitSelectProps = {
+        options: extraSetting?.data || [],
+      }
+      if (extraSetting?.double) {
+        selectProps = {
+          ...selectProps,
+          mode: 'tags',
+        }
+      }
+      return (
+        <Form.Item {...formProps}>
+          <YakitSelect {...selectProps} disabled={disabled} />
+        </Form.Item>
+      )
+    case 'http-packet':
+      const defaultValue = item.DefaultValue || ''
+      return (
+        <Form.Item
+          {...formProps}
+          rules={[
+            { required: item.Required },
+            {
+              validator: async (rule, value) => {
+                if (item.Required && value.length === 0) {
+                  onValidateStatus('error')
+                  return Promise.reject()
+                }
+                if (validateStatus === 'error') onValidateStatus('success')
+                return Promise.resolve()
+              },
+            },
+          ]}
+          className={classNames(formProps.className, styles['code-wrapper'], {
+            [styles['code-error-wrapper']]: validateStatus === 'error',
+          })}
+          initialValue={defaultValue}
+          trigger="setValue"
+          validateTrigger="setValue"
+          validateStatus={validateStatus}
+          help={validateStatus === 'error' ? t('YakitForm.field_required_with_label', { label: formProps.label }) : ''}
+        >
+          <HTTPPacketYakitEditor
+            type="http"
+            originValue={defaultValue}
+            readOnly={disabled}
+            onlyBasicMenu={true}
+            noLineNumber={true}
+            noMiniMap={true}
+          />
+        </Form.Item>
+      )
+    case 'yak':
+      let language: string = pluginType || ''
+      try {
+        const info = JSONParseLog(item.ExtraSetting || '', {
+          page: 'LocalPluginExecuteDetailHeard',
+          fun: 'yak',
+        }) as PluginParamDataEditorProps
+        language = info?.language || pluginType || ''
+      } catch (error) {}
+      language = GetPluginLanguage(language || codeType || 'yak')
+
+      return (
+        <Form.Item
+          {...formProps}
+          rules={[
+            { required: item.Required },
+            {
+              validator: async (rule, value) => {
+                if (item.Required && value.length === 0) {
+                  onValidateStatus('error')
+                  return Promise.reject()
+                }
+                if (validateStatus === 'error') onValidateStatus('success')
+                return Promise.resolve()
+              },
+            },
+          ]}
+          className={classNames(formProps.className, styles['code-wrapper'], {
+            [styles['code-error-wrapper']]: validateStatus === 'error',
+          })}
+          initialValue={item.DefaultValue || ''}
+          trigger="setValue"
+          validateTrigger="setValue"
+          validateStatus={validateStatus}
+          help={validateStatus === 'error' ? t('YakitForm.field_required_with_label', { label: formProps.label }) : ''}
+        >
+          <YakitEditor type={language} readOnly={disabled} noLineNumber={true} noMiniMap={true} />
+        </Form.Item>
+      )
+    case 'json':
+      if (typeof jsonSchemaListRef?.current !== 'object') return <></>
+      let schema: any = {}
+      let uiSchema: any = {}
+      let value: any = undefined
+      try {
+        schema = JSONParseLog(item?.JsonSchema || '{}', { page: 'LocalPluginExecuteDetailHeard', fun: 'schema' })
+        uiSchema = JSONParseLog(item?.UISchema || '{}', {
+          page: 'LocalPluginExecuteDetailHeard',
+          fun: 'uiSchema',
+        })
+        if (jsonSchemaInitial && jsonSchemaInitial[item.Field]) {
+          value = JSONParseLog(jsonSchemaInitial[item.Field], {
+            page: 'LocalPluginExecuteDetailHeard',
+            fun: 'jsonSchemaInitial',
+          })
+        }
+      } catch (error) {
+        console.error('Parse JsonSchema failed:', error)
+      }
+      return (
+        <JsonFormWrapper
+          field={item.Field}
+          schema={schema}
+          uiSchema={uiSchema}
+          jsonSchemaListRef={jsonSchemaListRef}
+          disabled={disabled}
+          value={value}
+        />
+      )
+    default:
+      return <></>
+  }
 }
 
 export const PluginExecuteProgress: React.FC<PluginExecuteProgressProps> = React.memo((props) => {
-    const {percent, name} = props
-    return (
-        <div className={styles["plugin-execute-progress-wrapper"]}>
-            <div className={styles["plugin-execute-progress-name"]}>
-                <span className='content-ellipsis'>{name}</span>
-            </div>
-            <Progress
-                strokeColor='var(--Colors-Use-Main-Primary)'
-                trailColor='var(--Colors-Use-Neutral-Bg)'
-                percent={Math.trunc(percent * 100)}
-                format={(percent) => `${percent}%`}
-            />
-        </div>
-    )
+  const { percent, name } = props
+  return (
+    <div className={styles['plugin-execute-progress-wrapper']}>
+      <div className={styles['plugin-execute-progress-name']}>
+        <span className="content-ellipsis">{name}</span>
+      </div>
+      <Progress
+        strokeColor="var(--Colors-Use-Main-Primary)"
+        trailColor="var(--Colors-Use-Neutral-Bg)"
+        percent={Math.trunc(percent * 100)}
+        format={(percent) => `${percent}%`}
+      />
+    </div>
+  )
 })
 /**固定的插件类型 mitm/port-scan/nuclei 显示的UI */
 export const PluginFixFormParams: React.FC<PluginFixFormParamsProps> = React.memo((props) => {
-    const {
-        form,
-        disabled,
-        type = "single",
-        rawHTTPRequest = "",
-        MockHTTPResponse = "",
-        inputType,
-        setInputType,
-        isShowMockHTTPResponse
-    } = props
-    const {t, i18n} = useI18nNamespaces(["plugin", "yakitUi"])
+  const {
+    form,
+    disabled,
+    type = 'single',
+    rawHTTPRequest = '',
+    MockHTTPResponse = '',
+    inputType,
+    setInputType,
+    isShowMockHTTPResponse,
+  } = props
+  const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi'])
 
-    const requestType: RequestType = Form.useWatch("requestType", form)
-    const isShowResponse: boolean = Form.useWatch("simulationResponse", form)
-    const rawItem = useMemo(() => {
-        const codeItem: YakParamProps = {
-            Field: "rawHTTPRequest",
-            FieldVerbose: t("PluginFixFormParams.data_packet"),
-            Required: true,
-            TypeVerbose: "http-packet",
-            DefaultValue: rawHTTPRequest,
-            Help: ""
-        }
-        return codeItem
-    }, [rawHTTPRequest, i18n.language])
+  const requestType: RequestType = Form.useWatch('requestType', form)
+  const isShowResponse: boolean = Form.useWatch('simulationResponse', form)
+  const rawItem = useMemo(() => {
+    const codeItem: YakParamProps = {
+      Field: 'rawHTTPRequest',
+      FieldVerbose: t('PluginFixFormParams.data_packet'),
+      Required: true,
+      TypeVerbose: 'http-packet',
+      DefaultValue: rawHTTPRequest,
+      Help: '',
+    }
+    return codeItem
+  }, [rawHTTPRequest, i18n.language])
 
-    const mockItem = useMemo(() => {
-        const codeItem: YakParamProps = {
-            Field: "mockHTTPResponse",
-            FieldVerbose: t("PluginFixFormParams.data_packet"),
-            Required: true,
-            TypeVerbose: "http-packet",
-            DefaultValue: MockHTTPResponse,
-            Help: ""
-        }
-        return codeItem
-    }, [MockHTTPResponse, i18n.language])
+  const mockItem = useMemo(() => {
+    const codeItem: YakParamProps = {
+      Field: 'mockHTTPResponse',
+      FieldVerbose: t('PluginFixFormParams.data_packet'),
+      Required: true,
+      TypeVerbose: 'http-packet',
+      DefaultValue: MockHTTPResponse,
+      Help: '',
+    }
+    return codeItem
+  }, [MockHTTPResponse, i18n.language])
 
-    const requestTypeOptions = useCreation(() => {
-        if (type === "single") {
-            return [
-                {
-                    value: "original",
-                    label: t("PluginFixFormParams.original_request")
-                },
-                {
-                    value: "input",
-                    label: t("PluginFixFormParams.request_configuration")
-                }
-            ]
-        }
-        return [
-            {
-                value: "original",
-                label: t("PluginFixFormParams.original_request")
-            },
-            {
-                value: "input",
-                label: t("PluginFixFormParams.request_configuration")
-            },
-            {
-                value: "httpFlowId",
-                label: t("PluginFixFormParams.request_id")
-            }
-        ]
-    }, [type, i18n.language])
-    return (
+  const requestTypeOptions = useCreation(() => {
+    if (type === 'single') {
+      return [
+        {
+          value: 'original',
+          label: t('PluginFixFormParams.original_request'),
+        },
+        {
+          value: 'input',
+          label: t('PluginFixFormParams.request_configuration'),
+        },
+      ]
+    }
+    return [
+      {
+        value: 'original',
+        label: t('PluginFixFormParams.original_request'),
+      },
+      {
+        value: 'input',
+        label: t('PluginFixFormParams.request_configuration'),
+      },
+      {
+        value: 'httpFlowId',
+        label: t('PluginFixFormParams.request_id'),
+      },
+    ]
+  }, [type, i18n.language])
+  return (
+    <>
+      <Form.Item label="HTTPS" name="IsHttps" valuePropName="checked" initialValue={false}>
+        <YakitSwitch size="large" disabled={disabled} />
+      </Form.Item>
+      <Form.Item label={t('PluginFixFormParams.request_type')} name="requestType" initialValue="input">
+        <YakitRadioButtons buttonStyle="solid" options={requestTypeOptions} disabled={disabled} />
+      </Form.Item>
+      {requestType === 'original' && <OutputFormComponentsByType item={rawItem} disabled={disabled} />}
+      {requestType === 'input' && (
         <>
-            <Form.Item label='HTTPS' name='IsHttps' valuePropName='checked' initialValue={false}>
-                <YakitSwitch size='large' disabled={disabled} />
-            </Form.Item>
-            <Form.Item label={t("PluginFixFormParams.request_type")} name='requestType' initialValue='input'>
-                <YakitRadioButtons buttonStyle='solid' options={requestTypeOptions} disabled={disabled} />
-            </Form.Item>
-            {requestType === "original" && <OutputFormComponentsByType item={rawItem} disabled={disabled} />}
-            {requestType === "input" && (
-                <>
-                    {inputType && setInputType ? (
-                        <YakitFormDraggerContentPath
-                            className={styles["plugin-execute-form-item"]}
-                            formItemProps={{
-                                name: "Input",
-                                label: t("PluginFixFormParams.scan_target"),
-                                rules: [
-                                    {
-                                        required: true,
-                                        message: t("YakitForm.field_required_with_label", {
-                                            label: t("PluginFixFormParams.scan_target")
-                                        })
-                                    }
-                                ]
-                            }}
-                            accept='.txt,.xlsx,.xls,.csv'
-                            textareaProps={{
-                                placeholder: t("PluginFixFormParams.please_enter_scan_target"),
-                                rows: 3
-                            }}
-                            help={t("YakitDraggerContent.drag_files_tip")}
-                            disabled={disabled}
-                            valueSeparator={"\r\n"}
-                            onTextAreaType={setInputType}
-                            textAreaType={inputType}
-                        />
-                    ) : (
-                        <YakitFormDraggerContent
-                            className={styles["plugin-execute-form-item"]}
-                            formItemProps={{
-                                name: "Input",
-                                label: t("PluginFixFormParams.scan_target"),
-                                rules: [
-                                    {
-                                        required: true,
-                                        message: t("YakitForm.field_required_with_label", {
-                                            label: t("PluginFixFormParams.scan_target")
-                                        })
-                                    }
-                                ]
-                            }}
-                            accept='.txt,.xlsx,.xls,.csv'
-                            textareaProps={{
-                                placeholder: t("PluginFixFormParams.please_enter_scan_target"),
-                                rows: 3
-                            }}
-                            help={t("YakitDraggerContent.drag_files_tip")}
-                            disabled={disabled}
-                            valueSeparator={"\r\n"}
-                        />
-                    )}
-                </>
-            )}
-            {requestType === "httpFlowId" && (
-                <Form.Item label={t("PluginFixFormParams.request_id")} name='httpFlowId' rules={[{required: true}]}>
-                    <YakitInput.TextArea
-                        placeholder={t("PluginFixFormParams.enter_request_id_comma_separated")}
-                        disabled={disabled}
-                    />
-                </Form.Item>
-            )}
-            {isShowMockHTTPResponse && (
-                <Form.Item
-                    label={t("PluginFixFormParams.simulation_response")}
-                    name='simulationResponse'
-                    valuePropName='checked'
-                    initialValue={false}
-                >
-                    <YakitSwitch size='large' disabled={disabled} />
-                </Form.Item>
-            )}
-            {isShowResponse && <OutputFormComponentsByType item={mockItem} disabled={disabled} />}
+          {inputType && setInputType ? (
+            <YakitFormDraggerContentPath
+              className={styles['plugin-execute-form-item']}
+              formItemProps={{
+                name: 'Input',
+                label: t('PluginFixFormParams.scan_target'),
+                rules: [
+                  {
+                    required: true,
+                    message: t('YakitForm.field_required_with_label', {
+                      label: t('PluginFixFormParams.scan_target'),
+                    }),
+                  },
+                ],
+              }}
+              accept=".txt,.xlsx,.xls,.csv"
+              textareaProps={{
+                placeholder: t('PluginFixFormParams.please_enter_scan_target'),
+                rows: 3,
+              }}
+              help={t('YakitDraggerContent.drag_files_tip')}
+              disabled={disabled}
+              valueSeparator={'\r\n'}
+              onTextAreaType={setInputType}
+              textAreaType={inputType}
+            />
+          ) : (
+            <YakitFormDraggerContent
+              className={styles['plugin-execute-form-item']}
+              formItemProps={{
+                name: 'Input',
+                label: t('PluginFixFormParams.scan_target'),
+                rules: [
+                  {
+                    required: true,
+                    message: t('YakitForm.field_required_with_label', {
+                      label: t('PluginFixFormParams.scan_target'),
+                    }),
+                  },
+                ],
+              }}
+              accept=".txt,.xlsx,.xls,.csv"
+              textareaProps={{
+                placeholder: t('PluginFixFormParams.please_enter_scan_target'),
+                rows: 3,
+              }}
+              help={t('YakitDraggerContent.drag_files_tip')}
+              disabled={disabled}
+              valueSeparator={'\r\n'}
+            />
+          )}
         </>
-    )
+      )}
+      {requestType === 'httpFlowId' && (
+        <Form.Item label={t('PluginFixFormParams.request_id')} name="httpFlowId" rules={[{ required: true }]}>
+          <YakitInput.TextArea
+            placeholder={t('PluginFixFormParams.enter_request_id_comma_separated')}
+            disabled={disabled}
+          />
+        </Form.Item>
+      )}
+      {isShowMockHTTPResponse && (
+        <Form.Item
+          label={t('PluginFixFormParams.simulation_response')}
+          name="simulationResponse"
+          valuePropName="checked"
+          initialValue={false}
+        >
+          <YakitSwitch size="large" disabled={disabled} />
+        </Form.Item>
+      )}
+      {isShowResponse && <OutputFormComponentsByType item={mockItem} disabled={disabled} />}
+    </>
+  )
 })

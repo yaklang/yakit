@@ -1121,6 +1121,10 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
           { page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE] },
         ],
       },
+      {
+        page: YakitRoute.Plugin_Hub,
+        ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub],
+      },
     ]
   if (isYakit()) {
     if (isCommunityYakit()) {
