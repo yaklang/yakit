@@ -121,6 +121,8 @@
     "request": "Request",
     "response": "Response",
     "responseContent": "Response content",
+    "recommendConfig": "Recommend config",
+    "applyRecommendConfig": "Apply recommend config",
     "testSuccess": "Test success",
     "testFailed": "Test failed"
   }

@@ -121,6 +121,8 @@
     "request": "请求",
     "response": "响应",
     "responseContent": "响应内容",
+    "recommendConfig": "推荐配置",
+    "applyRecommendConfig": "一键应用",
     "testSuccess": "测试成功",
     "testFailed": "测试失败"
   }
