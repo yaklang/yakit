@@ -1,984 +1,968 @@
-import React, {useEffect, useMemo, useRef, useState} from "react"
-import {AutoCard} from "@/components/AutoCard"
-import {ManyMultiSelectForString, SwitchItem} from "@/utils/inputUtil"
-import {Divider, Form, Modal, Slider, Space, Upload} from "antd"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {yakitInfo, warn, failed, success, yakitNotify} from "@/utils/notification"
-import {AutoSpin} from "@/components/AutoSpin"
-import update from "immutability-helper"
-import {useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import styles from "./ConfigNetworkPage.module.scss"
-import {YakitInput} from "../yakitUI/YakitInput/YakitInput"
-import {YakitRadioButtons} from "../yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {InputCertificateForm} from "@/pages/mitm/MITMServerStartForm/MITMAddTLS"
-import {StringToUint8Array, Uint8ArrayToString} from "@/utils/str"
-import cloneDeep from "lodash/cloneDeep"
-import {RectangleFailIcon, RectangleSucceeIcon, UnionIcon} from "./icon"
-import {SolidCheckCircleIcon, SolidLockClosedIcon} from "@/assets/icon/colors"
-import {showYakitModal} from "../yakitUI/YakitModal/YakitModalConfirm"
-import classNames from "classnames"
-import {YakitSwitch} from "../yakitUI/YakitSwitch/YakitSwitch"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {BanIcon, CogIcon, DragSortIcon, PencilAltIcon, RemoveIcon, TrashIcon} from "@/assets/newIcon"
-import {YakitDrawer} from "../yakitUI/YakitDrawer/YakitDrawer"
-import {TableVirtualResize} from "../TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps} from "../TableVirtualResize/TableVirtualResizeType"
-import {YakitModal} from "../yakitUI/YakitModal/YakitModal"
-import {YakitSelect} from "../yakitUI/YakitSelect/YakitSelect"
-import ProxyRulesConfig from "./ProxyRulesConfig"
-import {v4 as uuidv4} from "uuid"
-import {ExclamationCircleOutlined} from "@ant-design/icons"
-import {PcapMetadata} from "@/models/Traffic"
-import {SelectOptionProps} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {KVPair} from "@/models/kv"
-import {getLocalValue, getRemoteValue, setLocalValue, setRemoteValue} from "@/utils/kv"
-import {LocalGVS} from "@/enums/localGlobal"
-import {RemoteGV} from "@/yakitGV"
-import {DragDropContext, Draggable, DropResult, Droppable} from "@hello-pangea/dnd"
-import NewThirdPartyApplicationConfig from "./NewThirdPartyApplicationConfig"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {GlobalConfigRemoteGV} from "@/enums/globalConfig"
-import emiter from "@/utils/eventBus/eventBus"
-import {CodeCustomize} from "./CustomizeCode"
-import {OutlineCogIcon, OutlineTrashIcon} from "@/assets/icon/outline"
-import {LIMIT_LOG_NUM_NAME, DEFAULT_LOG_LIMIT} from "@/defaultConstants/HoldGRPCStream"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {checkProxyVersion} from "@/utils/proxyConfigUtil"
-import {useProxy} from "@/hook/useProxy"
-import {handleAIConfig} from "@/pages/spaceEngine/utils"
-import {isIRify} from "@/utils/envfile"
-import {JSONParseLog} from "@/utils/tool"
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { AutoCard } from '@/components/AutoCard'
+import { ManyMultiSelectForString, SwitchItem } from '@/utils/inputUtil'
+import { Divider, Form, Modal, Slider, Space, Upload } from 'antd'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { yakitInfo, warn, failed, success, yakitNotify } from '@/utils/notification'
+import { AutoSpin } from '@/components/AutoSpin'
+import update from 'immutability-helper'
+import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import styles from './ConfigNetworkPage.module.scss'
+import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
+import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { InputCertificateForm } from '@/pages/mitm/MITMServerStartForm/MITMAddTLS'
+import { StringToUint8Array, Uint8ArrayToString } from '@/utils/str'
+import cloneDeep from 'lodash/cloneDeep'
+import { RectangleFailIcon, RectangleSucceeIcon, UnionIcon } from './icon'
+import { SolidCheckCircleIcon, SolidLockClosedIcon } from '@/assets/icon/colors'
+import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
+import classNames from 'classnames'
+import { YakitSwitch } from '../yakitUI/YakitSwitch/YakitSwitch'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { BanIcon, CogIcon, DragSortIcon, PencilAltIcon, RemoveIcon, TrashIcon } from '@/assets/newIcon'
+import { YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
+import { TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
+import { ColumnsTypeProps } from '../TableVirtualResize/TableVirtualResizeType'
+import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
+import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
+import ProxyRulesConfig from './ProxyRulesConfig'
+import { v4 as uuidv4 } from 'uuid'
+import { ExclamationCircleOutlined } from '@ant-design/icons'
+import { PcapMetadata } from '@/models/Traffic'
+import { SelectOptionProps } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { KVPair } from '@/models/kv'
+import { getLocalValue, getRemoteValue, setLocalValue, setRemoteValue } from '@/utils/kv'
+import { LocalGVS } from '@/enums/localGlobal'
+import { RemoteGV } from '@/yakitGV'
+import { DragDropContext, Draggable, DropResult, Droppable } from '@hello-pangea/dnd'
+import NewThirdPartyApplicationConfig from './NewThirdPartyApplicationConfig'
+import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
+import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
+import emiter from '@/utils/eventBus/eventBus'
+import { CodeCustomize } from './CustomizeCode'
+import { OutlineCogIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { LIMIT_LOG_NUM_NAME, DEFAULT_LOG_LIMIT } from '@/defaultConstants/HoldGRPCStream'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { checkProxyVersion } from '@/utils/proxyConfigUtil'
+import { useProxy } from '@/hook/useProxy'
+import { handleAIConfig } from '@/pages/spaceEngine/utils'
+import { isIRify } from '@/utils/envfile'
+import { JSONParseLog } from '@/utils/tool'
 import {
-    AIOnlineModel,
-    getTipByType,
-    onEditAIModel,
-    onRemoveAIModel,
-    onSelectAIModel,
-    setAIModal
-} from "@/pages/ai-agent/aiModelList/AIModelList"
+  AIOnlineModel,
+  getTipByType,
+  onEditAIModel,
+  onRemoveAIModel,
+  onSelectAIModel,
+  setAIModal,
+} from '@/pages/ai-agent/aiModelList/AIModelList'
 import {
-    AIModelPolicyOptions,
-    AIModelTypeEnum,
-    AIModelTypeInterFileNameEnum,
-    defaultAIGlobalConfig
-} from "@/pages/ai-agent/defaultConstant"
+  AIModelPolicyOptions,
+  AIModelTypeEnum,
+  AIModelTypeInterFileNameEnum,
+  defaultAIGlobalConfig,
+} from '@/pages/ai-agent/defaultConstant'
 import {
-    AIGlobalConfig,
-    AIModelConfig,
-    grpcGetAIGlobalConfig,
-    grpcSetAIGlobalConfig
-} from "@/pages/ai-agent/aiModelList/utils"
-import YakitCollapse from "../yakitUI/YakitCollapse/YakitCollapse"
-import {AIModelActionProps, AIOnlineModelListProps} from "@/pages/ai-agent/aiModelList/AIModelListType"
+  AIGlobalConfig,
+  AIModelConfig,
+  grpcGetAIGlobalConfig,
+  grpcSetAIGlobalConfig,
+} from '@/pages/ai-agent/aiModelList/utils'
+import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
+import { AIModelActionProps, AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
 
 export interface ConfigNetworkPageProp {}
 
 export interface AuthInfo {
-    AuthUsername: string
-    AuthPassword: string
-    AuthType: string
-    Host: string
-    Forbidden: boolean
+  AuthUsername: string
+  AuthPassword: string
+  AuthType: string
+  Host: string
+  Forbidden: boolean
 }
 export interface HandleAIConfigProps {
-    AppConfigs: GlobalNetworkConfig["AppConfigs"]
-    AiApiPriority: GlobalNetworkConfig["AiApiPriority"]
+  AppConfigs: GlobalNetworkConfig['AppConfigs']
+  AiApiPriority: GlobalNetworkConfig['AiApiPriority']
 }
 export interface GlobalNetworkConfig {
-    DisableSystemDNS: boolean
-    CustomDNSServers: string[]
-    DNSFallbackTCP: boolean
-    DNSFallbackDoH: boolean
-    CustomDoHServers: string[]
+  DisableSystemDNS: boolean
+  CustomDNSServers: string[]
+  DNSFallbackTCP: boolean
+  DNSFallbackDoH: boolean
+  CustomDoHServers: string[]
 
-    ClientCertificates?: ClientCertificates[]
+  ClientCertificates?: ClientCertificates[]
 
-    DisallowIPAddress: string[]
-    DisallowDomain: string[]
-    GlobalProxy: string[]
-    EnableSystemProxyFromEnv: boolean
-    SkipSaveHTTPFlow: boolean
+  DisallowIPAddress: string[]
+  DisallowDomain: string[]
+  GlobalProxy: string[]
+  EnableSystemProxyFromEnv: boolean
+  SkipSaveHTTPFlow: boolean
 
-    //
-    AppConfigs: ThirdPartyApplicationConfig[]
+  //
+  AppConfigs: ThirdPartyApplicationConfig[]
 
-    AiApiPriority: string[]
+  AiApiPriority: string[]
 
-    AuthInfos: AuthInfo[]
+  AuthInfos: AuthInfo[]
 
-    SynScanNetInterface: string
+  SynScanNetInterface: string
 
-    ExcludePluginScanURIs: string[]
-    IncludePluginScanURIs: string[]
+  ExcludePluginScanURIs: string[]
+  IncludePluginScanURIs: string[]
 
-    DbSaveSync: boolean
+  DbSaveSync: boolean
 
-    CallPluginTimeout: number
+  CallPluginTimeout: number
 
-    MinTlsVersion: number
-    MaxTlsVersion: number
-    MaxContentLength: number | string
+  MinTlsVersion: number
+  MaxTlsVersion: number
+  MaxContentLength: number | string
 }
 export interface ThirdPartyApplicationConfig {
-    //zoomeye / hunter / shodan / fofa / github / openai / token
-    Type:
-        | "zoomeye"
-        | "hunter"
-        | "shodan"
-        | "fofa"
-        | "github"
-        | "openai"
-        | "skylark"
-        | "aliyun"
-        | "tencent"
-        | "quake"
-        | string
-    APIKey?: string
-    UserIdentifier?: string
-    UserSecret?: string
-    Namespace?: string
-    Domain?: string
-    WebhookURL?: string
-    ExtraParams?: KVPair[]
-    Disabled?: boolean
-    Proxy?: string
-    NoHttps?: boolean
-    APIType?: string
-    BaseURL?: string
-    Endpoint?: string
-    EnableEndpoint?: boolean
-    Headers?: KVPair[]
+  //zoomeye / hunter / shodan / fofa / github / openai / token
+  Type:
+    | 'zoomeye'
+    | 'hunter'
+    | 'shodan'
+    | 'fofa'
+    | 'github'
+    | 'openai'
+    | 'skylark'
+    | 'aliyun'
+    | 'tencent'
+    | 'quake'
+    | string
+  APIKey?: string
+  UserIdentifier?: string
+  UserSecret?: string
+  Namespace?: string
+  Domain?: string
+  WebhookURL?: string
+  ExtraParams?: KVPair[]
+  Disabled?: boolean
+  Proxy?: string
+  NoHttps?: boolean
+  APIType?: string
+  BaseURL?: string
+  Endpoint?: string
+  EnableEndpoint?: boolean
+  Headers?: KVPair[]
 }
 type TenumBuffer = Buffer | Uint8Array
 
 export interface IsSetGlobalNetworkConfig {
-    Pkcs12Bytes: Buffer
-    Pkcs12Password?: Buffer
+  Pkcs12Bytes: Buffer
+  Pkcs12Password?: Buffer
 }
 
 interface ClientCertificatePem {
-    CrtPem: TenumBuffer
-    KeyPem: TenumBuffer
-    CaCertificates: TenumBuffer[]
-    Host: string
+  CrtPem: TenumBuffer
+  KeyPem: TenumBuffer
+  CaCertificates: TenumBuffer[]
+  Host: string
 }
 
 interface ClientCertificatePfx {
-    name: string
-    Pkcs12Bytes: TenumBuffer
-    Pkcs12Password: TenumBuffer
-    password?: boolean
-    Host?: string
-    CrtPem?: TenumBuffer
-    KeyPem?: TenumBuffer
-    CaCertificates?: TenumBuffer[]
+  name: string
+  Pkcs12Bytes: TenumBuffer
+  Pkcs12Password: TenumBuffer
+  password?: boolean
+  Host?: string
+  CrtPem?: TenumBuffer
+  KeyPem?: TenumBuffer
+  CaCertificates?: TenumBuffer[]
 }
 
 interface ClientCertificates {
-    CrtPem: TenumBuffer
-    KeyPem: TenumBuffer
-    CaCertificates: TenumBuffer[]
-    Pkcs12Bytes: TenumBuffer
-    Pkcs12Password: TenumBuffer
-    Host?: string
+  CrtPem: TenumBuffer
+  KeyPem: TenumBuffer
+  CaCertificates: TenumBuffer[]
+  Pkcs12Bytes: TenumBuffer
+  Pkcs12Password: TenumBuffer
+  Host?: string
 }
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
 export const defaultParams: GlobalNetworkConfig = {
-    DisableSystemDNS: false,
-    CustomDNSServers: [],
-    DNSFallbackTCP: false,
-    DNSFallbackDoH: false,
-    CustomDoHServers: [],
-    DisallowIPAddress: [],
-    DisallowDomain: [],
-    GlobalProxy: [],
-    EnableSystemProxyFromEnv: false,
-    SkipSaveHTTPFlow: false,
-    AppConfigs: [],
-    AiApiPriority: [],
-    AuthInfos: [],
-    SynScanNetInterface: "",
-    ExcludePluginScanURIs: [],
-    IncludePluginScanURIs: [],
-    DbSaveSync: false,
-    CallPluginTimeout: 60,
-    MinTlsVersion: 0x300,
-    MaxTlsVersion: 0x304,
-    MaxContentLength: 10
+  DisableSystemDNS: false,
+  CustomDNSServers: [],
+  DNSFallbackTCP: false,
+  DNSFallbackDoH: false,
+  CustomDoHServers: [],
+  DisallowIPAddress: [],
+  DisallowDomain: [],
+  GlobalProxy: [],
+  EnableSystemProxyFromEnv: false,
+  SkipSaveHTTPFlow: false,
+  AppConfigs: [],
+  AiApiPriority: [],
+  AuthInfos: [],
+  SynScanNetInterface: '',
+  ExcludePluginScanURIs: [],
+  IncludePluginScanURIs: [],
+  DbSaveSync: false,
+  CallPluginTimeout: 60,
+  MinTlsVersion: 0x300,
+  MaxTlsVersion: 0x304,
+  MaxContentLength: 10,
 }
 
 export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
-    const [params, setParams] = useState<GlobalNetworkConfig>(defaultParams)
-    const [certificateParams, setCertificateParams] = useState<ClientCertificatePfx[]>()
-    const currentIndex = useRef<number>(0)
-    const [format, setFormat] = useState<1 | 2>(1)
-    const cerFormRef = useRef<any>()
-    const [loading, setLoading] = useState(false)
-    const isShowLoading = useRef<boolean>(true)
-    const [visible, setVisible] = useState<boolean>(false)
-    const configRef = useRef<any>()
-    const [inViewport] = useInViewport(configRef)
-    const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
-    const [proxyDrawerVisible, setProxyDrawerVisible] = useState(false)
-    const {t, i18n} = useI18nNamespaces(["mitm"])
-    const {
-        proxyConfig: {Routes = [], Endpoints = []}
-    } = useProxy()
-    const originGlobalConfigRef = useRef<GlobalNetworkConfig>(cloneDeep(defaultParams))
-    /** ---------- 是否删除私密插件逻辑 Start ---------- */
-    const [isDelPrivatePlugin, setIsDelPrivatePlugin] = useState<boolean>(false)
-    useEffect(() => {
-        getLocalValue(LocalGVS.IsDeletePrivatePluginsOnLogout).then((v: boolean) => {
-            setIsDelPrivatePlugin(!!v)
-        })
-    }, [])
-    const onSetDelPrivatePlugin = useMemoizedFn(() => {
-        setLocalValue(LocalGVS.IsDeletePrivatePluginsOnLogout, isDelPrivatePlugin)
+  const [params, setParams] = useState<GlobalNetworkConfig>(defaultParams)
+  const [certificateParams, setCertificateParams] = useState<ClientCertificatePfx[]>()
+  const currentIndex = useRef<number>(0)
+  const [format, setFormat] = useState<1 | 2>(1)
+  const cerFormRef = useRef<any>()
+  const [loading, setLoading] = useState(false)
+  const isShowLoading = useRef<boolean>(true)
+  const [visible, setVisible] = useState<boolean>(false)
+  const configRef = useRef<any>()
+  const [inViewport] = useInViewport(configRef)
+  const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
+  const [proxyDrawerVisible, setProxyDrawerVisible] = useState(false)
+  const { t, i18n } = useI18nNamespaces(['mitm'])
+  const {
+    proxyConfig: { Routes = [], Endpoints = [] },
+  } = useProxy()
+  const originGlobalConfigRef = useRef<GlobalNetworkConfig>(cloneDeep(defaultParams))
+  /** ---------- 是否删除私密插件逻辑 Start ---------- */
+  const [isDelPrivatePlugin, setIsDelPrivatePlugin] = useState<boolean>(false)
+  useEffect(() => {
+    getLocalValue(LocalGVS.IsDeletePrivatePluginsOnLogout).then((v: boolean) => {
+      setIsDelPrivatePlugin(!!v)
     })
-    const onResetDelPrivatePlugin = useMemoizedFn(() => {
-        setLocalValue(LocalGVS.IsDeletePrivatePluginsOnLogout, false)
-    })
-    /** ---------- 私密插件逻辑 End ---------- */
+  }, [])
+  const onSetDelPrivatePlugin = useMemoizedFn(() => {
+    setLocalValue(LocalGVS.IsDeletePrivatePluginsOnLogout, isDelPrivatePlugin)
+  })
+  const onResetDelPrivatePlugin = useMemoizedFn(() => {
+    setLocalValue(LocalGVS.IsDeletePrivatePluginsOnLogout, false)
+  })
+  /** ---------- 私密插件逻辑 End ---------- */
 
-    const update = useMemoizedFn(() => {
-        isShowLoading.current && setLoading(true)
-        isShowLoading.current = false
-        // setParams(defaultParams)
-        ipcRenderer.invoke("GetGlobalNetworkConfig", {}).then((rsp: GlobalNetworkConfig) => {
-            const {ClientCertificates, SynScanNetInterface} = rsp
-            ipcRenderer.invoke("GetPcapMetadata", {}).then((data: PcapMetadata) => {
-                if (!data || !data.AvailablePcapDevices?.length) {
-                    return
-                }
-                const interfaceList = data.AvailablePcapDevices.filter((el) => el).map((item) => ({
-                    label: `${item.NetInterfaceName}-(${item.IP})`,
-                    value: item.Name
-                }))
-                if (SynScanNetInterface.length === 0 && data?.DefaultPublicNetInterface) {
-                    setParams((v) => ({
-                        ...v,
-                        SynScanNetInterface: data.DefaultPublicNetInterface?.NetInterfaceName || ""
-                    }))
-                }
-                setNetInterfaceList(interfaceList)
-            })
-            if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0) {
-                let newArr = ClientCertificates.map((item, index) => {
-                    return {...item, name: `证书${index + 1}`}
-                })
-                setCertificateParams(newArr)
-                currentIndex.current = ClientCertificates.length
-            } else {
-                setCertificateParams([])
-                currentIndex.current = 0
-            }
-            const value: GlobalNetworkConfig = {
-                ...params,
-                ...rsp,
-                DisallowDomain: rsp.DisallowDomain.filter((item) => item),
-                MaxContentLength: +rsp.MaxContentLength / (1024 * 1024) || 10
-            }
-            originGlobalConfigRef.current = {...value}
-            setParams({...value})
-            setLoading(false)
+  const update = useMemoizedFn(() => {
+    isShowLoading.current && setLoading(true)
+    isShowLoading.current = false
+    // setParams(defaultParams)
+    ipcRenderer.invoke('GetGlobalNetworkConfig', {}).then((rsp: GlobalNetworkConfig) => {
+      const { ClientCertificates, SynScanNetInterface } = rsp
+      ipcRenderer.invoke('GetPcapMetadata', {}).then((data: PcapMetadata) => {
+        if (!data || !data.AvailablePcapDevices?.length) {
+          return
+        }
+        const interfaceList = data.AvailablePcapDevices.filter((el) => el).map((item) => ({
+          label: `${item.NetInterfaceName}-(${item.IP})`,
+          value: item.Name,
+        }))
+        if (SynScanNetInterface.length === 0 && data?.DefaultPublicNetInterface) {
+          setParams((v) => ({
+            ...v,
+            SynScanNetInterface: data.DefaultPublicNetInterface?.NetInterfaceName || '',
+          }))
+        }
+        setNetInterfaceList(interfaceList)
+      })
+      if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0) {
+        let newArr = ClientCertificates.map((item, index) => {
+          return { ...item, name: `证书${index + 1}` }
         })
+        setCertificateParams(newArr)
+        currentIndex.current = ClientCertificates.length
+      } else {
+        setCertificateParams([])
+        currentIndex.current = 0
+      }
+      const value: GlobalNetworkConfig = {
+        ...params,
+        ...rsp,
+        DisallowDomain: rsp.DisallowDomain.filter((item) => item),
+        MaxContentLength: +rsp.MaxContentLength / (1024 * 1024) || 10,
+      }
+      originGlobalConfigRef.current = { ...value }
+      setParams({ ...value })
+      setLoading(false)
     })
-    useEffect(() => {
+  })
+  useEffect(() => {
+    update()
+  }, [])
+
+  const onCertificate = useMemoizedFn((file: any) => {
+    if (!['application/x-pkcs12'].includes(file.type)) {
+      warn('仅支持格式为：application/x-pkcs12')
+      return false
+    }
+    ipcRenderer
+      .invoke('fetch-certificate-content', file.path)
+      .then((res) => {
+        currentIndex.current += 1
+
+        // 验证证书是否需要密码
+        ipcRenderer
+          .invoke('ValidP12PassWord', {
+            Pkcs12Bytes: res,
+          } as IsSetGlobalNetworkConfig)
+          .then((result: { IsSetPassWord: boolean }) => {
+            if (result.IsSetPassWord) {
+              setCertificateParams([
+                ...(certificateParams || []),
+                {
+                  name: `证书${currentIndex.current}`,
+                  Pkcs12Bytes: res,
+                  Pkcs12Password: new Uint8Array(),
+                },
+              ])
+            } else {
+              // 需要密码
+              setCertificateParams([
+                ...(certificateParams || []),
+                {
+                  name: `证书${currentIndex.current}`,
+                  Pkcs12Bytes: res,
+                  Pkcs12Password: new Uint8Array(),
+                  password: true,
+                },
+              ])
+            }
+          })
+      })
+      .catch((e) => {
+        failed(`无法获取该文件内容，请检查后后重试！${e}`)
+      })
+    return false
+  })
+
+  const ipcSubmit = useMemoizedFn((params: GlobalNetworkConfig, isNtml?: boolean) => {
+    const realParams: GlobalNetworkConfig = {
+      ...params,
+      MaxContentLength: +params.MaxContentLength * 1024 * 1024,
+    }
+    ipcRenderer
+      .invoke('SetGlobalNetworkConfig', realParams)
+      .then(() => {
+        cerFormRef.current?.resetFields()
+        yakitInfo('更新配置成功')
         update()
-    }, [])
+        if (isNtml) setVisible(false)
+      })
+      .catch((err) => {
+        yakitNotify('error', err + '')
+      })
+  })
 
-    const onCertificate = useMemoizedFn((file: any) => {
-        if (!["application/x-pkcs12"].includes(file.type)) {
-            warn("仅支持格式为：application/x-pkcs12")
-            return false
-        }
-        ipcRenderer
-            .invoke("fetch-certificate-content", file.path)
-            .then((res) => {
-                currentIndex.current += 1
+  const onNtmlSave = useMemoizedFn(() => {
+    submit(true)
+  })
 
-                // 验证证书是否需要密码
-                ipcRenderer
-                    .invoke("ValidP12PassWord", {
-                        Pkcs12Bytes: res
-                    } as IsSetGlobalNetworkConfig)
-                    .then((result: {IsSetPassWord: boolean}) => {
-                        if (result.IsSetPassWord) {
-                            setCertificateParams([
-                                ...(certificateParams || []),
-                                {
-                                    name: `证书${currentIndex.current}`,
-                                    Pkcs12Bytes: res,
-                                    Pkcs12Password: new Uint8Array()
-                                }
-                            ])
-                        } else {
-                            // 需要密码
-                            setCertificateParams([
-                                ...(certificateParams || []),
-                                {
-                                    name: `证书${currentIndex.current}`,
-                                    Pkcs12Bytes: res,
-                                    Pkcs12Password: new Uint8Array(),
-                                    password: true
-                                }
-                            ])
-                        }
-                    })
-            })
-            .catch((e) => {
-                failed(`无法获取该文件内容，请检查后后重试！${e}`)
-            })
-        return false
-    })
+  const submit = useMemoizedFn((isNtml?: boolean) => {
+    // 更新 隐私配置 数据
+    onSetDelPrivatePlugin()
 
-    const ipcSubmit = useMemoizedFn((params: GlobalNetworkConfig, isNtml?: boolean) => {
-        const realParams: GlobalNetworkConfig = {
-            ...params,
-            MaxContentLength: +params.MaxContentLength * 1024 * 1024
-        }
-        ipcRenderer
-            .invoke("SetGlobalNetworkConfig", realParams)
-            .then(() => {
-                cerFormRef.current?.resetFields()
-                yakitInfo("更新配置成功")
-                update()
-                if (isNtml) setVisible(false)
-            })
-            .catch((err) => {
-                yakitNotify("error", err + "")
-            })
-    })
+    // 更新 免配置启动路径
+    onSetChromePath()
 
-    const onNtmlSave = useMemoizedFn(() => {
-        submit(true)
-    })
+    // 更新 自动性能采样
+    onSetPprofFileAutoAnalyze()
 
-    const submit = useMemoizedFn((isNtml?: boolean) => {
-        // 更新 隐私配置 数据
-        onSetDelPrivatePlugin()
+    // 更新 二级页签数量
+    onSetSecondaryTabsNum()
 
-        // 更新 免配置启动路径
-        onSetChromePath()
+    // 更新插件日志条数
+    onSetLimitLogNum()
 
-        // 更新 自动性能采样
-        onSetPprofFileAutoAnalyze()
-
-        // 更新 二级页签数量
-        onSetSecondaryTabsNum()
-
-        // 更新插件日志条数
-        onSetLimitLogNum()
-
-        const newParams: GlobalNetworkConfig = {
-            ...params,
-            ClientCertificates: []
-        }
-        if (
-            Array.isArray(certificateParams) &&
-            certificateParams.length > 0 &&
-            certificateParams.filter((item) => item.password === true).length === certificateParams.length
-        ) {
-            warn("无效证书")
-            return
+    const newParams: GlobalNetworkConfig = {
+      ...params,
+      ClientCertificates: [],
+    }
+    if (
+      Array.isArray(certificateParams) &&
+      certificateParams.length > 0 &&
+      certificateParams.filter((item) => item.password === true).length === certificateParams.length
+    ) {
+      warn('无效证书')
+      return
+    } else {
+      const certificate = (certificateParams || []).filter((item) => item.password !== true)
+      const ClientCertificates = certificate.map((item) => {
+        const {
+          Pkcs12Bytes,
+          Pkcs12Password,
+          Host,
+          CrtPem = new Uint8Array(),
+          KeyPem = new Uint8Array(),
+          CaCertificates = [],
+        } = item
+        if (Uint8ArrayToString(CrtPem) && Uint8ArrayToString(KeyPem)) {
+          // pem 格式
+          return {
+            CrtPem,
+            KeyPem,
+            CaCertificates,
+            Host,
+            Pkcs12Bytes: new Uint8Array(),
+            Pkcs12Password: new Uint8Array(),
+          }
         } else {
-            const certificate = (certificateParams || []).filter((item) => item.password !== true)
-            const ClientCertificates = certificate.map((item) => {
-                const {
-                    Pkcs12Bytes,
-                    Pkcs12Password,
-                    Host,
-                    CrtPem = new Uint8Array(),
-                    KeyPem = new Uint8Array(),
-                    CaCertificates = []
-                } = item
-                if (Uint8ArrayToString(CrtPem) && Uint8ArrayToString(KeyPem)) {
-                    // pem 格式
-                    return {
-                        CrtPem,
-                        KeyPem,
-                        CaCertificates,
-                        Host,
-                        Pkcs12Bytes: new Uint8Array(),
-                        Pkcs12Password: new Uint8Array()
-                    }
-                } else {
-                    // p12/pfx 格式
-                    return {
-                        Pkcs12Bytes,
-                        Pkcs12Password,
-                        Host,
-                        CrtPem: new Uint8Array(),
-                        KeyPem: new Uint8Array(),
-                        CaCertificates: []
-                    }
-                }
-            })
-            newParams.ClientCertificates = ClientCertificates.length > 0 ? ClientCertificates : []
+          // p12/pfx 格式
+          return {
+            Pkcs12Bytes,
+            Pkcs12Password,
+            Host,
+            CrtPem: new Uint8Array(),
+            KeyPem: new Uint8Array(),
+            CaCertificates: [],
+          }
         }
-
-        if (format === 1) {
-            ipcSubmit(newParams, isNtml)
-        } else {
-            // 校验 pem 格式
-            cerFormRef.current
-                .validateFields()
-                .then((values) => {
-                    if (values.CrtPem && values.KeyPem) {
-                        const obj: ClientCertificatePem = {
-                            CrtPem: StringToUint8Array(values.CrtPem),
-                            KeyPem: StringToUint8Array(values.KeyPem),
-                            CaCertificates:
-                                values.CaCertificates && values.CaCertificates.length > 0
-                                    ? [StringToUint8Array(values.CaCertificates)]
-                                    : [],
-                            Host: values.Host || ""
-                        }
-                        newParams.ClientCertificates = newParams.ClientCertificates?.concat({
-                            ...obj,
-                            Pkcs12Bytes: new Uint8Array(),
-                            Pkcs12Password: new Uint8Array()
-                        })
-                    }
-                    ipcSubmit(newParams, isNtml)
-                })
-                .catch(() => {})
-        }
-    })
-
-    const hostRef = useRef<string>("")
-    const handleConfigureHost = (key: number, Host?: string) => {
-        hostRef.current = Host || ""
-        const m = showYakitModal({
-            title: "输入 Host 配置",
-            content: (
-                <div style={{paddingTop: 20}}>
-                    <Form labelCol={{span: 5}} wrapperCol={{span: 18}} size={"small"}>
-                        <Form.Item label={"域名"} help='为该证书指定Host地址'>
-                            <YakitInput
-                                defaultValue={hostRef.current}
-                                placeholder='例如baidu.com或者*.baidu.com'
-                                allowClear
-                                onChange={(e) => {
-                                    const {value} = e.target
-                                    hostRef.current = value
-                                }}
-                            />
-                        </Form.Item>
-                    </Form>
-                </div>
-            ),
-            onCancel: () => {
-                m.destroy()
-            },
-            onOkText: "添加",
-            onOk: () => {
-                setCertificateParams((prev) => {
-                    if (Array.isArray(prev)) {
-                        prev[key].Host = hostRef.current
-                    }
-                    return prev?.slice()
-                })
-                m.destroy()
-            },
-            width: 400
-        })
+      })
+      newParams.ClientCertificates = ClientCertificates.length > 0 ? ClientCertificates : []
     }
 
-    const closeCard = useMemoizedFn((item: ClientCertificatePfx) => {
-        if (Array.isArray(certificateParams)) {
-            let cache: ClientCertificatePfx[] = certificateParams.filter((itemIn) => item.name !== itemIn.name)
-            setCertificateParams(cache)
-        }
-    })
-
-    const failCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
-        return (
-            <div className={styles["certificate-card-item"]} key={key}>
-                <div className={classNames(styles["certificate-card"], styles["certificate-fail"])}>
-                    <div className={styles["decorate"]}>
-                        <RectangleFailIcon />
-                    </div>
-                    <div className={styles["card-hide"]}></div>
-                    <div className={styles["fail-main"]}>
-                        <div className={styles["title"]}>{item.name}</div>
-                        <SolidLockClosedIcon />
-                        <div className={styles["content"]}>未解密</div>
-                        <YakitButton
-                            type='outline2'
-                            onClick={() => {
-                                const m = showYakitModal({
-                                    title: "密码解锁",
-                                    content: (
-                                        <div style={{padding: 20}}>
-                                            <YakitInput.Password
-                                                placeholder='请输入证书密码'
-                                                allowClear
-                                                onChange={(e) => {
-                                                    const {value} = e.target
-                                                    setCertificateParams((prev) => {
-                                                        if (Array.isArray(prev)) {
-                                                            prev[key].Pkcs12Password =
-                                                                value.length > 0
-                                                                    ? StringToUint8Array(value)
-                                                                    : new Uint8Array()
-                                                        }
-                                                        return prev?.slice()
-                                                    })
-                                                }}
-                                            />
-                                        </div>
-                                    ),
-                                    onCancel: () => {
-                                        m.destroy()
-                                    },
-                                    onOk: () => {
-                                        ipcRenderer
-                                            .invoke("ValidP12PassWord", {
-                                                Pkcs12Bytes: item.Pkcs12Bytes,
-                                                Pkcs12Password: item.Pkcs12Password
-                                            } as IsSetGlobalNetworkConfig)
-                                            .then((result: {IsSetPassWord: boolean}) => {
-                                                if (result.IsSetPassWord) {
-                                                    setCertificateParams((prev) => {
-                                                        if (Array.isArray(prev)) {
-                                                            prev[key].password = false
-                                                        }
-                                                        return prev?.slice()
-                                                    })
-                                                    m.destroy()
-                                                } else {
-                                                    failed(`密码错误`)
-                                                }
-                                            })
-                                    },
-                                    width: 400
-                                })
-                            }}
-                        >
-                            密码解锁
-                        </YakitButton>
-                    </div>
-                </div>
-                <div className={styles["certificate-card-item-footer"]}>
-                    <OutlineCogIcon
-                        className={styles["icon-cog"]}
-                        onClick={() => {
-                            handleConfigureHost(key, item.Host)
-                        }}
-                    />
-                    <OutlineTrashIcon
-                        className={styles["icon-trash"]}
-                        onClick={() => {
-                            closeCard(item)
-                        }}
-                    />
-                </div>
-            </div>
-        )
-    })
-
-    const succeeCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
-        return (
-            <div className={styles["certificate-card-item"]} key={key}>
-                <div className={classNames(styles["certificate-card"], styles["certificate-succee"])}>
-                    <div className={styles["decorate"]}>
-                        <RectangleSucceeIcon />
-                    </div>
-                    <div className={styles["union"]}>
-                        <UnionIcon />
-                    </div>
-                    <div className={styles["card-hide"]}></div>
-
-                    <div className={styles["success-main"]}>
-                        <div className={styles["title"]}>{item.name}</div>
-                        <SolidCheckCircleIcon />
-                        <div className={styles["content"]}>可用</div>
-                        <div className={styles["password"]}>******</div>
-                    </div>
-                </div>
-                <div className={styles["certificate-card-item-footer"]}>
-                    <OutlineCogIcon
-                        className={styles["icon-cog"]}
-                        onClick={() => {
-                            handleConfigureHost(key, item.Host)
-                        }}
-                    />
-                    <OutlineTrashIcon
-                        className={styles["icon-trash"]}
-                        onClick={() => {
-                            closeCard(item)
-                        }}
-                    />
-                </div>
-            </div>
-        )
-    })
-
-    const certificateList = useMemo(() => {
-        return (
-            <div className={styles["certificate-box"]}>
-                {Array.isArray(certificateParams) &&
-                    certificateParams.map((item, index) => {
-                        if (item.password) return failCard(item, index)
-                        return succeeCard(item, index)
-                    })}
-            </div>
-        )
-    }, [certificateParams])
-
-    const [chromePath, setChromePath] = useState<string>("")
-    useEffect(() => {
-        getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
-            if (!setting) {
-                ipcRenderer.invoke("GetChromePath").then((chromePath: string) => {
-                    setChromePath(chromePath)
-                    onSetChromePath(chromePath)
-                })
-            } else {
-                const values: string = JSONParseLog(setting, {page: "ConfigNetworkPage", fun: "GlobalChromePath"})
-                setChromePath(values)
+    if (format === 1) {
+      ipcSubmit(newParams, isNtml)
+    } else {
+      // 校验 pem 格式
+      cerFormRef.current
+        .validateFields()
+        .then((values) => {
+          if (values.CrtPem && values.KeyPem) {
+            const obj: ClientCertificatePem = {
+              CrtPem: StringToUint8Array(values.CrtPem),
+              KeyPem: StringToUint8Array(values.KeyPem),
+              CaCertificates:
+                values.CaCertificates && values.CaCertificates.length > 0
+                  ? [StringToUint8Array(values.CaCertificates)]
+                  : [],
+              Host: values.Host || '',
             }
-        })
-    }, [])
-    const onSetChromePath = useMemoizedFn((value?: string) => {
-        setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(value || chromePath))
-    })
-    const onResetChromePath = useMemoizedFn(() => {
-        let path = ""
-        ipcRenderer
-            .invoke("GetChromePath")
-            .then((chromePath: string) => {
-                path = chromePath
+            newParams.ClientCertificates = newParams.ClientCertificates?.concat({
+              ...obj,
+              Pkcs12Bytes: new Uint8Array(),
+              Pkcs12Password: new Uint8Array(),
             })
-            .finally(() => {
-                setChromePath(path)
-                setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(path))
-            })
-    })
-
-    const [pprofFileAutoAnalyze, setPprofFileAutoAnalyze] = useState<boolean>(false)
-    useEffect(() => {
-        getRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze).then((setting) => {
-            setPprofFileAutoAnalyze(setting === "true")
+          }
+          ipcSubmit(newParams, isNtml)
         })
-    }, [])
-    const onSetPprofFileAutoAnalyze = () => {
-        setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, pprofFileAutoAnalyze + "")
+        .catch(() => {})
     }
-    const onResetPprofFileAutoAnalyze = () => {
-        setPprofFileAutoAnalyze(false)
-        setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, false + "")
-    }
+  })
 
-    const [secondaryTabsNum, setSecondaryTabsNum] = useState<number | string>(100)
-    useEffect(() => {
-        getRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum).then((set) => {
-            if (set) {
-                setSecondaryTabsNum(set)
-            }
+  const hostRef = useRef<string>('')
+  const handleConfigureHost = (key: number, Host?: string) => {
+    hostRef.current = Host || ''
+    const m = showYakitModal({
+      title: '输入 Host 配置',
+      content: (
+        <div style={{ paddingTop: 20 }}>
+          <Form labelCol={{ span: 5 }} wrapperCol={{ span: 18 }} size={'small'}>
+            <Form.Item label={'域名'} help="为该证书指定Host地址">
+              <YakitInput
+                defaultValue={hostRef.current}
+                placeholder="例如baidu.com或者*.baidu.com"
+                allowClear
+                onChange={(e) => {
+                  const { value } = e.target
+                  hostRef.current = value
+                }}
+              />
+            </Form.Item>
+          </Form>
+        </div>
+      ),
+      onCancel: () => {
+        m.destroy()
+      },
+      onOkText: '添加',
+      onOk: () => {
+        setCertificateParams((prev) => {
+          if (Array.isArray(prev)) {
+            prev[key].Host = hostRef.current
+          }
+          return prev?.slice()
         })
-    }, [])
-    const onSetSecondaryTabsNum = () => {
-        setRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum, secondaryTabsNum + "")
-        emiter.emit("onUpdateSecondaryTabsNum", Number(secondaryTabsNum))
+        m.destroy()
+      },
+      width: 400,
+    })
+  }
+
+  const closeCard = useMemoizedFn((item: ClientCertificatePfx) => {
+    if (Array.isArray(certificateParams)) {
+      let cache: ClientCertificatePfx[] = certificateParams.filter((itemIn) => item.name !== itemIn.name)
+      setCertificateParams(cache)
     }
-    const onResetSecondaryTabsNum = () => {
-        setSecondaryTabsNum(100)
-        setRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum, 100 + "")
-    }
+  })
 
-    const [limitLogNum, setLimitLogNum] = useState<number | string>(DEFAULT_LOG_LIMIT)
-
-    useEffect(() => {
-        getRemoteValue(LIMIT_LOG_NUM_NAME).then((num) => {
-            if (num) setLimitLogNum(Number(num))
-        })
-    }, [])
-
-    const onSetLimitLogNum = useMemoizedFn(() => {
-        const value = Number(limitLogNum)
-        setRemoteValue(LIMIT_LOG_NUM_NAME, value + "")
-        emiter.emit("onUpdateLimitLogNum", value)
-    })
-
-    const onResetLimitLogNum = useMemoizedFn(() => {
-        setLimitLogNum(DEFAULT_LOG_LIMIT)
-        setTimeout(() => {
-            onSetLimitLogNum()
-        }, 100)
-    })
-
-    const onLimitLogNumEnter = useMemoizedFn(() => {
-        let value = parseInt(limitLogNum + "" || "0", 10)
-        if (!value || value === 0) {
-            value = 100
-        }
-        setLimitLogNum(value)
-    })
-
-    const onClickDownstreamProxy = useMemoizedFn(async () => {
-        try {
-            const versionValid = await checkProxyVersion()
-            if (!versionValid) {
-                return
-            }
-            setProxyDrawerVisible(true)
-        } catch (error) {
-            console.error("error:", error)
-        }
-    })
-    const hideRules = useMemo(() => isIRify(), [])
-
+  const failCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
     return (
-        <>
-            <div ref={configRef}>
-                <AutoCard style={{height: "auto"}}>
-                    <AutoSpin spinning={loading} tip='网络配置加载中...'>
-                        {params && (
-                            <Form
-                                size={"small"}
-                                labelCol={{span: 5}}
-                                wrapperCol={{span: 14}}
-                                onSubmitCapture={() => submit()}
-                            >
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                                    DNS 配置
-                                </Divider>
-                                <SwitchItem
-                                    label={"禁用系统 DNS"}
-                                    setValue={(DisableSystemDNS) => setParams({...params, DisableSystemDNS})}
-                                    value={params.DisableSystemDNS}
-                                    oldTheme={false}
-                                />
-                                <ManyMultiSelectForString
-                                    label={"备用 DNS"}
-                                    setValue={(CustomDNSServers) =>
-                                        setParams({...params, CustomDNSServers: CustomDNSServers.split(",")})
-                                    }
-                                    value={params.CustomDNSServers.join(",")}
-                                    data={[]}
-                                    mode={"tags"}
-                                />
-                                <SwitchItem
-                                    label={"启用 TCP DNS"}
-                                    setValue={(DNSFallbackTCP) => setParams({...params, DNSFallbackTCP})}
-                                    value={params.DNSFallbackTCP}
-                                    oldTheme={false}
-                                />
-                                <SwitchItem
-                                    label={"启用 DoH 抗污染"}
-                                    setValue={(DNSFallbackDoH) => setParams({...params, DNSFallbackDoH})}
-                                    value={params.DNSFallbackDoH}
-                                    oldTheme={false}
-                                />
-                                {params.DNSFallbackDoH && (
-                                    <ManyMultiSelectForString
-                                        label={"备用 DoH"}
-                                        setValue={(data) => setParams({...params, CustomDoHServers: data.split(",")})}
-                                        value={params.CustomDoHServers.join(",")}
-                                        data={[]}
-                                        mode={"tags"}
-                                    />
-                                )}
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                                    TLS 客户端配置
-                                </Divider>
-                                <Form.Item label={"选择格式"}>
-                                    <YakitRadioButtons
-                                        size='small'
-                                        value={format}
-                                        onChange={(e) => {
-                                            setFormat(e.target.value)
-                                        }}
-                                        buttonStyle='solid'
-                                        options={[
-                                            {
-                                                value: 1,
-                                                label: "p12/pfx 格式"
-                                            },
-                                            {
-                                                value: 2,
-                                                label: "pem 格式"
-                                            }
-                                        ]}
-                                    />
-                                </Form.Item>
-                                {format === 1 && (
-                                    <>
-                                        <Form.Item label={"添加证书"}>
-                                            {/*
+      <div className={styles['certificate-card-item']} key={key}>
+        <div className={classNames(styles['certificate-card'], styles['certificate-fail'])}>
+          <div className={styles['decorate']}>
+            <RectangleFailIcon />
+          </div>
+          <div className={styles['card-hide']}></div>
+          <div className={styles['fail-main']}>
+            <div className={styles['title']}>{item.name}</div>
+            <SolidLockClosedIcon />
+            <div className={styles['content']}>未解密</div>
+            <YakitButton
+              type="outline2"
+              onClick={() => {
+                const m = showYakitModal({
+                  title: '密码解锁',
+                  content: (
+                    <div style={{ padding: 20 }}>
+                      <YakitInput.Password
+                        placeholder="请输入证书密码"
+                        allowClear
+                        onChange={(e) => {
+                          const { value } = e.target
+                          setCertificateParams((prev) => {
+                            if (Array.isArray(prev)) {
+                              prev[key].Pkcs12Password = value.length > 0 ? StringToUint8Array(value) : new Uint8Array()
+                            }
+                            return prev?.slice()
+                          })
+                        }}
+                      />
+                    </div>
+                  ),
+                  onCancel: () => {
+                    m.destroy()
+                  },
+                  onOk: () => {
+                    ipcRenderer
+                      .invoke('ValidP12PassWord', {
+                        Pkcs12Bytes: item.Pkcs12Bytes,
+                        Pkcs12Password: item.Pkcs12Password,
+                      } as IsSetGlobalNetworkConfig)
+                      .then((result: { IsSetPassWord: boolean }) => {
+                        if (result.IsSetPassWord) {
+                          setCertificateParams((prev) => {
+                            if (Array.isArray(prev)) {
+                              prev[key].password = false
+                            }
+                            return prev?.slice()
+                          })
+                          m.destroy()
+                        } else {
+                          failed(`密码错误`)
+                        }
+                      })
+                  },
+                  width: 400,
+                })
+              }}
+            >
+              密码解锁
+            </YakitButton>
+          </div>
+        </div>
+        <div className={styles['certificate-card-item-footer']}>
+          <OutlineCogIcon
+            className={styles['icon-cog']}
+            onClick={() => {
+              handleConfigureHost(key, item.Host)
+            }}
+          />
+          <OutlineTrashIcon
+            className={styles['icon-trash']}
+            onClick={() => {
+              closeCard(item)
+            }}
+          />
+        </div>
+      </div>
+    )
+  })
+
+  const succeeCard = useMemoizedFn((item: ClientCertificatePfx, key: number) => {
+    return (
+      <div className={styles['certificate-card-item']} key={key}>
+        <div className={classNames(styles['certificate-card'], styles['certificate-succee'])}>
+          <div className={styles['decorate']}>
+            <RectangleSucceeIcon />
+          </div>
+          <div className={styles['union']}>
+            <UnionIcon />
+          </div>
+          <div className={styles['card-hide']}></div>
+
+          <div className={styles['success-main']}>
+            <div className={styles['title']}>{item.name}</div>
+            <SolidCheckCircleIcon />
+            <div className={styles['content']}>可用</div>
+            <div className={styles['password']}>******</div>
+          </div>
+        </div>
+        <div className={styles['certificate-card-item-footer']}>
+          <OutlineCogIcon
+            className={styles['icon-cog']}
+            onClick={() => {
+              handleConfigureHost(key, item.Host)
+            }}
+          />
+          <OutlineTrashIcon
+            className={styles['icon-trash']}
+            onClick={() => {
+              closeCard(item)
+            }}
+          />
+        </div>
+      </div>
+    )
+  })
+
+  const certificateList = useMemo(() => {
+    return (
+      <div className={styles['certificate-box']}>
+        {Array.isArray(certificateParams) &&
+          certificateParams.map((item, index) => {
+            if (item.password) return failCard(item, index)
+            return succeeCard(item, index)
+          })}
+      </div>
+    )
+  }, [certificateParams])
+
+  const [chromePath, setChromePath] = useState<string>('')
+  useEffect(() => {
+    getRemoteValue(RemoteGV.GlobalChromePath).then((setting) => {
+      if (!setting) {
+        ipcRenderer.invoke('GetChromePath').then((chromePath: string) => {
+          setChromePath(chromePath)
+          onSetChromePath(chromePath)
+        })
+      } else {
+        const values: string = JSONParseLog(setting, { page: 'ConfigNetworkPage', fun: 'GlobalChromePath' })
+        setChromePath(values)
+      }
+    })
+  }, [])
+  const onSetChromePath = useMemoizedFn((value?: string) => {
+    setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(value || chromePath))
+  })
+  const onResetChromePath = useMemoizedFn(() => {
+    let path = ''
+    ipcRenderer
+      .invoke('GetChromePath')
+      .then((chromePath: string) => {
+        path = chromePath
+      })
+      .finally(() => {
+        setChromePath(path)
+        setRemoteValue(RemoteGV.GlobalChromePath, JSON.stringify(path))
+      })
+  })
+
+  const [pprofFileAutoAnalyze, setPprofFileAutoAnalyze] = useState<boolean>(false)
+  useEffect(() => {
+    getRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze).then((setting) => {
+      setPprofFileAutoAnalyze(setting === 'true')
+    })
+  }, [])
+  const onSetPprofFileAutoAnalyze = () => {
+    setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, pprofFileAutoAnalyze + '')
+  }
+  const onResetPprofFileAutoAnalyze = () => {
+    setPprofFileAutoAnalyze(false)
+    setRemoteValue(GlobalConfigRemoteGV.PProfFileAutoAnalyze, false + '')
+  }
+
+  const [secondaryTabsNum, setSecondaryTabsNum] = useState<number | string>(100)
+  useEffect(() => {
+    getRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum).then((set) => {
+      if (set) {
+        setSecondaryTabsNum(set)
+      }
+    })
+  }, [])
+  const onSetSecondaryTabsNum = () => {
+    setRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum, secondaryTabsNum + '')
+    emiter.emit('onUpdateSecondaryTabsNum', Number(secondaryTabsNum))
+  }
+  const onResetSecondaryTabsNum = () => {
+    setSecondaryTabsNum(100)
+    setRemoteValue(GlobalConfigRemoteGV.SecondaryTabsNum, 100 + '')
+  }
+
+  const [limitLogNum, setLimitLogNum] = useState<number | string>(DEFAULT_LOG_LIMIT)
+
+  useEffect(() => {
+    getRemoteValue(LIMIT_LOG_NUM_NAME).then((num) => {
+      if (num) setLimitLogNum(Number(num))
+    })
+  }, [])
+
+  const onSetLimitLogNum = useMemoizedFn(() => {
+    const value = Number(limitLogNum)
+    setRemoteValue(LIMIT_LOG_NUM_NAME, value + '')
+    emiter.emit('onUpdateLimitLogNum', value)
+  })
+
+  const onResetLimitLogNum = useMemoizedFn(() => {
+    setLimitLogNum(DEFAULT_LOG_LIMIT)
+    setTimeout(() => {
+      onSetLimitLogNum()
+    }, 100)
+  })
+
+  const onLimitLogNumEnter = useMemoizedFn(() => {
+    let value = parseInt(limitLogNum + '' || '0', 10)
+    if (!value || value === 0) {
+      value = 100
+    }
+    setLimitLogNum(value)
+  })
+
+  const onClickDownstreamProxy = useMemoizedFn(async () => {
+    try {
+      const versionValid = await checkProxyVersion()
+      if (!versionValid) {
+        return
+      }
+      setProxyDrawerVisible(true)
+    } catch (error) {
+      console.error('error:', error)
+    }
+  })
+  const hideRules = useMemo(() => isIRify(), [])
+
+  return (
+    <>
+      <div ref={configRef}>
+        <AutoCard style={{ height: 'auto' }}>
+          <AutoSpin spinning={loading} tip="网络配置加载中...">
+            {params && (
+              <Form size={'small'} labelCol={{ span: 5 }} wrapperCol={{ span: 14 }} onSubmitCapture={() => submit()}>
+                <Divider orientation={'left'} style={{ marginTop: '0px' }}>
+                  DNS 配置
+                </Divider>
+                <SwitchItem
+                  label={'禁用系统 DNS'}
+                  setValue={(DisableSystemDNS) => setParams({ ...params, DisableSystemDNS })}
+                  value={params.DisableSystemDNS}
+                  oldTheme={false}
+                />
+                <ManyMultiSelectForString
+                  label={'备用 DNS'}
+                  setValue={(CustomDNSServers) =>
+                    setParams({ ...params, CustomDNSServers: CustomDNSServers.split(',') })
+                  }
+                  value={params.CustomDNSServers.join(',')}
+                  data={[]}
+                  mode={'tags'}
+                />
+                <SwitchItem
+                  label={'启用 TCP DNS'}
+                  setValue={(DNSFallbackTCP) => setParams({ ...params, DNSFallbackTCP })}
+                  value={params.DNSFallbackTCP}
+                  oldTheme={false}
+                />
+                <SwitchItem
+                  label={'启用 DoH 抗污染'}
+                  setValue={(DNSFallbackDoH) => setParams({ ...params, DNSFallbackDoH })}
+                  value={params.DNSFallbackDoH}
+                  oldTheme={false}
+                />
+                {params.DNSFallbackDoH && (
+                  <ManyMultiSelectForString
+                    label={'备用 DoH'}
+                    setValue={(data) => setParams({ ...params, CustomDoHServers: data.split(',') })}
+                    value={params.CustomDoHServers.join(',')}
+                    data={[]}
+                    mode={'tags'}
+                  />
+                )}
+                <Divider orientation={'left'} style={{ marginTop: '0px' }}>
+                  TLS 客户端配置
+                </Divider>
+                <Form.Item label={'选择格式'}>
+                  <YakitRadioButtons
+                    size="small"
+                    value={format}
+                    onChange={(e) => {
+                      setFormat(e.target.value)
+                    }}
+                    buttonStyle="solid"
+                    options={[
+                      {
+                        value: 1,
+                        label: 'p12/pfx 格式',
+                      },
+                      {
+                        value: 2,
+                        label: 'pem 格式',
+                      },
+                    ]}
+                  />
+                </Form.Item>
+                {format === 1 && (
+                  <>
+                    <Form.Item label={'添加证书'}>
+                      {/*
                                     PEM: 3 - CERT / KEY / CA-CERT
                                     PKCS12(P12/PFX)(.p12 .pfx): File + Password
                                 */}
-                                            <Upload
-                                                accept={".p12,.pfx"}
-                                                multiple={false}
-                                                maxCount={1}
-                                                showUploadList={false}
-                                                beforeUpload={(file) => onCertificate(file)}
-                                            >
-                                                <YakitButton type={"outline2"}>
-                                                    添加 TLS 客户端证书（双向认证）
-                                                </YakitButton>
-                                            </Upload>
-                                        </Form.Item>
-                                    </>
-                                )}
-                                {format === 2 && (
-                                    <InputCertificateForm
-                                        ref={cerFormRef}
-                                        isShowCerName={false}
-                                        formProps={{
-                                            labelCol: {span: 5},
-                                            wrapperCol: {span: 14}
-                                        }}
-                                    />
-                                )}
-                                <Form.Item colon={false} label={<> </>}>
-                                    {certificateList}
-                                </Form.Item>
-                                <Form.Item label={"客户端tls版本支持"}>
-                                    <Slider
-                                        style={{width: "33%"}}
-                                        range
-                                        dots
-                                        value={[params.MinTlsVersion, params.MaxTlsVersion]}
-                                        onChange={(value) => {
-                                            if (value.length == 2) {
-                                                setParams({...params, MinTlsVersion: value[0], MaxTlsVersion: value[1]})
-                                            }
-                                        }}
-                                        min={0x300}
-                                        max={0x304}
-                                        tipFormatter={(value) => {
-                                            switch (value) {
-                                                case 0x300:
-                                                    return "SSLv3"
-                                                case 0x301:
-                                                    return "TLS 1.0"
-                                                case 0x302:
-                                                    return "TLS 1.1"
-                                                case 0x303:
-                                                    return "TLS 1.2"
-                                                case 0x304:
-                                                    return "TLS 1.3"
-                                                default:
-                                                    return value
-                                            }
-                                        }}
-                                    />
-                                </Form.Item>
+                      <Upload
+                        accept={'.p12,.pfx'}
+                        multiple={false}
+                        maxCount={1}
+                        showUploadList={false}
+                        beforeUpload={(file) => onCertificate(file)}
+                      >
+                        <YakitButton type={'outline2'}>添加 TLS 客户端证书（双向认证）</YakitButton>
+                      </Upload>
+                    </Form.Item>
+                  </>
+                )}
+                {format === 2 && (
+                  <InputCertificateForm
+                    ref={cerFormRef}
+                    isShowCerName={false}
+                    formProps={{
+                      labelCol: { span: 5 },
+                      wrapperCol: { span: 14 },
+                    }}
+                  />
+                )}
+                <Form.Item colon={false} label={<> </>}>
+                  {certificateList}
+                </Form.Item>
+                <Form.Item label={'客户端tls版本支持'}>
+                  <Slider
+                    style={{ width: '33%' }}
+                    range
+                    dots
+                    value={[params.MinTlsVersion, params.MaxTlsVersion]}
+                    onChange={(value) => {
+                      if (value.length == 2) {
+                        setParams({ ...params, MinTlsVersion: value[0], MaxTlsVersion: value[1] })
+                      }
+                    }}
+                    min={0x300}
+                    max={0x304}
+                    tipFormatter={(value) => {
+                      switch (value) {
+                        case 0x300:
+                          return 'SSLv3'
+                        case 0x301:
+                          return 'TLS 1.0'
+                        case 0x302:
+                          return 'TLS 1.1'
+                        case 0x303:
+                          return 'TLS 1.2'
+                        case 0x304:
+                          return 'TLS 1.3'
+                        default:
+                          return value
+                      }
+                    }}
+                  />
+                </Form.Item>
 
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                                    第三方应用配置
-                                </Divider>
-                                <Form.Item label={"第三方应用"}>
-                                    {(params.AppConfigs || []).map((i, index) => {
-                                        const extraParamsArr = i.ExtraParams || []
-                                        const extraParams = {}
-                                        extraParamsArr.forEach((item) => {
-                                            extraParams[item.Key] = item.Value
-                                        })
-                                        return (
-                                            <YakitTag
-                                                key={index}
-                                                onClick={() => {
-                                                    let m = showYakitModal({
-                                                        title: "修改第三方应用",
-                                                        width: 600,
-                                                        closable: true,
-                                                        maskClosable: false,
-                                                        footer: null,
-                                                        content: (
-                                                            <NewThirdPartyApplicationConfig
-                                                                formValues={{
-                                                                    Type: i.Type,
-                                                                    ...extraParams
-                                                                }}
-                                                                disabledType={true}
-                                                                onAdd={(data) => {
-                                                                    // 不影响ai优先级排序
-                                                                    setParams({
-                                                                        ...params,
-                                                                        AppConfigs: (params.AppConfigs || []).map(
-                                                                            (i) => {
-                                                                                if (i.Type === data.Type) {
-                                                                                    i = data
-                                                                                }
-                                                                                return {...i}
-                                                                            }
-                                                                        )
-                                                                    })
-                                                                    setTimeout(() => submit(), 100)
-                                                                    m.destroy()
-                                                                }}
-                                                                onCancel={() => m.destroy()}
-                                                            />
-                                                        )
-                                                    })
-                                                }}
-                                                closable
-                                                onClose={async () => {
-                                                    const newAppConfigs = (params.AppConfigs || []).filter(
-                                                        (e) => i.Type !== e.Type
-                                                    )
-                                                    const newAiApiPriority = params.AiApiPriority.filter(
-                                                        (ele) => ele !== i.Type
-                                                    )
-                                                    setParams({
-                                                        ...params,
-                                                        AppConfigs: newAppConfigs,
-                                                        AiApiPriority: newAiApiPriority
-                                                    })
-                                                    setTimeout(() => submit(), 100)
-                                                }}
-                                            >
-                                                {i.Type}
-                                            </YakitTag>
-                                        )
-                                    })}
-                                    <YakitButton
-                                        type={"outline1"}
-                                        onClick={() => {
-                                            let m = showYakitModal({
-                                                title: "添加第三方应用",
-                                                width: 600,
-                                                footer: null,
-                                                closable: true,
-                                                maskClosable: false,
-                                                content: (
-                                                    <NewThirdPartyApplicationConfig
-                                                        onAdd={(data) => {
-                                                            // 新增，有影响ai优化级
-                                                            const newValue = handleAIConfig(
-                                                                {
-                                                                    AppConfigs: params.AppConfigs,
-                                                                    AiApiPriority: params.AiApiPriority
-                                                                },
-                                                                data
-                                                            )
-                                                            if (!newValue) {
-                                                                yakitNotify("error", "ConfigNetworkPage 参数错误")
-                                                                return
-                                                            }
-                                                            setParams((perv) => ({...perv, ...newValue})) // submit后会拿最新得全局配置
-                                                            setTimeout(() => submit(), 100)
-                                                            m.destroy()
-                                                        }}
-                                                        onCancel={() => m.destroy()}
-                                                    />
-                                                )
-                                            })
-                                        }}
-                                    >
-                                        添加第三方应用
-                                    </YakitButton>
-                                </Form.Item>
-                                {/* <Form.Item label={"AI使用优先级"}>
+                <Divider orientation={'left'} style={{ marginTop: '0px' }}>
+                  第三方应用配置
+                </Divider>
+                <Form.Item label={'第三方应用'}>
+                  {(params.AppConfigs || []).map((i, index) => {
+                    const extraParamsArr = i.ExtraParams || []
+                    const extraParams = {}
+                    extraParamsArr.forEach((item) => {
+                      extraParams[item.Key] = item.Value
+                    })
+                    return (
+                      <YakitTag
+                        key={index}
+                        onClick={() => {
+                          let m = showYakitModal({
+                            title: '修改第三方应用',
+                            width: 600,
+                            closable: true,
+                            maskClosable: false,
+                            footer: null,
+                            content: (
+                              <NewThirdPartyApplicationConfig
+                                formValues={{
+                                  Type: i.Type,
+                                  ...extraParams,
+                                }}
+                                disabledType={true}
+                                onAdd={(data) => {
+                                  // 不影响ai优先级排序
+                                  setParams({
+                                    ...params,
+                                    AppConfigs: (params.AppConfigs || []).map((i) => {
+                                      if (i.Type === data.Type) {
+                                        i = data
+                                      }
+                                      return { ...i }
+                                    }),
+                                  })
+                                  setTimeout(() => submit(), 100)
+                                  m.destroy()
+                                }}
+                                onCancel={() => m.destroy()}
+                              />
+                            ),
+                          })
+                        }}
+                        closable
+                        onClose={async () => {
+                          const newAppConfigs = (params.AppConfigs || []).filter((e) => i.Type !== e.Type)
+                          const newAiApiPriority = params.AiApiPriority.filter((ele) => ele !== i.Type)
+                          setParams({
+                            ...params,
+                            AppConfigs: newAppConfigs,
+                            AiApiPriority: newAiApiPriority,
+                          })
+                          setTimeout(() => submit(), 100)
+                        }}
+                      >
+                        {i.Type}
+                      </YakitTag>
+                    )
+                  })}
+                  <YakitButton
+                    type={'outline1'}
+                    onClick={() => {
+                      let m = showYakitModal({
+                        title: '添加第三方应用',
+                        width: 600,
+                        footer: null,
+                        closable: true,
+                        maskClosable: false,
+                        content: (
+                          <NewThirdPartyApplicationConfig
+                            onAdd={(data) => {
+                              // 新增，有影响ai优化级
+                              const newValue = handleAIConfig(
+                                {
+                                  AppConfigs: params.AppConfigs,
+                                  AiApiPriority: params.AiApiPriority,
+                                },
+                                data,
+                              )
+                              if (!newValue) {
+                                yakitNotify('error', 'ConfigNetworkPage 参数错误')
+                                return
+                              }
+                              setParams((perv) => ({ ...perv, ...newValue })) // submit后会拿最新得全局配置
+                              setTimeout(() => submit(), 100)
+                              m.destroy()
+                            }}
+                            onCancel={() => m.destroy()}
+                          />
+                        ),
+                      })
+                    }}
+                  >
+                    添加第三方应用
+                  </YakitButton>
+                </Form.Item>
+                {/* <Form.Item label={"AI使用优先级"}>
                                     <div className={styles["ai-sort-box"]}>
                                         {!!params.AppConfigs.length ? (
                                             <AISortContent
@@ -1006,1033 +990,1011 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                         )}
                                     </div>
                                 </Form.Item> */}
-                                <AIModelGlobalConfig />
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                                    自定义代码片段
-                                    <div className={styles["form-rule-code-customize-describe"]}>
-                                        配置后编写代码时自动补全将会提示，并且选中后可使用自己的代码片段
-                                    </div>
-                                </Divider>
+                <AIModelGlobalConfig />
+                <Divider orientation={'left'} style={{ marginTop: '0px' }}>
+                  自定义代码片段
+                  <div className={styles['form-rule-code-customize-describe']}>
+                    配置后编写代码时自动补全将会提示，并且选中后可使用自己的代码片段
+                  </div>
+                </Divider>
 
-                                <Form.Item
-                                    label='代码片段'
-                                    name='code-customize'
-                                    className={styles["form-rule-code-customize-item"]}
-                                >
-                                    <CodeCustomize />
-                                </Form.Item>
+                <Form.Item label="代码片段" name="code-customize" className={styles['form-rule-code-customize-item']}>
+                  <CodeCustomize />
+                </Form.Item>
 
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                                    其他配置
-                                </Divider>
-                                <Form.Item label={"HTTP认证全局配置"}>
-                                    <div className={styles["form-rule-body"]}>
-                                        <div className={styles["form-rule"]} onClick={() => setVisible(true)}>
-                                            <div className={styles["form-rule-text"]}>
-                                                现有配置 {params.AuthInfos.filter((item) => !item.Forbidden).length} 条
-                                            </div>
-                                            <div className={styles["form-rule-icon"]}>
-                                                <CogIcon />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Form.Item>
+                <Divider orientation={'left'} style={{ marginTop: '0px' }}>
+                  其他配置
+                </Divider>
+                <Form.Item label={'HTTP认证全局配置'}>
+                  <div className={styles['form-rule-body']}>
+                    <div className={styles['form-rule']} onClick={() => setVisible(true)}>
+                      <div className={styles['form-rule-text']}>
+                        现有配置 {params.AuthInfos.filter((item) => !item.Forbidden).length} 条
+                      </div>
+                      <div className={styles['form-rule-icon']}>
+                        <CogIcon />
+                      </div>
+                    </div>
+                  </div>
+                </Form.Item>
 
-                                <Form.Item label={"禁用IP"} tooltip='配置禁用IP后，yakit将会过滤不会访问'>
-                                    <YakitSelect
-                                        mode='tags'
-                                        value={params.DisallowIPAddress}
-                                        onChange={(value) => {
-                                            setParams({...params, DisallowIPAddress: value})
-                                        }}
-                                    ></YakitSelect>
-                                </Form.Item>
-                                <Form.Item label={"禁用域名"} tooltip='配置禁用域名后，yakit将会过滤不会访问'>
-                                    <YakitSelect
-                                        mode='tags'
-                                        value={params.DisallowDomain}
-                                        onChange={(value) => {
-                                            setParams({...params, DisallowDomain: value})
-                                        }}
-                                    ></YakitSelect>
-                                </Form.Item>
-                                <Form.Item
-                                    label={"插件扫描白名单"}
-                                    tooltip='配置插件扫描白名单后，插件仅会对匹配的URL进行扫描。支持以兼容模式进行匹配，即先尝试以正则模式匹配 → glob 模式匹配 → 关键字匹配。'
-                                >
-                                    <YakitSelect
-                                        mode='tags'
-                                        value={params.IncludePluginScanURIs}
-                                        onChange={(value) => {
-                                            setParams({...params, IncludePluginScanURIs: value})
-                                        }}
-                                    ></YakitSelect>
-                                </Form.Item>
-                                <Form.Item
-                                    label={"插件扫描黑名单"}
-                                    tooltip='配置插件扫描黑名单后，插件不会对匹配的URL进行扫描。支持以兼容模式进行匹配，即先尝试以正则模式匹配 → glob 模式匹配 → 关键字匹配。'
-                                >
-                                    <YakitSelect
-                                        mode='tags'
-                                        value={params.ExcludePluginScanURIs}
-                                        onChange={(value) => {
-                                            setParams({...params, ExcludePluginScanURIs: value})
-                                        }}
-                                    ></YakitSelect>
-                                </Form.Item>
-                                <Form.Item label={"全局代理"}>
-                                    <YakitInput
-                                        allowClear
-                                        size='small'
-                                        value={params.GlobalProxy.join(",")}
-                                        onChange={(e) => {
-                                            const {value} = e.target
-                                            setParams({...params, GlobalProxy: value.split(",")})
-                                        }}
-                                    />
-                                </Form.Item>
-                                <Form.Item label={"插件执行超时限制"}>
-                                    <YakitInputNumber
-                                        size='small'
-                                        value={params.CallPluginTimeout}
-                                        onChange={(e) => {
-                                            setParams({...params, CallPluginTimeout: e as number})
-                                        }}
-                                        min={1}
-                                    />
-                                </Form.Item>
-                                <Form.Item label={"免配置启动路径"}>
-                                    <YakitInput
-                                        value={chromePath}
-                                        placeholder={"请选择启动路径"}
-                                        size='small'
-                                        onChange={(e) => setChromePath(e.target.value)}
-                                    />
-                                    <Upload
-                                        multiple={false}
-                                        maxCount={1}
-                                        showUploadList={false}
-                                        beforeUpload={(f) => {
-                                            const file_name = f.name
-                                            // @ts-ignore
-                                            const path: string = f?.path || ""
-                                            if (path.length > 0) {
-                                                setChromePath(path)
-                                            }
-                                            return false
-                                        }}
-                                    >
-                                        <div className={styles["config-select-path"]}>选择路径</div>
-                                    </Upload>
-                                </Form.Item>
-                                <Form.Item
-                                    label={"系统代理"}
-                                    tooltip='开启以后如未配置代理，会默认走系统代理；如配置其他代理，其优先级高于系统代理'
-                                >
-                                    <YakitSwitch
-                                        checked={params.EnableSystemProxyFromEnv}
-                                        onChange={(EnableSystemProxyFromEnv) =>
-                                            setParams({...params, EnableSystemProxyFromEnv})
-                                        }
-                                    />
-                                </Form.Item>
-                                <Form.Item
-                                    label={t(hideRules ? "AgentConfigModal.proxy_configuration" : "ProxyConfig.title")}
-                                >
-                                    <div className={styles["form-rule-body"]}>
-                                        <div className={styles["form-rule"]} onClick={onClickDownstreamProxy}>
-                                            <div className={styles["form-rule-text"]}>
-                                                {t("ProxyConfig.recordPointsCount", {i: Endpoints.length})}
-                                                {!hideRules
-                                                    ? `,${t("ProxyConfig.recordRoutesCount", {i: Routes.length})}`
-                                                    : null}
-                                            </div>
-                                            <div className={styles["form-rule-icon"]}>
-                                                <OutlineCogIcon />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Form.Item>
-                                <ProxyRulesConfig
-                                    hideRules={hideRules}
-                                    visible={proxyDrawerVisible}
-                                    onClose={() => setProxyDrawerVisible(false)}
-                                />
-                                <Form.Item label={"保存HTTP流量"} tooltip='打开则会保存MITM以外的流量数据到History表中'>
-                                    <YakitSwitch
-                                        checked={!params.SkipSaveHTTPFlow}
-                                        onChange={(val) => setParams({...params, SkipSaveHTTPFlow: !val})}
-                                    />
-                                </Form.Item>
-                                <Form.Item label={"数据库同步存储"} tooltip='开启数据库同步存存储'>
-                                    <YakitSwitch
-                                        checked={params.DbSaveSync}
-                                        onChange={(val) => setParams({...params, DbSaveSync: val})}
-                                    />
-                                </Form.Item>
-                                <Form.Item
-                                    label={"转储数据包大小"}
-                                    tooltip='超过设置大小的数据包会转储为文件，不会直接入库'
-                                    labelCol={{span: 5}}
-                                    wrapperCol={{span: 2}}
-                                >
-                                    <YakitInput
-                                        suffix='M'
-                                        size='small'
-                                        value={params.MaxContentLength}
-                                        onChange={(e) => {
-                                            let value = e.target.value.replace(/\D/g, "")
-                                            if (value.length > 1 && value.startsWith("0")) {
-                                                value = value.replace(/^0+/, "")
-                                            }
-                                            setParams({...params, MaxContentLength: value})
-                                        }}
-                                        onPressEnter={() => {
-                                            let value = parseInt(params.MaxContentLength + "" || "0", 10)
-                                            if (!value || value === 0) {
-                                                value = 10
-                                            } else if (value > 50) {
-                                                value = 50
-                                            }
-                                            setParams({...params, MaxContentLength: value})
-                                        }}
-                                        onBlur={() => {
-                                            let value = parseInt(params.MaxContentLength + "" || "0", 10)
-                                            if (!value || value === 0) {
-                                                value = 10
-                                            } else if (value > 50) {
-                                                value = 50
-                                            }
-                                            setParams({...params, MaxContentLength: value})
-                                        }}
-                                    />
-                                </Form.Item>
-                                <Form.Item
-                                    label={"自动性能采样"}
-                                    tooltip={
-                                        <>
-                                            开启后cpu、内存过高则会自动触发性能采样，采集到的文件会存在
-                                            "~yakit-projects/pprof-log"文件夹里
-                                        </>
-                                    }
-                                >
-                                    <YakitSwitch
-                                        checked={pprofFileAutoAnalyze}
-                                        onChange={(pprofFileAutoAnalyze) =>
-                                            setPprofFileAutoAnalyze(pprofFileAutoAnalyze)
-                                        }
-                                    />
-                                </Form.Item>
-                                <Form.Item label={"二级页签数量"} labelCol={{span: 5}} wrapperCol={{span: 2}}>
-                                    <YakitInput
-                                        size='small'
-                                        value={secondaryTabsNum}
-                                        onChange={(e) => {
-                                            let value = e.target.value.replace(/\D/g, "")
-                                            if (value.length > 1 && value.startsWith("0")) {
-                                                value = value.replace(/^0+/, "")
-                                            }
-                                            setSecondaryTabsNum(value)
-                                        }}
-                                        onPressEnter={() => {
-                                            let value = parseInt(secondaryTabsNum + "" || "0", 10)
-                                            if (!value || value === 0) {
-                                                value = 100
-                                            }
-                                            setSecondaryTabsNum(value)
-                                        }}
-                                        onBlur={() => {
-                                            let value = parseInt(secondaryTabsNum + "" || "0", 10)
-                                            if (!value || value === 0) {
-                                                value = 100
-                                            }
-                                            setSecondaryTabsNum(value)
-                                        }}
-                                    />
-                                </Form.Item>
-                                <Form.Item label={"插件日志条数"} labelCol={{span: 5}} wrapperCol={{span: 2}}>
-                                    <YakitInput
-                                        size='small'
-                                        value={limitLogNum}
-                                        onChange={(e) => {
-                                            let value = e.target.value.replace(/\D/g, "")
-                                            if (value.length > 1 && value.startsWith("0")) {
-                                                value = value.replace(/^0+/, "")
-                                            }
-                                            setLimitLogNum(value)
-                                        }}
-                                        onPressEnter={onLimitLogNumEnter}
-                                        onBlur={onLimitLogNumEnter}
-                                    />
-                                </Form.Item>
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                                    SYN 扫描网卡配置
-                                </Divider>
-                                <Form.Item label={"网卡"} tooltip='为SYN扫描选择网卡'>
-                                    <YakitSelect
-                                        // showSearch
-                                        options={netInterfaceList}
-                                        placeholder='请选择...'
-                                        size='small'
-                                        value={params.SynScanNetInterface}
-                                        onChange={(netInterface) => {
-                                            setParams({...params, SynScanNetInterface: netInterface})
-                                        }}
-                                        maxTagCount={100}
-                                    />
-                                </Form.Item>
-                                <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                                    隐私配置
-                                </Divider>
-                                <Form.Item
-                                    label={"退出登陆删除本地私密插件"}
-                                    tooltip='账号退出登录后,会删除该账号的本地私密插件,便于保护用户隐私数据'
-                                >
-                                    <YakitSwitch checked={isDelPrivatePlugin} onChange={setIsDelPrivatePlugin} />
-                                </Form.Item>
-                                <Form.Item colon={false} label={" "}>
-                                    <Space>
-                                        <YakitButton type='primary' htmlType='submit'>
-                                            更新全局配置
-                                        </YakitButton>
-                                        <YakitPopconfirm
-                                            title={"确定需要重置配置吗？"}
-                                            onConfirm={() => {
-                                                onResetDelPrivatePlugin()
-                                                onResetChromePath()
-                                                onResetPprofFileAutoAnalyze()
-                                                onResetSecondaryTabsNum()
-                                                onResetLimitLogNum()
-                                                ipcRenderer.invoke("ResetGlobalNetworkConfig", {}).then(() => {
-                                                    cerFormRef.current?.resetFields()
-                                                    update()
-                                                    yakitInfo("重置配置成功")
-                                                })
-                                            }}
-                                            placement='top'
-                                        >
-                                            <YakitButton type='outline1'> 重置配置 </YakitButton>
-                                        </YakitPopconfirm>
-                                    </Space>
-                                </Form.Item>
-                            </Form>
-                        )}
-                    </AutoSpin>
-                </AutoCard>
-            </div>
-            {visible && (
-                <NTMLConfig
-                    visible={visible && !!inViewport}
-                    setVisible={setVisible}
-                    params={params}
-                    setParams={setParams}
-                    onNtmlSave={onNtmlSave}
+                <Form.Item label={'禁用IP'} tooltip="配置禁用IP后，yakit将会过滤不会访问">
+                  <YakitSelect
+                    mode="tags"
+                    value={params.DisallowIPAddress}
+                    onChange={(value) => {
+                      setParams({ ...params, DisallowIPAddress: value })
+                    }}
+                  ></YakitSelect>
+                </Form.Item>
+                <Form.Item label={'禁用域名'} tooltip="配置禁用域名后，yakit将会过滤不会访问">
+                  <YakitSelect
+                    mode="tags"
+                    value={params.DisallowDomain}
+                    onChange={(value) => {
+                      setParams({ ...params, DisallowDomain: value })
+                    }}
+                  ></YakitSelect>
+                </Form.Item>
+                <Form.Item
+                  label={'插件扫描白名单'}
+                  tooltip="配置插件扫描白名单后，插件仅会对匹配的URL进行扫描。支持以兼容模式进行匹配，即先尝试以正则模式匹配 → glob 模式匹配 → 关键字匹配。"
+                >
+                  <YakitSelect
+                    mode="tags"
+                    value={params.IncludePluginScanURIs}
+                    onChange={(value) => {
+                      setParams({ ...params, IncludePluginScanURIs: value })
+                    }}
+                  ></YakitSelect>
+                </Form.Item>
+                <Form.Item
+                  label={'插件扫描黑名单'}
+                  tooltip="配置插件扫描黑名单后，插件不会对匹配的URL进行扫描。支持以兼容模式进行匹配，即先尝试以正则模式匹配 → glob 模式匹配 → 关键字匹配。"
+                >
+                  <YakitSelect
+                    mode="tags"
+                    value={params.ExcludePluginScanURIs}
+                    onChange={(value) => {
+                      setParams({ ...params, ExcludePluginScanURIs: value })
+                    }}
+                  ></YakitSelect>
+                </Form.Item>
+                <Form.Item label={'全局代理'}>
+                  <YakitInput
+                    allowClear
+                    size="small"
+                    value={params.GlobalProxy.join(',')}
+                    onChange={(e) => {
+                      const { value } = e.target
+                      setParams({ ...params, GlobalProxy: value.split(',') })
+                    }}
+                  />
+                </Form.Item>
+                <Form.Item label={'插件执行超时限制'}>
+                  <YakitInputNumber
+                    size="small"
+                    value={params.CallPluginTimeout}
+                    onChange={(e) => {
+                      setParams({ ...params, CallPluginTimeout: e as number })
+                    }}
+                    min={1}
+                  />
+                </Form.Item>
+                <Form.Item label={'免配置启动路径'}>
+                  <YakitInput
+                    value={chromePath}
+                    placeholder={'请选择启动路径'}
+                    size="small"
+                    onChange={(e) => setChromePath(e.target.value)}
+                  />
+                  <Upload
+                    multiple={false}
+                    maxCount={1}
+                    showUploadList={false}
+                    beforeUpload={(f) => {
+                      const file_name = f.name
+                      // @ts-ignore
+                      const path: string = f?.path || ''
+                      if (path.length > 0) {
+                        setChromePath(path)
+                      }
+                      return false
+                    }}
+                  >
+                    <div className={styles['config-select-path']}>选择路径</div>
+                  </Upload>
+                </Form.Item>
+                <Form.Item
+                  label={'系统代理'}
+                  tooltip="开启以后如未配置代理，会默认走系统代理；如配置其他代理，其优先级高于系统代理"
+                >
+                  <YakitSwitch
+                    checked={params.EnableSystemProxyFromEnv}
+                    onChange={(EnableSystemProxyFromEnv) => setParams({ ...params, EnableSystemProxyFromEnv })}
+                  />
+                </Form.Item>
+                <Form.Item label={t(hideRules ? 'AgentConfigModal.proxy_configuration' : 'ProxyConfig.title')}>
+                  <div className={styles['form-rule-body']}>
+                    <div className={styles['form-rule']} onClick={onClickDownstreamProxy}>
+                      <div className={styles['form-rule-text']}>
+                        {t('ProxyConfig.recordPointsCount', { i: Endpoints.length })}
+                        {!hideRules ? `,${t('ProxyConfig.recordRoutesCount', { i: Routes.length })}` : null}
+                      </div>
+                      <div className={styles['form-rule-icon']}>
+                        <OutlineCogIcon />
+                      </div>
+                    </div>
+                  </div>
+                </Form.Item>
+                <ProxyRulesConfig
+                  hideRules={hideRules}
+                  visible={proxyDrawerVisible}
+                  onClose={() => setProxyDrawerVisible(false)}
                 />
+                <Form.Item label={'保存HTTP流量'} tooltip="打开则会保存MITM以外的流量数据到History表中">
+                  <YakitSwitch
+                    checked={!params.SkipSaveHTTPFlow}
+                    onChange={(val) => setParams({ ...params, SkipSaveHTTPFlow: !val })}
+                  />
+                </Form.Item>
+                <Form.Item label={'数据库同步存储'} tooltip="开启数据库同步存存储">
+                  <YakitSwitch
+                    checked={params.DbSaveSync}
+                    onChange={(val) => setParams({ ...params, DbSaveSync: val })}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label={'转储数据包大小'}
+                  tooltip="超过设置大小的数据包会转储为文件，不会直接入库"
+                  labelCol={{ span: 5 }}
+                  wrapperCol={{ span: 2 }}
+                >
+                  <YakitInput
+                    suffix="M"
+                    size="small"
+                    value={params.MaxContentLength}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, '')
+                      if (value.length > 1 && value.startsWith('0')) {
+                        value = value.replace(/^0+/, '')
+                      }
+                      setParams({ ...params, MaxContentLength: value })
+                    }}
+                    onPressEnter={() => {
+                      let value = parseInt(params.MaxContentLength + '' || '0', 10)
+                      if (!value || value === 0) {
+                        value = 10
+                      } else if (value > 50) {
+                        value = 50
+                      }
+                      setParams({ ...params, MaxContentLength: value })
+                    }}
+                    onBlur={() => {
+                      let value = parseInt(params.MaxContentLength + '' || '0', 10)
+                      if (!value || value === 0) {
+                        value = 10
+                      } else if (value > 50) {
+                        value = 50
+                      }
+                      setParams({ ...params, MaxContentLength: value })
+                    }}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label={'自动性能采样'}
+                  tooltip={
+                    <>开启后cpu、内存过高则会自动触发性能采样，采集到的文件会存在 "~yakit-projects/pprof-log"文件夹里</>
+                  }
+                >
+                  <YakitSwitch
+                    checked={pprofFileAutoAnalyze}
+                    onChange={(pprofFileAutoAnalyze) => setPprofFileAutoAnalyze(pprofFileAutoAnalyze)}
+                  />
+                </Form.Item>
+                <Form.Item label={'二级页签数量'} labelCol={{ span: 5 }} wrapperCol={{ span: 2 }}>
+                  <YakitInput
+                    size="small"
+                    value={secondaryTabsNum}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, '')
+                      if (value.length > 1 && value.startsWith('0')) {
+                        value = value.replace(/^0+/, '')
+                      }
+                      setSecondaryTabsNum(value)
+                    }}
+                    onPressEnter={() => {
+                      let value = parseInt(secondaryTabsNum + '' || '0', 10)
+                      if (!value || value === 0) {
+                        value = 100
+                      }
+                      setSecondaryTabsNum(value)
+                    }}
+                    onBlur={() => {
+                      let value = parseInt(secondaryTabsNum + '' || '0', 10)
+                      if (!value || value === 0) {
+                        value = 100
+                      }
+                      setSecondaryTabsNum(value)
+                    }}
+                  />
+                </Form.Item>
+                <Form.Item label={'插件日志条数'} labelCol={{ span: 5 }} wrapperCol={{ span: 2 }}>
+                  <YakitInput
+                    size="small"
+                    value={limitLogNum}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, '')
+                      if (value.length > 1 && value.startsWith('0')) {
+                        value = value.replace(/^0+/, '')
+                      }
+                      setLimitLogNum(value)
+                    }}
+                    onPressEnter={onLimitLogNumEnter}
+                    onBlur={onLimitLogNumEnter}
+                  />
+                </Form.Item>
+                <Divider orientation={'left'} style={{ marginTop: '0px' }}>
+                  SYN 扫描网卡配置
+                </Divider>
+                <Form.Item label={'网卡'} tooltip="为SYN扫描选择网卡">
+                  <YakitSelect
+                    // showSearch
+                    options={netInterfaceList}
+                    placeholder="请选择..."
+                    size="small"
+                    value={params.SynScanNetInterface}
+                    onChange={(netInterface) => {
+                      setParams({ ...params, SynScanNetInterface: netInterface })
+                    }}
+                    maxTagCount={100}
+                  />
+                </Form.Item>
+                <Divider orientation={'left'} style={{ marginTop: '0px' }}>
+                  隐私配置
+                </Divider>
+                <Form.Item
+                  label={'退出登陆删除本地私密插件'}
+                  tooltip="账号退出登录后,会删除该账号的本地私密插件,便于保护用户隐私数据"
+                >
+                  <YakitSwitch checked={isDelPrivatePlugin} onChange={setIsDelPrivatePlugin} />
+                </Form.Item>
+                <Form.Item colon={false} label={' '}>
+                  <Space>
+                    <YakitButton type="primary" htmlType="submit">
+                      更新全局配置
+                    </YakitButton>
+                    <YakitPopconfirm
+                      title={'确定需要重置配置吗？'}
+                      onConfirm={() => {
+                        onResetDelPrivatePlugin()
+                        onResetChromePath()
+                        onResetPprofFileAutoAnalyze()
+                        onResetSecondaryTabsNum()
+                        onResetLimitLogNum()
+                        ipcRenderer.invoke('ResetGlobalNetworkConfig', {}).then(() => {
+                          cerFormRef.current?.resetFields()
+                          update()
+                          yakitInfo('重置配置成功')
+                        })
+                      }}
+                      placement="top"
+                    >
+                      <YakitButton type="outline1"> 重置配置 </YakitButton>
+                    </YakitPopconfirm>
+                  </Space>
+                </Form.Item>
+              </Form>
             )}
-        </>
-    )
+          </AutoSpin>
+        </AutoCard>
+      </div>
+      {visible && (
+        <NTMLConfig
+          visible={visible && !!inViewport}
+          setVisible={setVisible}
+          params={params}
+          setParams={setParams}
+          onNtmlSave={onNtmlSave}
+        />
+      )}
+    </>
+  )
 }
 
 interface AIModelGlobalConfigProps {
-    mountContainer?: AIOnlineModelListProps["mountContainer"]
+  mountContainer?: AIOnlineModelListProps['mountContainer']
 }
 /**
  * 在全局配置得页面使用这个组件,组件得父元素得Form表单中没有使用自带得设置值,而是采用得state来控制
  */
 const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((props) => {
-    const {mountContainer} = props
-    const {t} = useI18nNamespaces(["aiAgent"])
-    const [aiGlobalConfig, setAIGlobalConfig] = useState<AIGlobalConfig>(cloneDeep(defaultAIGlobalConfig))
-    const refRef = useRef<HTMLDivElement>(null)
-    const [inViewport = true] = useInViewport(refRef)
-    useEffect(() => {
-        inViewport && getAIConfig()
-    }, [inViewport])
-    const getAIConfig = useMemoizedFn(() => {
-        grpcGetAIGlobalConfig().then((res) => {
-            setAIGlobalConfig(res)
-        })
+  const { mountContainer } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const [aiGlobalConfig, setAIGlobalConfig] = useState<AIGlobalConfig>(cloneDeep(defaultAIGlobalConfig))
+  const refRef = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(refRef)
+  useEffect(() => {
+    inViewport && getAIConfig()
+  }, [inViewport])
+  const getAIConfig = useMemoizedFn(() => {
+    grpcGetAIGlobalConfig().then((res) => {
+      setAIGlobalConfig(res)
     })
-    useEffect(() => {
-        setAIConfig()
-    }, [aiGlobalConfig.DisableFallback, aiGlobalConfig.RoutingPolicy])
-    const setAIConfig = useDebounceFn(
-        useMemoizedFn(() => {
-            grpcSetAIGlobalConfig(aiGlobalConfig)
-        }),
-        {wait: 500}
-    ).run
+  })
+  useEffect(() => {
+    setAIConfig()
+  }, [aiGlobalConfig.DisableFallback, aiGlobalConfig.RoutingPolicy])
+  const setAIConfig = useDebounceFn(
+    useMemoizedFn(() => {
+      grpcSetAIGlobalConfig(aiGlobalConfig)
+    }),
+    { wait: 500 },
+  ).run
 
-    const onEdit = useMemoizedFn((options: AIModelActionProps) => {
-        if (!aiGlobalConfig) return
-        const {fileName, index} = options
-        onEditAIModel({
-            aiGlobalConfig,
-            index,
-            fileName,
-            mountContainer: undefined,
-            t,
-            onSuccess: () => {
-                getAIConfig()
-            }
-        })
+  const onEdit = useMemoizedFn((options: AIModelActionProps) => {
+    if (!aiGlobalConfig) return
+    const { fileName, index } = options
+    onEditAIModel({
+      aiGlobalConfig,
+      index,
+      fileName,
+      mountContainer: undefined,
+      t,
+      onSuccess: () => {
+        getAIConfig()
+      },
     })
+  })
 
-    const onRemove = useMemoizedFn((options: AIModelActionProps) => {
-        if (!aiGlobalConfig) return
-        const {fileName, index} = options
-        onRemoveAIModel({
-            aiGlobalConfig,
-            index,
-            fileName,
-            onSuccess: () => {
-                getAIConfig()
-            }
-        })
+  const onRemove = useMemoizedFn((options: AIModelActionProps) => {
+    if (!aiGlobalConfig) return
+    const { fileName, index } = options
+    onRemoveAIModel({
+      aiGlobalConfig,
+      index,
+      fileName,
+      onSuccess: () => {
+        getAIConfig()
+      },
     })
+  })
 
-    const onSelect = useMemoizedFn((item: AIModelConfig, options: AIModelActionProps) => {
-        if (!aiGlobalConfig) return
-        const {index, fileName} = options
-        onSelectAIModel({
-            aiGlobalConfig,
-            item,
-            index,
-            fileName,
-            onSuccess: () => {
-                getAIConfig()
-            }
-        })
+  const onSelect = useMemoizedFn((item: AIModelConfig, options: AIModelActionProps) => {
+    if (!aiGlobalConfig) return
+    const { index, fileName } = options
+    onSelectAIModel({
+      aiGlobalConfig,
+      item,
+      index,
+      fileName,
+      onSuccess: () => {
+        getAIConfig()
+      },
     })
+  })
 
-    /**增加ai配置模型 */
-    const onAdd = useMemoizedFn(() => {
-        setAIModal({
-            mountContainer,
-            t,
-            onSuccess: () => {
-                getAIConfig()
-            }
-        })
+  /**增加ai配置模型 */
+  const onAdd = useMemoizedFn(() => {
+    setAIModal({
+      mountContainer,
+      t,
+      onSuccess: () => {
+        getAIConfig()
+      },
     })
+  })
 
-    return (
-        <div ref={refRef} className={styles["ai-model-global-config-wrapper"]}>
-            <Divider orientation={"left"} style={{marginTop: "0px"}}>
-                AI模型配置
-            </Divider>
-            <Form.Item label='AI模型'>
-                <div className={styles["ai-model-list-wrapper"]}>
-                    <div className={styles["ai-model-list-header"]}>
-                        <YakitButton type='primary' onClick={onAdd}>
-                            添加
-                        </YakitButton>
-                    </div>
-                    <YakitCollapse defaultActiveKey={["高质模型", "轻量模型", "视觉模式"]}>
-                        <YakitCollapse.YakitPanel key='高质模型' header='高质模型'>
-                            {!!aiGlobalConfig?.IntelligentModels.length && (
-                                <AIOnlineModel
-                                    list={aiGlobalConfig?.IntelligentModels || []}
-                                    onEdit={(index) =>
-                                        onEdit({
-                                            fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                                            index
-                                        })
-                                    }
-                                    onRemove={(index) =>
-                                        onRemove({
-                                            fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                                            index
-                                        })
-                                    }
-                                    onSelect={(item, index) =>
-                                        onSelect(item, {
-                                            fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                                            index
-                                        })
-                                    }
-                                    modelType={AIModelTypeEnum.TierIntelligent}
-                                />
-                            )}
-                        </YakitCollapse.YakitPanel>
-                        {!!aiGlobalConfig?.LightweightModels.length && (
-                            <YakitCollapse.YakitPanel key='轻量模型' header='轻量模型'>
-                                <AIOnlineModel
-                                    list={aiGlobalConfig?.LightweightModels || []}
-                                    onEdit={(index) =>
-                                        onEdit({
-                                            fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                                            index
-                                        })
-                                    }
-                                    onRemove={(index) =>
-                                        onRemove({
-                                            fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                                            index
-                                        })
-                                    }
-                                    onSelect={(item, index) =>
-                                        onSelect(item, {
-                                            fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                                            index
-                                        })
-                                    }
-                                     modelType={AIModelTypeEnum.TierLightweight}
-                                />
-                            </YakitCollapse.YakitPanel>
-                        )}
-                        {!!aiGlobalConfig?.VisionModels?.length && (
-                            <YakitCollapse.YakitPanel key='视觉模式' header='视觉模式'>
-                                <AIOnlineModel
-                                    list={aiGlobalConfig?.VisionModels || []}
-                                    onEdit={(index) =>
-                                        onEdit({
-                                            fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                                            index
-                                        })
-                                    }
-                                    onRemove={(index) =>
-                                        onRemove({
-                                            fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                                            index
-                                        })
-                                    }
-                                    onSelect={(item, index) =>
-                                        onSelect(item, {
-                                            fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                                            index
-                                        })
-                                    }
-                                    modelType={AIModelTypeEnum.TierVision}
-                                />
-                            </YakitCollapse.YakitPanel>
-                        )}
-                    </YakitCollapse>
-                </div>
-            </Form.Item>
-            <Form.Item label='调用模式' extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</>}>
-                <YakitRadioButtons
-                    buttonStyle='solid'
-                    options={AIModelPolicyOptions}
-                    value={aiGlobalConfig.RoutingPolicy}
-                    onChange={(v) => setAIGlobalConfig((old) => ({...old, RoutingPolicy: v.target.value}))}
+  return (
+    <div ref={refRef} className={styles['ai-model-global-config-wrapper']}>
+      <Divider orientation={'left'} style={{ marginTop: '0px' }}>
+        AI模型配置
+      </Divider>
+      <Form.Item label="AI模型">
+        <div className={styles['ai-model-list-wrapper']}>
+          <div className={styles['ai-model-list-header']}>
+            <YakitButton type="primary" onClick={onAdd}>
+              添加
+            </YakitButton>
+          </div>
+          <YakitCollapse defaultActiveKey={['高质模型', '轻量模型', '视觉模式']}>
+            <YakitCollapse.YakitPanel key="高质模型" header="高质模型">
+              {!!aiGlobalConfig?.IntelligentModels.length && (
+                <AIOnlineModel
+                  list={aiGlobalConfig?.IntelligentModels || []}
+                  onEdit={(index) =>
+                    onEdit({
+                      fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                      index,
+                    })
+                  }
+                  onRemove={(index) =>
+                    onRemove({
+                      fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                      index,
+                    })
+                  }
+                  onSelect={(item, index) =>
+                    onSelect(item, {
+                      fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                      index,
+                    })
+                  }
+                  modelType={AIModelTypeEnum.TierIntelligent}
                 />
-            </Form.Item>
-            <Form.Item valuePropName='checked' label='禁用降级到轻量模型'>
-                <YakitSwitch
-                    size='middle'
-                    checked={aiGlobalConfig.DisableFallback}
-                    onChange={(c) => setAIGlobalConfig((old) => ({...old, DisableFallback: c}))}
+              )}
+            </YakitCollapse.YakitPanel>
+            {!!aiGlobalConfig?.LightweightModels.length && (
+              <YakitCollapse.YakitPanel key="轻量模型" header="轻量模型">
+                <AIOnlineModel
+                  list={aiGlobalConfig?.LightweightModels || []}
+                  onEdit={(index) =>
+                    onEdit({
+                      fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                      index,
+                    })
+                  }
+                  onRemove={(index) =>
+                    onRemove({
+                      fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                      index,
+                    })
+                  }
+                  onSelect={(item, index) =>
+                    onSelect(item, {
+                      fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                      index,
+                    })
+                  }
+                  modelType={AIModelTypeEnum.TierLightweight}
                 />
-            </Form.Item>
+              </YakitCollapse.YakitPanel>
+            )}
+            {!!aiGlobalConfig?.VisionModels?.length && (
+              <YakitCollapse.YakitPanel key="视觉模式" header="视觉模式">
+                <AIOnlineModel
+                  list={aiGlobalConfig?.VisionModels || []}
+                  onEdit={(index) =>
+                    onEdit({
+                      fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                      index,
+                    })
+                  }
+                  onRemove={(index) =>
+                    onRemove({
+                      fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                      index,
+                    })
+                  }
+                  onSelect={(item, index) =>
+                    onSelect(item, {
+                      fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                      index,
+                    })
+                  }
+                  modelType={AIModelTypeEnum.TierVision}
+                />
+              </YakitCollapse.YakitPanel>
+            )}
+          </YakitCollapse>
         </div>
-    )
+      </Form.Item>
+      <Form.Item label="调用模式" extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</>}>
+        <YakitRadioButtons
+          buttonStyle="solid"
+          options={AIModelPolicyOptions}
+          value={aiGlobalConfig.RoutingPolicy}
+          onChange={(v) => setAIGlobalConfig((old) => ({ ...old, RoutingPolicy: v.target.value }))}
+        />
+      </Form.Item>
+      <Form.Item valuePropName="checked" label="禁用降级到轻量模型">
+        <YakitSwitch
+          size="middle"
+          checked={aiGlobalConfig.DisableFallback}
+          onChange={(c) => setAIGlobalConfig((old) => ({ ...old, DisableFallback: c }))}
+        />
+      </Form.Item>
+    </div>
+  )
 })
 
 interface NTMLConfigProps {
-    visible: boolean
-    setVisible: (v: boolean) => void
-    getContainer?: HTMLElement | (() => HTMLElement) | false
-    params: GlobalNetworkConfig
-    setParams: (v: GlobalNetworkConfig) => void
-    onNtmlSave: () => void
+  visible: boolean
+  setVisible: (v: boolean) => void
+  getContainer?: HTMLElement | (() => HTMLElement) | false
+  params: GlobalNetworkConfig
+  setParams: (v: GlobalNetworkConfig) => void
+  onNtmlSave: () => void
 }
 
 interface DataProps extends AuthInfo {
-    id: string
-    Disabled: boolean
+  id: string
+  Disabled: boolean
 }
 
 export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
-    const {visible, setVisible, getContainer, params, setParams, onNtmlSave} = props
-    const [data, setData] = useState<DataProps[]>([])
-    const [isRefresh, setIsRefresh] = useState<boolean>(false)
-    const [loading, setLoading] = useState<boolean>(false)
-    const [currentItem, setCurrentItem] = useState<DataProps>()
-    const [modalStatus, setModalStatus] = useState<boolean>(false)
-    const [isEdit, setIsEdit] = useState<boolean>(false)
-    // initData 初始数据 用于校验数据是否改变
-    const initData = useRef<DataProps[]>([])
+  const { visible, setVisible, getContainer, params, setParams, onNtmlSave } = props
+  const [data, setData] = useState<DataProps[]>([])
+  const [isRefresh, setIsRefresh] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [currentItem, setCurrentItem] = useState<DataProps>()
+  const [modalStatus, setModalStatus] = useState<boolean>(false)
+  const [isEdit, setIsEdit] = useState<boolean>(false)
+  // initData 初始数据 用于校验数据是否改变
+  const initData = useRef<DataProps[]>([])
 
-    useEffect(() => {
-        const newData = params.AuthInfos.map((item) => ({id: uuidv4(), Disabled: item.Forbidden, ...item}))
-        initData.current = newData
-        setData(newData)
-    }, [params.AuthInfos])
+  useEffect(() => {
+    const newData = params.AuthInfos.map((item) => ({ id: uuidv4(), Disabled: item.Forbidden, ...item }))
+    initData.current = newData
+    setData(newData)
+  }, [params.AuthInfos])
 
-    const onOk = useMemoizedFn(() => {
-        const AuthInfos = data.map((item) => ({
-            AuthUsername: item.AuthUsername,
-            AuthPassword: item.AuthPassword,
-            AuthType: item.AuthType,
-            Host: item.Host,
-            Forbidden: item.Forbidden
-        }))
+  const onOk = useMemoizedFn(() => {
+    const AuthInfos = data.map((item) => ({
+      AuthUsername: item.AuthUsername,
+      AuthPassword: item.AuthPassword,
+      AuthType: item.AuthType,
+      Host: item.Host,
+      Forbidden: item.Forbidden,
+    }))
 
-        setParams({...params, AuthInfos})
-        setTimeout(() => {
-            onNtmlSave()
-        }, 200)
-    })
+    setParams({ ...params, AuthInfos })
+    setTimeout(() => {
+      onNtmlSave()
+    }, 200)
+  })
 
-    const onClose = useMemoizedFn(() => {
-        if (JSON.stringify(initData.current) !== JSON.stringify(data)) {
-            Modal.confirm({
-                title: "温馨提示",
-                icon: <ExclamationCircleOutlined />,
-                content: "请问是否要保存HTTP认证全局配置并关闭弹框？",
-                okText: "保存",
-                cancelText: "不保存",
-                closable: true,
-                closeIcon: (
-                    <div
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            Modal.destroyAll()
-                        }}
-                        className='modal-remove-icon'
-                    >
-                        <RemoveIcon />
-                    </div>
-                ),
-                onOk: () => {
-                    onOk()
-                },
-                onCancel: () => {
-                    setVisible(false)
-                },
-                cancelButtonProps: {size: "small", className: "modal-cancel-button"},
-                okButtonProps: {size: "small", className: "modal-ok-button"}
-            })
-        } else {
-            setVisible(false)
-        }
-    })
-
-    const onCreateAuthInfo = useMemoizedFn(() => {
-        setModalStatus(true)
-    })
-
-    const onRowClick = useDebounceFn(
-        (rowDate) => {
-            setCurrentItem(rowDate)
+  const onClose = useMemoizedFn(() => {
+    if (JSON.stringify(initData.current) !== JSON.stringify(data)) {
+      Modal.confirm({
+        title: '温馨提示',
+        icon: <ExclamationCircleOutlined />,
+        content: '请问是否要保存HTTP认证全局配置并关闭弹框？',
+        okText: '保存',
+        cancelText: '不保存',
+        closable: true,
+        closeIcon: (
+          <div
+            onClick={(e) => {
+              e.stopPropagation()
+              Modal.destroyAll()
+            }}
+            className="modal-remove-icon"
+          >
+            <RemoveIcon />
+          </div>
+        ),
+        onOk: () => {
+          onOk()
         },
-        {wait: 200}
-    ).run
+        onCancel: () => {
+          setVisible(false)
+        },
+        cancelButtonProps: { size: 'small', className: 'modal-cancel-button' },
+        okButtonProps: { size: 'small', className: 'modal-ok-button' },
+      })
+    } else {
+      setVisible(false)
+    }
+  })
 
-    const onRemove = useMemoizedFn((rowDate: DataProps) => {
-        const newData = data.filter((item) => item.id !== rowDate.id)
-        setData(newData)
-    })
+  const onCreateAuthInfo = useMemoizedFn(() => {
+    setModalStatus(true)
+  })
 
-    const onBan = useMemoizedFn((rowDate: DataProps) => {
-        const newData: DataProps[] = data.map((item: DataProps) => {
-            if (item.id === rowDate.id) {
-                if (!rowDate.Disabled && rowDate.id === currentItem?.id) {
-                    setCurrentItem(undefined)
-                }
-                item = {
-                    ...rowDate,
-                    Disabled: !rowDate.Disabled,
-                    Forbidden: !rowDate.Disabled
-                }
-            }
-            return item
-        })
-        setData(newData)
-    })
+  const onRowClick = useDebounceFn(
+    (rowDate) => {
+      setCurrentItem(rowDate)
+    },
+    { wait: 200 },
+  ).run
 
-    const onOpenAddOrEdit = useMemoizedFn((rowDate?: DataProps) => {
-        setModalStatus(true)
-        setIsEdit(true)
-        setCurrentItem(rowDate)
-    })
+  const onRemove = useMemoizedFn((rowDate: DataProps) => {
+    const newData = data.filter((item) => item.id !== rowDate.id)
+    setData(newData)
+  })
 
-    const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
-        return [
-            {
-                title: "执行顺序",
-                dataKey: "Index",
-                fixed: "left",
-                width: 130,
-                render: (text: any, record: any, index: any) => <>{index + 1}</>
-            },
-            {
-                title: "Host",
-                dataKey: "Host",
-                width: 150
-            },
-            {
-                title: "用户名",
-                dataKey: "AuthUsername",
-                width: 150
-            },
-            {
-                title: "密码",
-                dataKey: "AuthPassword",
-                width: 150,
-                render: () => <>***</>
-            },
-            {
-                title: "认证类型",
-                dataKey: "AuthType"
-                // minWidth: 120
-            },
-            {
-                title: "操作",
-                dataKey: "action",
-                fixed: "right",
-                width: 128,
-                render: (_, record) => {
-                    return (
-                        <div className={styles["table-action-icon"]}>
-                            <TrashIcon
-                                className={styles["icon-trash"]}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onRemove(record)
-                                }}
-                            />
-                            <PencilAltIcon
-                                className={classNames(styles["action-icon"], {
-                                    [styles["action-icon-edit-disabled"]]: record.Disabled
-                                })}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onOpenAddOrEdit(record)
-                                }}
-                            />
-                            <BanIcon
-                                className={classNames(styles["action-icon"], {
-                                    [styles["action-icon-ban-disabled"]]: record.Disabled
-                                })}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onBan(record)
-                                }}
-                            />
-                        </div>
-                    )
-                }
-            }
-        ]
-    }, [])
-
-    const onMoveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
-        setData((prevRules) =>
-            update(prevRules, {
-                $splice: [
-                    [dragIndex, 1],
-                    [hoverIndex, 0, prevRules[dragIndex]]
-                ]
-            })
-        )
-    })
-
-    const onMoveRowEnd = useMemoizedFn(() => {
-        // setData((prevRules) => {
-        //     const newRules = prevRules.map((item, index) => ({...item, Index: index + 1}))
-        //     return [...newRules]
-        // })
-    })
-
-    const onSubmit = useMemoizedFn((v: DataProps) => {
-        if (isEdit) {
-            const newData = data.map((item) => {
-                if (item.id === v.id) {
-                    return v
-                }
-                return item
-            })
-            setData(newData)
-            success("编辑成功")
-        } else {
-            success("新增成功")
-            setData([v, ...data])
+  const onBan = useMemoizedFn((rowDate: DataProps) => {
+    const newData: DataProps[] = data.map((item: DataProps) => {
+      if (item.id === rowDate.id) {
+        if (!rowDate.Disabled && rowDate.id === currentItem?.id) {
+          setCurrentItem(undefined)
         }
-        setModalStatus(false)
-        setIsEdit(false)
+        item = {
+          ...rowDate,
+          Disabled: !rowDate.Disabled,
+          Forbidden: !rowDate.Disabled,
+        }
+      }
+      return item
     })
-    return (
-        <>
-            <YakitDrawer
-                // placement='right'
-                width='50%'
-                closable={false}
-                onClose={() => onClose()}
-                visible={visible}
-                getContainer={getContainer}
-                // mask={false}
-                maskClosable={false}
-                // style={{height: visible ? heightDrawer : 0}}
-                className={classNames(styles["ntlm-config-drawer"])}
-                contentWrapperStyle={{boxShadow: "0px -2px 4px rgba(133, 137, 158, 0.2)"}}
-                title={
-                    <div className={styles["heard-title"]}>
-                        <div className={styles["title"]}>HTTP认证全局配置</div>
-                        <div className={styles["table-total"]}>
-                            共 <span>{params.AuthInfos.length}</span> 条认证配置
-                        </div>
-                    </div>
-                }
-                extra={
-                    <div className={styles["heard-right-operation"]}>
-                        <YakitButton
-                            type='primary'
-                            className={styles["button-create"]}
-                            onClick={() => onCreateAuthInfo()}
-                        >
-                            新增
-                        </YakitButton>
-                        <YakitButton type='primary' className={styles["button-save"]} onClick={() => onOk()}>
-                            保存
-                        </YakitButton>
-                        <div onClick={() => onClose()} className={styles["icon-remove"]}>
-                            <RemoveIcon />
-                        </div>
-                    </div>
-                }
-            >
-                <div className={styles["ntlm-config-table"]}>
-                    <TableVirtualResize
-                        isRefresh={isRefresh}
-                        titleHeight={42}
-                        isShowTitle={false}
-                        renderKey='id'
-                        data={data}
-                        // rowSelection={{
-                        //     isAll: isAllSelect,
-                        //     type: "checkbox",
-                        //     selectedRowKeys,
-                        //     onSelectAll: onSelectAll,
-                        //     onChangeCheckboxSingle: onSelectChange
-                        // }}
-                        pagination={{
-                            total: data.length,
-                            limit: 20,
-                            page: 1,
-                            onChange: () => {}
-                        }}
-                        loading={loading}
-                        columns={columns}
-                        currentSelectItem={currentItem}
-                        onRowClick={onRowClick}
-                        onMoveRow={onMoveRow}
-                        enableDragSort={true}
-                        enableDrag={true}
-                        onMoveRowEnd={onMoveRowEnd}
-                    />
-                </div>
-            </YakitDrawer>
-            {modalStatus && (
-                <NTMLConfigModal
-                    modalStatus={modalStatus}
-                    onSubmit={onSubmit}
-                    onClose={() => {
-                        setModalStatus(false)
-                        setIsEdit(false)
-                    }}
-                    isEdit={isEdit}
-                    currentItem={currentItem}
-                />
-            )}
-        </>
+    setData(newData)
+  })
+
+  const onOpenAddOrEdit = useMemoizedFn((rowDate?: DataProps) => {
+    setModalStatus(true)
+    setIsEdit(true)
+    setCurrentItem(rowDate)
+  })
+
+  const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
+    return [
+      {
+        title: '执行顺序',
+        dataKey: 'Index',
+        fixed: 'left',
+        width: 130,
+        render: (text: any, record: any, index: any) => <>{index + 1}</>,
+      },
+      {
+        title: 'Host',
+        dataKey: 'Host',
+        width: 150,
+      },
+      {
+        title: '用户名',
+        dataKey: 'AuthUsername',
+        width: 150,
+      },
+      {
+        title: '密码',
+        dataKey: 'AuthPassword',
+        width: 150,
+        render: () => <>***</>,
+      },
+      {
+        title: '认证类型',
+        dataKey: 'AuthType',
+        // minWidth: 120
+      },
+      {
+        title: '操作',
+        dataKey: 'action',
+        fixed: 'right',
+        width: 128,
+        render: (_, record) => {
+          return (
+            <div className={styles['table-action-icon']}>
+              <TrashIcon
+                className={styles['icon-trash']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRemove(record)
+                }}
+              />
+              <PencilAltIcon
+                className={classNames(styles['action-icon'], {
+                  [styles['action-icon-edit-disabled']]: record.Disabled,
+                })}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenAddOrEdit(record)
+                }}
+              />
+              <BanIcon
+                className={classNames(styles['action-icon'], {
+                  [styles['action-icon-ban-disabled']]: record.Disabled,
+                })}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onBan(record)
+                }}
+              />
+            </div>
+          )
+        },
+      },
+    ]
+  }, [])
+
+  const onMoveRow = useMemoizedFn((dragIndex: number, hoverIndex: number) => {
+    setData((prevRules) =>
+      update(prevRules, {
+        $splice: [
+          [dragIndex, 1],
+          [hoverIndex, 0, prevRules[dragIndex]],
+        ],
+      }),
     )
+  })
+
+  const onMoveRowEnd = useMemoizedFn(() => {
+    // setData((prevRules) => {
+    //     const newRules = prevRules.map((item, index) => ({...item, Index: index + 1}))
+    //     return [...newRules]
+    // })
+  })
+
+  const onSubmit = useMemoizedFn((v: DataProps) => {
+    if (isEdit) {
+      const newData = data.map((item) => {
+        if (item.id === v.id) {
+          return v
+        }
+        return item
+      })
+      setData(newData)
+      success('编辑成功')
+    } else {
+      success('新增成功')
+      setData([v, ...data])
+    }
+    setModalStatus(false)
+    setIsEdit(false)
+  })
+  return (
+    <>
+      <YakitDrawer
+        // placement='right'
+        width="50%"
+        closable={false}
+        onClose={() => onClose()}
+        visible={visible}
+        getContainer={getContainer}
+        // mask={false}
+        maskClosable={false}
+        // style={{height: visible ? heightDrawer : 0}}
+        className={classNames(styles['ntlm-config-drawer'])}
+        contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
+        title={
+          <div className={styles['heard-title']}>
+            <div className={styles['title']}>HTTP认证全局配置</div>
+            <div className={styles['table-total']}>
+              共 <span>{params.AuthInfos.length}</span> 条认证配置
+            </div>
+          </div>
+        }
+        extra={
+          <div className={styles['heard-right-operation']}>
+            <YakitButton type="primary" className={styles['button-create']} onClick={() => onCreateAuthInfo()}>
+              新增
+            </YakitButton>
+            <YakitButton type="primary" className={styles['button-save']} onClick={() => onOk()}>
+              保存
+            </YakitButton>
+            <div onClick={() => onClose()} className={styles['icon-remove']}>
+              <RemoveIcon />
+            </div>
+          </div>
+        }
+      >
+        <div className={styles['ntlm-config-table']}>
+          <TableVirtualResize
+            isRefresh={isRefresh}
+            titleHeight={42}
+            isShowTitle={false}
+            renderKey="id"
+            data={data}
+            // rowSelection={{
+            //     isAll: isAllSelect,
+            //     type: "checkbox",
+            //     selectedRowKeys,
+            //     onSelectAll: onSelectAll,
+            //     onChangeCheckboxSingle: onSelectChange
+            // }}
+            pagination={{
+              total: data.length,
+              limit: 20,
+              page: 1,
+              onChange: () => {},
+            }}
+            loading={loading}
+            columns={columns}
+            currentSelectItem={currentItem}
+            onRowClick={onRowClick}
+            onMoveRow={onMoveRow}
+            enableDragSort={true}
+            enableDrag={true}
+            onMoveRowEnd={onMoveRowEnd}
+          />
+        </div>
+      </YakitDrawer>
+      {modalStatus && (
+        <NTMLConfigModal
+          modalStatus={modalStatus}
+          onSubmit={onSubmit}
+          onClose={() => {
+            setModalStatus(false)
+            setIsEdit(false)
+          }}
+          isEdit={isEdit}
+          currentItem={currentItem}
+        />
+      )}
+    </>
+  )
 }
 
 interface NTMLConfigModalProps {
-    onClose: () => void
-    modalStatus: boolean
-    onSubmit: (v: DataProps) => void
-    isEdit: boolean
-    currentItem?: DataProps
+  onClose: () => void
+  modalStatus: boolean
+  onSubmit: (v: DataProps) => void
+  isEdit: boolean
+  currentItem?: DataProps
 }
 
 export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
-    const {onClose, modalStatus, onSubmit, isEdit, currentItem} = props
-    const [form] = Form.useForm()
+  const { onClose, modalStatus, onSubmit, isEdit, currentItem } = props
+  const [form] = Form.useForm()
 
-    useEffect(() => {
-        if (isEdit && currentItem) {
-            const {Host, AuthUsername, AuthPassword, AuthType} = currentItem
-            form.setFieldsValue({
-                Host,
-                AuthUsername,
-                AuthPassword,
-                AuthType
-            })
-        }
-    }, [])
+  useEffect(() => {
+    if (isEdit && currentItem) {
+      const { Host, AuthUsername, AuthPassword, AuthType } = currentItem
+      form.setFieldsValue({
+        Host,
+        AuthUsername,
+        AuthPassword,
+        AuthType,
+      })
+    }
+  }, [])
 
-    const onOk = useMemoizedFn(() => {
-        form.validateFields().then((value: AuthInfo) => {
-            if (isEdit && currentItem) {
-                onSubmit({
-                    ...currentItem,
-                    ...value
-                })
-            } else {
-                onSubmit({
-                    id: uuidv4(),
-                    Disabled: false,
-                    ...value
-                })
-            }
+  const onOk = useMemoizedFn(() => {
+    form.validateFields().then((value: AuthInfo) => {
+      if (isEdit && currentItem) {
+        onSubmit({
+          ...currentItem,
+          ...value,
         })
+      } else {
+        onSubmit({
+          id: uuidv4(),
+          Disabled: false,
+          ...value,
+        })
+      }
     })
-    // 判断是否为IP地址 或 域名
-    const judgeUrl = () => [
-        {
-            validator: (_, value: string) => {
-                // 正则表达式匹配IPv4地址
-                const ipv4RegexWithPort =
-                    /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}(:\d+)?$/
-                // 正则表达式匹配域名（支持通配符域名）
-                const domainRegex = /^(\*\.|\*\*\.)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}$/
-                // 匹配 CIDR 表示的 IPv4 地址范围（包含端口号）
-                const cidrRegexWithPort =
-                    /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}\/([0-2]?[0-9]|3[0-2])(:\d+)?$/
-                if (ipv4RegexWithPort.test(value) || domainRegex.test(value) || cidrRegexWithPort.test(value)) {
-                    return Promise.resolve()
-                } else {
-                    return Promise.reject("请输入符合要求的Host")
-                }
-            }
+  })
+  // 判断是否为IP地址 或 域名
+  const judgeUrl = () => [
+    {
+      validator: (_, value: string) => {
+        // 正则表达式匹配IPv4地址
+        const ipv4RegexWithPort =
+          /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}(:\d+)?$/
+        // 正则表达式匹配域名（支持通配符域名）
+        const domainRegex = /^(\*\.|\*\*\.)?([a-zA-Z0-9-]+\.){1,}[a-zA-Z]{2,}$/
+        // 匹配 CIDR 表示的 IPv4 地址范围（包含端口号）
+        const cidrRegexWithPort =
+          /^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\.(25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})){3}\/([0-2]?[0-9]|3[0-2])(:\d+)?$/
+        if (ipv4RegexWithPort.test(value) || domainRegex.test(value) || cidrRegexWithPort.test(value)) {
+          return Promise.resolve()
+        } else {
+          return Promise.reject('请输入符合要求的Host')
         }
-    ]
-    return (
-        <YakitModal
-            maskClosable={false}
-            title={isEdit ? "编辑" : "新增"}
-            visible={modalStatus}
-            onCancel={() => onClose()}
-            closable
-            okType='primary'
-            width={480}
-            onOk={() => onOk()}
-            bodyStyle={{padding: "24px 16px"}}
-        >
-            <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
-                <Form.Item label='Host' name='Host' rules={[{required: true, message: "该项为必填"}, ...judgeUrl()]}>
-                    <YakitInput placeholder='请输入...' />
-                </Form.Item>
-                <Form.Item label='用户名' name='AuthUsername' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput placeholder='请输入...' />
-                </Form.Item>
-                <Form.Item label='密码' name='AuthPassword' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitInput placeholder='请输入...' />
-                </Form.Item>
-                <Form.Item label='认证类型' name='AuthType' rules={[{required: true, message: "该项为必填"}]}>
-                    <YakitSelect placeholder='请选择...'>
-                        <YakitSelect value='ntlm'>ntlm</YakitSelect>
-                        <YakitSelect value='any'>any</YakitSelect>
-                        <YakitSelect value='basic'>basic</YakitSelect>
-                        <YakitSelect value='digest'>digest</YakitSelect>
-                    </YakitSelect>
-                </Form.Item>
-            </Form>
-        </YakitModal>
-    )
+      },
+    },
+  ]
+  return (
+    <YakitModal
+      maskClosable={false}
+      title={isEdit ? '编辑' : '新增'}
+      visible={modalStatus}
+      onCancel={() => onClose()}
+      closable
+      okType="primary"
+      width={480}
+      onOk={() => onOk()}
+      bodyStyle={{ padding: '24px 16px' }}
+    >
+      <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} className={styles['modal-from']}>
+        <Form.Item label="Host" name="Host" rules={[{ required: true, message: '该项为必填' }, ...judgeUrl()]}>
+          <YakitInput placeholder="请输入..." />
+        </Form.Item>
+        <Form.Item label="用户名" name="AuthUsername" rules={[{ required: true, message: '该项为必填' }]}>
+          <YakitInput placeholder="请输入..." />
+        </Form.Item>
+        <Form.Item label="密码" name="AuthPassword" rules={[{ required: true, message: '该项为必填' }]}>
+          <YakitInput placeholder="请输入..." />
+        </Form.Item>
+        <Form.Item label="认证类型" name="AuthType" rules={[{ required: true, message: '该项为必填' }]}>
+          <YakitSelect placeholder="请选择...">
+            <YakitSelect value="ntlm">ntlm</YakitSelect>
+            <YakitSelect value="any">any</YakitSelect>
+            <YakitSelect value="basic">basic</YakitSelect>
+            <YakitSelect value="digest">digest</YakitSelect>
+          </YakitSelect>
+        </Form.Item>
+      </Form>
+    </YakitModal>
+  )
 }
 
 interface SortDataProps {
-    label: string
-    value: string
+  label: string
+  value: string
 }
 interface AISortContentProps {
-    onUpdate: (v: GlobalNetworkConfig["AppConfigs"]) => void
-    AiApiPriority: string[]
-    appConfigs: GlobalNetworkConfig["AppConfigs"]
+  onUpdate: (v: GlobalNetworkConfig['AppConfigs']) => void
+  AiApiPriority: string[]
+  appConfigs: GlobalNetworkConfig['AppConfigs']
 }
 
 const getItemStyle = (isDragging, draggableStyle) => {
-    let transform: string = draggableStyle["transform"] || ""
-    // console.log("transform---",transform,isDragging);
-    if (isDragging) {
-        // 使用正则表达式匹配 translate 函数中的两个参数
-        const match = transform.match(/translate\((-?\d+)px, (-?\d+)px\)/)
-        if (match) {
-            // 提取匹配到的两个值，并将它们转换为数字
-            const [value1, value2] = match.slice(1).map(Number)
-            const modifiedString = transform.replace(/translate\((-?\d+)px, (-?\d+)px\)/, `translate(0px, ${value2}px)`)
-            transform = modifiedString
-        }
+  let transform: string = draggableStyle['transform'] || ''
+  // console.log("transform---",transform,isDragging);
+  if (isDragging) {
+    // 使用正则表达式匹配 translate 函数中的两个参数
+    const match = transform.match(/translate\((-?\d+)px, (-?\d+)px\)/)
+    if (match) {
+      // 提取匹配到的两个值，并将它们转换为数字
+      const [value1, value2] = match.slice(1).map(Number)
+      const modifiedString = transform.replace(/translate\((-?\d+)px, (-?\d+)px\)/, `translate(0px, ${value2}px)`)
+      transform = modifiedString
     }
+  }
 
-    return {
-        ...draggableStyle,
-        transform
-    }
+  return {
+    ...draggableStyle,
+    transform,
+  }
 }
 
 export const AISortContent: React.FC<AISortContentProps> = (props) => {
-    const {onUpdate, AiApiPriority, appConfigs} = props
-    const [sortData, setSortData] = useState<GlobalNetworkConfig["AppConfigs"]>([])
+  const { onUpdate, AiApiPriority, appConfigs } = props
+  const [sortData, setSortData] = useState<GlobalNetworkConfig['AppConfigs']>([])
 
-    useEffect(() => {
-        const aiPriority = appConfigs.filter((item) => AiApiPriority.includes(item.Type))
-        setSortData(aiPriority)
-    }, [appConfigs, AiApiPriority])
+  useEffect(() => {
+    const aiPriority = appConfigs.filter((item) => AiApiPriority.includes(item.Type))
+    setSortData(aiPriority)
+  }, [appConfigs, AiApiPriority])
 
-    const onDragEnd = useMemoizedFn((result: DropResult) => {
-        const {source, destination, draggableId} = result
-        if (destination) {
-            const newItems: GlobalNetworkConfig["AppConfigs"] = cloneDeep(sortData)
-            const [removed] = newItems.splice(source.index, 1)
-            newItems.splice(destination.index, 0, removed)
-            setSortData([...newItems])
-            onUpdate(newItems)
-        }
-    })
+  const onDragEnd = useMemoizedFn((result: DropResult) => {
+    const { source, destination, draggableId } = result
+    if (destination) {
+      const newItems: GlobalNetworkConfig['AppConfigs'] = cloneDeep(sortData)
+      const [removed] = newItems.splice(source.index, 1)
+      newItems.splice(destination.index, 0, removed)
+      setSortData([...newItems])
+      onUpdate(newItems)
+    }
+  })
 
-    return (
-        <div className={styles["ai-sort-content"]}>
-            <div className={styles["ai-sort-describe"]}>优先级为从上到下</div>
-            <div className={styles["menu-list"]}>
-                <DragDropContext onDragEnd={onDragEnd}>
-                    <Droppable droppableId='droppable-payload' direction='vertical'>
-                        {(provided) => (
-                            <div ref={provided.innerRef} {...provided.droppableProps}>
-                                {sortData.map((item, index) => {
-                                    return (
-                                        <Draggable key={item.Type} draggableId={item.Type} index={index}>
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    style={{
-                                                        ...getItemStyle(
-                                                            snapshot.isDragging,
-                                                            provided.draggableProps.style
-                                                        )
-                                                    }}
-                                                >
-                                                    <div
-                                                        className={classNames(styles["menu-list-item"], {
-                                                            [styles["menu-list-item-drag"]]: snapshot.isDragging
-                                                        })}
-                                                    >
-                                                        <div className={styles["menu-list-item-info"]}>
-                                                            <DragSortIcon className={styles["drag-sort-icon"]} />
-                                                            <div className={styles["title"]}>{item.Type}</div>
-                                                        </div>
-                                                    </div>
+  return (
+    <div className={styles['ai-sort-content']}>
+      <div className={styles['ai-sort-describe']}>优先级为从上到下</div>
+      <div className={styles['menu-list']}>
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="droppable-payload" direction="vertical">
+            {(provided) => (
+              <div ref={provided.innerRef} {...provided.droppableProps}>
+                {sortData.map((item, index) => {
+                  return (
+                    <Draggable key={item.Type} draggableId={item.Type} index={index}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={{
+                            ...getItemStyle(snapshot.isDragging, provided.draggableProps.style),
+                          }}
+                        >
+                          <div
+                            className={classNames(styles['menu-list-item'], {
+                              [styles['menu-list-item-drag']]: snapshot.isDragging,
+                            })}
+                          >
+                            <div className={styles['menu-list-item-info']}>
+                              <DragSortIcon className={styles['drag-sort-icon']} />
+                              <div className={styles['title']}>{item.Type}</div>
+                            </div>
+                          </div>
 
-                                                    {/* <div className={styles['sort-item-box']}>
+                          {/* <div className={styles['sort-item-box']}>
                                 <div className={classNames(styles["sort-item"]) } key={item.value}>{item.label}</div>
                                 </div> */}
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    )
-                                })}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </Droppable>
-                </DragDropContext>
-            </div>
-        </div>
-    )
+                        </div>
+                      )}
+                    </Draggable>
+                  )
+                })}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </div>
+    </div>
+  )
 }
