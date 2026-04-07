@@ -89,13 +89,12 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
                         label: (
                             <div className={styles["select-option"]}>
                                 <OutlineMicroscopeIcon className={styles["icon-wrapper"]} />
-                                <span className={styles["select-option-text"]}>请选择</span>
+                                <span className={styles["select-option-text"]}>专注模式</span>
                             </div>
                         ),
                         value: ""
                     }
                 }
-                // placeholder="请选择"
                 onSelect={onSelectModel}
                 optionLabelProp='label'
                 open={open}

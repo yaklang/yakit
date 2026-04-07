@@ -826,15 +826,15 @@ const FocusModeOfMention: React.FC<FocusModeOfMentionProps> = React.memo(
                         ref={listRef}
                         data={response.Data}
                         loadMoreData={() => {}}
-                        renderRow={(rowData: AIFocus, index: number) => {
+                        renderRow={(rowData: AIFocus) => {
                             return (
                                 <AIMentionSelectItem
                                     item={{
                                         id: `${rowData.Name}`,
-                                        name: rowData.Name || ""
+                                        name: rowData.VerboseNameZh || rowData.Name || ""
                                     }}
                                     onSelect={() => onSelect(rowData)}
-                                    isActive={selected?.Name === rowData.Name}
+                                    isActive={selected?.VerboseNameZh === rowData.VerboseNameZh}
                                 />
                             )
                         }}

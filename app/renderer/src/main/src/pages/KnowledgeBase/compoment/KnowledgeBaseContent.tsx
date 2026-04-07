@@ -431,6 +431,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
         const newChat: AIHandleStartExtraProps = {
             chatId: knowledgeBaseID
         }
+        console.log("data", data)
         return new Promise<AIHandleStartResProps>((resolve) => {
             resolve({
                 params: data.params,
