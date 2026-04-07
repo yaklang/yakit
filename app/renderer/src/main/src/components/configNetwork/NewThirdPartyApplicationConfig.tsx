@@ -553,6 +553,10 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
         const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
         const headerItemRef = useRef<HTTPHeader>()
         const headerItemIndexRef = useRef<number>()
+        const [activeKey, setActiveKey] = useState<string | string[]>()
+        const onChangeCollapse = (key: string | string[]) => {
+            setActiveKey(key)
+        }
         useImperativeHandle(
             ref,
             () => ({
@@ -663,6 +667,11 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
         useEffect(() => {
             execModelNameOption.current = false
             cancelModelNameOption()
+            if(typeVal === "custom") {
+                setActiveKey("1")
+            } else {
+                setActiveKey(undefined)
+            }
         }, [typeVal])
 
         // 切换类型，渲染不同表单项（目前只有输入框、开关、下拉）
@@ -859,7 +868,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
                         )}
                     </Form.Item>
                     {renderAllFormItems()}
-                    <YakitCollapse bordered={false} className={styles["ai-third-party-application-config-collapse"]}>
+                    <YakitCollapse activeKey={activeKey} onChange={onChangeCollapse} bordered={false} className={styles["ai-third-party-application-config-collapse"]}>
                     <Collapse.Panel header='高级配置' key='1'>
                     {/* 可选的表单项 */}
                     {renderOptionalFormItems()}
