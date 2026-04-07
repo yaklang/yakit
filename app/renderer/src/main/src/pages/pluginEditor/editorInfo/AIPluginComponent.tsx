@@ -160,25 +160,24 @@ const AIPluginComponent: FC<AIPluginComponentProps> = ({ getCodeContent, value, 
       <div className={styles['wrapper-label']}>
         <div>开放给AI使用</div>
         <div>开启后使用AI时可调用该插件</div>
-        <div className={styles['wrapper-label-highlight']}>
-          以下内容可通过AI生成，
-          <YakitButton
-            type="text"
-            onClick={() => handleGenerate()}
-            style={{ margin: 0, padding: 0, fontSize: 14 }}
-            loading={executeStatus === 'process'}
-          >
-            点击生成，
-          </YakitButton>
-          如未配置AI可
-          <br />
-          <YakitButton type="text" onClick={() => handleSetting()} style={{ margin: 0, padding: 0, fontSize: 14 }}>
-            点此配置
-          </YakitButton>
-          AI描述
-        </div>
         {merged.EnableForAI && (
           <>
+            <div className={styles['wrapper-label-highlight']}>
+              以下内容可通过AI生成，
+              <YakitButton
+                type="text"
+                onClick={() => handleGenerate()}
+                style={{ margin: 0, padding: 0, fontSize: 14 }}
+                loading={executeStatus === 'process'}
+              >
+                点击生成，
+              </YakitButton>
+              如未配置AI可
+              <br />
+              <YakitButton type="text" onClick={() => handleSetting()} style={{ margin: 0, padding: 0, fontSize: 14 }}>
+                点此配置
+              </YakitButton>
+            </div>
             <div className={styles['ai-items-wrapper']}>
               <div>AI描述</div>
               <YakitInput value={merged.AIDesc} onChange={(e) => patch({ AIDesc: e.target.value })} />
