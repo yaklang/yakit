@@ -146,6 +146,21 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
 
     return config
 }
+
+const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplicationConfig) => {
+    return {
+        Type: config.Type,
+        api_key: config.APIKey,
+        api_type: normalizeAIAPIType(config.APIType),
+        domain: config.Domain,
+        proxy: config.Proxy,
+        no_https: config.NoHttps,
+        base_url: config.BaseURL,
+        endpoint: config.Endpoint,
+        enable_endpoint: config.EnableEndpoint,
+        Headers: config.Headers,
+    }
+}
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     const {item, aiModelType, onSuccess, onClose} = props
 
@@ -172,23 +187,10 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         let value
         if (!!item) {
             value = {
-                Type: item.Provider.Type,
                 model_type: aiModelType,
-
-                api_key: item.Provider.APIKey,
-                api_type: normalizeAIAPIType(item.Provider.APIType),
                 api_key_id: item.ProviderId,
-
                 model: item.ModelName,
-
-                no_https: item.Provider.NoHttps,
-                domain: item.Provider.Domain,
-                proxy: item.Provider.Proxy,
-
-                base_url: item.Provider.BaseURL,
-                endpoint: item.Provider.Endpoint,
-                enable_endpoint: item.Provider.EnableEndpoint,
-                Headers: item.Provider.Headers,
+                ...buildAIConfigHealthCheckFormValues(item.Provider),
             }
         } else {
             value = {...defaultFormValues}
@@ -376,11 +378,20 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
                 })
         })
     })
+
+    const onApplyRecommendConfig = useMemoizedFn((config: ThirdPartyApplicationConfig) => {
+        formRef.current?.form?.setFieldsValue(buildAIConfigHealthCheckFormValues(config))
+    })
+
     const onOpenCheckResult = useMemoizedFn((testResult: AIConfigHealthCheckResponse) => {
         const m = showYakitModal({
             hiddenHeader: true,
             type: "white",
-            content: <AIModelCheckResult testResult={testResult} onClose={() => m.destroy()} />,
+            width: 600,
+            content: <AIModelCheckResult testResult={testResult} onClose={() => m.destroy()} onApplyRecommendConfig={(config)=>{
+                onApplyRecommendConfig(config)
+                m.destroy()
+            }}/>,
             onOk: () => m.destroy()
         })
     })
@@ -411,10 +422,10 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 })
 
 export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => {
-    const {testResult, onClose} = props
+    const {testResult, onClose, onApplyRecommendConfig} = props
 
     const {t, i18n} = useI18nNamespaces(["aiAgent"])
-    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response" | "responseContent">("response") //选中的表格项
+    const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response" | "responseContent" | "recommendConfig">("response") //选中的表格项
     const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
 
     const testStatus = useCreation(() => {
@@ -478,6 +489,8 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
             return testResult?.RawResponse || ""
         } else if (currentSelectShowType === "responseContent") {
             return testResult?.ResponseContent || ""
+        } else if (currentSelectShowType === "recommendConfig") {
+            return JSON.stringify(testResult?.RecommendConfig, null, 2)
         }
         return ""
     }, [currentSelectShowType, testResult])
@@ -502,6 +515,16 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
                 <div className={styles["test-result-packet"]}>
                     <NewHTTPPacketEditor
                         originValue={renderContent}
+                        extra={
+                            currentSelectShowType === "recommendConfig" && (
+                                <YakitButton size="small" onClick={() => {
+                                    if (!testResult) return
+                                    onApplyRecommendConfig?.(testResult?.RecommendConfig)
+                                }} >{t("AIModelTestResult.applyRecommendConfig")}</YakitButton>
+                            )
+                        }
+                        isShowBeautifyRender={currentSelectShowType !== "recommendConfig"}
+                        showDefaultExtra={currentSelectShowType !== "recommendConfig"}
                         title={
                             <div className={styles["packet-title-wrapper"]}>
                                 <span className={styles["packet-title-text"]}>
@@ -527,6 +550,10 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
                                             {
                                                 value: "responseContent",
                                                 label: t("AIModelTestResult.responseContent")
+                                            },
+                                            {
+                                                value: "recommendConfig",
+                                                label: t("AIModelTestResult.recommendConfig")
                                             }
                                         ]}
                                     />

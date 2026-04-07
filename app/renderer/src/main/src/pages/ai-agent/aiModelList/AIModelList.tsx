@@ -760,6 +760,25 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
         e.stopPropagation()
         onRemove(item)
     })
+
+    const {t} = useI18nNamespaces(["aiAgent", "yakitUi"])
+    const onApplyRecommendConfig = useMemoizedFn((config: ThirdPartyApplicationConfig) => {
+        const newItem: AIModelConfig = {
+            ProviderId: item.ProviderId,
+            Provider: config,
+            ModelName: item.ModelName,
+            ExtraParams: item.ExtraParams
+        }
+        setAIModal({
+            item: newItem,
+            modelType: modelType as AIModelTypeEnum,
+            t,
+            onSuccess: () => {
+                emiter.emit("onRefreshAIModelList")
+            }
+        })
+    })
+
     const onCheckModel = useMemoizedFn((e) => {
         e.stopPropagation()
 
@@ -784,7 +803,10 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
                     hiddenHeader: true,
                     type: "white",
                     onOk: () => m.destroy(),
-                    content: <AIModelCheckResult testResult={response} onClose={() => m.destroy()} />
+                    content: <AIModelCheckResult testResult={response} onClose={() => m.destroy()} onApplyRecommendConfig={(config)=>{
+                        onApplyRecommendConfig(config)
+                        m.destroy()
+                    }}/>
                 })
             })
             .finally(() => {
