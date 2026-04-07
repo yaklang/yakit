@@ -164,7 +164,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick })
       default:
         return [<div key="circle" className={styles['node-circle-icon']} />, getWrapper(styles['node-wrapper-default'])]
     }
-  }, [data, infoShow, isParentLast, onClick, onCancelTask])
+  }, [data, infoShow, isParentLast, onClick, onCancelTask, syncIdInfoMap])
 
   if (data === null) return null
 
