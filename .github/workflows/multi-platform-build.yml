@@ -214,19 +214,32 @@ jobs:
                   GH_TOKEN: ${{ secrets.GH_TOKEN }}
               working-directory: ./
               run: |
+                  set -e
                   yarn add -D dmg-license
                   if [ "${{ inputs.version }}" = "ce" ]; then
-                    yarn electron-publish${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-mac${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-linux${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-win${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "ee" ]; then
-                    yarn electron-publish-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-mac-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-linux-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-win-ee${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "se" ]; then
-                    yarn electron-publish-se${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-mac-se${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-linux-se${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-win-se${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "irify" ]; then
-                    yarn electron-publish-irify${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-mac-irify${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-linux-irify${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-win-irify${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
-                    yarn electron-publish-irify-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-mac-irify-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-linux-irify-ee${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-win-irify-ee${{ inputs.legacy && '-legacy' || '' }}
                   elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    yarn electron-publish-memfit${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-mac-memfit${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-linux-memfit${{ inputs.legacy && '-legacy' || '' }}
+                    yarn pack-win-memfit${{ inputs.legacy && '-legacy' || '' }}
                   else
                     echo "未知的输入值: ${{ inputs.version }}" >&2
                     exit 1
