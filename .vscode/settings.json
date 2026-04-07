@@ -11,7 +11,7 @@
   "editor.formatOnType": false,
 
   // code spell checker ，以下是一些自定义的单词列表
-  "cSpell.words": ["emiter", "Yakit", "yaklang", "irify", "memfit"],
+  "cSpell.words": ["emiter", "Yakit", "yaklang", "irify", "memfit", "irifyee"],
 
   // 1. 新文件默认使用 LF
   "files.eol": "\n",
