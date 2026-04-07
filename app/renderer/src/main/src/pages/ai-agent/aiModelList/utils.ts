@@ -449,6 +449,7 @@ export interface AIConfigHealthCheckResponse {
     ResponseContent: string
     ErrorMessage: string
     RawResponse: string
+    RecommendConfig: ThirdPartyApplicationConfig
 }
 
 export const grpcAIConfigHealthCheck: APIFunc<AIConfigHealthCheckRequest, AIConfigHealthCheckResponse> = (params, hiddenError) => {
