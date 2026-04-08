@@ -96,20 +96,20 @@ jobs:
         with:
           # 明确指定 base_sha，确保只对比 PR 本身的改动
           base_sha: ${{ github.event.pull_request.base.sha }}
-          separator: "\n"
+          json: true
+          safe_output: false
 
       - name: Print PR changed files
         shell: bash
         run: |
           echo "Changed files from tj-actions/changed-files:"
-          CHANGED_FILES_RAW='${{ steps.changed_files.outputs.all_changed_files }}'
-          CHANGED_FILES=$(printf '%b' "$CHANGED_FILES_RAW")
-          if [ -z "$CHANGED_FILES" ]; then
+          CHANGED_FILES_JSON='${{ steps.changed_files.outputs.all_changed_files }}'
+          if [ -z "$CHANGED_FILES_JSON" ] || [ "$CHANGED_FILES_JSON" = "[]" ]; then
             echo "(none)"
           else
             while IFS= read -r file; do
               [ -n "$file" ] && echo "$file"
-            done <<< "$CHANGED_FILES"
+            done < <(jq -r '.[]' <<< "$CHANGED_FILES_JSON")
           fi
 
       - name: Format or check PR changed files with prettier
@@ -121,13 +121,12 @@ jobs:
         run: |
           set -o pipefail
           {
-          CHANGED_FILES_RAW='${{ steps.changed_files.outputs.all_changed_files }}'
-          CHANGED_FILES=$(printf '%b' "$CHANGED_FILES_RAW")
+          CHANGED_FILES_JSON='${{ steps.changed_files.outputs.all_changed_files }}'
 
           format_targets=()
           while IFS= read -r file; do
             [ -f "$file" ] && format_targets+=("$file")
-          done <<< "$CHANGED_FILES"
+          done < <(jq -r '.[]' <<< "$CHANGED_FILES_JSON")
 
           if [ "${#format_targets[@]}" -eq 0 ]; then
             echo "No files to format."
