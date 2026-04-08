@@ -101,16 +101,14 @@ jobs:
       - name: Print PR changed files
         shell: bash
         env:
-          # 使用环境变量传递，防止文件名特殊字符干扰脚本
+          # 直接引用，不加额外的引号，让 shell 处理
           ALL_CHANGED_FILES: ${{ steps.changed_files.outputs.all_changed_files }}
         run: |
           echo "Changed files from tj-actions/changed-files:"
-          if [ "$ALL_CHANGED_FILES" = "[]" ] || [ -z "$ALL_CHANGED_FILES" ]; then
-            echo "(none)"
-          else
-            # 使用 jq 解析 JSON 数组并逐行输出
-            echo "$ALL_CHANGED_FILES" | jq -r '.[]'
-          fi
+          # 使用 HEREDOC 喂给 jq，防止特殊字符导致解析失败
+          cat << 'EOF' | jq -r '.[]'
+          ${{ env.ALL_CHANGED_FILES }}
+          EOF
 
       - name: Format or check PR changed files with prettier
         id: format_step
@@ -122,28 +120,27 @@ jobs:
         run: |
           set -o pipefail
           {
-            # 1. 转换为 Bash 数组
-            mapfile -t all_files < <(echo "$ALL_CHANGED_FILES" | jq -r '.[]')
-
-            # 2. 过滤掉不存在的文件（处理被删除的文件）
+            # 使用 HEREDOC 安全地读取 JSON 并转换为数组
             format_targets=()
-            for file in "${all_files[@]}"; do
+            while IFS= read -r file; do
               if [ -f "$file" ]; then
                 format_targets+=("$file")
               fi
-            done
+            done < <(cat << 'EOF' | jq -r '.[]'
+          ${{ env.ALL_CHANGED_FILES }}
+          EOF
+            )
 
             if [ "${#format_targets[@]}" -eq 0 ]; then
-              echo "No files to format."
+              echo "No valid files to format."
               exit 0
             fi
 
-            # 3. 执行格式化或检查
             if [ "$IS_FORK_PR" = 'true' ]; then
-              echo "Fork PR detected. Checking ${#format_targets[@]} file(s) with prettier..."
+              echo "Fork PR detected. Checking ${#format_targets[@]} file(s)..."
               npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --check --ignore-unknown "${format_targets[@]}"
             else
-              echo "Same-repo PR detected. Formatting ${#format_targets[@]} file(s) with prettier..."
+              echo "Same-repo PR detected. Formatting ${#format_targets[@]} file(s)..."
               npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --write --ignore-unknown "${format_targets[@]}"
             fi
           } 2>&1 | tee format-output.log
