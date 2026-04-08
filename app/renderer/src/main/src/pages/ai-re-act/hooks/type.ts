@@ -69,6 +69,8 @@ export interface UseCasualChatEvents extends UseHookBaseEvents {
   handleSend: handleSendFunc
   /** 设置UI展示的列表数据 */
   handleSetElements: (newElements: ReActChatRenderItem[]) => void
+  /** 用户手动介入逻辑 */
+  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
 }
 // #endregion
 
@@ -101,6 +103,8 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
   handlePlanExecEnd: (res: AIOutputEvent) => void
   /** 设置UI展示的列表数据 */
   handleSetElements: (newElements: ReActChatRenderItem[]) => void
+  /** 用户手动介入逻辑 */
+  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
 }
 // #endregion
 
@@ -267,6 +271,8 @@ export interface UseChatIPCEvents {
   handleCancelLoadingChange: (type: ReActChatBaseInfo['chatType'], status: boolean) => void
   /** 清空指定变量数据 */
   handleResetTarget: (target: 'memoryList') => void
+  /** 用户手动干预的执行事件 */
+  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
 }
 // #endregion
 

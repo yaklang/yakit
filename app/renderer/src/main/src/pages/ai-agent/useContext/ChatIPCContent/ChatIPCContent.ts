@@ -4,8 +4,6 @@ import { cloneDeep } from 'lodash'
 import { UseChatIPCEvents, UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
-import { HandleStartParams } from '../../aiAgentChat/type'
-import { AIChatMentionSelectItem } from '../../components/aiChatMention/type'
 
 export interface ChatIPCContextStore {
   chatIPCData: UseChatIPCState
@@ -40,8 +38,6 @@ export interface ChatIPCContextDispatcher {
   handleSendCasual: (params: AIChatIPCSendParams) => void
   /** 任务规划 */
   handleSendTask: (params: AIChatIPCSendParams) => void
-  /** 开始 */
-  // handleStart: (data: HandleStartParams) => void
   /** 停止ai */
   handleStop: () => void
   handleSend: (params: AIChatIPCSendParams) => void
@@ -70,6 +66,7 @@ export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
     onDelChats: () => {},
     handleCancelLoadingChange: () => {},
     handleResetTarget: () => {},
+    handleUserManualIntervention: () => {},
   },
   handleSendCasual: () => {},
   handleSendTask: () => {},

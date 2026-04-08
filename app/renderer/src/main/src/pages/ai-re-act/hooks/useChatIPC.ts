@@ -46,7 +46,7 @@ import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import useAINodeLabel from './useAINodeLabel'
 import { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import { DeepPartial } from '@/pages/ai-agent/store/ChatDataStore'
-import { ReActChatBaseInfo } from './aiRender'
+import { AIChatQSData, ReActChatBaseInfo } from './aiRender'
 import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
 
 const { ipcRenderer } = window.require('electron')
@@ -1053,6 +1053,20 @@ function useChatIPC(params?: UseChatIPCParams) {
     }
   })
 
+  /** 用户手动创建内容的执行方法 */
+  const handleUserManualIntervention = useMemoizedFn((chatInfo: AIChatQSData) => {
+    try {
+      if (chatInfo.chatType === 'reAct') {
+        casualChatEvent.handleUserManualIntervention(chatInfo)
+      }
+      if (chatInfo.chatType === 'task') {
+        taskChatEvent.handleUserManualIntervention(chatInfo)
+      }
+    } catch (error) {
+      yakitNotify('error', `用户手动干预操作失败: ${error}`)
+    }
+  })
+
   const state: UseChatIPCState = useCreation(() => {
     return {
       execute,
@@ -1110,6 +1124,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       onDelChats,
       handleCancelLoadingChange,
       handleResetTarget,
+      handleUserManualIntervention,
     }
   }, [])
 
