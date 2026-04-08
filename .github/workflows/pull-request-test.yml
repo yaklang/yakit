@@ -90,6 +90,14 @@ jobs:
           echo "i18n check failed."
           exit 1
 
+      - name: Get PR changed files
+        id: changed_files
+        uses: tj-actions/changed-files@v47
+        with:
+          # 明确指定 base_sha，确保只对比 PR 本身的改动
+          base_sha: ${{ github.event.pull_request.base.sha }}
+          separator: "\n"
+
       - name: Format or check PR changed files with prettier
         id: format_step
         continue-on-error: true
@@ -99,14 +107,12 @@ jobs:
         run: |
           set -o pipefail
           {
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          mapfile -d '' changed_files < <(git diff --name-only -z "$BASE_SHA" "$HEAD_SHA")
+          CHANGED_FILES="${{ steps.changed_files.outputs.all_changed_files }}"
 
           format_targets=()
-          for file in "${changed_files[@]}"; do
+          while IFS= read -r file; do
             [ -f "$file" ] && format_targets+=("$file")
-          done
+          done <<< "$CHANGED_FILES"
 
           if [ "${#format_targets[@]}" -eq 0 ]; then
             echo "No files to format."
