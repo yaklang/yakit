@@ -1,8 +1,9 @@
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AIGlobalConfig, grpcGetAIGlobalConfig, grpcSetAIGlobalConfig } from '@/pages/ai-agent/aiModelList/utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { shallow } from 'zustand/shallow'
+import { cloneDeep } from 'lodash'
 
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig
@@ -15,23 +16,26 @@ interface UseAIGlobalConfigData {
 interface UseAIGlobalConfigEvents {
   /** 刷新，会设置全局变量中的值和ref */
   onRefresh: (isShowLoading?: boolean) => void
-  /** 设置 */
+  /** 设置到数据库和全局变量中 */
   setAIGlobalConfig: (data: Partial<AIGlobalConfig>) => Promise<void>
   /** 获取最新的值,不会设置全局变量中的值,会设置ref */
   getLastAIGlobalConfig: () => Promise<AIGlobalConfig>
+  /** 设置到全局变量中 */
+  setConfigStore: (data: AIGlobalConfig) => void
 }
 function useAIGlobalConfig(): [UseAIGlobalConfigData, UseAIGlobalConfigEvents]
 
 function useAIGlobalConfig() {
-  const { aiGlobalConfig, isInit, setConfig } = useAIGlobalConfigStore(
+  const { aiGlobalConfig, isInit, setConfig, setQueryLoading, queryLoading } = useAIGlobalConfigStore(
     (s) => ({
       isInit: s.isInit,
       setConfig: s.setAIGlobalConfig,
       aiGlobalConfig: s.aiGlobalConfig,
+      queryLoading: s.queryLoading, // 提升到全局，是为了避免外界父组件调用子组件的刷新，拿不到最新的loading
+      setQueryLoading: s.setQueryLoading,
     }),
     shallow,
   )
-  const [queryLoading, setQueryLoading] = useState<boolean>(false)
   const [updateLoading, setUpdateLoading] = useState<boolean>(false)
   const [total, setTotal] = useState<number>(0)
 
@@ -40,7 +44,6 @@ function useAIGlobalConfig() {
   useEffect(() => {
     isInit && getAIGlobalConfig()
   }, [isInit])
-
   /** 刷新，会设置全局变量中的值和ref */
   const getAIGlobalConfig = useMemoizedFn((isShowLoading?: boolean) => {
     const showLoading = isShowLoading !== false
@@ -70,8 +73,9 @@ function useAIGlobalConfig() {
       setUpdateLoading(true)
       grpcSetAIGlobalConfig(config)
         .then(() => {
-          setConfig(config)
-          getAIGlobalConfig()
+          aiGlobalConfigRef.current = cloneDeep(config)
+          setConfig({ ...config })
+          getAIGlobalConfig(false)
           resolve()
         })
         .catch(reject)
@@ -88,13 +92,20 @@ function useAIGlobalConfig() {
     return new Promise<AIGlobalConfig>((resolve, reject) => {
       grpcGetAIGlobalConfig()
         .then((res) => {
-          aiGlobalConfigRef.current = res
+          aiGlobalConfigRef.current = cloneDeep(res)
           resolve(res)
         })
         .catch(reject)
     })
   })
-  const data: UseAIGlobalConfigData = useCreation(() => {
+
+  /** 设置到全局变量中 */
+  const setConfigStore = useMemoizedFn((data: AIGlobalConfig) => {
+    setConfig(data)
+    aiGlobalConfigRef.current = cloneDeep(data)
+  })
+
+  const data: UseAIGlobalConfigData = useMemo(() => {
     return {
       aiGlobalConfig,
       queryLoading,
@@ -109,6 +120,7 @@ function useAIGlobalConfig() {
       onRefresh: (isShowLoading) => getAIGlobalConfig(isShowLoading),
       setAIGlobalConfig: (res) => setAIGlobalConfig(res),
       getLastAIGlobalConfig: () => getLastAIGlobalConfig(),
+      setConfigStore: (res) => setConfigStore(res),
     }
   }, [])
 

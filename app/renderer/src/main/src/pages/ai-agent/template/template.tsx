@@ -455,6 +455,8 @@ const AIGlobalCommand: React.FC<AIGlobalCommandProps> = React.memo(
           isShowResize={false}
           onPressEnter={() => onSave(prompt)}
           placeholder="全局命令将对所有会话生效..."
+          maxLength={500}
+          showCount
         />
         <div className={styles['ai-global-command-footer']}>
           <YakitButton type="outline2" onClick={onCancel}>

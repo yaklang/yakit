@@ -258,8 +258,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
   const localRef = useRef<AILocalModelListRefProps>(null)
   const onlineListRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(onlineListRef)
-  const [{ total: onlineTotal }, { onRefresh: onRefreshOnline }] = useAIGlobalConfig()
-
+  const [aiGlobalConfigData, event] = useAIGlobalConfig()
   useEffect(() => {
     if (!inViewport) return
     emiter.on('onRefreshAIModelList', onRefreshAIModelList)
@@ -279,18 +278,18 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
   })
   const total = useCreation(() => {
     if (modelType === 'online') {
-      return onlineTotal
+      return aiGlobalConfigData.total
     } else {
       return localTotal
     }
-  }, [modelType, localTotal, onlineTotal])
+  }, [modelType, localTotal, aiGlobalConfigData.total])
   const onRefreshAIModelList = useMemoizedFn(() => {
     onRefresh()
   })
   const onRefresh = useMemoizedFn((isShowLoading?: boolean) => {
     switch (modelType) {
       case 'online':
-        onRefreshOnline(isShowLoading)
+        event.onRefresh(isShowLoading)
         break
       case 'local':
         localRef.current?.onRefresh()
@@ -331,7 +330,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
       mountContainer,
       t,
       onSuccess: () => {
-        onRefreshOnline()
+        event.onRefresh()
       },
     })
   })
@@ -447,10 +446,10 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
   const [form] = Form.useForm()
   const routingPolicy = Form.useWatch('RoutingPolicy', form)
 
-  const [{ aiGlobalConfigRef: configRef }, { getLastAIGlobalConfig, setAIGlobalConfig }] = useAIGlobalConfig()
+  const [aiGlobalConfigData, event] = useAIGlobalConfig()
 
   const getList = useMemoizedFn(() => {
-    getLastAIGlobalConfig().then((res) => {
+    event.getLastAIGlobalConfig().then((res) => {
       form.setFieldsValue({
         RoutingPolicy: res.RoutingPolicy || AIModelPolicyEnum.PolicyAuto,
         DisableFallback: res.DisableFallback,
@@ -465,22 +464,22 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
     }
 
     const values = form.getFieldsValue()
-    if (!configRef.current) {
+    if (!aiGlobalConfigData?.aiGlobalConfigRef.current) {
       yakitNotify('error', t('AIOnlineModeSetting.configUpdateFailed'))
       return
     }
     if (
-      configRef.current.RoutingPolicy === values.RoutingPolicy &&
-      configRef.current.DisableFallback === values.DisableFallback
+      aiGlobalConfigData?.aiGlobalConfigRef.current.RoutingPolicy === values.RoutingPolicy &&
+      aiGlobalConfigData?.aiGlobalConfigRef.current.DisableFallback === values.DisableFallback
     ) {
       return
     }
     const config: AIGlobalConfig = {
-      ...configRef.current,
+      ...aiGlobalConfigData?.aiGlobalConfigRef.current,
       RoutingPolicy: values.RoutingPolicy,
       DisableFallback: values.DisableFallback,
     }
-    setAIGlobalConfig(config).then(() => {
+    event.setAIGlobalConfig(config).then(() => {
       onRefresh()
     })
   })
@@ -531,7 +530,6 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
       if (inViewport) event.onRefresh()
     }, [inViewport])
     const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
-    const spinning = useCreation(() => aiGlobalConfigData.queryLoading, [aiGlobalConfigData.queryLoading])
     const onRemoveAll = useMemoizedFn(() => {})
     const isHaveData = useCreation(() => {
       return !!(
@@ -587,7 +585,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
       })
     })
     return (
-      <YakitSpin spinning={spinning}>
+      <YakitSpin spinning={aiGlobalConfigData.queryLoading}>
         {isHaveData ? (
           <div className={styles['ai-online-model-wrapper']} ref={onlineListRef}>
             {!!aiGlobalConfig?.IntelligentModels.length && (

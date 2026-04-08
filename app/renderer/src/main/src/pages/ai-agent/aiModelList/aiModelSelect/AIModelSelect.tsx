@@ -1,526 +1,530 @@
-import React, {useEffect, useRef, useState} from "react"
-import {AIModelItemProps, AIModelSelectListProps, AIModelSelectProps, AISelectType} from "./AIModelSelectType"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import {AIGlobalConfig, AIModelConfig, AIModelTypeFileName, grpcSetAIGlobalConfig, isForcedSetAIModal} from "../utils"
-import styles from "./AIModelSelect.module.scss"
-import classNames from "classnames"
-import {GetAIModelAvailableTotalResponse} from "../../type/aiModel"
+import React, { useEffect, useRef, useState } from 'react'
+import { AIModelItemProps, AIModelSelectListProps, AIModelSelectProps, AISelectType } from './AIModelSelectType'
+import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { AIGlobalConfig, AIModelConfig, AIModelTypeFileName, grpcSetAIGlobalConfig, isForcedSetAIModal } from '../utils'
+import styles from './AIModelSelect.module.scss'
+import classNames from 'classnames'
+import { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
 import {
-    AIAgentTabListEnum,
-    AIModelPolicyEnum,
-    AIModelPolicyOptions,
-    AIModelTypeInterFileNameEnum,
-    AIOnlineModelIconMap,
-    defaultAIGlobalConfig,
-    SwitchAIAgentTabEventEnum
-} from "../../defaultConstant"
-import {getTipByType, OutlineAtomIconByStatus, setAIModal} from "../AIModelList"
-import {AIChatSelect} from "@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect"
-import useChatIPCDispatcher from "../../useContext/ChatIPCContent/useDispatcher"
-import useChatIPCStore from "../../useContext/ChatIPCContent/useStore"
-import {OutlineCheckIcon, OutlineCogIcon, OutlineInformationcircleIcon, OutlineRefreshIcon} from "@/assets/icon/outline"
-import {cloneDeep, isEqual} from "lodash"
-import {AIInputEventHotPatchTypeEnum} from "@/pages/ai-re-act/hooks/grpcApi"
-import emiter from "@/utils/eventBus/eventBus"
-import {YakitModalConfirm} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {Avatar, Tooltip} from "antd"
-import {AIAgentTriggerEventInfo} from "../../aiAgentType"
-import {yakitNotify} from "@/utils/notification"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {usePageInfo} from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
-import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import useAIAgentDispatcher from "../../useContext/useDispatcher"
+  AIAgentTabListEnum,
+  AIModelPolicyEnum,
+  AIModelPolicyOptions,
+  AIModelTypeInterFileNameEnum,
+  AIOnlineModelIconMap,
+  defaultAIGlobalConfig,
+  SwitchAIAgentTabEventEnum,
+} from '../../defaultConstant'
+import { getTipByType, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
+import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
+import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
+import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
+import {
+  OutlineCheckIcon,
+  OutlineCogIcon,
+  OutlineInformationcircleIcon,
+  OutlineRefreshIcon,
+} from '@/assets/icon/outline'
+import { cloneDeep, isEqual } from 'lodash'
+import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { Avatar, Tooltip } from 'antd'
+import { AIAgentTriggerEventInfo } from '../../aiAgentType'
+import { yakitNotify } from '@/utils/notification'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {
-    const m = YakitModalConfirm({
-        title: t("AIModelSelect.configTitle"),
-        width: 420,
-        onOkText: t("AIModelSelect.toConfigure"),
-        content: <div>{t("AIModelSelect.configDesc")}</div>,
-        closable: false,
-        maskClosable: false,
-        keyboard: false,
-        cancelButtonProps: {style: {display: "none"}},
-        getContainer: mountContainer,
-        onOk: () => {
-            setAIModal({
-                mountContainer,
-                t,
-                onSuccess: () => {
-                    setTimeout(() => {
-                        emiter.emit("onRefreshAIModelList")
-                    }, 200)
-                }
-            })
-            m.destroy()
-        }
-    })
+  const m = YakitModalConfirm({
+    title: t('AIModelSelect.configTitle'),
+    width: 420,
+    onOkText: t('AIModelSelect.toConfigure'),
+    content: <div>{t('AIModelSelect.configDesc')}</div>,
+    closable: false,
+    maskClosable: false,
+    keyboard: false,
+    cancelButtonProps: { style: { display: 'none' } },
+    getContainer: mountContainer,
+    onOk: () => {
+      setAIModal({
+        mountContainer,
+        t,
+        onSuccess: () => {
+          setTimeout(() => {
+            emiter.emit('onRefreshAIModelList')
+          }, 200)
+        },
+      })
+      m.destroy()
+    },
+  })
 }
 
 const modelType = (t: TFunction) => [
-    t("AIModelList.intelligentModels"),
-    t("AIModelList.lightweightModels"),
-    t("AIModelList.visionModels")
+  t('AIModelList.intelligentModels'),
+  t('AIModelList.lightweightModels'),
+  t('AIModelList.visionModels'),
 ]
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
-    const {t} = useI18nNamespaces(["aiAgent", "yakitUi"])
-    const {isOpen = true, mountContainer} = props
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { isOpen = true, mountContainer } = props
 
-    const {setSetting} = useAIAgentDispatcher()
-    const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
-    //#region AI model
-    const {chatIPCData} = useChatIPCStore()
-    const {handleSendConfigHotpatch} = useChatIPCDispatcher()
+  const { setSetting } = useAIAgentDispatcher()
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+  //#region AI model
+  const { chatIPCData } = useChatIPCStore()
+  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
 
-    const [aiType, setAIType] = useState<AISelectType>("online") //暂时只有online，后续会加"local"
+  const [aiType, setAIType] = useState<AISelectType>('online') //暂时只有online，后续会加"local"
 
-    const [aiModelOptions, setAIModelOptions] = useState<GetAIModelAvailableTotalResponse>({
-        onlineModelsTotal: 0,
-        localModelsTotal: 0,
-        onlineModels: cloneDeep(defaultAIGlobalConfig),
-        localModels: []
-    })
-    const [onlineLoading, setOnlineLoading] = useState<boolean>(false)
-    const [open, setOpen] = useState<boolean>(false)
+  const [aiModelOptions, setAIModelOptions] = useState<GetAIModelAvailableTotalResponse>({
+    onlineModelsTotal: 0,
+    localModelsTotal: 0,
+    onlineModels: cloneDeep(defaultAIGlobalConfig),
+    localModels: [],
+  })
+  const [onlineLoading, setOnlineLoading] = useState<boolean>(false)
+  const [open, setOpen] = useState<boolean>(false)
 
-    const refRef = useRef<HTMLDivElement>(null)
-    const aiGlobalConfigRef = useRef<AIGlobalConfig>()
-    const [inViewport = true] = useInViewport(refRef)
+  const refRef = useRef<HTMLDivElement>(null)
+  const aiGlobalConfigRef = useRef<AIGlobalConfig>()
+  const [inViewport = true] = useInViewport(refRef)
 
-    useEffect(() => {
-        if (!inViewport) return
-        getAIModelListOption()
-        emiter.on("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
-        emiter.on("aiModelSelectChange", onAIModelSelectChange)
-        return () => {
-            emiter.off("onRefreshAvailableAIModelList", onRefreshAvailableAIModelList)
-            emiter.off("aiModelSelectChange", onAIModelSelectChange)
-        }
-    }, [inViewport])
+  useEffect(() => {
+    if (!inViewport) return
+    getAIModelListOption()
+    emiter.on('onRefreshAvailableAIModelList', onRefreshAvailableAIModelList)
+    emiter.on('aiModelSelectChange', onAIModelSelectChange)
+    return () => {
+      emiter.off('onRefreshAvailableAIModelList', onRefreshAvailableAIModelList)
+      emiter.off('aiModelSelectChange', onAIModelSelectChange)
+    }
+  }, [inViewport])
 
-    const onRefreshAvailableAIModelList = useMemoizedFn(() => {
-        setOnlineLoading(true)
-        getAIModelListOption()
-    })
+  const onRefreshAvailableAIModelList = useMemoizedFn(() => {
+    setOnlineLoading(true)
+    getAIModelListOption()
+  })
 
-    /**外界ai模型的执行变化,触发里面的热更新 */
-    const onAIModelSelectChange = useMemoizedFn((res: string) => {
-        try {
-            const data: AIAgentTriggerEventInfo = JSON.parse(res)
-            const {type, params} = data
-            setAIType(type as AISelectType)
-            const fileName = params?.fileName as AIModelTypeFileName
+  /**外界ai模型的执行变化,触发里面的热更新 */
+  const onAIModelSelectChange = useMemoizedFn((res: string) => {
+    try {
+      const data: AIAgentTriggerEventInfo = JSON.parse(res)
+      const { type, params } = data
+      setAIType(type as AISelectType)
+      const fileName = params?.fileName as AIModelTypeFileName
 
-            if (fileName === AIModelTypeInterFileNameEnum.IntelligentModels) {
-                if (execute) {
-                    handleSendConfigHotpatch({
-                        hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
-                        params: {
-                            AIService: params?.AIService || "",
-                            AIModelName: params?.AIModelName || ""
-                        }
-                    })
-                }
-                setSetting?.((old) => {
-                    return {
-                        ...old,
-                        AIService: params?.AIService || "",
-                        AIModelName: params?.AIModelName || ""
-                    }
-                })
-            }
-        } catch (error) {}
-    })
-
-    const getAIModelListOption = useDebounceFn(
-        () => {
-            isForcedSetAIModal({
-                t,
-                haveDataCall: (res) => {
-                    setAIModelOptions(res)
-                    aiGlobalConfigRef.current = cloneDeep(res.onlineModels)
-                },
-                pageKey: "ai-agent",
-                isOpen: isOpen,
-                mountContainer: document.getElementById("main-operator-page-body-ai-agent")
-            }).finally(() => {
-                setTimeout(() => {
-                    setOnlineLoading(false)
-                }, 200)
-            })
-        },
-        {wait: 200, leading: true}
-    ).run
-
-    const onSetOpen = useMemoizedFn((v: boolean) => {
-        setOpen(v)
-
-        switch (aiType) {
-            case "online":
-                if (!v) {
-                    if (isEqual(aiGlobalConfigRef.current, aiModelOptions.onlineModels)) break
-                    onSetAI()
-                }
-                break
-
-            default:
-                break
-        }
-    })
-    /**
-     * execute为true:热更新ai配置,热更新只支持 intelligentModels
-     * execute为false:更新全局配置
-     * */
-    const onSetAI = useMemoizedFn(() => {
-        if (intelligentModels.length === 0) return
-        const aiService = intelligentModels[0]?.Provider.Type || ""
-        const aiModelName = intelligentModels[0]?.ModelName || ""
+      if (fileName === AIModelTypeInterFileNameEnum.IntelligentModels) {
         if (execute) {
-            handleSendConfigHotpatch({
-                hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
-                params: {
-                    AIService: aiService,
-                    AIModelName: aiModelName
-                }
-            })
-            setTimeout(() => {
-                getAIModelListOption()
-                emiter.emit("onRefreshAIModelList")
-            }, 500)
-        } else {
-            grpcSetAIGlobalConfig(aiModelOptions.onlineModels).then(() => {
-                setAIModelOptions((v) => ({...v, onlineModels: cloneDeep(aiModelOptions.onlineModels)}))
-                aiGlobalConfigRef.current = cloneDeep(aiModelOptions.onlineModels)
-                emiter.emit("onRefreshAIModelList")
-            })
+          handleSendConfigHotpatch({
+            hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
+            params: {
+              AIService: params?.AIService || '',
+              AIModelName: params?.AIModelName || '',
+            },
+          })
         }
         setSetting?.((old) => {
-            return {
-                ...old,
-                AIService: aiService,
-                AIModelName: aiModelName
-            }
+          return {
+            ...old,
+            AIService: params?.AIService || '',
+            AIModelName: params?.AIModelName || '',
+          }
         })
-    })
+      }
+    } catch (error) {}
+  })
 
-    const isHaveData = useCreation(() => {
-        return aiModelOptions.onlineModelsTotal > 0 || aiModelOptions.localModels.length > 0
-    }, [aiModelOptions.onlineModelsTotal, aiModelOptions.localModels.length])
+  const getAIModelListOption = useDebounceFn(
+    () => {
+      isForcedSetAIModal({
+        t,
+        haveDataCall: (res) => {
+          setAIModelOptions(res)
+          aiGlobalConfigRef.current = cloneDeep(res.onlineModels)
+        },
+        pageKey: 'ai-agent',
+        isOpen: isOpen,
+        mountContainer: document.getElementById('main-operator-page-body-ai-agent'),
+      }).finally(() => {
+        setTimeout(() => {
+          setOnlineLoading(false)
+        }, 200)
+      })
+    },
+    { wait: 200, leading: true },
+  ).run
 
-    //#endregion
+  const onSetOpen = useMemoizedFn((v: boolean) => {
+    setOpen(v)
 
-    const renderContent = useMemoizedFn(() => {
-        switch (aiType) {
-            case "online":
-                return (
-                    <>
-                        <YakitSelect.Option
-                            value='select'
-                            label={
-                                <div className={styles["select-option"]}>
-                                    {selectList.length > 1 ? (
-                                        <Avatar.Group>
-                                            {selectList.map((item, index) => (
-                                                <Tooltip key={index} title={`${modelType(t)[index]}:${item.ModelName}`}>
-                                                    <Avatar
-                                                        className={styles["model-item"]}
-                                                        icon={getIconByAI(item.Provider.Type)}
-                                                        size='small'
-                                                    />
-                                                </Tooltip>
-                                            ))}
-                                        </Avatar.Group>
-                                    ) : (
-                                        <>
-                                            {getIconByAI(selectList[0]?.Provider.Type)}
-                                            <span
-                                                className={styles["select-option-text"]}
-                                                title={`${selectList[0]?.ModelName}`}
-                                            >
-                                                {selectList[0]?.ModelName}
-                                            </span>
-                                        </>
-                                    )}
-                                </div>
-                            }
-                        >
-                            {selectList.length}
-                        </YakitSelect.Option>
-                    </>
-                )
-            // TODO -
-            // case "local":
-            //     return (
-            //         <>
-            //             {aiModelOptions.localModels.map((nodeItem) => (
-            //                 <YakitSelect.Option key={nodeItem.Name} value={nodeItem.Name}>
-            //                     <AIModelItem value={nodeItem.Name} />
-            //                 </YakitSelect.Option>
-            //             ))}
-            //         </>
-            //     )
-            default:
-                return <></>
+    switch (aiType) {
+      case 'online':
+        if (!v) {
+          if (isEqual(aiGlobalConfigRef.current, aiModelOptions.onlineModels)) break
+          onSetAI()
         }
-    })
-    const intelligentModels = useCreation(() => {
-        return aiModelOptions?.onlineModels?.IntelligentModels || []
-    }, [aiModelOptions?.onlineModels?.IntelligentModels])
-    const lightweightModels = useCreation(() => {
-        return aiModelOptions?.onlineModels?.LightweightModels || []
-    }, [aiModelOptions?.onlineModels?.LightweightModels])
-    const visionModels = useCreation(() => {
-        return aiModelOptions?.onlineModels?.VisionModels || []
-    }, [aiModelOptions?.onlineModels?.VisionModels])
-    const policy: AIModelPolicyEnum = useCreation(() => {
-        return aiModelOptions?.onlineModels?.RoutingPolicy as AIModelPolicyEnum
-    }, [aiModelOptions?.onlineModels?.RoutingPolicy])
+        break
 
-    const selectList = useCreation(() => {
-        const intelligentItem = intelligentModels[0]
-        const lightweightItem = lightweightModels[0]
-        const visionItem = visionModels[0]
-        const list: AIModelConfig[] = []
-        // 顺序按照高质、轻量、视觉的优先级展示
-        intelligentItem && list.push(intelligentItem)
-        lightweightItem && list.push(lightweightItem)
-        visionItem && list.push(visionItem)
-        return list
-    }, [intelligentModels, lightweightModels, visionModels])
-    const execute = useCreation(() => {
-        return chatIPCData.execute
-    }, [chatIPCData.execute])
-    const onSelectPolicy = useMemoizedFn((value) => {
-        setAIModelOptions((old) => {
-            return {
-                ...old,
-                onlineModels: {
-                    ...old.onlineModels,
-                    RoutingPolicy: value
-                }
-            }
-        })
-    })
-    const onAddModel = useMemoizedFn(() => {
-        setAIModal({
-            mountContainer,
-            t,
-            onSuccess: () => {
-                emiter.emit("onRefreshAIModelList")
-            }
-        })
-    })
-    const onSelect = useMemoizedFn(
-        (
-            item: AIModelConfig,
-            options: {
-                fileName: AIModelTypeFileName
-                index: number
-            }
-        ) => {
-            const {fileName, index} = options
-            setAIModelOptions((old) => {
-                const newList = [...old.onlineModels[fileName]]
-                newList.splice(index, 1)
-                newList.unshift(item)
-                return {
-                    ...old,
-                    onlineModels: {
-                        ...old.onlineModels,
-                        [fileName]: newList
-                    }
-                }
-            })
-        }
-    )
-    const openModelTab = useMemoizedFn(() => {
-        if (currentRouteKey !== YakitRoute.AI_Agent) {
-            emiter.emit(
-                "openPage",
-                JSON.stringify({
-                    route: YakitRoute.AI_Agent
-                })
-            )
-            setTimeout(() => {
-                onSwitchAIAgentTab()
-            }, 100)
+      default:
+        break
+    }
+  })
+  const [_, event] = useAIGlobalConfig()
+  /**
+   * execute为true:热更新ai配置,热更新只支持 intelligentModels
+   * execute为false:更新全局配置
+   * */
+  const onSetAI = useMemoizedFn(() => {
+    if (intelligentModels.length === 0) return
+    const aiService = intelligentModels[0]?.Provider.Type || ''
+    const aiModelName = intelligentModels[0]?.ModelName || ''
+
+    if (execute) {
+      handleSendConfigHotpatch({
+        hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
+        params: {
+          AIService: aiService,
+          AIModelName: aiModelName,
+        },
+      })
+      setTimeout(() => {
+        getAIModelListOption()
+        if (aiType === 'online') {
+          event.onRefresh()
         } else {
-            onSwitchAIAgentTab()
+          emiter.emit('onRefreshAIModelList')
         }
+      }, 500)
+    } else {
+      event.setAIGlobalConfig(aiModelOptions.onlineModels).then(() => {
+        setAIModelOptions((v) => ({ ...v, onlineModels: cloneDeep(aiModelOptions.onlineModels) }))
+        aiGlobalConfigRef.current = cloneDeep(aiModelOptions.onlineModels)
+        if (aiType === 'local') emiter.emit('onRefreshAIModelList')
+      })
+    }
+    setSetting?.((old) => {
+      return {
+        ...old,
+        AIService: aiService,
+        AIModelName: aiModelName,
+      }
+    })
+  })
 
-        yakitNotify("success", t("AIModelSelect.openModelTabSuccess"))
-    })
-    const onSwitchAIAgentTab = useMemoizedFn(() => {
-        emiter.emit(
-            "switchAIAgentTab",
-            JSON.stringify({
-                type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-                params: {
-                    active: AIAgentTabListEnum.AI_Model,
-                    show: true
-                }
-            })
+  const isHaveData = useCreation(() => {
+    return aiModelOptions.onlineModelsTotal > 0 || aiModelOptions.localModels.length > 0
+  }, [aiModelOptions.onlineModelsTotal, aiModelOptions.localModels.length])
+
+  //#endregion
+
+  const renderContent = useMemoizedFn(() => {
+    switch (aiType) {
+      case 'online':
+        return (
+          <>
+            <YakitSelect.Option
+              value="select"
+              label={
+                <div className={styles['select-option']}>
+                  {selectList.length > 1 ? (
+                    <Avatar.Group>
+                      {selectList.map((item, index) => (
+                        <Tooltip key={index} title={`${modelType(t)[index]}:${item.ModelName}`}>
+                          <Avatar
+                            className={styles['model-item']}
+                            icon={getIconByAI(item.Provider.Type)}
+                            size="small"
+                          />
+                        </Tooltip>
+                      ))}
+                    </Avatar.Group>
+                  ) : (
+                    <>
+                      {getIconByAI(selectList[0]?.Provider.Type)}
+                      <span className={styles['select-option-text']} title={`${selectList[0]?.ModelName}`}>
+                        {selectList[0]?.ModelName}
+                      </span>
+                    </>
+                  )}
+                </div>
+              }
+            >
+              {selectList.length}
+            </YakitSelect.Option>
+          </>
         )
+      // TODO -
+      // case "local":
+      //     return (
+      //         <>
+      //             {aiModelOptions.localModels.map((nodeItem) => (
+      //                 <YakitSelect.Option key={nodeItem.Name} value={nodeItem.Name}>
+      //                     <AIModelItem value={nodeItem.Name} />
+      //                 </YakitSelect.Option>
+      //             ))}
+      //         </>
+      //     )
+      default:
+        return <></>
+    }
+  })
+  const intelligentModels = useCreation(() => {
+    return aiModelOptions?.onlineModels?.IntelligentModels || []
+  }, [aiModelOptions?.onlineModels?.IntelligentModels])
+  const lightweightModels = useCreation(() => {
+    return aiModelOptions?.onlineModels?.LightweightModels || []
+  }, [aiModelOptions?.onlineModels?.LightweightModels])
+  const visionModels = useCreation(() => {
+    return aiModelOptions?.onlineModels?.VisionModels || []
+  }, [aiModelOptions?.onlineModels?.VisionModels])
+  const policy: AIModelPolicyEnum = useCreation(() => {
+    return aiModelOptions?.onlineModels?.RoutingPolicy as AIModelPolicyEnum
+  }, [aiModelOptions?.onlineModels?.RoutingPolicy])
+
+  const selectList = useCreation(() => {
+    const intelligentItem = intelligentModels[0]
+    const lightweightItem = lightweightModels[0]
+    const visionItem = visionModels[0]
+    const list: AIModelConfig[] = []
+    // 顺序按照高质、轻量、视觉的优先级展示
+    intelligentItem && list.push(intelligentItem)
+    lightweightItem && list.push(lightweightItem)
+    visionItem && list.push(visionItem)
+    return list
+  }, [intelligentModels, lightweightModels, visionModels])
+  const execute = useCreation(() => {
+    return chatIPCData.execute
+  }, [chatIPCData.execute])
+  const onSelectPolicy = useMemoizedFn((value) => {
+    setAIModelOptions((old) => {
+      return {
+        ...old,
+        onlineModels: {
+          ...old.onlineModels,
+          RoutingPolicy: value,
+        },
+      }
     })
-    return (
-        <div ref={refRef}>
-            {isHaveData ? (
-                <AIChatSelect
-                    dropdownRender={(menu) => {
-                        return (
-                            <div className={styles["drop-select-wrapper"]}>
-                                <div className={styles["select-title"]}>
-                                    <div className={styles["select-title-left"]}>
-                                        <span>{t("AIModelSelect.selectModel")}</span>
-                                        {!execute && (
-                                            <YakitSelect
-                                                size='small'
-                                                disabled={execute}
-                                                options={AIModelPolicyOptions}
-                                                value={policy}
-                                                onSelect={onSelectPolicy}
-                                                wrapperClassName={styles["select-policy-wrapper"]}
-                                                dropdownClassName={styles["select-policy-dropdown"]}
-                                                wrapperStyle={{width: 80, marginRight: 4}}
-                                                dropdownMatchSelectWidth={false}
-                                            />
-                                        )}
-                                        <Tooltip title={getTipByType(policy, t)}>
-                                            <OutlineInformationcircleIcon className={styles["icon-info"]} />
-                                        </Tooltip>
-                                    </div>
-                                    <div className={styles["select-title-right"]}>
-                                        <Tooltip title={t("AIModelSelect.openConfigTooltip")}>
-                                            <YakitButton
-                                                size='small'
-                                                type='text2'
-                                                icon={<OutlineCogIcon />}
-                                                onClick={openModelTab}
-                                            />
-                                        </Tooltip>
-                                        {aiType === "online" && (
-                                            <Tooltip title={t("YakitButton.refresh")}>
-                                                <YakitButton
-                                                    size='small'
-                                                    type='text2'
-                                                    icon={<OutlineRefreshIcon />}
-                                                    loading={onlineLoading}
-                                                    onClick={() => onRefreshAvailableAIModelList()}
-                                                />
-                                            </Tooltip>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className={styles["select-content"]}>
-                                    {!!intelligentModels.length && (
-                                        <AIModelSelectList
-                                            title={t("AIModelList.intelligentModels")}
-                                            subTitle={t("AIModelList.intelligentModelsDesc")}
-                                            list={intelligentModels}
-                                            onSelect={(item, index) =>
-                                                onSelect(item, {
-                                                    fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
-                                                    index
-                                                })
-                                            }
-                                        />
-                                    )}
-                                    {!execute && !!lightweightModels.length && (
-                                        <AIModelSelectList
-                                            title={t("AIModelList.lightweightModels")}
-                                            subTitle={t("AIModelList.lightweightModelsDesc")}
-                                            list={lightweightModels}
-                                            onSelect={(item, index) =>
-                                                onSelect(item, {
-                                                    fileName: AIModelTypeInterFileNameEnum.LightweightModels,
-                                                    index
-                                                })
-                                            }
-                                        />
-                                    )}
-                                    {!execute && !!visionModels.length && (
-                                        <AIModelSelectList
-                                            title={t("AIModelList.visionModels")}
-                                            subTitle={t("AIModelList.visionModelsDesc")}
-                                            list={visionModels}
-                                            onSelect={(item, index) =>
-                                                onSelect(item, {
-                                                    fileName: AIModelTypeInterFileNameEnum.VisionModels,
-                                                    index
-                                                })
-                                            }
-                                        />
-                                    )}
-                                </div>
-                                <YakitButton type='secondary2' onClick={onAddModel} className={styles["add-model-btn"]}>
-                                    {t("AIModelList.addModel")}
-                                </YakitButton>
-                            </div>
-                        )
-                    }}
-                    open={open}
-                    setOpen={onSetOpen}
-                    optionLabelProp='label'
-                    value='select'
-                >
-                    {renderContent()}
-                </AIChatSelect>
-            ) : (
-                <></>
-            )}
-        </div>
+  })
+  const onAddModel = useMemoizedFn(() => {
+    setAIModal({
+      mountContainer,
+      t,
+      onSuccess: () => {
+        emiter.emit('onRefreshAIModelList')
+      },
+    })
+  })
+  const onSelect = useMemoizedFn(
+    (
+      item: AIModelConfig,
+      options: {
+        fileName: AIModelTypeFileName
+        index: number
+      },
+    ) => {
+      const { fileName, index } = options
+      setAIModelOptions((old) => {
+        const newList = [...old.onlineModels[fileName]]
+        newList.splice(index, 1)
+        newList.unshift(item)
+        return {
+          ...old,
+          onlineModels: {
+            ...old.onlineModels,
+            [fileName]: newList,
+          },
+        }
+      })
+    },
+  )
+  const openModelTab = useMemoizedFn(() => {
+    if (currentRouteKey !== YakitRoute.AI_Agent) {
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.AI_Agent,
+        }),
+      )
+      setTimeout(() => {
+        onSwitchAIAgentTab()
+      }, 100)
+    } else {
+      onSwitchAIAgentTab()
+    }
+
+    yakitNotify('success', t('AIModelSelect.openModelTabSuccess'))
+  })
+  const onSwitchAIAgentTab = useMemoizedFn(() => {
+    emiter.emit(
+      'switchAIAgentTab',
+      JSON.stringify({
+        type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
+        params: {
+          active: AIAgentTabListEnum.AI_Model,
+          show: true,
+        },
+      }),
     )
+  })
+  return (
+    <div ref={refRef}>
+      {isHaveData ? (
+        <AIChatSelect
+          dropdownRender={(menu) => {
+            return (
+              <div className={styles['drop-select-wrapper']}>
+                <div className={styles['select-title']}>
+                  <div className={styles['select-title-left']}>
+                    <span>{t('AIModelSelect.selectModel')}</span>
+                    {!execute && (
+                      <YakitSelect
+                        size="small"
+                        disabled={execute}
+                        options={AIModelPolicyOptions}
+                        value={policy}
+                        onSelect={onSelectPolicy}
+                        wrapperClassName={styles['select-policy-wrapper']}
+                        dropdownClassName={styles['select-policy-dropdown']}
+                        wrapperStyle={{ width: 80, marginRight: 4 }}
+                        dropdownMatchSelectWidth={false}
+                      />
+                    )}
+                    <Tooltip title={getTipByType(policy, t)}>
+                      <OutlineInformationcircleIcon className={styles['icon-info']} />
+                    </Tooltip>
+                  </div>
+                  <div className={styles['select-title-right']}>
+                    <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
+                      <YakitButton size="small" type="text2" icon={<OutlineCogIcon />} onClick={openModelTab} />
+                    </Tooltip>
+                    {aiType === 'online' && (
+                      <Tooltip title={t('YakitButton.refresh')}>
+                        <YakitButton
+                          size="small"
+                          type="text2"
+                          icon={<OutlineRefreshIcon />}
+                          loading={onlineLoading}
+                          onClick={() => onRefreshAvailableAIModelList()}
+                        />
+                      </Tooltip>
+                    )}
+                  </div>
+                </div>
+                <div className={styles['select-content']}>
+                  {!!intelligentModels.length && (
+                    <AIModelSelectList
+                      title={t('AIModelList.intelligentModels')}
+                      subTitle={t('AIModelList.intelligentModelsDesc')}
+                      list={intelligentModels}
+                      onSelect={(item, index) =>
+                        onSelect(item, {
+                          fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                          index,
+                        })
+                      }
+                    />
+                  )}
+                  {!execute && !!lightweightModels.length && (
+                    <AIModelSelectList
+                      title={t('AIModelList.lightweightModels')}
+                      subTitle={t('AIModelList.lightweightModelsDesc')}
+                      list={lightweightModels}
+                      onSelect={(item, index) =>
+                        onSelect(item, {
+                          fileName: AIModelTypeInterFileNameEnum.LightweightModels,
+                          index,
+                        })
+                      }
+                    />
+                  )}
+                  {!execute && !!visionModels.length && (
+                    <AIModelSelectList
+                      title={t('AIModelList.visionModels')}
+                      subTitle={t('AIModelList.visionModelsDesc')}
+                      list={visionModels}
+                      onSelect={(item, index) =>
+                        onSelect(item, {
+                          fileName: AIModelTypeInterFileNameEnum.VisionModels,
+                          index,
+                        })
+                      }
+                    />
+                  )}
+                </div>
+                <YakitButton type="secondary2" onClick={onAddModel} className={styles['add-model-btn']}>
+                  {t('AIModelList.addModel')}
+                </YakitButton>
+              </div>
+            )
+          }}
+          open={open}
+          setOpen={onSetOpen}
+          optionLabelProp="label"
+          value="select"
+        >
+          {renderContent()}
+        </AIChatSelect>
+      ) : (
+        <></>
+      )}
+    </div>
+  )
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-    const {title, subTitle, list, onSelect} = props
-    return (
-        <div className={styles["ai-model-select-list-wrapper"]}>
-            <div className={styles["ai-model-select-list-wrapper-header"]}>
-                <div className={styles["ai-model-select-list-wrapper-header-title"]}>
-                    {title}
-                    <Tooltip title={subTitle}>
-                        <OutlineInformationcircleIcon className={styles["icon-info"]} />
-                    </Tooltip>
-                </div>
-            </div>
-            <div className={styles["ai-online-model-list"]}>
-                {list.map((item, index) => (
-                    <div
-                        key={index}
-                        className={classNames(styles["ai-online-model-list-row"])}
-                        onClick={() => onSelect(item, index)}
-                    >
-                        <AIModelItem value={item.ModelName} aiService={item.Provider.Type} checked={index === 0} />
-                    </div>
-                ))}
-            </div>
+  const { title, subTitle, list, onSelect } = props
+  return (
+    <div className={styles['ai-model-select-list-wrapper']}>
+      <div className={styles['ai-model-select-list-wrapper-header']}>
+        <div className={styles['ai-model-select-list-wrapper-header-title']}>
+          {title}
+          <Tooltip title={subTitle}>
+            <OutlineInformationcircleIcon className={styles['icon-info']} />
+          </Tooltip>
         </div>
-    )
+      </div>
+      <div className={styles['ai-online-model-list']}>
+        {list.map((item, index) => (
+          <div
+            key={index}
+            className={classNames(styles['ai-online-model-list-row'])}
+            onClick={() => onSelect(item, index)}
+          >
+            <AIModelItem value={item.ModelName} aiService={item.Provider.Type} checked={index === 0} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 })
 
 export const getIconByAI = (value) => {
-    return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus size='small' />
+  return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus size="small" />
 }
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
-    const {value, aiService, checked} = props
-    const icon = useCreation(() => {
-        if (!aiService) return <></>
-        return getIconByAI(aiService)
-    }, [aiService])
+  const { value, aiService, checked } = props
+  const icon = useCreation(() => {
+    if (!aiService) return <></>
+    return getIconByAI(aiService)
+  }, [aiService])
 
-    return (
-        <div className={classNames(styles["select-option-wrapper"])}>
-            <div className={styles["select-option-left"]}>
-                {icon}
-                <div className={styles["option-text"]} title={value}>
-                    {value}
-                </div>
-            </div>
-            {checked && <OutlineCheckIcon className={styles["check-icon"]} />}
+  return (
+    <div className={classNames(styles['select-option-wrapper'])}>
+      <div className={styles['select-option-left']}>
+        {icon}
+        <div className={styles['option-text']} title={value}>
+          {value}
         </div>
-    )
+      </div>
+      {checked && <OutlineCheckIcon className={styles['check-icon']} />}
+    </div>
+  )
 })
