@@ -1,81 +1,79 @@
-import {LocalModelConfig} from "../type/aiModel"
-import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
-import {type ModalProps} from "antd"
-import {ReactNode} from "react"
-import {AIModelConfig, AIModelTypeFileName} from "./utils"
-import {AIModelTypeEnum} from "../defaultConstant"
+import { LocalModelConfig } from '../type/aiModel'
+import { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
+import { type ModalProps } from 'antd'
+import { ReactNode } from 'react'
+import { AIModelConfig, AIModelTypeFileName } from './utils'
+import { AIModelTypeEnum } from '../defaultConstant'
 
-export interface AIModelListProps extends Partial<Pick<AIOnlineModelListProps, "mountContainer">> {}
+export interface AIModelListProps extends Partial<Pick<AIOnlineModelListProps, 'mountContainer'>> {}
 
-export type AIModelType = "online" | "local"
+export type AIModelType = 'online' | 'local'
 
 export interface AIOnlineModelListProps {
-    ref: React.ForwardedRef<AIOnlineModelListRefProps>
-    setOnlineTotal: (total: number) => void
-    onAdd: () => void
-    mountContainer?: ModalProps["getContainer"]
+  ref: React.ForwardedRef<AIOnlineModelListRefProps>
+  onAdd: () => void
+  mountContainer?: ModalProps['getContainer']
 }
 
 export interface AIOnlineModelListRefProps {
-    onRefresh: (isShowLoading?: boolean) => void
-    onRemoveAll: () => void
+  onRemoveAll: () => void
 }
 
 export interface AILocalModelListProps {
-    ref: React.ForwardedRef<AILocalModelListRefProps>
-    setLocalTotal: (total: number) => void
+  ref: React.ForwardedRef<AILocalModelListRefProps>
+  setLocalTotal: (total: number) => void
 }
 
 export interface AILocalModelListRefProps {
-    onRefresh: () => void
+  onRefresh: () => void
 }
 export interface AILocalModelListItemProps {
-    item: LocalModelConfig
-    onRefresh: () => void
-    currentPageTabRouteKey: string
+  item: LocalModelConfig
+  onRefresh: () => void
+  currentPageTabRouteKey: string
 }
 export interface AIOnlineModelListItemProps {
-    item: AIModelConfig
-    onRemove: (item: AIModelConfig) => void
-    onEdit: (item: AIModelConfig) => void
-    checked: boolean
-    modelType: `${AIModelTypeEnum}`
+  item: AIModelConfig
+  onRemove: (item: AIModelConfig) => void
+  onEdit: (item: AIModelConfig) => void
+  checked: boolean
+  modelType: `${AIModelTypeEnum}`
 }
 export interface OutlineAtomIconByStatusProps {
-    isReady?: boolean
-    isRunning?: boolean
-    iconClassName?: string
-    size?: YakitSizeType
+  isReady?: boolean
+  isRunning?: boolean
+  iconClassName?: string
+  size?: YakitSizeType
 }
 export interface AILocalModelListItemPromptHintProps {
-    title: string
-    content: string
-    onOk: (b: boolean) => Promise<void>
-    onCancel: () => void
+  title: string
+  content: string
+  onOk: (b: boolean) => Promise<void>
+  onCancel: () => void
 }
 
 export interface AILocalModelListWrapperProps {
-    title: string
-    list: LocalModelConfig[]
-    onRefresh: () => void
-    currentPageTabRouteKey: string
+  title: string
+  list: LocalModelConfig[]
+  onRefresh: () => void
+  currentPageTabRouteKey: string
 }
 
 export interface AIOnlineModelProps {
-    title?: ReactNode
-    subTitle?: ReactNode
-    list: AIModelConfig[]
-    onRemove: (i: number) => void
-    onEdit: (i: number) => void
-    onSelect: (v: AIModelConfig, i: number) => void
-    modelType: AIOnlineModelListItemProps["modelType"]
+  title?: ReactNode
+  subTitle?: ReactNode
+  list: AIModelConfig[]
+  onRemove: (i: number) => void
+  onEdit: (i: number) => void
+  onSelect: (v: AIModelConfig, i: number) => void
+  modelType: AIOnlineModelListItemProps['modelType']
 }
 
 export interface AIOnlineModeSettingProps {
-    onRefresh: () => void
+  onRefresh: () => void
 }
 
 export interface AIModelActionProps {
-    fileName: AIModelTypeFileName
-    index: number
+  fileName: AIModelTypeFileName
+  index: number
 }
