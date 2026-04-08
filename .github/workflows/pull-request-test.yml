@@ -90,36 +90,61 @@ jobs:
           echo "i18n check failed."
           exit 1
 
+      - name: Get PR changed files
+        id: changed_files
+        uses: tj-actions/changed-files@v47
+        with:
+          base_sha: ${{ github.event.pull_request.base.sha }}
+          safe_output: false
+
+      - name: Print PR changed files
+        shell: bash
+        env:
+          # 依然建议通过 env 传递，避免 Shell 直接插值产生的注入风险
+          ALL_CHANGED_FILES: ${{ steps.changed_files.outputs.all_changed_files }}
+        run: |
+          echo "Changed files from tj-actions/changed-files:"
+          if [ -z "$ALL_CHANGED_FILES" ]; then
+            echo "(none)"
+          else
+            # 将空格替换为换行进行打印
+            for file in $ALL_CHANGED_FILES; do
+              echo "$file"
+            done
+          fi
+
       - name: Format or check PR changed files with prettier
         id: format_step
         continue-on-error: true
         shell: bash
         env:
+          ALL_CHANGED_FILES: ${{ steps.changed_files.outputs.all_changed_files }}
           IS_FORK_PR: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           set -o pipefail
           {
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-          mapfile -d '' changed_files < <(git diff --name-only -z "$BASE_SHA" "$HEAD_SHA")
+            # 1. 巧妙地利用 Bash 将空格分隔的字符串转换为数组
+            # 注意：如果文件名包含空格，这种方式会失效，但在大多数 JS/TS 项目中这是安全的
+            format_targets=()
+            for file in $ALL_CHANGED_FILES; do
+              if [ -f "$file" ]; then
+                format_targets+=("$file")
+              fi
+            done
 
-          format_targets=()
-          for file in "${changed_files[@]}"; do
-            [ -f "$file" ] && format_targets+=("$file")
-          done
+            if [ "${#format_targets[@]}" -eq 0 ]; then
+              echo "No valid files to format."
+              exit 0
+            fi
 
-          if [ "${#format_targets[@]}" -eq 0 ]; then
-            echo "No files to format."
-            exit 0
-          fi
-
-          if [ "$IS_FORK_PR" = 'true' ]; then
-            echo "Fork PR detected. Checking ${#format_targets[@]} file(s) with prettier..."
-            npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --check --ignore-unknown "${format_targets[@]}"
-          else
-            echo "Same-repo PR detected. Formatting ${#format_targets[@]} file(s) with prettier..."
-            npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --write --ignore-unknown "${format_targets[@]}"
-          fi
+            # 2. 执行格式化或检查
+            if [ "$IS_FORK_PR" = 'true' ]; then
+              echo "Fork PR detected. Checking ${#format_targets[@]} file(s)..."
+              npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --check --ignore-unknown "${format_targets[@]}"
+            else
+              echo "Same-repo PR detected. Formatting ${#format_targets[@]} file(s)..."
+              npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --write --ignore-unknown "${format_targets[@]}"
+            fi
           } 2>&1 | tee format-output.log
 
       - name: Comment format failure on PR
