@@ -102,7 +102,7 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
       Filter: {},
     })
       .then(() => {
-        /** TODO - 删除流中的memoryList */
+        chatIPCEvents.handleResetTarget('memoryList')
       })
       .finally(() => {
         setTimeout(() => {
