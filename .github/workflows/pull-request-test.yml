@@ -95,20 +95,23 @@ jobs:
         uses: tj-actions/changed-files@v47
         with:
           base_sha: ${{ github.event.pull_request.base.sha }}
-          json: true
           safe_output: false
 
       - name: Print PR changed files
         shell: bash
         env:
-          # 直接引用，不加额外的引号，让 shell 处理
+          # 依然建议通过 env 传递，避免 Shell 直接插值产生的注入风险
           ALL_CHANGED_FILES: ${{ steps.changed_files.outputs.all_changed_files }}
         run: |
           echo "Changed files from tj-actions/changed-files:"
-          # 使用 HEREDOC 喂给 jq，防止特殊字符导致解析失败
-          cat << 'EOF' | jq -r '.[]'
-          ${{ env.ALL_CHANGED_FILES }}
-          EOF
+          if [ -z "$ALL_CHANGED_FILES" ]; then
+            echo "(none)"
+          else
+            # 将空格替换为换行进行打印
+            for file in $ALL_CHANGED_FILES; do
+              echo "$file"
+            done
+          fi
 
       - name: Format or check PR changed files with prettier
         id: format_step
@@ -120,22 +123,21 @@ jobs:
         run: |
           set -o pipefail
           {
-            # 使用 HEREDOC 安全地读取 JSON 并转换为数组
+            # 1. 巧妙地利用 Bash 将空格分隔的字符串转换为数组
+            # 注意：如果文件名包含空格，这种方式会失效，但在大多数 JS/TS 项目中这是安全的
             format_targets=()
-            while IFS= read -r file; do
+            for file in $ALL_CHANGED_FILES; do
               if [ -f "$file" ]; then
                 format_targets+=("$file")
               fi
-            done < <(cat << 'EOF' | jq -r '.[]'
-          ${{ env.ALL_CHANGED_FILES }}
-          EOF
-            )
+            done
 
             if [ "${#format_targets[@]}" -eq 0 ]; then
               echo "No valid files to format."
               exit 0
             fi
 
+            # 2. 执行格式化或检查
             if [ "$IS_FORK_PR" = 'true' ]; then
               echo "Fork PR detected. Checking ${#format_targets[@]} file(s)..."
               npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --check --ignore-unknown "${format_targets[@]}"
