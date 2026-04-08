@@ -155,53 +155,63 @@ const AIPluginComponent: FC<AIPluginComponentProps> = ({ getCodeContent, value, 
   })
 
   return (
-    <div className={styles['switch-ai-wrapper']}>
-      <YakitSwitch checked={merged.EnableForAI} onChange={handleEnableChange} />
-      <div className={styles['wrapper-label']}>
-        <div>开放给AI使用</div>
+    <>
+      <div className={styles['switch-ai-wrapper']}>
+        <YakitSwitch checked={merged.EnableForAI} onChange={handleEnableChange} />
+        <div className={styles['wrapper-label']}>开放给AI使用</div>
+      </div>
+
+      <div className={styles['items-label-wrapper']}>
         <div>开启后使用AI时可调用该插件</div>
         {merged.EnableForAI && (
-          <>
+          <div>
             <div className={styles['wrapper-label-highlight']}>
               以下内容可通过AI生成，
               <YakitButton
                 type="text"
                 onClick={() => handleGenerate()}
-                style={{ margin: 0, padding: 0, fontSize: 14 }}
+                style={{ margin: 0, padding: 0, fontSize: 12 }}
                 loading={executeStatus === 'process'}
               >
                 点击生成，
               </YakitButton>
               如未配置AI可
               <br />
-              <YakitButton type="text" onClick={() => handleSetting()} style={{ margin: 0, padding: 0, fontSize: 14 }}>
+              <YakitButton type="text" onClick={() => handleSetting()} style={{ margin: 0, padding: 0, fontSize: 12 }}>
                 点此配置
               </YakitButton>
             </div>
             <div className={styles['ai-items-wrapper']}>
-              <div>AI描述</div>
-              <YakitInput value={merged.AIDesc} onChange={(e) => patch({ AIDesc: e.target.value })} />
+              <div className={styles['ai-items-label']}>AI描述</div>
+              <YakitInput.TextArea
+                placeholder="请输入AI描述"
+                rows={2}
+                value={merged.AIDesc}
+                onChange={(e) => patch({ AIDesc: e.target.value })}
+              />
             </div>
             <div className={styles['ai-items-wrapper']}>
-              <div>AI关键词</div>
+              <div className={styles['ai-items-label']}>AI关键词</div>
               <YakitInput.TextArea
                 rows={2}
+                placeholder="请输入AI关键词"
                 value={merged.AIKeywords}
                 onChange={(e) => patch({ AIKeywords: e.target.value })}
               />
             </div>
             <div className={styles['ai-items-wrapper']}>
-              <div>AI指南</div>
+              <div className={styles['ai-items-label']}>AI指南</div>
               <YakitInput.TextArea
+                placeholder="请输入AI指南"
                 rows={2}
                 value={merged.AIUsage}
                 onChange={(e) => patch({ AIUsage: e.target.value })}
               />
             </div>
-          </>
+          </div>
         )}
       </div>
-    </div>
+    </>
   )
 }
 

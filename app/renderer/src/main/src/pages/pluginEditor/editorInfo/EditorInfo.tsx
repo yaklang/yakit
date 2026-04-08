@@ -426,6 +426,30 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                     <YakitSwitch checked={EnablePluginSelector} onChange={handleEnablePluginSelector} />
                     启用插件联动 UI
                   </div>
+                  {EnablePluginSelector && (
+                    <Form.Item
+                      name="PluginSelectorTypes"
+                      label={
+                        <>
+                          联动插件类型<span className="form-item-required">*</span>:
+                        </>
+                      }
+                      required={true}
+                      rules={[{ required: true, message: '联动插件类型必填' }]}
+                      style={{ width: '100%', marginBottom: 0 }}
+                    >
+                      <YakitSelect
+                        wrapperClassName={styles['linkage-plugin-type-select']}
+                        mode="tags"
+                        allowClear
+                        size="large"
+                      >
+                        <YakitSelect.Option value="mitm">MITM</YakitSelect.Option>
+                        <YakitSelect.Option value="port-scan">端口扫描</YakitSelect.Option>
+                      </YakitSelect>
+                    </Form.Item>
+                  )}
+
                   {YakTypePluginSwitchs.map((item) => {
                     const check = tags.findIndex((tag) => {
                       return handleFilterTag(tag, item)
@@ -471,24 +495,6 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
               </Form.Item>
             </div>
           </div>
-
-          {EnablePluginSelector && (
-            <Form.Item
-              name="PluginSelectorTypes"
-              label={
-                <>
-                  联动插件类型<span className="form-item-required">*</span>:
-                </>
-              }
-              required={true}
-              rules={[{ required: true, message: '联动插件类型必填' }]}
-            >
-              <YakitSelect wrapperClassName={styles['linkage-plugin-type-select']} mode="tags" allowClear size="large">
-                <YakitSelect.Option value="mitm">MITM</YakitSelect.Option>
-                <YakitSelect.Option value="port-scan">端口扫描</YakitSelect.Option>
-              </YakitSelect>
-            </Form.Item>
-          )}
         </Form>
 
         {/* 案例文档 */}
