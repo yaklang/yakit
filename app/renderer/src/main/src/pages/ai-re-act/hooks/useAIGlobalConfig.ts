@@ -6,8 +6,8 @@ import { shallow } from 'zustand/shallow'
 
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig
-  getLoading: boolean
-  setLoading: boolean
+  queryLoading: boolean
+  updateLoading: boolean
   aiGlobalConfigRef: React.MutableRefObject<AIGlobalConfig | undefined>
   /** 模型总数 */
   total: number
@@ -31,8 +31,8 @@ function useAIGlobalConfig() {
     }),
     shallow,
   )
-  const [getLoading, setGetLoading] = useState<boolean>(false)
-  const [setLoading, setSetLoading] = useState<boolean>(false)
+  const [queryLoading, setQueryLoading] = useState<boolean>(false)
+  const [updateLoading, setUpdateLoading] = useState<boolean>(false)
   const [total, setTotal] = useState<number>(0)
 
   const aiGlobalConfigRef = useRef<AIGlobalConfig>()
@@ -44,10 +44,10 @@ function useAIGlobalConfig() {
   /** 刷新，会设置全局变量中的值和ref */
   const getAIGlobalConfig = useMemoizedFn((isShowLoading?: boolean) => {
     const showLoading = isShowLoading !== false
-    showLoading && setGetLoading(true)
+    showLoading && setQueryLoading(true)
     grpcGetAIGlobalConfig()
       .then((res) => {
-        setAIGlobalConfig(res)
+        setConfig(res)
         aiGlobalConfigRef.current = res
         const total =
           (res.IntelligentModels?.length || 0) + (res.LightweightModels?.length || 0) + (res.VisionModels?.length || 0)
@@ -56,7 +56,7 @@ function useAIGlobalConfig() {
       .finally(() => {
         showLoading &&
           setTimeout(() => {
-            setGetLoading(false)
+            setQueryLoading(false)
           }, 200)
       })
   })
@@ -67,7 +67,7 @@ function useAIGlobalConfig() {
         ...aiGlobalConfig,
         ...data,
       }
-      setSetLoading(true)
+      setUpdateLoading(true)
       grpcSetAIGlobalConfig(config)
         .then(() => {
           setConfig(config)
@@ -77,7 +77,7 @@ function useAIGlobalConfig() {
         .catch(reject)
         .finally(() => {
           setTimeout(() => {
-            setSetLoading(false)
+            setUpdateLoading(false)
           }, 200)
         })
     })
@@ -97,18 +97,18 @@ function useAIGlobalConfig() {
   const data: UseAIGlobalConfigData = useCreation(() => {
     return {
       aiGlobalConfig,
-      getLoading,
-      setLoading,
+      queryLoading,
+      updateLoading,
       aiGlobalConfigRef,
       total,
     }
-  }, [aiGlobalConfig, getLoading, setLoading, aiGlobalConfigRef, total])
+  }, [aiGlobalConfig, queryLoading, updateLoading, aiGlobalConfigRef, total])
 
   const event: UseAIGlobalConfigEvents = useCreation(() => {
     return {
       onRefresh: (isShowLoading) => getAIGlobalConfig(isShowLoading),
-      setAIGlobalConfig,
-      getLastAIGlobalConfig,
+      setAIGlobalConfig: (res) => setAIGlobalConfig(res),
+      getLastAIGlobalConfig: () => getLastAIGlobalConfig(),
     }
   }, [])
 

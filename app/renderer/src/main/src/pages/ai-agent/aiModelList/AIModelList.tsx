@@ -518,7 +518,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     const onlineListRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(onlineListRef)
 
-    const [{ aiGlobalConfig, getLoading: spinning }, { onRefresh }] = useAIGlobalConfig()
+    const [aiGlobalConfigData, event] = useAIGlobalConfig()
 
     useImperativeHandle(
       ref,
@@ -528,9 +528,10 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
       [],
     )
     useEffect(() => {
-      if (inViewport) onRefresh()
+      if (inViewport) event.onRefresh()
     }, [inViewport])
-
+    const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
+    const spinning = useCreation(() => aiGlobalConfigData.queryLoading, [aiGlobalConfigData.queryLoading])
     const onRemoveAll = useMemoizedFn(() => {})
     const isHaveData = useCreation(() => {
       return !!(
@@ -555,7 +556,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
           mountContainer: undefined,
           t,
           onSuccess: () => {
-            onRefresh()
+            event.onRefresh()
           },
         })
       } catch (error) {}
@@ -568,7 +569,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         index,
         fileName,
         onSuccess: () => {
-          onRefresh()
+          event.onRefresh()
         },
       })
     })
@@ -581,7 +582,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         index,
         fileName,
         onSuccess: () => {
-          onRefresh()
+          event.onRefresh()
         },
       })
     })

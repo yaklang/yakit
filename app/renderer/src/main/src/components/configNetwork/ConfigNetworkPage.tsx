@@ -7,7 +7,7 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { yakitInfo, warn, failed, success, yakitNotify } from '@/utils/notification'
 import { AutoSpin } from '@/components/AutoSpin'
 import update from 'immutability-helper'
-import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import styles from './ConfigNetworkPage.module.scss'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -1305,11 +1305,12 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
 
-  const [{ aiGlobalConfig }, { onRefresh, setAIGlobalConfig }] = useAIGlobalConfig()
+  const [aiGlobalConfigData, event] = useAIGlobalConfig()
 
   useEffect(() => {
-    inViewport && onRefresh()
+    inViewport && event.onRefresh()
   }, [inViewport])
+  const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
 
   const onEdit = useMemoizedFn((options: AIModelActionProps) => {
     if (!aiGlobalConfig) return
@@ -1321,7 +1322,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       mountContainer: undefined,
       t,
       onSuccess: () => {
-        onRefresh()
+        event.onRefresh()
       },
     })
   })
@@ -1334,7 +1335,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       index,
       fileName,
       onSuccess: () => {
-        onRefresh()
+        event.onRefresh()
       },
     })
   })
@@ -1348,7 +1349,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       index,
       fileName,
       onSuccess: () => {
-        onRefresh()
+        event.onRefresh()
       },
     })
   })
@@ -1359,7 +1360,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       mountContainer,
       t,
       onSuccess: () => {
-        onRefresh()
+        event.onRefresh()
       },
     })
   })
@@ -1463,14 +1464,14 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
           buttonStyle="solid"
           options={AIModelPolicyOptions}
           value={aiGlobalConfig.RoutingPolicy}
-          onChange={(v) => setAIGlobalConfig({ RoutingPolicy: v.target.value })}
+          onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
         />
       </Form.Item>
       <Form.Item valuePropName="checked" label="禁用降级到轻量模型">
         <YakitSwitch
           size="middle"
           checked={aiGlobalConfig.DisableFallback}
-          onChange={(c) => setAIGlobalConfig({ DisableFallback: c })}
+          onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
         />
       </Form.Item>
     </div>

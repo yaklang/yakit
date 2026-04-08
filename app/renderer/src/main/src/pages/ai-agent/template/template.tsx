@@ -59,6 +59,7 @@ import { AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { randomString } from '@/utils/randomUtil'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -314,11 +315,15 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       editorMilkdown.current?.action(callCommand<string>(insertAtCurrentPosition.key, '@'))
     })
 
-    const [{ aiGlobalConfig }, { setAIGlobalConfig }] = useAIGlobalConfig()
+    //#region AI全局指令相关逻辑
+    const [aiGlobalConfigData, event] = useAIGlobalConfig()
+
+    const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
+    const updateLoading = useCreation(() => aiGlobalConfigData.updateLoading, [aiGlobalConfigData.updateLoading])
 
     const onSave = useMemoizedFn((prompt: string) => {
       setVisible(false)
-      setAIGlobalConfig({ AIPresetPrompt: prompt })
+      event.setAIGlobalConfig({ AIPresetPrompt: prompt })
     })
     const aiGlobalCommandRef = useRef<AIGlobalCommandRefProps>({ value: '' })
     const onGlobalCommandVisibleChange = useMemoizedFn((visible: boolean) => {
@@ -328,6 +333,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         setVisible(true)
       }
     })
+    //#endregion
     return (
       <div
         className={classNames(
@@ -356,10 +362,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             }}
             className={styles['code-btn-wrapper']}
           >
-            <YakitTag color="purple" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
-              <OutlineCodeIcon className={styles['code-icon']} />
-              <span className="content-ellipsis">{aiGlobalConfig.AIPresetPrompt || '自定义 AI 指令'}</span>
-            </YakitTag>
+            <YakitSpin spinning={updateLoading} size="small">
+              <YakitTag color="purple" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
+                <OutlineCodeIcon className={styles['code-icon']} />
+                <span className="content-ellipsis">{aiGlobalConfig.AIPresetPrompt || '自定义AI全局指令'}</span>
+              </YakitTag>
+            </YakitSpin>
           </div>
         </YakitPopover>
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
@@ -433,9 +441,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 const AIGlobalCommand: React.FC<AIGlobalCommandProps> = React.memo(
   forwardRef((props, ref) => {
     const { onCancel, onSave } = props
-    const [{ aiGlobalConfig }] = useAIGlobalConfig()
-    const [prompt, setPrompt] = useState<string>(aiGlobalConfig.AIPresetPrompt || '')
+    const [aiGlobalConfigData] = useAIGlobalConfig()
+    const [prompt, setPrompt] = useState<string>(aiGlobalConfigData?.aiGlobalConfig.AIPresetPrompt || '')
     useImperativeHandle(ref, () => ({ value: prompt }), [prompt])
+
     return (
       <div className={styles['ai-global-command']} onClick={(e) => e.stopPropagation()}>
         <div className={styles['ai-global-command-heard']}>全局命令</div>

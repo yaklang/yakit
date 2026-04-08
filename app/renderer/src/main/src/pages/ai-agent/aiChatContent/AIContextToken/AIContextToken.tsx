@@ -239,11 +239,12 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(ref)
 
-  const [{ aiGlobalConfig }, { onRefresh }] = useAIGlobalConfig()
+  const [aiGlobalConfigData, event] = useAIGlobalConfig()
 
   useEffect(() => {
-    inViewport && onRefresh()
+    inViewport && event.onRefresh()
   }, [inViewport])
+  const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
 
   const currentModel = useCreation(() => {
     let data: CurrentModel = {}
