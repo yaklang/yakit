@@ -245,7 +245,7 @@ const CustomizeMenu: React.FC<CustomizeMenuProps> = React.memo((props) => {
             yakitNotify("error", t("CustomizeMenu.max_limit", {UpperLimit}))
             return
         }
-        const unnamed = i18n.language === "en" ? "Unnamed " : "未命名"
+        const unnamed = t("CustomizeMenu.unnamedMenuPrefix")
         const length = menuData.filter((ele) => ele.label.includes(unnamed.trim())).length
         const menu: EnhancedCustomRouteMenuProps = {
             id: randomString(6),

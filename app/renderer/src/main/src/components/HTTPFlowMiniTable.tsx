@@ -9,6 +9,7 @@ import {CopyableField} from "../utils/inputUtil";
 import {showDrawer} from "../utils/showModal";
 import ReactResizeDetector from "react-resize-detector";
 import {useDebounceFn, useInViewport, useThrottleFn} from "ahooks";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -23,6 +24,7 @@ export interface HTTPFlowMiniTableProp {
 }
 
 export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((props) => {
+    const {t} = useI18nNamespaces(["history", "yakitUi"])
     const [tableHeight, setTableHeight] = useState(400);
     const [response, setResponse] = useState<QueryGeneralResponse<HTTPFlow>>({
         Data: [],
@@ -54,7 +56,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                 width: 60, lock: true,
             },
             {
-                code: "Hash", name: "状态", render: (i: any) => {
+                code: "Hash", name: t("HTTPFlowMiniTable.status"), render: (i: any) => {
                     const flow: HTTPFlow | undefined = findHTTPFlowById(i)
 
                     return <div style={{overflow: "hidden"}}>
@@ -85,7 +87,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                 width: 700,
             },
             {
-                code: "Hash", name: "Body大小", render: (i: any) => {
+                code: "Hash", name: t("HTTPFlowMiniTable.bodyLength"), render: (i: any) => {
                     const flow: HTTPFlow | undefined = findHTTPFlowById(i)
 
                     return <div style={{overflow: "hidden"}}>
@@ -95,7 +97,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                 width: 100, lock: true,
             },
             {
-                code: "Hash", name: "操作", render: (i: any) => {
+                code: "Hash", name: t("YakitTable.action"), render: (i: any) => {
                     return <>
                         <Space>
                             <Button
@@ -111,7 +113,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                                         bodyStyle: {paddingTop: 5}
                                     })
                                 }}
-                            >详情</Button>
+                            >{t("HTTPFlowMiniTable.details")}</Button>
                         </Space>
                     </>
                 },
@@ -131,14 +133,14 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
             },
             {
                 code: "GetParamsTotal",
-                name: "Get 参数",
-                render: (i: any) => i > 0 ? <Tag color={"orange"}>{i}个</Tag> : "-",
+                name: t("HTTPFlowMiniTable.getParams"),
+                render: (i: any) => i > 0 ? <Tag color={"orange"}>{i}</Tag> : "-",
                 width: 60
             },
             {
                 code: "PostParamsTotal",
-                name: "Post 参数",
-                render: (i: any) => i > 0 ? <Tag color={"orange"}>{i}个</Tag> : "-",
+                name: t("HTTPFlowMiniTable.postParams"),
+                render: (i: any) => i > 0 ? <Tag color={"orange"}>{i}</Tag> : "-",
                 width: 60, lock: true,
             },
             {
@@ -148,7 +150,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                 width: 450, features: {sortable: true}
             },
             {
-                code: "Hash", name: "操作", render: (i: any) => {
+                code: "Hash", name: t("YakitTable.action"), render: (i: any) => {
                     return <>
                         <Space>
                             {props.onSendToWebFuzzer && <Button
@@ -165,7 +167,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                                         })
                                     }
                                 }}
-                            >发送到Fuzzer</Button>}
+                            >{t("HTTPFlowMiniTable.sendToWebFuzzer")}</Button>}
                             <Button
                                 type={"link"} size={"small"}
                                 onClick={() => {
@@ -179,7 +181,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                                         bodyStyle: {paddingTop: 5}
                                     })
                                 }}
-                            >详情</Button>
+                            >{t("HTTPFlowMiniTable.details")}</Button>
                         </Space>
                     </>
                 },

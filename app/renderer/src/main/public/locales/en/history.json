@@ -150,6 +150,19 @@
     "batchDeletion": "Batch Deletion",
     "deduplicate": "Deduplicate"
   },
+  "HTTPFlowRiskViewer": {
+    "details": "Details"
+  },
+  "HTTPFlowMiniTable": {
+    "id": "ID",
+    "method": "Method",
+    "status": "Status",
+    "bodyLength": "Body Length",
+    "details": "Details",
+    "getParams": "GET Params",
+    "postParams": "POST Params",
+    "sendToWebFuzzer": "Send to Web Fuzzer"
+  },
   "RandomChunkedDataTable": {
     "chunkDetails": "Chunk Details",
     "content": "Content",
@@ -182,6 +195,7 @@
     "collapseRight": "Collapse Right",
     "previousRule": "Previous Rule",
     "nextRule": "Next Rule",
+    "rootDomains": "Root Domains",
     "domain": "Domain",
     "object": "Object",
     "rule": "Rule",

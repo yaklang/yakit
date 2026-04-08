@@ -47,7 +47,7 @@ interface QueryDomainsRequest extends QueryGeneralRequest {
 }
 export interface DomainAssetPageProps {}
 export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
-  const { t } = useI18nNamespaces(['database', 'yakitUi'])
+  const { t } = useI18nNamespaces(['assetViewer', 'yakitUi'])
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   const [allCheck, setAllCheck] = useState<boolean>(false)
   const [selectList, setSelectList] = useState<Domain[]>([])
@@ -253,7 +253,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
           })
         })
         .catch((e) => {
-          yakitNotify('error', '数据导出失败 ' + `${e}`)
+          yakitNotify('error', t('DomainAssetPage.exportFailed', { error: String(e) }))
         })
     })
   })
@@ -262,7 +262,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
     switch (key) {
       case '发送到漏洞检测':
         if (allCheck) {
-          yakitNotify('warning', '该批量操作不支持全选')
+          yakitNotify('warning', t('DomainAssetPage.batchNotSupportSelectAll'))
           return
         }
         emiter.emit(
@@ -277,7 +277,7 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
         break
       case '发送到爆破':
         if (allCheck) {
-          yakitNotify('warning', '该批量操作不支持全选')
+          yakitNotify('warning', t('DomainAssetPage.batchNotSupportSelectAll'))
           return
         }
         emiter.emit(
@@ -354,12 +354,18 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
         }
         extra={
           <div className={styles['domainAsset-table-extra']}>
-            <ExportExcel getData={getData} btnProps={{ size: 'small' }} fileName="域名资产" />
+            <ExportExcel getData={getData} btnProps={{ size: 'small' }} fileName={t('DomainAssetPage.exportName')} />
             <YakitDropdownMenu
               menu={{
                 data: [
-                  { key: '发送到漏洞检测', label: '发送到漏洞检测' },
-                  { key: '发送到爆破', label: '发送到爆破' },
+                  {
+                    key: '发送到漏洞检测',
+                    label: t('DomainAssetPage.sendToVulnDetection'),
+                  },
+                  {
+                    key: '发送到爆破',
+                    label: t('DomainAssetPage.sendToBruteForce'),
+                  },
                 ],
                 onClick: ({ key }) => {
                   onSendMenuSelect(key)
@@ -372,18 +378,18 @@ export const DomainAssetPage: React.FC<DomainAssetPageProps> = (props) => {
               }}
             >
               <YakitButton type="primary" icon={<SolidPaperairplaneIcon />}>
-                发送到...
+                {t('DomainAssetPage.sendTo')}
               </YakitButton>
             </YakitDropdownMenu>
             <YakitPopconfirm
-              title={selectNum > 0 ? '确定删除勾选数据吗？' : '确定清空列表数据吗?'}
+              title={selectNum > 0 ? t('DomainAssetPage.deleteSelectedConfirm') : t('DomainAssetPage.clearListConfirm')}
               onConfirm={() => {
                 onRemoveMultiple()
               }}
               placement="bottomRight"
             >
               <YakitButton type="outline1" colors="danger" icon={<TrashIcon />}>
-                {selectNum > 0 ? '删除' : '清空'}
+                {selectNum > 0 ? t('YakitButton.delete') : t('YakitButton.clear')}
               </YakitButton>
             </YakitPopconfirm>
             <YakitDropdownMenu

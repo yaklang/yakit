@@ -16,12 +16,12 @@ import cloneDeep from "lodash/cloneDeep"
 import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
 import {FuzzerRemoteGV} from "@/enums/fuzzer"
 import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import { useFuzzerSequence } from "@/store/fuzzerSequence"
 import { JSONParseLog } from "@/utils/tool"
 const {ipcRenderer} = window.require("electron")
 
-export const webFuzzerTabs = (t: (text: string) => string) => {
+export const webFuzzerTabs = (t: TFunction) => {
     return [
         {
             key: "config",
@@ -83,7 +83,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         rule: true
     })
 
-    const {fuzzerSequenceList, addFuzzerSequenceList } = useFuzzerSequence((s) => ({ 
+    const {fuzzerSequenceList, addFuzzerSequenceList } = useFuzzerSequence((s) => ({
         fuzzerSequenceList: s.fuzzerSequenceList,
         addFuzzerSequenceList: s.addFuzzerSequenceList,
     }), shallow)

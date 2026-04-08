@@ -106,7 +106,7 @@ const PluginHasParamsDrawer = React.memo((props: PluginHasParamsDrawerProps) => 
                         className='content-ellipsis'
                         style={{maxWidth: `calc(${vwToPx(Math.max(minWidth, drawerWidth))}px - 150px)`}}
                     >
-                        {t("PluginHasParamsDrawer.parameter_Settings", {colon: true})}
+                        {t("PluginHasParamsDrawer.parameter_Settings")}
                         <Tooltip title={scriptName}>{`${scriptName}`}</Tooltip>
                     </div>
                     <Space>

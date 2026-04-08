@@ -11,6 +11,7 @@ import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {Progress} from "antd"
 import {SolidDocumentdownloadIcon} from "@/assets/icon/solid"
 import classNames from "classnames"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (props) => {
@@ -70,6 +71,7 @@ export interface MigrateSSAProjectResponse {
 
 export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerModalProps> = (props) => {
     const {visible, onClose} = props
+    const {t} = useI18nNamespaces(["yakRunner", "yakitUi"])
     // 全部添加进度
     const [percent, setPercent] = useState<number>(0)
     const [token, setTaskToken] = useState(randomString(40))
@@ -90,7 +92,7 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
             }, 500)
         })
         ipcRenderer.on(`${token}-error`, (_, e) => {
-            failed(`同步失败:${e}`)
+            failed(t("YakitNotification.syncFailed", {error: e + ""}))
         })
         return () => {
             ipcRenderer.removeAllListeners(`${token}-data`)
@@ -111,7 +113,7 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
         setPercent(0)
         onClose?.()
         ipcRenderer.invoke("cancel-MigrateSSAProject", token).catch((e) => {
-            failed(`停止失败:${e}`)
+            failed(t("IRifyUpdateProjectManagerModal.stopFailed", {error: e + ""}))
         })
     }
     return (
@@ -136,7 +138,7 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
 
                 <div className={styles["hint-right-wrapper"]}>
                     <div className={styles["hint-right-download"]}>
-                        <div className={styles["hint-right-title"]}>同步数据中，请耐心等待...</div>
+                        <div className={styles["hint-right-title"]}>{t("IRifyUpdateProjectManagerModal.syncingData")}</div>
                         <div className={classNames(styles["download-progress"], "yakit-progress-wrapper")}>
                             <Progress
                                 strokeColor='var(--Colors-Use-Main-Primary)'
@@ -144,7 +146,7 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
                                 percent={percent}
                                 showInfo={false}
                             />
-                            <div className={styles["progress-title"]}>进度 {Math.round(percent)}%</div>
+                            <div className={styles["progress-title"]}>{t("IRifyUpdateProjectManagerModal.progress", {percent: Math.round(percent)})}</div>
                         </div>
                         <div className={styles["log-info"]}>
                             {logInfoRef.current.map((item) => (
@@ -155,7 +157,7 @@ export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerM
                         </div>
                         <div className={styles["download-btn"]}>
                             <YakitButton loading={false} size='large' type='outline2' onClick={StopUpdate}>
-                                取消
+                                {t("YakitButton.cancel")}
                             </YakitButton>
                         </div>
                     </div>

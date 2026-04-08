@@ -7,7 +7,8 @@
         "largeInput": "Large Input",
         "replaceOutputToInput": "Replace Output to Input",
         "largeOutputTip": "Output is too large, please click save to download and view the file",
-        "dataDistortion": "data distortion"
+        "dataDistortion": "data distortion",
+        "hexRawText": "Hex raw text"
     },
     "NewCodecMiddleTypeItem": {
         "enableBreakpoint": "Enable Breakpoint",

@@ -68,6 +68,7 @@ import {ImportAndExportStatusInfo} from "@/components/YakitUploadModal/YakitUplo
 import {randomString} from "@/utils/randomUtil"
 import {FuncBtn} from "@/pages/plugins/funcTemplate"
 import {YakitRoute} from "@/enums/yakitRoute"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {AuditCodePageInfoProps} from "@/store/pageInfo"
 import ReactResizeDetector from "react-resize-detector"
 import {FieldName} from "@/pages/risks/RiskTable"
@@ -105,16 +106,18 @@ export const defQuerySSARisksRequest: QuerySSARisksRequest = {
     Filter: {}
 }
 
-export const batchRefreshMenuData: YakitMenuItemProps[] = [
-    {
-        key: "noResetRefresh",
-        label: "仅刷新"
-    },
-    {
-        key: "resetRefresh",
-        label: "重置查询条件刷新"
-    }
-]
+export const batchRefreshMenuData: (t: TFunction) => YakitMenuItemProps[] = (t) => {
+    return [
+        {
+            key: "noResetRefresh",
+            label: t("YakitButton.refreshOnly")
+        },
+        {
+            key: "resetRefresh",
+            label: t("YakitButton.resetQueryAndRefresh")
+        }
+    ]
+}
 
 const initResDataFun = (data: SSARisk[]) => {
     const newData = data.map((ele) => ({
@@ -136,6 +139,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         setAllTotal
     } = props
     const {userInfo} = useStore()
+    const {t, i18n} = useI18nNamespaces(["yakRunnerAuditHole", "yakitUi"])
 
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [scrollToIndex, setScrollToIndex] = useState<number>()
@@ -254,7 +258,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     })
     const getLabelByValue = (value) => {
         // 使用 find 方法查找匹配的 value
-        const option = defaultTags.find((option) => option.value === value)
+        const option = defaultTags(t).find((option) => option.value === value)
 
         // 如果找到匹配的 value，返回对应的 label，否则返回 null
         return option ? option.label : value.replaceAll("|", ",")
@@ -271,7 +275,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         }))
         const columnArr: ColumnsTypeProps[] = [
             {
-                title: "序号",
+                title: t("YakitTable.order"),
                 dataKey: "Id",
                 fixed: "left",
                 ellipsis: false,
@@ -283,7 +287,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 }
             },
             {
-                title: "标题",
+                title: t("YakitAuditHoleTable.title"),
                 dataKey: "TitleVerbose",
                 filterProps: {
                     filterKey: "Title",
@@ -293,7 +297,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 render: (_, record) => record?.TitleVerbose || record.Title || "-"
             },
             {
-                title: "类型",
+                title: t("YakitAuditHoleTable.type"),
                 dataKey: "RiskTypeVerbose",
                 filterProps: {
                     filterKey: "RiskType",
@@ -303,7 +307,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 }
             },
             {
-                title: "等级",
+                title: t("YakitAuditHoleTable.severity"),
                 dataKey: "Severity",
                 width: 75,
                 align: "center",
@@ -322,29 +326,29 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                     filters: [
                         {
                             value: "critical",
-                            label: "严重"
+                            label: t("YakitTag.critical")
                         },
                         {
                             value: "high",
-                            label: "高危"
+                            label: t("YakitTag.high")
                         },
                         {
                             value: "middle",
-                            label: "中危"
+                            label: t("YakitTag.warning")
                         },
                         {
                             value: "low",
-                            label: "低危"
+                            label: t("YakitTag.low")
                         },
                         {
                             value: "info",
-                            label: "信息"
+                            label: t("YakitTag.info")
                         }
                     ]
                 }
             },
             {
-                title: "所属项目",
+                title: t("YakitAuditHoleTable.project"),
                 dataKey: "ProgramName",
                 filterProps: {
                     filterKey: "ProgramName",
@@ -354,13 +358,13 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 }
             },
             {
-                title: "处置状态",
+                title: t("YakitAuditHoleTable.disposalStatus"),
                 dataKey: "LatestDisposalStatus",
                 filterProps: {
                     filterKey: "LatestDisposalStatus",
                     filtersType: "select",
                     filterMultiple: true,
-                    filters: defaultTags
+                    filters: defaultTags(t)
                 },
                 minWidth: 120,
                 render: (text, record, index) => (
@@ -379,7 +383,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 )
             },
             {
-                title: "发现时间",
+                title: t("YakitAuditHoleTable.foundAt"),
                 dataKey: "CreatedAt",
                 filterProps: {
                     filterKey: "CreatedAt",
@@ -388,7 +392,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 render: (text) => (text ? formatTimestamp(text) : "-")
             },
             {
-                title: "操作",
+                title: t("YakitTable.action"),
                 dataKey: "action",
                 width: 140,
                 fixed: "right",
@@ -404,7 +408,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                             icon={<OutlineTrashIcon />}
                         />
                         <Divider type='vertical' />
-                        <Tooltip title={"在代码审计中打开"}>
+                        <Tooltip title={t("YakitAuditHoleTable.openInAudit")}>
                             <YakitButton
                                 type='text'
                                 icon={<OutlineTerminalIcon />}
@@ -434,7 +438,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                         </Tooltip>
                         <Divider type='vertical' />
                         <Tooltip
-                            title='误报反馈'
+                            title={t("YakitAuditHoleTable.misstatementFeedback")}
                             destroyTooltipOnHide={true}
                             overlayStyle={{paddingBottom: 0}}
                             placement='top'
@@ -452,7 +456,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             }
         ]
         return columnArr.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
-    }, [riskTypeVerbose, excludeColumnsKey])
+    }, [riskTypeVerbose, excludeColumnsKey, i18n.language])
 
     /**误报上传 start */
     const [misstatementVisible, setMisstatementVisible] = useState<boolean>(false)
@@ -472,7 +476,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     }
     const onClickSSARiskFeedbackToOnline = useMemoizedFn((record: SSARisk) => {
         if (!userInfo.isLogin) {
-            yakitNotify("info", "请先登录账号")
+            yakitNotify("info", t("YakitAuditHoleTable.loginFirst"))
             return
         }
         ssaRiskFeedbackToOnlineParams.current = {
@@ -491,7 +495,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         const params = ssaRiskFeedbackToOnlineParams.current
         if (params) {
             apiSSARiskFeedbackToOnline(params).then(() => {
-                yakitNotify("success", "反馈成功")
+                yakitNotify("success", t("YakitAuditHoleTable.feedbackSuccess"))
             })
         }
     }
@@ -523,7 +527,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const onConfirmExport = useMemoizedFn(() => {
         const formValue = exportForm.getFieldsValue()
         if (!formValue.TargetPath) {
-            yakitNotify("error", "请填写文件名")
+            yakitNotify("error", t("YakitAuditHoleTable.enterFileName"))
             return
         }
         let targetPath = formValue.TargetPath
@@ -554,11 +558,11 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                         setExportProgressVisible(true)
                     })
                     .catch((error) => {
-                        yakitNotify("error", `导出失败: ${error}`)
+                        yakitNotify("error", t("YakitNotification.exportFailed", {error: String(error)}))
                     })
             })
             .catch((error) => {
-                yakitNotify("error", `生成路径失败: ${error}`)
+                yakitNotify("error", t("YakitAuditHoleTable.generatePathFailed", {error: String(error)}))
             })
     })
 
@@ -579,7 +583,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         if (exportPathRef.current) {
             openABSFileLocated(exportPathRef.current)
         }
-        yakitNotify("success", "导出成功")
+        yakitNotify("success", t("YakitNotification.exportSuccess"))
         setExportModalVisible(false)
         setExportProgressVisible(false)
         setExportProgress({Progress: 0, Verbose: ""})
@@ -597,7 +601,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             exportProgressRef.current = {Progress: data.Percent, Verbose: data.Verbose}
         })
         ipcRenderer.on(`${exportToken}-error`, (_, error) => {
-            yakitNotify("error", `导出失败: ${error}`)
+            yakitNotify("error", t("YakitNotification.exportFailed", {error: String(error)}))
         })
         ipcRenderer.on(`${exportToken}-end`, () => {})
         return () => {
@@ -635,7 +639,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
     const onConfirmImport = useMemoizedFn(() => {
         const formValue = importForm.getFieldsValue()
         if (!formValue.InputPath) {
-            yakitNotify("error", "请输入本地路径")
+            yakitNotify("error", t("YakitAuditHoleTable.enterLocalPath"))
             return
         }
         const importParams: ImportSSARiskRequest = {
@@ -646,7 +650,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 setImportProgressVisible(true)
             })
             .catch((error) => {
-                yakitNotify("error", `导入失败: ${error}`)
+                yakitNotify("error", t("YakitNotification.importFailed", {error: String(error)}))
             })
     })
 
@@ -664,7 +668,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
 
     // 导入成功
     const onImportSuccess = useMemoizedFn(() => {
-        yakitNotify("success", "导入成功")
+        yakitNotify("success", t("YakitNotification.imported"))
         setImportModalVisible(false)
         setImportProgressVisible(false)
         setImportProgress({Progress: 0, Verbose: ""})
@@ -684,7 +688,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             importProgressRef.current = {Progress: data.Percent, Verbose: data.Verbose}
         })
         ipcRenderer.on(`${importToken}-error`, (_, error) => {
-            yakitNotify("error", `导入失败: ${error}`)
+            yakitNotify("error", t("YakitNotification.importFailed", {error: String(error)}))
         })
         ipcRenderer.on(`${importToken}-end`, () => {})
         return () => {
@@ -718,7 +722,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         const m = showYakitModal({
             title: (
                 <div className='content-ellipsis'>
-                    序号【{record.Id}】- {record.TitleVerbose || record.Title}
+                    {t("YakitAuditHoleTable.sequenceTitle", {id: record.Id, title: record.TitleVerbose || record.Title})}
                 </div>
             ),
             content: <YakitRiskSelectTag ids={[record.Id]} onClose={() => m.destroy()} onCreate={onCreateTags} />,
@@ -1015,7 +1019,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                             ) : (
                                 <div className={styles["table-renderTitle"]}>
                                     <div className={styles["table-renderTitle-left"]}>
-                                        <div className={styles["table-renderTitle-text"]}>审计漏洞</div>
+                        <div className={styles["table-renderTitle-text"]}>{t("YakitAuditHoleTable.auditRisk")}</div>
                                         <YakitRadioButtons
                                             value={type}
                                             onChange={(e) => {
@@ -1025,11 +1029,11 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                             options={[
                                                 {
                                                     value: "all",
-                                                    label: "全部"
+                                                    label: t("YakitAuditHoleTable.all")
                                                 },
                                                 {
                                                     value: "false",
-                                                    label: "未读"
+                                                    label: t("YakitAuditHoleTable.unread")
                                                 }
                                             ]}
                                         />
@@ -1067,7 +1071,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                         <YakitInput.Search
                                             value={keywords}
                                             onChange={(e) => setKeywords(e.target.value)}
-                                            placeholder='请输入关键词搜索'
+                                            placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                                             onSearch={onSearch}
                                             onPressEnter={onPressEnter}
                                         />
@@ -1078,7 +1082,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                             onClick={(e) => {
                                                 e.stopPropagation()
                                                 const m = showYakitModal({
-                                                    title: <div className='content-ellipsis'>批量处置</div>,
+                                                    title: <div className='content-ellipsis'>{t("YakitAuditHoleTable.batchDisposal")}</div>,
                                                     content: (
                                                         <YakitRiskSelectTag
                                                             ids={selectedRowKeys}
@@ -1093,7 +1097,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                                 })
                                             }}
                                         >
-                                            批量处置
+                                            {t("YakitAuditHoleTable.batchDisposal")}
                                         </YakitButton>
 
                                         <FuncBtn
@@ -1102,27 +1106,27 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                             icon={<OutlineExportIcon />}
                                             onClick={onExportSSARisk}
                                             disabled={tableTotal === 0}
-                                            name='导出'
+                                            name={t("YakitButton.export")}
                                         />
                                         <FuncBtn
                                             maxWidth={1200}
                                             type='outline2'
                                             icon={<OutlineImportIcon />}
                                             onClick={onImportSSARisk}
-                                            name='导入'
+                                            name={t("YakitButton.import")}
                                         />
                                         <FuncBtn
                                             maxWidth={1200}
                                             type='outline2'
                                             icon={<OutlineEyeIcon />}
                                             onClick={onAllRead}
-                                            name='全部已读'
+                                            name={t("YakitAuditHoleTable.allRead")}
                                         />
                                         <YakitPopconfirm
                                             title={
                                                 allCheck
-                                                    ? "确定删除所有风险与漏洞吗? 不可恢复"
-                                                    : "确定删除选择的风险与漏洞吗?不可恢复"
+                                                    ? t("YakitAuditHoleTable.confirmDeleteAll")
+                                                    : t("YakitAuditHoleTable.confirmDeleteSelected")
                                             }
                                             onConfirm={onRemove}
                                         >
@@ -1132,12 +1136,12 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                                 colors='danger'
                                                 icon={<OutlineTrashIcon />}
                                                 disabled={tableTotal === 0}
-                                                name={selectNum === 0 ? "清空" : "删除"}
+                                                name={selectNum === 0 ? t("YakitButton.clear") : t("YakitButton.delete")}
                                             />
                                         </YakitPopconfirm>
                                         <YakitDropdownMenu
                                             menu={{
-                                                data: batchRefreshMenuData,
+                                                data: batchRefreshMenuData(t),
                                                 onClick: ({key}) => {
                                                     onRefreshMenuSelect(key)
                                                 }
@@ -1200,15 +1204,15 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             {/* 误报反馈提示 */}
             <NoPromptHint
                 visible={misstatementVisible}
-                title='误报反馈提醒'
-                content='确认反馈后，整条漏洞信息将会被上传至后台，开发人员将获取漏洞信息进行误报修复。是否确认反馈？'
+                title={t("YakitAuditHoleTable.misstatementReminder")}
+                content={t("YakitAuditHoleTable.misstatementContent")}
                 cacheKey={RemoteAuditHoleGV.AuditHoleMisstatementNoPrompt}
                 onCallback={handleMisstatementHint}
             />
             {/* 导出弹窗 */}
             <YakitModal
                 visible={exportModalVisible}
-                title='导出审计漏洞'
+                title={t("YakitAuditHoleTable.exportAuditRisk")}
                 width={520}
                 centered={true}
                 maskClosable={false}
@@ -1224,13 +1228,13 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                                 onClick={() => setExportModalVisible(false)}
                                 style={{marginRight: 8}}
                             >
-                                取消
+                                {t("YakitButton.cancel")}
                             </YakitButton>
-                            <YakitButton onClick={onConfirmExport}>确定</YakitButton>
+                            <YakitButton onClick={onConfirmExport}>{t("YakitButton.confirm")}</YakitButton>
                         </>
                     ) : (
                         <YakitButton type='outline2' onClick={onCancelExport}>
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                     )
                 }
@@ -1238,22 +1242,22 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 {!exportProgressVisible ? (
                     <div className={importExportStyles["import-export-modal"]}>
                         <div className={importExportStyles["export-hint"]}>
-                            远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
+                            {t("YakitAuditHoleTable.exportHint")}
                         </div>
                         <Form form={exportForm} layout='horizontal' labelCol={{span: 5}} wrapperCol={{span: 18}}>
                             <Form.Item
-                                label='文件名'
+                                label={t("YakitAuditHoleTable.fileName")}
                                 name='TargetPath'
-                                rules={[{required: true, message: "请填写文件名"}]}
+                                rules={[{required: true, message: t("YakitAuditHoleTable.enterFileName")}]}
                             >
-                                <YakitInput placeholder='请输入导出文件名' />
+                                <YakitInput placeholder={t("YakitAuditHoleTable.exportFileNamePlaceholder")} />
                             </Form.Item>
                         </Form>
                     </div>
                 ) : (
                     <div style={{padding: "0 16px"}}>
                         <ImportAndExportStatusInfo
-                            title='导出中'
+                            title={t("YakitAuditHoleTable.exporting")}
                             showDownloadDetail={false}
                             streamData={exportProgress}
                             logListInfo={[]}
@@ -1264,7 +1268,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             {/* 导入弹窗 */}
             <YakitModal
                 visible={importModalVisible}
-                title='导入审计漏洞'
+                title={t("YakitAuditHoleTable.importAuditRisk")}
                 width={720}
                 centered={true}
                 maskClosable={false}
@@ -1274,10 +1278,10 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 footerStyle={{justifyContent: "flex-end"}}
                 footer={
                     !importProgressVisible ? (
-                        <YakitButton onClick={onConfirmImport}>导入</YakitButton>
+                        <YakitButton onClick={onConfirmImport}>{t("YakitButton.import")}</YakitButton>
                     ) : (
                         <YakitButton type='outline2' onClick={onCancelImport}>
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                     )
                 }
@@ -1285,14 +1289,14 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 {!importProgressVisible ? (
                     <div className={importExportStyles["import-export-modal"]}>
                         <div className={importExportStyles["import-hint"]}>
-                            导入外部资源存在潜在风险，可能会被植入恶意代码或Payload，造成数据泄露、系统被入侵等严重后果。请务必谨慎考虑引入外部资源的必要性，并确保资源来源可信、内容安全。
+                            {t("YakitAuditHoleTable.importWarning")}
                         </div>
                         <Form form={importForm} layout='horizontal' labelCol={{span: 6}} wrapperCol={{span: 17}}>
                             <YakitFormDragger
                                 formItemProps={{
                                     name: "InputPath",
-                                    label: "本地路径",
-                                    rules: [{required: true, message: "请输入本地路径"}]
+                                    label: t("YakitAuditHoleTable.localPath"),
+                                    rules: [{required: true, message: t("YakitAuditHoleTable.enterLocalPath")}]
                                 }}
                                 multiple={false}
                                 selectType='file'
@@ -1303,7 +1307,7 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                 ) : (
                     <div style={{padding: "0 16px"}}>
                         <ImportAndExportStatusInfo
-                            title='导入中'
+                            title={t("YakitAuditHoleTable.importing")}
                             showDownloadDetail={false}
                             streamData={importProgress}
                             logListInfo={[]}
@@ -1314,26 +1318,29 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
         </div>
     )
 })
-const defaultTags = [
-    {
-        label: "有问题",
-        value: "is_issue"
-    },
-    {
-        label: "不是问题",
-        value: "not_issue"
-    },
-    {
-        label: "存疑",
-        value: "suspicious"
-    },
-    {
-        label: "未处置",
-        value: "not_set"
-    }
-]
+const defaultTags = (t: TFunction) => {
+    return [
+        {
+            label: t("YakitAuditHoleTable.problem"),
+            value: "is_issue"
+        },
+        {
+            label: t("YakitAuditHoleTable.notProblem"),
+            value: "not_issue"
+        },
+        {
+            label: t("YakitAuditHoleTable.doubtful"),
+            value: "suspicious"
+        },
+        {
+            label: t("YakitAuditHoleTable.undisposed"),
+            value: "not_set"
+        }
+    ]
+}
 export const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo((props) => {
     const {ids, onClose, onCreate} = props
+    const {t, i18n} = useI18nNamespaces(["yakRunnerAuditHole", "yakitUi"])
 
     const onFinish = useMemoizedFn((value) => {
         onCreate({RiskIds: ids, Status: value.Tag, Comment: value.Description})
@@ -1343,9 +1350,9 @@ export const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo(
     return (
         <div className={styles["yakit-ssa-risk-select-tag"]}>
             <Form onFinish={onFinish} labelCol={{span: 4}} wrapperCol={{span: 20}}>
-                <Form.Item label='处置状态' name='Tag'>
+                <Form.Item label={t("YakitAuditHoleTable.disposalStatus")} name='Tag'>
                     <YakitSelect allowClear>
-                        {defaultTags.map((item) => {
+                        {defaultTags(t).map((item) => {
                             return (
                                 <YakitSelect.Option key={item.value} value={item.value}>
                                     {item.label}
@@ -1354,7 +1361,7 @@ export const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo(
                         })}
                     </YakitSelect>
                 </Form.Item>
-                <Form.Item label='说明' name='Description'>
+                <Form.Item label={t("YakitAuditHoleTable.description")} name='Description'>
                     <YakitInput.TextArea spellCheck={false} autoSize={{minRows: 3, maxRows: 10}} />
                 </Form.Item>
                 <div className={styles["yakit-ssa-risk-select-tag-btns"]}>
@@ -1364,9 +1371,9 @@ export const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo(
                             if (onClose) onClose()
                         }}
                     >
-                        取消
+                        {t("YakitButton.cancel")}
                     </YakitButton>
-                    <YakitButton htmlType='submit'>确定</YakitButton>
+                    <YakitButton htmlType='submit'>{t("YakitButton.confirm")}</YakitButton>
                 </div>
             </Form>
         </div>
@@ -1375,6 +1382,7 @@ export const YakitRiskSelectTag: React.FC<YakitRiskSelectTagProps> = React.memo(
 
 export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React.memo((props) => {
     const {info, className, border, isShowExtra, isExtraClick, setLatestDisposalStatus, getSSARiskDisposal} = props
+    const {t, i18n} = useI18nNamespaces(["yakRunnerAuditHole", "yakitUi"])
     const [yakURLData, setYakURLData] = useState<YakURLDataItemProps[]>([])
     const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
         defaultValue: [],
@@ -1394,22 +1402,22 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
     const getOptions = useMemo(() => {
         let options = [
             {
-                label: "漏洞详情",
+                label: t("YakitAuditHoleTable.riskDetails"),
                 value: "detail"
             },
             {
-                label: "代码片段",
+                label: t("YakitAuditHoleTable.codeSnippet"),
                 value: "code"
             }
         ]
         // if (disposalData.length > 0) {
         options.push({
-            label: "处置历史",
+            label: t("YakitAuditHoleTable.disposalHistory"),
             value: "history"
         })
         // }
         return options
-    }, [disposalData])
+    }, [disposalData, i18n.language])
 
     const [isShowCollapse, setIsShowCollapse] = useState<boolean>(false)
     const initData = useMemoizedFn(async () => {
@@ -1442,19 +1450,19 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
         const severity = SeverityMapTag.filter((item) => item.key.includes(info.Severity || ""))[0]
         let icon = <></>
         switch (severity?.name) {
-            case "信息":
+            case t("YakitTag.info"):
                 icon = <IconSolidInfoRiskIcon />
                 break
-            case "低危":
+            case t("YakitTag.low"):
                 icon = <IconSolidLowRiskIcon />
                 break
-            case "中危":
+            case t("YakitTag.warning"):
                 icon = <IconSolidMediumRiskIcon />
                 break
-            case "高危":
+            case t("YakitTag.high"):
                 icon = <IconSolidHighRiskIcon />
                 break
-            case "严重":
+            case t("YakitTag.critical"):
                 icon = <IconSolidSeriousIcon />
                 break
             default:
@@ -1466,7 +1474,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
             tag: severity?.tag || "default",
             name: severity?.name || info?.Severity || "-"
         }
-    }, [info.Severity])
+    }, [info.Severity, i18n.language])
 
     // 跳转到代码审计页面
     const jumpCodeScanPage = useMemoizedFn((value?: string) => {
@@ -1551,10 +1559,10 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                                 ID:{info.Id}
                             </YakitTag>
                             <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
-                            <span className={styles["description-port"]}>所属项目:{info.ProgramName || "-"}</span>
+                            <span className={styles["description-port"]}>{t("YakitAuditHoleTable.belongsToProject", {name: info.ProgramName || "-"})}</span>
                             <Divider type='vertical' style={{height: 16, margin: "0 8px"}} />
                             <span className={styles["content-heard-body-time"]}>
-                                发现时间:{!!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"}
+                                {t("YakitAuditHoleTable.foundTime", {time: !!info.CreatedAt ? formatTimestamp(info.CreatedAt) : "-"})}
                             </span>
                         </div>
                     </div>
@@ -1567,7 +1575,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                             icon={<OutlineBotIcon />}
                             onClick={goAI}
                         >
-                            在AIAgent中打开
+                            {t("YakitAuditHoleTable.openInAIAgent")}
                         </YakitButton>
                         {isShowCollapse ? (
                             <YakitButton
@@ -1579,13 +1587,13 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
                                     jumpCodeScanPage(info.Index ? `/${info.Index}` : undefined)
                                 }}
                             >
-                                在代码审计中打开
+                                {t("YakitAuditHoleTable.openInAudit")}
                             </YakitButton>
                         ) : (
-                            <Tooltip title={`相关数据已被删除`} placement='topLeft'>
+                            <Tooltip title={t("YakitAuditHoleTable.relatedDataDeleted")} placement='topLeft'>
                                 <div className={styles["disabled-open"]}>
                                     <OutlineTerminalIcon />
-                                    在代码审计中打开
+                                    {t("YakitAuditHoleTable.openInAudit")}
                                 </div>
                             </Tooltip>
                         )}
@@ -1606,7 +1614,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 
             {showType === "code" && (
                 <div className={styles["content-resize-collapse"]}>
-                    <div className={styles["main-title"]}>相关代码段</div>
+                    <div className={styles["main-title"]}>{t("YakitAuditHoleTable.relatedCode")}</div>
                     <AuditResultCollapse
                         data={yakURLData}
                         jumpCodeScanPage={jumpCodeScanPage}
@@ -1632,6 +1640,7 @@ export const YakitAuditRiskDetails: React.FC<YakitAuditRiskDetailsProps> = React
 
 export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo((props) => {
     const {info, setLatestDisposalStatus, style, getSSARiskDisposal, refreshFileOrRuleTree} = props
+    const {t, i18n} = useI18nNamespaces(["yakRunnerAuditHole", "yakitUi"])
     const [disposalData, setDisposalData] = useControllableValue<SSARiskDisposalData[]>(props, {
         defaultValue: [],
         valuePropName: "disposalData",
@@ -1653,20 +1662,20 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                     setLatestDisposalStatus(info, newDisposalData.length > 0 ? newDisposalData[0].Status : "not_set")
                 setDisposalData(newDisposalData)
                 refreshFileOrRuleTree?.()
-                yakitNotify("success", "删除成功")
+                yakitNotify("success", t("YakitNotification.deleted"))
             })
             .catch((e) => {
-                yakitNotify("error", `删除失败: ${e}`)
+                yakitNotify("error", t("YakitNotification.deleteFailed", {error: String(e)}))
             })
     })
 
     const AuditResultHistoryItem = useMemoizedFn((info: SSARiskDisposalData, index: number) => {
         const getLabelByValue = (value) => {
             // 使用 find 方法查找匹配的 value
-            const option = defaultTags.find((option) => option.value === value)
+            const option = defaultTags(t).find((option) => option.value === value)
 
             // 如果找到匹配的 value，返回对应的 label，否则返回 null
-            return option ? option.label : "未识别状态"
+            return option ? option.label : t("YakitAuditHoleTable.unrecognizedStatus")
         }
         return (
             <div className={classNames(styles["audit-result-history"])}>
@@ -1698,13 +1707,13 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                         >
                             <div className={styles["header-content"]}>
                                 {/* <AuthorImg src={info.headImg || UnLogin} wrapperClassName={styles["img-style"]} /> */}
-                                <div className={styles["author-name"]}>处置状态：{getLabelByValue(info.Status)}</div>
+                                <div className={styles["author-name"]}>{t("YakitAuditHoleTable.disposalStatusValue", {value: getLabelByValue(info.Status)})}</div>
                                 {/* <div className={styles["log-content"]}>content</div> */}
                                 <div className={styles["log-time"]}>{formatTimestamp(info.UpdatedAt)}</div>
                                 {info.TaskName && <YakitTag color={"info"}>{info.TaskName}</YakitTag>}
                                 <div className={styles["option"]}>
                                     <YakitPopconfirm
-                                        title={"确认删除此处置记录吗？"}
+                                        title={t("YakitAuditHoleTable.deleteDisposalConfirm")}
                                         onConfirm={(e) => {
                                             e?.stopPropagation()
                                             onDeleteSSARiskDisposals(info.Id)
@@ -1712,7 +1721,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                                         placement='left'
                                     >
                                         <YakitButton danger type='text' size='small'>
-                                            删除
+                                            {t("YakitButton.delete")}
                                         </YakitButton>
                                     </YakitPopconfirm>
                                 </div>
@@ -1723,7 +1732,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                             <div
                                 className={classNames(styles["description-style"], "yakit-content-multiLine-ellipsis")}
                             >
-                                {info.Comment || "暂无处置说明"}
+                                {info.Comment || t("YakitAuditHoleTable.noDisposalComment")}
                             </div>
                         </div>
                     </div>
@@ -1745,7 +1754,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
             setValue("")
             setSelectValue("")
             setLoading(false)
-            yakitNotify("success", "处置成功")
+            yakitNotify("success", t("YakitAuditHoleTable.disposalSuccess"))
             refreshFileOrRuleTree?.()
         })
     })
@@ -1771,7 +1780,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                 {disposalData.length > 0 ? (
                     <>{disposalData.map((item, index) => AuditResultHistoryItem(item, index))}</>
                 ) : (
-                    <YakitEmpty title='暂无漏洞处置信息' />
+                    <YakitEmpty title={t("YakitAuditHoleTable.noDisposalData")} />
                 )}
             </div>
 
@@ -1782,7 +1791,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                 onClick={handleTextareaFocus}
             >
                 <div className={styles["select-wrapper"]}>
-                    <div className={styles["label"]}>处置状态：</div>
+                    <div className={styles["label"]}>{t("YakitAuditHoleTable.disposalStatusLabel")}</div>
                     <div
                         className={styles["option"]}
                         onClick={(e) => {
@@ -1797,7 +1806,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                             }}
                             size='small'
                         >
-                            {defaultTags.map((item) => {
+                            {defaultTags(t).map((item) => {
                                 return (
                                     <YakitSelect.Option key={item.value} value={item.value}>
                                         {item.label}
@@ -1814,7 +1823,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                     value={value}
                     bordered={false}
                     autoSize={{minRows: 1, maxRows: 3}}
-                    placeholder='请留下对处置的说明...'
+                    placeholder={t("YakitAuditHoleTable.disposalPlaceholder")}
                     spellCheck={false}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
@@ -1824,7 +1833,7 @@ export const AuditResultHistory: React.FC<AuditResultHistoryProps> = React.memo(
                 <div className={styles["right-footer"]}>
                     <YakitButton size='small' loading={loading} disabled={disabled} onClick={onSubmit}>
                         <SolidPaperairplaneIcon />
-                        发布处置
+                        {t("YakitAuditHoleTable.publishDisposal")}
                     </YakitButton>
                 </div>
             </div>

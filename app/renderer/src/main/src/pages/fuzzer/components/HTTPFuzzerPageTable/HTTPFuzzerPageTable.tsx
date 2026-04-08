@@ -732,7 +732,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                     }
                 })
                     .catch((e) => {
-                        yakitFailed(t("YakitNotification.search_failed", {colon: true}) + e)
+                        yakitFailed(t("YakitNotification.search_failed", {error: e + ""}))
                     })
                     .finally(() => {
                         setTimeout(() => {
@@ -853,7 +853,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
                             // 不为空判断
                             if (query?.ExtractedResultsNotEmpty) {
-                                isHaveDataIsPush = !!extractedMap.size ? extractedResultsString.trim().length > 0 
+                                isHaveDataIsPush = !!extractedMap.size ? extractedResultsString.trim().length > 0
                                 : (record.ExtractedResults || []).some((item) => item.Value && item.Value.trim().length > 0)
                             }
 
@@ -902,7 +902,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                 }
                 // ------------  搜索 结束  ------------
             } catch (error) {
-                yakitFailed(t("YakitNotification.search_failed", {colon: true}) + error)
+                yakitFailed(t("YakitNotification.search_failed", {error: error + ""}))
             }
         })
 

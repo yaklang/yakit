@@ -50,6 +50,8 @@
         "pluginStore": "插件商店",
         "pluginsMine": "我的插件",
         "pluginLocal": "本地插件",
+        "notepadManage": "{name}管理",
+        "addNotepad": "新建{name}",
         "codecDesc": "数据加解密工具，支持多种加解密方式，且可以自定义加解密流",
         "payloadDesc": "对字典进行增删改查，方便统一管理",
         "informationGathering": "信息收集",

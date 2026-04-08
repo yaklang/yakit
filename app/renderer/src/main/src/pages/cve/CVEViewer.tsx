@@ -14,6 +14,7 @@ import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {ChevronDownIcon} from "@/assets/newIcon"
 import {YakitCheckableTagList} from "@/components/YakitCheckableTagList/YakitCheckableTagList"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {Panel} = Collapse
 export interface QueryCVERequest {
@@ -92,6 +93,7 @@ export const defQueryCVERequest:QueryCVERequest = {
 }
 const CVEQuery: React.FC<CVEQueryProp> = (props) => {
     const {advancedQuery, setAdvancedQuery} = props
+    const {t, i18n} = useI18nNamespaces(["cve", "yakitUi"])
     const [params, setParams] = useState<QueryCVERequest>(props.defaultParams || defQueryCVERequest)
 
     useEffect(() => {
@@ -102,60 +104,60 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
     }, [params])
 
     return (
-        <div className={styles["cve-query"]}>
+        <div className={styles["cve-query"]} style={{minWidth: i18n.language === "zh" ? 300 : 450}}>
             <div className={styles["cve-query-heard"]}>
-                <span>高级查询</span>
+                <span>{t("CVEQuery.advancedQuery")}</span>
                 <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} />
             </div>
             <div className={styles["cve-query-body"]}>
                 <div className={styles["cve-query-text"]}>
-                    <span>CVE 查询条件</span>
+                    <span>{t("CVEQuery.cveQueryConditions")}</span>
                     <span
                         className={styles["cve-query-resetting"]}
                         onClick={() => {
                             setParams(defQueryCVERequest)
                         }}
                     >
-                        重置
+                        {t("YakitButton.reset")}
                     </span>
                 </div>
                 <div className={styles["cve-query-item"]}>
-                    <div>利用路径</div>
+                    <div>{t("CVEQuery.exploitPath")}</div>
                     <YakitCheckableTagList
                         data={[
-                            {value: "NETWORK", label: "网络"},
-                            {value: "ADJACENT_NETWORK", label: "局域网"},
-                            {value: "LOCAL", label: "本地"},
-                            {value: "PHYSICAL", label: "物理"}
+                            {value: "NETWORK", label: t("CVEQuery.network")},
+                            {value: "ADJACENT_NETWORK", label: t("CVEQuery.adjacentNetwork")},
+                            {value: "LOCAL", label: t("CVEQuery.local")},
+                            {value: "PHYSICAL", label: t("CVEQuery.physical")}
                         ]}
                         value={params.AccessVector ? params.AccessVector.split(",") : []}
                         setValue={(AccessVector) => setParams({...params, AccessVector: AccessVector.join(",")})}
                     />
                 </div>
                 <div className={styles["cve-query-item"]}>
-                    <div>利用难度</div>
+                    <div>{t("CVEQuery.exploitDifficulty")}</div>
                     <YakitCheckableTagList
                         setValue={(AccessComplexity) =>
                             setParams({...params, AccessComplexity: AccessComplexity.join(",")})
                         }
                         value={params.AccessComplexity ? params.AccessComplexity.split(",") : []}
                         data={[
-                            {value: "HIGH", label: "困难"},
-                            {value: "MEDIUM", label: "一般"},
-                            {value: "LOW", label: "容易"}
+                            {value: "HIGH", label: t("CVEQuery.difficult")},
+                            {value: "MEDIUM", label: t("CVEQuery.medium")},
+                            {value: "LOW", label: t("CVEQuery.easy")}
                         ]}
                     />
                 </div>
                 <div className={styles["cve-query-item"]}>
-                    <div>漏洞级别</div>
+                    <div>{t("CVEQuery.vulnerabilityLevel")}</div>
                     <YakitCheckableTagList
                         setValue={(Severity) => setParams({...params, Severity: Severity.join(",")})}
                         value={params.Severity ? params.Severity.split(",") : []}
                         data={[
-                            {value: "CRITICAL", label: "严重"},
-                            {value: "HIGH", label: "高危"},
-                            {value: "MEDIUM", label: "中危"},
-                            {value: "LOW", label: "低危"}
+                            {value: "CRITICAL", label: t("CVEQuery.critical")},
+                            {value: "HIGH", label: t("CVEQuery.high")},
+                            {value: "MEDIUM", label: t("CVEQuery.medium")},
+                            {value: "LOW", label: t("CVEQuery.low")}
                         ]}
                     />
                 </div>

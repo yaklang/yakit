@@ -237,7 +237,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const [showAllRes, setShowAllRes] = useState(false)
 
     const { getProxyValue } = useProxy();
-    
+
     const [droppedCountMap, {set: setDroppedCount, get: getDroppedCount, reset: resetDroppedCount}] = useMap<
         string,
         number
@@ -260,7 +260,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const droppedSequenceIndexMapRef = useRef<Map<string, Map<string, number>>>(new Map()) //序列丢弃:中间缓存的数据用于计算最后的丢弃数
 
     const [extractedMap, {reset, set}] = useMap<string, Map<string, string>>()
-    
+
     // 并发模式的数据
     const [originConcurrencyList, setOriginConcurrencyList] = useState<SequenceProps[]>([])
     const [concurrencyList, setConcurrencyList] = useState<SequenceProps[]>([])
@@ -273,7 +273,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const isConcurrencyShowAllRes = useMemo(()=> showAllRes && isConcurrency, [showAllRes, isConcurrency])
 
     // 是否执行了匹配提取
-    const [hasExtractorRules, setHasExtractorRules] = useState<boolean>(false) 
+    const [hasExtractorRules, setHasExtractorRules] = useState<boolean>(false)
     // 记录是否已经在并发模式下初始化过
     const hasInitializedConcurrencyRef = useRef<boolean>(false)
 
@@ -507,18 +507,18 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const fuzzerIndexModeRef = useRef<Map<string, boolean>>(new Map()) // true=并发, false=序列
     // 根据模式动态选择使用的 responseMap
     const responseMap = useMemo(() => isConcurrency ? concurrencyResponseMap : sequenceResponseMap, [isConcurrency, concurrencyResponseMap, sequenceResponseMap])
-    
+
     // 根据 fuzzerIndex 记录的模式存入对应的 map
     const setResponse = useMemoizedFn((key: string, value: ResponseProps) => {
         const isConcurrencyMode = fuzzerIndexModeRef.current.get(key) ?? isConcurrency
         isConcurrencyMode ? setConcurrencyResponse(key, value) : setSequenceResponse(key, value)
     })
-    
+
     const getResponse = useMemoizedFn((key: string) => {
         const isConcurrencyMode = fuzzerIndexModeRef.current.get(key) ?? isConcurrency
         return isConcurrencyMode ? getConcurrencyResponse(key) : getSequenceResponse(key)
     })
-    
+
     const resetResponse = useMemoizedFn(() => {
         isConcurrency ? resetConcurrencyResponse() : resetSequenceResponse()
     })
@@ -843,10 +843,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         },
         {wait: 350}
     ).run
-    
+
     const getResponseRef = useRef(getResponse)
     const updateDataRef = useRef<(fuzzerIndex: string) => void>(() => {})
-    
+
     useEffect(() => {
         getResponseRef.current = getResponse
     }, [getResponse])
@@ -1056,7 +1056,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             if (webFuzzerPageInfo) {
                 // 用于表格显示最大数量
                 fuzzerTableMaxDataRef.current.set(item.id, webFuzzerPageInfo.advancedConfigValue.resNumlimit)
-                
+
                 const { proxy = [] } = webFuzzerPageInfo.advancedConfigValue;
                 const { proxyEndpoints, ProxyRuleIds } = getProxyValue(proxy)
 
@@ -1120,12 +1120,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         setCurrentSelectResponse(undefined)
         const newList = currentList.map((item) => ({...item, disabled: true}))
         setCurrentList([...newList])
-        
+
         // 记录当前所有 fuzzerIndex 的模式
         currentList.forEach((item) => {
             fuzzerIndexModeRef.current.set(item.id, isConcurrency)
         })
-        
+
         const httpParams = getHttpParams()
         if (isConcurrency) {
             const ConcurrencyAdvancedConfigValue = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue;
@@ -1223,12 +1223,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
         try {
             const matchTaskID = currentResponse.successFuzzer[0]?.TaskId
-            
+
             // 只获取当前选中项的请求参数
             const allHttpParams = getHttpParams()
             const currentHttpParam = allHttpParams.find(p => p.FuzzerIndex === currentSequenceItem.id)
             if (!currentHttpParam) return
-            
+
             const params = {
                 Requests: [currentHttpParam],
                 ReMatch: true,
@@ -1449,7 +1449,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         let allRuntimeIds: string[] = []
         /** 表格数据限制 */
         let maxFuzzerTableMaxData = DefFuzzerTableMaxData
-        /** 聚合图表数据 */ 
+        /** 聚合图表数据 */
         let allFuzzerResChartData: FuzzerResChartData[] = []
 
         newList.forEach(([id, response]) => {
@@ -1467,7 +1467,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         const params = {
             id: "all-concurrency",
             onlyOneResponse: emptyFuzzer,
-            successCount: totalSuccessCount, 
+            successCount: totalSuccessCount,
             failedCount: totalFailedCount,
             successFuzzer: allSuccessFuzzer,
             failedFuzzer: allFailedFuzzer,
@@ -1480,9 +1480,9 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     /**调试匹配器和提取器 */
     const onDebug = useMemoizedFn((value: DebugProps) => {
-        const { 
-            httpResponse, 
-            httpRequest = currentSelectRequest?.request || '', 
+        const {
+            httpResponse,
+            httpRequest = currentSelectRequest?.request || '',
             isHttps =  !!currentSelectRequest?.advancedConfigValue?.isHttps,
         }
          = value;
@@ -1517,12 +1517,12 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
 
     //点击应用按钮
     const onApply = useMemoizedFn(()=>{
-        const cachedTotal = currentSelectResponse 
+        const cachedTotal = currentSelectResponse
             ? currentSelectResponse.successCount + currentSelectResponse.failedCount
             : 0
-        
+
         if(!cachedTotal){
-            yakitNotify("warning", `请发送多个请求包后再应用`)
+            yakitNotify("warning", t("FuzzerSequence.pleaseSendMultipleRequestsBeforeApply"))
             return;
         }
         onSingleMatchSubmit()
@@ -1541,7 +1541,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 const pageData = queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId)
                 if (!pageData) return
                 const currentConfig = pageData.pageParamsInfo?.ConcurrencyAdvancedConfigValue || initSetValue
-                
+
                 const newPageData: PageNodeItemProps = {
                     ...pageData,
                     pageParamsInfo: {
@@ -1554,7 +1554,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                     }
                 }
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, newPageData)
-                
+
                 if (isApply) {
                     setTimeout(() => {
                         onConcurrencyMatchSubmit()
@@ -1562,7 +1562,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 }
                 return
             }
-            
+
             // 单个请求模式,保存到单个请求的配置
             if (!currentSelectRequest?.pageId) return
             const currentItem: PageNodeItemProps | undefined = queryPagesDataById(
@@ -1590,7 +1590,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 updatePagesDataCacheById(YakitRoute.HTTPFuzzer, {...newCurrentItem})
                 setTriggerPageSetting(!triggerPageSetting)
                 setShowMatcherAndExtraction(false)
-                
+
                 if (isApply) {
                     setTimeout(() => {
                         onSingleMatchSubmit()
@@ -1652,7 +1652,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             matcher: {...matchData},
             extractor: {...extractorData}
         }
-        
+
         // 如果是并发模式且没有选中序列项且有响应数据,使用 ConcurrencyAdvancedConfigValue
         const isShowAllConcurrency = isConcurrencyShowAllRes && responseMap.size > 0
         if (isShowAllConcurrency) {
@@ -1668,7 +1668,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             }
             return data
         }
-        
+
         if (!currentSequenceItem) {
             return data
         }
@@ -1718,7 +1718,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     const handleAdvancedSetSave = useMemoizedFn((values) => {
         const pageData = queryPagesDataById(YakitRoute.HTTPFuzzer, selectGroupId)
         if (!pageData) return
-        
+
         const newCurrentItem: PageNodeItemProps = {
             ...pageData,
             pageParamsInfo: {
@@ -1736,27 +1736,27 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
     /* 流量分析遮罩层 */
     const renderHistoryAnalysis = useMemoizedFn(() => {
         if (!trafficAnalysisVisible) return null
-        const currentItem: PageNodeItemProps | undefined = currentSelectRequest?.pageId 
+        const currentItem: PageNodeItemProps | undefined = currentSelectRequest?.pageId
             ? queryPagesDataById(YakitRoute.HTTPFuzzer, currentSelectRequest.pageId)
             : undefined,
             isSingle = trafficAnalysisType === "single"
-        
+
         if (!isConcurrencyShowAllRes && !currentItem) return null
-        
+
         // 根据 trafficAnalysisType 判断是显示全部还是单个序列的流量
-        const runtimeId = isSingle && currentSequenceItem && currentSelectResponse?.runtimeIdFuzzer 
-            ? currentSelectResponse.runtimeIdFuzzer 
+        const runtimeId = isSingle && currentSequenceItem && currentSelectResponse?.runtimeIdFuzzer
+            ? currentSelectResponse.runtimeIdFuzzer
             : allRuntimeIds()
 
-        const verbose = isConcurrencyShowAllRes 
+        const verbose = isConcurrencyShowAllRes
             ? t("FuzzerSequence.allTraffic")
-            : isSingle && currentSequenceItem 
+            : isSingle && currentSequenceItem
                 ? `${currentItem?.pageName}-${currentSequenceItem.name}-${t("FuzzerSequence.allTraffic")}`
                 : `${currentItem?.pageName}-${t("FuzzerSequence.allTraffic")}`
-        
+
         // 根据不同模式获取对应的匹配和提取规则
         let matchers: HTTPResponseMatcher[] = []
-        
+
         if (isConcurrencyShowAllRes) {
             const config = pageGroupData?.pageParamsInfo?.ConcurrencyAdvancedConfigValue
             matchers = config?.matchers || []
@@ -1764,7 +1764,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
             // 从 currentItem 获取 matchers，而不是 currentSelectRequest
             matchers = currentItem?.pageParamsInfo?.webFuzzerPageInfo?.advancedConfigValue?.matchers || []
         }
-        
+
         const params = {
             webFuzzer: true,
             runtimeId: runtimeId,
@@ -1841,8 +1841,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                         >
                             {isConcurrency ? <>
                                 {pageGroupData?.pageName}
-                                {/* <OutlineCogIcon 
-                                    onClick={() => setAdvancedSetVisible(true)} 
+                                {/* <OutlineCogIcon
+                                    onClick={() => setAdvancedSetVisible(true)}
                                     className={styles["fuzzer-sequence-left-heard-setting"]}
                                 />
                                 <AdvancedSet
@@ -1857,16 +1857,16 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                     onSave={handleAdvancedSetSave}
                                     onCancel={()=> setAdvancedSetVisible(false)}
                                 >
-                                    <OutlineCogIcon 
-                                        onClick={() => setAdvancedSetVisible(true)} 
+                                    <OutlineCogIcon
+                                        onClick={() => setAdvancedSetVisible(true)}
                                         className={classNames(styles["fuzzer-sequence-left-heard-setting"],{
                                             [styles["fuzzer-sequence-left-heard-active"]]: AdvancedConfigActive
                                         })}
                                     />
                                 </AdvancedSetV2>
-                            </> : 
+                            </> :
                             <>
-                                {t("FuzzerSequence.sequence_configuration")} 
+                                {t("FuzzerSequence.sequence_configuration")}
                                 <QuestionMarkCircleIcon />
                             </>
                             }
@@ -1948,7 +1948,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                                                                     const ItemComponent = isConcurrency ? ConcurrencyItem : SequenceItem
                                                                     return <ItemComponent {...commonProps} />
                                                                 })()}
-                                                                
+
                                                             </div>
                                                         )}
                                                     </Draggable>
@@ -1984,7 +1984,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 >
                     <div className={styles["setting-heard"]}>
                         <span>
-                            {isConcurrency ? currentSequenceItem?.pageName : 
+                            {isConcurrency ? currentSequenceItem?.pageName :
                                 currentSequenceItem?.name}&nbsp;{t("FuzzerSequence.config")
                             }
                         </span>
@@ -2497,11 +2497,11 @@ const SequenceResponseHeard: React.FC<SequenceResponseHeardProps> = React.memo((
     return (
         <div className={styles["sequence-response-heard"]}>
             <div className={styles["sequence-response-heard-left"]}>
-                {isConcurrency ? 
+                {isConcurrency ?
                     <span className={styles["sequence-response-heard-left-title"]}>
                         {currentSequenceItemPageName}
                     </span>
-                : 
+                :
                 <span>
                     <span className={styles["sequence-response-heard-left-title"]}>
                         {currentSequenceItemName || ""}
@@ -2639,7 +2639,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
         // first Node
         const firstNodeRef = useRef(null)
         const firstNodeSize = useSize(firstNodeRef)
-        
+
         const secondNodeRef = useRef(null)
         const secondNodeSize = useSize(secondNodeRef)
 
@@ -2895,7 +2895,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                     showResponseInfoSecondEditor={showResponseInfoSecondEditor}
                     setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
                     onShowAll={onShowAll}
-                    matchSubmit={() => { 
+                    matchSubmit={() => {
                         const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, pageId)
                         if(!currentItem?.pageParamsInfo)return;
                         const { webFuzzerPageInfo: { advancedConfigValue }  = {} } = currentItem?.pageParamsInfo
@@ -2905,7 +2905,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                             onOpenMatcherDrawer?.()
                         }
                     }}
-                    // isShowMatch // TODO: 隐藏匹配/提取按钮 
+                    // isShowMatch // TODO: 隐藏匹配/提取按钮
                 />
                 <div className={styles["resize-card-icon"]} onClick={() => setSecondFull(!secondFull)}>
                     {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
@@ -3021,7 +3021,7 @@ const SequenceResponse: React.FC<SequenceResponseProps> = React.memo(
                                         <div className={classNames(styles["resize-card-heard"])}>
                                             <div className={styles["resize-card-heard-title"]}>{secondNodeTitle()}</div>
                                             <div className={styles["resize-card-heard-extra"]}></div>
-                                           
+
                                             {secondNodeExtra()}
                                         </div>
                                         {cachedTotal > 1 ? (

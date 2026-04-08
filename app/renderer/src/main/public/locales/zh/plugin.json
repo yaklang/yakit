@@ -67,6 +67,6 @@
     "localPlugin": "本地插件"
   },
   "PluginHasParamsDrawer": {
-    "parameter_Settings": "参数设置{colon}"
+    "parameter_Settings": "参数设置: "
   }
 }

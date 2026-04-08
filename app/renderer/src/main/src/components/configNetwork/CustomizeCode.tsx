@@ -22,6 +22,7 @@ import type {
 } from "./CustomizeCodeTypes"
 import {YakitSpin} from "../yakitUI/YakitSpin/YakitSpin"
 import {OutlineXIcon} from "@/assets/icon/outline"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -174,6 +175,7 @@ export const getAllRows = <T extends Record<string, any[]>>(data: T): RowOf<T>[]
 const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
     const [form] = useForm()
     const {theme} = useTheme()
+    const {t} = useI18nNamespaces(["configNetwork", "yakitUi"])
 
     const [visibleOpen, setVisibleOpen] = useSafeState(false)
     const stateRef = useRef({
@@ -190,7 +192,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
         },
         {
             onError: (err) => {
-                yakitNotify("error", `获取自定义代码片段组失败：${err}`)
+                yakitNotify("error", t("ConfigNetworkPage.loadSnippetsFailed", {error: String(err)}))
             }
         }
     )
@@ -205,10 +207,10 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
             onSuccess: () => {
                 detailCustomCodeRun()
                 setVisibleOpen(false)
-                yakitNotify("success", "添加自定义代码片段组成功")
+                yakitNotify("success", t("ConfigNetworkPage.addSnippetGroupSuccess"))
             },
             onError: (error) => {
-                yakitNotify("error", `添加自定义代码片段组失败：${error}`)
+                yakitNotify("error", t("ConfigNetworkPage.addSnippetGroupFailed", {error: String(error)}))
             }
         }
     )
@@ -222,10 +224,10 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
             manual: true,
             onSuccess: () => {
                 detailCustomCodeRun()
-                yakitNotify("success", "删除自定义代码片段成功")
+                yakitNotify("success", t("ConfigNetworkPage.deleteSnippetSuccess"))
             },
             onError: (error) => {
-                yakitNotify("error", `删除自定义代码片段失败：${error}`)
+                yakitNotify("error", t("ConfigNetworkPage.deleteSnippetFailed", {error: String(error)}))
             }
         }
     )
@@ -239,10 +241,10 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
             onSuccess: () => {
                 detailCustomCodeRun()
                 setVisibleOpen(false)
-                yakitNotify("success", "编辑自定义代码片段组成功")
+                yakitNotify("success", t("ConfigNetworkPage.editSnippetGroupSuccess"))
             },
             onError: (error) => {
-                yakitNotify("error", `编辑自定义代码片段组失败：${error}`)
+                yakitNotify("error", t("ConfigNetworkPage.editSnippetGroupFailed", {error: String(error)}))
             }
         }
     )
@@ -318,14 +320,14 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
         <div className={styles["customizeCode_tags"]}>
             {codeCustomizeTag}
             <YakitButton type={"primary"} onClick={codeCustomizeModalVisible}>
-                添加
+                {t("YakitButton.add")}
             </YakitButton>
             <CodeCustomizeModal
                 theme={theme}
                 form={form}
                 visible={visibleOpen}
                 onOk={handCodeCustomizeOk}
-                title='添加代码片段'
+                title={t("ConfigNetworkPage.addCodeSnippet")}
                 codeCustomizeModalVisible={codeCustomizeModalVisible}
                 confirmLoading={createCustomCodeLoading}
             />
@@ -335,6 +337,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({value}) => {
 
 const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
     const {form, theme, visible, title, onOk, codeCustomizeModalVisible, confirmLoading} = props
+    const {t} = useI18nNamespaces(["configNetwork", "yakitUi"])
 
     const onCancel = () => {
         codeCustomizeModalVisible()
@@ -353,48 +356,48 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
         >
             <Form labelCol={{span: 5}} wrapperCol={{span: 18}} form={form}>
                 <Item
-                    label='名称'
+                    label={t("ConfigNetworkPage.name")}
                     name='Name'
                     rules={[
-                        {required: true, message: "该项为必填"},
-                        {max: 50, message: "代码片段名称最多50个字"},
+                        {required: true, message: t("YakitForm.requiredField")},
+                        {max: 50, message: t("ConfigNetworkPage.snippetNameMax")},
                         {
                             pattern: /^[A-Za-z\p{P}][A-Za-z0-9_\-]*$/u,
-                            message: "首字符必须为字母或标点符号，其余只能是字母/数字/下划线/中划线"
+                            message: t("ConfigNetworkPage.snippetNamePattern")
                         }
                     ]}
-                    tooltip='该名称是自动补全出现的名称，建议用英文'
+                    tooltip={t("ConfigNetworkPage.snippetNameTip")}
                 >
-                    <YakitInput placeholder='请输入' />
+                    <YakitInput placeholder={t("YakitInput.please_enter")} />
                 </Item>
                 <Item
-                    label='使用位置'
+                    label={t("ConfigNetworkPage.usageLocation")}
                     name='State'
-                    rules={[{required: true, message: "该项为必填"}]}
-                    tooltip='该代码片段的使用位置,http是指数据包,yak是指yak代码'
+                    rules={[{required: true, message: t("YakitForm.requiredField")} ]}
+                    tooltip={t("ConfigNetworkPage.usageLocationTip")}
                 >
-                    <YakitSelect placeholder='请选择' options={selectOptions} />
+                    <YakitSelect placeholder={t("YakitSelect.pleaseSelect")} options={selectOptions} />
                 </Item>
                 <Item
-                    label='代码类型'
+                    label={t("ConfigNetworkPage.codeType")}
                     name='Level'
-                    rules={[{required: true, message: "请选择类型定义"}]}
+                    rules={[{required: true, message: t("ConfigNetworkPage.selectTypeDefinition")} ]}
                     initialValue={"method"}
                 >
-                    <YakitSelect options={LevelOptions} placeholder='请选择' />
+                    <YakitSelect options={LevelOptions} placeholder={t("YakitSelect.pleaseSelect")} />
                 </Item>
-                <Item label='描述' name='Description' rules={[{max: 200, message: "代码片段描述最多200个字"}]}>
-                    <YakitInput placeholder='请输入' />
+                <Item label={t("ConfigNetworkPage.description")} name='Description' rules={[{max: 200, message: t("ConfigNetworkPage.snippetDescMax")}]}>
+                    <YakitInput placeholder={t("YakitInput.please_enter")} />
                 </Item>
                 <Item noStyle dependencies={["State"]}>
                     {({getFieldValue}) => {
                         const getAddress = getFieldValue("State") || "yak"
                         return (
                             <Item
-                                label='代码片段'
+                                label={t("ConfigNetworkPage.codeSnippet")}
                                 name='Code'
                                 className={styles["customize-code-segmentation-item"]}
-                                rules={[{required: true, message: "该项为必填"}]}
+                                rules={[{required: true, message: t("YakitForm.requiredField")} ]}
                             >
                                 <YakitEditor propsTheme={theme} type={getAddress} />
                             </Item>

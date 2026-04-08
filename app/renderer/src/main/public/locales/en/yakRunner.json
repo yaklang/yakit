@@ -1,0 +1,7 @@
+{
+  "IRifyUpdateProjectManagerModal": {
+    "syncingData": "Syncing data, please wait...",
+    "stopFailed": "Stop failed: {error}",
+    "progress": "Progress {percent}%"
+  }
+}

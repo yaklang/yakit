@@ -126,7 +126,7 @@ import {isEnpriTrace} from "@/utils/envfile"
 import {HTTPFlowsToOnlineRequest} from "@/utils/login"
 import {NowProjectDescription} from "@/pages/globalVariable"
 import {useStore} from "@/store"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitEmpty} from "../yakitUI/YakitEmpty/YakitEmpty"
 import i18n from "@/i18n/i18n"
 import {OptionProps, YakitCombinationSearchProps} from "../YakitCombinationSearch/YakitCombinationSearchType"
@@ -250,7 +250,7 @@ export const onExpandHTTPFlow = (
     flow: HTTPFlow | undefined,
     onClosed: () => any,
     downstreamProxyStr: string,
-    t?: (keys: string) => string, // 部分调用位置不确认，暂时为可选参数
+    t?: TFunction, // 部分调用位置不确认，暂时为可选参数
     pageType?: HTTPHistorySourcePageType
 ) => {
     if (!flow) {
@@ -756,7 +756,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const ref = useRef(null)
 
     const refreshTabsContRef = useRef<boolean>(false)
-    
+
     const fromMITM = useMemo(()=> props.pageType === 'MITM', [props.pageType])
 
     useShortcutKeyTrigger("sendAndJump*common", (focus) => {

@@ -723,7 +723,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                     .then((rsp: ProjectDescription) => setLatestProject(rsp || undefined))
             })
             .catch((e) => {
-                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
+                failed(t("YakitNotification.deleteFailed", {error: e + ""}))
             })
             .finally(() => {
                 setDelId({Id: -1, Type: "project"})

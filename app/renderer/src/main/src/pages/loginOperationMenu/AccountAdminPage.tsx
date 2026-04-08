@@ -409,7 +409,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", `${t("YakitNotification.deleteFailed", {colon: true})}${err}`)
+                yakitNotify("error", t("YakitNotification.deleteFailed", {error: err + ""}))
             })
     }
 
@@ -456,7 +456,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                 }
             })
             .catch((err) => {
-                yakitNotify("error", `${t("YakitNotification.modifyFailed", {colon: true})}${err}`)
+                yakitNotify("error", t("YakitNotification.modifyFailed", {error: err + ""}))
             })
     }
 
@@ -759,7 +759,7 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) =>
                 }
             })
             .catch((err) => {
-                yakitNotify("error", `${t("YakitNotification.createFailed", {colon: true})}${err}`)
+                yakitNotify("error", t("YakitNotification.createFailed", {error: err + ""}))
             })
             .finally(() => {
                 setLoading(false)

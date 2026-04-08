@@ -1806,7 +1806,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
                     })
                     .catch((e: any) => {
                         setInputName(folder.name)
-                        failed(`${t("YakitNotification.editFailed", {colon: true})}${e}}`)
+                        failed(t("YakitNotification.editFailed", {error: e + ""}))
                     })
             }
         } else {
@@ -1855,7 +1855,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
             })
             .catch((e: any) => {
                 setDeleteVisible(false)
-                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
+                failed(t("YakitNotification.deleteFailed", {error: e + ""}))
             })
     })
 
@@ -2436,7 +2436,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
                 })
                 .catch((e: any) => {
                     setInputName(file.name)
-                    failed(`${t("YakitNotification.editFailed", {colon: true})}${e}`)
+                    failed(t("YakitNotification.editFailed", {error: e + ""}))
                 })
         } else {
             file.name !== inputName &&
@@ -2489,7 +2489,7 @@ export const FileComponent: React.FC<FileComponentProps> = (props) => {
             })
             .catch((e: any) => {
                 setDeleteVisible(false)
-                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
+                failed(t("YakitNotification.deleteFailed", {error: e + ""}))
             })
     })
 
@@ -3172,7 +3172,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
                 success(t("YakitNotification.deleted"))
             })
             .catch((e: any) => {
-                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
+                failed(t("YakitNotification.deleteFailed", {error: e + ""}))
             })
     })
 
@@ -3729,7 +3729,7 @@ export const PayloadOnlineContent: React.FC<PayloadLocalContentProps> = (props) 
                 success(t("YakitNotification.deleted"))
             })
             .catch((e: any) => {
-                failed(`${t("YakitNotification.deleteFailed", {colon: true})}${e}`)
+                failed(t("YakitNotification.deleteFailed", {error: e + ""}))
             })
     })
 

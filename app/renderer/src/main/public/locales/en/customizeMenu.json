@@ -14,6 +14,7 @@
     "editMenuName": "Edit Menu Name",
     "emptyMenuDetected": "Empty menu detected",
     "emptyMenuWarning": "There are {emptyMenuLength} menu items that are empty. Empty menus will not {tip}. Do you still want to continue {tip}?",
+    "unnamedMenuPrefix": "Unnamed",
     "SecondMenu": {
       "unnamedMenu1": "Unnamed1 (Menu name is recommended to be 4–16 English characters for best results)",
       "deleteMenuConfirm": "Do you want to delete this menu?",

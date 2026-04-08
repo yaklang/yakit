@@ -26,6 +26,7 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
 import {getRemoteValue, setRemoteValue} from "@/utils/kv"
 import {NotepadRemoteGV} from "@/enums/notepad"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 const ModifyNotepadOnline = React.lazy(() => import("./modifyNotepadOnline/ModifyNotepadOnline"))
 const ModifyNotepadLocal = React.lazy(() => import("./modifyNotepadLocal/ModifyNotepadLocal"))
@@ -45,12 +46,12 @@ export default ModifyNotepad
 const ModifyNotepadContentTab: YakitTabsProps[] = [
     {
         icon: <OutlineListTwoIcon />,
-        label: "列表",
+        label: "ModifyNotepad.list",
         value: "list"
     },
     {
         icon: <OutlineListOneIcon />,
-        label: "目录",
+        label: "ModifyNotepad.catalogue",
         value: "catalogue"
     }
 ]
@@ -58,6 +59,7 @@ const ModifyNotepadContentTab: YakitTabsProps[] = [
 export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.memo(
     forwardRef((props, ref) => {
         const {tabName, spinning, listDom} = props
+        const {t, i18n} = useI18nNamespaces(["notepad", "yakitUi"])
         //#region 目录
         const [catalogue, setCatalogue] = useState<MilkdownCatalogueProps[]>([])
         const [excludeExpandedKeys, setExcludeExpandedKeys] = useState<string[]>([])
@@ -152,11 +154,13 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                             firstNode={
                                 <div className={styles["notepad-tab-body"]}>
                                     <YakitSideTab
+                                        key={i18n.language}
                                         yakitTabs={ModifyNotepadContentTab}
                                         activeKey={activeKey}
                                         onActiveKey={onActiveKey}
                                         show={show}
                                         setShow={setShow}
+                                        t={t}
                                     />
                                     <div className={styles["notepad-tab-content"]}>
                                         {activeKey === "catalogue" && (
@@ -180,7 +184,7 @@ export const ModifyNotepadContent: React.FC<ModifyNotepadContentProps> = React.m
                                                         )}
                                                     />
                                                 ) : (
-                                                    <YakitEmpty style={{paddingTop: 48}} title='暂无数据' />
+                                                    <YakitEmpty style={{paddingTop: 48}} title={t("YakitEmpty.noData")} />
                                                 )}
                                             </>
                                         )}

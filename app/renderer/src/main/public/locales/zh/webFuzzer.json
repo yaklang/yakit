@@ -454,7 +454,7 @@
     "payload_test_result": "字典管理测试结果",
     "total": "总量：",
     "tag_add_success": "标签添加成功",
-    "description": "描述{colon}",
+    "description": "描述: ",
     "example": "示例：",
     "parameter_type_info": "参数类型信息：",
     "parameter_name": "参数名",
@@ -644,7 +644,8 @@
     "add_node": "添加节点",
     "force_stop": "强制停止",
     "config": "配置",
-    "select_webfuzzer_with_sequence_tip": "请选择 Web Fuzzer（如需使用序列，请将其他标签页拖入该分组）"
+    "select_webfuzzer_with_sequence_tip": "请选择 Web Fuzzer（如需使用序列，请将其他标签页拖入该分组）",
+    "pleaseSendMultipleRequestsBeforeApply": "请发送多个请求包后再应用"
   },
   "FuzzerConcurrency": {
     "add_node": "添加",

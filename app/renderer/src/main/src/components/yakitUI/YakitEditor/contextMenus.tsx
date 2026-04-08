@@ -15,11 +15,12 @@ import {getClipboardText, setClipboardText} from "@/utils/clipboard"
 import {getGlobalShortcutKeyEvents, GlobalShortcutKey} from "@/utils/globalShortcutKey/events/global"
 import {YakEditorOptionShortcutKey} from "@/utils/globalShortcutKey/events/page/yakEditor"
 import {YakParamProps} from "@/pages/plugins/pluginsType"
+import { TFunction } from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
 /** @name 基础菜单组配置信息 */
-export const baseMenuLists: (t: (text: string) => string) => OtherMenuListProps = (t) => {
+export const baseMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
     return {
         fontSize: {
             menu: [
@@ -103,7 +104,7 @@ interface MutateHTTPRequestParams {
 }
 
 /** @name 编码模块子菜单 */
-const codeSubmenu: (t: (text: string) => string) => {key: string; label: string}[] = (t) => {
+const codeSubmenu: (t: TFunction) => {key: string; label: string}[] = (t) => {
     return [
         {key: "double-urlencode", label: t("YakitEditor.doubleUrlEncode")},
         {key: "base64-url-encode", label: t("YakitEditor.base64ThenUrlEncode")},
@@ -116,7 +117,7 @@ const codeSubmenu: (t: (text: string) => string) => {key: string; label: string}
     ]
 }
 /** @name 解码模块子菜单 */
-const decodeSubmenu: (t: (text: string) => string) => {key: string; label: string}[] = (t) => {
+const decodeSubmenu: (t: TFunction) => {key: string; label: string}[] = (t) => {
     return [
         {key: "url-base64-decode", label: t("YakitEditor.urlThenBase64Decode")},
         {key: "base64-decode", label: t("YakitEditor.base64Decode")},
@@ -128,7 +129,7 @@ const decodeSubmenu: (t: (text: string) => string) => {key: string; label: strin
     ]
 }
 /** @name HTTP数据包变形模块子菜单 */
-const httpSubmenu: (t: (text: string) => string) => {
+const httpSubmenu: (t: TFunction) => {
     key: string
     label: string
     params?: MutateHTTPRequestParams
@@ -184,7 +185,7 @@ const httpSubmenu: (t: (text: string) => string) => {
 }
 /** @name 内置菜单组配置信息 */
 
-export const extraMenuLists: (t: (text: string) => string) => OtherMenuListProps = (t) => {
+export const extraMenuLists: (t: TFunction) => OtherMenuListProps = (t) => {
     return {
         code: {
             menu: [
@@ -322,7 +323,7 @@ export const extraMenuLists: (t: (text: string) => string) => OtherMenuListProps
 const execCodec = async (
     typeStr: string,
     text: string,
-    t: (text: string, vars?: object) => string,
+    t: TFunction,
     noPrompt?: boolean,
     replaceEditor?: YakitIMonacoEditor,
     clear?: boolean,
@@ -382,7 +383,7 @@ const execCodec = async (
             }
         })
         .catch((e: any) => {
-            failed(`CODEC[${typeStr}] ${t("YakitNotification.executeFailed", {colon: true})}${e}`)
+            failed(`CODEC[${typeStr}] ${t("YakitNotification.executeFailed", {error: e + ""})}`)
         })
 }
 

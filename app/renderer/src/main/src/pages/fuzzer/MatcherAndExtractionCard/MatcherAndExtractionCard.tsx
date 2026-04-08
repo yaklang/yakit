@@ -70,7 +70,7 @@ import {useMenuHeight} from "@/store/menuHeight"
 import {TableCellToColorTag} from "@/components/TableVirtualResize/utils"
 import {openPacketNewWindow} from "@/utils/openWebsite"
 import {useCampare} from "@/hook/useCompare/useCompare"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {Trans} from "react-i18next"
 import i18n from "@/i18n/i18n"
 import { YakitSegmented } from "@/components/yakitUI/YakitSegmented/YakitSegmented"
@@ -101,7 +101,7 @@ const InstructionsWithSearch: React.FC = React.memo(() => {
 
     const highlightText = useMemoizedFn((keyword: string) => {
         if (!contentRef.current || !originalHtmlRef.current) return
-        
+
         if (!keyword.trim()) {
             contentRef.current.innerHTML = originalHtmlRef.current
             return
@@ -109,9 +109,9 @@ const InstructionsWithSearch: React.FC = React.memo(() => {
 
         const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
         const regex = new RegExp(`(${escaped})(?![^<]*>)`, "gi")
-        
+
         contentRef.current.innerHTML = originalHtmlRef.current.replace(regex, '<mark data-search-highlight="true">$1</mark>')
-        
+
         // 滚动到第一个匹配项
         const firstMark = contentRef.current.querySelector("mark[data-search-highlight]")
         firstMark?.scrollIntoView({behavior: "smooth", block: "center"})
@@ -205,7 +205,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         const [executeLoading, setExecuteLoading] = useState<boolean>(false)
 
         const contentRef = useRef<any>(null)
-        
+
         const onShowUseInstructions = useMemoizedFn(() => {
             const m = showYakitModal({
                 title: t("MatcherAndExtraction.matchersAndExtractorsUseInstructions"),
@@ -551,8 +551,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
                                             : extractor.extractorList.length
                                 }}
                             />
-                            <YakitButton 
-                                type="text" 
+                            <YakitButton
+                                type="text"
                                 onClick={onShowUseInstructions}
                             >
                                     {t("MatcherAndExtraction.useInstructions")}
@@ -1375,7 +1375,7 @@ export const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) =>
         </div>
     )
 })
-const colors: (t: (text: string) => string) => {color: string; title: string}[] = (t) => {
+const colors: (t: TFunction) => {color: string; title: string}[] = (t) => {
     return [
         {
             color: TableCellToColorTag["RED"],

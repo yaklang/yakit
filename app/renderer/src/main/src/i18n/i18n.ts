@@ -18,7 +18,9 @@ i18n.use(HttpBackend)
             "home",
             "history",
             "webFuzzer",
-            "aiAgent"
+            "aiAgent",
+            "setting",
+            "yakChat"
         ], // 这几个需要预加载
         defaultNS: "",
         interpolation: {

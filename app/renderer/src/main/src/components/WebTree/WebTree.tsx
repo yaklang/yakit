@@ -139,7 +139,7 @@ export const WebTree: React.FC<WebTreeProp> = React.forwardRef((props, ref) => {
                 }
             ).catch((error) => {
                 setTreeLoading(false)
-                yakitFailed(`${t("YakitNotification.loadFailed", {colon: true})}${error}`)
+                yakitFailed(t("YakitNotification.loadFailed", {error: error + ""}))
             })
         }, 30)
     })

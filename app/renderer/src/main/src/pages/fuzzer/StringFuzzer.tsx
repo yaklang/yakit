@@ -294,7 +294,7 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
                                                     {item.Name}
                                                 </div>
                                                 <div className={styles["stringFuzzer-popover-cont-desc"]}>
-                                                    {t("StringFuzzer.description", {colon: true})}{item.Description}
+                                                    {t("StringFuzzer.description")}{item.Description}
                                                 </div>
                                                 <div className={styles["stringFuzzer-popover-cont-example"]}>
                                                     {t("StringFuzzer.example")}{item.Examples.join(", ")}
@@ -306,7 +306,7 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
                                                             <tr>
                                                                 <th>{t("StringFuzzer.parameter_name")}</th>
                                                                 <th>{t("StringFuzzer.default_value")}</th>
-                                                                <th>{t("StringFuzzer.description", {colon: false})}</th>
+                                                                <th>{t("StringFuzzer.description")}</th>
                                                                 <th>{t("StringFuzzer.optional_parameter")}</th>
                                                                 <th>{t("StringFuzzer.array_parameter")}</th>
                                                                 <th>{t("StringFuzzer.delimiter")}</th>
@@ -371,10 +371,10 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
                         </YakitSpin>
                     </div>
                 <div className={styles["stringFuzzer-right-btns"]}>
-                {loading ? 
+                {loading ?
                         <YakitButton type="primary" onClick={handleCancel}>
                             {t("StringFuzzer.cancel")}
-                        </YakitButton>: 
+                        </YakitButton>:
                     <>
                         <YakitButton type='outline2' onClick={onSubmit}>
                             {t("StringFuzzer.viewGeneratedPayload")}

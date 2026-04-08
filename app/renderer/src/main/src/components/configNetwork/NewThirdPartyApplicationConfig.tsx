@@ -32,6 +32,8 @@ import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
 import { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
 import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
 import classNames from 'classnames'
+import i18n from '@/i18n/i18n'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -97,14 +99,14 @@ const defaultFormItems: ThirdPartyAppConfigItemTemplate[] = [
     Name: 'user_identifier',
     Required: false,
     Type: 'string',
-    Verbose: '用户信息',
+    Verbose: i18n.language === 'zh' ? '用户信息' : 'User Info',
   },
 ]
 
 const aiModelTypeOptions: SelectOptionsProps[] = [
-  { label: '高质模型:执行复杂任务', value: AIModelTypeEnum.TierIntelligent },
-  { label: '轻量模型:用于执行简单任务和会话', value: AIModelTypeEnum.TierLightweight },
-  { label: '视觉模式:用于识别图片等,生成知识库和任务执行都会用到', value: AIModelTypeEnum.TierVision },
+  { label: i18n.language === 'zh' ? '高质模型:执行复杂任务' : 'High quality model: executes complex tasks', value: AIModelTypeEnum.TierIntelligent },
+  { label: i18n.language === 'zh' ? '轻量模型:用于执行简单任务和会话' : 'Lightweight model: executes simple tasks and conversations', value: AIModelTypeEnum.TierLightweight },
+  { label: i18n.language === 'zh' ? '视觉模式:用于识别图片等,生成知识库和任务执行都会用到' : 'Vision model: used for image recognition and knowledge base/task execution', value: AIModelTypeEnum.TierVision },
 ]
 const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({ label: item, value: item }))
 const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
@@ -116,7 +118,7 @@ const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
   Extra: `${JSON.stringify({
     options: aiModelTypeOptions,
   })}`,
-  Verbose: '模型类型',
+  Verbose: i18n.language === 'zh' ? '模型类型' : 'Model Type',
 }
 
 const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
@@ -148,6 +150,7 @@ interface NewThirdPartyApplicationConfigBaseProps
 export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicationConfigBaseProps> = React.memo(
   forwardRef((props, ref) => {
     const { formValues = defautFormValues, disabledType = false, canAddType = true, FormProps, footer } = props
+    const {t} = useI18nNamespaces(["configNetwork", "yakitUi"])
     const [form] = Form.useForm()
     const typeVal = Form.useWatch('Type', form)
     const typeValRef = useRef<string>(typeVal)
@@ -212,7 +215,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
               ? [{ label: name, value: name }, ...modalNamelist]
               : modalNamelist
             setModelNameAllOptions(newOptions)
-            yakitNotify('success', '获取成功')
+            yakitNotify('success', t("ConfigNetworkPage.fetchSuccess"))
           })
           .catch((error) => {
             if (!execModelNameOption.current) return
@@ -264,7 +267,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
     })
     const renderSingleFormItem = (item: ThirdPartyAppConfigItemTemplate, modelType?: string) => {
       const formProps = {
-        rules: [{ required: item.Required, message: `请填写${item.Verbose}` }],
+        rules: [{ required: item.Required, message: t("ConfigNetworkPage.pleaseFill", {name: item.Verbose})}],
         label: item.Verbose,
         name: item.Name,
         tooltip: item.Desc
@@ -295,7 +298,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                 {...formProps}
                 help={
                   <div style={{ height: 30 }}>
-                    如无法自动获取，请
+                    {t("ConfigNetworkPage.ifCannotAutoFetch")}
                     <YakitButton
                       type="text"
                       onClick={() => {
@@ -304,9 +307,9 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                       }}
                       style={{ padding: 0, fontSize: 14 }}
                     >
-                      点击刷新
+                      {t("ConfigNetworkPage.clickRefresh")}
                     </YakitButton>
-                    重新获取
+                    {t("ConfigNetworkPage.refetch")}
                   </div>
                 }
               >
@@ -397,8 +400,8 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
           className={styles['config-form']}
         >
           <Form.Item
-            label={isMemfit() ? '厂商' : '类型'}
-            rules={[{ required: true, message: `请${canAddType ? '填写' : '选择'}类型` }]}
+            label={isMemfit() ? t("ConfigNetworkPage.vendor") : t("ConfigNetworkPage.type")}
+            rules={[{ required: true, message: t("ConfigNetworkPage.pleaseEnterOrSelectType", {mode: canAddType ? t("ConfigNetworkPage.enter") : t("ConfigNetworkPage.select")}) }]}
             name={'Type'}
           >
             {canAddType ? (
@@ -453,7 +456,7 @@ const defaultAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     Extra: `${JSON.stringify({
       options: aiAPITypeOptions,
     })}`,
-    Verbose: 'API类型',
+    Verbose: i18n.language === 'zh' ? 'API类型' : "API type",
   },
   {
     DefaultValue: 'memfit-light-free',
@@ -462,7 +465,7 @@ const defaultAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     Name: 'model',
     Required: true,
     Type: 'list',
-    Verbose: '模型名称',
+    Verbose: i18n.language === 'zh' ? '模型名称' : "Model name",
   },
 ]
 
@@ -913,6 +916,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
 
 const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> = React.memo((props) => {
   const { onCancel, onAdd, ...rest } = props
+  const {t} = useI18nNamespaces(["configNetwork", "yakitUi"])
+
   const formRef = useRef<{ form: FormInstance }>(null)
   return (
     <NewThirdPartyApplicationConfigBase
@@ -921,7 +926,7 @@ const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> 
       footer={
         <>
           <YakitButton size="large" type="outline2" onClick={onCancel}>
-            取消
+            {t("YakitButton.cancel")}
           </YakitButton>
           <YakitButton
             size="large"
@@ -938,7 +943,7 @@ const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> 
               })
             }}
           >
-            确定添加
+            {t("ConfigNetworkPage.confirmAdd")}
           </YakitButton>
         </>
       }

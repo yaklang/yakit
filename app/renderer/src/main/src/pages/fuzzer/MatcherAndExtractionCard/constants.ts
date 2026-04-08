@@ -1,8 +1,9 @@
 import {TableCellToColorTag} from "@/components/TableVirtualResize/utils"
 import {HTTPResponseExtractor, HTTPResponseMatcher} from "./MatcherAndExtractionCardType"
+import { TFunction } from "@/i18n/useI18nNamespaces"
 
 /**@name 过滤器模式 */
-export const filterModeOptions = (t: (text: string) => string) => {
+export const filterModeOptions = (t: TFunction) => {
     return [
         {
             value: "drop",
@@ -74,7 +75,7 @@ export const defaultExtractorItem: HTTPResponseExtractor = {
     XPathAttribute: ""
 }
 
-export const matcherTypeList = (t: (text: string) => string) => {
+export const matcherTypeList = (t: TFunction) => {
     return [
         {label: t("MatcherCollapse.keyword"), value: "word"},
         {label: t("MatcherCollapse.regex"), value: "regex"},
@@ -84,7 +85,7 @@ export const matcherTypeList = (t: (text: string) => string) => {
     ]
 }
 
-export const extractorTypeList = (t: (text: string) => string) => {
+export const extractorTypeList = (t: TFunction) => {
     return [
         {label: t("ExtractorItem.regex"), value: "regex"},
         {label: "XPath", value: "xpath"},
@@ -94,7 +95,7 @@ export const extractorTypeList = (t: (text: string) => string) => {
     ]
 }
 
-export const ScopeList = (t: (text: string) => string) => {
+export const ScopeList = (t: TFunction) => {
     return [
         {label: t("MatcherItem.request_url"), value: "request_url"},
         {label: t("MatcherItem.request_header"), value: "request_header"},
@@ -573,7 +574,7 @@ extractors:
     regex:
       - 'username=(\\w+)'
     group: 1
-  
+
   - name: password
     type: regex
     scope: request_body
@@ -600,7 +601,7 @@ http:
         regex:
           - '"token":"([^"]+)"'
         group: 1
-  
+
   # 第二步：使用提取的 token 访问 API
   - method: GET
     path:
@@ -625,7 +626,7 @@ extractors:
     scope: body
     json:
       - '.data.user.name'
-  
+
   - name: user_email
     type: json
     scope: body

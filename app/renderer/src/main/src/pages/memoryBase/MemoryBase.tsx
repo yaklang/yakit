@@ -71,6 +71,7 @@ import {yakitNotify} from "@/utils/notification"
 import {NoPromptHint} from "../pluginHub/utilsUI/UtilsTemplate"
 import {RemoteAIAgentGV} from "@/enums/aiAgent"
 import {ParamsTProps} from "@/hook/useVirtualTableHook/useVirtualTableHookType"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 const {YakitPanel} = YakitCollapse
 
@@ -174,6 +175,7 @@ const rateRemoveList: RateRemoveListItem[] = [
 ]
 const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
     const {queryParams, setQueryParams} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi"])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [tagShow, setTagShow] = useState<boolean>(false)
     const [allCheck, setAllCheck] = useState<boolean>(false)
@@ -636,7 +638,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
                                     </YakitPopconfirm>
                                     <YakitDropdownMenu
                                         menu={{
-                                            data: batchRefreshMenuData,
+                                            data: batchRefreshMenuData(t),
                                             onClick: ({key}) => {
                                                 onRefreshMenuSelect(key)
                                             }

@@ -117,7 +117,7 @@ import {JumpToAuditEditorProps} from "@/pages/yakRunnerAuditCode/BottomEditorDet
 import {Selection} from "@/pages/yakRunnerAuditCode/RunnerTabs/RunnerTabsType"
 import {getNameByPath} from "@/pages/yakRunner/utils"
 import {shallow} from "zustand/shallow"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {SafeMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
 import {HTTPFlow} from "@/components/HTTPFlowTable/HTTPFlowTable"
 
@@ -131,7 +131,7 @@ export const isShowCodeScanDetail = (selectItem: Risk) => {
     return false
 }
 
-const batchExportMenuData: (t: (text: string) => string) => YakitMenuItemProps[] = (t) => {
+const batchExportMenuData: (t: TFunction) => YakitMenuItemProps[] = (t) => {
     return [
         {
             key: "export-csv",
@@ -143,7 +143,7 @@ const batchExportMenuData: (t: (text: string) => string) => YakitMenuItemProps[]
         }
     ]
 }
-const batchRefreshMenuData: (t: (text: string) => string) => YakitMenuItemProps[] = (t) => {
+const batchRefreshMenuData: (t: TFunction) => YakitMenuItemProps[] = (t) => {
     return [
         {
             key: "noResetRefresh",
@@ -183,7 +183,7 @@ export const SeverityMapTag = [
     }
 ]
 /**漏洞风险导出字段及其属性 */
-const exportFields = (t: (text: string) => string) => {
+const exportFields = (t: TFunction) => {
     return [
         {
             label: t("YakitRiskTable.title"),
@@ -257,7 +257,7 @@ const exportFields = (t: (text: string) => string) => {
         }
     ]
 }
-const yakitRiskCellStyle = (t: (text: string) => string) => {
+const yakitRiskCellStyle = (t: TFunction) => {
     return {
         [t("YakitTag.info")]: {
             font: {
@@ -1517,7 +1517,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
         </div>
     )
 })
-const defaultTags = (t: (text: string) => string) => {
+const defaultTags = (t: TFunction) => {
     return [
         {
             label: t("YakitRiskSelectTag.false_positive"),

@@ -1,0 +1,76 @@
+{
+  "LocalRuleGroupList": {
+    "title": "Rule Management",
+    "searchPlaceholder": "Enter group name",
+    "uploadTitle": "Upload Tips",
+    "uploadContent": "If a rule library with the same name exists, it will be overwritten.",
+    "uploadConfirm": "Confirm Upload",
+    "renameFailed": "Failed to rename local rule group"
+  },
+  "EditRuleDrawer": {
+    "formMissing": "Form data not found. Please close the dialog and try again.",
+    "saveAndCloseConfirm": "Do you want to save the rule and close the dialog?",
+    "formRequired": "Please complete all required rule fields",
+    "riskTab": "Risks and Vulnerabilities",
+    "logTab": "Logs",
+    "auditResultTab": "Audit Results",
+    "rule": " Rule",
+    "auditDetail": "Audit Details",
+    "relatedHoles": "Related Vulnerabilities",
+    "ruleContent": "Rule Content",
+    "executionResult": "Execution Result",
+    "basicInfo": "Basic Information",
+    "collapseBasicInfo": "Collapse Basic Information",
+    "ruleName": "Rule Name",
+    "ruleNameRequired": "Rule name is required",
+    "enterRuleName": "Enter rule name",
+    "language": "Language",
+    "languageRequired": "Language is required",
+    "groupName": "Group",
+    "selectGroup": "Select a group",
+    "description": "Description",
+    "expandBasicInfo": "Expand Basic Information",
+    "executionProgress": "Execution Progress",
+    "autoDetect": "Auto Detect",
+    "projectName": "Project Name",
+    "selectProjectToDebug": "Select a project to debug",
+    "syntaxflowCheck": "SyntaxFlow Rule Check",
+    "scoreHint1": "Basic compilation test to verify the SyntaxFlow rule syntax is valid and compiles.",
+    "scoreHint2": "Check whether the description contains desc and solution fields.",
+    "scoreHint3": "Check whether the rule contains alert statements that produce results.",
+    "scoreHint4": "Check whether the test cases can pass rule validation; positive cases should alert and negative cases should not."
+  },
+  "UpdateRuleToGroup": {
+    "groupCount": "Rule Group {count}",
+    "hint": "Checked items will be added to the group; unchecked items will be removed. Create a new group by typing its name and pressing Enter.",
+    "addGroup": "Add group \"{search}\"",
+    "addGroupButton": "Add Group"
+  },
+  "RuleDebugAuditDetail": {
+    "readFailed": "Read failed",
+    "openError": "Open failed: {error}",
+    "selectLeft": "Please select an item on the left"
+  },
+  "RuleDebugAuditList": {
+    "title": "Audit Results List"
+  },
+  "RuleUploadAndDownloadModal": {
+    "streamError": "Error: {error}",
+    "ruleUpload": "Rule Upload",
+    "ruleDownload": "Rule Download",
+    "progress": "Progress {percent}%"
+  },
+  "OnlineRuleGroupList": {
+    "noPermissionTitle": "No viewing permission",
+    "noPermissionDesc": "Log in to view",
+    "loginNow": "Log In",
+    "searchPlaceholder": "Enter group name",
+    "downloadTitle": "Download Tips",
+    "downloadContent": "If the rule ID is the same, it will be overwritten. Confirm download?"
+  },
+  "RelatedHoleList": {
+    "type": "Type",
+    "description": "Vulnerability Description",
+    "solution": "Fix Suggestion"
+  }
+}

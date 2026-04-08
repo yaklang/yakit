@@ -801,7 +801,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             <div style={{height: "calc(100% - 30px)", marginTop: '-1px'}}>
                 {curBottomTab === "packet" && initRenderTabCont["packet"] && (
                     <>
-                        {clickHttpFlow?.Id ? 
+                        {clickHttpFlow?.Id ?
                             <HTTPFlowDetailMini
                                 noHeader={true}
                                 id={clickHttpFlow.Id}
@@ -810,7 +810,7 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                                 showEditTag={false}
                                 showJumpTree={false}
                             />
-                         : 
+                         :
                             <YakitEmpty title={t("AnalysisMain.select_traffic_to_view_packet")} />
                         }
                     </>
@@ -1667,7 +1667,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                     }
                 }
             } catch (error) {
-                yakitNotify("error", t("YakitNotification.search_failed", {colon: true}) + error)
+                yakitNotify("error", t("YakitNotification.search_failed", {error: error + ""}))
             }
         },
         {wait: 300}
@@ -1685,7 +1685,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
                 }
             })
                 .catch((e) => {
-                    yakitNotify("error", t("YakitNotification.search_failed", {colon: true}) + e)
+                    yakitNotify("error", t("YakitNotification.search_failed", {error: e + ""}))
                 })
                 .finally(() => {
                     setTimeout(() => {

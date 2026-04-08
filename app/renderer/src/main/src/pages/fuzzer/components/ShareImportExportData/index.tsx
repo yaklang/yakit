@@ -525,7 +525,7 @@ export const ShareModal: React.FC<ShareModalProps> = React.memo((props) => {
                     })
                 })
                 .catch((err) => {
-                    yakitNotify("error", t("YakitNotification.shareFailed", {colon: true}) + err)
+                    yakitNotify("error", t("YakitNotification.shareFailed", {error: err + ""}))
                 })
                 .finally(() => {
                     setTimeout(() => {

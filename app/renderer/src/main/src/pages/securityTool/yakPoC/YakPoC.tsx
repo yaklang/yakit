@@ -79,7 +79,7 @@ import {HybridScanControlAfterRequest} from "@/models/HybridScan"
 import {getRemoteHttpSettingGV} from "@/utils/envfile"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const HybridScanTaskListDrawer = React.lazy(
     () => import("@/pages/plugins/pluginBatchExecutor/HybridScanTaskListDrawer")
@@ -1052,11 +1052,11 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
                             options={[
                                 {
                                     value: "plugin",
-                                    label: "已选插件"
+                                    label: t("YakPoCExecuteContent.selectedPlugin")
                                 },
                                 {
                                     value: "log",
-                                    label: "插件日志",
+                                    label: t("YakPoCExecuteContent.pluginLog"),
                                     disabled: pluginLogDisabled
                                 }
                             ]}
@@ -1090,7 +1090,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
             <div className={styles["yak-poc-execute-wrapper"]}>
                 <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
                     <div className={styles["yak-poc-executor-title"]}>
-                        <span className={styles["yak-poc-executor-title-text"]}>插件执行</span>
+                        <span className={styles["yak-poc-executor-title-text"]}>{t("YakPoCExecuteContent.pluginExecute")}</span>
                     </div>
                     <div className={styles["yak-poc-executor-btn"]}>
                         {progressList.length === 1 && (
@@ -1181,7 +1181,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
  * @param {number} endTime
  * @returns {TimeConsumingProps}
  */
-const intervalTime = (startTime: number, endTime: number) => {
+const intervalTime = (startTime: number, endTime: number, t: TFunction) => {
     const startMoment = moment(startTime)
     const endMoment = moment(endTime)
 
@@ -1195,7 +1195,7 @@ const intervalTime = (startTime: number, endTime: number) => {
     if (minutes > 60) {
         return {
             type: "danger",
-            value: "超时"
+            value: t("PluginExecuteLog.timeout")
         }
     }
     if (minutes > 0) {
@@ -1235,7 +1235,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
         const logs: PluginLogProps[] = pluginExecuteLog
             .map((item) => {
                 const newTime = Date.now()
-                const timeConsuming: TimeConsumingProps = intervalTime(item.startTime, newTime)
+                const timeConsuming: TimeConsumingProps = intervalTime(item.startTime, newTime, t)
                 return {...item, timeConsuming}
             })
             .sort((a, b) => compareAsc(a, b, "Index"))

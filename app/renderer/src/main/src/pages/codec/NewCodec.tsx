@@ -102,7 +102,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
     const [outputMenuOpen, setOutputMenuOpen] = useState<boolean>(false)
     const [outputShowType, setOutputShowType] = useState<"editor" | "hex">("editor")
     // hex
-    const [showData, setShowData] = useState<Uint8Array>(new Buffer([]))
+    const [showData, setShowData] = useState<Uint8Array>(new Uint8Array([]))
     const [nonce, setNonce] = useState<number>(0)
 
     const editorBoxRef = useRef<HTMLDivElement>(null)
@@ -449,7 +449,7 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                                                 }
                                             }}
                                         >
-                                            hex原文
+                                            {t("NewCodecRightEditorBox.hexRawText")}
                                         </YakitCheckableTag>
                                     )}
                                     {outPutObj.hidden && (

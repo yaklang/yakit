@@ -166,7 +166,7 @@ export const ExportExcel: React.FC<ExportExcelProps> = (props) => {
                 }
             })
             .catch((e: any) => {
-                failed(t("YakitNotification.exportFailed", {colon: true}) + `${e}`)
+                failed(t("YakitNotification.exportFailed", {error: `${e}`}))
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })

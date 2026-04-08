@@ -67,6 +67,6 @@
     "localPlugin": "local Plugin"
   },
   "PluginHasParamsDrawer": {
-    "parameter_Settings": "Parameter Settings{colon}"
+    "parameter_Settings": "Parameter Settings: "
   }
 }

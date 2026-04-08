@@ -1,4 +1,13 @@
 {
+  "ScreenRecorderPage": {
+    "notInstalled": "Not installed",
+    "installRecorder": "Install Screen Recorder",
+    "installing": "Screen recorder is installing...",
+    "installFailed": "IsScrecorderReady failed: {error}",
+    "installHint": "Click 'Install Screen Recorder' to start recording after the tool is installed",
+    "timeout": "connection timeout",
+    "downloaded": "Downloaded"
+  },
   "ScrecorderModal": {
     "recommended": "Recommended",
     "speed": "Speed",
@@ -29,5 +38,10 @@
     "noImage": "No Image",
     "openDirectory": "Click to open video directory",
     "deletePopconfirm": "Deleting the recording will also delete the local recording file"
+  },
+  "ReactPlayerVideo": {
+    "fileNotPlayable": "This video file cannot be played",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

@@ -37,14 +37,15 @@ import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox
 import {DocumentCollect} from "./DocumentCollect/DocumentCollect"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import { JSONParseLog } from "@/utils/tool"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 export const YakRunnerAuditHoleTab: YakitTabsProps[] = [
     {
-        label: "统计",
+        label: "YakRunnerAuditHole.statisticTab",
         value: "statistic"
     },
     {
-        label: "文件汇总",
+        label: "YakRunnerAuditHole.documentCollectTab",
         value: "document-collect"
     }
 ]
@@ -158,6 +159,7 @@ export const YakRunnerAuditHole: React.FC<YakRunnerAuditHoleProps> = (props) => 
 
 const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     const {inViewport, onOperateSide, query, setQuery} = props
+    const {t} = useI18nNamespaces(["yakRunnerAuditHole", "yakitUi"])
     const [programList, setProgramList] = useState<FieldGroup[]>([])
     const [levelList, setLevelList] = useState<FieldName[]>([])
     const [typeList, setTypeList] = useState<FieldName[]>([])
@@ -229,7 +231,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
     return (
         <div className={classNames(styles["hole-query"])}>
             <div className={styles["hole-query-heard"]}>
-                <span>高级查询</span>
+                <span>{t("YakRunnerAuditHole.advancedSearch")}</span>
             </div>
             <div className={styles["hole-query-body"]}>
                 <ProgramList
@@ -250,7 +252,7 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
                     data={typeList}
                     onSelect={(val) => onSelect(val, "RiskType")}
                 />
-                <div className={styles["to-end"]}>已经到底啦～</div>
+                <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>
             </div>
         </div>
     )
@@ -258,11 +260,12 @@ const HoleQuery: React.FC<HoleQueryProps> = React.memo((props) => {
 
 const ProgramList: React.FC<ProgramListProps> = React.memo((props) => {
     const {list, onSelect, selectList, onReset} = props
+    const {t} = useI18nNamespaces(["yakRunnerAuditHole", "yakitUi"])
 
     return (
         <div className={styles["program-list-body"]}>
             <div className={styles["program-list-heard"]}>
-                <div className={styles["program-list-heard-title"]}>文件统计</div>
+                <div className={styles["program-list-heard-title"]}>{t("YakRunnerAuditHole.fileStatistics")}</div>
                 <YakitButton
                     type='text'
                     colors='danger'
@@ -270,7 +273,7 @@ const ProgramList: React.FC<ProgramListProps> = React.memo((props) => {
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {t("YakitButton.reset")}
                 </YakitButton>
             </div>
             <div className={styles["program-list-content"]}>
@@ -317,6 +320,7 @@ const ProgramListItem: React.FC<ProgramListItemProps> = React.memo((props) => {
 /**漏洞等级 */
 const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props) => {
     const {data, onSelect, selectList} = props
+    const {t} = useI18nNamespaces(["yakRunnerAuditHole", "yakitUi"])
     const pieRef = useRef<VulnerabilityLevelPieRefProps>({onReset: () => {}})
     const onReset = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -331,7 +335,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
     return (
         <div className={styles["vulnerability-level"]} ref={levelRef}>
             <div className={styles["vulnerability-level-heard"]}>
-                <div className={styles["vulnerability-level-heard-title"]}>漏洞等级</div>
+                <div className={styles["vulnerability-level-heard-title"]}>{t("YakRunnerAuditHole.vulnerabilityLevel")}</div>
                 <YakitButton
                     type='text'
                     colors='danger'
@@ -339,7 +343,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {t("YakitButton.reset")}
                 </YakitButton>
             </div>
             <VulnerabilityLevelPie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />
@@ -349,6 +353,7 @@ const VulnerabilityLevel: React.FC<VulnerabilityLevelProps> = React.memo((props)
 
 const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) => {
     const {data, onSelect, selectList} = props
+    const {t} = useI18nNamespaces(["yakRunnerAuditHole", "yakitUi"])
     const pieRef = useRef<VulnerabilityTypePieRefProps>({onReset: () => {}})
     const onReset = useMemoizedFn((e) => {
         e.stopPropagation()
@@ -364,8 +369,8 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
         <div className={styles["vulnerability-type"]} ref={typeRef}>
             <div className={styles["vulnerability-type-heard"]}>
                 <div className={styles["vulnerability-type-heard-title"]}>
-                    漏洞类型 Top 10
-                    <Tooltip title='手动选择所有漏洞类型后，点击重置即可查看所有数据'>
+                    {t("YakRunnerAuditHole.vulnerabilityTypeTop10")}
+                    <Tooltip title={t("YakRunnerAuditHole.vulnerabilityTypeResetTip")}>
                         <OutlineInformationcircleIcon className={styles["info-icon"]} />
                     </Tooltip>
                 </div>
@@ -376,7 +381,7 @@ const VulnerabilityType: React.FC<VulnerabilityTypeProps> = React.memo((props) =
                     onClick={onReset}
                     size='small'
                 >
-                    重置
+                    {t("YakitButton.reset")}
                 </YakitButton>
             </div>
             <VulnerabilityTypePie ref={pieRef} selectList={selectList} list={data} setSelectList={onSelect} />

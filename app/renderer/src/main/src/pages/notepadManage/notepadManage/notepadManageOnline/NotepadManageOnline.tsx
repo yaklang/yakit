@@ -295,7 +295,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                 setBatchDownInfo(res)
             })
             .catch((err) => {
-                failed(`${t("YakitNotification.downloadFailed", {colon: true})}${err?.message || err}`)
+                failed(t("YakitNotification.downloadFailed", {error: err?.message || err}))
             })
             .finally(() =>
                 setTimeout(() => {

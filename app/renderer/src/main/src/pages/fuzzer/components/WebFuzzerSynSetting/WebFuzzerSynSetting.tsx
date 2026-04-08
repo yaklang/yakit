@@ -13,9 +13,9 @@ import {YakitRoute} from "@/enums/yakitRoute"
 import {yakitNotify} from "@/utils/notification"
 import {AdvancedConfigValueProps} from "../../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
 import {toolDelInvalidKV} from "@/utils/tool"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
-const rangeList = (t: (text: string) => string) => {
+const rangeList = (t: TFunction) => {
     return [
         {
             value: "all",
@@ -27,7 +27,7 @@ const rangeList = (t: (text: string) => string) => {
         }
     ]
 }
-const types = (t: (text: string) => string) => {
+const types = (t: TFunction) => {
     return [
         {
             value: "config",

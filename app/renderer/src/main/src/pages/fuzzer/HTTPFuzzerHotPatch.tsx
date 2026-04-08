@@ -1196,7 +1196,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
             yakitNotify('success', t('YakitNotification.uploaded'))
           })
           .catch((error) => {
-            yakitNotify('error', t('YakitNotification.uploadFailed', { colon: true }) + error)
+            yakitNotify('error', t('YakitNotification.uploadFailed', { error: error + "" }))
           })
       })
       .catch(() => {})
@@ -1218,7 +1218,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
             yakitNotify('success', t('YakitNotification.downloaded'))
           })
           .catch((error) => {
-            yakitNotify('error', t('YakitNotification.downloadFailed', { colon: true }) + error)
+            yakitNotify('error', t('YakitNotification.downloadFailed', { error: error + "" }))
           })
       })
       .catch(() => {})

@@ -104,6 +104,7 @@ import {apiQuerySSAPrograms} from "../yakRunnerScanHistory/utils"
 import {MilkdownEditorLocal} from "@/components/milkdownEditorLocal/MilkdownEditorLocal"
 import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
 import { openAIForge } from "../yakRunnerAuditHole/YakitAuditHoleTable/utils"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 const {YakitPanel} = YakitCollapse
 
 const {ipcRenderer} = window.require("electron")
@@ -117,6 +118,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
     React.forwardRef((props, ref) => {
         const {isrefresh, onGroupChange, currentPageTabRouteKey, canUpload, userInfo, onRefreshOnlienRuleManagement} =
             props
+        const {t} = useI18nNamespaces(["ruleManagement", "yakitUi"])
 
         useImperativeHandle(ref, () => ({
             handleReset
@@ -196,7 +198,7 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
             (type: "modify" | "delete", info: SyntaxFlowGroup, newInfo?: SyntaxFlowGroup) => {
                 if (type === "modify") {
                     if (!newInfo) {
-                        yakitNotify("error", "修改本地规则组名称错误")
+                        yakitNotify("error", t("LocalRuleGroupList.renameFailed"))
                         return
                     }
                     setData((arr) => {
@@ -337,18 +339,18 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
             <div className={styles["rule-group-list"]}>
                 <div className={styles["list-header"]}>
                     <div className={styles["title-body"]}>
-                        规则管理 <YakitRoundCornerTag>{groupLength}</YakitRoundCornerTag>
+                        {t("LocalRuleGroupList.title")} <YakitRoundCornerTag>{groupLength}</YakitRoundCornerTag>
                     </div>
                     <div className={styles["header-extra"]}>
                         <YakitButton type='text' onClick={handleReset}>
-                            重置
+                            {t("YakitButton.reset")}
                         </YakitButton>
                         <YakitButton type='secondary2' icon={<OutlinePlusIcon />} onClick={handleAddGroup} />
                     </div>
                 </div>
 
                 <div className={styles["list-search-and-add"]}>
-                    <YakitInput.Search size='large' placeholder='请输入组名' onSearch={handleSearch} />
+                    <YakitInput.Search size='large' placeholder={t("LocalRuleGroupList.searchPlaceholder")} onSearch={handleSearch} />
 
                     {/* 新建规则组输入框 */}
                     <YakitInput
@@ -492,9 +494,9 @@ export const LocalRuleGroupList: React.FC<LocalRuleGroupListProps> = memo(
                     {/* 上传 */}
                     <YakitHint
                         visible={uploadInfoVisible}
-                        title='上传提示'
-                        content='如果存在同名规则库，会直接覆盖'
-                        okButtonText='确认上传'
+                        title={t("LocalRuleGroupList.uploadTitle")}
+                        content={t("LocalRuleGroupList.uploadContent")}
+                        okButtonText={t("LocalRuleGroupList.uploadConfirm")}
                         mask={true}
                         onOk={() => {
                             handleUpload()
@@ -556,6 +558,7 @@ export const cleanObject = <T extends Record<string, any>>(obj: T): Partial<Filt
 /** @name 新建|编辑规则抽屉 */
 export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
     const {getContainer, info, visible, onCallback} = props
+    const {t, i18n} = useI18nNamespaces(["ruleManagement", "yakitUi"])
     const alertMsgRef = useRef<{[key: string]: AlertMessage}>(info?.AlertMsg || {})
     const getContainerSize = useSize(getContainer)
     // 抽屉展示高度
@@ -568,7 +571,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
         const formData = handleGetFormData()
         if (!formData) {
-            yakitNotify("error", "未获取到表单信息，请关闭弹框重试!")
+            yakitNotify("error", t("EditRuleDrawer.formMissing"))
             return
         }
         if (isEdit) {
@@ -593,11 +596,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
         if (isModify) {
             Modal.confirm({
-                title: "温馨提示",
+                title: t("YakitModal.friendlyReminder"),
                 icon: <OutlineExclamationcircleIcon />,
-                content: "请问是否要保存规则并关闭弹框？",
-                okText: "保存",
-                cancelText: "不保存",
+                content: t("EditRuleDrawer.saveAndCloseConfirm"),
+                okText: t("YakitButton.save"),
+                cancelText: t("YakitButton.doNotSave"),
                 closable: true,
                 closeIcon: (
                     <div
@@ -743,11 +746,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             .then(() => {
                 const data = handleGetFormData()
                 if (!data) {
-                    yakitNotify("error", "未获取到表单信息，请关闭弹框重试!")
+                    yakitNotify("error", t("EditRuleDrawer.formMissing"))
                     return
                 }
                 if (!data.RuleName || !data.Language) {
-                    yakitNotify("error", "请填写完整规则必须信息")
+                    yakitNotify("error", t("EditRuleDrawer.formRequired"))
                     return
                 }
                 onSubmitApi(data)
@@ -854,14 +857,14 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         try {
             await form.validateFields()
             const data = handleGetFormData()
-            if (!data) {
-                yakitNotify("error", "未获取到表单信息，请关闭弹框重试!")
-                return
-            }
-            if (!data.RuleName || !data.Language) {
-                yakitNotify("error", "请填写完整规则必须信息")
-                return
-            }
+                if (!data) {
+                    yakitNotify("error", t("EditRuleDrawer.formMissing"))
+                    return
+                }
+                if (!data.RuleName || !data.Language) {
+                    yakitNotify("error", t("EditRuleDrawer.formRequired"))
+                    return
+                }
 
             debugForm
                 .validateFields()
@@ -923,14 +926,14 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
     const getTabsState = useMemo(() => {
         const tabsState: HoldGRPCStreamProps.InfoTab[] = [
-            {tabName: "漏洞与风险", type: "ssa-risk"},
-            {tabName: "日志", type: "log"},
+            {tabName: t("EditRuleDrawer.riskTab"), type: "ssa-risk"},
+            {tabName: t("EditRuleDrawer.logTab"), type: "log"},
             {tabName: "Console", type: "console"}
         ]
         if (runtimeId) {
             return [
                 {
-                    tabName: "审计结果",
+                    tabName: t("EditRuleDrawer.auditResultTab"),
                     type: "result",
                     customProps: {onDetail: handleShowDetail, updateDataCallback: handleUpdateAuditData}
                 },
@@ -938,37 +941,37 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             ]
         }
         return tabsState
-    }, [runtimeId])
+    }, [runtimeId, i18n.language])
 
     const drawerTitle = useMemo(() => {
         if (auditDetailShow)
             return (
                 <div className={styles["drawer-title"]}>
                     <YakitButton type='outline2' size='large' icon={<SolidReplyIcon />} onClick={handleCancelDetail}>
-                        返回
+                        {t("YakitButton.back")}
                     </YakitButton>
 
                     <div className={styles["title-style"]}>
-                        {`${isEdit ? "编辑" : "新建"}规则`} / <span className={styles["active-title"]}>审计详情</span>
+                        {`${isEdit ? t("YakitButton.edit") : t("YakitButton.new")}${t("EditRuleDrawer.rule")}`} / <span className={styles["active-title"]}>{t("EditRuleDrawer.auditDetail")}</span>
                     </div>
                 </div>
             )
-        return `${isEdit ? "编辑" : "新建"}规则`
-    }, [isEdit, auditDetailShow])
+        return `${isEdit ? t("YakitButton.edit") : t("YakitButton.new")}${t("EditRuleDrawer.rule")}`
+    }, [isEdit, auditDetailShow, i18n.language])
 
     const getOptions = useMemo(() => {
         if (isEdit && Object.keys(info?.AlertMsg || {}).length > 0) {
             return [
-                {value: "hole", label: "相关漏洞"},
-                {value: "code", label: "规则内容"},
-                {value: "debug", label: "执行结果"}
+                {value: "hole", label: t("EditRuleDrawer.relatedHoles")},
+                {value: "code", label: t("EditRuleDrawer.ruleContent")},
+                {value: "debug", label: t("EditRuleDrawer.executionResult")}
             ]
         }
         return [
-            {value: "code", label: "规则内容"},
-            {value: "debug", label: "执行结果"}
+            {value: "code", label: t("EditRuleDrawer.ruleContent")},
+            {value: "debug", label: t("EditRuleDrawer.executionResult")}
         ]
-    }, [isEdit, info])
+    }, [isEdit, info, i18n.language])
 
     const goBackForm = useMemoizedFn(() => {
         onStop()
@@ -990,7 +993,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 extra={
                     <div className={styles["drawer-extra"]}>
                         <YakitButton loading={loading} onClick={handleFormSubmit}>
-                            保存
+                            {t("YakitButton.save")}
                         </YakitButton>
                         <div className={styles["divider-style"]}></div>
                         <YakitButton type='text2' icon={<OutlineXIcon />} onClick={handleCancel} />
@@ -1016,9 +1019,9 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                         })}
                     >
                         <div className={styles["info-header"]}>
-                            <div className={styles["header-title"]}>基础信息</div>
+                            <div className={styles["header-title"]}>{t("EditRuleDrawer.basicInfo")}</div>
                             <Tooltip
-                                title='收起基础信息'
+                                title={t("EditRuleDrawer.collapseBasicInfo")}
                                 visible={infoTooltipShow}
                                 onVisibleChange={setInfoTooltipShow}
                             >
@@ -1031,15 +1034,15 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 <Form.Item
                                     label={
                                         <>
-                                            规则名<span className='form-item-required'>*</span>:
+                                            {t("EditRuleDrawer.ruleName")}<span className='form-item-required'>*</span>:
                                         </>
                                     }
                                     name={"RuleName"}
-                                    rules={[{required: true, message: "规则名必填"}]}
+                                    rules={[{required: true, message: t("EditRuleDrawer.ruleNameRequired")}]}
                                 >
                                     <YakitInput
                                         maxLength={100}
-                                        placeholder='请输入规则名'
+                                        placeholder={t("EditRuleDrawer.enterRuleName")}
                                         disabled={isEdit || isBuildInRule}
                                     />
                                 </Form.Item>
@@ -1047,11 +1050,11 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 <Form.Item
                                     label={
                                         <>
-                                            语言<span className='form-item-required'>*</span>:
+                                            {t("EditRuleDrawer.language")}<span className='form-item-required'>*</span>:
                                         </>
                                     }
                                     name={"Language"}
-                                    rules={[{required: true, message: "语言必填"}]}
+                                    rules={[{required: true, message: t("EditRuleDrawer.languageRequired")}]}
                                 >
                                     <YakitSelect
                                         allowClear
@@ -1061,10 +1064,10 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                     />
                                 </Form.Item>
 
-                                <Form.Item label={"所属分组"} name={"GroupNames"}>
+                                <Form.Item label={t("EditRuleDrawer.groupName")} name={"GroupNames"}>
                                     <YakitSelect
                                         mode='tags'
-                                        placeholder='请选择分组'
+                                        placeholder={t("EditRuleDrawer.selectGroup")}
                                         allowClear={true}
                                         disabled={isBuildInRule}
                                         options={groups}
@@ -1076,7 +1079,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                     />
                                 </Form.Item>
 
-                                <Form.Item label={"描述"} name={"Description"}>
+                                <Form.Item label={t("EditRuleDrawer.description")} name={"Description"}>
                                     <YakitInput.TextArea
                                         disabled={isBuildInRule}
                                         isShowResize={false}
@@ -1095,7 +1098,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                 {!expand && (
                                     <Tooltip
                                         placement='topLeft'
-                                        title='展开基础信息'
+                                        title={t("EditRuleDrawer.expandBasicInfo")}
                                         visible={codeTooltipShow}
                                         onVisibleChange={setCodeTooltipShow}
                                     >
@@ -1116,26 +1119,13 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                             </div>
 
                             <div className={styles["header-extra"]}>
-                                {!!progress && <PluginExecuteProgress percent={progress} name='执行进度' />}
-                                <div className={styles["header-extra-btns"]}>
-                                    {
-                                        activeTab === "code" && <>
-                                            <YakitButton
-                                                type='text'
-                                                onClick={toAI}
-                                            >
-                                                美化
-                                            </YakitButton>
-                                            <YakitButton type='text' onClick={handleOpenScoreHint}>
-                                                自动检测
-                                            </YakitButton>
-                                        </>
-                                    }
-                                    
-                                </div>
+                                {!!progress && <PluginExecuteProgress percent={progress} name={t("EditRuleDrawer.executionProgress")} />}
+                                <YakitButton type='text' onClick={handleOpenScoreHint}>
+                                    {t("EditRuleDrawer.autoDetect")}
+                                </YakitButton>
                                 {isShowResult && (
                                     <YakitButton type='outline2' onClick={goBackForm} icon={<OutlineReplyIcon />}>
-                                        返回
+                                        {t("YakitButton.back")}
                                     </YakitButton>
                                 )}
                             </div>
@@ -1200,18 +1190,18 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                                 className={styles["params-form"]}
                                             >
                                                 <Form.Item
-                                                    label={"项目名称"}
+                                                    label={t("EditRuleDrawer.projectName")}
                                                     name={"project"}
-                                                    rules={[{required: true, message: "该项为必填"}]}
+                                                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
                                                 >
                                                     <YakitSelect
                                                         mode='multiple'
                                                         showSearch={true}
-                                                        placeholder='请选择项目后调试'
+                                                        placeholder={t("EditRuleDrawer.selectProjectToDebug")}
                                                         options={project}
                                                         defaultActiveFirstOption={false}
                                                         filterOption={false}
-                                                        notFoundContent='暂无数据'
+                                                        notFoundContent={t("YakitEmpty.noData")}
                                                         onSearch={handleSearchProject}
                                                     />
                                                 </Form.Item>
@@ -1219,12 +1209,12 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                                                     {isExecuting ? (
                                                         <div className={styles["extra-btns"]}>
                                                             <YakitButton size='large' danger onClick={handleStop}>
-                                                                停止
+                                                                {t("YakitButton.stop")}
                                                             </YakitButton>
                                                         </div>
                                                     ) : (
                                                         <YakitButton size='large' onClick={handleExecute}>
-                                                            执行
+                                                            {t("YakitButton.execute")}
                                                         </YakitButton>
                                                     )}
                                                 </Form.Item>
@@ -1247,12 +1237,12 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                 hiddenSpecialBtn={true}
                 visible={scoreHint}
                 onCancel={handleScoreHintCallback}
-                title='SyntaxFlow规则检测'
+                title={t("EditRuleDrawer.syntaxflowCheck")}
                 scoreHintData={[
-                    "基础编译测试,判断SyntaxFlow规则的语法是否符合规范,是否存在不正确语法导致编译不通过",
-                    "检查规则中的描述部分是否包含desc和solution字段",
-                    "检查规则中是否包含alert, 规则应该包含alert语句产生检测结果",
-                    "检查规则中的测试用例是否能通过规则检测,SyntaxFlow规则中应该包含正反测试用例,对于正向漏洞代码SyntaxFlow规则应该能正常产生alert,而对于反向测试不应该产生alert(误报)"
+                    t("EditRuleDrawer.scoreHint1"),
+                    t("EditRuleDrawer.scoreHint2"),
+                    t("EditRuleDrawer.scoreHint3"),
+                    t("EditRuleDrawer.scoreHint4")
                 ]}
             />
         </>
@@ -1267,6 +1257,7 @@ interface FrontSyntaxFlowGroup extends SyntaxFlowGroup {
 /** @name 规则添加分组 */
 export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) => {
     const {allCheck, rules, filters, callback} = props
+    const {t} = useI18nNamespaces(["ruleManagement", "yakitUi"])
 
     /** 添加分组按钮是否可用 */
     const isActive = useMemo(() => {
@@ -1531,7 +1522,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                             placement='bottom'
                         >
                             <YakitTag closable onClose={handleAllRemove}>
-                                规则组{oldGroup.length}
+                                {t("UpdateRuleToGroup.groupCount", {count: oldGroup.length})}
                             </YakitTag>
                         </YakitPopover>
                     )}
@@ -1545,12 +1536,10 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                 trigger='click'
                 content={
                     <div className={styles["add-and-remove-group"]}>
-                        <div className={styles["search-header"]}>
-                            勾选表示加入组，取消勾选则表示移出组，创建新分组直接在输入框输入名称回车即可。
-                        </div>
+                            <div className={styles["search-header"]}>{t("UpdateRuleToGroup.hint")}</div>
                         <div className={styles["search-input"]}>
                             <YakitInput
-                                placeholder='输入关键字...'
+                                placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                                 maxLength={50}
                                 prefix={<OutlineSearchIcon className={styles["search-icon"]} />}
                                 value={search}
@@ -1575,7 +1564,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                                         className={classNames(styles["title-style"], "yakit-content-single-ellipsis")}
                                         title={search}
                                     >
-                                        新增分组 "{search}"
+                                        {t("UpdateRuleToGroup.addGroup", {search})}
                                     </span>
                                 </div>
                             )}
@@ -1606,10 +1595,10 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                         <div className={styles["group-footer"]}>
                             <div className={styles["group-footer-btns"]}>
                                 <YakitButton type='outline2' onClick={handelCancel}>
-                                    取消
+                                    {t("YakitButton.cancel")}
                                 </YakitButton>
                                 <YakitButton loading={submitLoading} onClick={handleSubmit}>
-                                    确认
+                                    {t("YakitButton.confirm")}
                                 </YakitButton>
                             </div>
                         </div>
@@ -1618,7 +1607,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
                 onVisibleChange={handleAddGroupVisibleChange}
             >
                 <YakitButton type='text' disabled={!isActive} icon={<OutlinePluscircleIcon />}>
-                    {oldGroup.length ? undefined : "添加分组"}
+                    {oldGroup.length ? undefined : t("UpdateRuleToGroup.addGroupButton")}
                 </YakitButton>
             </YakitPopover>
         </div>
@@ -1628,6 +1617,7 @@ export const UpdateRuleToGroup: React.FC<UpdateRuleToGroupProps> = memo((props) 
 /** @name 规则编写-调试页面的审计详情 */
 export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((props) => {
     const {auditData, info} = props
+    const {t} = useI18nNamespaces(["ruleManagement", "yakitUi"])
 
     const currentInfo = useRef<SyntaxFlowResult>()
 
@@ -1667,7 +1657,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
         return (
             getAuditMap(id) || {
                 parent: null,
-                name: "读取失败",
+                name: t("RuleDebugAuditDetail.readFailed"),
                 isLeaf: true,
                 id: `${uuidv4()}-fail`,
                 ResourceType: "",
@@ -1710,7 +1700,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
         if (newInitTree.length > 0) {
             newInitTree.push({
                 parent: null,
-                name: "已经到底啦~",
+                name: t("YakitEmpty.end_of_list"),
                 id: "111",
                 depth: 1,
                 isBottom: true,
@@ -2002,7 +1992,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
                 setShowAuditDetail(true)
             }
         } catch (error) {
-            failed(`打开错误${error}`)
+            failed(t("RuleDebugAuditDetail.openError", {error: `${error}`}))
         }
     })
     const handleResetAuditDetail = useMemoizedFn(() => {
@@ -2034,7 +2024,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
                 </div>
 
                 {isShowEmpty ? (
-                    <div className={styles["no-data"]}>暂无数据</div>
+                    <div className={styles["no-data"]}>{t("YakitEmpty.noData")}</div>
                 ) : (
                     <AuditTree
                         data={auditDetailTree}
@@ -2066,7 +2056,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
                     </>
                 ) : (
                     <div className={styles["no-audit"]}>
-                        <YakitEmpty title='暂无数据' description='请选择左边内容' />
+                        <YakitEmpty title={t("YakitEmpty.noData")} description={t("RuleDebugAuditDetail.selectLeft")} />
                     </div>
                 )}
             </div>
@@ -2077,6 +2067,7 @@ export const RuleDebugAuditDetail: React.FC<RuleDebugAuditDetailProps> = memo((p
 /** @name 规则编写-调试页面-审计结果列表 */
 const RuleDebugAuditList: React.FC<RuleDebugAuditListProps> = memo((props) => {
     const {auditData, onDetail} = props
+    const {t} = useI18nNamespaces(["ruleManagement", "yakitUi"])
 
     const dataLength = useMemo(() => {
         return auditData.length
@@ -2104,14 +2095,14 @@ const RuleDebugAuditList: React.FC<RuleDebugAuditListProps> = memo((props) => {
         <div className={styles["rule-debug-audit-list"]}>
             <div className={styles["audit-list-header"]}>
                 <div className={styles["header-title"]}>
-                    <span className={styles["title-style"]}>审计结果列表</span>
+                    <span className={styles["title-style"]}>{t("RuleDebugAuditList.title")}</span>
                     <YakitRoundCornerTag>{dataLength || 0}</YakitRoundCornerTag>
                 </div>
             </div>
 
             <div className={styles["audit-list-search"]}>
                 <YakitInput.Search
-                    placeholder='请输入关键词搜索'
+                    placeholder={t("YakitInput.searchKeyWordPlaceholder")}
                     wrapperStyle={{width: "100%"}}
                     size='large'
                     onSearch={handleSearch}
@@ -2159,6 +2150,7 @@ const RuleDebugAuditList: React.FC<RuleDebugAuditListProps> = memo((props) => {
 /** @name 规则上传下载进度弹窗 */
 export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProps> = memo((props) => {
     const {getContainer, onCancel, type, apiKey, token, onSuccess} = props
+    const {t} = useI18nNamespaces(["ruleManagement", "yakitUi"])
 
     const timeRef = useRef<any>(null)
     const streamRef = useRef<SyntaxFlowRuleOnlineProgress[]>([])
@@ -2184,7 +2176,7 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
             streamRef.current.unshift(data)
         })
         ipcRenderer.on(`${token}-error`, (e, error) => {
-            yakitNotify("error", `error: ${error}`)
+            yakitNotify("error", t("RuleUploadAndDownloadModal.streamError", {error: `${error}`}))
         })
         return () => {
             onStreamCancel()
@@ -2214,7 +2206,7 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
             footerStyle={{justifyContent: "flex-end"}}
             footer={
                 <YakitButton type={"outline2"} onClick={onStreamCancel}>
-                    {stream[0]?.Progress === 1 ? "完成" : "取消"}
+                    {stream[0]?.Progress === 1 ? t("YakitButton.finish") : t("YakitButton.cancel")}
                 </YakitButton>
             }
         >
@@ -2224,13 +2216,17 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
                 ) : (
                     <SolidClouddownloadIcon style={{color: "var(--Colors-Use-Orange-Primary)"}} />
                 )}
-                <span className={styles["text"]}>规则{type === "upload" ? "上传" : "下载"}</span>
+                <span className={styles["text"]}>
+                    {type === "upload"
+                        ? t("RuleUploadAndDownloadModal.ruleUpload")
+                        : t("RuleUploadAndDownloadModal.ruleDownload")}
+                </span>
             </div>
             <Progress
                 strokeColor='var(--Colors-Use-Main-Primary)'
                 trailColor='var(--Colors-Use-Neutral-Bg)'
                 percent={Math.trunc(stream[0]?.Progress * 100)}
-                format={(percent) => `进度 ${percent}%`}
+                format={(percent) => t("RuleUploadAndDownloadModal.progress", {percent: percent ?? 0})}
             />
             <div className={styles["log-info"]}>
                 {stream.map((item, index) => (
@@ -2255,6 +2251,7 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
 export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
     React.forwardRef((props, ref) => {
         const {isrefresh, onGroupChange, currentPageTabRouteKey, canDel, userInfo, onRefreshRuleManagement} = props
+        const {t} = useI18nNamespaces(["ruleManagement", "yakitUi"])
         const powerEmptyImage = useEmptyImage("power")
 
         useImperativeHandle(ref, () => ({
@@ -2408,11 +2405,11 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                         <YakitEmpty
                             image={<img src={powerEmptyImage} alt='' />}
                             imageStyle={{width: 220, height: 150, margin: "auto"}}
-                            title='暂无查看权限'
-                            description='登录后即可查看'
+                            title={t("OnlineRuleGroupList.noPermissionTitle")}
+                            description={t("OnlineRuleGroupList.noPermissionDesc")}
                         />
                         <YakitButton style={{width: 200, marginLeft: 50}} type='outline1' onClick={() => onLogin()}>
-                            立即登录
+                            {t("OnlineRuleGroupList.loginNow")}
                         </YakitButton>
                         {loginShow && <Login visible={loginShow} onCancel={onLoadCancel} />}
                     </>
@@ -2420,14 +2417,14 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                     <>
                         {data.length === 0 ? (
                             <YakitSpin spinning={loading}>
-                                <YakitEmpty title='暂无数据' />
+                                <YakitEmpty title={t("YakitEmpty.noData")} />
                             </YakitSpin>
                         ) : (
                             <>
                                 <div className={styles["list-search-and-add"]}>
                                     <YakitInput.Search
                                         size='large'
-                                        placeholder='请输入组名'
+                                        placeholder={t("OnlineRuleGroupList.searchPlaceholder")}
                                         onSearch={handleSearch}
                                         allowClear
                                     />
@@ -2509,9 +2506,9 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
                                     {/* 下载提示 */}
                                     <YakitHint
                                         visible={downloadInfoVisible}
-                                        title='下载提示'
-                                        content='如果规则id相同则会直接覆盖，是否确认下载'
-                                        okButtonText='确认'
+                                        title={t("OnlineRuleGroupList.downloadTitle")}
+                                        content={t("OnlineRuleGroupList.downloadContent")}
+                                        okButtonText={t("YakitButton.confirm")}
                                         mask={true}
                                         onOk={() => {
                                             handleDownload()
@@ -2551,6 +2548,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
 
 export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
     const {info, visible, alertMsgRef} = props
+    const {t} = useI18nNamespaces(["ruleManagement"])
     const [activePanelKey, setActivePanelKey] = useState<string | undefined>(undefined)
     const [isManualSort, setIsManualSort] = useState(false)
     const [isRefresh, setRefresh] = useState<boolean>(false)
@@ -2689,7 +2687,7 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                     }}
                                     className='yakit-descriptions'
                                 >
-                                    <Descriptions.Item label='类型' span={3}>
+                                    <Descriptions.Item label={t("RelatedHoleList.type")} span={3}>
                                         <YakitInput
                                             defaultValue={alert.RiskType}
                                             onChange={(e) => {
@@ -2698,7 +2696,7 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                             }}
                                         />
                                     </Descriptions.Item>
-                                    <Descriptions.Item label='漏洞描述' span={3}>
+                                    <Descriptions.Item label={t("RelatedHoleList.description")} span={3}>
                                         <MilkdownEditorLocal
                                             type='notepad'
                                             defaultValue={alert.Description}
@@ -2706,7 +2704,7 @@ export const RelatedHoleList: React.FC<RelatedHoleListProps> = memo((props) => {
                                             isControlEditorType={false}
                                         />
                                     </Descriptions.Item>
-                                    <Descriptions.Item label='修复建议' span={3}>
+                                    <Descriptions.Item label={t("RelatedHoleList.solution")} span={3}>
                                         <MilkdownEditorLocal
                                             type='notepad'
                                             defaultValue={alert.Solution}

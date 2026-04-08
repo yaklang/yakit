@@ -55,7 +55,7 @@ import MITMContext from '../Context/MITMContext'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { OutlineCogIcon, OutlineSearchIcon } from '@/assets/icon/outline'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 
 const { ipcRenderer } = window.require('electron')
@@ -111,7 +111,7 @@ const HitColor = {
   },
 }
 
-const batchMenuData = (excludeBatchMenuKey: string, t: (text: string) => string) => {
+const batchMenuData = (excludeBatchMenuKey: string, t: TFunction) => {
   const arr = [
     {
       key: 'ban',
@@ -138,7 +138,7 @@ const batchMenuData = (excludeBatchMenuKey: string, t: (text: string) => string)
   }
 }
 
-export const colorSelectNode = (t: (text: string) => string) => {
+export const colorSelectNode = (t: TFunction) => {
   return (
     <>
       {Object.values(HitColor).map((item) => (
@@ -697,7 +697,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             onRefreshCurrentRules()
           })
           .catch((e) => {
-            failed(`${t('YakitNotification.saveFailed', { colon: true })}${e}`)
+            failed(t('YakitNotification.saveFailed', { error: e + '' }))
           })
       } else {
         // 开启劫持
@@ -744,7 +744,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                   onRefreshCurrentRules()
                 })
                 .catch((e) => {
-                  failed(`${t('YakitNotification.saveFailed', { colon: true })}${e}`)
+                  failed(t('YakitNotification.saveFailed', { error: e + '' }))
                 })
             },
           })
@@ -766,7 +766,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               onRefreshCurrentRules()
             })
             .catch((e) => {
-              failed(`${t('YakitNotification.saveFailed', { colon: true })}${e}`)
+              failed(t('YakitNotification.saveFailed', { error: e + '' }))
             })
         }
       }

@@ -58,7 +58,7 @@ import {
 } from '../MatcherAndExtractionCard/constants'
 import { defaultAdvancedConfigValue, DefFuzzerConcurrent } from '@/defaultConstants/HTTPFuzzerPage'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useProxy } from '@/hook/useProxy'
@@ -69,7 +69,7 @@ const { YakitPanel } = YakitCollapse
 
 const WEB_FUZZ_Advanced_Config_ActiveKey = 'WEB_FUZZ_Advanced_Config_ActiveKey'
 
-const fuzzTagModeOptions = (t: (text: string) => string) => {
+const fuzzTagModeOptions = (t: TFunction) => {
   return [
     {
       value: 'close',
@@ -86,7 +86,7 @@ const fuzzTagModeOptions = (t: (text: string) => string) => {
   ]
 }
 
-const fuzzTagSyncOptions = (t: (text: string) => string) => {
+const fuzzTagSyncOptions = (t: TFunction) => {
   return [
     {
       value: false,
@@ -100,7 +100,7 @@ const fuzzTagSyncOptions = (t: (text: string) => string) => {
 }
 
 // 前端定义的字段值
-const overwriteSNIOptions = (t: (text: string) => string) => {
+const overwriteSNIOptions = (t: TFunction) => {
   return [
     {
       value: 'auto',

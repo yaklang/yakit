@@ -47,7 +47,7 @@ import {HighLightText} from "./yakitUI/YakitEditor/YakitEditorType"
 import useGetSetState from "@/pages/pluginHub/hooks/useGetSetState"
 import {useCampare} from "@/hook/useCompare/useCompare"
 import {useSelectionByteCount} from "./yakitUI/YakitEditor/useSelectionByteCount"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {formatTimestamp} from "@/utils/timeUtil"
 import {JSONParseLog} from "@/utils/tool"
 import {HTTPFlowCodec} from "@/utils/encodec"
@@ -882,7 +882,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                 yakitNotify("success", t("YakitNotification.exportSuccess"))
             })
             .catch((err) => {
-                yakitNotify("error", t("YakitNotification.exportFailed", {colon: true}) + err)
+                yakitNotify("error", t("YakitNotification.exportFailed", {error: err + ""}))
             })
     })
     const disablePrev = useMemo(() => {
@@ -1102,9 +1102,9 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                                         switch (infoType) {
                                                             case "domains":
                                                                 return (
-                                                                    "# 根域 (Root-Domains)\r\n" +
+                                                                    `# ${t("HTTPFlowDetailMini.rootDomains")}\r\n` +
                                                                     (flow?.RootDomains || []).join("\r\n") +
-                                                                    "\r\n\r\n# 域名 (Domain) \r\n" +
+                                                                    `\r\n\r\n# ${t("HTTPFlowDetailMini.domain")}\r\n` +
                                                                     (flow?.Domains || []).join("\r\n")
                                                                 )
                                                             case "json":
@@ -2150,7 +2150,7 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
     )
 }
 
-function infoTypeVerbose(i: HTTPFlowInfoType, t: (text: string) => string) {
+function infoTypeVerbose(i: HTTPFlowInfoType, t: TFunction) {
     switch (i) {
         case "domains":
             return t("HTTPFlowDetailMini.domain")

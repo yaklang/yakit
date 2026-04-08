@@ -422,7 +422,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                                         .catch((e) => {
                                             yakitNotify(
                                                 "error",
-                                                `${t("YakitNotification.downloadFailed", {colon: true})}${e}`
+                                                t("YakitNotification.downloadFailed", {error: e + ""})
                                             )
                                         })
                                     return

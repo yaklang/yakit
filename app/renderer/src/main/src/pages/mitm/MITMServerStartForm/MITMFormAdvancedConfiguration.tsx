@@ -52,6 +52,7 @@ interface MITMFormAdvancedConfigurationProps {
 const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps> = React.memo(
   React.forwardRef((props, ref) => {
     const { visible, setVisible, onSave, enableGMTLS } = props
+    const { t, i18n } = useI18nNamespaces(['webFuzzer', 'mitm', 'yakitUi'])
     const [certs, setCerts] = useState<ClientCertificate[]>([])
 
     // 保存初始默认值
@@ -64,7 +65,6 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
     const [form] = Form.useForm()
     const enableProxyAuth = useWatch<boolean>('enableProxyAuth', form)
     const overwriteSNI = useWatch('OverwriteSNI', form)
-    const { t, i18n } = useI18nNamespaces(['webFuzzer', 'mitm', 'yakitUi'])
     const tableRef = useRef<HTMLDivElement>(null)
 
     const getValue = useMemoizedFn(() => {
@@ -190,11 +190,11 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
       }
       if (!isEqual(oldValue, newValue)) {
         Modal.confirm({
-          title: '温馨提示',
+          title: t('YakitModal.friendlyReminder'),
           icon: <ExclamationCircleOutlined />,
-          content: '请问是否要保存高级配置并关闭弹框？',
-          okText: '保存',
-          cancelText: '不保存',
+          content: t('MITMFormAdvancedConfiguration.saveAndCloseConfirm'),
+          okText: t('YakitButton.save'),
+          cancelText: t('YakitButton.doNotSave'),
           closable: true,
           closeIcon: (
             <div
@@ -232,7 +232,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         width="40%"
         title={
           <div className={styles['advanced-configuration-drawer-title']}>
-            <div className={styles['advanced-configuration-drawer-title-text']}>高级配置</div>
+            <div className={styles['advanced-configuration-drawer-title-text']}>
+              {t('MITMFormAdvancedConfiguration.advancedConfig')}
+            </div>
             <div className={styles['advanced-configuration-drawer-title-btns']}>
               <YakitButton
                 type="outline2"
@@ -240,10 +242,10 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                   setVisible(false)
                 }}
               >
-                取消
+                {t('YakitButton.cancel')}
               </YakitButton>
               <YakitButton type="primary" onClick={() => onSaveSetting()}>
-                保存
+                {t('YakitButton.save')}
               </YakitButton>
             </div>
           </div>
@@ -252,9 +254,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
       >
         <Form labelCol={{ span: 6 }} wrapperCol={{ span: 18 }} form={form}>
           <Form.Item
-            label="DNS服务器"
+            label={t('MITMFormAdvancedConfiguration.dnsServer')}
             name="dnsServers"
-            help={'指定DNS服务器'}
+            help={t('MITMFormAdvancedConfiguration.specifyDnsServer')}
             initialValue={['8.8.8.8', '114.114.114.114']}
           >
             <YakitSelect
@@ -263,10 +265,10 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
               })}
               allowClear
               mode="tags"
-              placeholder={'例如 1.1.1.1'}
+              placeholder={t('MITMFormAdvancedConfiguration.dnsExample')}
             />
           </Form.Item>
-          <Form.Item label={'Hosts配置'} name="etcHosts">
+          <Form.Item label={t('MITMFormAdvancedConfiguration.hostsConfig')} name="etcHosts">
             <div className={styles['etcHosts-btns']}>
               <YakitButton
                 onClick={() => {
@@ -283,7 +285,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                   )
                 }}
               >
-                添加 Hosts 映射
+                {t('MITMFormAdvancedConfiguration.addHostsMapping')}
               </YakitButton>
               {!!etcHosts.length && (
                 <YakitButton type="text" danger onClick={() => setEtcHosts([])}>
@@ -323,17 +325,17 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
           {enableGMTLS && (
             <>
               <Form.Item
-                label={'国密TLS优先'}
+                label={t('MITMFormAdvancedConfiguration.gmTLSFirst')}
                 name="preferGMTLS"
-                help={'启用此选项将优先选择国密TLS，当连接失败后，自动降级为普通 TLS，关闭后优先普通 TLS'}
+                help={t('MITMFormAdvancedConfiguration.gmTLSFirstHelp')}
                 valuePropName="checked"
               >
                 <YakitSwitch size="large" />
               </Form.Item>
               <Form.Item
-                label={'仅国密 TLS'}
+                label={t('MITMFormAdvancedConfiguration.gmTLSOnly')}
                 name="onlyEnableGMTLS"
-                help={'此选项开启后，将不支持除国密算法的 TLS 外其安全传输层'}
+                help={t('MITMFormAdvancedConfiguration.gmTLSOnlyHelp')}
                 valuePropName="checked"
               >
                 <YakitSwitch size="large" />
@@ -341,9 +343,9 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             </>
           )}
           <Form.Item
-            label={'代理认证'}
+            label={t('MITMFormAdvancedConfiguration.proxyAuth')}
             name="enableProxyAuth"
-            help={'为劫持代理启动认证，需要在代理客户端配置代理认证信息'}
+            help={t('MITMFormAdvancedConfiguration.proxyAuthHelp')}
             valuePropName="checked"
           >
             <YakitSwitch size="large" />
@@ -351,36 +353,51 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
           {enableProxyAuth && (
             <>
               <Form.Item
-                label={'代理认证用户名'}
-                rules={[{ required: enableProxyAuth, message: '该项为必填' }]}
+                label={t('MITMFormAdvancedConfiguration.proxyAuthUsername')}
+                rules={[{ required: enableProxyAuth, message: t('YakitForm.requiredField') }]}
                 name="proxyUsername"
               >
-                <YakitAutoComplete options={[{ label: 'admin', value: 'admin' }]} placeholder="请输入" />
+                <YakitAutoComplete
+                  options={[{ label: 'admin', value: 'admin' }]}
+                  placeholder={t('YakitInput.please_enter')}
+                />
               </Form.Item>
               <Form.Item
-                label={'代理认证密码'}
-                rules={[{ required: enableProxyAuth, message: '该项为必填' }]}
+                label={t('MITMFormAdvancedConfiguration.proxyAuthPassword')}
+                rules={[{ required: enableProxyAuth, message: t('YakitForm.requiredField') }]}
                 name="proxyPassword"
               >
-                <YakitInput placeholder="请输入" />
+                <YakitInput placeholder={t('YakitInput.please_enter')} />
               </Form.Item>
             </>
           )}
-          <Form.Item label={'过滤WebSocket'} name="filterWebsocket" valuePropName="checked">
-            <YakitSwitch size="large" />
-          </Form.Item>
           <Form.Item
-            label={'禁用初始页'}
-            name="disableCACertPage"
+            label={t('MITMFormAdvancedConfiguration.filterWebsocket')}
+            name="filterWebsocket"
             valuePropName="checked"
-            help={'开启后免配置启动不会访问初始页面'}
           >
             <YakitSwitch size="large" />
           </Form.Item>
-          <Form.Item label={'启用WebSocket压缩'} name="DisableWebsocketCompression" valuePropName="checked">
+          <Form.Item
+            label={t('MITMFormAdvancedConfiguration.disableInitPage')}
+            name="disableCACertPage"
+            valuePropName="checked"
+            help={t('MITMFormAdvancedConfiguration.disableInitPageHelp')}
+          >
             <YakitSwitch size="large" />
           </Form.Item>
-          <Form.Item label={'插件并发进程'} name="PluginConcurrency" style={{ marginBottom: 12 }}>
+          <Form.Item
+            label={t('MITMFormAdvancedConfiguration.enableWebsocketCompression')}
+            name="DisableWebsocketCompression"
+            valuePropName="checked"
+          >
+            <YakitSwitch size="large" />
+          </Form.Item>
+          <Form.Item
+            label={t('MITMFormAdvancedConfiguration.pluginConcurrency')}
+            name="PluginConcurrency"
+            style={{ marginBottom: 12 }}
+          >
             <YakitInputNumber type="horizontal" size="small" min={1} defaultValue={20} />
           </Form.Item>
           <Form.Item label={t('AdvancedConfiguration.sni_config')} className={styles['sni-rules']}>
@@ -397,7 +414,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                         if (snimapping.length > 0) {
                           const { Key, Value } = snimapping[snimapping.length - 1]
                           if (!Key && !Value) {
-                            yakitFailed('请设置完成后再添加')
+                            yakitFailed(t('MITMFormAdvancedConfiguration.setBeforeAdd'))
                             return
                           }
                         }
@@ -461,7 +478,10 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
               )}
             </div>
           </Form.Item>
-          <Form.Item label="客户端 TLS 导入" className={styles['advanced-configuration-drawer-TLS']}>
+          <Form.Item
+            label={t('MITMFormAdvancedConfiguration.clientTlsImport')}
+            className={styles['advanced-configuration-drawer-TLS']}
+          >
             <div className={styles['drawer-TLS-item']}>
               <YakitButton
                 type="text"
@@ -472,7 +492,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 }}
                 style={{ paddingLeft: 0 }}
               >
-                添加
+                {t('YakitButton.add')}
               </YakitButton>
               {/* <div className={styles["drawer-TLS-btns"]}>
                                 <YakitButton
@@ -506,7 +526,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                                 </YakitButton>
                             </div> */}
             </div>
-            <div className={styles['drawer-TLS-help']}>用于 mTLS（Mutual TLS）开启客户端验证的 HTTPS 网站抓包</div>
+            <div className={styles['drawer-TLS-help']}>{t('MITMFormAdvancedConfiguration.mtlsHelp')}</div>
             <div className={styles['drawer-TLS-certs']}>
               {certs.map((item) => (
                 <div className={styles['drawer-TLS-certs-item']}>
@@ -529,11 +549,11 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             <Divider dashed style={{ margin: '16px 0' }} />
             <div>
               <YakitButton type="text" style={{ paddingLeft: 0 }} onClick={() => setFiltersVisible(true)}>
-                过滤器
+                {t('MITMFormAdvancedConfiguration.filters')}
               </YakitButton>
               <Divider type="vertical" style={{ margin: '0 4px' }} />
               <YakitButton type="text" onClick={() => setDownloadVisible(true)}>
-                证书下载
+                {t('MITMFormAdvancedConfiguration.certificateDownload')}
               </YakitButton>
             </div>
           </Form.Item>

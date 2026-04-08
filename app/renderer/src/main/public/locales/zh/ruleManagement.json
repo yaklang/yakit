@@ -1,0 +1,76 @@
+{
+  "LocalRuleGroupList": {
+    "title": "规则管理",
+    "searchPlaceholder": "请输入组名",
+    "uploadTitle": "上传提示",
+    "uploadContent": "如果存在同名规则库，会直接覆盖",
+    "uploadConfirm": "确认上传",
+    "renameFailed": "修改本地规则组名称错误"
+  },
+  "EditRuleDrawer": {
+    "formMissing": "未获取到表单信息，请关闭弹框重试!",
+    "saveAndCloseConfirm": "请问是否要保存规则并关闭弹框？",
+    "formRequired": "请填写完整规则必须信息",
+    "riskTab": "漏洞与风险",
+    "logTab": "日志",
+    "auditResultTab": "审计结果",
+    "rule": "规则",
+    "auditDetail": "审计详情",
+    "relatedHoles": "相关漏洞",
+    "ruleContent": "规则内容",
+    "executionResult": "执行结果",
+    "basicInfo": "基础信息",
+    "collapseBasicInfo": "收起基础信息",
+    "ruleName": "规则名",
+    "ruleNameRequired": "规则名必填",
+    "enterRuleName": "请输入规则名",
+    "language": "语言",
+    "languageRequired": "语言必填",
+    "groupName": "所属分组",
+    "selectGroup": "请选择分组",
+    "description": "描述",
+    "expandBasicInfo": "展开基础信息",
+    "executionProgress": "执行进度",
+    "autoDetect": "自动检测",
+    "projectName": "项目名称",
+    "selectProjectToDebug": "请选择项目后调试",
+    "syntaxflowCheck": "SyntaxFlow规则检测",
+    "scoreHint1": "基础编译测试,判断SyntaxFlow规则的语法是否符合规范,是否存在不正确语法导致编译不通过",
+    "scoreHint2": "检查规则中的描述部分是否包含desc和solution字段",
+    "scoreHint3": "检查规则中是否包含alert, 规则应该包含alert语句产生检测结果",
+    "scoreHint4": "检查规则中的测试用例是否能通过规则检测,SyntaxFlow规则中应该包含正反测试用例,对于正向漏洞代码SyntaxFlow规则应该能正常产生alert,而对于反向测试不应该产生alert(误报)"
+  },
+  "UpdateRuleToGroup": {
+    "groupCount": "规则组{count}",
+    "hint": "勾选表示加入组，取消勾选则表示移出组，创建新分组直接在输入框输入名称回车即可。",
+    "addGroup": "新增分组 \"{search}\"",
+    "addGroupButton": "添加分组"
+  },
+  "RuleDebugAuditDetail": {
+    "readFailed": "读取失败",
+    "openError": "打开错误：{error}",
+    "selectLeft": "请选择左边内容"
+  },
+  "RuleDebugAuditList": {
+    "title": "审计结果列表"
+  },
+  "RuleUploadAndDownloadModal": {
+    "streamError": "错误：{error}",
+    "ruleUpload": "规则上传",
+    "ruleDownload": "规则下载",
+    "progress": "进度 {percent}%"
+  },
+  "OnlineRuleGroupList": {
+    "noPermissionTitle": "暂无查看权限",
+    "noPermissionDesc": "登录后即可查看",
+    "loginNow": "立即登录",
+    "searchPlaceholder": "请输入组名",
+    "downloadTitle": "下载提示",
+    "downloadContent": "如果规则id相同则会直接覆盖，是否确认下载"
+  },
+  "RelatedHoleList": {
+    "type": "类型",
+    "description": "漏洞描述",
+    "solution": "修复建议"
+  }
+}

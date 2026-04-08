@@ -1,6 +1,7 @@
 import {FastForwardIcon, RewindIcon} from "@/assets/newIcon"
 import {Tooltip} from "antd"
 import React, {useEffect, useRef, useState} from "react"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import {
     Player,
@@ -31,6 +32,7 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
     const {url, title, isPre, isNext, onPreClick, onNextClick} = props
     const [error, setError] = useState<string>()
     const playerRef = useRef<any>()
+    const {t} = useI18nNamespaces(["screenRecorder"])
     useEffect(() => {
         if (!playerRef.current) return
         playerRef.current.load()
@@ -52,9 +54,9 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
                 className={styles["player-video"]}
             >
                 <BigPlayButton position='center' />
-                {error && <div className={styles["player-video-tip"]}>该视频文件不可播放</div>}
+                {error && <div className={styles["player-video-tip"]}>{t("ReactPlayerVideo.fileNotPlayable")}</div>}
                 <ControlBar autoHide={true} disableDefaultControls={false} className={styles["player-control-bar"]}>
-                    <div className={isPre ? "hint--top-right" : ""} aria-label='上一个'>
+                    <div className={isPre ? "hint--top-right" : ""} aria-label={t("ReactPlayerVideo.previous")}>
                         <RewindIcon
                             className={classNames(styles["bar-icon"], {
                                 [styles["not-allowed-icon"]]: !isPre
@@ -70,7 +72,7 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
                             [styles["not-allowed-icon"]]: error
                         })}
                     />
-                    <div className={isNext ? "hint--top" : ""} aria-label='下一个'>
+                    <div className={isNext ? "hint--top" : ""} aria-label={t("ReactPlayerVideo.next")}>
                         <FastForwardIcon
                             className={classNames(styles["bar-icon"], {
                                 [styles["not-allowed-icon"]]: !isNext

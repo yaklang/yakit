@@ -10,6 +10,7 @@ import {AutoCard} from "@/components/AutoCard";
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox";
 import {InputItem} from "@/utils/inputUtil";
 import { TreeNode } from "@/components/WebTree/WebTree";
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces";
 
 export interface YakURLTreeProp {
 
@@ -19,6 +20,7 @@ const DirectoryTree = Tree.DirectoryTree;
 
 
 export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
+        const {t} = useI18nNamespaces(["yakURLTree", "yakitUi"])
         const [data, setData] = useState<TreeNode[]>([]);
         const [yakurl, setYakURL] = useState<string>("website:///");
         const [selected, setSelected] = useState<YakURLResource>();
@@ -35,7 +37,7 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
                     isLeaf: !i.HaveChildrenNodes,
                 })))
             }).catch(e => {
-                yakitFailed(`加载失败: ${e}`)
+                yakitFailed(t("YakitNotification.loadFailed", {error: e}))
                 setData([])
             })
         }, [yakurl])
@@ -108,7 +110,7 @@ export const YakURLTree: React.FC<YakURLTreeProp> = (props) => {
                     treeData={data}
                 />}
                 secondNode={<div>
-                    {selected ? <div>SELECTED {`${JSON.stringify(selected)}`}</div> : <div>未选择</div>}
+                    {selected ? <div>{t("YakURLTree.selected")} {`${JSON.stringify(selected)}`}</div> : <div>{t("YakURLTree.notSelected")}</div>}
                 </div>}
             />
         </AutoCard>

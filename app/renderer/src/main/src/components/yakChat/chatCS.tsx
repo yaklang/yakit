@@ -129,6 +129,7 @@ import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutK
 import {JSONParseLog} from "@/utils/tool"
 import {StreamMarkdown} from "@/pages/assetViewer/reportRenders/markdownRender"
 import {YakExecutorParam} from "@/pages/invoker/YakExecutorParams"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export interface CodecParamsProps {
@@ -2948,6 +2949,7 @@ interface PluginAIComponentProps {
 export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
     const {visible, params, setParams, pluginAIList, setPluginAIList, showOnly, setShowOnly, isShowAI, setShowAI} =
         props
+    const {t, i18n} = useI18nNamespaces(["yakChat"])
     const [loading, setLoading] = useState<boolean>(false)
     const [loadingToken, setLoadingToken] = useState<string>("")
     const [resTime, setResTime] = useState<string>("")
@@ -3044,7 +3046,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
 
     const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
         tabs: [
-            {tabName: "日志", type: "log"},
+            {tabName: t("YakChatCS.log"), type: "log"},
             {tabName: "Console", type: "console"}
         ],
         taskName: "debug-plugin",
@@ -3059,7 +3061,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
             }
         },
         setRuntimeId: (rId) => {
-            yakitNotify("info", `调试任务启动成功，运行时 ID: ${rId}`)
+            yakitNotify("info", t("YakChatCS.debugTaskStarted", {runtimeId: rId}))
             setRuntimeId(rId)
         },
         isShowError: false,
@@ -3106,7 +3108,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                 debugPluginStreamEvent.start()
             })
             .catch((e: any) => {
-                yakitNotify("error", "本地插件执行出错:" + e)
+                yakitNotify("error", t("YakChatCS.localPluginExecuteError", {error: String(e)}))
             })
     })
 
@@ -3267,7 +3269,7 @@ export const PluginAIComponent: React.FC<PluginAIComponentProps> = (props) => {
                                 <div className={styles["welcome-plugin-ai"]}>
                                     <div className={styles["header-title"]}>
                                         <div className={classNames(styles["title-style"])}>
-                                            可在数据包或History右键调用插件进行体验噢~👋
+                                            {t("YakChatCS.tryPluginInPacketOrHistory")}
                                         </div>
                                     </div>
                                 </div>
@@ -3299,6 +3301,7 @@ interface PluginAIContentProps {
 
 export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
     const {token, loading, loadingToken, time, info, resTime, onStop, onDel, className, contentAIRef} = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "yakChat"])
     const showLoading = useMemo(() => {
         return token === loadingToken && loading
     }, [token, loadingToken, loading])
@@ -3316,7 +3319,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                 <div className={showLoading ? styles["header-right-loading"] : styles["header-right"]}>
                     {showLoading ? (
                         <YakitButton type='primary' colors='danger' icon={<StopIcon />} onClick={onStop}>
-                            停止
+                            {t("YakitButton.stop")}
                         </YakitButton>
                     ) : (
                         <>
@@ -3370,7 +3373,7 @@ export const PluginAIContent: React.FC<PluginAIContentProps> = (props) => {
                                 <StreamMarkdown content={info.content} />
                             </React.Fragment>
                         ) : (
-                            "请求出现错误，请稍候再试"
+                            t("YakChatCS.requestErrorRetry")
                         )}
                     </div>
                 )}

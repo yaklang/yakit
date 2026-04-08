@@ -67,7 +67,7 @@ export const YakitFormDragger: React.FC<YakitFormDraggerProps> = React.memo((pro
 /**
  * @description:YakitDragger  支持拖拽:文件/文件夹 文件路径只包括文件夹或者文件的第一级路径, 不包括文件夹下面的子文件路径数;
  * @description 如果需要显示文件中的内容，推荐使用组件:YakitDraggerContent
- * @augments YakitDraggerProps 
+ * @augments YakitDraggerProps
  * eg:  <YakitFormDraggerContent
         className={styles["plugin-execute-form-item"]}
         formItemProps={{
@@ -148,7 +148,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
                     setContent(res)
                 })
                 .catch((err) => {
-                    failed(t("YakitNotification.dataFetchFailed", {colon: true}) + err)
+                    failed(t("YakitNotification.dataFetchFailed", {error: err + ""}))
                     setContent("")
                 })
                 .finally(() => setTimeout(() => setUploadLoading(false), 200))
@@ -346,8 +346,8 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     })
 
 
-    const cacheFilePathRef = useRef<string>("") 
-    const cacheFolderPathRef = useRef<string>("") 
+    const cacheFilePathRef = useRef<string>("")
+    const cacheFolderPathRef = useRef<string>("")
     // 获取缓存的文件路径
     useEffect(()=>{
         if (cacheFilePathKey) {

@@ -97,7 +97,7 @@ export const portAssetFormatJson = (filterVal, jsonData) => {
 }
 
 export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
-    const {t} = useI18nNamespaces(["database", "yakitUi"])
+    const {t} = useI18nNamespaces(["assetViewer", "yakitUi"])
     const [params, setParams] = useState<QueryPortsRequest>({
         ...cloneDeep(defQueryPortsRequest),
         State: props.closed ? "closed" : "open"
@@ -138,7 +138,7 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                 setAdvancedConfig(data.PortsGroupList.length > 0)
             })
             .catch((e: any) => {
-                failed("getPortsGroup failed: " + e)
+                failed(`getPortsGroup failed: ${e}`)
             })
             .finally(() => setTimeout(() => setAdvancedQueryLoading(false), 200))
     })
@@ -184,10 +184,10 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
         <div ref={portAssetRef} className={styles["portAsset-content"]} style={{display: "flex", flexDirection: "row"}}>
             <div className={styles["portAsset"]}>
                 <div className={styles["portAsset-head"]}>
-                    <div className={styles["head-title"]}>{t("PortAssetPage.PortAssetTable.title")}</div>
+                    <div className={styles["head-title"]}>{t("PortAssetTable.title")}</div>
                     <div className={styles["head-extra"]}>
                         <YakitInput.Search
-                            placeholder={t("PortAssetPage.PortAssetTable.searchPlaceholder")}
+                            placeholder={t("PortAssetTable.searchPlaceholder")}
                             style={{width: 320}}
                             onSearch={onSearch}
                             onPressEnter={() => onSearch(keywords)}
@@ -259,8 +259,8 @@ export const PortAssetTable: React.FC<PortAssetTableProp> = (props) => {
                             <YakitPopconfirm
                                 title={
                                     selectNumber > 0
-                                        ? t("PortAssetPage.PortAssetTable.confirmDeleteSelected")
-                                        : t("PortAssetPage.PortAssetTable.confirmClearList")
+                                        ? t("PortAssetTable.confirmDeleteSelected")
+                                        : t("PortAssetTable.confirmClearList")
                                 }
                                 onConfirm={() => {
                                     onRemove()
@@ -346,7 +346,7 @@ interface PortAssetQueryProps {
 /**@description 资产高级查询 */
 const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
     const {loading, portsGroupList, visible, setVisible, queryList, setQueryList} = props
-    const {t} = useI18nNamespaces(["database", "yakitUi"])
+    const {t} = useI18nNamespaces(["assetViewer", "yakitUi"])
     const [activeKey, setActiveKey] = useState<string[]>([]) // Collapse打开的key
 
     useEffect(() => {
@@ -379,7 +379,7 @@ const PortAssetQuery: React.FC<PortAssetQueryProps> = React.memo((props) => {
             </div>
             <YakitSpin spinning={loading} wrapperClassName={styles["portAsset-query-loading"]}>
                 {portsGroupList.length === 0 ? (
-                    <YakitEmpty style={{paddingTop: 48}} title={t("PortAssetPage.PortAssetQuery.noFingerprint")} />
+                    <YakitEmpty style={{paddingTop: 48}} title={t("PortAssetQuery.noFingerprint")} />
                 ) : (
                     <YakitCollapse
                         activeKey={activeKey}
@@ -441,11 +441,11 @@ export interface PortAssetDescriptionProp {
 
 export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) => {
     const {port} = props
-    const {t} = useI18nNamespaces(["database"])
+    const {t} = useI18nNamespaces(["assetViewer", "yakitUi"])
     return (
         <>
-            <Descriptions size={"small"} bordered={true} column={!port.ServiceType ? 1 : 2} title={"端口资产详情"}>
-                <Descriptions.Item label={t("PortAssetPage.PortAssetDescription.state")}>
+            <Descriptions size={"small"} bordered={true} column={!port.ServiceType ? 1 : 2} title={t("PortAssetDescription.detailTitle")}>
+                <Descriptions.Item label={t("PortAssetDescription.state")}>
                     <YakitCopyText showText={port.State} />
                 </Descriptions.Item>
                 {port.HtmlTitle && (
@@ -454,12 +454,12 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
                     </Descriptions.Item>
                 )}
                 {port.ServiceType && (
-                    <Descriptions.Item span={2} label='应用'>
+                    <Descriptions.Item span={2} label={t("PortAssetDescription.application")}>
                         <YakitCopyText showText={port.ServiceType} />
                     </Descriptions.Item>
                 )}
                 {port.Reason && (
-                    <Descriptions.Item span={2} label='失败原因'>
+                    <Descriptions.Item span={2} label={t("PortAssetDescription.failureReason")}>
                         <YakitCopyText showText={port.Reason} />
                     </Descriptions.Item>
                 )}
@@ -477,14 +477,14 @@ export const PortAssetDescription: React.FC<PortAssetDescriptionProp> = (props) 
                     </Descriptions.Item>
                 ) : undefined}
                 {port.Fingerprint && (
-                    <Descriptions.Item span={2} label='指纹信息'>
+                    <Descriptions.Item span={2} label={t("PortAssetDescription.fingerprintInfo")}>
                         <div style={{height: 200}}>
                             <YakEditor value={port.Fingerprint} noLineNumber={true} noMiniMap={true} readOnly />
                         </div>
                     </Descriptions.Item>
                 )}
             </Descriptions>
-            <div className='descriptions-no-more'>暂无更多</div>
+            <div className='descriptions-no-more'>{t("YakitEmpty.noMoreData")}</div>
         </>
     )
 }

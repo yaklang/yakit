@@ -5,9 +5,11 @@ import {LeftSideHoleBarProps} from "./LeftSideHoleBarType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {useMemoizedFn} from "ahooks"
 import {YakRunnerAuditHoleTab} from "../YakRunnerAuditHole"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 export const LeftSideHoleBar: React.FC<LeftSideHoleBarProps> = (props) => {
     const {isUnShow, setIsUnShow, active, setActive, statisticNode, documentCollectDom} = props
+    const {t, i18n} = useI18nNamespaces(["yakRunnerAuditHole"])
     // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
     const rendered = useRef<Set<string>>(new Set(["statistic"]))
 
@@ -26,11 +28,13 @@ export const LeftSideHoleBar: React.FC<LeftSideHoleBarProps> = (props) => {
         >
             {/* 左侧边栏 */}
             <YakitSideTab
+                key={i18n.language}
                 yakitTabs={YakRunnerAuditHoleTab}
                 activeKey={active}
                 onActiveKey={onSetActive}
                 show={!isUnShow}
                 setShow={(v) => setIsUnShow(!v)}
+                t={t}
             />
 
             {/* 侧边栏对应展示内容 */}

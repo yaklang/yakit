@@ -6,6 +6,7 @@ import {CopyComponents, YakitTag} from "./yakitUI/YakitTag/YakitTag"
 import {YakitSwitch} from "./yakitUI/YakitSwitch/YakitSwitch"
 import {YakitButton} from "./yakitUI/YakitButton/YakitButton"
 import {showYakitModal} from "./yakitUI/YakitModal/YakitModalConfirm"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 export interface HTTPFlowRiskViewerProp {
     risk: YakitHTTPFlowRisk
@@ -26,6 +27,7 @@ export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
     const {risk} = props
     const {risk_name, is_https, url, highlight, request, response, fragment, level} = risk
     const [showFragment, setShowFragment] = useState(false)
+    const {t} = useI18nNamespaces(["history"])
 
     return (
         <>
@@ -39,7 +41,7 @@ export const HTTPFlowRiskViewer: React.FC<HTTPFlowRiskViewerProp> = (props) => {
                         <Divider type={"vertical"} />
                         {highlight !== "" && (fragment || []).length > 0 ? (
                             <span style={{color: "#85899e", display: "inline-flex", alignItems: "center"}}>
-                                详情：
+                                {t("HTTPFlowRiskViewer.details")}：
                                 <YakitSwitch checked={showFragment} onChange={setShowFragment} />
                             </span>
                         ) : undefined}

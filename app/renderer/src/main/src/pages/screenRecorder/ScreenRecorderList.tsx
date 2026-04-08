@@ -143,7 +143,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 setTotal(item.Total)
             })
             .catch((e) => {
-                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: e}))
+                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: e + ""}))
             })
             .finally(() => setTimeout(() => setLoading(false), 300))
     })
@@ -198,7 +198,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 setIsShowScreenRecording(!(item.Total > 0))
             })
             .catch((e) => {
-                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: e}))
+                yakitNotify("error", t("ScreenRecorderList.getListFailed", {error: e + ""}))
             })
             .finally(() => setTimeout(() => setLoading(false), 200))
     })
@@ -248,7 +248,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 setSelected([])
             })
             .catch((err) => {
-                yakitNotify("error", `${t("YakitNotification.uploadFailed", {colon: true})}${err}`)
+                yakitNotify("error", t("YakitNotification.uploadFailed", {error: err + ""}))
             })
     })
     const onBatchRemove = useMemoizedFn(() => {
@@ -272,7 +272,7 @@ export const ScreenRecorderList: React.FC<ScreenRecorderListProp> = (props) => {
                 setDelShow(false)
             })
             .catch((err) => {
-                yakitNotify("error", `${t("YakitNotification.deleteFailed", {colon: true})}${err}`)
+                yakitNotify("error", t("YakitNotification.deleteFailed", {error: err + ""}))
             })
     })
     const onRefresh = useMemoizedFn(() => {
@@ -690,7 +690,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                     yakitNotify("success", t("YakitNotification.uploaded"))
                 })
                 .catch((err) => {
-                    yakitNotify("error", `${t("YakitNotification.uploadFailed", {colon: true})}${err}`)
+                    yakitNotify("error", t("YakitNotification.uploadFailed", {error: err + ""}))
                 })
                 .finally(() =>
                     setTimeout(() => {
@@ -711,7 +711,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
                 yakitNotify("success", t("YakitNotification.deleted"))
             })
             .catch((err) => {
-                yakitNotify("error", `${t("YakitNotification.deleteFailed", {colon: true})}${err}`)
+                yakitNotify("error", t("YakitNotification.deleteFailed", {error: err + ""}))
             })
     })
     return (

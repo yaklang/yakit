@@ -10,6 +10,7 @@ import {ProjectManageProp} from "./ProjectManage"
 import classNames from "classnames"
 import styles from "./SoftwareSettings.module.scss"
 import {isCommunityMemfit, isEnpriTrace, isEnpriTraceAgent, isIRify, isMemfit} from "@/utils/envfile"
+import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import yakitEEProject from "@/assets/yakitFontEE.png"
 import yakitSEProject from "@/assets/yakitFontSE.png"
 import yakitEEMiniProject from "@/assets/yakitEE.png"
@@ -45,10 +46,10 @@ const ProjectLogo = (showMini: boolean) => {
         return <YakitLogoSvgIcon />
     }
 }
-const SettingsMenu: SettingsMenuProp[] = [
+const getSettingsMenu = (t: TFunction): SettingsMenuProp[] => [
     {
         key: "project",
-        name: "项目管理",
+        name: t("SoftwareSettings.projectManagement"),
         icon: <DesktopComputerSvgIcon />
     }
 ]
@@ -75,11 +76,13 @@ export interface SoftwareSettingsProp {
 
 export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => {
     const {onEngineModeChange} = props
+    const {t} = useI18nNamespaces(["setting"])
 
     const [hostName, setHostName] = useState<string>("")
     const [currentKey, setCurrentKey] = useState<string>("project")
 
     const [showMini, setShowMini] = useState<boolean>(false)
+    const SettingsMenu = getSettingsMenu(t)
 
     const wrapperResize = useMemoizedFn((e: UIEvent) => {
         const win: Window = e.target as any
@@ -109,7 +112,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
     }, [])
 
     return (
-        <div className={styles["software-settings-wrapper"]}>
+    <div className={styles["software-settings-wrapper"]}>
             <div className={styles["software-settings-container"]}>
                 <div
                     className={classNames(styles["left-wrapper"], {
@@ -135,7 +138,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                                     >
                                         <div className={styles["opt-title"]}>
                                             {item.icon}
-                                            {showMini ? <></> : item.name}
+                                            {showMini ? <></> : <span style={{whiteSpace: "nowrap"}}>{item.name}</span>}
                                         </div>
                                         {!showMini && (
                                             <div className={styles["opt-notes"]}>
@@ -165,7 +168,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                         type='outline2'
                         onClick={() => onEngineModeChange("remote")}
                     >
-                        {showMini ? <SoftwareRemoteSvgIcon /> : "远程模式"}
+                        {showMini ? <SoftwareRemoteSvgIcon /> : t("SoftwareSettings.remoteMode")}
                     </YakitButton>
                 </div>
 
