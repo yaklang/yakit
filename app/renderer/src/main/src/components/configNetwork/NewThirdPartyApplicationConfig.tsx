@@ -141,10 +141,8 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
   },
 ]
 
-interface NewThirdPartyApplicationConfigBaseProps extends Omit<
-  ThirdPartyApplicationConfigProp,
-  'onAdd' | 'onCancel' | 'isOnlyShowAiType'
-> {
+interface NewThirdPartyApplicationConfigBaseProps
+  extends Omit<ThirdPartyApplicationConfigProp, 'onAdd' | 'onCancel' | 'isOnlyShowAiType'> {
   ref?: React.ForwardedRef<{ form: FormInstance }>
 }
 export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicationConfigBaseProps> = React.memo(
@@ -211,8 +209,8 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
             const newOptions = hasDefault
               ? modalNamelist
               : name
-                ? [{ label: name, value: name }, ...modalNamelist]
-                : modalNamelist
+              ? [{ label: name, value: name }, ...modalNamelist]
+              : modalNamelist
             setModelNameAllOptions(newOptions)
             yakitNotify('success', '获取成功')
           })
@@ -590,8 +588,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
             const newOptions = hasDefault
               ? modalNamelist
               : name
-                ? [{ label: name, value: name }, ...modalNamelist]
-                : modalNamelist
+              ? [{ label: name, value: name }, ...modalNamelist]
+              : modalNamelist
             setModelNameAllOptions(newOptions)
             yakitNotify('success', '获取成功')
           })
