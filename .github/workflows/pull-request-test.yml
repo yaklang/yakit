@@ -98,6 +98,18 @@ jobs:
           base_sha: ${{ github.event.pull_request.base.sha }}
           separator: "\n"
 
+      - name: Print PR changed files
+        shell: bash
+        run: |
+          echo "Changed files from tj-actions/changed-files:"
+          if [ -z "${{ steps.changed_files.outputs.all_changed_files }}" ]; then
+            echo "(none)"
+          else
+            while IFS= read -r file; do
+              [ -n "$file" ] && echo "$file"
+            done <<< "${{ steps.changed_files.outputs.all_changed_files }}"
+          fi
+
       - name: Format or check PR changed files with prettier
         id: format_step
         continue-on-error: true
