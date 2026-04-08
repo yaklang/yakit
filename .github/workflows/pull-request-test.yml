@@ -102,12 +102,14 @@ jobs:
         shell: bash
         run: |
           echo "Changed files from tj-actions/changed-files:"
-          if [ -z "${{ steps.changed_files.outputs.all_changed_files }}" ]; then
+          CHANGED_FILES_RAW='${{ steps.changed_files.outputs.all_changed_files }}'
+          CHANGED_FILES=$(printf '%b' "$CHANGED_FILES_RAW")
+          if [ -z "$CHANGED_FILES" ]; then
             echo "(none)"
           else
             while IFS= read -r file; do
               [ -n "$file" ] && echo "$file"
-            done <<< "${{ steps.changed_files.outputs.all_changed_files }}"
+            done <<< "$CHANGED_FILES"
           fi
 
       - name: Format or check PR changed files with prettier
@@ -119,7 +121,8 @@ jobs:
         run: |
           set -o pipefail
           {
-          CHANGED_FILES="${{ steps.changed_files.outputs.all_changed_files }}"
+          CHANGED_FILES_RAW='${{ steps.changed_files.outputs.all_changed_files }}'
+          CHANGED_FILES=$(printf '%b' "$CHANGED_FILES_RAW")
 
           format_targets=()
           while IFS= read -r file; do
