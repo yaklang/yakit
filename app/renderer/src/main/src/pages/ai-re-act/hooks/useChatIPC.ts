@@ -1041,6 +1041,18 @@ function useChatIPC(params?: UseChatIPCParams) {
     }
   }, [])
 
+  /** 清空指定变量数据 */
+  const handleResetTarget = useMemoizedFn((target: 'memoryList') => {
+    switch (target) {
+      case 'memoryList':
+        handleResetMemoryList()
+        break
+
+      default:
+        break
+    }
+  })
+
   const state: UseChatIPCState = useCreation(() => {
     return {
       execute,
@@ -1097,6 +1109,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleTaskReviewRelease,
       onDelChats,
       handleCancelLoadingChange,
+      handleResetTarget,
     }
   }, [])
 
