@@ -94,22 +94,22 @@ jobs:
         id: changed_files
         uses: tj-actions/changed-files@v47
         with:
-          # 明确指定 base_sha，确保只对比 PR 本身的改动
           base_sha: ${{ github.event.pull_request.base.sha }}
           json: true
           safe_output: false
 
       - name: Print PR changed files
         shell: bash
+        env:
+          # 使用环境变量传递，防止文件名特殊字符干扰脚本
+          ALL_CHANGED_FILES: ${{ steps.changed_files.outputs.all_changed_files }}
         run: |
           echo "Changed files from tj-actions/changed-files:"
-          CHANGED_FILES_JSON='${{ steps.changed_files.outputs.all_changed_files }}'
-          if [ -z "$CHANGED_FILES_JSON" ] || [ "$CHANGED_FILES_JSON" = "[]" ]; then
+          if [ "$ALL_CHANGED_FILES" = "[]" ] || [ -z "$ALL_CHANGED_FILES" ]; then
             echo "(none)"
           else
-            while IFS= read -r file; do
-              [ -n "$file" ] && echo "$file"
-            done < <(jq -r '.[]' <<< "$CHANGED_FILES_JSON")
+            # 使用 jq 解析 JSON 数组并逐行输出
+            echo "$ALL_CHANGED_FILES" | jq -r '.[]'
           fi
 
       - name: Format or check PR changed files with prettier
@@ -117,29 +117,35 @@ jobs:
         continue-on-error: true
         shell: bash
         env:
+          ALL_CHANGED_FILES: ${{ steps.changed_files.outputs.all_changed_files }}
           IS_FORK_PR: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           set -o pipefail
           {
-          CHANGED_FILES_JSON='${{ steps.changed_files.outputs.all_changed_files }}'
+            # 1. 转换为 Bash 数组
+            mapfile -t all_files < <(echo "$ALL_CHANGED_FILES" | jq -r '.[]')
 
-          format_targets=()
-          while IFS= read -r file; do
-            [ -f "$file" ] && format_targets+=("$file")
-          done < <(jq -r '.[]' <<< "$CHANGED_FILES_JSON")
+            # 2. 过滤掉不存在的文件（处理被删除的文件）
+            format_targets=()
+            for file in "${all_files[@]}"; do
+              if [ -f "$file" ]; then
+                format_targets+=("$file")
+              fi
+            done
 
-          if [ "${#format_targets[@]}" -eq 0 ]; then
-            echo "No files to format."
-            exit 0
-          fi
+            if [ "${#format_targets[@]}" -eq 0 ]; then
+              echo "No files to format."
+              exit 0
+            fi
 
-          if [ "$IS_FORK_PR" = 'true' ]; then
-            echo "Fork PR detected. Checking ${#format_targets[@]} file(s) with prettier..."
-            npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --check --ignore-unknown "${format_targets[@]}"
-          else
-            echo "Same-repo PR detected. Formatting ${#format_targets[@]} file(s) with prettier..."
-            npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --write --ignore-unknown "${format_targets[@]}"
-          fi
+            # 3. 执行格式化或检查
+            if [ "$IS_FORK_PR" = 'true' ]; then
+              echo "Fork PR detected. Checking ${#format_targets[@]} file(s) with prettier..."
+              npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --check --ignore-unknown "${format_targets[@]}"
+            else
+              echo "Same-repo PR detected. Formatting ${#format_targets[@]} file(s) with prettier..."
+              npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --write --ignore-unknown "${format_targets[@]}"
+            fi
           } 2>&1 | tee format-output.log
 
       - name: Comment format failure on PR
