@@ -1,1 +1,11 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 检测根目录是否存在 prettier
+if ! [ -x "$(command -v ./node_modules/.bin/prettier)" ]; then
+  echo "❌ 错误: 检测到未安装 Prettier 依赖！"
+  echo "请在根目录执行: yarn install"
+  exit 1
+fi
+
 npx lint-staged
