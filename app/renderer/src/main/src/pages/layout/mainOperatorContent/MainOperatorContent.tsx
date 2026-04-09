@@ -3219,6 +3219,9 @@ const TabContent: React.FC<TabContentProps> = React.memo((props) => {
     try {
       if (subMenuList.length > 0) {
         pageCache[index].multipleNode = [...subMenuList]
+        // 非新增操作（重命名/排序/关闭等）不应触发 useEffect 中的自动导航到最后一项
+        pageCache[index].openFlag = false
+        pageCache[index].selectSubItem = false
         // setSubPage([...subMenuList])
         setPageCache([...pageCache])
       } else {
