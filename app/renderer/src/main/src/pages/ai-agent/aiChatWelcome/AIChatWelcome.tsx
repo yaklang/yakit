@@ -28,7 +28,6 @@ import { AIDownAngleLeftIcon, AIDownAngleRightIcon, AIUpAngleLeftIcon, AIUpAngle
 import { Tooltip } from 'antd'
 import ReactResizeDetector from 'react-resize-detector'
 import emiter from '@/utils/eventBus/eventBus'
-import { AIAgentTabListEnum, SwitchAIAgentTabEventEnum } from '../defaultConstant'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { randomString } from '@/utils/randomUtil'
 import classNames from 'classnames'
@@ -60,10 +59,10 @@ import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdown
 //     }
 // ]
 
-const getRandomItems = (array, count = 3) => {
-  const shuffled = [...array].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, count)
-}
+// const getRandomItems = (array, count = 3) => {
+//   const shuffled = [...array].sort(() => 0.5 - Math.random())
+//   return shuffled.slice(0, count)
+// }
 
 const randomAIMaterialsDataIsEmpty = (randObj) => {
   try {
@@ -73,6 +72,12 @@ const randomAIMaterialsDataIsEmpty = (randObj) => {
   } catch (error) {
     return true
   }
+}
+
+enum AIChatWelcomeTabKeyEnum {
+  Knowledge = 'knowledge',
+  Skills = 'skills',
+  Tools = 'tools',
 }
 
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
@@ -103,6 +108,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
     // 控制下拉菜单
     const [openDrawer, setOpenDrawer] = useState<boolean>(true)
+    const [tabActiveKey, setTabActiveKey] = useState<AIChatWelcomeTabKeyEnum>(AIChatWelcomeTabKeyEnum.Knowledge)
 
     const lineStartRef = useRef<HTMLDivElement>(null)
     const welcomeRef = useRef<HTMLDivElement>(null)
@@ -130,44 +136,22 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const onMore = useMemoizedFn((item: string) => {
       switch (item) {
         case '技能':
-          onForgeMore()
+          setTabActiveKey(AIChatWelcomeTabKeyEnum.Skills)
+          setOpenDrawer(true)
           break
         case '知识库':
-          onKnowledgeBaseMore()
+          emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_REPOSITORY }))
           break
         case '工具':
-          onToolMore()
+          setTabActiveKey(AIChatWelcomeTabKeyEnum.Tools)
+          setOpenDrawer(true)
           break
         default:
           break
       }
     })
-    const onForgeMore = useMemoizedFn(() => {
-      emiter.emit(
-        'switchAIAgentTab',
-        JSON.stringify({
-          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-          params: {
-            active: AIAgentTabListEnum.Forge_Name,
-            show: true,
-          },
-        }),
-      )
-    })
-    const onKnowledgeBaseMore = useMemoizedFn(() => {
-      emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_REPOSITORY }))
-    })
-    const onToolMore = useMemoizedFn(() => {
-      emiter.emit(
-        'switchAIAgentTab',
-        JSON.stringify({
-          type: SwitchAIAgentTabEventEnum.SET_TAB_ACTIVE,
-          params: {
-            active: AIAgentTabListEnum.Tool,
-            show: true,
-          },
-        }),
-      )
+    const handleTabChange = useMemoizedFn((key: string) => {
+      setTabActiveKey(key as AIChatWelcomeTabKeyEnum)
     })
 
     const onCheckItem = useMemoizedFn(
@@ -193,7 +177,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       return [
         {
           label: t('AIChatWelcome.knowledgeBase'),
-          key: 'knowledge',
+          key: AIChatWelcomeTabKeyEnum.Knowledge,
           children: <KnowledgeSidebarList ref={knowledgeSidebarListRef} api={api} streams={streams} />,
           extra: [
             <YakitButton
@@ -227,7 +211,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         },
         {
           label: t('AIChatWelcome.skillBase'),
-          key: 'skills',
+          key: AIChatWelcomeTabKeyEnum.Skills,
           children: <ForgeName ref={forgeNameRef} onSelectChange={setIsSelectForgeName} />,
           extra: [
             <YakitButton
@@ -259,7 +243,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         },
         {
           label: t('AIChatWelcome.toolBase'),
-          key: 'tools',
+          key: AIChatWelcomeTabKeyEnum.Tools,
           children: <AIToolList />,
           extra: [
             <YakitButton
@@ -301,7 +285,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         >
           <SplitView
             isVertical
-            elements={[{ element: <FileTreeList /> }, { element: <Tabs items={items} /> }]}
+            elements={[
+              { element: <FileTreeList /> },
+              { element: <Tabs items={items} activeKey={tabActiveKey} onChange={handleTabChange} /> },
+            ]}
             sashClassName={styles['split-view-line']}
           />
         </YakitDrawer>
