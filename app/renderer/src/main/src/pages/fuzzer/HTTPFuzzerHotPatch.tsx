@@ -55,6 +55,7 @@ import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { getHotPatchCache, setHotPatchCache } from './hotPatchCache'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 interface HTTPFuzzerHotPatchProp {
   pageId: string
   onInsert: (s: string) => any
@@ -493,6 +494,7 @@ export const getHotPatchCodeInfo = async () => {
 interface HTTPFuzzerHotPatchSidebarProp {
   pageId: string
   visible: boolean
+  inViewport?: boolean
   hotPatchCode: string
   hotPatchCodeWithParamGetter: string
   selectedTemplateName?: string
@@ -716,11 +718,10 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
   useShortcutKeyTrigger(
     'saveHotPatch*httpFuzzer',
     useMemoizedFn(() => {
-      if (visible) {
-        if (!canSaveSelectedTemplate) {
-          yakitFailed(t('HotCodeTemplate.save_disable_tip'))
-          return
-        }
+      if (!props.inViewport || !visible) return
+      if (!canSaveSelectedTemplate) {
+        setAddHotCodeTemplateVisible(true)
+      } else {
         onUpdateTemplate()
       }
     }),
@@ -1318,6 +1319,11 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                           ></YakitButton>
                         ) : null}
                       </div>
+                      {item.isDefault && (
+                        <YakitTag color="info" size="small">
+                          {t('YakitButton.builtIn')}
+                        </YakitTag>
+                      )}
                     </div>
                   </YakitPopconfirm>
                 </YakitPopover>
