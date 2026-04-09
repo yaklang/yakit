@@ -91,16 +91,12 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
       getValue: () => {},
     })
 
-    useImperativeHandle(
-      ref,
-      () => {
-        return {
-          ...aiChatTextareaRef.current,
-          handleStart: () => {},
-        }
-      },
-      [],
-    )
+    useImperativeHandle(ref, () => {
+      return {
+        ...aiChatTextareaRef.current,
+        handleStart: () => {},
+      }
+    }, [])
 
     const [{ randomAIMaterials, randomAIMaterialsData, loadingAIMaterials }, { onRefresh }] = useGetAIMaterialsData()
     // #region 问题相关逻辑
