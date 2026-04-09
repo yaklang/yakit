@@ -35,6 +35,7 @@ export interface AIManualAdditionPopoverProps {
   children?: ReactNode
   visible?: boolean
   setVisible?: (v: boolean) => void
+  chatType: AIManualAdditionProps['chatType']
 }
 
 export interface AIGlobalCommandRefProps {
@@ -47,5 +48,6 @@ export interface AIGlobalCommandProps {
 }
 
 export interface AIManualAdditionProps {
+  chatType: ReActChatBaseInfo['chatType']
   onCancel: () => void
 }

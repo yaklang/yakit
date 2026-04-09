@@ -32,7 +32,7 @@ import {
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import { AIReviewType } from '../hooks/aiRender'
+import { AIChatQSData, AIChatQSDataTypeEnum, AIReviewType } from '../hooks/aiRender'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
 import { Tooltip } from 'antd'
@@ -49,6 +49,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import useAIGlobalConfig from '../hooks/useAIGlobalConfig'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { v4 as uuidv4 } from 'uuid'
+import moment from 'moment'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
@@ -335,7 +337,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         streams.length > 0 && (
           <div className={styles['footer']}>
             {chatIPCData.execute && (
-              <AIManualAdditionPopover>
+              <AIManualAdditionPopover chatType="task">
                 <YakitButton
                   type="outline2"
                   radius="28px"
@@ -374,7 +376,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
   )
 })
 export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = React.memo((props) => {
-  const { children } = props
+  const { children, chatType } = props
   const [manualAdditionVisible, setManualAdditionVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'visible',
@@ -384,7 +386,7 @@ export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = R
   return (
     <YakitPopover
       visible={manualAdditionVisible}
-      content={<AIManualAddition onCancel={() => setManualAdditionVisible(false)} />}
+      content={<AIManualAddition chatType={chatType} onCancel={() => setManualAdditionVisible(false)} />}
       onVisibleChange={setManualAdditionVisible}
       trigger={'click'}
     >
@@ -394,7 +396,7 @@ export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = R
 })
 
 const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => {
-  const { onCancel } = props
+  const { chatType, onCancel } = props
   const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
   const { chatIPCData, syncIdInfoMap } = useChatIPCStore()
   const [prompt, setPrompt] = useState<string>()
@@ -416,12 +418,21 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
       (syncIdOfAddToContext.current && !syncIdInfoMap?.get(syncIdOfAddToContext.current)) ||
       (syncIdOfAddAndReExecute.current && !syncIdInfoMap?.get(syncIdOfAddAndReExecute.current))
     ) {
-      onCancel()
-      setPrompt('')
-      if (syncIdOfAddToContext.current) syncIdOfAddToContext.current = ''
-      if (syncIdOfAddAndReExecute.current) syncIdOfAddAndReExecute.current = ''
+      onReset()
     }
   }, [syncIdInfoMap])
+
+  useEffect(() => {
+    if (chatIPCData.execute) return
+    onReset()
+  }, [chatIPCData.execute])
+
+  const onReset = useMemoizedFn(() => {
+    onCancel()
+    setPrompt('')
+    if (syncIdOfAddToContext.current) syncIdOfAddToContext.current = ''
+    if (syncIdOfAddAndReExecute.current) syncIdOfAddAndReExecute.current = ''
+  })
 
   const onAddAndReExecute = useMemoizedFn(() => {
     if (!prompt?.trim()) return
@@ -451,6 +462,11 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
     })
     currentCoordinatorIdRef.current = ''
   })
+  const getTypeBySyncID = useMemoizedFn(() => {
+    if (!!syncIdOfAddToContext.current) return '加入上下文'
+    if (!!syncIdOfAddAndReExecute.current) return '加入并重新执行'
+    return ''
+  })
   const onAddToContext = useMemoizedFn((syncID: string) => {
     if (!prompt?.trim()) return
     handleSendSyncMessage({
@@ -458,10 +474,23 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
       SyncJsonInput: JSON.stringify({ content: prompt }),
       syncID: syncID,
     })
+    onAddToList()
+  })
+  const onAddToList = useMemoizedFn(() => {
+    const chatData: AIChatQSData = {
+      id: uuidv4(),
+      chatType,
+      type: AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
+      Timestamp: moment().unix(),
+      data: { type: getTypeBySyncID(), content: prompt || '' },
+      AIService: '',
+      AIModelName: '',
+    }
+    chatIPCEvents.handleUserManualIntervention(chatData)
   })
   return (
     <div className={styles['ai-manual-addition']} onClick={(e) => e.stopPropagation()}>
-      <div className={styles['ai-manual-addition-heard']}>手动介入</div>
+      <div className={styles['ai-manual-addition-heard']}>人工介入</div>
       <YakitInput.TextArea
         rows={5}
         value={prompt}

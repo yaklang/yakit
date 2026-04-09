@@ -354,7 +354,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   <UploadFileButton title="打开文件夹" className={styles['btn-base']} />
                 </OpenFileDropdown>
 
-                <AIManualAdditionPopover visible={manualAdditionVisible} setVisible={setManualAdditionVisible}>
+                <AIManualAdditionPopover
+                  chatType="reAct"
+                  visible={manualAdditionVisible}
+                  setVisible={setManualAdditionVisible}
+                >
                   <YakitButton
                     type="text2"
                     radius="50%"

@@ -133,7 +133,12 @@ export interface FailReactError {
 export type ChatReferenceMaterialPayload = AIAgentGrpcApi.ReferenceMaterialPayload[]
 
 /** 用户手动介入上下文 */
-export interface UserManualInterventionContext {}
+export interface UserManualInterventionContext {
+  /** 手动介入得类型 */
+  type: string
+  /** 用户输入 */
+  content: string
+}
 
 export enum AIChatQSDataTypeEnum {
   /**用户的自由输入 */
@@ -238,7 +243,7 @@ type ChatReferenceMaterial = AIChatQSDataBase<
 >
 /** 用于渲染State定义使用, 无实际逻辑意义 */
 type ChatStreamGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM_GROUP, undefined>
-type ChatUserManualIntervention = AIChatQSDataBase<
+export type ChatUserManualIntervention = AIChatQSDataBase<
   AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
   UserManualInterventionContext
 >
