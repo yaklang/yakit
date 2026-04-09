@@ -576,7 +576,7 @@ const AIGlobalCommand: React.FC<AIGlobalCommandProps> = React.memo(
 
     return (
       <div className={styles['ai-global-command']} onClick={(e) => e.stopPropagation()}>
-        <div className={styles['ai-global-command-heard']}>{t('AIReActTaskChatContent.humanIntervention')}</div>
+        <div className={styles['ai-global-command-heard']}>全局指令</div>
         <YakitInput.TextArea
           rows={5}
           value={prompt}

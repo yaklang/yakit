@@ -52,6 +52,7 @@ import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { AIGlobalCommandPopover, AIManualAdditionPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -88,7 +89,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       isOpen,
       filterMentionType,
     } = props
-
+    const { t } = useI18nNamespaces(['aiAgent'])
     const { chatIPCData } = useChatIPCStore()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 
@@ -354,23 +355,25 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   <UploadFileButton title="打开文件夹" className={styles['btn-base']} />
                 </OpenFileDropdown>
 
-                <AIManualAdditionPopover
-                  chatType="reAct"
-                  visible={manualAdditionVisible}
-                  setVisible={setManualAdditionVisible}
-                >
-                  <YakitButton
-                    type="text2"
-                    radius="50%"
-                    isHover={manualAdditionVisible}
-                    icon={<OutlineHandIcon />}
-                    disabled={!execute}
-                    className={styles['btn-base']}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                    }}
-                  />
-                </AIManualAdditionPopover>
+                {execute && (
+                  <AIManualAdditionPopover
+                    chatType="reAct"
+                    visible={manualAdditionVisible}
+                    setVisible={setManualAdditionVisible}
+                  >
+                    <YakitButton
+                      type="outline2"
+                      radius="28px"
+                      isHover={manualAdditionVisible}
+                      icon={<OutlineHandIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                      }}
+                    >
+                      {t('AIReActTaskChatContent.humanIntervention')}
+                    </YakitButton>
+                  </AIManualAdditionPopover>
+                )}
               </div>
             )}
 
