@@ -132,7 +132,6 @@ textarea.qs-input-textarea {
     }
   }
 }
-
 .code-btn-wrapper {
   cursor: pointer;
   height: 16px;
@@ -148,40 +147,6 @@ textarea.qs-input-textarea {
   .preset-prompt-tag {
     overflow: hidden;
     max-width: 200px;
-  }
-}
-// #endregion
-
-// #region AIGlobalCommand/AIManualAddition
-.ai-global-command,
-.ai-manual-addition {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 300px;
-  &-heard {
-    display: flex;
-    align-items: center;
-
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 20px; /* 142.857% */
-    letter-spacing: 0.1px;
-  }
-  &-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    padding-top: 4px;
-  }
-  .add-and-re-execute-btn {
-    :global {
-      .ant-btn > .ant-btn-loading-icon {
-        width: auto !important;
-      }
-    }
   }
 }
 // #endregion

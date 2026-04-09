@@ -129,5 +129,9 @@
     "applyRecommendConfig": "Apply recommend config",
     "testSuccess": "Test success",
     "testFailed": "Test failed"
+  },
+  "AIReActTaskChatContent": {
+    "humanIntervention": "Human intervention",
+    "globalDirective": "Global directive"
   }
 }

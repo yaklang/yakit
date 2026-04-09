@@ -129,5 +129,9 @@
     "applyRecommendConfig": "一键应用",
     "testSuccess": "测试成功",
     "testFailed": "测试失败"
+  },
+  "AIReActTaskChatContent": {
+    "humanIntervention": "人工介入",
+    "globalDirective": "全局指令"
   }
 }

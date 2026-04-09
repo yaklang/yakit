@@ -63,16 +63,3 @@ export interface FileToChatQuestionList {
   path: string
   isFolder: boolean
 }
-
-export interface AIGlobalCommandRefProps {
-  value: string
-}
-export interface AIGlobalCommandProps {
-  ref?: React.ForwardedRef<AIGlobalCommandRefProps>
-  onSave: (v: string) => void
-  onCancel: () => void
-}
-
-export interface AIManualAdditionProps {
-  onCancel: () => void
-}
