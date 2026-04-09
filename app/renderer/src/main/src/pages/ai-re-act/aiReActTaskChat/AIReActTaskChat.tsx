@@ -345,6 +345,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                   onClick={(e) => {
                     e.stopPropagation()
                   }}
+                  size="large"
                 >
                   {t('AIReActTaskChatContent.humanIntervention')}
                 </YakitButton>
@@ -352,7 +353,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
             )}
 
             <AIGlobalCommandPopover>
-              <YakitButton icon={<OutlineCodeIcon />} radius="28px" type="outline2">
+              <YakitButton icon={<OutlineCodeIcon />} radius="28px" type="outline2" size="large">
                 {t('AIReActTaskChatContent.globalDirective')}
               </YakitButton>
             </AIGlobalCommandPopover>
