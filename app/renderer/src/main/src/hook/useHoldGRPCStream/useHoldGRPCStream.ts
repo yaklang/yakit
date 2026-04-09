@@ -8,8 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { getRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
-
-const { ipcRenderer } = window.require('electron')
+import { yakitStream } from '@/services/electronBridge'
 
 /** @name 将缓冲区Map对象(卡片类) 转换成 hook数据数据(卡片集合) */
 export const convertCardInfo = (maps: Map<string, HoldGRPCStreamProps.CacheCard>) => {
@@ -159,7 +158,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   })
 
   useEffect(() => {
-    ipcRenderer.on(`${token}-data`, async (e: any, data: StreamResult.BaseProsp) => {
+    const offData = yakitStream.onData(token, async (data: StreamResult.BaseProsp) => {
       // run-time-id
       if (!!data?.RuntimeID) {
         runTimeId.current.cache = data.RuntimeID
@@ -333,14 +332,14 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
       }
     })
     // token-error
-    ipcRenderer.on(`${token}-error`, (e: any, error: any) => {
+    const offError = yakitStream.onError(token, (error: any) => {
       isShowError && yakitFailed(`[Mod] ${taskName} error: ${error}`, true)
       if (onError) {
         onError(error)
       }
     })
     // token-end
-    ipcRenderer.on(`${token}-end`, (e: any, data: any) => {
+    const offEnd = yakitStream.onEnd(token, () => {
       isShowEnd && info(`[Mod] ${taskName} finished`)
       handleResults()
       if (onEnd) {
@@ -351,9 +350,9 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
     return () => {
       stop()
       cancel()
-      ipcRenderer.removeAllListeners(`${token}-data`)
-      ipcRenderer.removeAllListeners(`${token}-error`)
-      ipcRenderer.removeAllListeners(`${token}-end`)
+      offData()
+      offError()
+      offEnd()
     }
   }, [token])
 
@@ -446,7 +445,7 @@ export default function useHoldGRPCStream(params: HoldGRPCStreamParams) {
   })
   /** @name 关闭处理数据流 */
   const cancel = useMemoizedFn(() => {
-    ipcRenderer.invoke(`cancel-${apiKey}`, token)
+    yakitStream.cancel(apiKey, token)
   })
   /** @name 重置数据流 */
   const reset = useMemoizedFn(() => {

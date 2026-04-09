@@ -1,141 +1,152 @@
-import React from "react"
-import {success, yakitFailed, yakitNotify} from "./notification"
-import {OpenPacketNewWindowItem} from "@/components/OpenPacketNewWindow/OpenPacketNewWindow"
-import {childWindowHash} from "@/pages/layout/mainOperatorContent/MainOperatorContent"
+import React from 'react'
+import { success, yakitFailed, yakitNotify } from './notification'
+import { OpenPacketNewWindowItem } from '@/components/OpenPacketNewWindow/OpenPacketNewWindow'
+import { childWindowHash } from '@/pages/layout/mainOperatorContent/MainOperatorContent'
 import {
-    changeClickEngineConsoleFlag,
-    clickEngineConsoleFlag,
-    engineConsoleWindowHash
-} from "@/components/layout/hooks/useEngineConsole/useEngineConsole"
-import i18n from "@/i18n/i18n"
-import { Risk } from "@/pages/risks/schema"
-import { SSARisk } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+  changeClickEngineConsoleFlag,
+  clickEngineConsoleFlag,
+  engineConsoleWindowHash,
+} from '@/components/layout/hooks/useEngineConsole/useEngineConsole'
+import i18n from '@/i18n/i18n'
+import { Risk } from '@/pages/risks/schema'
+import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
 
-const {ipcRenderer} = window.require("electron")
+const toWritableText = (data?: Uint8Array | string) => {
+  if (typeof data === 'string') {
+    return data
+  }
+
+  if (data instanceof Uint8Array) {
+    return new TextDecoder().decode(data)
+  }
+
+  return ''
+}
 
 export const openExternalWebsite = (u: string) => {
-    ipcRenderer.invoke("shell-open-external", u)
+  yakitShell.openExternal(u)
 }
 
 export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
-    if (childWindowHash) {
-        minWinSendToChildWin({type: "openPacketNewWindow", data})
-    } else {
-        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
-        ipcRenderer.send("open-new-child-window", {
-            type: "openPacketNewWindow",
-            data: data
-        })
-    }
+  if (childWindowHash) {
+    minWinSendToChildWin({ type: 'openPacketNewWindow', data })
+  } else {
+    yakitNotify('info', i18n.language === 'zh' ? '新窗口打开中...' : 'Opening new window...')
+    yakitWindow.openChildWindow({
+      type: 'openPacketNewWindow',
+      data: data,
+    })
+  }
 }
 
 export const openRiskNewWindow = (data?: Risk) => {
-    if (childWindowHash) {
-        minWinSendToChildWin({type: "openRiskNewWindow", data})
-    } else {
-        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
-        ipcRenderer.send("open-new-child-window", {
-            type: "openRiskNewWindow",
-            data: data
-        })
-    }
+  if (childWindowHash) {
+    minWinSendToChildWin({ type: 'openRiskNewWindow', data })
+  } else {
+    yakitNotify('info', i18n.language === 'zh' ? '新窗口打开中...' : 'Opening new window...')
+    yakitWindow.openChildWindow({
+      type: 'openRiskNewWindow',
+      data: data,
+    })
+  }
 }
 
 export const openSSARiskNewWindow = (data?: SSARisk) => {
-    if (childWindowHash) {
-        minWinSendToChildWin({type: "openSSARiskNewWindow", data})
-    } else {
-        yakitNotify("info", i18n.language === "zh" ? "新窗口打开中..." : "Opening new window...")
-        ipcRenderer.send("open-new-child-window", {
-            type: "openSSARiskNewWindow",
-            data: data
-        })
-    }
+  if (childWindowHash) {
+    minWinSendToChildWin({ type: 'openSSARiskNewWindow', data })
+  } else {
+    yakitNotify('info', i18n.language === 'zh' ? '新窗口打开中...' : 'Opening new window...')
+    yakitWindow.openChildWindow({
+      type: 'openSSARiskNewWindow',
+      data: data,
+    })
+  }
 }
 
 export const minWinSendToChildWin = (params) => {
-    ipcRenderer.send("onTop-childWin")
-    ipcRenderer.send("minWin-send-to-childWin", {
-        type: params.type,
-        hash: childWindowHash,
-        data: params.data
-    })
+  yakitWindow.focusChildWindow()
+  yakitWindow.sendToChildWindow({
+    type: params.type,
+    hash: childWindowHash,
+    data: params.data,
+  })
 }
 
 export const openConsoleNewWindow = () => {
-    if (clickEngineConsoleFlag) return
-    if (!engineConsoleWindowHash) {
-        changeClickEngineConsoleFlag(true)
-        ipcRenderer.invoke("open-console-new-window")
-    } else {
-        ipcRenderer.send("onTop-console-new-window")
-    }
+  if (clickEngineConsoleFlag) return
+  if (!engineConsoleWindowHash) {
+    changeClickEngineConsoleFlag(true)
+    yakitWindow.openConsoleWindow()
+  } else {
+    yakitWindow.focusConsoleWindow()
+  }
 }
 
 export const openABSFile = (u: string) => {
-    ipcRenderer.invoke("shell-open-abs-file", u)
+  yakitShell.openAbsoluteFile(u)
 }
 
 export const openABSFileLocated = (u: string) => {
-    ipcRenderer.invoke("open-specified-file", u)
+  yakitShell.openSpecifiedFile(u)
 }
 
 export const saveABSFileToOpen = (name: string, data?: Uint8Array | string) => {
-    const isArr = Array.isArray(data)
-    ipcRenderer.invoke("show-save-dialog", name).then((res) => {
-        if (res.canceled) return
-        ipcRenderer
-            .invoke("write-file", {
-                route: res.filePath,
-                data: isArr ? new Buffer((data || []) as Uint8Array).toString() : data || ""
-            })
-            .then(() => {
-                success("下载完成")
-                ipcRenderer.invoke("open-specified-file", res.filePath)
-            })
-    })
+  yakitDialog.showSaveDialog(name).then((res) => {
+    if (res.canceled || !res.filePath) return
+    yakitDialog
+      .writeFile({
+        route: res.filePath,
+        data: toWritableText(data),
+      })
+      .then(() => {
+        success('下载完成')
+        if (res.filePath) {
+          yakitShell.openSpecifiedFile(res.filePath)
+        }
+      })
+  })
 }
 
 export const saveABSFileAnotherOpen = async (params: {
-    name: string
-    data?: Uint8Array | string
-    successMsg: string
-    errorMsg: string
-    isOpenSpecifiedFile?: boolean
+  name: string
+  data?: Uint8Array | string
+  successMsg: string
+  errorMsg: string
+  isOpenSpecifiedFile?: boolean
 }) => {
-    const {name, data, successMsg = "下载完成", errorMsg = "下载失败", isOpenSpecifiedFile = false} = params
-    const isArr = Array.isArray(data)
-    const showSaveDialogRes = await ipcRenderer.invoke("show-save-dialog", name)
-    if (showSaveDialogRes.canceled) return
-    return ipcRenderer
-        .invoke("write-file", {
-            route: showSaveDialogRes.filePath,
-            data: isArr ? new Buffer(data || []).toString() : data || ""
-        })
-        .then(() => {
-            success(successMsg)
-            isOpenSpecifiedFile && ipcRenderer.invoke("open-specified-file", showSaveDialogRes.filePath)
-            return showSaveDialogRes.filePath
-        })
-        .catch((e) => {
-            errorMsg && yakitFailed(`${errorMsg}：${e}`)
-            return Promise.reject(e)
-        })
+  const { name, data, successMsg = '下载完成', errorMsg = '下载失败', isOpenSpecifiedFile = false } = params
+  const showSaveDialogRes = await yakitDialog.showSaveDialog(name)
+  if (showSaveDialogRes.canceled || !showSaveDialogRes.filePath) return
+  return yakitDialog
+    .writeFile({
+      route: showSaveDialogRes.filePath,
+      data: toWritableText(data),
+    })
+    .then(() => {
+      success(successMsg)
+      isOpenSpecifiedFile && showSaveDialogRes.filePath && yakitShell.openSpecifiedFile(showSaveDialogRes.filePath)
+      return showSaveDialogRes.filePath
+    })
+    .catch((e) => {
+      errorMsg && yakitFailed(`${errorMsg}：${e}`)
+      return Promise.reject(e)
+    })
 }
 
 export interface ExternalUrlProp {
-    url: string
-    title?: React.ReactNode
+  url: string
+  title?: React.ReactNode
 }
 
 export const ExternalUrl: React.FC<ExternalUrlProp> = (props) => {
-    return (
-        <a
-            onClick={(e) => {
-                openExternalWebsite(props.url)
-            }}
-        >
-            {props.title || props.url}
-        </a>
-    )
+  return (
+    <a
+      onClick={(e) => {
+        openExternalWebsite(props.url)
+      }}
+    >
+      {props.title || props.url}
+    </a>
+  )
 }

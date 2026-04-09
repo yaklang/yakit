@@ -1,6 +1,5 @@
-import {ipcEventPre} from "./ipcEventPre"
-const {ipcRenderer} = window.require("electron")
+import { yakitShell } from './electronBridge'
 
 export const openABSFileLocated = (u: string) => {
-    ipcRenderer.invoke(ipcEventPre + "open-specified-file", u)
+  yakitShell.openSpecifiedFile(u)
 }

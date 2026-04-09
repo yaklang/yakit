@@ -1,25 +1,23 @@
-import {ipcEventPre} from "./ipcEventPre"
-
-const {ipcRenderer} = window.require("electron")
+import { yakitLogs } from './electronBridge'
 
 /** 打开引擎日志文件所在文件夹 */
 export const grpcOpenEngineLogFolder = () => {
-    ipcRenderer.invoke(ipcEventPre + "open-engine-log")
+  yakitLogs.openEngineLog()
 }
 
 /** 打开渲染端错误收集日志文件所在文件夹 */
 export const grpcOpenRenderLogFolder = () => {
-    ipcRenderer.invoke(ipcEventPre + "open-render-log")
+  yakitLogs.openRenderLog()
 }
 
 /** 打开主动输出信息的日志文件所在文件夹 */
 export const grpcOpenPrintLogFolder = () => {
-    ipcRenderer.invoke(ipcEventPre + "open-print-log")
+  yakitLogs.openPrintLog()
 }
 
 /** 主动输出信息到信息日志的方法 */
 export const debugToPrintLog = (msg: any) => {
-    try {
-        ipcRenderer.invoke(ipcEventPre + "debug-print-log", `${msg || ""}`)
-    } catch (error) {}
+  try {
+    yakitLogs.debugPrintLog(`${msg || ''}`)
+  } catch (error) {}
 }
