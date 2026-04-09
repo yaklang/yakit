@@ -11,6 +11,7 @@ import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, ReActChatRenderItem } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useChatContent from './useChatContent'
+import moment from 'moment'
 
 function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -365,7 +366,7 @@ function useCasualChat(params?: UseCasualChatParams) {
           id: uuidv4(),
           chatType: 'reAct',
           type: AIChatQSDataTypeEnum.QUESTION,
-          Timestamp: Date.now(),
+          Timestamp: moment().unix(),
           data: { qs: FreeInput || '', setting: request },
           AIService: '',
           AIModelName: '',
@@ -390,7 +391,7 @@ function useCasualChat(params?: UseCasualChatParams) {
   const handleUserManualIntervention = useMemoizedFn((chatInfo: AIChatQSData) => {
     try {
       setContentMap(chatInfo.id, cloneDeep(chatInfo))
-      setElements((old) => [...old, { token: chatInfo.id, type: chatInfo.type, renderNum: 1, chatType: 'task' }])
+      setElements((old) => [...old, { token: chatInfo.id, type: chatInfo.type, renderNum: 1, chatType: 'reAct' }])
     } catch (error) {
       yakitNotify('error', `用户手动干预操作失败: ${error}`)
     }
