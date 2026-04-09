@@ -1,56 +1,57 @@
 .file-tree-system {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  &-title {
+    padding: 4px 0;
     display: flex;
-    flex-direction: column;
-    &-title {
-        padding: 4px 0;
-        display: flex;
-        height: 32px;
-        justify-content: space-between;
-        align-items: center;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        line-height: 16px;
-        &:hover &-icon {
-            display: flex;
-        }
-        &-toggle {
-            span {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-size: 12px;
-                font-weight: 600;
-                line-height: 16px;
-                letter-spacing: 0.5px;
-                transition: all 0.3s;
-                cursor: pointer;
-                svg {
-                    width: 12px;
-                    height: 12px;
-                    color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                }
-            }
-        }
-        &-icon {
-            display: none;
-            align-items: center;
-            gap: 4px;
-        }
-        &-btn {
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            justify-content: center;
-        }
-        &-icon svg {
-            width: 16px;
-            height: 16px;
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
+    height: 32px;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    line-height: 16px;
+    &:hover &-icon {
+      display: flex;
     }
+    &-toggle {
+      height: 24px;
+      span {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+        cursor: pointer;
+        svg {
+          width: 12px;
+          height: 12px;
+          color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        }
+      }
+    }
+    &-icon {
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+    &-btn {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: center;
+    }
+    &-icon svg {
+      width: 16px;
+      height: 16px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+  }
 }
 .dropdown-menu {
-    > div:first-of-type {
-        width: 100%;
-    }
+  > div:first-of-type {
+    width: 100%;
+  }
 }
