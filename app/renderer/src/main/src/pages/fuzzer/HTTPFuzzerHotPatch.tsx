@@ -484,8 +484,29 @@ export const getHotPatchCodeInfo = async () => {
   try {
     const { sharedHotReloadCode, hotPatchCode: cacheHotPatchCode, hotPatchCodeOpen } = await getHotPatchCache()
     if (sharedHotReloadCode) {
-      hotPatchCode = cacheHotPatchCode
-      hotPatchOpen = !!hotPatchCodeOpen
+      // shared 开启时：优先取上一个 WebFuzzer 页面状态；没有再用缓存
+      let hasLastWebFuzzer = false
+      try {
+        const pageInfoStore = usePageInfo.getState()
+        const lastPageId = pageInfoStore.getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
+        if (lastPageId) {
+          const lastPage = pageInfoStore.queryPagesDataById(YakitRoute.HTTPFuzzer, lastPageId)
+          const lastPageInfo = lastPage?.pageParamsInfo?.webFuzzerPageInfo
+          if (lastPageInfo) {
+            hasLastWebFuzzer = true
+            hotPatchCode = lastPageInfo.hotPatchCode || cacheHotPatchCode || HotPatchDefaultContent
+            hotPatchOpen =
+              typeof lastPageInfo.advancedConfigValue?.disableHotPatch === 'boolean'
+                ? !lastPageInfo.advancedConfigValue?.disableHotPatch
+                : !!hotPatchCodeOpen
+          }
+        }
+      } catch (error) {}
+
+      if (!hasLastWebFuzzer) {
+        hotPatchCode = cacheHotPatchCode || HotPatchDefaultContent
+        hotPatchOpen = !!hotPatchCodeOpen
+      }
     }
   } catch (error) {}
   return { hotPatchCode, hotPatchOpen }
