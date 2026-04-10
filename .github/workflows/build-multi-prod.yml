@@ -1,291 +1,291 @@
 name: Build Multi-Platform Prod
 
 on:
-    push:
-        tags:
-            - "v*-*"
-            - "!v*-render"
-            - "!v*-irify"
-            - "!v*-link-render"
-            - "!v*-memfit"
+  push:
+    tags:
+      - 'v*-*'
+      - '!v*-render'
+      - '!v*-irify'
+      - '!v*-link-render'
+      - '!v*-memfit'
 
 jobs:
-    prepare_engine:
-        runs-on: macos-15
-        env:
-            CI: ""
-            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-        outputs:
-            engine_version: ${{ steps.engine_ver.outputs.version }}
-        steps:
-            - uses: actions/checkout@v4
+  prepare_engine:
+    runs-on: macos-15
+    env:
+      CI: ''
+      APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+    outputs:
+      engine_version: ${{ steps.engine_ver.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: "Fetch Latest Engine Version And Set To Env"
-              id: engine_ver
-              run: |
-                  mkdir -p bins
-                  wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
-                  cat bins/engine-version.txt
-                  YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
-                  echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
-                  echo "version=$YAK_VERSION" >> $GITHUB_OUTPUT
+      - name: 'Fetch Latest Engine Version And Set To Env'
+        id: engine_ver
+        run: |
+          mkdir -p bins
+          wget -O bins/engine-version.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/latest/version.txt
+          cat bins/engine-version.txt
+          YAK_VERSION=$(cat bins/engine-version.txt | tr -d '\n')
+          echo "ENGINE_VERSION=$YAK_VERSION" >> $GITHUB_ENV
+          echo "version=$YAK_VERSION" >> $GITHUB_OUTPUT
 
-            - name: Restore Yak Engine Cache
-              uses: actions/cache@v4
-              id: cache
-              with:
-                  path: bins
-                  key: yak-engine-${{ runner.os }}-${{ steps.engine_ver.outputs.version }}
+      - name: Restore Yak Engine Cache
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: bins
+          key: yak-engine-${{ runner.os }}-${{ steps.engine_ver.outputs.version }}
 
-        # ---------- Linux ----------
-            - name: Download Yak Engine (Linux)
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: |
-                    wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_amd64
-                    zip bins/yak_linux_amd64.zip bins/yak_linux_amd64
-                    rm bins/yak_linux_amd64
+      # ---------- Linux ----------
+      - name: Download Yak Engine (Linux)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          wget -O bins/yak_linux_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_amd64
+          zip bins/yak_linux_amd64.zip bins/yak_linux_amd64
+          rm bins/yak_linux_amd64
 
-            - name: Download Yak Engine (Linux-arm64)
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: |
-                  wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_arm64
-                  zip bins/yak_linux_arm64.zip bins/yak_linux_arm64
-                  rm bins/yak_linux_arm64
+      - name: Download Yak Engine (Linux-arm64)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          wget -O bins/yak_linux_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_linux_arm64
+          zip bins/yak_linux_arm64.zip bins/yak_linux_arm64
+          rm bins/yak_linux_arm64
 
-        # ---------- Windows ----------
-            - name: Download Yak Engine (Windows)
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: |
-                  wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe
-                  zip bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
-                  rm bins/yak_windows_amd64.exe
+      # ---------- Windows ----------
+      - name: Download Yak Engine (Windows)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_amd64.exe
+          zip bins/yak_windows_normal_amd64.zip bins/yak_windows_amd64.exe
+          rm bins/yak_windows_amd64.exe
 
-            - name: Download Yak Legacy Engine (Windows)
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: |
-                  wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe
-                  zip bins/yak_windows_legacy_amd64.zip bins/yak_windows_amd64.exe
-                  rm bins/yak_windows_amd64.exe
+      - name: Download Yak Legacy Engine (Windows)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          wget -O bins/yak_windows_amd64.exe https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_windows_legacy_amd64.exe
+          zip bins/yak_windows_legacy_amd64.zip bins/yak_windows_amd64.exe
+          rm bins/yak_windows_amd64.exe
 
-        # ---------- MacOS ----------
-            - name: Download Yak Engine (macOS)
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: |
-                  wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
+      # ---------- MacOS ----------
+      - name: Download Yak Engine (macOS)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64
 
-            - name: Download Yak Engine (macOS-arm64)
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: |
-                  wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
+      - name: Download Yak Engine (macOS-arm64)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64
 
-            - name: Signature Mac Engine
-              if: steps.cache.outputs.cache-hit != 'true'
-              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
-              shell: bash
+      - name: Signature Mac Engine
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
+        shell: bash
 
-            - name: Fetch macOS sha256
-              run: |
-                  wget -O bins/yak_darwin_amd64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64.sha256.txt
-                  wget -O bins/yak_darwin_arm64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
+      - name: Fetch macOS sha256
+        run: |
+          wget -O bins/yak_darwin_amd64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_amd64.sha256.txt
+          wget -O bins/yak_darwin_arm64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${ENGINE_VERSION}/yak_darwin_arm64.sha256.txt
 
-            - name: Upload Yak Engine Artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: yak-engine
-                  path: bins
-                  retention-days: 1
+      - name: Upload Yak Engine Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yak-engine
+          path: bins
+          retention-days: 1
 
-    build_yakit:
-        needs: prepare_engine
-        runs-on: macos-15
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                    - version: ce
-                      artifact_name: Yakit
-                    - version: ee
-                      artifact_name: EnpriTrace
-        env:
-            CI: ""
-            NODE_OPTIONS: --max_old_space_size=4096
-            ENGINE_VERSION: ${{ needs.prepare_engine.outputs.engine_version }}
-            GH_TOKEN: ${{ secrets.GH_TOKEN }}
-            APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-            TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-            APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-            CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
-            CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+  build_yakit:
+    needs: prepare_engine
+    runs-on: macos-15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - version: ce
+            artifact_name: Yakit
+          - version: ee
+            artifact_name: EnpriTrace
+    env:
+      CI: ''
+      NODE_OPTIONS: --max_old_space_size=4096
+      ENGINE_VERSION: ${{ needs.prepare_engine.outputs.engine_version }}
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: 18.18.2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.0.0
 
-            - name: Download Yak Engine Artifact
-              uses: actions/download-artifact@v4
-              with:
-                  name: yak-engine
-                  path: bins
+      - name: Download Yak Engine Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: yak-engine
+          path: bins
 
-            - run: echo ${{ github.ref_name }}
-            - run: cp buildutil/zip /usr/local/bin/zip
-            - run: chmod +x /usr/local/bin/zip
-            - run: zip -h
+      - run: echo ${{ github.ref_name }}
+      - run: cp buildutil/zip /usr/local/bin/zip
+      - run: chmod +x /usr/local/bin/zip
+      - run: zip -h
 
-            - name: "Download yakit-chrome-extension"
-              run: |
-                  extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
-                      echo "Failed to download!" >&2
-                      exit 1
-                  }
-                  wget -O bins/scripts/google-chrome-plugin.zip https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
-              shell: bash
+      - name: 'Download yakit-chrome-extension'
+        run: |
+          extensionVersion=$(curl -fsL "http://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/latest-version.txt") || {
+              echo "Failed to download!" >&2
+              exit 1
+          }
+          wget -O bins/scripts/google-chrome-plugin.zip https://yaklang.oss-accelerate.aliyuncs.com/chrome-extension/yakit-chrome-extension-v${extensionVersion}.zip
+        shell: bash
 
-            - name: Signature Mac Engine
-              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh build
+      - name: Signature Mac Engine
+        run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh build
 
-            - name: "Download MakeSelf"
-              run: brew install makeself
-              shell: bash
+      - name: 'Download MakeSelf'
+        run: brew install makeself
+        shell: bash
 
-            - name: Echo Yakit Package Version To Env
-              run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
-              shell: bash
+      - name: Echo Yakit Package Version To Env
+        run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
+        shell: bash
 
-            - name: "Install Dependencies"
-              run: yarn install
-              working-directory: ./
+      - name: 'Install Dependencies'
+        run: yarn install
+        working-directory: ./
 
-            - name: Build pre script
-              run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh yakit
-              shell: bash
+      - name: Build pre script
+        run: chmod +x ./packageScript/script/buildPreScript.sh && ./packageScript/script/buildPreScript.sh yakit
+        shell: bash
 
-            - name: Build ${{ matrix.artifact_name }} Normal And Legacy (MultiPlatform)
-              working-directory: ./
-              run: ./packageScript/script/electron-builder.sh ${{ matrix.version }} || { exit 1; }
-              shell: bash
+      - name: Build ${{ matrix.artifact_name }} Normal And Legacy (MultiPlatform)
+        working-directory: ./
+        run: ./packageScript/script/electron-builder.sh ${{ matrix.version }} || { exit 1; }
+        shell: bash
 
-            - name: View Published Content
-              run:
-                  ls ./release
-                  # Yakit            -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
+      - name: View Published Content
+        run:
+          ls ./release
+          # Yakit            -1.3.4-sp6-darwin-arm64(.dmg|.exe|.AppImage)
 
-            - name: Check build output
-              run: ./packageScript/script/check-build-package.sh ${{ matrix.artifact_name }}
-              shell: bash
+      - name: Check build output
+        run: ./packageScript/script/check-build-package.sh ${{ matrix.artifact_name }}
+        shell: bash
 
-            - name: Generate MakeSelf Run File To Linux Legacy
-              if: matrix.artifact_name == 'EnpriTrace'
-              run: |
-                  folder_amd64="EnpriTrace-${{ env.ENV_TAG }}-linux-legacy-amd64"
-                  folder_arm64="EnpriTrace-${{ env.ENV_TAG }}-linux-legacy-arm64"
-                  mkdir -p "release/${folder_amd64}" "release/${folder_arm64}"
-                  cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_amd64}"
-                  cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_arm64}"
+      - name: Generate MakeSelf Run File To Linux Legacy
+        if: matrix.artifact_name == 'EnpriTrace'
+        run: |
+          folder_amd64="EnpriTrace-${{ env.ENV_TAG }}-linux-legacy-amd64"
+          folder_arm64="EnpriTrace-${{ env.ENV_TAG }}-linux-legacy-arm64"
+          mkdir -p "release/${folder_amd64}" "release/${folder_arm64}"
+          cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_amd64}"
+          cp -f packageScript/script/uos-legacy-arm.sh "release/${folder_arm64}"
 
-                  cd release
-                  cp -f "${folder_amd64}.AppImage" "${folder_amd64}"
-                  cp -f "${folder_arm64}.AppImage" "${folder_arm64}"
-                  chmod +rwx "${folder_amd64}/uos-legacy-arm.sh"
-                  chmod +rwx "${folder_amd64}/${folder_amd64}.AppImage"
-                  chmod +rwx "${folder_arm64}/uos-legacy-arm.sh"
-                  chmod +rwx "${folder_arm64}/${folder_arm64}.AppImage"
+          cd release
+          cp -f "${folder_amd64}.AppImage" "${folder_amd64}"
+          cp -f "${folder_arm64}.AppImage" "${folder_arm64}"
+          chmod +rwx "${folder_amd64}/uos-legacy-arm.sh"
+          chmod +rwx "${folder_amd64}/${folder_amd64}.AppImage"
+          chmod +rwx "${folder_arm64}/uos-legacy-arm.sh"
+          chmod +rwx "${folder_arm64}/${folder_arm64}.AppImage"
 
-                  makeself --gzip "${folder_amd64}" "${folder_amd64}.run" "${folder_amd64}" ./uos-legacy-arm.sh
-                  makeself --gzip "${folder_arm64}" "${folder_arm64}.run" "${folder_arm64}" ./uos-legacy-arm.sh
-              shell: bash
+          makeself --gzip "${folder_amd64}" "${folder_amd64}.run" "${folder_amd64}" ./uos-legacy-arm.sh
+          makeself --gzip "${folder_arm64}" "${folder_arm64}.run" "${folder_arm64}" ./uos-legacy-arm.sh
+        shell: bash
 
-            - name: Upload ${{ matrix.artifact_name }} Artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ${{ matrix.artifact_name }}-artifacts
-                  path: |
-                      ./release/*-${{ env.ENV_TAG }}-*.exe
-                      ./release/*-${{ env.ENV_TAG }}-*.dmg
-                      ./release/*-${{ env.ENV_TAG }}-*.AppImage
-                  if-no-files-found: error
-                  retention-days: 1
+      - name: Upload ${{ matrix.artifact_name }} Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}-artifacts
+          path: |
+            ./release/*-${{ env.ENV_TAG }}-*.exe
+            ./release/*-${{ env.ENV_TAG }}-*.dmg
+            ./release/*-${{ env.ENV_TAG }}-*.AppImage
+          if-no-files-found: error
+          retention-days: 1
 
-            - name: Upload EnpriTrace Linux Legacy Run (EE Only)
-              if: matrix.artifact_name == 'EnpriTrace'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ${{ matrix.artifact_name }}-run-artifact
-                  path: |
-                      ./release/EnpriTrace-${{ env.ENV_TAG }}-*.run
-                  if-no-files-found: error
-                  retention-days: 1
+      - name: Upload EnpriTrace Linux Legacy Run (EE Only)
+        if: matrix.artifact_name == 'EnpriTrace'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}-run-artifact
+          path: |
+            ./release/EnpriTrace-${{ env.ENV_TAG }}-*.run
+          if-no-files-found: error
+          retention-days: 1
 
-    cleanup_engine_artifact:
-        needs: build_yakit
-        runs-on: ubuntu-latest
-        steps:
-            - name: Delete yak-engine artifact
-              uses: geekyeggo/delete-artifact@v5
-              with:
-                  name: yak-engine
+  cleanup_engine_artifact:
+    needs: build_yakit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete yak-engine artifact
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: yak-engine
 
-    publish_software_to_oss:
-        needs:
-            - build_yakit
-        strategy:
-            matrix:
-                artifact: [Yakit, EnpriTrace] # 需要发布的软件名前缀
-        runs-on: ubuntu-latest
-        steps:
-            - name: Echo Package Version To Env
-              run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
+  publish_software_to_oss:
+    needs:
+      - build_yakit
+    strategy:
+      matrix:
+        artifact: [Yakit, EnpriTrace] # 需要发布的软件名前缀
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo Package Version To Env
+        run: echo "ENV_TAG=${GITHUB_REF_NAME:1}" >> $GITHUB_ENV
 
-            - name: Download Yakit And Legacy Yakit
-              uses: actions/download-artifact@v4
-              with:
-                  name: ${{ matrix.artifact }}-artifacts
-                  merge-multiple: true
+      - name: Download Yakit And Legacy Yakit
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-artifacts
+          merge-multiple: true
 
-            - name: Download Linux Legacy Run
-              if: matrix.artifact == 'EnpriTrace'
-              uses: actions/download-artifact@v4
-              with:
-                  name: EnpriTrace-run-artifact
-                  merge-multiple: true
+      - name: Download Linux Legacy Run
+        if: matrix.artifact == 'EnpriTrace'
+        uses: actions/download-artifact@v4
+        with:
+          name: EnpriTrace-run-artifact
+          merge-multiple: true
 
-            - run: ls
-              name: Ls Published Artifacts...
+      - run: ls
+        name: Ls Published Artifacts...
 
-            - name: Create Release and Upload Assets
-              if: ${{ matrix.artifact == 'Yakit' }}
-              uses: ncipollo/release-action@v1
-              with:
-                  artifacts: ./*
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  name: Release ${{ github.ref_name }}
-                  tag: ${{ github.ref_name }}
+      - name: Create Release and Upload Assets
+        if: ${{ matrix.artifact == 'Yakit' }}
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ./*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Release ${{ github.ref_name }}
+          tag: ${{ github.ref_name }}
 
-            - name: Generate OSS File Path
-              run: |
-                  if [ "${{ matrix.artifact }}" = "Yakit" ]; then
-                    echo "FILE_PATH=yak" >> $GITHUB_ENV
-                  elif [ "${{ matrix.artifact }}" = "EnpriTrace" ]; then
-                    echo "FILE_PATH=vip" >> $GITHUB_ENV
-                  else
-                    echo "No corresponding file path" >&2
-                    exit 1
-                  fi
-            - name: Show ENV.FILE_PATH
-              run: echo "FILE_PATH： $FILE_PATH"
+      - name: Generate OSS File Path
+        run: |
+          if [ "${{ matrix.artifact }}" = "Yakit" ]; then
+            echo "FILE_PATH=yak" >> $GITHUB_ENV
+          elif [ "${{ matrix.artifact }}" = "EnpriTrace" ]; then
+            echo "FILE_PATH=vip" >> $GITHUB_ENV
+          else
+            echo "No corresponding file path" >&2
+            exit 1
+          fi
+      - name: Show ENV.FILE_PATH
+        run: echo "FILE_PATH： $FILE_PATH"
 
-            - name: Upload Yakit To OSS
-              uses: tvrcgo/upload-to-oss@master
-              with:
-                  key-id: ${{ secrets.OSS_KEY_ID }}
-                  key-secret: ${{ secrets.OSS_KEY_SECRET }}
-                  region: oss-accelerate
-                  bucket: yaklang
-                  assets: |
-                      *:/${{ env.FILE_PATH }}/${{ env.ENV_TAG }}/
+      - name: Upload Yakit To OSS
+        uses: tvrcgo/upload-to-oss@master
+        with:
+          key-id: ${{ secrets.OSS_KEY_ID }}
+          key-secret: ${{ secrets.OSS_KEY_SECRET }}
+          region: oss-accelerate
+          bucket: yaklang
+          assets: |
+            *:/${{ env.FILE_PATH }}/${{ env.ENV_TAG }}/
