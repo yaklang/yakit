@@ -24,11 +24,15 @@
   },
   "AIReActTaskChatReview": {
     "hideReview": "隐藏，稍后审阅",
-    "expandReview": "展开审阅信息",
+    "expandReview": "展开审阅信息"
+  },
+  "AIRenderTaskFooterExtra": {
     "cancelSubtaskConfirm": "是否确认取消该子任务，取消后会按顺序执行下一个子任务",
     "skipSubtask": "跳过子任务",
     "cancelTaskConfirm": "是否确认取消整个任务，确认将停止执行",
-    "terminateTask": "终止任务"
+    "continueTask": "继续任务",
+    "resumeTask": "恢复任务",
+    "stoppingTask": "停止任务中..."
   },
   "AIChatWelcome": {
     "knowledgeBase": "知识库",
@@ -125,5 +129,9 @@
     "applyRecommendConfig": "一键应用",
     "testSuccess": "测试成功",
     "testFailed": "测试失败"
+  },
+  "AIReActTaskChatContent": {
+    "humanIntervention": "人工介入",
+    "globalDirective": "全局指令"
   }
 }

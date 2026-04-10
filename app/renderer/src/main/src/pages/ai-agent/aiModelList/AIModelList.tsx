@@ -23,12 +23,10 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
   AIGlobalConfig,
   AIModelConfig,
-  AIModelTypeFileName,
   grpcAIConfigHealthCheck,
   grpcCancelStartLocalModel,
   grpcClearAllModels,
   grpcDeleteLocalModel,
-  grpcGetAIGlobalConfig,
   grpcGetSupportedLocalModels,
   grpcIsLlamaServerReady,
   grpcIsLocalModelReady,
@@ -100,6 +98,7 @@ import { AIModelFormProps } from './aiModelForm/AIModelFormType'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 export const setAIModal = (params: {
   modelType?: AIModelFormProps['aiModelType']
@@ -251,7 +250,6 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
 
   const [modelType, setModelType] = useState<AIModelType>('online')
 
-  const [onlineTotal, setOnlineTotal] = useState<number>(0)
   const [localTotal, setLocalTotal] = useState<number>(0)
 
   const [removeVisible, setRemoveVisible] = useState<boolean>(false)
@@ -260,7 +258,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
   const localRef = useRef<AILocalModelListRefProps>(null)
   const onlineListRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(onlineListRef)
-
+  const [aiGlobalConfigData, event] = useAIGlobalConfig()
   useEffect(() => {
     if (!inViewport) return
     emiter.on('onRefreshAIModelList', onRefreshAIModelList)
@@ -280,18 +278,18 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
   })
   const total = useCreation(() => {
     if (modelType === 'online') {
-      return onlineTotal
+      return aiGlobalConfigData.total
     } else {
       return localTotal
     }
-  }, [modelType, localTotal, onlineTotal])
+  }, [modelType, localTotal, aiGlobalConfigData.total])
   const onRefreshAIModelList = useMemoizedFn(() => {
     onRefresh()
   })
   const onRefresh = useMemoizedFn((isShowLoading?: boolean) => {
     switch (modelType) {
       case 'online':
-        onlineRef.current?.onRefresh(isShowLoading)
+        event.onRefresh(isShowLoading)
         break
       case 'local':
         localRef.current?.onRefresh()
@@ -332,7 +330,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
       mountContainer,
       t,
       onSuccess: () => {
-        onlineRef.current?.onRefresh()
+        event.onRefresh()
       },
     })
   })
@@ -407,12 +405,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
         </div>
       </div>
       {modelType === 'online' ? (
-        <AIOnlineModelList
-          ref={onlineRef}
-          setOnlineTotal={setOnlineTotal}
-          onAdd={onAdd}
-          mountContainer={mountContainer}
-        />
+        <AIOnlineModelList ref={onlineRef} onAdd={onAdd} mountContainer={mountContainer} />
       ) : (
         <AILocalModelList ref={localRef} setLocalTotal={setLocalTotal} />
       )}
@@ -450,20 +443,19 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
   const { onRefresh } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   const [visible, setVisible] = useState<boolean>(false)
-  const configRef = useRef<AIGlobalConfig>()
   const [form] = Form.useForm()
   const routingPolicy = Form.useWatch('RoutingPolicy', form)
 
+  const [aiGlobalConfigData, event] = useAIGlobalConfig()
+
   const getList = useMemoizedFn(() => {
-    grpcGetAIGlobalConfig().then((res) => {
-      configRef.current = res
+    event.getLastAIGlobalConfig().then((res) => {
       form.setFieldsValue({
         RoutingPolicy: res.RoutingPolicy || AIModelPolicyEnum.PolicyAuto,
         DisableFallback: res.DisableFallback,
       })
     })
   })
-
   const onSetConfig = useMemoizedFn((visible: boolean) => {
     setVisible(visible) // 不管是否保存成功,都设置
     if (visible) {
@@ -472,22 +464,22 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
     }
 
     const values = form.getFieldsValue()
-    if (!configRef.current) {
+    if (!aiGlobalConfigData?.aiGlobalConfigRef.current) {
       yakitNotify('error', t('AIOnlineModeSetting.configUpdateFailed'))
       return
     }
     if (
-      configRef.current.RoutingPolicy === values.RoutingPolicy &&
-      configRef.current.DisableFallback === values.DisableFallback
+      aiGlobalConfigData?.aiGlobalConfigRef.current.RoutingPolicy === values.RoutingPolicy &&
+      aiGlobalConfigData?.aiGlobalConfigRef.current.DisableFallback === values.DisableFallback
     ) {
       return
     }
     const config: AIGlobalConfig = {
-      ...configRef.current,
+      ...aiGlobalConfigData?.aiGlobalConfigRef.current,
       RoutingPolicy: values.RoutingPolicy,
       DisableFallback: values.DisableFallback,
     }
-    grpcSetAIGlobalConfig(config).then(() => {
+    event.setAIGlobalConfig(config).then(() => {
       onRefresh()
     })
   })
@@ -519,45 +511,25 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
 })
 const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
   forwardRef((props, ref) => {
-    const { setOnlineTotal, onAdd, mountContainer } = props
+    const { onAdd, mountContainer } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
-    const [spinning, setSpinning] = useState<boolean>(false)
-    const [aiGlobalConfig, setAIGlobalConfig] = useState<AIGlobalConfig>()
     const onlineListRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(onlineListRef)
+
+    const [aiGlobalConfigData, event] = useAIGlobalConfig()
+
     useImperativeHandle(
       ref,
       () => ({
-        onRefresh: (isShowLoading) => {
-          getList(isShowLoading)
-        },
         onRemoveAll: () => onRemoveAll(),
       }),
       [],
     )
     useEffect(() => {
-      if (inViewport) getList()
+      if (inViewport) event.onRefresh()
     }, [inViewport])
-    const getList = useMemoizedFn((isShowLoading?: boolean) => {
-      const showLoading = isShowLoading !== false
-      showLoading && setSpinning(true)
-      grpcGetAIGlobalConfig()
-        .then((res) => {
-          setAIGlobalConfig(res)
-          const total =
-            (res.IntelligentModels?.length || 0) +
-            (res.LightweightModels?.length || 0) +
-            (res.VisionModels?.length || 0)
-          setOnlineTotal(total)
-        })
-        .finally(() => {
-          showLoading &&
-            setTimeout(() => {
-              setSpinning(false)
-            }, 200)
-        })
-    })
+    const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
     const onRemoveAll = useMemoizedFn(() => {})
     const isHaveData = useCreation(() => {
       return !!(
@@ -582,7 +554,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
           mountContainer: undefined,
           t,
           onSuccess: () => {
-            getList()
+            event.onRefresh()
           },
         })
       } catch (error) {}
@@ -595,7 +567,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         index,
         fileName,
         onSuccess: () => {
-          getList()
+          event.onRefresh()
         },
       })
     })
@@ -608,12 +580,12 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         index,
         fileName,
         onSuccess: () => {
-          getList()
+          event.onRefresh()
         },
       })
     })
     return (
-      <YakitSpin spinning={spinning}>
+      <YakitSpin spinning={aiGlobalConfigData.queryLoading}>
         {isHaveData ? (
           <div className={styles['ai-online-model-wrapper']} ref={onlineListRef}>
             {!!aiGlobalConfig?.IntelligentModels.length && (

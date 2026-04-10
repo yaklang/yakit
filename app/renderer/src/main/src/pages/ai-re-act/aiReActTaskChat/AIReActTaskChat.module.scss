@@ -1,245 +1,278 @@
-@use "../aiReActChat/AIReActChat.module.scss" as AIReActChat;
+@use '../aiReActChat/AIReActChat.module.scss' as AIReActChat;
 
 %display-flex-center {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 %display-column-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .tab-wrap {
-    width: 100%;
-    overflow: hidden;
+  width: 100%;
+  overflow: hidden;
 }
 .tab-content {
-    flex: 1;
-    width: 100%;
-    overflow: hidden;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
 }
 .ai-re-act-task-chat {
-    @extend %display-flex-center;
-    align-items: flex-start;
+  @extend %display-flex-center;
+  align-items: flex-start;
+  flex: 1;
+  // overflow: auto hidden;
+  height: 100%;
+
+  @include AIReActChat.content-side('left') {
+    width: 100%;
+    border-right: 0;
+  }
+  .spin-wrapper {
+    :global {
+      .ant-spin-nested-loading > div > .ant-spin {
+        max-height: fit-content;
+      }
+    }
+  }
+  .chat-content-wrapper {
+    @extend %display-column-center;
     flex: 1;
-    // overflow: auto hidden;
+    overflow: hidden;
     height: 100%;
+    width: 100%;
+    position: relative;
+    min-width: 400px;
+  }
+  .header {
+    @extend %display-flex-center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 12px 12px 8px 12px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    width: 100%;
+    height: 45px;
+    .title {
+      @extend %display-flex-center;
+      gap: 4px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
 
-    @include AIReActChat.content-side("left") {
-        width: 100%;
-        border-right: 0;
+      /* PingFang SC/T6/Medium */
+      font-size: 14px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 20px; /* 142.857% */
+      letter-spacing: 0.1px;
+      svg {
+        width: 20px;
+        height: 20px;
+      }
     }
-    .spin-wrapper {
-        :global {
-            .ant-spin-nested-loading > div > .ant-spin {
-                max-height: fit-content;
-            }
-        }
-    }
-    .chat-content-wrapper {
-        @extend %display-column-center;
-        flex: 1;
-        overflow: hidden;
-        height: 100%;
-        width: 100%;
-        position: relative;
-        min-width: 400px;
-    }
-    .header {
-        @extend %display-flex-center;
-        justify-content: space-between;
-        gap: 4px;
-        padding: 12px 12px 8px 12px;
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-        width: 100%;
-        height: 45px;
-        .title {
-            @extend %display-flex-center;
-            gap: 4px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+    .extra {
+      @extend %display-flex-center;
+      gap: 8px;
+      flex-shrink: 0;
 
-            /* PingFang SC/T6/Medium */
-            font-size: 14px;
-            font-style: normal;
-            font-weight: 500;
-            line-height: 20px; /* 142.857% */
-            letter-spacing: 0.1px;
-            svg {
-                width: 20px;
-                height: 20px;
-            }
-        }
-        .extra {
-            @extend %display-flex-center;
-            gap: 8px;
-            flex-shrink: 0;
-
-            .divider-style {
-                width: 1px;
-                height: 12px;
-                border-left: 1px solid var(--Colors-Use-Neutral-Border);
-            }
-        }
+      .divider-style {
+        width: 1px;
+        height: 12px;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+      }
     }
+  }
 }
 .footer {
-    position: absolute;
-    bottom: 8px;
-    margin: 0 auto;
-    display: flex;
-    gap: 12px;
-    .position-button {
-        border-color: var(--Colors-Use-Neutral-Border);
-        box-shadow: 0 4px 8px 0 var(--Colors-Use-Basic-Shadow);
-        svg {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-        &:hover {
-            border-color: var(--Colors-Use-Main-Primary);
-            svg {
-                color: var(--Colors-Use-Main-Primary);
-            }
-        }
+  position: absolute;
+  bottom: 8px;
+  margin: 0 auto;
+  display: flex;
+  gap: 12px;
+  .position-button {
+    border-color: var(--Colors-Use-Neutral-Border);
+    box-shadow: 0 4px 8px 0 var(--Colors-Use-Basic-Shadow);
+    svg {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
-    .task-sub-button {
-        border-color: var(--Colors-Use-Error-Border);
-        background: var(--Colors-Use-Basic-Background);
-        &:hover {
-            border-color: var(--Colors-Use-Error-Primary);
-        }
+    &:hover {
+      border-color: var(--Colors-Use-Main-Primary);
+      svg {
+        color: var(--Colors-Use-Main-Primary);
+      }
     }
-    .task-button {
-        &:hover {
-            background-color: var(--Colors-Use-Error-Hover);
-        }
+  }
+  .task-sub-button {
+    border-color: var(--Colors-Use-Error-Border);
+    background: var(--Colors-Use-Basic-Background);
+    &:hover {
+      border-color: var(--Colors-Use-Error-Primary);
     }
+  }
+  .task-button {
+    &:hover {
+      background-color: var(--Colors-Use-Error-Hover);
+    }
+  }
 }
 .re-act-task-empty-wrapper {
+  @extend %display-column-center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  gap: 16px;
+  .heard {
     @extend %display-column-center;
-    justify-content: center;
-    flex: 1;
+    gap: 4px;
     width: 100%;
-    gap: 16px;
-    .heard {
-        @extend %display-column-center;
-        gap: 4px;
-        width: 100%;
 
+    .title {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      text-align: center;
+
+      font-size: 32px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 40px; /* 125% */
+    }
+    .sub-title {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      text-align: center;
+
+      font-size: 16px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 24px; /* 150% */
+      letter-spacing: 0.15px;
+    }
+  }
+  .list-wrapper {
+    @extend %display-column-center;
+    gap: 8px;
+    padding: 8px 4px;
+  }
+
+  .re-act-recommend-list-wrapper {
+    @extend %display-column-center;
+    position: relative;
+    border-radius: 8px;
+    width: 320px;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Basic-Background);
+    padding: 8px;
+    &:hover {
+      border: 1px solid var(--Colors-Use-Main-Border);
+      background: var(--Colors-Use-Main-Bg);
+      .re-act-recommend-list-heard {
         .title {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            text-align: center;
-
-            font-size: 32px;
-            font-style: normal;
-            font-weight: 500;
-            line-height: 40px; /* 125% */
+          .icon {
+            display: none;
+          }
+          .hover-icon {
+            display: flex;
+          }
         }
-        .sub-title {
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            text-align: center;
-
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: 24px; /* 150% */
-            letter-spacing: 0.15px;
+        .add-btn {
+          @extend %display-flex-center;
         }
+      }
+
+      .re-act-recommend-list {
+        height: 96px;
+        opacity: 1;
+        margin-top: 4px;
+      }
     }
-    .list-wrapper {
-        @extend %display-column-center;
+
+    .re-act-recommend-list-heard {
+      @extend %display-flex-center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      height: 24px;
+      .title {
+        @extend %display-flex-center;
         gap: 8px;
-        padding: 8px 4px;
-    }
-
-    .re-act-recommend-list-wrapper {
-        @extend %display-column-center;
-        position: relative;
-        border-radius: 8px;
-        width: 320px;
-        border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-        background: var(--Colors-Use-Basic-Background);
-        padding: 8px;
-        &:hover {
-            border: 1px solid var(--Colors-Use-Main-Border);
-            background: var(--Colors-Use-Main-Bg);
-            .re-act-recommend-list-heard {
-                .title {
-                    .icon {
-                        display: none;
-                    }
-                    .hover-icon {
-                        display: flex;
-                    }
-                }
-                .add-btn {
-                    @extend %display-flex-center;
-                }
-            }
-
-            .re-act-recommend-list {
-                height: 96px;
-                opacity: 1;
-                margin-top: 4px;
-            }
-        }
-
-        .re-act-recommend-list-heard {
-            @extend %display-flex-center;
-            justify-content: space-between;
-            gap: 8px;
-            width: 100%;
+        .icon,
+        .hover-icon {
+          width: 24px;
+          height: 24px;
+          svg {
+            width: 24px;
             height: 24px;
-            .title {
-                @extend %display-flex-center;
-                gap: 8px;
-                .icon,
-                .hover-icon {
-                    width: 24px;
-                    height: 24px;
-                    svg {
-                        width: 24px;
-                        height: 24px;
-                    }
-                }
-                .hover-icon {
-                    display: none;
-                }
-            }
-            .add-btn {
-                display: none;
-            }
+          }
         }
-        .re-act-recommend-list {
-            @extend %display-column-center;
-            height: 0;
-            opacity: 0;
-            transition: all 0.2s;
-            overflow: hidden;
-            .re-act-recommend-list-item {
-                @extend %display-flex-center;
-                padding: 4px 8px;
-                gap: 4px;
-                overflow: hidden;
-                height: 32px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-size: 12px;
-                line-height: 16px;
-                letter-spacing: 0.5px;
-                border-radius: 8px;
-                cursor: pointer;
-                width: 316px;
-                position: relative;
-
-                .text {
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                    overflow: hidden;
-                    word-break: break-all;
-                }
-                &:hover {
-                    background: var(--Colors-Use-Main-Focus);
-                }
-            }
+        .hover-icon {
+          display: none;
         }
+      }
+      .add-btn {
+        display: none;
+      }
     }
+    .re-act-recommend-list {
+      @extend %display-column-center;
+      height: 0;
+      opacity: 0;
+      transition: all 0.2s;
+      overflow: hidden;
+      .re-act-recommend-list-item {
+        @extend %display-flex-center;
+        padding: 4px 8px;
+        gap: 4px;
+        overflow: hidden;
+        height: 32px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 316px;
+        position: relative;
+
+        .text {
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          word-break: break-all;
+        }
+        &:hover {
+          background: var(--Colors-Use-Main-Focus);
+        }
+      }
+    }
+  }
 }
+// #region AIGlobalCommand/AIManualAddition
+.ai-global-command,
+.ai-manual-addition {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 300px;
+  &-heard {
+    display: flex;
+    align-items: center;
+
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px; /* 142.857% */
+    letter-spacing: 0.1px;
+  }
+  &-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 4px;
+  }
+  .add-and-re-execute-btn {
+    :global {
+      .ant-btn > .ant-btn-loading-icon {
+        width: auto !important;
+      }
+    }
+  }
+}
+// #endregion

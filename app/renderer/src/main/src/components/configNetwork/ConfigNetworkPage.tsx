@@ -7,7 +7,7 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { yakitInfo, warn, failed, success, yakitNotify } from '@/utils/notification'
 import { AutoSpin } from '@/components/AutoSpin'
 import update from 'immutability-helper'
-import { useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import styles from './ConfigNetworkPage.module.scss'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitRadioButtons } from '../yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -57,20 +57,11 @@ import {
   onSelectAIModel,
   setAIModal,
 } from '@/pages/ai-agent/aiModelList/AIModelList'
-import {
-  AIModelPolicyOptions,
-  AIModelTypeEnum,
-  AIModelTypeInterFileNameEnum,
-  defaultAIGlobalConfig,
-} from '@/pages/ai-agent/defaultConstant'
-import {
-  AIGlobalConfig,
-  AIModelConfig,
-  grpcGetAIGlobalConfig,
-  grpcSetAIGlobalConfig,
-} from '@/pages/ai-agent/aiModelList/utils'
+import { AIModelPolicyOptions, AIModelTypeEnum, AIModelTypeInterFileNameEnum } from '@/pages/ai-agent/defaultConstant'
+import { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
 import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
 import { AIModelActionProps, AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
+import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 export interface ConfigNetworkPageProp {}
 
@@ -1311,26 +1302,15 @@ interface AIModelGlobalConfigProps {
 const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((props) => {
   const { mountContainer } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-  const [aiGlobalConfig, setAIGlobalConfig] = useState<AIGlobalConfig>(cloneDeep(defaultAIGlobalConfig))
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
+
+  const [aiGlobalConfigData, event] = useAIGlobalConfig()
+
   useEffect(() => {
-    inViewport && getAIConfig()
+    inViewport && event.onRefresh()
   }, [inViewport])
-  const getAIConfig = useMemoizedFn(() => {
-    grpcGetAIGlobalConfig().then((res) => {
-      setAIGlobalConfig(res)
-    })
-  })
-  useEffect(() => {
-    setAIConfig()
-  }, [aiGlobalConfig.DisableFallback, aiGlobalConfig.RoutingPolicy])
-  const setAIConfig = useDebounceFn(
-    useMemoizedFn(() => {
-      grpcSetAIGlobalConfig(aiGlobalConfig)
-    }),
-    { wait: 500 },
-  ).run
+  const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
 
   const onEdit = useMemoizedFn((options: AIModelActionProps) => {
     if (!aiGlobalConfig) return
@@ -1342,7 +1322,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       mountContainer: undefined,
       t,
       onSuccess: () => {
-        getAIConfig()
+        event.onRefresh()
       },
     })
   })
@@ -1355,7 +1335,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       index,
       fileName,
       onSuccess: () => {
-        getAIConfig()
+        event.onRefresh()
       },
     })
   })
@@ -1369,7 +1349,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       index,
       fileName,
       onSuccess: () => {
-        getAIConfig()
+        event.onRefresh()
       },
     })
   })
@@ -1380,7 +1360,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
       mountContainer,
       t,
       onSuccess: () => {
-        getAIConfig()
+        event.onRefresh()
       },
     })
   })
@@ -1484,14 +1464,14 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
           buttonStyle="solid"
           options={AIModelPolicyOptions}
           value={aiGlobalConfig.RoutingPolicy}
-          onChange={(v) => setAIGlobalConfig((old) => ({ ...old, RoutingPolicy: v.target.value }))}
+          onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
         />
       </Form.Item>
       <Form.Item valuePropName="checked" label="禁用降级到轻量模型">
         <YakitSwitch
           size="middle"
           checked={aiGlobalConfig.DisableFallback}
-          onChange={(c) => setAIGlobalConfig((old) => ({ ...old, DisableFallback: c }))}
+          onChange={(c) => event.setAIGlobalConfig({ DisableFallback: c })}
         />
       </Form.Item>
     </div>

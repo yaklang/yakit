@@ -17,9 +17,7 @@ import {
   AIModelTypeFileName,
   AIProvider,
   DEFAULT_AI_API_TYPE,
-  grpcGetAIGlobalConfig,
   grpcQueryAIProviderAll,
-  grpcSetAIGlobalConfig,
   grpcAIConfigHealthCheck,
   normalizeAIAPIType,
   AIConfigHealthCheckResponse,
@@ -45,6 +43,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
+import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 const defaultFormValues = {
   Type: '',
@@ -171,9 +170,10 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const isShowSaveLoadingRef = useRef<boolean>(true)
   const formRef = useRef<{ form: FormInstance }>(null)
   const footerRef = useRef<HTMLDivElement>(null)
-  let aiGlobalConfigRef = useRef<AIGlobalConfig>()
   let currentIndexInConfigRef = useRef<number>(-1) //更新时，该值为当前模型在全局配置列表中的下标
   const [inViewport = true] = useInViewport(footerRef)
+
+  const [aiGlobalConfigData, event] = useAIGlobalConfig()
 
   const isAdd = useCreation(() => {
     return !item
@@ -199,13 +199,14 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   }, [item, aiModelType])
 
   const getAIGlobalConfig = useMemoizedFn(() => {
-    grpcGetAIGlobalConfig().then((res) => {
-      aiGlobalConfigRef.current = res
+    event.getLastAIGlobalConfig().then((res) => {
       if (!!item) {
         // 编辑时，需要先保存该模型的配置在列表的下标，后续更新时需要用到
         const fileName = !!aiModelType ? getFileNameByModelType(aiModelType) : ''
         if (!fileName) return
-        const index = (aiGlobalConfigRef.current[fileName] || []).findIndex((i) => isEqualAIModel(i, item))
+        const index = (aiGlobalConfigData?.aiGlobalConfigRef.current?.[fileName] || []).findIndex((i) =>
+          isEqualAIModel(i, item),
+        )
         currentIndexInConfigRef.current = index
       }
     })
@@ -213,7 +214,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
   const onOk = useMemoizedFn(() => {
     formRef.current?.form?.validateFields().then((res) => {
-      if (!aiGlobalConfigRef.current) {
+      if (!aiGlobalConfigData?.aiGlobalConfigRef.current) {
         yakitNotify('error', 'AI全局配置获取失败，请稍后再试')
         return
       }
@@ -254,9 +255,9 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
     })
   })
   const onAdd = useMemoizedFn((newItem: AIModelConfig, options: AIModelFormAddOptions) => {
-    if (!aiGlobalConfigRef.current) return
+    if (!aiGlobalConfigData?.aiGlobalConfigRef.current) return
     const { modelType, aiModelName } = options
-    const newConfig: AIGlobalConfig = cloneDeep(aiGlobalConfigRef.current)
+    const newConfig: AIGlobalConfig = cloneDeep(aiGlobalConfigData?.aiGlobalConfigRef.current)
 
     const fileName = getFileNameByModelType(modelType)
     if (!fileName) return
@@ -275,10 +276,10 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 
   const onUpdate = useMemoizedFn((newItem: AIModelConfig, options: AIModelFormUpdateOptions) => {
     try {
-      if (!aiGlobalConfigRef.current || currentIndexInConfigRef.current === -1) return
+      if (!aiGlobalConfigData?.aiGlobalConfigRef.current || currentIndexInConfigRef.current === -1) return
 
       const { modelType, aiModelName } = options
-      const newConfig: AIGlobalConfig = cloneDeep(aiGlobalConfigRef.current)
+      const newConfig: AIGlobalConfig = cloneDeep(aiGlobalConfigData?.aiGlobalConfigRef.current)
 
       const fileName = getFileNameByModelType(modelType)
       if (!fileName) return
@@ -289,7 +290,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       }
 
       if (!fileName) return
-      const oldUpdateItem = aiGlobalConfigRef.current?.[fileName][currentIndexInConfigRef.current]
+      const oldUpdateItem = aiGlobalConfigData?.aiGlobalConfigRef.current?.[fileName][currentIndexInConfigRef.current]
       const newUpdateItem: AIModelConfig = {
         ...newItem,
         ExtraParams: oldUpdateItem.ExtraParams,
@@ -324,10 +325,10 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   })
   const onSetAIGlobalConfig = useMemoizedFn((config: AIGlobalConfig, option: AIModelFormSetAIGlobalConfigOptions) => {
     isShowSaveLoadingRef.current && setLoading(true)
-    grpcSetAIGlobalConfig(config)
+    event
+      .setAIGlobalConfig(config)
       .then(() => {
         const { aiService, aiModelName, fileName } = option
-
         onSuccess?.()
         emiter.emit('onRefreshAvailableAIModelList', `${isAdd}`)
         fileName &&

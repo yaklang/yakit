@@ -336,6 +336,8 @@ export interface AIGlobalConfig {
   LightweightModels: AIModelConfig[]
   /**视觉模式 */
   VisionModels: AIModelConfig[]
+  /**ai 全局命令 */
+  AIPresetPrompt: string
 }
 export type AIModelTypeFileName = keyof Pick<AIGlobalConfig, 'IntelligentModels' | 'LightweightModels' | 'VisionModels'>
 export interface AIModelConfig {

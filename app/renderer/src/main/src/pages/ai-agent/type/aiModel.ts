@@ -1,109 +1,109 @@
-import {ThirdPartyApplicationConfig} from "@/components/configNetwork/ConfigNetworkPage"
-import {AIGlobalConfig} from "../aiModelList/utils"
+import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import { AIGlobalConfig } from '../aiModelList/utils'
 
 export interface GeneralResponse {
-    Ok: boolean
-    Reason: string
+  Ok: boolean
+  Reason: string
 }
 export interface LocalModelConfig {
-    Name: string
-    Type: string
-    FileName: string
-    DownloadURL: string
-    Description: string
-    DefaultPort: number
-    IsReady: boolean
-    IsLocal: boolean
-    Path: string
-    Status: LocalModelStatus | null
+  Name: string
+  Type: string
+  FileName: string
+  DownloadURL: string
+  Description: string
+  DefaultPort: number
+  IsReady: boolean
+  IsLocal: boolean
+  Path: string
+  Status: LocalModelStatus | null
 }
 
 export interface LocalModelStatus {
-    Status: "stopped" | "starting" | "running" | "stopping" | "error"
-    Host: string
-    Port: number
-    Model: string
-    ModelPath: string
-    LlamaServerPath: string
-    ContextSize: number
-    ContBatching: boolean
-    BatchSize: number
-    Threads: number
-    Detached: boolean
-    Debug: boolean
-    Pooling: string
-    StartupTimeout: number
-    Args: string[]
+  Status: 'stopped' | 'starting' | 'running' | 'stopping' | 'error'
+  Host: string
+  Port: number
+  Model: string
+  ModelPath: string
+  LlamaServerPath: string
+  ContextSize: number
+  ContBatching: boolean
+  BatchSize: number
+  Threads: number
+  Detached: boolean
+  Debug: boolean
+  Pooling: string
+  StartupTimeout: number
+  Args: string[]
 }
 
 export interface GetSupportedLocalModelsResponse {
-    Models: LocalModelConfig[]
+  Models: LocalModelConfig[]
 }
 export interface IsLlamaServerReadyResponse extends GeneralResponse {}
 export interface InstallLlamaServerRequest {
-    Proxy: string
-    token: string
+  Proxy: string
+  token: string
 }
 export interface DownloadLocalModelRequest {
-    ModelName: string
-    Proxy: string
-    token: string
+  ModelName: string
+  Proxy: string
+  token: string
 }
 export interface IsLocalModelReadyRequest {
-    ModelName: string
+  ModelName: string
 }
 export interface IsLocalModelReadyResponse extends GeneralResponse {}
 export interface StartLocalModelRequest {
-    token: string
-    ModelName: string
-    Host: string
-    Port: number
+  token: string
+  ModelName: string
+  Host: string
+  Port: number
 }
 
 export interface StopLocalModelRequest {
-    ModelName: string
+  ModelName: string
 }
 
 export interface AddLocalModelRequest {
-    Name: string
-    ModelType: string
-    Description: string
-    Path: string
+  Name: string
+  ModelType: string
+  Description: string
+  Path: string
 }
 
 export interface DeleteLocalModelRequest {
-    Name: string
-    DeleteSourceFile: boolean
+  Name: string
+  DeleteSourceFile: boolean
 }
 
 export interface UpdateLocalModelRequest extends AddLocalModelRequest {}
 
 export interface GetAllStartedLocalModelsResponse {
-    Models: StartedLocalModelInfo[]
+  Models: StartedLocalModelInfo[]
 }
 export interface StartedLocalModelInfo {
-    Name: string
-    ModelType: string
-    Host: string
-    Port: number
+  Name: string
+  ModelType: string
+  Host: string
+  Port: number
 }
 export interface ClearAllModelsRequest {
-    DeleteSourceFile: boolean
+  DeleteSourceFile: boolean
 }
 export interface GetAIModelListResponse {
-    onlineModels: ThirdPartyApplicationConfig[]
-    localModels: StartedLocalModelInfo[]
+  onlineModels: ThirdPartyApplicationConfig[]
+  localModels: StartedLocalModelInfo[]
 }
 
 export interface GetAIModelAvailableTotalResponse {
-    onlineModelsTotal: number
-    localModelsTotal: number
-    onlineModels: AIGlobalConfig
-    localModels: StartedLocalModelInfo[]
+  onlineModelsTotal: number
+  localModelsTotal: number
+  onlineModels: AIGlobalConfig
+  localModels: StartedLocalModelInfo[]
 }
 
 export interface IsForcedSetAIModalRequest {
-    noDataCall?: (v: GetAIModelAvailableTotalResponse) => void
-    haveDataCall?: (v: GetAIModelAvailableTotalResponse) => void
-    mountContainer?: HTMLElement | null
+  noDataCall?: (v: GetAIModelAvailableTotalResponse) => void
+  haveDataCall?: (v: GetAIModelAvailableTotalResponse) => void
+  mountContainer?: HTMLElement | null
 }

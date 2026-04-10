@@ -1,48 +1,105 @@
-@use "../../../../styles/mixin.scss" as mixin;
+@use '../../../../styles/mixin.scss' as mixin;
 
 .title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px 8px;
+  overflow: hidden;
+  flex-wrap: wrap;
+  .title-main {
     display: flex;
     align-items: center;
-    gap: 4px 8px;
+    gap: 4px;
     overflow: hidden;
-    flex-wrap: wrap;
-    .title-main {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        overflow: hidden;
-    }
-    svg {
-        width: 16px;
-        height: 16px;
-        color: var(--Colors-Use-Neutral-Text-2-Primary);
-    }
+  }
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+  }
 
-    .title {
-        flex-shrink: 0;
-        margin-right: 4px;
-    }
-    .mpb-color-text {
-        @include mixin.mpb-color-text();
-        @include mixin.text-ellipsis(1, false, false, false);
-        font-size: 12px;
-        font-weight: 500;
-        line-height: 16px;
-    }
+  .title {
+    flex-shrink: 0;
+    margin-right: 4px;
+  }
+  .mpb-color-text {
+    @include mixin.mpb-color-text();
+    @include mixin.text-ellipsis(1, false, false, false);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+  }
 }
 .title-extra {
-    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
 
-    font-size: 11px;
-    font-weight: 400;
-    line-height: 14px;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 14px;
 
-    min-width: 20px;
-    @include mixin.text-ellipsis(1, false, false, false);
+  min-width: 20px;
+  @include mixin.text-ellipsis(1, false, false, false);
 }
 .time {
-    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
 
-    font-size: 11px;
-    line-height: 14px;
+  font-size: 11px;
+  line-height: 14px;
+}
+.header-extra {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ai-review-params-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-height: 100px;
+
+  .param-item {
+    display: flex;
+    // align-items: center;
+    gap: 2px;
+    .param-value-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      overflow: hidden;
+      &:hover {
+        background-color: var(--Colors-Use-Neutral-Bg);
+      }
+    }
+    .param-key {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      font-size: 12px;
+      line-height: 16px;
+      white-space: nowrap;
+      word-wrap: normal;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 25%;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+    .param-value {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      line-height: 16px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      word-break: break-all;
+    }
+  }
+  .no-param {
+    display: flex;
+    align-items: center;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 12px;
+    line-height: 16px;
+  }
 }
