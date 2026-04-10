@@ -104,6 +104,9 @@ export interface AIStartParams {
   AICallTokenLimit?: number
   /**@deprecated */
   UserPresetPrompt?: string
+
+  // 是否关闭工具执行期间的 interval review(默认: false)
+  DisableToolIntervalReview?: boolean
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */

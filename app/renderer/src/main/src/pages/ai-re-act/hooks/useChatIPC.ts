@@ -920,7 +920,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       // console.log("error", err)
       yakitNotify('error', `AI执行失败: ${err}`)
     })
-    // console.log("start-ai-re-act", token, params)
+    // console.log('start-ai-re-act', token, params)
 
     // 初次用户对话的问题，属于自由对话中的问题
     casualChatEvent.handleSend({

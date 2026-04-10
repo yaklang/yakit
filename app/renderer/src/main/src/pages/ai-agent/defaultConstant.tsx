@@ -110,6 +110,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   UserInteractLimit: 0,
   TimelineSessionID: '',
   AICallTokenLimit: 40,
+  DisableToolIntervalReview: false,
 }
 
 /** mcp 自定义服务器配置类型选项 */
