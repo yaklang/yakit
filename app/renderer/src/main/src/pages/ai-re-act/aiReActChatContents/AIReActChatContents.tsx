@@ -76,7 +76,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
           {...aiMarkdownProps}
         />
       )
-    case AIStreamContentType.TEXT_PLAIN:
+    case AIStreamContentType.TEXT_PLAIN: {
       const { execFileRecord } = yakExecResult
       const fileList = execFileRecord.get(CallToolID)
       return (
@@ -89,6 +89,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
           referenceNode={referenceNode}
         />
       )
+    }
     case AIStreamContentType.LOG_TOOL_ERROR_OUTPUT:
       return <></>
     default:

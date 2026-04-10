@@ -339,7 +339,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
             const { id, Timestamp, type, data } = info
             switch (type) {
               case AIChatQSDataTypeEnum.STREAM:
-              case AIChatQSDataTypeEnum.TOOL_CALL_RESULT:
+              case AIChatQSDataTypeEnum.TOOL_CALL_RESULT: {
                 const { NodeIdVerbose, CallToolID, content, NodeId } = data
                 const { execFileRecord } = yakExecResult
                 const fileList = execFileRecord.get(CallToolID)
@@ -360,6 +360,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                     fileList={fileList}
                   />
                 )
+              }
               default:
                 return <React.Fragment key={id}></React.Fragment>
             }
