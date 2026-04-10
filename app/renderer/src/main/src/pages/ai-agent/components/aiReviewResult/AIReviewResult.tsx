@@ -21,20 +21,33 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const { type, data } = info
   const { chatIPCData } = useChatIPCStore()
 
+  const getChatType = useMemoizedFn(() => {
+    return info.chatType
+  })
+
   const [expand, setExpand] = useState<boolean>(true)
 
   const taskLength = useCreation(() => {
     return chatIPCData?.taskChat?.elements?.length
   }, [chatIPCData?.taskChat?.elements?.length])
+  const casualLength = useCreation(() => {
+    return chatIPCData?.casualChat?.elements?.length
+  }, [chatIPCData?.casualChat?.elements?.length])
 
   const isInit = useRef<boolean>(true)
 
   useUpdateEffect(() => {
-    if (isInit.current) {
+    if (isInit.current && getChatType() === 'task') {
       setExpand(false)
       isInit.current = false
     }
   }, [taskLength])
+  useUpdateEffect(() => {
+    if (isInit.current && getChatType() === 'reAct') {
+      setExpand(false)
+      isInit.current = false
+    }
+  }, [casualLength])
   const title = useCreation(() => {
     switch (type) {
       case 'plan_review_require':
