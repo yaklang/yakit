@@ -947,7 +947,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       // console.log("error", err)
       yakitNotify('error', `AI执行失败: ${err}`)
     })
-    // console.log("start-ai-re-act", token, params)
+    // console.log('start-ai-re-act', token, params)
 
     tempUserQuestionRequest.current.push({ request: params, extra: extraValue })
 

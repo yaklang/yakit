@@ -1926,6 +1926,9 @@ message AIStartParams {
   int64 AICallTokenLimit = 34;
 
   string UserPresetPrompt = 35;
+
+  // 是否关闭工具执行期间的 interval review
+  bool DisableToolIntervalReview = 36;
 }
 
 message AITaskFilter {
