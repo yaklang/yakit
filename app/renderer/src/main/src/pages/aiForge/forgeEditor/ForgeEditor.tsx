@@ -1263,7 +1263,7 @@ const AIForgeMilkdownBase: React.FC<AIForgeMilkdownBaseProps> = memo((props) => 
   const onEditorContextMenu = (event: React.MouseEvent | MouseEvent) => {
     showByRightContext(
       {
-        data: [{ label: '清洗格式并按 Markdown 解析', key: 'pasteMarkdown' }],
+        data: [{ label: '转为纯文本后按 Markdown 解析', key: 'pasteMarkdown' }],
         onClick: ({ key }) => {
           if (key === 'pasteMarkdown') {
             handlePasteMarkdown()
