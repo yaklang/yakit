@@ -764,7 +764,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     const config = buildAIConfigHealthCheckConfig(value)
     grpcAIConfigHealthCheck({
       Config: config,
-      Content: "你好,请简单回复'测试成功'",
+      Content: '测试成功',
     })
       .then((response) => {
         const m = showYakitModal({
