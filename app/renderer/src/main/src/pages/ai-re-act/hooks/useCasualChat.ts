@@ -360,7 +360,7 @@ function useCasualChat(params?: UseCasualChatParams) {
         })
       }
 
-      if (IsFreeInput && FreeInput) {
+      if (IsFreeInput && FreeInput && !cb) {
         // 用户问题
         const chatData: AIChatQSData = {
           id: uuidv4(),

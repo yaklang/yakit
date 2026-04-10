@@ -358,6 +358,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     { wait: 50, leading: false },
   ).run
 
+  /** 暂存用户问题的请求数据 */
+  const tempUserQuestionRequest = useRef<{ request: AIInputEvent; extra?: AIChatIPCStartParams['extraValue'] }[]>([])
   // 问题入队|出队变化时-进行通知逻辑
   const handleQuestionQueueStatusChange = useMemoizedFn((res: AIOutputEvent) => {
     try {
@@ -371,6 +373,25 @@ function useChatIPC(params?: UseChatIPCParams) {
         } else {
           // 非专注模式状态
           handleResetFocusMode()
+        }
+
+        // 将用户的问题回显到UI上
+        const findIndex = tempUserQuestionRequest.current.findIndex(
+          (item) =>
+            item.request.Params?.UserQuery === data.react_task_input ||
+            item.request.FreeInput === data.react_task_input,
+        )
+        const qsInfo = tempUserQuestionRequest.current[findIndex]
+        if (findIndex !== -1) {
+          casualChatEvent.handleSend({
+            request: {
+              ...qsInfo.request,
+              IsFreeInput: true,
+              FreeInput: qsInfo.request?.Params?.UserQuery || qsInfo.request?.FreeInput || '',
+            },
+            extraValue: qsInfo.extra,
+          })
+          tempUserQuestionRequest.current.splice(findIndex, 1)
         }
       }
     } catch (error) {
@@ -418,6 +439,10 @@ function useChatIPC(params?: UseChatIPCParams) {
 
       if (params.IsConfigHotpatch) {
         aiRequest.current = { ...(aiRequest.current || {}), ...(params.Params || {}) }
+      }
+
+      if (params.IsFreeInput) {
+        tempUserQuestionRequest.current.push({ request: params, extra: extraValue })
       }
 
       switch (type) {
@@ -500,6 +525,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     yakExecResultEvent.handleResetData()
     casualChatEvent.handleResetData()
     taskChatEvent.handleResetData()
+
+    tempUserQuestionRequest.current = []
   })
 
   /** 建立会话连接后需要同步的数据 */
@@ -922,11 +949,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     // console.log("start-ai-re-act", token, params)
 
-    // 初次用户对话的问题，属于自由对话中的问题
-    casualChatEvent.handleSend({
-      request: { ...params, IsFreeInput: true, FreeInput: params?.Params?.UserQuery || '' },
-      extraValue,
-    })
+    tempUserQuestionRequest.current.push({ request: params, extra: extraValue })
 
     ipcRenderer.invoke('start-ai-re-act', token, params)
     setTimeout(() => {
