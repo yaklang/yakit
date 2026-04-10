@@ -14,6 +14,7 @@ import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import { setClipboardText } from '@/utils/clipboard'
 import { success } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isEmpty } from 'lodash'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const { info, timestamp } = props
@@ -155,7 +156,7 @@ const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
       onClick={() => setIsScroll(true)}
       ref={containerRef}
     >
-      {!!params?.length ? (
+      {params && !isEmpty(params) ? (
         Object.entries(params || {}).map(([key, value]) => {
           const valueString = typeof value === 'string' ? value : JSON.stringify(value)
           return (
