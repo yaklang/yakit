@@ -51,3 +51,56 @@
   align-items: center;
   gap: 4px;
 }
+
+.ai-review-params-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-height: 100px;
+
+  .param-item {
+    display: flex;
+    // align-items: center;
+    gap: 2px;
+    .param-value-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      &:hover {
+        background-color: var(--Colors-Use-Neutral-Bg);
+      }
+    }
+    .param-key {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      font-size: 12px;
+      line-height: 16px;
+      white-space: nowrap;
+      word-wrap: normal;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 25%;
+      flex-shrink: 0;
+      height: 16px;
+      padding-top: 2px;
+    }
+    .param-value {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      line-height: 16px;
+      display: -webkit-box;
+      line-clamp: 3;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+  .no-param {
+    display: flex;
+    align-items: center;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 12px;
+    line-height: 16px;
+  }
+}

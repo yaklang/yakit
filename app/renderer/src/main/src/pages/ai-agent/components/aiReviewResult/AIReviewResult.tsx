@@ -1,7 +1,6 @@
 import { memo, useRef, useState } from 'react'
-import { AIReviewResultProps, AISingHaveColorTextProps } from './type'
-import { SolidHandIcon } from '@/assets/icon/solid'
-import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { AIReviewParamsProps, AIReviewResultProps, AISingHaveColorTextProps } from './type'
+import { useClickAway, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './AIReviewResult.module.scss'
 import React from 'react'
 import ChatCard from '../ChatCard'
@@ -11,6 +10,10 @@ import { Tooltip } from 'antd'
 import { OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
+import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
+import { setClipboardText } from '@/utils/clipboard'
+import { success } from '@/utils/notification'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const { info, timestamp } = props
@@ -82,18 +85,18 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     }
   }, [type, data])
   const renderContent = useMemoizedFn(() => {
-    let paramsValue = userAction.userInput
+    let paramsValue = !!userAction.userInput ? <PreWrapper code={userAction.userInput} /> : null
     switch (type) {
       case 'tool_use_review_require':
         const { params } = data
         try {
-          paramsValue = !!paramsValue ? paramsValue : JSON.stringify(params, null, 2)
+          paramsValue = !!paramsValue ? paramsValue : <AIReviewParams params={params} />
         } catch (error) {}
         break
       default:
         break
     }
-    return !!paramsValue ? <PreWrapper code={paramsValue} /> : null
+    return paramsValue
   })
   return (
     <AISingHaveColorText
@@ -111,7 +114,9 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
           <Tooltip title={expand ? '收起' : '展开'}>
             <YakitButton
               type="text2"
-              onClick={() => setExpand((v) => !v)}
+              onClick={() => {
+                setExpand((v) => !v)
+              }}
               icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
             />
           </Tooltip>
@@ -120,6 +125,55 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     >
       {expand && renderContent()}
     </AISingHaveColorText>
+  )
+})
+
+const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
+  const { params } = props
+  const { t } = useI18nNamespaces(['yakitUi'])
+  const [isScroll, setIsScroll] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  useClickAway(() => {
+    setIsScroll(false)
+  }, containerRef)
+  const onCopy = useMemoizedFn((value: string) => {
+    setClipboardText(value, {
+      hiddenHint: true,
+      finalCallback: () => {
+        setTimeout(() => {
+          success(t('YakitNotification.copySuccess'))
+        }, 200)
+      },
+    })
+  })
+  return (
+    <div
+      className={styles['ai-review-params-wrapper']}
+      style={{
+        overflow: isScroll ? 'auto' : 'hidden',
+      }}
+      onClick={() => setIsScroll(true)}
+      ref={containerRef}
+    >
+      {!!params?.length ? (
+        Object.entries(params || {}).map(([key, value]) => {
+          const valueString = typeof value === 'string' ? value : JSON.stringify(value)
+          return (
+            <div key={key} className={styles['param-item']}>
+              <div className={styles['param-key']}>{key}:</div>
+              {!!valueString && (
+                <div className={styles['param-value-wrapper']} onClick={() => onCopy(valueString)}>
+                  <span className={styles['param-value']}>{valueString}</span>
+                  <CopyComponents copyText={valueString} />
+                </div>
+              )}
+            </div>
+          )
+        })
+      ) : (
+        <div className={styles['no-param']}>无参数</div>
+      )}
+    </div>
   )
 })
 
