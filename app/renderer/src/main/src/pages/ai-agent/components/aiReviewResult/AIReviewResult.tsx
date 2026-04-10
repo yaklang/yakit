@@ -164,7 +164,7 @@ const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
               <div className={styles['param-key']}>{key}:</div>
               {!!valueString && (
                 <div className={styles['param-value-wrapper']} onClick={() => onCopy(valueString)}>
-                  <span className={styles['param-value']}>{valueString}</span>
+                  <div className={styles['param-value']}>{valueString}</div>
                   <CopyComponents copyText={valueString} />
                 </div>
               )}

@@ -68,6 +68,7 @@
       padding: 2px 4px;
       border-radius: 4px;
       cursor: pointer;
+      overflow: hidden;
       &:hover {
         background-color: var(--Colors-Use-Neutral-Bg);
       }
@@ -89,11 +90,10 @@
       color: var(--Colors-Use-Neutral-Text-1-Title);
       font-size: 12px;
       line-height: 16px;
-      display: -webkit-box;
-      line-clamp: 1;
-      -webkit-line-clamp: 1;
-      -webkit-box-orient: vertical;
+      white-space: nowrap;
+      text-overflow: ellipsis;
       overflow: hidden;
+      word-break: break-all;
     }
   }
   .no-param {
