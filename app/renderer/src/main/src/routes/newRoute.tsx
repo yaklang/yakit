@@ -1103,7 +1103,10 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
       },
       { page: YakitRoute.AI_REPOSITORY, ...YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY] },
       { page: YakitRoute.AI_Memory, ...YakitRouteToPageInfo[YakitRoute.AI_Memory] },
-
+      {
+        page: YakitRoute.Plugin_Hub,
+        ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub],
+      },
       {
         page: undefined,
         label: '数据库',
