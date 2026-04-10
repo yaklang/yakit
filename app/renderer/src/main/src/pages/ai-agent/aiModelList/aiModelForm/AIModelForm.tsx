@@ -360,10 +360,10 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       const config = buildAIConfigHealthCheckConfig(res)
       grpcAIConfigHealthCheck({
         Config: config,
-        Content: "你好,请简单回复'测试成功'",
+        Content: '测试成功',
       })
         .then((response) => {
-          const isSuccess = response.ResponseStatusCode === 200
+          const isSuccess = response.Success
           if (isSuccess) {
             yakitNotify('success', '测试成功')
             isShowSaveLoadingRef.current = false
@@ -439,7 +439,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
 
   const testStatus = useCreation(() => {
     if (!testResult) return null
-    const isSuccess = testResult.ResponseStatusCode === 200
+    const isSuccess = testResult.Success
     return {
       color: (isSuccess ? 'success' : 'danger') as YakitTagColor,
       text: isSuccess ? t('AIModelTestResult.testSuccess') : t('AIModelTestResult.testFailed'),
