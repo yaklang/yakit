@@ -1926,6 +1926,9 @@ message AIStartParams {
   int64 AICallTokenLimit = 34;
 
   string UserPresetPrompt = 35;
+
+  // 是否关闭工具执行期间的 interval review
+  bool DisableToolIntervalReview = 36;
 }
 
 message AITaskFilter {
@@ -7079,7 +7082,6 @@ message MITMContentReplacer {
   repeated int64 RegexpGroups = 19;
   repeated string ExcludeSuffix = 20;
 
-  // Regex capture group output template, supports $1, \1, {1}
   string RegexpResultTemplate = 21;
 }
 
@@ -8517,6 +8519,7 @@ message AIConfigHealthCheckResponse{
   string ErrorMessage = 6;
   string RawResponse = 7;
   ThirdPartyApplicationConfig RecommendConfig = 8;
+  bool Success = 9;
 }
 
 message AIProvider {
