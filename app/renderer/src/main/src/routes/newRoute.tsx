@@ -1103,7 +1103,10 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
       },
       { page: YakitRoute.AI_REPOSITORY, ...YakitRouteToPageInfo[YakitRoute.AI_REPOSITORY] },
       { page: YakitRoute.AI_Memory, ...YakitRouteToPageInfo[YakitRoute.AI_Memory] },
-
+      {
+        page: YakitRoute.Plugin_Hub,
+        ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub],
+      },
       {
         page: undefined,
         label: '数据库',
@@ -1120,10 +1123,6 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
           { page: YakitRoute.FingerprintManage, ...YakitRouteToPageInfo[YakitRoute.FingerprintManage] },
           { page: YakitRoute.DB_CVE, ...YakitRouteToPageInfo[YakitRoute.DB_CVE] },
         ],
-      },
-      {
-        page: YakitRoute.Plugin_Hub,
-        ...YakitRouteToPageInfo[YakitRoute.Plugin_Hub],
       },
     ]
   if (isYakit()) {
