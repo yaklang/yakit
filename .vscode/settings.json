@@ -1,4 +1,10 @@
 {
+  // 1. 强制指定 Prettier 配置文件的路径（相对于根目录）
+  "prettier.configPath": ".prettierrc.js",
+  // 2. 强制插件搜索并使用根目录的 node_modules 里的 prettier 模块
+  // 这样能确保 VS Code 和 lint-staged 使用完全相同的版本
+  "prettier.prettierPath": "./node_modules/prettier",
+  // 3. 设置默认格式化程序为 Prettier
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   // 如果插件没安装，Cursor 的状态栏通常会报错提醒你
