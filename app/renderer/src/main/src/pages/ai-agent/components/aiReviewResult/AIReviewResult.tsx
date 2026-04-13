@@ -112,6 +112,14 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     }
     return paramsValue
   })
+  const isShowExpandBtn = useCreation(() => {
+    switch (type) {
+      case 'tool_use_review_require':
+        return true
+      default:
+        return !!userAction.userInput
+    }
+  }, [type])
   return (
     <AISingHaveColorText
       // titleIcon={<SolidHandIcon />}
@@ -124,17 +132,19 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
         icon: info.AIService,
       }}
       titleMore={
-        <div className={styles['header-extra']}>
-          <Tooltip title={expand ? '收起' : '展开'}>
-            <YakitButton
-              type="text2"
-              onClick={() => {
-                setExpand((v) => !v)
-              }}
-              icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
-            />
-          </Tooltip>
-        </div>
+        isShowExpandBtn ? (
+          <div className={styles['header-extra']}>
+            <Tooltip title={expand ? '收起' : '展开'}>
+              <YakitButton
+                type="text2"
+                onClick={() => {
+                  setExpand((v) => !v)
+                }}
+                icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+              />
+            </Tooltip>
+          </div>
+        ) : null
       }
     >
       {expand && renderContent()}
