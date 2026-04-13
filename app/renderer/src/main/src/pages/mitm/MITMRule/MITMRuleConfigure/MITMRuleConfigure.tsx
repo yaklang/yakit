@@ -27,7 +27,7 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
         setValue(r.JsonRaw)
       })
       .catch((e) => {
-        failed(`${t('YakitNotification.exportFailed', { colon: true })}${e}`)
+        failed(t('YakitNotification.exportFailed', { error: e + '' }))
       })
       .finally(() => setTimeout(() => setLoading(false), 300))
   }, [visible])
@@ -88,10 +88,10 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
           info(t('YakitNotification.imported'))
         })
         .catch((e) => {
-          failed(t('YakitNotification.importFailed', { colon: true }) + e)
+          failed(t('YakitNotification.importFailed', { error: e + '' }))
         })
     } catch (error) {
-      failed(t('YakitNotification.importFailed', { colon: true }) + error)
+      failed(t('YakitNotification.importFailed', { error: error + '' }))
     }
   })
   const onUseDefaultConfig = useMemoizedFn(() => {

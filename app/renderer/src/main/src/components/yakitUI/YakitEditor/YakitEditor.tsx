@@ -89,7 +89,7 @@ import { applyYakitMonacoTheme } from '@/utils/monacoSpec/theme'
 import { useTheme } from '@/hook/useTheme'
 import { keepSearchNameMapStore, useKeepSearchNameMap } from '@/store/keepSearchName'
 import type { IEvent } from 'monaco-editor'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
 import { JSONParseLog } from '@/utils/tool'
 
@@ -136,7 +136,7 @@ const keyToFontSize: Record<string, number> = {
 }
 
 /** 编辑器右键默认菜单 - 顶部 */
-const DefaultMenuTop: (t: (text: string) => string, nowFontsize: number) => EditorMenuItemType[] = (t, nowFontsize) => {
+const DefaultMenuTop: (t: TFunction, nowFontsize: number) => EditorMenuItemType[] = (t, nowFontsize) => {
   return [
     {
       key: 'font-size',
@@ -150,7 +150,7 @@ const DefaultMenuTop: (t: (text: string) => string, nowFontsize: number) => Edit
 }
 
 /** 编辑器右键默认菜单 - 底部 */
-const DefaultMenuBottom: (t: (text: string) => string) => EditorMenuItemType[] = (t) => {
+const DefaultMenuBottom: (t: TFunction) => EditorMenuItemType[] = (t) => {
   return [
     { key: 'cut', label: t('YakitEditor.cut') },
     { key: 'copy', label: t('YakitEditor.copy') },

@@ -372,7 +372,7 @@
     "viewBody": "查看Body",
     "targetFileNotExist": "目标文件已不存在!",
     "fullResponse": "完整响应",
-    "noEmpty":"不为空",
+    "noEmpty": "不为空",
     "includes": "包含",
     "notIncludes": "不包含"
   },
@@ -454,7 +454,7 @@
     "payload_test_result": "字典管理测试结果",
     "total": "总量：",
     "tag_add_success": "标签添加成功",
-    "description": "描述{colon}",
+    "description": "描述: ",
     "example": "示例：",
     "parameter_type_info": "参数类型信息：",
     "parameter_name": "参数名",
@@ -534,7 +534,7 @@
     "template_empty_message": "模板名称不能为空",
     "template_repeat_message": "模板名称已存在",
     "add_template_success": "新建模板成功",
-    "template_list":"模板列表"
+    "template_list": "模板列表"
   },
   "GlobalHotPatch": {
     "Global_hot_template": "全局热加载",
@@ -644,7 +644,8 @@
     "add_node": "添加节点",
     "force_stop": "强制停止",
     "config": "配置",
-    "select_webfuzzer_with_sequence_tip": "请选择 Web Fuzzer（如需使用序列，请将其他标签页拖入该分组）"
+    "select_webfuzzer_with_sequence_tip": "请选择 Web Fuzzer（如需使用序列，请将其他标签页拖入该分组）",
+    "pleaseSendMultipleRequestsBeforeApply": "请发送多个请求包后再应用"
   },
   "FuzzerConcurrency": {
     "add_node": "添加",
@@ -690,7 +691,7 @@
     "uploadFile": "上传文件",
     "hostsConfig": "hosts 配置",
     "dragOrUpload": "可将文件拖入框内或",
-    "example":"示例模板",
+    "example": "示例模板",
     "fileRequired": "请先选择一个 hosts 配置文件",
     "unsupportedFileType": "仅支持导入以下文本文件：{accept}",
     "fileReadFailed": "文件读取失败：{error}",

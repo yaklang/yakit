@@ -1,39 +1,40 @@
 {
-    "NewCodecRightEditorBox": {
-        "noSavedContent": "No saved content",
-        "selectFolder": "Please select a folder",
-        "autoWordwrap": "Auto Wrap",
-        "noAutoWordwrap": "No Auto Wrap",
-        "largeInput": "Large Input",
-        "replaceOutputToInput": "Replace Output to Input",
-        "largeOutputTip": "Output is too large, please click save to download and view the file",
-        "dataDistortion": "data distortion"
-    },
-    "NewCodecMiddleTypeItem": {
-        "enableBreakpoint": "Enable Breakpoint",
-        "disableBreakpoint": "Disable Breakpoint"
-    },
-    "CodecRunListHistoryStore": {
-        "historyStore": "History Store",
-        "clearHistoryConfirm": "Are you sure you want to clear the history storage?"
-    },
-    "NewCodecMiddleRunList": {
-        "dragHint": "Drag Codec tools from the left list to use them",
-        "pleaseEnterName": "Please enter a name",
-        "nameAlreadyExists": "A history record with the same name already exists, please change the name",
-        "regexCheckFailed": "{title}-{regex} check failed",
-        "expandCodecCategory": "Expand Codec Categories",
-        "codecOrder": "Codec Order",
-        "saveCodecOrder": "Save Codec Order",
-        "codecOrderNamePlaceholder": "Please name the codec order..."
-    },
-    "NewCodecLeftDragList": {
-        "codecCategory": "Codec Categories",
-        "collapseCodecCategory": "Collapse Codec Categories",
-        "myFavoriteTools": "My Favorite Tools"
-    },
-    "NewCodec": {
-        "saveUpdateConfirm": "Do you want to save updates to the current template?",
-        "unrecognizedData": "Unrecognized Data"
-    }
+  "NewCodecRightEditorBox": {
+    "noSavedContent": "No saved content",
+    "selectFolder": "Please select a folder",
+    "autoWordwrap": "Auto Wrap",
+    "noAutoWordwrap": "No Auto Wrap",
+    "largeInput": "Large Input",
+    "replaceOutputToInput": "Replace Output to Input",
+    "largeOutputTip": "Output is too large, please click save to download and view the file",
+    "dataDistortion": "data distortion",
+    "hexRawText": "Hex raw text"
+  },
+  "NewCodecMiddleTypeItem": {
+    "enableBreakpoint": "Enable Breakpoint",
+    "disableBreakpoint": "Disable Breakpoint"
+  },
+  "CodecRunListHistoryStore": {
+    "historyStore": "History Store",
+    "clearHistoryConfirm": "Are you sure you want to clear the history storage?"
+  },
+  "NewCodecMiddleRunList": {
+    "dragHint": "Drag Codec tools from the left list to use them",
+    "pleaseEnterName": "Please enter a name",
+    "nameAlreadyExists": "A history record with the same name already exists, please change the name",
+    "regexCheckFailed": "{title}-{regex} check failed",
+    "expandCodecCategory": "Expand Codec Categories",
+    "codecOrder": "Codec Order",
+    "saveCodecOrder": "Save Codec Order",
+    "codecOrderNamePlaceholder": "Please name the codec order..."
+  },
+  "NewCodecLeftDragList": {
+    "codecCategory": "Codec Categories",
+    "collapseCodecCategory": "Collapse Codec Categories",
+    "myFavoriteTools": "My Favorite Tools"
+  },
+  "NewCodec": {
+    "saveUpdateConfirm": "Do you want to save updates to the current template?",
+    "unrecognizedData": "Unrecognized Data"
+  }
 }

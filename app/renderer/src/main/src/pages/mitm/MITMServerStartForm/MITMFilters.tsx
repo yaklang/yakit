@@ -212,7 +212,7 @@ export const onFilterEmptyMITMAdvancedFilters = (list: FilterDataItem[]) => {
 type MITMAdvancedFilterSearchType = 'ruleName' | 'ruleContent'
 
 const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((props, ref) => {
-  const { t } = useI18nNamespaces(['mitm', 'webFuzzer'])
+  const { t, i18n } = useI18nNamespaces(['mitm', 'webFuzzer'])
   const { visible = true } = props
 
   const [activeKey, setActiveKey] = useControllableValue<string | string[]>(props, {
@@ -304,7 +304,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
     >
       <div className={styles['filter-operation']}>
         <YakitCombinationSearch
-          beforeOptionWidth={96}
+          beforeOptionWidth={i18n.language === 'zh' ? 96 : 120}
           valueBeforeOption={searchType}
           addonBeforeOption={[
             { label: t('ExtractorCollapse.ruleName'), value: 'ruleName' },

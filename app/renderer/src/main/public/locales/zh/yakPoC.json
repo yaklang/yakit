@@ -19,10 +19,14 @@
     "plugins": "个插件"
   },
   "YakPoCExecuteContent": {
-    "taskList": "任务列表"
+    "selectedPlugin": "已选插件",
+    "pluginLog": "插件日志",
+    "taskList": "任务列表",
+    "pluginExecute": "插件执行"
   },
   "PluginExecuteLog": {
     "target": "执行目标",
-    "timeConsuming": "耗时"
+    "timeConsuming": "耗时",
+    "timeout": "超时"
   }
 }

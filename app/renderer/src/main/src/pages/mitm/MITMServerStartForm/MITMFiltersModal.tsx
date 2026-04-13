@@ -41,6 +41,7 @@ import {
 } from '../MITMHacker/utils'
 import MITMContext from '../Context/MITMContext'
 import { JSONParseLog } from '@/utils/tool'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const MITMAdvancedFilters = React.lazy(() => import('./MITMFilters'))
 const { ipcRenderer } = window.require('electron')
@@ -83,6 +84,7 @@ export const getMitmHijackFilter = (baseFilter: MITMFilterSchema, advancedFilter
 }
 const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => {
   const { filterType, visible, setVisible, isStartMITM, onSetHijackFilterFlag, onSetFilterFlag } = props
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const filtersRef = useRef<any>()
   const [type, setType] = useState<FilterSettingType>('base-setting')
   // filter 过滤器
@@ -101,7 +103,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
   }, [mitmContent.mitmStore.version])
   const onResetFilters = useMemoizedFn(() => {
     function resetFilterOk() {
-      info('MITM 过滤器重置命令已发送')
+      info(t('MITMFiltersModal.reset_filter_command_sent'))
       emiter.emit('onRefFilterWhiteListEvent', mitmVersion)
       onSetFilterFlag?.(false)
       setVisible(false)
@@ -160,7 +162,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             }
           })
           setRemoteValue(removeFilterKey, JSON.stringify(newSaveFilterData))
-          yakitNotify('success', '编辑' + editFilterName + '成功')
+          yakitNotify('success', t('MITMFiltersModal.edit_success', { name: editFilterName }))
           setVisible(false)
         } catch (error) {}
       })
@@ -185,10 +187,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             onSetFilterFlag?.(getMitmHijackFilter(baseFilter, advancedFilters))
           }
           setVisible(false)
-          info('更新 MITM 过滤器状态')
+          info(t('MITMFiltersModal.update_filter_status'))
         })
         .catch((err) => {
-          yakitFailed('更新 MITM 过滤器失败：' + err)
+          yakitFailed(t('MITMFiltersModal.update_filter_failed', { err: err + '' }))
         })
     } else {
       const value: MITMHijackSetFilterRequest = {
@@ -202,10 +204,10 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             onSetHijackFilterFlag(getMitmHijackFilter(baseFilter, advancedFilters))
           }
           setVisible(false)
-          info('更新 劫持 过滤器状态')
+          info(t('MITMFiltersModal.update_hijack_status'))
         })
         .catch((err) => {
-          yakitFailed('更新 劫持 过滤器失败：' + err)
+          yakitFailed(t('MITMFiltersModal.update_hijack_failed', { err: err + '' }))
         })
     }
   })
@@ -222,7 +224,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
           }
         })
         .catch((err) => {
-          yakitFailed('获取 MITM 过滤器失败：' + err)
+          yakitFailed(t('MITMFiltersModal.get_filter_failed', { err: err + '' }))
         })
     } else {
       grpcMITMHijackGetFilter()
@@ -236,7 +238,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
           }
         })
         .catch((err) => {
-          yakitFailed('获取 劫持 过滤器失败：' + err)
+          yakitFailed(t('MITMFiltersModal.get_hijack_failed', { err: err + '' }))
         })
     }
   })
@@ -254,11 +256,14 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
   // 保存过滤器
   const onSaveFilter = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: filterType === 'filter' ? '保存过滤器配置' : '保存条件劫持配置',
+      title:
+        filterType === 'filter' ? t('MITMFiltersModal.save_filter_config') : t('MITMFiltersModal.save_hijack_config'),
       content: (
         <div className={styles['mitm-save-filter']}>
           <YakitInput.TextArea
-            placeholder={`请为${filterType === 'filter' ? '过滤器' : ''}配置取个名字...`}
+            placeholder={t('MITMFiltersModal.name_placeholder', {
+              name: filterType === 'filter' ? t('MITMFormAdvancedConfiguration.filters') : '',
+            })}
             showCount
             maxLength={50}
             onChange={(e) => {
@@ -273,13 +278,13 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 m.destroy()
               }}
             >
-              取消
+              {t('YakitButton.cancel')}
             </YakitButton>
             <YakitButton
               type="primary"
               onClick={() => {
                 if (getFilterName().length === 0) {
-                  warn('请输入名字')
+                  warn(t('MITMFiltersModal.please_enter_name'))
                   return
                 }
                 const filter = getMITMFilterData().baseFilter
@@ -291,7 +296,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 getRemoteValue(removeFilterKey).then((data) => {
                   if (!data) {
                     setRemoteValue(removeFilterKey, JSON.stringify([saveObj]))
-                    info('存储成功')
+                    info(t('MITMFiltersModal.saved_successfully'))
                     m.destroy()
                     return
                   }
@@ -301,17 +306,17 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                       fun: 'removeFilterKey',
                     })
                     if (saveFilterData.filter((item) => item.filterName === getFilterName()).length > 0) {
-                      warn('此名字重复')
+                      warn(t('MITMFiltersModal.duplicate_name'))
                     } else {
                       setRemoteValue(removeFilterKey, JSON.stringify([saveObj, ...saveFilterData]))
-                      info('存储成功')
+                      info(t('MITMFiltersModal.saved_successfully'))
                       m.destroy()
                     }
                   } catch (error) {}
                 })
               }}
             >
-              保存
+              {t('YakitButton.save')}
             </YakitButton>
           </div>
         </div>
@@ -369,8 +374,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         <div className={styles['mitm-filters-title']}>
           <span>
             {filterType === 'hijackFilter'
-              ? (editFilterName ? '编辑' : '') + '条件劫持'
-              : (editFilterName ? '编辑' : '') + '过滤器配置'}
+              ? (editFilterName ? `${t('YakitButton.edit')}` : '') + t('MITMFiltersModal.hijack_condition')
+              : (editFilterName ? `${t('YakitButton.edit')}` : '') + t('MITMFiltersModal.filter_configuration')}
           </span>
           <YakitRadioButtons
             value={type}
@@ -379,11 +384,11 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             options={[
               {
                 value: 'base-setting',
-                label: '基础配置',
+                label: t('MITMFiltersModal.base_configuration'),
               },
               {
                 value: 'advanced-setting',
-                label: '高级配置',
+                label: t('MITMFiltersModal.advanced_configuration'),
               },
             ]}
           />
@@ -395,7 +400,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
         <div className={styles['mitm-filters-subTitle']}>
           {filterType === 'filter' && (
             <>
-              <Tooltip title="导出配置" align={{ offset: [0, 10] }}>
+              <Tooltip title={t('MITMFiltersModal.export_configuration')} align={{ offset: [0, 10] }}>
                 <YakitButton
                   style={{ padding: '3px 8px' }}
                   type="text"
@@ -403,7 +408,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                   onClick={onFilterExport}
                 />
               </Tooltip>
-              <Tooltip title="导入配置" align={{ offset: [0, 10] }}>
+              <Tooltip title={t('MITMFiltersModal.import_configuration')} align={{ offset: [0, 10] }}>
                 <YakitButton
                   style={{ padding: '3px 8px' }}
                   type="text"
@@ -413,7 +418,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
               </Tooltip>
               <ImportFileModal
                 visible={importVisibel}
-                title="从 JSON 中导入"
+                title={t('MITMFiltersModal.import_from_json')}
                 fileType="application/json"
                 onCancel={() => {
                   setImportVisibel(false)
@@ -424,7 +429,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                     onMenuSelect(importValue)
                     setImportVisibel(false)
                   } catch (error) {
-                    yakitNotify('error', '导入失败')
+                    yakitNotify('error', t('YakitNotification.importFailedNoError'))
                   }
                 }}
               ></ImportFileModal>
@@ -458,7 +463,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
           </YakitPopover>
 
           <YakitButton type="text" onClick={() => onClearFilters()}>
-            清除
+            {t('YakitButton.clear')}
           </YakitButton>
           {filterType === 'filter' && (
             <YakitButton
@@ -467,7 +472,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 onResetFilters()
               }}
             >
-              重置过滤器
+              {t('MITMFiltersModal.reset_filter')}
             </YakitButton>
           )}
         </div>
@@ -476,20 +481,18 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
       onOk={() => {
         onSetFilter()
       }}
-      okText={editFilterName ? '保存并应用' : '确认'}
+      okText={editFilterName ? t('MITMFiltersModal.save_and_apply') : t('YakitButton.confirm')}
       bodyStyle={{ padding: 0 }}
     >
       <div className={styles.infoBox}>
-        <div>提示：</div>
+        <div>{t('MITMFiltersModal.tip')}</div>
         {filterType === 'hijackFilter' ? (
           <>
-            <div>1、符合条件的数据会自动跳转到手动劫持查看，其余数据自动放行</div>
-            <div>
-              2、基础配置除Content-Type和文件后缀外默认都按关键字匹配，如需要正则和glob模式匹配请在高级配置中配置
-            </div>
+            <div>1、{t('MITMFiltersModal.hijack_tip_1')}</div>
+            <div>2、{t('MITMFiltersModal.hijack_tip_2')}</div>
           </>
         ) : (
-          <div>基础配置除Content-Type和文件后缀外默认都按关键字匹配，如需要正则和glob模式匹配请在高级配置中配置</div>
+          <div>{t('MITMFiltersModal.hijack_tip_2')}</div>
         )}
       </div>
       <MITMFilters
@@ -522,6 +525,7 @@ interface MitmFilterHistoryStoreProps {
 }
 const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo((props) => {
   const { removeFilterKey, popoverVisible, setPopoverVisible, onSelect, editFilterName, onSetEditFilterName } = props
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const [mitmSaveData, setMitmSaveData] = useState<SaveObjProps[]>([])
   useEffect(() => {
     onMitmSaveFilter()
@@ -561,7 +565,7 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
   return (
     <div className={styles['mitm-filter-history-store']}>
       <div className={styles['header']}>
-        <div className={styles['title']}>历史存储</div>
+        <div className={styles['title']}>{t('MITMFiltersModal.history_storage')}</div>
         {mitmSaveData.length !== 0 && (
           <YakitButton
             type="text"
@@ -570,7 +574,7 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
               setMitmSaveData([])
             }}
           >
-            清空
+            {t('YakitButton.clear')}
           </YakitButton>
         )}
       </div>
@@ -605,7 +609,7 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
                 onClick={(e) => {
                   e.stopPropagation()
                   if (editFilterName === item.filterName) {
-                    yakitNotify('info', '正在编辑' + editFilterName + '，暂无法删除')
+                    yakitNotify('info', t('MITMFiltersModal.editing_cannot_delete', { name: editFilterName }))
                   } else {
                     removeItem(item.filterName)
                   }
@@ -617,7 +621,7 @@ const MitmFilterHistoryStore: React.FC<MitmFilterHistoryStoreProps> = React.memo
           ))}
         </div>
       ) : (
-        <div className={classNames(styles['no-data'])}>暂无数据</div>
+        <div className={classNames(styles['no-data'])}>{t('YakitEmpty.noData')}</div>
       )}
     </div>
   )
@@ -632,7 +636,8 @@ interface ImportFileModalProps {
   onOk: (value: string) => void
 }
 const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
-  const { title, visible, okText = '导入', fileType, onCancel, onOk } = props
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { title, visible, okText = t('YakitButton.import'), fileType, onCancel, onOk } = props
   const [value, setValue] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -661,7 +666,7 @@ const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
       setValue('')
       const file = files[0]
       if (fileType && file.type !== fileType) {
-        yakitNotify('warning', '导入文件不符合格式要求')
+        yakitNotify('warning', t('MITMFiltersModal.invalid_import_file'))
         return
       }
       const reader = new FileReader()
@@ -691,12 +696,12 @@ const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
       width={850}
       subTitle={
         <div className={styles['import-text']}>
-          可将文件拖入框内，或
+          {t('YakitDraggerContent.drag_file_tip')}
           <input type="file" className={styles['fileInput']} ref={fileInputRef} onChange={handleFileChange} />
           <YakitButton type="text" onClick={onClickUpload} style={{ fontSize: 14 }}>
-            点击此处
+            {t('YakitDraggerContent.click_here')}
           </YakitButton>
-          上传，也支持直接粘贴代码
+          {t('MITMFiltersModal.drag_hint_suffix')}
         </div>
       }
       destroyOnClose={true}

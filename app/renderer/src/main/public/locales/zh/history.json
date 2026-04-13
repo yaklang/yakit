@@ -4,7 +4,6 @@
     "process": "进程",
     "pleaseEnterDomainToSearch": "请输入域名进行搜索，例baidu.com",
     "AI": "AI"
-
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "找不到该请求详情",
@@ -151,6 +150,19 @@
     "batchDeletion": "批量删除",
     "deduplicate": "去重"
   },
+  "HTTPFlowRiskViewer": {
+    "details": "详情"
+  },
+  "HTTPFlowMiniTable": {
+    "id": "ID",
+    "method": "方法",
+    "status": "状态",
+    "bodyLength": "Body大小",
+    "details": "详情",
+    "getParams": "Get 参数",
+    "postParams": "Post 参数",
+    "sendToWebFuzzer": "发送到Fuzzer"
+  },
   "RandomChunkedDataTable": {
     "chunkDetails": "分块详情",
     "content": "内容",
@@ -183,6 +195,7 @@
     "collapseRight": "向右收起",
     "previousRule": "上一个规则",
     "nextRule": "下一个规则",
+    "rootDomains": "根域",
     "domain": "域名",
     "object": "对象",
     "rule": "规则",

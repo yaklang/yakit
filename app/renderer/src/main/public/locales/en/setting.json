@@ -9,5 +9,9 @@
     "watermarkPlaceholder": "No more than 15 characters",
     "default": "Default",
     "custom": "Custom"
+  },
+  "SoftwareSettings": {
+    "projectManagement": "Project Management",
+    "remoteMode": "Remote Mode"
   }
 }

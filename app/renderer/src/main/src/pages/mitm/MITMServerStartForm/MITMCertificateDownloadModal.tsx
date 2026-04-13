@@ -25,7 +25,7 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
     CaCerts: new Uint8Array(),
     LocalFile: '',
   })
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
   useEffect(() => {
     const apiName = isGMState ? 'DownloadMITMGMCert' : 'DownloadMITMCert'
     ipcRenderer.invoke(apiName, {}).then((data: CaCertData) => {
@@ -45,15 +45,15 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
       visible={visible}
       onCancel={() => setVisible(false)}
       closable={true}
-      title={'下载证书以劫持 HTTPS'}
+      title={t('MITMCertificateDownloadModal.download_cert')}
       width={720}
       className={styles['mitm-certificate-download-modal']}
-      okText="下载到本地并打开"
+      okText={t('MITMCertificateDownloadModal.download_and_open')}
       footerExtra={
         <div className={styles['certificate-download-modal-footer']}>
-          在设置代理后访问：
+          {t('MITMCertificateDownloadModal.after_proxy_visit')}
           <YakitTag enableCopy copyText="http://mitm" iconColor="var(--Colors-Use-Main-Primary)" />
-          可自动下载证书
+          {t('MITMCertificateDownloadModal.auto_download_cert')}
         </div>
       }
       onOk={() => onDown()}
@@ -66,11 +66,11 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
             options={[
               {
                 value: false,
-                label: 'SSL/TLS证书',
+                label: t('MITMCertificateDownloadModal.ssl_tls_cert'),
               },
               {
                 value: true,
-                label: '国密SSL/TLS证书',
+                label: t('MITMCertificateDownloadModal.gm_ssl_tls_cert'),
               },
             ]}
             value={isGMState}

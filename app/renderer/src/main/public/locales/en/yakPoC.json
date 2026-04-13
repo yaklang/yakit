@@ -19,10 +19,14 @@
     "plugins": " Plugins"
   },
   "YakPoCExecuteContent": {
-    "taskList": "Task List"
+    "selectedPlugin": "Selected Plugins",
+    "pluginLog": "Plugin Log",
+    "taskList": "Task List",
+    "pluginExecute": "Plugin Execution"
   },
   "PluginExecuteLog": {
     "target": "Target",
-    "timeConsuming": "Time Consuming"
+    "timeConsuming": "Time Consuming",
+    "timeout": "Timeout"
   }
 }

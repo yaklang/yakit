@@ -1,11 +1,12 @@
-import {HTTPHistoryAnalysisPageInfo} from "@/store/pageInfo"
+import { TFunction } from '@/i18n/useI18nNamespaces'
+import { HTTPHistoryAnalysisPageInfo } from '@/store/pageInfo'
 
 export const defaultHTTPHistoryAnalysisPageInfo: HTTPHistoryAnalysisPageInfo = {
-    webFuzzer: false,
-    runtimeId: [],
-    sourceType: "mitm",
-    verbose: "",
-    pageId: ""
+  webFuzzer: false,
+  runtimeId: [],
+  sourceType: 'mitm',
+  verbose: '',
+  pageId: '',
 }
 export const HotPatchDefaultContent = `
 // f = file.OpenFile(tempFile, file.O_APPEND|file.O_CREATE, 0o777)~
@@ -14,11 +15,11 @@ export const HotPatchDefaultContent = `
 analyzeHTTPFlow = func(flow /* *yakit.HTTPFlow */ , extract /*func(ruleName string, flow *yakit.HTTPFlow,contents ...string)*/) {
     // flow 从数据库查询的流量数据
     // extract 将数据进行提取,ruleName做为提取流量的规则名，contents为提取的内容
-    
+
     // Example:
     // 在响应内容中搜索手机号
     // 需要使用GetResponse()方法拿到响应体，直接使用flow.Response拿到的是被转移存在数据库的响应体。
-    // respStr := flow.GetResponse() 
+    // respStr := flow.GetResponse()
     // // 使用正则匹配手机号
     // phoneRegex := re.MustCompile(\`\\b1[3-9]d{9}\\b\`)
     // phoneMatches := phoneRegex.FindAllString(respStr, -1)
@@ -43,10 +44,10 @@ onAnalyzeHTTPFlowFinish = func(totalCount, matchedCount) {
 
 `
 
-export const footerTabs = (t: (text: string) => string) => {
-    return [
-        {key: "packet", label: t("AnalysisMain.packet")},
-        {key: "rule", label: t("AnalysisMain.rule")},
-        {key: "hot-patch", label: t("AnalysisMain.hot_reload")}
-    ]
+export const footerTabs = (t: TFunction) => {
+  return [
+    { key: 'packet', label: t('AnalysisMain.packet') },
+    { key: 'rule', label: t('AnalysisMain.rule') },
+    { key: 'hot-patch', label: t('AnalysisMain.hot_reload') },
+  ]
 }

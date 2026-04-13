@@ -1,0 +1,7 @@
+{
+  "IRifyUpdateProjectManagerModal": {
+    "syncingData": "同步数据中，请耐心等待...",
+    "stopFailed": "停止失败：{error}",
+    "progress": "进度 {percent}%"
+  }
+}
