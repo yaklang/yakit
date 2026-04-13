@@ -118,6 +118,9 @@
     "release-yakit": "node scripts/prod-pack.js",
     "test:vitest": "vitest",
     "i18n:check": "node scripts/locale-parity.js",
+    "ci:eslint": "cd app/renderer/src/main && ./node_modules/.bin/eslint src --ext .js,.jsx,.ts,.tsx",
+    "ci:tsc": "cd app/renderer/src/main && ./node_modules/.bin/tsc -p tsconfig.json --noEmit",
+    "ci:media-size": "node scripts/check-media-size.js",
     "prepare": "husky"
   },
   "keywords": [],
