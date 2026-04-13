@@ -1,114 +1,114 @@
 .plugin-tun-hijack {
+  height: 100%;
+  .plugin-tun-hijack-table {
     height: 100%;
-    .plugin-tun-hijack-table {
-        height: 100%;
-        .plugin-tun-hijack-result {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            .plugin-tun-hijack-header {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                margin-bottom: 8px;
-                .title {
-                    display: flex;
-                    align-items: center;
-                }
-                .extra {
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    .plugin-tun-hijack-quit-icon {
-                        color: var(--Colors-Use-Error-Primary);
-                        display: flex;
-                        align-items: center;
-                        cursor: pointer;
-                    }
-                }
-            }
-            .plugin-tun-hijack-content {
-                flex: 1;
-                overflow: hidden;
-            }
-            .plugin-tun-hijack-content-hidden {
-                height: 0px;
-                overflow: hidden;
-                flex: none;
-            }
+    .plugin-tun-hijack-result {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      .plugin-tun-hijack-header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        .title {
+          display: flex;
+          align-items: center;
         }
+        .extra {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          .plugin-tun-hijack-quit-icon {
+            color: var(--Colors-Use-Error-Primary);
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+          }
+        }
+      }
+      .plugin-tun-hijack-content {
+        flex: 1;
+        overflow: hidden;
+      }
+      .plugin-tun-hijack-content-hidden {
+        height: 0px;
+        overflow: hidden;
+        flex: none;
+      }
     }
+  }
 }
 .plugin-tun-hijack-hidden {
-    height: 0px;
-    overflow: hidden;
+  height: 0px;
+  overflow: hidden;
 }
 
 .action-spin {
-    display: inline-block;
-    width: auto;
+  display: inline-block;
+  width: auto;
 }
 
 .connectivity-check-button {
-    margin-left: 2px;
+  margin-left: 2px;
 }
 
 .connectivity-check-footer {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .connectivity-check-progress {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .connectivity-check-result {
-    height: 420px;
-    overflow: hidden;
+  height: 420px;
+  overflow: hidden;
 }
 
 .filter-icon {
-    svg {
-        width: 16px;
-        height: 16px;
-    }
+  svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .hijack-process-search-wrapper {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    .hijack-process-search {
-        margin-bottom: 8px;
-        :global {
-            .ant-input-search-button {
-                width: 40px;
-                font-size: 11px;
-            }
-        }
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  .hijack-process-search {
+    margin-bottom: 8px;
+    :global {
+      .ant-input-search-button {
+        width: 40px;
+        font-size: 11px;
+      }
     }
+  }
 
-    .hijack-process-tabs {
-        flex: 1;
-        :global {
-            .ant-tabs-top {
-                & > .ant-tabs-nav {
-                    &::before {
-                        border-bottom: unset;
-                    }
-                }
-            }
+  .hijack-process-tabs {
+    flex: 1;
+    :global {
+      .ant-tabs-top {
+        & > .ant-tabs-nav {
+          &::before {
+            border-bottom: unset;
+          }
         }
+      }
     }
+  }
 }
 
 .exclamationcircleIcon {
-    svg {
-        width: 16px;
-        height: 16px;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    }
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
 }

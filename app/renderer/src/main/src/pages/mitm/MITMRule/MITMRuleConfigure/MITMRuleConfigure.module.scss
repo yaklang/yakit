@@ -1,18 +1,18 @@
 .modal-footer-extra {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    .modal-footer-extra-text {
-        font-weight: 400;
-        font-size: 12px;
-        line-height: 16px;
-        color: var(--Colors-Use-Neutral-Text-2-Primary);
-        margin-right: 1px;
-    }
+  .modal-footer-extra-text {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    margin-right: 1px;
+  }
 }
 
 .modal-subTitle {
-    display: flex;
-    justify-content: space-between;
-    flex: 1;
+  display: flex;
+  justify-content: space-between;
+  flex: 1;
 }

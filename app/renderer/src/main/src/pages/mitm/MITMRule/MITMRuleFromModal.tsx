@@ -1,44 +1,44 @@
-import {Col, Divider, Form, Row} from "antd"
-import React, {useEffect, useImperativeHandle, useRef, useState} from "react"
-import styles from "./MITMRuleFromModal.module.scss"
-import classNames from "classnames"
+import { Col, Divider, Form, Row } from 'antd'
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import styles from './MITMRuleFromModal.module.scss'
+import classNames from 'classnames'
 import {
-    ExtractRegularProps,
-    ExtraHTTPSelectProps,
-    InputHTTPCookieFormProps,
-    InputHTTPHeaderFormProps,
-    MITMContentReplacerRule,
-    MITMRuleFromModalProps,
-    RuleContentProps
-} from "./MITMRuleType"
-import {useDebounceEffect, useMemoizedFn} from "ahooks"
-import {AdjustmentsIcon, CheckIcon, PencilAltIcon, PlusCircleIcon} from "@/assets/newIcon"
-import {FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {YakEditor} from "@/utils/editors"
-import {editor} from "monaco-editor"
-import {StringToUint8Array} from "@/utils/str"
-import {failed} from "@/utils/notification"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInputNumber"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitAutoComplete} from "@/components/yakitUI/YakitAutoComplete/YakitAutoComplete"
-import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {YakitSwitch} from "@/components/yakitUI/YakitSwitch/YakitSwitch"
-import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
-import {colorSelectNode} from "./MITMRule"
-import {ValidateStatus} from "antd/lib/form/FormItem"
-import {InternalTextAreaProps} from "@/components/yakitUI/YakitInput/YakitInputType"
-import {YakitSizeType} from "@/components/yakitUI/YakitInputNumber/YakitInputNumberType"
-import {SizeType} from "antd/lib/config-provider/SizeContext"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {Trans} from "react-i18next"
-import { YakitEditor } from "@/components/yakitUI/YakitEditor/YakitEditor"
-import {RegexTester} from "./RegexTester"
+  ExtractRegularProps,
+  ExtraHTTPSelectProps,
+  InputHTTPCookieFormProps,
+  InputHTTPHeaderFormProps,
+  MITMContentReplacerRule,
+  MITMRuleFromModalProps,
+  RuleContentProps,
+} from './MITMRuleType'
+import { useDebounceEffect, useMemoizedFn } from 'ahooks'
+import { AdjustmentsIcon, CheckIcon, PencilAltIcon, PlusCircleIcon } from '@/assets/newIcon'
+import { FuzzerResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { YakEditor } from '@/utils/editors'
+import { editor } from 'monaco-editor'
+import { StringToUint8Array } from '@/utils/str'
+import { failed } from '@/utils/notification'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
+import { HTTPCookieSetting, HTTPHeader } from '../MITMContentReplacerHeaderOperator'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
+import { colorSelectNode } from './MITMRule'
+import { ValidateStatus } from 'antd/lib/form/FormItem'
+import { InternalTextAreaProps } from '@/components/yakitUI/YakitInput/YakitInputType'
+import { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputNumberType'
+import { SizeType } from 'antd/lib/config-provider/SizeContext'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { Trans } from 'react-i18next'
+import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import { RegexTester } from './RegexTester'
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
 /**
  * @description:MITMRule 新增或修改
@@ -48,117 +48,118 @@ const {ipcRenderer} = window.require("electron")
  * @param {Function} onClose 关闭回调
  */
 export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
-    const {modalVisible, onClose, currentItem, isEdit, rules, onSave, ruleUse} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
+  const { modalVisible, onClose, currentItem, isEdit, rules, onSave, ruleUse } = props
+  const { t, i18n } = useI18nNamespaces(['yakitUi', 'mitm'])
 
-    const ruleContentRef = useRef<any>()
-    const [form] = Form.useForm()
-    const [regexpType, setRegexpType] = useState<"group" | "template">("group")
+  const ruleContentRef = useRef<any>()
+  const [form] = Form.useForm()
+  const [regexpType, setRegexpType] = useState<'group' | 'template'>('group')
 
-    const [regexpGroupsValue, setRegexpGroupsValue] = useState<number[]>([])
-    const [regexpGroupsSearchVal, setRegexpGroupsSearchVal] = useState("")
-    const handleRegexpGroupsSearch = (searchText) => {
-        // 如果输入的文本符合正则规则（0或非零开头的数字），则更新输入框的内容
-        if (/^(0|[1-9]\d*)?$/.test(searchText)) {
-            setRegexpGroupsSearchVal(searchText)
-        }
+  const [regexpGroupsValue, setRegexpGroupsValue] = useState<number[]>([])
+  const [regexpGroupsSearchVal, setRegexpGroupsSearchVal] = useState('')
+  const handleRegexpGroupsSearch = (searchText) => {
+    // 如果输入的文本符合正则规则（0或非零开头的数字），则更新输入框的内容
+    if (/^(0|[1-9]\d*)?$/.test(searchText)) {
+      setRegexpGroupsSearchVal(searchText)
     }
-    const handleRegexpGroupsChange = (newValue) => {
-        setRegexpGroupsValue(newValue)
-        setRegexpGroupsSearchVal("")
+  }
+  const handleRegexpGroupsChange = (newValue) => {
+    setRegexpGroupsValue(newValue)
+    setRegexpGroupsSearchVal('')
+  }
+
+  const resultType = Form.useWatch('ResultType', form)
+  const headers: HTTPHeader[] = Form.useWatch('ExtraHeaders', form) || []
+  const cookies: HTTPCookieSetting[] = Form.useWatch('ExtraCookies', form) || []
+
+  useEffect(() => {
+    form.setFieldsValue({
+      ...currentItem,
+      ResultType:
+        currentItem && (currentItem?.ExtraHeaders?.length > 0 || currentItem?.ExtraCookies?.length > 0) ? 2 : 1, //  1 文本  2 HTTP
+    })
+    ruleContentRef?.current?.onSetValue(currentItem?.Rule)
+    setRegexpGroupsValue(currentItem?.RegexpGroups || [])
+    setRegexpType(currentItem?.RegexpResultTemplate ? 'template' : 'group')
+  }, [currentItem])
+  const onOk = useMemoizedFn(() => {
+    form
+      .validateFields()
+      .then((values: MITMContentReplacerRule) => {
+        const newValues = { ...currentItem, ...values }
+        if (newValues.ExtraCookies.length > 0 || newValues.ExtraHeaders.length > 0 || !!newValues.Result) {
+          newValues.NoReplace = false
+        } else {
+          newValues.NoReplace = true
+        }
+        if (regexpType === 'group') {
+          newValues.RegexpGroups = (newValues.RegexpGroups || []).map((item) => Number(item))
+          newValues.RegexpResultTemplate = ''
+        } else {
+          newValues.RegexpGroups = []
+          newValues.RegexpResultTemplate = newValues.RegexpResultTemplate || ''
+        }
+        onSave(newValues)
+      })
+      .catch((errorInfo) => {})
+  })
+  const getRule = useMemoizedFn((val: string) => {
+    form.setFieldsValue({
+      Rule: val,
+    })
+  })
+  const getExtraHeaders = useMemoizedFn((val, updateIndex) => {
+    let ExtraHeaders: HTTPHeader[] = []
+    if (updateIndex === undefined) {
+      ExtraHeaders = [...headers, val]
+    } else {
+      headers[updateIndex] = val
+      ExtraHeaders = [...headers]
     }
+    form.setFieldsValue({
+      ExtraHeaders: ExtraHeaders,
+    })
+  })
+  const getExtraCookies = useMemoizedFn((val, updateIndex) => {
+    let ExtraCookies: HTTPCookieSetting[] = []
+    if (updateIndex === undefined) {
+      ExtraCookies = [...cookies, val]
+    } else {
+      cookies[updateIndex] = val
+      ExtraCookies = [...cookies]
+    }
+    form.setFieldsValue({
+      ExtraCookies: ExtraCookies,
+    })
+  })
+  const onRemoveExtraHeaders = useMemoizedFn((index: number) => {
+    form.setFieldsValue({
+      ExtraHeaders: headers.filter((_, i) => i !== index),
+    })
+  })
+  const onRemoveExtraCookies = useMemoizedFn((index: number) => {
+    form.setFieldsValue({
+      ExtraCookies: cookies.filter((_, i) => i !== index),
+    })
+  })
 
-    const resultType = Form.useWatch("ResultType", form)
-    const headers: HTTPHeader[] = Form.useWatch("ExtraHeaders", form) || []
-    const cookies: HTTPCookieSetting[] = Form.useWatch("ExtraCookies", form) || []
-
-    useEffect(() => {
-        form.setFieldsValue({
-            ...currentItem,
-            ResultType:
-                currentItem && (currentItem?.ExtraHeaders?.length > 0 || currentItem?.ExtraCookies?.length > 0) ? 2 : 1 //  1 文本  2 HTTP
-        })
-        ruleContentRef?.current?.onSetValue(currentItem?.Rule)
-        setRegexpGroupsValue(currentItem?.RegexpGroups || [])
-        setRegexpType(currentItem?.RegexpResultTemplate ? "template" : "group")
-    }, [currentItem])
-    const onOk = useMemoizedFn(() => {
-        form.validateFields()
-            .then((values: MITMContentReplacerRule) => {
-                const newValues = {...currentItem, ...values}
-                if (newValues.ExtraCookies.length > 0 || newValues.ExtraHeaders.length > 0 || !!newValues.Result) {
-                    newValues.NoReplace = false
-                } else {
-                    newValues.NoReplace = true
-                }
-                if (regexpType === "group") {
-                    newValues.RegexpGroups = (newValues.RegexpGroups || []).map((item) => Number(item))
-                    newValues.RegexpResultTemplate = ""
-                } else {
-                    newValues.RegexpGroups = []
-                    newValues.RegexpResultTemplate = newValues.RegexpResultTemplate || ""
-                }
-                onSave(newValues)
-            })
-            .catch((errorInfo) => {})
-    })
-    const getRule = useMemoizedFn((val: string) => {
-        form.setFieldsValue({
-            Rule: val
-        })
-    })
-    const getExtraHeaders = useMemoizedFn((val, updateIndex) => {
-        let ExtraHeaders: HTTPHeader[] = []
-        if (updateIndex === undefined) {
-            ExtraHeaders = [...headers, val]
-        } else {
-            headers[updateIndex] = val
-            ExtraHeaders = [...headers]
-        }
-        form.setFieldsValue({
-            ExtraHeaders: ExtraHeaders
-        })
-    })
-    const getExtraCookies = useMemoizedFn((val, updateIndex) => {
-        let ExtraCookies: HTTPCookieSetting[] = []
-        if (updateIndex === undefined) {
-            ExtraCookies = [...cookies, val]
-        } else {
-            cookies[updateIndex] = val
-            ExtraCookies = [...cookies]
-        }
-        form.setFieldsValue({
-            ExtraCookies: ExtraCookies
-        })
-    })
-    const onRemoveExtraHeaders = useMemoizedFn((index: number) => {
-        form.setFieldsValue({
-            ExtraHeaders: headers.filter((_, i) => i !== index)
-        })
-    })
-    const onRemoveExtraCookies = useMemoizedFn((index: number) => {
-        form.setFieldsValue({
-            ExtraCookies: cookies.filter((_, i) => i !== index)
-        })
-    })
-
-    return (
-        <>
-            <YakitModal
-                title={isEdit ? t("MITMRuleFromModal.edit_rule") : t("MITMRuleFromModal.add_rule")}
-                visible={modalVisible}
-                // visible={true}
-                onCancel={() => onClose()}
-                closable
-                okType='primary'
-                okText={isEdit ? t("YakitButton.edit") : t("MITMRuleFromModal.add_this_rule")}
-                width={720}
-                zIndex={1001}
-                onOk={() => onOk()}
-                bodyStyle={{padding: 0}}
-            >
-                <Form form={form} labelCol={{span: 5}} wrapperCol={{span: 16}} className={styles["modal-from"]}>
-                    {/* <Form.Item
+  return (
+    <>
+      <YakitModal
+        title={isEdit ? t('MITMRuleFromModal.edit_rule') : t('MITMRuleFromModal.add_rule')}
+        visible={modalVisible}
+        // visible={true}
+        onCancel={() => onClose()}
+        closable
+        okType="primary"
+        okText={isEdit ? t('YakitButton.edit') : t('MITMRuleFromModal.add_this_rule')}
+        width={720}
+        zIndex={1001}
+        onOk={() => onOk()}
+        bodyStyle={{ padding: 0 }}
+      >
+        <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} className={styles['modal-from']}>
+          {/* <Form.Item
                         label='执行顺序'
                         name='Index'
                         rules={[
@@ -182,678 +183,658 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
                     >
                         <YakitInputNumber type='horizontal' min={1} />
                     </Form.Item> */}
-                    <Form.Item label={t("MITMRule.rule_name")} name='VerboseName'>
-                        <YakitInput />
-                    </Form.Item>
-                    <Form.Item
-                        label={t("MITMRule.rule_content")}
-                        name='Rule'
-                        rules={[{required: true, message: "该项为必填"}]}
-                    >
-                        <RuleContent getRule={getRule} ref={ruleContentRef} />
-                    </Form.Item>
+          <Form.Item label={t('MITMRule.rule_name')} name="VerboseName">
+            <YakitInput />
+          </Form.Item>
+          <Form.Item label={t('MITMRule.rule_content')} name="Rule" rules={[{ required: true, message: '该项为必填' }]}>
+            <RuleContent getRule={getRule} ref={ruleContentRef} />
+          </Form.Item>
 
-                    <Form.Item label={t("MITMRuleFromModal.format_type")}>
-                        <YakitRadioButtons
-                            size='large'
-                            value={regexpType}
-                            onChange={(e) => setRegexpType(e.target.value)}
-                            options={[
-                                {label: t("MITMRuleFromModal.format_by_group"), value: "group"},
-                                {label: t("MITMRuleFromModal.format_by_template"), value: "template"}
-                            ]}
-                            buttonStyle='solid'
-                        />
+          <Form.Item label={t('MITMRuleFromModal.format_type')}>
+            <YakitRadioButtons
+              size="large"
+              value={regexpType}
+              onChange={(e) => setRegexpType(e.target.value)}
+              options={[
+                { label: t('MITMRuleFromModal.format_by_group'), value: 'group' },
+                { label: t('MITMRuleFromModal.format_by_template'), value: 'template' },
+              ]}
+              buttonStyle="solid"
+            />
+          </Form.Item>
+          {regexpType === 'group' ? (
+            <Form.Item
+              label={t('MITMRuleFromModal.rule_group')}
+              name="RegexpGroups"
+              help={t('MITMRuleFromModal.group_matching_tip')}
+            >
+              <YakitSelect
+                mode="tags"
+                size="middle"
+                wrapperStyle={{ width: '100%' }}
+                value={regexpGroupsValue}
+                onChange={handleRegexpGroupsChange}
+                searchValue={regexpGroupsSearchVal}
+                onSearch={handleRegexpGroupsSearch}
+                onBlur={() => setRegexpGroupsSearchVal('')}
+              ></YakitSelect>
+            </Form.Item>
+          ) : (
+            <Form.Item
+              label={t('MITMRuleFromModal.regexp_result_template')}
+              name="RegexpResultTemplate"
+              help={t('MITMRuleFromModal.regexp_result_template_tip')}
+            >
+              <YakitInput.TextArea
+                autoSize={{ minRows: 1, maxRows: 3 }}
+                placeholder={t('MITMRuleFromModal.regexp_result_template_placeholder')}
+              />
+            </Form.Item>
+          )}
+          <Row>
+            <Col span={5}>&nbsp;</Col>
+            <Col span={16}>
+              <Divider dashed style={{ marginTop: 0 }} />
+            </Col>
+          </Row>
+          {ruleUse === 'mitm' && (
+            <>
+              <Form.Item
+                label={t('MITMRuleFromModal.replacement_result')}
+                help={t('MITMRuleFromModal.http_header_cookie_priority_tip')}
+                name="ResultType"
+              >
+                <YakitRadioButtons
+                  size="large"
+                  options={[
+                    { label: t('MITMRuleFromModal.text'), value: 1 },
+                    { label: 'HTTP Header/Cookie', value: 2 },
+                  ]}
+                  buttonStyle="solid"
+                />
+              </Form.Item>
+              <>
+                {(resultType === 1 && (
+                  <Form.Item label={t('MITMRuleFromModal.text')} name="Result">
+                    <YakitInput placeholder={t('MITMRuleFromModal.enter_content_to_replace_tip')} />
+                  </Form.Item>
+                )) || (
+                  <>
+                    <Form.Item label="HTTP Header" name="ExtraHeaders">
+                      <ExtraHTTPSelect
+                        tip="Header"
+                        onSave={getExtraHeaders}
+                        list={headers}
+                        onRemove={onRemoveExtraHeaders}
+                      />
                     </Form.Item>
-                    {regexpType === "group" ? (
-                    <Form.Item
-                        label={t("MITMRuleFromModal.rule_group")}
-                        name='RegexpGroups'
-                        help={t("MITMRuleFromModal.group_matching_tip")}
-                    >
-                        <YakitSelect
-                            mode='tags'
-                            size='middle'
-                            wrapperStyle={{width: "100%"}}
-                            value={regexpGroupsValue}
-                            onChange={handleRegexpGroupsChange}
-                            searchValue={regexpGroupsSearchVal}
-                            onSearch={handleRegexpGroupsSearch}
-                            onBlur={() => setRegexpGroupsSearchVal("")}
-                        ></YakitSelect>
+                    <Form.Item label="HTTP Cookie" name="ExtraCookies">
+                      <ExtraHTTPSelect
+                        tip="Cookie"
+                        onSave={getExtraCookies}
+                        list={cookies.map((item) => ({
+                          ...item,
+                          Header: item.Key,
+                          Value: item.Value,
+                        }))}
+                        onRemove={onRemoveExtraCookies}
+                      />
                     </Form.Item>
-                    ) : (
-                    <Form.Item
-                        label={t("MITMRuleFromModal.regexp_result_template")}
-                        name='RegexpResultTemplate'
-                        help={t("MITMRuleFromModal.regexp_result_template_tip")}
-                    >
-                        <YakitInput.TextArea
-                            autoSize={{minRows: 1, maxRows: 3}}
-                            placeholder={t("MITMRuleFromModal.regexp_result_template_placeholder")}
-                        />
-                    </Form.Item>
-                    )}
-                    <Row>
-                        <Col span={5}>&nbsp;</Col>
-                        <Col span={16}>
-                            <Divider dashed style={{marginTop: 0}} />
-                        </Col>
-                    </Row>
-                    {ruleUse === "mitm" && (
-                        <>
-                            <Form.Item
-                                label={t("MITMRuleFromModal.replacement_result")}
-                                help={t("MITMRuleFromModal.http_header_cookie_priority_tip")}
-                                name='ResultType'
-                            >
-                                <YakitRadioButtons
-                                    size='large'
-                                    options={[
-                                        {label: t("MITMRuleFromModal.text"), value: 1},
-                                        {label: "HTTP Header/Cookie", value: 2}
-                                    ]}
-                                    buttonStyle='solid'
-                                />
-                            </Form.Item>
-                            <>
-                                {(resultType === 1 && (
-                                    <Form.Item label={t("MITMRuleFromModal.text")} name='Result'>
-                                        <YakitInput placeholder={t("MITMRuleFromModal.enter_content_to_replace_tip")} />
-                                    </Form.Item>
-                                )) || (
-                                    <>
-                                        <Form.Item label='HTTP Header' name='ExtraHeaders'>
-                                            <ExtraHTTPSelect
-                                                tip='Header'
-                                                onSave={getExtraHeaders}
-                                                list={headers}
-                                                onRemove={onRemoveExtraHeaders}
-                                            />
-                                        </Form.Item>
-                                        <Form.Item label='HTTP Cookie' name='ExtraCookies'>
-                                            <ExtraHTTPSelect
-                                                tip='Cookie'
-                                                onSave={getExtraCookies}
-                                                list={cookies.map((item) => ({
-                                                    ...item,
-                                                    Header: item.Key,
-                                                    Value: item.Value
-                                                }))}
-                                                onRemove={onRemoveExtraCookies}
-                                            />
-                                        </Form.Item>
-                                    </>
-                                )}
-                            </>
-                            <Row>
-                                <Col span={5}>&nbsp;</Col>
-                                <Col span={16}>
-                                    <Divider dashed style={{marginTop: 0}} />
-                                </Col>
-                            </Row>
-                        </>
-                    )}
-                    <Form.Item
-                        label={t("MITMRuleFromModal.effective_url")}
-                        name='EffectiveURL'
-                        help={t("MITMRuleFromModal.url_specific_rule_tip")}
-                    >
-                        <YakitInput />
-                    </Form.Item>
-                    <Form.Item label={t("MITMRuleFromModal.hit_color")} name='Color'>
-                        <YakitSelect size='middle' wrapperStyle={{width: "100%"}} allowClear>
-                            {colorSelectNode(t)}
-                        </YakitSelect>
-                    </Form.Item>
-                    <Form.Item label={t("MITMRuleFromModal.tag")} name='ExtraTag'>
-                        <YakitSelect size='middle' mode='tags' wrapperStyle={{width: "100%"}} />
-                    </Form.Item>
-                </Form>
-            </YakitModal>
-        </>
-    )
+                  </>
+                )}
+              </>
+              <Row>
+                <Col span={5}>&nbsp;</Col>
+                <Col span={16}>
+                  <Divider dashed style={{ marginTop: 0 }} />
+                </Col>
+              </Row>
+            </>
+          )}
+          <Form.Item
+            label={t('MITMRuleFromModal.effective_url')}
+            name="EffectiveURL"
+            help={t('MITMRuleFromModal.url_specific_rule_tip')}
+          >
+            <YakitInput />
+          </Form.Item>
+          <Form.Item label={t('MITMRuleFromModal.hit_color')} name="Color">
+            <YakitSelect size="middle" wrapperStyle={{ width: '100%' }} allowClear>
+              {colorSelectNode(t)}
+            </YakitSelect>
+          </Form.Item>
+          <Form.Item label={t('MITMRuleFromModal.tag')} name="ExtraTag">
+            <YakitSelect size="middle" mode="tags" wrapperStyle={{ width: '100%' }} />
+          </Form.Item>
+        </Form>
+      </YakitModal>
+    </>
+  )
 }
 
 const ExtractRegular: React.FC<ExtractRegularProps> = React.memo((props) => {
-    const {onSave, defaultCode} = props
-    const {t, i18n} = useI18nNamespaces(["mitm"])
-    const [codeValue, setCodeValue] = useState(defaultCode)
-    const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>()
-    const [selected, setSelected] = useState<string>("")
-    const [_responseStr, setResponseStr] = useState<string>("")
+  const { onSave, defaultCode } = props
+  const { t, i18n } = useI18nNamespaces(['mitm'])
+  const [codeValue, setCodeValue] = useState(defaultCode)
+  const [editor, setEditor] = useState<editor.IStandaloneCodeEditor>()
+  const [selected, setSelected] = useState<string>('')
+  const [_responseStr, setResponseStr] = useState<string>('')
 
-    //用户选择的数据转换成的正则
-    const [matchedRegexp, setMatchedRegexp] = useState<string>("")
-    useEffect(() => {
-        setCodeValue(defaultCode)
-    }, [defaultCode])
-    useEffect(() => {
-        if (!editor) {
-            return
+  //用户选择的数据转换成的正则
+  const [matchedRegexp, setMatchedRegexp] = useState<string>('')
+  useEffect(() => {
+    setCodeValue(defaultCode)
+  }, [defaultCode])
+  useEffect(() => {
+    if (!editor) {
+      return
+    }
+    const model = editor.getModel()
+    if (!model) {
+      return
+    }
+    const setSelectedFunc = () => {
+      try {
+        const selection = editor.getSelection()
+        if (!selection) {
+          return
         }
-        const model = editor.getModel()
-        if (!model) {
-            return
-        }
-        const setSelectedFunc = () => {
-            try {
-                const selection = editor.getSelection()
-                if (!selection) {
-                    return
-                }
 
-                setResponseStr(model.getValue())
-                // 这里能获取到选择到的内容
-                setSelected(model.getValueInRange(selection))
-            } catch (e) {
-                failed(t("ExtractRegular.extract_selection_data_error") + e)
-            }
-        }
-        setSelectedFunc()
-        const id = setInterval(setSelectedFunc, 500)
-        return () => {
-            clearInterval(id)
-        }
-    }, [editor])
-    useDebounceEffect(
-        () => {
-            if (!selected) {
-                return
-            }
+        setResponseStr(model.getValue())
+        // 这里能获取到选择到的内容
+        setSelected(model.getValueInRange(selection))
+      } catch (e) {
+        failed(t('ExtractRegular.extract_selection_data_error') + e)
+      }
+    }
+    setSelectedFunc()
+    const id = setInterval(setSelectedFunc, 500)
+    return () => {
+      clearInterval(id)
+    }
+  }, [editor])
+  useDebounceEffect(
+    () => {
+      if (!selected) {
+        return
+      }
 
-            ipcRenderer
-                .invoke("GenerateExtractRule", {
-                    Data: StringToUint8Array(_responseStr),
-                    Selected: StringToUint8Array(selected)
-                })
-                .then((e: {PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string}) => {
-                    setMatchedRegexp(e.SelectedRegexp)
-                })
-                .catch((e) => {
-                    failed(`${t("ExtractRegular.cannot_generate_data_extraction_rule")}${e}`)
-                })
-        },
-        [selected],
-        {wait: 500}
-    )
-    return (
-        <div className={styles["yakit-extract-regular-editor"]}>
-            <div className={styles["yakit-editor"]}>
-                <YakitEditor
-                    value={codeValue}
-                    setValue={(c) => setCodeValue(c)}
-                    editorDidMount={(e) => {
-                        setEditor(e)
-                    }}
-                    type={"html"}
-                />
-            </div>
-            <RegexpInput
-                regexp={matchedRegexp}
-                tagSize='large'
-                showCheck={true}
-                onSave={onSave}
-                onSure={setMatchedRegexp}
-            />
-        </div>
-    )
+      ipcRenderer
+        .invoke('GenerateExtractRule', {
+          Data: StringToUint8Array(_responseStr),
+          Selected: StringToUint8Array(selected),
+        })
+        .then((e: { PrefixRegexp: string; SuffixRegexp: string; SelectedRegexp: string }) => {
+          setMatchedRegexp(e.SelectedRegexp)
+        })
+        .catch((e) => {
+          failed(`${t('ExtractRegular.cannot_generate_data_extraction_rule')}${e}`)
+        })
+    },
+    [selected],
+    { wait: 500 },
+  )
+  return (
+    <div className={styles['yakit-extract-regular-editor']}>
+      <div className={styles['yakit-editor']}>
+        <YakitEditor
+          value={codeValue}
+          setValue={(c) => setCodeValue(c)}
+          editorDidMount={(e) => {
+            setEditor(e)
+          }}
+          type={'html'}
+        />
+      </div>
+      <RegexpInput regexp={matchedRegexp} tagSize="large" showCheck={true} onSave={onSave} onSure={setMatchedRegexp} />
+    </div>
+  )
 })
 interface RegexpInputProps {
-    regexp: string
-    inputSize?: SizeType
-    onSave: (s: string) => void
-    onSure: (s: string) => void
-    showCheck?: boolean
-    /**@name 初始是否显示 编辑icon/初始文字tag */
-    initialTagShow?: boolean
-    textAreaProps?: InternalTextAreaProps
-    tagSize?: YakitSizeType
+  regexp: string
+  inputSize?: SizeType
+  onSave: (s: string) => void
+  onSure: (s: string) => void
+  showCheck?: boolean
+  /**@name 初始是否显示 编辑icon/初始文字tag */
+  initialTagShow?: boolean
+  textAreaProps?: InternalTextAreaProps
+  tagSize?: YakitSizeType
 }
 
 export const RegexpInput: React.FC<RegexpInputProps> = React.memo((props) => {
-    const {regexp, inputSize, tagSize = "middle", onSave, onSure, showCheck, initialTagShow} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi"])
-    const [isEdit, setIsEdit] = useState<boolean>(false)
-    const [tagShow, setTagShow] = useState<boolean>(initialTagShow || false)
-    const [editMatchedRegexp, setEditMatchedRegexp] = useState<string>("")
-    useEffect(() => {
-        if (regexp) setTagShow(true)
-    }, [regexp])
-    return (
-        <div className={styles["yakit-editor-regexp"]}>
-            {!isEdit && tagShow && (
-                <YakitTag size={tagSize} className={styles["yakit-editor-regexp-tag"]}>
-                    <div className={styles["yakit-editor-regexp-value"]} title={regexp}>
-                        {regexp}
-                    </div>
-                    <div className={styles["yakit-editor-icon"]}>
-                        <PencilAltIcon
-                            onClick={() => {
-                                setIsEdit(true)
-                                setTagShow(true)
-                                setEditMatchedRegexp(regexp)
-                            }}
-                        />
-                        {showCheck && (
-                            <>
-                                <Divider type='vertical' style={{top: 1}} />
-                                <CheckIcon
-                                    onClick={() => {
-                                        onSave(regexp)
-                                    }}
-                                />
-                            </>
-                        )}
-                    </div>
-                </YakitTag>
-            )}
-            <div className={styles["yakit-editor-text-area"]} style={{display: isEdit ? "" : "none"}}>
-                <YakitInput.TextArea
-                    value={editMatchedRegexp}
-                    onChange={(e) => setEditMatchedRegexp(e.target.value)}
-                    autoSize={{minRows: 1, maxRows: 3}}
-                    size={inputSize}
+  const { regexp, inputSize, tagSize = 'middle', onSave, onSure, showCheck, initialTagShow } = props
+  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const [isEdit, setIsEdit] = useState<boolean>(false)
+  const [tagShow, setTagShow] = useState<boolean>(initialTagShow || false)
+  const [editMatchedRegexp, setEditMatchedRegexp] = useState<string>('')
+  useEffect(() => {
+    if (regexp) setTagShow(true)
+  }, [regexp])
+  return (
+    <div className={styles['yakit-editor-regexp']}>
+      {!isEdit && tagShow && (
+        <YakitTag size={tagSize} className={styles['yakit-editor-regexp-tag']}>
+          <div className={styles['yakit-editor-regexp-value']} title={regexp}>
+            {regexp}
+          </div>
+          <div className={styles['yakit-editor-icon']}>
+            <PencilAltIcon
+              onClick={() => {
+                setIsEdit(true)
+                setTagShow(true)
+                setEditMatchedRegexp(regexp)
+              }}
+            />
+            {showCheck && (
+              <>
+                <Divider type="vertical" style={{ top: 1 }} />
+                <CheckIcon
+                  onClick={() => {
+                    onSave(regexp)
+                  }}
                 />
-                <div className={styles["yakit-editor-btn"]}>
-                    <div className={styles["cancel-btn"]} onClick={() => setIsEdit(false)}>
-                        {t("YakitButton.cancel")}
-                    </div>
-                    <Divider type='vertical' style={{margin: "0 8px", top: 1}} />
-                    <div
-                        className={styles["save-btn"]}
-                        onClick={() => {
-                            setIsEdit(false)
-                            onSure(editMatchedRegexp)
-                        }}
-                    >
-                        {t("YakitButton.ok")}
-                    </div>
-                </div>
-            </div>
+              </>
+            )}
+          </div>
+        </YakitTag>
+      )}
+      <div className={styles['yakit-editor-text-area']} style={{ display: isEdit ? '' : 'none' }}>
+        <YakitInput.TextArea
+          value={editMatchedRegexp}
+          onChange={(e) => setEditMatchedRegexp(e.target.value)}
+          autoSize={{ minRows: 1, maxRows: 3 }}
+          size={inputSize}
+        />
+        <div className={styles['yakit-editor-btn']}>
+          <div className={styles['cancel-btn']} onClick={() => setIsEdit(false)}>
+            {t('YakitButton.cancel')}
+          </div>
+          <Divider type="vertical" style={{ margin: '0 8px', top: 1 }} />
+          <div
+            className={styles['save-btn']}
+            onClick={() => {
+              setIsEdit(false)
+              onSure(editMatchedRegexp)
+            }}
+          >
+            {t('YakitButton.ok')}
+          </div>
         </div>
-    )
+      </div>
+    </div>
+  )
 })
 
 const ExtraHTTPSelect: React.FC<ExtraHTTPSelectProps> = React.memo((props) => {
-    const {tip, onSave, list, onRemove} = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "mitm"])
-    const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
-    const [initHeaderFormVal, setInitHeaderFormVal] = useState<HTTPHeader>()
-    const [initCookieFormVal, setInitCookieFormVal] = useState<any>()
-    const [updateHeaderIndex, setUpdateHeaderIndex] = useState<number>()
-    const [updateCookieIndex, setUpdateCookieIndex] = useState<number>()
+  const { tip, onSave, list, onRemove } = props
+  const { t, i18n } = useI18nNamespaces(['yakitUi', 'mitm'])
+  const [visibleHTTPHeader, setVisibleHTTPHeader] = useState<boolean>(false)
+  const [initHeaderFormVal, setInitHeaderFormVal] = useState<HTTPHeader>()
+  const [initCookieFormVal, setInitCookieFormVal] = useState<any>()
+  const [updateHeaderIndex, setUpdateHeaderIndex] = useState<number>()
+  const [updateCookieIndex, setUpdateCookieIndex] = useState<number>()
 
-    return (
-        <div className={styles["yakit-extra-http-select"]}>
-            <div className={styles["yakit-extra-http-select-heard"]}>
-                <YakitButton
-                    type='text'
-                    icon={<PlusCircleIcon />}
-                    onClick={() => {
-                        if (tip === "Header") {
-                            setInitHeaderFormVal(undefined)
-                            setUpdateHeaderIndex(undefined)
-                        } else {
-                            setInitCookieFormVal(undefined)
-                            setUpdateCookieIndex(undefined)
-                        }
-                        setVisibleHTTPHeader(true)
-                    }}
-                >
-                    {t("YakitButton.add")}
-                </YakitButton>
-                <div className={styles["extra-tip"]}>
-                    <Trans
-                        i18nKey='ExtraHTTPSelect.already_set_extra_count_tip'
-                        ns='mitm'
-                        components={{count: <span className={styles.number} />}}
-                        values={{len: list.length, tip: tip}}
-                    />
-                </div>
-            </div>
-            {(tip === "Header" && (
-                <InputHTTPHeaderForm
-                    initFormVal={initHeaderFormVal}
-                    updateIndex={updateHeaderIndex}
-                    visible={visibleHTTPHeader}
-                    setVisible={setVisibleHTTPHeader}
-                    onSave={onSave}
-                />
-            )) || (
-                <InputHTTPCookieForm
-                    initFormVal={initCookieFormVal}
-                    updateIndex={updateCookieIndex}
-                    visible={visibleHTTPHeader}
-                    setVisible={setVisibleHTTPHeader}
-                    onSave={onSave}
-                />
-            )}
-
-            {list && list.length > 0 && (
-                <div className={styles["http-tags"]}>
-                    {list.map((item, index) => (
-                        <YakitTag
-                            key={`${item.Header}-${index}`}
-                            closable
-                            onClose={() => onRemove(index)}
-                            className={styles["tag-item"]}
-                            onClick={() => {
-                                if (tip === "Header") {
-                                    setInitHeaderFormVal({
-                                        Header: item.Header,
-                                        Value: item.Value
-                                    })
-                                    setUpdateHeaderIndex(index)
-                                } else {
-                                    setInitCookieFormVal({...item})
-                                    setUpdateCookieIndex(index)
-                                }
-                                setVisibleHTTPHeader(true)
-                            }}
-                        >
-                            {item.Header}
-                        </YakitTag>
-                    ))}
-                </div>
-            )}
+  return (
+    <div className={styles['yakit-extra-http-select']}>
+      <div className={styles['yakit-extra-http-select-heard']}>
+        <YakitButton
+          type="text"
+          icon={<PlusCircleIcon />}
+          onClick={() => {
+            if (tip === 'Header') {
+              setInitHeaderFormVal(undefined)
+              setUpdateHeaderIndex(undefined)
+            } else {
+              setInitCookieFormVal(undefined)
+              setUpdateCookieIndex(undefined)
+            }
+            setVisibleHTTPHeader(true)
+          }}
+        >
+          {t('YakitButton.add')}
+        </YakitButton>
+        <div className={styles['extra-tip']}>
+          <Trans
+            i18nKey="ExtraHTTPSelect.already_set_extra_count_tip"
+            ns="mitm"
+            components={{ count: <span className={styles.number} /> }}
+            values={{ len: list.length, tip: tip }}
+          />
         </div>
-    )
+      </div>
+      {(tip === 'Header' && (
+        <InputHTTPHeaderForm
+          initFormVal={initHeaderFormVal}
+          updateIndex={updateHeaderIndex}
+          visible={visibleHTTPHeader}
+          setVisible={setVisibleHTTPHeader}
+          onSave={onSave}
+        />
+      )) || (
+        <InputHTTPCookieForm
+          initFormVal={initCookieFormVal}
+          updateIndex={updateCookieIndex}
+          visible={visibleHTTPHeader}
+          setVisible={setVisibleHTTPHeader}
+          onSave={onSave}
+        />
+      )}
+
+      {list && list.length > 0 && (
+        <div className={styles['http-tags']}>
+          {list.map((item, index) => (
+            <YakitTag
+              key={`${item.Header}-${index}`}
+              closable
+              onClose={() => onRemove(index)}
+              className={styles['tag-item']}
+              onClick={() => {
+                if (tip === 'Header') {
+                  setInitHeaderFormVal({
+                    Header: item.Header,
+                    Value: item.Value,
+                  })
+                  setUpdateHeaderIndex(index)
+                } else {
+                  setInitCookieFormVal({ ...item })
+                  setUpdateCookieIndex(index)
+                }
+                setVisibleHTTPHeader(true)
+              }}
+            >
+              {item.Header}
+            </YakitTag>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 })
 
 export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.memo((props) => {
-    const {visible, setVisible, onSave, initFormVal, updateIndex} = props
-    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
-    const [form] = Form.useForm()
+  const { visible, setVisible, onSave, initFormVal, updateIndex } = props
+  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const [form] = Form.useForm()
 
-    useEffect(() => {
-        if (visible) {
-            if (initFormVal !== undefined) {
-                form.setFieldsValue(initFormVal)
-            } else {
-                form.resetFields()
-            }
-        }
-    }, [visible])
-    return (
-        <YakitModal
-            title={t("InputHTTPHeaderForm.enter_new_http_header")}
-            visible={visible}
-            onCancel={() => setVisible(false)}
-            zIndex={1002}
-            footer={null}
-            closable={true}
-            bodyStyle={{padding: 0}}
-            destroyOnClose={true}
+  useEffect(() => {
+    if (visible) {
+      if (initFormVal !== undefined) {
+        form.setFieldsValue(initFormVal)
+      } else {
+        form.resetFields()
+      }
+    }
+  }, [visible])
+  return (
+    <YakitModal
+      title={t('InputHTTPHeaderForm.enter_new_http_header')}
+      visible={visible}
+      onCancel={() => setVisible(false)}
+      zIndex={1002}
+      footer={null}
+      closable={true}
+      bodyStyle={{ padding: 0 }}
+      destroyOnClose={true}
+    >
+      <Form
+        labelCol={{ span: 5 }}
+        wrapperCol={{ span: 14 }}
+        onFinish={(val: HTTPHeader) => {
+          onSave(val, updateIndex)
+          setVisible(false)
+          form.resetFields()
+        }}
+        form={form}
+        className={styles['http-heard-form']}
+      >
+        <Form.Item
+          label="HTTP Header"
+          name="Header"
+          rules={[{ required: true, message: t('YakitForm.requiredField') }]}
         >
-            <Form
-                labelCol={{span: 5}}
-                wrapperCol={{span: 14}}
-                onFinish={(val: HTTPHeader) => {
-                    onSave(val, updateIndex)
-                    setVisible(false)
-                    form.resetFields()
-                }}
-                form={form}
-                className={styles["http-heard-form"]}
-            >
-                <Form.Item
-                    label='HTTP Header'
-                    name='Header'
-                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
-                >
-                    <YakitAutoComplete
-                        options={[
-                            "Authorization",
-                            "Accept",
-                            "Accept-Charset",
-                            "Accept-Encoding",
-                            "Accept-Language",
-                            "Accept-Ranges",
-                            "Cache-Control",
-                            "Cc",
-                            "Connection",
-                            "Content-Id",
-                            "Content-Language",
-                            "Content-Length",
-                            "Content-Transfer-Encoding",
-                            "Content-Type",
-                            "Cookie",
-                            "Date",
-                            "Dkim-Signature",
-                            "Etag",
-                            "Expires",
-                            "From",
-                            "Host",
-                            "If-Modified-Since",
-                            "If-None-Match",
-                            "In-Reply-To",
-                            "Last-Modified",
-                            "Location",
-                            "Message-Id",
-                            "Mime-Version",
-                            "Pragma",
-                            "Received",
-                            "Return-Path",
-                            "Server",
-                            "Set-Cookie",
-                            "Subject",
-                            "To",
-                            "User-Agent",
-                            "X-Forwarded-For",
-                            "Via",
-                            "X-Imforwards",
-                            "X-Powered-By",
-                            "X-Requested-With"
-                        ].map((ele) => ({value: ele, label: ele}))}
-                        filterOption={(inputValue, option) => {
-                            if (option?.value && typeof option?.value === "string") {
-                                return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                            }
-                            return false
-                        }}
-                        size='middle'
-                    />
-                </Form.Item>
+          <YakitAutoComplete
+            options={[
+              'Authorization',
+              'Accept',
+              'Accept-Charset',
+              'Accept-Encoding',
+              'Accept-Language',
+              'Accept-Ranges',
+              'Cache-Control',
+              'Cc',
+              'Connection',
+              'Content-Id',
+              'Content-Language',
+              'Content-Length',
+              'Content-Transfer-Encoding',
+              'Content-Type',
+              'Cookie',
+              'Date',
+              'Dkim-Signature',
+              'Etag',
+              'Expires',
+              'From',
+              'Host',
+              'If-Modified-Since',
+              'If-None-Match',
+              'In-Reply-To',
+              'Last-Modified',
+              'Location',
+              'Message-Id',
+              'Mime-Version',
+              'Pragma',
+              'Received',
+              'Return-Path',
+              'Server',
+              'Set-Cookie',
+              'Subject',
+              'To',
+              'User-Agent',
+              'X-Forwarded-For',
+              'Via',
+              'X-Imforwards',
+              'X-Powered-By',
+              'X-Requested-With',
+            ].map((ele) => ({ value: ele, label: ele }))}
+            filterOption={(inputValue, option) => {
+              if (option?.value && typeof option?.value === 'string') {
+                return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              }
+              return false
+            }}
+            size="middle"
+          />
+        </Form.Item>
 
-                <Form.Item label='HTTP Value' name='Value'>
-                    <YakitInput />
-                </Form.Item>
-                <Form.Item colon={false} label={" "}>
-                    <YakitButton type='primary' htmlType='submit'>
-                        {t("InputHTTPHeaderForm.set_this_header")}
-                    </YakitButton>
-                </Form.Item>
-            </Form>
-        </YakitModal>
-    )
+        <Form.Item label="HTTP Value" name="Value">
+          <YakitInput />
+        </Form.Item>
+        <Form.Item colon={false} label={' '}>
+          <YakitButton type="primary" htmlType="submit">
+            {t('InputHTTPHeaderForm.set_this_header')}
+          </YakitButton>
+        </Form.Item>
+      </Form>
+    </YakitModal>
+  )
 })
 
 const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((props) => {
-    const {visible, setVisible, onSave, initFormVal, updateIndex} = props
-    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
-    const [form] = Form.useForm()
-    const [advanced, setAdvanced] = useState(false)
+  const { visible, setVisible, onSave, initFormVal, updateIndex } = props
+  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const [form] = Form.useForm()
+  const [advanced, setAdvanced] = useState(false)
 
-    useEffect(() => {
-        if (visible) {
-            if (initFormVal !== undefined) {
-                if (
-                    initFormVal.Path ||
-                    initFormVal.Domain ||
-                    initFormVal.HttpOnly ||
-                    initFormVal.Secure ||
-                    initFormVal.SameSiteMode ||
-                    initFormVal.Expires ||
-                    initFormVal.MaxAge
-                ) {
-                    setAdvanced(true)
-                } else {
-                    setAdvanced(false)
-                }
-                form.resetFields()
-                form.setFieldsValue(initFormVal)
-            } else {
-                setAdvanced(false)
-                form.resetFields()
-            }
+  useEffect(() => {
+    if (visible) {
+      if (initFormVal !== undefined) {
+        if (
+          initFormVal.Path ||
+          initFormVal.Domain ||
+          initFormVal.HttpOnly ||
+          initFormVal.Secure ||
+          initFormVal.SameSiteMode ||
+          initFormVal.Expires ||
+          initFormVal.MaxAge
+        ) {
+          setAdvanced(true)
+        } else {
+          setAdvanced(false)
         }
-    }, [visible])
+        form.resetFields()
+        form.setFieldsValue(initFormVal)
+      } else {
+        setAdvanced(false)
+        form.resetFields()
+      }
+    }
+  }, [visible])
 
-    return (
-        <YakitModal
-            title={t("InputHTTPCookieForm.enter_new_cookie_value")}
-            visible={visible}
-            onCancel={() => setVisible(false)}
-            zIndex={1002}
-            footer={null}
-            closable={true}
-            width={600}
-            bodyStyle={{padding: 0}}
-            destroyOnClose={true}
+  return (
+    <YakitModal
+      title={t('InputHTTPCookieForm.enter_new_cookie_value')}
+      visible={visible}
+      onCancel={() => setVisible(false)}
+      zIndex={1002}
+      footer={null}
+      closable={true}
+      width={600}
+      bodyStyle={{ padding: 0 }}
+      destroyOnClose={true}
+    >
+      <Form
+        labelCol={{ span: 5 }}
+        wrapperCol={{ span: 14 }}
+        onFinish={(val: HTTPCookieSetting) => {
+          onSave(val, updateIndex)
+          setVisible(false)
+          form.resetFields()
+        }}
+        form={form}
+        className={styles['http-heard-form']}
+      >
+        <Form.Item label="Cookie Key" name="Key" rules={[{ required: true, message: t('YakitForm.requiredField') }]}>
+          <YakitAutoComplete
+            options={['JSESSION', 'PHPSESSION', 'SESSION', 'admin', 'test', 'debug'].map((ele) => ({
+              value: ele,
+              label: ele,
+            }))}
+            filterOption={(inputValue, option) => {
+              if (option?.value && typeof option?.value === 'string') {
+                return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
+              }
+              return false
+            }}
+            size="middle"
+          />
+        </Form.Item>
+        <Form.Item
+          label="Cookie Value"
+          name="Value"
+          rules={[{ required: true, message: t('YakitForm.requiredField') }]}
         >
-            <Form
-                labelCol={{span: 5}}
-                wrapperCol={{span: 14}}
-                onFinish={(val: HTTPCookieSetting) => {
-                    onSave(val, updateIndex)
-                    setVisible(false)
-                    form.resetFields()
-                }}
-                form={form}
-                className={styles["http-heard-form"]}
+          <YakitInput />
+        </Form.Item>
+        <Divider orientation={'left'}>
+          {t('InputHTTPCookieForm.advanced_configuration')}&emsp;
+          <YakitSwitch checked={advanced} onChange={(c) => setAdvanced(c)} />
+        </Divider>
+        {advanced && (
+          <>
+            <Form.Item label="Path" name="Path">
+              <YakitInput />
+            </Form.Item>
+            <Form.Item label="Domain" name="Domain">
+              <YakitInput />
+            </Form.Item>
+            <Form.Item label="HttpOnly" name="HttpOnly" valuePropName="checked">
+              <YakitSwitch />
+            </Form.Item>
+            <Form.Item
+              label="Secure"
+              name="Secure"
+              help={t('InputHTTPCookieForm.cookie_https_only')}
+              valuePropName="checked"
             >
-                <Form.Item
-                    label='Cookie Key'
-                    name='Key'
-                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
-                >
-                    <YakitAutoComplete
-                        options={["JSESSION", "PHPSESSION", "SESSION", "admin", "test", "debug"].map((ele) => ({
-                            value: ele,
-                            label: ele
-                        }))}
-                        filterOption={(inputValue, option) => {
-                            if (option?.value && typeof option?.value === "string") {
-                                return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                            }
-                            return false
-                        }}
-                        size='middle'
-                    />
-                </Form.Item>
-                <Form.Item
-                    label='Cookie Value'
-                    name='Value'
-                    rules={[{required: true, message: t("YakitForm.requiredField")}]}
-                >
-                    <YakitInput />
-                </Form.Item>
-                <Divider orientation={"left"}>
-                    {t("InputHTTPCookieForm.advanced_configuration")}&emsp;
-                    <YakitSwitch checked={advanced} onChange={(c) => setAdvanced(c)} />
-                </Divider>
-                {advanced && (
-                    <>
-                        <Form.Item label='Path' name='Path'>
-                            <YakitInput />
-                        </Form.Item>
-                        <Form.Item label='Domain' name='Domain'>
-                            <YakitInput />
-                        </Form.Item>
-                        <Form.Item label='HttpOnly' name='HttpOnly' valuePropName='checked'>
-                            <YakitSwitch />
-                        </Form.Item>
-                        <Form.Item
-                            label='Secure'
-                            name='Secure'
-                            help={t("InputHTTPCookieForm.cookie_https_only")}
-                            valuePropName='checked'
-                        >
-                            <YakitSwitch />
-                        </Form.Item>
-                        <Form.Item
-                            label={t("InputHTTPCookieForm.samesite_policy")}
-                            name='SameSiteMode'
-                            initialValue='default'
-                        >
-                            <YakitRadioButtons
-                                size='large'
-                                options={[
-                                    {label: t("InputHTTPCookieForm.default_policy"), value: "default"},
-                                    {label: t("InputHTTPCookieForm.lax_policy"), value: "lax"},
-                                    {label: t("InputHTTPCookieForm.strict_policy"), value: "strict"},
-                                    {label: t("InputHTTPCookieForm.do_not_set"), value: "none"}
-                                ]}
-                                buttonStyle='solid'
-                                wrapClassName={styles['sameSiteMode']}
-                            />
-                        </Form.Item>
-                        <Form.Item label={t("InputHTTPCookieForm.expires_timestamp")} name='Expires'>
-                            <YakitInputNumber type='horizontal' min={0} />
-                        </Form.Item>
-                        <Form.Item label='MaxAge' name='MaxAge'>
-                            <YakitInputNumber type='horizontal' min={0} />
-                        </Form.Item>
-                    </>
-                )}
-                <Form.Item colon={false} label={" "}>
-                    <YakitButton type='primary' htmlType='submit'>
-                        {t("InputHTTPCookieForm.add_this_cookie")}
-                    </YakitButton>
-                </Form.Item>
-            </Form>
-        </YakitModal>
-    )
+              <YakitSwitch />
+            </Form.Item>
+            <Form.Item label={t('InputHTTPCookieForm.samesite_policy')} name="SameSiteMode" initialValue="default">
+              <YakitRadioButtons
+                size="large"
+                options={[
+                  { label: t('InputHTTPCookieForm.default_policy'), value: 'default' },
+                  { label: t('InputHTTPCookieForm.lax_policy'), value: 'lax' },
+                  { label: t('InputHTTPCookieForm.strict_policy'), value: 'strict' },
+                  { label: t('InputHTTPCookieForm.do_not_set'), value: 'none' },
+                ]}
+                buttonStyle="solid"
+                wrapClassName={styles['sameSiteMode']}
+              />
+            </Form.Item>
+            <Form.Item label={t('InputHTTPCookieForm.expires_timestamp')} name="Expires">
+              <YakitInputNumber type="horizontal" min={0} />
+            </Form.Item>
+            <Form.Item label="MaxAge" name="MaxAge">
+              <YakitInputNumber type="horizontal" min={0} />
+            </Form.Item>
+          </>
+        )}
+        <Form.Item colon={false} label={' '}>
+          <YakitButton type="primary" htmlType="submit">
+            {t('InputHTTPCookieForm.add_this_cookie')}
+          </YakitButton>
+        </Form.Item>
+      </Form>
+    </YakitModal>
+  )
 })
 
 export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, ref) => {
-    useImperativeHandle(ref, () => ({
-        onSetValue: (v) => {
-            setRule(v)
-        }
-    }))
-    const {getRule, inputProps, defaultCode} = props
-    const {t, i18n} = useI18nNamespaces(["mitm", "yakitUi"])
-    const [rule, setRule] = useState<string>("")
-    const [ruleVisible, setRuleVisible] = useState<boolean>()
-    const onGetRule = useMemoizedFn((val: string) => {
-        setRule(val)
-        getRule(val)
-    })
+  useImperativeHandle(ref, () => ({
+    onSetValue: (v) => {
+      setRule(v)
+    },
+  }))
+  const { getRule, inputProps, defaultCode } = props
+  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const [rule, setRule] = useState<string>('')
+  const [ruleVisible, setRuleVisible] = useState<boolean>()
+  const onGetRule = useMemoizedFn((val: string) => {
+    setRule(val)
+    getRule(val)
+  })
 
-    return (
-        <>
-            {props.children ? (
-                <span onClick={() => setRuleVisible(true)}>{props.children}</span>
-            ) : (
-                <YakitInput
-                    {...inputProps}
-                    value={rule}
-                    placeholder={t("RuleContent.use_right_tool_generate_regex")}
-                    addonAfter={
-                        <AdjustmentsIcon className={styles["icon-adjustments"]} onClick={() => setRuleVisible(true)} />
-                    }
-                    onChange={(e) => {
-                        const {value} = e.target
-                        setRule(value)
-                        getRule(value)
-                    }}
-                />
-            )}
-            <YakitModal
-                title={t("RuleContent.auto_extract_regex")}
-                subTitle={t("RuleContent.select_in_editor_generate_regex")}
-                visible={ruleVisible}
-                onCancel={() => setRuleVisible(false)}
-                width={840}
-                zIndex={1002}
-                footer={null}
-                closable={true}
-                bodyStyle={{padding: 0}}
-            >
-                <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode} rule={rule}/>
-            </YakitModal>
-        </>
-    )
+  return (
+    <>
+      {props.children ? (
+        <span onClick={() => setRuleVisible(true)}>{props.children}</span>
+      ) : (
+        <YakitInput
+          {...inputProps}
+          value={rule}
+          placeholder={t('RuleContent.use_right_tool_generate_regex')}
+          addonAfter={<AdjustmentsIcon className={styles['icon-adjustments']} onClick={() => setRuleVisible(true)} />}
+          onChange={(e) => {
+            const { value } = e.target
+            setRule(value)
+            getRule(value)
+          }}
+        />
+      )}
+      <YakitModal
+        title={t('RuleContent.auto_extract_regex')}
+        subTitle={t('RuleContent.select_in_editor_generate_regex')}
+        visible={ruleVisible}
+        onCancel={() => setRuleVisible(false)}
+        width={840}
+        zIndex={1002}
+        footer={null}
+        closable={true}
+        bodyStyle={{ padding: 0 }}
+      >
+        <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode} rule={rule} />
+      </YakitModal>
+    </>
+  )
 })
