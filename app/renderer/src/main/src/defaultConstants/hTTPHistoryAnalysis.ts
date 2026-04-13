@@ -1,12 +1,12 @@
-import { TFunction } from "@/i18n/useI18nNamespaces"
-import {HTTPHistoryAnalysisPageInfo} from "@/store/pageInfo"
+import { TFunction } from '@/i18n/useI18nNamespaces'
+import { HTTPHistoryAnalysisPageInfo } from '@/store/pageInfo'
 
 export const defaultHTTPHistoryAnalysisPageInfo: HTTPHistoryAnalysisPageInfo = {
-    webFuzzer: false,
-    runtimeId: [],
-    sourceType: "mitm",
-    verbose: "",
-    pageId: ""
+  webFuzzer: false,
+  runtimeId: [],
+  sourceType: 'mitm',
+  verbose: '',
+  pageId: '',
 }
 export const HotPatchDefaultContent = `
 // f = file.OpenFile(tempFile, file.O_APPEND|file.O_CREATE, 0o777)~
@@ -45,9 +45,9 @@ onAnalyzeHTTPFlowFinish = func(totalCount, matchedCount) {
 `
 
 export const footerTabs = (t: TFunction) => {
-    return [
-        {key: "packet", label: t("AnalysisMain.packet")},
-        {key: "rule", label: t("AnalysisMain.rule")},
-        {key: "hot-patch", label: t("AnalysisMain.hot_reload")}
-    ]
+  return [
+    { key: 'packet', label: t('AnalysisMain.packet') },
+    { key: 'rule', label: t('AnalysisMain.rule') },
+    { key: 'hot-patch', label: t('AnalysisMain.hot_reload') },
+  ]
 }

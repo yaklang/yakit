@@ -1722,7 +1722,7 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
         }
       })
       .catch((err) => {
-        failed(t('YakitNotification.loadFailed', { error: err + "" }))
+        failed(t('YakitNotification.loadFailed', { error: err + '' }))
       })
       .finally(() => setTimeout(() => setLoading(false), 300))
   })

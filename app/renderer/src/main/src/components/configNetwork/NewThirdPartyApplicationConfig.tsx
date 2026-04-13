@@ -104,9 +104,24 @@ const defaultFormItems: ThirdPartyAppConfigItemTemplate[] = [
 ]
 
 const aiModelTypeOptions: SelectOptionsProps[] = [
-  { label: i18n.language === 'zh' ? '高质模型:执行复杂任务' : 'High quality model: executes complex tasks', value: AIModelTypeEnum.TierIntelligent },
-  { label: i18n.language === 'zh' ? '轻量模型:用于执行简单任务和会话' : 'Lightweight model: executes simple tasks and conversations', value: AIModelTypeEnum.TierLightweight },
-  { label: i18n.language === 'zh' ? '视觉模式:用于识别图片等,生成知识库和任务执行都会用到' : 'Vision model: used for image recognition and knowledge base/task execution', value: AIModelTypeEnum.TierVision },
+  {
+    label: i18n.language === 'zh' ? '高质模型:执行复杂任务' : 'High quality model: executes complex tasks',
+    value: AIModelTypeEnum.TierIntelligent,
+  },
+  {
+    label:
+      i18n.language === 'zh'
+        ? '轻量模型:用于执行简单任务和会话'
+        : 'Lightweight model: executes simple tasks and conversations',
+    value: AIModelTypeEnum.TierLightweight,
+  },
+  {
+    label:
+      i18n.language === 'zh'
+        ? '视觉模式:用于识别图片等,生成知识库和任务执行都会用到'
+        : 'Vision model: used for image recognition and knowledge base/task execution',
+    value: AIModelTypeEnum.TierVision,
+  },
 ]
 const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({ label: item, value: item }))
 const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
@@ -143,14 +158,16 @@ const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
   },
 ]
 
-interface NewThirdPartyApplicationConfigBaseProps
-  extends Omit<ThirdPartyApplicationConfigProp, 'onAdd' | 'onCancel' | 'isOnlyShowAiType'> {
+interface NewThirdPartyApplicationConfigBaseProps extends Omit<
+  ThirdPartyApplicationConfigProp,
+  'onAdd' | 'onCancel' | 'isOnlyShowAiType'
+> {
   ref?: React.ForwardedRef<{ form: FormInstance }>
 }
 export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicationConfigBaseProps> = React.memo(
   forwardRef((props, ref) => {
     const { formValues = defautFormValues, disabledType = false, canAddType = true, FormProps, footer } = props
-    const {t} = useI18nNamespaces(["configNetwork", "yakitUi"])
+    const { t } = useI18nNamespaces(['configNetwork', 'yakitUi'])
     const [form] = Form.useForm()
     const typeVal = Form.useWatch('Type', form)
     const typeValRef = useRef<string>(typeVal)
@@ -212,10 +229,10 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
             const newOptions = hasDefault
               ? modalNamelist
               : name
-              ? [{ label: name, value: name }, ...modalNamelist]
-              : modalNamelist
+                ? [{ label: name, value: name }, ...modalNamelist]
+                : modalNamelist
             setModelNameAllOptions(newOptions)
-            yakitNotify('success', t("ConfigNetworkPage.fetchSuccess"))
+            yakitNotify('success', t('ConfigNetworkPage.fetchSuccess'))
           })
           .catch((error) => {
             if (!execModelNameOption.current) return
@@ -267,7 +284,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
     })
     const renderSingleFormItem = (item: ThirdPartyAppConfigItemTemplate, modelType?: string) => {
       const formProps = {
-        rules: [{ required: item.Required, message: t("ConfigNetworkPage.pleaseFill", {name: item.Verbose})}],
+        rules: [{ required: item.Required, message: t('ConfigNetworkPage.pleaseFill', { name: item.Verbose }) }],
         label: item.Verbose,
         name: item.Name,
         tooltip: item.Desc
@@ -298,7 +315,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                 {...formProps}
                 help={
                   <div style={{ height: 30 }}>
-                    {t("ConfigNetworkPage.ifCannotAutoFetch")}
+                    {t('ConfigNetworkPage.ifCannotAutoFetch')}
                     <YakitButton
                       type="text"
                       onClick={() => {
@@ -307,9 +324,9 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                       }}
                       style={{ padding: 0, fontSize: 14 }}
                     >
-                      {t("ConfigNetworkPage.clickRefresh")}
+                      {t('ConfigNetworkPage.clickRefresh')}
                     </YakitButton>
-                    {t("ConfigNetworkPage.refetch")}
+                    {t('ConfigNetworkPage.refetch')}
                   </div>
                 }
               >
@@ -400,8 +417,15 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
           className={styles['config-form']}
         >
           <Form.Item
-            label={isMemfit() ? t("ConfigNetworkPage.vendor") : t("ConfigNetworkPage.type")}
-            rules={[{ required: true, message: t("ConfigNetworkPage.pleaseEnterOrSelectType", {mode: canAddType ? t("ConfigNetworkPage.enter") : t("ConfigNetworkPage.select")}) }]}
+            label={isMemfit() ? t('ConfigNetworkPage.vendor') : t('ConfigNetworkPage.type')}
+            rules={[
+              {
+                required: true,
+                message: t('ConfigNetworkPage.pleaseEnterOrSelectType', {
+                  mode: canAddType ? t('ConfigNetworkPage.enter') : t('ConfigNetworkPage.select'),
+                }),
+              },
+            ]}
             name={'Type'}
           >
             {canAddType ? (
@@ -456,7 +480,7 @@ const defaultAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     Extra: `${JSON.stringify({
       options: aiAPITypeOptions,
     })}`,
-    Verbose: i18n.language === 'zh' ? 'API类型' : "API type",
+    Verbose: i18n.language === 'zh' ? 'API类型' : 'API type',
   },
   {
     DefaultValue: 'memfit-light-free',
@@ -465,7 +489,7 @@ const defaultAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
     Name: 'model',
     Required: true,
     Type: 'list',
-    Verbose: i18n.language === 'zh' ? '模型名称' : "Model name",
+    Verbose: i18n.language === 'zh' ? '模型名称' : 'Model name',
   },
 ]
 
@@ -591,8 +615,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
             const newOptions = hasDefault
               ? modalNamelist
               : name
-              ? [{ label: name, value: name }, ...modalNamelist]
-              : modalNamelist
+                ? [{ label: name, value: name }, ...modalNamelist]
+                : modalNamelist
             setModelNameAllOptions(newOptions)
             yakitNotify('success', '获取成功')
           })
@@ -916,7 +940,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
 
 const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> = React.memo((props) => {
   const { onCancel, onAdd, ...rest } = props
-  const {t} = useI18nNamespaces(["configNetwork", "yakitUi"])
+  const { t } = useI18nNamespaces(['configNetwork', 'yakitUi'])
 
   const formRef = useRef<{ form: FormInstance }>(null)
   return (
@@ -926,7 +950,7 @@ const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> 
       footer={
         <>
           <YakitButton size="large" type="outline2" onClick={onCancel}>
-            {t("YakitButton.cancel")}
+            {t('YakitButton.cancel')}
           </YakitButton>
           <YakitButton
             size="large"
@@ -943,7 +967,7 @@ const NewThirdPartyApplicationConfig: React.FC<ThirdPartyApplicationConfigProp> 
               })
             }}
           >
-            {t("ConfigNetworkPage.confirmAdd")}
+            {t('ConfigNetworkPage.confirmAdd')}
           </YakitButton>
         </>
       }

@@ -1,227 +1,236 @@
-import React, {useEffect, useRef, useState} from "react"
-import {WebFuzzerPageProps, WebFuzzerType} from "./WebFuzzerPageType"
-import styles from "./WebFuzzerPage.module.scss"
-import {OutlineAdjustmentsIcon, OutlineClipboardlistIcon, OutlineCollectionIcon, OutlineLightningboltIcon, OutlineViewboardsIcon } from "@/assets/icon/outline"
-import classNames from "classnames"
-import {useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {YakitRoute} from "@/enums/yakitRoute"
-import "video-react/dist/video-react.css" // import css
-import {PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
-import {shallow} from "zustand/shallow"
-import emiter from "@/utils/eventBus/eventBus"
-import {getRemoteValue} from "@/utils/kv"
-import {AdvancedConfigShowProps} from "../HTTPFuzzerPage"
+import React, { useEffect, useRef, useState } from 'react'
+import { WebFuzzerPageProps, WebFuzzerType } from './WebFuzzerPageType'
+import styles from './WebFuzzerPage.module.scss'
+import {
+  OutlineAdjustmentsIcon,
+  OutlineClipboardlistIcon,
+  OutlineCollectionIcon,
+  OutlineLightningboltIcon,
+  OutlineViewboardsIcon,
+} from '@/assets/icon/outline'
+import classNames from 'classnames'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { YakitRoute } from '@/enums/yakitRoute'
+import 'video-react/dist/video-react.css' // import css
+import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import emiter from '@/utils/eventBus/eventBus'
+import { getRemoteValue } from '@/utils/kv'
+import { AdvancedConfigShowProps } from '../HTTPFuzzerPage'
 
-import cloneDeep from "lodash/cloneDeep"
-import {defaultWebFuzzerPageInfo} from "@/defaultConstants/HTTPFuzzerPage"
-import {FuzzerRemoteGV} from "@/enums/fuzzer"
-import ShortcutKeyFocusHook from "@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook"
-import {TFunction, useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import { useFuzzerSequence } from "@/store/fuzzerSequence"
-import { JSONParseLog } from "@/utils/tool"
-const {ipcRenderer} = window.require("electron")
+import cloneDeep from 'lodash/cloneDeep'
+import { defaultWebFuzzerPageInfo } from '@/defaultConstants/HTTPFuzzerPage'
+import { FuzzerRemoteGV } from '@/enums/fuzzer'
+import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook/ShortcutKeyFocusHook'
+import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useFuzzerSequence } from '@/store/fuzzerSequence'
+import { JSONParseLog } from '@/utils/tool'
+const { ipcRenderer } = window.require('electron')
 
 export const webFuzzerTabs = (t: TFunction) => {
-    return [
-        {
-            key: "config",
-            label: t("WebFuzzerPage.config"),
-            icon: <OutlineAdjustmentsIcon />
-        },
-        {
-            key: "rule",
-            label: t("WebFuzzerPage.rule"),
-            icon: <OutlineClipboardlistIcon />
-        },
-        {
-            key: "hot-patch",
-            label: t("HTTPFuzzerPage.hotReload"),
-            icon: <OutlineLightningboltIcon />
-        },
-        {
-            key: "sequence",
-            label: t("WebFuzzerPage.sequence"),
-            icon: <OutlineCollectionIcon />
-        },
-        {
-            key: "concurrency",
-            label: t("WebFuzzerPage.concurrency"),
-            icon: <OutlineViewboardsIcon />
-        }
-    ]
+  return [
+    {
+      key: 'config',
+      label: t('WebFuzzerPage.config'),
+      icon: <OutlineAdjustmentsIcon />,
+    },
+    {
+      key: 'rule',
+      label: t('WebFuzzerPage.rule'),
+      icon: <OutlineClipboardlistIcon />,
+    },
+    {
+      key: 'hot-patch',
+      label: t('HTTPFuzzerPage.hotReload'),
+      icon: <OutlineLightningboltIcon />,
+    },
+    {
+      key: 'sequence',
+      label: t('WebFuzzerPage.sequence'),
+      icon: <OutlineCollectionIcon />,
+    },
+    {
+      key: 'concurrency',
+      label: t('WebFuzzerPage.concurrency'),
+      icon: <OutlineViewboardsIcon />,
+    },
+  ]
 }
 /**包裹 配置和规则，不包裹序列 */
 const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
-    const {id} = props
-    const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
-    const {queryPagesDataById, selectGroupId, getPagesDataByGroupId} = usePageInfo(
-        (s) => ({
-            queryPagesDataById: s.queryPagesDataById,
-            selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer) || "",
-            getPagesDataByGroupId: s.getPagesDataByGroupId
-        }),
-        shallow
-    )
-    const initWebFuzzerPageInfo = useMemoizedFn(() => {
-        if (!id) {
-            return cloneDeep(defaultWebFuzzerPageInfo)
-        }
-        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, id)
-        if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
-            return currentItem.pageParamsInfo.webFuzzerPageInfo
+  const { id } = props
+  const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
+  const { queryPagesDataById, selectGroupId, getPagesDataByGroupId } = usePageInfo(
+    (s) => ({
+      queryPagesDataById: s.queryPagesDataById,
+      selectGroupId: s.selectGroupId.get(YakitRoute.HTTPFuzzer) || '',
+      getPagesDataByGroupId: s.getPagesDataByGroupId,
+    }),
+    shallow,
+  )
+  const initWebFuzzerPageInfo = useMemoizedFn(() => {
+    if (!id) {
+      return cloneDeep(defaultWebFuzzerPageInfo)
+    }
+    const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.HTTPFuzzer, id)
+    if (currentItem && currentItem.pageParamsInfo.webFuzzerPageInfo) {
+      return currentItem.pageParamsInfo.webFuzzerPageInfo
+    } else {
+      return cloneDeep(defaultWebFuzzerPageInfo)
+    }
+  })
+
+  const webFuzzerRef = useRef<any>(null)
+  const [inViewport] = useInViewport(webFuzzerRef)
+  const [type, setType] = useState<WebFuzzerType>(props.defaultType || 'config')
+  // 高级配置的隐藏/显示
+  const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
+    config: false,
+    rule: true,
+  })
+
+  const { fuzzerSequenceList, addFuzzerSequenceList } = useFuzzerSequence(
+    (s) => ({
+      fuzzerSequenceList: s.fuzzerSequenceList,
+      addFuzzerSequenceList: s.addFuzzerSequenceList,
+    }),
+    shallow,
+  )
+
+  useEffect(() => {
+    emiter.on('onGetFuzzerAdvancedConfigShow', debounceGetFuzzerAdvancedConfigShow)
+    emiter.on('sequenceSendSwitchTypeToFuzzer', onSwitchType)
+    return () => {
+      emiter.off('onGetFuzzerAdvancedConfigShow', debounceGetFuzzerAdvancedConfigShow)
+      emiter.off('sequenceSendSwitchTypeToFuzzer', onSwitchType)
+    }
+  }, [])
+
+  useEffect(() => {
+    getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow).then((c) => {
+      if (!c) return
+      try {
+        const newAdvancedConfigShow = initWebFuzzerPageInfo().advancedConfigShow
+        if (newAdvancedConfigShow) {
+          setAdvancedConfigShow({ ...newAdvancedConfigShow })
         } else {
-            return cloneDeep(defaultWebFuzzerPageInfo)
+          const value = JSONParseLog(c, { page: 'WebFuzzerPage', fun: 'WebFuzzerAdvancedConfigShow' })
+          setAdvancedConfigShow({
+            ...value,
+          })
         }
+      } catch (error) {}
     })
+  }, [])
 
-    const webFuzzerRef = useRef<any>(null)
-    const [inViewport] = useInViewport(webFuzzerRef)
-    const [type, setType] = useState<WebFuzzerType>(props.defaultType || "config")
-    // 高级配置的隐藏/显示
-    const [advancedConfigShow, setAdvancedConfigShow] = useState<AdvancedConfigShowProps>({
-        config: false,
-        rule: true
-    })
-
-    const {fuzzerSequenceList, addFuzzerSequenceList } = useFuzzerSequence((s) => ({
-        fuzzerSequenceList: s.fuzzerSequenceList,
-        addFuzzerSequenceList: s.addFuzzerSequenceList,
-    }), shallow)
-
-    useEffect(() => {
-        emiter.on("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
-        emiter.on("sequenceSendSwitchTypeToFuzzer", onSwitchType)
-        return () => {
-            emiter.off("onGetFuzzerAdvancedConfigShow", debounceGetFuzzerAdvancedConfigShow)
-            emiter.off("sequenceSendSwitchTypeToFuzzer", onSwitchType)
+  const onSetSequence = useMemoizedFn((type) => {
+    const pageChildrenList: PageNodeItemProps[] = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId) || []
+    if (props.id && pageChildrenList.length === 0) {
+      // 新建组
+      onAddGroup({ pageId: props.id, type })
+    } else {
+      //这里判断SequenceList有没有当前选中组 没有就添加(解决偶发性点击序列或者并发没有反应的问题， 原因在于fuzzerSequenceList没有当前组)
+      const needAddSequence = fuzzerSequenceList.every(({ groupId }) => groupId !== selectGroupId)
+      needAddSequence && addFuzzerSequenceList({ groupId: selectGroupId })
+      // 设置MainOperatorContent层type变化用来控制是否展示【序列】/【并发】
+      emiter.emit('sendSwitchSequenceToMainOperatorContent', JSON.stringify({ type }))
+    }
+  })
+  const onAddGroup = useMemoizedFn((params: Record<string, string>) => {
+    ipcRenderer.invoke('send-add-group', params)
+  })
+  /**本组件中切换tab展示的事件 */
+  const onSetType = useMemoizedFn((key: WebFuzzerType) => {
+    switch (key) {
+      case 'sequence':
+      case 'concurrency':
+        onSetSequence(key)
+        // 当前页面不在fuzzer页面
+        emiter.emit('onCurrentFuzzerPage', false)
+        break
+      default:
+        // 设置MainOperatorContent层type变化用来控制是否展示【配置】/【规则】
+        emiter.emit('sendSwitchSequenceToMainOperatorContent', JSON.stringify({ type: key }))
+        // 发送到HTTPFuzzerPage组件中 选中【配置】/【规则】 type
+        emiter.emit('onSwitchTypeWebFuzzerPage', JSON.stringify({ type: key }))
+        if (type === key) {
+          // 设置【配置】/【规则】的高级配置的隐藏或显示
+          emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: key }))
         }
-    }, [])
+        // 当前页面在fuzzer页面
+        emiter.emit('onCurrentFuzzerPage', true)
+        // 设置【配置】/【规则】选中
+        setType(key)
+        break
+    }
+  })
 
-    useEffect(() => {
-        getRemoteValue(FuzzerRemoteGV.WebFuzzerAdvancedConfigShow).then((c) => {
-            if (!c) return
-            try {
-                const newAdvancedConfigShow = initWebFuzzerPageInfo().advancedConfigShow
-                if (newAdvancedConfigShow) {
-                    setAdvancedConfigShow({...newAdvancedConfigShow})
-                } else {
-                    const value = JSONParseLog(c, {page: "WebFuzzerPage", fun: "WebFuzzerAdvancedConfigShow"})
-                    setAdvancedConfigShow({
-                        ...value
-                    })
-                }
-            } catch (error) {}
-        })
-    }, [])
+  const debounceGetFuzzerAdvancedConfigShow = useMemoizedFn((data) => {
+    if (inViewport) {
+      try {
+        const value = JSONParseLog(data, { page: 'WebFuzzerPage', fun: 'debounceGetFuzzerAdvancedConfigShow' })
+        const key = value.type as WebFuzzerType
+        if (['sequence', 'concurrency'].includes(key)) return
+        const c = value.checked
+        const newValue = {
+          ...advancedConfigShow,
+          [key]: c,
+        }
+        setAdvancedConfigShow(newValue)
+      } catch (error) {}
+    }
+  })
+  /**FuzzerSequenceWrapper组件中发送的信号，切换【配置】/【规则】包裹层的type */
+  const onSwitchType = useMemoizedFn((data) => {
+    if (!inViewport) return
+    try {
+      const value = JSONParseLog(data, { page: 'WebFuzzerPage', fun: 'onSwitchType' })
+      const type = value.type as WebFuzzerType
+      if (['sequence', 'concurrency'].includes(type)) return
+      setType(type)
+      // 发送到HTTPFuzzerPage组件中 切换【配置】/【规则】tab 得选中type
+      emiter.emit('onSwitchTypeWebFuzzerPage', JSON.stringify({ type }))
+    } catch (error) {}
+  })
+  const isUnShow = useCreation(() => {
+    switch (type) {
+      case 'config':
+        return !advancedConfigShow.config
+      case 'rule':
+        return !advancedConfigShow.rule
+      default:
+        return false
+    }
+  }, [type, advancedConfigShow, advancedConfigShow])
 
-    const onSetSequence = useMemoizedFn((type) => {
-        const pageChildrenList: PageNodeItemProps[] = getPagesDataByGroupId(YakitRoute.HTTPFuzzer, selectGroupId) || []
-        if (props.id && pageChildrenList.length === 0) {
-            // 新建组
-            onAddGroup({pageId: props.id, type })
-        } else {
-            //这里判断SequenceList有没有当前选中组 没有就添加(解决偶发性点击序列或者并发没有反应的问题， 原因在于fuzzerSequenceList没有当前组)
-            const needAddSequence = fuzzerSequenceList.every(({ groupId })=> groupId !== selectGroupId)
-            needAddSequence && addFuzzerSequenceList({ groupId: selectGroupId })
-            // 设置MainOperatorContent层type变化用来控制是否展示【序列】/【并发】
-            emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type}))
-        }
-    })
-    const onAddGroup = useMemoizedFn((params: Record<string,string>) => {
-        ipcRenderer.invoke("send-add-group", params)
-    })
-    /**本组件中切换tab展示的事件 */
-    const onSetType = useMemoizedFn((key: WebFuzzerType) => {
-        switch (key) {
-            case "sequence":
-            case "concurrency":
-                onSetSequence(key)
-                // 当前页面不在fuzzer页面
-                emiter.emit("onCurrentFuzzerPage", false)
-                break
-            default:
-                // 设置MainOperatorContent层type变化用来控制是否展示【配置】/【规则】
-                emiter.emit("sendSwitchSequenceToMainOperatorContent", JSON.stringify({type: key}))
-                // 发送到HTTPFuzzerPage组件中 选中【配置】/【规则】 type
-                emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type: key}))
-                if (type === key) {
-                    // 设置【配置】/【规则】的高级配置的隐藏或显示
-                    emiter.emit("onSetAdvancedConfigShow", JSON.stringify({type: key}))
-                }
-                // 当前页面在fuzzer页面
-                emiter.emit("onCurrentFuzzerPage", true)
-                // 设置【配置】/【规则】选中
-                setType(key)
-                break
-        }
-    })
-
-    const debounceGetFuzzerAdvancedConfigShow = useMemoizedFn((data) => {
-        if (inViewport) {
-            try {
-                const value = JSONParseLog(data, {page: "WebFuzzerPage", fun: "debounceGetFuzzerAdvancedConfigShow"})
-                const key = value.type as WebFuzzerType
-                if (["sequence", 'concurrency'].includes(key)) return
-                const c = value.checked
-                const newValue = {
-                    ...advancedConfigShow,
-                    [key]: c
-                }
-                setAdvancedConfigShow(newValue)
-            } catch (error) {}
-        }
-    })
-    /**FuzzerSequenceWrapper组件中发送的信号，切换【配置】/【规则】包裹层的type */
-    const onSwitchType = useMemoizedFn((data) => {
-        if (!inViewport) return
-        try {
-            const value = JSONParseLog(data, {page: "WebFuzzerPage", fun: "onSwitchType"})
-            const type = value.type as WebFuzzerType
-            if (["sequence", 'concurrency'].includes(type)) return
-            setType(type)
-            // 发送到HTTPFuzzerPage组件中 切换【配置】/【规则】tab 得选中type
-            emiter.emit("onSwitchTypeWebFuzzerPage", JSON.stringify({type}))
-        } catch (error) {}
-    })
-    const isUnShow = useCreation(() => {
-        switch (type) {
-            case "config":
-                return !advancedConfigShow.config
-            case "rule":
-                return !advancedConfigShow.rule
-            default:
-                return false
-        }
-    }, [type, advancedConfigShow, advancedConfigShow])
-
-    return (
-        <ShortcutKeyFocusHook
-            className={styles["web-fuzzer"]}
-            boxRef={webFuzzerRef}
-            focusId={props.id ? [props.id] : undefined}
-            isUpdateFocus={false}
-        >
-            <div className={styles["web-fuzzer-tab"]}>
-                {webFuzzerTabs(t).map((item) => (
-                    <div
-                        key={item.key}
-                        className={classNames(styles["web-fuzzer-tab-item"], {
-                            [styles["web-fuzzer-tab-item-active"]]: type === item.key,
-                            [styles["web-fuzzer-tab-item-advanced-config-unShow"]]: item.key === type && isUnShow
-                        })}
-                        onClick={() => {
-                            const keyType = item.key as WebFuzzerType
-                            onSetType(keyType)
-                        }}
-                    >
-                        <span className={styles["web-fuzzer-tab-label"]}>{item.label}</span>
-                        {item.icon}
-                    </div>
-                ))}
-            </div>
-            <div className={classNames(styles["web-fuzzer-tab-content"])}>{props.children}</div>
-        </ShortcutKeyFocusHook>
-    )
+  return (
+    <ShortcutKeyFocusHook
+      className={styles['web-fuzzer']}
+      boxRef={webFuzzerRef}
+      focusId={props.id ? [props.id] : undefined}
+      isUpdateFocus={false}
+    >
+      <div className={styles['web-fuzzer-tab']}>
+        {webFuzzerTabs(t).map((item) => (
+          <div
+            key={item.key}
+            className={classNames(styles['web-fuzzer-tab-item'], {
+              [styles['web-fuzzer-tab-item-active']]: type === item.key,
+              [styles['web-fuzzer-tab-item-advanced-config-unShow']]: item.key === type && isUnShow,
+            })}
+            onClick={() => {
+              const keyType = item.key as WebFuzzerType
+              onSetType(keyType)
+            }}
+          >
+            <span className={styles['web-fuzzer-tab-label']}>{item.label}</span>
+            {item.icon}
+          </div>
+        ))}
+      </div>
+      <div className={classNames(styles['web-fuzzer-tab-content'])}>{props.children}</div>
+    </ShortcutKeyFocusHook>
+  )
 })
 
 export default WebFuzzerPage

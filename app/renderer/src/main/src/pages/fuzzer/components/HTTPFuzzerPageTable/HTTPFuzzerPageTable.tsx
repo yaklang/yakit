@@ -1,82 +1,88 @@
-import {ArrowCircleRightSvgIcon, FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon} from "@/assets/newIcon"
-import {DurationMsToColor, RangeInputNumberTable, StatusCodeToColor} from "@/components/HTTPFlowTable/HTTPFlowTable"
-import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {ColumnsTypeProps, SortProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {OtherMenuListProps} from "@/components/yakitUI/YakitEditor/YakitEditorType"
-import {CopyComponents, YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {compareAsc, compareDesc} from "@/pages/yakitStore/viewers/base"
+import { ArrowCircleRightSvgIcon, FilterIcon, SorterDownIcon, SorterUpIcon, DisableSorterIcon } from '@/assets/newIcon'
+import { DurationMsToColor, RangeInputNumberTable, StatusCodeToColor } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
+import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import { CopyComponents, YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { compareAsc, compareDesc } from '@/pages/yakitStore/viewers/base'
 import {
-    HTTP_PACKET_EDITOR_Response_Info,
-    IMonacoEditor,
-    NewHTTPPacketEditor,
-    RenderTypeOptionVal
-} from "@/utils/editors"
-import {getRemoteValue, setRemoteValue} from "@/utils/kv"
-import {failed, yakitFailed, yakitNotify} from "@/utils/notification"
-import {Uint8ArrayToString} from "@/utils/str"
-import {formatTimestamp} from "@/utils/timeUtil"
-import {useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect} from "ahooks"
-import classNames from "classnames"
-import React, {useEffect, useImperativeHandle, useMemo, useRef, useState} from "react"
-import {analyzeFuzzerResponse, ByteCountTag, copyAsUrl, FuzzerResponse, onAddOverlayWidget} from "../../HTTPFuzzerPage"
-import styles from "./HTTPFuzzerPageTable.module.scss"
-import {HollowLightningBoltIcon} from "@/assets/newIcon"
-import {Alert, Divider, Tooltip} from "antd"
-import {ExtractionResultsContent} from "../../MatcherAndExtractionCard/MatcherAndExtractionCard"
-import {showYakitModal} from "@/components/yakitUI/YakitModal/YakitModalConfirm"
-import {YakitRadioButtons} from "@/components/yakitUI/YakitRadioButtons/YakitRadioButtons"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import emiter from "@/utils/eventBus/eventBus"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {openABSFileLocated, openExternalWebsite, openPacketNewWindow} from "@/utils/openWebsite"
-import ReactResizeDetector from "react-resize-detector"
-import {useCampare} from "@/hook/useCompare/useCompare"
-import {DefFuzzerTableMaxData} from "@/defaultConstants/HTTPFuzzerPage"
-import {CodingPopover} from "@/components/HTTPFlowDetail"
-import {OutlineSearchIcon, OutlineSelectorIcon} from "@/assets/icon/outline"
-import {FuzzerRemoteGV} from "@/enums/fuzzer"
-import {isCellRedSingleColor} from "@/components/TableVirtualResize/utils"
-import {useSelectionByteCount} from "@/components/yakitUI/YakitEditor/useSelectionByteCount"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
-import {ExportDataType} from "@/utils/exporter"
-import {ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter} from "./extractedFilter"
-import {useChunkAutoScrollToBottom} from "../../hooks/useAutoScrollToBottom"
+  HTTP_PACKET_EDITOR_Response_Info,
+  IMonacoEditor,
+  NewHTTPPacketEditor,
+  RenderTypeOptionVal,
+} from '@/utils/editors'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { failed, yakitFailed, yakitNotify } from '@/utils/notification'
+import { Uint8ArrayToString } from '@/utils/str'
+import { formatTimestamp } from '@/utils/timeUtil'
+import { useCreation, useDebounceFn, useMemoizedFn, useThrottleEffect, useUpdateEffect } from 'ahooks'
+import classNames from 'classnames'
+import React, { useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import {
+  analyzeFuzzerResponse,
+  ByteCountTag,
+  copyAsUrl,
+  FuzzerResponse,
+  onAddOverlayWidget,
+} from '../../HTTPFuzzerPage'
+import styles from './HTTPFuzzerPageTable.module.scss'
+import { HollowLightningBoltIcon } from '@/assets/newIcon'
+import { Alert, Divider, Tooltip } from 'antd'
+import { ExtractionResultsContent } from '../../MatcherAndExtractionCard/MatcherAndExtractionCard'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
+import emiter from '@/utils/eventBus/eventBus'
+import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
+import { openABSFileLocated, openExternalWebsite, openPacketNewWindow } from '@/utils/openWebsite'
+import ReactResizeDetector from 'react-resize-detector'
+import { useCampare } from '@/hook/useCompare/useCompare'
+import { DefFuzzerTableMaxData } from '@/defaultConstants/HTTPFuzzerPage'
+import { CodingPopover } from '@/components/HTTPFlowDetail'
+import { OutlineSearchIcon, OutlineSelectorIcon } from '@/assets/icon/outline'
+import { FuzzerRemoteGV } from '@/enums/fuzzer'
+import { isCellRedSingleColor } from '@/components/TableVirtualResize/utils'
+import { useSelectionByteCount } from '@/components/yakitUI/YakitEditor/useSelectionByteCount'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { ExportDataType } from '@/utils/exporter'
+import { ExtractedFilter, TableFilterAndSorter, StatusCodeInputFilter } from './extractedFilter'
+import { useChunkAutoScrollToBottom } from '../../hooks/useAutoScrollToBottom'
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
 export interface HTTPFuzzerPageTableDebugPayload {
-    httpResponse: string
-    httpRequest?: string
-    isHttps?: boolean
+  httpResponse: string
+  httpRequest?: string
+  isHttps?: boolean
 }
 
 interface HTTPFuzzerPageTableProps {
-    ref?: any
-    query?: HTTPFuzzerPageTableQuery
-    data: FuzzerResponse[]
-    success?: boolean
-    onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
-    setQuery: (h: HTTPFuzzerPageTableQuery) => void
-    isRefresh?: boolean
-    /**@name 提取的数据 */
-    extractedMap: Map<string, string>
-    /**@name 数据是否传输完成 */
-    isEnd: boolean
-    setExportData?: (v: FuzzerResponse[]) => void
-    /**@name 是否可以调试匹配器或提取器 */
-    isShowDebug?: boolean
-    /**点击调试回调 */
-    onDebug?: (payload: HTTPFuzzerPageTableDebugPayload) => void
-    pageId?: string
-    /**超过限制数据，alert文案显示 */
-    moreLimtAlertMsg?: React.ReactNode
-    noMoreLimtAlertMsg?: React.ReactNode
-    tableKeyUpDownEnabled?: boolean
-    fuzzerTableMaxData?: number
-    /**@name 是否有提取器规则 */
-    hasExtractorRules?: boolean
+  ref?: any
+  query?: HTTPFuzzerPageTableQuery
+  data: FuzzerResponse[]
+  success?: boolean
+  onSendToWebFuzzer?: (isHttps: boolean, request: string) => any
+  setQuery: (h: HTTPFuzzerPageTableQuery) => void
+  isRefresh?: boolean
+  /**@name 提取的数据 */
+  extractedMap: Map<string, string>
+  /**@name 数据是否传输完成 */
+  isEnd: boolean
+  setExportData?: (v: FuzzerResponse[]) => void
+  /**@name 是否可以调试匹配器或提取器 */
+  isShowDebug?: boolean
+  /**点击调试回调 */
+  onDebug?: (payload: HTTPFuzzerPageTableDebugPayload) => void
+  pageId?: string
+  /**超过限制数据，alert文案显示 */
+  moreLimtAlertMsg?: React.ReactNode
+  noMoreLimtAlertMsg?: React.ReactNode
+  tableKeyUpDownEnabled?: boolean
+  fuzzerTableMaxData?: number
+  /**@name 是否有提取器规则 */
+  hasExtractorRules?: boolean
 }
 
 /**
@@ -84,1346 +90,1294 @@ interface HTTPFuzzerPageTableProps {
  * @returns {number}
  */
 export const convertBodyLength = (val: number) => {
-    const size = Number(val)
-    if (!Number.isFinite(size) || size < 0) return "0B"
+  const size = Number(val)
+  if (!Number.isFinite(size) || size < 0) return '0B'
 
-    const units = ["B", "KB", "MB", "GB", "TB"]
-    let idx = 0
-    let cur = size
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let idx = 0
+  let cur = size
 
-    while (cur >= 1024 && idx < units.length - 1) {
-        cur /= 1024
-        idx++
-    }
+  while (cur >= 1024 && idx < units.length - 1) {
+    cur /= 1024
+    idx++
+  }
 
-    return idx === 0 ? `${cur}${units[idx]}` : `${cur.toFixed(2)}${units[idx]}`
+  return idx === 0 ? `${cur}${units[idx]}` : `${cur.toFixed(2)}${units[idx]}`
 }
 
 export interface HTTPFuzzerPageTableQuery {
-    keyWord?: string
-    afterBodyLength?: number
-    beforeBodyLength?: number
-    afterDurationMs?: number
-    beforeDurationMs?: number
-    StatusCode?: string
-    Color?: string[]
-    ExtractedResults?: string
-    ExtractedResultsMatchType?: "includes" | "notIncludes" // 包含或不包含
-    ExtractedResultsNotEmpty?: boolean // 是否不为空
-    // bodyLengthUnit: "B" | "k" | "M"
+  keyWord?: string
+  afterBodyLength?: number
+  beforeBodyLength?: number
+  afterDurationMs?: number
+  beforeDurationMs?: number
+  StatusCode?: string
+  Color?: string[]
+  ExtractedResults?: string
+  ExtractedResultsMatchType?: 'includes' | 'notIncludes' // 包含或不包含
+  ExtractedResultsNotEmpty?: boolean // 是否不为空
+  // bodyLengthUnit: "B" | "k" | "M"
 }
 
 // 判断数组值是否是数字 字符串类型数字也算
 const isNumericArray = (arr) => {
-    // 利用正则表达式进行匹配
-    var regex = /^\d+$/
-    for (var i = 0; i < arr.length; i++) {
-        if (!regex.test(arr[i])) {
-            return false
-        }
+  // 利用正则表达式进行匹配
+  var regex = /^\d+$/
+  for (var i = 0; i < arr.length; i++) {
+    if (!regex.test(arr[i])) {
+      return false
     }
-    return true
+  }
+  return true
 }
 
-export const sorterFunction = (list, sorterTable, defSorter = "Count") => {
-    // ------------  排序 开始  ------------
-    let newList = list
-    // 判断当前排序列是否既有数字又有字母的情况
-    const isNumber = isNumericArray(
-        list.map((item) => (sorterTable?.orderBy == "" ? item[defSorter] + "" : item[sorterTable?.orderBy] + ""))
-    )
-    // 重置
-    if (sorterTable?.order === "none") {
-        newList = list.sort((a, b) => compareAsc(a, b, defSorter, isNumber))
-    }
-    // 升序
-    if (sorterTable?.order === "asc") {
-        newList = list.sort((a, b) => compareAsc(a, b, sorterTable?.orderBy, isNumber))
-    }
-    // 降序
-    if (sorterTable?.order === "desc") {
-        newList = list.sort((a, b) => compareDesc(a, b, sorterTable?.orderBy, isNumber))
-    }
-    // ------------  排序 结束  ------------
-    return newList
+export const sorterFunction = (list, sorterTable, defSorter = 'Count') => {
+  // ------------  排序 开始  ------------
+  let newList = list
+  // 判断当前排序列是否既有数字又有字母的情况
+  const isNumber = isNumericArray(
+    list.map((item) => (sorterTable?.orderBy == '' ? item[defSorter] + '' : item[sorterTable?.orderBy] + '')),
+  )
+  // 重置
+  if (sorterTable?.order === 'none') {
+    newList = list.sort((a, b) => compareAsc(a, b, defSorter, isNumber))
+  }
+  // 升序
+  if (sorterTable?.order === 'asc') {
+    newList = list.sort((a, b) => compareAsc(a, b, sorterTable?.orderBy, isNumber))
+  }
+  // 降序
+  if (sorterTable?.order === 'desc') {
+    newList = list.sort((a, b) => compareDesc(a, b, sorterTable?.orderBy, isNumber))
+  }
+  // ------------  排序 结束  ------------
+  return newList
 }
 
 export const parseStatusCodes = (statusCode: string) => {
-    const result = new Set<number>()
-    statusCode.split(",").forEach((part) => {
-        // 检查是否是一个范围
-        if (part.includes("-")) {
-            const [start, end] = part.split("-").map((str) => (str.trim() !== "" ? Number(str) : NaN))
-            // 确保 start 和 end 都是有效数字
-            if (!isNaN(start) && !isNaN(end) && start <= end && start >= 100 && end <= 599) {
-                for (let i = start; i <= end; i++) {
-                    result.add(i)
-                }
-            }
-        } else {
-            const code = part.trim() !== "" ? Number(part) : NaN
-            // 确保 code 是有效数字
-            if (!isNaN(code) && code >= 100 && code <= 599) {
-                result.add(code)
-            }
+  const result = new Set<number>()
+  statusCode.split(',').forEach((part) => {
+    // 检查是否是一个范围
+    if (part.includes('-')) {
+      const [start, end] = part.split('-').map((str) => (str.trim() !== '' ? Number(str) : NaN))
+      // 确保 start 和 end 都是有效数字
+      if (!isNaN(start) && !isNaN(end) && start <= end && start >= 100 && end <= 599) {
+        for (let i = start; i <= end; i++) {
+          result.add(i)
         }
-    })
-    return Array.from(result).sort((a, b) => a - b)
+      }
+    } else {
+      const code = part.trim() !== '' ? Number(part) : NaN
+      // 确保 code 是有效数字
+      if (!isNaN(code) && code >= 100 && code <= 599) {
+        result.add(code)
+      }
+    }
+  })
+  return Array.from(result).sort((a, b) => a - b)
 }
 
 export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.memo(
-    React.forwardRef((props, ref) => {
-        const {
-            data,
-            success,
-            query,
-            setQuery,
-            isRefresh,
-            extractedMap,
-            isEnd,
-            setExportData,
-            isShowDebug,
-            onDebug,
-            pageId,
-            moreLimtAlertMsg,
-            noMoreLimtAlertMsg,
-            tableKeyUpDownEnabled = true,
-            fuzzerTableMaxData = DefFuzzerTableMaxData,
-            hasExtractorRules = false
-        } = props
-        const {t, i18n} = useI18nNamespaces(["webFuzzer", "yakitUi"])
-        const [listTable, setListTable] = useState<FuzzerResponse[]>([])
-        const [loading, setLoading] = useState<boolean>(false)
-        const [sorterTable, setSorterTable] = useState<SortProps>()
-        const [isResetSort, setIsResetSort] = useState<boolean>(false)
+  React.forwardRef((props, ref) => {
+    const {
+      data,
+      success,
+      query,
+      setQuery,
+      isRefresh,
+      extractedMap,
+      isEnd,
+      setExportData,
+      isShowDebug,
+      onDebug,
+      pageId,
+      moreLimtAlertMsg,
+      noMoreLimtAlertMsg,
+      tableKeyUpDownEnabled = true,
+      fuzzerTableMaxData = DefFuzzerTableMaxData,
+      hasExtractorRules = false,
+    } = props
+    const { t, i18n } = useI18nNamespaces(['webFuzzer', 'yakitUi'])
+    const [listTable, setListTable] = useState<FuzzerResponse[]>([])
+    const [loading, setLoading] = useState<boolean>(false)
+    const [sorterTable, setSorterTable] = useState<SortProps>()
+    const [isResetSort, setIsResetSort] = useState<boolean>(false)
 
-        const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
-        const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
-        const [currentSelectShowType, setCurrentSelectShowType] = useState<"request" | "response">("response") //选中的表格项
+    const [firstFull, setFirstFull] = useState<boolean>(true) // 表格是否全屏
+    const [currentSelectItem, setCurrentSelectItem] = useState<FuzzerResponse>() //选中的表格项
+    const [currentSelectShowType, setCurrentSelectShowType] = useState<'request' | 'response'>('response') //选中的表格项
 
-        const [editor, setEditor] = useState<IMonacoEditor>()
-        const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
+    const [editor, setEditor] = useState<IMonacoEditor>()
+    const [showResponseInfoSecondEditor, setShowResponseInfoSecondEditor] = useState<boolean>(true)
 
-        const bodyLengthRef = useRef<any>()
-        const durationMsRef = useRef<any>()
-        const tableRef = useRef<any>(null)
+    const bodyLengthRef = useRef<any>()
+    const durationMsRef = useRef<any>()
+    const tableRef = useRef<any>(null)
 
-        const [scrollToIndex, setScrollToIndex] = useState<number>()
-        const [alertHeight, setAlertHeight] = useState<number>(0)
-        const selectionByteCount = useSelectionByteCount(editor, 500)
+    const [scrollToIndex, setScrollToIndex] = useState<number>()
+    const [alertHeight, setAlertHeight] = useState<number>(0)
+    const selectionByteCount = useSelectionByteCount(editor, 500)
 
-        // useThrottleEffect(
-        //     () => {
-        //             setListTable([...data]);
-        //             const dataLength = data.length
-        //             if(dataLength>0){scrollUpdate(dataLength)}
-        //     },
-        //     [data],
-        //     {
-        //       wait: 500,
-        //     },
-        //   );
+    // useThrottleEffect(
+    //     () => {
+    //             setListTable([...data]);
+    //             const dataLength = data.length
+    //             if(dataLength>0){scrollUpdate(dataLength)}
+    //     },
+    //     [data],
+    //     {
+    //       wait: 500,
+    //     },
+    //   );
 
-        const scrollUpdate = useMemoizedFn((dataLength) => {
-            const scrollTop = tableRef.current?.containerRef?.scrollTop
-            const clientHeight = tableRef.current?.containerRef?.clientHeight
-            const scrollHeight = tableRef.current?.containerRef?.scrollHeight
-            let scrollBottom: number | undefined = undefined
-            if (typeof scrollTop === "number" && typeof clientHeight === "number" && typeof scrollHeight === "number") {
-                scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
-                const isScroll: boolean = scrollHeight > clientHeight
-                if (scrollBottom <= 2 && isScroll) {
-                    setScrollToIndex(dataLength)
-                }
-            }
-        })
+    const scrollUpdate = useMemoizedFn((dataLength) => {
+      const scrollTop = tableRef.current?.containerRef?.scrollTop
+      const clientHeight = tableRef.current?.containerRef?.clientHeight
+      const scrollHeight = tableRef.current?.containerRef?.scrollHeight
+      let scrollBottom: number | undefined = undefined
+      if (typeof scrollTop === 'number' && typeof clientHeight === 'number' && typeof scrollHeight === 'number') {
+        scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
+        const isScroll: boolean = scrollHeight > clientHeight
+        if (scrollBottom <= 2 && isScroll) {
+          setScrollToIndex(dataLength)
+        }
+      }
+    })
 
-        useImperativeHandle(
-            ref,
-            () => ({
-                // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
-                setCurrentSelectItem,
-                setFirstFull
-            }),
-            []
-        )
+    useImperativeHandle(
+      ref,
+      () => ({
+        // 减少父组件获取的DOM元素属性,只暴露给父组件需要用到的方法
+        setCurrentSelectItem,
+        setFirstFull,
+      }),
+      [],
+    )
 
-        const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
-            // 提取数据列定义
-            const extractedResultsColumn: ColumnsTypeProps = {
-                title: t("HTTPFuzzerPageTable.extractData"),
-                dataKey: "ExtractedResults",
-                width: 200,
-                filterProps: {
-                    filterIcon: (
-                        <OutlineSelectorIcon
-                            className={classNames(styles["search-icon"], styles["filter-icon"], {
-                                [styles["active-icon"]]: !!query?.ExtractedResults?.length
-                            })}
-                        />
-                    ),
-                    filterRender: () => (
-                        <ExtractedFilter
-                            onSearch={(ExtractedParams) => {
-                                setQuery({
-                                    ...query,
-                                    ...ExtractedParams
-                                })
-                                setTimeout(() => update(), 100)
-                            }}
-                        />
-                    )
-                },
-                render: (item, record) =>
-                    extractedMap.size > 0 ? (
-                        extractedMap.get(record["UUID"]) || "-"
-                    ) : item?.length > 0 ? (
-                        <div className={styles["table-item-extracted-results"]}>
-                            <span className={styles["extracted-results-text"]}>
-                                {/* 匹配项只有一个时 只显示值 多个用 Divider 分割 */}
-                                {item.length === 1
-                                    ? `${item[0].Value}`
-                                    : item.map((i, index) => (
-                                          <>
-                                              {!!index && <Divider type='vertical' style={{margin: "0 4px"}} />}
-                                              {`${i.Key}: ${i.Value}`}
-                                          </>
-                                      ))}
-                            </span>
-                            {item?.length > 1 && (
-                                <YakitButton
-                                    type='text'
-                                    size='small'
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onViewExecResults(item)
-                                    }}
-                                    style={{
-                                        color: !isCellRedSingleColor(record.cellClassName) ? undefined : "#fff"
-                                    }}
-                                >
-                                    {t("YakitButton.detail")}
-                                </YakitButton>
-                            )}
-                        </div>
-                    ) : (
-                        "-"
-                    )
-            }
-
-            return success
-                ? [
-                      {
-                          title: t("HTTPFuzzerPageTable.request"),
-                          dataKey: "Count",
-                          render: (v) => {
-                              return v + 1
-                          },
-                          width: 72,
-                          sorterProps: {
-                              sorter: true
-                          },
-                          fixed: "left"
-                      },
-                      ...(hasExtractorRules ? [extractedResultsColumn] : []),
-                      {
-                          title: "Method",
-                          dataKey: "Method",
-                          width: 93,
-                          sorterProps: {
-                              sorter: true
-                          }
-                      },
-                      {
-                          title: t("HTTPFuzzerPageTable.status"),
-                          dataKey: "StatusCode",
-                          render: (v, rowData) =>
-                              v ? (
-                                  <div
-                                      style={{
-                                          color: !isCellRedSingleColor(rowData.cellClassName)
-                                              ? StatusCodeToColor(v)
-                                              : ""
-                                      }}
-                                  >{`${v}`}</div>
-                              ) : (
-                                  "-"
-                              ),
-                          width: 80,
-                          filterProps: {
-                              filterKey: "StatusCode",
-                              filtersType: "input",
-                              filterIcon: (
-                                  <OutlineSelectorIcon
-                                      className={classNames(styles["filter-icon"], {
-                                          [styles["active-icon"]]:
-                                              !!query?.StatusCode?.length || sorterTable?.orderBy === "StatusCode"
-                                      })}
-                                  />
-                              ),
-                              filterRender: () => (
-                                  <TableFilterAndSorter
-                                      sortStatus={sorterTable?.orderBy === "StatusCode" ? sorterTable?.order : "none"}
-                                      handleSort={(status) => {
-                                          setIsResetSort((pre) => !pre)
-                                          setSorterTable(
-                                              status === "none" ? undefined : {orderBy: "StatusCode", order: status}
-                                          )
-                                      }}
-                                      filterType={"search"}
-                                      filterActive={!!query?.StatusCode}
-                                      filterNode={
-                                          <StatusCodeInputFilter
-                                              query={query}
-                                              setQuery={(q) => {
-                                                  setQuery({
-                                                      ...q
-                                                  })
-                                              }}
-                                              onSure={() => {
-                                                  setTimeout(() => {
-                                                      update()
-                                                  }, 100)
-                                              }}
-                                          />
-                                      }
-                                  />
-                              )
-                          }
-                      },
-                      {
-                          title: t("HTTPFuzzerPageTable.responseSize"),
-                          dataKey: "BodyLength",
-                          width: 99,
-                          filterProps: {
-                              filterKey: "bodyLength",
-                              filterIcon: (
-                                  <OutlineSelectorIcon
-                                      className={classNames(styles["filter-icon"], {
-                                          [styles["active-icon"]]:
-                                              query?.afterBodyLength ||
-                                              query?.beforeBodyLength ||
-                                              sorterTable?.orderBy === "BodyLength"
-                                      })}
-                                  />
-                              ),
-                              filterRender: () => (
-                                  <TableFilterAndSorter
-                                      sortStatus={sorterTable?.orderBy === "BodyLength" ? sorterTable?.order : "none"}
-                                      handleSort={(status) => {
-                                          setIsResetSort((pre) => !pre)
-                                          setSorterTable(
-                                              status === "none" ? undefined : {orderBy: "BodyLength", order: status}
-                                          )
-                                      }}
-                                      filterActive={!!(query?.afterBodyLength || query?.beforeBodyLength)}
-                                      filterNode={
-                                          <BodyLengthInputNumber
-                                              ref={bodyLengthRef}
-                                              query={query}
-                                              setQuery={(q) => {
-                                                  setQuery({
-                                                      ...q
-                                                  })
-                                              }}
-                                              onSure={() => {
-                                                  setTimeout(() => {
-                                                      update()
-                                                  }, 100)
-                                              }}
-                                              showFooter={true}
-                                          />
-                                      }
-                                  />
-                              )
-                          }
-                      },
-                      {
-                          title: t("HTTPFuzzerPageTable.latencyMs"),
-                          dataKey: "DurationMs",
-                          width: 99,
-                          filterProps: {
-                              filterKey: "durationMs",
-                              filterIcon: (
-                                  <OutlineSelectorIcon
-                                      className={classNames(styles["filter-icon"], {
-                                          [styles["active-icon"]]:
-                                              query?.afterDurationMs ||
-                                              query?.beforeDurationMs ||
-                                              sorterTable?.orderBy === "DurationMs"
-                                      })}
-                                  />
-                              ),
-                              filterRender: () => (
-                                  <TableFilterAndSorter
-                                      sortStatus={sorterTable?.orderBy === "DurationMs" ? sorterTable?.order : "none"}
-                                      handleSort={(status) => {
-                                          setIsResetSort((pre) => !pre)
-                                          setSorterTable(
-                                              status === "none" ? undefined : {orderBy: "DurationMs", order: status}
-                                          )
-                                      }}
-                                      filterActive={!!(query?.afterDurationMs || query?.beforeDurationMs)}
-                                      filterNode={
-                                          <DurationMsInputNumber
-                                              ref={durationMsRef}
-                                              query={query}
-                                              setQuery={(q) => {
-                                                  setQuery({
-                                                      ...q
-                                                  })
-                                              }}
-                                              onSure={() => {
-                                                  setTimeout(() => {
-                                                      update()
-                                                  }, 100)
-                                              }}
-                                              showFooter={true}
-                                          />
-                                      }
-                                  />
-                              )
-                          },
-                          render: (v, rowData) =>
-                              v ? (
-                                  <div
-                                      style={{
-                                          color: !isCellRedSingleColor(rowData.cellClassName)
-                                              ? DurationMsToColor(v)
-                                              : ""
-                                      }}
-                                  >{`${v}`}</div>
-                              ) : (
-                                  "-"
-                              )
-                      },
-                      {
-                          title: "Payloads",
-                          dataKey: "Payloads",
-                          width: 150,
-                          sorterProps: {
-                              sorter: true
-                          },
-                          render: (v) => {
-                              return v ? v.join(",") : "-"
-                          }
-                      },
-                      ...(!hasExtractorRules ? [extractedResultsColumn] : []),
-                      {
-                          title: t("HTTPFuzzerPageTable.responseSimilarity"),
-                          dataKey: "BodySimilarity",
-                          width: 120,
-                          render: (v, rowData) => {
-                              const text = parseFloat(`${v}`).toFixed(3)
-                              return text ? (
-                                  <div
-                                      style={{
-                                          color:
-                                              !isCellRedSingleColor(rowData.cellClassName) && text.startsWith("1.00")
-                                                  ? "var(--Colors-Use-Success-Primary)"
-                                                  : undefined
-                                      }}
-                                  >
-                                      {text}
-                                  </div>
-                              ) : (
-                                  "-"
-                              )
-                          },
-                          sorterProps: {
-                              sorter: true
-                          }
-                      },
-                      {
-                          title: t("HTTPFuzzerPageTable.httpHeaderSimilarity"),
-                          dataKey: "HeaderSimilarity",
-                          render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : "-"),
-                          width: 140,
-                          sorterProps: {
-                              sorter: true
-                          }
-                      },
-
-                      {
-                          title: "Content-Type",
-                          dataKey: "ContentType",
-                          width: 120
-                      },
-                      {
-                          title: "time",
-                          dataKey: "Timestamp",
-                          width: 150,
-                          render: (text) => (text ? formatTimestamp(text) : "-"),
-                          sorterProps: {
-                              sorter: true
-                          }
-                      },
-                      {
-                          title: t("YakitTable.action"),
-                          dataKey: "UUID",
-                          fixed: "right",
-                          width: isShowDebug !== false ? 85 : 60,
-                          render: (_, record, index: number) => {
-                              return (
-                                  <div className={styles["operate-icons"]}>
-                                      {isShowDebug !== false && (
-                                          <>
-                                              <Tooltip title={t("HTTPFuzzerPageTable.debug")}>
-                                                  <HollowLightningBoltIcon
-                                                      onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          if (onDebug) {
-                                                              onDebug({
-                                                                  httpResponse: Uint8ArrayToString(record.ResponseRaw),
-                                                                  httpRequest: record.RequestRaw
-                                                                      ? Uint8ArrayToString(record.RequestRaw)
-                                                                      : undefined,
-                                                                  isHttps: record?.IsHTTPS
-                                                              })
-                                                          } else {
-                                                              const value = {
-                                                                  httpResponseCode: Uint8ArrayToString(
-                                                                      record.ResponseRaw
-                                                                  )
-                                                              }
-                                                              emiter.emit(
-                                                                  "openMatcherAndExtraction",
-                                                                  JSON.stringify(value)
-                                                              )
-                                                          }
-                                                      }}
-                                                      style={{
-                                                          color: !isCellRedSingleColor(record.cellClassName)
-                                                              ? ""
-                                                              : "#fff"
-                                                      }}
-                                                  />
-                                              </Tooltip>
-                                              <Divider type='vertical' style={{margin: 0}} />
-                                          </>
-                                      )}
-
-                                      <ArrowCircleRightSvgIcon
-                                          style={{
-                                              color: !isCellRedSingleColor(record.cellClassName) ? "" : "#fff"
-                                          }}
-                                          onClick={(e) => {
-                                              e.stopPropagation()
-                                              onDetails(record, index)
-                                          }}
-                                      />
-                                  </div>
-                              )
-                          }
-                      }
-                  ]
-                : [
-                      {
-                          title: "Method",
-                          dataKey: "Method",
-                          width: 100,
-                          sorterProps: {
-                              sorter: true
-                          }
-                      },
-                      {
-                          title: t("HTTPFuzzerPageTable.failureReason"),
-                          dataKey: "Reason",
-                          render: (v) => {
-                              return v ? (
-                                  <YakitTag color='danger' style={{maxWidth: "100%"}}>
-                                      <span className={styles["fail-reason"]}>{v}</span>
-                                      <CopyComponents copyText={v} />
-                                  </YakitTag>
-                              ) : (
-                                  "-"
-                              )
-                          }
-                      },
-                      {
-                          title: "Payloads",
-                          dataKey: "Payloads",
-                          sorterProps: {
-                              sorter: true
-                          },
-                          render: (v) => {
-                              return v ? v.join(",") : "-"
-                          }
-                      }
-                  ]
-        }, [
-            success,
-            hasExtractorRules,
-            query?.StatusCode,
-            query?.afterBodyLength,
-            query?.beforeBodyLength,
-            query?.afterDurationMs,
-            query?.beforeDurationMs,
-            extractedMap,
-            query?.ExtractedResults,
-            isShowDebug,
-            i18n.language,
-            sorterTable?.orderBy,
-            sorterTable?.order
-        ])
-
-        const compareSorterTable = useCampare(sorterTable)
-        useThrottleEffect(
-            () => {
-                queryData()
-            },
-            [data, isEnd, compareSorterTable],
-            {wait: 500}
-        )
-
-        const compareQuery = useCampare(query)
-        useEffect(() => {
-            update()
-        }, [isRefresh])
-        useUpdateEffect(() => {
-            update()
-        }, [compareQuery])
-        useEffect(() => {
-            getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
-                .then((data) => {
-                    setShowResponseInfoSecondEditor(data === "false" ? false : true)
-                })
-                .catch(() => {
-                    setShowResponseInfoSecondEditor(true)
-                })
-        }, [])
-        const onViewExecResults = useMemoizedFn((list) => {
-            showYakitModal({
-                title: t("HTTPFuzzerPageTable.extractionResult"),
-                width: "60%",
-                footer: <></>,
-                content: <ExtractionResultsContent list={list} />
-            })
-        })
-        const onDetails = useMemoizedFn((record, index: number) => {
-            analyzeFuzzerResponse(record, index, data)
-        })
-        const onTableChange = useMemoizedFn(
-            (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
-                const l = bodyLengthRef?.current?.getValue() || {}
-                const d = durationMsRef?.current?.getValue() || {}
+    const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
+      // 提取数据列定义
+      const extractedResultsColumn: ColumnsTypeProps = {
+        title: t('HTTPFuzzerPageTable.extractData'),
+        dataKey: 'ExtractedResults',
+        width: 200,
+        filterProps: {
+          filterIcon: (
+            <OutlineSelectorIcon
+              className={classNames(styles['search-icon'], styles['filter-icon'], {
+                [styles['active-icon']]: !!query?.ExtractedResults?.length,
+              })}
+            />
+          ),
+          filterRender: () => (
+            <ExtractedFilter
+              onSearch={(ExtractedParams) => {
                 setQuery({
-                    ...query,
-                    ...filters,
-                    ...l,
-                    ...d
+                  ...query,
+                  ...ExtractedParams,
                 })
-                // 当 sorter 有 orderBy 时才更新，避免关闭筛选框时传入空 sorter 导致重置
-                if (sorter?.orderBy) {
-                    setSorterTable(sorter)
-                }
-            }
-        )
+                setTimeout(() => update(), 100)
+              }}
+            />
+          ),
+        },
+        render: (item, record) =>
+          extractedMap.size > 0 ? (
+            extractedMap.get(record['UUID']) || '-'
+          ) : item?.length > 0 ? (
+            <div className={styles['table-item-extracted-results']}>
+              <span className={styles['extracted-results-text']}>
+                {/* 匹配项只有一个时 只显示值 多个用 Divider 分割 */}
+                {item.length === 1
+                  ? `${item[0].Value}`
+                  : item.map((i, index) => (
+                      <>
+                        {!!index && <Divider type="vertical" style={{ margin: '0 4px' }} />}
+                        {`${i.Key}: ${i.Value}`}
+                      </>
+                    ))}
+              </span>
+              {item?.length > 1 && (
+                <YakitButton
+                  type="text"
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onViewExecResults(item)
+                  }}
+                  style={{
+                    color: !isCellRedSingleColor(record.cellClassName) ? undefined : '#fff',
+                  }}
+                >
+                  {t('YakitButton.detail')}
+                </YakitButton>
+              )}
+            </div>
+          ) : (
+            '-'
+          ),
+      }
 
-        const update = useDebounceFn(
-            () => {
-                setLoading(true)
-                new Promise((resolve, reject) => {
-                    try {
-                        queryData()
-                        resolve(true)
-                    } catch (error) {
-                        reject(error)
-                    }
-                })
-                    .catch((e) => {
-                        yakitFailed(t("YakitNotification.search_failed", {error: e + ""}))
-                    })
-                    .finally(() => {
-                        setTimeout(() => {
-                            setLoading(false)
-                        }, 200)
-                    })
+      return success
+        ? [
+            {
+              title: t('HTTPFuzzerPageTable.request'),
+              dataKey: 'Count',
+              render: (v) => {
+                return v + 1
+              },
+              width: 72,
+              sorterProps: {
+                sorter: true,
+              },
+              fixed: 'left',
+            },
+            ...(hasExtractorRules ? [extractedResultsColumn] : []),
+            {
+              title: 'Method',
+              dataKey: 'Method',
+              width: 93,
+              sorterProps: {
+                sorter: true,
+              },
             },
             {
-                wait: 200
-            }
-        ).run
-
-        /**
-         * @description 前端搜索
-         */
-        const queryData = useMemoizedFn(() => {
-            try {
-                // ------------  搜索 开始  ------------
-                // 有搜索条件才循环
-                if (
-                    query?.keyWord ||
-                    (query?.StatusCode && query?.StatusCode?.length > 0) ||
-                    (query?.Color && query?.Color?.length > 0) ||
-                    query?.afterBodyLength ||
-                    query?.beforeBodyLength ||
-                    query?.afterDurationMs ||
-                    query?.beforeDurationMs ||
-                    (query?.ExtractedResults && query?.ExtractedResults?.length > 0) ||
-                    query?.ExtractedResultsNotEmpty
-                ) {
-                    const newDataTable = sorterFunction(data, sorterTable) || []
-                    const l = newDataTable.length
-                    const searchList: FuzzerResponse[] = []
-                    for (let index = 0; index < l; index++) {
-                        const record = newDataTable[index]
-                        // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
-                        let keyWordIsPush = true
-                        let statusCodeIsPush = true
-                        let bodyLengthMinIsPush = true
-                        let bodyLengthMaxIsPush = true
-                        let durationMsMinIsPush = true
-                        let durationMsMaxIsPush = true
-                        let isHaveDataIsPush = true
-                        let colorIsPush = true
-                        // 搜索满足条件 交集
-                        // 颜色搜索
-                        // 去掉record.MatchedByMatcher bug：有些MatchedByMatcher为false的也需要被筛选掉
-                        if (query?.Color && query?.Color?.length > 0) {
-                            const cLength = query.Color
-                            let colorFlag = false
-                            for (let index = 0; index < cLength.length; index++) {
-                                const element = query.Color[index]
-                                if (record.HitColor.toUpperCase().indexOf(element) > -1) {
-                                    colorFlag = true
-                                    break
-                                }
-                            }
-                            colorIsPush = colorFlag
-                        }
-                        // 关键字搜索
-                        if (query?.keyWord) {
-                            const responseString = Uint8ArrayToString(record.ResponseRaw || new Uint8Array())
-                            const payloadsString = (record.Payloads || []).join("")
-                            let extractedResultsString = ""
-                            if (extractedMap.size > 0) {
-                                extractedResultsString = extractedMap.get(record["UUID"]) || ""
-                            } else {
-                                extractedResultsString = (record.ExtractedResults || [])
-                                    .map((item) => `${item.Key}: ${item.Value}`)
-                                    .join("")
-                            }
-                            keyWordIsPush = (responseString + payloadsString + extractedResultsString).includes(
-                                query.keyWord
-                            )
-                        }
-                        // 状态码搜索
-                        if (query?.StatusCode && query?.StatusCode?.length > 0) {
-                            const statusCodes = parseStatusCodes(query.StatusCode)
-                            const codeIsPushArr: boolean[] = []
-                            for (let index = 0; index < statusCodes.length; index++) {
-                                const element = statusCodes[index]
-                                if (record.StatusCode === element) {
-                                    codeIsPushArr.push(true)
-                                } else {
-                                    codeIsPushArr.push(false)
-                                }
-                            }
-                            statusCodeIsPush = codeIsPushArr.includes(true)
-                        }
-                        // 响应大小搜索
-                        if (query?.afterBodyLength) {
-                            // 最小
-                            bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
-                        }
-                        if (query?.beforeBodyLength) {
-                            // 最大
-                            bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
-                        }
-                        // 延迟搜索
-                        if (query?.afterDurationMs) {
-                            // 最小
-                            durationMsMinIsPush = Number(record.DurationMs) >= query.afterDurationMs
-                        }
-                        if (query?.beforeDurationMs) {
-                            // 最大
-                            durationMsMaxIsPush = Number(record.DurationMs) <= query.beforeDurationMs
-                        }
-                        // 是否有提取数据
-                        if (query?.ExtractedResults || query?.ExtractedResultsNotEmpty) {
-                            let extractedResultsString = ""
-                            if (extractedMap.size > 0) {
-                                extractedResultsString = extractedMap.get(record["UUID"]) || ""
-                            } else {
-                                extractedResultsString = (record.ExtractedResults || [])
-                                    .map((item) => `${item.Key}: ${item.Value}`)
-                                    .join("")
-                            }
-
-                            // 不为空判断
-                            if (query?.ExtractedResultsNotEmpty) {
-                                isHaveDataIsPush = !!extractedMap.size ? extractedResultsString.trim().length > 0
-                                : (record.ExtractedResults || []).some((item) => item.Value && item.Value.trim().length > 0)
-                            }
-
-                            // 关键字匹配判断（如果有关键字）
-                            if (query?.ExtractedResults && query.ExtractedResults.length > 0) {
-                                const keyword = query.ExtractedResults.trim().toLocaleLowerCase()
-                                const content = extractedResultsString.toLocaleLowerCase()
-                                const matchType = query?.ExtractedResultsMatchType || "includes"
-
-                                const matchResult =
-                                    matchType === "includes" ? content.includes(keyword) : !content.includes(keyword)
-
-                                // 如果同时有不为空和关键字条件，需要同时满足
-                                if (query?.ExtractedResultsNotEmpty) {
-                                    isHaveDataIsPush = isHaveDataIsPush && matchResult
-                                } else {
-                                    isHaveDataIsPush = matchResult
-                                }
-                            }
-                        }
-                        if (
-                            colorIsPush &&
-                            keyWordIsPush &&
-                            statusCodeIsPush &&
-                            bodyLengthMinIsPush &&
-                            bodyLengthMaxIsPush &&
-                            durationMsMinIsPush &&
-                            durationMsMaxIsPush &&
-                            isHaveDataIsPush
-                        ) {
-                            searchList.push(record)
-                        }
+              title: t('HTTPFuzzerPageTable.status'),
+              dataKey: 'StatusCode',
+              render: (v, rowData) =>
+                v ? (
+                  <div
+                    style={{
+                      color: !isCellRedSingleColor(rowData.cellClassName) ? StatusCodeToColor(v) : '',
+                    }}
+                  >{`${v}`}</div>
+                ) : (
+                  '-'
+                ),
+              width: 80,
+              filterProps: {
+                filterKey: 'StatusCode',
+                filtersType: 'input',
+                filterIcon: (
+                  <OutlineSelectorIcon
+                    className={classNames(styles['filter-icon'], {
+                      [styles['active-icon']]: !!query?.StatusCode?.length || sorterTable?.orderBy === 'StatusCode',
+                    })}
+                  />
+                ),
+                filterRender: () => (
+                  <TableFilterAndSorter
+                    sortStatus={sorterTable?.orderBy === 'StatusCode' ? sorterTable?.order : 'none'}
+                    handleSort={(status) => {
+                      setIsResetSort((pre) => !pre)
+                      setSorterTable(status === 'none' ? undefined : { orderBy: 'StatusCode', order: status })
+                    }}
+                    filterType={'search'}
+                    filterActive={!!query?.StatusCode}
+                    filterNode={
+                      <StatusCodeInputFilter
+                        query={query}
+                        setQuery={(q) => {
+                          setQuery({
+                            ...q,
+                          })
+                        }}
+                        onSure={() => {
+                          setTimeout(() => {
+                            update()
+                          }, 100)
+                        }}
+                      />
                     }
-                    setExportData && setExportData([...searchList])
-                    setListTable([...searchList])
-                    if (searchList.length > 0) {
-                        scrollUpdate(searchList.length)
-                    }
-                } else {
-                    const newData = sorterFunction(data, sorterTable) || []
-                    setExportData && setExportData([...newData])
-                    setListTable([...newData])
-                    if (newData.length > 0) {
-                        scrollUpdate(newData.length)
-                    }
-                }
-                // ------------  搜索 结束  ------------
-            } catch (error) {
-                yakitFailed(t("YakitNotification.search_failed", {error: error + ""}))
-            }
-        })
-
-        const onGetExportFuzzerEvent = useMemoizedFn((v: string) => {
-            try {
-                const obj: {pageId: string; type: ExportDataType} = JSON.parse(v)
-                if (pageId === obj.pageId) {
-                    // 处理Uint8Array经过JSON.parse(JSON.stringify())导致数据损失和变形
-                    const newListTable = listTable.map((item) => ({
-                        ...item,
-                        RequestRaw: Uint8ArrayToString(item.RequestRaw),
-                        ResponseRaw: Uint8ArrayToString(item.ResponseRaw)
-                    }))
-                    emiter.emit(
-                        "onGetExportFuzzerCallBack",
-                        JSON.stringify({listTable: newListTable, type: obj.type, pageId})
-                    )
-                }
-            } catch (error) {}
-        })
-
-        // 获取最新table值 用于筛选
-        useEffect(() => {
-            emiter.on("onGetExportFuzzer", onGetExportFuzzerEvent)
-            return () => {
-                emiter.off("onGetExportFuzzer", onGetExportFuzzerEvent)
-            }
-        }, [])
-
-        const onRowClick = useMemoizedFn((val) => {
-            if (val) {
-                setCurrentSelectItem(val)
-                setFirstFull(false)
-            } else {
-                setCurrentSelectItem(undefined)
-                setFirstFull(true)
-            }
-        })
-
-        const onSetCurrentRow = useDebounceFn(
-            (rowDate?: FuzzerResponse) => {
-                onRowClick(rowDate)
+                  />
+                ),
+              },
             },
-            {wait: 200}
-        ).run
-
-        const ResizeBoxProps = useCreation(() => {
-            let p = {
-                firstRatio: "50%",
-                secondRatio: "50%"
-            }
-            if (firstFull) {
-                p.secondRatio = "0%"
-                p.firstRatio = "100%"
-            }
-            return p
-        }, [firstFull])
-
-        const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
-            return {
-                overlayWidgetv: {
-                    menu: [
-                        {
-                            key: "is-show-add-overlay-widgetv",
-                            label: showResponseInfoSecondEditor
-                                ? t("HTTPFuzzerPageTable.hideResponseInfo")
-                                : t("HTTPFuzzerPageTable.showResponseInfo")
-                        }
-                    ],
-                    onRun: () => {
-                        setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
-                        setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
+            {
+              title: t('HTTPFuzzerPageTable.responseSize'),
+              dataKey: 'BodyLength',
+              width: 99,
+              filterProps: {
+                filterKey: 'bodyLength',
+                filterIcon: (
+                  <OutlineSelectorIcon
+                    className={classNames(styles['filter-icon'], {
+                      [styles['active-icon']]:
+                        query?.afterBodyLength || query?.beforeBodyLength || sorterTable?.orderBy === 'BodyLength',
+                    })}
+                  />
+                ),
+                filterRender: () => (
+                  <TableFilterAndSorter
+                    sortStatus={sorterTable?.orderBy === 'BodyLength' ? sorterTable?.order : 'none'}
+                    handleSort={(status) => {
+                      setIsResetSort((pre) => !pre)
+                      setSorterTable(status === 'none' ? undefined : { orderBy: 'BodyLength', order: status })
+                    }}
+                    filterActive={!!(query?.afterBodyLength || query?.beforeBodyLength)}
+                    filterNode={
+                      <BodyLengthInputNumber
+                        ref={bodyLengthRef}
+                        query={query}
+                        setQuery={(q) => {
+                          setQuery({
+                            ...q,
+                          })
+                        }}
+                        onSure={() => {
+                          setTimeout(() => {
+                            update()
+                          }, 100)
+                        }}
+                        showFooter={true}
+                      />
                     }
-                }
-            }
-        }, [showResponseInfoSecondEditor])
-        useEffect(() => {
-            if (!editor || !currentSelectItem) return
-            onAddOverlayWidget(editor, currentSelectItem, showResponseInfoSecondEditor)
-        }, [currentSelectItem, showResponseInfoSecondEditor])
-        const onExecResults = useMemoizedFn(() => {
-            if (currentSelectItem) {
-                onViewExecResults(currentSelectItem.ExtractedResults)
-            }
-        })
-
-        const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
-        // 编辑器编码
-        const [codeKey, setCodeKey] = useState<string>("utf-8")
-        const [codeLoading, setCodeLoading] = useState<boolean>(false)
-        const [codeValue, setCodeValue] = useState<string>("")
-        useEffect(() => {
-            if (currentSelectItem) {
-                setCodeKey("utf-8")
-                getRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify).then((res) => {
-                    if (!!res) {
-                        setTypeOptionVal(res)
-                    } else {
-                        setTypeOptionVal(undefined)
+                  />
+                ),
+              },
+            },
+            {
+              title: t('HTTPFuzzerPageTable.latencyMs'),
+              dataKey: 'DurationMs',
+              width: 99,
+              filterProps: {
+                filterKey: 'durationMs',
+                filterIcon: (
+                  <OutlineSelectorIcon
+                    className={classNames(styles['filter-icon'], {
+                      [styles['active-icon']]:
+                        query?.afterDurationMs || query?.beforeDurationMs || sorterTable?.orderBy === 'DurationMs',
+                    })}
+                  />
+                ),
+                filterRender: () => (
+                  <TableFilterAndSorter
+                    sortStatus={sorterTable?.orderBy === 'DurationMs' ? sorterTable?.order : 'none'}
+                    handleSort={(status) => {
+                      setIsResetSort((pre) => !pre)
+                      setSorterTable(status === 'none' ? undefined : { orderBy: 'DurationMs', order: status })
+                    }}
+                    filterActive={!!(query?.afterDurationMs || query?.beforeDurationMs)}
+                    filterNode={
+                      <DurationMsInputNumber
+                        ref={durationMsRef}
+                        query={query}
+                        setQuery={(q) => {
+                          setQuery({
+                            ...q,
+                          })
+                        }}
+                        onSure={() => {
+                          setTimeout(() => {
+                            update()
+                          }, 100)
+                        }}
+                        showFooter={true}
+                      />
                     }
-                })
-            }
-        }, [currentSelectItem, currentSelectShowType])
+                  />
+                ),
+              },
+              render: (v, rowData) =>
+                v ? (
+                  <div
+                    style={{
+                      color: !isCellRedSingleColor(rowData.cellClassName) ? DurationMsToColor(v) : '',
+                    }}
+                  >{`${v}`}</div>
+                ) : (
+                  '-'
+                ),
+            },
+            {
+              title: 'Payloads',
+              dataKey: 'Payloads',
+              width: 150,
+              sorterProps: {
+                sorter: true,
+              },
+              render: (v) => {
+                return v ? v.join(',') : '-'
+              },
+            },
+            ...(!hasExtractorRules ? [extractedResultsColumn] : []),
+            {
+              title: t('HTTPFuzzerPageTable.responseSimilarity'),
+              dataKey: 'BodySimilarity',
+              width: 120,
+              render: (v, rowData) => {
+                const text = parseFloat(`${v}`).toFixed(3)
+                return text ? (
+                  <div
+                    style={{
+                      color:
+                        !isCellRedSingleColor(rowData.cellClassName) && text.startsWith('1.00')
+                          ? 'var(--Colors-Use-Success-Primary)'
+                          : undefined,
+                    }}
+                  >
+                    {text}
+                  </div>
+                ) : (
+                  '-'
+                )
+              },
+              sorterProps: {
+                sorter: true,
+              },
+            },
+            {
+              title: t('HTTPFuzzerPageTable.httpHeaderSimilarity'),
+              dataKey: 'HeaderSimilarity',
+              render: (v) => (v ? parseFloat(`${v}`).toFixed(3) : '-'),
+              width: 140,
+              sorterProps: {
+                sorter: true,
+              },
+            },
 
-        const originReqOrResValue = useMemo(() => {
-            const value =
-                currentSelectShowType === "request" ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
-            return (value && Uint8ArrayToString(value)) || ""
-        }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
-
-        const copyUrl = useMemoizedFn(() => {
-            if (currentSelectItem?.RequestRaw) {
-                copyAsUrl({
-                    Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
-                    IsHTTPS: !!currentSelectItem?.IsHTTPS
-                })
-            }
-        })
-        const onClickOpenBrowserMenu = useMemoizedFn(() => {
-            if (currentSelectItem?.RequestRaw) {
-                ipcRenderer
-                    .invoke("ExtractUrl", {
-                        Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
-                        IsHTTPS: !!currentSelectItem?.IsHTTPS
-                    })
-                    .then((data: {Url: string}) => {
-                        openExternalWebsite(data.Url)
-                    })
-                    .catch((e) => {
-                        yakitNotify("error", t("HTTPFuzzerPageTable.copyUrlFailed"))
-                    })
-            }
-        })
-
-        const showAlertFlag = useMemo(() => {
-            return (moreLimtAlertMsg || noMoreLimtAlertMsg) && data.length >= fuzzerTableMaxData
-        }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data, fuzzerTableMaxData])
-
-        // 自动滚动到底部 hook（仅在流式加载时启用）
-        const {handleEditorMount} = useChunkAutoScrollToBottom({
-            chunkedData: currentSelectItem?.RandomChunkedData || [],
-            id: currentSelectItem?.UUID
-        })
-
-        return (
-            <div className={styles["http-fuzzer-page-table"]} style={{overflowY: "hidden", height: "100%"}}>
-                <YakitResizeBox
-                    isVer={true}
-                    lineDirection='bottom'
-                    lineStyle={{display: firstFull ? "none" : ""}}
-                    secondNodeStyle={{padding: firstFull ? 0 : undefined, display: firstFull ? "none" : ""}}
-                    //隐藏详情框 只需要清除选中项
-                    onClickHiddenBox={() => onRowClick(undefined)}
-                    firstNode={
-                        <div className={styles["fuzzer-page-table-wrap"]}>
-                            {showAlertFlag && (
-                                <div style={{padding: "0 2px"}}>
-                                    <ReactResizeDetector
-                                        onResize={(w, h) => {
-                                            if (!w || !h) {
-                                                return
-                                            }
-                                            setAlertHeight(h)
-                                        }}
-                                        handleHeight={true}
-                                        refreshMode={"debounce"}
-                                        refreshRate={50}
-                                    />
-                                    <Alert
-                                        message={
-                                            data.length >= fuzzerTableMaxData ? moreLimtAlertMsg : noMoreLimtAlertMsg
-                                        }
-                                        type='warning'
-                                        style={{margin: "2px 0"}}
-                                    />
-                                </div>
-                            )}
-                            <div
-                                style={{
-                                    height: showAlertFlag ? `calc(100% - ${alertHeight + 10}px)` : "100%"
-                                }}
-                            >
-                                <TableVirtualResize<FuzzerResponse>
-                                    ref={tableRef}
-                                    query={query}
-                                    isRefresh={isRefresh || loading}
-                                    titleHeight={0.01}
-                                    renderTitle={<></>}
-                                    renderKey='UUID'
-                                    data={listTable}
-                                    loading={loading}
-                                    enableDrag={true}
-                                    columns={columns}
-                                    onChange={onTableChange}
-                                    containerClassName={classNames(styles["table-container"], {
-                                        [styles["table-container-border"]]: currentSelectItem?.ResponseRaw
-                                    })}
-                                    isResetSort={isResetSort}
-                                    currentSelectItem={currentSelectItem}
-                                    onSetCurrentRow={onSetCurrentRow}
-                                    useUpAndDown={tableKeyUpDownEnabled}
-                                    scrollToIndex={scrollToIndex}
-                                />
-                            </div>
-                        </div>
-                    }
-                    secondNode={
-                        currentSelectItem && (
-                            <NewHTTPPacketEditor
-                                language={currentSelectItem?.DisableRenderStyles ? "text" : undefined}
-                                isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
-                                title={
-                                    <div className={styles["second-node-title-wrapper"]}>
-                                        <span className={styles["second-node-title-text"]}>
-                                            {t("HTTPFuzzerPageTable.quickPreview")}
-                                        </span>
-                                        <div className={styles["second-node-title-btns"]}>
-                                            <YakitRadioButtons
-                                                size='small'
-                                                value={currentSelectShowType}
-                                                onChange={(e) => {
-                                                    setCurrentSelectShowType(e.target.value)
-                                                }}
-                                                buttonStyle='solid'
-                                                options={[
-                                                    {
-                                                        value: "request",
-                                                        label: t("HTTPFuzzerPageTable.request")
-                                                    },
-                                                    {
-                                                        value: "response",
-                                                        label: t("HTTPFuzzerPageTable.response")
-                                                    }
-                                                ]}
-                                            />
-                                            {currentSelectItem?.IsTooLargeResponse && (
-                                                <YakitTag style={{marginLeft: 8}} color='danger'>
-                                                    {t("HTTPFuzzerPageTable.oversizedResponse")}
-                                                </YakitTag>
-                                            )}
-                                            <ByteCountTag
-                                                selectionByteCount={selectionByteCount}
-                                                itemKey='httpfuzzerpagetable'
-                                                style={{marginLeft: 8}}
-                                            />
-                                        </div>
-                                    </div>
+            {
+              title: 'Content-Type',
+              dataKey: 'ContentType',
+              width: 120,
+            },
+            {
+              title: 'time',
+              dataKey: 'Timestamp',
+              width: 150,
+              render: (text) => (text ? formatTimestamp(text) : '-'),
+              sorterProps: {
+                sorter: true,
+              },
+            },
+            {
+              title: t('YakitTable.action'),
+              dataKey: 'UUID',
+              fixed: 'right',
+              width: isShowDebug !== false ? 85 : 60,
+              render: (_, record, index: number) => {
+                return (
+                  <div className={styles['operate-icons']}>
+                    {isShowDebug !== false && (
+                      <>
+                        <Tooltip title={t('HTTPFuzzerPageTable.debug')}>
+                          <HollowLightningBoltIcon
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              if (onDebug) {
+                                onDebug({
+                                  httpResponse: Uint8ArrayToString(record.ResponseRaw),
+                                  httpRequest: record.RequestRaw ? Uint8ArrayToString(record.RequestRaw) : undefined,
+                                  isHttps: record?.IsHTTPS,
+                                })
+                              } else {
+                                const value = {
+                                  httpResponseCode: Uint8ArrayToString(record.ResponseRaw),
                                 }
-                                defaultHttps={currentSelectItem?.IsHTTPS}
-                                isResponse={true}
-                                readOnly={true}
-                                loading={codeLoading}
-                                // noHeader={true}
-                                originValue={codeKey === "utf-8" ? originReqOrResValue : codeValue}
-                                originalPackage={
-                                    currentSelectShowType === "request"
-                                        ? currentSelectItem?.RequestRaw
-                                        : currentSelectItem?.ResponseRaw
-                                }
-                                onAddOverlayWidget={(editor) => {
-                                    setEditor(editor)
-                                }}
-                                isAddOverlayWidget={showResponseInfoSecondEditor}
-                                contextMenu={responseEditorRightMenu}
-                                webFuzzerValue={Uint8ArrayToString(currentSelectItem?.RequestRaw || new Uint8Array())}
-                                extraEditorProps={{
-                                    isShowSelectRangeMenu: true
-                                }}
-                                extra={[
-                                    currentSelectItem?.IsTooLargeResponse && (
-                                        <YakitDropdownMenu
-                                            key='allRes'
-                                            menu={{
-                                                data: [
-                                                    {
-                                                        key: "tooLargeResponseHeaderFile",
-                                                        label: t("HTTPFuzzerPageTable.viewHeader")
-                                                    },
-                                                    {
-                                                        key: "tooLargeResponseBodyFile",
-                                                        label: t("HTTPFuzzerPageTable.viewBody")
-                                                    }
-                                                ],
-                                                onClick: ({key}) => {
-                                                    switch (key) {
-                                                        case "tooLargeResponseHeaderFile":
-                                                            ipcRenderer
-                                                                .invoke(
-                                                                    "is-file-exists",
-                                                                    currentSelectItem.TooLargeResponseHeaderFile
-                                                                )
-                                                                .then((flag: boolean) => {
-                                                                    if (flag) {
-                                                                        openABSFileLocated(
-                                                                            currentSelectItem.TooLargeResponseHeaderFile
-                                                                        )
-                                                                    } else {
-                                                                        failed(
-                                                                            t("HTTPFuzzerPageTable.targetFileNotExist")
-                                                                        )
-                                                                    }
-                                                                })
-                                                                .catch(() => {})
-                                                            break
-                                                        case "tooLargeResponseBodyFile":
-                                                            ipcRenderer
-                                                                .invoke(
-                                                                    "is-file-exists",
-                                                                    currentSelectItem.TooLargeResponseBodyFile
-                                                                )
-                                                                .then((flag: boolean) => {
-                                                                    if (flag) {
-                                                                        openABSFileLocated(
-                                                                            currentSelectItem.TooLargeResponseBodyFile
-                                                                        )
-                                                                    } else {
-                                                                        failed(
-                                                                            t("HTTPFuzzerPageTable.targetFileNotExist")
-                                                                        )
-                                                                    }
-                                                                })
-                                                                .catch(() => {})
-                                                            break
-                                                        default:
-                                                            break
-                                                    }
-                                                }
-                                            }}
-                                            dropdown={{
-                                                trigger: ["click"],
-                                                placement: "bottom"
-                                            }}
-                                        >
-                                            <YakitButton type='primary' size='small'>
-                                                {t("HTTPFuzzerPageTable.fullResponse")}
-                                            </YakitButton>
-                                        </YakitDropdownMenu>
-                                    ),
-                                    <YakitButton size='small' onClick={onExecResults} key='extractData'>
-                                        {t("HTTPFuzzerPageTable.extractData")}
-                                    </YakitButton>
-                                ]}
-                                AfterBeautifyRenderBtn={
-                                    <CodingPopover
-                                        key='coding'
-                                        originValue={
-                                            (currentSelectShowType === "request"
-                                                ? currentSelectItem?.RequestRaw
-                                                : currentSelectItem?.ResponseRaw) || new Uint8Array()
-                                        }
-                                        onSetCodeLoading={setCodeLoading}
-                                        codeKey={codeKey}
-                                        onSetCodeKey={(codeKey) => {
-                                            setCodeKey(codeKey)
-                                        }}
-                                        onSetCodeValue={setCodeValue}
-                                    />
-                                }
-                                typeOptionVal={typeOptionVal}
-                                onTypeOptionVal={(typeOptionVal) => {
-                                    if (typeOptionVal !== undefined) {
-                                        setTypeOptionVal(typeOptionVal)
-                                        setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
-                                    } else {
-                                        setTypeOptionVal(undefined)
-                                        setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, "")
-                                    }
-                                }}
-                                onClickUrlMenu={copyUrl}
-                                onClickOpenBrowserMenu={onClickOpenBrowserMenu}
-                                downbodyParams={{
-                                    RuntimeId: currentSelectItem?.RuntimeID,
-                                    IsRequest: currentSelectShowType === "request"
-                                }}
-                                onClickOpenPacketNewWindowMenu={() => {
-                                    openPacketNewWindow({
-                                        request: {
-                                            originValue: currentSelectItem?.RequestRaw
-                                                ? Uint8ArrayToString(currentSelectItem?.RequestRaw)
-                                                : new Uint8Array(),
-                                            originalPackage: currentSelectItem?.RequestRaw
-                                        },
-                                        response: {
-                                            originValue:
-                                                codeKey === "utf-8"
-                                                    ? currentSelectItem?.ResponseRaw
-                                                        ? Uint8ArrayToString(currentSelectItem?.ResponseRaw)
-                                                        : new Uint8Array()
-                                                    : codeValue,
-                                            originalPackage: currentSelectItem?.ResponseRaw
-                                        }
-                                    })
-                                }}
-                                onEditor={handleEditorMount}
-                            />
-                        )
-                    }
-                    {...ResizeBoxProps}
-                />
-            </div>
-        )
+                                emiter.emit('openMatcherAndExtraction', JSON.stringify(value))
+                              }
+                            }}
+                            style={{
+                              color: !isCellRedSingleColor(record.cellClassName) ? '' : '#fff',
+                            }}
+                          />
+                        </Tooltip>
+                        <Divider type="vertical" style={{ margin: 0 }} />
+                      </>
+                    )}
+
+                    <ArrowCircleRightSvgIcon
+                      style={{
+                        color: !isCellRedSingleColor(record.cellClassName) ? '' : '#fff',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDetails(record, index)
+                      }}
+                    />
+                  </div>
+                )
+              },
+            },
+          ]
+        : [
+            {
+              title: 'Method',
+              dataKey: 'Method',
+              width: 100,
+              sorterProps: {
+                sorter: true,
+              },
+            },
+            {
+              title: t('HTTPFuzzerPageTable.failureReason'),
+              dataKey: 'Reason',
+              render: (v) => {
+                return v ? (
+                  <YakitTag color="danger" style={{ maxWidth: '100%' }}>
+                    <span className={styles['fail-reason']}>{v}</span>
+                    <CopyComponents copyText={v} />
+                  </YakitTag>
+                ) : (
+                  '-'
+                )
+              },
+            },
+            {
+              title: 'Payloads',
+              dataKey: 'Payloads',
+              sorterProps: {
+                sorter: true,
+              },
+              render: (v) => {
+                return v ? v.join(',') : '-'
+              },
+            },
+          ]
+    }, [
+      success,
+      hasExtractorRules,
+      query?.StatusCode,
+      query?.afterBodyLength,
+      query?.beforeBodyLength,
+      query?.afterDurationMs,
+      query?.beforeDurationMs,
+      extractedMap,
+      query?.ExtractedResults,
+      isShowDebug,
+      i18n.language,
+      sorterTable?.orderBy,
+      sorterTable?.order,
+    ])
+
+    const compareSorterTable = useCampare(sorterTable)
+    useThrottleEffect(
+      () => {
+        queryData()
+      },
+      [data, isEnd, compareSorterTable],
+      { wait: 500 },
+    )
+
+    const compareQuery = useCampare(query)
+    useEffect(() => {
+      update()
+    }, [isRefresh])
+    useUpdateEffect(() => {
+      update()
+    }, [compareQuery])
+    useEffect(() => {
+      getRemoteValue(HTTP_PACKET_EDITOR_Response_Info)
+        .then((data) => {
+          setShowResponseInfoSecondEditor(data === 'false' ? false : true)
+        })
+        .catch(() => {
+          setShowResponseInfoSecondEditor(true)
+        })
+    }, [])
+    const onViewExecResults = useMemoizedFn((list) => {
+      showYakitModal({
+        title: t('HTTPFuzzerPageTable.extractionResult'),
+        width: '60%',
+        footer: <></>,
+        content: <ExtractionResultsContent list={list} />,
+      })
     })
+    const onDetails = useMemoizedFn((record, index: number) => {
+      analyzeFuzzerResponse(record, index, data)
+    })
+    const onTableChange = useMemoizedFn((page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => {
+      const l = bodyLengthRef?.current?.getValue() || {}
+      const d = durationMsRef?.current?.getValue() || {}
+      setQuery({
+        ...query,
+        ...filters,
+        ...l,
+        ...d,
+      })
+      // 当 sorter 有 orderBy 时才更新，避免关闭筛选框时传入空 sorter 导致重置
+      if (sorter?.orderBy) {
+        setSorterTable(sorter)
+      }
+    })
+
+    const update = useDebounceFn(
+      () => {
+        setLoading(true)
+        new Promise((resolve, reject) => {
+          try {
+            queryData()
+            resolve(true)
+          } catch (error) {
+            reject(error)
+          }
+        })
+          .catch((e) => {
+            yakitFailed(t('YakitNotification.search_failed', { error: e + '' }))
+          })
+          .finally(() => {
+            setTimeout(() => {
+              setLoading(false)
+            }, 200)
+          })
+      },
+      {
+        wait: 200,
+      },
+    ).run
+
+    /**
+     * @description 前端搜索
+     */
+    const queryData = useMemoizedFn(() => {
+      try {
+        // ------------  搜索 开始  ------------
+        // 有搜索条件才循环
+        if (
+          query?.keyWord ||
+          (query?.StatusCode && query?.StatusCode?.length > 0) ||
+          (query?.Color && query?.Color?.length > 0) ||
+          query?.afterBodyLength ||
+          query?.beforeBodyLength ||
+          query?.afterDurationMs ||
+          query?.beforeDurationMs ||
+          (query?.ExtractedResults && query?.ExtractedResults?.length > 0) ||
+          query?.ExtractedResultsNotEmpty
+        ) {
+          const newDataTable = sorterFunction(data, sorterTable) || []
+          const l = newDataTable.length
+          const searchList: FuzzerResponse[] = []
+          for (let index = 0; index < l; index++) {
+            const record = newDataTable[index]
+            // 关键字搜索是否满足，默认 满足，以下同理,搜索同时为true时，push新数组
+            let keyWordIsPush = true
+            let statusCodeIsPush = true
+            let bodyLengthMinIsPush = true
+            let bodyLengthMaxIsPush = true
+            let durationMsMinIsPush = true
+            let durationMsMaxIsPush = true
+            let isHaveDataIsPush = true
+            let colorIsPush = true
+            // 搜索满足条件 交集
+            // 颜色搜索
+            // 去掉record.MatchedByMatcher bug：有些MatchedByMatcher为false的也需要被筛选掉
+            if (query?.Color && query?.Color?.length > 0) {
+              const cLength = query.Color
+              let colorFlag = false
+              for (let index = 0; index < cLength.length; index++) {
+                const element = query.Color[index]
+                if (record.HitColor.toUpperCase().indexOf(element) > -1) {
+                  colorFlag = true
+                  break
+                }
+              }
+              colorIsPush = colorFlag
+            }
+            // 关键字搜索
+            if (query?.keyWord) {
+              const responseString = Uint8ArrayToString(record.ResponseRaw || new Uint8Array())
+              const payloadsString = (record.Payloads || []).join('')
+              let extractedResultsString = ''
+              if (extractedMap.size > 0) {
+                extractedResultsString = extractedMap.get(record['UUID']) || ''
+              } else {
+                extractedResultsString = (record.ExtractedResults || [])
+                  .map((item) => `${item.Key}: ${item.Value}`)
+                  .join('')
+              }
+              keyWordIsPush = (responseString + payloadsString + extractedResultsString).includes(query.keyWord)
+            }
+            // 状态码搜索
+            if (query?.StatusCode && query?.StatusCode?.length > 0) {
+              const statusCodes = parseStatusCodes(query.StatusCode)
+              const codeIsPushArr: boolean[] = []
+              for (let index = 0; index < statusCodes.length; index++) {
+                const element = statusCodes[index]
+                if (record.StatusCode === element) {
+                  codeIsPushArr.push(true)
+                } else {
+                  codeIsPushArr.push(false)
+                }
+              }
+              statusCodeIsPush = codeIsPushArr.includes(true)
+            }
+            // 响应大小搜索
+            if (query?.afterBodyLength) {
+              // 最小
+              bodyLengthMinIsPush = Number(record.BodyLength) >= query.afterBodyLength
+            }
+            if (query?.beforeBodyLength) {
+              // 最大
+              bodyLengthMaxIsPush = Number(record.BodyLength) <= query.beforeBodyLength
+            }
+            // 延迟搜索
+            if (query?.afterDurationMs) {
+              // 最小
+              durationMsMinIsPush = Number(record.DurationMs) >= query.afterDurationMs
+            }
+            if (query?.beforeDurationMs) {
+              // 最大
+              durationMsMaxIsPush = Number(record.DurationMs) <= query.beforeDurationMs
+            }
+            // 是否有提取数据
+            if (query?.ExtractedResults || query?.ExtractedResultsNotEmpty) {
+              let extractedResultsString = ''
+              if (extractedMap.size > 0) {
+                extractedResultsString = extractedMap.get(record['UUID']) || ''
+              } else {
+                extractedResultsString = (record.ExtractedResults || [])
+                  .map((item) => `${item.Key}: ${item.Value}`)
+                  .join('')
+              }
+
+              // 不为空判断
+              if (query?.ExtractedResultsNotEmpty) {
+                isHaveDataIsPush = !!extractedMap.size
+                  ? extractedResultsString.trim().length > 0
+                  : (record.ExtractedResults || []).some((item) => item.Value && item.Value.trim().length > 0)
+              }
+
+              // 关键字匹配判断（如果有关键字）
+              if (query?.ExtractedResults && query.ExtractedResults.length > 0) {
+                const keyword = query.ExtractedResults.trim().toLocaleLowerCase()
+                const content = extractedResultsString.toLocaleLowerCase()
+                const matchType = query?.ExtractedResultsMatchType || 'includes'
+
+                const matchResult = matchType === 'includes' ? content.includes(keyword) : !content.includes(keyword)
+
+                // 如果同时有不为空和关键字条件，需要同时满足
+                if (query?.ExtractedResultsNotEmpty) {
+                  isHaveDataIsPush = isHaveDataIsPush && matchResult
+                } else {
+                  isHaveDataIsPush = matchResult
+                }
+              }
+            }
+            if (
+              colorIsPush &&
+              keyWordIsPush &&
+              statusCodeIsPush &&
+              bodyLengthMinIsPush &&
+              bodyLengthMaxIsPush &&
+              durationMsMinIsPush &&
+              durationMsMaxIsPush &&
+              isHaveDataIsPush
+            ) {
+              searchList.push(record)
+            }
+          }
+          setExportData && setExportData([...searchList])
+          setListTable([...searchList])
+          if (searchList.length > 0) {
+            scrollUpdate(searchList.length)
+          }
+        } else {
+          const newData = sorterFunction(data, sorterTable) || []
+          setExportData && setExportData([...newData])
+          setListTable([...newData])
+          if (newData.length > 0) {
+            scrollUpdate(newData.length)
+          }
+        }
+        // ------------  搜索 结束  ------------
+      } catch (error) {
+        yakitFailed(t('YakitNotification.search_failed', { error: error + '' }))
+      }
+    })
+
+    const onGetExportFuzzerEvent = useMemoizedFn((v: string) => {
+      try {
+        const obj: { pageId: string; type: ExportDataType } = JSON.parse(v)
+        if (pageId === obj.pageId) {
+          // 处理Uint8Array经过JSON.parse(JSON.stringify())导致数据损失和变形
+          const newListTable = listTable.map((item) => ({
+            ...item,
+            RequestRaw: Uint8ArrayToString(item.RequestRaw),
+            ResponseRaw: Uint8ArrayToString(item.ResponseRaw),
+          }))
+          emiter.emit('onGetExportFuzzerCallBack', JSON.stringify({ listTable: newListTable, type: obj.type, pageId }))
+        }
+      } catch (error) {}
+    })
+
+    // 获取最新table值 用于筛选
+    useEffect(() => {
+      emiter.on('onGetExportFuzzer', onGetExportFuzzerEvent)
+      return () => {
+        emiter.off('onGetExportFuzzer', onGetExportFuzzerEvent)
+      }
+    }, [])
+
+    const onRowClick = useMemoizedFn((val) => {
+      if (val) {
+        setCurrentSelectItem(val)
+        setFirstFull(false)
+      } else {
+        setCurrentSelectItem(undefined)
+        setFirstFull(true)
+      }
+    })
+
+    const onSetCurrentRow = useDebounceFn(
+      (rowDate?: FuzzerResponse) => {
+        onRowClick(rowDate)
+      },
+      { wait: 200 },
+    ).run
+
+    const ResizeBoxProps = useCreation(() => {
+      let p = {
+        firstRatio: '50%',
+        secondRatio: '50%',
+      }
+      if (firstFull) {
+        p.secondRatio = '0%'
+        p.firstRatio = '100%'
+      }
+      return p
+    }, [firstFull])
+
+    const responseEditorRightMenu: OtherMenuListProps = useMemo(() => {
+      return {
+        overlayWidgetv: {
+          menu: [
+            {
+              key: 'is-show-add-overlay-widgetv',
+              label: showResponseInfoSecondEditor
+                ? t('HTTPFuzzerPageTable.hideResponseInfo')
+                : t('HTTPFuzzerPageTable.showResponseInfo'),
+            },
+          ],
+          onRun: () => {
+            setRemoteValue(HTTP_PACKET_EDITOR_Response_Info, `${!showResponseInfoSecondEditor}`)
+            setShowResponseInfoSecondEditor(!showResponseInfoSecondEditor)
+          },
+        },
+      }
+    }, [showResponseInfoSecondEditor])
+    useEffect(() => {
+      if (!editor || !currentSelectItem) return
+      onAddOverlayWidget(editor, currentSelectItem, showResponseInfoSecondEditor)
+    }, [currentSelectItem, showResponseInfoSecondEditor])
+    const onExecResults = useMemoizedFn(() => {
+      if (currentSelectItem) {
+        onViewExecResults(currentSelectItem.ExtractedResults)
+      }
+    })
+
+    const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
+    // 编辑器编码
+    const [codeKey, setCodeKey] = useState<string>('utf-8')
+    const [codeLoading, setCodeLoading] = useState<boolean>(false)
+    const [codeValue, setCodeValue] = useState<string>('')
+    useEffect(() => {
+      if (currentSelectItem) {
+        setCodeKey('utf-8')
+        getRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify).then((res) => {
+          if (!!res) {
+            setTypeOptionVal(res)
+          } else {
+            setTypeOptionVal(undefined)
+          }
+        })
+      }
+    }, [currentSelectItem, currentSelectShowType])
+
+    const originReqOrResValue = useMemo(() => {
+      const value = currentSelectShowType === 'request' ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
+      return (value && Uint8ArrayToString(value)) || ''
+    }, [currentSelectShowType, currentSelectItem?.RequestRaw, currentSelectItem?.ResponseRaw])
+
+    const copyUrl = useMemoizedFn(() => {
+      if (currentSelectItem?.RequestRaw) {
+        copyAsUrl({
+          Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+          IsHTTPS: !!currentSelectItem?.IsHTTPS,
+        })
+      }
+    })
+    const onClickOpenBrowserMenu = useMemoizedFn(() => {
+      if (currentSelectItem?.RequestRaw) {
+        ipcRenderer
+          .invoke('ExtractUrl', {
+            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+            IsHTTPS: !!currentSelectItem?.IsHTTPS,
+          })
+          .then((data: { Url: string }) => {
+            openExternalWebsite(data.Url)
+          })
+          .catch((e) => {
+            yakitNotify('error', t('HTTPFuzzerPageTable.copyUrlFailed'))
+          })
+      }
+    })
+
+    const showAlertFlag = useMemo(() => {
+      return (moreLimtAlertMsg || noMoreLimtAlertMsg) && data.length >= fuzzerTableMaxData
+    }, [moreLimtAlertMsg, noMoreLimtAlertMsg, data, fuzzerTableMaxData])
+
+    // 自动滚动到底部 hook（仅在流式加载时启用）
+    const { handleEditorMount } = useChunkAutoScrollToBottom({
+      chunkedData: currentSelectItem?.RandomChunkedData || [],
+      id: currentSelectItem?.UUID,
+    })
+
+    return (
+      <div className={styles['http-fuzzer-page-table']} style={{ overflowY: 'hidden', height: '100%' }}>
+        <YakitResizeBox
+          isVer={true}
+          lineDirection="bottom"
+          lineStyle={{ display: firstFull ? 'none' : '' }}
+          secondNodeStyle={{ padding: firstFull ? 0 : undefined, display: firstFull ? 'none' : '' }}
+          //隐藏详情框 只需要清除选中项
+          onClickHiddenBox={() => onRowClick(undefined)}
+          firstNode={
+            <div className={styles['fuzzer-page-table-wrap']}>
+              {showAlertFlag && (
+                <div style={{ padding: '0 2px' }}>
+                  <ReactResizeDetector
+                    onResize={(w, h) => {
+                      if (!w || !h) {
+                        return
+                      }
+                      setAlertHeight(h)
+                    }}
+                    handleHeight={true}
+                    refreshMode={'debounce'}
+                    refreshRate={50}
+                  />
+                  <Alert
+                    message={data.length >= fuzzerTableMaxData ? moreLimtAlertMsg : noMoreLimtAlertMsg}
+                    type="warning"
+                    style={{ margin: '2px 0' }}
+                  />
+                </div>
+              )}
+              <div
+                style={{
+                  height: showAlertFlag ? `calc(100% - ${alertHeight + 10}px)` : '100%',
+                }}
+              >
+                <TableVirtualResize<FuzzerResponse>
+                  ref={tableRef}
+                  query={query}
+                  isRefresh={isRefresh || loading}
+                  titleHeight={0.01}
+                  renderTitle={<></>}
+                  renderKey="UUID"
+                  data={listTable}
+                  loading={loading}
+                  enableDrag={true}
+                  columns={columns}
+                  onChange={onTableChange}
+                  containerClassName={classNames(styles['table-container'], {
+                    [styles['table-container-border']]: currentSelectItem?.ResponseRaw,
+                  })}
+                  isResetSort={isResetSort}
+                  currentSelectItem={currentSelectItem}
+                  onSetCurrentRow={onSetCurrentRow}
+                  useUpAndDown={tableKeyUpDownEnabled}
+                  scrollToIndex={scrollToIndex}
+                />
+              </div>
+            </div>
+          }
+          secondNode={
+            currentSelectItem && (
+              <NewHTTPPacketEditor
+                language={currentSelectItem?.DisableRenderStyles ? 'text' : undefined}
+                isShowBeautifyRender={!currentSelectItem?.IsTooLargeResponse}
+                title={
+                  <div className={styles['second-node-title-wrapper']}>
+                    <span className={styles['second-node-title-text']}>{t('HTTPFuzzerPageTable.quickPreview')}</span>
+                    <div className={styles['second-node-title-btns']}>
+                      <YakitRadioButtons
+                        size="small"
+                        value={currentSelectShowType}
+                        onChange={(e) => {
+                          setCurrentSelectShowType(e.target.value)
+                        }}
+                        buttonStyle="solid"
+                        options={[
+                          {
+                            value: 'request',
+                            label: t('HTTPFuzzerPageTable.request'),
+                          },
+                          {
+                            value: 'response',
+                            label: t('HTTPFuzzerPageTable.response'),
+                          },
+                        ]}
+                      />
+                      {currentSelectItem?.IsTooLargeResponse && (
+                        <YakitTag style={{ marginLeft: 8 }} color="danger">
+                          {t('HTTPFuzzerPageTable.oversizedResponse')}
+                        </YakitTag>
+                      )}
+                      <ByteCountTag
+                        selectionByteCount={selectionByteCount}
+                        itemKey="httpfuzzerpagetable"
+                        style={{ marginLeft: 8 }}
+                      />
+                    </div>
+                  </div>
+                }
+                defaultHttps={currentSelectItem?.IsHTTPS}
+                isResponse={true}
+                readOnly={true}
+                loading={codeLoading}
+                // noHeader={true}
+                originValue={codeKey === 'utf-8' ? originReqOrResValue : codeValue}
+                originalPackage={
+                  currentSelectShowType === 'request' ? currentSelectItem?.RequestRaw : currentSelectItem?.ResponseRaw
+                }
+                onAddOverlayWidget={(editor) => {
+                  setEditor(editor)
+                }}
+                isAddOverlayWidget={showResponseInfoSecondEditor}
+                contextMenu={responseEditorRightMenu}
+                webFuzzerValue={Uint8ArrayToString(currentSelectItem?.RequestRaw || new Uint8Array())}
+                extraEditorProps={{
+                  isShowSelectRangeMenu: true,
+                }}
+                extra={[
+                  currentSelectItem?.IsTooLargeResponse && (
+                    <YakitDropdownMenu
+                      key="allRes"
+                      menu={{
+                        data: [
+                          {
+                            key: 'tooLargeResponseHeaderFile',
+                            label: t('HTTPFuzzerPageTable.viewHeader'),
+                          },
+                          {
+                            key: 'tooLargeResponseBodyFile',
+                            label: t('HTTPFuzzerPageTable.viewBody'),
+                          },
+                        ],
+                        onClick: ({ key }) => {
+                          switch (key) {
+                            case 'tooLargeResponseHeaderFile':
+                              ipcRenderer
+                                .invoke('is-file-exists', currentSelectItem.TooLargeResponseHeaderFile)
+                                .then((flag: boolean) => {
+                                  if (flag) {
+                                    openABSFileLocated(currentSelectItem.TooLargeResponseHeaderFile)
+                                  } else {
+                                    failed(t('HTTPFuzzerPageTable.targetFileNotExist'))
+                                  }
+                                })
+                                .catch(() => {})
+                              break
+                            case 'tooLargeResponseBodyFile':
+                              ipcRenderer
+                                .invoke('is-file-exists', currentSelectItem.TooLargeResponseBodyFile)
+                                .then((flag: boolean) => {
+                                  if (flag) {
+                                    openABSFileLocated(currentSelectItem.TooLargeResponseBodyFile)
+                                  } else {
+                                    failed(t('HTTPFuzzerPageTable.targetFileNotExist'))
+                                  }
+                                })
+                                .catch(() => {})
+                              break
+                            default:
+                              break
+                          }
+                        },
+                      }}
+                      dropdown={{
+                        trigger: ['click'],
+                        placement: 'bottom',
+                      }}
+                    >
+                      <YakitButton type="primary" size="small">
+                        {t('HTTPFuzzerPageTable.fullResponse')}
+                      </YakitButton>
+                    </YakitDropdownMenu>
+                  ),
+                  <YakitButton size="small" onClick={onExecResults} key="extractData">
+                    {t('HTTPFuzzerPageTable.extractData')}
+                  </YakitButton>,
+                ]}
+                AfterBeautifyRenderBtn={
+                  <CodingPopover
+                    key="coding"
+                    originValue={
+                      (currentSelectShowType === 'request'
+                        ? currentSelectItem?.RequestRaw
+                        : currentSelectItem?.ResponseRaw) || new Uint8Array()
+                    }
+                    onSetCodeLoading={setCodeLoading}
+                    codeKey={codeKey}
+                    onSetCodeKey={(codeKey) => {
+                      setCodeKey(codeKey)
+                    }}
+                    onSetCodeValue={setCodeValue}
+                  />
+                }
+                typeOptionVal={typeOptionVal}
+                onTypeOptionVal={(typeOptionVal) => {
+                  if (typeOptionVal !== undefined) {
+                    setTypeOptionVal(typeOptionVal)
+                    setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, typeOptionVal)
+                  } else {
+                    setTypeOptionVal(undefined)
+                    setRemoteValue(FuzzerRemoteGV.WebFuzzerEditorBeautify, '')
+                  }
+                }}
+                onClickUrlMenu={copyUrl}
+                onClickOpenBrowserMenu={onClickOpenBrowserMenu}
+                downbodyParams={{
+                  RuntimeId: currentSelectItem?.RuntimeID,
+                  IsRequest: currentSelectShowType === 'request',
+                }}
+                onClickOpenPacketNewWindowMenu={() => {
+                  openPacketNewWindow({
+                    request: {
+                      originValue: currentSelectItem?.RequestRaw
+                        ? Uint8ArrayToString(currentSelectItem?.RequestRaw)
+                        : new Uint8Array(),
+                      originalPackage: currentSelectItem?.RequestRaw,
+                    },
+                    response: {
+                      originValue:
+                        codeKey === 'utf-8'
+                          ? currentSelectItem?.ResponseRaw
+                            ? Uint8ArrayToString(currentSelectItem?.ResponseRaw)
+                            : new Uint8Array()
+                          : codeValue,
+                      originalPackage: currentSelectItem?.ResponseRaw,
+                    },
+                  })
+                }}
+                onEditor={handleEditorMount}
+              />
+            )
+          }
+          {...ResizeBoxProps}
+        />
+      </div>
+    )
+  }),
 )
 
 interface BodyLengthInputNumberProps {
-    query?: HTTPFuzzerPageTableQuery
-    setQuery: (h: HTTPFuzzerPageTableQuery) => void
-    onSure?: () => void
-    showFooter?: boolean
-    ref?: any
+  query?: HTTPFuzzerPageTableQuery
+  setQuery: (h: HTTPFuzzerPageTableQuery) => void
+  onSure?: () => void
+  showFooter?: boolean
+  ref?: any
 }
 
 export const BodyLengthInputNumber: React.FC<BodyLengthInputNumberProps> = React.memo(
-    React.forwardRef((props, ref) => {
-        const {query, setQuery, showFooter} = props
-        // 响应大小
-        const [afterBodyLength, setAfterBodyLength] = useState<number>()
-        const [beforeBodyLength, setBeforeBodyLength] = useState<number>()
-        useEffect(() => {
-            setAfterBodyLength(query?.afterBodyLength)
-            setBeforeBodyLength(query?.beforeBodyLength)
-        }, [query])
-        useImperativeHandle(
-            ref,
-            () => ({
-                getValue: () => {
-                    const objLength = {
-                        afterBodyLength,
-                        beforeBodyLength
-                    }
-                    return objLength
-                }
-            }),
-            [afterBodyLength, beforeBodyLength]
-        )
-        return (
-            <div className={styles["range-input-number"]}>
-                <RangeInputNumberTable
-                    showFooter={showFooter}
-                    minNumber={afterBodyLength}
-                    setMinNumber={setAfterBodyLength}
-                    maxNumber={beforeBodyLength}
-                    setMaxNumber={setBeforeBodyLength}
-                    onReset={() => {
-                        setQuery({
-                            ...query,
-                            afterBodyLength,
-                            beforeBodyLength
-                        })
-                        setBeforeBodyLength(undefined)
-                        setAfterBodyLength(undefined)
-                    }}
-                    onSure={() => {
-                        setQuery({
-                            ...query,
-                            afterBodyLength,
-                            beforeBodyLength
-                        })
-                    }}
-                />
-            </div>
-        )
-    })
+  React.forwardRef((props, ref) => {
+    const { query, setQuery, showFooter } = props
+    // 响应大小
+    const [afterBodyLength, setAfterBodyLength] = useState<number>()
+    const [beforeBodyLength, setBeforeBodyLength] = useState<number>()
+    useEffect(() => {
+      setAfterBodyLength(query?.afterBodyLength)
+      setBeforeBodyLength(query?.beforeBodyLength)
+    }, [query])
+    useImperativeHandle(
+      ref,
+      () => ({
+        getValue: () => {
+          const objLength = {
+            afterBodyLength,
+            beforeBodyLength,
+          }
+          return objLength
+        },
+      }),
+      [afterBodyLength, beforeBodyLength],
+    )
+    return (
+      <div className={styles['range-input-number']}>
+        <RangeInputNumberTable
+          showFooter={showFooter}
+          minNumber={afterBodyLength}
+          setMinNumber={setAfterBodyLength}
+          maxNumber={beforeBodyLength}
+          setMaxNumber={setBeforeBodyLength}
+          onReset={() => {
+            setQuery({
+              ...query,
+              afterBodyLength,
+              beforeBodyLength,
+            })
+            setBeforeBodyLength(undefined)
+            setAfterBodyLength(undefined)
+          }}
+          onSure={() => {
+            setQuery({
+              ...query,
+              afterBodyLength,
+              beforeBodyLength,
+            })
+          }}
+        />
+      </div>
+    )
+  }),
 )
 
 interface DurationMsInputNumberProps {
-    query?: HTTPFuzzerPageTableQuery
-    setQuery: (h: HTTPFuzzerPageTableQuery) => void
-    onSure?: () => void
-    showFooter?: boolean
-    ref?: any
+  query?: HTTPFuzzerPageTableQuery
+  setQuery: (h: HTTPFuzzerPageTableQuery) => void
+  onSure?: () => void
+  showFooter?: boolean
+  ref?: any
 }
 export const DurationMsInputNumber: React.FC<DurationMsInputNumberProps> = React.memo(
-    React.forwardRef((props, ref) => {
-        const {query, setQuery, showFooter} = props
-        // 响应大小
-        const [afterDurationMs, setAfterDurationMs] = useState<number>()
-        const [beforeDurationMs, setBeforeDurationMs] = useState<number>()
-        useEffect(() => {
-            setAfterDurationMs(query?.afterDurationMs)
-            setBeforeDurationMs(query?.beforeDurationMs)
-        }, [query])
-        useImperativeHandle(
-            ref,
-            () => ({
-                getValue: () => {
-                    const objLength = {
-                        afterDurationMs,
-                        beforeDurationMs
-                    }
-                    return objLength
-                }
-            }),
-            [afterDurationMs, beforeDurationMs]
-        )
-        return (
-            <div className={styles["range-input-number"]}>
-                <RangeInputNumberTable
-                    showFooter={showFooter}
-                    minNumber={afterDurationMs}
-                    setMinNumber={setAfterDurationMs}
-                    maxNumber={beforeDurationMs}
-                    setMaxNumber={setBeforeDurationMs}
-                    onReset={() => {
-                        setQuery({
-                            ...query,
-                            afterDurationMs,
-                            beforeDurationMs
-                        })
-                        setBeforeDurationMs(undefined)
-                        setAfterDurationMs(undefined)
-                    }}
-                    onSure={() => {
-                        setQuery({
-                            ...query,
-                            afterDurationMs,
-                            beforeDurationMs
-                        })
-                    }}
-                />
-            </div>
-        )
-    })
+  React.forwardRef((props, ref) => {
+    const { query, setQuery, showFooter } = props
+    // 响应大小
+    const [afterDurationMs, setAfterDurationMs] = useState<number>()
+    const [beforeDurationMs, setBeforeDurationMs] = useState<number>()
+    useEffect(() => {
+      setAfterDurationMs(query?.afterDurationMs)
+      setBeforeDurationMs(query?.beforeDurationMs)
+    }, [query])
+    useImperativeHandle(
+      ref,
+      () => ({
+        getValue: () => {
+          const objLength = {
+            afterDurationMs,
+            beforeDurationMs,
+          }
+          return objLength
+        },
+      }),
+      [afterDurationMs, beforeDurationMs],
+    )
+    return (
+      <div className={styles['range-input-number']}>
+        <RangeInputNumberTable
+          showFooter={showFooter}
+          minNumber={afterDurationMs}
+          setMinNumber={setAfterDurationMs}
+          maxNumber={beforeDurationMs}
+          setMaxNumber={setBeforeDurationMs}
+          onReset={() => {
+            setQuery({
+              ...query,
+              afterDurationMs,
+              beforeDurationMs,
+            })
+            setBeforeDurationMs(undefined)
+            setAfterDurationMs(undefined)
+          }}
+          onSure={() => {
+            setQuery({
+              ...query,
+              afterDurationMs,
+              beforeDurationMs,
+            })
+          }}
+        />
+      </div>
+    )
+  }),
 )

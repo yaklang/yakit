@@ -372,7 +372,7 @@
     "viewBody": "View Body",
     "targetFileNotExist": "Target file no longer exists!",
     "fullResponse": "Full Response",
-    "noEmpty":"No Empty",
+    "noEmpty": "No Empty",
     "includes": "includes",
     "notIncludes": "Not Includes"
   },
@@ -534,7 +534,7 @@
     "template_empty_message": "Template name cannot be empty",
     "template_repeat_message": "Template name already exists",
     "add_template_success": "Add Template Success",
-    "template_list":"Template List"
+    "template_list": "Template List"
   },
   "GlobalHotPatch": {
     "Global_hot_template": "Global Hot-Reload Template",
@@ -691,7 +691,7 @@
     "uploadFile": "Upload File",
     "hostsConfig": "hosts config",
     "dragOrUpload": "Drag file here or",
-    "example":"Sample Template",
+    "example": "Sample Template",
     "fileRequired": "Please select a hosts config file first",
     "unsupportedFileType": "Only the following text file types are supported: {accept}",
     "fileReadFailed": "Failed to read file: {error}",

@@ -214,7 +214,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
   const [inViewport] = useInViewport(configRef)
   const [netInterfaceList, setNetInterfaceList] = useState<SelectOptionProps[]>([]) // 代理代表
   const [proxyDrawerVisible, setProxyDrawerVisible] = useState(false)
-  const { t, i18n } = useI18nNamespaces(["configNetwork", 'mitm', "yakitUi"])
+  const { t, i18n } = useI18nNamespaces(['configNetwork', 'mitm', 'yakitUi'])
   const {
     proxyConfig: { Routes = [], Endpoints = [] },
   } = useProxy()
@@ -258,7 +258,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
       })
       if (Array.isArray(ClientCertificates) && ClientCertificates.length > 0) {
         let newArr = ClientCertificates.map((item, index) => {
-          return { ...item, name: t("ConfigNetworkPage.certificateName", {index: index + 1}) }
+          return { ...item, name: t('ConfigNetworkPage.certificateName', { index: index + 1 }) }
         })
         setCertificateParams(newArr)
         currentIndex.current = ClientCertificates.length
@@ -283,7 +283,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
   const onCertificate = useMemoizedFn((file: any) => {
     if (!['application/x-pkcs12'].includes(file.type)) {
-      warn(t("ConfigNetworkPage.onlySupportPkcs12"))
+      warn(t('ConfigNetworkPage.onlySupportPkcs12'))
       return false
     }
     ipcRenderer
@@ -301,7 +301,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
               setCertificateParams([
                 ...(certificateParams || []),
                 {
-                  name: t("ConfigNetworkPage.certificateName", {index: currentIndex.current}),
+                  name: t('ConfigNetworkPage.certificateName', { index: currentIndex.current }),
                   Pkcs12Bytes: res,
                   Pkcs12Password: new Uint8Array(),
                 },
@@ -311,7 +311,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
               setCertificateParams([
                 ...(certificateParams || []),
                 {
-                  name: t("ConfigNetworkPage.certificateName", {index: currentIndex.current}),
+                  name: t('ConfigNetworkPage.certificateName', { index: currentIndex.current }),
                   Pkcs12Bytes: res,
                   Pkcs12Password: new Uint8Array(),
                   password: true,
@@ -321,7 +321,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
           })
       })
       .catch((e) => {
-        failed(t("ConfigNetworkPage.fetchCertificateContentFailed", {error: String(e)}))
+        failed(t('ConfigNetworkPage.fetchCertificateContentFailed', { error: String(e) }))
       })
     return false
   })
@@ -335,7 +335,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
       .invoke('SetGlobalNetworkConfig', realParams)
       .then(() => {
         cerFormRef.current?.resetFields()
-        yakitInfo(t("ConfigNetworkPage.updateConfigSuccess"))
+        yakitInfo(t('ConfigNetworkPage.updateConfigSuccess'))
         update()
         if (isNtml) setVisible(false)
       })
@@ -373,7 +373,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
       certificateParams.length > 0 &&
       certificateParams.filter((item) => item.password === true).length === certificateParams.length
     ) {
-      warn(t("ConfigNetworkPage.invalidCertificate"))
+      warn(t('ConfigNetworkPage.invalidCertificate'))
       return
     } else {
       const certificate = (certificateParams || []).filter((item) => item.password !== true)
@@ -444,14 +444,14 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
   const handleConfigureHost = (key: number, Host?: string) => {
     hostRef.current = Host || ''
     const m = showYakitModal({
-      title: t("ConfigNetworkPage.inputHostTitle"),
+      title: t('ConfigNetworkPage.inputHostTitle'),
       content: (
         <div style={{ paddingTop: 20 }}>
           <Form labelCol={{ span: 5 }} wrapperCol={{ span: 18 }} size={'small'}>
-            <Form.Item label={t("ConfigNetworkPage.domain")} help={t("ConfigNetworkPage.domainHelp")}>
+            <Form.Item label={t('ConfigNetworkPage.domain')} help={t('ConfigNetworkPage.domainHelp')}>
               <YakitInput
                 defaultValue={hostRef.current}
-                placeholder={t("ConfigNetworkPage.domainPlaceholder")}
+                placeholder={t('ConfigNetworkPage.domainPlaceholder')}
                 allowClear
                 onChange={(e) => {
                   const { value } = e.target
@@ -465,7 +465,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
       onCancel: () => {
         m.destroy()
       },
-      onOkText: t("YakitButton.add"),
+      onOkText: t('YakitButton.add'),
       onOk: () => {
         setCertificateParams((prev) => {
           if (Array.isArray(prev)) {
@@ -497,16 +497,16 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
           <div className={styles['fail-main']}>
             <div className={styles['title']}>{item.name}</div>
             <SolidLockClosedIcon />
-            <div className={styles['content']}>{t("ConfigNetworkPage.undecrypted")}</div>
+            <div className={styles['content']}>{t('ConfigNetworkPage.undecrypted')}</div>
             <YakitButton
               type="outline2"
               onClick={() => {
                 const m = showYakitModal({
-                  title: t("ConfigNetworkPage.passwordUnlock"),
+                  title: t('ConfigNetworkPage.passwordUnlock'),
                   content: (
                     <div style={{ padding: 20 }}>
                       <YakitInput.Password
-                        placeholder={t("ConfigNetworkPage.enterCertificatePassword")}
+                        placeholder={t('ConfigNetworkPage.enterCertificatePassword')}
                         allowClear
                         onChange={(e) => {
                           const { value } = e.target
@@ -539,7 +539,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                           })
                           m.destroy()
                         } else {
-                          failed(t("ConfigNetworkPage.passwordError"))
+                          failed(t('ConfigNetworkPage.passwordError'))
                         }
                       })
                   },
@@ -547,7 +547,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 })
               }}
             >
-              {t("ConfigNetworkPage.passwordUnlock")}
+              {t('ConfigNetworkPage.passwordUnlock')}
             </YakitButton>
           </div>
         </div>
@@ -584,7 +584,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
           <div className={styles['success-main']}>
             <div className={styles['title']}>{item.name}</div>
             <SolidCheckCircleIcon />
-            <div className={styles['content']}>{t("ConfigNetworkPage.available")}</div>
+            <div className={styles['content']}>{t('ConfigNetworkPage.available')}</div>
             <div className={styles['password']}>******</div>
           </div>
         </div>
@@ -725,20 +725,20 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     <>
       <div ref={configRef}>
         <AutoCard style={{ height: 'auto' }}>
-          <AutoSpin spinning={loading} tip={t("ConfigNetworkPage.loading")}>
+          <AutoSpin spinning={loading} tip={t('ConfigNetworkPage.loading')}>
             {params && (
               <Form size={'small'} labelCol={{ span: 5 }} wrapperCol={{ span: 14 }} onSubmitCapture={() => submit()}>
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                  {t("ConfigNetworkPage.dnsConfig")}
+                  {t('ConfigNetworkPage.dnsConfig')}
                 </Divider>
                 <SwitchItem
-                  label={t("ConfigNetworkPage.disableSystemDNS")}
+                  label={t('ConfigNetworkPage.disableSystemDNS')}
                   setValue={(DisableSystemDNS) => setParams({ ...params, DisableSystemDNS })}
                   value={params.DisableSystemDNS}
                   oldTheme={false}
                 />
                 <ManyMultiSelectForString
-                  label={t("ConfigNetworkPage.backupDNS")}
+                  label={t('ConfigNetworkPage.backupDNS')}
                   setValue={(CustomDNSServers) =>
                     setParams({ ...params, CustomDNSServers: CustomDNSServers.split(',') })
                   }
@@ -747,20 +747,20 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   mode={'tags'}
                 />
                 <SwitchItem
-                  label={t("ConfigNetworkPage.enableTCPDNS")}
+                  label={t('ConfigNetworkPage.enableTCPDNS')}
                   setValue={(DNSFallbackTCP) => setParams({ ...params, DNSFallbackTCP })}
                   value={params.DNSFallbackTCP}
                   oldTheme={false}
                 />
                 <SwitchItem
-                  label={t("ConfigNetworkPage.enableDoHAntiPollution")}
+                  label={t('ConfigNetworkPage.enableDoHAntiPollution')}
                   setValue={(DNSFallbackDoH) => setParams({ ...params, DNSFallbackDoH })}
                   value={params.DNSFallbackDoH}
                   oldTheme={false}
                 />
                 {params.DNSFallbackDoH && (
                   <ManyMultiSelectForString
-                    label={t("ConfigNetworkPage.backupDoH")}
+                    label={t('ConfigNetworkPage.backupDoH')}
                     setValue={(data) => setParams({ ...params, CustomDoHServers: data.split(',') })}
                     value={params.CustomDoHServers.join(',')}
                     data={[]}
@@ -768,9 +768,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   />
                 )}
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                  {t("ConfigNetworkPage.tlsClientConfig")}
+                  {t('ConfigNetworkPage.tlsClientConfig')}
                 </Divider>
-                <Form.Item label={t("ConfigNetworkPage.selectFormat")}>
+                <Form.Item label={t('ConfigNetworkPage.selectFormat')}>
                   <YakitRadioButtons
                     size="small"
                     value={format}
@@ -781,18 +781,18 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     options={[
                       {
                         value: 1,
-                        label: t("ConfigNetworkPage.p12Format"),
+                        label: t('ConfigNetworkPage.p12Format'),
                       },
                       {
                         value: 2,
-                        label: t("ConfigNetworkPage.pemFormat"),
+                        label: t('ConfigNetworkPage.pemFormat'),
                       },
                     ]}
                   />
                 </Form.Item>
                 {format === 1 && (
                   <>
-                    <Form.Item label={t("ConfigNetworkPage.addCertificate")}>
+                    <Form.Item label={t('ConfigNetworkPage.addCertificate')}>
                       {/*
                                     PEM: 3 - CERT / KEY / CA-CERT
                                     PKCS12(P12/PFX)(.p12 .pfx): File + Password
@@ -804,7 +804,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         showUploadList={false}
                         beforeUpload={(file) => onCertificate(file)}
                       >
-                        <YakitButton type={'outline2'}>{t("ConfigNetworkPage.addTlsClientCertificate")}</YakitButton>
+                        <YakitButton type={'outline2'}>{t('ConfigNetworkPage.addTlsClientCertificate')}</YakitButton>
                       </Upload>
                     </Form.Item>
                   </>
@@ -822,7 +822,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 <Form.Item colon={false} label={<> </>}>
                   {certificateList}
                 </Form.Item>
-                <Form.Item label={t("ConfigNetworkPage.clientTlsVersionSupport")}>
+                <Form.Item label={t('ConfigNetworkPage.clientTlsVersionSupport')}>
                   <Slider
                     style={{ width: '33%' }}
                     range
@@ -855,9 +855,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                 </Form.Item>
 
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                  {t("ConfigNetworkPage.thirdPartyAppConfig")}
+                  {t('ConfigNetworkPage.thirdPartyAppConfig')}
                 </Divider>
-                <Form.Item label={t("ConfigNetworkPage.thirdPartyApp")}>
+                <Form.Item label={t('ConfigNetworkPage.thirdPartyApp')}>
                   {(params.AppConfigs || []).map((i, index) => {
                     const extraParamsArr = i.ExtraParams || []
                     const extraParams = {}
@@ -869,7 +869,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         key={index}
                         onClick={() => {
                           let m = showYakitModal({
-                            title: t("ConfigNetworkPage.editThirdPartyApp"),
+                            title: t('ConfigNetworkPage.editThirdPartyApp'),
                             width: 600,
                             closable: true,
                             maskClosable: false,
@@ -920,7 +920,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     type={'outline1'}
                     onClick={() => {
                       let m = showYakitModal({
-                        title: t("ConfigNetworkPage.addThirdPartyApp"),
+                        title: t('ConfigNetworkPage.addThirdPartyApp'),
                         width: 600,
                         footer: null,
                         closable: true,
@@ -937,7 +937,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 data,
                               )
                               if (!newValue) {
-                                yakitNotify('error', t("ConfigNetworkPage.paramError"))
+                                yakitNotify('error', t('ConfigNetworkPage.paramError'))
                                 return
                               }
                               setParams((perv) => ({ ...perv, ...newValue })) // submit后会拿最新得全局配置
@@ -950,7 +950,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                       })
                     }}
                   >
-                    {t("ConfigNetworkPage.addThirdPartyApp")}
+                    {t('ConfigNetworkPage.addThirdPartyApp')}
                   </YakitButton>
                 </Form.Item>
                 {/* <Form.Item label={"AI使用优先级"}>
@@ -983,24 +983,30 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                                 </Form.Item> */}
                 <AIModelGlobalConfig />
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                  {t("ConfigNetworkPage.customCodeSnippet")}
+                  {t('ConfigNetworkPage.customCodeSnippet')}
                   <div className={styles['form-rule-code-customize-describe']}>
-                    {t("ConfigNetworkPage.customCodeSnippetDesc")}
+                    {t('ConfigNetworkPage.customCodeSnippetDesc')}
                   </div>
                 </Divider>
 
-                <Form.Item label={t("ConfigNetworkPage.codeSnippet")} name="code-customize" className={styles['form-rule-code-customize-item']}>
+                <Form.Item
+                  label={t('ConfigNetworkPage.codeSnippet')}
+                  name="code-customize"
+                  className={styles['form-rule-code-customize-item']}
+                >
                   <CodeCustomize />
                 </Form.Item>
 
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                  {t("ConfigNetworkPage.otherConfig")}
+                  {t('ConfigNetworkPage.otherConfig')}
                 </Divider>
-                <Form.Item label={t("ConfigNetworkPage.httpAuthGlobalConfig")}>
+                <Form.Item label={t('ConfigNetworkPage.httpAuthGlobalConfig')}>
                   <div className={styles['form-rule-body']}>
                     <div className={styles['form-rule']} onClick={() => setVisible(true)}>
                       <div className={styles['form-rule-text']}>
-                        {t("ConfigNetworkPage.existingAuthConfig", {count: params.AuthInfos.filter((item) => !item.Forbidden).length})}
+                        {t('ConfigNetworkPage.existingAuthConfig', {
+                          count: params.AuthInfos.filter((item) => !item.Forbidden).length,
+                        })}
                       </div>
                       <div className={styles['form-rule-icon']}>
                         <CogIcon />
@@ -1009,7 +1015,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   </div>
                 </Form.Item>
 
-                <Form.Item label={t("ConfigNetworkPage.disableIP")} tooltip={t("ConfigNetworkPage.disableIPTip", {soft: getReleaseEditionName()})}>
+                <Form.Item
+                  label={t('ConfigNetworkPage.disableIP')}
+                  tooltip={t('ConfigNetworkPage.disableIPTip', { soft: getReleaseEditionName() })}
+                >
                   <YakitSelect
                     mode="tags"
                     value={params.DisallowIPAddress}
@@ -1018,7 +1027,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     }}
                   ></YakitSelect>
                 </Form.Item>
-                <Form.Item label={t("ConfigNetworkPage.disableDomain")} tooltip={t("ConfigNetworkPage.disableDomainTip", {soft: getReleaseEditionName()})}>
+                <Form.Item
+                  label={t('ConfigNetworkPage.disableDomain')}
+                  tooltip={t('ConfigNetworkPage.disableDomainTip', { soft: getReleaseEditionName() })}
+                >
                   <YakitSelect
                     mode="tags"
                     value={params.DisallowDomain}
@@ -1028,8 +1040,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   ></YakitSelect>
                 </Form.Item>
                 <Form.Item
-                  label={t("ConfigNetworkPage.pluginScanWhitelist")}
-                  tooltip={t("ConfigNetworkPage.pluginScanWhitelistTip")}
+                  label={t('ConfigNetworkPage.pluginScanWhitelist')}
+                  tooltip={t('ConfigNetworkPage.pluginScanWhitelistTip')}
                 >
                   <YakitSelect
                     mode="tags"
@@ -1040,8 +1052,8 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   ></YakitSelect>
                 </Form.Item>
                 <Form.Item
-                  label={t("ConfigNetworkPage.pluginScanBlacklist")}
-                  tooltip={t("ConfigNetworkPage.pluginScanBlacklistTip")}
+                  label={t('ConfigNetworkPage.pluginScanBlacklist')}
+                  tooltip={t('ConfigNetworkPage.pluginScanBlacklistTip')}
                 >
                   <YakitSelect
                     mode="tags"
@@ -1051,7 +1063,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     }}
                   ></YakitSelect>
                 </Form.Item>
-                <Form.Item label={t("ConfigNetworkPage.globalProxy")}>
+                <Form.Item label={t('ConfigNetworkPage.globalProxy')}>
                   <YakitInput
                     allowClear
                     size="small"
@@ -1062,7 +1074,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     }}
                   />
                 </Form.Item>
-                <Form.Item label={t("ConfigNetworkPage.pluginExecTimeout")}>
+                <Form.Item label={t('ConfigNetworkPage.pluginExecTimeout')}>
                   <YakitInputNumber
                     size="small"
                     value={params.CallPluginTimeout}
@@ -1072,10 +1084,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     min={1}
                   />
                 </Form.Item>
-                <Form.Item label={t("ConfigNetworkPage.noConfigLaunchPath")}>
+                <Form.Item label={t('ConfigNetworkPage.noConfigLaunchPath')}>
                   <YakitInput
                     value={chromePath}
-                    placeholder={t("ConfigNetworkPage.selectLaunchPath")}
+                    placeholder={t('ConfigNetworkPage.selectLaunchPath')}
                     size="small"
                     onChange={(e) => setChromePath(e.target.value)}
                   />
@@ -1093,13 +1105,10 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                       return false
                     }}
                   >
-                    <div className={styles['config-select-path']}>{t("ConfigNetworkPage.selectPath")}</div>
+                    <div className={styles['config-select-path']}>{t('ConfigNetworkPage.selectPath')}</div>
                   </Upload>
                 </Form.Item>
-                <Form.Item
-                  label={t("ConfigNetworkPage.systemProxy")}
-                  tooltip={t("ConfigNetworkPage.systemProxyTip")}
-                >
+                <Form.Item label={t('ConfigNetworkPage.systemProxy')} tooltip={t('ConfigNetworkPage.systemProxyTip')}>
                   <YakitSwitch
                     checked={params.EnableSystemProxyFromEnv}
                     onChange={(EnableSystemProxyFromEnv) => setParams({ ...params, EnableSystemProxyFromEnv })}
@@ -1123,21 +1132,24 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   visible={proxyDrawerVisible}
                   onClose={() => setProxyDrawerVisible(false)}
                 />
-                <Form.Item label={t("ConfigNetworkPage.saveHTTPFlow")} tooltip={t("ConfigNetworkPage.saveHTTPFlowTip")}>
+                <Form.Item label={t('ConfigNetworkPage.saveHTTPFlow')} tooltip={t('ConfigNetworkPage.saveHTTPFlowTip')}>
                   <YakitSwitch
                     checked={!params.SkipSaveHTTPFlow}
                     onChange={(val) => setParams({ ...params, SkipSaveHTTPFlow: !val })}
                   />
                 </Form.Item>
-                <Form.Item label={t("ConfigNetworkPage.dbSyncStorage")} tooltip={t("ConfigNetworkPage.dbSyncStorageTip")}>
+                <Form.Item
+                  label={t('ConfigNetworkPage.dbSyncStorage')}
+                  tooltip={t('ConfigNetworkPage.dbSyncStorageTip')}
+                >
                   <YakitSwitch
                     checked={params.DbSaveSync}
                     onChange={(val) => setParams({ ...params, DbSaveSync: val })}
                   />
                 </Form.Item>
                 <Form.Item
-                  label={t("ConfigNetworkPage.dumpPacketSize")}
-                  tooltip={t("ConfigNetworkPage.dumpPacketSizeTip")}
+                  label={t('ConfigNetworkPage.dumpPacketSize')}
+                  tooltip={t('ConfigNetworkPage.dumpPacketSizeTip')}
                   labelCol={{ span: 5 }}
                   wrapperCol={{ span: 2 }}
                 >
@@ -1173,15 +1185,19 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   />
                 </Form.Item>
                 <Form.Item
-                  label={t("ConfigNetworkPage.autoPerformanceSampling")}
-                  tooltip={t("ConfigNetworkPage.autoPerformanceSamplingTip")}
+                  label={t('ConfigNetworkPage.autoPerformanceSampling')}
+                  tooltip={t('ConfigNetworkPage.autoPerformanceSamplingTip')}
                 >
                   <YakitSwitch
                     checked={pprofFileAutoAnalyze}
                     onChange={(pprofFileAutoAnalyze) => setPprofFileAutoAnalyze(pprofFileAutoAnalyze)}
                   />
                 </Form.Item>
-                <Form.Item label={t("ConfigNetworkPage.secondaryTabsNum")} labelCol={{ span: 5 }} wrapperCol={{ span: 2 }}>
+                <Form.Item
+                  label={t('ConfigNetworkPage.secondaryTabsNum')}
+                  labelCol={{ span: 5 }}
+                  wrapperCol={{ span: 2 }}
+                >
                   <YakitInput
                     size="small"
                     value={secondaryTabsNum}
@@ -1208,7 +1224,11 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     }}
                   />
                 </Form.Item>
-                <Form.Item label={t("ConfigNetworkPage.pluginLogCount")} labelCol={{ span: 5 }} wrapperCol={{ span: 2 }}>
+                <Form.Item
+                  label={t('ConfigNetworkPage.pluginLogCount')}
+                  labelCol={{ span: 5 }}
+                  wrapperCol={{ span: 2 }}
+                >
                   <YakitInput
                     size="small"
                     value={limitLogNum}
@@ -1224,13 +1244,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   />
                 </Form.Item>
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                  {t("ConfigNetworkPage.synScanNicConfig")}
+                  {t('ConfigNetworkPage.synScanNicConfig')}
                 </Divider>
-                <Form.Item label={t("ConfigNetworkPage.nic")} tooltip={t("ConfigNetworkPage.nicTip")}>
+                <Form.Item label={t('ConfigNetworkPage.nic')} tooltip={t('ConfigNetworkPage.nicTip')}>
                   <YakitSelect
                     // showSearch
                     options={netInterfaceList}
-                    placeholder={t("YakitSelect.pleaseSelect")}
+                    placeholder={t('YakitSelect.pleaseSelect')}
                     size="small"
                     value={params.SynScanNetInterface}
                     onChange={(netInterface) => {
@@ -1240,21 +1260,21 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                   />
                 </Form.Item>
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-                  {t("ConfigNetworkPage.privacyConfig")}
+                  {t('ConfigNetworkPage.privacyConfig')}
                 </Divider>
                 <Form.Item
-                  label={t("ConfigNetworkPage.deletePrivatePluginsOnLogout")}
-                  tooltip={t("ConfigNetworkPage.deletePrivatePluginsOnLogoutTip")}
+                  label={t('ConfigNetworkPage.deletePrivatePluginsOnLogout')}
+                  tooltip={t('ConfigNetworkPage.deletePrivatePluginsOnLogoutTip')}
                 >
                   <YakitSwitch checked={isDelPrivatePlugin} onChange={setIsDelPrivatePlugin} />
                 </Form.Item>
                 <Form.Item colon={false} label={' '}>
                   <Space>
                     <YakitButton type="primary" htmlType="submit">
-                      {t("ConfigNetworkPage.updateGlobalConfig")}
+                      {t('ConfigNetworkPage.updateGlobalConfig')}
                     </YakitButton>
                     <YakitPopconfirm
-                      title={t("ConfigNetworkPage.confirmResetConfig")}
+                      title={t('ConfigNetworkPage.confirmResetConfig')}
                       onConfirm={() => {
                         onResetDelPrivatePlugin()
                         onResetChromePath()
@@ -1264,12 +1284,12 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         ipcRenderer.invoke('ResetGlobalNetworkConfig', {}).then(() => {
                           cerFormRef.current?.resetFields()
                           update()
-                          yakitInfo(t("ConfigNetworkPage.resetConfigSuccess"))
+                          yakitInfo(t('ConfigNetworkPage.resetConfigSuccess'))
                         })
                       }}
                       placement="top"
                     >
-                      <YakitButton type="outline1"> {t("ConfigNetworkPage.resetConfig")} </YakitButton>
+                      <YakitButton type="outline1"> {t('ConfigNetworkPage.resetConfig')} </YakitButton>
                     </YakitPopconfirm>
                   </Space>
                 </Form.Item>
@@ -1299,7 +1319,7 @@ interface AIModelGlobalConfigProps {
  */
 const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((props) => {
   const { mountContainer } = props
-  const { t } = useI18nNamespaces(['aiAgent', "yakitUi"])
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
 
@@ -1366,17 +1386,17 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
   return (
     <div ref={refRef} className={styles['ai-model-global-config-wrapper']}>
       <Divider orientation={'left'} style={{ marginTop: '0px' }}>
-        {t("AIModelGlobalConfig.aiModelConfig")}
+        {t('AIModelGlobalConfig.aiModelConfig')}
       </Divider>
-      <Form.Item label={t("AIModelGlobalConfig.aiModel")}>
+      <Form.Item label={t('AIModelGlobalConfig.aiModel')}>
         <div className={styles['ai-model-list-wrapper']}>
           <div className={styles['ai-model-list-header']}>
             <YakitButton type="primary" onClick={onAdd}>
-              {t("YakitButton.add")}
+              {t('YakitButton.add')}
             </YakitButton>
           </div>
           <YakitCollapse defaultActiveKey={['高质模型', '轻量模型', '视觉模式']}>
-            <YakitCollapse.YakitPanel key="高质模型" header={t("AIModelGlobalConfig.highQualityModel")}>
+            <YakitCollapse.YakitPanel key="高质模型" header={t('AIModelGlobalConfig.highQualityModel')}>
               {!!aiGlobalConfig?.IntelligentModels.length && (
                 <AIOnlineModel
                   list={aiGlobalConfig?.IntelligentModels || []}
@@ -1403,7 +1423,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
               )}
             </YakitCollapse.YakitPanel>
             {!!aiGlobalConfig?.LightweightModels.length && (
-              <YakitCollapse.YakitPanel key="轻量模型" header={t("AIModelGlobalConfig.lightweightModel")}>
+              <YakitCollapse.YakitPanel key="轻量模型" header={t('AIModelGlobalConfig.lightweightModel')}>
                 <AIOnlineModel
                   list={aiGlobalConfig?.LightweightModels || []}
                   onEdit={(index) =>
@@ -1429,7 +1449,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
               </YakitCollapse.YakitPanel>
             )}
             {!!aiGlobalConfig?.VisionModels?.length && (
-              <YakitCollapse.YakitPanel key="视觉模式" header={t("AIModelGlobalConfig.visionModel")}>
+              <YakitCollapse.YakitPanel key="视觉模式" header={t('AIModelGlobalConfig.visionModel')}>
                 <AIOnlineModel
                   list={aiGlobalConfig?.VisionModels || []}
                   onEdit={(index) =>
@@ -1457,7 +1477,10 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
           </YakitCollapse>
         </div>
       </Form.Item>
-      <Form.Item label={t("AIModelGlobalConfig.routingMode")} extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</>}>
+      <Form.Item
+        label={t('AIModelGlobalConfig.routingMode')}
+        extra={<>{getTipByType(aiGlobalConfig.RoutingPolicy, t)}</>}
+      >
         <YakitRadioButtons
           buttonStyle="solid"
           options={AIModelPolicyOptions}
@@ -1465,7 +1488,7 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
           onChange={(v) => event.setAIGlobalConfig({ RoutingPolicy: v.target.value })}
         />
       </Form.Item>
-      <Form.Item valuePropName="checked" label={t("AIModelGlobalConfig.disableFallback")}>
+      <Form.Item valuePropName="checked" label={t('AIModelGlobalConfig.disableFallback')}>
         <YakitSwitch
           size="middle"
           checked={aiGlobalConfig.DisableFallback}
@@ -1492,7 +1515,7 @@ interface DataProps extends AuthInfo {
 
 export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
   const { visible, setVisible, getContainer, params, setParams, onNtmlSave } = props
-  const {t, i18n} = useI18nNamespaces(["configNetwork", "yakitUi"])
+  const { t, i18n } = useI18nNamespaces(['configNetwork', 'yakitUi'])
   const [data, setData] = useState<DataProps[]>([])
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
@@ -1526,11 +1549,11 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
   const onClose = useMemoizedFn(() => {
     if (JSON.stringify(initData.current) !== JSON.stringify(data)) {
       Modal.confirm({
-        title: t("YakitModal.friendlyReminder"),
+        title: t('YakitModal.friendlyReminder'),
         icon: <ExclamationCircleOutlined />,
-        content: t("ConfigNetworkPage.saveHttpAuthAndClose"),
-        okText: t("YakitButton.save"),
-        cancelText: t("YakitButton.doNotSave"),
+        content: t('ConfigNetworkPage.saveHttpAuthAndClose'),
+        okText: t('YakitButton.save'),
+        cancelText: t('YakitButton.doNotSave'),
         closable: true,
         closeIcon: (
           <div
@@ -1599,7 +1622,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
   const columns: ColumnsTypeProps[] = useMemo<ColumnsTypeProps[]>(() => {
     return [
       {
-        title: t("ConfigNetworkPage.executionOrder"),
+        title: t('ConfigNetworkPage.executionOrder'),
         dataKey: 'Index',
         fixed: 'left',
         width: 130,
@@ -1611,23 +1634,23 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         width: 150,
       },
       {
-        title: t("ConfigNetworkPage.username"),
+        title: t('ConfigNetworkPage.username'),
         dataKey: 'AuthUsername',
         width: 150,
       },
       {
-        title: t("ConfigNetworkPage.password"),
+        title: t('ConfigNetworkPage.password'),
         dataKey: 'AuthPassword',
         width: 150,
         render: () => <>***</>,
       },
       {
-        title: t("ConfigNetworkPage.authType"),
+        title: t('ConfigNetworkPage.authType'),
         dataKey: 'AuthType',
         // minWidth: 120
       },
       {
-        title: t("YakitTable.action"),
+        title: t('YakitTable.action'),
         dataKey: 'action',
         fixed: 'right',
         width: 128,
@@ -1693,9 +1716,9 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         return item
       })
       setData(newData)
-      success(t("YakitNotification.editSuccess"))
+      success(t('YakitNotification.editSuccess'))
     } else {
-      success(t("YakitNotification.addSuccess"))
+      success(t('YakitNotification.addSuccess'))
       setData([v, ...data])
     }
     setModalStatus(false)
@@ -1717,19 +1740,19 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
         title={
           <div className={styles['heard-title']}>
-            <div className={styles['title']}>{t("ConfigNetworkPage.httpAuthGlobalConfig")}</div>
+            <div className={styles['title']}>{t('ConfigNetworkPage.httpAuthGlobalConfig')}</div>
             <div className={styles['table-total']}>
-              {t("ConfigNetworkPage.authConfigTotal", { count: params.AuthInfos.length })}
+              {t('ConfigNetworkPage.authConfigTotal', { count: params.AuthInfos.length })}
             </div>
           </div>
         }
         extra={
           <div className={styles['heard-right-operation']}>
             <YakitButton type="primary" className={styles['button-create']} onClick={() => onCreateAuthInfo()}>
-              {t("YakitButton.add_new")}
+              {t('YakitButton.add_new')}
             </YakitButton>
             <YakitButton type="primary" className={styles['button-save']} onClick={() => onOk()}>
-              {t("YakitButton.save")}
+              {t('YakitButton.save')}
             </YakitButton>
             <div onClick={() => onClose()} className={styles['icon-remove']}>
               <RemoveIcon />
@@ -1794,7 +1817,7 @@ interface NTMLConfigModalProps {
 
 export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
   const { onClose, modalStatus, onSubmit, isEdit, currentItem } = props
-  const {t} = useI18nNamespaces(["configNetwork", "yakitUi"])
+  const { t } = useI18nNamespaces(['configNetwork', 'yakitUi'])
   const [form] = Form.useForm()
 
   useEffect(() => {
@@ -1840,7 +1863,7 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
         if (ipv4RegexWithPort.test(value) || domainRegex.test(value) || cidrRegexWithPort.test(value)) {
           return Promise.resolve()
         } else {
-          return Promise.reject(t("ConfigNetworkPage.invalidHost"))
+          return Promise.reject(t('ConfigNetworkPage.invalidHost'))
         }
       },
     },
@@ -1848,7 +1871,7 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
   return (
     <YakitModal
       maskClosable={false}
-      title={isEdit ? t("YakitButton.edit") : t("YakitButton.add_new")}
+      title={isEdit ? t('YakitButton.edit') : t('YakitButton.add_new')}
       visible={modalStatus}
       onCancel={() => onClose()}
       closable
@@ -1858,17 +1881,33 @@ export const NTMLConfigModal: React.FC<NTMLConfigModalProps> = (props) => {
       bodyStyle={{ padding: '24px 16px' }}
     >
       <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} className={styles['modal-from']}>
-        <Form.Item label="Host" name="Host" rules={[{ required: true, message: t("YakitForm.requiredField") }, ...judgeUrl()]}>
-          <YakitInput placeholder={t("YakitInput.please_enter")} />
+        <Form.Item
+          label="Host"
+          name="Host"
+          rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgeUrl()]}
+        >
+          <YakitInput placeholder={t('YakitInput.please_enter')} />
         </Form.Item>
-        <Form.Item label={t("ConfigNetworkPage.username")} name="AuthUsername" rules={[{ required: true, message: t("YakitForm.requiredField") }]}>
-          <YakitInput placeholder={t("YakitInput.please_enter")} />
+        <Form.Item
+          label={t('ConfigNetworkPage.username')}
+          name="AuthUsername"
+          rules={[{ required: true, message: t('YakitForm.requiredField') }]}
+        >
+          <YakitInput placeholder={t('YakitInput.please_enter')} />
         </Form.Item>
-        <Form.Item label={t("ConfigNetworkPage.password")} name="AuthPassword" rules={[{ required: true, message: t("YakitForm.requiredField") }]}>
-          <YakitInput placeholder={t("YakitInput.please_enter")} />
+        <Form.Item
+          label={t('ConfigNetworkPage.password')}
+          name="AuthPassword"
+          rules={[{ required: true, message: t('YakitForm.requiredField') }]}
+        >
+          <YakitInput placeholder={t('YakitInput.please_enter')} />
         </Form.Item>
-        <Form.Item label={t("ConfigNetworkPage.authType")} name="AuthType" rules={[{ required: true, message: t("YakitForm.requiredField") }]}>
-          <YakitSelect placeholder={t("YakitSelect.pleaseSelect")}>
+        <Form.Item
+          label={t('ConfigNetworkPage.authType')}
+          name="AuthType"
+          rules={[{ required: true, message: t('YakitForm.requiredField') }]}
+        >
+          <YakitSelect placeholder={t('YakitSelect.pleaseSelect')}>
             <YakitSelect value="ntlm">ntlm</YakitSelect>
             <YakitSelect value="any">any</YakitSelect>
             <YakitSelect value="basic">basic</YakitSelect>
@@ -1912,7 +1951,7 @@ const getItemStyle = (isDragging, draggableStyle) => {
 
 export const AISortContent: React.FC<AISortContentProps> = (props) => {
   const { onUpdate, AiApiPriority, appConfigs } = props
-  const {t} = useI18nNamespaces(["configNetwork"])
+  const { t } = useI18nNamespaces(['configNetwork'])
   const [sortData, setSortData] = useState<GlobalNetworkConfig['AppConfigs']>([])
 
   useEffect(() => {
@@ -1933,7 +1972,7 @@ export const AISortContent: React.FC<AISortContentProps> = (props) => {
 
   return (
     <div className={styles['ai-sort-content']}>
-      <div className={styles['ai-sort-describe']}>{t("ConfigNetworkPage.priorityTopDown")}</div>
+      <div className={styles['ai-sort-describe']}>{t('ConfigNetworkPage.priorityTopDown')}</div>
       <div className={styles['menu-list']}>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="droppable-payload" direction="vertical">
