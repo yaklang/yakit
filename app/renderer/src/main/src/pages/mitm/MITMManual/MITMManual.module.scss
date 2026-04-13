@@ -1,70 +1,70 @@
 .context-menu-keybind-wrapper {
-    width: 100%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  .content-style {
     height: 100%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 12px;
-
-    .content-style {
-        height: 100%;
-        display: flex;
-        align-items: center;
-    }
-    .keybind-style {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        color: var(--Colors-Use-Neutral-Disable);
-        font-size: 12px;
-    }
-}
-.mitm-v2-manual-editor-title {
+  }
+  .keybind-style {
+    height: 100%;
     display: flex;
     align-items: center;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    overflow: hidden;
+    color: var(--Colors-Use-Neutral-Disable);
+    font-size: 12px;
+  }
+}
+.mitm-v2-manual-editor-title {
+  display: flex;
+  align-items: center;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  overflow: hidden;
 }
 
 .mitm-v2-manual-editor-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .mitm-v2-manual-table-status {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    svg {
-        height: 14px;
-        width: 14px;
-    }
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  svg {
+    height: 14px;
+    width: 14px;
+  }
 }
 
 // icon 图标转圈动画
 .icon-rotate-animation {
-    animation: rotate 1s linear infinite;
+  animation: rotate 1s linear infinite;
 }
 @keyframes rotate {
-    0% {
-        -webkit-transform: rotate(0deg);
-    }
-    25% {
-        -webkit-transform: rotate(90deg);
-    }
-    50% {
-        -webkit-transform: rotate(180deg);
-    }
-    75% {
-        -webkit-transform: rotate(270deg);
-    }
-    100% {
-        -webkit-transform: rotate(360deg);
-    }
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  25% {
+    -webkit-transform: rotate(90deg);
+  }
+  50% {
+    -webkit-transform: rotate(180deg);
+  }
+  75% {
+    -webkit-transform: rotate(270deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
 }
 
 .mitm-v2-manual-table-wrapper {
-    height: 100%;
-    width: 100%;
+  height: 100%;
+  width: 100%;
 }

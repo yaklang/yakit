@@ -77,7 +77,7 @@
     border: 1px solid var(--Colors-Use-Neutral-Border);
 
     :global {
-      .ant-descriptions-bordered .ant-descriptions-view>table {
+      .ant-descriptions-bordered .ant-descriptions-view > table {
         table-layout: fixed;
       }
     }

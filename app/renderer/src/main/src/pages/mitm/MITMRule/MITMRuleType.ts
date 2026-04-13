@@ -1,143 +1,143 @@
-import {YakitInputProps} from "@/components/yakitUI/YakitInput/YakitInputType"
-import {ForwardedRef, ReactNode} from "react"
-import {HTTPCookieSetting, HTTPHeader} from "../MITMContentReplacerHeaderOperator"
-import {MitmStatus} from "../MITMPage"
+import { YakitInputProps } from '@/components/yakitUI/YakitInput/YakitInputType'
+import { ForwardedRef, ReactNode } from 'react'
+import { HTTPCookieSetting, HTTPHeader } from '../MITMContentReplacerHeaderOperator'
+import { MitmStatus } from '../MITMPage'
 
 export interface MITMContentReplacerRule {
-    // 文本字符串，正则/Re2/字符串硬匹配
-    Id: number
-    Index: number
-    Rule: string
-    ExcludeSuffix?: string[]
-    RegexpGroups: number[]
-    /** @description 捕获组输出模板，支持 $1、\1、{1} */
-    RegexpResultTemplate?: string
-    NoReplace: boolean
-    Result: string
-    EffectiveURL: string
-    Color: "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan" | ""
-    EnableForRequest: boolean
-    EnableForResponse: boolean
-    EnableForBody: boolean
-    EnableForHeader: boolean
-    EnableForURI: boolean
-    ExtraRepeat: boolean
-    Drop: boolean
-    ExtraTag: string[]
-    Disabled: boolean
-    VerboseName: string
+  // 文本字符串，正则/Re2/字符串硬匹配
+  Id: number
+  Index: number
+  Rule: string
+  ExcludeSuffix?: string[]
+  RegexpGroups: number[]
+  /** @description 捕获组输出模板，支持 $1、\1、{1} */
+  RegexpResultTemplate?: string
+  NoReplace: boolean
+  Result: string
+  EffectiveURL: string
+  Color: 'red' | 'blue' | 'green' | 'grey' | 'purple' | 'yellow' | 'orange' | 'cyan' | ''
+  EnableForRequest: boolean
+  EnableForResponse: boolean
+  EnableForBody: boolean
+  EnableForHeader: boolean
+  EnableForURI: boolean
+  ExtraRepeat: boolean
+  Drop: boolean
+  ExtraTag: string[]
+  Disabled: boolean
+  VerboseName: string
 
-    // 设置额外Header
-    ExtraHeaders: HTTPHeader[]
-    ExtraCookies: HTTPCookieSetting[]
+  // 设置额外Header
+  ExtraHeaders: HTTPHeader[]
+  ExtraCookies: HTTPCookieSetting[]
 }
 export interface MITMRulePropRef {
-    onSaveToDataBase: (saveOk?: () => void) => void
+  onSaveToDataBase: (saveOk?: () => void) => void
 }
 export interface MITMRuleProp {
-    ref?: ForwardedRef<MITMRulePropRef>
-    ruleUse?: "mitm" | "historyAnalysis"
-    status: MitmStatus
-    visible: boolean
-    setVisible?: (b: boolean) => void
-    getContainer?: HTMLElement | (() => HTMLElement) | false
-    excludeColumnsKey?: string
-    excludeBatchMenuKey?: string
-    onSetRules?: (r: MITMContentReplacerRule[]) => void
-    onRefreshCom?: () => void
-    inMouseEnterTable?: boolean
+  ref?: ForwardedRef<MITMRulePropRef>
+  ruleUse?: 'mitm' | 'historyAnalysis'
+  status: MitmStatus
+  visible: boolean
+  setVisible?: (b: boolean) => void
+  getContainer?: HTMLElement | (() => HTMLElement) | false
+  excludeColumnsKey?: string
+  excludeBatchMenuKey?: string
+  onSetRules?: (r: MITMContentReplacerRule[]) => void
+  onRefreshCom?: () => void
+  inMouseEnterTable?: boolean
 }
 
 export interface ButtonTextProps {
-    onClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
-    label: string
-    icon?: ReactNode
+  onClick?: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
+  label: string
+  icon?: ReactNode
 }
 
 export interface MITMRuleFromModalProps {
-    ruleUse: "mitm" | "historyAnalysis"
-    defaultIndex?: number
-    isEdit: boolean
-    modalVisible: boolean
-    onClose: () => void
-    onSave: (m: MITMContentReplacerRule) => void
-    currentItem?: MITMContentReplacerRule
-    rules: MITMContentReplacerRule[]
+  ruleUse: 'mitm' | 'historyAnalysis'
+  defaultIndex?: number
+  isEdit: boolean
+  modalVisible: boolean
+  onClose: () => void
+  onSave: (m: MITMContentReplacerRule) => void
+  currentItem?: MITMContentReplacerRule
+  rules: MITMContentReplacerRule[]
 }
 
 export interface ExtractRegularProps {
-    onSave: (s: string) => void
-    /**@name 提取规则的默认code */
-    defaultCode?: string
+  onSave: (s: string) => void
+  /**@name 提取规则的默认code */
+  defaultCode?: string
 }
 
 export interface ExtraHTTPSelectProps {
-    list: HTTPHeader[]
-    tip: string
-    onSave: (h: HTTPHeader | HTTPCookieSetting, updateIndex?: number) => any
-    onRemove: (h: number) => any
+  list: HTTPHeader[]
+  tip: string
+  onSave: (h: HTTPHeader | HTTPCookieSetting, updateIndex?: number) => any
+  onRemove: (h: number) => any
 }
 
 export interface InputHTTPHeaderFormProps {
-    visible: boolean
-    setVisible: (b: boolean) => void
-    onSave: (h: HTTPHeader, updateIndex?: number) => any
-    updateIndex?: number
-    initFormVal?: HTTPHeader
+  visible: boolean
+  setVisible: (b: boolean) => void
+  onSave: (h: HTTPHeader, updateIndex?: number) => any
+  updateIndex?: number
+  initFormVal?: HTTPHeader
 }
 export interface InputHTTPCookieFormProps {
-    visible: boolean
-    setVisible: (b: boolean) => void
-    onSave: (h: HTTPCookieSetting, updateIndex?: number) => any
-    updateIndex?: number
-    initFormVal?: HTTPCookieSetting
+  visible: boolean
+  setVisible: (b: boolean) => void
+  onSave: (h: HTTPCookieSetting, updateIndex?: number) => any
+  updateIndex?: number
+  initFormVal?: HTTPCookieSetting
 }
 
 export interface YakitSelectMemoProps {
-    value: "" | "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan"
-    disabled: boolean
-    onSelect: (c: "" | "red" | "blue" | "green" | "grey" | "purple" | "yellow" | "orange" | "cyan") => void
+  value: '' | 'red' | 'blue' | 'green' | 'grey' | 'purple' | 'yellow' | 'orange' | 'cyan'
+  disabled: boolean
+  onSelect: (c: '' | 'red' | 'blue' | 'green' | 'grey' | 'purple' | 'yellow' | 'orange' | 'cyan') => void
 }
 
 export interface YakitCheckboxProps {
-    checked: boolean
-    disabled: boolean
-    onChange: (e) => void
+  checked: boolean
+  disabled: boolean
+  onChange: (e) => void
 }
 export interface YakitSwitchMemoProps {
-    checked: boolean
-    disabled: boolean
-    onChange: (e) => void
-    Result: string
-    ExtraHeaders: HTTPHeader[]
-    ExtraCookies: HTTPCookieSetting[]
+  checked: boolean
+  disabled: boolean
+  onChange: (e) => void
+  Result: string
+  ExtraHeaders: HTTPHeader[]
+  ExtraCookies: HTTPCookieSetting[]
 }
 
 export interface CloseTipModalProps {
-    visible: boolean
-    onOK: (b: boolean) => void
-    onCancel: (b: boolean) => void
+  visible: boolean
+  onOK: (b: boolean) => void
+  onCancel: (b: boolean) => void
 }
 
 export interface RuleContentProps {
-    ref?: any
-    /**@name 提取规则的默认code */
-    defaultCode?: string
-    getRule: (s: string) => void
-    inputProps?: YakitInputProps
-    /**@name  不要传复杂的节点,最好只传一个icon,目前正则Modal触发条件只有:icon和组件默认的共两种情况 */
-    children?: ReactNode
+  ref?: any
+  /**@name 提取规则的默认code */
+  defaultCode?: string
+  getRule: (s: string) => void
+  inputProps?: YakitInputProps
+  /**@name  不要传复杂的节点,最好只传一个icon,目前正则Modal触发条件只有:icon和组件默认的共两种情况 */
+  children?: ReactNode
 }
 
 export interface RuleExportAndImportButtonProps {
-    onOkImport?: () => void
-    onBeforeNode?: ReactNode
-    ref?: any
-    isUseDefRules?: boolean
-    setIsUseDefRules?: (b: boolean) => void
+  onOkImport?: () => void
+  onBeforeNode?: ReactNode
+  ref?: any
+  isUseDefRules?: boolean
+  setIsUseDefRules?: (b: boolean) => void
 }
 
 export interface RuleExportAndImportHandle {
-    onSetImportVisible: (newVal: boolean) => void
-    onSetExportVisible: (newVal: boolean) => void
+  onSetImportVisible: (newVal: boolean) => void
+  onSetExportVisible: (newVal: boolean) => void
 }

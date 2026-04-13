@@ -1,2 +1,1 @@
-export interface MITMHackerProps{
-}
+export interface MITMHackerProps {}
