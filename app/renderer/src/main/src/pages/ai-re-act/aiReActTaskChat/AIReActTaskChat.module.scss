@@ -120,14 +120,10 @@
   flex: 1;
   width: 100%;
   gap: 16px;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
   .heard {
     @extend %display-column-center;
     gap: 4px;
     width: 100%;
-    height: 68px;
 
     .title {
       color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -154,15 +150,6 @@
     gap: 8px;
     padding: 8px 4px;
     width: 328px;
-    overflow: hidden hidden;
-    height: auto;
-    max-height: calc(100% - 68px);
-    flex: 0 1 auto;
-    min-height: 0;
-    overflow-x: hidden;
-    &:hover {
-      overflow-y: overlay;
-    }
   }
 
   .re-act-recommend-list-wrapper {

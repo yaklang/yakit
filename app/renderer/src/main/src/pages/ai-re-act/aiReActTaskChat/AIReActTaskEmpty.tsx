@@ -28,7 +28,7 @@ const AIReActTaskEmpty: React.FC<AIReActTaskEmptyProps> = React.memo((props) => 
 
     const fetchSessionFiles = async () => {
       const files = await Promise.all(
-        grpcFolders.map(async (item) => ({
+        grpcFolders.slice(-5).map(async (item) => ({
           ...item,
           name: await getNameByPath(item.path),
         })),
@@ -80,8 +80,12 @@ const AIReActTaskEmpty: React.FC<AIReActTaskEmptyProps> = React.memo((props) => 
               <React.Fragment key={aiItem.type}></React.Fragment>
             )
           })}
-          <FilePreviewRecentList title="本次会话文件" files={sessionFiles} onClickItem={handleViewFile} />
         </div>
+        {sessionFiles.length > 0 && (
+          <div className={styles['list-wrapper']}>
+            <FilePreviewRecentList title="本次会话文件" files={sessionFiles} onClickItem={handleViewFile} />
+          </div>
+        )}
       </div>
     </YakitSpin>
   )
