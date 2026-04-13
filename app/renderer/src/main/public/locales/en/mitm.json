@@ -30,7 +30,8 @@
     "white_list_label": "File Suffix",
     "white_list_tip": "After configuring a whitelist, the rules will no longer apply to file extensions on the whitelist. Multiple file extensions can be configured, for example: .txt/.jpg/.mp4",
     "add_rule": "Add Rule",
-    "default_Configuration": "Default Configuration"
+    "default_Configuration": "Default Configuration",
+    "rule_content_tip": "Multiple rules can be configured sequentially, with each subsequent rule matching the results of the previous filter again"
   },
   "RuleExportAndImportButton": {
     "import_configuration": "Import",

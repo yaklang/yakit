@@ -40,6 +40,11 @@ export const RegexTester: React.FC<RegexTesterProps> = React.memo((props) => {
   const [activeMatchIndex, setActiveMatchIndex] = useState<number>()
 
   useEffect(() => {
+    setActiveMatchIndex(undefined)
+    setRegexPattern(rule || '')
+  }, [rule])
+
+  useEffect(() => {
     if (!editorInstance) return
 
     const disposable = editorInstance.onDidChangeCursorSelection(() => {

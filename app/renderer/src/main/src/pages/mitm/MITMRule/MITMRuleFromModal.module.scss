@@ -3,9 +3,93 @@
 
   .icon-adjustments {
     cursor: pointer;
-    width: 24px;
+    width: 16px;
+    height: 16px;
+
     &:hover {
       color: var(--Colors-Use-Main-Primary);
+    }
+  }
+
+  .rule-content-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow: visible;
+    margin-top: 0;
+  }
+
+  .rule-content-row {
+    display: flex;
+    align-items: center;
+    position: relative;
+    min-height: 32px;
+
+    .rule-content-input {
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+    }
+
+    :global {
+      .ant-input-group,
+      .ant-input,
+      .ant-input-group-addon {
+        height: 32px;
+      }
+
+      .ant-input-group-addon {
+        padding: 0 8px;
+      }
+    }
+
+    .rule-content-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      position: absolute;
+      top: 50%;
+      right: -56px;
+      transform: translateY(-50%);
+      width: 46px;
+    }
+
+    .icon-remove,
+    .icon-plus {
+      cursor: pointer;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .icon-remove {
+      color: var(--Colors-Use-Error-Primary);
+    }
+
+    .icon-plus {
+      color: var(--Colors-Use-Main-Primary);
+    }
+
+    .icon-disabled {
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+  }
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+
+  .info-icon {
+    margin-left: 4px;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      color: var(--Colors-Use-Neutral-Disable);
     }
   }
 }

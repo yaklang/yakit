@@ -30,7 +30,8 @@
     "white_list_label": "文件后缀",
     "white_list_tip": "配置白名单后,规则不再对白名单上的后缀名生效.支持配置多个后缀,例如:.txt/.jpg/.mp4",
     "add_rule": "新增规则",
-    "default_Configuration": "默认配置"
+    "default_Configuration": "默认配置",
+    "rule_content_tip": "支持依次配置多条规则,后一条规则会对前一次格式化输出的结果再次进行匹配输出"
   },
   "RuleExportAndImportButton": {
     "import_configuration": "导入配置",
