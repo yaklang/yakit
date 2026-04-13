@@ -133,5 +133,14 @@
   "AIReActTaskChatContent": {
     "humanIntervention": "人工介入",
     "globalDirective": "全局指令"
+  },
+  "AIModelGlobalConfig": {
+    "aiModelConfig": "AI模型配置",
+    "aiModel": "AI模型",
+    "highQualityModel": "高质模型",
+    "lightweightModel": "轻量模型",
+    "visionModel": "视觉模式",
+    "routingMode": "调用模式",
+    "disableFallback": "禁用降级到轻量模型"
   }
 }

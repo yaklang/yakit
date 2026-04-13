@@ -1,0 +1,44 @@
+{
+  "DomainAssetPage": {
+    "domain": "Domain",
+    "sendToVulnDetection": "Send to vulnerability detection",
+    "sendToBruteForce": "Send to brute force",
+    "sendTo": "Send to...",
+    "deleteSelectedConfirm": "Are you sure you want to delete the selected data?",
+    "clearListConfirm": "Are you sure you want to clear the list?",
+    "exportFailed": "Data export failed: {error}",
+    "batchNotSupportSelectAll": "This batch operation does not support select all",
+    "exportName": "Domain Assets"
+  },
+  "PortAssetTable": {
+    "title": "Port Assets",
+    "searchPlaceholder": "Search ports / hosts / titles",
+    "confirmDeleteSelected": "Are you sure you want to delete selected data?",
+    "confirmClearList": "Are you sure you want to clear the list?"
+  },
+  "PortAssetQuery": {
+    "noFingerprint": "No fingerprint information available."
+  },
+  "PortAssetDescription": {
+    "detailTitle": "Port Asset Details",
+    "state": "Status",
+    "application": "Application",
+    "failureReason": "Failure reason",
+    "fingerprintInfo": "Fingerprint info",
+    "advancedQuery": "Advanced Query"
+  },
+  "ReportViewerPage": {
+    "reportList": "Report List",
+    "clickToInspect": "Click a report in the list to inspect content",
+    "deleteSelectedConfirm": "Are you sure you want to delete the selected reports? This cannot be recovered",
+    "deleteAllConfirm": "Are you sure you want to delete all reports? This cannot be recovered",
+    "generateReport": "Generate Report",
+    "selectToDelete": "Click to select, then delete",
+    "owner": "Owner",
+    "source": "Source",
+    "selectReport": "Select a report to view content",
+    "pages": "Total {total} pages",
+    "selectFolder": "Please select a folder",
+    "exportSuccess": "Report exported successfully"
+  }
+}

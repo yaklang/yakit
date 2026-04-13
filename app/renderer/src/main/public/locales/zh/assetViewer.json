@@ -1,0 +1,44 @@
+{
+  "DomainAssetPage": {
+    "domain": "域名",
+    "sendToVulnDetection": "发送到漏洞检测",
+    "sendToBruteForce": "发送到爆破",
+    "sendTo": "发送到...",
+    "deleteSelectedConfirm": "确定删除勾选数据吗？",
+    "clearListConfirm": "确定清空列表数据吗?",
+    "exportFailed": "数据导出失败：{error}",
+    "batchNotSupportSelectAll": "该批量操作不支持全选",
+    "exportName": "域名资产"
+  },
+  "PortAssetTable": {
+    "title": "端口资产",
+    "searchPlaceholder": "搜索端口 / 主机 / 标题",
+    "confirmDeleteSelected": "确定删除勾选数据吗？",
+    "confirmClearList": "确定清空列表数据吗?"
+  },
+  "PortAssetQuery": {
+    "noFingerprint": "暂无指纹信息"
+  },
+  "PortAssetDescription": {
+    "detailTitle": "端口资产详情",
+    "state": "状态",
+    "application": "应用",
+    "failureReason": "失败原因",
+    "fingerprintInfo": "指纹信息",
+    "advancedQuery": "资产高级查询"
+  },
+  "ReportViewerPage": {
+    "reportList": "报告列表",
+    "clickToInspect": "点击列表中的报告检查内容",
+    "deleteSelectedConfirm": "确定删除选择的报告吗？不可恢复",
+    "deleteAllConfirm": "确定删除所有报告吗? 不可恢复",
+    "generateReport": "生成报告",
+    "selectToDelete": "点击选中后，可删除",
+    "owner": "发起人",
+    "source": "来源",
+    "selectReport": "选择报告以在此查看内容",
+    "pages": "共 {total} 页",
+    "selectFolder": "请选择文件夹",
+    "exportSuccess": "报告导出成功"
+  }
+}

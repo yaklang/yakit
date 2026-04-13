@@ -1,4 +1,13 @@
 {
+  "ScreenRecorderPage": {
+    "notInstalled": "未安装录屏",
+    "installRecorder": "安装录屏",
+    "installing": "录屏工具安装中...",
+    "installFailed": "IsScrecorderReady失败：{error}",
+    "installHint": "点击“安装录屏”，录屏工具安装成功后即可开始录屏",
+    "timeout": "连接超时",
+    "downloaded": "已下载"
+  },
   "ScrecorderModal": {
     "recommended": "推荐",
     "speed": "倍速",
@@ -29,5 +38,10 @@
     "noImage": "暂无图片",
     "openDirectory": "点击打开视频所在目录",
     "deletePopconfirm": "删除录屏的同时会删除本地录屏文件"
+  },
+  "ReactPlayerVideo": {
+    "fileNotPlayable": "该视频文件不可播放",
+    "previous": "上一个",
+    "next": "下一个"
   }
 }

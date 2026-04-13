@@ -13,6 +13,7 @@
     "installTitle": "Install Vulinbox",
     "installOrUpgrade": "Install/Upgrade Vulinbox",
     "downloadAddresses": "Vulinbox Download Addresses",
+    "viewDownloadAddresses": "View download addresses",
     "info": {
       "title": "Vulinbox Agent - Web Security Vulnerability Playground",
       "description": "Vulinbox is a well-designed web security vulnerability playground that simulates various security vulnerabilities that may occur in real-world scenarios, providing an ideal learning and practice platform for security researchers and penetration testing engineers.",
@@ -65,6 +66,7 @@
     "safeModeTooltip": "Safe mode will disable some dangerous vulnerabilities, but it can effectively prevent Vulinbox from being maliciously exploited"
   },
   "InstallVulinboxPrompt": {
-    "installing": "Installing Vulinbox"
+    "installing": "Installing Vulinbox",
+    "downloadedPercent": "Downloaded {percent}%"
   }
 }

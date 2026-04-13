@@ -133,5 +133,14 @@
   "AIReActTaskChatContent": {
     "humanIntervention": "Human intervention",
     "globalDirective": "Global directive"
+  },
+  "AIModelGlobalConfig": {
+    "aiModelConfig": "AI model configuration",
+    "aiModel": "AI model",
+    "highQualityModel": "High quality model",
+    "lightweightModel": "Lightweight model",
+    "visionModel": "Vision model",
+    "routingMode": "Routing mode",
+    "disableFallback": "Disable fallback to lightweight model"
   }
 }

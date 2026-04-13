@@ -8,10 +8,12 @@ import { XTerm } from 'xterm-for-react'
 import ReactResizeDetector from 'react-resize-detector'
 import { useXTermOptions } from '@/hook/useXTermOptions/useXTermOptions'
 import { yakitEngine, yakitStream } from '@/services/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface EngineConsoleProp {}
 
 export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
+  const { t } = useI18nNamespaces(['engineConsole'])
   const xtermRef = useRef<any>(null)
 
   const terminalOptions = useXTermOptions({
@@ -39,7 +41,7 @@ export const EngineConsole: React.FC<EngineConsoleProp> = (props) => {
     })
 
     yakitEngine.attachCombinedOutput({}, token).then(() => {
-      info(`启动输出监控成功`)
+      info(t('EngineConsole.monitorStarted'))
     })
 
     return () => {

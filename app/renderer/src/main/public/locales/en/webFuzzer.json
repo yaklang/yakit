@@ -372,7 +372,7 @@
     "viewBody": "View Body",
     "targetFileNotExist": "Target file no longer exists!",
     "fullResponse": "Full Response",
-    "noEmpty":"No Empty",
+    "noEmpty": "No Empty",
     "includes": "includes",
     "notIncludes": "Not Includes"
   },
@@ -454,7 +454,7 @@
     "payload_test_result": "Payload Test Result",
     "total": "Total:",
     "tag_add_success": "Tag added successfully",
-    "description": "Description:",
+    "description": "Description: ",
     "example": "Example:",
     "parameter_type_info": "Parameter Type Info:",
     "parameter_name": "Parameter Name",
@@ -534,7 +534,7 @@
     "template_empty_message": "Template name cannot be empty",
     "template_repeat_message": "Template name already exists",
     "add_template_success": "Add Template Success",
-    "template_list":"Template List"
+    "template_list": "Template List"
   },
   "GlobalHotPatch": {
     "Global_hot_template": "Global Hot-Reload Template",
@@ -578,7 +578,7 @@
     "debugExecute": "Debug Execute",
     "no_condition_set": "No conditions set yet",
     "keyword": "Keyword",
-    "regex": "Regular Expression",
+    "regex": "Regex",
     "status_code": "Status Code",
     "hex": "Hexadecimal",
     "expression": "Expression",
@@ -623,7 +623,7 @@
     "response_header": "Response Header",
     "response_body": "Response Body",
     "complete_conditions_before_adding": "Please complete the configuration of the existing conditions before adding new ones",
-    "regex": "Regular Expression",
+    "regex": "Regex",
     "keyValuePair": "Key-Value Pair",
     "expression": "Expression"
   },
@@ -644,13 +644,14 @@
     "add_node": "Add Node",
     "force_stop": "Force Stop",
     "config": "Config",
-    "select_webfuzzer_with_sequence_tip": "Please select Web Fuzzer (if you need to use a sequence, please drag other tabs into this group)"
+    "select_webfuzzer_with_sequence_tip": "Please select Web Fuzzer (if you need to use a sequence, please drag other tabs into this group)",
+    "pleaseSendMultipleRequestsBeforeApply": "Please send multiple request packets before applying."
   },
   "FuzzerConcurrency": {
     "add_node": "Add",
     "select_after_configuring_concurrency": "Please configure the concurrency before making a selection",
     "execute_after_concurrency": "Please configure the concurrency before executing",
-    "select_webfuzzer_with_concurrency_tip": "Please select Web Fuzzer (if you need to use a concurrency, please drag other tabs into this group)" 
+    "select_webfuzzer_with_concurrency_tip": "Please select Web Fuzzer (if you need to use a concurrency, please drag other tabs into this group)"
   },
   "SequenceItem": {
     "variable": "Variable",
@@ -690,7 +691,7 @@
     "uploadFile": "Upload File",
     "hostsConfig": "hosts config",
     "dragOrUpload": "Drag file here or",
-    "example":"Sample Template",
+    "example": "Sample Template",
     "fileRequired": "Please select a hosts config file first",
     "unsupportedFileType": "Only the following text file types are supported: {accept}",
     "fileReadFailed": "Failed to read file: {error}",

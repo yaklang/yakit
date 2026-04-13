@@ -1,0 +1,19 @@
+{
+  "CVEQuery": {
+    "advancedQuery": "Advanced Query",
+    "cveQueryConditions": "CVE Query Conditions",
+    "exploitPath": "Exploit Path",
+    "exploitDifficulty": "Exploit Difficulty",
+    "vulnerabilityLevel": "Vulnerability Level",
+    "network": "Network",
+    "adjacentNetwork": "Adjacent Network",
+    "local": "Local",
+    "physical": "Physical",
+    "difficult": "Difficult",
+    "medium": "Medium",
+    "easy": "Easy",
+    "critical": "Critical",
+    "high": "High",
+    "low": "Low"
+  }
+}

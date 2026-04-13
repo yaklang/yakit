@@ -1,0 +1,12 @@
+{
+  "ShortcutKey": {
+    "global": "Global",
+    "multiple": "Multiple pages",
+    "editor": "Editor",
+    "hotPatchManagement": "Hot Patch Management",
+    "loadFailed": "Failed to get shortcuts",
+    "restoreDefault": "Restore defaults",
+    "editShortcut": "Edit shortcut",
+    "hint": "Press the desired key combination first, then Enter to confirm, or Esc to cancel"
+  }
+}
