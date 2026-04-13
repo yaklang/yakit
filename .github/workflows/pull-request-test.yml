@@ -7,26 +7,35 @@ concurrency:
 on:
   pull_request:
     branches: [master]
-    paths-ignore:
-      - package.json
-      - yarn.lock
-      - README.md
-      - README-EN.md
-      - README_LEGACY.md
-      - LICENSE.md
-      - docs/**
-      - .github/**
-      - '**/*.md'
-      - '**/*.txt'
-      - .vscode/**
+    # 用 paths 正选 + ! 排除：paths-ignore 下只要 PR 里存在任一「未忽略」文件就会跑 CI（易误以为只改了 version）。
+    # 此处先 ** 再 !，使「仅清单/锁/文档/.github 等」的 PR 不触发；vendor 等其它 package.json 仍会触发。
+    paths:
+      - '**'
+      - '!package.json'
+      - '!yarn.lock'
+      - '!app/renderer/src/main/package.json'
+      - '!app/renderer/src/main/yarn.lock'
+      - '!app/renderer/engine-link-startup/package.json'
+      - '!app/renderer/engine-link-startup/yarn.lock'
+      - '!README.md'
+      - '!README-EN.md'
+      - '!README_LEGACY.md'
+      - '!LICENSE.md'
+      - '!docs/**'
+      - '!.github/**'
+      - '!**/*.md'
+      - '!**/*.txt'
+      - '!.vscode/**'
+
+env:
+  HUSKY: '0'
 
 jobs:
-  pr-test:
-    name: pull_request test
+  prepare:
+    name: prepare（变更列表 · Vitest 选择）
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    outputs:
+      vitest_tests: ${{ steps.vitest_select.outputs.tests }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,104 +49,234 @@ jobs:
         with:
           node-version: 22.22.1
 
+      - name: Write PR changed paths (git UTF-8, for Prettier/media)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          # 勿用 .ci-changed-files-list.txt：该路径在 .gitignore 中，upload-artifact@v4 会忽略导致上传失败
+          git -c core.quotePath=false diff --name-only "$BASE_SHA" "$HEAD_SHA" > pr-ci-changed-files-list.txt
+          echo "Changed path lines: $(wc -l < pr-ci-changed-files-list.txt)"
+          echo '---- sample paths (debug) ----'
+          head -5 pr-ci-changed-files-list.txt || true
+          echo '-------------------------------'
+
+      - name: Select Vitest targets
+        id: vitest_select
+        shell: bash
+        env:
+          CHANGED_FILES_PATH: ${{ github.workspace }}/pr-ci-changed-files-list.txt
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CI_DEBUG_VITEST_SELECT: '0'
+        run: node scripts/ci-select-vitest-tests.js
+
+      - uses: actions/upload-artifact@v4
+        name: Upload changed paths
+        with:
+          name: ci-changed-files-list
+          path: pr-ci-changed-files-list.txt
+          if-no-files-found: error
+
+  ci-i18n:
+    name: i18n（zh/en）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.1
+
       - name: Check i18n parity (zh/en)
-        id: i18n_check
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
-          yarn i18n:check 2>&1 | tee i18n-output.log
+          node scripts/locale-parity.js 2>&1 | tee i18n-output.log
 
-      - name: Comment i18n failure on PR
-        if: steps.i18n_check.outcome == 'failure' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v7
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          script: |
-            const fs = require('fs');
-            const marker = '<!-- pull-request-test -->'
-            const rawLog = fs.existsSync('i18n-output.log')
-              ? fs.readFileSync('i18n-output.log', 'utf8').slice(-6000)
-              : 'No log available.'
-            const body = `${marker}\n❌ i18n 检查失败\n\n错误信息：\n\`\`\`\n${rawLog}\n\`\`\``
-            const issue_number = context.payload.pull_request.number
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number,
-            })
-            const existing = comments.find(
-              (c) => c.user?.type === 'Bot' && c.body?.includes(marker)
-            )
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              })
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number,
-                body,
-              })
-            }
+          name: ci-log-i18n
+          path: i18n-output.log
+          if-no-files-found: warn
 
-      - name: Stop CI on i18n failure
-        if: steps.i18n_check.outcome == 'failure'
-        run: |
-          echo "i18n check failed."
-          exit 1
+  ci-eslint-renderer:
+    name: ESLint（renderer src/main）
+    uses: ./.github/workflows/pr-ci-yarn-check.yml
+    secrets: inherit
+    with:
+      pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
+      pr_ref: ${{ github.event.pull_request.head.ref }}
+      workdir: app/renderer/src/main
+      run_command: npx eslint src --ext .js,.jsx,.ts,.tsx
+      log_filename: eslint-output.log
+      artifact_name: ci-log-eslint-renderer
 
-      - name: Get PR changed files
-        id: changed_files
-        uses: tj-actions/changed-files@v47
+  ci-tsc-renderer:
+    name: TypeScript（renderer src/main）
+    uses: ./.github/workflows/pr-ci-yarn-check.yml
+    secrets: inherit
+    with:
+      pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
+      pr_ref: ${{ github.event.pull_request.head.ref }}
+      workdir: app/renderer/src/main
+      run_command: npx tsc -p tsconfig.json --noEmit
+      log_filename: tsc-output.log
+      artifact_name: ci-log-tsc-renderer
+
+  ci-eslint-engine-link:
+    name: ESLint（engine-link-startup）
+    uses: ./.github/workflows/pr-ci-yarn-check.yml
+    secrets: inherit
+    with:
+      pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
+      pr_ref: ${{ github.event.pull_request.head.ref }}
+      workdir: app/renderer/engine-link-startup
+      run_command: npx eslint src --ext .js,.jsx,.ts,.tsx
+      log_filename: eslint-engine-link-output.log
+      artifact_name: ci-log-eslint-engine-link
+
+  ci-tsc-engine-link:
+    name: TypeScript（engine-link-startup）
+    uses: ./.github/workflows/pr-ci-yarn-check.yml
+    secrets: inherit
+    with:
+      pr_repository: ${{ github.event.pull_request.head.repo.full_name }}
+      pr_ref: ${{ github.event.pull_request.head.ref }}
+      workdir: app/renderer/engine-link-startup
+      run_command: npx tsc -p tsconfig.json --noEmit
+      log_filename: tsc-engine-link-output.log
+      artifact_name: ci-log-tsc-engine-link
+
+  ci-media:
+    name: 图片/视频体积
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    steps:
+      - uses: actions/checkout@v4
         with:
-          base_sha: ${{ github.event.pull_request.base.sha }}
-          safe_output: false
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Print PR changed files
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.1
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-changed-files-list
+          path: .
+
+      - name: Media size check (changed images/videos)
         shell: bash
         env:
-          # 依然建议通过 env 传递，避免 Shell 直接插值产生的注入风险
-          ALL_CHANGED_FILES: ${{ steps.changed_files.outputs.all_changed_files }}
+          CHANGED_FILES_PATH: ${{ github.workspace }}/pr-ci-changed-files-list.txt
         run: |
-          echo "Changed files from tj-actions/changed-files:"
-          if [ -z "$ALL_CHANGED_FILES" ]; then
-            echo "(none)"
-          else
-            # 将空格替换为换行进行打印
-            for file in $ALL_CHANGED_FILES; do
-              echo "$file"
-            done
+          set -o pipefail
+          node scripts/check-media-size.js 2>&1 | tee media-output.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-log-media
+          path: media-output.log
+          if-no-files-found: warn
+
+  ci-vitest:
+    name: Vitest（选中用例）
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: ./.github/actions/pr-ci-setup-node-yarn
+
+      - name: Run Vitest (changed-area tests)
+        shell: bash
+        env:
+          CI: 'true'
+          CI_VITEST_TESTS: ${{ needs.prepare.outputs.vitest_tests }}
+        run: |
+          set -o pipefail
+          root="$(git rev-parse --show-toplevel)"
+          cd "$root"
+          TESTS="$CI_VITEST_TESTS"
+          if [ -z "$TESTS" ] || [ "$TESTS" = "none" ]; then
+            echo "No vitest targets (prepare 输出 tests=none 或空)，跳过" | tee "$root/vitest-output.log"
+            exit 0
           fi
+          echo "Running vitest for: $TESTS"
+          shopt -s globstar nullglob
+          EXPANDED_TESTS=$(eval echo $TESTS)
+          echo "Expanded: $EXPANDED_TESTS"
+          yarn test:vitest $EXPANDED_TESTS --run --reporter verbose 2>&1 | tee "$root/vitest-output.log"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-log-vitest
+          path: vitest-output.log
+          if-no-files-found: warn
+
+  ci-prettier:
+    name: Prettier（变更文件 · 同仓库可写回）
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - uses: ./.github/actions/pr-ci-setup-node-yarn
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-changed-files-list
+          path: .
 
       - name: Format or check PR changed files with prettier
         id: format_step
-        continue-on-error: true
         shell: bash
         env:
-          ALL_CHANGED_FILES: ${{ steps.changed_files.outputs.all_changed_files }}
           IS_FORK_PR: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
         run: |
           set -o pipefail
           {
-            # 1. 巧妙地利用 Bash 将空格分隔的字符串转换为数组
-            # 注意：如果文件名包含空格，这种方式会失效，但在大多数 JS/TS 项目中这是安全的
             format_targets=()
-            for file in $ALL_CHANGED_FILES; do
-              if [ -f "$file" ]; then
-                format_targets+=("$file")
-              fi
-            done
+            if [ -f pr-ci-changed-files-list.txt ]; then
+              while IFS= read -r file || [ -n "$file" ]; do
+                [ -z "$file" ] && continue
+                if [ -f "$file" ]; then
+                  format_targets+=("$file")
+                fi
+              done < pr-ci-changed-files-list.txt
+            fi
 
             if [ "${#format_targets[@]}" -eq 0 ]; then
               echo "No valid files to format."
               exit 0
             fi
 
-            # 2. 执行格式化或检查
             if [ "$IS_FORK_PR" = 'true' ]; then
               echo "Fork PR detected. Checking ${#format_targets[@]} file(s)..."
               npx prettier@3.8.1 --config .prettierrc.js --ignore-path .prettierignore --check --ignore-unknown "${format_targets[@]}"
@@ -147,47 +286,12 @@ jobs:
             fi
           } 2>&1 | tee format-output.log
 
-      - name: Comment format failure on PR
-        if: steps.format_step.outcome == 'failure' && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v7
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          script: |
-            const fs = require('fs');
-            const marker = '<!-- pull-request-test -->'
-            const rawLog = fs.existsSync('format-output.log')
-              ? fs.readFileSync('format-output.log', 'utf8').slice(-6000)
-              : 'No log available.'
-            const body = `${marker}\n❌ prettier 格式化失败\n\n错误信息：\n\`\`\`\n${rawLog}\n\`\`\``
-            const issue_number = context.payload.pull_request.number
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number,
-            })
-            const existing = comments.find(
-              (c) => c.user?.type === 'Bot' && c.body?.includes(marker)
-            )
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              })
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number,
-                body,
-              })
-            }
-
-      - name: Stop CI on format failure
-        if: steps.format_step.outcome == 'failure'
-        run: |
-          echo "prettier format check failed."
-          exit 1
+          name: ci-log-prettier
+          path: format-output.log
+          if-no-files-found: warn
 
       - name: Commit formatted files
         if: success() && github.event.pull_request.head.repo.full_name == github.repository
@@ -195,8 +299,6 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          # GITHUB_TOKEN cannot update workflow files without extra app permission.
-          # Unstage workflow paths to avoid push rejection.
           git reset -- .github/workflows || true
           if git diff-index --quiet HEAD; then
             echo "No formatting changes, nothing to commit"
@@ -205,50 +307,67 @@ jobs:
             git push
           fi
 
-      - name: Comment pull_request format and check success on PR
-        if: success() && github.event.pull_request.head.repo.full_name == github.repository
-        uses: actions/github-script@v7
+  ci-pr-summary:
+    name: PR 汇总评论
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - ci-i18n
+      - ci-eslint-renderer
+      - ci-tsc-renderer
+      - ci-eslint-engine-link
+      - ci-tsc-engine-link
+      - ci-media
+      - ci-vitest
+      - ci-prettier
+    if: always() && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
         with:
-          script: |
-            const marker = '<!-- pull-request-test -->'
-            const body = [
-              marker,
-              '## ✅ CI 检查通过',
-              '',
-              '本次 PR 已完成以下自动检查：',
-              '',
-              '- ✅ i18n 配置校验通过（zh/en）',
-              '- ✅ Prettier 格式化已完成',
-              '- ✅ 结果已自动提交到当前 PR 分支（如有变更）',
-              '',
-              '---',
-              '_由 pull_request test workflow 自动生成_',
-            ].join('\n')
-            const issue_number = context.payload.pull_request.number
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number,
-            })
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: ci-log-*
+          merge-multiple: true
+          path: .
 
-            const existing = comments.find(
-              (comment) =>
-                comment.user?.type === 'Bot' && comment.body?.includes(marker)
-            )
+      - name: Map Vitest outcome（无选中用例 ⇒ skipped，与原先 step 被 skip 一致）
+        id: map_vitest
+        shell: bash
+        run: |
+          vt='${{ needs.prepare.outputs.vitest_tests }}'
+          r='${{ needs.ci-vitest.result }}'
+          if [ -z "$vt" ] || [ "$vt" = "none" ]; then
+            echo "outcome=skipped" >> "$GITHUB_OUTPUT"
+          else
+            echo "outcome=$r" >> "$GITHUB_OUTPUT"
+          fi
 
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body,
-              })
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number,
-                body,
-              })
-            }
+      - name: Render PR CI summary (body for maintain-one-comment)
+        id: pr_comment
+        env:
+          OUTCOME_I18N: ${{ needs.ci-i18n.result }}
+          OUTCOME_ESLINT: ${{ needs.ci-eslint-renderer.result }}
+          OUTCOME_TSC: ${{ needs.ci-tsc-renderer.result }}
+          OUTCOME_ESLINT_ENGINE_LINK: ${{ needs.ci-eslint-engine-link.result }}
+          OUTCOME_TSC_ENGINE_LINK: ${{ needs.ci-tsc-engine-link.result }}
+          OUTCOME_MEDIA: ${{ needs.ci-media.result }}
+          OUTCOME_VITEST: ${{ steps.map_vitest.outputs.outcome }}
+          OUTCOME_FORMAT: ${{ needs.ci-prettier.result }}
+        run: node scripts/ci-render-pr-summary.js
+
+      - name: Maintain one PR comment
+        if: steps.pr_comment.outcome == 'success'
+        uses: actions-cool/maintain-one-comment@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body-include: '<!-- pr-ci-one-comment -->'
+          body: ${{ steps.pr_comment.outputs.body }}
