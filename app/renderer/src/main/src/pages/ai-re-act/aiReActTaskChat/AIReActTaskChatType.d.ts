@@ -1,5 +1,6 @@
 import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AIRecommendItem } from '@/pages/ai-agent/aiChatWelcome/type'
+import { AIRecommendItem, RandomAIMaterialsDataProps } from '@/pages/ai-agent/aiChatWelcome/type'
+import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { ReactNode } from 'react'
 
 export interface AIReActTaskChatProps {
@@ -24,6 +25,13 @@ export interface AIReActTaskRecommendProps {
   title: string
   data: AIRecommendItem[]
   onClickItem: (item: AIRecommendItem) => void
+}
+
+export interface AIReActTaskEmptyProps {
+  loadingAIMaterials: boolean
+  randomAIMaterialsData: RandomAIMaterialsDataProps
+  onRefresh: () => void
+  onClickItem: (item: AIRecommendItem, mentionType: AIMentionCommandParams['mentionType']) => void
 }
 
 export interface AIGlobalCommandPopoverProps {
