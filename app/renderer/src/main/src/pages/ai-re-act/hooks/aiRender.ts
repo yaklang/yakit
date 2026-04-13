@@ -61,6 +61,8 @@ export interface AIToolResult {
     dirPath: string
     /** 工具执行结果详情数据 */
     resultDetails: string
+    /** review参数信息 */
+    reviewParams?: AIAgentGrpcApi.ToolUseReviewRequire['params']
   }
   /** http流量数据总数 */
   httpFlowDataCount: number

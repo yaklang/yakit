@@ -261,6 +261,8 @@ function useChatIPC(params?: UseChatIPCParams) {
           return item
         })
         .filter((item) => item.task_progress.phase !== 'Completed')
+        // 历史任务树会包含当前正在执行的任务树，需要将其过滤
+        .filter((item) => item.coordinator_id !== taskChatID.current?.coordinatorId)
       setPlanHistoryList({ ...list, records: newArr })
     } catch (error) {}
   })
@@ -621,7 +623,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
-        // console.log("onStart-res", res, ipcContent)
+        // console.log('onStart-res', res, ipcContent)
 
         if (res.Type === 'yak_httpflow') {
           // 产生一条http流量数据时的通知

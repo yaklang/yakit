@@ -88,15 +88,19 @@ export interface UseTaskChatParams extends UseHookBaseParams {
   sendRequest?: (request: AIInputEvent) => void
 }
 
+/** 当前正在执行的任务树 */
+export interface CurrentExecTaskTree {
+  task_tree: AIAgentGrpcApi.PlanHistory['task_tree']
+  root_task_name: AIAgentGrpcApi.PlanHistory['root_task_name']
+}
+
 export interface UseTaskChatState {
   /** 正在执行的任务列表 */
-  plan: AITaskInfoProps[]
+  plan: CurrentExecTaskTree
   elements: ReActChatRenderItem[]
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents {
   handleSend: handleSendFunc
-  /** 获取树结构的任务树 */
-  fetchPlanTree: () => AIAgentGrpcApi.PlanTask | undefined
   /** grpc接口关闭后的后续处理逻辑 */
   handleCloseGrpc: () => void
   /** 当前任务规划结束-触发UI展示结束标识 */

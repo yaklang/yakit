@@ -2,8 +2,15 @@ import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
-import { AIReviewJudgeLevelMap } from './defaultConstant'
-import { AIChatLogData, handleSendFunc, UseTaskChatEvents, UseTaskChatParams, UseTaskChatState } from './type'
+import { AIReviewJudgeLevelMap, DefaultCurrentExecTaskTree } from './defaultConstant'
+import {
+  AIChatLogData,
+  CurrentExecTaskTree,
+  handleSendFunc,
+  UseTaskChatEvents,
+  UseTaskChatParams,
+  UseTaskChatState,
+} from './type'
 import {
   genBaseAIChatData,
   genErrorLogData,
@@ -47,16 +54,9 @@ function useTaskChat(params?: UseTaskChatParams) {
   })
 
   // #region 任务树相关逻辑
-  // plan_review 原始树结构
-  const planTree = useRef<AIAgentGrpcApi.PlanTask>()
-  /** 树结构的任务树 */
-  const fetchPlanTree = useMemoizedFn(() => {
-    return cloneDeep(planTree.current)
-  })
-  const [plan, setPlan] = useState<AITaskInfoProps[]>([])
+  const [plan, setPlan] = useState<CurrentExecTaskTree>(cloneDeep(DefaultCurrentExecTaskTree))
   const handleResetPlanTree = useMemoizedFn(() => {
-    planTree.current = undefined
-    setPlan([])
+    setPlan(cloneDeep(DefaultCurrentExecTaskTree))
   })
 
   /** 正在执行中的叶子任务的mapKey集合(已结束的叶子任务会被移除) */
@@ -118,10 +118,13 @@ function useTaskChat(params?: UseTaskChatParams) {
   /** 更新任务树指定任务节点的状态 */
   const handleUpdateTaskState = useMemoizedFn((index: string, state: AITaskInfoProps['progress']) => {
     setPlan((old) => {
-      return old.map((item) => {
-        if (item.index === index) item.progress = state
-        return item
-      })
+      return {
+        ...old,
+        task_tree: old.task_tree.map((item) => {
+          if (item.index === index) item.progress = state
+          return item
+        }),
+      }
     })
   })
 
@@ -145,13 +148,15 @@ function useTaskChat(params?: UseTaskChatParams) {
     }
     handleResetActiveLeafTasks()
     setPlan((old) => {
-      const newData = cloneDeep(old)
-      return newData.map((item) => {
-        if (item.progress === AITaskStatus.inProgress) {
-          item.progress = AITaskStatus.error
-        }
-        return item
-      })
+      return {
+        ...old,
+        task: old.task_tree.map((item) => {
+          if (item.progress === AITaskStatus.inProgress) {
+            item.progress = AITaskStatus.error
+          }
+          return item
+        }),
+      }
     })
   })
   // #endregion
@@ -170,9 +175,11 @@ function useTaskChat(params?: UseTaskChatParams) {
     if (reviewInfo.type === AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE && reviewInfo.data.optionValue === 'continue') {
       // plan_review, 选择是continue选项, 则进行UI任务树的生成
       const tasks = reviewInfo.data
-      planTree.current = cloneDeep(tasks.plans.root_task)
       const plans = genExecTasks(tasks.plans.root_task)
-      setPlan(cloneDeep(plans))
+      setPlan({
+        task_tree: cloneDeep(plans),
+        root_task_name: tasks.plans.root_task.name,
+      })
     }
   })
 
@@ -526,11 +533,10 @@ function useTaskChat(params?: UseTaskChatParams) {
         // 更新正在执行的任务树
         const tasks = JSON.parse(ipcContent) as { root_task: AIAgentGrpcApi.PlanTask }
         if (has(tasks, 'root_task')) {
-          planTree.current = cloneDeep(tasks.root_task)
           const plans = genExecTasks(tasks.root_task)
-          setPlan(cloneDeep(plans))
+          setPlan({ task_tree: cloneDeep(plans), root_task_name: tasks.root_task.name })
         } else {
-          setPlan([])
+          setPlan(cloneDeep(DefaultCurrentExecTaskTree))
         }
 
         return
@@ -634,7 +640,6 @@ function useTaskChat(params?: UseTaskChatParams) {
 
   const events: UseTaskChatEvents = useCreation(() => {
     return {
-      fetchPlanTree,
       handleSetData,
       handleResetData,
       handleSend,
