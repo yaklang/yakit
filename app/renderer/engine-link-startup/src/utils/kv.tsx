@@ -1,24 +1,22 @@
-import {ipcEventPre} from "./ipcEventPre"
-
-const {ipcRenderer} = window.require("electron")
+import { yakitCache } from './electronBridge'
 
 export const setLocalValue = (k: string, value: any) => {
-    ipcRenderer.invoke(`${ipcEventPre}set-local-cache`, k, value).then(() => {})
+  yakitCache.setLocalCache(k, value).then(() => {})
 }
 
 export const getLocalValue = (k: string) => {
-    return ipcRenderer.invoke(`${ipcEventPre}fetch-local-cache`, k)
+  return yakitCache.getLocalCache(k)
 }
 
 // 这是从引擎内获取存储
 export const getRemoteValue = (k: string) => {
-    return ipcRenderer.invoke(ipcEventPre + "GetKey", {Key: k})
+  return yakitCache.getRemoteKey(k)
 }
 
 export const setRemoteValue = (k: string, v: string) => {
-    return ipcRenderer.invoke(ipcEventPre + "SetKey", {Key: k, Value: v})
+  return yakitCache.setRemoteKey(k, v)
 }
 
 export const setRemoteValueTTL = (k: string, v: string, ttl: number) => {
-    return ipcRenderer.invoke(ipcEventPre + "SetKey", {Key: k, Value: v, TTL: parseInt(`${ttl}`)})
+  return yakitCache.setRemoteKeyWithTTL(k, v, parseInt(`${ttl}`))
 }

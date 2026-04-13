@@ -19,8 +19,7 @@ import classNames from 'classnames'
 import styles from './performanceDisplay.module.scss'
 import { yakitDynamicStatus } from '@/store'
 import { remoteOperation } from '@/pages/dynamicControl/DynamicControl'
-
-const { ipcRenderer } = window.require('electron')
+import { yakitApp, yakitEngine, yakitPerf, yakitUILayout } from '@/services/electronBridge'
 
 interface PerformanceDisplayProps {
   engineMode: YaklangEngineMode | undefined
@@ -37,14 +36,14 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = React.memo(
   const showLineTime = useRef<any>(null)
 
   useEffect(() => {
-    ipcRenderer.invoke('start-compute-percent')
+    yakitPerf.startComputePercent()
     const time = setInterval(() => {
-      ipcRenderer.invoke('fetch-compute-percent').then((res) => setCpu(res))
+      yakitPerf.fetchComputePercent().then((res) => setCpu(res))
     }, 500)
 
     return () => {
       clearInterval(time)
-      ipcRenderer.invoke('clear-compute-percent')
+      yakitPerf.clearComputePercent()
     }
   }, [])
 
@@ -140,8 +139,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
     if (psLoading) return
 
     setPSLoading(true)
-    ipcRenderer
-      .invoke('ps-yak-grpc')
+    yakitEngine
+      .listYakGrpc()
       .then((i: yakProcess[]) => {
         const valuesArray = Array.from(runNodeList.values())
         // 过滤掉运行节点
@@ -166,8 +165,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
       })
   })
   const fetchCurrentPort = () => {
-    ipcRenderer
-      .invoke('fetch-yaklang-engine-addr')
+    yakitEngine
+      .fetchYaklangEngineAddr()
       .then((data) => {
         const hosts: string[] = (data.addr as string).split(':')
         if (hosts.length !== 2) return
@@ -193,7 +192,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
   const allClose = useMemoizedFn(async () => {
     await delTemporaryProject()
     ;(process || []).forEach((i) => {
-      ipcRenderer.invoke('kill-yak-grpc', i.pid).then((val) => {
+      yakitEngine.killYakGrpc(i.pid).then((val) => {
         if (!val) {
           info(`KILL yak PROCESS: ${i.pid}`)
           if (+i.port === port && isLocal) typeCallback('break')
@@ -229,14 +228,14 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                   }
                   await delTemporaryProject()
                   process.map((i) => {
-                    ipcRenderer.invoke(`kill-yak-grpc`, i.pid)
+                    yakitEngine.killYakGrpc(i.pid)
                   })
-                  ipcRenderer
-                    .invoke('RestoreEngineAndPlugin', {})
+                  yakitEngine
+                    .restoreEngineAndPlugin({})
                     .finally(() => {
-                      ipcRenderer.invoke('write-engine-key-to-yakit-projects').finally(() => {
+                      yakitEngine.writeEngineKeyToYakitProjects().finally(() => {
                         info('恢复引擎成功')
-                        ipcRenderer.invoke('relaunch')
+                        yakitApp.relaunch()
                       })
                     })
                     .catch((e) => {
@@ -292,16 +291,16 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                             Port: i.port,
                             Host: '127.0.0.1',
                           }
-                          ipcRenderer.invoke('switch-conn-refresh', true)
-                          ipcRenderer
-                            .invoke('connect-yaklang-engine', switchEngine)
+                          yakitUILayout.setSwitchConnectionRefresh(true)
+                          yakitEngine
+                            .connectYaklangEngine(switchEngine)
                             .then(() => {
                               setTimeout(() => {
                                 success(`切换核心引擎成功！`)
                                 if (!isEnpriTraceAgent() && +i.port !== oldPort) {
                                   emiter.emit('onSwitchEngine')
                                 }
-                                ipcRenderer.invoke('switch-conn-refresh', false)
+                                yakitUILayout.setSwitchConnectionRefresh(false)
                               }, 500)
                             })
                             .catch((e) => {
@@ -309,12 +308,12 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                               if (isLocal) {
                                 process.forEach((item) => {
                                   if (item.port == oldPort) {
-                                    ipcRenderer
-                                      .invoke(`kill-yak-grpc`, item.pid)
+                                    yakitEngine
+                                      .killYakGrpc(item.pid)
                                       .then((val) => {
                                         if (!val) {
                                           success('引擎进程关闭中...')
-                                          ipcRenderer.invoke('switch-conn-refresh', false)
+                                          yakitUILayout.setSwitchConnectionRefresh(false)
                                           typeCallback('break')
                                         }
                                       })
@@ -349,8 +348,8 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                             await delTemporaryProject()
                           }
 
-                          ipcRenderer
-                            .invoke('kill-yak-grpc', i.pid)
+                          yakitEngine
+                            .killYakGrpc(i.pid)
                             .then((val) => {
                               if (!val) {
                                 isLocal && +i.port === port && typeCallback('break')
