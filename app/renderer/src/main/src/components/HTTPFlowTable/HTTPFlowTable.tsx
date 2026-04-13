@@ -5019,7 +5019,7 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
       type: 'fuzzer',
       data: {
         openFlag,
-        isHttps: rowData.IsHTTPS,
+        isHttps: rowData.Url.startsWith('http://') ? false : rowData.IsHTTPS,
         downstreamProxyStr,
         ...params,
         request: rowData.InvalidForUTF8Request
