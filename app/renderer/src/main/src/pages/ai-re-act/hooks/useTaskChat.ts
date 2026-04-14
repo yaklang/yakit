@@ -150,7 +150,7 @@ function useTaskChat(params?: UseTaskChatParams) {
     setPlan((old) => {
       return {
         ...old,
-        task: old.task_tree.map((item) => {
+        task_tree: old.task_tree.map((item) => {
           if (item.progress === AITaskStatus.inProgress) {
             item.progress = AITaskStatus.error
           }
