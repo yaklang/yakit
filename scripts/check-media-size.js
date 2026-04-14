@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * CI：检查 PR 变更中的图片/视频是否超过体积阈值。
- * 文件列表来自环境变量 ALL_CHANGED_FILES（空格分隔，与 tj-actions/changed-files 一致）。
+ * 文件列表优先读 CHANGED_FILES_PATH（每行一个路径，与 git diff --name-only 一致，支持中文路径）；
+ * 否则读 ALL_CHANGED_FILES（空格分隔，与 tj-actions/changed-files 一致）。
  */
 const fs = require('fs')
 const path = require('path')
@@ -24,7 +25,24 @@ function human(n) {
   return `${n} B`
 }
 
-function listFromEnv() {
+function listChangedFiles() {
+  const fromFile = (process.env.CHANGED_FILES_PATH || '').trim()
+  if (fromFile) {
+    if (!fs.existsSync(fromFile)) {
+      console.error(`CHANGED_FILES_PATH 指向的文件不存在: ${fromFile}`)
+      process.exit(1)
+    }
+    try {
+      const text = fs.readFileSync(fromFile, 'utf8')
+      return text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+    } catch (e) {
+      console.error(`无法读取 CHANGED_FILES_PATH: ${fromFile}`, e.message || e)
+      process.exit(1)
+    }
+  }
   const raw = process.env.ALL_CHANGED_FILES || ''
   return raw.split(/\s+/).filter(Boolean)
 }
@@ -32,7 +50,7 @@ function listFromEnv() {
 const cwd = process.cwd()
 const bad = []
 
-for (const rel of listFromEnv()) {
+for (const rel of listChangedFiles()) {
   if (!rel || rel.includes('..')) continue
   const ext = path.extname(rel).toLowerCase()
   const isImg = IMAGE_EXT.has(ext)
