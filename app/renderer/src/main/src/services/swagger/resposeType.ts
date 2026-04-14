@@ -147,6 +147,10 @@ export declare namespace API {
     userName: string;
     fileName: string;
     filePath: string;
+    /**
+     * other_file 其他文件 yak_data 安装包
+     */
+    fileType?: string;
   }
   export interface UploadDataResponse extends Paging {
     data: UploadDataList[];
@@ -361,6 +365,37 @@ export declare namespace API {
     name: string;
     content: string;
   }
+  export interface TaskWorkerList {
+    userName: string;
+    userUid: string;
+    isRead?: boolean;
+  }
+  export interface TaskRequest {
+    title: string;
+    description?: string;
+    /**
+     * 责任人id, 逗号分割
+     */
+    workerUid: string;
+    /**
+     * 编辑需要
+     */
+    taskId?: string;
+  }
+  export interface TaskListResponse extends Paging {
+    data: TaskList[];
+  }
+  export interface TaskList extends GormBaseModel {
+    taskId: string;
+    title: string;
+    description: string;
+    taskLeader: string;
+    workers: TaskWorkerList[];
+    /**
+     * 0 待下发 1已下发 2 结束
+     */
+    status: number;
+  }
   export interface SystemConfigResponse extends Paging {
     data: SystemConfigList[];
   }
@@ -442,15 +477,24 @@ export declare namespace API {
     name: string;
     createdAt: number;
     checkPlugin: boolean;
+    builtIn?: boolean;
   }
   export interface RiskUploadResponse extends Paging {
     data: RiskLists[];
   }
   export interface RiskTypes {
     risk_type: string;
+    total: number;
   }
   export interface RiskTypeResponse {
     data: RiskTypes[];
+  }
+  export interface RiskTagsResponse {
+    data: RiskTags[];
+  }
+  export interface RiskTags {
+    name: string;
+    total: number;
   }
   export interface RiskRequest {
     projectName: string;
@@ -468,7 +512,7 @@ export declare namespace API {
   export interface RiskList {
     hash: string;
     user_name: string;
-    rish_hash: string;
+    risk_hash: string;
     ip: string;
     ip_integer: number;
     url: string;
@@ -506,6 +550,7 @@ export declare namespace API {
      * 所属组织
      */
     department?: string;
+    tags?: string;
   }
   export interface RiskFeedBackResponse extends Paging {
     data: RiskFeedBackData[];
@@ -731,6 +776,7 @@ export declare namespace API {
     unSetGroup?: boolean;
     group?: string[];
   }
+  export interface PluginsWhereIsPrivate {}
   export interface PluginsSearchResponse {
     data: PluginsSearch[];
   }
@@ -789,6 +835,10 @@ export declare namespace API {
      */
     pluginSupplement?: string;
     pluginEnvKey?: string[];
+    enableForAI?: boolean;
+    aiDesc?: string;
+    aiKeywords?: string;
+    aiUsage?: string;
   }
   export interface PluginsRecycleRequest extends PluginsWhere, PluginsRecycle {}
   export interface PluginsRecycle {
@@ -914,6 +964,10 @@ export declare namespace API {
      */
     pluginSupplement?: string;
     pluginEnvKey?: string[];
+    enableForAI?: boolean;
+    aiDesc?: string;
+    aiKeywords?: string;
+    aiUsage?: string;
   }
   export interface PluginsAuditRequest extends PluginsRequest, PluginsAudit {}
   export interface PluginsAuditDetailResponse
@@ -1065,8 +1119,8 @@ export declare namespace API {
   }
   export interface PayloadRequest extends PayloadWhere, Pagination {}
   export interface PayloadGroupResponse {
-    group?: string[];
-    nodes?: PayloadGroupNode[];
+    group: string[];
+    nodes: PayloadGroupNode[];
   }
   export interface PayloadGroupNode {
     type: string;
@@ -1189,9 +1243,18 @@ export declare namespace API {
     otherLink?: string;
     sort?: number;
   }
+  export interface MITMRuleExtractedDataWhere {
+    httpFlowHash?: string;
+    httpFlowHiddenIndex?: string;
+    filter?: ExtractedDataFilter;
+    onlyName?: boolean;
+  }
   export interface MITMRuleExtractedDataResponse extends Paging {
     data: MITMRuleExtractedDataList[];
   }
+  export interface MitmRuleExtractedDataRequest
+    extends Pagination,
+      MITMRuleExtractedDataWhere {}
   export interface MITMRuleExtractedDataList
     extends GormBaseModel,
       MITMRuleExtractedDataDetail {}
@@ -1201,10 +1264,17 @@ export declare namespace API {
     regexp: string;
     ruleName: string;
     data: string;
+    index?: number;
+    length?: number;
+    isMatchRequest?: boolean;
   }
   export interface MessageLogWhereRequest {
     isAll: boolean;
     hash: string;
+    /**
+     * 排除一些不设置为已读
+     */
+    excludeHash?: string;
   }
   export interface MessageLogResponse extends Paging {
     data: MessageLogDetail[];
@@ -1213,6 +1283,8 @@ export declare namespace API {
     afterId?: number;
     beforeId?: number;
     isRead?: string;
+    logType?: string;
+    status?: string;
   }
   export interface MessageLogDetail extends GormBaseModel {
     handlerUserName: string;
@@ -1440,11 +1512,13 @@ export declare namespace API {
      * 外部 项目编号
      */
     externalProjectCode?: string;
-    host?: string;
     /**
      * 所属组织
      */
     department?: string;
+    hiddenIndex?: string;
+    fromPlugin?: string;
+    host?: string;
   }
   export interface HTTPFlowDeleteWhere {
     deleteAll?: boolean;
@@ -1532,7 +1606,15 @@ export declare namespace API {
      * 外部 项目编号
      */
     externalProjectCode?: string;
+    project_name?: string;
+    /**
+     * 所属组织
+     */
+    department?: string;
+    beforeRiskCreatedAt?: number;
+    afterRiskCreatedAt?: number;
   }
+  export interface GetRiskRequest extends Pagination, GetRiskWhere {}
   export interface GetRemoteWhere {
     user_name?: string;
     start_time?: number;
@@ -1637,6 +1719,11 @@ export declare namespace API {
     extract_content: string;
     module: string;
   }
+  export interface ExtractedDataFilter {
+    traceId?: string[];
+    ruleVerbose?: string[];
+    analyzedIds?: number[];
+  }
   export interface ExportHTTPFlowWhere extends HTTPFlowListWhere {
     fieldName: string[];
     /**
@@ -1647,6 +1734,11 @@ export declare namespace API {
      * 包含字段 响应包: response  请求包: request 请求大小: requestLen  标题: title
      */
     includeField?: string[];
+    start?: number;
+    /**
+     * 导出多少条
+     */
+    end?: number;
   }
   export interface EditUrmRequest {
     uid: string;
@@ -1671,6 +1763,12 @@ export declare namespace API {
   }
   export interface DeleteUrm {
     uid: string[];
+  }
+  export interface DeleteRiskWhere extends GetRiskWhere {
+    id?: number;
+    ids?: number[];
+    deleteRepetition?: boolean;
+    deleteAll?: boolean;
   }
   export interface DeleteResource {
     csrf_token?: string;
