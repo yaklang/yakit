@@ -11,7 +11,6 @@
     "logs": "日志",
     "inputTarget": "输入目标",
     "targetPlaceholder": "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割",
-    "dragFilesHelp": "可将 TXT、Excel 文件拖入框内或",
     "targetConcurrentLabel": "目标并发:",
     "stopOnSuccess": "爆破成功即停止",
     "continueOnSuccess": "爆破成功后仍继续",

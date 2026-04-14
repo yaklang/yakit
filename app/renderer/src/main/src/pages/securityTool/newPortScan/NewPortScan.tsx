@@ -666,7 +666,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
                     placeholder: t("NewPortScanExecuteForm.scanTargetPlaceholder"),
                     rows: 3
                 }}
-                help={t("NewPortScanExecuteForm.dragFilesHelp")}
+                help={t("YakitDraggerContent.drag_files_tip")}
                 disabled={disabled}
                 onTextAreaType={setInputType}
                 textAreaType={inputType}

@@ -3,7 +3,7 @@
     "notInstalled": "Not installed",
     "installRecorder": "Install Screen Recorder",
     "installing": "Screen recorder is installing...",
-    "installFailed": "IsScrecorderReady failed: {error}",
+    "installFailed": "IsScrecorderReady failed: {{error}}",
     "installHint": "Click 'Install Screen Recorder' to start recording after the tool is installed",
     "timeout": "connection timeout",
     "downloaded": "Downloaded"
@@ -20,7 +20,7 @@
     "startRecording": "Start Recording"
   },
   "ScreenRecorderList": {
-    "getListFailed": "Get list data failed: {error}",
+    "getListFailed": "Get list data failed: {{error}}",
     "loginRequired": "Please login first",
     "screenRecorder": "Screen Recorder",
     "stopRecording": "Stop Recording",
@@ -29,9 +29,9 @@
   },
   "ScreenRecorderListItem": {
     "fileNotFound": "Target file does not exist!",
-    "playFailed": "Play failed: {error}",
+    "playFailed": "Play failed: {{error}}",
     "editVideoInfo": "Edit Video Info",
-    "updateFailed": "Update failed: {error}",
+    "updateFailed": "Update failed: {{error}}",
     "video": "Video",
     "videoName": "Video Name",
     "notes": "Notes",

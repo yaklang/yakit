@@ -19,7 +19,7 @@
     "pemExample": "For example:"
   },
   "PEMHint": {
-    "saveHistoryNote": "Note: {appName} will not upload the history to the internet",
+    "saveHistoryNote": "Note: {{appName}} will not upload the history to the internet",
     "saveHistoryLocation": "You can find the remote login information in your local directory (client directory)",
     "openLocation": "Open remote information storage location"
   }

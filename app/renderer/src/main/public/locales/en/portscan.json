@@ -40,7 +40,7 @@
     "serviceFingerprint": "Service Fingerprint",
     "allFingerprint": "All Fingerprints",
     "bruteForceConfig": "Brute Force Config",
-    "invalidFileType": "{name} is not a txt or Excel file, please upload txt or Excel format!",
+    "invalidFileType": "{{name}} is not a txt or Excel file, please upload txt or Excel format!",
     "userDict": "User Dictionary:",
     "useDefaultUserDict": "Use default user dictionary simultaneously",
     "passwordDict": "Password Dictionary:",
@@ -94,7 +94,6 @@
     "deleteTemplateSuccess": "Template deleted successfully",
     "scanTarget": "Scan Targets",
     "scanTargetPlaceholder": "Domain/Host/IP/IP range, separated by comma or line",
-    "dragFilesHelp": "Drag TXT or Excel files into the box or",
     "saveAsTemplate": "Save as Template",
     "defaultConfig": "Default Config",
     "scanModeLabel": "Scan Mode: ",
@@ -105,7 +104,6 @@
   "FingerprintSettingsPanel": {
     "allOption": "All",
     "customFingerprint": "Custom Fingerprint",
-    "dragYamlFilesHelp": "Drag yaml or yml files into the box or",
     "useFingerprintLib": "Use Fingerprint Lib",
     "jsSsaParser": "JS SSA Parser",
     "jsSsaParserHelp": "Perform JS SSA analysis when crawling is enabled. Enabling this will use significant resources and cause CPU spikes. Recommended to keep closed if not needed"

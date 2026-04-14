@@ -1,15 +1,16 @@
 import React from "react"
 import styles from "./EditorInfo.module.scss"
 import { SafeMarkdown } from "@/pages/assetViewer/reportRenders/markdownRender"
+import {TFunction} from "@/i18n/useI18nNamespaces"
 export interface TempExampleInfo {
   label: string
   desc: string
   code: string
 }
 
-export const tempExampleList: TempExampleInfo[] = [
+export const getTempExampleList = (t: TFunction): TempExampleInfo[] => [
     {
-        label: "文件读取(普通特征字符串匹配)",
+        label: t("TempExampleHelp.fileRead"),
         desc: "yaml",
         code: `\`\`\`yaml
 id: WebFuzzer-Template-file-read
@@ -41,7 +42,7 @@ http:
 \`\`\``
     },
     {
-        label: "代码执行(匹配二次处理后的结果)",
+        label: t("TempExampleHelp.codeExecution"),
         desc: "yaml",
         code: `\`\`\`yaml
 id: WebFuzzer-Template-code-execution
@@ -77,7 +78,7 @@ http:
 \`\`\``
     },
     {
-        label: "二进制数据发包",
+        label: t("TempExampleHelp.binaryData"),
         desc: "yaml",
         code: `\`\`\`yaml
 id: WebFuzzer-Template-rce-hex_decode
@@ -125,7 +126,7 @@ http:
 \`\`\``
     },
     {
-        label: "无回显检测(通过延时判断)",
+        label: t("TempExampleHelp.noEchoByDelay"),
         desc: "yaml",
         code: `\`\`\`yaml
 id: WebFuzzer-Template-Delay
@@ -162,7 +163,7 @@ http:
 \`\`\``
     },
     {
-        label: "无回显检测(通过DNSLOG判断)",
+        label: t("TempExampleHelp.noEchoByDnslog"),
         desc: "yaml",
         code: `\`\`\`yaml
 id: WebFuzzer-Template-dnslog
@@ -224,8 +225,8 @@ http:
     Host: {{Hostname}}
     Content-Type: application/x-www-form-urlencoded
     User-Agent: WebFuzzer
-    
-    id=' UNION SELECT CONCAT('{{r1}}', '{{r2}}') -- 
+
+    id=' UNION SELECT CONCAT('{{r1}}', '{{r2}}') --
   max-redirects: 3
   matchers-condition: and
   matchers:
@@ -303,17 +304,17 @@ EOF
     rsp, req = poc.HTTP(packet1, poc.params({"target": addr}), poc.https(isTls), poc.redirectTimes(0))~
     if time.Since(begin_time).Seconds() > 5 {
         yakit.Info(
-            "%v found 用友U8-Cloud系统BusinessRefAction存在SQL注入漏洞", 
-            addr, 
+            "%v found 用友U8-Cloud系统BusinessRefAction存在SQL注入漏洞",
+            addr,
         )
         risk.NewRisk(
-            addr, 
-            risk.title("用友U8-Cloud系统BusinessRefAction存在SQL注入漏洞：" + addr), 
-            risk.severity("high"), 
-            risk.titleVerbose("用友U8-Cloud系统BusinessRefAction存在SQL注入漏洞"), 
-            risk.request(string(req)), 
-            risk.response(string(rsp)), 
-            risk.cve("no cve"), 
+            addr,
+            risk.title("用友U8-Cloud系统BusinessRefAction存在SQL注入漏洞：" + addr),
+            risk.severity("high"),
+            risk.titleVerbose("用友U8-Cloud系统BusinessRefAction存在SQL注入漏洞"),
+            risk.request(string(req)),
+            risk.response(string(rsp)),
+            risk.cve("no cve"),
         )
     }
     

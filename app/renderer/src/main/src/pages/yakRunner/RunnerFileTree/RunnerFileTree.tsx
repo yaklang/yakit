@@ -60,9 +60,14 @@ import {YakitDragger} from "@/components/yakitUI/YakitForm/YakitForm"
 import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 import {SystemInfo} from "@/constants/hardware"
 import {WatchFolderID} from "../FileTreeMap/watchFolderID"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import i18n from "@/i18n/i18n"
+
+const tOriginal = i18n.getFixedT(null, "yakRunner")
 
 export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
     const {setAbsolutePath} = props
+    const {t, i18n} = useI18nNamespaces(['yakRunner'])
     const [value, setValue] = useState<string>("")
     return (
         <div style={{padding: "20px 24px"}}>
@@ -72,7 +77,7 @@ export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
                 selectType='folder'
                 multiple={false}
                 help=''
-                uploadFolderText='选择本地文件夹'
+                uploadFolderText={t("RunnerFileTree.selectLocalFolder")}
                 onChange={(value) => {
                     setValue(value)
                     setAbsolutePath(value)
@@ -87,7 +92,7 @@ export const openFolder = () => {
     if (SystemInfo.mode === "remote") {
         let absolutePath = ""
         const m = showYakitModal({
-            title: "请输入文件夹路径",
+            title: tOriginal("RunnerFileTree.enterFolderPath"),
             width: 400,
             type: "white",
             closable: false,
@@ -98,7 +103,7 @@ export const openFolder = () => {
             },
             onOk: async () => {
                 if (absolutePath.length === 0) {
-                    warn("请输入文件夹路径")
+                    warn(tOriginal("RunnerFileTree.enterFolderPath"))
                     return
                 }
                 emiter.emit("onOpenFileTree", absolutePath)
@@ -106,7 +111,7 @@ export const openFolder = () => {
             }
         })
     } else {
-        handleOpenFileSystemDialog({title: "请选择文件夹", properties: ["openDirectory"]}).then((data) => {
+        handleOpenFileSystemDialog({title: tOriginal("RunnerFileTree.selectFolder"), properties: ["openDirectory"]}).then((data) => {
             if (data.filePaths.length) {
                 let absolutePath: string = data.filePaths[0].replace(/\\/g, "\\")
                 emiter.emit("onOpenFileTree", absolutePath)
@@ -119,6 +124,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     const {addFileTab} = props
+    const {t, i18n} = useI18nNamespaces(['yakRunner', 'yakitUi'])
     const {fileTree, areaInfo, activeFile} = useStore()
     const {handleFileLoadData, setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
 
@@ -175,7 +181,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         if (initTree.length > 0) {
             initTree.push({
                 parent: null,
-                name: "已经到底啦~",
+                name: t("YakitEmpty.end_of_list"),
                 path: "",
                 isFolder: false,
                 icon: "",
@@ -185,7 +191,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         }
 
         return initTree
-    }, [fileTree, refreshTree])
+    }, [fileTree, refreshTree, i18n.language])
 
     const getHistoryList = useMemoizedFn(async (data?: string) => {
         try {
@@ -219,16 +225,16 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
         let newMenu: YakitMenuItemType[] = [
             {
                 key: "closeFolder",
-                label: "关闭文件夹",
+                label: t("FileTree.closeFolder"),
                 disabled: fileTree.length === 0
             },
             {
                 key: "createFile",
-                label: "新建文件"
+                label: t("YakitButton.newFile")
             },
             {
                 key: "createFolder",
-                label: "新建文件夹",
+                label: t("YakitButton.newFolder"),
                 // 未打开文件夹或无法新建文件夹
                 disabled: fileTree.length === 0
             },
@@ -256,7 +262,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             })
         }
         return newMenu
-    }, [historyList, fileTree])
+    }, [historyList, fileTree, i18n.language])
 
     // 新建文件
     const onNewFile = useMemoizedFn(async (path: string) => {
@@ -383,9 +389,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
             }
             emiter.emit("onResetFileTree", JSON.stringify({path: info.path}))
             emiter.emit("onRefreshFileTree")
-            success(`${info.name} 删除成功`)
+            success(t("RunnerFileTree.deleteSuccess", {name: info.name}))
         } catch (error) {
-            failed(`${info.name} 删除失败${error}`)
+            failed(t("RunnerFileTree.deleteFailed", {name: info.name, error: error + ""}))
         }
     })
 
@@ -694,9 +700,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 <div className={styles["file-tree"]}>
                     <div className={styles["file-tree-container"]}>
                         <div className={styles["file-tree-header"]}>
-                            <div className={styles["title-style"]}>文件列表</div>
+                            <div className={styles["title-style"]}>{t("RunnerFileTree.fileList")}</div>
                             <div className={styles["extra"]}>
-                                <Tooltip title={"刷新资源管理器"}>
+                                <Tooltip title={t("RunnerFileTree.refreshExplorer")}>
                                     <YakitButton
                                         type='text2'
                                         disabled={fileTree.length === 0}
@@ -744,10 +750,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
 
 export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
     const {} = props
+    const {t, i18n} = useI18nNamespaces(['yakRunner'])
     const {areaInfo, activeFile} = useStore()
     const {setAreaInfo, setActiveFile} = useDispatcher()
     const titleRender = () => {
-        return <div className={styles["opened-file-header"]}>打开的编辑器</div>
+        return <div className={styles["opened-file-header"]}>{t("RunnerFileTree.openedEditors")}</div>
     }
 
     const removeItem = useMemoizedFn((e, data: FileDetailInfo) => {

@@ -37,6 +37,8 @@ import {API} from "@/services/swagger/resposeType"
 import {apiSaveNotepad} from "@/pages/notepadManage/notepadManage/utils"
 import useInitEditorHooks, {InitEditorHooksCollabProps} from "./utils/initEditor"
 import {useGoEditNotepad} from "@/pages/notepadManage/hook/useGoEditNotepad"
+import i18n from "@/i18n/i18n"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const markdown1 = `
 
 1. 5565
@@ -54,6 +56,7 @@ Maybe more? ![]()
 const markdown2 = `#ggg
 fsdfsdf
 `
+const tOriginal = i18n.getFixedT(null, "components")
 export const randomMilkdownUserColor = () => `#${Math.floor(Math.random() * 16777215).toString(16)}`
 
 const saveHistoryIntervalTime = 1000 * 60
@@ -76,15 +79,15 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
 /**笔记本错误弹窗 */
 export const showOnlineErrorNotification = (event: {code: number; reason: string; onOk: () => void}) => {
     const m = showYakitModal({
-        title: "异常",
+        title: tOriginal("MilkdownEditor.onlineError.exception"),
         content: (
             <span>
-                错误原因:{event.code}:{event.reason}
+                {tOriginal("MilkdownEditor.onlineError.errorReason")} {event.code}:{event.reason}
             </span>
         ),
         maskClosable: false,
         closable: false,
-        onOkText: "关闭页面",
+        onOkText: tOriginal("MilkdownEditor.onlineError.closePage"),
         cancelButtonProps: {style: {display: "none"}},
         onOk: () => {
             event.onOk()
@@ -98,6 +101,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const userInfo = useStore((s) => s.userInfo)
 
     const {defaultValue, collabProps, setEditor, onSaveContentBeforeDestroy} = props
+    const {t} = useI18nNamespaces(["components", "yaktUi"])
 
     const milkdownRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(milkdownRef)
@@ -303,7 +307,7 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         useMemoizedFn((event: CloseEvent) => {
             const {routeInfo} = collabParams
             if (!routeInfo) {
-                yakitNotify("error", "当enableCollab为true,routeInfo必传")
+                yakitNotify("error", t("MilkdownEditor.initEditor.collabRouteRequired"))
                 return
             }
             switch (event.code) {
@@ -350,13 +354,13 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
         const {title} = collabParams
         // 弹出框，显示网络异常，关闭/保存按钮
         const s = showYakitModal({
-            title: "文档不存在/已经被删除",
-            content: <span>错误原因:{event.reason}</span>,
+            title: t("MilkdownEditor.initEditor.documentMissing"),
+            content: <span>{t("MilkdownEditor.initEditor.errorReason")} {event.reason}</span>,
             maskClosable: false,
             closable: false,
             showConfirmLoading: true,
-            onOkText: "保存当前文档",
-            onCancelText: "不保存",
+            onOkText: t("MilkdownEditor.initEditor.saveCurrentDocument"),
+            onCancelText: t("YakitButton.doNotSave"),
             onOk: () => {
                 const markdownContent = get()?.action(getMarkdown()) || ""
                 // 有内容才保存，没有内容新建

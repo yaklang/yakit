@@ -66,35 +66,37 @@ import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutK
 import {WatchFolderID} from "./FileTreeMap/watchFolderID"
 import {randomString} from "@/utils/randomUtil"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 // 模拟tabs分块及对应文件
 // 设想方法1：区域4等分，减少其结构嵌套层数，分别用1、2、3、4标注其展示所处区域 例如全屏展示则为[1、2、3、4]
-/**  
+/**
  * 设想方法2（数组每一项对应着垂直项,其中elements中代表横着的项）：[
-// 
+//
  * {
         elements:[{...},{...}]
  * },
  * {
- * 
+ *
  * }
  * ]
 */
 
 export const YakRunnerTab: YakitTabsProps[] = [
     {
-        label: "资源管理器",
+        label: "YakRunner.resourceExplorer",
         value: "file-tree"
     },
     {
-        label: "帮助文档",
+        label: "YakRunner.helpDocumentation",
         value: "help-doc"
     }
 ]
 
 export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     const {initCode} = props
+    const {t, i18n} = useI18nNamespaces(["yakRunner", "yakitUi"])
 
     /** ---------- 文件树 ---------- */
     const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
@@ -114,7 +116,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 if (callback) callback(res)
             })
             .catch((error) => {
-                yakitNotify("error", `获取文件项目失败: ${error}`)
+                yakitNotify("error", t("YakRunner.fetchFileTreeFailed", {error: error + ""}))
                 if (callback) callback([])
             })
     })
@@ -694,7 +696,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                             if (result.length > 0) {
                                 file.name = result[0].name
                                 file.isDelete = false
-                                success(`${result[0].name} 保存成功`)
+                                success(t("YakRunner.saveSuccess", {name: result[0].name}))
                                 const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
                                 const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
                                 setAreaInfo && setAreaInfo(newAreaInfo)
@@ -712,7 +714,7 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                     })
             }
         } catch (error) {
-            failed(`${activeFile?.name}保存失败`)
+            failed(t("YakRunner.saveFailed", {name: activeFile?.name || ""}))
         }
     })
 
@@ -1058,15 +1060,15 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                 <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
             </div>
             {/* 文件过大提示框 */}
-            <YakitHint
+                <YakitHint
                 visible={isShowFileHint}
-                title='文件警告'
-                content='文件过大，无法使用YakRunner进行操作'
+                title={t("YakRunner.fileTooLargeWarning")}
+                content={t("YakRunner.fileTooLargeContent")}
                 cancelButtonProps={{style: {display: "none"}}}
                 onOk={() => {
                     setShowFileHint(false)
                 }}
-                okButtonText={"知道了"}
+                okButtonText={t("YakitButton.iKnow")}
             />
         </YakRunnerContext.Provider>
     )

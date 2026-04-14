@@ -27,7 +27,7 @@
     "autoGenerateExtractionRule": "自动生成提取规则",
     "regexExtractWithPrefixSuffix": "前后缀正则提取",
     "singleRegexExtract": "单正则提取",
-    "responseCount": "共{responses}个响应",
+    "responseCount": "共{{responses}}个响应",
     "extractData": "提取数据",
     "prefixRegex": "前缀（正则）：",
     "suffixRegex": "后缀（正则）：",
@@ -46,7 +46,7 @@
     "exportJson": "导出 JSON",
     "exportCsv": "导出 CSV",
     "outputToDirectory": "输出到目录",
-    "optionalDefaultYakitTempDir": "可为空，默认为 {yakit} 临时目录",
+    "optionalDefaultYakitTempDir": "可为空，默认为 {{yakit}} 临时目录",
     "fileName": "文件名",
     "asteriskAsRandom": "'*' 可作为随机字符串填空，不需要填写后缀",
     "generateDataToLocalFile": "生成数据到本地文件",
@@ -67,7 +67,7 @@
     "buildRequest": "构造请求",
     "syncConfig": "同步配置",
     "allTraffic": "全部流量",
-    "response_overflow": "响应数量超过{maxData}，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击",
+    "response_overflow": "响应数量超过{{maxData}}，为避免前端渲染压力过大，这里将丢弃部分数据包进行展示，请点击",
     "view_all_suffix": "查看所有数据",
     "advanced_filter_suggestion": "需要进行高级筛选，多条件组合查询或其他复杂操作时，建议点击跳转到",
     "performAction": "进行操作",
@@ -88,14 +88,14 @@
     "run_function_end": "运行函数-结束：",
     "send_complete": "发送完成",
     "success_and_failure_length": "成功与失败的长度",
-    "success_failure_count": "成功：{success}——失败：${failed}",
+    "success_failure_count": "成功：{{success}}——失败：{{failed}}",
     "send_request": "发送请求",
     "parameter": "参数",
     "trafficAnalysisMode": "流量分析模式",
     "trafficAnalysis": "流量分析"
   },
   "FuzzerExtraShow": {
-    "responsesDiscarded": "已丢弃[{droppedCount}]个响应",
+    "responsesDiscarded": "已丢弃[{{droppedCount}}]个响应",
     "proxy": "代理：",
     "systemProxy": "系统代理：",
     "realHost": "真实Host：",
@@ -132,8 +132,8 @@
   "SecondNodeTitle": {
     "oversizedResponse": "超大响应",
     "contentTypeModified": "Content-Type被修改，修改前的内容展示在对应字段旁",
-    "success": "成功[{count}]",
-    "failure": "失败[{count}]",
+    "success": "成功[{{count}}]",
+    "failure": "失败[{{count}}]",
     "concurrencyLoad": "并发/负载"
   },
   "EditorOverlayWidget": {
@@ -185,8 +185,8 @@
   },
   "HTTPFuzzerHotPatch": {
     "enableModifiedHotReload": "是否启用修改的热加载代码和配置",
-    "updateTemplateSuccess": "更新模板 {tempName} 成功",
-    "updateTemplateFailed": "更新模板 {tempName} 失败：",
+    "updateTemplateSuccess": "更新模板 {{tempName}} 成功",
+    "updateTemplateFailed": "更新模板 {{tempName}} 失败：",
     "debugInsertHotReload": "调试 / 插入热加载代码",
     "resultDisplay": "结果展示",
     "copyFuzzResult": "复制 Fuzz 结果",
@@ -219,8 +219,8 @@
   "HTTPFuzzerHistorySelector": {
     "confirmDeletePackets": "将会删除数据包与缓存数据，确定删除吗？",
     "quickSearch": "快速搜索：",
-    "totalFlows": "共{HTTPFlowTotal}个",
-    "successCount": "成功：{HTTPFlowSuccessCount}个"
+    "totalFlows": "共{{HTTPFlowTotal}}个",
+    "successCount": "成功：{{HTTPFlowSuccessCount}}个"
   },
   "HTTPFuzzerClickEditorMenu": {
     "insertTag": "插入标签",
@@ -340,7 +340,7 @@
     "oneDay": "1天",
     "password": "密码：",
     "limitShareCount": "限制分享次数：",
-    "timesValue": "{value}次",
+    "timesValue": "{{value}}次",
     "shareId": "分享id：",
     "generateShareToken": "生成分享密令",
     "copiedToClipboard": "已复制到粘贴板",
@@ -549,7 +549,7 @@
     "no_valid_extractor": "没有有效提取器（都为空）",
     "no_valid_match_found": "匹配不到有效结果",
     "data_extraction_error": "数据提取报错：",
-    "duplicate_name_error": "【{namesElement}】名称重复，请修改后再应用",
+    "duplicate_name_error": "【{{namesElement}}】名称重复，请修改后再应用",
     "matcher": "匹配器",
     "extractor": "提取器",
     "addMatcher": "添加匹配器",
@@ -690,14 +690,13 @@
     "inputConfig": "输入配置",
     "uploadFile": "上传文件",
     "hostsConfig": "hosts 配置",
-    "dragOrUpload": "可将文件拖入框内或",
     "example": "示例模板",
     "fileRequired": "请先选择一个 hosts 配置文件",
-    "unsupportedFileType": "仅支持导入以下文本文件：{accept}",
-    "fileReadFailed": "文件读取失败：{error}",
+    "unsupportedFileType": "仅支持导入以下文本文件：{{accept}}",
+    "fileReadFailed": "文件读取失败：{{error}}",
     "emptyOrUnreadableFile": "文件内容为空或读取失败，请重新选择可解析的文本文件",
     "parseFailed": "解析失败，未识别到有效的 hosts 配置",
-    "parseSuccess": "解析成功，已导入 {count} 条 hosts 配置",
+    "parseSuccess": "解析成功，已导入 {{count}} 条 hosts 配置",
     "uploadPlaceholder": "路径支持手动输入,支持格式:txt/hosts"
   }
 }

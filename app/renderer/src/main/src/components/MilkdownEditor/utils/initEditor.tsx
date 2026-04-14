@@ -61,6 +61,7 @@ import emiter from "@/utils/eventBus/eventBus"
 import {slash, SlashView} from "../Slash/Slash"
 import {httpUploadImgPath} from "@/apiUtils/http"
 import {customShiftEnterPlugin} from "./utils"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
     onCollab: (ctx: Ctx) => void
@@ -94,6 +95,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
         positionElementId,
         isControlEditorType
     } = props
+    const {t, i18n} = useI18nNamespaces(["components"])
 
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
@@ -173,7 +175,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                                     continue
                                 }
                                 if (file.size > ImgMaxSize) {
-                                    yakitNotify("error", "图片大小不能超过1M")
+                                    yakitNotify("error", t("MilkdownEditor.initEditor.imageTooLarge"))
                                     continue
                                 }
                                 images.push(file)
@@ -438,7 +440,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
                     .use(customPlugin || [])
             )
         },
-        [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash]
+        [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash, i18n.language]
     )
 
     const uploadImg = async (image) => {
@@ -447,7 +449,7 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
             return ""
         }
         if (image.size > ImgMaxSize) {
-            yakitNotify("error", "图片大小不能超过1M")
+            yakitNotify("error", t("MilkdownEditor.initEditor.imageTooLarge"))
             return ""
         }
         try {

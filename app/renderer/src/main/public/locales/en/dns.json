@@ -2,7 +2,7 @@
   "DNSLogPage": {
     "generateAvailableDomainFirst": "Please generate an available domain first",
     "title": "DNSLog",
-    "subtitle": "Use the built-in DNSLog callback service from {edition}",
+    "subtitle": "Use the built-in DNSLog callback service from {{edition}}",
     "builtIn": "Built-in",
     "custom": "Custom",
     "builtInDnsLog": "Built-in DNSLog",

@@ -11,6 +11,7 @@ import {writeExecResultXTerm, writeXTerm, xtermClear} from "@/utils/xtermUtils"
 import {Uint8ArrayToString} from "@/utils/str"
 import {ExecResult} from "@/pages/invoker/schema"
 import {TerminalDetailsProps} from "./TerminalMap"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 const {ipcRenderer} = window.require("electron")
 
 export const defaultTerminaFont = "Consolas, 'Courier New', monospace"
@@ -124,6 +125,7 @@ interface useTerminalHookProps {
 /* 终端hook */
 export const useTerminalHook = (props: useTerminalHookProps) => {
     const {type, terminalRef, folderPathRef, terminalSizeRef, terminalFocusRef, onExit, isShowDetails, showItem} = props
+    const {t, i18n} = useI18nNamespaces(["yakRunner"])
     // 当前终端打开项
     const [terminalIds, setTerminalIds] = useState<string[]>([])
     // 终端当前展示项
@@ -403,7 +405,7 @@ export const useTerminalHook = (props: useTerminalHookProps) => {
         }
 
         const onError = (e, data) => {
-            warn(`终端${data.path}错误`)
+            warn(t("TerminalBox.terminalError", {path: data.path}))
         }
 
         ipcRenderer.on(key, onData)

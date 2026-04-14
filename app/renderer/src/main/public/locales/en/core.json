@@ -1,6 +1,6 @@
 {
   "Login": {
-    "loginError": "Login error: {error}",
+    "loginError": "Login error: {{error}}",
     "dataSync": "Data Sync",
     "syncDataConfirm": "Do you want to sync remote data to local?",
     "login": "Login",
@@ -12,7 +12,7 @@
     "verifyingLicense": "Verifying License"
   },
   "LicensePage": {
-    "getLicenseFailed": "Failed to get License: {error}",
+    "getLicenseFailed": "Failed to get License: {{error}}",
     "loadingLicense": "Loading license",
     "emptyLicense": "Empty License...",
     "registerProduct": "Register your product with License",
@@ -25,7 +25,7 @@
   "SetPassword": {
     "passwordMismatch": "New passwords do not match, please check and try again",
     "updateSuccess": "Password modified successfully, please login again",
-    "updateFailed": "Password modification failed: {error}",
+    "updateFailed": "Password modification failed: {{error}}",
     "passwordRule": "Password must be 8-20 characters long and include uppercase/lowercase letters, numbers, and special characters",
     "oldPassword": "Old Password",
     "inputOldPassword": "Please enter your old password",
@@ -39,8 +39,8 @@
     "uploadSuccess": "Data uploaded successfully",
     "uploadFailed": "Project upload failed",
     "cancelSuccess": "Upload canceled successfully",
-    "processDataFailed": "Failed to process project data: {error}",
-    "queryProjectsFailed": "Failed to query Projects: {error}",
+    "processDataFailed": "Failed to process project data: {{error}}",
+    "queryProjectsFailed": "Failed to query Projects: {{error}}",
     "project": "Project",
     "selectProject": "Please select a project"
   }

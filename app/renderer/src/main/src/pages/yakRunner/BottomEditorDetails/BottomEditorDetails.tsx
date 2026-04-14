@@ -38,6 +38,7 @@ import {YakitInputNumber} from "@/components/yakitUI/YakitInputNumber/YakitInput
 import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
 import {Uint8ArrayToString} from "@/utils/str"
 import {setClipboardText} from "@/utils/clipboard"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
@@ -45,6 +46,7 @@ const {ipcRenderer} = window.require("electron")
 
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
     const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
+    const {t} = useI18nNamespaces(["yakRunner"])
 
     const {activeFile, fileTree} = useStore()
     // 不再重新加载的元素
@@ -229,7 +231,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
     const isShowTerminalList = useMemo(() => {
         return terminalIds.length > 1
     }, [terminalIds])
-    
+
     return (
         <div className={styles["bottom-editor-details"]}>
             <div className={styles["header"]}>
@@ -241,7 +243,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                         onClick={() => setShowItem("output")}
                     >
-                        <div className={styles["title"]}>输出</div>
+                        <div className={styles["title"]}>{t("BottomEditorDetails.output")}</div>
                     </div>
                     <div
                         className={classNames(styles["item"], {
@@ -250,7 +252,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                         onClick={() => setShowItem("syntaxCheck")}
                     >
-                        <div className={styles["title"]}>语法检查</div>
+                        <div className={styles["title"]}>{t("BottomEditorDetails.syntaxCheck")}</div>
                         {activeFile && <div className={styles["count"]}>{syntaxCheckData.length}</div>}
                     </div>
                     <div
@@ -260,7 +262,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                         onClick={() => setShowItem("terminal")}
                     >
-                        <div className={styles["title"]}>终端</div>
+                        <div className={styles["title"]}>{t("BottomEditorDetails.terminal")}</div>
                     </div>
                     <div
                         className={classNames(styles["item"], {
@@ -269,7 +271,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         })}
                         onClick={() => setShowItem("helpInfo")}
                     >
-                        <div className={styles["title"]}>帮助信息</div>
+                        <div className={styles["title"]}>{t("BottomEditorDetails.helpInfo")}</div>
                     </div>
                 </div>
                 <div className={styles["extra"]}>
@@ -286,11 +288,11 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                 placement='left'
                                 trigger='click'
                                 overlayClassName={styles["yak-runner-menu-popover"]}
-                                title={<div style={{display: "flex"}}>终端字体配置</div>}
+                                title={<div style={{display: "flex"}}>{t("BottomEditorDetails.terminalFontConfig")}</div>}
                                 content={
                                     <>
                                         <div className={styles["title-font"]}>
-                                            控制终端的字体系列，默认为{" "}
+                                            {t("BottomEditorDetails.terminalFontFamilyHelpPrefix")}{" "}
                                             <span
                                                 className={styles["default-font"]}
                                                 onClick={() => {
@@ -299,7 +301,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                             >
                                                 Termina: Font Family
                                             </span>{" "}
-                                            的值。
+                                            {t("BottomEditorDetails.terminalFontFamilyHelpSuffix")}
                                         </div>
                                         <YakitInput
                                             size='small'
@@ -308,17 +310,17 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                                                 const str = e.target.value
                                                 setTerminaFont({...terminaFont, fontFamily: str})
                                             }}
-                                            placeholder='请输入字体'
+                                            placeholder={t("BottomEditorDetails.enterFont")}
                                         />
                                         <div className={styles["title-font"]} style={{marginTop: 4}}>
-                                            控制终端的字体大小，默认为{" "}
+                                            {t("BottomEditorDetails.terminalFontSizeHelpPrefix")}{" "}
                                             <span
                                                 className={styles["default-font"]}
                                                 onClick={() => {
                                                     setTerminaFont({...terminaFont, fontSize: 14})
                                                 }}
                                             >
-                                                14
+                                            14
                                             </span>{" "}
                                             。
                                         </div>
@@ -389,7 +391,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         {activeFile ? (
                             <SyntaxCheckList syntaxCheckData={syntaxCheckData} onJumpToEditor={onJumpToEditor} />
                         ) : (
-                            <div className={styles["no-syntax-check"]}>请选中具体文件查看语法检查信息</div>
+                            <div className={styles["no-syntax-check"]}>{t("BottomEditorDetails.selectFileForSyntaxCheck")}</div>
                         )}
                     </div>
                 )}
@@ -443,7 +445,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                         {activeFile?.language === "yak" ? (
                             <HelpInfoList onJumpToEditor={onJumpToEditor} />
                         ) : (
-                            <div className={styles["no-syntax-check"]}>请选中yak文件查看帮助信息</div>
+                            <div className={styles["no-syntax-check"]}>{t("BottomEditorDetails.selectYakFileForHelp")}</div>
                         )}
                     </div>
                 )}

@@ -1,4 +1,5 @@
 import {failed, warn, yakitNotify} from "@/utils/notification"
+import i18n from "@/i18n/i18n"
 import {CodeScoreSmokingEvaluateResponseProps} from "../plugins/funcTemplateType"
 import {RequestYakURLResponse} from "../yakURLTree/data"
 import {FileNodeMapProps, FileNodeProps, FileTreeListProps} from "./FileTree/FileTreeType"
@@ -23,6 +24,7 @@ import {SyntaxFlowMonacoSpec} from "@/utils/monacoSpec/syntaxflowEditor"
 import {handleOpenFileSystemDialog} from "@/utils/fileSystemDialog"
 
 const {ipcRenderer} = window.require("electron")
+const tOriginal = i18n.getFixedT(null, "yakRunner")
 
 export const initFileTreeData = (list: RequestYakURLResponse, path?: string | null) => {
     return list.Resources.sort((a, b) => {
@@ -320,7 +322,7 @@ const getCodeByNode = (path: string): Promise<string> => {
                 resolve(res)
             })
             .catch(() => {
-                failed("无法获取该文件内容，请检查后后重试！")
+                failed(tOriginal("YakRunner.readFileFailed"))
                 reject()
             })
     })
@@ -351,7 +353,7 @@ export const getCodeByPath = (path: string, loadTreeType?: "file" | "audit"): Pr
                     let newContent = await getCodeByNode(path)
                     resolve(newContent)
                 } catch (error) {
-                    failed(`无法获取该文件内容，请检查后后重试:  ${error}`)
+                    failed(tOriginal("YakRunner.readFileFailedWithError", {error}))
                     reject()
                 }
             })
@@ -759,7 +761,7 @@ export const getDefaultActiveFile = async (info: FileDetailInfo) => {
  */
 export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> => {
     return new Promise(async (resolve, reject) => {
-        handleOpenFileSystemDialog({title: "请选择文件", properties: ["openFile"]})
+        handleOpenFileSystemDialog({title: tOriginal("YakRunner.selectFile"), properties: ["openFile"]})
             .then(async (data) => {
                 try {
                     const filesLength = data.filePaths.length
@@ -771,7 +773,7 @@ export const getOpenFileInfo = (): Promise<{path: string; name: string} | null> 
                             name
                         })
                     } else if (filesLength > 1) {
-                        warn("只支持单选文件")
+                        warn(tOriginal("YakRunner.singleSelectOnly"))
                     }
                     resolve(null)
                 } catch (error) {
@@ -807,7 +809,7 @@ export const setYakRunnerHistory = (newHistory: YakRunnerHistoryProps) => {
             setRemoteValue(YakRunnerOpenHistory, JSON.stringify(newHistoryData))
             emiter.emit("onRefreshRunnerHistory", JSON.stringify(newHistoryData))
         } catch (error) {
-            failed(`历史记录异常，重置历史 ${error}`)
+            failed(tOriginal("YakRunner.historyResetFailed", {error}))
             setRemoteValue(YakRunnerOpenHistory, JSON.stringify([]))
         }
     })

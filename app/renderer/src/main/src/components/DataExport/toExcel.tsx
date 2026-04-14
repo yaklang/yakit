@@ -4,6 +4,9 @@ import {saveAs} from "file-saver"
 import moment from "moment"
 import * as XLSX from "xlsx"
 import * as XLSXStyle from "xlsx-style"
+import i18n from "@/i18n/i18n"
+
+const tOriginal = i18n.getFixedT(null, "components")
 
 function sheet_from_array_of_arrays(data, optsSingleCellSetting) {
     var ws = {}
@@ -143,6 +146,6 @@ export function export_json_to_excel({
             `${filename}(${moment().valueOf()}).${bookType}`
         )
     } catch (error) {
-        yakitNotify("error", `xlsx过大:${error}`)
+        yakitNotify("error", tOriginal("ExportExcel.xlsxTooLarge", {error: String(error)}))
     }
 }

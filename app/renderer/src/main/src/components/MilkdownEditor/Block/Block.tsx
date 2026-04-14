@@ -35,6 +35,7 @@ import {
 import {HttpUploadImgBaseRequest} from "@/apiUtils/http"
 import {useStore} from "@/store"
 import {InitEditorHooksLocalProps} from "../utils/initEditor"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 interface BlockViewProps {
     type: HttpUploadImgBaseRequest["type"]
@@ -43,6 +44,7 @@ interface BlockViewProps {
 }
 export const BlockView: React.FC<BlockViewProps> = (props) => {
     const {notepadHash, type, localProps} = props
+    const {t} = useI18nNamespaces(["components"])
 
     const userInfo = useStore((s) => s.userInfo)
 
@@ -51,7 +53,7 @@ export const BlockView: React.FC<BlockViewProps> = (props) => {
 
     const [visibleAdd, setVisibleAdd] = useState(false)
     const [blockList, setBlockList] = useState<BlockListProps[]>(
-        !!localProps?.local ? createMilkdownMenuListByKey(localBlockKey) : createMilkdownMenuListByKey(onlineBlockKey)
+        !!localProps?.local ? createMilkdownMenuListByKey(t, localBlockKey) : createMilkdownMenuListByKey(t, onlineBlockKey)
     ) // 后期选中某个类型的组件可能不会显示一些操作
 
     const {view, prevState} = usePluginViewContext()

@@ -73,6 +73,7 @@ export const CollapseList: <T>(props: CollapseListProp<T>) => ReactElement | nul
 // 帮助信息
 export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
     const {onJumpToEditor} = props
+    const {t, i18n} = useI18nNamespaces(["yakRunner"])
     const {activeFile} = useStore()
 
     // 编辑器实例
@@ -322,7 +323,7 @@ export const HelpInfoList: React.FC<HelpInfoListProps> = memo((props) => {
                     />
                 }
             />
-            {getList.length === 0 && <div className={styles["no-data"]}>暂无帮助信息</div>}
+            {getList.length === 0 && <div className={styles["no-data"]}>{t("CollapseList.noHelpInfo")}</div>}
         </div>
     )
 })

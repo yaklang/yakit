@@ -6,8 +6,8 @@
   "CreateDictionaries": {
     "dictionaryNameExists": "字典名重复",
     "uploadHintLargeFile": "支持大文件上传(支持文件类型txt)",
-    "incorrectFormat": "{name}非txt、csv文件，请上传正确格式文件！",
-    "alreadySelected": "{path}已选择",
+    "incorrectFormat": "{{name}}非txt、csv文件，请上传正确格式文件！",
+    "alreadySelected": "{{path}}已选择",
     "storageMethod": "可根据需求选择以下存储方式，存储方式不影响使用：",
     "fileStorage": "文件存储：将字典以文件形式保存在本地，不支持命中次数，上传速度更快",
     "databaseStorage": "数据库存储：将字典数据读取后保存在数据库中，支持命中次数，搜索更方便",
@@ -26,7 +26,7 @@
   },
   "ReadOnlyNewPayload": {
     "selected": "已选中：",
-    "totalCheckedItems": "{count}个",
+    "totalCheckedItems": "{{count}}个",
     "insert": "插入",
     "supportInsertFileForFuzz": "支持插入文件进行Fuzz",
     "pleaseSelectDictionaryOrFolder": "请选择要插入的字典或文件夹"
@@ -34,7 +34,7 @@
   "NewPayloadLocalList": {
     "selectDictionaryToInsert": "选择想要插入的字典",
     "goToDictionaryManagement": "前往 字典管理",
-    "updateFailed": "数据更新失败：{error}",
+    "updateFailed": "数据更新失败：{{error}}",
     "folderExists": "文件夹已存在",
     "deleting": "正在删除中...",
     "renaming": "正在重命名中...",
@@ -62,7 +62,7 @@
   },
   "FolderComponent": {
     "createFolderSuccess": "新建文件夹成功",
-    "createFolderFailed": "新建文件夹失败：{error}",
+    "createFolderFailed": "新建文件夹失败：{{error}}",
     "nameNotAllowSpecial": "名称不允许出现/*,",
     "folderNameExistsCannotCreate": "文件夹名重复，不可创建",
     "folderNameExistsCannotEdit": "文件夹名重复，不可编辑",
@@ -77,11 +77,11 @@
     "extendDictionary": "扩充字典",
     "exportDictionary": "导出字典",
     "toDatabase": "转为数据库存储",
-    "extendTo": "扩充到 {name}",
+    "extendTo": "扩充到 {{name}}",
     "toDatabaseWaiting": "转为数据库存储中，请耐心等待..."
   },
   "MoveOrCopyPayload": {
-    "getDataFailed": "获取数据失败：{error}",
+    "getDataFailed": "获取数据失败：{{error}}",
     "pleaseSelect": "请选择..."
   },
   "PayloadLocalContent": {
@@ -89,10 +89,10 @@
     "contentCannotBeEmpty": "内容不能为空",
     "editorDataGetFailed": "编辑器数据获取失败",
     "pleaseSelectDictionary": "请选择字典",
-    "operationFailed": "操作字典失败: {error}",
+    "operationFailed": "操作字典失败: {{error}}",
     "backupToOther": "备份到其他字典",
     "moveToOther": "移动到其他字典",
-    "extendTo": "扩充到 {name}",
+    "extendTo": "扩充到 {{name}}",
     "extend": "扩充",
     "autoRemoveDuplicate": "自动去重",
     "autoRemoveDuplicateWaiting": "自动去重中，请耐心等待..."
@@ -106,10 +106,10 @@
     "exportWaiting": "导出中，请耐心等待..."
   },
   "UploadOrDownloadByPayloadGrpc": {
-    "waiting": "{type}中，请耐心等待..."
+    "waiting": "{{type}}中，请耐心等待..."
   },
   "NewPayload": {
-    "getDictionaryListFailed": "获取字典列表失败：{error}",
+    "getDictionaryListFailed": "获取字典列表失败：{{error}}",
     "migrateData": "迁移数据",
     "migrateDataContent": "由于Payload功能进行重构，为不影响使用，需要点击确定将旧数据进行迁移，迁移数据不会造成任何数据丢失。",
     "engineVersionTooLow": "引擎版本过低",
@@ -123,6 +123,6 @@
     "dictionaryContent": "字典内容",
     "addHitCountFieldNotice": "新增命中次数字段，命中次数越高，在爆破时优先级也会越高",
     "hitCount": "命中次数",
-    "recordCount": "共{i}条记录"
+    "recordCount": "共{{i}}条记录"
   }
 }

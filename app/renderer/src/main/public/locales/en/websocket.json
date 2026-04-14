@@ -19,6 +19,6 @@
     "serverResponse": "Server Response",
     "clientRequest": "Client Request",
     "frameDetails": "Data Frame Details",
-    "dataSize": "Data Size: {size}"
+    "dataSize": "Data Size: {{size}}"
   }
 }

@@ -19,7 +19,7 @@
     "pemExample": "例如如下内容："
   },
   "PEMHint": {
-    "saveHistoryNote": "注意：{appName} 并不会把历史记录上传到互联网",
+    "saveHistoryNote": "注意：{{appName}} 并不会把历史记录上传到互联网",
     "saveHistoryLocation": "你可以在你的本地目录（客户端目录）下找到远程登录信息",
     "openLocation": "打开远程信息储存位置"
   }

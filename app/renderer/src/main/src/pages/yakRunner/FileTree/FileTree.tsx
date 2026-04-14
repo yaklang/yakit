@@ -47,15 +47,18 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import cloneDeep from "lodash/cloneDeep"
 import {OpenFileByPathProps} from "../YakRunnerType"
 import {setClipboardText} from "@/utils/clipboard"
+import { TFunction, useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 
-const FolderMenu: YakitMenuItemProps[] = [
-    {label: "新建文件", key: "newFile"},
-    {label: "新建文件夹", key: "newFolder"},
-    {label: "在文件夹中显示", key: "openFileSystem"},
-    {label: "在终端打开", key: "openTernimal"}
-]
+const FolderMenu: (t: TFunction) => YakitMenuItemProps[] = (t) => {
+    return [
+        {label: t("YakitButton.newFile"), key: "newFile"},
+        {label: t("YakitButton.newFolder"), key: "newFolder"},
+        {label: t("FileTree.openFileSystem"), key: "openFileSystem"},
+        {label: t("FileTree.openTerminal"), key: "openTernimal"}
+    ]
+}
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
     const {folderPath, data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys} =
@@ -268,6 +271,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         setCopyPath,
         setFoucsedKey
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakRunner", "yakitUi"])
     const {areaInfo, activeFile, fileTree} = useStore()
     const {setAreaInfo, setActiveFile, setFileTree} = useDispatcher()
     // 是否为输入模式
@@ -321,7 +325,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 复制
     const onCopy = useMemoizedFn(() => {
         setCopyPath(info.path)
-        success(`已获取路径 ${info.path}`)
+        success(t("FileTree.copyPathSuccess", {path: info.path}))
     })
 
     // 复制绝对路径
@@ -332,7 +336,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     // 复制相对路径
     const onCopyRelativePath = useMemoizedFn(async () => {
         if (fileTree.length === 0) {
-            failed(`复制相对路径失败`)
+            failed(t("FileTree.copyRelativePathFailed"))
             return
         }
         try {
@@ -346,7 +350,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const onPaste = useMemoizedFn(async () => {
         try {
             if (!copyPath) {
-                warn("请先选择复制文件")
+                warn(t("FileTree.selectCopiedFileFirst"))
                 return
             }
             const fileDetail = getMapFileDetail(copyPath)
@@ -382,7 +386,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             emiter.emit("onRefreshFileTree")
         } catch (error) {
             setCopyPath("")
-            failed(`粘贴失败 ${error}`)
+            failed(t("YakitNotification.pasteFailed", {error: error + ""}))
         }
     })
 
@@ -544,7 +548,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             }
         } catch (error) {
             resetRename()
-            failed(`保存失败 ${error}`)
+                failed(t("YakitNotification.saveFailed", {error: error + ""}))
         }
     })
 
@@ -607,7 +611,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
                 emiter.emit("onRefreshFileTree")
             } catch (error) {
                 resetCreate()
-                failed(`新建失败 ${error}`)
+                failed(t("YakitNotification.createFailed", {error: error + ""}) )
             }
         }
         // 没有内容 新建失效
@@ -665,48 +669,48 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     const menuData: YakitMenuItemType[] = useMemo(() => {
         const base: YakitMenuItemType[] = [
             {
-                label: "删除",
+                label: t("YakitButton.delete"),
                 key: "delete",
                 type: "danger"
             },
             {
-                label: "重命名",
+                label: t("YakitButton.rename"),
                 key: "rename"
             }
         ]
         const CloseFolder: YakitMenuItemType[] = []
         if (fileTree.length > 0 && info.path === fileTree[0].path) {
             CloseFolder.push({
-                label: "关闭文件夹",
+                label: t("FileTree.closeFolder"),
                 key: "closeFolder"
             })
         }
         if (info.isFolder) {
             return [
                 ...CloseFolder,
-                ...FolderMenu,
+                ...FolderMenu(t),
                 {type: "divider"},
                 // {label: "复制", key: "copy"},
-                {label: "粘贴", key: "paste", disabled: copyPath.length === 0},
-                {label: "复制路径", key: "copyAbsolutePath"},
-                {label: "复制相对路径", key: "copyRelativePath"},
+                {label: t("YakitEditor.paste"), key: "paste", disabled: copyPath.length === 0},
+                {label: t("FileTree.copyPath"), key: "copyAbsolutePath"},
+                {label: t("FileTree.copyRelativePath"), key: "copyRelativePath"},
                 {type: "divider"},
                 ...base
             ]
         } else {
             return [
-                {label: "在文件夹中显示", key: "openFileSystem"},
-                {label: "在终端打开", key: "openTernimal"},
+                {label: t("FileTree.showInFolder"), key: "openFileSystem"},
+                {label: t("FileTree.openTerminal"), key: "openTernimal"},
                 {type: "divider"},
-                {label: "复制", key: "copy"},
-                {label: "粘贴", key: "paste", disabled: copyPath.length === 0},
-                {label: "复制路径", key: "copyAbsolutePath"},
-                {label: "复制相对路径", key: "copyRelativePath"},
+                {label: t("YakitButton.copy"), key: "copy"},
+                {label: t("YakitEditor.paste"), key: "paste", disabled: copyPath.length === 0},
+                {label: t("FileTree.copyPath"), key: "copyAbsolutePath"},
+                {label: t("FileTree.copyRelativePath"), key: "copyRelativePath"},
                 {type: "divider"},
                 ...base
             ]
         }
-    }, [info, copyPath])
+    }, [info, copyPath, i18n.language])
 
     // 此处关闭文件夹由于审计树没有树右键 因此只有文件树存在
     const closeFolder = useMemoizedFn(() => {
@@ -838,8 +842,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
             )}
             <YakitHint
                 visible={removeCheckVisible}
-                title={`是否要删除${info.name}`}
-                content={`确认删除后将会彻底删除（windows系统将会移入回收站）`}
+                title={t("FileTree.deleteConfirmTitle", {name: info.name})}
+                content={t("FileTree.deleteConfirmContent")}
                 onOk={onDelete}
                 onCancel={() => setRemoveCheckVisible(false)}
             />

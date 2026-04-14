@@ -63,6 +63,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import classNames from 'classnames'
 import '../../plugins/plugins.scss'
 import styles from './PluginEditor.module.scss'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -96,7 +97,8 @@ interface PluginEditorProps {
 
 export const PluginEditor: React.FC<PluginEditorProps> = memo(
   forwardRef((props, ref) => {
-    const { title = '新建插件', headerExtra, onEditCancel } = props
+    const {t} = useI18nNamespaces(["plugin", "yakitUi"])
+    const { title = t("PluginEditor.newPlugin"), headerExtra, onEditCancel } = props
 
     const userinfo = useStore((s) => s.userInfo)
     const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -130,7 +132,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
           }
         })
         .catch((e: any) => {
-          yakitNotify('error', '查询旧数据迁移失败: ' + e)
+          yakitNotify('error', t("PluginEditor.fetchOldDataFailed") + e)
         })
         .finally(() => {
           setTimeout(() => {
@@ -193,12 +195,12 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
     const onFetchPlugin = useMemoizedFn(() => {
       if (!editPlugin.current) {
-        yakitNotify('error', '获取插件详情异常，请求为空')
+        yakitNotify('error', t("PluginEditor.fetchPluginDetailEmpty"))
         return
       }
       const { name, uuid } = editPlugin.current
       if (!name && !uuid) {
-        yakitNotify('error', '获取插件详情异常，请求插件名为空')
+        yakitNotify('error', t("PluginEditor.fetchPluginNameEmpty"))
         return
       }
 
@@ -932,7 +934,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
     return (
       <div ref={wrapperRef} tabIndex={0} className={styles['plugin-editor']}>
-        <YakitSpin spinning={loading} tip="获取插件详情中...">
+        <YakitSpin spinning={loading} tip={t("PluginEditor.loadingPluginDetail")}>
           <div className={styles['plugin-editor-wrapper']}>
             <div
               className={classNames(styles['plugin-editor-header'], {
@@ -942,7 +944,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
               <div className={styles['header-title']}>
                 {title}
                 <div className={styles['header-subtitle']} onClick={handleOpenHelp}>
-                  <span className={classNames(styles['subtitle-style'])}>帮助文档</span>
+                  <span className={classNames(styles['subtitle-style'])}>{t("PluginEditor.helpDoc")}</span>
                   <OutlineQuestionmarkcircleIcon />
                 </div>
               </div>
@@ -956,7 +958,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     type="outline2"
                     size={isEdit ? 'middle' : 'large'}
                     icon={<OutlineDocumentduplicateIcon />}
-                    name="复制至云端"
+                    name={t("PluginEditor.copyToCloud")}
                     onClick={onBtnCopyOnline}
                   />
                 )}
@@ -968,7 +970,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     type="outline1"
                     size={isEdit ? 'middle' : 'large'}
                     icon={<OutlinePaperairplaneIcon />}
-                    name="提交并保存"
+                    name={t("PluginEditor.submitAndSave")}
                     onClick={onBtnSubmitOnline}
                   />
                 )}
@@ -980,7 +982,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     type="outline1"
                     size={isEdit ? 'middle' : 'large'}
                     icon={<OutlineClouduploadIcon />}
-                    name="同步至云端"
+                    name={t("PluginEditor.syncToCloud")}
                     onClick={onBtnOnlineSave}
                   />
                 )}
@@ -991,7 +993,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                   type="outline1"
                   size={isEdit ? 'middle' : 'large'}
                   icon={<OutlineExitIcon />}
-                  name="保存并退出"
+                  name={t("PluginEditor.saveAndExit")}
                   onClick={onBtnLocalSaveAndExit}
                 />
                 <HubButton
@@ -1000,7 +1002,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                   loading={localLoading}
                   size={isEdit ? 'middle' : 'large'}
                   icon={<SolidStoreIcon />}
-                  name="保存"
+                  name={t("YakitButton.save")}
                   onClick={onBtnLocalSave}
                 />
 
@@ -1041,10 +1043,10 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
               getContainer={wrapperRef.current || undefined}
               wrapClassName={styles['old-data-hint-wrapper']}
               visible={oldShow}
-              title="旧数据迁移提示"
-              content="由于参数设计升级，检测到数据库存储参数与插件源码里参数不同，使用会有问题，请点击“复制代码”将参数复制到插件源码中。"
-              okButtonText="复制代码"
-              cancelButtonText="忽略"
+              title={t("PluginEditor.oldDataMigrationTitle")}
+              content={t("PluginEditor.oldDataMigrationContent")}
+              okButtonText={t("PluginEditor.copyCode")}
+              cancelButtonText={t("YakitButton.ignore")}
               okButtonProps={{ loading: copyLoading }}
               onOk={onOldDataOk}
               onCancel={onOldDataCancel}
@@ -1071,16 +1073,17 @@ interface PluginCopyModalProps {
 /** @name 插件复制云端 */
 const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
   const { visible, setVisible } = props
+  const {t} = useI18nNamespaces(["plugin", "yakitUi"])
 
   const [name, setName] = useState<string>('')
 
   const onSubmit = useMemoizedFn(() => {
     if (!name) {
-      yakitNotify('error', '请输入复制插件的名称')
+      yakitNotify('error', t("PluginEditor.enterCopyName"))
       return
     }
     if (name.length > 100) {
-      yakitNotify('error', '插件名最长100位')
+      yakitNotify('error', t("PluginEditor.pluginNameMaxLength"))
       return
     }
     setVisible(true, name)
@@ -1091,7 +1094,7 @@ const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
 
   return (
     <YakitModal
-      title="复制至云端"
+      title={t("PluginEditor.copyToCloud")}
       type="white"
       width={506}
       centered={true}
@@ -1104,11 +1107,11 @@ const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
     >
       <div className={styles['plugin-copy-body']}>
         <div className={styles['copy-header']}>
-          复制插件并同步到自己的私密插件，无需作者同意，即可保存修改内容至云端
+          {t("PluginEditor.copyToCloudDesc")}
         </div>
         <div className={styles['copy-wrapper']}>
-          <div className={styles['title-style']}>插件名称 : </div>
-          <YakitInput placeholder="请输入..." value={name} onChange={(e) => setName(e.target.value)} />
+          <div className={styles['title-style']}>{t("PluginEditor.pluginName")}</div>
+          <YakitInput placeholder={t("YakitInput.please_enter")} value={name} onChange={(e) => setName(e.target.value)} />
         </div>
       </div>
     </YakitModal>

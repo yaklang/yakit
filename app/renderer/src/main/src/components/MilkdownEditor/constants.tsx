@@ -12,6 +12,7 @@ import {
     IconType
 } from "./icon/icon"
 import {ReactNode} from "react"
+import { TFunction } from "@/i18n/useI18nNamespaces"
 
 export interface MilkdownBaseUtilProps {
     key: string
@@ -31,74 +32,74 @@ export const MilkdownMenu = {
     text: {
         key: "text",
         icon: <IconType />,
-        label: "文本",
-        description: "文本"
+        labelKey: "MilkdownEditor.menu.text.label",
+        descriptionKey: "MilkdownEditor.menu.text.description"
     },
     heading1: {
         key: "heading1",
         icon: <IconHeading1 />,
-        label: "一级标题",
-        description: "一级标题: #空格"
+        labelKey: "MilkdownEditor.menu.heading1.label",
+        descriptionKey: "MilkdownEditor.menu.heading1.description"
     },
     heading2: {
         key: "heading2",
         icon: <IconHeading2 />,
-        label: "二级标题",
-        description: "二级标题: ##空格"
+        labelKey: "MilkdownEditor.menu.heading2.label",
+        descriptionKey: "MilkdownEditor.menu.heading2.description"
     },
     heading3: {
         key: "heading3",
         icon: <IconHeading3 />,
-        label: "三级标题",
-        description: "三级标题: ###空格"
+        labelKey: "MilkdownEditor.menu.heading3.label",
+        descriptionKey: "MilkdownEditor.menu.heading3.description"
     },
     orderedList: {
         key: "orderedList",
         icon: <IconListOrdered />,
-        label: "有序列表",
-        description: "有序列表: 1.空格"
+        labelKey: "MilkdownEditor.menu.orderedList.label",
+        descriptionKey: "MilkdownEditor.menu.orderedList.description"
     },
     unorderedList: {
         key: "unorderedList",
         icon: <IconList />,
-        label: "无序列表",
-        description: "无序列表: -空格或*空格"
+        labelKey: "MilkdownEditor.menu.unorderedList.label",
+        descriptionKey: "MilkdownEditor.menu.unorderedList.description"
     },
     task: {
         key: "task",
         icon: <IconCheckSquare />,
-        label: "任务",
-        description: "任务"
+        labelKey: "MilkdownEditor.menu.task.label",
+        descriptionKey: "MilkdownEditor.menu.task.description"
     },
     codeBlock: {
         key: "codeBlock",
         icon: <IconCurlyBraces />,
-        label: "代码块",
-        description: "代码块:```空格"
+        labelKey: "MilkdownEditor.menu.codeBlock.label",
+        descriptionKey: "MilkdownEditor.menu.codeBlock.description"
     },
     quote: {
         key: "quote",
         icon: <IconQuote />,
-        label: "引用",
-        description: "引用: >空格"
+        labelKey: "MilkdownEditor.menu.quote.label",
+        descriptionKey: "MilkdownEditor.menu.quote.description"
     },
     highLight: {
         key: "highLight",
         icon: <OutlineLightbulbIcon />,
-        label: "高亮",
-        description: "高亮: :::success空格"
+        labelKey: "MilkdownEditor.menu.highLight.label",
+        descriptionKey: "MilkdownEditor.menu.highLight.description"
     },
     file: {
         key: "file",
         icon: <OutlinePaperclipIcon />,
-        label: "上传文件",
-        description: "上传文件"
+        labelKey: "MilkdownEditor.menu.file.label",
+        descriptionKey: "MilkdownEditor.menu.file.description"
     },
     divider: {
         key: "divider",
         icon: <IconFlipVertical />,
-        label: "分割线",
-        description: "分割线: ***"
+        labelKey: "MilkdownEditor.menu.divider.label",
+        descriptionKey: "MilkdownEditor.menu.divider.description"
     }
 }
 
@@ -115,10 +116,12 @@ export const MilkdownMenuKeyEnum = Object.fromEntries(
  * 根据传的key生成对应的工具菜单，按key的顺序
  * @param {MilkdownMenuType[]} keys
  * */
-export const createMilkdownMenuListByKey = (keys: MilkdownMenuType[]) => {
+export const createMilkdownMenuListByKey = (t: TFunction, keys: MilkdownMenuType[]) => {
     return keys.map((ele) => ({
         ...MilkdownMenu[ele],
-        key: ele
+        key: ele,
+        label: t(MilkdownMenu[ele].labelKey),
+        description: t(MilkdownMenu[ele].descriptionKey)
     }))
 }
 //#region slash

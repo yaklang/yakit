@@ -7,14 +7,14 @@
     "interruptConfirm": "是否<code>中断</code>当前正在进行的对话,使用",
     "confirmExecute": "确定要执行",
     "toolSuffix": "工具?",
-    "useForgeTask": "我要使用 {name} forge执行任务",
+    "useForgeTask": "我要使用 {{name}} forge执行任务",
     "params": ",参数:",
     "input": ",输入",
     "toolInfoError": "tool 信息异常，请关闭重试",
-    "useToolTask": "我要使用 {name} 工具执行任务",
-    "templateErrorWithId": "准备使用的模板异常: id('{id}'), 操作失败",
-    "toolErrorWithId": "准备使用的工具异常: id('{id}'), 操作失败",
-    "cancelBuildPluginFailed": "取消构建知识插件失败: {error}",
+    "useToolTask": "我要使用 {{name}} 工具执行任务",
+    "templateErrorWithId": "准备使用的模板异常: id('{{id}}'), 操作失败",
+    "toolErrorWithId": "准备使用的工具异常: id('{{id}}'), 操作失败",
+    "cancelBuildPluginFailed": "取消构建知识插件失败: {{error}}",
     "warning": "警告",
     "replaceSkillTemplateConfirm": "是否要替换当前使用的技能模板?",
     "replaceToolConfirm": "是否要替换当前使用的工具?",
@@ -73,7 +73,7 @@
     "addModel": "添加模型",
     "addThirdPartyApp": "添加第三方应用",
     "addLocalModel": "添加本地模型",
-    "clearConfirm": "是否确认清空所有{type}模型配置",
+    "clearConfirm": "是否确认清空所有{{type}}模型配置",
     "online": "线上",
     "local": "本地",
     "clearModelsTitle": "清空模型",
@@ -93,7 +93,7 @@
     "noDataDesc": "通过 api 访问模型，接受 AI 信息或向 Al 发送信息，可配置多个。"
   },
   "AILocalModelList": {
-    "llamaServerNotReady": "Llama服务器未准备就绪: {reason}",
+    "llamaServerNotReady": "Llama服务器未准备就绪: {{reason}}",
     "installLlamaServer": "安装Llama服务器",
     "myAdded": "我添加的",
     "recommendedModels": "推荐模型",
@@ -106,12 +106,12 @@
     "llamaInstalling": "LIama 服务器安装中..."
   },
   "AILocalModelListItem": {
-    "startModel": "启动模型 - {name}",
+    "startModel": "启动模型 - {{name}}",
     "downloadModel": "下载模型",
     "editLocalModel": "修改本地模型"
   },
   "AIAgent": {
-    "getKnowledgeBaseFailed": "获取知识库列表失败: {error}",
+    "getKnowledgeBaseFailed": "获取知识库列表失败: {{error}}",
     "tip": "提示",
     "memfitUpdateNotice": "Memfit会话数据升级，会删除系统内的所有历史会话记录",
     "clearHistoryConfirm": "是否清除数据库历史记录"

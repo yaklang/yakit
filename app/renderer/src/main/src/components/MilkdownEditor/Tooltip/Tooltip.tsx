@@ -39,35 +39,37 @@ import type {VirtualElement} from "@floating-ui/dom"
 import {computePosition, flip, offset} from "@floating-ui/dom"
 import {posToDOMRect} from "@milkdown/prose"
 import {mentionCustomSchema} from "../utils/mentionPlugin"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 export const tooltip = tooltipFactory("Text")
 
 const highlight = [
     {
         label: "remove",
-        description: "清除高亮"
+        descriptionKey: "highlight.remove"
     },
     {
         label: "note",
-        description: "灰色:  :::note空格"
+        descriptionKey: "highlight.note"
     },
     {
         label: "success",
-        description: "绿色:  :::success空格"
+        descriptionKey: "highlight.success"
     },
     {
         label: "danger",
-        description: "红色:  :::danger空格"
+        descriptionKey: "highlight.danger"
     },
     {
         label: "warning",
-        description: "黄色:  :::warning空格"
+        descriptionKey: "highlight.warning"
     }
 ]
 const tooltipWidth = 324
 
 interface TooltipViewProps {}
 export const TooltipView: React.FC<TooltipViewProps> = () => {
+    const {t, i18n} = useI18nNamespaces(["components"])
     const [visibleText, setVisibleText] = useState<boolean>(false)
     const [visibleLight, setVisibleLight] = useState<boolean>(false)
 
@@ -95,11 +97,13 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
             } else {
                 return {
                     ...MilkdownMenu[ele],
-                    key: ele
+                    key: ele,
+                    label: t(MilkdownMenu[ele].labelKey),
+                    description: t(MilkdownMenu[ele].descriptionKey)
                 }
             }
         })
-    }, [])
+    }, [i18n.language])
 
     useEffect(() => {
         if (loading) {
@@ -442,7 +446,7 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
                 content={
                     <div className={styles["tooltip-light-popover-content"]}>
                         {highlight.map((item) => (
-                            <Tooltip key={item.label} title={item.description}>
+                            <Tooltip key={item.label} title={t(item.descriptionKey)}>
                                 <div
                                     key={item.label}
                                     className={classNames(styles["tooltip-type-item"], styles[`item-${item.label}`])}
@@ -466,11 +470,11 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
             </YakitPopover>
             <div className={styles["tooltip-divider"]} />
             <div className={styles["tooltip-tool"]}>
-                <TooltipIcon title='粗体:**文本**空格' icon={<IconBold />} onClick={onBold} />
-                <TooltipIcon title='删除线:~文本~空格' icon={<IconStrikethrough />} onClick={onStrikethrough} />
-                <TooltipIcon title='斜体:*文本*空格' icon={<IconItalic />} onClick={onEmphasis} />
-                <TooltipIcon title='下划线: :u[文本]' icon={<IconUnderline />} onClick={onUnderline} />
-                <TooltipIcon title='代码块:```空格' icon={<IconCode2 />} onClick={onAddCode} />
+                <TooltipIcon title={t("MilkdownEditor.tooltip.bold")} icon={<IconBold />} onClick={onBold} />
+                <TooltipIcon title={t("MilkdownEditor.tooltip.strikethrough")} icon={<IconStrikethrough />} onClick={onStrikethrough} />
+                <TooltipIcon title={t("MilkdownEditor.tooltip.italic")} icon={<IconItalic />} onClick={onEmphasis} />
+                <TooltipIcon title={t("MilkdownEditor.tooltip.underline")} icon={<IconUnderline />} onClick={onUnderline} />
+                <TooltipIcon title={t("MilkdownEditor.tooltip.codeBlock")} icon={<IconCode2 />} onClick={onAddCode} />
                 {/* <TooltipIcon icon={<OutlineAnnotationIcon />} onClick={onAddComment} /> */}
             </div>
         </div>

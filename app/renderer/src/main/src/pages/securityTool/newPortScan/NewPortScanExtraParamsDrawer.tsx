@@ -513,7 +513,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
                                 label: t("FingerprintSettingsPanel.customFingerprint")
                             }}
                             accept='.yaml,.yml'
-                            help={t("FingerprintSettingsPanel.dragYamlFilesHelp")}
+                            help={t("YakitFormDragger.dragFileHereOr", {fileType: "yaml、yml"})}
                             selectType='file'
                             multiple={true}
                         />

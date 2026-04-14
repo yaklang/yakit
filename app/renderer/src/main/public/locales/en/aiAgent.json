@@ -7,14 +7,14 @@
     "interruptConfirm": "Whether to <code>interrupt</code> the current conversation and use",
     "confirmExecute": "Are you sure to execute",
     "toolSuffix": " tool?",
-    "useForgeTask": "I want to use {name} forge to execute the task",
+    "useForgeTask": "I want to use {{name}} forge to execute the task",
     "params": ", params:",
     "input": ", input:",
     "toolInfoError": "Tool information error, please close and try again",
-    "useToolTask": "I want to use {name} tool to execute the task",
-    "templateErrorWithId": "Template error: id('{id}'), operation failed",
-    "toolErrorWithId": "Tool error: id('{id}'), operation failed",
-    "cancelBuildPluginFailed": "Failed to cancel build knowledge plugin: {error}",
+    "useToolTask": "I want to use {{name}} tool to execute the task",
+    "templateErrorWithId": "Template error: id('{{id}}'), operation failed",
+    "toolErrorWithId": "Tool error: id('{{id}}'), operation failed",
+    "cancelBuildPluginFailed": "Failed to cancel build knowledge plugin: {{error}}",
     "warning": "Warning",
     "replaceSkillTemplateConfirm": "Whether to replace the current skill template?",
     "replaceToolConfirm": "Whether to replace the current tool?",
@@ -73,7 +73,7 @@
     "addModel": "Add Model",
     "addThirdPartyApp": "Add Third-Party Application",
     "addLocalModel": "Add Local Model",
-    "clearConfirm": "Are you sure to clear all {type} model configurations?",
+    "clearConfirm": "Are you sure to clear all {{type}} model configurations?",
     "online": "Online",
     "local": "Local",
     "clearModelsTitle": "Clear Models",
@@ -93,7 +93,7 @@
     "noDataDesc": "Access models via API, receive AI info or send messages to AI, multiple configurations possible."
   },
   "AILocalModelList": {
-    "llamaServerNotReady": "Llama server not ready: {reason}",
+    "llamaServerNotReady": "Llama server not ready: {{reason}}",
     "installLlamaServer": "Install Llama Server",
     "myAdded": "My Added",
     "recommendedModels": "Recommended Models",
@@ -106,12 +106,12 @@
     "llamaInstalling": "Llama server installing..."
   },
   "AILocalModelListItem": {
-    "startModel": "Start Model - {name}",
+    "startModel": "Start Model - {{name}}",
     "downloadModel": "Download Model",
     "editLocalModel": "Edit Local Model"
   },
   "AIAgent": {
-    "getKnowledgeBaseFailed": "Failed to get knowledge base list: {error}",
+    "getKnowledgeBaseFailed": "Failed to get knowledge base list: {{error}}",
     "tip": "Tip",
     "memfitUpdateNotice": "Memfit session data upgraded, all historical session records in the system will be deleted.",
     "clearHistoryConfirm": "Whether to clear database history records"

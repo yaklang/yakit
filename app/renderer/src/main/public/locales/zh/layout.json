@@ -40,7 +40,7 @@
       "type": "类型",
       "remoteIP": "远端IP",
       "time": "时间",
-      "useCallbackService": "使用 {v1} 自带 {v2} 反连服务",
+      "useCallbackService": "使用 {{v1}} 自带 {{v2}} 反连服务",
       "generateDomain": "生成域名",
       "viewAccessRecords": "查看访问记录"
     },
@@ -95,9 +95,9 @@
   },
   "UILayout": {
     "entering": "即将进入...",
-    "projectSyncFailed": "{name} 项目数据同步失败, 请手动上传",
+    "projectSyncFailed": "{{name}} 项目数据同步失败, 请手动上传",
     "exiting": "即将退出...",
-    "engineModeSwitched": "引擎状态切换为: {mode}",
+    "engineModeSwitched": "引擎状态切换为: {{mode}}",
     "cannotExportProject": "当前项目无关键信息，无法导出!",
     "temporaryProject": "临时项目",
     "updateEngineTitle": "更新引擎，需关闭所有本地进程",
@@ -106,7 +106,7 @@
   "GlobalState": {
     "autoReverseConfigSuccess": "自启-全局反连配置成功",
     "dnslogConfigSuccess": "配置全局 DNSLog 生效",
-    "dnslogConfigFailed": "配置全局 DNSLog 失败：{error}",
+    "dnslogConfigFailed": "配置全局 DNSLog 失败：{{error}}",
     "cannotGetPcapInfo": "无法获取 PCAP 支持信息",
     "closeAllNodesSuccess": "成功关闭全部运行节点",
     "closeNodeSuccess": "成功关闭运行节点",
@@ -114,7 +114,7 @@
     "systemCheck": "系统检测",
     "checking": "自检中...",
     "noException": "暂无异常",
-    "exceptionsDetected": "检测到 {count} 项异常",
+    "exceptionsDetected": "检测到 {{count}} 项异常",
     "engineNotOfficial": "引擎不是官方发布版本",
     "engineNotOfficialDesc": "可能会造成本地使用出现问题",
     "useOfficialEngine": "使用官方引擎",
@@ -139,10 +139,10 @@
     "statusRefreshInterval": "状态刷新间隔时间"
   },
   "SetUserInfo": {
-    "avatarUpdateFailed": "头像更换失败：{error}",
+    "avatarUpdateFailed": "头像更换失败：{{error}}",
     "avatarUpdateSuccess": "头像更换成功",
     "avatarUploadFailed": "头像上传失败",
-    "avatarFileTypeLimit": "{name}非png、png、jpeg文件，请上传正确格式文件！",
+    "avatarFileTypeLimit": "{{name}}非png、png、jpeg文件，请上传正确格式文件！",
     "admin": "管理员"
   },
   "Main": {
@@ -175,7 +175,7 @@
     "holeCollect": "漏洞汇总",
     "systemConfig": "系统配置",
     "screenRecordingNotice": "录屏须知",
-    "isScrecorderReadyFailed": "IsScrecorderReady失败: {error}",
+    "isScrecorderReadyFailed": "IsScrecorderReady失败: {{error}}",
     "engineConsole": "引擎Console",
     "signOutSuccess": "已成功退出账号",
     "signOutRemoteConfirm": "点击退出登录将自动退出远程控制，是否确认退出",

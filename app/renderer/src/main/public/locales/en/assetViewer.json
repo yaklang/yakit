@@ -6,7 +6,7 @@
     "sendTo": "Send to...",
     "deleteSelectedConfirm": "Are you sure you want to delete the selected data?",
     "clearListConfirm": "Are you sure you want to clear the list?",
-    "exportFailed": "Data export failed: {error}",
+    "exportFailed": "Data export failed: {{error}}",
     "batchNotSupportSelectAll": "This batch operation does not support select all",
     "exportName": "Domain Assets"
   },
@@ -37,7 +37,7 @@
     "owner": "Owner",
     "source": "Source",
     "selectReport": "Select a report to view content",
-    "pages": "Total {total} pages",
+    "pages": "Total {{total}} pages",
     "selectFolder": "Please select a folder",
     "exportSuccess": "Report exported successfully"
   }

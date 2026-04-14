@@ -3,8 +3,8 @@
     "searchUserPlaceholder": "Enter username to search"
   },
   "OrganizationAdmin": {
-    "getOrganizationFailed": "Failed to get organization: {error}",
-    "getNoDepartmentFailed": "Failed to get unassigned organization: {error}",
+    "getOrganizationFailed": "Failed to get organization: {{error}}",
+    "getNoDepartmentFailed": "Failed to get unassigned organization: {{error}}",
     "unassigned": "Unassigned",
     "organization": "Organization",
     "addFirstLevelDepartment": "Add First-level Department",
@@ -25,7 +25,7 @@
     "resetPwdTooltip": "Reset User Password",
     "copySecretKeyTooltip": "Copy Secret Key",
     "deleteUserConfirm": "Are you sure to delete this user?",
-    "getListFailed": "Failed to get account list: {error}"
+    "getListFailed": "Failed to get account list: {{error}}"
   },
   "HoleCollectPage": {
     "title": "Title",
@@ -35,7 +35,7 @@
     "discoveryTime": "Discovery Time",
     "uploadTime": "Upload Time",
     "deleteHoleConfirm": "Are you sure to delete this vulnerability?",
-    "exportFailed": "Data export failed: {error}",
+    "exportFailed": "Data export failed: {{error}}",
     "riskAndVulnerability": "Risk & Vulnerability",
     "refreshTooltip": "Refresh will reset all search criteria",
     "deleteSelectedConfirm": "Are you sure to delete selected risks? It cannot be recovered",
@@ -63,15 +63,15 @@
     "totalUsers": "Total Users",
     "generateLicense": "Generate License",
     "confirmDeleteCompany": "Are you sure to delete this company?",
-    "viewLicenseFailed": "Failed to view license: {error}",
+    "viewLicenseFailed": "Failed to view license: {{error}}",
     "deleteCompanySuccess": "Company deleted successfully",
-    "deleteCompanyFailed": "Failed to delete company: {error}",
+    "deleteCompanyFailed": "Failed to delete company: {{error}}",
     "addCompany": "Add Company",
     "editCompany": "Edit Company",
     "createCompany": "Create Company"
   },
   "LicenseForm": {
-    "companyOperationFailed": "Company operation failed: {error}",
+    "companyOperationFailed": "Company operation failed: {{error}}",
     "changeUserCountWarning": "Changing the total number of users requires modifying the License of the private deployment server, which will consume one License generation count. Therefore, the total number of Licenses will be increased by 1 by default.",
     "inputCompanyName": "Please enter company name",
     "totalLicenses": "Total Licenses",
@@ -101,14 +101,14 @@
     "auditPlugin": "Audit Plugin",
     "createdAt": "Creation Time",
     "confirmDeleteRole": "Are you sure to delete this role?",
-    "getRoleListFailed": "Failed to get role list: {error}",
+    "getRoleListFailed": "Failed to get role list: {{error}}",
     "deleteRoleSuccess": "Role deleted successfully",
-    "deleteRoleFailed": "Failed to delete role: {error}",
+    "deleteRoleFailed": "Failed to delete role: {{error}}",
     "confirmDeleteSelectedRoles": "Are you sure to delete selected roles? Cannot be recovered",
     "createRole": "Create Role"
   },
   "RoleOperationForm": {
-    "failed": "Failed: {error}",
+    "failed": "Failed: {{error}}",
     "all": "All",
     "inputRoleName": "Please enter role name",
     "pluginPermissions": "Plugin Permissions",
@@ -125,15 +125,15 @@
     "auditor": "Auditor",
     "createdAt": "Creation Time",
     "confirmRemoveUser": "Are you sure to remove this user?",
-    "getAccountListFailed": "Failed to get account list: {error}",
+    "getAccountListFailed": "Failed to get account list: {{error}}",
     "deleteUserSuccess": "User deleted successfully",
-    "deleteUserFailed": "Failed to delete user: {error}",
+    "deleteUserFailed": "Failed to delete user: {{error}}",
     "confirmDeleteSelectedUsers": "Are you sure you want to delete the selected user? This action cannot be undone.",
     "addUser": "Add User"
   },
   "CreateUserForm": {
-    "addFailed": "Failed to add: {error}",
-    "getNormalUserFailed": "Failed to get normal user: {error}",
+    "addFailed": "Failed to add: {{error}}",
+    "getNormalUserFailed": "Failed to get normal user: {{error}}",
     "addUserRequired": "Add user is required",
     "inputFullUsername": "Please enter full username",
     "selectRole": "Select Role",

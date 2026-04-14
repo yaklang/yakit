@@ -27,7 +27,7 @@
     "autoGenerateExtractionRule": "Auto-Generate Extraction Rule",
     "regexExtractWithPrefixSuffix": "Prefix/Suffix Regex Extraction",
     "singleRegexExtract": "Single Regex Extraction",
-    "responseCount": "Total {responses} responses",
+    "responseCount": "Total {{responses}} responses",
     "extractData": "Extract Data",
     "prefixRegex": "Prefix (Regex):",
     "suffixRegex": "Suffix (Regex):",
@@ -46,7 +46,7 @@
     "exportJson": "Export JSON",
     "exportCsv": "Export CSV",
     "outputToDirectory": "Output to Directory",
-    "optionalDefaultYakitTempDir": "Optional, defaults to {yakit} temp directory",
+    "optionalDefaultYakitTempDir": "Optional, defaults to {{yakit}} temp directory",
     "fileName": "File Name",
     "asteriskAsRandom": "'*' can be used as a random string placeholder. Do not include the file extension.",
     "generateDataToLocalFile": "Generate Data to Local File",
@@ -67,7 +67,7 @@
     "buildRequest": "Construct Request",
     "syncConfig": "Sync Config",
     "allTraffic": "All Traffic",
-    "response_overflow": "Response count exceeds {maxData}. To avoid excessive frontend rendering pressure, some packets will be discarded for display here. Please click",
+    "response_overflow": "Response count exceeds {{maxData}}. To avoid excessive frontend rendering pressure, some packets will be discarded for display here. Please click",
     "view_all_suffix": "to view all data",
     "advanced_filter_suggestion": "For advanced filtering, multi-condition combined queries, or other complex operations, it is recommended to click and jump to ",
     "performAction": " to perform the action",
@@ -88,14 +88,14 @@
     "run_function_end": "Run Function - End:",
     "send_complete": "Send Complete",
     "success_and_failure_length": "Success and Failure Length",
-    "success_failure_count": "Success: {success} -- Failed: ${failed}",
+    "success_failure_count": "Success: {{success}} -- Failed: {{failed}}",
     "send_request": "Send Request",
     "parameter": "Parameter",
     "trafficAnalysisMode": "TrafficAnalysis Mode",
     "trafficAnalysis": "TrafficAnalysis"
   },
   "FuzzerExtraShow": {
-    "responsesDiscarded": "Discarded [{droppedCount}] responses",
+    "responsesDiscarded": "Discarded [{{droppedCount}}] responses",
     "proxy": "Proxy:",
     "systemProxy": "System Proxy:",
     "realHost": "Real Host:",
@@ -132,8 +132,8 @@
   "SecondNodeTitle": {
     "oversizedResponse": "Oversized Response",
     "contentTypeModified": "Content-Type was modified; the original content is displayed next to the corresponding field",
-    "success": "Success [{count}]",
-    "failure": "Failure [{count}]",
+    "success": "Success [{{success}}]",
+    "failure": "Failure [{{failed}}]",
     "concurrencyLoad": "Concurrency/Load"
   },
   "EditorOverlayWidget": {
@@ -185,8 +185,8 @@
   },
   "HTTPFuzzerHotPatch": {
     "enableModifiedHotReload": "Enable modified hot reload code and configuration?",
-    "updateTemplateSuccess": "Successfully updated template {tempName}",
-    "updateTemplateFailed": "Failed to update template {tempName}:",
+    "updateTemplateSuccess": "Successfully updated template {{tempName}}",
+    "updateTemplateFailed": "Failed to update template {{tempName}}:",
     "debugInsertHotReload": "Debug / Insert Hot Reload Code",
     "resultDisplay": "Result Display",
     "copyFuzzResult": "Copy Fuzz Result",
@@ -219,8 +219,8 @@
   "HTTPFuzzerHistorySelector": {
     "confirmDeletePackets": "This will delete the data packets and cached data. Are you sure you want to delete them?",
     "quickSearch": "Quick Search:",
-    "totalFlows": "Total: {HTTPFlowTotal}",
-    "successCount": "Success: {HTTPFlowSuccessCount}"
+    "totalFlows": "Total: {{HTTPFlowTotal}}",
+    "successCount": "Success: {{HTTPFlowSuccessCount}}"
   },
   "HTTPFuzzerClickEditorMenu": {
     "insertTag": "Insert Tag",
@@ -340,7 +340,7 @@
     "oneDay": "1 day",
     "password": "Password:",
     "limitShareCount": "Limit share count:",
-    "timesValue": "{value} times",
+    "timesValue": "{{value}} times",
     "shareId": "Share ID:",
     "generateShareToken": "Generate Share Token",
     "copiedToClipboard": "Copied to clipboard",
@@ -549,7 +549,7 @@
     "no_valid_extractor": "No valid extractor (all are empty)",
     "no_valid_match_found": "No valid match found",
     "data_extraction_error": "Data extraction error:",
-    "duplicate_name_error": "The name '{namesElement}' is duplicated. Please modify it before applying.",
+    "duplicate_name_error": "The name '{{namesElement}}' is duplicated. Please modify it before applying.",
     "matcher": "Matcher",
     "extractor": "Extractor",
     "addMatcher": "Add Matcher",
@@ -690,14 +690,13 @@
     "inputConfig": "Input Config",
     "uploadFile": "Upload File",
     "hostsConfig": "hosts config",
-    "dragOrUpload": "Drag file here or",
     "example": "Sample Template",
     "fileRequired": "Please select a hosts config file first",
-    "unsupportedFileType": "Only the following text file types are supported: {accept}",
-    "fileReadFailed": "Failed to read file: {error}",
+    "unsupportedFileType": "Only the following text file types are supported: {{accept}}",
+    "fileReadFailed": "Failed to read file: {{error}}",
     "emptyOrUnreadableFile": "The file is empty or could not be read. Please select a supported text file",
     "parseFailed": "Parse failed. No valid hosts entries were found",
-    "parseSuccess": "Parse succeeded. Imported {count} hosts entries",
+    "parseSuccess": "Parse succeeded. Imported {{count}} hosts entries",
     "uploadPlaceholder": "The path can be entered manually, and the supported format is txt/hosts"
   }
 }

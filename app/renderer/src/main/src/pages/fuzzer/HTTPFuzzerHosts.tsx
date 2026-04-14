@@ -31,7 +31,7 @@ export const inputHTTPFuzzerHostConfigItem = (
             <div style={{padding: 24}}>
                 <HTTPFuzzerHostInput
                     onAdd={handler}
-                    onBatchAdd={batchHandler} 
+                    onBatchAdd={batchHandler}
                     onClose={() => {
                         m.destroy()
                     }}
@@ -142,10 +142,10 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
                 handleSubmit()
             }}
         >
-            <YakitRadioButtons 
-                buttonStyle="solid" 
-                value={configType} 
-                onChange={(e) => setConfigType(e.target.value)} 
+            <YakitRadioButtons
+                buttonStyle="solid"
+                value={configType}
+                onChange={(e) => setConfigType(e.target.value)}
                 options={typeOptions}
                 className={styles["host_upload_radio"]}
             />
@@ -182,11 +182,11 @@ const HTTPFuzzerHostInput: React.FC<HTTPFuzzerHostInputProp> = (props) => {
                     multiple={false}
                     value={fileName}
                     onChange={setFileName}
-                    help={t("HTTPFuzzerHosts.dragOrUpload")}
+                    help={t("YakitDraggerContent.drag_file_tip")}
                     showExtraHelp={
                         <YakitButton
                             style={{ marginLeft: 70 }}
-                            type="text" 
+                            type="text"
                             onClick={onDownloadExampleTemplate}
                         >
                             {t("HTTPFuzzerHosts.example")}

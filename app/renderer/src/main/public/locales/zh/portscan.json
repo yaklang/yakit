@@ -40,7 +40,7 @@
     "serviceFingerprint": "服务指纹",
     "allFingerprint": "全部指纹",
     "bruteForceConfig": "弱口令配置",
-    "invalidFileType": "{name} 非 txt、Excel 文件，请上传 txt、Excel 格式文件！",
+    "invalidFileType": "{{name}} 非 txt、Excel 文件，请上传 txt、Excel 格式文件！",
     "userDict": "用户字典:",
     "useDefaultUserDict": "同时使用默认用户字典",
     "passwordDict": "密码字典:",
@@ -94,7 +94,6 @@
     "deleteTemplateSuccess": "模板删除成功",
     "scanTarget": "扫描目标",
     "scanTargetPlaceholder": "域名/主机/IP/IP段均可，逗号分隔或按行分割",
-    "dragFilesHelp": "可将 TXT、Excel 文件拖入框内或",
     "saveAsTemplate": "存为模板",
     "defaultConfig": "默认配置",
     "scanModeLabel": "扫描模式：",
@@ -105,7 +104,6 @@
   "FingerprintSettingsPanel": {
     "allOption": "全部",
     "customFingerprint": "自定义指纹",
-    "dragYamlFilesHelp": "可将 yaml、yml 文件拖入框内或",
     "useFingerprintLib": "使用指纹库",
     "jsSsaParser": "JS SSA 解析",
     "jsSsaParserHelp": "在启用爬虫时进行 JS SSA 解析。开启后会使用大量资源,造成 cpu 飙升,如无需要建议关闭"
