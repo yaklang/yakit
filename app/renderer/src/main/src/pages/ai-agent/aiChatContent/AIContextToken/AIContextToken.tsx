@@ -8,6 +8,7 @@ import {
   ContextPressureEchartsProps,
   ResponseSpeedEcharts,
   ResponseSpeedEchartsProps,
+  TokenCountEcharts,
 } from '../../chatTemplate/AIEcharts'
 import styles from '../AIChatContent.module.scss'
 import { FC, memo, useCallback, useEffect, useRef, useState } from 'react'
@@ -373,6 +374,18 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
             <AICostDetailsEcharts dataEcharts={costEcharts} />
           </div>
         )}
+        <div className={styles['cost-wrapper']}>
+          <div className={styles['echarts-heard']}>
+            <div className={styles['echarts-heard-left']}>
+              <div className={styles['title']}>上下文字节统计</div>
+              <div className={styles['unit']}>（单位: Byte）</div>
+            </div>
+            <div className={styles['total']}>
+              总数 <span>231</span>
+            </div>
+          </div>
+          <TokenCountEcharts />
+        </div>
         <div style={{ height: '320px' }}>
           <ContextTable />
         </div>

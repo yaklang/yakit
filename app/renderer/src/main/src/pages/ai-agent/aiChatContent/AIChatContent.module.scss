@@ -242,13 +242,13 @@
   width: 480px;
   display: flex;
   flex-direction: column;
+  height: 100vh;
 
   .echarts-details-heard {
     display: flex;
     align-items: center;
     justify-content: space-between;
     height: 44px;
-    flex: 1;
     padding: 12px 12px 8px 12px;
     .echarts-details-title {
       display: flex;
@@ -272,6 +272,10 @@
     flex-direction: column;
     gap: 8px;
     padding: 0 12px 12px;
+    overflow-y: hidden;
+    &:hover {
+      overflow-y: overlay;
+    }
     .token-wrapper {
       @extend %echarts-wrapper;
       .token-heard {
@@ -332,6 +336,13 @@
         .threshold {
           color: var(--Colors-Use-Error-Primary);
         }
+        .unit {
+          color: var(--Colors-Use-Neutral-Text-4-Help-text);
+          color: var(--Colors-Use-Neutral-Text-4-Help-text, #9ca3b1);
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 16px;
+        }
 
         .title {
           color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -368,6 +379,17 @@
               color: var(--Colors-Use-Warning-Primary);
             }
           }
+        }
+      }
+      .total {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+        span {
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+          font-weight: 400;
         }
       }
     }
