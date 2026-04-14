@@ -10,7 +10,11 @@ const checks = [
   { envKey: 'OUTCOME_I18N', title: 'i18n（zh/en）', log: 'i18n-output.log' },
   { envKey: 'OUTCOME_ESLINT', title: 'ESLint（renderer src/main）', log: 'eslint-output.log' },
   { envKey: 'OUTCOME_TSC', title: 'TypeScript（renderer src/main）', log: 'tsc-output.log' },
-  { envKey: 'OUTCOME_ESLINT_ENGINE_LINK', title: 'ESLint（engine-link-startup）', log: 'eslint-engine-link-output.log' },
+  {
+    envKey: 'OUTCOME_ESLINT_ENGINE_LINK',
+    title: 'ESLint（engine-link-startup）',
+    log: 'eslint-engine-link-output.log',
+  },
   { envKey: 'OUTCOME_TSC_ENGINE_LINK', title: 'TypeScript（engine-link-startup）', log: 'tsc-engine-link-output.log' },
   { envKey: 'OUTCOME_MEDIA', title: '图片/视频体积', log: 'media-output.log' },
   { envKey: 'OUTCOME_FORMAT', title: 'Prettier', log: 'format-output.log' },
@@ -62,4 +66,3 @@ if (ghOut) {
 }
 
 fs.writeFileSync('pr-comment.md', md)
-
