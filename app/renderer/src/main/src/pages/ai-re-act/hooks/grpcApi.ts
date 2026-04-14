@@ -704,6 +704,39 @@ export declare namespace AIAgentGrpcApi {
     runtime_id: string
     title: string
   }
+
+  /** 上下文成分 */
+  export interface AIContextSections {
+    key: string
+    label: string
+    role: string
+    included: boolean
+    can_compress: boolean
+    bytes: number
+    lines: number
+    summary?: string
+    children?: AIContextSections[]
+  }
+
+  /** 上下文字节统计和上下文成分 */
+  export interface ContextStatsSections {
+    loop_name: string
+    nonce: string
+    /** 总字节数 */
+    prompt_bytes: number
+    prompt_lines: number
+    section_count: number
+    included_section_count: number
+    /** 系统信息 */
+    system_prompt_bytes: number
+    /** 运行内容 */
+    runtime_context_bytes: number
+    /** 用户输入 */
+    user_input_bytes: number
+    compressible_bytes: number
+    fixed_bytes: number
+    sections: AIContextSections[]
+  }
 }
 
 // #region AI相关普通接口的请求和定义结构
