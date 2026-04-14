@@ -1,8 +1,8 @@
-import {useRef, useEffect, Suspense, lazy} from "react"
+import {useRef, useEffect, Suspense, lazy, useState} from "react"
 // by types
 import {failed, warn, yakitFailed} from "./utils/notification"
 import {getRemoteValue, setRemoteValue} from "./utils/kv"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useInterval, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
@@ -219,8 +219,8 @@ function NewApp() {
                             wechatHeadImg: res.from_platform === "wechat" ? res.head_img : null,
                             qqName: res.from_platform === "qq" ? res.name : null,
                             qqHeadImg: res.from_platform === "qq" ? res.head_img : null,
-                            companyName: res.from_platform === "company" ? res.name : null,
-                            companyHeadImg: res.from_platform === "company" ? res.head_img : null,
+                            companyName: ["company", "ccb"].includes(res.from_platform) ? res.name : null,
+                            companyHeadImg: ["company", "ccb"].includes(res.from_platform) ? res.head_img : null,
                             role: res.role,
                             user_id: res.user_id,
                             token: resToken
@@ -328,6 +328,17 @@ function NewApp() {
             emiter.off("destroyMainWinAntdUiEvent", destroyMainWinAntdUi)
         }
     }, [])
+
+    // 半小时间隔定时收集流量信息
+    const [interval] = useState<number | undefined>(30 * 60 * 1000)
+    useInterval(() => {
+        const {token} = userInfo
+        if (token && token.length > 0) {
+            uploadProjectEvent.startUpload({
+                isUploadSyncData: true
+            })
+        }
+    }, interval)
 
     return (
         <UILayout linkSuccess={linkSuccess}>

@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react"
 import {API} from "@/services/swagger/resposeType"
 import {ColumnsTypeProps} from "@/components/TableVirtualResize/TableVirtualResizeType"
 import moment from "moment"
-import {Form, Space, TreeSelectProps} from "antd"
+import {Form, Space, Tooltip, TreeSelectProps} from "antd"
 import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
 import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
 import {useCampare} from "@/hook/useCompare/useCompare"
@@ -10,7 +10,7 @@ import {useCreation, useDebounceFn, useMemoizedFn, useUpdateEffect} from "ahooks
 import {NetWorkApi} from "@/services/fetch"
 import {yakitNotify} from "@/utils/notification"
 import {TableVirtualResize} from "@/components/TableVirtualResize/TableVirtualResize"
-import {PencilAltIcon, TrashIcon} from "@/assets/newIcon"
+import {PencilAltIcon, QuestionMarkCircleIcon, TrashIcon} from "@/assets/newIcon"
 import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {DefaultOptionType} from "antd/es/select"
@@ -61,7 +61,17 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
     const columns: ColumnsTypeProps[] = [
         {
             title: t("RoleAdminPage.roleName"),
-            dataKey: "name"
+            dataKey: "name",
+            render: (text, record) => {
+                return <div style={{display:"flex", alignItems:"center",gap:4}}>
+                <span>{text}</span>
+                {
+                    record.builtIn && <Tooltip title={"内置角色，无法操作"}>
+                        <QuestionMarkCircleIcon className={styles["icon-question"]} />
+                    </Tooltip>
+                }
+            </div>
+            }
         },
         {
             title: t("RoleAdminPage.operationPermissions"),
@@ -72,7 +82,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
         },
         {
             title: t("RoleAdminPage.createdAt"),
-            dataKey: "created_at",
+            dataKey: "createdAt",
             ellipsis: true,
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
@@ -82,7 +92,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
             fixed: "right",
             width: 65,
             render: (_, record: API.RoleList) =>
-                ["审核员"].includes(record.name) ? (
+                !!record.builtIn ? (
                     <></>
                 ) : (
                     <Space>
@@ -277,7 +287,12 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
                     type: "checkbox",
                     selectedRowKeys,
                     onSelectAll,
-                    onChangeCheckboxSingle
+                    onChangeCheckboxSingle,
+                    getCheckboxProps(record) {
+                        return {
+                            disabled: record.builtIn
+                        }
+                    },
                 }}
             ></TableVirtualResize>
             <YakitModal
