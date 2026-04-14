@@ -10,14 +10,9 @@ const path = require('path')
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.ico'])
 const VIDEO_EXT = new Set(['.mp4', '.webm', '.mov', '.m4v', '.avi', '.mkv'])
 
-const imageMax =
-  Number(process.env.MEDIA_IMAGE_MAX_BYTES) > 0
-    ? Number(process.env.MEDIA_IMAGE_MAX_BYTES)
-    : 500 * 1024
+const imageMax = Number(process.env.MEDIA_IMAGE_MAX_BYTES) > 0 ? Number(process.env.MEDIA_IMAGE_MAX_BYTES) : 500 * 1024
 const videoMax =
-  Number(process.env.MEDIA_VIDEO_MAX_BYTES) > 0
-    ? Number(process.env.MEDIA_VIDEO_MAX_BYTES)
-    : 2 * 1024 * 1024
+  Number(process.env.MEDIA_VIDEO_MAX_BYTES) > 0 ? Number(process.env.MEDIA_VIDEO_MAX_BYTES) : 2 * 1024 * 1024
 
 function human(n) {
   if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(2)} MiB`
