@@ -477,7 +477,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     setMode('re-act')
     handleStart({
       qs: `${t('AIAgentChat.useToolTask', {
-        name: `${activeTool.VerboseName}(${activeTool.Name})`,
+        name: `${activeTool.VerboseName || activeTool.Name}`,
       })}${question ? `${t('AIAgentChat.input')}${question}` : ''}`,
     })
     handleClearActiveTool()
