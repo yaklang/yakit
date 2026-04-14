@@ -1,8 +1,8 @@
-import {useRef, useEffect, Suspense, lazy} from "react"
+import {useRef, useEffect, Suspense, lazy, useState} from "react"
 // by types
 import {failed, warn, yakitFailed} from "./utils/notification"
 import {getRemoteValue, setRemoteValue} from "./utils/kv"
-import {useDebounceFn, useMemoizedFn} from "ahooks"
+import {useDebounceFn, useInterval, useMemoizedFn} from "ahooks"
 import {NetWorkApi} from "./services/fetch"
 import {API} from "./services/swagger/resposeType"
 import {useGoogleChromePluginPath, useStore, yakitDynamicStatus} from "./store"
@@ -328,6 +328,17 @@ function NewApp() {
             emiter.off("destroyMainWinAntdUiEvent", destroyMainWinAntdUi)
         }
     }, [])
+
+    // 半小时间隔定时收集流量信息
+    const [interval] = useState<number | undefined>(30 * 60 * 1000)
+    useInterval(() => {
+        const {token} = userInfo
+        if (token && token.length > 0) {
+            uploadProjectEvent.startUpload({
+                isUploadSyncData: true
+            })
+        }
+    }, interval)
 
     return (
         <UILayout linkSuccess={linkSuccess}>

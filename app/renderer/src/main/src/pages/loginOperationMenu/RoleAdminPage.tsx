@@ -72,7 +72,7 @@ export const RoleAdminPage: React.FC<RoleAdminPageProp> = (props) => {
         },
         {
             title: t("RoleAdminPage.createdAt"),
-            dataKey: "created_at",
+            dataKey: "createdAt",
             ellipsis: true,
             render: (text) => <span>{moment.unix(text).format("YYYY-MM-DD HH:mm")}</span>
         },
