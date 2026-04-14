@@ -32,6 +32,7 @@ import { AIChatData } from '../../type/aiChat'
 import { AIDetailsDashIcon } from '../../aiChatWelcome/icon'
 import { Tooltip } from 'antd'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import ContextTable from './ContextTable/ContextTable'
 
 const AIContextToken: FC<{
   session?: string
@@ -372,6 +373,9 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
             <AICostDetailsEcharts dataEcharts={costEcharts} />
           </div>
         )}
+        <div style={{ height: '320px' }}>
+          <ContextTable />
+        </div>
       </div>
     </div>
   )
