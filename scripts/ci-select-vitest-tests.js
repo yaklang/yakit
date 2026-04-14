@@ -20,16 +20,7 @@ const fs = require('fs')
 const path = require('path')
 
 const SRC_EXTS = new Set(['.ts', '.tsx', '.js', '.jsx'])
-const TEST_SUFFIXES = [
-  'test.ts',
-  'test.tsx',
-  'test.js',
-  'test.jsx',
-  'spec.ts',
-  'spec.tsx',
-  'spec.js',
-  'spec.jsx'
-]
+const TEST_SUFFIXES = ['test.ts', 'test.tsx', 'test.js', 'test.jsx', 'spec.ts', 'spec.tsx', 'spec.js', 'spec.jsx']
 const SKIP_DIR_NAMES = new Set(['node_modules', 'dist', 'build', '.git', 'coverage'])
 
 function isVitestSelectDebug() {
@@ -43,20 +34,20 @@ const PACKAGES = [
     id: 'app-main',
     label: 'app/main',
     src: 'app/main',
-    importPrefixes: []
+    importPrefixes: [],
   },
   {
     id: 'renderer-main',
     label: 'app/renderer/src/main',
     src: 'app/renderer/src/main/src',
-    importPrefixes: ['@/', '@renderer/']
+    importPrefixes: ['@/', '@renderer/'],
   },
   {
     id: 'engine-link',
     label: 'app/renderer/engine-link-startup',
     src: 'app/renderer/engine-link-startup/src',
-    importPrefixes: ['@engine/', '@engne/']
-  }
+    importPrefixes: ['@engine/', '@engne/'],
+  },
 ]
 
 function packageIdForRepoPath(repoRelPosix) {
@@ -100,9 +91,12 @@ function readChangedList() {
     try {
       const out = execSync(`git -c core.quotePath=false diff --name-only "${base}" "${head}"`, {
         encoding: 'utf8',
-        maxBuffer: 32 * 1024 * 1024
+        maxBuffer: 32 * 1024 * 1024,
       })
-      return out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+      return out
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean)
     } catch {
       return []
     }
@@ -110,7 +104,10 @@ function readChangedList() {
   const { execSync } = require('child_process')
   try {
     const out = execSync('git diff --name-only HEAD^ HEAD', { encoding: 'utf8' })
-    return out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+    return out
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
   } catch {
     return []
   }
@@ -185,7 +182,7 @@ function extractRelativeImportLiterals(content) {
     /\brequire\s*\(\s*['"](\.\.?\/[^'"]+)['"]\s*\)/g,
     /\bvi\.mock\s*\(\s*['"](\.\.?\/[^'"]+)['"]/g,
     /\bjest\.mock\s*\(\s*['"](\.\.?\/[^'"]+)['"]/g,
-    /(?:^|[;\n{])\s*import\s+['"](\.\.?\/[^'"]+)['"]/gm
+    /(?:^|[;\n{])\s*import\s+['"](\.\.?\/[^'"]+)['"]/gm,
   ]
   for (const re of patterns) {
     let m
