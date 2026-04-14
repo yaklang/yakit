@@ -41,7 +41,11 @@ import {
   SolidToolIcon,
 } from '@/assets/icon/solid'
 import { MCPServerType } from './type/aiMCP'
-import { DefaultMemoryList, DefaultPlanHistoryList } from '../ai-re-act/hooks/defaultConstant'
+import {
+  DefaultCurrentExecTaskTree,
+  DefaultMemoryList,
+  DefaultPlanHistoryList,
+} from '../ai-re-act/hooks/defaultConstant'
 import { ColorsAIIcon } from '@/assets/icon/colors'
 import { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
 import { cloneDeep } from 'lodash'
@@ -269,7 +273,7 @@ export const defaultChatIPCData: UseChatIPCState = {
     yakExecResultLogs: [],
   },
   taskChat: {
-    plan: [],
+    plan: cloneDeep(DefaultCurrentExecTaskTree),
     elements: [],
   },
   grpcFolders: [],

@@ -30,7 +30,7 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 }
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-  const { tasks, className } = props
+  const { tasks, className, aiTreeTitleExtraNode } = props
   const onClick = useMemoizedFn((id) => {
     emiter.emit('onAITreeLocatePlanningList', id)
   })
@@ -54,6 +54,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
             position={position}
             data={item}
             onClick={() => onClick(item.index)}
+            aiTreeTitleExtraNode={aiTreeTitleExtraNode}
           />
         )
       })}
@@ -65,7 +66,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
 })
 
 /** @name 树节点 */
-const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick }) => {
+const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, aiTreeTitleExtraNode }) => {
   const syncIdOfStopSubTask = useRef<string>('')
 
   const { handleSendSyncMessage } = useChatIPCDispatcher()
@@ -125,6 +126,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick })
               />
             </YakitPopconfirm>
           )}
+          {aiTreeTitleExtraNode?.(data)}
         </div>
       </div>
     )
@@ -164,7 +166,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick })
       default:
         return [<div key="circle" className={styles['node-circle-icon']} />, getWrapper(styles['node-wrapper-default'])]
     }
-  }, [data, infoShow, isParentLast, onClick, onCancelTask, syncIdInfoMap])
+  }, [data, infoShow, isParentLast, onClick, onCancelTask, syncIdInfoMap, aiTreeTitleExtraNode])
 
   if (data === null) return null
 

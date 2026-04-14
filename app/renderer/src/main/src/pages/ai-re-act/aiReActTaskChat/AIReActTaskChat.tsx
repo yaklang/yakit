@@ -139,8 +139,6 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
   const { activeChat } = useAIAgentStore()
   const { taskChat } = chatIPCData
 
-  const [visible, setVisible] = useState<boolean>(false)
-
   const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
 
   const streams = useCreation(() => {
@@ -169,7 +167,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     if (!!reviewInfo) {
       chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
     }
-    emiter.emit('onRefreshAITaskHistoryList')
+    onSendPlayHistoryList()
   })
   /**取消当前执行的子任务 */
   const onStopSubTask = useMemoizedFn((syncID: string) => {
@@ -182,9 +180,11 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
       chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
     }
     setTimeout(() => {
-      handleSendSyncMessage({ syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
-      emiter.emit('onRefreshAITaskHistoryList')
+      onSendPlayHistoryList()
     }, 500)
+  })
+  const onSendPlayHistoryList = useMemoizedFn(() => {
+    chatIPCData.execute && handleSendSyncMessage({ syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   })
   const onExtraAction = useMemoizedFn((type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => {
     switch (type) {
@@ -219,7 +219,6 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
       })
     }, 200)
-    emiter.emit('onRefreshAITaskHistoryList')
     if (!!reviewInfo) {
       chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
     }
@@ -575,22 +574,20 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
         )
       case AITaskStatus.error:
         return !taskStatus.loading ? (
-          <Tooltip overlay={t('AIRenderTaskFooterExtra.resumeTask')} placement="top">
-            <YakitButton
-              type="primary"
-              icon={<OutlinePlay2Icon />}
-              radius="28px"
-              size="large"
-              onClick={() => {
-                chatIPCEvents.handleCancelLoadingChange('task', true)
-                onExtraAction('recover', '')
-              }}
-              loading={cancelTaskLoading}
-              {...btnProps}
-            >
-              {t('AIRenderTaskFooterExtra.continueTask')}
-            </YakitButton>
-          </Tooltip>
+          <YakitButton
+            type="primary"
+            icon={<OutlinePlay2Icon />}
+            radius="28px"
+            size="large"
+            onClick={() => {
+              chatIPCEvents.handleCancelLoadingChange('task', true)
+              onExtraAction('recover', '')
+            }}
+            loading={cancelTaskLoading}
+            {...btnProps}
+          >
+            {t('AIRenderTaskFooterExtra.continueTask')}
+          </YakitButton>
         ) : (
           <YakitButton
             type="primary"
@@ -610,7 +607,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
   })
   return (
     <>
-      {getTaskInfo()?.status === AITaskStatus.inProgress && taskChat.plan.length > 0 && (
+      {getTaskInfo()?.status === AITaskStatus.inProgress && taskChat?.plan?.task_tree?.length > 0 && (
         <YakitPopconfirm
           onConfirm={() => {
             syncIdOfStopSubTask.current = randomString(8)
@@ -653,7 +650,12 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         [styles['content-left-side-hidden']]: !leftExpand,
       })}
     >
-      <AIChatLeftSide expand={leftExpand} setExpand={setLeftExpand} tasks={taskChat.plan} />
+      <AIChatLeftSide
+        expand={leftExpand}
+        setExpand={setLeftExpand}
+        taskTree={taskChat?.plan?.task_tree || []}
+        taskName={taskChat?.plan?.root_task_name}
+      />
       <div className={styles['open-wrapper']} onClick={() => setLeftExpand(true)}>
         <ChevrondownButton />
         <div className={styles['text']}>任务列表</div>
