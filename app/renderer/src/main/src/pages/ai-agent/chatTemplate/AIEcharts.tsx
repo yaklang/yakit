@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { FC, memo, useEffect, useMemo, useRef } from 'react'
 import ReactECharts, { EChartsOption } from 'echarts-for-react'
 import { useDebounceFn } from 'ahooks'
 import { AIModelTypeEnum } from '../defaultConstant'
@@ -7,6 +7,7 @@ import moment from 'moment'
 import { formatNumberUnits } from '../utils'
 import EChartsReact from 'echarts-for-react'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
+import { AIContextStatsDetail } from '../type/aiChat'
 
 export interface AIEchartsDataKey {
   modelName: string
@@ -797,14 +798,42 @@ const getResponseSpeedDetailsOption = (
 }
 
 // 上下文字节统计
-const tokenCountXAxis = ['15:38', '15:39', '15:40', '15:41', '15:42', '15:43', '15:44', '15:45', '15:46']
+const getTokenCountChartData = (contextStatsData?: AIContextStatsDetail['data']) => {
+  const promptBytes = contextStatsData?.prompt_bytes || []
+  const systemPromptBytes = contextStatsData?.system_prompt_bytes || []
+  const runtimeContextBytes = contextStatsData?.runtime_context_bytes || []
+  const userInputBytes = contextStatsData?.user_input_bytes || []
+  const times = contextStatsData?.times || []
 
-const tokenCountSeries = {
-  total: [550, 455, 560, 240, 545, 590, 565, 600, 450],
-  systemPrompt: [180, 165, 230, 100, 220, 235, 200, 250, 160],
-  runtimeContext: [110, 130, 118, 60, 145, 160, 88, 138, 86],
-  userInput: [35, 52, 45, 20, 105, 48, 8, 20, 9],
-  other: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  const xAxis = times.map((time) => moment.unix(time).format('HH:mm'))
+
+  const maxValue = Math.max(...promptBytes, ...systemPromptBytes, ...runtimeContextBytes, ...userInputBytes, 0)
+  const normalizedMax = maxValue <= 100 ? 100 : Math.ceil(maxValue / 100) * 100
+
+  return {
+    xAxis,
+    series: {
+      total: promptBytes,
+      systemPrompt: systemPromptBytes,
+      runtimeContext: runtimeContextBytes,
+      userInput: userInputBytes,
+    },
+    yAxisMax: normalizedMax,
+  }
+}
+
+const getNiceAxisInterval = (maxValue: number, splitCount = 4) => {
+  if (maxValue <= 0) return 100
+
+  const roughInterval = maxValue / splitCount
+  const magnitude = 10 ** Math.floor(Math.log10(roughInterval))
+  const normalized = roughInterval / magnitude
+
+  if (normalized <= 1) return magnitude
+  if (normalized <= 2) return magnitude * 2
+  if (normalized <= 5) return magnitude * 5
+
+  return magnitude * 10
 }
 
 const withAlpha = (color: string, alpha: number) => {
@@ -836,12 +865,16 @@ const withAlpha = (color: string, alpha: number) => {
   return color
 }
 
-const getTokenCountOption = (colors: Record<string, string>): EChartsOption => {
+const getTokenCountOption = (
+  colors: Record<string, string>,
+  contextStatsData?: AIContextStatsDetail['data'],
+): EChartsOption => {
+  const tokenCountData = getTokenCountChartData(contextStatsData)
+  const yAxisInterval = getNiceAxisInterval(tokenCountData.yAxisMax)
   const totalColor = colors['--yakit-colors-Success-50']
   const systemPromptColor = colors['--yakit-colors-Blue-50']
   const runtimeContextColor = colors['--yakit-colors-Purple-50']
   const userInputColor = colors['--yakit-colors-Magenta-50']
-  const otherColor = colors['--Colors-Use-Neutral-Disable']
   const borderColor = colors['--Colors-Use-Neutral-Border']
   const textColor = colors['--Colors-Use-Neutral-Text-3-Secondary']
   const titleColor = colors['--Colors-Use-Neutral-Text-2-Primary']
@@ -896,7 +929,7 @@ const getTokenCountOption = (colors: Record<string, string>): EChartsOption => {
         fontSize: 12,
         fontWeight: 500,
       },
-      data: ['总数', '系统信息', '运行内容', '用户输入', '其他'],
+      data: ['总数', '系统信息', '运行内容', '用户输入'],
     },
     tooltip: {
       trigger: 'axis',
@@ -923,7 +956,7 @@ const getTokenCountOption = (colors: Record<string, string>): EChartsOption => {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: tokenCountXAxis,
+      data: tokenCountData.xAxis,
       axisLine: {
         show: false,
       },
@@ -939,8 +972,9 @@ const getTokenCountOption = (colors: Record<string, string>): EChartsOption => {
     yAxis: {
       type: 'value',
       min: 0,
-      max: 600,
-      interval: 100,
+      max: tokenCountData.yAxisMax,
+      interval: yAxisInterval,
+      splitNumber: 4,
       axisLine: {
         show: false,
       },
@@ -959,18 +993,19 @@ const getTokenCountOption = (colors: Record<string, string>): EChartsOption => {
       },
     },
     series: [
-      buildLine('总数', totalColor, tokenCountSeries.total, 0.12, 5),
-      buildLine('系统信息', systemPromptColor, tokenCountSeries.systemPrompt, 0.1, 4),
-      buildLine('运行内容', runtimeContextColor, tokenCountSeries.runtimeContext, 0.08, 3),
-      buildLine('用户输入', userInputColor, tokenCountSeries.userInput, 0.07, 2),
-      buildLine('其他', otherColor, tokenCountSeries.other, 0.03, 1),
+      buildLine('总数', totalColor, tokenCountData.series.total, 0.12, 5),
+      buildLine('系统信息', systemPromptColor, tokenCountData.series.systemPrompt, 0.1, 4),
+      buildLine('运行内容', runtimeContextColor, tokenCountData.series.runtimeContext, 0.08, 3),
+      buildLine('用户输入', userInputColor, tokenCountData.series.userInput, 0.07, 2),
     ],
   }
 }
 
-export const TokenCountEcharts: React.FC = React.memo(() => {
+export const TokenCountEcharts: FC<{
+  contextStatsData?: AIContextStatsDetail['data']
+}> = memo(({ contextStatsData }) => {
   const colors = useGetColorsByTheme()
-  const option = useMemo(() => getTokenCountOption(colors), [colors])
+  const option = useMemo(() => getTokenCountOption(colors, contextStatsData), [colors, contextStatsData])
 
   return <ReactECharts option={option} style={{ width: '100%', height: 240 }} />
 })

@@ -23,7 +23,7 @@ import {
 import classNames from 'classnames'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { cloneDeep, isEmpty } from 'lodash'
-import { getPressuresData, getCostData, getThreshold } from './utils'
+import { getPressuresData, getCostData, getThreshold, getContextStatsData } from './utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { AIModelConfig } from '../../aiModelList/utils'
@@ -53,6 +53,8 @@ const AIContextToken: FC<{
     // 优化：如果是一样的数据结构就不更新
     shouldUpdate: (prev, next) => {
       if (!prev) return !!next
+      if (!next) return false
+
       return (
         // 高质模型
         Object.keys(prev.consumption?.tier_consumption?.intelligent || {}).length !==
@@ -71,7 +73,15 @@ const AIContextToken: FC<{
           Object.keys(next.consumption?.tier_consumption?.vision || {}).length ||
         prev.pressure?.vision?.length !== next.pressure?.vision?.length ||
         prev.firstCost?.vision?.length !== next.firstCost?.vision?.length ||
-        prev.totalCost?.vision?.length !== next.totalCost?.vision?.length
+        prev.totalCost?.vision?.length !== next.totalCost?.vision?.length ||
+        // 上下文字节统计
+        prev.contextStats?.prompt_bytes !== next.contextStats?.prompt_bytes ||
+        prev.contextStats?.data?.prompt_bytes.length !== next.contextStats?.data?.prompt_bytes.length ||
+        prev.contextStats?.data?.system_prompt_bytes.length !== next.contextStats?.data?.system_prompt_bytes.length ||
+        prev.contextStats?.data?.runtime_context_bytes.length !==
+          next.contextStats?.data?.runtime_context_bytes.length ||
+        prev.contextStats?.data?.user_input_bytes.length !== next.contextStats?.data?.user_input_bytes.length ||
+        prev.contextStats?.data?.times.length !== next.contextStats?.data?.times.length
       )
     },
     // 进行数据克隆，确保引用变化
@@ -200,6 +210,7 @@ const AIContextToken: FC<{
             pressure={aiDataRef?.pressure}
             firstCost={aiDataRef?.firstCost}
             onClose={() => setVisible(false)}
+            contextStats={aiDataRef?.contextStats}
             renderNumber={renderNumber}
           />
         }
@@ -233,11 +244,13 @@ interface AIEchartsDetailsProps {
   pressure?: AIChatData['aiPerfData']['pressure']
   /** ref */
   firstCost?: AIChatData['aiPerfData']['firstCost']
+  /** 上下文字节统计 */
+  contextStats?: AIChatData['aiPerfData']['contextStats']
   onClose: () => void
   renderNumber: number
 }
 const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
-  const { overallToken, tierConsumption, pressure, firstCost, onClose, renderNumber } = props
+  const { overallToken, tierConsumption, pressure, firstCost, contextStats, onClose, renderNumber } = props
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(ref)
 
@@ -245,7 +258,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
 
   useEffect(() => {
     inViewport && event.onRefresh()
-  }, [inViewport])
+  }, [event, inViewport])
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
 
   const currentModel = useCreation(() => {
@@ -285,6 +298,10 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
   const threshold = useCreation(() => {
     return getThreshold(pressure)
   }, [renderNumber, pressure?.intelligent, pressure?.lightweight])
+  // 上下文字节统计数据
+  const contextStatsData = useCreation(() => {
+    return getContextStatsData(contextStats?.data)
+  }, [renderNumber, contextStats])
   const getEchartsHeard = useMemoizedFn((title: string) => {
     return (
       <div className={styles['echarts-heard']}>
@@ -374,18 +391,20 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
             <AICostDetailsEcharts dataEcharts={costEcharts} />
           </div>
         )}
-        <div className={styles['cost-wrapper']}>
-          <div className={styles['echarts-heard']}>
-            <div className={styles['echarts-heard-left']}>
-              <div className={styles['title']}>上下文字节统计</div>
-              <div className={styles['unit']}>（单位: Byte）</div>
+        {!!contextStats?.prompt_bytes && (
+          <div className={styles['cost-wrapper']}>
+            <div className={styles['echarts-heard']}>
+              <div className={styles['echarts-heard-left']}>
+                <div className={styles['title']}>上下文字节统计</div>
+                <div className={styles['unit']}>（单位: Byte）</div>
+              </div>
+              <div className={styles['total']}>
+                总数 <span>{contextStats?.prompt_bytes}</span>
+              </div>
             </div>
-            <div className={styles['total']}>
-              总数 <span>231</span>
-            </div>
+            <TokenCountEcharts contextStatsData={contextStatsData} />
           </div>
-          <TokenCountEcharts />
-        </div>
+        )}
         <div style={{ height: '320px' }}>
           <ContextTable />
         </div>
