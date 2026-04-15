@@ -1,791 +1,770 @@
-import React, {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react"
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import {
-    NewPortScanExecuteProps,
-    NewPortScanExecuteContentProps,
-    NewPortScanExecuteFormProps,
-    NewPortScanProps,
-    PortScanExecuteExtraFormValue,
-    NewPortScanExecuteContentRefProps
-} from "./NewPortScanType"
-import styles from "./NewPortScan.module.scss"
+  NewPortScanExecuteProps,
+  NewPortScanExecuteContentProps,
+  NewPortScanExecuteFormProps,
+  NewPortScanProps,
+  PortScanExecuteExtraFormValue,
+  NewPortScanExecuteContentRefProps,
+} from './NewPortScanType'
+import styles from './NewPortScan.module.scss'
 import {
-    ExpandAndRetract,
-    ExpandAndRetractExcessiveState
-} from "@/pages/plugins/operator/expandAndRetract/ExpandAndRetract"
-import {useControllableValue, useCreation, useInViewport, useMemoizedFn} from "ahooks"
-import {YakitTag} from "@/components/yakitUI/YakitTag/YakitTag"
-import {StreamResult} from "@/hook/useHoldGRPCStream/useHoldGRPCStreamType"
-import {PluginExecuteProgress} from "@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+  ExpandAndRetract,
+  ExpandAndRetractExcessiveState,
+} from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import { useControllableValue, useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import { PluginExecuteProgress } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-    OutlineArrowscollapseIcon,
-    OutlineArrowsexpandIcon,
-    OutlineClipboardlistIcon,
-    OutlineRefreshIcon,
-    OutlineStoreIcon,
-    OutlineTrashIcon
-} from "@/assets/icon/outline"
-import classNames from "classnames"
-import {Checkbox, Divider, Form} from "antd"
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
-import cloneDeep from "lodash/cloneDeep"
-import {ScanKind, ScanPortTemplate, defaultPorts} from "@/pages/portscan/PortScanPage"
-import {YakitFormDraggerContentPath} from "@/components/yakitUI/YakitForm/YakitForm"
-import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {isEnpriTrace} from "@/utils/envfile"
-import {PluginExecuteResult} from "@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult"
-import {randomString} from "@/utils/randomUtil"
-import useHoldGRPCStream from "@/hook/useHoldGRPCStream/useHoldGRPCStream"
-import {PluginLocalListDetails} from "@/pages/plugins/operator/PluginLocalListDetails/PluginLocalListDetails"
-import {PluginFilterParams, PluginSearchParams} from "@/pages/plugins/baseTemplateType"
-import {defaultSearch} from "@/pages/plugins/builtInData"
-import {defaultLinkPluginConfig} from "@/pages/plugins/utils"
-import {getLinkPluginConfig} from "@/pages/plugins/singlePluginExecution/SinglePluginExecution"
-import {RecordPortScanRequest, apiCancelPortScan, apiCancelSimpleDetect, apiPortScan, apiSimpleDetect} from "./utils"
-import {CheckboxValueType} from "antd/es/checkbox/Group"
-import {PresetPorts} from "@/pages/portscan/schema"
-import {yakitNotify} from "@/utils/notification"
-import {CreateReportContentProps, onCreateReportModal} from "@/pages/portscan/CreateReport"
-import {v4 as uuidv4} from "uuid"
-import {apiGetGlobalNetworkConfig} from "@/pages/spaceEngine/utils"
-import {GlobalNetworkConfig} from "@/components/configNetwork/ConfigNetworkPage"
-import {shallow} from "zustand/shallow"
-import {PageNodeItemProps, ScanPortPageInfoProps, usePageInfo} from "@/store/pageInfo"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {pluginTypeFilterList} from "@/defaultConstants/PluginBatchExecutor"
-import {defaultScanPortPageInfo} from "@/defaultConstants/NewPortScan"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+  OutlineArrowscollapseIcon,
+  OutlineArrowsexpandIcon,
+  OutlineClipboardlistIcon,
+  OutlineRefreshIcon,
+  OutlineStoreIcon,
+  OutlineTrashIcon,
+} from '@/assets/icon/outline'
+import classNames from 'classnames'
+import { Checkbox, Divider, Form } from 'antd'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import cloneDeep from 'lodash/cloneDeep'
+import { ScanKind, ScanPortTemplate, defaultPorts } from '@/pages/portscan/PortScanPage'
+import { YakitFormDraggerContentPath } from '@/components/yakitUI/YakitForm/YakitForm'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { isEnpriTrace } from '@/utils/envfile'
+import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
+import { randomString } from '@/utils/randomUtil'
+import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
+import { PluginLocalListDetails } from '@/pages/plugins/operator/PluginLocalListDetails/PluginLocalListDetails'
+import { PluginFilterParams, PluginSearchParams } from '@/pages/plugins/baseTemplateType'
+import { defaultSearch } from '@/pages/plugins/builtInData'
+import { defaultLinkPluginConfig } from '@/pages/plugins/utils'
+import { getLinkPluginConfig } from '@/pages/plugins/singlePluginExecution/SinglePluginExecution'
+import { RecordPortScanRequest, apiCancelPortScan, apiCancelSimpleDetect, apiPortScan, apiSimpleDetect } from './utils'
+import { CheckboxValueType } from 'antd/es/checkbox/Group'
+import { PresetPorts } from '@/pages/portscan/schema'
+import { yakitNotify } from '@/utils/notification'
+import { CreateReportContentProps, onCreateReportModal } from '@/pages/portscan/CreateReport'
+import { v4 as uuidv4 } from 'uuid'
+import { apiGetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
+import { GlobalNetworkConfig } from '@/components/configNetwork/ConfigNetworkPage'
+import { shallow } from 'zustand/shallow'
+import { PageNodeItemProps, ScanPortPageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { pluginTypeFilterList } from '@/defaultConstants/PluginBatchExecutor'
+import { defaultScanPortPageInfo } from '@/defaultConstants/NewPortScan'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const NewPortScanExtraParamsDrawer = React.lazy(() => import("./NewPortScanExtraParamsDrawer"))
+const NewPortScanExtraParamsDrawer = React.lazy(() => import('./NewPortScanExtraParamsDrawer'))
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
 export const NewPortScan: React.FC<NewPortScanProps> = React.memo((props) => {
-    const {t} = useI18nNamespaces(["portscan"])
-    const {id} = props
-    // 隐藏插件列表
-    const [hidden, setHidden] = useState<boolean>(false)
-    const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
-    const [filters, setFilters] = useState<PluginFilterParams>({
-        plugin_type: []
-    })
-    const [selectList, setSelectList] = useState<string[]>([])
-    const [selectNum, setSelectNum] = useState<number>(0)
+  const { t } = useI18nNamespaces(['portscan'])
+  const { id } = props
+  // 隐藏插件列表
+  const [hidden, setHidden] = useState<boolean>(false)
+  const [search, setSearch] = useState<PluginSearchParams>(cloneDeep(defaultSearch))
+  const [filters, setFilters] = useState<PluginFilterParams>({
+    plugin_type: [],
+  })
+  const [selectList, setSelectList] = useState<string[]>([])
+  const [selectNum, setSelectNum] = useState<number>(0)
 
-    const [allCheck, setAllCheck] = useState<boolean>(false)
+  const [allCheck, setAllCheck] = useState<boolean>(false)
 
-    return (
-        <PluginLocalListDetails
-            hidden={hidden}
-            selectList={selectList}
-            setSelectList={setSelectList}
-            search={search}
-            setSearch={setSearch}
-            selectNum={selectNum}
-            setSelectNum={setSelectNum}
-            showFilter={true}
-            filters={filters}
-            defaultFilters={{
-                plugin_type: cloneDeep(pluginTypeFilterList)
-            }}
-            setFilters={setFilters}
-            fixFilterList={[
-                {
-                    groupName: t("NewPortScan.pluginType"),
-                    groupKey: "plugin_type",
-                    sort: 1,
-                    data: pluginTypeFilterList
-                }
-            ]}
-            pluginGroupExcludeType={["yak", "codec", "lua"]}
-            pluginDetailsProps={{
-                bodyClassName: styles["port-scan-body"]
-            }}
-            allCheck={allCheck}
-            setAllCheck={setAllCheck}
-        >
-            <NewPortScanExecute
-                selectNum={selectNum}
-                selectList={selectList}
-                setSelectList={setSelectList}
-                hidden={hidden}
-                setHidden={setHidden}
-                pluginListSearchInfo={{search, filters}}
-                allCheck={allCheck}
-                pageId={id}
-            />
-        </PluginLocalListDetails>
-    )
+  return (
+    <PluginLocalListDetails
+      hidden={hidden}
+      selectList={selectList}
+      setSelectList={setSelectList}
+      search={search}
+      setSearch={setSearch}
+      selectNum={selectNum}
+      setSelectNum={setSelectNum}
+      showFilter={true}
+      filters={filters}
+      defaultFilters={{
+        plugin_type: cloneDeep(pluginTypeFilterList),
+      }}
+      setFilters={setFilters}
+      fixFilterList={[
+        {
+          groupName: t('NewPortScan.pluginType'),
+          groupKey: 'plugin_type',
+          sort: 1,
+          data: pluginTypeFilterList,
+        },
+      ]}
+      pluginGroupExcludeType={['yak', 'codec', 'lua']}
+      pluginDetailsProps={{
+        bodyClassName: styles['port-scan-body'],
+      }}
+      allCheck={allCheck}
+      setAllCheck={setAllCheck}
+    >
+      <NewPortScanExecute
+        selectNum={selectNum}
+        selectList={selectList}
+        setSelectList={setSelectList}
+        hidden={hidden}
+        setHidden={setHidden}
+        pluginListSearchInfo={{ search, filters }}
+        allCheck={allCheck}
+        pageId={id}
+      />
+    </PluginLocalListDetails>
+  )
 })
 
 const NewPortScanExecute: React.FC<NewPortScanExecuteProps> = React.memo((props) => {
-    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
-    const {selectList, setSelectList, pluginListSearchInfo, selectNum, allCheck, pageId} = props
+  const { t } = useI18nNamespaces(['portscan', 'yakitUi'])
+  const { selectList, setSelectList, pluginListSearchInfo, selectNum, allCheck, pageId } = props
 
-    const {queryPagesDataById} = usePageInfo(
-        (s) => ({
-            queryPagesDataById: s.queryPagesDataById
-        }),
-        shallow
-    )
-    /**获取数据中心中的页面数据 */
-    const initPageInfo = useMemoizedFn(() => {
-        const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Mod_ScanPort, pageId)
-        if (currentItem && currentItem.pageParamsInfo.scanPortPageInfo) {
-            return currentItem.pageParamsInfo.scanPortPageInfo
-        } else {
-            return {
-                ...defaultScanPortPageInfo
-            }
-        }
-    })
-    const [pageInfo, setPageInfo] = useState<ScanPortPageInfoProps>(initPageInfo())
+  const { queryPagesDataById } = usePageInfo(
+    (s) => ({
+      queryPagesDataById: s.queryPagesDataById,
+    }),
+    shallow,
+  )
+  /**获取数据中心中的页面数据 */
+  const initPageInfo = useMemoizedFn(() => {
+    const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.Mod_ScanPort, pageId)
+    if (currentItem && currentItem.pageParamsInfo.scanPortPageInfo) {
+      return currentItem.pageParamsInfo.scanPortPageInfo
+    } else {
+      return {
+        ...defaultScanPortPageInfo,
+      }
+    }
+  })
+  const [pageInfo, setPageInfo] = useState<ScanPortPageInfoProps>(initPageInfo())
 
-    const [hidden, setHidden] = useControllableValue<boolean>(props, {
-        defaultValue: false,
-        valuePropName: "hidden",
-        trigger: "setHidden"
-    })
+  const [hidden, setHidden] = useControllableValue<boolean>(props, {
+    defaultValue: false,
+    valuePropName: 'hidden',
+    trigger: 'setHidden',
+  })
 
-    /**是否展开/收起 */
-    const [isExpand, setIsExpand] = useState<boolean>(true)
-    const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
-    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>("default")
+  /**是否展开/收起 */
+  const [isExpand, setIsExpand] = useState<boolean>(true)
+  const [progressList, setProgressList] = useState<StreamResult.Progress[]>([])
+  const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>('default')
 
-    const executeContentRef = useRef<NewPortScanExecuteContentRefProps>(null)
+  const executeContentRef = useRef<NewPortScanExecuteContentRefProps>(null)
 
-    const onExpand = useMemoizedFn((e) => {
-        e.stopPropagation()
-        setIsExpand(!isExpand)
-    })
-    const onRemove = useMemoizedFn((e) => {
-        e.stopPropagation()
-        setSelectList([])
-    })
-    const isExecuting = useCreation(() => {
-        if (executeStatus === "process") return true
+  const onExpand = useMemoizedFn((e) => {
+    e.stopPropagation()
+    setIsExpand(!isExpand)
+  })
+  const onRemove = useMemoizedFn((e) => {
+    e.stopPropagation()
+    setSelectList([])
+  })
+  const isExecuting = useCreation(() => {
+    if (executeStatus === 'process') return true
+    return false
+  }, [executeStatus])
+  const onStopExecute = useMemoizedFn((e) => {
+    e.stopPropagation()
+    executeContentRef.current?.onStopExecute()
+  })
+  const onStartExecute = useMemoizedFn((e) => {
+    e.stopPropagation()
+    executeContentRef.current?.onStartExecute()
+  })
+  const onCreateReport = useMemoizedFn((e) => {
+    e.stopPropagation()
+    executeContentRef.current?.onCreateReport()
+  })
+  const disabledReport = useCreation(() => {
+    switch (executeStatus) {
+      case 'finished':
         return false
-    }, [executeStatus])
-    const onStopExecute = useMemoizedFn((e) => {
-        e.stopPropagation()
-        executeContentRef.current?.onStopExecute()
-    })
-    const onStartExecute = useMemoizedFn((e) => {
-        e.stopPropagation()
-        executeContentRef.current?.onStartExecute()
-    })
-    const onCreateReport = useMemoizedFn((e) => {
-        e.stopPropagation()
-        executeContentRef.current?.onCreateReport()
-    })
-    const disabledReport = useCreation(() => {
-        switch (executeStatus) {
-            case "finished":
-                return false
-            case "error":
-                return false
-            default:
-                return true
-        }
-    }, [executeStatus])
-    return (
-        <div className={styles["port-scan-execute-wrapper"]}>
-            <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
-                <div className={styles["port-scan-executor-title"]}>
-                    <span className={styles["port-scan-executor-title-text"]}>
-                        {t("NewPortScanExecute.portFingerprintScan")}
-                    </span>
-                    {selectNum > 0 && (
-                        <YakitTag closable onClose={onRemove} color='info'>
-                            {selectNum} {t("NewPortScanExecute.plugins")}
-                        </YakitTag>
-                    )}
-                </div>
-                <div className={styles["port-scan-executor-btn"]}>
-                    {progressList.length === 1 && (
-                        <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
-                    )}
-                    {isExecuting
-                        ? !isExpand && (
-                              <>
-                                  <YakitButton danger onClick={onStopExecute}>
-                                      {t("YakitButton.stop")}
-                                  </YakitButton>
-                                  <div className={styles["divider-style"]}></div>
-                              </>
-                          )
-                        : !isExpand && (
-                              <>
-                                  <YakitButton onClick={onStartExecute}>{t("YakitButton.execute")}</YakitButton>
-                                  <div className={styles["divider-style"]}></div>
-                              </>
-                          )}
-                    {isEnpriTrace() && (
-                        <>
-                            <YakitButton
-                                icon={<OutlineClipboardlistIcon />}
-                                disabled={disabledReport}
-                                onClick={onCreateReport}
-                            >
-                                {t("NewPortScanExecute.generateReport")}
-                            </YakitButton>
-                            <div className={styles["divider-style"]}></div>
-                        </>
-                    )}
-                    <YakitButton
-                        type='text2'
-                        icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            setHidden(!hidden)
-                        }}
-                    />
-                </div>
-            </ExpandAndRetract>
-            <div className={styles["port-scan-executor-body"]}>
-                <NewPortScanExecuteContent
-                    ref={executeContentRef}
-                    isExpand={isExpand}
-                    setIsExpand={setIsExpand}
-                    executeStatus={executeStatus}
-                    setExecuteStatus={setExecuteStatus}
-                    selectNum={selectNum}
-                    pluginListSearchInfo={pluginListSearchInfo}
-                    selectList={selectList}
-                    setProgressList={setProgressList}
-                    allCheck={allCheck}
-                    pageInfo={pageInfo}
-                />
-            </div>
+      case 'error':
+        return false
+      default:
+        return true
+    }
+  }, [executeStatus])
+  return (
+    <div className={styles['port-scan-execute-wrapper']}>
+      <ExpandAndRetract isExpand={isExpand} onExpand={onExpand} status={executeStatus}>
+        <div className={styles['port-scan-executor-title']}>
+          <span className={styles['port-scan-executor-title-text']}>{t('NewPortScanExecute.portFingerprintScan')}</span>
+          {selectNum > 0 && (
+            <YakitTag closable onClose={onRemove} color="info">
+              {selectNum} {t('NewPortScanExecute.plugins')}
+            </YakitTag>
+          )}
         </div>
-    )
+        <div className={styles['port-scan-executor-btn']}>
+          {progressList.length === 1 && (
+            <PluginExecuteProgress percent={progressList[0].progress} name={progressList[0].id} />
+          )}
+          {isExecuting
+            ? !isExpand && (
+                <>
+                  <YakitButton danger onClick={onStopExecute}>
+                    {t('YakitButton.stop')}
+                  </YakitButton>
+                  <div className={styles['divider-style']}></div>
+                </>
+              )
+            : !isExpand && (
+                <>
+                  <YakitButton onClick={onStartExecute}>{t('YakitButton.execute')}</YakitButton>
+                  <div className={styles['divider-style']}></div>
+                </>
+              )}
+          {isEnpriTrace() && (
+            <>
+              <YakitButton icon={<OutlineClipboardlistIcon />} disabled={disabledReport} onClick={onCreateReport}>
+                {t('NewPortScanExecute.generateReport')}
+              </YakitButton>
+              <div className={styles['divider-style']}></div>
+            </>
+          )}
+          <YakitButton
+            type="text2"
+            icon={hidden ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+            onClick={(e) => {
+              e.stopPropagation()
+              setHidden(!hidden)
+            }}
+          />
+        </div>
+      </ExpandAndRetract>
+      <div className={styles['port-scan-executor-body']}>
+        <NewPortScanExecuteContent
+          ref={executeContentRef}
+          isExpand={isExpand}
+          setIsExpand={setIsExpand}
+          executeStatus={executeStatus}
+          setExecuteStatus={setExecuteStatus}
+          selectNum={selectNum}
+          pluginListSearchInfo={pluginListSearchInfo}
+          selectList={selectList}
+          setProgressList={setProgressList}
+          allCheck={allCheck}
+          pageInfo={pageInfo}
+        />
+      </div>
+    </div>
+  )
 })
 
 export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
-    Ports: defaultPorts,
-    Mode: "fingerprint",
-    Concurrent: 50,
-    SkippedHostAliveScan: false,
+  Ports: defaultPorts,
+  Mode: 'fingerprint',
+  Concurrent: 50,
+  SkippedHostAliveScan: false,
 
-    Targets: "",
-    Active: true,
-    FingerprintMode: "all",
-    UserFingerprintFiles: [],
-    UserFingerprintFilesStr: "",
-    EnableFingerprintGroup: true,
-    FingerprintGroup: [""],
-    Proto: ["tcp"],
-    SaveClosedPorts: false,
-    SaveToDB: true,
-    Proxy: [],
-    EnableBrute: false,
-    ProbeTimeout: 5,
-    ScriptNames: [],
-    ProbeMax: 3,
-    EnableCClassScan: false,
-    HostAlivePorts: "22,80,443",
-    EnableBasicCrawler: true,
-    BasicCrawlerRequestMax: 5,
-    SynConcurrent: 1000,
-    HostAliveConcurrent: 20,
-    LinkPluginConfig: cloneDeep(defaultLinkPluginConfig),
-    BasicCrawlerEnableJSParser: false,
-    /**@description 前端使用,扫描协议 */
-    scanProtocol: "tcp",
-    /**前端使用 */
-    pluginGroup: []
+  Targets: '',
+  Active: true,
+  FingerprintMode: 'all',
+  UserFingerprintFiles: [],
+  UserFingerprintFilesStr: '',
+  EnableFingerprintGroup: true,
+  FingerprintGroup: [''],
+  Proto: ['tcp'],
+  SaveClosedPorts: false,
+  SaveToDB: true,
+  Proxy: [],
+  EnableBrute: false,
+  ProbeTimeout: 5,
+  ScriptNames: [],
+  ProbeMax: 3,
+  EnableCClassScan: false,
+  HostAlivePorts: '22,80,443',
+  EnableBasicCrawler: true,
+  BasicCrawlerRequestMax: 5,
+  SynConcurrent: 1000,
+  HostAliveConcurrent: 20,
+  LinkPluginConfig: cloneDeep(defaultLinkPluginConfig),
+  BasicCrawlerEnableJSParser: false,
+  /**@description 前端使用,扫描协议 */
+  scanProtocol: 'tcp',
+  /**前端使用 */
+  pluginGroup: [],
 }
 
 const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo(
-    forwardRef((props, ref) => {
-        const {t, i18n} = useI18nNamespaces(["portscan", "yakitUi"])
-        const {
-            isExpand,
-            executeStatus,
-            setExecuteStatus,
-            setIsExpand,
-            selectNum,
-            pluginListSearchInfo,
-            selectList,
-            setProgressList,
-            allCheck,
-            pageInfo
-        } = props
-        const [form] = Form.useForm()
+  forwardRef((props, ref) => {
+    const { t, i18n } = useI18nNamespaces(['portscan', 'yakitUi'])
+    const {
+      isExpand,
+      executeStatus,
+      setExecuteStatus,
+      setIsExpand,
+      selectNum,
+      pluginListSearchInfo,
+      selectList,
+      setProgressList,
+      allCheck,
+      pageInfo,
+    } = props
+    const [form] = Form.useForm()
 
-        const [runtimeId, setRuntimeId] = useState<string>("")
-        /**额外参数弹出框 */
-        const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
-        const [extraParamsValue, setExtraParamsValue] = useState<PortScanExecuteExtraFormValue>(
-            cloneDeep(defPortScanExecuteExtraFormValue)
-        )
+    const [runtimeId, setRuntimeId] = useState<string>('')
+    /**额外参数弹出框 */
+    const [extraParamsVisible, setExtraParamsVisible] = useState<boolean>(false)
+    const [extraParamsValue, setExtraParamsValue] = useState<PortScanExecuteExtraFormValue>(
+      cloneDeep(defPortScanExecuteExtraFormValue),
+    )
 
-        const uuidRef = useRef<string>(uuidv4())
-        const taskNameRef = useRef<string>("")
+    const uuidRef = useRef<string>(uuidv4())
+    const taskNameRef = useRef<string>('')
 
-        const tokenRef = useRef<string>(randomString(40))
-        const newPortScanExecuteContentRef = useRef<HTMLDivElement>(null)
-        const [inViewport = true] = useInViewport(newPortScanExecuteContentRef)
+    const tokenRef = useRef<string>(randomString(40))
+    const newPortScanExecuteContentRef = useRef<HTMLDivElement>(null)
+    const [inViewport = true] = useInViewport(newPortScanExecuteContentRef)
 
-        const defaultTabs = useCreation(() => {
-            return [
-                {tabName: t("NewPortScanExecuteContent.portScanList"), type: "port"},
-                {tabName: t("NewPortScanExecuteContent.httpTraffic"), type: "http"},
-                {tabName: t("NewPortScanExecuteContent.riskAndVulnerability"), type: "risk"},
-                {tabName: t("NewPortScanExecuteContent.logs"), type: "log"},
-                {tabName: "Console", type: "console"}
-            ]
-        }, [i18n.language])
-        const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
-            tabs: defaultTabs,
-            taskName: isEnpriTrace() ? "Simple-Detect" : "Port-Scan",
-            apiKey: isEnpriTrace() ? "SimpleDetect" : "PortScan",
-            token: tokenRef.current,
-            onEnd: () => {
-                portScanStreamEvent.stop()
-                setTimeout(() => {
-                    setExecuteStatus("finished")
-                }, 200)
-            },
-            setRuntimeId: (rId) => {
-                setRuntimeId(rId)
-            }
-        })
-
-        useImperativeHandle(
-            ref,
-            () => ({
-                onStopExecute,
-                onStartExecute: () => {
-                    form.validateFields()
-                        .then(onStartExecute)
-                        .catch((e) => {
-                            setIsExpand(true)
-                        })
-                },
-                onCreateReport
-            }),
-            [form]
-        )
-
-        useEffect(() => {
-            setProgressList(streamInfo.progressState)
-        }, [streamInfo.progressState])
-
-        useEffect(() => {
-            apiGetGlobalNetworkConfig().then((rsp: GlobalNetworkConfig) => {
-                setExtraParamsValue({
-                    ...extraParamsValue,
-                    SynScanNetInterface: rsp.SynScanNetInterface
-                })
-            })
-        }, [])
-        useEffect(() => {
-            //  pageInfo.targets 目前情况下只有初始的时候才会变，给Targets设置初始值
-            form.setFieldsValue({
-                Targets: pageInfo.targets
-            })
-        }, [pageInfo.targets])
-
-        const isExecuting = useCreation(() => {
-            if (executeStatus === "process") return true
-            return false
-        }, [executeStatus])
-        /**生成报告 */
-        const onCreateReport = useMemoizedFn(() => {
-            if (executeStatus === "default") return
-            const params: CreateReportContentProps = {
-                reportName: taskNameRef.current,
-                runtimeId
-            }
-            onCreateReportModal(params, {
-                getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.Mod_ScanPort}`) || undefined
-            })
-        })
-
-        const [inputType, setInputType] = useState<"content" | "path">("content")
-        /**开始执行 */
-        const onStartExecute = useMemoizedFn((value) => {
-            const filters = {...pluginListSearchInfo.filters}
-            if (filters.plugin_type?.length === 0) {
-                filters.plugin_type = cloneDeep(pluginTypeFilterList)
-            }
-            const linkPluginConfig = getLinkPluginConfig(selectList, {...pluginListSearchInfo, filters}, allCheck)
-            let executeParams: PortScanExecuteExtraFormValue = {
-                ...extraParamsValue,
-                ...value,
-                Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
-                LinkPluginConfig: linkPluginConfig
-            }
-            if (inputType === "path") {
-                executeParams["TargetsFile"] = executeParams["Targets"]
-                executeParams["Targets"] = ""
-            }
-            executeParams.FingerprintGroup =
-                executeParams.FingerprintGroup?.length === 1 && executeParams.FingerprintGroup[0] === ""
-                    ? []
-                    : executeParams.FingerprintGroup || []
-            delete executeParams.UserFingerprintFilesStr
-            portScanStreamEvent.reset()
-            setRuntimeId("")
-            if (isEnpriTrace()) {
-                uuidRef.current = uuidv4()
-                const taskName = `${executeParams.Targets.split(",")[0].split(/\n/)[0]}${t(
-                    "NewPortScanExecuteContent.riskAssessmentReport"
-                )}`
-                taskNameRef.current = taskName
-                let PortScanRequest = {...executeParams, TaskName: `${taskName}-${uuidRef.current}`}
-                const simpleDetectPrams: RecordPortScanRequest = {
-                    PortScanRequest
-                }
-                apiSimpleDetect(simpleDetectPrams, tokenRef.current).then(() => {
-                    setExecuteStatus("process")
-                    setIsExpand(false)
-                    portScanStreamEvent.start()
-                })
-            } else {
-                apiPortScan(executeParams, tokenRef.current).then(() => {
-                    setExecuteStatus("process")
-                    setIsExpand(false)
-                    portScanStreamEvent.start()
-                })
-            }
-        })
-        /**取消执行 */
-        const onStopExecute = useMemoizedFn(() => {
-            if (isEnpriTrace()) {
-                apiCancelSimpleDetect(tokenRef.current).then(() => {
-                    portScanStreamEvent.stop()
-                    setExecuteStatus("finished")
-                })
-            } else {
-                apiCancelPortScan(tokenRef.current).then(() => {
-                    portScanStreamEvent.stop()
-                    setExecuteStatus("finished")
-                })
-            }
-        })
-        const openExtraPropsDrawer = useMemoizedFn(() => {
-            setExtraParamsValue({
-                ...extraParamsValue,
-                SkippedHostAliveScan: form.getFieldValue("SkippedHostAliveScan")
-            })
-            setExtraParamsVisible(true)
-        })
-        /**保存额外参数 */
-        const onSaveExtraParams = useMemoizedFn((v: PortScanExecuteExtraFormValue) => {
-            setExtraParamsValue({
-                ...v,
-                UserFingerprintFiles: v.UserFingerprintFilesStr ? v.UserFingerprintFilesStr.split(",") : []
-            } as PortScanExecuteExtraFormValue)
-            setExtraParamsVisible(false)
-            form.setFieldsValue({
-                SkippedHostAliveScan: v.SkippedHostAliveScan
-            })
-        })
-        const isShowResult = useCreation(() => {
-            return isExecuting || runtimeId
-        }, [isExecuting, runtimeId])
-        const progressList = useCreation(() => {
-            return streamInfo.progressState
-        }, [streamInfo.progressState])
-        return (
-            <>
-                <div
-                    className={classNames(styles["port-scan-form-wrapper"], {
-                        [styles["port-scan-form-wrapper-hidden"]]: !isExpand
-                    })}
-                    ref={newPortScanExecuteContentRef}
-                >
-                    <Form
-                        form={form}
-                        onFinish={onStartExecute}
-                        labelCol={{span: 6}}
-                        wrapperCol={{span: 12}} //这样设置是为了让输入框居中
-                        validateMessages={{
-                            /* eslint-disable no-template-curly-in-string */
-                            required: t("YakitForm.requiredField")
-                        }}
-                        labelWrap={true}
-                    >
-                        <NewPortScanExecuteForm
-                            inViewport={inViewport}
-                            form={form}
-                            disabled={isExecuting}
-                            extraParamsValue={extraParamsValue}
-                            inputType={inputType}
-                            setInputType={setInputType}
-                        />
-                        <Form.Item colon={false} label={" "} style={{marginBottom: 0}}>
-                            <div className={styles["plugin-execute-form-operate"]}>
-                                {isExecuting ? (
-                                    <YakitButton danger onClick={onStopExecute} size='large'>
-                                        {t("YakitButton.stop")}
-                                    </YakitButton>
-                                ) : (
-                                    <YakitButton
-                                        className={styles["plugin-execute-form-operate-start"]}
-                                        htmlType='submit'
-                                        size='large'
-                                    >
-                                        {t("YakitButton.start_execution")}
-                                    </YakitButton>
-                                )}
-                                <YakitButton
-                                    type='text'
-                                    onClick={openExtraPropsDrawer}
-                                    disabled={isExecuting}
-                                    size='large'
-                                >
-                                    {t("NewPortScanExecuteContent.extraParams")}
-                                </YakitButton>
-                            </div>
-                        </Form.Item>
-                    </Form>
-                </div>
-                {progressList.length > 1 && (
-                    <div className={styles["executing-progress"]}>
-                        {progressList.map((ele, index) => (
-                            <React.Fragment key={ele.id}>
-                                {index !== 0 && <Divider type='vertical' style={{margin: 0, top: 2}} />}
-                                <PluginExecuteProgress percent={ele.progress} name={ele.id} />
-                            </React.Fragment>
-                        ))}
-                    </div>
-                )}
-                {isShowResult && (
-                    <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />
-                )}
-                <React.Suspense fallback={<div>loading...</div>}>
-                    <NewPortScanExtraParamsDrawer
-                        extraParamsValue={extraParamsValue}
-                        visible={extraParamsVisible}
-                        onSave={onSaveExtraParams}
-                    />
-                </React.Suspense>
-            </>
-        )
+    const defaultTabs = useCreation(() => {
+      return [
+        { tabName: t('NewPortScanExecuteContent.portScanList'), type: 'port' },
+        { tabName: t('NewPortScanExecuteContent.httpTraffic'), type: 'http' },
+        { tabName: t('NewPortScanExecuteContent.riskAndVulnerability'), type: 'risk' },
+        { tabName: t('NewPortScanExecuteContent.logs'), type: 'log' },
+        { tabName: 'Console', type: 'console' },
+      ]
+    }, [i18n.language])
+    const [streamInfo, portScanStreamEvent] = useHoldGRPCStream({
+      tabs: defaultTabs,
+      taskName: isEnpriTrace() ? 'Simple-Detect' : 'Port-Scan',
+      apiKey: isEnpriTrace() ? 'SimpleDetect' : 'PortScan',
+      token: tokenRef.current,
+      onEnd: () => {
+        portScanStreamEvent.stop()
+        setTimeout(() => {
+          setExecuteStatus('finished')
+        }, 200)
+      },
+      setRuntimeId: (rId) => {
+        setRuntimeId(rId)
+      },
     })
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        onStopExecute,
+        onStartExecute: () => {
+          form
+            .validateFields()
+            .then(onStartExecute)
+            .catch((e) => {
+              setIsExpand(true)
+            })
+        },
+        onCreateReport,
+      }),
+      [form],
+    )
+
+    useEffect(() => {
+      setProgressList(streamInfo.progressState)
+    }, [streamInfo.progressState])
+
+    useEffect(() => {
+      apiGetGlobalNetworkConfig().then((rsp: GlobalNetworkConfig) => {
+        setExtraParamsValue({
+          ...extraParamsValue,
+          SynScanNetInterface: rsp.SynScanNetInterface,
+        })
+      })
+    }, [])
+    useEffect(() => {
+      //  pageInfo.targets 目前情况下只有初始的时候才会变，给Targets设置初始值
+      form.setFieldsValue({
+        Targets: pageInfo.targets,
+      })
+    }, [pageInfo.targets])
+
+    const isExecuting = useCreation(() => {
+      if (executeStatus === 'process') return true
+      return false
+    }, [executeStatus])
+    /**生成报告 */
+    const onCreateReport = useMemoizedFn(() => {
+      if (executeStatus === 'default') return
+      const params: CreateReportContentProps = {
+        reportName: taskNameRef.current,
+        runtimeId,
+      }
+      onCreateReportModal(params, {
+        getContainer: document.getElementById(`main-operator-page-body-${YakitRoute.Mod_ScanPort}`) || undefined,
+      })
+    })
+
+    const [inputType, setInputType] = useState<'content' | 'path'>('content')
+    /**开始执行 */
+    const onStartExecute = useMemoizedFn((value) => {
+      const filters = { ...pluginListSearchInfo.filters }
+      if (filters.plugin_type?.length === 0) {
+        filters.plugin_type = cloneDeep(pluginTypeFilterList)
+      }
+      const linkPluginConfig = getLinkPluginConfig(selectList, { ...pluginListSearchInfo, filters }, allCheck)
+      let executeParams: PortScanExecuteExtraFormValue = {
+        ...extraParamsValue,
+        ...value,
+        Proto: extraParamsValue.scanProtocol ? [extraParamsValue.scanProtocol] : [],
+        LinkPluginConfig: linkPluginConfig,
+      }
+      if (inputType === 'path') {
+        executeParams['TargetsFile'] = executeParams['Targets']
+        executeParams['Targets'] = ''
+      }
+      executeParams.FingerprintGroup =
+        executeParams.FingerprintGroup?.length === 1 && executeParams.FingerprintGroup[0] === ''
+          ? []
+          : executeParams.FingerprintGroup || []
+      delete executeParams.UserFingerprintFilesStr
+      portScanStreamEvent.reset()
+      setRuntimeId('')
+      if (isEnpriTrace()) {
+        uuidRef.current = uuidv4()
+        const taskName = `${executeParams.Targets.split(',')[0].split(/\n/)[0]}${t(
+          'NewPortScanExecuteContent.riskAssessmentReport',
+        )}`
+        taskNameRef.current = taskName
+        let PortScanRequest = { ...executeParams, TaskName: `${taskName}-${uuidRef.current}` }
+        const simpleDetectPrams: RecordPortScanRequest = {
+          PortScanRequest,
+        }
+        apiSimpleDetect(simpleDetectPrams, tokenRef.current).then(() => {
+          setExecuteStatus('process')
+          setIsExpand(false)
+          portScanStreamEvent.start()
+        })
+      } else {
+        apiPortScan(executeParams, tokenRef.current).then(() => {
+          setExecuteStatus('process')
+          setIsExpand(false)
+          portScanStreamEvent.start()
+        })
+      }
+    })
+    /**取消执行 */
+    const onStopExecute = useMemoizedFn(() => {
+      if (isEnpriTrace()) {
+        apiCancelSimpleDetect(tokenRef.current).then(() => {
+          portScanStreamEvent.stop()
+          setExecuteStatus('finished')
+        })
+      } else {
+        apiCancelPortScan(tokenRef.current).then(() => {
+          portScanStreamEvent.stop()
+          setExecuteStatus('finished')
+        })
+      }
+    })
+    const openExtraPropsDrawer = useMemoizedFn(() => {
+      setExtraParamsValue({
+        ...extraParamsValue,
+        SkippedHostAliveScan: form.getFieldValue('SkippedHostAliveScan'),
+      })
+      setExtraParamsVisible(true)
+    })
+    /**保存额外参数 */
+    const onSaveExtraParams = useMemoizedFn((v: PortScanExecuteExtraFormValue) => {
+      setExtraParamsValue({
+        ...v,
+        UserFingerprintFiles: v.UserFingerprintFilesStr ? v.UserFingerprintFilesStr.split(',') : [],
+      } as PortScanExecuteExtraFormValue)
+      setExtraParamsVisible(false)
+      form.setFieldsValue({
+        SkippedHostAliveScan: v.SkippedHostAliveScan,
+      })
+    })
+    const isShowResult = useCreation(() => {
+      return isExecuting || runtimeId
+    }, [isExecuting, runtimeId])
+    const progressList = useCreation(() => {
+      return streamInfo.progressState
+    }, [streamInfo.progressState])
+    return (
+      <>
+        <div
+          className={classNames(styles['port-scan-form-wrapper'], {
+            [styles['port-scan-form-wrapper-hidden']]: !isExpand,
+          })}
+          ref={newPortScanExecuteContentRef}
+        >
+          <Form
+            form={form}
+            onFinish={onStartExecute}
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 12 }} //这样设置是为了让输入框居中
+            validateMessages={{
+              /* eslint-disable no-template-curly-in-string */
+              required: t('YakitForm.requiredField'),
+            }}
+            labelWrap={true}
+          >
+            <NewPortScanExecuteForm
+              inViewport={inViewport}
+              form={form}
+              disabled={isExecuting}
+              extraParamsValue={extraParamsValue}
+              inputType={inputType}
+              setInputType={setInputType}
+            />
+            <Form.Item colon={false} label={' '} style={{ marginBottom: 0 }}>
+              <div className={styles['plugin-execute-form-operate']}>
+                {isExecuting ? (
+                  <YakitButton danger onClick={onStopExecute} size="large">
+                    {t('YakitButton.stop')}
+                  </YakitButton>
+                ) : (
+                  <YakitButton className={styles['plugin-execute-form-operate-start']} htmlType="submit" size="large">
+                    {t('YakitButton.start_execution')}
+                  </YakitButton>
+                )}
+                <YakitButton type="text" onClick={openExtraPropsDrawer} disabled={isExecuting} size="large">
+                  {t('NewPortScanExecuteContent.extraParams')}
+                </YakitButton>
+              </div>
+            </Form.Item>
+          </Form>
+        </div>
+        {progressList.length > 1 && (
+          <div className={styles['executing-progress']}>
+            {progressList.map((ele, index) => (
+              <React.Fragment key={ele.id}>
+                {index !== 0 && <Divider type="vertical" style={{ margin: 0, top: 2 }} />}
+                <PluginExecuteProgress percent={ele.progress} name={ele.id} />
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+        {isShowResult && <PluginExecuteResult streamInfo={streamInfo} runtimeId={runtimeId} loading={isExecuting} />}
+        <React.Suspense fallback={<div>loading...</div>}>
+          <NewPortScanExtraParamsDrawer
+            extraParamsValue={extraParamsValue}
+            visible={extraParamsVisible}
+            onSave={onSaveExtraParams}
+          />
+        </React.Suspense>
+      </>
+    )
+  }),
 )
 
 const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo((props) => {
-    const {t} = useI18nNamespaces(["portscan", "yakitUi"])
-    const {inViewport, disabled, form, extraParamsValue, inputType, setInputType} = props
-    const [portTemplates, setPortTemplates] = useState<{[key: string]: string}>({})
-    const [saveTemplateVisible, setSaveTemplateVisible] = useState<boolean>(false)
-    const [templateName, setTemplateName] = useState<string>("")
+  const { t } = useI18nNamespaces(['portscan', 'yakitUi'])
+  const { inViewport, disabled, form, extraParamsValue, inputType, setInputType } = props
+  const [portTemplates, setPortTemplates] = useState<{ [key: string]: string }>({})
+  const [saveTemplateVisible, setSaveTemplateVisible] = useState<boolean>(false)
+  const [templateName, setTemplateName] = useState<string>('')
 
-    useEffect(() => {
-        if (inViewport) onGetPortTemplates()
-    }, [inViewport])
+  useEffect(() => {
+    if (inViewport) onGetPortTemplates()
+  }, [inViewport])
 
-    const onGetPortTemplates = useMemoizedFn(() => {
-        ipcRenderer
-            .invoke("fetch-local-cache", "ScanPortTemplates")
-            .then((value: string) => {
-                if (value) {
-                    try {
-                        const templates = JSON.parse(value)
-                        setPortTemplates(templates || {})
-                    } catch (e) {
-                        setPortTemplates({})
-                    }
-                } else {
-                    setPortTemplates({})
-                }
-            })
-            .catch(() => {
-                setPortTemplates({})
-            })
-    })
-
-    const onShowSaveTemplate = useMemoizedFn(() => {
-        const ports = form.getFieldValue("Ports")
-        if (!ports) {
-            yakitNotify("error", t("NewPortScanExecuteForm.enterPortsBeforeSave"))
-            return
+  const onGetPortTemplates = useMemoizedFn(() => {
+    ipcRenderer
+      .invoke('fetch-local-cache', 'ScanPortTemplates')
+      .then((value: string) => {
+        if (value) {
+          try {
+            const templates = JSON.parse(value)
+            setPortTemplates(templates || {})
+          } catch (e) {
+            setPortTemplates({})
+          }
+        } else {
+          setPortTemplates({})
         }
-        setTemplateName("")
-        setSaveTemplateVisible(true)
-    })
+      })
+      .catch(() => {
+        setPortTemplates({})
+      })
+  })
 
-    const onSaveTemplate = useMemoizedFn(() => {
-        if (!templateName.trim()) {
-            yakitNotify("error", t("NewPortScanExecuteForm.enterTemplateName"))
-            return
-        }
-        const ports = form.getFieldValue("Ports")
-        const newTemplates = {
-            ...portTemplates,
-            [templateName.trim()]: ports
-        }
-        ipcRenderer.invoke("set-local-cache", "ScanPortTemplates", JSON.stringify(newTemplates)).then(() => {
-            yakitNotify("success", t("NewPortScanExecuteForm.saveTemplateSuccess"))
-            setPortTemplates(newTemplates)
-            setSaveTemplateVisible(false)
-            setTemplateName("")
-        })
-    })
+  const onShowSaveTemplate = useMemoizedFn(() => {
+    const ports = form.getFieldValue('Ports')
+    if (!ports) {
+      yakitNotify('error', t('NewPortScanExecuteForm.enterPortsBeforeSave'))
+      return
+    }
+    setTemplateName('')
+    setSaveTemplateVisible(true)
+  })
 
-    const onDeleteTemplate = useMemoizedFn((templateKey: string) => {
-        const newTemplates = {...portTemplates}
-        delete newTemplates[templateKey]
-        ipcRenderer.invoke("set-local-cache", "ScanPortTemplates", JSON.stringify(newTemplates)).then(() => {
-            yakitNotify("success", t("NewPortScanExecuteForm.deleteTemplateSuccess"))
-            setPortTemplates(newTemplates)
-        })
+  const onSaveTemplate = useMemoizedFn(() => {
+    if (!templateName.trim()) {
+      yakitNotify('error', t('NewPortScanExecuteForm.enterTemplateName'))
+      return
+    }
+    const ports = form.getFieldValue('Ports')
+    const newTemplates = {
+      ...portTemplates,
+      [templateName.trim()]: ports,
+    }
+    ipcRenderer.invoke('set-local-cache', 'ScanPortTemplates', JSON.stringify(newTemplates)).then(() => {
+      yakitNotify('success', t('NewPortScanExecuteForm.saveTemplateSuccess'))
+      setPortTemplates(newTemplates)
+      setSaveTemplateVisible(false)
+      setTemplateName('')
     })
-    /**选择预设端口设置Ports值 */
-    const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
-        let res: string = (checkedValue || [])
-            .map((i) => {
-                if (typeof i === "string" && portTemplates[i]) {
-                    return portTemplates[i]
-                }
-                return PresetPorts[i as string] || ""
-            })
-            .join(",")
-        if (!!res) {
-            form.setFieldsValue({Ports: res})
+  })
+
+  const onDeleteTemplate = useMemoizedFn((templateKey: string) => {
+    const newTemplates = { ...portTemplates }
+    delete newTemplates[templateKey]
+    ipcRenderer.invoke('set-local-cache', 'ScanPortTemplates', JSON.stringify(newTemplates)).then(() => {
+      yakitNotify('success', t('NewPortScanExecuteForm.deleteTemplateSuccess'))
+      setPortTemplates(newTemplates)
+    })
+  })
+  /**选择预设端口设置Ports值 */
+  const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
+    let res: string = (checkedValue || [])
+      .map((i) => {
+        if (typeof i === 'string' && portTemplates[i]) {
+          return portTemplates[i]
         }
-    })
-    const onResetPort = useMemoizedFn(() => {
-        form.setFieldsValue({Ports: defaultPorts, presetPort: undefined})
-    })
-    return (
-        <>
-            <YakitFormDraggerContentPath
-                formItemProps={{
-                    name: "Targets",
-                    label: t("NewPortScanExecuteForm.scanTarget"),
-                    rules: [{required: true}]
-                }}
-                accept='.txt,.xlsx,.xls,.csv'
-                textareaProps={{
-                    placeholder: t("NewPortScanExecuteForm.scanTargetPlaceholder"),
-                    rows: 3
-                }}
-                help={t("YakitDraggerContent.drag_files_tip")}
-                disabled={disabled}
-                onTextAreaType={setInputType}
-                textAreaType={inputType}
-            />
-            <Form.Item label={t("ScanPortForm.presetPort")} name='presetPort'>
-                <Checkbox.Group
-                    className={styles["preset-port-group-wrapper"]}
-                    onChange={onCheckPresetPort}
-                    disabled={disabled}
-                >
-                    <YakitCheckbox value={"top100"}>{t("ScanPortForm.top100")}</YakitCheckbox>
-                    <YakitCheckbox value={"topweb"}>{t("ScanPortForm.topweb")}</YakitCheckbox>
-                    <YakitCheckbox value={"top1000+"}>{t("ScanPortForm.top1000")}</YakitCheckbox>
-                    <YakitCheckbox value={"topdb"}>{t("ScanPortForm.topdb")}</YakitCheckbox>
-                    <YakitCheckbox value={"topudp"}>{t("ScanPortForm.topudp")}</YakitCheckbox>
-                    {Object.keys(portTemplates).map((templateKey) => (
-                        <div key={templateKey} className={styles["template-checkbox-wrapper"]}>
-                            <YakitCheckbox value={templateKey}>
-                                <div className={"content-ellipsis"} style={{maxWidth: 110}} title={templateKey}>
-                                    {templateKey}
-                                </div>
-                            </YakitCheckbox>
-                            {disabled ? (
-                                <OutlineTrashIcon
-                                    className={styles["template-not-allowed-del-icon"]}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                    }}
-                                />
-                            ) : (
-                                <OutlineTrashIcon
-                                    className={styles["template-del-icon"]}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        onDeleteTemplate(templateKey)
-                                    }}
-                                />
-                            )}
-                        </div>
-                    ))}
-                </Checkbox.Group>
-            </Form.Item>
-            <Form.Item
-                label={t("ScanPortForm.scanPort")}
-                name='Ports'
-                extra={
-                    <div className={styles["ports-form-extra"]}>
-                        <YakitButton
-                            type='text'
-                            icon={<OutlineStoreIcon />}
-                            style={{paddingLeft: 0}}
-                            onClick={onShowSaveTemplate}
-                            disabled={disabled}
-                        >
-                            {t("NewPortScanExecuteForm.saveAsTemplate")}
-                        </YakitButton>
-                        <div className={styles["divider-style"]}></div>
-                        <YakitButton
-                            type='text'
-                            icon={<OutlineRefreshIcon />}
-                            onClick={onResetPort}
-                            disabled={disabled}
-                        >
-                            {t("NewPortScanExecuteForm.defaultConfig")}
-                        </YakitButton>
-                    </div>
-                }
-                initialValue={defaultPorts}
-            >
-                <YakitInput.TextArea rows={3} disabled={disabled} />
-            </Form.Item>
-            <Form.Item label={" "} colon={false}>
-                <div className={styles["form-extra"]}>
-                    <Form.Item name='SkippedHostAliveScan' valuePropName='checked' noStyle>
-                        <YakitCheckbox disabled={disabled}>{t("ScanPortForm.skipHostAliveScan")}</YakitCheckbox>
-                    </Form.Item>
-                    <YakitTag>
-                        {t("NewPortScanExecuteForm.scanModeLabel")}
-                        {ScanKind[extraParamsValue.Mode]}
-                    </YakitTag>
-                    <YakitTag>
-                        {t("NewPortScanExecuteForm.fingerprintScanConcurrencyLabel")}
-                        {extraParamsValue.Concurrent}
-                    </YakitTag>
+        return PresetPorts[i as string] || ''
+      })
+      .join(',')
+    if (!!res) {
+      form.setFieldsValue({ Ports: res })
+    }
+  })
+  const onResetPort = useMemoizedFn(() => {
+    form.setFieldsValue({ Ports: defaultPorts, presetPort: undefined })
+  })
+  return (
+    <>
+      <YakitFormDraggerContentPath
+        formItemProps={{
+          name: 'Targets',
+          label: t('NewPortScanExecuteForm.scanTarget'),
+          rules: [{ required: true }],
+        }}
+        accept=".txt,.xlsx,.xls,.csv"
+        textareaProps={{
+          placeholder: t('NewPortScanExecuteForm.scanTargetPlaceholder'),
+          rows: 3,
+        }}
+        help={t('YakitDraggerContent.drag_files_tip')}
+        disabled={disabled}
+        onTextAreaType={setInputType}
+        textAreaType={inputType}
+      />
+      <Form.Item label={t('ScanPortForm.presetPort')} name="presetPort">
+        <Checkbox.Group
+          className={styles['preset-port-group-wrapper']}
+          onChange={onCheckPresetPort}
+          disabled={disabled}
+        >
+          <YakitCheckbox value={'top100'}>{t('ScanPortForm.top100')}</YakitCheckbox>
+          <YakitCheckbox value={'topweb'}>{t('ScanPortForm.topweb')}</YakitCheckbox>
+          <YakitCheckbox value={'top1000+'}>{t('ScanPortForm.top1000')}</YakitCheckbox>
+          <YakitCheckbox value={'topdb'}>{t('ScanPortForm.topdb')}</YakitCheckbox>
+          <YakitCheckbox value={'topudp'}>{t('ScanPortForm.topudp')}</YakitCheckbox>
+          {Object.keys(portTemplates).map((templateKey) => (
+            <div key={templateKey} className={styles['template-checkbox-wrapper']}>
+              <YakitCheckbox value={templateKey}>
+                <div className={'content-ellipsis'} style={{ maxWidth: 110 }} title={templateKey}>
+                  {templateKey}
                 </div>
-            </Form.Item>
-
-            <YakitModal
-                title={t("NewPortScanExecuteForm.saveFingerprintConfig")}
-                visible={saveTemplateVisible}
-                onCancel={() => setSaveTemplateVisible(false)}
-                width={400}
-                footer={null}
+              </YakitCheckbox>
+              {disabled ? (
+                <OutlineTrashIcon
+                  className={styles['template-not-allowed-del-icon']}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
+                />
+              ) : (
+                <OutlineTrashIcon
+                  className={styles['template-del-icon']}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteTemplate(templateKey)
+                  }}
+                />
+              )}
+            </div>
+          ))}
+        </Checkbox.Group>
+      </Form.Item>
+      <Form.Item
+        label={t('ScanPortForm.scanPort')}
+        name="Ports"
+        extra={
+          <div className={styles['ports-form-extra']}>
+            <YakitButton
+              type="text"
+              icon={<OutlineStoreIcon />}
+              style={{ paddingLeft: 0 }}
+              onClick={onShowSaveTemplate}
+              disabled={disabled}
             >
-                <div>
-                    <YakitInput.TextArea
-                        placeholder={t("NewPortScanExecuteForm.templateNamePlaceholder")}
-                        showCount
-                        maxLength={50}
-                        value={templateName}
-                        onChange={(e) => setTemplateName(e.target.value)}
-                        onPressEnter={onSaveTemplate}
-                    />
-                    <div style={{display: "flex", justifyContent: "end", gap: 8, marginTop: 25}}>
-                        <YakitButton
-                            type='outline2'
-                            onClick={() => {
-                                setTemplateName("")
-                                setSaveTemplateVisible(false)
-                            }}
-                        >
-                            {t("YakitButton.cancel")}
-                        </YakitButton>
-                        <YakitButton type='primary' onClick={onSaveTemplate}>
-                            {t("YakitButton.save")}
-                        </YakitButton>
-                    </div>
-                </div>
-            </YakitModal>
-        </>
-    )
+              {t('NewPortScanExecuteForm.saveAsTemplate')}
+            </YakitButton>
+            <div className={styles['divider-style']}></div>
+            <YakitButton type="text" icon={<OutlineRefreshIcon />} onClick={onResetPort} disabled={disabled}>
+              {t('NewPortScanExecuteForm.defaultConfig')}
+            </YakitButton>
+          </div>
+        }
+        initialValue={defaultPorts}
+      >
+        <YakitInput.TextArea rows={3} disabled={disabled} />
+      </Form.Item>
+      <Form.Item label={' '} colon={false}>
+        <div className={styles['form-extra']}>
+          <Form.Item name="SkippedHostAliveScan" valuePropName="checked" noStyle>
+            <YakitCheckbox disabled={disabled}>{t('ScanPortForm.skipHostAliveScan')}</YakitCheckbox>
+          </Form.Item>
+          <YakitTag>
+            {t('NewPortScanExecuteForm.scanModeLabel')}
+            {ScanKind[extraParamsValue.Mode]}
+          </YakitTag>
+          <YakitTag>
+            {t('NewPortScanExecuteForm.fingerprintScanConcurrencyLabel')}
+            {extraParamsValue.Concurrent}
+          </YakitTag>
+        </div>
+      </Form.Item>
+
+      <YakitModal
+        title={t('NewPortScanExecuteForm.saveFingerprintConfig')}
+        visible={saveTemplateVisible}
+        onCancel={() => setSaveTemplateVisible(false)}
+        width={400}
+        footer={null}
+      >
+        <div>
+          <YakitInput.TextArea
+            placeholder={t('NewPortScanExecuteForm.templateNamePlaceholder')}
+            showCount
+            maxLength={50}
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+            onPressEnter={onSaveTemplate}
+          />
+          <div style={{ display: 'flex', justifyContent: 'end', gap: 8, marginTop: 25 }}>
+            <YakitButton
+              type="outline2"
+              onClick={() => {
+                setTemplateName('')
+                setSaveTemplateVisible(false)
+              }}
+            >
+              {t('YakitButton.cancel')}
+            </YakitButton>
+            <YakitButton type="primary" onClick={onSaveTemplate}>
+              {t('YakitButton.save')}
+            </YakitButton>
+          </div>
+        </div>
+      </YakitModal>
+    </>
+  )
 })

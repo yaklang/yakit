@@ -97,8 +97,8 @@ interface PluginEditorProps {
 
 export const PluginEditor: React.FC<PluginEditorProps> = memo(
   forwardRef((props, ref) => {
-    const {t} = useI18nNamespaces(["plugin", "yakitUi"])
-    const { title = t("PluginEditor.newPlugin"), headerExtra, onEditCancel } = props
+    const { t } = useI18nNamespaces(['plugin', 'yakitUi'])
+    const { title = t('PluginEditor.newPlugin'), headerExtra, onEditCancel } = props
 
     const userinfo = useStore((s) => s.userInfo)
     const isLogin = useMemo(() => userinfo.isLogin, [userinfo])
@@ -132,7 +132,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
           }
         })
         .catch((e: any) => {
-          yakitNotify('error', t("PluginEditor.fetchOldDataFailed") + e)
+          yakitNotify('error', t('PluginEditor.fetchOldDataFailed') + e)
         })
         .finally(() => {
           setTimeout(() => {
@@ -195,12 +195,12 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
     const onFetchPlugin = useMemoizedFn(() => {
       if (!editPlugin.current) {
-        yakitNotify('error', t("PluginEditor.fetchPluginDetailEmpty"))
+        yakitNotify('error', t('PluginEditor.fetchPluginDetailEmpty'))
         return
       }
       const { name, uuid } = editPlugin.current
       if (!name && !uuid) {
-        yakitNotify('error', t("PluginEditor.fetchPluginNameEmpty"))
+        yakitNotify('error', t('PluginEditor.fetchPluginNameEmpty'))
         return
       }
 
@@ -934,7 +934,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
 
     return (
       <div ref={wrapperRef} tabIndex={0} className={styles['plugin-editor']}>
-        <YakitSpin spinning={loading} tip={t("PluginEditor.loadingPluginDetail")}>
+        <YakitSpin spinning={loading} tip={t('PluginEditor.loadingPluginDetail')}>
           <div className={styles['plugin-editor-wrapper']}>
             <div
               className={classNames(styles['plugin-editor-header'], {
@@ -944,7 +944,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
               <div className={styles['header-title']}>
                 {title}
                 <div className={styles['header-subtitle']} onClick={handleOpenHelp}>
-                  <span className={classNames(styles['subtitle-style'])}>{t("PluginEditor.helpDoc")}</span>
+                  <span className={classNames(styles['subtitle-style'])}>{t('PluginEditor.helpDoc')}</span>
                   <OutlineQuestionmarkcircleIcon />
                 </div>
               </div>
@@ -958,7 +958,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     type="outline2"
                     size={isEdit ? 'middle' : 'large'}
                     icon={<OutlineDocumentduplicateIcon />}
-                    name={t("PluginEditor.copyToCloud")}
+                    name={t('PluginEditor.copyToCloud')}
                     onClick={onBtnCopyOnline}
                   />
                 )}
@@ -970,7 +970,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     type="outline1"
                     size={isEdit ? 'middle' : 'large'}
                     icon={<OutlinePaperairplaneIcon />}
-                    name={t("PluginEditor.submitAndSave")}
+                    name={t('PluginEditor.submitAndSave')}
                     onClick={onBtnSubmitOnline}
                   />
                 )}
@@ -982,7 +982,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                     type="outline1"
                     size={isEdit ? 'middle' : 'large'}
                     icon={<OutlineClouduploadIcon />}
-                    name={t("PluginEditor.syncToCloud")}
+                    name={t('PluginEditor.syncToCloud')}
                     onClick={onBtnOnlineSave}
                   />
                 )}
@@ -993,7 +993,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                   type="outline1"
                   size={isEdit ? 'middle' : 'large'}
                   icon={<OutlineExitIcon />}
-                  name={t("PluginEditor.saveAndExit")}
+                  name={t('PluginEditor.saveAndExit')}
                   onClick={onBtnLocalSaveAndExit}
                 />
                 <HubButton
@@ -1002,7 +1002,7 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
                   loading={localLoading}
                   size={isEdit ? 'middle' : 'large'}
                   icon={<SolidStoreIcon />}
-                  name={t("YakitButton.save")}
+                  name={t('YakitButton.save')}
                   onClick={onBtnLocalSave}
                 />
 
@@ -1043,10 +1043,10 @@ export const PluginEditor: React.FC<PluginEditorProps> = memo(
               getContainer={wrapperRef.current || undefined}
               wrapClassName={styles['old-data-hint-wrapper']}
               visible={oldShow}
-              title={t("PluginEditor.oldDataMigrationTitle")}
-              content={t("PluginEditor.oldDataMigrationContent")}
-              okButtonText={t("PluginEditor.copyCode")}
-              cancelButtonText={t("YakitButton.ignore")}
+              title={t('PluginEditor.oldDataMigrationTitle')}
+              content={t('PluginEditor.oldDataMigrationContent')}
+              okButtonText={t('PluginEditor.copyCode')}
+              cancelButtonText={t('YakitButton.ignore')}
               okButtonProps={{ loading: copyLoading }}
               onOk={onOldDataOk}
               onCancel={onOldDataCancel}
@@ -1073,17 +1073,17 @@ interface PluginCopyModalProps {
 /** @name 插件复制云端 */
 const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
   const { visible, setVisible } = props
-  const {t} = useI18nNamespaces(["plugin", "yakitUi"])
+  const { t } = useI18nNamespaces(['plugin', 'yakitUi'])
 
   const [name, setName] = useState<string>('')
 
   const onSubmit = useMemoizedFn(() => {
     if (!name) {
-      yakitNotify('error', t("PluginEditor.enterCopyName"))
+      yakitNotify('error', t('PluginEditor.enterCopyName'))
       return
     }
     if (name.length > 100) {
-      yakitNotify('error', t("PluginEditor.pluginNameMaxLength"))
+      yakitNotify('error', t('PluginEditor.pluginNameMaxLength'))
       return
     }
     setVisible(true, name)
@@ -1094,7 +1094,7 @@ const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
 
   return (
     <YakitModal
-      title={t("PluginEditor.copyToCloud")}
+      title={t('PluginEditor.copyToCloud')}
       type="white"
       width={506}
       centered={true}
@@ -1106,12 +1106,14 @@ const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
       bodyStyle={{ padding: 0 }}
     >
       <div className={styles['plugin-copy-body']}>
-        <div className={styles['copy-header']}>
-          {t("PluginEditor.copyToCloudDesc")}
-        </div>
+        <div className={styles['copy-header']}>{t('PluginEditor.copyToCloudDesc')}</div>
         <div className={styles['copy-wrapper']}>
-          <div className={styles['title-style']}>{t("PluginEditor.pluginName")}</div>
-          <YakitInput placeholder={t("YakitInput.please_enter")} value={name} onChange={(e) => setName(e.target.value)} />
+          <div className={styles['title-style']}>{t('PluginEditor.pluginName')}</div>
+          <YakitInput
+            placeholder={t('YakitInput.please_enter')}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
       </div>
     </YakitModal>

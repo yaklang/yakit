@@ -52,7 +52,7 @@ interface EditorInfoProps extends EditorBaseInfoProps {
 export const EditorInfo: React.FC<EditorInfoProps> = memo(
   forwardRef((props, ref) => {
     const { expand, onExpand, ...rest } = props
-    const {t} = useI18nNamespaces(["plugin"])
+    const { t } = useI18nNamespaces(['plugin'])
 
     const [visible, setVisible] = useState<boolean>(false)
     const handleFold = useMemoizedFn(() => {
@@ -76,7 +76,7 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
     const handleSubmit: () => Promise<YakitPluginBaseInfo | undefined> = useMemoizedFn(() => {
       return new Promise(async (resolve, reject) => {
         if (!formRef || !formRef.current) {
-          yakitNotify('error', t("EditorInfo.functionError"))
+          yakitNotify('error', t('EditorInfo.functionError'))
           resolve(undefined)
         }
         try {
@@ -107,9 +107,9 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
         })}
       >
         <div className={styles['editor-info-header']}>
-          {t("EditorInfo.basicInfo")}
+          {t('EditorInfo.basicInfo')}
           <Tooltip
-            title={t("EditorInfo.collapseBasicInfo")}
+            title={t('EditorInfo.collapseBasicInfo')}
             overlayClassName="plugins-tooltip"
             visible={visible}
             onVisibleChange={(show) => setVisible(show)}
@@ -133,7 +133,7 @@ interface EditorInfoFormProps extends EditorBaseInfoProps {}
 export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
   forwardRef((props, ref) => {
     const { isEdit, data, initType, setType, setName, getCodeContent } = props
-    const {t} = useI18nNamespaces(["plugin", "yakitUi"])
+    const { t } = useI18nNamespaces(['plugin', 'yakitUi'])
 
     const [form] = Form.useForm()
     useImperativeHandle(
@@ -299,17 +299,19 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
     const [searchTempExampleVal, setSearchTempExampleVal] = useState<string>('')
     const renderTempExampleList = useMemo(() => {
       return searchTempExampleVal
-        ? getTempExampleList(t).filter((v) => v.label.toLocaleLowerCase().includes(searchTempExampleVal.toLocaleLowerCase()))
+        ? getTempExampleList(t).filter((v) =>
+            v.label.toLocaleLowerCase().includes(searchTempExampleVal.toLocaleLowerCase()),
+          )
         : getTempExampleList(t)
     }, [searchTempExampleVal, getTempExampleList])
     const onOpenHelpModal = (tempExampleItem: TempExampleInfo) => {
       const m = showYakitModal({
-        title: t("EditorInfo.templateExamples"),
+        title: t('EditorInfo.templateExamples'),
         type: 'white',
         width: '60vw',
         centered: true,
         cancelButtonProps: { style: { display: 'none' } },
-        onOkText: t("YakitButton.iKnow"),
+        onOkText: t('YakitButton.iKnow'),
         onOk: () => m.destroy(),
         bodyStyle: { padding: '8px 24px' },
         content: <TempExampleHelp tempExampleItem={tempExampleItem} />,
@@ -326,12 +328,12 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
     }, [searchQaDocumentVal, qaDocumentLableList])
     const onOpenQaDocModal = (label: string) => {
       const m = showYakitModal({
-        title: t("EditorInfo.faq"),
+        title: t('EditorInfo.faq'),
         type: 'white',
         width: '60vw',
         centered: true,
         cancelButtonProps: { style: { display: 'none' } },
-        onOkText: t("YakitButton.iKnow"),
+        onOkText: t('YakitButton.iKnow'),
         onOk: () => m.destroy(),
         bodyStyle: { padding: '8px 24px' },
         content: <Qadocument label={label} />,
@@ -345,11 +347,12 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
           <Form.Item
             label={
               <>
-                {t("EditorInfo.scriptType")}<span className="form-item-required">*</span>:
+                {t('EditorInfo.scriptType')}
+                <span className="form-item-required">*</span>:
               </>
             }
             name="Type"
-            rules={[{ required: true, message: t("EditorInfo.scriptTypeRequired") }]}
+            rules={[{ required: true, message: t('EditorInfo.scriptTypeRequired') }]}
           >
             <PluginTypeSelect
               size="large"
@@ -364,7 +367,8 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
           <Form.Item
             label={
               <>
-                {t("EditorInfo.pluginName")}<span className="form-item-required">*</span>:
+                {t('EditorInfo.pluginName')}
+                <span className="form-item-required">*</span>:
               </>
             }
             name="ScriptName"
@@ -372,23 +376,23 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
             rules={[
               {
                 validator: async (_, value) => {
-                  if (!value || !value.trim()) return Promise.reject(new Error(t("EditorInfo.pluginNameRequired")))
-                  if (value.trim().length > 100) return Promise.reject(new Error(t("EditorInfo.nameMaxLength")))
+                  if (!value || !value.trim()) return Promise.reject(new Error(t('EditorInfo.pluginNameRequired')))
+                  if (value.trim().length > 100) return Promise.reject(new Error(t('EditorInfo.nameMaxLength')))
                 },
               },
             ]}
           >
             <YakitInput
               wrapperClassName={styles['item-input']}
-              placeholder={t("YakitInput.please_enter")}
+              placeholder={t('YakitInput.please_enter')}
               size="large"
               prefix={<OutlineIdentificationIcon />}
               maxLength={100}
             />
           </Form.Item>
 
-          <Form.Item label={t("EditorInfo.descriptionLabel")} name="Help">
-            <YakitInput.TextArea rows={2} placeholder={t("YakitInput.please_enter")} />
+          <Form.Item label={t('EditorInfo.descriptionLabel')} name="Help">
+            <YakitInput.TextArea rows={2} placeholder={t('YakitInput.please_enter')} />
           </Form.Item>
 
           <Form.Item
@@ -398,7 +402,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
               </>
             }
           >
-            <Form.Item noStyle name="Tags" rules={[{ required: true, message: t("EditorInfo.tagsRequired") }]}>
+            <Form.Item noStyle name="Tags" rules={[{ required: true, message: t('EditorInfo.tagsRequired') }]}>
               <YakitSelect wrapperClassName={styles['item-select']} mode="tags" allowClear size="large">
                 {PluginEditorBuiltInTags.map((item) => {
                   return (
@@ -419,7 +423,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
               // [styles["hidden"]]: !["yak", "codec"].includes(type)
             })}
           >
-            <div className={styles['item-setting-header']}>{t("EditorInfo.pluginConfig")}</div>
+            <div className={styles['item-setting-header']}>{t('EditorInfo.pluginConfig')}</div>
 
             <div className={styles['item-switch-group']}>
               {/* yak 插件专用 ↓↓↓ */}
@@ -427,18 +431,19 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                 <>
                   <div className={styles['switch-wrapper']}>
                     <YakitSwitch checked={EnablePluginSelector} onChange={handleEnablePluginSelector} />
-                    {t("EditorInfo.enablePluginSelectorUI")}
+                    {t('EditorInfo.enablePluginSelectorUI')}
                   </div>
                   {EnablePluginSelector && (
                     <Form.Item
                       name="PluginSelectorTypes"
                       label={
                         <>
-                          {t("EditorInfo.linkedPluginType")}<span className="form-item-required">*</span>:
+                          {t('EditorInfo.linkedPluginType')}
+                          <span className="form-item-required">*</span>:
                         </>
                       }
                       required={true}
-                      rules={[{ required: true, message: t("EditorInfo.linkedPluginTypeRequired") }]}
+                      rules={[{ required: true, message: t('EditorInfo.linkedPluginTypeRequired') }]}
                       style={{ width: '100%', marginBottom: 0 }}
                     >
                       <YakitSelect
@@ -465,7 +470,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                             handleSwitchToTags(check, item)
                           }}
                         />
-                        {PluginSwitchTagToContent[item] || t("EditorInfo.invalidItem")}
+                        {PluginSwitchTagToContent[item] || t('EditorInfo.invalidItem')}
                       </div>
                     )
                   })}
@@ -486,7 +491,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
                             handleSwitchToTags(check, item)
                           }}
                         />
-                        {PluginSwitchTagToContent[item] || t("EditorInfo.invalidItem")}
+                        {PluginSwitchTagToContent[item] || t('EditorInfo.invalidItem')}
                       </div>
                     )
                   })}
@@ -513,11 +518,11 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
               options={[
                 {
                   value: 1,
-                  label: t("EditorInfo.templateExamples"),
+                  label: t('EditorInfo.templateExamples'),
                 },
                 {
                   value: 2,
-                  label: t("EditorInfo.faq"),
+                  label: t('EditorInfo.faq'),
                 },
               ]}
             />
@@ -577,8 +582,8 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
         </div>
         <YakitHint
           visible={typeSwitchPopShow}
-          title={t("EditorInfo.switchScriptType")}
-          content={t("EditorInfo.switchScriptTypeContent")}
+          title={t('EditorInfo.switchScriptType')}
+          content={t('EditorInfo.switchScriptTypeContent')}
           onOk={() => {
             setType(tempType.current)
             setTypeSwitchPopShow(false)
