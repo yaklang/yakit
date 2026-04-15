@@ -23,7 +23,9 @@ import {
   OutlineXIcon,
   OutlineArrowsexpandIcon,
   OutlineArrowscollapseIcon,
+  OutlineLightningboltIcon,
 } from '@/assets/icon/outline'
+import { SolidLightningboltIcon } from '@/assets/icon/solid'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
   defaultWebFuzzerPageInfo,
@@ -548,6 +550,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
   const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
   const [refreshHotCodeList, setRefreshHotCodeList] = useState<boolean>(true)
   const [selectedTemplateName, setSelectedTemplateName] = useState<string>(selectedTemplateNameProp || '')
+  const [sharedHotReloadCode, setSharedHotReloadCodeState] = useState<boolean>(false)
   const tempNameRef = useRef<string>('')
   const tokenRef = useRef<string>('')
   const resizeBodyRef = useRef<HTMLDivElement>(null)
@@ -579,6 +582,14 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
           setTemplate(`${e}`)
         }
       })
+
+      getHotPatchCache()
+        .then(({ sharedHotReloadCode }) => {
+          setSharedHotReloadCodeState(!!sharedHotReloadCode)
+        })
+        .catch(() => {
+          setSharedHotReloadCodeState(false)
+        })
     }
   }, [visible, hotPatchCode, setCode, setTemplate])
 
@@ -736,6 +747,11 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
     persistHotPatchState(checked, getCode())
   })
 
+  const setSharedHotReloadCode = useMemoizedFn((checked: boolean) => {
+    setSharedHotReloadCodeState(checked)
+    setHotPatchCache({ sharedHotReloadCode: checked })
+  })
+
   useShortcutKeyTrigger(
     'saveHotPatch*httpFuzzer',
     useMemoizedFn(() => {
@@ -803,6 +819,28 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                   />
                 </Tooltip>
               </YakitPopconfirm>
+              <Tooltip title={t('HTTPFuzzerHotPatch.sharedHotReloadCode')}>
+                <YakitPopover
+                  trigger="click"
+                  placement="bottom"
+                  content={
+                    <div className={styles['hotPatchCodeOpen']}>
+                      <span>{t('HTTPFuzzerHotPatch.sharedHotReloadCode')}</span>
+                      <Tooltip title={t('HTTPFuzzerHotPatch.webFuzzerHotReloadNotice')}>
+                        <InformationCircleIcon className={styles['info-icon']} />
+                      </Tooltip>
+                      <YakitSwitch checked={sharedHotReloadCode} onChange={setSharedHotReloadCode}></YakitSwitch>
+                    </div>
+                  }
+                >
+                  <YakitButton
+                    type="text"
+                    size="small"
+                    className={styles['hotPatch-sidebar-icon-button']}
+                    icon={sharedHotReloadCode ? <SolidLightningboltIcon /> : <OutlineLightningboltIcon />}
+                  />
+                </YakitPopover>
+              </Tooltip>
               <Tooltip title={t('HTTPFuzzerHotPatch.updateAndSaveTemplate')}>
                 <YakitButton
                   disabled={!canSaveSelectedTemplate}

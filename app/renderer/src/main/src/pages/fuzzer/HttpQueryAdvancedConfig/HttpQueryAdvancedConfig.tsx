@@ -62,7 +62,6 @@ import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useProxy } from '@/hook/useProxy'
-import { getHotPatchCache, setHotPatchCache } from '../hotPatchCache'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -164,7 +163,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     proxyRouteOptions,
     proxyConfig: { Endpoints = [] },
   } = useProxy()
-  const [sharedHotReloadCode, setSharedHotReloadCodeState] = useState<boolean>(false)
 
   const retry = useMemo(() => advancedConfigValue.retry, [advancedConfigValue.retry])
   const noRetry = useMemo(() => advancedConfigValue.noRetry, [advancedConfigValue.noRetry])
@@ -179,16 +177,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
   useEffect(() => {
     setHttpResponse(defaultHttpResponse)
   }, [defaultHttpResponse])
-
-  useEffect(() => {
-    getHotPatchCache()
-      .then(({ sharedHotReloadCode }) => {
-        setSharedHotReloadCodeState(sharedHotReloadCode)
-      })
-      .catch(() => {
-        setSharedHotReloadCodeState(false)
-      })
-  }, [])
 
   //把新增的代理节点替换成Id
   const changeProxy = useMemoizedFn(() => {
@@ -272,10 +260,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
       ...v,
       ...restValue,
     })
-  })
-  const setSharedHotReloadCode = useMemoizedFn((checked: boolean) => {
-    setSharedHotReloadCodeState(checked)
-    setHotPatchCache({ sharedHotReloadCode: checked })
   })
   /**添加的额外操作，例如没有展开的时候点击添加需要展开该项 */
   const onAddExtra = useMemoizedFn((type: string) => {
@@ -732,14 +716,6 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 <Form.Item label={t('HttpQueryAdvancedConfig.render_mode')} name="fuzzTagSyncIndex">
                   <YakitRadioButtons buttonStyle="solid" options={fuzzTagSyncOptions(t)} size={'small'} />
                 </Form.Item>
-
-                <div className={styles['hotPatchCodeOpen']}>
-                  <span>{t('HTTPFuzzerHotPatch.sharedHotReloadCode')}</span>
-                  <Tooltip title={t('HTTPFuzzerHotPatch.webFuzzerHotReloadNotice')}>
-                    <InformationCircleIcon className={styles['info-icon']} />
-                  </Tooltip>
-                  <YakitSwitch checked={sharedHotReloadCode} onChange={setSharedHotReloadCode}></YakitSwitch>
-                </div>
 
                 <Form.Item
                   label={t('HttpQueryAdvancedConfig.no_fix_length')}
