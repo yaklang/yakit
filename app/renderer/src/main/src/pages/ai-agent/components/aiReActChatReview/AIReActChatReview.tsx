@@ -306,7 +306,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       yakitNotify('error', '请输入一些细节信息')
       return
     }
-    setRequireLoading(false)
+    setRequireLoading(true)
     handleAIRequireOpSend(requireQS)
     setTimeout(() => {
       setRequireLoading(false)

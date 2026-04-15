@@ -26,6 +26,7 @@ import { AIChatQSData, AIChatQSDataTypeEnum } from '../ai-re-act/hooks/aiRender'
 import { genBaseAIChatData, isToolExecStream } from '../ai-re-act/hooks/utils'
 import { Uint8ArrayToString } from '@/utils/str'
 import { convertNodeIdToVerbose } from '../ai-re-act/hooks/defaultConstant'
+import { JSONParseLog } from '@/utils/tool'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -66,36 +67,36 @@ export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]
           try {
             ipcContent = Uint8ArrayToString(item.Content) || ''
             ipcStreamDelta = Uint8ArrayToString(item.StreamDelta) || ''
+            let current: AIChatQSData | null = null
+            if (item.Type === AIChatQSDataTypeEnum.TOOL_CALL_PARAM) {
+              const { call_tool_id, params } = JSONParseLog(ipcContent) as AIAgentGrpcApi.AIToolCallParams
+              current = {
+                ...genBaseAIChatData(item),
+                chatType: 'reAct', // 随机写的，后面需要开发UI时通过传入参数设置
+                type: AIChatQSDataTypeEnum.TOOL_CALL_PARAM,
+                data: {
+                  call_tool_id,
+                  params,
+                },
+              }
+            } else {
+              current = {
+                ...genBaseAIChatData(item),
+                chatType: 'reAct', // 随机写的，后面需要开发UI时通过传入参数设置
+                type: AIChatQSDataTypeEnum.STREAM,
+                data: {
+                  CallToolID: item.CallToolID,
+                  NodeId: item.NodeId,
+                  NodeIdVerbose: item.NodeIdVerbose || convertNodeIdToVerbose(item.NodeId),
+                  content: ipcContent + ipcStreamDelta,
+                  ContentType: item.ContentType,
+                  EventUUID: item.EventUUID,
+                  status: 'end',
+                },
+              }
+            }
+            list.push(current)
           } catch (error) {}
-          let current: AIChatQSData | null = null
-          if (item.Type === AIChatQSDataTypeEnum.TOOL_CALL_PARAM) {
-            const { call_tool_id, params } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallParams
-            current = {
-              ...genBaseAIChatData(item),
-              chatType: 'reAct', // 随机写的，后面需要开发UI时通过传入参数设置
-              type: AIChatQSDataTypeEnum.TOOL_CALL_PARAM,
-              data: {
-                call_tool_id,
-                params,
-              },
-            }
-          } else {
-            current = {
-              ...genBaseAIChatData(item),
-              chatType: 'reAct', // 随机写的，后面需要开发UI时通过传入参数设置
-              type: AIChatQSDataTypeEnum.STREAM,
-              data: {
-                CallToolID: item.CallToolID,
-                NodeId: item.NodeId,
-                NodeIdVerbose: item.NodeIdVerbose || convertNodeIdToVerbose(item.NodeId),
-                content: ipcContent + ipcStreamDelta,
-                ContentType: item.ContentType,
-                EventUUID: item.EventUUID,
-                status: 'end',
-              },
-            }
-          }
-          list.push(current)
         })
         resolve(list)
       })

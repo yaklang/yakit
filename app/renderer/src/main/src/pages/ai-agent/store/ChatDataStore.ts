@@ -133,8 +133,6 @@ export class ChatDataStore {
     if (!prev) {
       throw new Error(`Session: ${session} does not exist`)
     }
-
-    console.log('prev:', prev, value)
     const next = typeof value === 'function' ? value(prev) : value
     this.map.set(session, next)
   }

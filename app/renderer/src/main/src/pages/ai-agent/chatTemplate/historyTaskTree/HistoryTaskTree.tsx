@@ -19,10 +19,6 @@ import { OutlineLoadingIcon, OutlinePlay2Icon } from '@/assets/icon/outline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 
-export const isHaveExecutingTask = (list: AITaskInfoProps[]) => {
-  return list.every((item) => !!item.progress)
-}
-
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const { data } = props
 
@@ -56,9 +52,6 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                         {item?.root_task_name}
                       </div>
                     </div>
-                    {isHaveExecutingTask(item.task_tree) && (
-                      <AIHistoryContinueTask coordinatorId={item.coordinator_id} taskIndex={''} />
-                    )}
                   </div>
                 }
                 key={item.coordinator_id}
@@ -91,9 +84,6 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 
   const loading = useCreation(() => {
     return sendRecoverParamsRef.current?.taskIndex === taskIndex && isExecuting
-  }, [isExecuting, taskIndex, sendRecoverParamsRef.current?.taskIndex])
-  const disabled = useCreation(() => {
-    return isExecuting && !!sendRecoverParamsRef.current?.taskIndex
   }, [isExecuting, taskIndex, sendRecoverParamsRef.current?.taskIndex])
 
   const getTaskInfo = useMemoizedFn(() => {
@@ -172,7 +162,6 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
         onClick={(e) => {
           e.stopPropagation()
         }}
-        disabled={disabled}
         className={styles['continue-task-button']}
         radius="50%"
         size="small"
