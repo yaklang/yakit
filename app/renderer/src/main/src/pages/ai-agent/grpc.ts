@@ -54,7 +54,6 @@ export const grpcQueryAIToolDetails: APIFunc<AIEventQueryRequest, AIChatQSData[]
     grpcQueryAIEvent(param)
       .then((res: AIEventQueryResponse) => {
         const { Events } = res
-        console.log('grpcQueryAIToolDetails-res', param, res)
         const list: AIChatQSData[] = []
         Events.filter((ele) => {
           if (ele.Type === AIChatQSDataTypeEnum.STREAM && isToolExecStream(ele.NodeId)) return true
