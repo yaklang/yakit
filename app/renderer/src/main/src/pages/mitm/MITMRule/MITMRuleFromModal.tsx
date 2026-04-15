@@ -44,7 +44,7 @@ const { ipcRenderer } = window.require('electron')
 
 const parseRuleToRuleList = (rule: string = '') => {
   const list = `${rule || ''}`
-    .split(/[\r\n,，]+/g)
+    .split(/\r?\n/g)
     .map((item) => item.trim())
     .filter(Boolean)
   return list.length > 0 ? list : ['']
@@ -57,7 +57,7 @@ const parseSecondaryStagesToRule = (secondaryStages?: MITMSecondaryStagesItem[])
   return secondaryStages
     .map((item) => `${item?.Regexp || ''}`.trim())
     .filter(Boolean)
-    .join(',')
+    .join('\n')
 }
 
 const buildSecondaryStagesFromRule = (rule: string = ''): MITMSecondaryStagesItem[] => {

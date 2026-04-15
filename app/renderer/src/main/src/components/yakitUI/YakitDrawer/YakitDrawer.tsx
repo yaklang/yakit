@@ -23,8 +23,12 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
     } else {
       emiter.emit('setYakitHeaderDraggable', true)
     }
-    return () => emiter.emit('setYakitHeaderDraggable', true)
   }, [visible])
+
+  useEffect(() => {
+    return () => emiter.emit('setYakitHeaderDraggable', true)
+  }, [])
+
   return (
     <Drawer
       visible={visible}
