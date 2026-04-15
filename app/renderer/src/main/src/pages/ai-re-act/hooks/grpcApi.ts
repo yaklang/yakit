@@ -737,6 +737,11 @@ export declare namespace AIAgentGrpcApi {
     fixed_bytes: number
     sections: AIContextSections[]
   }
+
+  export interface AIToolCallParams {
+    call_tool_id: string
+    params: ToolUseReviewRequire['params']
+  }
 }
 
 // #region AI相关普通接口的请求和定义结构

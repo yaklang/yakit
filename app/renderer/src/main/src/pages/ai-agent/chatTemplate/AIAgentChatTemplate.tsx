@@ -36,6 +36,7 @@ import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import { AIHistoryContinueTask, HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
@@ -385,11 +386,11 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         <>
           {toolList.map((info) => {
             const { id, Timestamp, type, data } = info
+            const { execFileRecord } = yakExecResult
             switch (type) {
               case AIChatQSDataTypeEnum.STREAM:
               case AIChatQSDataTypeEnum.TOOL_CALL_RESULT: {
                 const { NodeIdVerbose, CallToolID, content, NodeId } = data
-                const { execFileRecord } = yakExecResult
                 const fileList = execFileRecord.get(CallToolID)
                 const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
                 const nodeLabel = NodeIdVerbose[language]
@@ -409,6 +410,23 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                   />
                 )
               }
+              case AIChatQSDataTypeEnum.TOOL_CALL_PARAM:
+                const { call_tool_id } = data
+                const fileList = execFileRecord.get(call_tool_id)
+                return (
+                  <StreamCard
+                    key={id}
+                    titleText={'工具参数'}
+                    content={<AIReviewParams params={data.params} isPreStyle={true} />}
+                    modalInfo={{
+                      time: Timestamp,
+                      title: info.AIModelName,
+                      icon: info.AIService,
+                    }}
+                    operationInfo={{ aiFilePath }}
+                    fileList={fileList}
+                  />
+                )
               default:
                 return <React.Fragment key={id}></React.Fragment>
             }

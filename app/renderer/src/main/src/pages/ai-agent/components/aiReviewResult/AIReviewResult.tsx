@@ -15,6 +15,7 @@ import { setClipboardText } from '@/utils/clipboard'
 import { success } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isEmpty } from 'lodash'
+import classNames from 'classnames'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const { info, timestamp } = props
@@ -104,7 +105,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
       case 'tool_use_review_require':
         const { params } = data
         try {
-          paramsValue = !!paramsValue ? paramsValue : <AIReviewParams params={params} />
+          paramsValue = !!paramsValue ? paramsValue : <AIReviewParams params={params} isPreStyle={true} />
         } catch (error) {}
         break
       default:
@@ -152,8 +153,8 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   )
 })
 
-const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
-  const { params } = props
+export const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
+  const { params, className, isPreStyle } = props
   const { t } = useI18nNamespaces(['yakitUi'])
   const [isScroll, setIsScroll] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -172,7 +173,13 @@ const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
   })
   return (
     <div
-      className={styles['ai-review-params-wrapper']}
+      className={classNames(
+        styles['ai-review-params-wrapper'],
+        {
+          [styles['ai-tool-param-pre-wrapper']]: !!isPreStyle,
+        },
+        className,
+      )}
       style={{
         overflow: isScroll ? 'auto' : 'hidden',
       }}

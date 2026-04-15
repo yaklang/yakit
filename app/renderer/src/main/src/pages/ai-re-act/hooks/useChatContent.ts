@@ -534,10 +534,7 @@ function useChatContent(params: UseChatContentParams) {
   const handleToolReviewParams = useMemoizedFn((res: AIOutputEvent) => {
     try {
       const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const { call_tool_id, params } = JSON.parse(ipcContent) as {
-        call_tool_id: string
-        params: AIAgentGrpcApi.ToolUseReviewRequire['params']
-      }
+      const { call_tool_id, params } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallParams
       if (!call_tool_id) {
         pushLog(genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
         return

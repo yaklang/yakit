@@ -16,5 +16,7 @@ export interface AISingHaveColorTextProps extends ChatCardProps {
 }
 
 export interface AIReviewParamsProps {
-  params: UIToolUseReview['params']
+  params?: UIToolUseReview['params']
+  isPreStyle?: boolean
+  className?: string
 }
