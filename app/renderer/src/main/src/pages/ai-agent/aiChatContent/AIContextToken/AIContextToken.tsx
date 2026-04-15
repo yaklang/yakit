@@ -81,7 +81,9 @@ const AIContextToken: FC<{
         prev.contextStats?.data?.runtime_context_bytes.length !==
           next.contextStats?.data?.runtime_context_bytes.length ||
         prev.contextStats?.data?.user_input_bytes.length !== next.contextStats?.data?.user_input_bytes.length ||
-        prev.contextStats?.data?.times.length !== next.contextStats?.data?.times.length
+        prev.contextStats?.data?.times.length !== next.contextStats?.data?.times.length ||
+        // 上下文成分
+        prev.contextSections?.sections.length !== next.contextSections?.sections.length
       )
     },
     // 进行数据克隆，确保引用变化
@@ -211,6 +213,7 @@ const AIContextToken: FC<{
             firstCost={aiDataRef?.firstCost}
             onClose={() => setVisible(false)}
             contextStats={aiDataRef?.contextStats}
+            contextSections={aiDataRef?.contextSections}
             renderNumber={renderNumber}
           />
         }
@@ -246,11 +249,14 @@ interface AIEchartsDetailsProps {
   firstCost?: AIChatData['aiPerfData']['firstCost']
   /** 上下文字节统计 */
   contextStats?: AIChatData['aiPerfData']['contextStats']
+  // 上下文成分
+  contextSections?: AIChatData['aiPerfData']['contextSections']
   onClose: () => void
   renderNumber: number
 }
 const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
-  const { overallToken, tierConsumption, pressure, firstCost, contextStats, onClose, renderNumber } = props
+  const { overallToken, tierConsumption, pressure, firstCost, contextStats, contextSections, onClose, renderNumber } =
+    props
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(ref)
 
@@ -302,6 +308,19 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
   const contextStatsData = useCreation(() => {
     return getContextStatsData(contextStats?.data)
   }, [renderNumber, contextStats])
+  // 上下文成分
+  const contextSectionsData = useCreation(() => {
+    if (!contextSections?.sections)
+      return {
+        summary: new Map<string, string>(),
+        sections: [],
+      }
+    return {
+      summary: contextSections.summary,
+      sections: contextSections.sections,
+    }
+  }, [renderNumber, contextSections?.sections])
+
   const getEchartsHeard = useMemoizedFn((title: string) => {
     return (
       <div className={styles['echarts-heard']}>
@@ -406,7 +425,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
           </div>
         )}
         <div style={{ height: '320px' }}>
-          <ContextTable />
+          <ContextTable contextSectionsData={contextSectionsData} />
         </div>
       </div>
     </div>
