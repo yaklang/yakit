@@ -1,10 +1,10 @@
 {
   "CustomizeMenu": {
     "getMenuFailed": "Failed to get menu:",
-    "max_limit": "You can set up to {UpperLimit}",
+    "max_limit": "You can set up to {{UpperLimit}}",
     "selectLeftMenuFirst": "Please select a primary menu on the left first",
     "primaryMenuNameCannotBeEmpty": "Primary menu name cannot be empty",
-    "menuNameDuplicate": "The name 【{repeatMenu}】 is duplicate, please modify",
+    "menuNameDuplicate": "The name 【{{repeatMenu}}】 is duplicate, please modify",
     "saveMenuFailed": "Failed to save menu:",
     "updateMenuFailed": "Failed to update menu:",
     "saveMenuConfirm": "Do you want to save the menu and close the page?",
@@ -13,7 +13,7 @@
     "editScanMode": "Edit Scan Mode",
     "editMenuName": "Edit Menu Name",
     "emptyMenuDetected": "Empty menu detected",
-    "emptyMenuWarning": "There are {emptyMenuLength} menu items that are empty. Empty menus will not {tip}. Do you still want to continue {tip}?",
+    "emptyMenuWarning": "There are {{emptyMenuLength}} menu items that are empty. Empty menus will not {{tip}}. Do you still want to continue {{tip}}?",
     "unnamedMenuPrefix": "Unnamed",
     "SecondMenu": {
       "unnamedMenu1": "Unnamed1 (Menu name is recommended to be 4–16 English characters for best results)",

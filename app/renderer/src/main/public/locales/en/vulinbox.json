@@ -67,6 +67,6 @@
   },
   "InstallVulinboxPrompt": {
     "installing": "Installing Vulinbox",
-    "downloadedPercent": "Downloaded {percent}%"
+    "downloadedPercent": "Downloaded {{percent}}%"
   }
 }

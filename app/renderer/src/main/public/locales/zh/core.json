@@ -1,6 +1,6 @@
 {
   "Login": {
-    "loginError": "登录错误: {error}",
+    "loginError": "登录错误: {{error}}",
     "dataSync": "数据同步",
     "syncDataConfirm": "是否选择将远端的数据同步本地",
     "login": "登录",
@@ -12,7 +12,7 @@
     "verifyingLicense": "验证License中"
   },
   "LicensePage": {
-    "getLicenseFailed": "获取License失败: {error}",
+    "getLicenseFailed": "获取License失败: {{error}}",
     "loadingLicense": "加载 license",
     "emptyLicense": "空 License...",
     "registerProduct": "使用 License 注册您的产品",
@@ -25,7 +25,7 @@
   "SetPassword": {
     "passwordMismatch": "新密码两次输入内容不匹配，请检查重试",
     "updateSuccess": "密码修改成功,请重新登录",
-    "updateFailed": "密码修改失败：{error}",
+    "updateFailed": "密码修改失败：{{error}}",
     "passwordRule": "密码为8-20位，且必须包含大小写字母、数字及特殊字符",
     "oldPassword": "旧密码",
     "inputOldPassword": "请输入你的旧密码",
@@ -39,8 +39,8 @@
     "uploadSuccess": "上传数据成功",
     "uploadFailed": "项目上传失败",
     "cancelSuccess": "取消上传成功",
-    "processDataFailed": "处理项目数据失败: {error}",
-    "queryProjectsFailed": "查询 Projects 失败：{error}",
+    "processDataFailed": "处理项目数据失败: {{error}}",
+    "queryProjectsFailed": "查询 Projects 失败：{{error}}",
     "project": "项目",
     "selectProject": "请选择项目"
   }

@@ -6,8 +6,8 @@
   "CreateDictionaries": {
     "dictionaryNameExists": "Dictionary name exists",
     "uploadHintLargeFile": "Supports large file upload (supports file type txt)",
-    "incorrectFormat": "{name} is not a txt or csv file, please upload the correct format!",
-    "alreadySelected": "{path} already selected",
+    "incorrectFormat": "{{name}} is not a txt or csv file, please upload the correct format!",
+    "alreadySelected": "{{path}} already selected",
     "storageMethod": "Choose a storage method as needed, which does not affect usage:",
     "fileStorage": "File Storage: Save the dictionary as a file locally, does not support hit count, faster upload speed.",
     "databaseStorage": "Database Storage: Read the dictionary data and save it in the database, supports hit count, more convenient to search.",
@@ -26,7 +26,7 @@
   },
   "ReadOnlyNewPayload": {
     "selected": "Selected:",
-    "totalCheckedItems": "{count} items",
+    "totalCheckedItems": "{{count}} items",
     "insert": "Insert",
     "supportInsertFileForFuzz": "Supports inserting files for Fuzzing",
     "pleaseSelectDictionaryOrFolder": "Please select the payload or folder to insert"
@@ -34,7 +34,7 @@
   "NewPayloadLocalList": {
     "selectDictionaryToInsert": "Select the payload you want to insert",
     "goToDictionaryManagement": "Go to Payload Management",
-    "updateFailed": "Data update failed: {error}",
+    "updateFailed": "Data update failed: {{error}}",
     "folderExists": "Folder already exists",
     "deleting": "Deleting...",
     "renaming": "Renaming...",
@@ -62,7 +62,7 @@
   },
   "FolderComponent": {
     "createFolderSuccess": "Create folder success",
-    "createFolderFailed": "Create folder failed: {error}",
+    "createFolderFailed": "Create folder failed: {{error}}",
     "nameNotAllowSpecial": "Name not allow special characters /*,",
     "folderNameExistsCannotCreate": "Folder name exists, cannot create",
     "folderNameExistsCannotEdit": "Folder name exists, cannot edit",
@@ -77,11 +77,11 @@
     "extendDictionary": "Extend Payload",
     "exportDictionary": "Export Payload",
     "toDatabase": "Convert to Database Storage",
-    "extendTo": "Extend to {name}",
+    "extendTo": "Extend to {{name}}",
     "toDatabaseWaiting": "Converting to database storage, please wait..."
   },
   "MoveOrCopyPayload": {
-    "getDataFailed": "Get data failed: {error}",
+    "getDataFailed": "Get data failed: {{error}}",
     "pleaseSelect": "Please select..."
   },
   "PayloadLocalContent": {
@@ -89,10 +89,10 @@
     "contentCannotBeEmpty": "Content Can not Be Empty",
     "editorDataGetFailed": "Editor data retrieval failed",
     "pleaseSelectDictionary": "Please select a dictionary",
-    "operationFailed": "Dictionary operation failed: {error}",
+    "operationFailed": "Dictionary operation failed: {{error}}",
     "backupToOther": "Backup to other dictionary",
     "moveToOther": "Move to other dictionary",
-    "extendTo": "Extend to {name}",
+    "extendTo": "Extend to {{name}}",
     "extend": "Extend",
     "autoRemoveDuplicate": "Auto remove duplicate",
     "autoRemoveDuplicateWaiting": "Auto removing duplicate, please wait..."
@@ -106,10 +106,10 @@
     "exportWaiting": "Exporting, please wait..."
   },
   "UploadOrDownloadByPayloadGrpc": {
-    "waiting": "{type}ing, please wait..."
+    "waiting": "{{type}}ing, please wait..."
   },
   "NewPayload": {
-    "getDictionaryListFailed": "Failed to get dictionary list: {error}",
+    "getDictionaryListFailed": "Failed to get dictionary list: {{error}}",
     "migrateData": "Migrate Data",
     "migrateDataContent": "Due to the reconstruction of the Payload function, you need to click OK to migrate the old data. Migrating data will not cause any data loss.",
     "engineVersionTooLow": "Engine Version Too Low",
@@ -123,6 +123,6 @@
     "dictionaryContent": "Payload Content",
     "addHitCountFieldNotice": "Added Hit Count field. The higher the hit count, the higher its priority during brute-forcing.",
     "hitCount": "Hit Count",
-    "recordCount": "Total {i} records"
+    "recordCount": "Total {{i}} records"
   }
 }

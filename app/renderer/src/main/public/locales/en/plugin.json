@@ -61,12 +61,88 @@
   "VulnerabilitiesRisksTable": {
     "risks_and_vulnerabilities": "Risks and Vulnerabilities"
   },
+  "PluginExecutePortTable": {
+    "portAssetManagement": "Port Asset Management"
+  },
+  "PluginExecuteHttpFlow": {
+    "httpSearchPlaceholder": "Search by domain, e.g. baidu.com"
+  },
+  "PluginExecuteCustomTable": {
+    "logicCrashRetry": "The dialog logic crashed. Please close it and try again.",
+    "outputTable": "Output Table",
+    "exportAll": "Export All"
+  },
   "PluginTabName": {
     "allPlugin": "Online Plugin",
     "officialPlugin": "Official Plugin",
     "localPlugin": "local Plugin"
   },
   "PluginHasParamsDrawer": {
-    "parameter_Settings": "Parameter Settings: "
+    "parameter_Settings": "Parameter Settings: ",
+    "jsonSchemaValidateFailed": "JSON schema validation failed"
+  },
+  "PluginEditor": {
+    "newPlugin": "New Plugin",
+    "helpDoc": "Help Documentation",
+    "copyToCloud": "Copy to Cloud",
+    "submitAndSave": "Submit and Save",
+    "syncToCloud": "Sync to Cloud",
+    "saveAndExit": "Save and Exit",
+    "loadingPluginDetail": "Loading plugin details...",
+    "oldDataMigrationTitle": "Old Data Migration Prompt",
+    "oldDataMigrationContent": "The parameter design has been upgraded. The database-stored parameters differ from the plugin source parameters. This may cause issues. Please click \"Copy Code\" to copy the parameters into the plugin source.",
+    "copyCode": "Copy Code",
+    "fetchOldDataFailed": "Failed to fetch old data migration info: ",
+    "fetchPluginDetailEmpty": "Plugin detail query error: request is empty",
+    "fetchPluginNameEmpty": "Plugin detail query error: plugin name is empty",
+    "copyToCloudDesc": "Copy the plugin to your private cloud plugins without author approval and save the modified content to the cloud.",
+    "pluginName": "Plugin Name",
+    "enterCopyName": "Please enter the name of the plugin to copy",
+    "pluginNameMaxLength": "Plugin name can be at most 100 characters"
+  },
+  "EditorInfo": {
+    "basicInfo": "Basic Information",
+    "collapseBasicInfo": "Collapse Basic Information",
+    "functionError": "Function error, please try again",
+    "templateExamples": "Template Examples",
+    "faq": "FAQ",
+    "scriptType": "Script Type",
+    "scriptTypeRequired": "Script type is required",
+    "pluginName": "Plugin Name",
+    "pluginNameRequired": "Plugin name is required",
+    "nameMaxLength": "Name can be at most 100 characters",
+    "descriptionLabel": "Description:",
+    "descriptionRequired": "Plugin description is required",
+    "tagsRequired": "Tags are required",
+    "pluginConfig": "Plugin Configuration:",
+    "enablePluginSelectorUI": "Enable Plugin Linkage UI",
+    "invalidItem": "Invalid item",
+    "linkedPluginType": "Linked Plugin Type",
+    "linkedPluginTypeRequired": "Linked plugin type is required",
+    "switchScriptType": "Switch Script Type",
+    "switchScriptTypeContent": "Switching script type will clear the source code. Are you sure?"
+  },
+  "TempExampleHelp": {
+    "fileRead": "File Read (String Match)",
+    "codeExecution": "Code Execution (Match Processed Result)",
+    "binaryData": "Binary Data Request",
+    "noEchoByDelay": "No-echo Detection (Delay)",
+    "noEchoByDnslog": "No-echo Detection (DNSLOG)"
+  },
+  "FuncTemplate": {
+    "author": "Author",
+    "applicant": "Applicant",
+    "expandFilter": "Expand filter",
+    "switchToGrid": "Switch to grid view",
+    "switchToList": "Switch to list view",
+    "loginRequiredDelete": "Please log in before deleting",
+    "loginRequiredRestore": "Please log in before restoring",
+    "restore": "Restore",
+    "resetSearch": "Reset Search",
+    "sourceCode": "Source Code",
+    "sourceCodeDesc": "You can define the plugin input principle and write output UI here",
+    "escFullScreen": "Press Esc to exit full screen",
+    "anonymous": "anonymous",
+    "filterCondition": "Filter Condition"
   }
 }

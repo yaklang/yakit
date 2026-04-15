@@ -17,6 +17,20 @@
     "setting": "配置",
     "recycle": "回收站",
     "ownHint": "我的插件",
-    "localHint": "本地插件"
+    "localHint": "本地插件",
+    "clickToEnter": "点击进入{{target}}",
+    "list": "列表",
+    "expandDetailList": "展开详情列表",
+    "collapseDetailList": "收起详情列表",
+    "expandAdvancedFilter": "展开高级筛选",
+    "collapseAdvancedFilter": "收起高级筛选"
+  },
+  "HubListOnline": {
+    "downloadBusy": "该插件正在执行下载操作,请稍后再试",
+    "loginRequiredUpload": "请先登录后才可一键上传",
+    "noPermission": "暂无权限使用该操作",
+    "pluginInfoMissingRefresh": "未获取到插件信息，请刷新列表重试",
+    "newPlugin": "新建插件",
+    "bulkUploadHint": "可将本地所有插件一键上传"
   }
 }

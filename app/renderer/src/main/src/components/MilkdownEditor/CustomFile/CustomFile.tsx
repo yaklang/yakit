@@ -1,547 +1,559 @@
-import {useNodeViewContext} from "@prosemirror-adapter/react"
-import styles from "./CustomFile.module.scss"
-import {useEffect, useRef, useState, ReactNode} from "react"
-import {randomString} from "@/utils/randomUtil"
-import {yakitNotify} from "@/utils/notification"
+import { useNodeViewContext } from '@prosemirror-adapter/react'
+import styles from './CustomFile.module.scss'
+import { useEffect, useRef, useState, ReactNode } from 'react'
+import { randomString } from '@/utils/randomUtil'
+import { yakitNotify } from '@/utils/notification'
 import {
-    IconNotepadFileTypeWord,
-    IconNotepadFileTypeCompress,
-    IconNotepadFileTypePPT,
-    IconNotepadFileTypePdf,
-    IconNotepadFileTypeUnknown,
-    IconNotepadFileTypeExcel
-} from "../icon/icon"
-import {Progress, Tooltip} from "antd"
+  IconNotepadFileTypeWord,
+  IconNotepadFileTypeCompress,
+  IconNotepadFileTypePPT,
+  IconNotepadFileTypePdf,
+  IconNotepadFileTypeUnknown,
+  IconNotepadFileTypeExcel,
+} from '../icon/icon'
+import { Progress, Tooltip } from 'antd'
 import {
-    OutlineDocumentduplicateIcon,
-    OutlineDownloadIcon,
-    OutlineRefreshIcon,
-    OutlineUploadIcon,
-    OutlineXIcon
-} from "@/assets/icon/outline"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import numeral from "numeral"
-import classNames from "classnames"
-import {TooltipIcon} from "../Tooltip/Tooltip"
-import {useMemoizedFn} from "ahooks"
-import {SolidXcircleIcon} from "@/assets/icon/solid"
-import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
-import React from "react"
-import {SolidCloudDownloadIcon} from "@/assets/newIcon"
-import useDownloadUrlToLocalHooks, {DownloadUrlToLocal} from "@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal"
-import {apiDownloadStorageType, onOpenLocalFileByPath, saveDialogAndGetLocalFileInfo} from "@/pages/notepadManage/notepadManage/utils"
-import {YakitHintProps} from "@/components/yakitUI/YakitHint/YakitHintType"
-import useUploadOSSHooks, {UploadFileTypeProps, UploadOSSStartProps} from "@/hook/useUploadOSS/useUploadOSS"
-import {getHttpFileLinkInfo, getLocalFileLinkInfo} from "./utils"
-import {setClipboardText} from "@/utils/clipboard"
-import {getFileNameByUrl} from "../utils/trackDeletePlugin"
-import {httpDeleteNotepadFile} from "@/apiUtils/http"
-import {useStore} from "@/store"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {LogNodeStatusFileIcon, SolidYakCattleNoBackColorIcon} from "@/assets/icon/colors"
+  OutlineDocumentduplicateIcon,
+  OutlineDownloadIcon,
+  OutlineRefreshIcon,
+  OutlineUploadIcon,
+  OutlineXIcon,
+} from '@/assets/icon/outline'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import numeral from 'numeral'
+import classNames from 'classnames'
+import { TooltipIcon } from '../Tooltip/Tooltip'
+import { useMemoizedFn } from 'ahooks'
+import { SolidXcircleIcon } from '@/assets/icon/solid'
+import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
+import React from 'react'
+import { SolidCloudDownloadIcon } from '@/assets/newIcon'
+import useDownloadUrlToLocalHooks, { DownloadUrlToLocal } from '@/hook/useDownloadUrlToLocal/useDownloadUrlToLocal'
+import {
+  apiDownloadStorageType,
+  onOpenLocalFileByPath,
+  saveDialogAndGetLocalFileInfo,
+} from '@/pages/notepadManage/notepadManage/utils'
+import { YakitHintProps } from '@/components/yakitUI/YakitHint/YakitHintType'
+import useUploadOSSHooks, { UploadFileTypeProps, UploadOSSStartProps } from '@/hook/useUploadOSS/useUploadOSS'
+import { getHttpFileLinkInfo, getLocalFileLinkInfo } from './utils'
+import { setClipboardText } from '@/utils/clipboard'
+import { getFileNameByUrl } from '../utils/trackDeletePlugin'
+import { httpDeleteNotepadFile } from '@/apiUtils/http'
+import { useStore } from '@/store'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { LogNodeStatusFileIcon, SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
+import i18n from '@/i18n/i18n'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+const tOriginal = i18n.getFixedT(null, 'components')
 
 interface CustomFileItem {
-    name: string
-    size: number
-    type: string
-    url: string
-    path: string
+  name: string
+  size: number
+  type: string
+  url: string
+  path: string
 }
 interface DownFileInfoProps {
-    url: string
-    path: string
-    fileName: string
+  url: string
+  path: string
+  fileName: string
 }
 /**上传文件后,后端拼接hash和文件名的字符:&*&;方便截取文件名 */
 export const getTypeAndNameByPath = (path) => {
-    let newPath = decodeURIComponent(path.split("/").pop())
-    const firstIndex = newPath.indexOf("&*&")
-    if (firstIndex !== -1) {
-        newPath = newPath.substring(firstIndex + 3, path.length)
-    }
-    const index = newPath.lastIndexOf(".")
-    const fileType = newPath.substring(index, newPath.length)
-    const fileName = newPath.split("\\").pop() || "未知命名"
-    return {fileType, fileName}
+  let newPath = decodeURIComponent(path.split('/').pop())
+  const firstIndex = newPath.indexOf('&*&')
+  if (firstIndex !== -1) {
+    newPath = newPath.substring(firstIndex + 3, path.length)
+  }
+  const index = newPath.lastIndexOf('.')
+  const fileType = newPath.substring(index, newPath.length)
+  const fileName = newPath.split('\\').pop() || tOriginal('MilkdownEditor.customFile.unknownName')
+  return { fileType, fileName }
 }
 interface CustomFileProps {
-    type: UploadFileTypeProps
+  type: UploadFileTypeProps
 }
 
-export const renderFileTypeIcon = (params: {type: string; iconClassName?: string}) => {
-    const {type, iconClassName} = params
-    switch (type) {
-        case ".doc":
-        case "doc":
-            return <IconNotepadFileTypeWord className={iconClassName} />
-        case ".zip":
-        case "zip":
-        case ".7z":
-        case "7z":
-        case ".tar":
-        case "tar":
-            return <IconNotepadFileTypeCompress className={iconClassName} />
-        case ".ppt":
-        case "ppt":
-            return <IconNotepadFileTypePPT className={iconClassName} />
-        case ".csv":
-        case "csv":
-        case ".xlsx":
-        case "xlsx":
-        case ".numbers":
-        case "numbers":
-        case "xls":
-        case ".xls":
-            return <IconNotepadFileTypeExcel className={iconClassName} />
-        case ".pdf":
-        case "pdf":
-            return <IconNotepadFileTypePdf className={iconClassName} />
-        case ".txt":
-        case "txt":
-            return <LogNodeStatusFileIcon className={iconClassName} />
-        case ".yak":
-        case "yak":
-            return <SolidYakCattleNoBackColorIcon className={iconClassName} />
-        default:
-            return <IconNotepadFileTypeUnknown className={iconClassName} />
-    }
+export const renderFileTypeIcon = (params: { type: string; iconClassName?: string }) => {
+  const { type, iconClassName } = params
+  switch (type) {
+    case '.doc':
+    case 'doc':
+      return <IconNotepadFileTypeWord className={iconClassName} />
+    case '.zip':
+    case 'zip':
+    case '.7z':
+    case '7z':
+    case '.tar':
+    case 'tar':
+      return <IconNotepadFileTypeCompress className={iconClassName} />
+    case '.ppt':
+    case 'ppt':
+      return <IconNotepadFileTypePPT className={iconClassName} />
+    case '.csv':
+    case 'csv':
+    case '.xlsx':
+    case 'xlsx':
+    case '.numbers':
+    case 'numbers':
+    case 'xls':
+    case '.xls':
+      return <IconNotepadFileTypeExcel className={iconClassName} />
+    case '.pdf':
+    case 'pdf':
+      return <IconNotepadFileTypePdf className={iconClassName} />
+    case '.txt':
+    case 'txt':
+      return <LogNodeStatusFileIcon className={iconClassName} />
+    case '.yak':
+    case 'yak':
+      return <SolidYakCattleNoBackColorIcon className={iconClassName} />
+    default:
+      return <IconNotepadFileTypeUnknown className={iconClassName} />
+  }
 }
 export const CustomFile: React.FC<CustomFileProps> = (props) => {
-    const {type} = props
-    const {node, contentRef, selected, view, getPos, setAttrs} = useNodeViewContext()
+  const { type } = props
+  const { t, i18n } = useI18nNamespaces(['components', 'yaktUi'])
+  const { node, contentRef, selected, view, getPos, setAttrs } = useNodeViewContext()
 
-    const {attrs} = node
-    const [fileInfo, setFileInfo] = useState<CustomFileItem>({
-        name: "",
-        size: 0,
-        type: "",
-        url: "",
-        path: ""
-    })
-    const [percent, setPercent] = useState<number>(0)
-    const [loading, setLoading] = useState<boolean>(false)
-    const [errorReason, setErrorReason] = useState<string>("")
-    const [downFileInfo, setDownFileInfo] = useState<DownFileInfoProps>()
-    const [queryFileErrorInfo, setQueryFileErrorInfo] = useState<string>("")
-    const [loadingRefresh, setLoadingRefresh] = useState<boolean>(false)
+  const { attrs } = node
+  const [fileInfo, setFileInfo] = useState<CustomFileItem>({
+    name: '',
+    size: 0,
+    type: '',
+    url: '',
+    path: '',
+  })
+  const [percent, setPercent] = useState<number>(0)
+  const [loading, setLoading] = useState<boolean>(false)
+  const [errorReason, setErrorReason] = useState<string>('')
+  const [downFileInfo, setDownFileInfo] = useState<DownFileInfoProps>()
+  const [queryFileErrorInfo, setQueryFileErrorInfo] = useState<string>('')
+  const [loadingRefresh, setLoadingRefresh] = useState<boolean>(false)
 
-    const uploadTokenRef = useRef(randomString(40))
+  const uploadTokenRef = useRef(randomString(40))
 
-    const userInfo = useStore((s) => s.userInfo)
+  const userInfo = useStore((s) => s.userInfo)
 
-    useEffect(() => {
-        const {fileId, path: initPath = "", uploadUserId = ""} = attrs
-        const path = initPath.replace(/\\/g, "\\")
-        if (fileId !== "0") {
-            getFileInfoByLink()
-        } else if (path) {
-            if (uploadUserId === "0" || uploadUserId !== userInfo.user_id) return
-            getLocalFileLinkInfo(path).then((fileInfo) => {
-                const {fileName, fileType} = getTypeAndNameByPath(path)
-                const item = {
-                    name: fileName,
-                    size: fileInfo.size,
-                    type: fileType,
-                    url: "",
-                    path
-                }
-                setFileInfo(item)
-                onUpload(path)
-            })
+  useEffect(() => {
+    const { fileId, path: initPath = '', uploadUserId = '' } = attrs
+    const path = initPath.replace(/\\/g, '\\')
+    if (fileId !== '0') {
+      getFileInfoByLink()
+    } else if (path) {
+      if (uploadUserId === '0' || uploadUserId !== userInfo.user_id) return
+      getLocalFileLinkInfo(path).then((fileInfo) => {
+        const { fileName, fileType } = getTypeAndNameByPath(path)
+        const item = {
+          name: fileName,
+          size: fileInfo.size,
+          type: fileType,
+          url: '',
+          path,
         }
-    }, [attrs.fileId, attrs.uploadUserId])
-    const {onStart: onStartUpload, onCancel: onUploadCancel} = useUploadOSSHooks({
-        taskToken: uploadTokenRef.current,
-        onUploadData: (p) => {
-            if (p >= 100) setLoading(false)
-            setPercent(p)
-        },
-        onUploadEnd: () => {
-            setLoading(false)
-            setPercent(0)
-        },
-        onUploadError: (reason) => {
-            setErrorReason(reason || "")
-        },
-        setUrl: (url) => {
-            setAttrs({fileId: url, uploadUserId: 0, path: ""})
-            setFileInfo((v) => ({...v, url}))
-        }
-    })
-
-    const getFileInfoByLink = useMemoizedFn(() => {
-        const {fileId, path: initPath = ""} = attrs
-        const path = initPath.replace(/\\/g, "\\")
-        if (fileId !== "0") {
-            setLoadingRefresh(true)
-
-            apiDownloadStorageType(fileId).then((filePath) => {
-                getHttpFileLinkInfo(filePath, true)
-                .then((res) => {
-                    const {fileType, fileName} = getTypeAndNameByPath(fileId)
-                    const item = {
-                        name: fileName,
-                        size: res.size,
-                        type: fileType,
-                        url: filePath,
-                        path
-                    }
-                    setFileInfo(item)
-                })
-                .catch((e) => {
-                    setTimeout(() => {
-                        setQueryFileErrorInfo(`${e}`)
-                    }, 500)
-                })
-                .finally(() =>
-                    setTimeout(() => {
-                        setLoadingRefresh(false)
-                    }, 200)
-                )
-            })
-        }
-    })
-    const onUpload = (filePath) => {
-        if (!filePath) return
-        setLoading(true)
-        setErrorReason("")
-        setPercent(0)
-        const value: UploadOSSStartProps = {
-            filePath,
-            filedHash: attrs?.notepadHash || "",
-            type
-        }
-        onStartUpload(value)
+        setFileInfo(item)
+        onUpload(path)
+      })
     }
-    const onReloadUpload = useMemoizedFn((e) => {
-        e.stopPropagation()
-        e.preventDefault()
-        if (fileInfo) onUpload(fileInfo.path)
-    })
-    const onCancel = useMemoizedFn(() => {
-        onUploadCancel().then(() => {
-            onRemoveFile()
-        })
-    })
+  }, [attrs.fileId, attrs.uploadUserId])
+  const { onStart: onStartUpload, onCancel: onUploadCancel } = useUploadOSSHooks({
+    taskToken: uploadTokenRef.current,
+    onUploadData: (p) => {
+      if (p >= 100) setLoading(false)
+      setPercent(p)
+    },
+    onUploadEnd: () => {
+      setLoading(false)
+      setPercent(0)
+    },
+    onUploadError: (reason) => {
+      setErrorReason(reason || '')
+    },
+    setUrl: (url) => {
+      setAttrs({ fileId: url, uploadUserId: 0, path: '' })
+      setFileInfo((v) => ({ ...v, url }))
+    },
+  })
 
-    const onDown = (e) => {
-        e.stopPropagation()
-        e.preventDefault()
-        const {fileId} = attrs
-        apiDownloadStorageType(fileId).then((filePath) => {
-            saveDialogAndGetLocalFileInfo(filePath).then((v) => {
-                setDownFileInfo(v)
-                setFileInfo({...fileInfo, path: v.path})
-            })
-        })
+  const getFileInfoByLink = useMemoizedFn(() => {
+    const { fileId, path: initPath = '' } = attrs
+    const path = initPath.replace(/\\/g, '\\')
+    if (fileId !== '0') {
+      setLoadingRefresh(true)
+
+      apiDownloadStorageType(fileId).then((filePath) => {
+        getHttpFileLinkInfo(filePath, true)
+          .then((res) => {
+            const { fileType, fileName } = getTypeAndNameByPath(fileId)
+            const item = {
+              name: fileName,
+              size: res.size,
+              type: fileType,
+              url: filePath,
+              path,
+            }
+            setFileInfo(item)
+          })
+          .catch((e) => {
+            setTimeout(() => {
+              setQueryFileErrorInfo(`${e}`)
+            }, 500)
+          })
+          .finally(() =>
+            setTimeout(() => {
+              setLoadingRefresh(false)
+            }, 200),
+          )
+      })
     }
-    const onCopyLink = useMemoizedFn((e) => {
-        e.stopPropagation()
-        e.preventDefault()
-        if (fileInfo?.url) {
-            setClipboardText(fileInfo.url, {
-                failedCallback: () => {
-                    yakitNotify("error", "复制失败")
-                }
-            })
-        } else {
-            yakitNotify("error", "复制失败")
+  })
+  const onUpload = (filePath) => {
+    if (!filePath) return
+    setLoading(true)
+    setErrorReason('')
+    setPercent(0)
+    const value: UploadOSSStartProps = {
+      filePath,
+      filedHash: attrs?.notepadHash || '',
+      type,
+    }
+    onStartUpload(value)
+  }
+  const onReloadUpload = useMemoizedFn((e) => {
+    e.stopPropagation()
+    e.preventDefault()
+    if (fileInfo) onUpload(fileInfo.path)
+  })
+  const onCancel = useMemoizedFn(() => {
+    onUploadCancel().then(() => {
+      onRemoveFile()
+    })
+  })
+
+  const onDown = (e) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const { fileId } = attrs
+    apiDownloadStorageType(fileId).then((filePath) => {
+      saveDialogAndGetLocalFileInfo(filePath).then((v) => {
+        setDownFileInfo(v)
+        setFileInfo({ ...fileInfo, path: v.path })
+      })
+    })
+  }
+  const onCopyLink = useMemoizedFn((e) => {
+    e.stopPropagation()
+    e.preventDefault()
+    if (fileInfo?.url) {
+      setClipboardText(fileInfo.url, {
+        failedCallback: () => {
+          yakitNotify('error', t('YakitNotification.copyFailedNoError'))
+        },
+      })
+    } else {
+      yakitNotify('error', t('YakitNotification.copyFailedNoError'))
+    }
+  })
+  const onRemoveFile = useMemoizedFn(() => {
+    const { state, dispatch } = view
+    const { from, to } = state.selection
+
+    // 如果选区是有效的
+    if (from !== to) {
+      // 创建一个事务来删除选中的范围
+      const tr = state.tr.delete(from, to)
+
+      // 提交事务
+      if (dispatch) {
+        dispatch(tr)
+      }
+    } else {
+      // 如果没有选中任何内容（光标仅在一个位置），删除当前节点
+      const selectedNode = state.doc.nodeAt(from)
+
+      if (selectedNode) {
+        // 使用 replaceRange 来删除选中的节点
+        const tr = state.tr.delete(from - selectedNode.nodeSize, from)
+
+        // 提交事务
+        if (dispatch) {
+          dispatch(tr)
         }
+      }
+    }
+  })
+  const onOpenFile = useMemoizedFn(() => {
+    if (!fileInfo) return
+    onOpenLocalFileByPath(fileInfo?.path).then((flag) => {
+      if (!flag) {
+        setFileInfo({ ...fileInfo, path: '' })
+      }
     })
-    const onRemoveFile = useMemoizedFn(() => {
-        const {state, dispatch} = view
-        const {from, to} = state.selection
-
-        // 如果选区是有效的
-        if (from !== to) {
-            // 创建一个事务来删除选中的范围
-            const tr = state.tr.delete(from, to)
-
-            // 提交事务
-            if (dispatch) {
-                dispatch(tr)
-            }
-        } else {
-            // 如果没有选中任何内容（光标仅在一个位置），删除当前节点
-            const selectedNode = state.doc.nodeAt(from)
-
-            if (selectedNode) {
-                // 使用 replaceRange 来删除选中的节点
-                const tr = state.tr.delete(from - selectedNode.nodeSize, from)
-
-                // 提交事务
-                if (dispatch) {
-                    dispatch(tr)
-                }
-            }
-        }
-    })
-    const onOpenFile = useMemoizedFn(() => {
-        if (!fileInfo) return
-        onOpenLocalFileByPath(fileInfo?.path).then((flag) => {
-            if (!flag) {
-                setFileInfo({...fileInfo, path: ""})
-            }
-        })
-    })
-    const onCancelDownload = useMemoizedFn(() => {
-        setFileInfo({...fileInfo, path: ""})
-        setDownFileInfo(undefined)
-    })
-    const onRefreshFileInfo = useMemoizedFn((e) => {
-        e.stopPropagation()
-        e.preventDefault()
-        setQueryFileErrorInfo("")
-        getFileInfoByLink()
-    })
-    const errorNode = useMemoizedFn((error) => {
-        return (
-            <Tooltip title={`${error}`}>
-                <div className={styles["x-circle-btn"]}>
-                    <SolidXcircleIcon className={styles["x-circle-icon"]} onClick={onRemoveFile} />
-                </div>
-            </Tooltip>
-        )
-    })
+  })
+  const onCancelDownload = useMemoizedFn(() => {
+    setFileInfo({ ...fileInfo, path: '' })
+    setDownFileInfo(undefined)
+  })
+  const onRefreshFileInfo = useMemoizedFn((e) => {
+    e.stopPropagation()
+    e.preventDefault()
+    setQueryFileErrorInfo('')
+    getFileInfoByLink()
+  })
+  const errorNode = useMemoizedFn((error) => {
     return (
-        <>
-            <div
-                contentEditable={false}
-                className={classNames(styles["file-custom"], {
-                    [styles["file-custom-selected"]]: selected
-                })}
-                ref={contentRef}
-                onClick={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                }}
-            >
-                {!!(fileInfo.path || fileInfo.url) ? (
-                    <CustomFileItem
-                        title={renderFileTypeIcon({type: fileInfo?.type})}
-                        subTitle={fileInfo.name}
-                        describe={numeral(fileInfo.size).format("0b")}
-                        extra={
-                            errorReason ? (
-                                <div className={styles["error-action"]}>
-                                    {errorNode(errorReason)}
-                                    <Tooltip title='上传失败，点击重新上传'>
-                                        <YakitButton
-                                            type='text2'
-                                            icon={<OutlineUploadIcon />}
-                                            onClick={onReloadUpload}
-                                        />
-                                    </Tooltip>
-                                </div>
-                            ) : (
-                                <>
-                                    {loading ? (
-                                        <div className={styles["loading"]}>
-                                            <div className={styles["percent-loading"]}>
-                                                <span>{percent}%</span>
-                                                <Progress
-                                                    strokeColor='var(--Colors-Use-Main-Primary)'
-                                                    trailColor='var(--Colors-Use-Neutral-Bg)'
-                                                    type='circle'
-                                                    percent={percent}
-                                                    width={20}
-                                                    format={() => null}
-                                                    strokeWidth={12}
-                                                />
-                                            </div>
-                                            <YakitButton
-                                                className={styles["x-btn"]}
-                                                type='text2'
-                                                icon={<OutlineXIcon />}
-                                                onClick={onCancel}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className={styles["success-action"]}>
-                                            {fileInfo.url && (
-                                                <TooltipIcon
-                                                    title='下载文件'
-                                                    icon={<OutlineDownloadIcon />}
-                                                    onClick={onDown}
-                                                />
-                                            )}
-                                            <TooltipIcon
-                                                title={`复制链接`}
-                                                icon={<OutlineDocumentduplicateIcon />}
-                                                onClick={onCopyLink}
-                                            />
-                                        </div>
-                                    )}
-                                </>
-                            )
-                        }
-                    />
-                ) : queryFileErrorInfo ? (
-                    <CustomFileItem
-                        title={renderFileTypeIcon({type: fileInfo?.type})}
-                        subTitle='获取文件信息错误'
-                        extra={
-                            <>
-                                <div className={styles["error-action"]}>
-                                    {errorNode(queryFileErrorInfo)}
-                                    <Tooltip title='重新获取文件信息'>
-                                        <YakitButton
-                                            type='text2'
-                                            icon={<OutlineRefreshIcon />}
-                                            loading={loadingRefresh}
-                                            onClick={onRefreshFileInfo}
-                                        />
-                                    </Tooltip>
-                                </div>
-                            </>
-                        }
-                    />
-                ) : (
-                    <YakitSpin
-                        size='small'
-                        spinning={true}
-                        tip='文件加载中...'
-                        wrapperClassName={styles["file-spinning"]}
-                    />
-                )}
-            </div>
-            {downFileInfo && (
-                <DownFilesModal
-                    url={downFileInfo.url}
-                    fileName={downFileInfo.fileName}
-                    path={downFileInfo.path}
-                    visible={!!downFileInfo.url}
-                    setVisible={() => setDownFileInfo(undefined)}
-                    onCancelDownload={onCancelDownload}
-                    onSuccess={onOpenFile}
-                    // isEncodeURI={false}
-                />
-            )}
-        </>
+      <Tooltip title={`${error}`}>
+        <div className={styles['x-circle-btn']}>
+          <SolidXcircleIcon className={styles['x-circle-icon']} onClick={onRemoveFile} />
+        </div>
+      </Tooltip>
     )
+  })
+  return (
+    <>
+      <div
+        contentEditable={false}
+        className={classNames(styles['file-custom'], {
+          [styles['file-custom-selected']]: selected,
+        })}
+        ref={contentRef}
+        onClick={(e) => {
+          e.stopPropagation()
+          e.preventDefault()
+        }}
+      >
+        {!!(fileInfo.path || fileInfo.url) ? (
+          <CustomFileItem
+            title={renderFileTypeIcon({ type: fileInfo?.type })}
+            subTitle={fileInfo.name}
+            describe={numeral(fileInfo.size).format('0b')}
+            extra={
+              errorReason ? (
+                <div className={styles['error-action']}>
+                  {errorNode(errorReason)}
+                  <Tooltip title={t('MilkdownEditor.customFile.uploadFailedRetry')}>
+                    <YakitButton type="text2" icon={<OutlineUploadIcon />} onClick={onReloadUpload} />
+                  </Tooltip>
+                </div>
+              ) : (
+                <>
+                  {loading ? (
+                    <div className={styles['loading']}>
+                      <div className={styles['percent-loading']}>
+                        <span>{percent}%</span>
+                        <Progress
+                          strokeColor="var(--Colors-Use-Main-Primary)"
+                          trailColor="var(--Colors-Use-Neutral-Bg)"
+                          type="circle"
+                          percent={percent}
+                          width={20}
+                          format={() => null}
+                          strokeWidth={12}
+                        />
+                      </div>
+                      <YakitButton
+                        className={styles['x-btn']}
+                        type="text2"
+                        icon={<OutlineXIcon />}
+                        onClick={onCancel}
+                      />
+                    </div>
+                  ) : (
+                    <div className={styles['success-action']}>
+                      {fileInfo.url && (
+                        <TooltipIcon
+                          title={t('MilkdownEditor.customFile.downloadFile')}
+                          icon={<OutlineDownloadIcon />}
+                          onClick={onDown}
+                        />
+                      )}
+                      <TooltipIcon
+                        title={t('MilkdownEditor.customFile.copyLink')}
+                        icon={<OutlineDocumentduplicateIcon />}
+                        onClick={onCopyLink}
+                      />
+                    </div>
+                  )}
+                </>
+              )
+            }
+          />
+        ) : queryFileErrorInfo ? (
+          <CustomFileItem
+            title={renderFileTypeIcon({ type: fileInfo?.type })}
+            subTitle={t('MilkdownEditor.customFile.getFileInfoErrorTitle')}
+            extra={
+              <>
+                <div className={styles['error-action']}>
+                  {errorNode(queryFileErrorInfo)}
+                  <Tooltip title={t('MilkdownEditor.customFile.refreshFileInfo')}>
+                    <YakitButton
+                      type="text2"
+                      icon={<OutlineRefreshIcon />}
+                      loading={loadingRefresh}
+                      onClick={onRefreshFileInfo}
+                    />
+                  </Tooltip>
+                </div>
+              </>
+            }
+          />
+        ) : (
+          <YakitSpin
+            size="small"
+            spinning={true}
+            tip={t('MilkdownEditor.customFile.loadingFile')}
+            wrapperClassName={styles['file-spinning']}
+          />
+        )}
+      </div>
+      {downFileInfo && (
+        <DownFilesModal
+          url={downFileInfo.url}
+          fileName={downFileInfo.fileName}
+          path={downFileInfo.path}
+          visible={!!downFileInfo.url}
+          setVisible={() => setDownFileInfo(undefined)}
+          onCancelDownload={onCancelDownload}
+          onSuccess={onOpenFile}
+          // isEncodeURI={false}
+        />
+      )}
+    </>
+  )
 }
 
 interface DownFilesModalProps {
-    /**是否在流结束后删除oss上的资源。默认不删除 */
-    isDeleteOOSAfterEnd?: boolean
-    visible: boolean
-    setVisible: (b: boolean) => void
-    url: string
-    fileName?: string
-    path: string
-    onCancelDownload: () => void
-    onSuccess?: () => void
-    yakitHintProps?: Omit<YakitHintProps, "visible" | "onCancel">
-    /**是否需要编码,默认编码 */
-    isEncodeURI?: boolean
+  /**是否在流结束后删除oss上的资源。默认不删除 */
+  isDeleteOOSAfterEnd?: boolean
+  visible: boolean
+  setVisible: (b: boolean) => void
+  url: string
+  fileName?: string
+  path: string
+  onCancelDownload: () => void
+  onSuccess?: () => void
+  yakitHintProps?: Omit<YakitHintProps, 'visible' | 'onCancel'>
+  /**是否需要编码,默认编码 */
+  isEncodeURI?: boolean
 }
 /**下载文件到本地 */
 export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) => {
-    const {
-        isDeleteOOSAfterEnd,
-        visible,
-        setVisible,
-        fileName,
-        path,
-        url,
-        yakitHintProps,
-        onCancelDownload,
-        onSuccess,
-        isEncodeURI
-    } = props
+  const {
+    isDeleteOOSAfterEnd,
+    visible,
+    setVisible,
+    fileName,
+    path,
+    url,
+    yakitHintProps,
+    onCancelDownload,
+    onSuccess,
+    isEncodeURI,
+  } = props
+  const { t, i18n } = useI18nNamespaces(['components'])
 
-    const [percent, setPercent] = useState<number>(0)
+  const [percent, setPercent] = useState<number>(0)
 
-    const taskTokenRef = useRef(randomString(40))
+  const taskTokenRef = useRef(randomString(40))
 
-    const onProgressData = useMemoizedFn((newState) => {
-        const newPercent = Math.trunc(newState.percent * 100)
-        setPercent(newPercent)
+  const onProgressData = useMemoizedFn((newState) => {
+    const newPercent = Math.trunc(newState.percent * 100)
+    setPercent(newPercent)
+  })
+
+  const onUploadEnd = useMemoizedFn(() => {
+    setTimeout(() => {
+      setVisible(false)
+      setPercent(0)
+      if (isDeleteOOSAfterEnd) {
+        onDeleteOSSFile()
+      }
+    }, 1000)
+  })
+
+  const { onStart, onCancel: onNotepadDownCancel } = useDownloadUrlToLocalHooks({
+    path,
+    taskToken: taskTokenRef.current,
+    onUploadData: onProgressData,
+    onUploadEnd,
+    onUploadSuccess: () => {
+      setPercent(0)
+      onSuccess && onSuccess()
+    },
+  })
+  useEffect(() => {
+    if (visible) {
+      const value: DownloadUrlToLocal = {
+        onlineUrl: url,
+        localPath: path,
+        isEncodeURI,
+      }
+      onStart(value)
+    } else {
+      onNotepadDownCancel()
+      setPercent(0)
+    }
+  }, [visible])
+
+  const onCancel = useMemoizedFn(() => {
+    onNotepadDownCancel().then(() => {
+      onCancelDownload()
     })
-
-    const onUploadEnd = useMemoizedFn(() => {
-        setTimeout(() => {
-            setVisible(false)
-            setPercent(0)
-            if (isDeleteOOSAfterEnd) {
-                onDeleteOSSFile()
-            }
-        }, 1000)
-    })
-
-    const {onStart, onCancel: onNotepadDownCancel} = useDownloadUrlToLocalHooks({
-        path,
-        taskToken: taskTokenRef.current,
-        onUploadData: onProgressData,
-        onUploadEnd,
-        onUploadSuccess: () => {
-            setPercent(0)
-            onSuccess && onSuccess()
-        }
-    })
-    useEffect(() => {
-        if (visible) {
-            const value: DownloadUrlToLocal = {
-                onlineUrl: url,
-                localPath: path,
-                isEncodeURI
-            }
-            onStart(value)
-        } else {
-            onNotepadDownCancel()
-            setPercent(0)
-        }
-    }, [visible])
-
-    const onCancel = useMemoizedFn(() => {
-        onNotepadDownCancel().then(() => {
-            onCancelDownload()
-        })
-    })
-    // 删除oss资源
-    const onDeleteOSSFile = useMemoizedFn(() => {
-        const fileName = getFileNameByUrl(url)
-        if (fileName) {
-            httpDeleteNotepadFile({file_name: [fileName]}, false)
-        }
-    })
-    return (
-        <YakitHint
-            heardIcon={<SolidCloudDownloadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
-            okButtonProps={{style: {display: "none"}}}
-            isDrag={true}
-            mask={false}
-            title={fileName ? <div className='content-ellipsis'>{`${fileName}下载中...`}</div> : "下载中"}
-            {...(yakitHintProps || {})}
-            onCancel={onCancel}
-            visible={visible}
-        >
-            <Progress
-                strokeColor='var(--Colors-Use-Main-Primary)'
-                trailColor='var(--Colors-Use-Neutral-Bg)'
-                percent={percent}
-                format={(percent) => `已下载 ${percent}%`}
-            />
-        </YakitHint>
-    )
+  })
+  // 删除oss资源
+  const onDeleteOSSFile = useMemoizedFn(() => {
+    const fileName = getFileNameByUrl(url)
+    if (fileName) {
+      httpDeleteNotepadFile({ file_name: [fileName] }, false)
+    }
+  })
+  return (
+    <YakitHint
+      heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
+      okButtonProps={{ style: { display: 'none' } }}
+      isDrag={true}
+      mask={false}
+      title={
+        fileName ? (
+          <div className="content-ellipsis">{t('MilkdownEditor.customFile.downloadingFile', { fileName })}</div>
+        ) : (
+          t('MilkdownEditor.customFile.downloading')
+        )
+      }
+      {...(yakitHintProps || {})}
+      onCancel={onCancel}
+      visible={visible}
+    >
+      <Progress
+        strokeColor="var(--Colors-Use-Main-Primary)"
+        trailColor="var(--Colors-Use-Neutral-Bg)"
+        percent={percent}
+        format={(percent) => t('MilkdownEditor.customFile.downloadedPercent', { percent: percent ?? 0 })}
+      />
+    </YakitHint>
+  )
 })
 
 interface CustomFileItemProps {
-    title: ReactNode
-    subTitle: ReactNode
-    describe?: ReactNode
-    extra: ReactNode
+  title: ReactNode
+  subTitle: ReactNode
+  describe?: ReactNode
+  extra: ReactNode
 }
 const CustomFileItem: React.FC<CustomFileItemProps> = React.memo((props) => {
-    const {extra, title, subTitle, describe} = props
-    return (
-        <div className={styles["file-custom-content"]}>
-            <div className={styles["file-type"]}>{title}</div>
-            <div className={styles["file-info"]}>
-                <div className={styles["info-name"]}>{subTitle}</div>
-                {describe && <div className={styles["info-size"]}>{describe}</div>}
-            </div>
-            <div className={styles["file-extra"]}>{extra}</div>
-        </div>
-    )
+  const { extra, title, subTitle, describe } = props
+  return (
+    <div className={styles['file-custom-content']}>
+      <div className={styles['file-type']}>{title}</div>
+      <div className={styles['file-info']}>
+        <div className={styles['info-name']}>{subTitle}</div>
+        {describe && <div className={styles['info-size']}>{describe}</div>}
+      </div>
+      <div className={styles['file-extra']}>{extra}</div>
+    </div>
+  )
 })

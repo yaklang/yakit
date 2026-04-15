@@ -3,8 +3,8 @@
     "searchUserPlaceholder": "请输入用户名进行搜索"
   },
   "OrganizationAdmin": {
-    "getOrganizationFailed": "获取组织架构失败：{error}",
-    "getNoDepartmentFailed": "获取无归属组织架构：{error}",
+    "getOrganizationFailed": "获取组织架构失败：{{error}}",
+    "getNoDepartmentFailed": "获取无归属组织架构：{{error}}",
     "unassigned": "无归属",
     "organization": "组织架构",
     "addFirstLevelDepartment": "添加一级部门",
@@ -25,7 +25,7 @@
     "resetPwdTooltip": "重置用户密码",
     "copySecretKeyTooltip": "复制远程连接",
     "deleteUserConfirm": "确定删除该用户吗？",
-    "getListFailed": "获取账号列表失败：{error}"
+    "getListFailed": "获取账号列表失败：{{error}}"
   },
   "HoleCollectPage": {
     "title": "标题",
@@ -35,7 +35,7 @@
     "discoveryTime": "发现时间",
     "uploadTime": "上传时间",
     "deleteHoleConfirm": "确定删除该漏洞吗？",
-    "exportFailed": "数据导出失败：{error}",
+    "exportFailed": "数据导出失败：{{error}}",
     "riskAndVulnerability": "风险与漏洞",
     "refreshTooltip": "刷新会重置所有查询条件",
     "deleteSelectedConfirm": "确定删除选择的风险与漏洞吗？不可恢复",
@@ -63,15 +63,15 @@
     "totalUsers": "用户总数",
     "generateLicense": "生成License",
     "confirmDeleteCompany": "确定删除该企业吗？",
-    "viewLicenseFailed": "查看license失败：{error}",
+    "viewLicenseFailed": "查看license失败：{{error}}",
     "deleteCompanySuccess": "删除企业成功",
-    "deleteCompanyFailed": "删除企业失败：{error}",
+    "deleteCompanyFailed": "删除企业失败：{{error}}",
     "addCompany": "添加企业",
     "editCompany": "编辑企业",
     "createCompany": "创建企业"
   },
   "LicenseForm": {
-    "companyOperationFailed": "企业操作失败：{error}",
+    "companyOperationFailed": "企业操作失败：{{error}}",
     "changeUserCountWarning": "由于修改用户总数需要修改私有部署服务器的License，会占用一次License生成次数，所以默认会把License总数加1",
     "inputCompanyName": "请输入企业名称",
     "totalLicenses": "License总数",
@@ -101,14 +101,14 @@
     "auditPlugin": "审核插件",
     "createdAt": "创建时间",
     "confirmDeleteRole": "确定删除该角色吗？",
-    "getRoleListFailed": "获取角色列表失败：{error}",
+    "getRoleListFailed": "获取角色列表失败：{{error}}",
     "deleteRoleSuccess": "删除角色成功",
-    "deleteRoleFailed": "删除角色失败：{error}",
+    "deleteRoleFailed": "删除角色失败：{{error}}",
     "confirmDeleteSelectedRoles": "确认删除选择的角色吗？不可恢复",
     "createRole": "创建角色"
   },
   "RoleOperationForm": {
-    "failed": "失败：{error}",
+    "failed": "失败：{{error}}",
     "all": "全部",
     "inputRoleName": "请输入角色名",
     "pluginPermissions": "插件权限",
@@ -125,15 +125,15 @@
     "auditor": "审核员",
     "createdAt": "创建时间",
     "confirmRemoveUser": "确定移除该用户吗？",
-    "getAccountListFailed": "获取账号列表失败：{error}",
+    "getAccountListFailed": "获取账号列表失败：{{error}}",
     "deleteUserSuccess": "删除用户成功",
-    "deleteUserFailed": "删除用户失败：{error}",
+    "deleteUserFailed": "删除用户失败：{{error}}",
     "confirmDeleteSelectedUsers": "确定删除选择的用户吗？不可恢复",
     "addUser": "添加用户"
   },
   "CreateUserForm": {
-    "addFailed": "增加失败：{error}",
-    "getNormalUserFailed": "获取普通用户失败：{error}",
+    "addFailed": "增加失败：{{error}}",
+    "getNormalUserFailed": "获取普通用户失败：{{error}}",
     "addUserRequired": "添加用户必填",
     "inputFullUsername": "请输入完整的用户名",
     "selectRole": "选择角色",

@@ -22,7 +22,7 @@
     "dragHint": "Drag Codec tools from the left list to use them",
     "pleaseEnterName": "Please enter a name",
     "nameAlreadyExists": "A history record with the same name already exists, please change the name",
-    "regexCheckFailed": "{title}-{regex} check failed",
+    "regexCheckFailed": "{{title}}-{{regex}} check failed",
     "expandCodecCategory": "Expand Codec Categories",
     "codecOrder": "Codec Order",
     "saveCodecOrder": "Save Codec Order",

@@ -41,24 +41,24 @@
     "scoreHint4": "Check whether the test cases can pass rule validation; positive cases should alert and negative cases should not."
   },
   "UpdateRuleToGroup": {
-    "groupCount": "Rule Group {count}",
+    "groupCount": "Rule Group {{count}}",
     "hint": "Checked items will be added to the group; unchecked items will be removed. Create a new group by typing its name and pressing Enter.",
-    "addGroup": "Add group \"{search}\"",
+    "addGroup": "Add group \"{{search}}\"",
     "addGroupButton": "Add Group"
   },
   "RuleDebugAuditDetail": {
     "readFailed": "Read failed",
-    "openError": "Open failed: {error}",
+    "openError": "Open failed: {{error}}",
     "selectLeft": "Please select an item on the left"
   },
   "RuleDebugAuditList": {
     "title": "Audit Results List"
   },
   "RuleUploadAndDownloadModal": {
-    "streamError": "Error: {error}",
+    "streamError": "Error: {{error}}",
     "ruleUpload": "Rule Upload",
     "ruleDownload": "Rule Download",
-    "progress": "Progress {percent}%"
+    "progress": "Progress {{percent}}%"
   },
   "OnlineRuleGroupList": {
     "noPermissionTitle": "No viewing permission",

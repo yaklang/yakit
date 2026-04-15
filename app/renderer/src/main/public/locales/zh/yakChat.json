@@ -1,8 +1,8 @@
 {
   "YakChatCS": {
     "log": "日志",
-    "debugTaskStarted": "调试任务启动成功，运行时 ID: {runtimeId}",
-    "localPluginExecuteError": "本地插件执行出错: {error}",
+    "debugTaskStarted": "调试任务启动成功，运行时 ID: {{runtimeId}}",
+    "localPluginExecuteError": "本地插件执行出错: {{error}}",
     "tryPluginInPacketOrHistory": "可在数据包或History右键调用插件进行体验噢~👋",
     "requestErrorRetry": "请求出现错误，请稍候再试"
   }

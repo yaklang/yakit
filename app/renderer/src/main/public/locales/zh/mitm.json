@@ -23,7 +23,7 @@
     "content_rule_configuration": "内容规则配置",
     "official_website": "官方网站",
     "existing_mitm_content_rules": "现有 MITM 内容规则",
-    "total_rules_count": "共 {count} 条规则",
+    "total_rules_count": "共 {{count}} 条规则",
     "no_replace_all": "全部不替换",
     "white_list": "白名单",
     "white_list_modal_title": "规则白名单配置",
@@ -143,13 +143,13 @@
     "migration": "迁移",
     "not_migration": "不迁移",
     "migration_title": "是否将下游代理配置数据迁移到新版本，不迁移则认为放弃历史数据。",
-    "recordPointsCount": "现有节点 {i}个",
-    "recordRoutesCount": "现有规则 {i}条",
+    "recordPointsCount": "现有节点 {{i}}个",
+    "recordRoutesCount": "现有规则 {{i}}条",
     "Routes": "代理规则",
     "Points": "代理节点",
     "address_tip": "配置后仅目标地址走代理,其余流量不走代理",
     "delete_point_title": "删除代理节点",
-    "delete_point_tips": "该节点仍被 {i} 条规则引用，删除后会同时从这些规则中移除。是否继续？",
+    "delete_point_tips": "该节点仍被 {{i}} 条规则引用，删除后会同时从这些规则中移除。是否继续？",
     "disabled": "已禁用",
     "detectionStart": "开始检测",
     "detectionLoading": "检测中，请耐心等待...",
@@ -158,7 +158,7 @@
     "customDetectionTarget": "自定义检测目标",
     "customDetectionTargetPlaceholder": "请输入检测目标",
     "disable_point_title": "禁用代理节点",
-    "disable_point_tips": "该节点仍被 {i} 条规则引用，禁用后会同时从这些规则中移除。是否继续？",
+    "disable_point_tips": "该节点仍被 {{i}} 条规则引用，禁用后会同时从这些规则中移除。是否继续？",
     "downstream_agent": "下游代理",
     "select_disabled_tip": "选中的代理已被禁用，建议更换可用的代理",
     "destination_address_tips": "如需屏蔽指定域名不走代理则可加上“!”前缀，例如：!*.example.com"
@@ -194,7 +194,7 @@
   },
   "MITMServer": {
     "passive_plugin": "被动插件",
-    "loadingPlugin": "加载 MITM 插件[{id}]",
+    "loadingPlugin": "加载 MITM 插件[{{id}}]",
     "clearFailed": "清空失败:",
     "startPluginSuccess": "启动 MITM 插件成功",
     "startPluginFailed": "启动 MITM 插件失败:",
@@ -239,7 +239,7 @@
     "pleaseCompleteCondition": "请将已添加条件配置完成后再新增",
     "addAdvancedConfig": "添加高级配置",
     "notSetCondition": "暂未设置条件",
-    "ruleIndex": "规则_{index}"
+    "ruleIndex": "规则_{{index}}"
   },
   "MITMAdvancedFiltersItem": {
     "scope": "使用范围",
@@ -269,7 +269,7 @@
     "contentRule": "内容规则",
     "contentRuleHelp": "使用规则进行匹配、替换、标记、染色，同时配置生效位置",
     "defaultConfig": "默认配置",
-    "existingRules": "现有规则 {count} 条",
+    "existingRules": "现有规则 {{count}} 条",
     "enablePlugin": "启用插件",
     "startHijack": "劫持启动",
     "startHijackV2": "MITM 劫持 v2",
@@ -282,7 +282,7 @@
     "connectivityCheck": "TUN劫持联通性检测",
     "connectivityChecking": "TUN劫持联通性检测进行中",
     "connectivityCheckCompleted": "TUN劫持联通性检测完成",
-    "connectivityCheckPluginNotFound": "未找到本地插件“{name}”，请先确认插件已安装，或将代码中的插件名改为实际脚本名"
+    "connectivityCheckPluginNotFound": "未找到本地插件“{{name}}”，请先确认插件已安装，或将代码中的插件名改为实际脚本名"
   },
   "MITMChromeLauncher": {
     "proxy_configuration": "配置代理",
@@ -316,7 +316,7 @@
     "close_all_no_config_chrome_success": "关闭所有免配置 Chrome 成功",
     "close_all_no_config_chrome": "关闭所有免配置 Chrome",
     "close_all_chrome_failed": "关闭所有 Chrome 失败",
-    "chrome_launch_failed": "Chrome 启动失败：{err}，请尝试选择启动默认配置",
+    "chrome_launch_failed": "Chrome 启动失败：{{err}}，请尝试选择启动默认配置",
     "warning_content": "检测到开启了替换规则，可能会影响劫持，是否确认开启？",
     "confirm_restore_default_params": "确认恢复默认参数",
     "restore_default_params_content": "确定要将所有参数恢复到默认状态吗？这将丢失所有自定义设置。",
@@ -352,17 +352,17 @@
   "MITMFiltersModal": {
     "save_filter_config": "保存过滤器配置",
     "save_hijack_config": "保存条件劫持配置",
-    "name_placeholder": "请为{name}配置取个名字...",
+    "name_placeholder": "请为{{name}}配置取个名字...",
     "please_enter_name": "请输入名字",
     "saved_successfully": "存储成功",
     "duplicate_name": "此名字重复",
-    "edit_success": "编辑{name}成功",
+    "edit_success": "编辑{{name}}成功",
     "update_filter_status": "更新 MITM 过滤器状态",
-    "update_filter_failed": "更新 MITM 过滤器失败：{err}",
-    "get_filter_failed": "获取 MITM 过滤器失败：{err}",
+    "update_filter_failed": "更新 MITM 过滤器失败：{{err}}",
+    "get_filter_failed": "获取 MITM 过滤器失败：{{err}}",
     "update_hijack_status": "更新 劫持 过滤器状态",
-    "update_hijack_failed": "更新 劫持 过滤器失败：{err}",
-    "get_hijack_failed": "获取 劫持 过滤器失败：{err}",
+    "update_hijack_failed": "更新 劫持 过滤器失败：{{err}}",
+    "get_hijack_failed": "获取 劫持 过滤器失败：{{err}}",
     "filter_configuration": "过滤器配置",
     "hijack_condition": "条件劫持",
     "base_configuration": "基础配置",
@@ -379,7 +379,7 @@
     "history_storage": "历史存储",
     "invalid_import_file": "导入文件不符合格式要求",
     "drag_hint_suffix": "上传，也支持直接粘贴代码",
-    "editing_cannot_delete": "正在编辑{name}，暂无法删除"
+    "editing_cannot_delete": "正在编辑{{name}}，暂无法删除"
   },
   "MITMCertificateDownloadModal": {
     "download_cert": "下载证书以劫持 HTTPS",

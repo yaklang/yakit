@@ -200,6 +200,7 @@ interface PluginHasParamsFormProps {
 }
 const PluginHasParamsForm = React.forwardRef((props: PluginHasParamsFormProps, ref) => {
   const { pluginType, initFormValue, defaultFormValue, requiredParams, groupParams } = props
+  const { t, i18n } = useI18nNamespaces(['plugin'])
   const [form] = Form.useForm()
   const jsonSchemaListRef = useRef<{
     [key: string]: any
@@ -232,7 +233,7 @@ const PluginHasParamsForm = React.forwardRef((props: PluginHasParamsFormProps, r
           setTimeout(() => {
             const result = getJsonSchemaListResult(jsonSchemaListRef.current)
             if (result.jsonSchemaError.length > 0) {
-              failed(`jsonSchema校验失败`)
+              failed(t('PluginHasParamsDrawer.jsonSchemaValidateFailed'))
               return
             }
             result.jsonSchemaSuccess.forEach((item) => {

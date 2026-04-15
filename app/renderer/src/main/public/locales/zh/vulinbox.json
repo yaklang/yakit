@@ -67,6 +67,6 @@
   },
   "InstallVulinboxPrompt": {
     "installing": "正在安装 Vulinbox",
-    "downloadedPercent": "已下载 {percent}%"
+    "downloadedPercent": "已下载 {{percent}}%"
   }
 }

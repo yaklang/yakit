@@ -65,7 +65,7 @@ export function useI18nNamespaces(namespaces: string[]) {
 
     if (vars) {
       Object.keys(vars).forEach((k) => {
-        const regex = new RegExp(`{${k}}`, 'g')
+        const regex = new RegExp(`{{${k}}}`, 'g')
         strText = strText.replace(regex, String(vars[k]))
       })
     }

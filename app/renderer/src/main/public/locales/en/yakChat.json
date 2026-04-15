@@ -1,8 +1,8 @@
 {
   "YakChatCS": {
     "log": "Log",
-    "debugTaskStarted": "Debug task started successfully, runtime ID: {runtimeId}",
-    "localPluginExecuteError": "Local plugin execution failed: {error}",
+    "debugTaskStarted": "Debug task started successfully, runtime ID: {{runtimeId}}",
+    "localPluginExecuteError": "Local plugin execution failed: {{error}}",
     "tryPluginInPacketOrHistory": "You can right-click in packets or History to try the plugin~👋",
     "requestErrorRetry": "Request failed, please try again later"
   }

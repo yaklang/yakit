@@ -1298,7 +1298,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
             <div className={styles['btn-body']}>
               <div className={styles['body-title']}>
                 <FolderOpenSvgIcon />
-                {t('ProjectManage.newFolder')}
+                {t('YakitButton.newFolder')}
               </div>
               <div className={styles['icon-style']}>
                 <PlusBoldSvgIcon />
@@ -2297,7 +2297,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
               }
               help={
                 <div className={styles['import-form-item-help-wrapper']}>
-                  {t('NewProjectAndFolder.clickHere')}
+                  {t('YakitDraggerContent.click_here')}
                   <Upload
                     multiple={false}
                     maxCount={1}

@@ -2,7 +2,7 @@
   "SpaceEnginePage": {
     "scanPortList": "扫描端口列表",
     "logs": "日志",
-    "taskStartSuccess": "调试任务启动成功，运行时 ID: {id}"
+    "taskStartSuccess": "调试任务启动成功，运行时 ID: {{id}}"
   },
   "SpaceEngineFormContent": {
     "spaceEngineVerifyFailed": "空间引擎校验失败",

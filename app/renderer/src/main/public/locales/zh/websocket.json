@@ -19,6 +19,6 @@
     "serverResponse": "服务器响应",
     "clientRequest": "客户端请求",
     "frameDetails": "数据帧详情",
-    "dataSize": "数据大小: {size}"
+    "dataSize": "数据大小: {{size}}"
   }
 }

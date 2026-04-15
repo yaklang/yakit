@@ -882,7 +882,7 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
           placeholder: t('SimpleDetect.scanTargetPlaceholder'),
           rows: 3,
         }}
-        help={t('SimpleDetect.scanTargetHelp')}
+        help={t('YakitDraggerContent.drag_files_tip')}
         disabled={disabled}
         onTextAreaType={setInputType}
         textAreaType={inputType}

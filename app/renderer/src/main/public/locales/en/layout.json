@@ -40,7 +40,7 @@
       "type": "Type",
       "remoteIP": "Remote IP",
       "time": "Time",
-      "useCallbackService": "Use {v1} Built-in {v2} Callback Service",
+      "useCallbackService": "Use {{v1}} Built-in {{v2}} Callback Service",
       "generateDomain": "Generate Domain",
       "viewAccessRecords": "View Access Records"
     },
@@ -95,9 +95,9 @@
   },
   "UILayout": {
     "entering": "Entering...",
-    "projectSyncFailed": "{name} project data synchronization failed, please upload manually",
+    "projectSyncFailed": "{{name}} project data synchronization failed, please upload manually",
     "exiting": "Exiting...",
-    "engineModeSwitched": "Engine status switched to: {mode}",
+    "engineModeSwitched": "Engine status switched to: {{mode}}",
     "cannotExportProject": "Current project has no key information, cannot export!",
     "temporaryProject": "Temporary Project",
     "updateEngineTitle": "Update engine, all local processes need to be closed",
@@ -106,7 +106,7 @@
   "GlobalState": {
     "autoReverseConfigSuccess": "Auto-start - global reverse connection configuration successful",
     "dnslogConfigSuccess": "Global DNSLog configuration effective",
-    "dnslogConfigFailed": "Global DNSLog configuration failed: {error}",
+    "dnslogConfigFailed": "Global DNSLog configuration failed: {{error}}",
     "cannotGetPcapInfo": "Cannot get PCAP support information",
     "closeAllNodesSuccess": "Successfully closed all running nodes",
     "closeNodeSuccess": "Successfully closed running node",
@@ -114,7 +114,7 @@
     "systemCheck": "System Check",
     "checking": "Checking...",
     "noException": "No exception",
-    "exceptionsDetected": "{count} exceptions detected",
+    "exceptionsDetected": "{{count}} exceptions detected",
     "engineNotOfficial": "Engine is not an official release version",
     "engineNotOfficialDesc": "May cause problems in local use",
     "useOfficialEngine": "Use official engine",
@@ -139,10 +139,10 @@
     "statusRefreshInterval": "Status Refresh Interval"
   },
   "SetUserInfo": {
-    "avatarUpdateFailed": "Avatar update failed: {error}",
+    "avatarUpdateFailed": "Avatar update failed: {{error}}",
     "avatarUpdateSuccess": "Avatar updated successfully",
     "avatarUploadFailed": "Avatar upload failed",
-    "avatarFileTypeLimit": "{name} is not a png, png, jpeg file, please upload the correct format file!",
+    "avatarFileTypeLimit": "{{name}} is not a png, png, jpeg file, please upload the correct format file!",
     "admin": "Admin"
   },
   "Main": {
@@ -175,7 +175,7 @@
     "holeCollect": "Vulnerability Summary",
     "systemConfig": "System Configuration",
     "screenRecordingNotice": "Screen Recording Notice",
-    "isScrecorderReadyFailed": "IsScrecorderReady failed: {error}",
+    "isScrecorderReadyFailed": "IsScrecorderReady failed: {{error}}",
     "engineConsole": "Engine Console",
     "signOutSuccess": "Successfully signed out",
     "signOutRemoteConfirm": "Clicking sign out will automatically exit remote control, are you sure you want to exit?",

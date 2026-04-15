@@ -11,7 +11,6 @@
     "logs": "Logs",
     "inputTarget": "Input Targets",
     "targetPlaceholder": "Content rules: domain(:port)/IP(:port)/IP range, separate by comma for batch input",
-    "dragFilesHelp": "Drag TXT or Excel files into the box or",
     "targetConcurrentLabel": "Target Concurrent:",
     "stopOnSuccess": "Stop on success",
     "continueOnSuccess": "Continue on success",

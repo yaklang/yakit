@@ -3,7 +3,7 @@
     "notInstalled": "未安装录屏",
     "installRecorder": "安装录屏",
     "installing": "录屏工具安装中...",
-    "installFailed": "IsScrecorderReady失败：{error}",
+    "installFailed": "IsScrecorderReady失败：{{error}}",
     "installHint": "点击“安装录屏”，录屏工具安装成功后即可开始录屏",
     "timeout": "连接超时",
     "downloaded": "已下载"
@@ -20,7 +20,7 @@
     "startRecording": "开始录屏"
   },
   "ScreenRecorderList": {
-    "getListFailed": "获取列表数据失败：{error}",
+    "getListFailed": "获取列表数据失败：{{error}}",
     "loginRequired": "请先登录，登录后方可使用",
     "screenRecorder": "录屏管理",
     "stopRecording": "停止录屏",
@@ -29,9 +29,9 @@
   },
   "ScreenRecorderListItem": {
     "fileNotFound": "目标文件已不存在!",
-    "playFailed": "播放失败：{error}",
+    "playFailed": "播放失败：{{error}}",
     "editVideoInfo": "编辑视频信息",
-    "updateFailed": "修改失败：{error}",
+    "updateFailed": "修改失败：{{error}}",
     "video": "视频",
     "videoName": "视频名称",
     "notes": "备注",
