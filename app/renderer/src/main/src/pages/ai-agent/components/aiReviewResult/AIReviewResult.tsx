@@ -120,7 +120,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
       default:
         return !!userAction.userInput
     }
-  }, [type])
+  }, [type, userAction.userInput])
   return (
     <AISingHaveColorText
       // titleIcon={<SolidHandIcon />}
