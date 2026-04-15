@@ -805,13 +805,11 @@ const getTokenCountChartData = (contextStatsData?: AIContextStatsDetail['data'])
   const userInputBytes = contextStatsData?.user_input_bytes || []
   const times = contextStatsData?.times || []
 
-  const xAxis = times.map((time) => moment.unix(time).format('HH:mm'))
-
   const maxValue = Math.max(...promptBytes, ...systemPromptBytes, ...runtimeContextBytes, ...userInputBytes, 0)
   const normalizedMax = maxValue <= 100 ? 100 : Math.ceil(maxValue / 100) * 100
 
   return {
-    xAxis,
+    xAxis: times,
     series: {
       total: promptBytes,
       systemPrompt: systemPromptBytes,
@@ -883,9 +881,8 @@ const getTokenCountOption = (
     name,
     type: 'line',
     smooth: false,
-    symbol: 'circle',
-    symbolSize: 7,
-    showSymbol: true,
+    symbol: 'none',
+    showSymbol: false,
     z,
     lineStyle: {
       width: 1.5,
@@ -938,6 +935,19 @@ const getTokenCountOption = (
       textStyle: {
         color: titleColor,
       },
+      formatter: (params) => {
+        const list = Array.isArray(params) ? params : [params]
+        const axisValue = Number(list?.[0]?.axisValue || 0)
+        const timeLabel = axisValue ? moment.unix(axisValue).format('YYYY-MM-DD HH:mm:ss') : ''
+
+        const rows = list
+          .map((item) => {
+            return `${item.marker}${item.seriesName} ${formatNumberUnits(Number(item.value || 0))}`
+          })
+          .join('<br/>')
+
+        return `${timeLabel}<br/>${rows}`
+      },
       axisPointer: {
         type: 'line',
         lineStyle: {
@@ -967,6 +977,7 @@ const getTokenCountOption = (
         color: textColor,
         fontSize: 11,
         margin: 10,
+        formatter: (value) => moment.unix(Number(value)).format('HH:mm'),
       },
     },
     yAxis: {
