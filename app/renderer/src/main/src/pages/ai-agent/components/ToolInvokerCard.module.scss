@@ -135,33 +135,22 @@
       }
     }
     .copy-btn {
-      width: 24px;
-      height: 24px;
       border-color: var(--Colors-Use-Neutral-Border);
       display: none;
-      padding: 4px;
       align-items: center;
       border-radius: 4px;
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      background: var(--Colors-Use-Basic-Background);
       position: absolute;
       bottom: 8px;
       right: 8px;
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
-
-      &:hover {
-        border-color: var(--Colors-Use-Main-Border);
-        background: var(--Colors-Use-Main-Bg);
-        color: var(--Colors-Use-Main-Primary);
-      }
     }
     .copy-icon {
       margin: 0;
-      height: 16px;
-      width: 16px;
+      height: 14px;
+      width: 14px;
       svg {
-        height: 16px;
-        width: 16px;
+        height: 14px;
+        width: 14px;
       }
     }
   }

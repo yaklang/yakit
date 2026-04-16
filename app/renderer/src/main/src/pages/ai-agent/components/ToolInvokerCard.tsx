@@ -333,7 +333,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
             </label>
           )}
           <Tooltip title="刷新代码块数据">
-            <YakitButton type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
+            <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
           </Tooltip>
         </div>
       }

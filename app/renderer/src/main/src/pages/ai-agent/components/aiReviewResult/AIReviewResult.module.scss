@@ -94,6 +94,15 @@
       overflow: hidden;
       word-break: break-all;
     }
+    .copy-icon {
+      margin: 0;
+      height: 14px;
+      width: 14px;
+      svg {
+        height: 14px;
+        width: 14px;
+      }
+    }
   }
   .no-param {
     display: flex;

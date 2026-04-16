@@ -137,6 +137,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
           <div className={styles['header-extra']}>
             <Tooltip title={expand ? '收起' : '展开'}>
               <YakitButton
+                size="small"
                 type="text2"
                 onClick={() => {
                   setExpand((v) => !v)
@@ -195,7 +196,7 @@ export const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) 
               {!!valueString && (
                 <div className={styles['param-value-wrapper']} onClick={() => onCopy(valueString)}>
                   <div className={styles['param-value']}>{valueString}</div>
-                  <CopyComponents copyText={valueString} />
+                  <CopyComponents copyText={valueString} className={styles['copy-icon']} />
                 </div>
               )}
             </div>
