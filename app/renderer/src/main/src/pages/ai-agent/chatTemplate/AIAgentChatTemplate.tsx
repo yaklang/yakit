@@ -108,48 +108,40 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     const taskLength = taskTree?.length
     switch (activeTab) {
       case AIChatLeft.TaskTree:
-        const isShowEmpty = taskLength === 0 && planHistoryList.records.length === 0
         const coordinatorId = getTaskInfo()?.coordinatorId || 'current-task'
+        const historyLength = planHistoryList?.records?.length
         return (
           <div className={styles['history-task-tree-container']}>
-            {isShowEmpty ? (
-              <YakitEmpty
-                style={{ marginTop: '20%' }}
-                title="暂无任务数据"
-                description="执行计划生成任务树后，数据会展示在这里哦~"
-              />
-            ) : (
-              <>
-                {taskLength > 0 ? (
-                  <YakitCollapse
-                    destroyInactivePanel
-                    accordion
-                    bordered={false}
-                    activeKey={activeKey}
-                    style={{ marginBottom: 8 }}
-                    onChange={(key) => setActiveKey(key as string)}
-                  >
-                    <YakitCollapse.YakitPanel
-                      header={
-                        <div className={styles['history-task-tree-item-header']}>
-                          <div className={styles['history-task-tree-item-header-left']}>
-                            <div className={styles['history-task-tree-item-header-title']}>{taskName}</div>
-                          </div>
-
-                          <YakitTag color="info" size="small" fullRadius>
-                            当前任务
-                          </YakitTag>
+            <>
+              {taskLength > 0 ? (
+                <YakitCollapse
+                  destroyInactivePanel
+                  accordion
+                  bordered={false}
+                  activeKey={activeKey}
+                  style={{ marginBottom: 8 }}
+                  onChange={(key) => setActiveKey(key as string)}
+                >
+                  <YakitCollapse.YakitPanel
+                    header={
+                      <div className={styles['history-task-tree-item-header']}>
+                        <div className={styles['history-task-tree-item-header-left']}>
+                          <div className={styles['history-task-tree-item-header-title']}>{taskName}</div>
                         </div>
-                      }
-                      key={coordinatorId}
-                    >
-                      <AITree tasks={taskTree} aiTreeTitleExtraNode={onAITreeTitleExtraNode} />
-                    </YakitCollapse.YakitPanel>
-                  </YakitCollapse>
-                ) : null}
-                <HistoryTaskTree data={planHistoryList} />
-              </>
-            )}
+
+                        <YakitTag color="info" size="small" fullRadius>
+                          当前任务
+                        </YakitTag>
+                      </div>
+                    }
+                    key={coordinatorId}
+                  >
+                    <AITree tasks={taskTree} aiTreeTitleExtraNode={onAITreeTitleExtraNode} />
+                  </YakitCollapse.YakitPanel>
+                </YakitCollapse>
+              ) : null}
+              {historyLength > 0 && <HistoryTaskTree data={planHistoryList} isHaveCurrentTask={taskLength > 0} />}
+            </>
           </div>
         )
       case AIChatLeft.Timeline:

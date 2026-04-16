@@ -1,8 +1,8 @@
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIChatLeft } from '../AIAgentChatTemplate'
-import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface HistoryTaskTreeProps {
+  /** 是否有当前任务 */
+  isHaveCurrentTask: boolean
   // 历史任务数据源
   data: AIAgentGrpcApi.PlanHistoryList
 }

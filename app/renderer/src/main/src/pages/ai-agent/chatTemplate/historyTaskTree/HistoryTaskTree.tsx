@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import React, { memo, useRef, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss' // 假设你有对应的样式文件
 import {
   AIHistoryContinueTaskProps,
@@ -11,57 +11,56 @@ import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITree } from '../../aiTree/AITree'
 import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
-import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { OutlineLoadingIcon, OutlinePlay2Icon } from '@/assets/icon/outline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
+import { Tooltip } from 'antd'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
-  const { data } = props
+  const { data, isHaveCurrentTask } = props
 
-  const [activeKey, setActiveKey] = useState<string>(data.records[0]?.coordinator_id)
+  const [activeKey, setActiveKey] = useState<string>(isHaveCurrentTask ? '' : data.records[0]?.coordinator_id || '')
   const historyContainerRef = useRef<HTMLDivElement>(null)
-
   useUpdateEffect(() => {
-    data.records[0] && setActiveKey(data.records[0]?.coordinator_id)
-  }, [data.records[0]])
+    if (isHaveCurrentTask) {
+      setActiveKey('')
+    } else if (!!data.records[0]) {
+      setActiveKey(data.records[0]?.coordinator_id)
+    }
+  }, [isHaveCurrentTask, data.records[0]])
 
   return (
     <div className={styles['history-task-tree-container']} ref={historyContainerRef}>
-      {data.records.length === 0 ? (
-        <YakitEmpty style={{ marginTop: '20%' }} title="暂无历史任务" />
-      ) : (
-        <YakitCollapse
-          destroyInactivePanel
-          accordion
-          bordered={false}
-          activeKey={activeKey}
-          onChange={(key) => setActiveKey(key as string)}
-          style={{ marginBottom: 8 }}
-        >
-          {data.records.map((item) => {
-            return (
-              <YakitCollapse.YakitPanel
-                header={
-                  <div className={styles['history-task-tree-item-header']}>
-                    <div className={styles['history-task-tree-item-header-left']}>
-                      <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
-                        {item?.root_task_name}
-                      </div>
+      <YakitCollapse
+        destroyInactivePanel
+        accordion
+        bordered={false}
+        activeKey={activeKey}
+        onChange={(key) => setActiveKey(key as string)}
+        style={{ marginBottom: 8 }}
+      >
+        {data?.records?.map((item) => {
+          return (
+            <YakitCollapse.YakitPanel
+              header={
+                <div className={styles['history-task-tree-item-header']}>
+                  <div className={styles['history-task-tree-item-header-left']}>
+                    <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
+                      {item?.root_task_name}
                     </div>
                   </div>
-                }
-                key={item.coordinator_id}
-              >
-                <HistoryTaskTreeItem item={item} />
-              </YakitCollapse.YakitPanel>
-            )
-          })}
-        </YakitCollapse>
-      )}
+                </div>
+              }
+              key={item.coordinator_id}
+            >
+              <HistoryTaskTreeItem item={item} />
+            </YakitCollapse.YakitPanel>
+          )
+        })}
+      </YakitCollapse>
     </div>
   )
 })
@@ -156,22 +155,25 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       }}
       visible={visible}
       onVisibleChange={setVisible}
+      destroyTooltipOnHide={true}
     >
-      <YakitButton
-        type="text"
-        onClick={(e) => {
-          e.stopPropagation()
-        }}
-        className={styles['continue-task-button']}
-        radius="50%"
-        size="small"
-      >
-        {loading ? (
-          <OutlineLoadingIcon className={styles['icon-primary']} />
-        ) : (
-          <OutlinePlay2Icon className={styles['play2-icon']} />
-        )}
-      </YakitButton>
+      <Tooltip title="从该节点开始继续任务" destroyTooltipOnHide={true}>
+        <YakitButton
+          type="text"
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+          className={styles['continue-task-button']}
+          radius="50%"
+          size="small"
+        >
+          {loading ? (
+            <OutlineLoadingIcon className={styles['icon-primary']} />
+          ) : (
+            <OutlinePlay2Icon className={styles['play2-icon']} />
+          )}
+        </YakitButton>
+      </Tooltip>
     </YakitPopconfirm>
   ) : null
 })

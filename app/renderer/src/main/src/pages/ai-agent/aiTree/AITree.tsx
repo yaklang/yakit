@@ -126,7 +126,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
               />
             </YakitPopconfirm>
           )}
-          {aiTreeTitleExtraNode?.(data)}
+          {aiTreeTitleExtraNode && <div className={styles['ai-tree-extra-node']}>{aiTreeTitleExtraNode?.(data)}</div>}
         </div>
       </div>
     )

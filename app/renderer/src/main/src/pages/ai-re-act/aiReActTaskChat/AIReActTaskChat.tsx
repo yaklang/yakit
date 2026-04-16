@@ -279,7 +279,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
                 {t('AIReActTaskChatContent.globalDirective')}
               </YakitButton>
             </AIGlobalCommandPopover>
-            {!!getTaskId() && (
+            {chatIPCData.execute && !!getTaskId() && (
               <>
                 <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />
               </>
@@ -654,7 +654,7 @@ export const AIReActTaskChatLeftSide: React.FC<AIReActTaskChatLeftSideProps> = R
         expand={leftExpand}
         setExpand={setLeftExpand}
         taskTree={taskChat?.plan?.task_tree || []}
-        taskName={taskChat?.plan?.root_task_name}
+        taskName={taskChat?.plan?.root_task_name || ''}
       />
       <div className={styles['open-wrapper']} onClick={() => setLeftExpand(true)}>
         <ChevrondownButton />
