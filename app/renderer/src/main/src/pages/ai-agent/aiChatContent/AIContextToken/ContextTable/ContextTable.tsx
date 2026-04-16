@@ -117,9 +117,9 @@ const ContextTable: FC<{
         align: 'center',
         width: 80,
         render: (_, record) => {
-          const hasPreview = contextSectionsData?.summary.has(record.key)
-
-          if (!record.bytes && !hasPreview && !record.children?.length) return null
+          const previewValue = contextSectionsData?.summary.get(record.key)
+          if (!previewValue || previewValue.trim() === '') return null
+          if (!record.bytes && !record.children?.length) return null
 
           return (
             <YakitButton className={styles['view-btn']} type="text" onClick={() => setPreviewKey(record.key)}>
@@ -172,7 +172,7 @@ const ContextTable: FC<{
         width={720}
         centered
         zIndex={4000}
-        bodyStyle={{ height: 500 }}
+        bodyStyle={{ height: 400 }}
         onCancel={() => setPreviewKey('')}
       >
         <YakitEditor type="plaintext" readOnly={true} value={previewContent} />

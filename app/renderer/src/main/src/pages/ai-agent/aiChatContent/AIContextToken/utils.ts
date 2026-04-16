@@ -2,6 +2,59 @@ import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIModelTypeEnum } from '../../defaultConstant'
 import { AIEchartsDataKey, ContextPressureEchartsProps } from '../../chatTemplate/AIEcharts'
 import { AIContextStatsDetail } from '../../type/aiChat'
+import { AIChatData } from '../../type/aiChat'
+
+const MODEL_TIERS = [
+  AIModelTypeEnum.TierIntelligent,
+  AIModelTypeEnum.TierLightweight,
+  AIModelTypeEnum.TierVision,
+] as const
+
+type PerfData = AIChatData['aiPerfData']
+
+/** 比较两个 Record<tier, any[]> 类型字段在各模型层级的数组长度是否变化 */
+const isTierArrayLengthChanged = (prev: Record<string, any[]> | undefined, next: Record<string, any[]> | undefined) => {
+  return MODEL_TIERS.some((tier) => prev?.[tier]?.length !== next?.[tier]?.length)
+}
+
+/** 比较 aiPerfData 是否发生了需要触发更新的变化 */
+export const isPerfDataChanged = (prev: PerfData, next: PerfData): boolean => {
+  // 各模型层级的 consumption keys 数量
+  const prevTier = prev.consumption?.tier_consumption
+  const nextTier = next.consumption?.tier_consumption
+  if (
+    MODEL_TIERS.some(
+      (tier) => Object.keys(prevTier?.[tier] || {}).length !== Object.keys(nextTier?.[tier] || {}).length,
+    )
+  )
+    return true
+
+  // 各模型层级的数组类字段长度
+  if (
+    isTierArrayLengthChanged(prev.pressure, next.pressure) ||
+    isTierArrayLengthChanged(prev.firstCost, next.firstCost) ||
+    isTierArrayLengthChanged(prev.totalCost, next.totalCost)
+  )
+    return true
+
+  // 上下文字节统计
+  const prevStats = prev.contextStats
+  const nextStats = next.contextStats
+  if (
+    prevStats?.prompt_bytes !== nextStats?.prompt_bytes ||
+    prevStats?.data?.prompt_bytes.length !== nextStats?.data?.prompt_bytes.length ||
+    prevStats?.data?.system_prompt_bytes.length !== nextStats?.data?.system_prompt_bytes.length ||
+    prevStats?.data?.runtime_context_bytes.length !== nextStats?.data?.runtime_context_bytes.length ||
+    prevStats?.data?.user_input_bytes.length !== nextStats?.data?.user_input_bytes.length ||
+    prevStats?.data?.times.length !== nextStats?.data?.times.length
+  )
+    return true
+
+  // 上下文成分
+  if (prev.contextSections?.sections.length !== next.contextSections?.sections.length) return true
+
+  return false
+}
 
 /**
  * 处理压力数据，获取echarts需要的数据格式

@@ -23,7 +23,7 @@ import {
 import classNames from 'classnames'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { cloneDeep, isEmpty } from 'lodash'
-import { getPressuresData, getCostData, getThreshold, getContextStatsData } from './utils'
+import { getPressuresData, getCostData, getThreshold, getContextStatsData, isPerfDataChanged } from './utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { AIModelConfig } from '../../aiModelList/utils'
@@ -54,37 +54,7 @@ const AIContextToken: FC<{
     shouldUpdate: (prev, next) => {
       if (!prev) return !!next
       if (!next) return false
-
-      return (
-        // 高质模型
-        Object.keys(prev.consumption?.tier_consumption?.intelligent || {}).length !==
-          Object.keys(next.consumption?.tier_consumption?.intelligent || {}).length ||
-        prev.pressure?.intelligent?.length !== next.pressure?.intelligent?.length ||
-        prev.firstCost?.intelligent?.length !== next.firstCost?.intelligent?.length ||
-        prev.totalCost?.intelligent?.length !== next.totalCost?.intelligent?.length ||
-        // 轻量模型
-        Object.keys(prev.consumption?.tier_consumption?.lightweight || {}).length !==
-          Object.keys(next.consumption?.tier_consumption?.lightweight || {}).length ||
-        prev.pressure?.lightweight?.length !== next.pressure?.lightweight?.length ||
-        prev.firstCost?.lightweight?.length !== next.firstCost?.lightweight?.length ||
-        prev.totalCost?.lightweight?.length !== next.totalCost?.lightweight?.length ||
-        // 视觉模型
-        Object.keys(prev.consumption?.tier_consumption?.vision || {}).length !==
-          Object.keys(next.consumption?.tier_consumption?.vision || {}).length ||
-        prev.pressure?.vision?.length !== next.pressure?.vision?.length ||
-        prev.firstCost?.vision?.length !== next.firstCost?.vision?.length ||
-        prev.totalCost?.vision?.length !== next.totalCost?.vision?.length ||
-        // 上下文字节统计
-        prev.contextStats?.prompt_bytes !== next.contextStats?.prompt_bytes ||
-        prev.contextStats?.data?.prompt_bytes.length !== next.contextStats?.data?.prompt_bytes.length ||
-        prev.contextStats?.data?.system_prompt_bytes.length !== next.contextStats?.data?.system_prompt_bytes.length ||
-        prev.contextStats?.data?.runtime_context_bytes.length !==
-          next.contextStats?.data?.runtime_context_bytes.length ||
-        prev.contextStats?.data?.user_input_bytes.length !== next.contextStats?.data?.user_input_bytes.length ||
-        prev.contextStats?.data?.times.length !== next.contextStats?.data?.times.length ||
-        // 上下文成分
-        prev.contextSections?.sections.length !== next.contextSections?.sections.length
-      )
+      return isPerfDataChanged(prev, next)
     },
     // 进行数据克隆，确保引用变化
     clone: (data) => cloneDeep(data),
@@ -424,9 +394,11 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
             <TokenCountEcharts contextStatsData={contextStatsData} />
           </div>
         )}
-        <div style={{ height: '320px' }}>
-          <ContextTable contextSectionsData={contextSectionsData} />
-        </div>
+        {contextSectionsData?.sections.length > 0 && (
+          <div style={{ height: '320px' }}>
+            <ContextTable contextSectionsData={contextSectionsData} />
+          </div>
+        )}
       </div>
     </div>
   )
