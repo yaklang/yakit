@@ -62,6 +62,7 @@ import { AIModelConfig } from '@/pages/ai-agent/aiModelList/utils'
 import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
 import { AIModelActionProps, AIOnlineModelListProps } from '@/pages/ai-agent/aiModelList/AIModelListType'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { setOpenPerformanceTips } from '@/utils/duplex/duplex'
 
 export interface ConfigNetworkPageProp {}
 
@@ -363,6 +364,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
 
     // 更新插件日志条数
     onSetLimitLogNum()
+
+    // 更新性能提示
+    onSetPerformanceTips()
 
     const newParams: GlobalNetworkConfig = {
       ...params,
@@ -720,6 +724,20 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
     }
   })
   const hideRules = useMemo(() => isIRify(), [])
+
+  const [performanceTips, setPerformanceTips] = useState(false)
+  useEffect(() => {
+    getRemoteValue(GlobalConfigRemoteGV.PerformanceTips).then((setting) => {
+      setPerformanceTips(setting === 'true')
+    })
+  }, [inViewport])
+  const onSetPerformanceTips = () => {
+    setOpenPerformanceTips(!performanceTips)
+  }
+  const onResetPerformanceTips = () => {
+    setPerformanceTips(false)
+    setOpenPerformanceTips(true)
+  }
 
   return (
     <>
@@ -1243,6 +1261,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     onBlur={onLimitLogNumEnter}
                   />
                 </Form.Item>
+                <Form.Item label={t('ConfigNetworkPage.performance')} tooltip={t('ConfigNetworkPage.performanceTip')}>
+                  <YakitSwitch checked={performanceTips} onChange={setPerformanceTips} />
+                </Form.Item>
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
                   {t('ConfigNetworkPage.synScanNicConfig')}
                 </Divider>
@@ -1281,6 +1302,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         onResetPprofFileAutoAnalyze()
                         onResetSecondaryTabsNum()
                         onResetLimitLogNum()
+                        onResetPerformanceTips()
                         ipcRenderer.invoke('ResetGlobalNetworkConfig', {}).then(() => {
                           cerFormRef.current?.resetFields()
                           update()

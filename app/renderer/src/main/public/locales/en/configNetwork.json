@@ -66,6 +66,8 @@
     "autoPerformanceSamplingTip": "When enabled, high CPU/memory usage triggers performance sampling and saves files under ~yakit-projects/pprof-log",
     "secondaryTabsNum": "Secondary tab count",
     "pluginLogCount": "Plugin log count",
+    "performance": "Close performance tips",
+    "performanceTip": "After closing, there will be no prompt indicating slow data writing.",
     "synScanNicConfig": "SYN scan network interface configuration",
     "nic": "Network interface",
     "nicTip": "Select a network interface for SYN scanning",
