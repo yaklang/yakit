@@ -45,6 +45,7 @@ import {PluginSourceType} from "../type"
 import {YakitCheckbox} from "@/components/yakitUI/YakitCheckbox/YakitCheckbox"
 import {Tooltip} from "antd"
 import {PublicCommonPlugins} from "@/routes/newRoute"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 import classNames from "classnames"
 import styles from "./HubExtraOperate.module.scss"
@@ -73,6 +74,7 @@ export interface HubExtraOperateProps {
 
 export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
     forwardRef((props, ref) => {
+        const {t, i18n} = useI18nNamespaces(["pluginHub", "yakitUi"])
         const {getContainer, active, online, local, downloadLoading, onDownload, onEdit, onCallback} = props
 
         useImperativeHandle(
@@ -112,20 +114,20 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 const menus: YakitMenuItemType[] = [
                     {
                         key: "addMenu",
-                        label: "添加到菜单栏",
+                        label: t("HubExtraOperate.addToMenu"),
                         itemIcon: <OutlinePluscircleIcon />,
                         type: !!local ? undefined : "info"
                     },
                     {
                         key: "removeMenu",
-                        label: "移出菜单栏",
+                        label: t("HubExtraOperate.removeFromMenu"),
                         itemIcon: <OutlineMinuscircleIcon />,
                         type: !!local ? undefined : "info",
                         disabled: isInMenu
                     },
                     {
                         key: "export",
-                        label: "导出",
+                        label: t("YakitButton.export"),
                         itemIcon: <OutlineExportIcon />,
                         type: !!local ? undefined : "info"
                     }
@@ -141,12 +143,12 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             if (isAuth) {
                 first.push({
                     key: "status",
-                    label: online?.is_private ? "改为公开" : "改为私密",
+                    label: online?.is_private ? t("HubExtraOperate.makePublic") : t("HubExtraOperate.makePrivate"),
                     itemIcon: online?.is_private ? <OutlineLockopenIcon /> : <OutlineLockclosedIcon />
                 })
                 second.push({
                     key: "delOnline",
-                    label: "删除线上",
+                    label: t("HubExtraOperate.deleteOnline"),
                     itemIcon: <OutlineTrashIcon />,
                     type: "danger"
                 })
@@ -156,19 +158,19 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             first = first.concat([
                 {
                     key: "addMenu",
-                    label: "添加到菜单栏",
+                    label: t("HubExtraOperate.addToMenu"),
                     itemIcon: <OutlinePluscircleIcon />,
                     type: isLocal ? undefined : "info"
                 },
                 {
                     key: "removeMenu",
-                    label: "移出菜单栏",
+                    label: t("HubExtraOperate.removeFromMenu"),
                     itemIcon: <OutlineMinuscircleIcon />,
                     disabled: isInMenu
                 },
                 {
                     key: "export",
-                    label: "导出",
+                    label: t("YakitButton.export"),
                     itemIcon: <OutlineExportIcon />,
                     type: isLocal ? undefined : "info"
                 }
@@ -177,7 +179,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             if (isLocal) {
                 second.push({
                     key: "delLocal",
-                    label: "删除本地",
+                    label: t("HubExtraOperate.deleteLocal"),
                     itemIcon: <OutlineTrashIcon />,
                     type: "danger"
                 })
@@ -187,7 +189,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             if (second.length > 0) menus = [...menus, {type: "divider"}, ...second]
 
             return menus
-        }, [isCorePlugin, online, local, isInMenu])
+        }, [isCorePlugin, online, local, isInMenu, i18n.language])
 
         useEffect(() => {
             getRemoteValue(RemotePluginGV.AutoDownloadPlugin)
@@ -216,10 +218,10 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         })
         const autoDownloadCallback = useMemoizedFn((cache: boolean) => {
             if (downloadLoading) {
-                yakitNotify("info", "插件下载中，请稍后")
+                yakitNotify("info", t("HubExtraOperate.downloadingPleaseWait"))
                 return
             }
-            yakitNotify("info", "下载插件中...")
+            yakitNotify("info", t("HubExtraOperate.downloadingPlugin"))
             autoDownloadCache.current = cache
             onDownload()
             setAutoDownloadHint(false)
@@ -286,7 +288,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 if (isLocal) {
                     delLocalHintCache.current ? handleDelLocal() : handleDelPlugin("delLocal")
                 } else {
-                    yakitNotify("error", "本地不存在该插件，无法删除")
+                    yakitNotify("error", t("HubExtraOperate.localPluginMissing"))
                 }
             }
             // 删除线上
@@ -294,7 +296,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 if (isOnline && online.isAuthor) {
                     delOnlineHintCache.current ? handleDelOnline() : handleDelPlugin("delOnline")
                 } else {
-                    yakitNotify("error", "无法删除，插件无权限或不存在")
+                    yakitNotify("error", t("HubExtraOperate.cannotDeleteOnline"))
                 }
             }
             // 改为公开|私密
@@ -302,7 +304,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 if (isOnline && online.isAuthor) {
                     handleChangePrivate()
                 } else {
-                    yakitNotify("error", "无法更改，插件无权限")
+                    yakitNotify("error", t("HubExtraOperate.noPermissionToModify"))
                 }
             }
             // 编辑|添加菜单栏|移出菜单栏|导出
@@ -315,7 +317,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 } else {
                     if (autoDownloadCache.current) {
                         if (downloadLoading) {
-                            yakitNotify("info", "插件下载中，请稍后")
+                            yakitNotify("info", t("HubExtraOperate.downloadingPleaseWait"))
                             return
                         }
                         onDownload()
@@ -328,12 +330,12 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             if (type === "share") {
                 if (isOnline) {
                     if (!online.uuid) {
-                        yakitNotify("error", "未获取到插件的UUID，请切换不同插件详情后重试")
+                        yakitNotify("error", t("HubExtraOperate.missingUuid"))
                         return
                     }
                     handleShare()
                 } else {
-                    yakitNotify("error", "无法分享，线上不存在该插件")
+                    yakitNotify("error", t("HubExtraOperate.onlinePluginMissing"))
                 }
             }
             // 下载
@@ -341,7 +343,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 if (isOnline) {
                     handleDownload()
                 } else {
-                    yakitNotify("error", "无法下载/更新，该插件是纯本地插件")
+                    yakitNotify("error", t("HubExtraOperate.localOnlyPlugin"))
                 }
             }
         })
@@ -356,7 +358,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
         const handleShare = useMemoizedFn(() => {
             activeOperate.current = ""
             if (!online) return
-            setClipboardText(online.uuid || "", {hintText: "分享ID已复制到剪切板"})
+            setClipboardText(online.uuid || "", {hintText: t("HubExtraOperate.shareIdCopied")})
         })
 
         const [uploadHint, setUploadHint] = useState<boolean>(false)
@@ -366,11 +368,11 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             if (uploadHint) return
             if (!local) return
             if (!local.ScriptName) {
-                yakitNotify("error", "插件信息缺失，请切换插件后重试")
+                yakitNotify("error", t("HubExtraOperate.pluginInfoMissing"))
                 return
             }
             if (!userInfo.isLogin) {
-                yakitNotify("error", "登录后才可上传插件")
+                yakitNotify("error", t("HubExtraOperate.loginRequiredToUpload"))
                 return
             }
             setUploadHint(true)
@@ -397,7 +399,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             if (!online) return
             if (online.is_private) {
                 const m = showYakitModal({
-                    title: "插件基础检测",
+                title: t("HubExtraOperate.basicCheck"),
                     type: "white",
                     width: "50%",
                     centered: true,
@@ -433,7 +435,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             activeOperate.current = ""
             if (!local) return
             const m = showYakitModal({
-                title: `添加到菜单栏中[${local.Id}]`,
+                title: t("HubExtraOperate.addToMenuTitle", {id: local.Id}),
                 content: <AddPluginMenuContent onCancel={() => m.destroy()} script={local} />,
                 onCancel: () => {
                     m.destroy()
@@ -446,7 +448,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             activeOperate.current = ""
             if (!local) return
             const m = showYakitModal({
-                title: "移除菜单栏",
+                title: t("HubExtraOperate.removeFromMenuTitle"),
                 footer: null,
                 content: <RemovePluginMenuContent pluginName={local.ScriptName} />,
                 onCancel: () => {
@@ -468,7 +470,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
             if (exportModal) return
             try {
                 let m = showYakitModal({
-                    title: "导出插件",
+                    title: t("HubExtraOperate.exportPlugin"),
                     width: 450,
                     closable: true,
                     maskClosable: false,
@@ -524,7 +526,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                     if (onCallback) onCallback("delOnline")
                 })
                 .catch((err) => {
-                    yakitNotify("error", "线上删除失败: " + err)
+                yakitNotify("error", t("HubExtraOperate.deleteOnlineFailed", {error: String(err)}))
                 })
         })
         // 删除本地插件
@@ -537,7 +539,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                     if (onCallback) onCallback("delLocal")
                 })
                 .catch((err) => {
-                    yakitNotify("error", "本地删除失败: " + err)
+                yakitNotify("error", t("HubExtraOperate.deleteLocalFailed", {error: String(err)}))
                 })
         })
         /** ---------- 按钮操作逻辑 End ---------- */
@@ -600,8 +602,8 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                             })
                         }}
                     >
-                        不下载{" "}
-                        <Tooltip title='勾选不下载插件后，批量下载插件时将跳过此插件' align={{offset: [0, 10]}}>
+                        {t("HubExtraOperate.doNotDownload")} {" "}
+                        <Tooltip title={t("HubExtraOperate.skipDownloadTooltip")} align={{offset: [0, 10]}}>
                             <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
                         </Tooltip>
                     </YakitCheckbox>
@@ -613,7 +615,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                             iconWidth={900}
                             icon={<OutlinePencilaltIcon />}
                             type='text2'
-                            name={"编辑"}
+                            name={t("YakitButton.edit")}
                             className={classNames({[styles["share-disabled-btn"]]: !local})}
                             onClick={(e) => {
                                 e.stopPropagation()
@@ -626,7 +628,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                             iconWidth={900}
                             icon={<OutlineShareIcon />}
                             type='text2'
-                            name={"分享"}
+                            name={t("YakitButton.share")}
                             className={classNames({[styles["share-disabled-btn"]]: !online})}
                             disabled={!online}
                             hint={!online ? PluginOperateHint["banOnlineOP"] : ""}
@@ -644,7 +646,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         iconWidth={900}
                         icon={<OutlineClouduploadIcon />}
                         type='outline2'
-                        name={"上传"}
+                        name={t("YakitButton.upload")}
                         onClick={(e) => {
                             e.stopPropagation()
                             handleOperates("upload")
@@ -656,7 +658,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                         width={wrapperWidth}
                         iconWidth={900}
                         icon={<OutlineClouddownloadIcon />}
-                        name={isUpdate ? "更新" : "下载"}
+                        name={isUpdate ? t("YakitButton.update") : t("YakitButton.download")}
                         className={classNames({[styles["download-disabled-btn"]]: !online})}
                         disabled={!online}
                         hint={!online ? PluginOperateHint["banOnlineOP"] : ""}
@@ -683,7 +685,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                 {/* 删除插件 */}
                 <NoPromptHint
                     visible={delHint}
-                    title='是否要删除插件'
+                    title={t("HubExtraOperate.deletePluginConfirm")}
                     content={PluginOperateHint[delSource.current]}
                     cacheKey={delHintCacheKey.current}
                     onCallback={delHintCallback}

@@ -102,6 +102,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         externalSearchParams,
         onChangeOnline
     } = props
+    const {t, i18n} = useI18nNamespaces(["yakitUi", "plugin", "pluginHub"])
 
     const emptyImageTarget = useEmptyImage("search")
     const divRef = useRef<HTMLDivElement>(null)
@@ -149,8 +150,6 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         cloneDeep({...defaultSearch, ...externalSearchParams})
     )
     const [filters, setFilters, getFilters] = useGetSetState<PluginFilterParams>(cloneDeep(defaultFilter))
-
-    const {t, i18n} = useI18nNamespaces(["yakitUi", "plugin"])
 
     const showIndex = useRef<number>(0)
     const setShowIndex = useMemoizedFn((index: number) => {
@@ -401,7 +400,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const onFooterExtraDel = useMemoizedFn((info: YakScript) => {
         const findIndex = singleDel.findIndex((item) => item.ScriptName === info.ScriptName)
         if (findIndex > -1) {
-            yakitNotify("error", "该插件正在执行删除操作,请稍后再试")
+            yakitNotify("error", t("HubListLocal.deleteBusy"))
             return
         }
         setSingleDel((arr) => {
@@ -447,7 +446,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const onHeaderExtraUpload = useMemoizedFn(() => {
         if (batchUploadLoading) return
         if (!isLogin) {
-            yakitNotify("error", "请登录后再上传插件")
+            yakitNotify("error", t("HubListLocal.uploadLoginRequired"))
             return
         }
         if (selectedNum === 0) return
@@ -460,12 +459,12 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
         const list = selectList.filter((item) => !item.IsCorePlugin).map((item) => item.ScriptName) || []
         if (!allChecked && list.length === 0) {
-            yakitNotify("error", "勾选的插件全为内置插件或没有勾选插件")
+            yakitNotify("error", t("HubListLocal.builtinOrEmptySelection"))
             return
         }
         const m = showYakitModal({
             type: "white",
-            title: "批量上传插件",
+            title: t("HubListLocal.batchUpload"),
             content: (
                 <PluginLocalUpload
                     pluginNames={list}
@@ -493,11 +492,11 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     const uploadPlugin = useRef<YakScript>()
     const onFooterExtraUpload = useMemoizedFn((info: YakScript) => {
         if (!isLogin) {
-            yakitNotify("error", "登录后才可上传插件")
+            yakitNotify("error", t("HubListLocal.uploadLoginLater"))
             return
         }
         if (!!uploadPlugin.current) {
-            yakitNotify("error", "有插件正在执行上传操作,请稍后再试")
+            yakitNotify("error", t("HubListLocal.uploadBusy"))
             return
         }
         uploadPlugin.current = cloneDeep(info)
@@ -554,7 +553,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
         if (exportModal) return
         try {
             let m = showYakitModal({
-                title: "导出插件",
+                title: t("HubListLocal.exportPlugin"),
                 width: 450,
                 closable: true,
                 maskClosable: false,
@@ -562,7 +561,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 content: (
                     <div style={{marginBottom: 15}}>
                         <div className={styles.infoBox}>
-                            远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
+                            {t("HubListLocal.exportHint")}
                         </div>
                         <PluginLocalExportForm
                             onCancel={() => m.destroy()}
@@ -782,21 +781,24 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             RemoveGroup: removeGroup
         }).then(() => {
             setAddGroupVisible(false)
+            const pluginCount = allChecked ? response.Total : Number(query.IncludedScriptNames?.length) || 0
             if (removeGroup.length) {
                 yakitNotify(
                     "success",
-                    `${allChecked ? response.Total : query.IncludedScriptNames?.length}个插件已从“${removeGroup.join(
-                        ","
-                    )}”组移除`
+                    t("HubListLocal.removeGroupSuccess", {
+                        count: pluginCount,
+                        groups: removeGroup.join(",")
+                    })
                 )
             }
             const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
             if (addGroup.length) {
                 yakitNotify(
                     "success",
-                    `${allChecked ? response.Total : query.IncludedScriptNames?.length}个插件已添加至“${addGroup.join(
-                        ","
-                    )}”组`
+                    t("HubListLocal.addGroupSuccess", {
+                        count: pluginCount,
+                        groups: addGroup.join(",")
+                    })
                 )
             }
             if (removeGroup.length || addGroup.length) {
@@ -835,8 +837,14 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 onRemoveOk()
             } else {
                 removeOutGroupContRef.current = allChecked
-                    ? `是否从 “${removeSingleGroupRef.current}” 组移除${response.Total}个插件？`
-                    : `是否从 “${removeSingleGroupRef.current}” 组中移除插件 “${scriptNameRef.current}” ？`
+                    ? t("HubListLocal.removeGroupConfirmSingle", {
+                          group: removeSingleGroupRef.current,
+                          count: response.Total
+                      })
+                    : t("HubListLocal.removeGroupConfirmSingleItem", {
+                          group: removeSingleGroupRef.current,
+                          scriptName: scriptNameRef.current.join(",")
+                      })
                 setListDelGroupConfirm(true)
             }
         })
@@ -849,8 +857,14 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 onRemoveOk()
             } else {
                 removeOutGroupContRef.current = allChecked
-                    ? `是否从 “${showGroupList.join(",")}” 组移除${response.Total}个插件？`
-                    : `是否从 “${showGroupList.join(",")}” 组中移除插件 “${scriptNameRef.current}” ？`
+                    ? t("HubListLocal.removeGroupConfirmMulti", {
+                          groups: showGroupList.join(","),
+                          count: response.Total
+                      })
+                    : t("HubListLocal.removeGroupConfirmMultiItem", {
+                          groups: showGroupList.join(","),
+                          scriptName: scriptNameRef.current.join(",")
+                      })
                 setListDelGroupConfirm(true)
             }
         })
@@ -863,11 +877,13 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             RemoveGroup: removeGroup
         })
         if (removeGroup.length) {
+            const pluginCount = allChecked ? response.Total : Number(query.IncludedScriptNames?.length) || 0
             yakitNotify(
                 "success",
-                `${allChecked ? response.Total : query.IncludedScriptNames?.length}个插件已从“${removeGroup.join(
-                    ","
-                )}”组移除`
+                t("HubListLocal.removeGroupSuccess", {
+                    count: pluginCount,
+                    groups: removeGroup.join(",")
+                })
             )
             fetchFilterGroup()
         }
@@ -1011,7 +1027,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     // 进入插件详情
     const onOptClick = useMemoizedFn((info: YakScript, index: number) => {
         if (!info.ScriptName) {
-            yakitNotify("error", "未获取到插件信息，请刷新列表重试")
+            yakitNotify("error", t("HubListLocal.refreshListRetry"))
             return
         }
         setShowIndex(index)
@@ -1115,7 +1131,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                     return (
                                         <>
                                             <YakitButton type='text' onClick={onOpenPluginGroup}>
-                                                管理
+                                                {t("HubListLocal.manage")}
                                             </YakitButton>
                                             <div className={styles["local-list-divider-style"]} />
                                         </>
@@ -1149,7 +1165,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                     <FuncFilterPopover
                                         maxWidth={1200}
                                         icon={<SolidChevrondownIcon />}
-                                        name='批量操作'
+                                        name={t("YakitButton.batchOperation")}
                                         disabled={selectedNum === 0}
                                         button={{
                                             type: "outline2",
@@ -1158,13 +1174,13 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                         menu={{
                                             type: "primary",
                                             data: [
-                                                {key: "export", label: "导出"},
+                                                {key: "export", label: t("YakitButton.export")},
                                                 {
                                                     key: "upload",
-                                                    label: "上传",
+                                                    label: t("YakitButton.upload"),
                                                     disabled: allChecked || batchUploadLoading
                                                 },
-                                                {key: "remove", label: "删除", disabled: batchDelLoading}
+                                                {key: "remove", label: t("YakitButton.delete"), disabled: batchDelLoading}
                                             ],
                                             onClick: ({key}) => {
                                                 switch (key) {
@@ -1189,7 +1205,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                         iconWidth={900}
                                         icon={<SolidPluscircleIcon />}
                                         size='large'
-                                        name='新建插件'
+                                        name={t("HubListLocal.newPlugin")}
                                         onClick={onNewPlugin}
                                     />
                                 </div>
@@ -1201,9 +1217,9 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                         checked={skipUpdate}
                                         onChange={setYakScriptSkipUpdate}
                                     >
-                                        不下载{" "}
+                                        {t("HubListLocal.doNotDownload")} {" "}
                                         <Tooltip
-                                            title='勾选不下载插件后，批量下载插件时将跳过此插件'
+                                            title={t("HubListLocal.skipNotDownloadTooltip")}
                                             align={{offset: [0, 10]}}
                                         >
                                             <OutlineExclamationcircleIcon className={styles["exclamationcircleIcon"]} />
@@ -1259,7 +1275,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                                         })}
                                                     >
                                                         <span>
-                                                            插件组{" "}
+                                                            {t("HubListLocal.pluginGroup")} {" "}
                                                             <span className={styles["total-style"]}>
                                                                 {showGroupList.length}
                                                             </span>
@@ -1313,7 +1329,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                                     color: addGroupBtnColor
                                                 }}
                                             >
-                                                添加分组
+                                                {t("HubListLocal.addGroup")}
                                             </YakitButton>
                                         )}
                                     </YakitPopover>
@@ -1370,21 +1386,21 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                                 <YakitEmpty
                                     image={emptyImageTarget}
                                     imageStyle={{margin: "0 auto 24px", width: 274, height: 180}}
-                                    title='搜索结果“空”'
+                                    title={t("YakitEmpty.searchEmpty")}
                                     className={styles["hub-list-empty"]}
                                 />
                             ) : (
                                 <div className={styles["hub-list-empty"]}>
                                     <YakitEmpty
-                                        title='暂无数据'
-                                        description='可新建插件同步至云端，创建属于自己的插件'
+                                        title={t("YakitEmpty.noData")}
+                                        description={t("HubListLocal.noDataDesc")}
                                     />
                                     <div className={styles["refresh-buttons"]}>
                                         <YakitButton type='outline1' icon={<OutlinePlusIcon />} onClick={onNewPlugin}>
-                                            新建插件
+                                            {t("HubListLocal.newPlugin")}
                                         </YakitButton>
                                         <YakitButton type='outline1' icon={<OutlineRefreshIcon />} onClick={onRefresh}>
-                                            刷新
+                                            {t("YakitButton.refresh")}
                                         </YakitButton>
                                     </div>
                                 </div>
@@ -1417,13 +1433,13 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                         total={listLength}
                         selected={selectedNum}
                         filterExtra={
-                            <div className={styles["hub-detail-list-extra"]}>
-                                <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type='local' />
-                                <div className={styles["divider-style"]}></div>
-                                <Tooltip title='上传插件' overlayClassName='plugins-tooltip'>
-                                    <YakitButton
-                                        type='text2'
-                                        loading={batchUploadLoading}
+                                <div className={styles["hub-detail-list-extra"]}>
+                                    <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type='local' />
+                                    <div className={styles["divider-style"]}></div>
+                                <Tooltip title={t("HubListLocal.uploadPlugin")} overlayClassName='plugins-tooltip'>
+                                        <YakitButton
+                                            type='text2'
+                                            loading={batchUploadLoading}
                                         disabled={allChecked || selectedNum === 0}
                                         icon={<OutlineClouduploadIcon />}
                                         onClick={onHeaderExtraUpload}
@@ -1494,7 +1510,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
             <NoPromptHint
                 visible={delHint}
-                title='是否要删除插件'
+                title={t("HubListLocal.deleteConfirm")}
                 content={PluginOperateHint["delLocal"]}
                 cacheKey={RemotePluginGV.LocalPluginRemoveCheck}
                 onCallback={delHintCallback}

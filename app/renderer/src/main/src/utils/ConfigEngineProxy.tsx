@@ -9,11 +9,16 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { removeRepeatedElement } from '@/utils/str'
 import { JSONParseLog } from './tool'
 import { yakitEngine } from '@/services/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
+
+const tOriginal = i18n.getFixedT(null, 'utils')
 
 export interface ConfigEngineProxyProp {}
 
 const HISTORY_ENGINE_PROXY = 'HISTORY_ENGINE_PROXY'
 export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
+  const { t, i18n } = useI18nNamespaces(['utils'])
   const [proxy, setProxy] = useState('')
   const [loading, setLoading] = useState(false)
   const [historyProxy, setHistoryProxy] = useState<string[]>([])
@@ -63,7 +68,7 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
               }
             } catch (e) {}
 
-            info('设置引擎代理成功')
+            info(t('ConfigEngineProxy.saveSuccess'))
           })
           .finally(() => setTimeout(() => setLoading(false), 300))
       }}
@@ -78,30 +83,27 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
             <>
               <Space direction={'vertical'}>
                 <Space>
-                  <div>当前引擎代理为：</div>
+                  <div>{t('ConfigEngineProxy.currentProxy')}</div>
                   <Tag color={'red'}>{proxy}</Tag>
                   <Button type={'link'} icon={<ReloadOutlined />} onClick={update} />
                 </Space>
-                <div>
-                  本配置将会对绝大部分 Yak
-                  插件自动生效，如果在扫描模块中配置代理，一般来说，配置的代理将会自动覆盖这个配置。
-                </div>
+                <div>{t('ConfigEngineProxy.hint')}</div>
               </Space>
             </>
           }
         />
       </Form.Item>
       <InputItem
-        label={'代理'}
+        label={t('ConfigEngineProxy.proxyLabel')}
         value={proxy}
         setValue={setProxy}
         autoComplete={historyProxy}
-        help={'例如 http://127.0.0.1:7890 或 socks://127.0.0.1:7890 等配置均可'}
+        help={t('ConfigEngineProxy.proxyHelp')}
       />
       <Form.Item colon={false} label={' '}>
         <Button loading={loading} type="primary" htmlType="submit">
           {' '}
-          更新引擎代理{' '}
+          {t('ConfigEngineProxy.updateProxy')}{' '}
         </Button>
       </Form.Item>
     </Form>
@@ -110,7 +112,7 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
 
 export const showConfigEngineProxyForm = () => {
   showModal({
-    title: '配置引擎扫描代理',
+    title: tOriginal('ConfigEngineProxy.modalTitle'),
     width: 800,
     content: (
       <>

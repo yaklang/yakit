@@ -4,24 +4,28 @@ import { getReleaseEditionName } from './envfile'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { yakitHost } from '@/services/electronBridge'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'utils')
 
 export const invalidCacheAndUserData = (delTemporaryProject) => {
   let checked = false
   const m = showYakitModal({
     type: 'white',
-    title: '重置用户数据与缓存',
+    title: tOriginal('InvalidCacheAndUserData.title'),
     content: (
       <Space direction={'vertical'} style={{ width: '100%', padding: 20 }}>
         <Alert
           type="success"
-          message={`如果你的 ${getReleaseEditionName()} 出现异常，可使用此功能删除所有本地缓存和用户数据，重连重启。`}
+          message={tOriginal('InvalidCacheAndUserData.resetHint', { name: getReleaseEditionName() })}
         />
-        <Alert type="success" message="注意，本操作将永久删除缓存数据，难以恢复，请谨慎操作" />
-        <YakitCheckbox onChange={(e) => (checked = e.target.checked)}>同步删除所有数据库内的数据</YakitCheckbox>
+        <Alert type="success" message={tOriginal('InvalidCacheAndUserData.warning')} />
+        <YakitCheckbox onChange={(e) => (checked = e.target.checked)}>
+          {tOriginal('InvalidCacheAndUserData.syncDeleteDatabase')}
+        </YakitCheckbox>
       </Space>
     ),
     width: 700,
-    onOkText: '我确认此风险，立即删除',
+    onOkText: tOriginal('InvalidCacheAndUserData.confirmDelete'),
     okButtonProps: {
       danger: true,
     },
@@ -33,7 +37,7 @@ export const invalidCacheAndUserData = (delTemporaryProject) => {
         .then(() => {})
         .catch((e) => {})
         .finally(() => {
-          yakitNotify('success', '执行重置用户数据成功')
+          yakitNotify('success', tOriginal('InvalidCacheAndUserData.resetSuccess'))
         })
     },
   })

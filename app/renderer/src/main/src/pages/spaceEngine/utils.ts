@@ -8,7 +8,9 @@ import {GetThirdPartyAppConfigTemplateResponse} from "@/components/configNetwork
 import {SpaceEngineStartParams, SpaceEngineStatus} from "@/models/SpaceEngine"
 import {PcapMetadata} from "@/models/Traffic"
 import {yakitNotify} from "@/utils/notification"
+import i18n from "@/i18n/i18n"
 
+const tOriginal = i18n.getFixedT(null, 'spaceEngine')
 const {ipcRenderer} = window.require("electron")
 
 export interface GetSpaceEngineStatusProps {
@@ -23,7 +25,7 @@ export const apiGetSpaceEngineStatus: (params: GetSpaceEngineStatusProps) => Pro
             .invoke("GetSpaceEngineStatus", {...params})
             .then(resolve)
             .catch((e: any) => {
-                yakitNotify("error", "获取空间引擎错误:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.getSpaceEngineError") + e)
                 reject(e)
             })
     })
@@ -39,7 +41,7 @@ export const apiGetSpaceEngineAccountStatus: (params: ThirdPartyApplicationConfi
             .invoke("GetSpaceEngineAccountStatusV2", {...params})
             .then(resolve)
             .catch((e: any) => {
-                yakitNotify("error", "校验引擎失败:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.verifyEngineFailed") + e)
                 reject(e)
             })
     })
@@ -51,7 +53,7 @@ export const apiGetGlobalNetworkConfig: () => Promise<GlobalNetworkConfig> = () 
             .invoke("GetGlobalNetworkConfig")
             .then(resolve)
             .catch((e: any) => {
-                yakitNotify("error", "获取全局配置错误:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.getGlobalNetworkConfigError") + e)
                 reject(e)
             })
     })
@@ -64,7 +66,7 @@ export const apiSetGlobalNetworkConfig: (params: GlobalNetworkConfig) => Promise
             .invoke("SetGlobalNetworkConfig", params)
             .then(resolve)
             .catch((e: any) => {
-                yakitNotify("error", "设置全局配置错误:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.setGlobalNetworkConfigError") + e)
                 reject(e)
             })
     })
@@ -81,12 +83,12 @@ export const apiUpdateGlobalNetworkConfig: (params: Partial<GlobalNetworkConfig>
                     .invoke("SetGlobalNetworkConfig", newConfig)
                     .then(resolve)
                     .catch((e: any) => {
-                        yakitNotify("error", "设置全局配置错误:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.setGlobalNetworkConfigError") + e)
                         reject(e)
                 })
             })
             .catch((e: any) => {
-                yakitNotify("error", "获取全局配置错误:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.getGlobalNetworkConfigError") + e)
                 reject(e)
             })
     })
@@ -101,7 +103,7 @@ export const apiGetThirdPartyAppConfigTemplate: APINoRequestFunc<GetThirdPartyAp
             .invoke("GetThirdPartyAppConfigTemplate")
             .then(resolve)
             .catch((e) => {
-                if (hiddenError) yakitNotify("error", "获取第三方应用配置模板错误:" + e)
+                if (hiddenError) yakitNotify("error", tOriginal("SpaceEnginePage.getThirdPartyAppConfigTemplateError") + e)
                 reject(e)
             })
     })
@@ -153,7 +155,7 @@ export const apiGetPcapMetadata: () => Promise<PcapMetadata> = () => {
             .invoke("GetPcapMetadata", {})
             .then(resolve)
             .catch((e: any) => {
-                yakitNotify("error", "GetPcapMetadata数据获取错误:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.getPcapMetadataError") + e)
                 reject(e)
             })
     })
@@ -171,11 +173,11 @@ export const apiFetchPortAssetFromSpaceEngine: (params: SpaceEngineStartParams, 
         ipcRenderer
             .invoke("FetchPortAssetFromSpaceEngine", {...params}, token)
             .then(() => {
-                yakitNotify("info", "启动任务成功")
+                yakitNotify("info", tOriginal("SpaceEnginePage.taskStartSuccessBrief"))
                 resolve(null)
             })
             .catch((e: any) => {
-                yakitNotify("error", "空间引擎执行错误:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.executeError") + e)
                 reject(e)
             })
     })
@@ -192,7 +194,7 @@ export const apiCancelFetchPortAssetFromSpaceEngine: (token: string) => Promise<
                 resolve(null)
             })
             .catch((e: any) => {
-                yakitNotify("error", "取消空间引擎执行出错:" + e)
+                yakitNotify("error", tOriginal("SpaceEnginePage.cancelExecuteError") + e)
                 reject(e)
             })
     })

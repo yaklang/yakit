@@ -4,6 +4,8 @@ import { failed } from '@/utils/notification'
 import { AxiosRequestConfig, AxiosResponse } from './axios'
 import { globalUserLogout } from '@/utils/envfile'
 import { yakitNetwork } from './electronBridge'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'utils')
 
 interface AxiosResponseInfoProps {
   message?: string
@@ -52,8 +54,8 @@ export const handleAxios = (res: AxiosResponseProps<AxiosResponseInfoProps>, res
   const { code, message, data } = res
   // console.log("返回", res)
   if (!code) {
-    failed('请求超时，请重试')
-    reject('请求超时，请重试')
+    failed(tOriginal('servicesFetch.requestTimeout'))
+    reject(tOriginal('servicesFetch.requestTimeout'))
     return
   }
   switch (code) {
@@ -79,5 +81,5 @@ export const tokenOverdue = (res) => {
   // 异常过期 无法通过接口更新连接状态 故只作退出远程处理
   yakitNetwork.logoutDynamicControl({ loginOut: false })
   globalUserLogout()
-  failed('401,登录过期/未登录，请重新登录')
+  failed(tOriginal('servicesFetch.loginExpired'))
 }

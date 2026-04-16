@@ -454,7 +454,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
     onSuccess,
     isEncodeURI,
   } = props
-  const { t, i18n } = useI18nNamespaces(['components'])
+  const { t, i18n } = useI18nNamespaces(['components', "yakitUi"])
 
   const [percent, setPercent] = useState<number>(0)
 
@@ -532,7 +532,7 @@ export const DownFilesModal: React.FC<DownFilesModalProps> = React.memo((props) 
         strokeColor="var(--Colors-Use-Main-Primary)"
         trailColor="var(--Colors-Use-Neutral-Bg)"
         percent={percent}
-        format={(percent) => t('MilkdownEditor.customFile.downloadedPercent', { percent: percent ?? 0 })}
+        format={(percent) => t('YakitProgress.downloadedPercent', { percent: percent ?? 0 })}
       />
     </YakitHint>
   )

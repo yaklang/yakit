@@ -51,11 +51,13 @@
     "startAudit": "Start Audit",
     "reset": "Reset",
     "resetParams": "Reset Params",
+    "resetAll": "Reset All",
     "batchOperation": "Batch Operation",
     "clear": "Clear",
     "disable": "Disable",
     "disable_all": "Disable All",
     "enable": "Enable",
+    "deactivated": "Deactivated",
     "detail": "Detail",
     "stop": "Stop",
     "continue": "Continue",
@@ -88,7 +90,9 @@
     "importNow": "Import Now",
     "compile": "Compile",
     "locate": "Locate",
-    "ignore": "Ignore"
+    "ignore": "Ignore",
+    "update": "Update",
+    "modify": "Modify"
   },
   "YakitNotification": {
     "unknown_error": "Unknown Error",
@@ -107,8 +111,11 @@
     "deleteFailed": "Deletion failed: {{error}}",
     "uploaded": "Uploaded successfully",
     "uploadFailed": "Upload failed: {{error}}",
+    "uploadFailedNoError": "Upload failed",
     "downloaded": "Downloaded successfully",
     "downloadFailed": "Download failed: {{error}}",
+    "downloadFailedNoError": "Download failed",
+    "downloadFinished": "Download finished",
     "updated": "Updated successfully",
     "updateFailed": "Update failed: {{error}}",
     "networkError": "Network error: {{error}}",
@@ -234,6 +241,10 @@
   "YakitSpin": {
     "loading": "loading",
     "loadMore": "Load more..."
+  },
+  "YakitProgress": {
+    "uploadedPercent": "Uploaded {{percent}}%",
+    "downloadedPercent": "Downloaded {{percent}}%"
   },
   "YakitSelect": {
     "pleaseSelect": "Please select...",

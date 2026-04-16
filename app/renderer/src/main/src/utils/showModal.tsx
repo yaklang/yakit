@@ -7,6 +7,8 @@ import emiter from './eventBus/eventBus'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'utils')
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
   onVisibleSetter?: (setter: (i: boolean) => any) => any
@@ -75,11 +77,11 @@ export const showModal = (props: ShowModalProps) => {
             <ErrorBoundary
               FallbackComponent={({ error, resetErrorBoundary }) => {
                 if (!error) {
-                  return <div>未知错误</div>
+                  return <div>{tOriginal('YakitNotification.unknown_error')}</div>
                 }
                 return (
                   <div>
-                    <p>弹框内逻辑性崩溃，请关闭重试！</p>
+                    <p>{tOriginal('ShowModal.modalLogicCrash')}</p>
                     <pre>{error?.message}</pre>
                   </div>
                 )

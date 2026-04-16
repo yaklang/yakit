@@ -119,7 +119,6 @@
       "loadingFile": "文件加载中...",
       "downloadingFile": "{{fileName}}下载中...",
       "downloading": "下载中",
-      "downloadedPercent": "已下载 {{percent}}%",
       "getFileInfoErrorTitle": "获取文件信息错误",
       "getLinkInfoError": "获取链接信息错误：{{error}}",
       "getFileInfoError": "获取文件信息失败：{{error}}",

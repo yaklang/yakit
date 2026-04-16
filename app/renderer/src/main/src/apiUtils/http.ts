@@ -4,6 +4,8 @@ import { NetWorkApi } from '@/services/fetch'
 import { API } from '@/services/swagger/resposeType'
 import { UploadImgTypeProps } from '@/hook/useUploadOSS/useUploadOSS'
 import { yakitUpload } from '@/services/electronBridge'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, ['apiUtils', 'yakitUi'])
 
 export interface HttpUploadImgBaseRequest {
   type?: UploadImgTypeProps
@@ -17,7 +19,7 @@ const isUploadImg = (params: HttpUploadImgBaseRequest) => {
     case 'notepad':
       if (!filedHash) {
         enable = false
-        yakitNotify('error', 'httpUploadImgPath:type为notepad,filedHash必传')
+        yakitNotify('error', 'httpUploadImgPath: ' + tOriginal('apiUtilsHttp.notepadFiledHashRequired'))
       }
       break
     default:
@@ -35,7 +37,7 @@ export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest | HttpUploadImg
 ) => {
   return new Promise(async (resolve, reject) => {
     if (!isUploadImg({ type: request.type, filedHash: request.filedHash })) {
-      reject('参数错误')
+      reject(tOriginal('apiUtilsHttp.parameterError'))
       return
     }
 
@@ -46,13 +48,13 @@ export const httpUploadImgPath: APIFunc<HttpUploadImgPathRequest | HttpUploadImg
         if (res?.code === 200 && res?.data?.from) {
           resolve(res?.data?.from)
         } else {
-          const message = res?.message || res?.data?.reason || '未知错误'
-          if (!hiddenError) yakitNotify('error', '上传图片失败:' + message)
+          const message = res?.message || res?.data?.reason || tOriginal('YakitNotification.unknown_error')
+          if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { error: message }))
           reject(message)
         }
       })
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '上传图片失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { error: e }))
         reject(e)
       })
   })
@@ -66,7 +68,7 @@ export interface HttpUploadImgBase64Request extends HttpUploadImgBaseRequest {
 export const httpUploadImgBase64: APIFunc<HttpUploadImgBase64Request, string> = (request, hiddenError) => {
   return new Promise(async (resolve, reject) => {
     if (!isUploadImg({ type: request.type, filedHash: request.filedHash })) {
-      reject('参数错误')
+      reject(tOriginal('apiUtilsHttp.parameterError'))
       return
     }
     yakitUpload
@@ -75,13 +77,13 @@ export const httpUploadImgBase64: APIFunc<HttpUploadImgBase64Request, string> = 
         if (res?.code === 200 && res?.data?.from) {
           resolve(res?.data?.from)
         } else {
-          const message = res?.message || res?.data?.reason || '未知错误'
-          if (!hiddenError) yakitNotify('error', '上传图片失败:' + message)
+          const message = res?.message || res?.data?.reason || tOriginal('YakitNotification.unknown_error')
+          if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { error: message }))
           reject(message)
         }
       })
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '上传图片失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadImgFailed', { error: e }))
         reject(e)
       })
   })
@@ -104,13 +106,13 @@ export const httpUploadFile: APIFunc<httpUploadFileFileInfo, string> = (request,
         if (res?.code === 200 && res?.data) {
           resolve(res.data)
         } else {
-          const message = res?.message || res?.data?.reason || '未知错误'
-          if (!hiddenError) yakitNotify('error', '上传文件失败:' + message)
+          const message = res?.message || res?.data?.reason || tOriginal('YakitNotification.unknown_error')
+          if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadFileFailed', { error: message }))
           reject(message)
         }
       })
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '上传文件失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadFileFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -127,7 +129,7 @@ export const httpDeleteOSSResource: APIFunc<API.DeleteOssResource, API.ActionSuc
     })
       .then(resolve)
       .catch((err) => {
-        if (!hiddenError) yakitNotify('error', '删除OSS资源失败:' + err)
+        if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.deleteOSSFailed', { error: String(err) }))
         reject(err)
       })
   })
@@ -144,7 +146,7 @@ export const httpDeleteNotepadFile: APIFunc<API.DeleteOssResource, API.ActionSuc
     })
       .then(resolve)
       .catch((err) => {
-        if (!hiddenError) yakitNotify('error', '删除OSS资源失败:' + err)
+        if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.deleteOSSFailed', { error: String(err) }))
         reject(err)
       })
   })

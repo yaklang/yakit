@@ -5,6 +5,8 @@ import { RemotePrivateDomainGV } from '@/enums/privateDomain'
 import { RemoteI18nGV } from '@/enums/i18n'
 import { Theme } from '@/hook/useTheme'
 import { yakitRelease } from '@/services/electronBridge'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'utils')
 
 export enum PRODUCT_RELEASE_EDITION {
   Yakit = 0,
@@ -166,7 +168,7 @@ export const fetchEnv = () => {
  * */
 yakitRelease.setEditionRaw(fetchEnv() || '').then(() => {
   if (isEnpriTraceAgent()) {
-    info(`设置 ${getReleaseEditionName()} 发行版成功`)
+    info(tOriginal('envfile.setReleaseEditionSuccess', { edition: getReleaseEditionName() }))
   }
 })
 

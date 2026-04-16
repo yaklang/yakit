@@ -6,17 +6,21 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { QuestionMarkCircleIcon } from '@/assets/newIcon'
 import { yakitHost, yakitSystem } from '@/services/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
 
+const tOriginal = i18n.getFixedT(null, 'utils')
 export interface ConfigPcapPermissionFormProp {
   onClose: () => any
 }
 
 export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = (props) => {
+  const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
   const [response, setResponse] = useState<{
     IsPrivileged: boolean
     Advice: string
     AdviceVerbose: string
-  }>({ Advice: 'unknown', AdviceVerbose: '无法获取 PCAP 支持信息', IsPrivileged: false })
+  }>({ Advice: 'unknown', AdviceVerbose: t('ConfigPcapPermission.unavailable'), IsPrivileged: false })
   const [platform, setPlatform] = useState('')
 
   useEffect(() => {
@@ -24,14 +28,17 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
       .isPrivilegedForNetRaw({})
       .then(setResponse)
       .catch((e) => {
-        yakitNotify('error', `获取 Pcap 权限状态失败：${e}`)
+        yakitNotify('error', t('ConfigPcapPermission.fetchStatusFailed', { error: String(e) }))
       })
       .finally(() => {
         yakitSystem
           .fetchSystemAndArch()
           .then((e: string) => setPlatform(e))
           .catch((e) => {
-            yakitNotify('error', `获取 ${getReleaseEditionName()} 操作系统失败：${e}`)
+            yakitNotify(
+              'error',
+              t('ConfigPcapPermission.fetchPlatformFailed', { name: getReleaseEditionName(), error: String(e) }),
+            )
           })
       })
   }, [])
@@ -54,7 +61,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
             }
           })
           .catch((e) => {
-            yakitNotify('error', `提升 Pcap 用户权限失败：${e}`)
+            yakitNotify('error', t('ConfigPcapPermission.promoteFailed', { error: String(e) }))
           })
       }}
     >
@@ -63,16 +70,12 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
         colon={false}
         help={
           <>
-            <Tooltip
-              title={
-                '原理：MacOS 通过设置 /dev/bpf* 权限组，可参考 Wireshark ChmodBPF 相关配置，Linux 可通过 setcap 命令设置 pcap 权限，Windows 推荐直接以 UAC 提升管理员权限启动'
-              }
-            >
+            <Tooltip title={t('ConfigPcapPermission.tooltip')}>
               <YakitButton type={'text'} icon={<QuestionMarkCircleIcon />} />
             </Tooltip>
             {isWindows
-              ? `Windows 可用管理员权限启动 ${getReleaseEditionName()} 以获取对 Pcap 的使用权限`
-              : 'Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限'}
+              ? t('ConfigPcapPermission.windowsHint', { name: getReleaseEditionName() })
+              : t('ConfigPcapPermission.unixHint')}
           </>
         }
       >
@@ -90,17 +93,17 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
                 props.onClose()
               }}
             >
-              知道了～
+              {t('YakitButton.iKnow')}～
             </YakitButton>
           )}
         </Form.Item>
       ) : (
         <Form.Item label={' '} colon={false}>
           <YakitButton htmlType={'submit'} type={'primary'}>
-            开启 PCAP 权限
+            {t('ConfigPcapPermission.enablePcap')}
           </YakitButton>
           <Tooltip title={`${response.AdviceVerbose}: ${response.Advice}`}>
-            <YakitButton type={'text'}>手动修复</YakitButton>
+            <YakitButton type={'text'}>{t('YakitButton.manualFix')}</YakitButton>
           </Tooltip>
         </Form.Item>
       )}
@@ -111,7 +114,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
 export const showPcapPermission = () => {
   const m = showYakitModal({
     type: 'white',
-    title: '修复 Pcap 权限',
+    title: tOriginal('ConfigPcapPermission.modalTitle'),
     width: '50%',
     content: (
       <ConfigPcapPermissionForm

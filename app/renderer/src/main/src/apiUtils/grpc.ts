@@ -4,6 +4,8 @@ import { fetchEnv, getReleaseEditionName } from '@/utils/envfile'
 import { NetWorkApi } from '@/services/fetch'
 import { API } from '@/services/swagger/resposeType'
 import { yakitEngine } from '@/services/electronBridge'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'apiUtils')
 
 interface GrpcToHTTPRequestProps {
   timeout?: number
@@ -41,7 +43,7 @@ export const grpcFetchLatestYakitVersion: APIOptionalFunc<GrpcToHTTPRequestProps
       })
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '获取最新软件版本失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchLatestYakitVersionFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -72,7 +74,8 @@ export const grpcFetchIntranetYakitVersion: APIOptionalFunc<boolean, string> = (
           }
         })
         .catch((e) => {
-          if (!hiddenError) yakitNotify('error', '获取内网最新软件版本失败:' + e)
+          if (!hiddenError)
+            yakitNotify('error', tOriginal('grpc.fetchIntranetYakitVersionFailed', { error: String(e) }))
           reject(e)
         })
         .finally(() => {})
@@ -109,7 +112,7 @@ export const grpcFetchLatestYakVersion: APINoRequestFunc<string> = (hiddenError)
         resolve(newVersion)
       })
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '获取最新引擎版本失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchLatestYakVersionFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -133,7 +136,7 @@ export const grpcFetchLocalYakitVersion: APINoRequestFunc<string> = (hiddenError
         resolve(newVersion)
       })
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '获取本地软件版本失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchLocalYakitVersionFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -159,7 +162,7 @@ export const grpcFetchYakInstallResult: APINoRequestFunc<boolean> = (hiddenError
       .isYaklangEngineInstalled()
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '获取本地是否存在引擎结果失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchYakInstallResultFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -175,7 +178,7 @@ export const grpcFetchBuildInYakVersion: APINoRequestFunc<string> = (hiddenError
       .getBuildInEngineVersion()
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '获取内置引擎版本失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchBuildInYakVersionFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -193,7 +196,8 @@ export const grpcFetchSpecifiedYakVersionHash: APIFunc<{ version: string; config
       .fetchCheckYaklangSource(version, config)
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '获取最新软件版本失败:' + e)
+        if (!hiddenError)
+          yakitNotify('error', tOriginal('grpc.fetchSpecifiedYakVersionHashFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -206,7 +210,7 @@ export const grpcFetchLocalYakVersionHash: APINoRequestFunc<string[]> = (hiddenE
       .calcEngineSha265()
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '获取本地引擎 hash 失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchLocalYakVersionHashFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -222,7 +226,7 @@ export const grpcFetchAvaiableProt: APINoRequestFunc<number> = (hiddenError) => 
         try {
           const { message } = e
           const error = message.split("'get-avaiable-port':").pop()
-          if (!hiddenError) yakitNotify('error', '获取可用端口失败:' + error)
+          if (!hiddenError) yakitNotify('error', tOriginal('grpc.fetchAvailablePortFailed', { error: String(error) }))
           reject(error)
         } catch (error) {
           reject(e)
@@ -238,7 +242,8 @@ export const grpcDetermineAdaptedVersionEngine: APIFunc<number, boolean> = (port
       .determineAdaptedVersionEngine({ port: port, version: fetchEnv() || 'yakit' })
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '判断已运行引擎的适配版本失败:' + e)
+        if (!hiddenError)
+          yakitNotify('error', tOriginal('grpc.determineAdaptedVersionEngineFailed', { error: String(e) }))
         reject(e)
       })
   })

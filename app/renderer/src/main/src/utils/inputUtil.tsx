@@ -27,7 +27,6 @@ import { randomColor } from './randomUtil'
 import { LiteralUnion } from 'antd/lib/_util/type'
 import { FormItemProps } from '@ant-design/compatible/lib/form'
 import './inputUtil.scss'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -35,6 +34,8 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { yakitFileSystem } from '@/services/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
 type TooltipPlacement =
   | 'top'
@@ -234,6 +235,7 @@ export interface InputStringOrJsonItemProps extends InputItemProps {
 }
 
 export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (props) => {
+  const { t, i18n } = useI18nNamespaces(['utils'])
   const [mode, setMode] = useState<'string' | 'json'>('json')
   const [items, setItems] = useState<{ key: string; value?: string }[]>([{ key: '', value: undefined }])
   const [initValue, setInitValue] = useState(props.value || '')
@@ -310,7 +312,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
         <>
           {items.map((item, index) => {
             return (
-              <Form.Item label={`参数[${index}]`}>
+              <Form.Item label={t('InputUtil.parameterIndex', { index })}>
                 <Input.Group>
                   <Row gutter={10}>
                     <Col span={6}>
@@ -333,7 +335,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                               style={{ width: '100%' }}
                               allowClear={true}
                               autoClearSearchValue={true}
-                              placeholder={'参数使用 | 分割数组'}
+                              placeholder={t('InputUtil.splitArrayHint')}
                               dropdownMatchSelectWidth={200}
                               mode={'tags'}
                               value={items[index].value?.split('|') || []}
@@ -404,7 +406,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                 setItems([...items, { key: '', value: undefined }])
               }}
             >
-              添加 Key-Value Pair
+              {t('InputUtil.addKeyValuePair')}
             </Button>
           </Item>
         </>
@@ -668,6 +670,7 @@ export interface InputFileNameItemProps {
 }
 
 export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
+  const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
   const [uploadLoading, setUploadLoading] = useState(false)
   return (
     <Item label={p.label} required={p.required}>
@@ -704,15 +707,16 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
               value={p.content}
               textarea={true}
               textareaRow={6}
-              placeholder="请输入绝对路径"
+              placeholder={t('InputUtil.enterAbsolutePath')}
               isBubbing={true}
               help={
                 p.hint ? (
                   p.hint
                 ) : (
                   <div>
-                    可将文件拖入框内或<span style={{ color: 'var(--yakit-primary-5' }}>点击此处</span>
-                    上传
+                    {t('YakitDraggerContent.drag_file_tip')}
+                    <span style={{ color: 'var(--yakit-primary-5' }}>{t('YakitDraggerContent.click_here')}</span>
+                    {t('YakitButton.upload')}
                   </div>
                 )
               }
@@ -723,7 +727,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
               label={''}
               value={p.filename}
               setValue={(f) => p.setFileName && p.setFileName(f)}
-              placeholder="请输入绝对路径"
+              placeholder={t('InputUtil.enterAbsolutePath')}
               isBubbing={true}
               allowClear={false}
               help={
@@ -731,8 +735,9 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
                   p.hint
                 ) : (
                   <div>
-                    可将文件拖入框内或<span style={{ color: 'var(--yakit-primary-5' }}>点击此处</span>
-                    上传
+                    {t('YakitDraggerContent.drag_file_tip')}
+                    <span style={{ color: 'var(--yakit-primary-5' }}>{t('YakitDraggerContent.click_here')}</span>
+                    {t('YakitButton.upload')}
                   </div>
                 )
               }
@@ -835,6 +840,7 @@ const EditableTags: React.FC<EditableTagsProps> = (p) => {
 }
 
 export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
+  const { t, i18n } = useI18nNamespaces(['utils'])
   const [createdTag, setCreatedTag] = useState('')
   const [tags, setTags] = useState<string[]>(p.tags || [])
 
@@ -858,7 +864,7 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
     <div>
       {tags.map((tag, tagIndex) => {
         return (
-          <Popover
+          <YakitPopover
             title={'Operations'}
             visible={p.noOperations ? false : undefined}
             content={[
@@ -875,7 +881,7 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
                   }
                 }}
               >
-                删除 Tag
+                {t('InputUtil.deleteTag')}
               </Button>,
             ]}
           >
@@ -885,7 +891,7 @@ export const EditableTagsGroup: React.FC<EditableTagsGroupProps> = (p) => {
             >
               {tag}
             </Tag>
-          </Popover>
+          </YakitPopover>
         )
       })}
       <EditableTags

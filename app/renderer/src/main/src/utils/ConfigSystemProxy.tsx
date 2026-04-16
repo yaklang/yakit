@@ -15,6 +15,10 @@ import emiter from './eventBus/eventBus'
 import { APINoRequestFunc } from '@/apiUtils/type'
 import { JSONParseLog } from './tool'
 import { yakitHost } from '@/services/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
+
+const tOriginal = i18n.getFixedT(null, 'utils')
 
 export interface ConfigSystemProxyProp {
   defaultProxy?: string
@@ -31,7 +35,8 @@ export const apiGetSystemProxy: APINoRequestFunc<GetSystemProxyResult> = (hidden
       .getSystemProxy()
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', '获取系统代理失败:' + e)
+        if (!hiddenError)
+          yakitNotify('error', tOriginal('ConfigSystemProxy.getSystemProxyFailed', { error: String(e) }))
         reject(e)
       })
   })
@@ -39,6 +44,7 @@ export const apiGetSystemProxy: APINoRequestFunc<GetSystemProxyResult> = (hidden
 
 export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
   const { defaultProxy, onClose } = props
+  const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
   const [proxy, setProxy] = useState(defaultProxy ? defaultProxy : '127.0.0.1:8083')
   const [loading, setLoading] = useState(false)
   const [current, setCurrent] = useState<{
@@ -75,19 +81,19 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
         Enable: !enable,
       })
       .then((e) => {
-        info('设置系统代理成功')
+        info(t('ConfigSystemProxy.setSystemProxySuccess'))
         onClose()
         emiter.emit('onRefConfigSystemProxy', '')
       })
       .catch((err) => {
-        yakitFailed('设置系统代理失败:' + err)
+        yakitFailed(t('ConfigSystemProxy.setSystemProxyFailed', { error: String(err) }))
       })
   })
   return (
     <YakitSpin spinning={loading}>
       <div className={styles['config-system-proxy']}>
         <div className={styles['config-system-proxy-heard']}>
-          <div className={styles['config-system-proxy-title']}>配置系统代理</div>
+          <div className={styles['config-system-proxy-title']}>{t('ConfigSystemProxy.configSystemProxy')}</div>
           <RemoveIcon className={styles['close-icon']} onClick={() => onClose()} />
         </div>
         <div
@@ -95,16 +101,15 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
             [styles['config-system-proxy-status-danger']]: !current.Enable,
           })}
         >
-          当前系统代理状态：
-          <span>{current.Enable ? '已启用' : '未启用'}</span>
+          {t('ConfigSystemProxy.currentSystemProxyStatus')}
+          <span>{current.Enable ? t('ConfigSystemProxy.enabled') : t('ConfigSystemProxy.disabled')}</span>
         </div>
         <Form layout="vertical" style={{ padding: '0 24px 24px' }}>
           <Form.Item
-            label="系统代理"
-            help="一键配置系统代理"
+            label={t('ConfigSystemProxy.systemProxy')}
+            help={t('ConfigSystemProxy.oneClickConfig')}
             tooltip={{
-              title:
-                '由于操作系统与 Yak 内核限制，无法使用原生 MacOS OC/Swift 接口实现设置代理。 Yak 引擎将弹出 osascript 授权页以改动系统代理，MacOS 用户认证即可。',
+              title: t('ConfigSystemProxy.proxyHint'),
               icon: <InformationCircleIcon />,
             }}
           >
@@ -120,10 +125,10 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
           </Form.Item>
           <div className={styles['config-system-proxy-btns']}>
             <YakitButton type="outline2" size="large" onClick={() => onClose()}>
-              取消
+              {t('YakitButton.cancel')}
             </YakitButton>
             <YakitButton colors={enable ? 'danger' : 'primary'} size="large" onClick={() => onSetSystemProxy()}>
-              {enable ? '停用' : '启用'}
+              {enable ? t('YakitButton.deactivated') : t('YakitButton.enable')}
             </YakitButton>
           </div>
         </Form>
@@ -160,6 +165,7 @@ interface ConfigChromePathProp {
 
 export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
   const { onClose, submitAlreadyChromePath } = props
+  const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
   const [loading, setLoading] = useState<boolean>(true)
   const [chromePath, setChromePath] = useState<string>()
 
@@ -179,7 +185,7 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
     } else {
       submitAlreadyChromePath(false)
     }
-    info('设置Chrome启动路径成功')
+    info(t('ConfigSystemProxy.setChromeStartPathSuccess'))
     onClose()
   })
 
@@ -187,17 +193,17 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
     <YakitSpin spinning={loading}>
       <div className={styles['config-system-proxy']}>
         <div className={styles['config-system-proxy-heard']}>
-          <div className={styles['config-system-proxy-title']}>设置Chrome启动路径</div>
+          <div className={styles['config-system-proxy-title']}>{t('ConfigSystemProxy.chromeStartPath')}</div>
           <RemoveIcon className={styles['close-icon']} onClick={() => onClose()} />
         </div>
         <div className={classNames(styles['config-system-proxy-status-success'])}>
-          如无法启动Chrome，请配置Chrome启动路径
+          {t('ConfigSystemProxy.chromeStartPathHint')}
         </div>
         <Form layout="horizontal" style={{ padding: '0 24px 24px' }}>
-          <Form.Item label="启动路径">
+          <Form.Item label={t('ConfigSystemProxy.startPath')}>
             <YakitInput
               value={chromePath}
-              placeholder={'请选择启动路径'}
+              placeholder={t('ConfigSystemProxy.selectStartPath')}
               size="large"
               onChange={(e) => setChromePath(e.target.value)}
             />
@@ -215,15 +221,15 @@ export const ConfigChromePath: React.FC<ConfigChromePathProp> = (props) => {
                 return false
               }}
             >
-              <div className={styles['config-select-path']}>选择路径</div>
+              <div className={styles['config-select-path']}>{t('ConfigSystemProxy.selectStartPath')}</div>
             </Upload>
           </Form.Item>
           <div className={styles['config-system-proxy-btns']}>
             <YakitButton type="outline2" size="large" onClick={() => onClose()}>
-              取消
+              {t('YakitButton.cancel')}
             </YakitButton>
             <YakitButton type={'primary'} size="large" onClick={() => onSetChromePath()}>
-              确定
+              {t('YakitButton.ok')}
             </YakitButton>
           </div>
         </Form>

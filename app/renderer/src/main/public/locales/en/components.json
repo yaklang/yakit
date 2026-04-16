@@ -119,7 +119,6 @@
       "loadingFile": "Loading file...",
       "downloadingFile": "{{fileName}} downloading...",
       "downloading": "Downloading...",
-      "downloadedPercent": "Downloaded {{percent}}%",
       "getFileInfoErrorTitle": "Failed to get file info",
       "getLinkInfoError": "Failed to get link info: {{error}}",
       "getFileInfoError": "Failed to get file info: {{error}}",

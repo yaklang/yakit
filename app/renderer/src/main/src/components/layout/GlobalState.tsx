@@ -742,7 +742,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
   const content = useMemo(() => {
     return (
-      <div className={styles['global-state-content-wrapper']}>
+      <div className={styles['global-state-content-wrapper']} style={{ width: i18n.language === 'zh' ? 450 : 550 }}>
         <div className={styles['body-header']}>
           <div className={styles['header-title']}>{t('GlobalState.systemCheck')}</div>
           <div className={styles['header-hint']}>

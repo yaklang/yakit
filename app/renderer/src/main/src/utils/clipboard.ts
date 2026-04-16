@@ -1,6 +1,7 @@
 import i18n from '@/i18n/i18n'
 import { yakitNotify } from './notification'
 import { yakitClipboard } from '@/services/electronBridge'
+const tOriginal = i18n.getFixedT(null, ['yakitUi'])
 
 interface SetClipboardTextExtraParams {
   /** 是否隐藏复制成功提示 */
@@ -25,8 +26,7 @@ export const setClipboardText = (text?: string, extra?: SetClipboardTextExtraPar
     yakitClipboard
       .setText(text)
       .then(() => {
-        if (!hiddenHint)
-          yakitNotify('success', hintText || (i18n.language === 'zh' ? '复制成功' : 'Copied successfully'))
+        if (!hiddenHint) yakitNotify('success', hintText || tOriginal('YakitNotification.copySuccess'))
         successCallback && successCallback()
       })
       .catch(() => {

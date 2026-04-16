@@ -1,0 +1,22 @@
+{
+  "apiUtilsHttp": {
+    "parameterError": "Parameter error",
+    "notepadFiledHashRequired": "When type is notepad, filedHash is required",
+    "uploadImgFailed": "Failed to upload image: {{error}}",
+    "uploadFileFailed": "Failed to upload file: {{error}}",
+    "deleteOSSFailed": "Failed to delete OSS resource: {{error}}"
+  },
+  "grpc": {
+    "fetchLatestYakitVersionFailed": "Failed to get latest software version: {{error}}",
+    "fetchIntranetYakitVersionFailed": "Failed to get latest intranet software version: {{error}}",
+    "fetchLatestYakVersionFailed": "Failed to get latest engine version: {{error}}",
+    "fetchLocalYakitVersionFailed": "Failed to get local software version: {{error}}",
+    "fetchLocalYakVersionFailed": "Failed to get local engine version: {{error}}",
+    "fetchYakInstallResultFailed": "Failed to get local engine install result: {{error}}",
+    "fetchBuildInYakVersionFailed": "Failed to get built-in engine version: {{error}}",
+    "fetchSpecifiedYakVersionHashFailed": "Failed to get latest software version: {{error}}",
+    "fetchLocalYakVersionHashFailed": "Failed to get local engine hash: {{error}}",
+    "fetchAvailablePortFailed": "Failed to get available port: {{error}}",
+    "determineAdaptedVersionEngineFailed": "Failed to determine adapted version of running engine: {{error}}"
+  }
+}

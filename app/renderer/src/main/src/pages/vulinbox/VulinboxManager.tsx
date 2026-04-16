@@ -562,7 +562,7 @@ export interface InstallVulinboxPromptProp {
 }
 
 const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
-  const { t } = useI18nNamespaces(['vulinbox'])
+  const { t } = useI18nNamespaces(['vulinbox', "yakitUi"])
   const [token, setToken] = useState(randomString(60))
   const [data, setData, getData] = useGetState<string[]>([])
   const [percent, setPercent] = useState(0)
@@ -611,7 +611,7 @@ const InstallVulinboxPrompt: React.FC<InstallVulinboxPromptProp> = (props) => {
           strokeColor="var(--Colors-Use-Main-Primary)"
           trailColor="var(--Colors-Use-Neutral-Bg)"
           percent={percent}
-          format={(percent) => t('InstallVulinboxPrompt.downloadedPercent', { percent: percent ?? 0 })}
+          format={(percent) => t('YakitProgress.downloadedPercent', { percent: percent ?? 0 })}
         />
       </div>
       <div className={styles['download-progress-messages']}>

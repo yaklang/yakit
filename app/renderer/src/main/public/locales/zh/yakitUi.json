@@ -51,11 +51,13 @@
     "startAudit": "开始审计",
     "reset": "重置",
     "resetParams": "重置参数",
+    "resetAll": "一键重置",
     "batchOperation": "批量操作",
     "clear": "清空",
     "disable": "禁用",
     "disable_all": "全部禁用",
     "enable": "启用",
+    "deactivated": "停用",
     "detail": "详情",
     "stop": "停止",
     "continue": "继续",
@@ -88,7 +90,9 @@
     "importNow": "一键导入",
     "compile": "编译",
     "locate": "定位",
-    "ignore": "忽略"
+    "ignore": "忽略",
+    "update": "更新",
+    "modify": "修改"
   },
   "YakitNotification": {
     "unknown_error": "未知错误",
@@ -107,8 +111,11 @@
     "deleteFailed": "删除失败: {{error}}",
     "uploaded": "上传成功",
     "uploadFailed": "上传失败: {{error}}",
+    "uploadFailedNoError": "上传失败",
     "downloaded": "下载成功",
     "downloadFailed": "下载失败: {{error}}",
+    "downloadFailedNoError": "下载失败",
+    "downloadFinished": "下载完成",
     "updated": "更新成功",
     "updateFailed": "更新失败: {{error}}",
     "networkError": "网络错误: {{error}}",
@@ -234,6 +241,10 @@
   "YakitSpin": {
     "loading": "加载中",
     "loadMore": "加载更多..."
+  },
+  "YakitProgress": {
+    "uploadedPercent": "已上传 {{percent}}%",
+    "downloadedPercent": "已下载 {{percent}}%"
   },
   "YakitSelect": {
     "pleaseSelect": "请选择...",

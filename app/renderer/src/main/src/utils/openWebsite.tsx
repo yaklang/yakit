@@ -11,6 +11,7 @@ import i18n from '@/i18n/i18n'
 import { Risk } from '@/pages/risks/schema'
 import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
+const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])
 
 const toWritableText = (data?: Uint8Array | string) => {
   if (typeof data === 'string') {
@@ -32,7 +33,7 @@ export const openPacketNewWindow = (data: OpenPacketNewWindowItem) => {
   if (childWindowHash) {
     minWinSendToChildWin({ type: 'openPacketNewWindow', data })
   } else {
-    yakitNotify('info', i18n.language === 'zh' ? '新窗口打开中...' : 'Opening new window...')
+    yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
     yakitWindow.openChildWindow({
       type: 'openPacketNewWindow',
       data: data,
@@ -44,7 +45,7 @@ export const openRiskNewWindow = (data?: Risk) => {
   if (childWindowHash) {
     minWinSendToChildWin({ type: 'openRiskNewWindow', data })
   } else {
-    yakitNotify('info', i18n.language === 'zh' ? '新窗口打开中...' : 'Opening new window...')
+    yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
     yakitWindow.openChildWindow({
       type: 'openRiskNewWindow',
       data: data,
@@ -56,7 +57,7 @@ export const openSSARiskNewWindow = (data?: SSARisk) => {
   if (childWindowHash) {
     minWinSendToChildWin({ type: 'openSSARiskNewWindow', data })
   } else {
-    yakitNotify('info', i18n.language === 'zh' ? '新窗口打开中...' : 'Opening new window...')
+    yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
     yakitWindow.openChildWindow({
       type: 'openSSARiskNewWindow',
       data: data,
@@ -100,7 +101,7 @@ export const saveABSFileToOpen = (name: string, data?: Uint8Array | string) => {
         data: toWritableText(data),
       })
       .then(() => {
-        success('下载完成')
+        success(tOriginal('YakitNotification.downloadFinished'))
         if (res.filePath) {
           yakitShell.openSpecifiedFile(res.filePath)
         }
@@ -115,7 +116,13 @@ export const saveABSFileAnotherOpen = async (params: {
   errorMsg: string
   isOpenSpecifiedFile?: boolean
 }) => {
-  const { name, data, successMsg = '下载完成', errorMsg = '下载失败', isOpenSpecifiedFile = false } = params
+  const {
+    name,
+    data,
+    successMsg = tOriginal('YakitNotification.downloadFinished'),
+    errorMsg = tOriginal('YakitNotification.downloadFailedNoError'),
+    isOpenSpecifiedFile = false,
+  } = params
   const showSaveDialogRes = await yakitDialog.showSaveDialog(name)
   if (showSaveDialogRes.canceled || !showSaveDialogRes.filePath) return
   return yakitDialog

@@ -93,11 +93,14 @@ import {YakitHint} from "@/components/yakitUI/YakitHint/YakitHint"
 import {SolidClouduploadIcon} from "@/assets/icon/solid"
 import {httpUploadPluginToEE} from "@/pages/pluginHub/utils/http"
 import { YakitRoute } from "@/enums/yakitRoute"
+import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 interface PluginManageProps {}
 
 export const PluginManage: React.FC<PluginManageProps> = (props) => {
+    const {t} = useI18nNamespaces(["pluginHub", "yakitUi"])
+
     // 判断该页面-用户是否可见状态
     const layoutRef = useRef<HTMLDivElement>(null)
     const [inViewPort = true] = useInViewport(layoutRef)
@@ -469,13 +472,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         ? [
                               {
                                   key: "download",
-                                  label: "下载",
+                                  label: t("YakitButton.download"),
                                   itemIcon: <OutlineClouddownloadIcon />
                               },
                               {type: "divider"},
                               {
                                   key: "del",
-                                  label: "删除",
+                                  label: t("YakitButton.delete"),
                                   type: "danger",
                                   itemIcon: <OutlineTrashIcon />
                               }
@@ -483,7 +486,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         : [
                               {
                                   key: "download",
-                                  label: "下载",
+                                  label: t("YakitButton.download"),
                                   itemIcon: <OutlineClouddownloadIcon />
                               }
                           ],
@@ -554,11 +557,11 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const [resetLoading, setResetLoading] = useState<boolean>(false)
     const onResetAll = useMemoizedFn(() => {
         if (!userInfo.isLogin) {
-            yakitNotify("error", "请先登录")
+            yakitNotify("error", t("PluginManage.loginRequired"))
             return
         }
         if (!(admin.ee && admin.isAdmin)) {
-            yakitNotify("error", "暂无权限")
+            yakitNotify("error", t("PluginManage.noPermission"))
             return
         }
 
@@ -566,7 +569,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         apiFetchResetPlugins()
             .then((res) => {
                 if (res.ok) {
-                    yakitNotify("success", "一键重置成功")
+                    yakitNotify("success", t("PluginManage.resetSuccess"))
                     onRefListAndTotalAndGroup()
                     setResetLoading(false)
                 }
@@ -673,14 +676,15 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             if (removeGroup.length) {
                 yakitNotify(
                     "success",
-                    `${allCheck ? response.pagemeta.total : params.uuid.length}个插件已从“${removeGroup.join(
-                        ","
-                    )}”组移除`
+                    t("PluginManage.removeGroupSuccess", {
+                        count: allCheck ? response.pagemeta.total : params.uuid.length,
+                        groups: removeGroup.join(",")
+                    })
                 )
             }
             const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
             if (addGroup.length) {
-                yakitNotify("success", `${params.uuid.length}个插件已添加至“${addGroup.join(",")}”组`)
+                yakitNotify("success", t("PluginManage.addGroupSuccess", {count: params.uuid.length, groups: addGroup.join(",")}))
             }
             if (removeGroup.length || addGroup.length) {
                 fetchPluginFilters()
@@ -720,8 +724,14 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 onRemoveOk()
             } else {
                 removeOutGroupContRef.current = allCheck
-                    ? `是否从 “${removeSingleGroupRef.current}” 组移除${response.pagemeta.total}个插件？`
-                    : `是否从 “${removeSingleGroupRef.current}” 组中移除插件 “${selectList[0].script_name}” ？`
+                    ? t("PluginManage.removeGroupConfirmSingle", {
+                          count: response.pagemeta.total,
+                          group: removeSingleGroupRef.current
+                      })
+                    : t("PluginManage.removeGroupConfirmSingleItem", {
+                          scriptName: selectList[0].script_name,
+                          group: removeSingleGroupRef.current
+                      })
                 setListDelGroupConfirm(true)
             }
         })
@@ -734,10 +744,14 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 onRemoveOk()
             } else {
                 removeOutGroupContRef.current = allCheck
-                    ? `是否从 “${showGroupList.join(",")}” 组移除${response.pagemeta.total}个插件？`
-                    : `是否从 “${showGroupList.join(",")}” 组中移除插件 “${selectList
-                          .map((item) => item.script_name)
-                          .join(",")}” ？`
+                    ? t("PluginManage.removeGroupConfirmMulti", {
+                          count: response.pagemeta.total,
+                          groups: showGroupList.join(",")
+                      })
+                    : t("PluginManage.removeGroupConfirmMultiItem", {
+                          scriptName: selectList.map((item) => item.script_name).join(","),
+                          groups: showGroupList.join(",")
+                      })
                 setListDelGroupConfirm(true)
             }
         })
@@ -758,7 +772,10 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         if (removeGroup.length) {
             yakitNotify(
                 "success",
-                `${allCheck ? response.pagemeta.total : params.uuid.length}个插件已从“${removeGroup.join(",")}”组移除`
+                t("PluginManage.removeGroupSuccess", {
+                    count: allCheck ? response.pagemeta.total : params.uuid.length,
+                    groups: removeGroup.join(",")
+                })
             )
             fetchPluginFilters()
         }
@@ -882,7 +899,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             apiDownloadPluginCheck(downloadRequest)
                 .then(() => {
                     onCheck(false)
-                    yakitNotify("success", "批量下载成功")
+                    yakitNotify("success", t("PluginManage.batchDownloadSuccess"))
                 })
                 .catch(() => {})
                 .finally(() => {
@@ -911,7 +928,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     const onFooterExtraDownload = useMemoizedFn((info: YakitPluginOnlineDetail) => {
         const findIndex = singleDownload.findIndex((item) => item.uuid === info.uuid)
         if (findIndex > -1) {
-            yakitNotify("error", "该插件正在执行下载操作,请稍后再试")
+            yakitNotify("error", t("PluginManage.downloadBusy"))
             return
         }
         setSingleDownload((arr) => {
@@ -947,7 +964,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                         uuid: res.UUID || ""
                     })
                 )
-                yakitNotify("success", "下载成功")
+                yakitNotify("success", t("YakitNotification.downloaded"))
             })
             .catch(() => {})
             .finally(() => {
@@ -978,16 +995,16 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             .then(({TaskStatus}) => {
                 if (TaskStatus) {
                     setPercent(100)
-                    yakitNotify("success", "上传成功")
+                    yakitNotify("success", t("YakitNotification.uploaded"))
                     setTimeout(() => {
                         setPercentShow(false)
                     }, 300)
                 } else {
-                    yakitNotify("error", "上传失败")
+                    yakitNotify("error", t("YakitNotification.uploadFailedNoError"))
                 }
             })
             .catch((err) => {
-                yakitNotify("error", "上传失败：" + err)
+                yakitNotify("error", t("YakitNotification.uploadFailed", {error: String(err)}))
             })
     })
     const onUploadPluginLibraryCancel = useMemoizedFn(() => {
@@ -1013,7 +1030,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         httpUploadPluginToEE()
             .then((res) => {
                 if (res.ok) {
-                    yakitNotify("info", "插件正在同步中，请稍后")
+                        yakitNotify("info", t("PluginManage.syncingPleaseWait"))
                     setTimeout(() => {
                         onRefListAndTotalAndGroup()
                     }, 3000)
@@ -1027,18 +1044,18 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
     }
     const onSyncPluginToEE = useMemoizedFn(() => {
         const m = showYakitModal({
-            title: "插件同步",
+            title: t("PluginManage.syncTitle"),
             type: "white",
             maskClosable: false,
             content: (
                 <div className={styles["syncToEE"]}>
-                    <div className={styles["syncToEE-title"]}>确定将社区版全部插件同步到企业版？</div>
+                    <div className={styles["syncToEE-title"]}>{t("PluginManage.syncConfirm")}</div>
                     <div className={styles["syncToEE-footer"]}>
                         <YakitButton type='outline2' onClick={() => m.destroy()}>
-                            取消
+                            {t("YakitButton.cancel")}
                         </YakitButton>
                         <YakitButton type='primary' loading={syncToEELoading} onClick={() => sureSyncPluginToEE(m)}>
-                            确定
+                            {t("YakitButton.confirm")}
                         </YakitButton>
                     </div>
                 </div>
@@ -1073,7 +1090,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                 />
             )}
             <PluginsLayout
-                title='插件管理'
+                title={t("PluginManage.title")}
                 hidden={!!plugin}
                 subTitle={<TypeSelect active={pluginStatusSelect} list={DefaultStatusList} setActive={onSetActive} />}
                 extraHeader={
@@ -1086,7 +1103,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     icon={<OutlinePaperairplaneIcon />}
                                     type='outline2'
                                     size='large'
-                                    name={"同步插件到企业版"}
+                                    name={t("PluginManage.syncToEE")}
                                     onClick={onSyncPluginToEE}
                                 />
                             )}
@@ -1096,7 +1113,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     disabled={selectNum === 0 && !allCheck}
                                     type='outline2'
                                     size='large'
-                                    name={"修改作者"}
+                                    name={t("PluginManage.modifyAuthor")}
                                     onClick={onShowModifyAuthor}
                                 />
                             )}
@@ -1105,7 +1122,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 type='outline2'
                                 size='large'
                                 loading={downloadLoading}
-                                name={selectNum > 0 ? "下载" : "一键下载"}
+                                name={selectNum > 0 ? t("YakitButton.download") : t("YakitButton.oneClickDownload")}
                                 onClick={() => headerExtraDownload()}
                                 disabled={initTotal === 0}
                             />
@@ -1114,7 +1131,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     icon={<OutlineSaveIcon />}
                                     type='outline2'
                                     size='large'
-                                    name='导入分组'
+                                    name={t("PluginManage.importGroup")}
                                     onClick={() => setImportGroupVisible(true)}
                                 />
                             )}
@@ -1122,14 +1139,14 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 <YakitDropdownMenu
                                     menu={{
                                         data: [
-                                            {key: "resetAll", label: "一键重置"},
-                                            {key: "uploadPluginLibrary", label: "上传插件库"}
+                                            {key: "resetAll", label: t("YakitButton.resetAll")},
+                                            {key: "uploadPluginLibrary", label: t("PluginManage.uploadPluginLibrary")}
                                         ],
                                         onClick: ({key}) => {
                                             switch (key) {
                                                 case "resetAll":
                                                     let m = showYakitModal({
-                                                        title: "一键重置",
+                                                        title: t("YakitButton.resetAll"),
                                                         centered: true,
                                                         width: 400,
                                                         closable: true,
@@ -1149,7 +1166,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                                                         m.destroy()
                                                                     }}
                                                                 >
-                                                                    取消
+                                                                    {t("YakitButton.cancel")}
                                                                 </YakitButton>
                                                                 <YakitButton
                                                                     onClick={() => {
@@ -1157,13 +1174,13 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                                                         m.destroy()
                                                                     }}
                                                                 >
-                                                                    确定
+                                                                    {t("YakitButton.confirm")}
                                                                 </YakitButton>
                                                             </div>
                                                         ),
                                                         content: (
                                                             <div style={{padding: 15}}>
-                                                                一键重置会清空线上所有数据，再从服务器内置库中重新内置插件数据，是否确认重置
+                                                                {t("PluginManage.resetConfirm")}
                                                             </div>
                                                         ),
                                                         onCancel: () => {
@@ -1189,7 +1206,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         type='outline2'
                                         size='large'
                                         loading={resetLoading}
-                                        name='重置插件'
+                                        name={t("YakitButton.resetAll")}
                                     />
                                 </YakitDropdownMenu>
                             )}
@@ -1198,7 +1215,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     icon={<OutlineTrashIcon />}
                                     type='outline2'
                                     size='large'
-                                    name={selectNum > 0 ? "删除" : "清空"}
+                                    name={selectNum > 0 ? t("YakitButton.delete") : t("YakitButton.clear")}
                                     onClick={onShowDelPlugin}
                                     disabled={initTotal === 0}
                                 />
@@ -1218,7 +1235,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                             item.groupExtraOptBtn = magGroupState() ? (
                                 <>
                                     <YakitButton type='text' onClick={onOpenPluginGroup}>
-                                        管理
+                                        {t("PluginManage.manage")}
                                     </YakitButton>
                                     <div className={styles["divider-style"]} />
                                 </>
@@ -1293,7 +1310,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                                             })}
                                                         >
                                                             <span>
-                                                                插件组{" "}
+                                                                 {t("PluginManage.pluginGroupCountLabel")} {" "}
                                                                 <span className={styles["total-style"]}>
                                                                     {showGroupList.length}
                                                                 </span>
@@ -1423,7 +1440,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                             />
                         ) : (
                             <div className={styles["plugin-manage-empty"]}>
-                                <YakitEmpty title='暂无数据' />
+                                <YakitEmpty title={t("YakitEmpty.noData")} />
 
                                 <div className={styles["plugin-manage-buttons"]}>
                                     <YakitButton
@@ -1431,7 +1448,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                         icon={<OutlineRefreshIcon />}
                                         onClick={onRefListAndTotalAndGroup}
                                     >
-                                        刷新
+                                        {t("YakitButton.refresh")}
                                     </YakitButton>
                                 </div>
                             </div>
@@ -1466,7 +1483,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             ></ListDelGroupConfirmPop>
             {importGroupVisible && (
                 <YakitModal
-                    title='导入分组'
+                    title={t("PluginManage.importGroupTitle")}
                     closable={true}
                     visible={importGroupVisible}
                     maskClosable={false}
@@ -1492,23 +1509,23 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             {/* 批量下载同名覆盖提示 */}
             <NoPromptHint
                 visible={batchSameNameHint}
-                title='同名覆盖提示'
-                content='如果本地存在同名插件会直接进行覆盖'
+                title={t("PluginManage.sameNameOverlayTitle")}
+                content={t("PluginManage.sameNameOverlayContent")}
                 cacheKey={RemotePluginGV.BatchDownloadPluginSameNameOverlay}
                 onCallback={handleBatchSameNameHint}
             />
             {/* 单个下载同名覆盖提示 */}
             <NoPromptHint
                 visible={singleSameNameHint}
-                title='同名覆盖提示'
-                content='本地有插件同名，下载将会覆盖，是否下载'
+                title={t("PluginManage.sameNameOverlayTitle")}
+                content={t("PluginManage.sameNameOverlayContent")}
                 cacheKey={RemotePluginGV.SingleDownloadPluginSameNameOverlay}
                 onCallback={handleSingleSameNameHint}
             />
             {/* 上传插件库 */}
             {uploadPluginLibraryVisible && (
                 <YakitModal
-                    title='上传插件库'
+                    title={t("PluginManage.uploadPluginLibrary")}
                     closable={true}
                     visible={uploadPluginLibraryVisible}
                     maskClosable={false}
@@ -1523,7 +1540,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
             )}
             <YakitHint
                 visible={percentShow}
-                title='上传插件库'
+                title={t("PluginManage.uploadPluginLibrary")}
                 heardIcon={<SolidClouduploadIcon style={{color: "var(--Colors-Use-Warning-Primary)"}} />}
                 onCancel={onUploadPluginLibraryCancel}
                 okButtonProps={{style: {display: "none"}}}
@@ -1538,7 +1555,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                     strokeColor='var(--Colors-Use-Main-Primary)'
                     trailColor='var(--Colors-Use-Neutral-Bg)'
                     percent={percent}
-                    format={(percent) => `已上传 ${percent}%`}
+                format={(percent) => t("YakitProgress.uploadedPercent", {percent: percent ?? 0})}
                 />
             </YakitHint>
         </div>
@@ -1554,6 +1571,7 @@ interface ModifyAuthorModalProps {
 /** @name 批量修改插件作者 */
 const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
     const {visible, setVisible, plugins, onOK} = props
+    const {t} = useI18nNamespaces(["pluginHub"])
 
     const [loading, setLoading] = useState<boolean>(false)
     const [list, setList] = useState<API.UserList[]>([])
@@ -1576,7 +1594,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
                     setList(res?.data || [])
                 })
                 .catch((err) => {
-                    yakitNotify("error", "获取普通用户失败：" + err)
+                    yakitNotify("error", t("PluginManage.getNormalUserFailed", {error: String(err)}))
                 })
                 .finally(() => {
                     setTimeout(() => setLoading(false), 200)
@@ -1605,7 +1623,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
                 onOK()
             })
             .catch((err) => {
-                yakitNotify("error", "批量修改失败，原因:" + err)
+                yakitNotify("error", t("PluginManage.batchModifyFailed", {error: String(err)}))
             })
             .finally(() => {
                 setTimeout(() => setSubmitLoading(false), 200)
@@ -1627,7 +1645,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
 
     return (
         <YakitModal
-            title='批量修改插件作者'
+            title={t("PluginManage.batchModifyAuthorTitle")}
             width={448}
             type='white'
             centered={true}
@@ -1643,17 +1661,16 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
             <div className={styles["modify-author-modal-body"]}>
                 <Form.Item
                     labelCol={{span: 24}}
-                    label={<>作者：</>}
+                    label={t("PluginManage.author")}
                     help={
                         <>
-                            共选择了 <span className={styles["modify-author-hint-span"]}>{plugins.length || 0}</span>{" "}
-                            个插件
+                            {t("PluginManage.selectedPluginCount", {count: plugins.length || 0})}
                         </>
                     }
                     validateStatus={status}
                 >
                     <YakitSelect
-                        placeholder='请输入用户名进行搜索'
+                        placeholder={t("PluginManage.searchUsername")}
                         showArrow={false}
                         showSearch={true}
                         filterOption={false}
@@ -1691,12 +1708,13 @@ interface ReasonModalProps {
 /** @name 原因说明 */
 export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
     const {visible, setVisible, type = "nopass", total, onOK} = props
+    const {t, i18n} = useI18nNamespaces(["pluginHub"])
 
     const title = useMemo(() => {
-        if (type === "nopass") return "不通过原因"
-        if (type === "del") return "删除原因"
-        return "未知错误窗口,请关闭重试!"
-    }, [type])
+        if (type === "nopass") return t("PluginManage.reasonNopass")
+        if (type === "del") return t("PluginManage.reasonDelete")
+        return t("PluginManage.reasonUnknown")
+    }, [type, i18n.language])
 
     useEffect(() => {
         if (!visible) setValue("")
@@ -1706,7 +1724,7 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
     // const [kind, setKind] = useState<"body" | "extra">("body")
     const onSubmit = useMemoizedFn(() => {
         if (!value) {
-            yakitNotify("error", "请输入删除原因!")
+            yakitNotify("error", t("PluginManage.enterDeleteReason"))
             return
         }
         let data = value
@@ -1766,7 +1784,7 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
                 />
                 {total && (
                     <div className={styles["hint-wrapper"]}>
-                        共选择了 <span className={styles["total-num"]}>{total || 0}</span> 个插件
+                        {t("PluginManage.selectedPluginCount", {count: total || 0})}
                     </div>
                 )}
             </div>
@@ -1781,6 +1799,7 @@ interface UploadGroupModalProps {
 
 const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
     const {importSuccess, onClose} = props
+    const {t} = useI18nNamespaces(["pluginHub", "yakitUi"])
     const [file, setFile] = useState<RcFile>()
     const [loading, setLoading] = useState<boolean>(false)
     const isCancelRef = useRef<boolean>(false)
@@ -1800,7 +1819,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                 .then((res) => {
                     if (res.code === 200 && !isCancelRef.current) {
                         importSuccess()
-                        yakitNotify("success", "导入分组上传成功")
+                        yakitNotify("success", t("PluginManage.importGroupSuccess"))
                         onClose()
                     }
 
@@ -1809,7 +1828,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                     }
                 })
                 .catch((err) => {
-                    !isCancelRef.current && yakitNotify("error", "导入分组上传失败")
+                    !isCancelRef.current && yakitNotify("error", t("PluginManage.importGroupFailed"))
                 })
                 .finally(() => {
                     isCancelRef.current && setTimeout(() => setLoading(false), 200)
@@ -1838,7 +1857,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                             ]
                             if (!typeArr.includes(suffix)) {
                                 setFile(undefined)
-                                yakitNotify("warning", "上传文件格式错误，请重新上传")
+                                yakitNotify("warning", t("PluginManage.uploadFileFormatError"))
                                 return false
                             }
                             setFile(f)
@@ -1854,11 +1873,11 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                             ) : (
                                 <div className={styles["content"]}>
                                     <div className={styles["title"]}>
-                                        可将文件拖入框内，或
-                                        <span className={styles["hight-light"]}>点击此处导入</span>
+                                        {t("YakitDraggerContent.drag_file_tip")}
+                                        <span className={styles["hight-light"]}>{t("PluginManage.clickToImport")}</span>
                                     </div>
                                     <div className={styles["sub-title"]}>
-                                        （仅支持.xlsx格式文件）可先
+                                        {t("PluginManage.xlsxOnlyPrefix")}
                                         <span
                                             className={styles["hight-light"]}
                                             onClick={async (e) => {
@@ -1879,15 +1898,15 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                                                 })
                                                 const link = document.createElement("a")
                                                 link.href = URL.createObjectURL(blob)
-                                                link.download = "导入模板.xlsx"
+                                                link.download = t("PluginManage.importTemplate")
                                                 document.body.appendChild(link)
                                                 link.click()
                                                 document.body.removeChild(link)
                                             }}
                                         >
-                                            下载模板
+                                            {t("PluginManage.downloadTemplate")}
                                         </span>
-                                        填写后再进行导入
+                                        {t("PluginManage.fillThenImport")}
                                     </div>
                                 </div>
                             )}
@@ -1905,7 +1924,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                             setLoading(false)
                         }}
                     >
-                        取消
+                        {t("YakitButton.cancel")}
                     </YakitButton>
                 ) : (
                     <YakitButton
@@ -1916,7 +1935,7 @@ const UploadGroupModal: React.FC<UploadGroupModalProps> = (props) => {
                             UploadDataPackage()
                         }}
                     >
-                        导入
+                        {t("YakitButton.import")}
                     </YakitButton>
                 )}
             </div>
@@ -1930,6 +1949,7 @@ interface UploadPluginLibraryProps {
 }
 const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
     const {onUploadPluginLibrary, onClose} = props
+    const {t} = useI18nNamespaces(["pluginHub", "yakitUi"])
     const [file, setFile] = useState<RcFile>()
 
     const suffixFun = (file_name: string) => {
@@ -1951,7 +1971,7 @@ const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
                         const typeArr: string[] = [".db"]
                         if (!typeArr.includes(suffix)) {
                             setFile(undefined)
-                            yakitNotify("warning", "上传文件格式错误，请重新上传")
+                            yakitNotify("warning", t("PluginManage.uploadFileFormatError"))
                             return false
                         }
                         setFile(f)
@@ -1967,10 +1987,10 @@ const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
                         ) : (
                             <div className={styles["content"]}>
                                 <div className={styles["title"]}>
-                                    可将文件拖入框内，或
-                                    <span className={styles["hight-light"]}>点击此处导入</span>
+                                    {t("YakitDraggerContent.drag_file_tip")}
+                                    <span className={styles["hight-light"]}>{t("PluginManage.clickToImport")}</span>
                                 </div>
-                                <div className={styles["sub-title"]}>（仅支持.db格式文件）</div>
+                                <div className={styles["sub-title"]}>{t("PluginManage.dbOnly")}</div>
                             </div>
                         )}
                     </div>
@@ -1978,7 +1998,7 @@ const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
             </div>
             <div style={{textAlign: "right", marginTop: 16}}>
                 <YakitButton className={styles["btn-style"]} type='outline2' style={{marginRight: 8}} onClick={onClose}>
-                    取消
+                    {t("YakitButton.cancel")}
                 </YakitButton>
                 <YakitButton
                     className={styles["btn-style"]}
@@ -1992,7 +2012,7 @@ const UploadPluginLibrary: React.FC<UploadPluginLibraryProps> = (props) => {
                         onClose()
                     }}
                 >
-                    上传
+                    {t("YakitButton.upload")}
                 </YakitButton>
             </div>
         </div>

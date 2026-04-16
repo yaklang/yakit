@@ -6,6 +6,138 @@
     "StartToExecYakScriptViewer": {
       "executeSuccess": "执行 {{verbose}} 成功",
       "executeError": "执行 {{verbose}} 遇到问题："
+    },
+    "ConfigGlobalReverse": {
+      "dnslogSuccess": "全局 DNSLog 配置成功",
+      "dnslogFailed": "配置全局 DNSLog 失败：{{error}}",
+      "localReverseIP": "本地反连 IP",
+      "updateYakEngineLocalIP": "更新 Yak 引擎本地 IP",
+      "publicReverseConfig": "公网反连配置",
+      "runOnPublicServer": "在公网服务器上运行",
+      "or": "或",
+      "configured": "已配置",
+      "yakBridgeAddress": "Yak Bridge 地址",
+      "yakBridgeAddressHelp": "格式 host:port，例如 cybertunnel.run:64333",
+      "yakBridgePassword": "Yak Bridge 密码",
+      "yakBridgePasswordHelp": "yak bridge 命令的 --secret 参数值",
+      "globalDNSLogConfig": "全局 DNSLog 配置",
+      "reuseYakBridgeConfig": "复用 Yak Bridge 配置",
+      "dnslogConfig": "DNSLog 配置",
+      "dnslogAddressHelp": "配置好 Yak Bridge 的 DNSLog 系统的地址：[ip]:[port]",
+      "dnslogPassword": "DNSLog 密码",
+      "configureReverseConnection": "配置反连"
     }
+  },
+  "ConfigYaklangEnvironment": {
+    "variableName": "变量名",
+    "variableValue": "变量值",
+    "setEnvironmentVariable": "设置环境变量",
+    "environmentVariableList": "环境变量列表",
+    "setNewVariable": "设置新变量",
+    "environmentVariableName": "环境变量名",
+    "expiredTime": "失效时间",
+    "deleteThisEnvironmentVariable": "删除本环境变量",
+    "configYaklangSystemEnvironmentVariable": "配置 Yaklang 系统环境变量",
+    "newVariableTitle": "设置新变量",
+    "editVariableTitle": "修改变量"
+  },
+  "ConfigSystemProxy": {
+    "getSystemProxyFailed": "获取系统代理失败：{{error}}",
+    "setSystemProxySuccess": "设置系统代理成功",
+    "setSystemProxyFailed": "设置系统代理失败：{{error}}",
+    "configSystemProxy": "配置系统代理",
+    "currentSystemProxyStatus": "当前系统代理状态：",
+    "enabled": "已启用",
+    "disabled": "未启用",
+    "systemProxy": "系统代理",
+    "oneClickConfig": "一键配置系统代理",
+    "proxyHint": "由于操作系统与 Yak 内核限制，无法使用原生 MacOS OC/Swift 接口实现设置代理。 Yak 引擎将弹出 osascript 授权页以改动系统代理，MacOS 用户认证即可。",
+    "chromeStartPath": "Chrome 启动路径",
+    "chromeStartPathHint": "如无法启动 Chrome，请配置 Chrome 启动路径",
+    "startPath": "启动路径",
+    "selectStartPath": "请选择启动路径",
+    "setChromeStartPathSuccess": "设置 Chrome 启动路径成功"
+  },
+  "ConfigPcapPermission": {
+    "unavailable": "无法获取 PCAP 支持信息",
+    "fetchStatusFailed": "获取 Pcap 权限状态失败：{{error}}",
+    "fetchPlatformFailed": "获取 {name} 操作系统失败：{{error}}",
+    "promoteFailed": "提升 Pcap 用户权限失败：{{error}}",
+    "tooltip": "原理：MacOS 通过设置 /dev/bpf* 权限组，可参考 Wireshark ChmodBPF 相关配置，Linux 可通过 setcap 命令设置 pcap 权限，Windows 推荐直接以 UAC 提升管理员权限启动",
+    "windowsHint": "Windows 可用管理员权限启动 {{name}} 以获取对 Pcap 的使用权限",
+    "unixHint": "Linux 与 MacOS 可通过设置权限与组为用户态赋予网卡完全权限",
+    "privilegedHint": "您可以正常试用 SYN 扫描等功能，无需修复",
+    "notPrivilegedHint": "当前引擎不具有网卡操作权限",
+    "enablePcap": "开启 PCAP 权限",
+    "modalTitle": "修复 Pcap 权限"
+  },
+  "ConfigEngineProxy": {
+    "saveSuccess": "设置引擎代理成功",
+    "currentProxy": "当前引擎代理为：",
+    "hint": "本配置将会对绝大部分 Yak 插件自动生效，如果在扫描模块中配置代理，一般来说，配置的代理将会自动覆盖这个配置。",
+    "proxyLabel": "代理",
+    "proxyHelp": "例如 http://127.0.0.1:7890 或 socks://127.0.0.1:7890 等配置均可",
+    "updateProxy": "更新引擎代理",
+    "modalTitle": "配置引擎扫描代理"
+  },
+  "ConfigSystemMcp": {
+    "currentStatus": "当前状态：",
+    "enabled": "已启用",
+    "disabled": "未启用",
+    "startAddress": "启动地址：",
+    "startAddressHelp": "yak以SSE方式启动mcp，在需要使用mcp的地方填入启动地址即可"
+  },
+  "servicesFetch": {
+    "requestTimeout": "请求超时，请重试",
+    "loginExpired": "401,登录过期/未登录，请重新登录"
+  },
+  "envfile": {
+    "setReleaseEditionSuccess": "设置 {{edition}} 发行版成功"
+  },
+  "InputUtil": {
+    "rawString": "RawString",
+    "keyValue": "KeyValue",
+    "parameterIndex": "参数[{{index}}]",
+    "splitArrayHint": "参数使用 | 分割数组",
+    "addKeyValuePair": "添加 Key-Value Pair",
+    "enterAbsolutePath": "请输入绝对路径",
+    "deleteTag": "删除 Tag",
+    "operations": "Operations"
+  },
+  "SelectItem": {
+    "fetchListFailed": "获取字典列表失败！",
+    "fetchContentFailed": "获取字典内容失败：{{error}}"
+  },
+  "OpenWebsite": {
+    "openingNewWindow": "新窗口打开中..."
+  },
+  "Exporter": {
+    "exportData": "导出数据"
+  },
+  "InvalidCacheAndUserData": {
+    "title": "重置用户数据与缓存",
+    "resetHint": "如果你的 {{name}} 出现异常，可使用此功能删除所有本地缓存和用户数据，重连重启。",
+    "warning": "注意，本操作将永久删除缓存数据，难以恢复，请谨慎操作",
+    "syncDeleteDatabase": "同步删除所有数据库内的数据",
+    "confirmDelete": "我确认此风险，立即删除",
+    "resetSuccess": "执行重置用户数据成功"
+  },
+  "TimeRange": {
+    "setTimePoint": "设置时间点",
+    "setStartTime": "点击这里设置开始时间",
+    "setEndTime": "点击这里设置结束时间"
+  },
+  "TimeUtil": {
+    "secondsAgo": "秒前",
+    "minutesAgo": "分钟前",
+    "hoursAgo": "小时前",
+    "daysAgo": "天前"
+  },
+  "ShowModal": {
+    "modalLogicCrash": "弹框内逻辑性崩溃，请关闭重试！"
+  },
+  "ProxyConfigUtil": {
+    "engineVersionTooLow": "引擎版本过低，请更新到 {{version}} 及以上",
+    "checkEngineVersionFailed": "检查引擎版本失败"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "useDownloadUrlToLocal": {
+    "cancelDownloadFailed": "取消下载失败：{{error}}"
+  },
+  "useUploadOSSHooks": {
+    "uploadFailed": "项目上传失败：{{error}}",
+    "notepadFiledHashRequired": "type为notepad时，filedHash必传",
+    "cancelUploadFailed": "取消上传失败：{{error}}"
+  }
+}

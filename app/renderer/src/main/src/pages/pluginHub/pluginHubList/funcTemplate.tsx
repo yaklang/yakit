@@ -63,6 +63,7 @@ import "../../plugins/plugins.scss"
 import styles from "./PluginHubList.module.scss"
 import PluginTabs from "@/components/businessUI/PluginTabs/PluginTabs"
 import {debugToPrintLogs} from "@/utils/logCollection"
+import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
 
 const {ipcRenderer} = window.require("electron")
 const {YakitPanel} = YakitCollapse
@@ -84,6 +85,7 @@ interface HubListFilterProps {
 /** @name 插件列表筛选条件数据组 */
 export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
     const {wrapperClassName, groupList, selecteds, onSelect, isHidden, noDataHint, groupItemExtra} = props
+    const {t} = useI18nNamespaces(["yakitUi"])
 
     const [activeKey, setActiveKey] = useState<string[]>([])
     useEffect(() => {
@@ -114,7 +116,7 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                 wrapperClassName
             )}
         >
-            <div className={styles["hub-list-filter-header"]}>高级筛选</div>
+            <div className={styles["hub-list-filter-header"]}>{t("YakitButton.advancedFilter")}</div>
             <div className={styles["hub-list-filter-body"]}>
                 <YakitCollapse
                     activeKey={activeKey}
@@ -137,7 +139,7 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                                             onClear(item.groupKey)
                                         }}
                                     >
-                                        清空
+                                        {t("YakitButton.clear")}
                                     </YakitButton>
                                 </>
                             }
@@ -176,8 +178,8 @@ export const HubListFilter: React.FC<HubListFilterProps> = memo((props) => {
                         </YakitPanel>
                     ))}
                 </YakitCollapse>
-                {groupList.length > 0 && <div className={styles["to-end"]}>已经到底啦～</div>}
-                {groupList.length === 0 && <YakitEmpty style={{paddingTop: 48}} title={noDataHint || "暂无数据"} />}
+                {groupList.length > 0 && <div className={styles["to-end"]}>{t("YakitEmpty.end_of_list")}</div>}
+                {groupList.length === 0 && <YakitEmpty style={{paddingTop: 48}} title={noDataHint || t("YakitEmpty.noData")} />}
             </div>
         </div>
     )
@@ -228,6 +230,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
         listTabActive = "",
         onListTabActiveChange = () => {}
     } = props
+    const {t} = useI18nNamespaces(["pluginHub", "yakitUi"])
 
     /** 全选框是否为半选状态 */
     const checkIndeterminate = useMemo(() => {
@@ -284,7 +287,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                                 checked={allChecked}
                                 onChange={(e) => setAllChecked(e.target.checked)}
                             />
-                            全选
+                            {t("YakitCheckbox.selectAll")}
                         </div>
 
                         <div className={styles["total-and-selected"]}>
@@ -343,7 +346,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                                             })}
                                         >
                                             <span>
-                                                筛选条件 <span className={styles["total-style"]}>{tagLength}</span>
+                                                {t("HubListOuterList.filterCondition")} <span className={styles["total-style"]}>{tagLength}</span>
                                             </span>
                                             <OutlineXIcon onClick={() => onDelAllTag()} />
                                         </div>
@@ -414,6 +417,7 @@ interface HubGridListProps<T> {
 /** @name 插件网格列表 */
 export const HubGridList: <T>(props: HubGridListProps<T>) => any = memo((props) => {
     const {data, keyName, gridNode, loading, hasMore, updateList, showIndex, setShowIndex} = props
+    const {t} = useI18nNamespaces(["yakitUi"])
 
     const itemHeight = useRef(226)
 
@@ -553,7 +557,7 @@ export const HubGridList: <T>(props: HubGridListProps<T>) => any = memo((props) 
                     )
                 })}
 
-                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>暂无更多数据</div>}
+                {!loading && !hasMore && <div className={styles["no-more-wrapper"]}>{t("YakitEmpty.noMoreData")}</div>}
                 {data.length > 0 && loading && (
                     <div className={styles["loading-wrapper"]}>
                         <YakitSpin wrapperClassName={styles["loading-style"]} />
@@ -807,6 +811,7 @@ export const HubDetailList: <T>(props: HubDetailListProps<T>) => any = memo((pro
         listProps,
         spinLoading
     } = props
+    const {t} = useI18nNamespaces(["pluginHub", "yakitUi"])
 
     /** 全选框是否为半选状态 */
     const checkIndeterminate = useMemo(() => {
@@ -830,7 +835,7 @@ export const HubDetailList: <T>(props: HubDetailListProps<T>) => any = memo((pro
                                 checked={checked}
                                 onChange={(e) => onCheck(e.target.checked)}
                             />
-                            全选
+                            {t("YakitCheckbox.selectAll")}
                         </div>
                         <div className={styles["count-num"]}>
                             Total <span className={styles["num-style"]}>{total}</span>
@@ -1020,17 +1025,18 @@ interface OnlineOptFooterExtraProps {
 /** @name 插件商店单项-点赞|下载 */
 export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((props) => {
     const {isLogin, info, execDownloadInfo = [], onDownload, callback} = props
+    const {t} = useI18nNamespaces(["pluginHub"])
 
     const [starLoading, setStarLoading] = useState<boolean>(false)
     const onStar = useMemoizedFn((e) => {
         e.stopPropagation()
         if (starLoading) return
         if (!info.uuid) {
-            yakitNotify("error", "插件信息错误，无法进行点赞操作")
+            yakitNotify("error", t("OnlineOptFooterExtra.pluginInfoErrorLike"))
             return
         }
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行点赞")
+            yakitNotify("error", t("OnlineOptFooterExtra.loginRequiredLike"))
             return
         }
 
@@ -1061,7 +1067,7 @@ export const OnlineOptFooterExtra: React.FC<OnlineOptFooterExtraProps> = memo((p
         e.stopPropagation()
         if (downloadLoading) return
         if (!info.uuid) {
-            yakitNotify("error", "插件信息错误，无法进行下载操作")
+            yakitNotify("error", t("OnlineOptFooterExtra.pluginInfoErrorDownload"))
             return
         }
         onDownload(info)
@@ -1100,6 +1106,7 @@ interface OwnOptFooterExtraProps {
 /** @name 我的插件单项-下载|分享|更多(改公开|删除) */
 export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) => {
     const {isLogin, info, execDownloadInfo = [], onDownload, execDelInfo = [], onDel, callback} = props
+    const {t} = useI18nNamespaces(["pluginHub"])
 
     const userinfo = useStore((s) => s.userInfo)
 
@@ -1113,7 +1120,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
         e.stopPropagation()
         if (downloadLoading) return
         if (!info.uuid) {
-            yakitNotify("error", "插件信息错误，无法进行下载操作")
+            yakitNotify("error", t("OnlineOptFooterExtra.pluginInfoErrorDownload"))
             return
         }
         onDownload(info)
@@ -1123,10 +1130,10 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
     const onShare = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!info.uuid) {
-            yakitNotify("error", "分享插件的UUID不存在")
+            yakitNotify("error", t("OwnOptFooterExtra.shareUuidMissing"))
             return
         }
-        setClipboardText(info.uuid, {hintText: "插件UUID已粘贴到剪切板"})
+        setClipboardText(info.uuid, {hintText: t("OwnOptFooterExtra.uuidCopied")})
     })
 
     const delLoading = useMemo(() => {
@@ -1138,7 +1145,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
     const handleDel = useMemoizedFn(() => {
         if (delLoading) return
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行删除")
+            yakitNotify("error", t("OwnOptFooterExtra.loginRequiredDelete"))
             return
         }
         onDel(info)
@@ -1148,18 +1155,18 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
     const onState = useMemoizedFn(() => {
         if (stateLoading) return
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以改变状态")
+            yakitNotify("error", t("OwnOptFooterExtra.loginRequiredChange"))
             return
         }
         if (!info.uuid) {
-            yakitNotify("error", "插件关键信息获取错误")
+            yakitNotify("error", t("OwnOptFooterExtra.keyInfoError"))
             return
         }
 
         setStateLoading(true)
         if (info.is_private) {
             const m = showYakitModal({
-                title: "插件基础检测",
+                title: t("OwnOptFooterExtra.pluginBasicDetection"),
                 type: "white",
                 width: "50%",
                 centered: true,
@@ -1247,13 +1254,13 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
                     data: [
                         {
                             key: "state",
-                            label: info.is_private ? "改为公开" : "改为私密",
+                            label: info.is_private ? t("OwnOptFooterExtra.makePublic") : t("OwnOptFooterExtra.makePrivate"),
                             itemIcon: info.is_private ? <OutlineLockopenIcon /> : <OutlineLockclosedIcon />,
                             disabled: stateLoading
                         },
                         {
                             key: "del",
-                            label: "删除线上",
+                            label: t("OwnOptFooterExtra.deleteOnline"),
                             type: "danger",
                             itemIcon: <OutlineTrashIcon />,
                             disabled: delLoading
@@ -1279,6 +1286,7 @@ interface RecycleOptFooterExtraProps {
 /** @name 回收站单项-删除和还原 */
 export const RecycleOptFooterExtra: React.FC<RecycleOptFooterExtraProps> = memo((props) => {
     const {isLogin, info, execDelInfo = [], onDel, restoreCallback} = props
+    const {t} = useI18nNamespaces(["pluginHub"])
 
     const delLoading = useMemo(() => {
         if (!execDelInfo) return false
@@ -1290,7 +1298,7 @@ export const RecycleOptFooterExtra: React.FC<RecycleOptFooterExtraProps> = memo(
     const onRemove = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行删除")
+            yakitNotify("error", t("OwnOptFooterExtra.loginRequiredDelete"))
             return
         }
         if (delLoading) return
@@ -1302,7 +1310,7 @@ export const RecycleOptFooterExtra: React.FC<RecycleOptFooterExtraProps> = memo(
         e.stopPropagation()
         if (restoreLoading) return
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行还原")
+            yakitNotify("error", t("RecycleOptFooterExtra.loginRequiredRestore"))
             return
         }
 
@@ -1348,6 +1356,7 @@ interface LocalOptFooterExtraProps {
 /** @name 本地插件单项-上传|编辑|导出|删除本地 */
 export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((props) => {
     const {isLogin, info, onEdit, uploadInfo, onUpload, onExport, execDelInfo = [], onDel} = props
+    const {t, i18n} = useI18nNamespaces(["pluginHub", "yakitUi"])
 
     const isShowUpload = useMemo(() => {
         return !info.IsCorePlugin
@@ -1361,11 +1370,11 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         e.stopPropagation()
         if (!isShowUpload || uploadLoading) return
         if (!info.ScriptName) {
-            yakitNotify("error", "插件信息错误，无法进行上传操作")
+            yakitNotify("error", t("LocalOptFooterExtra.pluginInfoErrorUpload"))
             return
         }
         if (!isLogin) {
-            yakitNotify("error", "登录后才可以进行上传")
+            yakitNotify("error", t("HubListOnline.loginRequiredUpload"))
             return
         }
         setUploadTipShow(false)
@@ -1375,7 +1384,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
     const handleEdit = useMemoizedFn((e) => {
         e.stopPropagation()
         if (!info.ScriptName) {
-            yakitNotify("error", "插件信息错误，请刷新列表后重试")
+            yakitNotify("error", t("LocalOptFooterExtra.pluginInfoRefreshError"))
             return
         }
         onEdit(info)
@@ -1400,7 +1409,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
     const handleDel = useMemoizedFn(() => {
         if (delLoading) return
         if (!info.ScriptName) {
-            yakitNotify("error", "插件信息错误，无法进行删除操作,请刷新列表重试")
+            yakitNotify("error", t("LocalOptFooterExtra.pluginInfoErrorDelete"))
             return
         }
         onDel(info)
@@ -1411,7 +1420,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
             return [
                 {
                     key: "export",
-                    label: "导出",
+                    label: t("YakitButton.export"),
                     itemIcon: <OutlineExportIcon />
                 }
             ]
@@ -1419,18 +1428,18 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
         return [
             {
                 key: "export",
-                label: "导出",
+                label: t("YakitButton.export"),
                 itemIcon: <OutlineExportIcon />
             },
             {
                 key: "del",
-                label: "删除本地",
+                label: t("LocalOptFooterExtra.deleteLocal"),
                 type: "danger",
                 itemIcon: <OutlineTrashIcon />,
                 disabled: delLoading
             }
         ]
-    }, [info])
+    }, [info, i18n.language])
 
     return (
         <div className={styles["local-opt-footer-extra"]}>

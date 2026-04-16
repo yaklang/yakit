@@ -1,84 +1,91 @@
-import React, {useEffect, useState} from "react";
-import {Col, DatePicker, Row} from "antd";
-import moment from "moment";
+import React, { useEffect, useState } from 'react'
+import { Col, DatePicker, Row } from 'antd'
+import moment from 'moment'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface TimeRangeProps {
-    start?: number
-    end?: number
+  start?: number
+  end?: number
 
-    onStart?(time: number): any
+  onStart?(time: number): any
 
-    onEnd?(time: number): any
+  onEnd?(time: number): any
 }
 
 export interface TimePointProps {
-    value?: number
-    placeholder?: string
+  value?: number
+  placeholder?: string
 
-    setValue(value: number): any
+  setValue(value: number): any
 }
 
-export const TimePoint: React.FC<TimePointProps> = ({value, placeholder, setValue}) => {
-    let m;
-    if (value && value > 0) {
-        m = moment.unix(value)
-    }
+export const TimePoint: React.FC<TimePointProps> = ({ value, placeholder, setValue }) => {
+  const { t, i18n } = useI18nNamespaces(['utils'])
+  let m
+  if (value && value > 0) {
+    m = moment.unix(value)
+  }
 
-    return <div>
-        <DatePicker
-            style={{width: "100%"}}
-            showTime
-            format="YYYY-MM-DD HH:mm:ss"
-            value={m}
-            placeholder={placeholder || "设置时间点"}
-            onChange={e => setValue && e && setValue(e.unix())}
-        />
+  return (
+    <div>
+      <DatePicker
+        style={{ width: '100%' }}
+        showTime
+        format="YYYY-MM-DD HH:mm:ss"
+        value={m}
+        placeholder={placeholder || t('TimeRange.setTimePoint')}
+        onChange={(e) => setValue && e && setValue(e.unix())}
+      />
     </div>
+  )
 }
 
 const TimeRange: React.FC<TimeRangeProps> = (props: TimeRangeProps) => {
-    const { onStart, onEnd } = props;
-    const [start, setStart] = useState(props.start);
-    const [end, setEnd] = useState(props.end);
+  const { onStart, onEnd } = props
+  const { t, i18n } = useI18nNamespaces(['utils'])
+  const [start, setStart] = useState(props.start)
+  const [end, setEnd] = useState(props.end)
 
-    useEffect(() => {
-        onStart && onStart(start || 0);
-    }, [start, onStart]);
+  useEffect(() => {
+    onStart && onStart(start || 0)
+  }, [start, onStart])
 
-    useEffect(() => {
-        onEnd && onEnd(end || 0);
-    }, [end, onEnd]);
+  useEffect(() => {
+    onEnd && onEnd(end || 0)
+  }, [end, onEnd])
 
-    return <div className={"div-left"}>
-        <Row>
-            <Col span={12}>
-                <div style={{marginRight: 4}}>
-                    <DatePicker
-                        style={{width: "100%"}}
-                        showTime
-                        format="YYYY-MM-DD HH:mm:ss"
-                        value={(start && start > 0) ? moment.unix(start) : undefined}
-                        placeholder="点击这里设置开始时间"
-                        onChange={e => {
-                            e != null ? setStart(e.unix()) : setStart(undefined)
-                        }}
-                    />
-                </div>
-            </Col>
-            <Col span={12}>
-                <div style={{marginRight: 4}}>
-                    <DatePicker
-                        style={{width: "100%"}}
-                        showTime
-                        format="YYYY-MM-DD HH:mm:ss"
-                        value={(end && end > 0) ? moment.unix(end) : undefined}
-                        placeholder="点击这里设置结束时间"
-                        onChange={e => e != null ? setEnd(e.unix()) : setEnd(undefined)}
-                    />
-                </div>
-            </Col>
-        </Row>
+  return (
+    <div className={'div-left'}>
+      <Row>
+        <Col span={12}>
+          <div style={{ marginRight: 4 }}>
+            <DatePicker
+              style={{ width: '100%' }}
+              showTime
+              format="YYYY-MM-DD HH:mm:ss"
+              value={start && start > 0 ? moment.unix(start) : undefined}
+              placeholder={t('TimeRange.setStartTime')}
+              onChange={(e) => {
+                e != null ? setStart(e.unix()) : setStart(undefined)
+              }}
+            />
+          </div>
+        </Col>
+        <Col span={12}>
+          <div style={{ marginRight: 4 }}>
+            <DatePicker
+              style={{ width: '100%' }}
+              showTime
+              format="YYYY-MM-DD HH:mm:ss"
+              value={end && end > 0 ? moment.unix(end) : undefined}
+              placeholder={t('TimeRange.setEndTime')}
+              onChange={(e) => (e != null ? setEnd(e.unix()) : setEnd(undefined))}
+            />
+          </div>
+        </Col>
+      </Row>
     </div>
-};
+  )
+}
 
-export default TimeRange;
+export default TimeRange

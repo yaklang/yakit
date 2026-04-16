@@ -8,7 +8,12 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { info } from '@/utils/notification'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { yakitProcessEnv } from '@/services/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import i18n from '@/i18n/i18n'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 
+const tOriginal = i18n.getFixedT(null, 'utils')
 export interface ConfigYaklangEnvironmentProp {}
 
 interface EnvKey {
@@ -30,6 +35,7 @@ interface NewEnvKeyFormProp {
 }
 
 const NewEnvKeyForm: React.FC<NewEnvKeyFormProp> = (props) => {
+  const { t, i18n } = useI18nNamespaces(['utils'])
   const [loading, setLoading] = useState(false)
   const [params, setParams] = useState<SetEnvKey>(props.modified || { Key: '', Value: '' })
 
@@ -55,13 +61,21 @@ const NewEnvKeyForm: React.FC<NewEnvKeyFormProp> = (props) => {
             <Alert type={'info'} message={props.verbose} />
           </Form.Item>
         )}
-        <InputItem label={'变量名'} setValue={(Key) => setParams({ ...params, Key })} value={params.Key} />
-        <InputItem label={'变量值'} setValue={(Value) => setParams({ ...params, Value })} value={params.Value} />
+        <InputItem
+          label={t('ConfigYaklangEnvironment.variableName')}
+          setValue={(Key) => setParams({ ...params, Key })}
+          value={params.Key}
+        />
+        <InputItem
+          label={t('ConfigYaklangEnvironment.variableValue')}
+          setValue={(Value) => setParams({ ...params, Value })}
+          value={params.Value}
+        />
         <Form.Item colon={false} label={' '}>
-          <Button type="primary" htmlType="submit">
+          <YakitButton type="primary" htmlType="submit">
             {' '}
-            设置环境变量{' '}
-          </Button>
+            {t('ConfigYaklangEnvironment.setEnvironmentVariable')}{' '}
+          </YakitButton>
         </Form.Item>
       </Spin>
     </Form>
@@ -69,6 +83,7 @@ const NewEnvKeyForm: React.FC<NewEnvKeyFormProp> = (props) => {
 }
 
 export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = (props) => {
+  const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
   const [keys, setKeys] = useState<EnvKey[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -94,14 +109,14 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
       title={() => {
         return (
           <Space>
-            环境变量列表
-            <Button
+            {t('ConfigYaklangEnvironment.environmentVariableList')}
+            <YakitButton
               size={'small'}
               icon={<PlusOutlined />}
               type={'primary'}
               onClick={() => {
                 const m = showModal({
-                  title: '设置新变量',
+                  title: t('ConfigYaklangEnvironment.newVariableTitle'),
                   width: 600,
                   content: (
                     <NewEnvKeyForm
@@ -114,8 +129,8 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
                 })
               }}
             >
-              设置新变量
-            </Button>
+              {t('ConfigYaklangEnvironment.setNewVariable')}
+            </YakitButton>
             <Button size={'small'} type={'link'} icon={<ReloadOutlined />} onClick={updateKeys} />
           </Space>
         )
@@ -124,7 +139,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
       pagination={false}
       columns={[
         {
-          title: '环境变量名',
+          title: t('ConfigYaklangEnvironment.environmentVariableName'),
           render: (e: EnvKey) => (
             <Space>
               <Tag color={'geekblue'}>{e.Key}</Tag>
@@ -137,23 +152,23 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
           ),
         },
         {
-          title: '变量值',
+          title: t('ConfigYaklangEnvironment.variableValue'),
           render: (e: EnvKey) => <CopyableField text={e.Value} noCopy={!e.Value || e.Value === `""`} />,
         },
         {
-          title: '失效时间',
+          title: t('ConfigYaklangEnvironment.expiredTime'),
           render: (e: EnvKey) => <div>{e.ExpiredAt > 100 ? formatTimestamp(e.ExpiredAt) : '永久'}</div>,
         },
         {
-          title: '操作',
+          title: t('YakitTable.action'),
           render: (key: EnvKey) => {
             return (
               <Space>
-                <Button
+                <YakitButton
                   size={'small'}
                   onClick={() => {
                     const m = showModal({
-                      title: '修改变量',
+                      title: t('ConfigYaklangEnvironment.editVariableTitle'),
                       width: 650,
                       content: (
                         <NewEnvKeyForm
@@ -168,20 +183,20 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
                     })
                   }}
                 >
-                  修改
-                </Button>
+                  {t('YakitButton.modify')}
+                </YakitButton>
                 <YakitPopconfirm
-                  title={'删除本环境变量'}
+                  title={t('ConfigYaklangEnvironment.deleteThisEnvironmentVariable')}
                   onConfirm={() => {
                     yakitProcessEnv.deleteKey({ Key: key.Key }).then(() => {
-                      info('删除成功')
+                      info(t('YakitNotification.deleted'))
                       updateKeys()
                     })
                   }}
                 >
-                  <Button size={'small'} danger={true}>
-                    删除
-                  </Button>
+                  <YakitButton size={'small'} danger={true}>
+                    {t('YakitButton.delete')}
+                  </YakitButton>
                 </YakitPopconfirm>
               </Space>
             )
@@ -193,8 +208,8 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
 }
 
 export const showConfigYaklangEnvironment = (title?: string) => {
-  showModal({
-    title: title ? title : '配置 Yaklang 系统环境变量',
+  showYakitModal({
+    title: title ? title : tOriginal('ConfigYaklangEnvironment.configYaklangSystemEnvironmentVariable'),
     width: 800,
     content: (
       <>

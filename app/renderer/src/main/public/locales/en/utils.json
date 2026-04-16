@@ -6,6 +6,138 @@
     "StartToExecYakScriptViewer": {
       "executeSuccess": "Execution of {{verbose}} succeeded",
       "executeError": "Execution of {{verbose}} encountered an issue:"
+    },
+    "ConfigGlobalReverse": {
+      "dnslogSuccess": "Global DNSLog configured successfully",
+      "dnslogFailed": "Failed to configure global DNSLog: {{error}}",
+      "localReverseIP": "Local reverse IP",
+      "updateYakEngineLocalIP": "Update Yak engine local IP",
+      "publicReverseConfig": "Public reverse connection config",
+      "runOnPublicServer": "Run on a public server",
+      "or": "or",
+      "configured": "Configured",
+      "yakBridgeAddress": "Yak Bridge address",
+      "yakBridgeAddressHelp": "Format: host:port, e.g. cybertunnel.run:64333",
+      "yakBridgePassword": "Yak Bridge password",
+      "yakBridgePasswordHelp": "The --secret value for the yak bridge command",
+      "globalDNSLogConfig": "Global DNSLog config",
+      "reuseYakBridgeConfig": "Reuse Yak Bridge config",
+      "dnslogConfig": "DNSLog config",
+      "dnslogAddressHelp": "DNSLog system address configured in Yak Bridge: [ip]:[port]",
+      "dnslogPassword": "DNSLog password",
+      "configureReverseConnection": "Configure reverse connection"
     }
+  },
+  "ConfigYaklangEnvironment": {
+    "variableName": "Variable name",
+    "variableValue": "Variable value",
+    "setEnvironmentVariable": "Set environment variable",
+    "environmentVariableList": "Environment variable list",
+    "setNewVariable": "Set new variable",
+    "environmentVariableName": "Environment variable name",
+    "expiredTime": "Expiration time",
+    "deleteThisEnvironmentVariable": "Delete this environment variable",
+    "configYaklangSystemEnvironmentVariable": "Configure Yaklang system environment variable",
+    "newVariableTitle": "Set new variable",
+    "editVariableTitle": "Modify variable"
+  },
+  "ConfigSystemProxy": {
+    "getSystemProxyFailed": "Failed to get system proxy: {{error}}",
+    "setSystemProxySuccess": "System proxy configured successfully",
+    "setSystemProxyFailed": "Failed to configure system proxy: {{error}}",
+    "configSystemProxy": "Configure system proxy",
+    "currentSystemProxyStatus": "Current system proxy status:",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "systemProxy": "System proxy",
+    "oneClickConfig": "One-click configure system proxy",
+    "proxyHint": "Due to OS and Yak kernel limitations, the native MacOS OC/Swift interface cannot be used to set the proxy. Yak engine will open an osascript authorization page to change the system proxy. MacOS users can authorize it.",
+    "chromeStartPath": "Chrome start path",
+    "chromeStartPathHint": "If Chrome cannot start, please configure the Chrome start path",
+    "startPath": "Start path",
+    "selectStartPath": "Select start path",
+    "setChromeStartPathSuccess": "Chrome start path set successfully"
+  },
+  "ConfigPcapPermission": {
+    "unavailable": "Unable to get PCAP support information",
+    "fetchStatusFailed": "Failed to get Pcap permission status: {{error}}",
+    "fetchPlatformFailed": "Failed to get operating system for {{name}}: {{error}}",
+    "promoteFailed": "Failed to elevate Pcap user permissions: {{error}}",
+    "tooltip": "Principle: on MacOS, set permissions for /dev/bpf* groups; refer to Wireshark ChmodBPF configuration. On Linux, you can use setcap to set pcap permissions. On Windows, it is recommended to start with elevated administrator privileges via UAC.",
+    "windowsHint": "Windows can use administrator privileges to start {{name}} to gain Pcap access",
+    "unixHint": "Linux and MacOS can grant full network interface permissions to the user via permission and group settings",
+    "privilegedHint": "You can use features such as SYN scan normally without fixing anything",
+    "notPrivilegedHint": "The current engine does not have network interface access permissions",
+    "enablePcap": "Enable PCAP permissions",
+    "modalTitle": "Fix Pcap permissions"
+  },
+  "ConfigEngineProxy": {
+    "saveSuccess": "Engine proxy configured successfully",
+    "currentProxy": "Current engine proxy:",
+    "hint": "This configuration will automatically apply to most Yak plugins. If a proxy is configured in the scan module, that proxy will generally override this one.",
+    "proxyLabel": "Proxy",
+    "proxyHelp": "For example, http://127.0.0.1:7890 or socks://127.0.0.1:7890 are both valid",
+    "updateProxy": "Update engine proxy",
+    "modalTitle": "Configure engine scan proxy"
+  },
+  "ConfigSystemMcp": {
+    "currentStatus": "Current status:",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "startAddress": "Start address:",
+    "startAddressHelp": "yak starts mcp via SSE; enter the start address where mcp is needed"
+  },
+  "servicesFetch": {
+    "requestTimeout": "Request timed out, please try again",
+    "loginExpired": "401, login expired/not logged in, please log in again"
+  },
+  "envfile": {
+    "setReleaseEditionSuccess": "Set {{edition}} release edition successfully"
+  },
+  "InputUtil": {
+    "rawString": "RawString",
+    "keyValue": "KeyValue",
+    "parameterIndex": "Parameter[{{index}}]",
+    "splitArrayHint": "Use | to split arrays",
+    "addKeyValuePair": "Add Key-Value Pair",
+    "enterAbsolutePath": "Please enter an absolute path",
+    "deleteTag": "Delete Tag",
+    "operations": "Operations"
+  },
+  "SelectItem": {
+    "fetchListFailed": "Failed to fetch dictionary list!",
+    "fetchContentFailed": "Failed to fetch dictionary content: {{error}}"
+  },
+  "OpenWebsite": {
+    "openingNewWindow": "Opening new window..."
+  },
+  "Exporter": {
+    "exportData": "Export Data"
+  },
+  "InvalidCacheAndUserData": {
+    "title": "Reset user data and cache",
+    "resetHint": "If your {{name}} is behaving abnormally, you can use this feature to delete all local cache and user data, then reconnect and restart.",
+    "warning": "Warning: this action will permanently delete cache data and is difficult to recover. Please proceed with caution.",
+    "syncDeleteDatabase": "Also delete all data in the database",
+    "confirmDelete": "I understand the risk, delete now",
+    "resetSuccess": "User data reset completed successfully"
+  },
+  "TimeRange": {
+    "setTimePoint": "Set time point",
+    "setStartTime": "Click here to set the start time",
+    "setEndTime": "Click here to set the end time"
+  },
+  "TimeUtil": {
+    "secondsAgo": "seconds ago",
+    "minutesAgo": "minutes ago",
+    "hoursAgo": "hours ago",
+    "daysAgo": "days ago"
+  },
+  "ShowModal": {
+    "modalLogicCrash": "The dialog logic has crashed, please close and try again!"
+  },
+  "ProxyConfigUtil": {
+    "engineVersionTooLow": "Engine version is too low, please update to {{version}} or above",
+    "checkEngineVersionFailed": "Failed to check engine version"
   }
 }

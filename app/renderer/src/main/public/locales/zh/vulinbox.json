@@ -66,7 +66,6 @@
     "safeModeTooltip": "安全模式将会禁用部分危险的漏洞，但是可以有效避免 Vulinbox 被恶意利用"
   },
   "InstallVulinboxPrompt": {
-    "installing": "正在安装 Vulinbox",
-    "downloadedPercent": "已下载 {{percent}}%"
+    "installing": "正在安装 Vulinbox"
   }
 }

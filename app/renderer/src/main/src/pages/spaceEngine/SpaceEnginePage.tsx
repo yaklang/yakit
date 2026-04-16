@@ -389,7 +389,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
                         { label: "Hunter", value: "hunter" },
                         { label: "Shodan", value: "shodan" },
                         { label: "Quake", value: "quake" },
-                        { label: "零零测绘", value: "zone" }
+                        { label: t("SpaceEngineFormContent.zone"), value: "zone" }
                     ]}
                     onSelect={onSelectType}
                     disabled={disabled}
