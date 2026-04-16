@@ -109,6 +109,8 @@ export interface UseTaskChatEvents extends UseHookBaseEvents {
   handleSetElements: (newElements: ReActChatRenderItem[]) => void
   /** 用户手动介入逻辑 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 清空当前任务树 */
+  handleResetPlanTree: () => void
 }
 // #endregion
 

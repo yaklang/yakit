@@ -647,6 +647,7 @@ function useTaskChat(params?: UseTaskChatParams) {
       handlePlanExecEnd,
       handleSetElements,
       handleUserManualIntervention,
+      handleResetPlanTree,
     }
   }, [])
 

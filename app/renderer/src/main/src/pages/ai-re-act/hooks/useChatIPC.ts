@@ -501,7 +501,11 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   /** 流接口开始前需要重置的一些状态 */
   const handleResetBeforeStart = useMemoizedFn(() => {
+    // 清空专注模式
     handleResetFocusMode()
+    // 清空任务规划相关ID
+    handleResetTaskChatID()
+    taskChatEvent.handleResetPlanTree()
   })
 
   /** 重置所有数据 */
