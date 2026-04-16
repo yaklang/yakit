@@ -881,7 +881,8 @@ const getTokenCountOption = (
     name,
     type: 'line',
     smooth: false,
-    symbol: 'none',
+    symbol: 'circle',
+    symbolSize: 6,
     showSymbol: false,
     z,
     lineStyle: {
@@ -898,6 +899,11 @@ const getTokenCountOption = (
     },
     emphasis: {
       focus: 'none',
+      itemStyle: {
+        color: '#fff',
+        borderWidth: 1.5,
+        borderColor: color,
+      },
     },
     blur: {
       lineStyle: {

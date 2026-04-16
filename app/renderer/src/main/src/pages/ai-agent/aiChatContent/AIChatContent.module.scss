@@ -272,10 +272,7 @@
     flex-direction: column;
     gap: 8px;
     padding: 0 12px 12px;
-    overflow-y: hidden;
-    &:hover {
-      overflow-y: overlay;
-    }
+    overflow-y: overlay;
     .token-wrapper {
       @extend %echarts-wrapper;
       .token-heard {

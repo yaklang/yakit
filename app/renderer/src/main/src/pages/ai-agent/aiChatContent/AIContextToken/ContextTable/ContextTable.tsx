@@ -67,6 +67,7 @@ const ContextTable: FC<{
   contextSectionsData?: AIContextSectionsDetail
 }> = ({ contextSectionsData }) => {
   const [previewKey, setPreviewKey] = useState<string>('')
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([])
 
   const columns: TableColumnsType<AIAgentGrpcApi.AIContextSections> = useMemo(
     () => [
@@ -146,7 +147,18 @@ const ContextTable: FC<{
         scroll={{ y: 288 }}
         pagination={false}
         rowKey="key"
+        onRow={(record) => ({
+          style: { cursor: record.children?.length ? 'pointer' : undefined },
+          onClick: () => {
+            if (!record.children?.length) return
+            setExpandedRowKeys((prev) =>
+              prev.includes(record.key) ? prev.filter((k) => k !== record.key) : [...prev, record.key],
+            )
+          },
+        })}
         expandable={{
+          expandedRowKeys,
+          onExpandedRowsChange: (keys) => setExpandedRowKeys([...keys]),
           expandIcon: ({ expanded, onExpand, record }) => {
             const hasChildren = !!record.children?.length
 
