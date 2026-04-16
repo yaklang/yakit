@@ -42,7 +42,6 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
     if (currentTaskItem.task_tree.length === 0) return data.records || []
     return [currentTaskItem].concat(data.records || [])
   }, [currentTaskItem.task_tree.length, data.records])
-
   return (
     <div className={styles['history-task-tree-container']} ref={historyContainerRef}>
       <YakitCollapse
@@ -114,6 +113,14 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
     }
   }, [isExecuting])
   const isShow = useMemoizedFn(() => {
+    const currentCoordinatorId = getTaskInfo()?.coordinatorId || ''
+    const taskInfo = getTaskInfo()
+    let show = true
+    if (coordinatorId === currentCoordinatorId) {
+      show = taskInfo?.status === AITaskStatus.error && !chatIPCData?.taskStatus?.loading
+    } else {
+      show = chatIPCData?.execute
+    }
     // 如果当前有任务正在等待被恢复
     if (sendRecoverParamsRef.current) {
       // 仅保持被点击的那个任务节点按钮显示（用于展示 loading 状态），隐藏其他所有的继续按钮
@@ -122,13 +129,14 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
         sendRecoverParamsRef.current.taskIndex === taskIndex
       )
     }
-    const isStopping = getTaskInfo()?.status === AITaskStatus.error && taskStatus.loading
+    const isStopping = taskInfo?.status === AITaskStatus.error && taskStatus.loading
+
     // 如果系统正处于正在停止/取消任务的全局 Loading 状态，或当前任务本身正处于停止进行中的状态
     if (chatIPCData.cancelTaskLoading || isStopping) {
       return false
     }
 
-    return true
+    return show
   })
   const onSendRecover = useMemoizedFn((params: SendRecoverParams) => {
     const { coordinatorId, taskIndex } = params
@@ -197,27 +205,11 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
 /**任务历史的单个树节点 */
 const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => {
   const { item, currentCoordinatorId } = props
-  const { chatIPCData } = useChatIPCStore()
-  const { chatIPCEvents } = useChatIPCDispatcher()
   const time = useCreation(() => {
     return formatTimestamp(item.created_at_unix)
   }, [item.created_at_unix])
-  const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchTaskChatID()
-  })
-
-  const onCurrentTaskAITreeTitleExtraNode = useMemoizedFn((value: AITaskInfoProps) => {
-    const taskInfo = getTaskInfo()
-    const isShow = taskInfo?.status === AITaskStatus.error && !chatIPCData?.taskStatus?.loading
-    return isShow ? (
-      <AIHistoryContinueTask taskIndex={value.index} coordinatorId={taskInfo?.coordinatorId || ''} />
-    ) : null
-  })
   const onAITreeTitleExtraNode = useMemoizedFn((value: AITaskInfoProps) => {
-    if (item.coordinator_id === currentCoordinatorId) return onCurrentTaskAITreeTitleExtraNode(value)
-    return chatIPCData?.execute ? (
-      <AIHistoryContinueTask coordinatorId={item.coordinator_id} taskIndex={value.index} />
-    ) : null
+    return <AIHistoryContinueTask coordinatorId={item.coordinator_id} taskIndex={value.index} />
   })
   return (
     <div className={styles['tree-item']}>
