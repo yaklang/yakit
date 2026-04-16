@@ -3,18 +3,15 @@ import { useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEf
 import { AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps } from '../aiAgentType'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AITree } from '../aiTree/AITree'
-import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { grpcQueryAIToolDetails } from '../grpc'
 import {
   AIChatQSData,
   AIChatQSDataTypeEnum,
-  AITaskInfoProps,
   AITaskStartInfo,
   ReActChatRenderItem,
 } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIEventQueryRequest, AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIEventQueryRequest, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { taskAnswerToIconMap } from '../defaultConstant'
 import { AIChatListItem } from '../components/aiChatListItem/AIChatListItem'
 import StreamCard from '../components/StreamCard'
@@ -33,9 +30,7 @@ import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import TaskLoading from './TaskLoading/TaskLoading'
 import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
-import { AIHistoryContinueTask, HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
-import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 
 export enum AIChatLeft {
@@ -57,7 +52,6 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     valuePropName: 'expand',
     trigger: 'setExpand',
   })
-  const [activeKey, setActiveKey] = useState<string>('')
   const hasTaskTree = useCreation(() => {
     return (taskChat?.elements?.length ?? 0) > 0
   }, [taskChat?.elements?.length])
@@ -66,12 +60,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
       setActiveTab(AIChatLeft.TaskTree)
     }
   }, [hasTaskTree])
-  useUpdateEffect(() => {
-    if (!!chatIPCData.taskStatus.loading) {
-      const coordinatorId = getTaskInfo()?.coordinatorId || 'current-task'
-      setActiveKey(coordinatorId)
-    }
-  }, [chatIPCData.taskStatus.loading])
+
   const planHistoryList = useCreation(() => {
     return (
       chatIPCData.planHistoryList || {
@@ -96,52 +85,35 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     handleSendSyncMessage({ syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
   })
 
-  const onAITreeTitleExtraNode = useMemoizedFn((value: AITaskInfoProps) => {
-    const taskInfo = getTaskInfo()
-    const isShow = taskInfo?.status === AITaskStatus.error && !chatIPCData?.taskStatus?.loading
-    return isShow ? (
-      <AIHistoryContinueTask taskIndex={value.index} coordinatorId={taskInfo?.coordinatorId || ''} />
-    ) : null
-  })
-
   const renderDom = useMemoizedFn(() => {
-    const taskLength = taskTree?.length
     switch (activeTab) {
       case AIChatLeft.TaskTree:
-        const coordinatorId = getTaskInfo()?.coordinatorId || 'current-task'
-        const historyLength = planHistoryList?.records?.length
+        const coordinatorId = getTaskInfo()?.coordinatorId || ''
+        const currentTaskItem: AIAgentGrpcApi.PlanHistory = {
+          coordinator_id: coordinatorId,
+          created_at: '',
+          created_at_unix: 0,
+          session_id: '',
+          task_progress: {
+            total_tasks: 0,
+            completed_tasks: 0,
+            skipped_tasks: 0,
+            aborted_tasks: 0,
+            current_index: 0,
+            current_task_index: '',
+            current_task: '',
+            current_goal: '',
+            phase: 'NotCompleted',
+            updated_at: 0,
+          },
+          task_tree: taskTree,
+          updated_at: '',
+          updated_at_unix: 0,
+          root_task_name: taskName,
+        }
         return (
           <div className={styles['history-task-tree-container']}>
-            <>
-              {taskLength > 0 ? (
-                <YakitCollapse
-                  destroyInactivePanel
-                  accordion
-                  bordered={false}
-                  activeKey={activeKey}
-                  style={{ marginBottom: 8 }}
-                  onChange={(key) => setActiveKey(key as string)}
-                >
-                  <YakitCollapse.YakitPanel
-                    header={
-                      <div className={styles['history-task-tree-item-header']}>
-                        <div className={styles['history-task-tree-item-header-left']}>
-                          <div className={styles['history-task-tree-item-header-title']}>{taskName}</div>
-                        </div>
-
-                        <YakitTag color="info" size="small" fullRadius>
-                          当前任务
-                        </YakitTag>
-                      </div>
-                    }
-                    key={coordinatorId}
-                  >
-                    <AITree tasks={taskTree} aiTreeTitleExtraNode={onAITreeTitleExtraNode} />
-                  </YakitCollapse.YakitPanel>
-                </YakitCollapse>
-              ) : null}
-              {historyLength > 0 && <HistoryTaskTree data={planHistoryList} isHaveCurrentTask={taskLength > 0} />}
-            </>
+            <HistoryTaskTree data={planHistoryList} currentTaskItem={currentTaskItem} />
           </div>
         )
       case AIChatLeft.Timeline:

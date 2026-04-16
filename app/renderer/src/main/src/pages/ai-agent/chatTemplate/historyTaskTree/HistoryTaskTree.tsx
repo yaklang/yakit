@@ -18,19 +18,30 @@ import { OutlineLoadingIcon, OutlinePlay2Icon } from '@/assets/icon/outline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { Tooltip } from 'antd'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
-  const { data, isHaveCurrentTask } = props
+  const { data, currentTaskItem } = props
 
-  const [activeKey, setActiveKey] = useState<string>(isHaveCurrentTask ? '' : data.records[0]?.coordinator_id || '')
+  const currentCoordinatorId = useCreation(() => {
+    return currentTaskItem?.coordinator_id || ''
+  }, [currentTaskItem?.coordinator_id])
+  const [activeKey, setActiveKey] = useState<string>('')
   const historyContainerRef = useRef<HTMLDivElement>(null)
+
   useUpdateEffect(() => {
-    if (isHaveCurrentTask) {
-      setActiveKey('')
-    } else if (!!data.records[0]) {
-      setActiveKey(data.records[0]?.coordinator_id)
+    const firstItemId = data.records[0]?.coordinator_id || ''
+    if (!!currentTaskItem.coordinator_id) {
+      setActiveKey(currentTaskItem.coordinator_id)
+    } else if (!!firstItemId) {
+      setActiveKey(firstItemId)
     }
-  }, [isHaveCurrentTask, data.records[0]])
+  }, [currentTaskItem.coordinator_id, data.records[0]])
+
+  const treeData = useCreation(() => {
+    if (currentTaskItem.task_tree.length === 0) return data.records || []
+    return [currentTaskItem].concat(data.records || [])
+  }, [currentTaskItem.task_tree.length, data.records])
 
   return (
     <div className={styles['history-task-tree-container']} ref={historyContainerRef}>
@@ -39,10 +50,10 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
         accordion
         bordered={false}
         activeKey={activeKey}
-        onChange={(key) => setActiveKey(key as string)}
+        onChange={(k) => setActiveKey(k as string)}
         style={{ marginBottom: 8 }}
       >
-        {data?.records?.map((item) => {
+        {treeData.map((item) => {
           return (
             <YakitCollapse.YakitPanel
               header={
@@ -51,12 +62,17 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                     <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
                       {item?.root_task_name}
                     </div>
+                    {item.coordinator_id === currentCoordinatorId && (
+                      <YakitTag color="info" size="small" fullRadius>
+                        当前任务
+                      </YakitTag>
+                    )}
                   </div>
                 </div>
               }
               key={item.coordinator_id}
             >
-              <HistoryTaskTreeItem item={item} />
+              <HistoryTaskTreeItem item={item} currentCoordinatorId={currentTaskItem.coordinator_id} />
             </YakitCollapse.YakitPanel>
           )
         })}
@@ -65,7 +81,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   )
 })
 
-export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((props) => {
+const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((props) => {
   const { coordinatorId, taskIndex } = props
   const { chatIPCData } = useChatIPCStore()
   const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
@@ -180,20 +196,33 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 
 /**任务历史的单个树节点 */
 const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => {
-  const { item } = props
+  const { item, currentCoordinatorId } = props
   const { chatIPCData } = useChatIPCStore()
+  const { chatIPCEvents } = useChatIPCDispatcher()
   const time = useCreation(() => {
     return formatTimestamp(item.created_at_unix)
   }, [item.created_at_unix])
+  const getTaskInfo = useMemoizedFn(() => {
+    return chatIPCEvents.fetchTaskChatID()
+  })
 
+  const onCurrentTaskAITreeTitleExtraNode = useMemoizedFn((value: AITaskInfoProps) => {
+    const taskInfo = getTaskInfo()
+    const isShow = taskInfo?.status === AITaskStatus.error && !chatIPCData?.taskStatus?.loading
+    return isShow ? (
+      <AIHistoryContinueTask taskIndex={value.index} coordinatorId={taskInfo?.coordinatorId || ''} />
+    ) : null
+  })
   const onAITreeTitleExtraNode = useMemoizedFn((value: AITaskInfoProps) => {
+    if (item.coordinator_id === currentCoordinatorId) return onCurrentTaskAITreeTitleExtraNode(value)
     return chatIPCData?.execute ? (
       <AIHistoryContinueTask coordinatorId={item.coordinator_id} taskIndex={value.index} />
     ) : null
   })
   return (
     <div className={styles['tree-item']}>
-      <div className={styles['time']}>更新时间:{time}</div>
+      {!(item.coordinator_id === currentCoordinatorId) && <div className={styles['time']}>更新时间:{time}</div>}
+
       <AITree tasks={item.task_tree} className={styles['tree-wrapper']} aiTreeTitleExtraNode={onAITreeTitleExtraNode} />
     </div>
   )
