@@ -118,7 +118,6 @@ import blastingPwdmp4 from '@/assets/blasting-pwd.mp4'
 import blastingCountmp4 from '@/assets/blasting-count.mp4'
 import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import { WebFuzzerType } from './WebFuzzerPage/WebFuzzerPageType'
-import { setHotPatchCache } from './hotPatchCache'
 import cloneDeep from 'lodash/cloneDeep'
 import { useGlobalHotPatch, useGlobalHotPatchTag } from '@/store/globalHotPatch'
 
@@ -1267,7 +1266,6 @@ const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
     const httpParams: FuzzerRequestProps = getFuzzerRequestParams()
     //如果有新增的代理配置 则存配置项
     checkProxyEndpoints(advancedConfigValue.proxy)
-    setHotPatchCache({ hotPatchCodeOpen: hotPatchEnabled, hotPatchCode: hotPatchCodeRef.current })
     setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_PROXY, `${advancedConfigValue.proxy}`)
     setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Server_Config, JSON.stringify(httpParams.DNSServers))
     setRemoteValue(FuzzerRemoteGV.WEB_FUZZ_DNS_Hosts_Config, JSON.stringify(httpParams.EtcHosts))

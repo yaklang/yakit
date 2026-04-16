@@ -666,6 +666,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     pages,
     clearAllData,
     getCurrentSelectPageId,
+    queryPagesDataById,
     setCurrentPageTabRouteKey,
     clearOtherDataByRoute,
   } = usePageInfo(
@@ -676,6 +677,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       pages: s.pages,
       clearAllData: s.clearAllData,
       getCurrentSelectPageId: s.getCurrentSelectPageId,
+      queryPagesDataById: s.queryPagesDataById,
       setCurrentPageTabRouteKey: s.setCurrentPageTabRouteKey,
       clearOtherDataByRoute: s.clearOtherDataByRoute,
     }),
@@ -1582,8 +1584,12 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         newAdvancedConfigValue.noSystemProxy = noSystemProxy
       }
 
-      // 获取全局热加载缓存信息
-      const { hotPatchCode, hotPatchOpen } = await getHotPatchCodeInfo()
+      // 共享热加载时，以当前选中的 WebFuzzer 状态为准
+      const currentPageId = getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
+      const currentPageInfo = currentPageId
+        ? queryPagesDataById(YakitRoute.HTTPFuzzer, currentPageId)?.pageParamsInfo?.webFuzzerPageInfo
+        : undefined
+      const { hotPatchCode, hotPatchOpen } = await getHotPatchCodeInfo(currentPageInfo)
 
       openMenuPage(
         { route: YakitRoute.HTTPFuzzer },
