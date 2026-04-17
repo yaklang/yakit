@@ -4983,7 +4983,9 @@ export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo
 
 // 发送web fuzzer const
 export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxyStr?: string, fromMITM?: boolean) => {
-  let params = {}
+  let params = {},
+    isHttpUrl = rowData.Url.startsWith('http://')
+
   // 只有从 MITM 页面调用时才获取HTTPS 配置&禁用系统代理
   if (fromMITM) {
     try {
@@ -4997,7 +4999,7 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
         advancedConfigResult.status === 'fulfilled' ? advancedConfigResult.value.DisableSystemProxy : false
       const MITMData = { noSystemProxy: disableSystemProxy }
 
-      if (stateSecretHijacking) {
+      if (stateSecretHijacking && !isHttpUrl) {
         if (['enableGMTLS', '1'].includes(stateSecretHijacking)) {
           Object.assign(MITMData, { enableGMTLS: true })
         } else if (stateSecretHijacking === 'randomJA3') {
@@ -5019,7 +5021,7 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
       type: 'fuzzer',
       data: {
         openFlag,
-        isHttps: rowData.Url.startsWith('http://') ? false : rowData.IsHTTPS,
+        isHttps: isHttpUrl ? false : rowData.IsHTTPS,
         downstreamProxyStr,
         ...params,
         request: rowData.InvalidForUTF8Request
