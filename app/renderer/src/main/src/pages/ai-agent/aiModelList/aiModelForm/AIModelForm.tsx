@@ -499,7 +499,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
     } else if (currentSelectShowType === 'responseContent') {
       return testResult?.ResponseContent || ''
     } else if (currentSelectShowType === 'recommendConfig') {
-      return JSON.stringify(testResult?.RecommendConfig, null, 2)
+      return JSON.stringify(testResult?.RecommendConfig, null, 2) || ''
     }
     return ''
   }, [currentSelectShowType, testResult])
@@ -528,6 +528,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
               currentSelectShowType === 'recommendConfig' && (
                 <YakitButton
                   size="small"
+                  disabled={!testResult?.RecommendConfig}
                   onClick={() => {
                     if (!testResult) return
                     onApplyRecommendConfig?.(testResult?.RecommendConfig)
