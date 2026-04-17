@@ -1,13 +1,16 @@
 .roleAdminPage {
-    height: calc(100% - 30px);
-    .edit-icon {
-        svg {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
+  height: calc(100% - 30px);
+  .edit-icon {
+    svg {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
     }
-    .del-icon {
-        svg {
-            color: var(--Colors-Use-Error-Primary);
-        }
+  }
+  .del-icon {
+    svg {
+      color: var(--Colors-Use-Error-Primary);
     }
+  }
+}
+.icon-question {
+  color: var(--Colors-Use-Neutral-Disable);
 }

@@ -886,7 +886,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
             bordered={false}
             className={styles['ai-third-party-application-config-collapse']}
           >
-            <Collapse.Panel header="高级配置" key="1">
+            <Collapse.Panel header="高级配置" key="1" forceRender={true}>
               {/* 可选的表单项 */}
               {renderOptionalFormItems()}
               <Form.Item label={'Header'} name="Headers">

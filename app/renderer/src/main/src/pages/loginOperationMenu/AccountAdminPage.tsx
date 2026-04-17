@@ -859,6 +859,9 @@ const AccountList: React.FC<AccountListProps> = (props) => {
     {
       title: t('AccountList.role'),
       dataKey: 'role_name',
+      render: (text) => {
+        return <span>{text ?? t('AccountList.defaultRole')}</span>
+      },
     },
     {
       title: t('AccountList.createdAt'),

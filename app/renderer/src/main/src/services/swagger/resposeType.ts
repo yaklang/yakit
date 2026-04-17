@@ -145,6 +145,10 @@ export declare namespace API {
     userName: string
     fileName: string
     filePath: string
+    /**
+     * other_file 其他文件 yak_data 安装包
+     */
+    fileType?: string
   }
   export interface UploadDataResponse extends Paging {
     data: UploadDataList[]
@@ -469,6 +473,7 @@ export declare namespace API {
     name: string
     createdAt: number
     checkPlugin: boolean
+    builtIn?: boolean
   }
   export interface RiskUploadResponse extends Paging {
     data: RiskLists[]
