@@ -37,11 +37,6 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
       setActiveKey(firstItemId)
     }
   }, [currentCoordinatorId, data.records[0]])
-
-  const treeData = useCreation(() => {
-    if (currentTaskItem.task_tree.length === 0) return data.records || []
-    return [currentTaskItem].concat(data.records || [])
-  }, [currentTaskItem.task_tree.length, data.records])
   return (
     <div className={styles['history-task-tree-container']} ref={historyContainerRef}>
       <YakitCollapse
@@ -50,31 +45,51 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
         bordered={false}
         activeKey={activeKey}
         onChange={(k) => setActiveKey(k as string)}
-        style={{ marginBottom: 8 }}
+        style={{ marginBottom: 8, height: '100%' }}
       >
-        {treeData.map((item) => {
-          return (
-            <YakitCollapse.YakitPanel
-              header={
-                <div className={styles['history-task-tree-item-header']}>
-                  <div className={styles['history-task-tree-item-header-left']}>
-                    <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
-                      {item?.root_task_name}
-                    </div>
-                    {item.coordinator_id === currentCoordinatorId && (
-                      <YakitTag color="info" size="small" fullRadius>
-                        当前任务
-                      </YakitTag>
-                    )}
+        {currentTaskItem.task_tree.length > 0 && (
+          <YakitCollapse.YakitPanel
+            header={
+              <div className={styles['history-task-tree-item-header']}>
+                <div className={styles['history-task-tree-item-header-left']}>
+                  <div
+                    className={styles['history-task-tree-item-header-title']}
+                    title={currentTaskItem?.root_task_name}
+                  >
+                    {currentTaskItem?.root_task_name}
                   </div>
+                  <YakitTag color="info" size="small" fullRadius>
+                    当前任务
+                  </YakitTag>
                 </div>
-              }
-              key={item.coordinator_id}
-            >
-              <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} />
-            </YakitCollapse.YakitPanel>
-          )
-        })}
+              </div>
+            }
+            key={currentCoordinatorId}
+          >
+            <HistoryTaskTreeItem item={currentTaskItem} currentCoordinatorId={currentCoordinatorId} />
+          </YakitCollapse.YakitPanel>
+        )}
+        {data.records
+          // 历史任务树会包含当前正在执行的任务树，需要将其过滤
+          .filter((ele) => ele.coordinator_id !== currentCoordinatorId)
+          .map((item) => {
+            return (
+              <YakitCollapse.YakitPanel
+                header={
+                  <div className={styles['history-task-tree-item-header']}>
+                    <div className={styles['history-task-tree-item-header-left']}>
+                      <div className={styles['history-task-tree-item-header-title']} title={item?.root_task_name}>
+                        {item?.root_task_name}
+                      </div>
+                    </div>
+                  </div>
+                }
+                key={item.coordinator_id}
+              >
+                <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} />
+              </YakitCollapse.YakitPanel>
+            )
+          })}
       </YakitCollapse>
     </div>
   )

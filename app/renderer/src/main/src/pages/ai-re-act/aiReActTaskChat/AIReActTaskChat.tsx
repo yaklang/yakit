@@ -605,9 +605,13 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
         return null
     }
   })
+  const isSubTaskInProgress = useMemoizedFn(() => {
+    return taskChat?.plan?.task_tree?.length > 0 && !taskChat?.plan?.task_tree?.every((task) => !task.progress)
+  })
+
   return (
     <>
-      {getTaskInfo()?.status === AITaskStatus.inProgress && taskChat?.plan?.task_tree?.length > 0 && (
+      {getTaskInfo()?.status === AITaskStatus.inProgress && isSubTaskInProgress() && (
         <YakitPopconfirm
           onConfirm={() => {
             syncIdOfStopSubTask.current = randomString(8)
