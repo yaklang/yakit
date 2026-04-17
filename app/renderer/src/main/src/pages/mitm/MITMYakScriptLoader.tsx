@@ -461,20 +461,22 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         )}
       </div>
 
-      <PluginHasParamsDrawer
-        visible={mitmParamsDrawer}
-        placementDrawer="left"
-        pluginType={'mitm'}
-        scriptName={i.ScriptName}
-        drawerWidth={drawerWidth}
-        onSetDrawerWidth={setDrawerWidth}
-        onCloseParamsDrawer={setMitmParamsDrawer}
-        onOkParamsDrawer={onOkMitmParamsDrawer}
-        initFormValue={mitmParamsInitFormValueRef.current}
-        defaultFormValue={mitmParamsDefaultFormValueRef.current}
-        requiredParams={mitmParamsRequiredParamsRef.current}
-        groupParams={mitmParamsGroupParamsRef.current}
-      />
+      {mitmParamsDrawer && (
+        <PluginHasParamsDrawer
+          visible={mitmParamsDrawer}
+          placementDrawer="left"
+          pluginType={'mitm'}
+          scriptName={i.ScriptName}
+          drawerWidth={drawerWidth}
+          onSetDrawerWidth={setDrawerWidth}
+          onCloseParamsDrawer={setMitmParamsDrawer}
+          onOkParamsDrawer={onOkMitmParamsDrawer}
+          initFormValue={mitmParamsInitFormValueRef.current}
+          defaultFormValue={mitmParamsDefaultFormValueRef.current}
+          requiredParams={mitmParamsRequiredParamsRef.current}
+          groupParams={mitmParamsGroupParamsRef.current}
+        />
+      )}
     </div>
   )
 })

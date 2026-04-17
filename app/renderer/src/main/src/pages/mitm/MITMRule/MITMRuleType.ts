@@ -3,11 +3,18 @@ import { ForwardedRef, ReactNode } from 'react'
 import { HTTPCookieSetting, HTTPHeader } from '../MITMContentReplacerHeaderOperator'
 import { MitmStatus } from '../MITMPage'
 
+export interface MITMSecondaryStagesItem {
+  Regexp: string
+  ResultTemplate: string
+  Joiner: string
+}
+
 export interface MITMContentReplacerRule {
   // 文本字符串，正则/Re2/字符串硬匹配
   Id: number
   Index: number
   Rule: string
+  SecondaryStages?: MITMSecondaryStagesItem[]
   ExcludeSuffix?: string[]
   RegexpGroups: number[]
   /** @description 捕获组输出模板，支持 $1、\1、{1} */

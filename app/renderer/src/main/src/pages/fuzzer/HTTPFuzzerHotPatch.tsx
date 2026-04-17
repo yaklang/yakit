@@ -23,7 +23,9 @@ import {
   OutlineXIcon,
   OutlineArrowsexpandIcon,
   OutlineArrowscollapseIcon,
+  OutlineLightningboltIcon,
 } from '@/assets/icon/outline'
+import { SolidLightningboltIcon } from '@/assets/icon/solid'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
   defaultWebFuzzerPageInfo,
@@ -33,7 +35,7 @@ import {
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { shallow } from 'zustand/shallow'
-import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
+import { PageNodeItemProps, usePageInfo, WebFuzzerPageInfoProps } from '@/store/pageInfo'
 import { cloneDeep } from 'lodash'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
@@ -53,7 +55,6 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { getHotPatchCache, setHotPatchCache } from './hotPatchCache'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 interface HTTPFuzzerHotPatchProp {
@@ -128,18 +129,6 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
       }
     })
 
-    getRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode).then((e) => {
-      if (!!e) {
-        try {
-          const obj = JSON.parse(e) || {}
-          if (obj.hotPatchCodeOpen && initWebFuzzerPageInfo().hotPatchCode === obj.hotPatchCode) {
-            setHotPatchCodeOpen(obj.hotPatchCodeOpen)
-            initHotPatchCodeOpen.current = obj.hotPatchCodeOpen
-          }
-        } catch (error) {}
-      }
-    })
-
     return () => {
       setRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO, getParams().Template).then(() => {})
     }
@@ -147,10 +136,6 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
 
   const saveCode = useMemoizedFn((hotPatchCode: string) => {
     props.onSaveCode(hotPatchCode)
-    setRemoteValue(
-      FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode,
-      JSON.stringify({ hotPatchCodeOpen: hotPatchCodeOpen, hotPatchCode: getParams().HotPatchCode }),
-    )
     initHotPatchCodeOpen.current = hotPatchCodeOpen
   })
 
@@ -478,38 +463,29 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
   )
 }
 
-export const getHotPatchCodeInfo = async () => {
-  let hotPatchCode = HotPatchDefaultContent
-  let hotPatchOpen = false
-  try {
-    const { sharedHotReloadCode, hotPatchCode: cacheHotPatchCode, hotPatchCodeOpen } = await getHotPatchCache()
-    if (sharedHotReloadCode) {
-      // shared 开启时：优先取上一个 WebFuzzer 页面状态；没有再用缓存
-      let hasLastWebFuzzer = false
-      try {
-        const pageInfoStore = usePageInfo.getState()
-        const lastPageId = pageInfoStore.getCurrentSelectPageId(YakitRoute.HTTPFuzzer)
-        if (lastPageId) {
-          const lastPage = pageInfoStore.queryPagesDataById(YakitRoute.HTTPFuzzer, lastPageId)
-          const lastPageInfo = lastPage?.pageParamsInfo?.webFuzzerPageInfo
-          if (lastPageInfo) {
-            hasLastWebFuzzer = true
-            hotPatchCode = lastPageInfo.hotPatchCode || cacheHotPatchCode || HotPatchDefaultContent
-            hotPatchOpen =
-              typeof lastPageInfo.advancedConfigValue?.disableHotPatch === 'boolean'
-                ? !lastPageInfo.advancedConfigValue?.disableHotPatch
-                : !!hotPatchCodeOpen
-          }
-        }
-      } catch (error) {}
+export const getHotPatchCodeInfo = async (currentWebFuzzerPageInfo?: WebFuzzerPageInfoProps) => {
+  if (!currentWebFuzzerPageInfo) {
+    return { hotPatchCode: HotPatchDefaultContent, hotPatchOpen: false }
+  }
 
-      if (!hasLastWebFuzzer) {
-        hotPatchCode = cacheHotPatchCode || HotPatchDefaultContent
-        hotPatchOpen = !!hotPatchCodeOpen
-      }
+  let sharedHotReloadCode = false
+  try {
+    const raw = await getRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode)
+    if (raw) {
+      sharedHotReloadCode = raw === 'true'
     }
   } catch (error) {}
-  return { hotPatchCode, hotPatchOpen }
+
+  if (sharedHotReloadCode) {
+    const disableHotPatch = currentWebFuzzerPageInfo.advancedConfigValue?.disableHotPatch
+    const hotPatchOpen = typeof disableHotPatch === 'boolean' ? !disableHotPatch : false
+    return {
+      hotPatchCode: currentWebFuzzerPageInfo.hotPatchCode || HotPatchDefaultContent,
+      hotPatchOpen,
+    }
+  }
+
+  return { hotPatchCode: HotPatchDefaultContent, hotPatchOpen: false }
 }
 
 interface HTTPFuzzerHotPatchSidebarProp {
@@ -548,6 +524,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
   const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState<boolean>(false)
   const [refreshHotCodeList, setRefreshHotCodeList] = useState<boolean>(true)
   const [selectedTemplateName, setSelectedTemplateName] = useState<string>(selectedTemplateNameProp || '')
+  const [sharedHotReloadCode, setSharedHotReloadCodeState] = useState<boolean>(false)
   const tempNameRef = useRef<string>('')
   const tokenRef = useRef<string>('')
   const resizeBodyRef = useRef<HTMLDivElement>(null)
@@ -581,6 +558,13 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
       })
     }
   }, [visible, hotPatchCode, setCode, setTemplate])
+
+  useEffect(() => {
+    if (!visible || !props.inViewport) {
+      return
+    }
+    setRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode, `${sharedHotReloadCode}`)
+  }, [visible, props.inViewport])
 
   useEffect(() => {
     tempNameRef.current = selectedTemplateNameProp || ''
@@ -634,14 +618,13 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
     onChangeCode?.(nextCode)
   })
 
-  const persistHotPatchState = useMemoizedFn((enabled: boolean, currentCode: string) => {
+  const persistHotPatchState = useMemoizedFn(() => {
     setRemoteValue(FuzzerRemoteGV.HTTPFuzzerHotPatch_TEMPLATE_DEMO, getTemplate())
-    setHotPatchCache({ hotPatchCodeOpen: enabled, hotPatchCode: currentCode })
   })
 
   const saveCode = useMemoizedFn((c: string, notify?: boolean) => {
     props.onSaveCode(c)
-    persistHotPatchState(hotPatchEnabled, c)
+    persistHotPatchState()
     if (notify) {
       yakitNotify('success', t('YakitNotification.saved'))
     }
@@ -733,7 +716,12 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
       props.onSaveCode(code)
     }
     props.onHotPatchEnabledChange(checked)
-    persistHotPatchState(checked, getCode())
+    persistHotPatchState()
+  })
+
+  const setSharedHotReloadCode = useMemoizedFn((checked: boolean) => {
+    setSharedHotReloadCodeState(checked)
+    setRemoteValue(FuzzerRemoteGV.FuzzerHotCodeSwitchAndCode, `${checked}`)
   })
 
   useShortcutKeyTrigger(
@@ -803,6 +791,28 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
                   />
                 </Tooltip>
               </YakitPopconfirm>
+              <Tooltip title={t('HTTPFuzzerHotPatch.sharedHotReloadCode')}>
+                <YakitPopover
+                  trigger="click"
+                  placement="bottom"
+                  content={
+                    <div className={styles['hotPatchCodeOpen']}>
+                      <span>{t('HTTPFuzzerHotPatch.sharedHotReloadCode')}</span>
+                      <Tooltip title={t('HTTPFuzzerHotPatch.webFuzzerHotReloadNotice')}>
+                        <InformationCircleIcon className={styles['info-icon']} />
+                      </Tooltip>
+                      <YakitSwitch checked={sharedHotReloadCode} onChange={setSharedHotReloadCode}></YakitSwitch>
+                    </div>
+                  }
+                >
+                  <YakitButton
+                    type="text"
+                    size="small"
+                    className={styles['hotPatch-sidebar-icon-button']}
+                    icon={sharedHotReloadCode ? <SolidLightningboltIcon /> : <OutlineLightningboltIcon />}
+                  />
+                </YakitPopover>
+              </Tooltip>
               <Tooltip title={t('HTTPFuzzerHotPatch.updateAndSaveTemplate')}>
                 <YakitButton
                   disabled={!canSaveSelectedTemplate}

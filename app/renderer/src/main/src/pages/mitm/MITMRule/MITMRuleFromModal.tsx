@@ -1,4 +1,4 @@
-import { Col, Divider, Form, Row } from 'antd'
+import { Col, Divider, Form, Row, Tooltip } from 'antd'
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import styles from './MITMRuleFromModal.module.scss'
 import classNames from 'classnames'
@@ -9,6 +9,7 @@ import {
   InputHTTPHeaderFormProps,
   MITMContentReplacerRule,
   MITMRuleFromModalProps,
+  MITMSecondaryStagesItem,
   RuleContentProps,
 } from './MITMRuleType'
 import { useDebounceEffect, useMemoizedFn } from 'ahooks'
@@ -37,8 +38,35 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { RegexTester } from './RegexTester'
+import { OutlineInformationcircleIcon, OutlineMinuscircleIcon, OutlinePluscircleIcon } from '@/assets/icon/outline'
 
 const { ipcRenderer } = window.require('electron')
+
+const parseRuleToRuleList = (rule: string = '') => {
+  const list = `${rule || ''}`
+    .split(/\r?\n/g)
+    .map((item) => item.trim())
+    .filter(Boolean)
+  return list.length > 0 ? list : ['']
+}
+
+const parseSecondaryStagesToRule = (secondaryStages?: MITMSecondaryStagesItem[]) => {
+  if (!Array.isArray(secondaryStages) || secondaryStages.length === 0) {
+    return ''
+  }
+  return secondaryStages
+    .map((item) => `${item?.Regexp || ''}`.trim())
+    .filter(Boolean)
+    .join('\n')
+}
+
+const buildSecondaryStagesFromRule = (rule: string = ''): MITMSecondaryStagesItem[] => {
+  return `${rule || ''}`.split(/\r?\n/g).map((item) => ({
+    Regexp: item,
+    ResultTemplate: '',
+    Joiner: '',
+  }))
+}
 
 /**
  * @description:MITMRule 新增或修改
@@ -75,10 +103,11 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
   useEffect(() => {
     form.setFieldsValue({
       ...currentItem,
+      SecondaryStages: currentItem?.SecondaryStages || [],
       ResultType:
         currentItem && (currentItem?.ExtraHeaders?.length > 0 || currentItem?.ExtraCookies?.length > 0) ? 2 : 1, //  1 文本  2 HTTP
     })
-    ruleContentRef?.current?.onSetValue(currentItem?.Rule)
+    ruleContentRef?.current?.onSetValue(parseSecondaryStagesToRule(currentItem?.SecondaryStages))
     setRegexpGroupsValue(currentItem?.RegexpGroups || [])
     setRegexpType(currentItem?.RegexpResultTemplate ? 'template' : 'group')
   }, [currentItem])
@@ -87,6 +116,19 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
       .validateFields()
       .then((values: MITMContentReplacerRule) => {
         const newValues = { ...currentItem, ...values }
+        if (!Array.isArray(newValues.SecondaryStages)) {
+          newValues.SecondaryStages = []
+        }
+        const hasEmptyRegexp = newValues.SecondaryStages.some((item) => !`${item?.Regexp || ''}`.trim())
+        if (hasEmptyRegexp) {
+          form.setFields([
+            {
+              name: 'SecondaryStages',
+              errors: [t('YakitForm.requiredField')],
+            },
+          ])
+          return
+        }
         if (newValues.ExtraCookies.length > 0 || newValues.ExtraHeaders.length > 0 || !!newValues.Result) {
           newValues.NoReplace = false
         } else {
@@ -105,7 +147,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
   })
   const getRule = useMemoizedFn((val: string) => {
     form.setFieldsValue({
-      Rule: val,
+      SecondaryStages: buildSecondaryStagesFromRule(val),
     })
   })
   const getExtraHeaders = useMemoizedFn((val, updateIndex) => {
@@ -186,7 +228,18 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
           <Form.Item label={t('MITMRule.rule_name')} name="VerboseName">
             <YakitInput />
           </Form.Item>
-          <Form.Item label={t('MITMRule.rule_content')} name="Rule" rules={[{ required: true, message: '该项为必填' }]}>
+          <Form.Item
+            label={
+              <span className={styles['form-label']}>
+                {t('MITMRule.rule_content')}
+                <Tooltip title={t('MITMRule.rule_content_tip')}>
+                  <OutlineInformationcircleIcon className={styles['info-icon']} />
+                </Tooltip>
+              </span>
+            }
+            name="SecondaryStages"
+            rules={[{ required: true, message: t('YakitForm.requiredField') }]}
+          >
             <RuleContent getRule={getRule} ref={ruleContentRef} />
           </Form.Item>
 
@@ -793,16 +846,57 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
 export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     onSetValue: (v) => {
-      setRule(v)
+      const list = parseRuleToRuleList(v)
+      setRuleList(list)
     },
   }))
-  const { getRule, inputProps, defaultCode } = props
+  const { getRule, defaultCode } = props
   const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
-  const [rule, setRule] = useState<string>('')
+  const [ruleList, setRuleList] = useState<string[]>([''])
   const [ruleVisible, setRuleVisible] = useState<boolean>()
+  const [activeRuleIndex, setActiveRuleIndex] = useState<number>(0)
+
+  const syncRuleList = useMemoizedFn((nextRuleList: string[]) => {
+    const safeRuleList = nextRuleList.length > 0 ? nextRuleList : ['']
+    setRuleList(safeRuleList)
+    getRule(safeRuleList.join('\n'))
+  })
+
+  const updateRuleList = useMemoizedFn((updater: (list: string[]) => string[]) => {
+    const nextRuleList = updater([...ruleList])
+    syncRuleList(nextRuleList)
+  })
+
   const onGetRule = useMemoizedFn((val: string) => {
-    setRule(val)
-    getRule(val)
+    updateRuleList((list) => {
+      list[activeRuleIndex] = val
+      return list
+    })
+  })
+
+  const onSetRuleItem = useMemoizedFn((index: number, val: string) => {
+    updateRuleList((list) => {
+      list[index] = val
+      return list
+    })
+  })
+
+  const onAddRuleItem = useMemoizedFn((index: number) => {
+    if (!(ruleList[index] || '').trim()) return
+    updateRuleList((list) => {
+      list.splice(index + 1, 0, '')
+      return list
+    })
+  })
+
+  const onRemoveRuleItem = useMemoizedFn((index: number) => {
+    if (index === 0) return
+    updateRuleList((list) => list.filter((_, i) => i !== index))
+  })
+
+  const onOpenRegexTester = useMemoizedFn((index: number) => {
+    setActiveRuleIndex(index)
+    setRuleVisible(true)
   })
 
   return (
@@ -810,17 +904,45 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
       {props.children ? (
         <span onClick={() => setRuleVisible(true)}>{props.children}</span>
       ) : (
-        <YakitInput
-          {...inputProps}
-          value={rule}
-          placeholder={t('RuleContent.use_right_tool_generate_regex')}
-          addonAfter={<AdjustmentsIcon className={styles['icon-adjustments']} onClick={() => setRuleVisible(true)} />}
-          onChange={(e) => {
-            const { value } = e.target
-            setRule(value)
-            getRule(value)
-          }}
-        />
+        <div className={styles['rule-content-list']}>
+          {ruleList.map((item = '', index) => {
+            const canAdd = item.trim()
+            return (
+              <div className={styles['rule-content-row']} key={`rule-row-${index}`}>
+                <div className={styles['rule-content-input']}>
+                  <YakitInput
+                    value={item}
+                    placeholder={t('RuleContent.use_right_tool_generate_regex')}
+                    addonAfter={
+                      <AdjustmentsIcon
+                        className={styles['icon-adjustments']}
+                        onClick={() => onOpenRegexTester(index)}
+                      />
+                    }
+                    onChange={(e) => {
+                      const { value } = e.target
+                      onSetRuleItem(index, value)
+                    }}
+                  />
+                </div>
+                <div className={styles['rule-content-actions']}>
+                  {index !== 0 && (
+                    <OutlineMinuscircleIcon className={styles['icon-remove']} onClick={() => onRemoveRuleItem(index)} />
+                  )}
+                  <OutlinePluscircleIcon
+                    className={classNames(styles['icon-plus'], {
+                      [styles['icon-disabled']]: !canAdd,
+                    })}
+                    onClick={() => {
+                      if (!canAdd) return
+                      onAddRuleItem(index)
+                    }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
       )}
       <YakitModal
         title={t('RuleContent.auto_extract_regex')}
@@ -833,7 +955,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
         closable={true}
         bodyStyle={{ padding: 0 }}
       >
-        <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode} rule={rule} />
+        <RegexTester onSave={(v) => onGetRule(v)} defaultCode={defaultCode} rule={ruleList[activeRuleIndex] || ''} />
       </YakitModal>
     </>
   )

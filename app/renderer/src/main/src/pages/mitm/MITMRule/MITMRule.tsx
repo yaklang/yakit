@@ -153,6 +153,26 @@ export const colorSelectNode = (t: TFunction) => {
   )
 }
 
+const mergeRuleStages = (ele?: MITMContentReplacerRule) => {
+  if (!ele) return ele
+  const secondaryStages = ele.SecondaryStages || []
+  return {
+    ...ele,
+    SecondaryStages: [{ Regexp: ele.Rule, ResultTemplate: '', Joiner: '' }, ...secondaryStages],
+  }
+}
+
+const splitRuleStages = (ele: MITMContentReplacerRule): MITMContentReplacerRule => {
+  const mergedStages = ele.SecondaryStages || []
+  const [firstStage, ...restStages] = mergedStages
+
+  return {
+    ...ele,
+    Rule: firstStage?.Regexp || '',
+    SecondaryStages: restStages,
+  }
+}
+
 const MITMRule: React.FC<MITMRuleProp> = React.memo(
   React.forwardRef((props, ref) => {
     const { menuBodyHeight } = useMenuHeight(
@@ -318,7 +338,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const onOpenAddOrEdit = useMemoizedFn((rowDate?: MITMContentReplacerRule) => {
       setModalVisible(true)
       setIsEdit(true)
-      setCurrentItem(rowDate)
+      setCurrentItem(mergeRuleStages(rowDate))
     })
     const onBan = useMemoizedFn((rowDate: MITMContentReplacerRule) => {
       let showRules: MITMContentReplacerRule[] = []
@@ -386,6 +406,14 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           title: t('MITMRule.rule_content'),
           dataKey: 'Rule',
           width: 240,
+          render: (text, { SecondaryStages = [] }: MITMContentReplacerRule) => {
+            let list = SecondaryStages.map(({ Regexp }) => Regexp)
+            if (text) {
+              list = [text, ...list]
+            }
+            const ruleText = list.length ? list.join(',') : '-'
+            return <span title={ruleText}>{ruleText}</span>
+          },
         },
         {
           title: t('MITMRule.replacement_result'),
@@ -649,7 +677,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     })
 
     const onSaveRules = useMemoizedFn((val: MITMContentReplacerRule) => {
-      const obj = { ...val }
+      const obj = splitRuleStages(val)
       if (ruleUse === 'historyAnalysis') {
         obj.NoReplace = true
         obj.Result = ''

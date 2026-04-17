@@ -7031,6 +7031,18 @@ message Certificate {
   string Host = 6;
 }
 
+// RegexOutputStage defines a chained regex stage that runs on the joined outputs
+// of the previous stage (global mode).
+message RegexOutputStage {
+  // Regex to match on the joined input. When empty, the stage is a no-op.
+  string Regexp = 1;
+  // Output template for this stage, supports $1、\1、{1}.
+  // When empty, defaults to group(1) if present, else whole match.
+  string ResultTemplate = 2;
+  // Joiner for concatenating previous stage outputs before running this stage (default: "\n" when empty).
+  string Joiner = 3;
+}
+
 message MITMContentReplacer {
   // 如果是正则的话，就把匹配到的内容替换成对应结果
   // 优先 Golang 原生规则
@@ -7083,6 +7095,9 @@ message MITMContentReplacer {
   repeated string ExcludeSuffix = 20;
 
   string RegexpResultTemplate = 21;
+
+  // Multi-stage chained regex output (global mode).
+  repeated RegexOutputStage SecondaryStages = 22;
 }
 
 message RemoveHookParams {
