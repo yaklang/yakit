@@ -2,6 +2,8 @@ import { SetStateAction } from 'react'
 import type { AIChatData } from '../type/aiChat'
 import { AIChatQSData, ReActChatBaseInfo } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIModelTypeEnum } from '../defaultConstant'
+import { cloneDeep } from 'lodash'
+import { DefaultCurrentExecTaskTree } from '@/pages/ai-re-act/hooks/defaultConstant'
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
@@ -80,7 +82,7 @@ export class ChatDataStore {
         contents: new Map(),
       },
       taskChat: {
-        plan: [],
+        plan: cloneDeep(DefaultCurrentExecTaskTree),
         elements: [],
         contents: new Map(),
       },
@@ -131,8 +133,6 @@ export class ChatDataStore {
     if (!prev) {
       throw new Error(`Session: ${session} does not exist`)
     }
-
-    console.log('prev:', prev, value)
     const next = typeof value === 'function' ? value(prev) : value
     this.map.set(session, next)
   }

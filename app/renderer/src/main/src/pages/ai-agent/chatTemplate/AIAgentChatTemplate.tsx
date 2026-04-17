@@ -3,8 +3,6 @@ import { useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEf
 import { AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps } from '../aiAgentType'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AITree } from '../aiTree/AITree'
-import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { grpcQueryAIToolDetails } from '../grpc'
 import {
@@ -13,7 +11,7 @@ import {
   AITaskStartInfo,
   ReActChatRenderItem,
 } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIEventQueryRequest, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIEventQueryRequest, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { taskAnswerToIconMap } from '../defaultConstant'
 import { AIChatListItem } from '../components/aiChatListItem/AIChatListItem'
 import StreamCard from '../components/StreamCard'
@@ -33,19 +31,19 @@ import TaskLoading from './TaskLoading/TaskLoading'
 import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
+import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
   Timeline = 'timeline',
-  HistoryTaskTree = 'history-task-tree',
 }
 
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
-  const { tasks } = props
+  const { taskTree, taskName } = props
 
   const { chatIPCData } = useChatIPCStore()
-  const { handleSendSyncMessage } = useChatIPCDispatcher()
+  const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
 
   const { taskChat, memoryList } = useChatIPCStore().chatIPCData
   const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.Timeline)
@@ -58,10 +56,11 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     return (taskChat?.elements?.length ?? 0) > 0
   }, [taskChat?.elements?.length])
   useEffect(() => {
-    if ((activeTab === AIChatLeft.HistoryTaskTree && !chatIPCData.execute) || !hasTaskTree) {
-      setActiveTab(AIChatLeft.Timeline)
+    if (hasTaskTree) {
+      setActiveTab(AIChatLeft.TaskTree)
     }
-  }, [chatIPCData.execute, hasTaskTree])
+  }, [hasTaskTree])
+
   const planHistoryList = useCreation(() => {
     return (
       chatIPCData.planHistoryList || {
@@ -74,6 +73,9 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const length = useCreation(() => {
     return memoryList?.memories?.length
   }, [memoryList?.memories?.length])
+  const getTaskInfo = useMemoizedFn(() => {
+    return chatIPCEvents.fetchTaskChatID()
+  })
 
   const handleCancelExpand = useMemoizedFn(() => {
     setExpand(false)
@@ -86,15 +88,36 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const renderDom = useMemoizedFn(() => {
     switch (activeTab) {
       case AIChatLeft.TaskTree:
-        return tasks.length > 0 ? (
-          <AITree tasks={tasks} />
-        ) : (
-          <YakitEmpty style={{ marginTop: '20%' }} title="思考中..." description="" />
+        const coordinatorId = getTaskInfo()?.coordinatorId || ''
+        const currentTaskItem: AIAgentGrpcApi.PlanHistory = {
+          coordinator_id: coordinatorId,
+          created_at: '',
+          created_at_unix: 0,
+          session_id: '',
+          task_progress: {
+            total_tasks: 0,
+            completed_tasks: 0,
+            skipped_tasks: 0,
+            aborted_tasks: 0,
+            current_index: 0,
+            current_task_index: '',
+            current_task: '',
+            current_goal: '',
+            phase: 'NotCompleted',
+            updated_at: 0,
+          },
+          task_tree: taskTree,
+          updated_at: '',
+          updated_at_unix: 0,
+          root_task_name: taskName,
+        }
+        return (
+          <div className={styles['history-task-tree-container']}>
+            <HistoryTaskTree data={planHistoryList} currentTaskItem={currentTaskItem} />
+          </div>
         )
       case AIChatLeft.Timeline:
         return <TimelineCard />
-      case AIChatLeft.HistoryTaskTree:
-        return <HistoryTaskTree data={planHistoryList} handleTabChange={handleTabChange} />
       default:
         break
     }
@@ -102,24 +125,16 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
   const handleTabChange = useMemoizedFn((value: AIChatLeft) => {
     setActiveTab(value)
-    if (chatIPCData.execute && value === AIChatLeft.HistoryTaskTree) {
+    if (chatIPCData.execute && value === AIChatLeft.TaskTree) {
       onSendPlayHistoryList()
     }
   })
 
   const button = useMemo(() => {
-    if (!hasTaskTree && !chatIPCData.execute) return <YakitButton size="middle">时间线</YakitButton>
     let options = [
-      // {label: "任务树", value: AIChatLeft.TaskTree},
       { label: '时间线', value: AIChatLeft.Timeline },
-      // {label: "历史任务", value: AIChatLeft.HistoryTaskTree}
+      { label: '任务列表', value: AIChatLeft.TaskTree },
     ]
-    if (hasTaskTree) {
-      options.unshift({ label: '任务树', value: AIChatLeft.TaskTree })
-    }
-    if (chatIPCData.execute) {
-      options.push({ label: '历史任务', value: AIChatLeft.HistoryTaskTree })
-    }
     return (
       <YakitRadioButtons
         buttonStyle="solid"
@@ -130,7 +145,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         onChange={({ target }) => handleTabChange(target.value)}
       />
     )
-  }, [activeTab, handleTabChange, hasTaskTree, planHistoryList.total, chatIPCData.execute])
+  }, [activeTab, handleTabChange])
   const extraProps = useCreation(() => {
     let p: Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'> = {}
     if (!length) {
@@ -335,11 +350,11 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         <>
           {toolList.map((info) => {
             const { id, Timestamp, type, data } = info
+            const { execFileRecord } = yakExecResult
             switch (type) {
               case AIChatQSDataTypeEnum.STREAM:
               case AIChatQSDataTypeEnum.TOOL_CALL_RESULT: {
                 const { NodeIdVerbose, CallToolID, content, NodeId } = data
-                const { execFileRecord } = yakExecResult
                 const fileList = execFileRecord.get(CallToolID)
                 const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
                 const nodeLabel = NodeIdVerbose[language]
@@ -359,6 +374,23 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                   />
                 )
               }
+              case AIChatQSDataTypeEnum.TOOL_CALL_PARAM:
+                const { call_tool_id } = data
+                const fileList = execFileRecord.get(call_tool_id)
+                return (
+                  <StreamCard
+                    key={id}
+                    titleText={'工具参数'}
+                    content={<AIReviewParams params={data.params} isPreStyle={true} />}
+                    modalInfo={{
+                      time: Timestamp,
+                      title: info.AIModelName,
+                      icon: info.AIService,
+                    }}
+                    operationInfo={{ aiFilePath }}
+                    fileList={fileList}
+                  />
+                )
               default:
                 return <React.Fragment key={id}></React.Fragment>
             }

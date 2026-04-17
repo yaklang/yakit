@@ -15,6 +15,7 @@ import { setClipboardText } from '@/utils/clipboard'
 import { success } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isEmpty } from 'lodash'
+import classNames from 'classnames'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const { info, timestamp } = props
@@ -104,7 +105,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
       case 'tool_use_review_require':
         const { params } = data
         try {
-          paramsValue = !!paramsValue ? paramsValue : <AIReviewParams params={params} />
+          paramsValue = !!paramsValue ? paramsValue : <AIReviewParams params={params} isPreStyle={true} />
         } catch (error) {}
         break
       default:
@@ -112,6 +113,14 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     }
     return paramsValue
   })
+  const isShowExpandBtn = useCreation(() => {
+    switch (type) {
+      case 'tool_use_review_require':
+        return true
+      default:
+        return !!userAction.userInput
+    }
+  }, [type, userAction.userInput])
   return (
     <AISingHaveColorText
       // titleIcon={<SolidHandIcon />}
@@ -124,17 +133,20 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
         icon: info.AIService,
       }}
       titleMore={
-        <div className={styles['header-extra']}>
-          <Tooltip title={expand ? '收起' : '展开'}>
-            <YakitButton
-              type="text2"
-              onClick={() => {
-                setExpand((v) => !v)
-              }}
-              icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
-            />
-          </Tooltip>
-        </div>
+        isShowExpandBtn ? (
+          <div className={styles['header-extra']}>
+            <Tooltip title={expand ? '收起' : '展开'}>
+              <YakitButton
+                size="small"
+                type="text2"
+                onClick={() => {
+                  setExpand((v) => !v)
+                }}
+                icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+              />
+            </Tooltip>
+          </div>
+        ) : null
       }
     >
       {expand && renderContent()}
@@ -142,8 +154,8 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   )
 })
 
-const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
-  const { params } = props
+export const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
+  const { params, className, isPreStyle } = props
   const { t } = useI18nNamespaces(['yakitUi'])
   const [isScroll, setIsScroll] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -162,7 +174,13 @@ const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
   })
   return (
     <div
-      className={styles['ai-review-params-wrapper']}
+      className={classNames(
+        styles['ai-review-params-wrapper'],
+        {
+          [styles['ai-tool-param-pre-wrapper']]: !!isPreStyle,
+        },
+        className,
+      )}
       style={{
         overflow: isScroll ? 'auto' : 'hidden',
       }}
@@ -178,7 +196,7 @@ const AIReviewParams: React.FC<AIReviewParamsProps> = React.memo((props) => {
               {!!valueString && (
                 <div className={styles['param-value-wrapper']} onClick={() => onCopy(valueString)}>
                   <div className={styles['param-value']}>{valueString}</div>
-                  <CopyComponents copyText={valueString} />
+                  <CopyComponents copyText={valueString} className={styles['copy-icon']} />
                 </div>
               )}
             </div>

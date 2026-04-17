@@ -61,6 +61,8 @@ export interface AIToolResult {
     dirPath: string
     /** 工具执行结果详情数据 */
     resultDetails: string
+    /** review参数信息 */
+    reviewParams?: AIAgentGrpcApi.ToolUseReviewRequire['params']
   }
   /** http流量数据总数 */
   httpFlowDataCount: number
@@ -151,6 +153,8 @@ export enum AIChatQSDataTypeEnum {
   RESULT = 'result',
   /**工具总结 */
   TOOL_RESULT = 'tool_result',
+  /**工具结果详情:参数 */
+  TOOL_CALL_PARAM = 'tool_call_param',
   /**计划审阅 */
   PLAN_REVIEW_REQUIRE = 'plan_review_require',
   /**任务审阅 */
@@ -221,6 +225,8 @@ export interface AIChatQSDataBase<T extends string, U> {
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, { qs: string; setting: AIInputEvent }>
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
+type ChatToolCallParams = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_PARAM, AIAgentGrpcApi.AIToolCallParams>
+
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
 type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
 type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
@@ -268,4 +274,5 @@ export type AIChatQSData =
   | ChatReferenceMaterial
   | ChatStreamGroup
   | ChatUserManualIntervention
+  | ChatToolCallParams
 // #endregion

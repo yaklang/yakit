@@ -1,79 +1,91 @@
 .history-task-tree-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    :global {
-        .ant-collapse-header-text {
-            overflow: hidden;
-        }
-        .ant-collapse-item .ant-collapse-header {
-            padding: 4px;
-        }
-        .ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow {
-            margin-right: 2px;
-        }
-        .ant-collapse-item .ant-collapse-content > .ant-collapse-content-box {
-            padding: 0px 16px 24px 22px;
-        }
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  :global {
+    .ant-collapse-header-text {
+      overflow: hidden;
     }
+    .ant-collapse-item .ant-collapse-header {
+      padding: 4px;
+    }
+    .ant-collapse > .ant-collapse-item > .ant-collapse-header .ant-collapse-arrow {
+      margin-right: 2px;
+    }
+    .ant-collapse-item .ant-collapse-content > .ant-collapse-content-box {
+      padding: 0px 16px 24px 22px;
+    }
+  }
 
-    .history-task-tree-item-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+  .history-task-tree-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+    :global {
+      .ant-btn.ant-btn-loading::before {
+        background-color: transparent;
+      }
+    }
+    .history-task-tree-item-header-left {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      line-height: 16px;
+      overflow: hidden;
+      .history-task-tree-item-header-title {
+        white-space: nowrap;
+        text-overflow: ellipsis;
         overflow: hidden;
-        :global {
-            .ant-btn.ant-btn-loading::before {
-                background-color: transparent;
-            }
-        }
-        .history-task-tree-item-header-left {
-            display: flex;
-            align-items: center;
-            flex: 1;
-            font-size: 12px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            line-height: 16px;
-            overflow: hidden;
-            .history-task-tree-item-header-title {
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
-            }
-            .history-task-tree-item-header-time {
-                font-size: 10px;
-                color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
-            }
-        }
-        .icon-primary {
-            width: 16px;
-            height: 16px;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-            color: var(--Colors-Use-Main-Primary);
-            animation: spin 1s infinite linear;
-        }
+        word-break: break-all;
+      }
+      .history-task-tree-item-header-time {
+        font-size: 10px;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-all;
+      }
     }
-    .tree-item {
-        .time {
-        }
-        .tree-wrapper {
-            padding-top: 0;
-        }
+  }
+  .tree-item {
+    .time {
     }
+    .tree-wrapper {
+      padding-top: 0;
+    }
+  }
+}
+.icon-primary {
+  width: 16px;
+  height: 16px;
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+  color: var(--Colors-Use-Main-Primary);
+  animation: spin 1s infinite linear;
 }
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.continue-task-button {
+  padding: 0;
+  height: 16px;
+  .play2-icon {
+    svg {
+      color: var(--Colors-Use-Main-Primary);
+      &:hover {
+        color: var(--Colors-Use-Main-Hover);
+      }
     }
-    100% {
-        transform: rotate(360deg);
-    }
+  }
 }

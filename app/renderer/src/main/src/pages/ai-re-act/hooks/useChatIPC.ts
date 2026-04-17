@@ -92,7 +92,7 @@ function useChatIPC(params?: UseChatIPCParams) {
   /** 向进行中的grpc流接口发送请求 */
   const sendRequest = useMemoizedFn((request: AIInputEvent) => {
     if (!chatID.current) return
-    // console.log("send-ai-re-act---\n", chatID.current, request)
+    // console.log('send-ai-re-act---\n', chatID.current, request)
     ipcRenderer.invoke('send-ai-re-act', chatID.current, request)
   })
 
@@ -494,13 +494,16 @@ function useChatIPC(params?: UseChatIPCParams) {
     taskChatEvent.handleCloseGrpc()
     setExecute(false)
     handleResetCasualChatLoading()
-    handleResetTaskChatID()
     handleResetTaskChatLoading()
   })
 
   /** 流接口开始前需要重置的一些状态 */
   const handleResetBeforeStart = useMemoizedFn(() => {
+    // 清空专注模式
     handleResetFocusMode()
+    // 清空任务规划相关ID
+    handleResetTaskChatID()
+    taskChatEvent.handleResetPlanTree()
   })
 
   /** 重置所有数据 */
@@ -621,7 +624,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
-        // console.log("onStart-res", res, ipcContent)
+        // console.log('onStart-res', res, ipcContent)
 
         if (res.Type === 'yak_httpflow') {
           // 产生一条http流量数据时的通知
@@ -660,6 +663,8 @@ function useChatIPC(params?: UseChatIPCParams) {
               status: AITaskStatus.inProgress,
               coordinatorId: startInfo.coordinator_id, // 取消任务规划需要的数据id
             }
+            // 开始任务规划后，刷新历史任务树
+            sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
             casualChatID.current -= 1
             setCasualStatus((old) => ({ ...old, loading: casualChatID.current > 0 }))
             // 标记grpc流里属于任务规划的流
@@ -682,8 +687,9 @@ function useChatIPC(params?: UseChatIPCParams) {
             casualChatID.current += 1
             setCasualStatus((old) => ({ ...old, loading: casualChatID.current > 0 }))
             taskChatEvent.handlePlanExecEnd(res)
-            taskChatEvent.handleCloseGrpc()
+            /**先修改任务状态loading，再改变任务树的状态 */
             handleResetTaskChatLoading()
+            taskChatEvent.handleCloseGrpc()
           }
           return
         }
