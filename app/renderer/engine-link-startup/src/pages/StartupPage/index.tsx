@@ -1228,7 +1228,7 @@ export const StartupPage: React.FC = () => {
       <div className={styles['startup-header-drap']} style={{ height: DragHeaderHeight }}></div>
       <div className={styles['startup-wrapper-left']}>
         <div className={styles['startup-title']}>
-          <div
+          {/* <div
             className={`${styles['startup-logo']}${
               isCommunityMemfit() || isMemfit() ? ` ${styles['startup-logo-memfit']}` : ''
             }`}
@@ -1243,7 +1243,7 @@ export const StartupPage: React.FC = () => {
             ) : (
               <startupLogo.component style={{ height: startupLogo.height, width: startupLogo.width }} />
             )}
-          </div>
+          </div> */}
           <div className={styles['startup-desc']}>{t('StartupPage.born_for_cybersecurity')}</div>
         </div>
         <YaklangEngineWatchDog
@@ -1348,7 +1348,7 @@ export const StartupPage: React.FC = () => {
           </>
         )}
       </div>
-      <div className={styles['startup-wrapper-right']}>{startupRightImg}</div>
+      {/* <div className={styles['startup-wrapper-right']}>{startupRightImg}</div> */}
     </div>
   )
 }

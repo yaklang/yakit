@@ -140,9 +140,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
       if (isCommunityMemfit()) {
         return (
           <div className={styles['yakit-loading-icon-wrapper']}>
-            <div className={styles['white-icon']}>
-              <SolidMemfitMiniLogoIcon />
-            </div>
+            <div className={styles['white-icon']}>{/* <SolidMemfitMiniLogoIcon /> */}</div>
           </div>
         )
       }
@@ -169,9 +167,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
       if (isMemfit()) {
         return (
           <div className={styles['yakit-loading-icon-wrapper']}>
-            <div className={styles['white-icon']}>
-              <SolidMemfitMiniLogoIcon />
-            </div>
+            <div className={styles['white-icon']}>{/* <SolidMemfitMiniLogoIcon /> */}</div>
           </div>
         )
       }
@@ -188,9 +184,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
     if (isEnpriTraceAgent()) {
       return (
         <div className={styles['yakit-loading-icon-wrapper']}>
-          <div className={styles['white-icon']}>
-            <img src={yakitSE} alt={t('YakitEmpty.noImage')} />
-          </div>
+          <div className={styles['white-icon']}>{/* <img src={yakitSE} alt={t('YakitEmpty.noImage')} /> */}</div>
         </div>
       )
     }

@@ -117,7 +117,7 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
             [styles['left-mini-body']]: showMini,
           })}
         >
-          <div className={styles['navbar-logo']}>{ProjectLogo(showMini)}</div>
+          {/* <div className={styles['navbar-logo']}>{ProjectLogo(showMini)}</div> */}
 
           <div className={styles['navbar-list-wrapper']}>
             <div className={styles['list-body']}>
