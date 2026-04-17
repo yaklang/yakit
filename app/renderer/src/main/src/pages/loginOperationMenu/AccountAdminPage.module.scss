@@ -1,133 +1,144 @@
 .accountAdminPage {
-    height: 100%;
-    .card {
-        border: none;
-        &-title {
-            display: flex;
-            align-items: center;
+  height: 100%;
+  .card {
+    border: none;
+    &-title {
+      display: flex;
+      align-items: center;
 
-            gap: 5px;
-            &-text {
-                font-size: 14px;
-            }
-        }
-        &-extra {
-            display: flex;
-            align-items: center;
+      gap: 5px;
+      &-text {
+        font-size: 14px;
+      }
+    }
+    &-extra {
+      display: flex;
+      align-items: center;
 
-            gap: 5px;
-        }
-        &-body {
-            height: 100%;
-        }
+      gap: 5px;
     }
-    .department-tree {
-        .department-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            &-info {
-                flex: 1;
-            }
-            &-extra {
-                display: none;
-            }
-        }
-        .department-item-extra {
-            display: block;
-            height: 24px;
-            line-height: 24px;
-        }
-        .department-item-select {
-            .department-item-extra {
-                display: block;
-                .edit-icon,
-                .del-icon,
-                .plus-icon {
-                    svg {
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
-                    }
-                }
-            }
-        }
+    &-body {
+      height: 100%;
     }
-    .accountList {
-        height: 100%;
-        .block-title {
-            display: flex;
-            align-items: center;
-            margin: 8px 0;
-            .first-title {
-                color: var(--Colors-Use-Neutral-Text-1-Title)
-            }
-            .second-title {
-                color: var(--Colors-Use-Neutral-Text-1-Title)
-            }
-            .right-outlined {
-                padding: 0 8px;
-                color: var(--Colors-Use-Neutral-Text-1-Title)
-                svg {
-                    width: 12px;
-                    height: 12px;
-                }
-            }
-        }
-        .userNameWrapper {
-            display: flex;
-            align-items: center;
-            .userNameAvatar {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 20px;
-                height: 20px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                border-radius: 50%;
-                background-color: var(--Colors-Use-Main-Primary);
-                font-size: 14px;
-            }
-        }
+  }
+  .department-tree {
+    .department-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      &-info {
+        flex: 1;
+      }
+      &-extra {
+        display: none;
+      }
     }
-    .accountList-table-extra {
-        display: flex;
-        align-items: center;
-
-        gap: 8px;
+    .department-item-extra {
+      display: block;
+      height: 24px;
+      line-height: 24px;
     }
-    .table-action-icon {
-        display: flex;
-        align-items: center;
-        padding: 0 4px;
-        .action-icon {
-            svg {
-                width: 16px;
-                &:hover {
-                    color: var(--Colors-Use-Main-Primary);
-                }
-            }
-        }
-        span {
-            padding: 0 12px;
+    .department-item-select {
+      .department-item-extra {
+        display: block;
+        .edit-icon,
+        .del-icon,
+        .plus-icon {
+          svg {
             color: var(--Colors-Use-Neutral-Text-1-Title);
-            border-right: 1px solid var(--Colors-Use-Neutral-Border);
-            &:first-child {
-                padding-left: 0;
-            }
-            &:last-child {
-                border-right: none;
-            }
+          }
         }
-        .del-icon {
-            svg {
-                width: 16px;
-                color: var(--Colors-Use-Error-Primary);
-            }
-        }
+      }
     }
-    .filter-icon {
-        svg {
-            width: 16px;
-            height: 16px;
+  }
+  .accountList {
+    height: 100%;
+    .block-title {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+      .first-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+      .second-title {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+      .right-outlined {
+        padding: 0 8px;
+        color: var(--Colors-Use-Neutral-Text-1-Title) svg {
+          width: 12px;
+          height: 12px;
         }
+      }
     }
+    .userNameWrapper {
+      display: flex;
+      align-items: center;
+      .userNameAvatar {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 20px;
+        height: 20px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        border-radius: 50%;
+        background-color: var(--Colors-Use-Main-Primary);
+        font-size: 14px;
+      }
+    }
+  }
+  .accountList-table-extra {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+  }
+  .table-action-icon {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    .action-icon {
+      svg {
+        width: 16px;
+        &:hover {
+          color: var(--Colors-Use-Main-Primary);
+        }
+      }
+    }
+    .action-icon-disable {
+      svg {
+        width: 16px;
+        color: var(--Colors-Use-Neutral-Disable);
+      }
+    }
+    span {
+      padding: 0 12px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      border-right: 1px solid var(--Colors-Use-Neutral-Border);
+      &:first-child {
+        padding-left: 0;
+      }
+      &:last-child {
+        border-right: none;
+      }
+    }
+    .del-icon {
+      svg {
+        width: 16px;
+        color: var(--Colors-Use-Error-Primary);
+      }
+    }
+    .del-icon-disable {
+      svg {
+        width: 16px;
+        color: var(--Colors-Use-Neutral-Disable);
+      }
+    }
+  }
+  .filter-icon {
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
 }

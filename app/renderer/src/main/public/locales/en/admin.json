@@ -25,7 +25,9 @@
     "resetPwdTooltip": "Reset User Password",
     "copySecretKeyTooltip": "Copy Secret Key",
     "deleteUserConfirm": "Are you sure to delete this user?",
-    "getListFailed": "Failed to get account list: {{error}}"
+    "getListFailed": "Failed to get account list: {{error}}",
+    "nonSystemUserResetPwd": "This user is not created by the system, password cannot be reset",
+    "nonSystemUserDelete": "This user is not created by the system, user cannot be deleted"
   },
   "HoleCollectPage": {
     "title": "Title",

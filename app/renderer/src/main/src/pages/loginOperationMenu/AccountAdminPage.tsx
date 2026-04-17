@@ -882,27 +882,40 @@ const AccountList: React.FC<AccountListProps> = (props) => {
               setCreatCountVisible(true)
             }}
           />
-          <YakitPopconfirm
-            title={t('AccountList.resetPwdConfirm')}
-            onConfirm={() => onResetPwd(record.uid, record.user_name)}
-          >
-            <Tooltip title={t('AccountList.resetPwdTooltip')} align={{ targetOffset: [0, -15] }}>
-              <OutlineRefreshIcon className={styles['action-icon']} onClick={() => {}} />
+          {record.from_platform === 'company' ? (
+            <YakitPopconfirm
+              title={t('AccountList.resetPwdConfirm')}
+              onConfirm={() => onResetPwd(record.uid, record.user_name)}
+            >
+              <Tooltip title={t('AccountList.resetPwdTooltip')} align={{ targetOffset: [0, -15] }}>
+                <OutlineRefreshIcon className={styles['action-icon']} onClick={() => {}} />
+              </Tooltip>
+            </YakitPopconfirm>
+          ) : (
+            <Tooltip title={t('AccountList.nonSystemUserResetPwd')} align={{ targetOffset: [0, -15] }}>
+              <OutlineRefreshIcon className={styles['action-icon-disable']} onClick={() => {}} />
             </Tooltip>
-          </YakitPopconfirm>
+          )}
           <Tooltip title={t('AccountList.copySecretKeyTooltip')} align={{ targetOffset: [0, -15] }}>
             <OutlineDocumentduplicateIcon
               className={styles['action-icon']}
               onClick={() => copySecretKey(record.user_name)}
             />
           </Tooltip>
-          <YakitPopconfirm
-            title={t('AccountList.deleteUserConfirm')}
-            onConfirm={() => onRemoveSingle(record.uid, record.department_id)}
-            placement="right"
-          >
-            <OutlineTrashIcon className={styles['del-icon']} />
-          </YakitPopconfirm>
+
+          {record.from_platform === 'company' ? (
+            <YakitPopconfirm
+              title={t('AccountList.deleteUserConfirm')}
+              onConfirm={() => onRemoveSingle(record.uid, record.department_id)}
+              placement="right"
+            >
+              <OutlineTrashIcon className={styles['del-icon']} />
+            </YakitPopconfirm>
+          ) : (
+            <Tooltip title={t('AccountList.nonSystemUserDelete')} placement="left">
+              <OutlineTrashIcon className={styles['del-icon-disable']} />
+            </Tooltip>
+          )}
         </div>
       ),
     },
@@ -1216,6 +1229,9 @@ const AccountList: React.FC<AccountListProps> = (props) => {
           selectedRowKeys,
           onSelectAll,
           onChangeCheckboxSingle,
+          getCheckboxProps: (record) => ({
+            disabled: record.from_platform !== 'company',
+          }),
         }}
       ></TableVirtualResize>
       <YakitModal
@@ -1339,7 +1355,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
       params: depTreeQuery,
     })
       .then((res) => {
-        const data = res.data.map((item) => ({
+        const data = (res.data || []).map((item) => ({
           value: item.id,
           label: item.name,
           isLeaf: item.exist_group ? false : true,

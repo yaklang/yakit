@@ -25,7 +25,9 @@
     "resetPwdTooltip": "重置用户密码",
     "copySecretKeyTooltip": "复制远程连接",
     "deleteUserConfirm": "确定删除该用户吗？",
-    "getListFailed": "获取账号列表失败：{{error}}"
+    "getListFailed": "获取账号列表失败：{{error}}",
+    "nonSystemUserResetPwd": "该用户非系统创建用户，不可重置密码",
+    "nonSystemUserDelete": "该用户非系统创建用户，不可删除用户"
   },
   "HoleCollectPage": {
     "title": "标题",

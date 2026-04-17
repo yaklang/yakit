@@ -1,49 +1,80 @@
 .btn-sure {
-    margin-right: 12px;
+  margin-right: 12px;
 }
 
 .private-domain {
-    padding: 24px;
-    .login-title-show {
-        .icon-box {
-            text-align: center;
-            .type-icon-img {
-                width: 120px;
-            }
-        }
-        .title-box {
-            text-align: center;
-            font-size: 30px;
-            padding-bottom: 22px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
+  padding: 24px;
+  .login-title-show {
+    .icon-box {
+      text-align: center;
+      .type-icon-img {
+        width: 120px;
+      }
     }
-    .ant-select-single .ant-select-selector .ant-select-selection-item {
-        visibility: hidden;
+    .title-box {
+      text-align: center;
+      font-size: 30px;
+      padding-bottom: 22px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
     }
-    .form-item-submit {
-        display: flex;
-        justify-content: center;
-        .ant-form-item-control-input-content {
-            display: flex;
-            align-items: center;
-        }
+  }
+  .ant-select-single .ant-select-selector .ant-select-selection-item {
+    visibility: hidden;
+  }
+  .form-item-submit {
+    display: flex;
+    justify-content: center;
+    .ant-form-item-control-input-content {
+      display: flex;
+      align-items: center;
     }
-    .form-btns {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-    }
-    .form-label {
-        display: flex;
-        align-items: center;
+  }
+  .form-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .form-label {
+    display: flex;
+    align-items: center;
 
-        .info-icon {
-            margin-left: 4px;
-            // cursor: help;
-            svg {
-                color: var(--Colors-Use-Neutral-Disable);
-            }
-        }
+    .info-icon {
+      margin-left: 4px;
+      // cursor: help;
+      svg {
+        color: var(--Colors-Use-Neutral-Disable);
+      }
     }
+  }
+}
+
+.login-switch-box {
+  text-align: right;
+  .login-icon {
+    cursor: pointer;
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--Colors-Use-Neutral-Bg);
+    border-radius: 4px;
+
+    &:hover {
+      background-color: var(--Colors-Use-Neutral-Bg-Hover);
+      box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
+
+      .icon-right {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+    }
+
+    .login-icon-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      display: flex;
+      align-items: center;
+    }
+  }
 }
