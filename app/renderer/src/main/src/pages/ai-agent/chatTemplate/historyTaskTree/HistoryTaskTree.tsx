@@ -1,4 +1,4 @@
-import React, { memo, useRef, useState } from 'react'
+import React, { memo, useEffect, useRef, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss' // 假设你有对应的样式文件
 import {
   AIHistoryContinueTaskProps,
@@ -26,17 +26,17 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const currentCoordinatorId = useCreation(() => {
     return currentTaskItem?.coordinator_id || ''
   }, [currentTaskItem?.coordinator_id])
-  const [activeKey, setActiveKey] = useState<string>('')
+  const [activeKey, setActiveKey] = useState<string>(currentCoordinatorId || data.records[0]?.coordinator_id || '')
   const historyContainerRef = useRef<HTMLDivElement>(null)
 
   useUpdateEffect(() => {
     const firstItemId = data.records[0]?.coordinator_id || ''
-    if (!!currentTaskItem.coordinator_id) {
-      setActiveKey(currentTaskItem.coordinator_id)
+    if (!!currentCoordinatorId) {
+      setActiveKey(currentCoordinatorId)
     } else if (!!firstItemId) {
       setActiveKey(firstItemId)
     }
-  }, [currentTaskItem.coordinator_id, data.records[0]])
+  }, [currentCoordinatorId, data.records[0]])
 
   const treeData = useCreation(() => {
     if (currentTaskItem.task_tree.length === 0) return data.records || []
@@ -71,7 +71,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
               }
               key={item.coordinator_id}
             >
-              <HistoryTaskTreeItem item={item} currentCoordinatorId={currentTaskItem.coordinator_id} />
+              <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} />
             </YakitCollapse.YakitPanel>
           )
         })}
