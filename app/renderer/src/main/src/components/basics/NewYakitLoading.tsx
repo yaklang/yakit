@@ -1,258 +1,256 @@
-import React, {useMemo} from "react"
-import {YakitStatusType, YaklangEngineMode} from "@/yakitGVDefine"
+import React, { useMemo } from 'react'
+import { YakitStatusType, YaklangEngineMode } from '@/yakitGVDefine'
 import {
-    fetchEnv,
-    getReleaseEditionName,
-    isCommunityEdition,
-    isCommunityMemfit,
-    isEnpriTrace,
-    isEnpriTraceAgent,
-    isIRify,
-    isMemfit
-} from "@/utils/envfile"
-import {Tooltip} from "antd"
-import {OutlineQuestionmarkcircleIcon} from "@/assets/icon/outline"
-import {YakitButton} from "../yakitUI/YakitButton/YakitButton"
+  fetchEnv,
+  getReleaseEditionName,
+  isCommunityEdition,
+  isCommunityMemfit,
+  isEnpriTrace,
+  isEnpriTraceAgent,
+  isIRify,
+  isMemfit,
+} from '@/utils/envfile'
+import { Tooltip } from 'antd'
+import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
+import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 
-import yakitSE from "@/assets/yakitSE.png"
-import yakitEE from "@/assets/yakitEE.png"
-import yakitCE from "@/assets/yakit.jpg"
-import styles from "./newYakitLoading.module.scss"
-import {useTheme} from "@/hook/useTheme"
-import classNames from "classnames"
-import {SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon} from "@/assets/icon/colors"
+import yakitSE from '@/assets/yakitSE.png'
+import yakitEE from '@/assets/yakitEE.png'
+import yakitCE from '@/assets/yakit.jpg'
+import styles from './newYakitLoading.module.scss'
+import { useTheme } from '@/hook/useTheme'
+import classNames from 'classnames'
+import { SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon } from '@/assets/icon/colors'
 
-import IRifyPrimaryBg from "../../assets/uiLayout/IRifyPrimaryBg.png"
-import MemfitAIPrimaryBg from "@/assets/uiLayout/MemfitAIPrimaryBg.png"
-import YakitPrimaryBg from "@/assets/uiLayout/YakitPrimaryBg.png"
+import IRifyPrimaryBg from '../../assets/uiLayout/IRifyPrimaryBg.png'
+import MemfitAIPrimaryBg from '@/assets/uiLayout/MemfitAIPrimaryBg.png'
+import YakitPrimaryBg from '@/assets/uiLayout/YakitPrimaryBg.png'
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
 /** 首屏加载蒙层展示语 */
 const LoadingTitle: string[] = [
-    "没有困难的工作，只有勇敢的打工人。",
-    "打工累吗？累！但我不能哭，因为骑电动车擦眼泪不安全。",
-    "打工不仅能致富，还能交友娶媳妇",
-    "今天搬砖不狠，明天地位不稳",
-    "打工可能会少活十年，不打工你一天也活不下去。",
-    "有人相爱，有人夜里看海，有人七八个闹钟起不来，早安打工人!",
-    "打工人，打工魂，打工人是人上人",
-    `@所有人，据说用了${getReleaseEditionName()}后就不必再卷了！`,
-    `再不用${getReleaseEditionName()}，卷王就是别人的了`,
-    `来用${getReleaseEditionName()}啦？安全圈还是你最成功`,
-    `这届网安人，人手一个${getReleaseEditionName()}，香惨了！`,
+  '没有困难的工作，只有勇敢的打工人。',
+  '打工累吗？累！但我不能哭，因为骑电动车擦眼泪不安全。',
+  '打工不仅能致富，还能交友娶媳妇',
+  '今天搬砖不狠，明天地位不稳',
+  '打工可能会少活十年，不打工你一天也活不下去。',
+  '有人相爱，有人夜里看海，有人七八个闹钟起不来，早安打工人!',
+  '打工人，打工魂，打工人是人上人',
+  `@所有人，据说用了${getReleaseEditionName()}后就不必再卷了！`,
+  `再不用${getReleaseEditionName()}，卷王就是别人的了`,
+  `来用${getReleaseEditionName()}啦？安全圈还是你最成功`,
+  `这届网安人，人手一个${getReleaseEditionName()}，香惨了！`,
 
-    "webfuzzer时根目录插入字典，会有意想不到的收获 ——是果实菌啊",
-    `${getReleaseEditionName()}写监听参数时不必写socks的版本号 ——是果实菌啊`,
-    "使用热标签，可以中间处理des aes等加密，无需再碰py ——是果实菌啊",
-    `${getReleaseEditionName()}，为您提供渗透问题的完美解决方案 ——酒零`,
-    "热加载fuzz快速定位，轻松挖洞无压力 ——k1115h0t",
-    "别让无聊占据你的时间，来探索新世界吧！——Chelth",
-    `<script>alert(‘Hello ${getReleaseEditionName()}!’)</script> ——红炉点雪`,
-    "你的鼠标，掌控世界！——Chelth"
+  'webfuzzer时根目录插入字典，会有意想不到的收获 ——是果实菌啊',
+  `${getReleaseEditionName()}写监听参数时不必写socks的版本号 ——是果实菌啊`,
+  '使用热标签，可以中间处理des aes等加密，无需再碰py ——是果实菌啊',
+  `${getReleaseEditionName()}，为您提供渗透问题的完美解决方案 ——酒零`,
+  '热加载fuzz快速定位，轻松挖洞无压力 ——k1115h0t',
+  '别让无聊占据你的时间，来探索新世界吧！——Chelth',
+  `<script>alert(‘Hello ${getReleaseEditionName()}!’)</script> ——红炉点雪`,
+  '你的鼠标，掌控世界！——Chelth',
 ]
 
 export interface NewYakitLoadingProp {
-    /** yakit模式 */
-    yakitStatus: YakitStatusType
-    checkLog: string[]
-    restartLoading: boolean
-    remoteControlRefreshLoading: boolean
-    btnClickCallback: (type: YaklangEngineMode | YakitStatusType) => any
+  /** yakit模式 */
+  yakitStatus: YakitStatusType
+  checkLog: string[]
+  restartLoading: boolean
+  remoteControlRefreshLoading: boolean
+  btnClickCallback: (type: YaklangEngineMode | YakitStatusType) => any
 }
 
 export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
-    const {yakitStatus, checkLog, restartLoading, remoteControlRefreshLoading, btnClickCallback} = props
-    const {theme} = useTheme()
+  const { yakitStatus, checkLog, restartLoading, remoteControlRefreshLoading, btnClickCallback } = props
+  const { theme } = useTheme()
 
-    const btns = useMemo(() => {
-        if (yakitStatus === "control-remote") {
-            return (
-                <>
-                    <YakitButton
-                        loading={remoteControlRefreshLoading}
-                        className={styles["btn-style"]}
-                        size='max'
-                        onClick={() => btnClickCallback("control-remote")}
-                    >
-                        刷新
-                    </YakitButton>
-                    <YakitButton
-                        loading={remoteControlRefreshLoading}
-                        className={styles["btn-style"]}
-                        type='outline2'
-                        size='max'
-                        onClick={() => btnClickCallback("local")}
-                    >
-                        返回本地连接
-                    </YakitButton>
-                </>
-            )
-        }
+  const btns = useMemo(() => {
+    if (yakitStatus === 'control-remote') {
+      return (
+        <>
+          <YakitButton
+            loading={remoteControlRefreshLoading}
+            className={styles['btn-style']}
+            size="max"
+            onClick={() => btnClickCallback('control-remote')}
+          >
+            刷新
+          </YakitButton>
+          <YakitButton
+            loading={remoteControlRefreshLoading}
+            className={styles['btn-style']}
+            type="outline2"
+            size="max"
+            onClick={() => btnClickCallback('local')}
+          >
+            返回本地连接
+          </YakitButton>
+        </>
+      )
+    }
 
-        if (yakitStatus === "control-remote-timeout") {
-            return (
-                <YakitButton
-                    loading={restartLoading}
-                    className={styles["btn-style"]}
-                    type='outline2'
-                    size='max'
-                    onClick={() => btnClickCallback("local")}
-                >
-                    返回本地连接
-                </YakitButton>
-            )
-        }
+    if (yakitStatus === 'control-remote-timeout') {
+      return (
+        <YakitButton
+          loading={restartLoading}
+          className={styles['btn-style']}
+          type="outline2"
+          size="max"
+          onClick={() => btnClickCallback('local')}
+        >
+          返回本地连接
+        </YakitButton>
+      )
+    }
 
-        return null
-    }, [yakitStatus, remoteControlRefreshLoading, restartLoading])
+    return null
+  }, [yakitStatus, remoteControlRefreshLoading, restartLoading])
 
-    /** 加载页随机宣传语 */
-    const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
-    /** Title */
-    const Title = useMemo(
-        () => (yakitStatus === "control-remote" ? "远程控制中 ..." : `欢迎使用 ${getReleaseEditionName()}`),
-        [yakitStatus]
-    )
+  /** 加载页随机宣传语 */
+  const loadingTitle = useMemo(() => LoadingTitle[Math.floor(Math.random() * (LoadingTitle.length - 0)) + 0], [])
+  /** Title */
+  const Title = useMemo(
+    () => (yakitStatus === 'control-remote' ? '远程控制中 ...' : `欢迎使用 ${getReleaseEditionName()}`),
+    [yakitStatus],
+  )
 
-    const startLogo = useMemo(() => {
-        /* 社区版 */
-        if (isCommunityEdition()) {
-            if (isIRify()) {
-                return (
-                    <div className={styles["yakit-loading-icon-wrapper"]}>
-                        <div className={styles["white-icon"]}>
-                            <SolidIrifyMiniLogoIcon />
-                        </div>
-                    </div>
-                )
-            }
-            if (isCommunityMemfit()) {
-                return (
-                    <div className={styles["yakit-loading-icon-wrapper"]}>
-                        <div className={styles["white-icon"]}>
-                            <SolidMemfitMiniLogoIcon />
-                        </div>
-                    </div>
-                )
-            }
-            return (
-                <div className={styles["yakit-loading-icon-wrapper"]}>
-                    <div className={styles["white-icon"]}>
-                        <img src={yakitCE} alt='暂无图片' />
-                    </div>
-                </div>
-            )
-        }
-
-        /* 企业版 */
-        if (isEnpriTrace()) {
-            if (isIRify()) {
-                return (
-                    <div className={styles["yakit-loading-icon-wrapper"]}>
-                        <div className={styles["white-icon"]}>
-                            <SolidIrifyMiniLogoIcon />
-                        </div>
-                    </div>
-                )
-            }
-            if (isMemfit()) {
-                return (
-                    <div className={styles["yakit-loading-icon-wrapper"]}>
-                        <div className={styles["white-icon"]}>
-                            <SolidMemfitMiniLogoIcon />
-                        </div>
-                    </div>
-                )
-            }
-            return (
-                <div className={styles["yakit-loading-icon-wrapper"]}>
-                    <div className={styles["white-icon"]}>
-                        <img src={yakitEE} alt='暂无图片' />
-                    </div>
-                </div>
-            )
-        }
-
-        /* 便携版 */
-        if (isEnpriTraceAgent()) {
-            return (
-                <div className={styles["yakit-loading-icon-wrapper"]}>
-                    <div className={styles["white-icon"]}>
-                        <img src={yakitSE} alt='暂无图片' />
-                    </div>
-                </div>
-            )
-        }
-
-        return null
-    }, [])
-
-    const primaryBg = useMemo(() => {
-        switch (fetchEnv()) {
-            case "irify":
-            case "irify-enterprise":
-                return `url(${IRifyPrimaryBg})`
-            case "memfit":
-                return `url(${MemfitAIPrimaryBg})`
-            case "enterprise":
-            case "simple-enterprise":
-            case "yakit":
-                return `url(${YakitPrimaryBg})`
-            default:
-                break
-        }
-    }, [])
-
-    return (
-        <div className={styles["yakit-loading-wrapper"]}>
-            <div className={styles["yakit-loading-body"]}>
-                <div className={styles["body-content"]} style={{backgroundImage: primaryBg}}>
-                    {startLogo}
-
-                    <div className={styles["yakit-loading-title"]}>
-                        <div className={styles["title-style"]}>{Title}</div>
-                        {isCommunityEdition() && <div className={styles["subtitle-stlye"]}>{loadingTitle}</div>}
-                    </div>
-
-                    <div className={styles["yakit-loading-content"]}>
-                        <div className={classNames(styles["loading-box-wrapper"], styles["light-boder"])}>
-                            <div className={classNames(styles["loading-box"], styles["light-bg"])}>
-                                <div className={styles["loading-bar"]}>
-                                    <div className={styles["shine"]}></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className={styles["log-wrapper"]}>
-                            <div className={styles["log-body"]}>
-                                {checkLog.map((item, index) => {
-                                    return (
-                                        <div key={item} className={styles["log-item"]}>
-                                            {item}
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                        <div className={styles["engine-log-btn"]}>
-                            {btns}
-                            <div
-                                className={styles["engine-help-wrapper"]}
-                                onClick={() => {
-                                    ipcRenderer.invoke("open-yaklang-path")
-                                }}
-                                style={{position: "fixed", bottom: 32}}
-                            >
-                                打开引擎所在文件
-                                <Tooltip title={`打开文件夹后运行'start-engine-grpc'，命令行启动引擎查看具体问题`}>
-                                    <OutlineQuestionmarkcircleIcon />
-                                </Tooltip>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  const startLogo = useMemo(() => {
+    /* 社区版 */
+    if (isCommunityEdition()) {
+      if (isIRify()) {
+        return (
+          <div className={styles['yakit-loading-icon-wrapper']}>
+            <div className={styles['white-icon']}>
+              <SolidIrifyMiniLogoIcon />
             </div>
+          </div>
+        )
+      }
+      if (isCommunityMemfit()) {
+        return (
+          <div className={styles['yakit-loading-icon-wrapper']}>
+            <div className={styles['white-icon']}>
+              <SolidMemfitMiniLogoIcon />
+            </div>
+          </div>
+        )
+      }
+      return (
+        <div className={styles['yakit-loading-icon-wrapper']}>
+          <div className={styles['white-icon']}>
+            <img src={yakitCE} alt="暂无图片" />
+          </div>
         </div>
-    )
+      )
+    }
+
+    /* 企业版 */
+    if (isEnpriTrace()) {
+      if (isIRify()) {
+        return (
+          <div className={styles['yakit-loading-icon-wrapper']}>
+            <div className={styles['white-icon']}>
+              <SolidIrifyMiniLogoIcon />
+            </div>
+          </div>
+        )
+      }
+      if (isMemfit()) {
+        return (
+          <div className={styles['yakit-loading-icon-wrapper']}>
+            <div className={styles['white-icon']}>
+              <SolidMemfitMiniLogoIcon />
+            </div>
+          </div>
+        )
+      }
+      return (
+        <div className={styles['yakit-loading-icon-wrapper']}>
+          <div className={styles['white-icon']}>{/* <img src={yakitEE} alt='暂无图片' /> */}</div>
+        </div>
+      )
+    }
+
+    /* 便携版 */
+    if (isEnpriTraceAgent()) {
+      return (
+        <div className={styles['yakit-loading-icon-wrapper']}>
+          <div className={styles['white-icon']}>
+            <img src={yakitSE} alt="暂无图片" />
+          </div>
+        </div>
+      )
+    }
+
+    return null
+  }, [])
+
+  const primaryBg = useMemo(() => {
+    switch (fetchEnv()) {
+      case 'irify':
+      case 'irify-enterprise':
+        return `url(${IRifyPrimaryBg})`
+      case 'memfit':
+        return `url(${MemfitAIPrimaryBg})`
+      case 'enterprise':
+      case 'simple-enterprise':
+      case 'yakit':
+        return `url(${YakitPrimaryBg})`
+      default:
+        break
+    }
+  }, [])
+
+  return (
+    <div className={styles['yakit-loading-wrapper']}>
+      <div className={styles['yakit-loading-body']}>
+        <div className={styles['body-content']} style={{ backgroundImage: primaryBg }}>
+          {startLogo}
+
+          <div className={styles['yakit-loading-title']}>
+            <div className={styles['title-style']}>{Title}</div>
+            {isCommunityEdition() && <div className={styles['subtitle-stlye']}>{loadingTitle}</div>}
+          </div>
+
+          <div className={styles['yakit-loading-content']}>
+            <div className={classNames(styles['loading-box-wrapper'], styles['light-boder'])}>
+              <div className={classNames(styles['loading-box'], styles['light-bg'])}>
+                <div className={styles['loading-bar']}>
+                  <div className={styles['shine']}></div>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles['log-wrapper']}>
+              <div className={styles['log-body']}>
+                {checkLog.map((item, index) => {
+                  return (
+                    <div key={item} className={styles['log-item']}>
+                      {item}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            <div className={styles['engine-log-btn']}>
+              {btns}
+              <div
+                className={styles['engine-help-wrapper']}
+                onClick={() => {
+                  ipcRenderer.invoke('open-yaklang-path')
+                }}
+                style={{ position: 'fixed', bottom: 32 }}
+              >
+                打开引擎所在文件
+                <Tooltip title={`打开文件夹后运行'start-engine-grpc'，命令行启动引擎查看具体问题`}>
+                  <OutlineQuestionmarkcircleIcon />
+                </Tooltip>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

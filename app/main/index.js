@@ -590,7 +590,7 @@ function registerGlobalIPC() {
 
       dialog
         .showMessageBox(parentWindow, {
-          icon: nativeImage.createFromPath(path.join(__dirname, showIcon)),
+          // icon: nativeImage.createFromPath(path.join(__dirname, showIcon)),
           type: 'none',
           title: '提示',
           defaultId: 0,

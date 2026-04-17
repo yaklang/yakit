@@ -252,9 +252,9 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     <div className="private-domain">
       {enterpriseLogin && (
         <div className="login-title-show">
-          <div className="icon-box">
+          {/* <div className="icon-box">
             <img src={yakitImg} className="type-icon-img" />
-          </div>
+          </div> */}
           <div className="title-box">企业登录</div>
         </div>
       )}
