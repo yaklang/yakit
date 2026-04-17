@@ -155,7 +155,7 @@ export const startupDuplexConn = () => {
                     }}
                     style={{position: "absolute", right: -5, bottom: -2, fontSize: 14}}
                   >
-                    不在提醒
+                    不再提醒
                   </YakitButton>
                 </div>
               ),
