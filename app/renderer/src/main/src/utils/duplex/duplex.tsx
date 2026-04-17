@@ -144,16 +144,16 @@ export const startupDuplexConn = () => {
           if (openPerformanceTips) {
             yakitFailed({
               message: (
-                <div style={{position: "relative"}}>
+                <div style={{ position: 'relative' }}>
                   {`检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后点击顶部设置，来回收数据库空间。`}
                   <YakitButton
                     type="text"
                     danger
                     onClick={() => {
                       setOpenPerformanceTips(false)
-                      yakitNotify("success", "已关闭数据写入慢提示")
+                      yakitNotify('success', '已关闭数据写入慢提示')
                     }}
-                    style={{position: "absolute", right: -5, bottom: -2, fontSize: 14}}
+                    style={{ position: 'absolute', right: -5, bottom: -2, fontSize: 14 }}
                   >
                     不再提醒
                   </YakitButton>
