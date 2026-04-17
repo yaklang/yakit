@@ -186,7 +186,7 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
       return (
         <div className={styles['yakit-loading-icon-wrapper']}>
           <div className={styles['white-icon']}>
-            <img src={yakitSE} alt={t('YakitEmpty.noImage')} />
+            {/* <img src={yakitSE} alt={t('YakitEmpty.noImage')} /> */}
           </div>
         </div>
       )

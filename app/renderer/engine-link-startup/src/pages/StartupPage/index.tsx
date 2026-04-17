@@ -1062,13 +1062,13 @@ export const StartupPage: React.FC = () => {
       <div className={styles['startup-header-drap']} style={{ height: DragHeaderHeight }}></div>
       <div className={styles['startup-wrapper-left']}>
         <div className={styles['startup-title']}>
-          <div className={styles['startup-logo']}>
+          {/* <div className={styles['startup-logo']}>
             {startupLogo.type === 'img' ? (
               <img src={startupLogo.src} alt="暂无图片" width={startupLogo.width} height={startupLogo.height} />
             ) : (
               <startupLogo.component style={{ height: startupLogo.height, width: startupLogo.width }} />
             )}
-          </div>
+          </div> */}
           <div className={styles['startup-desc']}>为网络安全而生</div>
         </div>
         <YaklangEngineWatchDog
@@ -1152,7 +1152,7 @@ export const StartupPage: React.FC = () => {
           </>
         )}
       </div>
-      <div className={styles['startup-wrapper-right']}>{startupRightImg}</div>
+      {/* <div className={styles['startup-wrapper-right']}>{startupRightImg}</div> */}
     </div>
   )
 }
