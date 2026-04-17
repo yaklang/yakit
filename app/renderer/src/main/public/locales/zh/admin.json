@@ -25,7 +25,8 @@
     "resetPwdTooltip": "重置用户密码",
     "copySecretKeyTooltip": "复制远程连接",
     "deleteUserConfirm": "确定删除该用户吗？",
-    "getListFailed": "获取账号列表失败：{{error}}"
+    "getListFailed": "获取账号列表失败：{{error}}",
+    "defaultRole": "普通用户"
   },
   "HoleCollectPage": {
     "title": "标题",

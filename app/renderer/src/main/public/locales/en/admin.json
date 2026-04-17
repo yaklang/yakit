@@ -25,7 +25,8 @@
     "resetPwdTooltip": "Reset User Password",
     "copySecretKeyTooltip": "Copy Secret Key",
     "deleteUserConfirm": "Are you sure to delete this user?",
-    "getListFailed": "Failed to get account list: {{error}}"
+    "getListFailed": "Failed to get account list: {{error}}",
+    "defaultRole": "Default Role"
   },
   "HoleCollectPage": {
     "title": "Title",
