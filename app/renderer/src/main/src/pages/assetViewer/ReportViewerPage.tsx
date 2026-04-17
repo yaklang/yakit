@@ -385,7 +385,7 @@ interface ReportViewerProp {
 }
 const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   const { reportId } = props
-  const { t } = useI18nNamespaces(['assetViewer'])
+  const { t } = useI18nNamespaces(['assetViewer', 'yakitUi'])
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<Report>({
     From: '',

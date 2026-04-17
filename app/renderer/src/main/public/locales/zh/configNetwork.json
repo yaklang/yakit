@@ -66,6 +66,8 @@
     "autoPerformanceSamplingTip": "开启后cpu、内存过高则会自动触发性能采样，采集到的文件会存在~yakit-projects/pprof-log文件夹里",
     "secondaryTabsNum": "二级页签数量",
     "pluginLogCount": "插件日志条数",
+    "performance": "关闭性能提示",
+    "performanceTip": "关闭后将不会提示写入数据慢",
     "synScanNicConfig": "SYN 扫描网卡配置",
     "nic": "网卡",
     "nicTip": "为SYN扫描选择网卡",

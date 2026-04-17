@@ -1,4 +1,4 @@
-import { info, yakitFailed } from '@/utils/notification'
+import { info, yakitFailed, yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import emiter from '../eventBus/eventBus'
 import { Uint8ArrayToString } from '../str'
@@ -6,6 +6,8 @@ import { JSONParseLog } from '../tool'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineTrashSecondIcon } from '@/assets/icon/outline'
 import { yakitDuplex, yakitStream } from '@/services/electronBridge'
+import { setRemoteValue } from '../kv'
+import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 
 let id = randomString(40)
 let duplexListeners: Array<() => void> = []
@@ -67,6 +69,12 @@ function handleConcurrentLoadData(key: keyof ConcurrentLoad, number: number) {
   } else {
     emiter.emit('onRefreshCps')
   }
+}
+
+let openPerformanceTips = true
+export const setOpenPerformanceTips = (value: boolean) => {
+  openPerformanceTips = value
+  setRemoteValue(GlobalConfigRemoteGV.PerformanceTips, !value + '')
 }
 
 export const startupDuplexConn = () => {
@@ -133,9 +141,26 @@ export const startupDuplexConn = () => {
           break
         case 'httpflow_slow_insert_sql':
         case 'httpflow_slow_query_sql':
-          yakitFailed(
-            `检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后点击顶部设置或者在首页回收数据库空间。`,
-          )
+          if (openPerformanceTips) {
+            yakitFailed({
+              message: (
+                <div style={{ position: 'relative' }}>
+                  {`检测到写入数据慢，当前项目数据库偏大。可删除HTTPFlow History流量后点击顶部设置，来回收数据库空间。`}
+                  <YakitButton
+                    type="text"
+                    danger
+                    onClick={() => {
+                      setOpenPerformanceTips(false)
+                      yakitNotify('success', '已关闭数据写入慢提示')
+                    }}
+                    style={{ position: 'absolute', right: -5, bottom: -2, fontSize: 14 }}
+                  >
+                    不再提醒
+                  </YakitButton>
+                </div>
+              ),
+            })
+          }
           break
         case 'mitm_slow_rule_hook':
           emiter.emit('onMitmRuleMoreLimt')
