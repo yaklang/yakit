@@ -8,13 +8,12 @@ import {
   AIReActTaskChatContentProps,
   AIReActTaskChatLeftSideProps,
   AIReActTaskChatProps,
-  AIReActTaskRecommendProps,
   AIRenderTaskFooterExtraProps,
 } from './AIReActTaskChatType'
 import styles from './AIReActTaskChat.module.scss'
 import { ColorsBrainCircuitIcon } from '@/assets/icon/colors'
 import { AIAgentChatStream, AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplate'
-import { useControllableValue, useCreation, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
@@ -26,7 +25,6 @@ import {
   OutlineExitIcon,
   OutlineHandIcon,
   OutlinePlay2Icon,
-  OutlinePlussmIcon,
   OutlinePositionIcon,
   RedoDotIcon,
 } from '@/assets/icon/outline'
@@ -39,10 +37,8 @@ import { Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
 import { randomString } from '@/utils/randomUtil'
-import useGetAIMaterialsData, { getAIRecommendIconByType } from '../hooks/useGetAIMaterialsData'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AIMaterialsData, AIRecommendItem } from '@/pages/ai-agent/aiChatWelcome/type'
-import { YakitRoute } from '@/enums/yakitRoute'
+import useGetAIMaterialsData from '../hooks/useGetAIMaterialsData'
+import { AIRecommendItem } from '@/pages/ai-agent/aiChatWelcome/type'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -51,19 +47,11 @@ import useAIGlobalConfig from '../hooks/useAIGlobalConfig'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
+import AIReActTaskEmpty from './AIReActTaskEmpty'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
   const [{ randomAIMaterialsData, loadingAIMaterials }, { onRefresh }] = useGetAIMaterialsData()
-
-  const taskEmptyRef = useRef<HTMLDivElement>(null)
-  const [inViewPort = true] = useInViewport(taskEmptyRef)
-
-  useUpdateEffect(() => {
-    if (inViewPort) {
-      onRefresh()
-    }
-  }, [inViewPort])
 
   const { taskChat } = useChatIPCStore().chatIPCData
   const [leftExpand, setLeftExpand] = useState(true)
@@ -129,29 +117,12 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
                 <AIReActTaskChatContent />
               </div>
             ) : (
-              <YakitSpin spinning={loadingAIMaterials} wrapperClassName={styles['spin-wrapper']}>
-                <div className={styles['re-act-task-empty-wrapper']} ref={taskEmptyRef}>
-                  <div className={styles['heard']}>
-                    <div className={styles['title']}>扩展资源</div>
-                    <div className={styles['sub-title']}>专注于安全编码与漏洞分析的智能助手</div>
-                  </div>
-                  <div className={styles['list-wrapper']}>
-                    {Object.keys(randomAIMaterialsData).map((key) => {
-                      const aiItem: AIMaterialsData = randomAIMaterialsData[key as keyof typeof randomAIMaterialsData]
-                      return aiItem.data.length > 0 ? (
-                        <AIReActTaskRecommend
-                          key={aiItem.type}
-                          title={aiItem.type}
-                          data={aiItem.data}
-                          onClickItem={(item) => onClickItem(item, aiItem.mentionType)}
-                        />
-                      ) : (
-                        <React.Fragment key={aiItem.type}></React.Fragment>
-                      )
-                    })}
-                  </div>
-                </div>
-              </YakitSpin>
+              <AIReActTaskEmpty
+                loadingAIMaterials={loadingAIMaterials}
+                randomAIMaterialsData={randomAIMaterialsData}
+                onRefresh={onRefresh}
+                onClickItem={onClickItem}
+              />
             )}
           </>
         }
@@ -161,54 +132,6 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 })
 
 export default AIReActTaskChat
-
-const AIReActTaskRecommend: React.FC<AIReActTaskRecommendProps> = React.memo((props) => {
-  const { title, data, onClickItem } = props
-  const icons = useCreation(() => {
-    return getAIRecommendIconByType(title)
-  }, [title])
-  const onAdd = useMemoizedFn(() => {
-    switch (title) {
-      case '技能':
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AddAIForge }))
-        break
-      case '知识库':
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AI_REPOSITORY }))
-        break
-      case '工具':
-        emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.AddAITool }))
-        break
-
-      default:
-        break
-    }
-  })
-  return (
-    <div className={styles['re-act-recommend-list-wrapper']}>
-      <div className={styles['re-act-recommend-list-heard']}>
-        <div className={styles['title']}>
-          <div className={styles['icon']}>{icons.icon}</div>
-          <div className={styles['hover-icon']}>{icons.hoverIcon}</div>
-          {title}
-        </div>
-        <YakitButton icon={<OutlinePlussmIcon />} className={styles['add-btn']} type="text" onClick={onAdd}>
-          新建
-        </YakitButton>
-      </div>
-      <div className={styles['re-act-recommend-list']}>
-        {data.map((item, index) => (
-          <div
-            key={index} //不需要缓存，每次刷新重新渲染
-            className={styles['re-act-recommend-list-item']}
-            onClick={() => onClickItem(item)}
-          >
-            <span className={styles['text']}>{item.name}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-})
 
 const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
   const { reviewInfo, planReviewTreeKeywordsMap, chatIPCData } = useChatIPCStore()

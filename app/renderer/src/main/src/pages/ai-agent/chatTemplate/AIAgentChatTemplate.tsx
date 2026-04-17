@@ -183,10 +183,8 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 /** @name chat-信息流展示 */
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
   const { streams, scrollToBottom, taskStatus, session } = props
-  const { virtuosoRef, setScrollerRef, scrollToIndex, handleTotalListHeightChanged } = useVirtuosoAutoScroll({
-    total: streams.length,
-    atBottomThreshold: 100,
-  })
+  const { virtuosoRef, setIsAtBottomRef, setScrollerRef, scrollToIndex, handleTotalListHeightChanged } =
+    useVirtuosoAutoScroll()
   const [highlightedItem, setHighlightedItem] = useState<{ index: number; token: number } | null>(null)
   const highlightStartTimerRef = useRef<number | null>(null)
   useUpdateEffect(() => {
@@ -289,7 +287,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
       <Virtuoso<ReActChatRenderItem>
         ref={virtuosoRef}
         scrollerRef={setScrollerRef}
-        // atBottomStateChange={setIsAtBottomRef}
+        atBottomStateChange={setIsAtBottomRef}
         style={{ height: '100%', width: '100%' }}
         data={streams}
         totalListHeightChanged={handleTotalListHeightChanged}

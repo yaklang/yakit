@@ -102,10 +102,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     casualStatus: { loading, title },
     systemStream,
   } = useChatIPCStore().chatIPCData
-  const { virtuosoRef, setScrollerRef, handleTotalListHeightChanged } = useVirtuosoAutoScroll({
-    total: chats.elements.length,
-    atBottomThreshold: 50,
-  })
+  const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged } = useVirtuosoAutoScroll()
 
   const renderItem = useCallback(
     (index: number, item?: ReActChatRenderItem) => {
@@ -161,7 +158,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       <Virtuoso
         ref={virtuosoRef}
         scrollerRef={setScrollerRef}
-        // atBottomStateChange={setIsAtBottomRef}
+        atBottomStateChange={setIsAtBottomRef}
         data={chats.elements}
         totalListHeightChanged={handleTotalListHeightChanged}
         itemContent={(index, item) => renderItem(index, item)}

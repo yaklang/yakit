@@ -95,6 +95,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
             </>
           }
           name="DisableToolIntervalReview"
+          valuePropName="checked"
         >
           <YakitSwitch />
         </Form.Item>

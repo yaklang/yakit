@@ -2,145 +2,148 @@ import { useMemoizedFn, useThrottleFn } from 'ahooks'
 import { useEffect, useRef } from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 
-interface UseVirtuosoAutoScrollOptions {
-  atBottomThreshold?: number
-  total?: number
-}
-
-const useVirtuosoAutoScroll = (options: UseVirtuosoAutoScrollOptions) => {
-  const { atBottomThreshold = 80, total } = options
+const useVirtuosoAutoScroll = () => {
   const virtuosoRef = useRef<VirtuosoHandle>(null)
   const isAtBottomRef = useRef(true)
-  const scrollerRef = useRef<HTMLElement | Window | null>(null)
-  const prevScrollTopRef = useRef<number>(0) // 上一次 scrollTop，用于检测滚动方向
-  const rafIdRef = useRef<number>(0) // 当前 rAF ID，用于取消挂起的自动滚动
+  /** 用户正在主动滚动（wheel / touch / keyboard） */
+  const userScrollingRef = useRef(false)
+  const userScrollTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const scrollerElRef = useRef<HTMLElement | null>(null)
 
-  // 检查是否接近底部
-  const checkIsAtBottom = useMemoizedFn(() => {
-    const scroller = scrollerRef.current
-    if (scroller instanceof HTMLElement) {
-      const distanceToBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight
-      return distanceToBottom <= atBottomThreshold
+  const markUserScrolling = useMemoizedFn((direction?: 'up' | 'down') => {
+    userScrollingRef.current = true
+    // 用户主动向上滚动，立即关闭自动滚动，无需等 atBottomStateChange
+    if (direction === 'up') {
+      isAtBottomRef.current = false
     }
-    return true
+    if (userScrollTimerRef.current) clearTimeout(userScrollTimerRef.current)
+    userScrollTimerRef.current = setTimeout(() => {
+      userScrollingRef.current = false
+    }, 200)
   })
 
-  // scroll 事件处理 —— 通过 scrollTop 变化检测方向，不依赖 wheel 事件
-  const { run: onScroll } = useThrottleFn(
-    () => {
-      const scroller = scrollerRef.current
-      if (!(scroller instanceof HTMLElement)) return
+  const upScrollKeys = useRef(new Set(['ArrowUp', 'PageUp', 'Home']))
+  const scrollKeys = useRef(new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Space']))
+  const handleKeyDown = useMemoizedFn((e: KeyboardEvent) => {
+    if (scrollKeys.current.has(e.key) || (e.key === ' ' && !e.shiftKey)) {
+      markUserScrolling(upScrollKeys.current.has(e.key) ? 'up' : 'down')
+    }
+  })
 
-      const currentScrollTop = scroller.scrollTop
-      const prev = prevScrollTopRef.current
-      prevScrollTopRef.current = currentScrollTop
+  const handleWheel = useMemoizedFn((e: WheelEvent) => {
+    markUserScrolling(e.deltaY < 0 ? 'up' : 'down')
+  })
 
-      // scrollTop 减小 → 用户往上滚了（容差 2px 过滤抖动）
-      if (currentScrollTop < prev - 2) {
-        isAtBottomRef.current = false
-        cancelAnimationFrame(rafIdRef.current)
-      } else if (currentScrollTop > prev) {
-        // scrollTop 增大 → 用户往下滚了，检查是否到底
-        isAtBottomRef.current = checkIsAtBottom()
+  const handleTouchMove = useMemoizedFn(() => {
+    markUserScrolling('up')
+  })
+
+  /** 检测鼠标拖拽滚动条：mousedown 在滚动条区域（clientX 超出 contentWidth） */
+  const handleMouseDown = useMemoizedFn((e: MouseEvent) => {
+    const el = scrollerElRef.current
+    if (!el) return
+    // 点击位置在内容区域右侧 = 点在滚动条上
+    if (e.offsetX >= el.clientWidth || e.offsetY >= el.clientHeight) {
+      markUserScrolling()
+      const onMouseUp = () => {
+        // mouseup 后延迟一段时间再取消标记，避免惯性滚动
+        userScrollTimerRef.current = setTimeout(() => {
+          userScrollingRef.current = false
+        }, 200)
+        document.removeEventListener('mouseup', onMouseUp)
       }
-    },
-    { wait: 30 },
-  )
-
-  // 键盘事件处理
-  const onKeyDown = useMemoizedFn((e: KeyboardEvent) => {
-    if (e.key === 'PageDown' || e.key === 'End' || e.key === 'ArrowDown') {
-      // 延迟检查，等滚动完成
-      setTimeout(() => {
-        isAtBottomRef.current = checkIsAtBottom()
-      }, 50)
-    } else if (e.key === 'PageUp' || e.key === 'Home' || e.key === 'ArrowUp') {
-      isAtBottomRef.current = false
+      document.addEventListener('mouseup', onMouseUp)
     }
   })
 
-  // 触摸事件处理
-  const touchStartY = useRef<number>(0)
-  const onTouchStart = useMemoizedFn((e: TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY
-  })
-
-  const onTouchMove = useMemoizedFn((e: TouchEvent) => {
-    const deltaY = touchStartY.current - e.touches[0].clientY
-    if (deltaY < 0) {
-      isAtBottomRef.current = false
-    } else if (deltaY > 0) {
-      isAtBottomRef.current = checkIsAtBottom()
-    }
-    touchStartY.current = e.touches[0].clientY
-  })
-
-  const setScrollerRef = useMemoizedFn((ref: HTMLElement | Window | null) => {
-    // 解绑旧的事件
-    if (scrollerRef.current && scrollerRef.current instanceof HTMLElement) {
-      scrollerRef.current.removeEventListener('scroll', onScroll)
-      scrollerRef.current.removeEventListener('keydown', onKeyDown)
-      scrollerRef.current.removeEventListener('touchstart', onTouchStart)
-      scrollerRef.current.removeEventListener('touchmove', onTouchMove)
-    }
-    scrollerRef.current = ref
-    // 绑定新的事件
-    if (ref && ref instanceof HTMLElement) {
-      ref.addEventListener('scroll', onScroll, { passive: true })
-      ref.addEventListener('keydown', onKeyDown)
-      ref.addEventListener('touchstart', onTouchStart, { passive: true })
-      ref.addEventListener('touchmove', onTouchMove, { passive: true })
-    }
-  })
-
-  // 组件卸载时清理事件
+  // 卸载时清理 timer 和事件监听
   useEffect(() => {
     return () => {
-      if (scrollerRef.current && scrollerRef.current instanceof HTMLElement) {
-        scrollerRef.current.removeEventListener('scroll', onScroll)
-        scrollerRef.current.removeEventListener('keydown', onKeyDown)
-        scrollerRef.current.removeEventListener('touchstart', onTouchStart)
-        scrollerRef.current.removeEventListener('touchmove', onTouchMove)
+      if (userScrollTimerRef.current) clearTimeout(userScrollTimerRef.current)
+      if (scrollerElRef.current) {
+        scrollerElRef.current.removeEventListener('wheel', handleWheel)
+        scrollerElRef.current.removeEventListener('touchmove', handleTouchMove)
+        scrollerElRef.current.removeEventListener('keydown', handleKeyDown)
+        scrollerElRef.current.removeEventListener('mousedown', handleMouseDown)
       }
-      cancelAnimationFrame(rafIdRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  /** 传给 Virtuoso 的 scrollerRef，自动挂载 wheel/touchmove/keydown 监听 */
+  const setScrollerRef = useMemoizedFn((ref: HTMLElement | Window | null) => {
+    const el = ref instanceof HTMLElement ? ref : null
+
+    if (scrollerElRef.current) {
+      scrollerElRef.current.removeEventListener('wheel', handleWheel)
+      scrollerElRef.current.removeEventListener('touchmove', handleTouchMove)
+      scrollerElRef.current.removeEventListener('keydown', handleKeyDown)
+      scrollerElRef.current.removeEventListener('mousedown', handleMouseDown)
+    }
+
+    scrollerElRef.current = el
+
+    if (el) {
+      el.addEventListener('wheel', handleWheel, { passive: true })
+      el.addEventListener('touchmove', handleTouchMove, { passive: true })
+      el.addEventListener('keydown', handleKeyDown)
+      el.addEventListener('mousedown', handleMouseDown)
+    }
+  })
+
   const scrollToIndex = useMemoizedFn((index: 'LAST' | number, behavior?: 'auto' | 'smooth') => {
-    const isLast = index === 'LAST' || (total != null && index === total - 1)
-    isAtBottomRef.current = isLast
     requestIdleCallback(() => {
       virtuosoRef.current?.scrollToIndex({
         index,
-        align: isLast ? 'end' : 'start',
+        align: index === 'LAST' ? 'end' : 'start',
         behavior: behavior || 'smooth',
-        offset: isLast ? 0 : -100,
+        offset: index === 'LAST' ? 0 : -100,
       })
     })
   })
 
-  const smartScrollToBottom = () => {
-    cancelAnimationFrame(rafIdRef.current)
-    rafIdRef.current = requestAnimationFrame(() => {
-      if (!isAtBottomRef.current) return
-      const scroller = scrollerRef.current
-      if (scroller instanceof HTMLElement) {
-        scroller.scrollTop = scroller.scrollHeight
-      }
+  const smartScrollToBottom = useMemoizedFn(() => {
+    requestAnimationFrame(() => {
+      if (!isAtBottomRef.current || userScrollingRef.current) return
+      virtuosoRef.current?.scrollToIndex({
+        index: 'LAST',
+        align: 'end',
+        behavior: 'auto',
+        offset: 0,
+      })
     })
-  }
+  })
+
+  const setIsAtBottomRef = useMemoizedFn((flag: boolean) => {
+    if (flag) {
+      // 滚到底部了，恢复自动滚动
+      isAtBottomRef.current = true
+    } else {
+      // 只有用户主动滚动才关闭自动滚动
+      // 内容突然增大导致的 atBottomStateChange(false) 不应中断自动滚动
+      if (userScrollingRef.current) {
+        isAtBottomRef.current = false
+      }
+    }
+  })
 
   const { run: handleTotalListHeightChanged } = useThrottleFn(
     () => {
-      if (isAtBottomRef.current && total && total > 0) {
+      if (isAtBottomRef.current && !userScrollingRef.current) {
         smartScrollToBottom()
       }
     },
     { wait: 150 },
   )
 
-  return { virtuosoRef, setScrollerRef, scrollToIndex, handleTotalListHeightChanged }
+  return {
+    virtuosoRef,
+    setScrollerRef,
+    setIsAtBottomRef,
+    scrollToIndex,
+    handleTotalListHeightChanged,
+    isAtBottomRef,
+  }
 }
 
 export default useVirtuosoAutoScroll

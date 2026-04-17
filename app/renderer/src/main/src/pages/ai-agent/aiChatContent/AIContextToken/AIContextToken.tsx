@@ -8,6 +8,7 @@ import {
   ContextPressureEchartsProps,
   ResponseSpeedEcharts,
   ResponseSpeedEchartsProps,
+  TokenCountEcharts,
 } from '../../chatTemplate/AIEcharts'
 import styles from '../AIChatContent.module.scss'
 import { FC, memo, useCallback, useEffect, useRef, useState } from 'react'
@@ -22,7 +23,7 @@ import {
 import classNames from 'classnames'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { cloneDeep, isEmpty } from 'lodash'
-import { getPressuresData, getCostData, getThreshold } from './utils'
+import { getPressuresData, getCostData, getThreshold, getContextStatsData, isPerfDataChanged } from './utils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { AIModelConfig } from '../../aiModelList/utils'
@@ -32,6 +33,7 @@ import { AIChatData } from '../../type/aiChat'
 import { AIDetailsDashIcon } from '../../aiChatWelcome/icon'
 import { Tooltip } from 'antd'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import ContextTable from './ContextTable/ContextTable'
 
 const AIContextToken: FC<{
   session?: string
@@ -51,26 +53,8 @@ const AIContextToken: FC<{
     // 优化：如果是一样的数据结构就不更新
     shouldUpdate: (prev, next) => {
       if (!prev) return !!next
-      return (
-        // 高质模型
-        Object.keys(prev.consumption?.tier_consumption?.intelligent || {}).length !==
-          Object.keys(next.consumption?.tier_consumption?.intelligent || {}).length ||
-        prev.pressure?.intelligent?.length !== next.pressure?.intelligent?.length ||
-        prev.firstCost?.intelligent?.length !== next.firstCost?.intelligent?.length ||
-        prev.totalCost?.intelligent?.length !== next.totalCost?.intelligent?.length ||
-        // 轻量模型
-        Object.keys(prev.consumption?.tier_consumption?.lightweight || {}).length !==
-          Object.keys(next.consumption?.tier_consumption?.lightweight || {}).length ||
-        prev.pressure?.lightweight?.length !== next.pressure?.lightweight?.length ||
-        prev.firstCost?.lightweight?.length !== next.firstCost?.lightweight?.length ||
-        prev.totalCost?.lightweight?.length !== next.totalCost?.lightweight?.length ||
-        // 视觉模型
-        Object.keys(prev.consumption?.tier_consumption?.vision || {}).length !==
-          Object.keys(next.consumption?.tier_consumption?.vision || {}).length ||
-        prev.pressure?.vision?.length !== next.pressure?.vision?.length ||
-        prev.firstCost?.vision?.length !== next.firstCost?.vision?.length ||
-        prev.totalCost?.vision?.length !== next.totalCost?.vision?.length
-      )
+      if (!next) return false
+      return isPerfDataChanged(prev, next)
     },
     // 进行数据克隆，确保引用变化
     clone: (data) => cloneDeep(data),
@@ -198,6 +182,8 @@ const AIContextToken: FC<{
             pressure={aiDataRef?.pressure}
             firstCost={aiDataRef?.firstCost}
             onClose={() => setVisible(false)}
+            contextStats={aiDataRef?.contextStats}
+            contextSections={aiDataRef?.contextSections}
             renderNumber={renderNumber}
           />
         }
@@ -231,11 +217,16 @@ interface AIEchartsDetailsProps {
   pressure?: AIChatData['aiPerfData']['pressure']
   /** ref */
   firstCost?: AIChatData['aiPerfData']['firstCost']
+  /** 上下文字节统计 */
+  contextStats?: AIChatData['aiPerfData']['contextStats']
+  // 上下文成分
+  contextSections?: AIChatData['aiPerfData']['contextSections']
   onClose: () => void
   renderNumber: number
 }
 const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
-  const { overallToken, tierConsumption, pressure, firstCost, onClose, renderNumber } = props
+  const { overallToken, tierConsumption, pressure, firstCost, contextStats, contextSections, onClose, renderNumber } =
+    props
   const ref = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(ref)
 
@@ -243,7 +234,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
 
   useEffect(() => {
     inViewport && event.onRefresh()
-  }, [inViewport])
+  }, [event, inViewport])
   const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
 
   const currentModel = useCreation(() => {
@@ -283,6 +274,23 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
   const threshold = useCreation(() => {
     return getThreshold(pressure)
   }, [renderNumber, pressure?.intelligent, pressure?.lightweight])
+  // 上下文字节统计数据
+  const contextStatsData = useCreation(() => {
+    return getContextStatsData(contextStats?.data)
+  }, [renderNumber, contextStats])
+  // 上下文成分
+  const contextSectionsData = useCreation(() => {
+    if (!contextSections?.sections)
+      return {
+        summary: new Map<string, string>(),
+        sections: [],
+      }
+    return {
+      summary: contextSections.summary,
+      sections: contextSections.sections,
+    }
+  }, [renderNumber, contextSections?.sections])
+
   const getEchartsHeard = useMemoizedFn((title: string) => {
     return (
       <div className={styles['echarts-heard']}>
@@ -370,6 +378,25 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
           <div className={styles['cost-wrapper']}>
             {getEchartsHeard('响应速度')}
             <AICostDetailsEcharts dataEcharts={costEcharts} />
+          </div>
+        )}
+        {!!contextStats?.prompt_bytes && (
+          <div className={styles['cost-wrapper']}>
+            <div className={styles['echarts-heard']}>
+              <div className={styles['echarts-heard-left']}>
+                <div className={styles['title']}>上下文字节统计</div>
+                <div className={styles['unit']}>（单位: Byte）</div>
+              </div>
+              <div className={styles['total']}>
+                总数 <span>{contextStats?.prompt_bytes}</span>
+              </div>
+            </div>
+            <TokenCountEcharts contextStatsData={contextStatsData} />
+          </div>
+        )}
+        {contextSectionsData?.sections.length > 0 && (
+          <div style={{ height: '320px' }}>
+            <ContextTable contextSectionsData={contextSectionsData} />
           </div>
         )}
       </div>
