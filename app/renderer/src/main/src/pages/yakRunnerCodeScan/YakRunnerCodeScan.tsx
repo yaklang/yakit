@@ -62,7 +62,7 @@ import {randomString} from "@/utils/randomUtil"
 import {YakitSelect} from "@/components/yakitUI/YakitSelect/YakitSelect"
 import {grpcFetchAuditTree} from "../yakRunnerAuditCode/utils"
 import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {apiCancelSyntaxFlowScan, apiSyntaxFlowScan, getGroupNamesTotal} from "./utils"
+import {apiCancelSyntaxFlowScan, apiSyntaxFlowScan, getGroupNamesTotal, getRuleFilterByComplianceMode} from "./utils"
 import {YakitRoute} from "@/enums/yakitRoute"
 import {AuditCodePageInfoProps, CodeScanPageInfoProps, PageNodeItemProps, usePageInfo} from "@/store/pageInfo"
 import {shallow} from "zustand/shallow"
@@ -115,6 +115,8 @@ import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
 import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
 import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
 import {getJsonSchemaListResult} from "@/components/JsonFormWrapper/JsonFormWrapper"
+import {getRemoteValue, setRemoteValue} from "@/utils/kv"
+import {CodeScanComplianceMode} from "./utils"
 import { JSONParseLog } from "@/utils/tool"
 const {YakitPanel} = YakitCollapse
 const {ipcRenderer} = window.require("electron")
@@ -130,13 +132,53 @@ const clearRuleByPageInfo: CodeScanPageInfoProps = {
     selectTotal: 0,
     RuleIds: []
 }
+
+const CODE_SCAN_COMPLIANCE_MODE_KEY = "code-scan-compliance-mode"
+
+const CODE_SCAN_COMPLIANCE_OPTIONS: {value: CodeScanComplianceMode; label: string}[] = [
+    {value: "include", label: "漏洞 + 合规"},
+    {value: "exclude", label: "仅漏洞"}
+]
+
+const isValidCodeScanComplianceMode = (value: unknown): value is CodeScanComplianceMode => {
+    return value === "include" || value === "exclude"
+}
+
+const CodeScanComplianceModeSelector: React.FC<{
+    complianceMode?: CodeScanComplianceMode
+    onChange: (e: any) => void
+}> = React.memo((props) => {
+    const {complianceMode, onChange} = props
+    return (
+        <div className={styles["code-scan-mode-panel"]}>
+            <div className={styles["code-scan-mode-row"]}>
+                <span className={styles["code-scan-mode-title"]}>规则筛选</span>
+                <YakitRadioButtons
+                    value={complianceMode}
+                    onChange={onChange}
+                    buttonStyle='solid'
+                    size='small'
+                    wrapClassName={styles["code-scan-mode-buttons"]}
+                    options={CODE_SCAN_COMPLIANCE_OPTIONS}
+                />
+            </div>
+            <div className={styles["code-scan-mode-desc"]}>切换后会直接影响下方规则范围；仅漏洞模式只保留漏洞类规则。</div>
+        </div>
+    )
+})
+
 export interface CodeScanStreamInfo {
     logState: StreamResult.Log[]
     cardState: HoldGRPCStreamProps.InfoCards[]
 }
 
-const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((props) => {
-    const {inViewport} = props
+const CodeScanRuleByGroup: React.FC<
+    CodeScanRuleByGroupProps & {
+        complianceMode: CodeScanComplianceMode
+        onComplianceModeChange: (e: any) => void
+    }
+> = React.memo((props) => {
+    const {inViewport, complianceMode, onComplianceModeChange} = props
     const [pageInfo, setPageInfo] = useControllableValue<CodeScanPageInfoProps>(props, {
         defaultValue: {
             ...clearRuleByPageInfo
@@ -155,7 +197,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
 
     useEffect(() => {
         if (inViewport) init()
-    }, [inViewport])
+    }, [inViewport, complianceMode])
 
     const init = useMemoizedFn((KeyWord = "") => {
         setLoading(true)
@@ -165,8 +207,14 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
             }
         }
         grpcFetchLocalRuleGroupList({Pagination: DefaultRuleGroupFilterPageMeta, ...params})
-            .then(({Group}) => {
-                setResponse(Group)
+            .then(async ({Group}) => {
+                const nextGroup = await Promise.all(
+                    Group.map(async (item) => ({
+                        ...item,
+                        Count: await getGroupNamesTotal([item.GroupName], {ComplianceMode: complianceMode})
+                    }))
+                )
+                setResponse(nextGroup.filter((item) => item.Count > 0))
             })
             .finally(() => {
                 setTimeout(() => {
@@ -218,7 +266,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
             const {checked} = e.target
             if (checked) {
                 const GroupNames = response.map((ele) => ele.GroupName)
-                const selectTotal = await getGroupNamesTotal(GroupNames)
+                const selectTotal = await getGroupNamesTotal(GroupNames, {ComplianceMode: complianceMode})
                 setPageInfo((prev) => ({
                     ...prev,
                     GroupNames,
@@ -255,7 +303,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
             if (isExist) {
                 const newList = (pageInfo.GroupNames || []).filter((ele) => ele !== val.GroupName)
                 setLoading(true)
-                const selectTotal = await getGroupNamesTotal(newList)
+                const selectTotal = await getGroupNamesTotal(newList, {ComplianceMode: complianceMode})
                 setLoading(false)
                 setPageInfo((prev: CodeScanPageInfoProps) => ({
                     ...prev,
@@ -269,7 +317,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
             } else {
                 const newList = [...(pageInfo.GroupNames || []), val.GroupName]
                 setLoading(true)
-                const selectTotal = await getGroupNamesTotal(newList)
+                const selectTotal = await getGroupNamesTotal(newList, {ComplianceMode: complianceMode})
                 setLoading(false)
                 setPageInfo((prev: CodeScanPageInfoProps) => ({
                     ...prev,
@@ -311,6 +359,7 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
                             />
                         </YakitAutoComplete>
                     </div>
+                    <CodeScanComplianceModeSelector complianceMode={complianceMode} onChange={onComplianceModeChange} />
                     <div className={styles["filter-body"]}>
                         <div className={styles["filter-body-left"]}>
                             <YakitCheckbox indeterminate={indeterminate} checked={checked} onChange={onSelectAll}>
@@ -356,8 +405,13 @@ const CodeScanRuleByGroup: React.FC<CodeScanRuleByGroupProps> = React.memo((prop
     )
 })
 
-const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((props) => {
-    const {inViewport, handleTabClick} = props
+const CodeScanRuleByKeyWord: React.FC<
+    CodeScanRuleByKeyWordProps & {
+        complianceMode: CodeScanComplianceMode
+        onComplianceModeChange: (e: any) => void
+    }
+> = React.memo((props) => {
+    const {inViewport, handleTabClick, complianceMode, onComplianceModeChange} = props
     const [pageInfo, setPageInfo] = useControllableValue<CodeScanPageInfoProps>(props, {
         defaultValue: {
             GroupNames: [],
@@ -423,7 +477,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
 
     useEffect(() => {
         if (inViewport) init()
-    }, [inViewport])
+    }, [inViewport, complianceMode])
 
     const init = useMemoizedFn((KeyWord = "") => {
         const params = {
@@ -432,8 +486,14 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
             }
         }
         grpcFetchLocalRuleGroupList({Pagination: DefaultRuleGroupFilterPageMeta, ...params})
-            .then(({Group}) => {
-                setGroupList(Group)
+            .then(async ({Group}) => {
+                const nextGroup = await Promise.all(
+                    Group.map(async (item) => ({
+                        ...item,
+                        Count: await getGroupNamesTotal([item.GroupName], {ComplianceMode: complianceMode})
+                    }))
+                )
+                setGroupList(nextGroup.filter((item) => item.Count > 0))
             })
             .finally(() => {})
     })
@@ -470,7 +530,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                 selectTotal: selectedRules.length
             }))
         }
-    }, [allCheck, selectGroup, keywords, selectedRules, filterLibRuleKind])
+    }, [allCheck, selectGroup, keywords, selectedRules, filterLibRuleKind, complianceMode])
 
     // 如若在按组选择插件组，则清空关键词搜索和已选规则与所选组
     useUpdateEffect(() => {
@@ -480,6 +540,12 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
             setSelectGroup([])
         }
     }, [pageInfo.GroupNames])
+
+    useUpdateEffect(() => {
+        setSelectedRules([])
+        setAllCheck(false)
+        setSelectGroup([])
+    }, [complianceMode])
 
     const onFilterLibRuleKindChange = useMemoizedFn((v: "" | "noLib") => {
         setFilterLibRuleKind(v)
@@ -517,6 +583,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                     </div>
                 )}
             </div>
+            {inViewport && <CodeScanComplianceModeSelector complianceMode={complianceMode} onChange={onComplianceModeChange} />}
             <div
                 className={classNames(styles["code-scan-group-wrapper"])}
                 style={{height: inViewport ? "100%" : "0px"}}
@@ -627,6 +694,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                     response={response}
                     setResponse={setResponse}
                     filterLibRuleKind={filterLibRuleKind}
+                    complianceMode={complianceMode}
                     selectedRules={selectedRules}
                     setSelectedRules={setSelectedRules}
                     allCheck={allCheck}
@@ -665,6 +733,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
         return {...defaultCodeScanPageInfo}
     })
     const [pageInfo, setPageInfo] = useState<CodeScanPageInfoProps>(initPageInfo())
+    const [complianceMode, setComplianceMode] = useState<CodeScanComplianceMode>("include")
 
     // #region 左侧tab
     // 隐藏插件列表
@@ -688,6 +757,53 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
 
     const [filterLibRuleKind, setFilterLibRuleKind] = useState<"" | "noLib">("noLib")
 
+    useEffect(() => {
+        getRemoteValue(CODE_SCAN_COMPLIANCE_MODE_KEY).then((value: string) => {
+            const nextMode: CodeScanComplianceMode = isValidCodeScanComplianceMode(value) ? value : "include"
+            setComplianceMode(nextMode)
+            if (!isValidCodeScanComplianceMode(value)) {
+                setRemoteValue(CODE_SCAN_COMPLIANCE_MODE_KEY, nextMode)
+            }
+        })
+    }, [])
+
+    useEffect(() => {
+        if (!isValidCodeScanComplianceMode(complianceMode)) return
+        if ((pageInfo.RuleIds?.length || 0) > 0) return
+        if ((pageInfo.GroupNames?.length || 0) === 0) return
+
+        let isCancel = false
+        getGroupNamesTotal(pageInfo.GroupNames || [], {
+            ComplianceMode: complianceMode,
+            FilterLibRuleKind: pageInfo.FilterLibRuleKind || ""
+        }).then((selectTotal) => {
+            if (isCancel) return
+            setPageInfo((prev) => {
+                if (prev.selectTotal === selectTotal) return prev
+                return {
+                    ...prev,
+                    selectTotal
+                }
+            })
+        }).catch(() => {})
+
+        return () => {
+            isCancel = true
+        }
+    }, [complianceMode, pageInfo.FilterLibRuleKind, pageInfo.GroupNames, pageInfo.RuleIds, setPageInfo])
+
+    const onComplianceModeChange = useMemoizedFn((e) => {
+        const nextMode: CodeScanComplianceMode = isValidCodeScanComplianceMode(e?.target?.value)
+            ? e.target.value
+            : "include"
+        setComplianceMode(nextMode)
+        setRemoteValue(CODE_SCAN_COMPLIANCE_MODE_KEY, nextMode)
+        setPageInfo((prev) => ({
+            ...prev,
+            ...clearRuleByPageInfo
+        }))
+    })
+
     return (
         <div className={styles["yakrunner-codec-scan"]} id={`yakrunner-code-scan-${pageId}`}>
             {/* 左侧边栏 */}
@@ -710,12 +826,20 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                     inViewport={type === "keyword"}
                     filterLibRuleKind={filterLibRuleKind}
                     setFilterLibRuleKind={setFilterLibRuleKind}
+                    complianceMode={complianceMode}
+                    onComplianceModeChange={onComplianceModeChange}
                     pageInfo={pageInfo}
                     setPageInfo={setPageInfo}
                     handleTabClick={handleTabClick}
                 />
 
-                <CodeScanRuleByGroup inViewport={type === "group"} pageInfo={pageInfo} setPageInfo={setPageInfo} />
+                <CodeScanRuleByGroup
+                    inViewport={type === "group"}
+                    complianceMode={complianceMode}
+                    onComplianceModeChange={onComplianceModeChange}
+                    pageInfo={pageInfo}
+                    setPageInfo={setPageInfo}
+                />
             </div>
             <CodeScanExecuteContent
                 hidden={hidden}
@@ -724,6 +848,7 @@ export const YakRunnerCodeScan: React.FC<YakRunnerCodeScanProps> = (props) => {
                 setPageInfo={setPageInfo}
                 pageId={pageId}
                 filterLibRuleKind={filterLibRuleKind}
+                complianceMode={complianceMode}
             />
         </div>
     )
@@ -740,8 +865,8 @@ const initialLocalState: QuerySyntaxFlowRuleResponse = {
     Total: 0
 }
 
-const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
-    const {hidden, filterLibRuleKind, allCheck, setAllCheck, selectGroup, keywords, isRefresh} = props
+const CodeScanByGroup: React.FC<CodeScanByGroupProps & {complianceMode: CodeScanComplianceMode}> = React.memo((props) => {
+    const {hidden, filterLibRuleKind, allCheck, setAllCheck, selectGroup, keywords, isRefresh, complianceMode} = props
     const isLoadingRef = useRef<boolean>(true)
     const [response, setResponse] = useControllableValue<QuerySyntaxFlowRuleResponse>(props, {
         defaultValue: initialLocalState,
@@ -777,8 +902,7 @@ const CodeScanByGroup: React.FC<CodeScanByGroupProps> = React.memo((props) => {
                     Language: [],
                     GroupNames: selectGroup,
                     Severity: [],
-                    Purpose: [],
-                    Tag: [],
+                    ...getRuleFilterByComplianceMode(complianceMode),
                     Keyword: keywords,
                     FilterLibRuleKind: filterLibRuleKind
                 },
@@ -922,8 +1046,10 @@ const CodeScanGroupByKeyWordItem: React.FC<CodeScanGroupByKeyWordItemProps> = Re
     )
 })
 
-const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo((props) => {
-    const {pageId, filterLibRuleKind, hidden, setHidden} = props
+const CodeScanExecuteContent: React.FC<
+    CodeScanExecuteContentProps & {complianceMode: CodeScanComplianceMode}
+> = React.memo((props) => {
+    const {pageId, filterLibRuleKind, hidden, setHidden, complianceMode} = props
     /** 子组件方法传递给父组件 */
     const codeScanExecuteContentRef = useRef<CodeScanExecuteContentRefProps>(null)
     const [pageInfo, setPageInfo] = useControllableValue<CodeScanPageInfoProps>(props, {
@@ -1235,6 +1361,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
                         executeStatus={executeStatus}
                         setExecuteStatus={onSetExecuteStatus}
                         filterLibRuleKind={filterLibRuleKind}
+                        complianceMode={complianceMode}
                         setHidden={setHidden}
                         auditCodeList={auditCodeList}
                         getAduitList={getAduitList}
@@ -1323,13 +1450,16 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     )
 })
 
-export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps> = React.memo(
+export const CodeScanMainExecuteContent: React.FC<
+    CodeScaMainExecuteContentProps & {complianceMode: CodeScanComplianceMode}
+> = React.memo(
     forwardRef((props, ref) => {
         const {
             isExpand,
             setIsExpand,
             setHidden,
             filterLibRuleKind,
+            complianceMode,
             setProgressShow,
             auditCodeList,
             getAduitList,
@@ -1431,8 +1561,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Language: [],
                     GroupNames: pageInfo.GroupNames || [],
                     Severity: [],
-                    Purpose: [],
-                    Tag: [],
+                    ...getRuleFilterByComplianceMode(complianceMode),
                     Keyword: "",
                     FilterLibRuleKind: filterLibRuleKind
                 }
@@ -1781,8 +1910,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Language: [],
                     GroupNames: pageInfo.GroupNames || [],
                     Severity: [],
-                    Purpose: [],
-                    Tag: [],
+                    ...getRuleFilterByComplianceMode(complianceMode),
                     Keyword: pageInfo.Keyword || "",
                     FilterLibRuleKind: filterLibRuleKind,
                     Ids: pageInfo.RuleIds || []
@@ -1828,8 +1956,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                     Language: [],
                     GroupNames: pageInfo.GroupNames || [],
                     Severity: [],
-                    Purpose: [],
-                    Tag: [],
+                    ...getRuleFilterByComplianceMode(complianceMode),
                     Keyword: "",
                     FilterLibRuleKind: filterLibRuleKind
                 },
@@ -1855,8 +1982,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                         Language: [],
                         GroupNames: pageInfo.GroupNames || [],
                         Severity: [],
-                        Purpose: [],
-                        Tag: [],
+                        ...getRuleFilterByComplianceMode(complianceMode),
                         Keyword: "",
                         FilterLibRuleKind: filterLibRuleKind
                     },
@@ -1996,7 +2122,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                 }
 
                 const newSelectGroup = filter(selectGroup)
-                const selectTotal = await getGroupNamesTotal(newSelectGroup)
+                const selectTotal = await getGroupNamesTotal(newSelectGroup, {ComplianceMode: complianceMode})
                 setPageInfo({
                     ...pageInfo,
                     ...clearRuleByPageInfo,

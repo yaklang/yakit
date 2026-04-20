@@ -181,6 +181,45 @@
     }
 }
 
+.code-scan-mode-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+}
+
+.code-scan-mode-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.code-scan-mode-title {
+    flex-shrink: 0;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+}
+
+.code-scan-mode-desc {
+    color: var(--color-gray-text-02, #b4bbca);
+    font-size: 11px;
+    line-height: 14px;
+}
+
+.code-scan-mode-buttons {
+    :global {
+        .ant-radio-group {
+            gap: 0;
+        }
+    }
+}
+
 .code-scan-execute-wrapper {
     @include securityTool.execute-title("code-scan");
     .code-scan-executor-body {

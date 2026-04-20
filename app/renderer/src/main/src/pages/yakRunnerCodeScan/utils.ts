@@ -12,6 +12,12 @@ import {grpcFetchLocalRuleList} from "../ruleManagement/api"
 
 const {ipcRenderer} = window.require("electron")
 
+export type CodeScanComplianceMode = "include" | "exclude"
+
+export const getRuleFilterByComplianceMode = (complianceMode?: CodeScanComplianceMode) => ({
+    Purpose: complianceMode === "exclude" ? ["vuln"] : []
+})
+
 /**
  * @description SyntaxFlowScan 规则执行
  */
@@ -96,7 +102,10 @@ export const apiDeleteQuerySyntaxFlowResult: APIOptionalFunc<
 }
 
 // 获取选中分组下规则总数
-export const getGroupNamesTotal = (GroupNames: string[]) => {
+export const getGroupNamesTotal = (
+    GroupNames: string[],
+    options?: {ComplianceMode?: CodeScanComplianceMode; FilterLibRuleKind?: "" | "lib" | "noLib"}
+) => {
     return new Promise<number>(async (resolve, reject) => {
         try {
             if(GroupNames.length === 0) {
@@ -109,10 +118,9 @@ export const getGroupNamesTotal = (GroupNames: string[]) => {
                     Language: [],
                     GroupNames,
                     Severity: [],
-                    Purpose: [],
-                    Tag: [],
+                    ...getRuleFilterByComplianceMode(options?.ComplianceMode),
                     Keyword: "",
-                    FilterLibRuleKind: ""
+                    FilterLibRuleKind: options?.FilterLibRuleKind || ""
                 },
                 Pagination: {
                     Limit: 10,
