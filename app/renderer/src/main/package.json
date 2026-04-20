@@ -56,7 +56,6 @@
     "hint.css": "^2.7.0",
     "html-docx-js": "^0.3.1",
     "html2canvas": "^1.4.1",
-    "html2pdf.js": "^0.10.1",
     "i18next": "^25.3.6",
     "i18next-http-backend": "^3.0.2",
     "immutability-helper": "^3.1.1",

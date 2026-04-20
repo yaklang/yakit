@@ -39,6 +39,7 @@
     "selectReport": "选择报告以在此查看内容",
     "pages": "共 {{total}} 页",
     "selectFolder": "请选择文件夹",
-    "exportSuccess": "报告导出成功"
+    "exportSuccess": "报告导出成功",
+    "emptyReportData": "报告数据为空，无法导出"
   }
 }

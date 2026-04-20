@@ -24,7 +24,7 @@ import {
   PRODUCT_RELEASE_EDITION,
 } from '@/utils/envfile'
 import { openABSFileLocated } from '@/utils/openWebsite'
-import html2pdf from 'html2pdf.js'
+import { yakitDialog } from '@/services/electronBridge'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { ReportItem } from './reportRenders/schema'
 import html2canvas from 'html2canvas'
@@ -380,6 +380,23 @@ const truncateArrayBySize = (arr: ReportItem[], maxSizeKB: number, maxItemsPerCh
   return result
 }
 
+const getEchartsHtml2CanvasOptions = (echartType: string | null) => {
+  switch (echartType) {
+    case 'vertical-bar':
+    case 'stacked-vertical-bar':
+      return { scale: 1, windowWidth: 1000, x: 150, y: 0 }
+    case 'hollow-pie':
+    case 'e-chart':
+      return { scale: 1, windowWidth: 1000 }
+    case 'multi-pie':
+      return { scale: 0.8, windowWidth: 1200 }
+    case 'nightingle-rose':
+      return { scale: 1, windowWidth: 1000, x: 150, y: 0, height: 400 }
+    default:
+      return {}
+  }
+}
+
 interface ReportViewerProp {
   reportId?: number
 }
@@ -402,7 +419,6 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   const [reportItems, setReportItems] = useState<ReportItem[]>([])
   const divRef = useRef<HTMLDivElement>(null)
   const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
-  const [wordDownloadLoading, setWordDownloadLoading] = useState<boolean>(false)
 
   useEffect(() => {
     if ((reportId || 0) <= 0) {
@@ -439,56 +455,32 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
     }
   }, [report])
 
-  // 下载PDF
-  const downloadPdf = () => {
+  const downloadPdf = useMemoizedFn(async () => {
+    if (!report.JsonRaw || report.JsonRaw === '-') {
+      yakitNotify('error', t('ReportViewerPage.emptyReportData'))
+      return
+    }
+    setDownloadLoading(true)
     try {
-      if (!divRef || !divRef.current) return
-      const contentHTML = divRef.current
-      if (contentHTML.scrollTop) {
-        contentHTML.scrollTop = 0
+      // 先让 loading 渲染一帧，避免系统保存弹窗前无反馈
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      const saveRes = await yakitDialog.showSaveDialog(`${report.Title}.pdf`)
+      if (saveRes.canceled || !saveRes.filePath) {
+        return
       }
-      // 获取所有图表 改动其元素 为了生成pdf能正确渲染
-      const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
-      // 遍历每一个元素并修改样式
-      echartsElements.forEach((element) => {
-        const el = element as HTMLElement
-        // 例如：根据 index 给每个元素设置不同的背景色
-        el.style.justifyContent = 'flex-start'
+      await ipcRenderer.invoke('PrintReportPdfFromTemplate', {
+        outputPath: saveRes.filePath,
+        JsonRaw: report.JsonRaw,
+        reportName: report.Title,
+        hideCatalog: true,
       })
-      setDownloadLoading(true)
-      setTimeout(() => {
-        html2pdf()
-          .from(contentHTML)
-          .set({
-            margin: [10, 5, 10, 5],
-            filename: `${report.Title}${allReportItems.length > 1 ? '-' + current : ''}.pdf`,
-            image: { type: 'jpeg', quality: 0.95 },
-            jsPDF: {
-              format: 'a4',
-            },
-            // 图像渲染的清晰度过高时 大量的数据生成的pdf文件白屏
-            // html2canvas: {
-            //     scale: 2
-            // },
-            pagebreak: {
-              // 自动分页控制属性
-              // mode: 'avoid-all',
-              after: '#cover',
-            },
-          })
-          .save()
-          .then(() => {
-            setDownloadLoading(false)
-            // 遍历每一个元素并修改样式
-            echartsElements.forEach((element) => {
-              const el = element as HTMLElement
-              // 例如：根据 index 给每个元素设置不同的背景色
-              el.style.justifyContent = 'center'
-            })
-          })
-      }, 500)
-    } catch (error) {}
-  }
+      yakitNotify('success', t('ReportViewerPage.exportSuccess'))
+    } catch (e) {
+      yakitNotify('error', `Export PDF failed: ${e}`)
+    } finally {
+      setDownloadLoading(false)
+    }
+  })
 
   // 下载HTML
   const downloadHtml = () => {
@@ -521,7 +513,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   // 下载Word
   const downloadWord = () => {
     if (!divRef || !divRef.current) return
-    setWordDownloadLoading(true)
+    setDownloadLoading(true)
     // 此处定时器为了确保已处理其余任务
     setTimeout(() => {
       exportToWord()
@@ -536,24 +528,8 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       // 使用html2canvas将ECharts图表转换为图像
       const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
       const promises = Array.from(echartsElements).map(async (element) => {
-        // @ts-ignore
-        const echartType: string = element.getAttribute('echart-type')
-        let options = {}
-        // 适配各种图表
-        if (echartType === 'vertical-bar') {
-          options = { scale: 1, windowWidth: 1000, x: 150, y: 0 }
-        } else if (echartType === 'hollow-pie') {
-          options = { scale: 1, windowWidth: 1000 }
-        } else if (echartType === 'stacked-vertical-bar') {
-          options = { scale: 1, windowWidth: 1000, x: 150, y: 0 }
-        } else if (echartType === 'multi-pie') {
-          options = { scale: 0.8, windowWidth: 1200 }
-        } else if (echartType === 'nightingle-rose') {
-          options = { scale: 1, windowWidth: 1000, x: 150, y: 0, height: 400 }
-        } else if (echartType === 'e-chart') {
-          options = { scale: 1, windowWidth: 1000 }
-        }
-
+        const echartType = (element as HTMLElement).getAttribute('echart-type')
+        const options = getEchartsHtml2CanvasOptions(echartType)
         const canvas = await html2canvas(element as HTMLElement, options)
         return canvas.toDataURL('image/jpeg')
       })
@@ -583,7 +559,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       htmlDocx.asBlob(wordStr), //将html转为docx
       `${report.Title}.doc`,
     )
-    setWordDownloadLoading(false)
+    setDownloadLoading(false)
   }
 
   const onChangePagination = (page: number) => {
@@ -636,7 +612,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
       ) : loading ? (
         <YakitSpin spinning={loading} wrapperClassName={styles['loading-wrapper']}></YakitSpin>
       ) : (
-        <YakitSpin spinning={downloadLoading || wordDownloadLoading}>
+        <YakitSpin spinning={downloadLoading}>
           <YakitCard
             className={styles['card']}
             headStyle={{

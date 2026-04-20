@@ -39,6 +39,7 @@
     "selectReport": "Select a report to view content",
     "pages": "Total {{total}} pages",
     "selectFolder": "Please select a folder",
-    "exportSuccess": "Report exported successfully"
+    "exportSuccess": "Report exported successfully",
+    "emptyReportData": "Report data is empty, export is not available"
   }
 }
