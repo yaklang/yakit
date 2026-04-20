@@ -1297,12 +1297,12 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
 
   return (
     <div className={styles['yak-runner-welcome-page']} ref={ref}>
-      <div className={styles['title']}>
+      {/* <div className={styles['title']}>
         <div className={styles['icon-style']}>
           <SolidYakCattleNoBackColorIcon />
         </div>
         <div className={styles['header-style']}>{t('RunnerTabs.welcomeYak')}</div>
-      </div>
+      </div> */}
       <div className={styles['operate-box']} style={size && size.width < 600 ? { padding: '0px 20px' } : {}}>
         <div className={styles['operate']}>
           <div className={styles['title-style']}>{t('RunnerTabs.quickCreate')}</div>
