@@ -169,7 +169,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         info('启动初始 MITM 插件成功')
       })
     }
-  }, [props.enableInitialMITMPlugin, props.defaultPlugins])
+  }, [props.enableInitialMITMPlugin, props.defaultPlugins, mitmVersion])
 
   const onStartMitmChangeInfo = useMemoizedFn((infoStr = '') => {
     try {
@@ -213,13 +213,13 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
   })
   useEffect(() => {
     onStartMitmChangeInfo()
-  }, [status, mitmVersion])
+  }, [status, mitmVersion, onStartMitmChangeInfo])
   useEffect(() => {
     emiter.on('onStartMitm', onStartMitmChangeInfo)
     return () => {
       emiter.off('onStartMitm', onStartMitmChangeInfo)
     }
-  }, [])
+  }, [onStartMitmChangeInfo])
   const stopFun = useMemoizedFn(() => {
     // setLoading(true)
     return new Promise((resolve, reject) => {
@@ -264,7 +264,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     return () => {
       emiter.off('onCloseTunHijackCallback', onCloseChromeByTunHijack)
     }
-  }, [])
+  }, [onCloseChromeByTunHijack])
 
   useEffect(() => {
     loadAdvancedConfig().then((config) => {
@@ -321,6 +321,10 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
       version: mitmVersion,
     }
     grpcMITMSetDownstreamProxy(proxyValue)
+  })
+
+  const openMitmExtractAggregatePage = useMemoizedFn(() => {
+    emiter.emit('menuOpenPage', JSON.stringify({ route: YakitRoute.MITMExtractedAggregate }))
   })
 
   return (
@@ -395,6 +399,10 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                   }}
                 />
               </label>
+            </div>
+            <Divider type="vertical" style={{ margin: '0 4px', top: 1 }} />
+            <div className={style['link-item']} onClick={openMitmExtractAggregatePage}>
+              提取聚合
             </div>
             <Divider type="vertical" style={{ margin: '0 4px', top: 1 }} />
             <YakitPopover
@@ -475,12 +483,16 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 <YakitMenu
                   selectedKeys={[]}
                   data={[
+                    { key: 'extract-aggregate', label: '提取聚合' },
                     { key: 'rule-config', label: '规则配置' },
                     { key: 'cert-download', label: '证书下载' },
                   ]}
                   onClick={({ key }) => {
                     setMorePopoverVisible(false)
                     switch (key) {
+                      case 'extract-aggregate':
+                        openMitmExtractAggregatePage()
+                        break
                       case 'rule-config':
                         setVisible(true)
                         break
@@ -674,7 +686,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
   //回显代理选项
   useEffect(() => {
     downStreamAgentModalVisible && echoDownstreamProxy()
-  }, [downStreamAgentModalVisible])
+  }, [downStreamAgentModalVisible, echoDownstreamProxy])
 
   return (
     <>

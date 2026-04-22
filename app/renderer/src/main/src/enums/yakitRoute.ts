@@ -1,127 +1,129 @@
 /** 渲染端所有页面枚举 */
 export enum YakitRoute {
-    /** 首页 */
-    NewHome = "new-home",
-    /** 手动渗透 v1*/
-    HTTPHacker = "httpHacker",
-    /**mitm v2 */
-    MITMHacker = "mitm-hijack",
-    HTTPFuzzer = "httpFuzzer",
-    WebsocketFuzzer = "websocket-fuzzer",
-    Codec = "codec",
-    DataCompare = "dataCompare",
-    /** 基础工具 */
-    Mod_ScanPort = "scan-port",
-    PoC = "poc",
-    Plugin_OP = "plugin-op",
-    Mod_Brute = "brute",
-    Plugin_Hub = "plugin-hub",
-    BatchExecutorPage = "batch-executor-page-ex",
-    /** 反连 */
-    DNSLog = "dnslog",
-    ICMPSizeLog = "icmp-sizelog",
-    TCPPortLog = "tcp-portlog",
-    PayloadGenerater_New = "PayloadGenerater_New",
-    ReverseServer_New = "ReverseServer_New",
-    ShellReceiver = "shellReceiver",
-    /** 数据库 */
-    DB_HTTPHistory = "db-http-request",
-    DB_HTTPHistoryAnalysis = "db-http-request-analysis",
-    DB_Report = "db-reports-results",
-    DB_Risk = "db-risks",
-    Misstatement = "misstatement",
-    DB_Ports = "db-ports",
-    DB_Domain = "db-domains",
-    DB_CVE = "cve",
-    /** 独立功能页面 */
-    // Yak-Runner页面
-    YakScript = "yakScript",
-    // Payload页面
-    PayloadManager = "payload-manager",
-    // 配置管理页面（字典/代理/热加载）
-    ConfigManagement = "config-management",
-    // 私有版用户管理
-    AccountAdminPage = "account-admin-page",
-    RoleAdminPage = "role-admin-page",
-    HoleCollectPage = "hole-collect-page",
-    LicenseAdminPage = "license-admin-page",
-    // 公开版用户管理
-    TrustListPage = "trust-list-admin-page",
-    PlugInAdminPage = "plug-in-admin-page",
-    // 远程管理
-    ControlAdminPage = "control-admin-page",
-    // 插件批量页面中未完成页面的点击弹出页面
-    BatchExecutorRecover = "batch-executor-recover",
-    // http-history页面右键菜单"数据包扫描"生成页面
-    PacketScanPage = "packet-scan-page",
-    // 新建插件页面
-    AddYakitScript = "add-yakit-script",
-    /** 简易版专属 */
-    SimpleDetect = "simple-detect",
-    // 录屏管理器
-    ScreenRecorderPage = "screen-recorder-page",
-    /** 全局功能-试验性功能-BAS实验室 */
-    DB_ChaosMaker = "db-chaosmaker",
-    /** 调试插件编辑器 */
-    Beta_DebugTrafficAnalize = "**beta-debug-traffic-analize",
-    /** 调试插件编辑器 */
-    Beta_DebugMonacoEditor = "beta-debug-monaco-editor",
-    /** 靶场调试 */
-    Beta_VulinboxManager = "beta-vulinbox-manager",
-    /** 网络调试 */
-    Beta_DiagnoseNetwork = "beta-diagnose-network",
-    /** 配置全局 */
-    Beta_ConfigNetwork = "beta-config-network",
-    /** 插件管理 */
-    Plugin_Audit = "plugin-audit",
-    /** WebShell 管理 */
-    Beta_WebShellManager = "beta-webshell-manager",
-    Beta_WebShellOpt = "beta-webshell-opt",
-    /** 数据统计 */
-    Data_Statistics = "data_statistics",
-    /** 空间引擎 */
-    Space_Engine = "space-engine",
-    /** YakRunner代码扫描 */
-    YakRunner_Code_Scan = "yakrunner-code-scan",
-    // YakRunner代码审计
-    YakRunner_Audit_Code = "yakrunner-audit-code",
-    // YakRunner项目管理
-    YakRunner_Project_Manager = "yakrunner-project-manager",
-    // YakRunner扫描历史
-    YakRunner_ScanHistory = "yakrunner_scanHistory",
-    /** 规则管理 */
-    Rule_Management = "rule-management",
-    /**笔记本管理 */
-    Notepad_Manage = "notepad-manage",
-    /**笔记本内容编辑页面 */
-    Modify_Notepad = "modify-notepad",
-    // YakRunner漏洞管理
-    YakRunner_Audit_Hole = "yakrunner-audit-hole",
-    // 系统配置（目前仅供IRify企业版配置水印）
-    System_Config = "system-config",
-    // AI-Agent
-    AI_Agent = "ai-agent",
+  /** 首页 */
+  NewHome = 'new-home',
+  /** 手动渗透 v1*/
+  HTTPHacker = 'httpHacker',
+  /**mitm v2 */
+  MITMHacker = 'mitm-hijack',
+  /** MITM 规则提取结果聚合（HaE 式面板） */
+  MITMExtractedAggregate = 'mitm-extracted-aggregate',
+  HTTPFuzzer = 'httpFuzzer',
+  WebsocketFuzzer = 'websocket-fuzzer',
+  Codec = 'codec',
+  DataCompare = 'dataCompare',
+  /** 基础工具 */
+  Mod_ScanPort = 'scan-port',
+  PoC = 'poc',
+  Plugin_OP = 'plugin-op',
+  Mod_Brute = 'brute',
+  Plugin_Hub = 'plugin-hub',
+  BatchExecutorPage = 'batch-executor-page-ex',
+  /** 反连 */
+  DNSLog = 'dnslog',
+  ICMPSizeLog = 'icmp-sizelog',
+  TCPPortLog = 'tcp-portlog',
+  PayloadGenerater_New = 'PayloadGenerater_New',
+  ReverseServer_New = 'ReverseServer_New',
+  ShellReceiver = 'shellReceiver',
+  /** 数据库 */
+  DB_HTTPHistory = 'db-http-request',
+  DB_HTTPHistoryAnalysis = 'db-http-request-analysis',
+  DB_Report = 'db-reports-results',
+  DB_Risk = 'db-risks',
+  Misstatement = 'misstatement',
+  DB_Ports = 'db-ports',
+  DB_Domain = 'db-domains',
+  DB_CVE = 'cve',
+  /** 独立功能页面 */
+  // Yak-Runner页面
+  YakScript = 'yakScript',
+  // Payload页面
+  PayloadManager = 'payload-manager',
+  // 配置管理页面（字典/代理/热加载）
+  ConfigManagement = 'config-management',
+  // 私有版用户管理
+  AccountAdminPage = 'account-admin-page',
+  RoleAdminPage = 'role-admin-page',
+  HoleCollectPage = 'hole-collect-page',
+  LicenseAdminPage = 'license-admin-page',
+  // 公开版用户管理
+  TrustListPage = 'trust-list-admin-page',
+  PlugInAdminPage = 'plug-in-admin-page',
+  // 远程管理
+  ControlAdminPage = 'control-admin-page',
+  // 插件批量页面中未完成页面的点击弹出页面
+  BatchExecutorRecover = 'batch-executor-recover',
+  // http-history页面右键菜单"数据包扫描"生成页面
+  PacketScanPage = 'packet-scan-page',
+  // 新建插件页面
+  AddYakitScript = 'add-yakit-script',
+  /** 简易版专属 */
+  SimpleDetect = 'simple-detect',
+  // 录屏管理器
+  ScreenRecorderPage = 'screen-recorder-page',
+  /** 全局功能-试验性功能-BAS实验室 */
+  DB_ChaosMaker = 'db-chaosmaker',
+  /** 调试插件编辑器 */
+  Beta_DebugTrafficAnalize = '**beta-debug-traffic-analize',
+  /** 调试插件编辑器 */
+  Beta_DebugMonacoEditor = 'beta-debug-monaco-editor',
+  /** 靶场调试 */
+  Beta_VulinboxManager = 'beta-vulinbox-manager',
+  /** 网络调试 */
+  Beta_DiagnoseNetwork = 'beta-diagnose-network',
+  /** 配置全局 */
+  Beta_ConfigNetwork = 'beta-config-network',
+  /** 插件管理 */
+  Plugin_Audit = 'plugin-audit',
+  /** WebShell 管理 */
+  Beta_WebShellManager = 'beta-webshell-manager',
+  Beta_WebShellOpt = 'beta-webshell-opt',
+  /** 数据统计 */
+  Data_Statistics = 'data_statistics',
+  /** 空间引擎 */
+  Space_Engine = 'space-engine',
+  /** YakRunner代码扫描 */
+  YakRunner_Code_Scan = 'yakrunner-code-scan',
+  // YakRunner代码审计
+  YakRunner_Audit_Code = 'yakrunner-audit-code',
+  // YakRunner项目管理
+  YakRunner_Project_Manager = 'yakrunner-project-manager',
+  // YakRunner扫描历史
+  YakRunner_ScanHistory = 'yakrunner_scanHistory',
+  /** 规则管理 */
+  Rule_Management = 'rule-management',
+  /**笔记本管理 */
+  Notepad_Manage = 'notepad-manage',
+  /**笔记本内容编辑页面 */
+  Modify_Notepad = 'modify-notepad',
+  // YakRunner漏洞管理
+  YakRunner_Audit_Hole = 'yakrunner-audit-hole',
+  // 系统配置（目前仅供IRify企业版配置水印）
+  System_Config = 'system-config',
+  // AI-Agent
+  AI_Agent = 'ai-agent',
 
-    // 快捷键设置
-    ShortcutKey = "shortcut-key",
-    /** Java 反编译 */
-    Yak_Java_Decompiler = "yak-java-decompiler",
-    // 指纹库
-    FingerprintManage = "fingerprint-manage",
-    // ssa-result-diff
-    Ssa_Result_Diff = "ssa-result-diff",
-    // 新建 Forge
-    AddAIForge = "add-ai-forge",
-    // 编辑 Forge
-    ModifyAIForge = "modify-ai-forge",
-    /**AI 工具新增 */
-    AddAITool = "add-ai-tool",
-    /**AI 工具编辑 */
-    ModifyAITool = "modify-ai-tool",
-    /** AI 知识库 */
-    AI_REPOSITORY = "ai-repository",
-    // SSA编译历史
-    SSA_Compile_History = "ssa-compile-history",
-    /** AI 记忆库 */
-    AI_Memory = "ai-memory"
+  // 快捷键设置
+  ShortcutKey = 'shortcut-key',
+  /** Java 反编译 */
+  Yak_Java_Decompiler = 'yak-java-decompiler',
+  // 指纹库
+  FingerprintManage = 'fingerprint-manage',
+  // ssa-result-diff
+  Ssa_Result_Diff = 'ssa-result-diff',
+  // 新建 Forge
+  AddAIForge = 'add-ai-forge',
+  // 编辑 Forge
+  ModifyAIForge = 'modify-ai-forge',
+  /**AI 工具新增 */
+  AddAITool = 'add-ai-tool',
+  /**AI 工具编辑 */
+  ModifyAITool = 'modify-ai-tool',
+  /** AI 知识库 */
+  AI_REPOSITORY = 'ai-repository',
+  // SSA编译历史
+  SSA_Compile_History = 'ssa-compile-history',
+  /** AI 记忆库 */
+  AI_Memory = 'ai-memory',
 }

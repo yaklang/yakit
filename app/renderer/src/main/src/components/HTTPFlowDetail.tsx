@@ -1746,7 +1746,14 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                   />,
                 )
               }
-              titleEle.push(<ResByteCountTag editor={reqEditor} pageType={pageType} showJumpTree={showJumpTree} />)
+              titleEle.push(
+                <ResByteCountTag
+                  key="req-byte-count"
+                  editor={reqEditor}
+                  pageType={pageType}
+                  showJumpTree={showJumpTree}
+                />,
+              )
               return titleEle
             })()}
             originValue={originResValue}
@@ -1870,7 +1877,14 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                   </YakitTag>,
                 )
               }
-              titleEle.push(<ResByteCountTag editor={resEditor} pageType={pageType} showJumpTree={showJumpTree} />)
+              titleEle.push(
+                <ResByteCountTag
+                  key="res-byte-count"
+                  editor={resEditor}
+                  pageType={pageType}
+                  showJumpTree={showJumpTree}
+                />,
+              )
 
               return titleEle
             })()}

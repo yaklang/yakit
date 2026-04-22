@@ -184,6 +184,7 @@ import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownIn
 
 const HTTPHacker = React.lazy(() => import('../pages/hacker/httpHacker'))
 const MITMHacker = React.lazy(() => import('@/pages/mitm/MITMHacker/MITMHacker'))
+const MITMExtractedAggregate = React.lazy(() => import('@/pages/mitm/MITMExtractedAggregate'))
 const Home = React.lazy(() => import('@/pages/home/Home'))
 const IRifyHome = React.lazy(() => import('@/pages/home/IRifyHome'))
 const WebFuzzerPage = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage'))
@@ -219,6 +220,11 @@ export const YakitRouteToPageInfo: Record<
     label: 'MITM 交互式劫持',
     labelUi: 'YakitRoute.MITM',
     describeUi: 'YakitRoute.mitmSslHijack',
+  },
+  'mitm-extracted-aggregate': {
+    label: 'MITM 提取聚合',
+    labelUi: 'YakitRoute.MITMExtractedAggregate',
+    describe: '按规则与提取内容聚合，联动 HTTP 历史',
   },
   httpFuzzer: {
     label: 'Web Fuzzer',
@@ -409,6 +415,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.NewHome,
   YakitRoute.HTTPHacker,
   YakitRoute.MITMHacker,
+  YakitRoute.MITMExtractedAggregate,
   YakitRoute.Plugin_Hub,
   YakitRoute.DNSLog,
   YakitRoute.ICMPSizeLog,
@@ -466,6 +473,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.YakScript,
   YakitRoute.HTTPHacker,
   YakitRoute.MITMHacker,
+  YakitRoute.MITMExtractedAggregate,
   YakitRoute.Plugin_Hub,
   YakitRoute.ICMPSizeLog,
   YakitRoute.TCPPortLog,
@@ -781,6 +789,12 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return (
         <Suspense fallback={<PageLoading />}>
           <MITMHacker />
+        </Suspense>
+      )
+    case YakitRoute.MITMExtractedAggregate:
+      return (
+        <Suspense fallback={<PageLoading />}>
+          <MITMExtractedAggregate />
         </Suspense>
       )
     case YakitRoute.HTTPFuzzer:
@@ -1845,6 +1859,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
     icon: <PrivateOutlineMitmIcon />,
     hoverIcon: <PrivateSolidMitmIcon />,
     ...YakitRouteToPageInfo[YakitRoute.MITMHacker],
+  },
+  [YakitRoute.MITMExtractedAggregate]: {
+    page: YakitRoute.MITMExtractedAggregate,
+    icon: <PrivateOutlineMitmIcon />,
+    hoverIcon: <PrivateSolidMitmIcon />,
+    ...YakitRouteToPageInfo[YakitRoute.MITMExtractedAggregate],
   },
   [YakitRoute.HTTPFuzzer]: {
     page: YakitRoute.HTTPFuzzer,

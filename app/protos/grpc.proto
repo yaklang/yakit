@@ -638,6 +638,8 @@ service Yak {
 
   // 从规则中提取数据
   rpc QueryMITMRuleExtractedData(QueryMITMRuleExtractedDataRequest) returns (QueryMITMRuleExtractedDataResponse);
+  // 按规则名 + 提取内容聚合（JOIN http_flows，可按 Host / RuntimeId 等过滤）
+  rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
   rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
@@ -3318,6 +3320,36 @@ message DeduplicateMITMRuleExtractedDataRequest {
 
 message DeduplicateMITMRuleExtractedDataResponse {
   int64 DeletedCount = 1;
+}
+
+// MITM 提取聚合。规则组维度：RuleGroup、RuleGroupKeyword、OnlyUncategorizedRules 互斥（实现上精确 RuleGroup 优先）。
+message QueryMITMExtractedAggregateRequest {
+  Paging Pagination = 1;
+  string HostContains = 2;
+  string RuntimeId = 3;
+  repeated string RuleVerbose = 4;
+  string RuleVerboseKeyword = 5;
+  int64 UpdatedAtSince = 6;
+  string RuleGroup = 7;
+  bool OnlyUncategorizedRules = 8;
+  bool IncludeDistinctRuleGroups = 9;
+  QueryHTTPFlowRequest HttpFlowFilter = 10;
+  string RuleGroupKeyword = 11;
+}
+
+message MITMExtractedAggregateRow {
+  string RuleVerbose = 1;
+  string DisplayData = 2;
+  int64 HitCount = 3;
+  int64 LatestUpdatedAt = 4;
+  repeated string SampleTraceIds = 5;
+}
+
+message QueryMITMExtractedAggregateResponse {
+  repeated MITMExtractedAggregateRow Data = 1;
+  int64 Total = 2;
+  Paging Pagination = 3;
+  repeated string DistinctRuleGroups = 4;
 }
 
 message ExportProjectRequest {
@@ -6535,6 +6567,11 @@ message GetHTTPFlowBodyByIdRequest {
   bool IsRisk = 5;
 }
 
+message MITMExtractAggregateFlowFilterRow {
+  string RuleVerbose = 1;
+  string DisplayData = 2;
+}
+
 message QueryHTTPFlowRequest {
   Paging Pagination = 1;
   string SourceType = 2;
@@ -6603,6 +6640,7 @@ message QueryHTTPFlowRequest {
 
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
+  repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
 }
 
 message HTTPFlowsToOnlineRequest {
