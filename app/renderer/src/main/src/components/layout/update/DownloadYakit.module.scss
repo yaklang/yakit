@@ -1,224 +1,223 @@
 /* ---------- public ----------*/
 .draggable-modal {
-    width: 448px;
-    position: absolute;
-    left: calc(50% - 224px);
+  width: 448px;
+  position: absolute;
+  left: calc(50% - 224px);
 }
 .modal-top-wrapper {
-    z-index: 999;
+  z-index: 999;
 }
 .draggable-hidden-modal {
-    display: none;
+  display: none;
 }
 
 /* ---------- YakitQuestionModal ----------*/
 .download-yakit-modal {
-    top: 35%;
+  top: 35%;
 }
 .modal-yaklang-engine-hint {
-    box-sizing: border-box;
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--Colors-Use-Neutral-Bg);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
+  border-radius: 4px;
+
+  .yaklang-engine-hint-wrapper {
     width: 100%;
-    background: var(--Colors-Use-Neutral-Bg);
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
-    border-radius: 4px;
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    position: relative;
 
-    .yaklang-engine-hint-wrapper {
-        width: 100%;
-        padding: 24px;
-        display: flex;
-        gap: 16px;
-        position: relative;
-
-        .hint-draggle-body {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 24px;
-        }
-
-        .hint-left-wrapper {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-
-            .hint-icon {
-                width: 32px;
-                height: 32px;
-            }
-
-            .qs-icon {
-                width: 20px;
-                height: 20px;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                cursor: pointer;
-                svg {
-                    width: 20px;
-                    height: 20px;
-                }
-            }
-
-            .qs-icon:hover {
-                color: var(--Colors-Use-Main-Primary);
-            }
-        }
-
-        .hint-right-wrapper {
-            flex: 1;
-
-            .hint-right-title {
-                height: 24px;
-                font-weight: 600;
-                font-size: 16px;
-                line-height: 24px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-            }
-
-            .hint-right-download {
-
-                .download-info-wrapper {
-                    margin-top: 16px;
-                    display: flex;
-                    height: 16px;
-                    font-size: 12px;
-                    line-height: 16px;
-                    color: var(--Colors-Use-Neutral-Disable);
-
-                    .divider-wrapper {
-                        margin: 0 8px;
-                        width: 1px;
-                        height: 16px;
-                        display: flex;
-                        align-items: center;
-
-                        .divider-style {
-                            width: 100%;
-                            height: 12px;
-                            border: 1px solid var(--Colors-Use-Neutral-Border);
-                        }
-                    }
-                }
-            }
-        }
+    .hint-draggle-body {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 24px;
     }
+
+    .hint-left-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      .hint-icon {
+        width: 32px;
+        height: 32px;
+      }
+
+      .qs-icon {
+        width: 20px;
+        height: 20px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        cursor: pointer;
+        svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      .qs-icon:hover {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+
+    .hint-right-wrapper {
+      flex: 1;
+
+      .hint-right-title {
+        height: 24px;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 24px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+
+      .hint-right-download {
+        .download-info-wrapper {
+          margin-top: 16px;
+          display: flex;
+          height: 16px;
+          font-size: 12px;
+          line-height: 16px;
+          color: var(--Colors-Use-Neutral-Disable);
+
+          .divider-wrapper {
+            margin: 0 8px;
+            width: 1px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+
+            .divider-style {
+              width: 100%;
+              height: 12px;
+              border: 1px solid var(--Colors-Use-Neutral-Border);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 /* ---------- YakitQuestionModal ----------*/
 .qs-modal {
-    z-index: 99;
-    top: 37%;
+  z-index: 99;
+  top: 37%;
 }
 .yakit-agr-and-qs-modal {
-    width: 100%;
-    background: var(--Colors-Use-Neutral-Bg);
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
-    border-radius: 4px;
+  width: 100%;
+  background: var(--Colors-Use-Neutral-Bg);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  box-shadow: 0px 6px 20px rgba(204, 210, 222, 0.3);
+  border-radius: 4px;
 
-    .modal-header {
-        box-sizing: border-box;
-        height: 36px;
+  .modal-header {
+    box-sizing: border-box;
+    height: 36px;
+    display: flex;
+    align-items: center;
+
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px 4px 0px 0px;
+
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+
+  .mac-header {
+    gap: 12px;
+
+    .close-wrapper {
+      width: 36px;
+      height: 36px;
+      padding: 10px;
+      display: flex;
+      cursor: pointer;
+
+      .close-btn {
+        padding: 2px;
+
+        .btn-icon {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background-color: var(--Colors-Use-Error-Primary);
+        }
+      }
+    }
+  }
+
+  .win-header {
+    justify-content: space-between;
+
+    .header-title {
+      margin-left: 12px;
+    }
+
+    .close-wrapper {
+      width: 36px;
+      height: 36px;
+      padding: 8px;
+      cursor: pointer;
+
+      .icon-style {
+        color: var(--Colors-Use-Neutral-Disable);
+      }
+    }
+
+    .close-wrapper:hover {
+      .icon-style {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
+
+  .question-modal-wrapper {
+    .modal-body {
+      padding: 16px 24px 24px 24px;
+
+      .yakit-update-hint {
+        height: 24px;
+        font-size: 14px;
+        line-height: 24px;
+        text-align: justify;
+        color: var(--Colors-Use-Error-Primary);
+      }
+
+      .yakit-update-link {
+        margin-top: 8px;
+        height: 20px;
         display: flex;
         align-items: center;
+        gap: 8px;
 
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-        border-radius: 4px 4px 0px 0px;
+        .link-wrapper {
+          height: 20px;
+          display: flex;
+          align-items: center;
+          padding: 2px 6px;
+          gap: 8px;
+          background: var(--Colors-Use-Neutral-Bg-Hover);
+          border: 1px solid var(--Colors-Use-Neutral-Border);
+          border-radius: 4px;
+          font-size: 11px;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
 
-        font-weight: 600;
-        font-size: 14px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
+          .copy-icon {
+            margin-left: 0;
+            svg {
+              width: 12px;
+              height: 12px;
+            }
+          }
+        }
+      }
     }
-
-    .mac-header {
-        gap: 12px;
-
-        .close-wrapper {
-            width: 36px;
-            height: 36px;
-            padding: 10px;
-            display: flex;
-            cursor: pointer;
-
-            .close-btn {
-                padding: 2px;
-
-                .btn-icon {
-                    width: 12px;
-                    height: 12px;
-                    border-radius: 50%;
-                    background-color: var(--Colors-Use-Error-Primary);
-                }
-            }
-        }
-    }
-
-    .win-header {
-        justify-content: space-between;
-
-        .header-title {
-            margin-left: 12px;
-        }
-
-        .close-wrapper {
-            width: 36px;
-            height: 36px;
-            padding: 8px;
-            cursor: pointer;
-
-            .icon-style {
-                color: var(--Colors-Use-Neutral-Disable);
-            }
-        }
-
-        .close-wrapper:hover {
-            .icon-style {
-                color: var(--Colors-Use-Main-Primary);
-            }
-        }
-    }
-
-    .question-modal-wrapper {
-        .modal-body {
-            padding: 16px 24px 24px 24px;
-
-            .yakit-update-hint {
-                height: 24px;
-                font-size: 14px;
-                line-height: 24px;
-                text-align: justify;
-                color: var(--Colors-Use-Error-Primary);
-            }
-
-            .yakit-update-link {
-                margin-top: 8px;
-                height: 20px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-
-                .link-wrapper {
-                    height: 20px;
-                    display: flex;
-                    align-items: center;
-                    padding: 2px 6px;
-                    gap: 8px;
-                    background: var(--Colors-Use-Neutral-Bg-Hover);
-                    border: 1px solid var(--Colors-Use-Neutral-Border);
-                    border-radius: 4px;
-                    font-size: 11px;
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
-
-                    .copy-icon {
-                        margin-left: 0;
-                        svg {
-                            width: 12px;
-                            height: 12px;
-                        }
-                    }
-                }
-            }
-        }
-    }
+  }
 }

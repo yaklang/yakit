@@ -3,11 +3,11 @@
  * @author luoluo
  */
 
-import {LabelDataProps} from "@/pages/fuzzer/HTTPFuzzerEditorMenu"
-import {AdvancedConfigShowProps, FuzzerResponse} from "@/pages/fuzzer/HTTPFuzzerPage"
-import {AdvancedConfigValueProps} from "@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
-import {WebFuzzerPageInfoProps} from "@/store/pageInfo"
-import cloneDeep from "lodash/cloneDeep"
+import { LabelDataProps } from '@/pages/fuzzer/HTTPFuzzerEditorMenu'
+import { AdvancedConfigShowProps, FuzzerResponse } from '@/pages/fuzzer/HTTPFuzzerPage'
+import { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
+import { WebFuzzerPageInfoProps } from '@/store/pageInfo'
+import cloneDeep from 'lodash/cloneDeep'
 
 export const defaultPostTemplate = `POST / HTTP/1.1
 Content-Type: application/json
@@ -21,146 +21,146 @@ export const DefFuzzerTableMaxData = 2000
 export const DefFuzzerConcurrent = 20
 
 export const defaultAdvancedConfigShow: AdvancedConfigShowProps = {
-    config: false,
-    rule: true
+  config: false,
+  rule: true,
 }
 
 export const defaultAdvancedConfigValue: AdvancedConfigValueProps = {
-    // 请求包配置
-    fuzzTagMode: "standard",
-    fuzzTagSyncIndex: false,
-    isHttps: false,
-    isGmTLS: false,
-    randomJA3: false,
-    noFixContentLength: false,
-    noSystemProxy: false,
-    disableUseConnPool: false,
-    disableHotPatch: true,
-    maxBodySize: 5,
-    sNI: "",
-    overwriteSNI: "auto",
-    resNumlimit: DefFuzzerTableMaxData,
-    actualHost: "",
-    dialTimeoutSeconds: 10,
-    timeout: 30,
-    // Random Chunked
-    enableRandomChunked: false,
-    randomChunkedMinLength: 10,
-    randomChunkedMaxLength: 25,
-    randomChunkedMinDelay: 50,
-    randomChunkedMaxDelay: 100,
-    // 批量目标
-    batchTarget: new Uint8Array(),
-    // 发包配置
-    concurrent: DefFuzzerConcurrent,
-    proxy: [],
-    proxyRuleId: "",
-    minDelaySeconds: 0,
-    maxDelaySeconds: 0,
-    repeatTimes: 0,
-    // 重试配置
-    maxRetryTimes: 0,
-    retry: true,
-    noRetry: false,
-    retryConfiguration: {
-        statusCode: "",
-        keyWord: ""
+  // 请求包配置
+  fuzzTagMode: 'standard',
+  fuzzTagSyncIndex: false,
+  isHttps: false,
+  isGmTLS: false,
+  randomJA3: false,
+  noFixContentLength: false,
+  noSystemProxy: false,
+  disableUseConnPool: false,
+  disableHotPatch: true,
+  maxBodySize: 5,
+  sNI: '',
+  overwriteSNI: 'auto',
+  resNumlimit: DefFuzzerTableMaxData,
+  actualHost: '',
+  dialTimeoutSeconds: 10,
+  timeout: 30,
+  // Random Chunked
+  enableRandomChunked: false,
+  randomChunkedMinLength: 10,
+  randomChunkedMaxLength: 25,
+  randomChunkedMinDelay: 50,
+  randomChunkedMaxDelay: 100,
+  // 批量目标
+  batchTarget: new Uint8Array(),
+  // 发包配置
+  concurrent: DefFuzzerConcurrent,
+  proxy: [],
+  proxyRuleId: '',
+  minDelaySeconds: 0,
+  maxDelaySeconds: 0,
+  repeatTimes: 0,
+  // 重试配置
+  maxRetryTimes: 0,
+  retry: true,
+  noRetry: false,
+  retryConfiguration: {
+    statusCode: '',
+    keyWord: '',
+  },
+  noRetryConfiguration: {
+    statusCode: '',
+    keyWord: '',
+  },
+  retryWaitSeconds: 0,
+  retryMaxWaitSeconds: 0,
+  // 重定向配置
+  redirectCount: 3,
+  noFollowRedirect: true,
+  followJSRedirect: false,
+  redirectConfiguration: {
+    statusCode: '',
+    keyWord: '',
+  },
+  noRedirectConfiguration: {
+    statusCode: '',
+    keyWord: '',
+  },
+  // dns config
+  dnsServers: [],
+  etcHosts: [],
+  // 设置变量
+  params: [{ Key: '', Value: '', Type: 'raw' }],
+  methodGet: [
+    {
+      Key: '',
+      Value: '',
     },
-    noRetryConfiguration: {
-        statusCode: "",
-        keyWord: ""
+  ],
+  methodPost: [
+    {
+      Key: '',
+      Value: '',
     },
-    retryWaitSeconds: 0,
-    retryMaxWaitSeconds: 0,
-    // 重定向配置
-    redirectCount: 3,
-    noFollowRedirect: true,
-    followJSRedirect: false,
-    redirectConfiguration: {
-        statusCode: "",
-        keyWord: ""
+  ],
+  cookie: [
+    {
+      Key: '',
+      Value: '',
     },
-    noRedirectConfiguration: {
-        statusCode: "",
-        keyWord: ""
+  ],
+  headers: [
+    {
+      Key: '',
+      Value: '',
     },
-    // dns config
-    dnsServers: [],
-    etcHosts: [],
-    // 设置变量
-    params: [{Key: "", Value: "", Type: "raw"}],
-    methodGet: [
-        {
-            Key: "",
-            Value: ""
-        }
-    ],
-    methodPost: [
-        {
-            Key: "",
-            Value: ""
-        }
-    ],
-    cookie: [
-        {
-            Key: "",
-            Value: ""
-        }
-    ],
-    headers: [
-        {
-            Key: "",
-            Value: ""
-        }
-    ],
-    // 匹配器
-    matchers: [],
-    // 提取器
-    extractors: []
+  ],
+  // 匹配器
+  matchers: [],
+  // 提取器
+  extractors: [],
 }
 
 export const emptyFuzzer: FuzzerResponse = {
-    BodyLength: 0,
-    BodySimilarity: 0,
-    ContentType: "",
-    Count: 0,
-    DurationMs: 0,
-    HeaderSimilarity: 0,
-    Headers: [],
-    Host: "",
-    IsHTTPS: false,
-    MatchedByFilter: false,
-    Method: "",
-    Ok: false,
-    Payloads: [],
-    Reason: "",
-    RequestRaw: new Uint8Array(),
-    ResponseRaw: new Uint8Array(),
-    StatusCode: 0,
-    Timestamp: 0,
-    UUID: "",
+  BodyLength: 0,
+  BodySimilarity: 0,
+  ContentType: '',
+  Count: 0,
+  DurationMs: 0,
+  HeaderSimilarity: 0,
+  Headers: [],
+  Host: '',
+  IsHTTPS: false,
+  MatchedByFilter: false,
+  Method: '',
+  Ok: false,
+  Payloads: [],
+  Reason: '',
+  RequestRaw: new Uint8Array(),
+  ResponseRaw: new Uint8Array(),
+  StatusCode: 0,
+  Timestamp: 0,
+  UUID: '',
 
-    DNSDurationMs: 0,
-    TotalDurationMs: 0,
-    TLSHandshakeDurationMs: 0,
-    TCPDurationMs: 0,
-    ConnectDurationMs: 0,
-    ExtractedResults: [],
-    MatchedByMatcher: false,
-    HitColor: "",
+  DNSDurationMs: 0,
+  TotalDurationMs: 0,
+  TLSHandshakeDurationMs: 0,
+  TCPDurationMs: 0,
+  ConnectDurationMs: 0,
+  ExtractedResults: [],
+  MatchedByMatcher: false,
+  HitColor: '',
 
-    IsTooLargeResponse: false,
-    TooLargeResponseHeaderFile: "",
-    TooLargeResponseBodyFile: "",
-    DisableRenderStyles: false,
-    RuntimeID: "",
-    Discard: false,
+  IsTooLargeResponse: false,
+  TooLargeResponseHeaderFile: '',
+  TooLargeResponseBodyFile: '',
+  DisableRenderStyles: false,
+  RuntimeID: '',
+  Discard: false,
 
-    IsAutoFixContentType: false,
-    OriginalContentType: "",
-    FixContentType: "",
-    IsSetContentTypeOptions: false,
-    RandomChunkedData: []
+  IsAutoFixContentType: false,
+  OriginalContentType: '',
+  FixContentType: '',
+  IsSetContentTypeOptions: false,
+  RandomChunkedData: [],
 }
 
 export const HotPatchDefaultContent = `// 使用标签 {{yak(handle|param)}} 可以触发热加载调用
@@ -278,10 +278,10 @@ customFailureChecker = func(https, req, rsp, fail) {
 `
 
 export const HotPatchTempDefault = [
-    {
-        name: "响应解密（AES-CBC/Hex）",
-        nameUi: "HTTPFuzzerHotPatch.response_decrypt_aes_cbc_hex",
-        temp: `// 响应解密模板 - 适用于响应 body 为 Hex 编码的 AES-CBC 密文
+  {
+    name: '响应解密（AES-CBC/Hex）',
+    nameUi: 'HTTPFuzzerHotPatch.response_decrypt_aes_cbc_hex',
+    temp: `// 响应解密模板 - 适用于响应 body 为 Hex 编码的 AES-CBC 密文
 // key / iv 使用 Base64 编码，请替换为实际值
 key = "MTIzNDU2Nzg5MDEyMzQ1Ng=="  /* Base64("1234567890123456") */
 iv = "MTIzNDU2Nzg5MDEyMzQ1Ng=="
@@ -315,12 +315,12 @@ decrypt = func(req, rsp) {
 afterRequest = func(https, originReq, req, originRsp, rsp) {
     return decrypt(req, rsp)
 }`,
-        isDefault: true
-    },
-    {
-        name: "爆破 AES-CBC",
-        nameUi: "HTTPFuzzerHotPatch.bruteforce_aes_cbc",
-        temp: `decode = func(param) {
+    isDefault: true,
+  },
+  {
+    name: '爆破 AES-CBC',
+    nameUi: 'HTTPFuzzerHotPatch.bruteforce_aes_cbc',
+    temp: `decode = func(param) {
     key = codec.DecodeHex("31323334313233343132333431323334")~ /* 加密密钥 */
     iv = codec.DecodeHex("03395d68979ed8632646813f4c0bbdb3")~ /* 初始化向量 */
     usernameDict = ["admin"] /* 用户字典 */
@@ -337,12 +337,12 @@ afterRequest = func(https, originReq, req, originRsp, rsp) {
     }
     return resultList
 }`,
-        isDefault: true
-    },
-    {
-        name: "爆破 RSA-OAEP",
-        nameUi: "HTTPFuzzerHotPatch.bruteforce_rsa_oaep",
-        temp: `decode2 = func(param) {
+    isDefault: true,
+  },
+  {
+    name: '爆破 RSA-OAEP',
+    nameUi: 'HTTPFuzzerHotPatch.bruteforce_rsa_oaep',
+    temp: `decode2 = func(param) {
     publicKey64 = \`LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUFvVlRNNjNuRXE3YXpGQ0Yza2lEKwpuMGgyMnlvWmd2eU92TDJaS001NDg0SWZ0TFFERGdLUjFGTGhBOHJpZDkzRUdYVTRwNVNKZHVHdmhLRmxqR2s1ClFXYmFDcWNOdVNqM3NuYi9RRXU0TXZ2ZmFTMStWd3R4Vk84Z0lIdTVMRCs4ZXNTT1FMdTZaY1Q4dVJ3Wm00c00KNEh0ZXltc2Fjc1lGZmpWME5vMklnMnNVSVJaOTBYR2NzK01CMVFlMFQzcHBHa2V1WGhORnpjMldzS3ZreXBRSApZUDlUeENXejUwR1VhV3YzK2xnUDJzUTZtcFd6SWRDeUZ2OWRlU1NWeE1uRlJQQzU0R0s1endFNmJ3blBhRHJJClhzS0IxN2VnK1NES0FFVHpEYi9YSGxXamZqcWo3aWlabUw5bHJxK3pTU2F0R2llMzM4NVdQMlpUVlZHcDZlSnQKd1FJREFRQUIKLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0t\` /* base64格式的publicKey */
     publicKey = codec.DecodeBase64(publicKey64)~ 
 
@@ -363,12 +363,12 @@ afterRequest = func(https, originReq, req, originRsp, rsp) {
     return resultList
 }
 `,
-        isDefault: true
-    },
-    {
-        name: "爆破 CSRF（带有保护用 token）",
-        nameUi: "HTTPFuzzerHotPatch.bruteforce_csrf_with_token",
-        temp: `beforeRequest = func(req) { /* beforeRequest将在请求发起之前执行 */
+    isDefault: true,
+  },
+  {
+    name: '爆破 CSRF（带有保护用 token）',
+    nameUi: 'HTTPFuzzerHotPatch.bruteforce_csrf_with_token',
+    temp: `beforeRequest = func(req) { /* beforeRequest将在请求发起之前执行 */
     // 发送GET请求，获取响应
     rsp, _, err = poc.HTTP(\`\`) /* 这里可以替换为你需要的请求 */
     if err != nil {
@@ -392,12 +392,12 @@ afterRequest = func(https, originReq, req, originRsp, rsp) {
     req = poc.AppendHTTPPacketHeader(req, "Cookie", cookie)
     return req
 }`,
-        isDefault: true
-    },
-    {
-        name: "破解 Signature",
-        nameUi: "HTTPFuzzerHotPatch.crack_signature",
-        temp: `decode3 = func(param) {
+    isDefault: true,
+  },
+  {
+    name: '破解 Signature',
+    nameUi: 'HTTPFuzzerHotPatch.crack_signature',
+    temp: `decode3 = func(param) {
     key = \`1234123412341234\`
     usernameDict = ["admin"] /* 用户字典 */
     passwordDict = ["admin", "123456", "admin123", "88888888", "666666"] /* 密码字典 */
@@ -419,12 +419,12 @@ afterRequest = func(https, originReq, req, originRsp, rsp) {
     }
     return resultList
 }`,
-        isDefault: true
-    },
-    {
-        name: "第三方验证码绕过",
-        nameUi: "HTTPFuzzerHotPatch.third_party_captcha_bypass",
-        temp: `beforeRequest = func(req) {
+    isDefault: true,
+  },
+  {
+    name: '第三方验证码绕过',
+    nameUi: 'HTTPFuzzerHotPatch.third_party_captcha_bypass',
+    temp: `beforeRequest = func(req) {
     img_packet = \`\`
     img_packet_rsp, _ = poc.HTTP(img_packet, poc.https(true))~
 
@@ -442,81 +442,81 @@ afterRequest = func(https, originReq, req, originRsp, rsp) {
     req = re.ReplaceAll(req, \`__vi__\`, img_id)
     return []byte(req)
 }`,
-        isDefault: true
-    }
+    isDefault: true,
+  },
 ]
 
 export const defaultWebFuzzerPageInfo: WebFuzzerPageInfoProps = {
-    pageId: "",
-    advancedConfigValue: cloneDeep(defaultAdvancedConfigValue),
-    advancedConfigShow: null,
-    request: defaultPostTemplate,
-    variableActiveKeys: undefined,
-    hotPatchCode: HotPatchDefaultContent
+  pageId: '',
+  advancedConfigValue: cloneDeep(defaultAdvancedConfigValue),
+  advancedConfigShow: null,
+  request: defaultPostTemplate,
+  variableActiveKeys: undefined,
+  hotPatchCode: HotPatchDefaultContent,
 }
 // 注：此处顺序为倒序（新增DefaultDescription记得带-fixed，此处为标识固定项）
 export const defaultLabel: LabelDataProps[] = [
-    {
-        DefaultDescription: "调用codec模块保存的codec flow-fixed",
-        Description: "调用codec模块保存的codec flow",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.save_codec_flow",
-        Label: "{{codecflow(name|abc)}}"
-    },
-    {
-        DefaultDescription: "反向正则（单个）-fixed",
-        Description: "反向正则（单个）",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.reverse_regex_single",
-        Label: "{{regen:one([0-9a-f]{3})}}"
-    },
-    {
-        DefaultDescription: "反向正则（全部）-fixed",
-        Description: "反向正则（全部）",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.reverse_regex_all",
-        Label: "{{regen([0-9a-f]{3})}}"
-    },
-    {
-        DefaultDescription: "时间戳（秒）-fixed",
-        Description: "时间戳（秒）",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.timestamp_seconds",
-        Label: "{{timestamp(seconds)}}"
-    },
-    {
-        DefaultDescription: "验证码-fixed",
-        Description: "验证码",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.captcha",
-        Label: "{{int(0000-9999)}}"
-    },
-    {
-        DefaultDescription: "随机数-fixed",
-        Description: "随机数",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.random_number",
-        Label: "{{randint(0,10)}}"
-    },
-    {
-        DefaultDescription: "随机字符串-fixed",
-        Description: "随机字符串",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.random_string",
-        Label: "{{randstr}}"
-    },
-    {
-        DefaultDescription: "整数范围-fixed",
-        Description: "整数范围",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.integer_range",
-        Label: "{{int(1-10)}}"
-    },
-    {
-        DefaultDescription: "插入字典-fixed",
-        Description: "插入字典",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.insert_dictionary",
-    },
-    {
-        DefaultDescription: "插入临时字典-fixed",
-        Description: "插入临时字典",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.insert_temp_dictionary",
-    },
-    {
-        DefaultDescription: "插入文件-fixed",
-        Description: "插入文件",
-        DescriptionUi: "HTTPFuzzerClickEditorMenu.insert_file",
-    }
+  {
+    DefaultDescription: '调用codec模块保存的codec flow-fixed',
+    Description: '调用codec模块保存的codec flow',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.save_codec_flow',
+    Label: '{{codecflow(name|abc)}}',
+  },
+  {
+    DefaultDescription: '反向正则（单个）-fixed',
+    Description: '反向正则（单个）',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.reverse_regex_single',
+    Label: '{{regen:one([0-9a-f]{3})}}',
+  },
+  {
+    DefaultDescription: '反向正则（全部）-fixed',
+    Description: '反向正则（全部）',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.reverse_regex_all',
+    Label: '{{regen([0-9a-f]{3})}}',
+  },
+  {
+    DefaultDescription: '时间戳（秒）-fixed',
+    Description: '时间戳（秒）',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.timestamp_seconds',
+    Label: '{{timestamp(seconds)}}',
+  },
+  {
+    DefaultDescription: '验证码-fixed',
+    Description: '验证码',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.captcha',
+    Label: '{{int(0000-9999)}}',
+  },
+  {
+    DefaultDescription: '随机数-fixed',
+    Description: '随机数',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.random_number',
+    Label: '{{randint(0,10)}}',
+  },
+  {
+    DefaultDescription: '随机字符串-fixed',
+    Description: '随机字符串',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.random_string',
+    Label: '{{randstr}}',
+  },
+  {
+    DefaultDescription: '整数范围-fixed',
+    Description: '整数范围',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.integer_range',
+    Label: '{{int(1-10)}}',
+  },
+  {
+    DefaultDescription: '插入字典-fixed',
+    Description: '插入字典',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.insert_dictionary',
+  },
+  {
+    DefaultDescription: '插入临时字典-fixed',
+    Description: '插入临时字典',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.insert_temp_dictionary',
+  },
+  {
+    DefaultDescription: '插入文件-fixed',
+    Description: '插入文件',
+    DescriptionUi: 'HTTPFuzzerClickEditorMenu.insert_file',
+  },
 ]
