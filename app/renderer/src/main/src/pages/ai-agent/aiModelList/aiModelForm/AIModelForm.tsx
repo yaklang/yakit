@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AIConfigAPIKeyFormItemProps,
   AIModelCheckResultProps,
@@ -9,7 +9,10 @@ import {
 } from './AIModelFormType'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import { Form, FormInstance } from 'antd'
-import { NewAIThirdPartyApplicationConfigBase } from '@/components/configNetwork/NewThirdPartyApplicationConfig'
+import {
+  AIThirdPartyApplicationConfig,
+  NewAIThirdPartyApplicationConfigBase,
+} from '@/components/configNetwork/NewThirdPartyApplicationConfig'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   AIGlobalConfig,
@@ -146,19 +149,19 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
   return config
 }
 
-const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplicationConfig) => {
+export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplicationConfig) => {
   return {
-    Type: config.Type,
-    api_key: config.APIKey,
-    api_type: normalizeAIAPIType(config.APIType),
-    domain: config.Domain,
-    proxy: config.Proxy,
-    no_https: config.NoHttps,
-    base_url: config.BaseURL,
-    endpoint: config.Endpoint,
-    enable_endpoint: config.EnableEndpoint,
-    Headers: config.Headers,
-  }
+    Type: config.Type ?? '',
+    api_key: config.APIKey ?? '',
+    api_type: normalizeAIAPIType(config.APIType ?? ''),
+    domain: config.Domain ?? '',
+    proxy: config.Proxy ?? '',
+    no_https: config.NoHttps ?? false,
+    base_url: config.BaseURL ?? '',
+    endpoint: config.Endpoint ?? '',
+    enable_endpoint: config.EnableEndpoint ?? false,
+    Headers: config.Headers ?? [],
+  } as AIThirdPartyApplicationConfig
 }
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const { item, aiModelType, onSuccess, onClose } = props
@@ -397,6 +400,8 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
             onApplyRecommendConfig(config)
             m.destroy()
           }}
+          aiModelType={aiModelType}
+          model={item?.ModelName}
         />
       ),
       onOk: () => m.destroy(),
@@ -429,12 +434,12 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
 })
 
 export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => {
-  const { testResult, onClose, onApplyRecommendConfig } = props
+  const { testResult, onClose, onApplyRecommendConfig, aiModelType, model } = props
 
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const [currentSelectShowType, setCurrentSelectShowType] = useState<
     'request' | 'response' | 'responseContent' | 'recommendConfig'
-  >('response') //选中的表格项
+  >(testResult?.RecommendConfig ? 'recommendConfig' : 'responseContent') //选中的表格项
   const [typeOptionVal, setTypeOptionVal] = useState<RenderTypeOptionVal>()
 
   const testStatus = useCreation(() => {
@@ -498,11 +503,52 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
       return testResult?.RawResponse || ''
     } else if (currentSelectShowType === 'responseContent') {
       return testResult?.ResponseContent || ''
-    } else if (currentSelectShowType === 'recommendConfig') {
-      return JSON.stringify(testResult?.RecommendConfig, null, 2) || ''
     }
     return ''
   }, [currentSelectShowType, testResult])
+
+  const getOptions = useMemo(() => {
+    let options = [
+      {
+        value: 'recommendConfig',
+        label: t('AIModelTestResult.recommendConfig'),
+      },
+      {
+        value: 'responseContent',
+        label: t('AIModelTestResult.responseContent'),
+      },
+      {
+        value: 'request',
+        label: t('AIModelTestResult.request'),
+      },
+      {
+        value: 'response',
+        label: t('AIModelTestResult.response'),
+      },
+    ]
+    if (!testResult?.RecommendConfig) {
+      options = options.filter((i) => i.value !== 'recommendConfig')
+    }
+    return options
+  }, [testResult?.RecommendConfig])
+
+  const formValues = useMemo(() => {
+    let obj: AIThirdPartyApplicationConfig | undefined = undefined
+    if (testResult?.RecommendConfig) {
+      obj = buildAIConfigHealthCheckFormValues(testResult?.RecommendConfig)
+    }
+    if (obj) {
+      obj.ExtraParams = testResult?.RecommendConfig.ExtraParams || []
+    }
+    if (obj && aiModelType) {
+      obj.model_type = aiModelType
+    }
+    if (obj && model) {
+      obj.model = model
+    }
+
+    return obj
+  }, [aiModelType, model, testResult?.RecommendConfig])
   return (
     <div className={styles['test-result-wrapper']}>
       <div className={styles['test-result-heard']}>
@@ -551,24 +597,7 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
                       setCurrentSelectShowType(e.target.value)
                     }}
                     buttonStyle="solid"
-                    options={[
-                      {
-                        value: 'request',
-                        label: t('AIModelTestResult.request'),
-                      },
-                      {
-                        value: 'response',
-                        label: t('AIModelTestResult.response'),
-                      },
-                      {
-                        value: 'responseContent',
-                        label: t('AIModelTestResult.responseContent'),
-                      },
-                      {
-                        value: 'recommendConfig',
-                        label: t('AIModelTestResult.recommendConfig'),
-                      },
-                    ]}
+                    options={getOptions}
                   />
                 </div>
               </div>
@@ -578,6 +607,13 @@ export const AIModelCheckResult: React.FC<AIModelCheckResultProps> = (props) => 
             isResponse={true}
             typeOptionVal={typeOptionVal}
             onTypeOptionVal={onTypeOptionValChange}
+            children={
+              currentSelectShowType === 'recommendConfig' && (
+                <div style={{ flex: 1, overflow: 'auto' }}>
+                  <NewAIThirdPartyApplicationConfigBase readOnly={true} formValues={formValues} />
+                </div>
+              )
+            }
           />
         </div>
       </div>

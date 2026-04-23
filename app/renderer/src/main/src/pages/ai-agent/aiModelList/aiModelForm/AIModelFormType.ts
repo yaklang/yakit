@@ -35,4 +35,6 @@ export interface AIModelCheckResultProps {
   testResult?: AIConfigHealthCheckResponse
   onClose: () => void
   onApplyRecommendConfig?: (config: ThirdPartyApplicationConfig) => void
+  aiModelType?: AIModelTypeEnum
+  model?: string
 }

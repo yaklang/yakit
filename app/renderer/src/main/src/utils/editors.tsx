@@ -531,6 +531,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   noShowHex?: boolean
   // 外部单独控制渲染html是否显示，如果是采用内部type控制是否显示，此字段不需要传
   renderHtml?: React.ReactNode
+  // 是否由外部接管children的渲染，如果是由外部接管children的渲染，则编辑器组件不再对children进行任何处理，完全由外部控制，适用于一些特殊场景，比如内嵌入一些特殊组件等
+  children?: React.ReactNode
   /**@name 是否显示显示Extra默认项 */
   showDefaultExtra?: boolean
   /**@name 是否显示配置编辑器（默认显示） */
@@ -1126,72 +1128,78 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         )
       }
       children={
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          {empty && props.emptyOr}
-          {props.renderHtml || renderHtml}
-          {type !== 'hex' && noShowHex && !empty && !renderHtml && !props.renderHtml && (
-            <HTTPPacketYakitEditor
-              fromMITM={props.fromMITM}
-              keepSearchName={keepSearchName}
-              theme={props.theme}
-              noLineNumber={props.noLineNumber}
-              lineNumbersMinChars={props.lineNumbersMinChars}
-              noMiniMap={props.noMinimap}
-              type={props.language || 'http'}
-              originValue={showValue}
-              value={props.readOnly && showValue.length > 0 ? showValue : strValue}
-              readOnly={props.readOnly}
-              disabled={props.disabled}
-              setValue={setStrValue}
-              noWordWrap={noWordwrap}
-              fontSize={fontSize}
-              showLineBreaks={showLineBreaks}
-              contextMenu={props.contextMenu}
-              noPacketModifier={props.noPacketModifier}
-              noOpenPacketNewWindow={props.noOpenPacketNewWindow}
-              editorDidMount={handleEditorMount}
-              editorOperationRecord={editorOperationRecord}
-              defaultHttps={props.defaultHttps}
-              isWebSocket={props.isWebSocket}
-              webSocketValue={props.webSocketValue}
-              webSocketToServer={props.webSocketToServer}
-              webFuzzerValue={props.webFuzzerValue}
-              webFuzzerCallBack={props.webFuzzerCallBack}
-              editorId={editorId}
-              highLightText={editorHighLightText}
-              highLightFind={editorHighLightFind}
-              isPositionHighLightCursor={isPositionHighLightCursor}
-              highLightFindClass={highLightFindClass}
-              downstreamProxyStr={downstreamProxyStr}
-              url={props.url}
-              downbodyParams={props.downbodyParams}
-              onlyBasicMenu={props.onlyBasicMenu}
-              showDownBodyMenu={props.showDownBodyMenu}
-              noSendToComparer={props.noSendToComparer}
-              onClickUrlMenu={props.onClickUrlMenu}
-              onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
-              onClickOpenPacketNewWindowMenu={props.onClickOpenPacketNewWindowMenu}
-              fixContentType={props.fixContentType}
-              originalContentType={props.originalContentType}
-              fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
-              {...props.extraEditorProps}
-            />
+        <>
+          {props.children ? (
+            <>{props.children}</>
+          ) : (
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              {empty && props.emptyOr}
+              {props.renderHtml || renderHtml}
+              {type !== 'hex' && noShowHex && !empty && !renderHtml && !props.renderHtml && (
+                <HTTPPacketYakitEditor
+                  fromMITM={props.fromMITM}
+                  keepSearchName={keepSearchName}
+                  theme={props.theme}
+                  noLineNumber={props.noLineNumber}
+                  lineNumbersMinChars={props.lineNumbersMinChars}
+                  noMiniMap={props.noMinimap}
+                  type={props.language || 'http'}
+                  originValue={showValue}
+                  value={props.readOnly && showValue.length > 0 ? showValue : strValue}
+                  readOnly={props.readOnly}
+                  disabled={props.disabled}
+                  setValue={setStrValue}
+                  noWordWrap={noWordwrap}
+                  fontSize={fontSize}
+                  showLineBreaks={showLineBreaks}
+                  contextMenu={props.contextMenu}
+                  noPacketModifier={props.noPacketModifier}
+                  noOpenPacketNewWindow={props.noOpenPacketNewWindow}
+                  editorDidMount={handleEditorMount}
+                  editorOperationRecord={editorOperationRecord}
+                  defaultHttps={props.defaultHttps}
+                  isWebSocket={props.isWebSocket}
+                  webSocketValue={props.webSocketValue}
+                  webSocketToServer={props.webSocketToServer}
+                  webFuzzerValue={props.webFuzzerValue}
+                  webFuzzerCallBack={props.webFuzzerCallBack}
+                  editorId={editorId}
+                  highLightText={editorHighLightText}
+                  highLightFind={editorHighLightFind}
+                  isPositionHighLightCursor={isPositionHighLightCursor}
+                  highLightFindClass={highLightFindClass}
+                  downstreamProxyStr={downstreamProxyStr}
+                  url={props.url}
+                  downbodyParams={props.downbodyParams}
+                  onlyBasicMenu={props.onlyBasicMenu}
+                  showDownBodyMenu={props.showDownBodyMenu}
+                  noSendToComparer={props.noSendToComparer}
+                  onClickUrlMenu={props.onClickUrlMenu}
+                  onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
+                  onClickOpenPacketNewWindowMenu={props.onClickOpenPacketNewWindowMenu}
+                  fixContentType={props.fixContentType}
+                  originalContentType={props.originalContentType}
+                  fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
+                  {...props.extraEditorProps}
+                />
+              )}
+              {(type === 'hex' || !noShowHex) && !empty && !renderHtml && !props.renderHtml && (
+                <HexEditor
+                  style={{ fontSize: (fontSize || 12) === 12 ? 16 : fontSize === 16 ? 18 : 20 }}
+                  readOnly={true}
+                  asciiWidth={18}
+                  data={hexValue}
+                  overscanCount={0x03}
+                  showAscii={true}
+                  showColumnLabels={false}
+                  showRowLabels={true}
+                  highlightColumn={true}
+                  theme={targetHexTheme}
+                />
+              )}
+            </div>
           )}
-          {(type === 'hex' || !noShowHex) && !empty && !renderHtml && !props.renderHtml && (
-            <HexEditor
-              style={{ fontSize: (fontSize || 12) === 12 ? 16 : fontSize === 16 ? 18 : 20 }}
-              readOnly={true}
-              asciiWidth={18}
-              data={hexValue}
-              overscanCount={0x03}
-              showAscii={true}
-              showColumnLabels={false}
-              showRowLabels={true}
-              highlightColumn={true}
-              theme={targetHexTheme}
-            />
-          )}
-        </div>
+        </>
       }
     />
   )

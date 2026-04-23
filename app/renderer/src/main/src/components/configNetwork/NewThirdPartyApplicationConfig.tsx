@@ -34,6 +34,8 @@ import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
 import classNames from 'classnames'
 import i18n from '@/i18n/i18n'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
+import { setClipboardText } from '@/utils/clipboard'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -135,28 +137,6 @@ const aiModelTypeItem: ThirdPartyAppConfigItemTemplate = {
   })}`,
   Verbose: i18n.language === 'zh' ? '模型类型' : 'Model Type',
 }
-
-const defaultFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
-  cloneDeep(aiModelTypeItem),
-  {
-    DefaultValue: '',
-    Desc: 'APIKey / Token',
-    Extra: '',
-    Name: 'api_key',
-    Required: true,
-    Type: 'list',
-    Verbose: 'ApiKey',
-  },
-  {
-    DefaultValue: '',
-    Desc: 'email / username',
-    Extra: '',
-    Name: 'user_identifier',
-    Required: false,
-    Type: 'string',
-    Verbose: '用户信息',
-  },
-]
 
 interface NewThirdPartyApplicationConfigBaseProps extends Omit<
   ThirdPartyApplicationConfigProp,
@@ -509,6 +489,53 @@ const isShowRequiredApiKey = (typeVal: string) => {
   }
 }
 
+const pickOptionLabel = (opts: SelectOptionsProps[], value: unknown) => {
+  if (value === undefined || value === null || value === '') {
+    return ''
+  }
+  const hit = opts.find((o) => o.value === value)
+  return (hit?.label as string) || String(value)
+}
+
+const formatReadonlyEmptyAsDash = (v: unknown) => {
+  if (v === undefined || v === null || v === '') {
+    return '-'
+  }
+  if (typeof v === 'boolean') {
+    return v ? 'true' : 'false'
+  }
+  return String(v)
+}
+
+const headersToDisplayAndCopy = (headers: KVPair[] | undefined) => {
+  if (!headers?.length) {
+    return { display: '-', copy: '' }
+  }
+  const lines = headers.map((h) => `${h.Key}: ${h.Value}`)
+  return { display: lines.join('\n'), copy: lines.join('\n') }
+}
+
+const buildDefaultAIFormItemsForType = (typeVal: string) => {
+  const items = cloneDeep(defaultAIFormItemsOfAI)
+  const { isRequired, data } = isShowRequiredApiKey(typeVal)
+  if (isRequired) {
+    items.push(data)
+  }
+  return items
+}
+
+const buildOptionalAIFormItemsForType = (typeVal: string, enableEndpoint: boolean) => {
+  let newData = cloneDeep(optionalAIFormItemsOfAI)
+  const { isRequired, data } = isShowRequiredApiKey(typeVal)
+  if (!isRequired) {
+    newData.unshift(data)
+  }
+  if (enableEndpoint) {
+    return newData.filter((item) => item.Name !== 'base_url')
+  }
+  return newData.filter((item) => item.Name !== 'endpoint')
+}
+
 const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
   {
     DefaultValue: '',
@@ -550,9 +577,128 @@ const optionalAIFormItemsOfAI: ThirdPartyAppConfigItemTemplate[] = [
   },
 ]
 
-export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicationConfigBaseProps> = React.memo(
+type AIThirdPartyConfigReadonlyPanelProps = {
+  merged: Record<string, any>
+}
+
+const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelProps> = React.memo((props) => {
+  const { merged } = props
+  const typeVal = String(merged.Type ?? '')
+  const enableEndpoint = !!merged.enable_endpoint
+  const defaultItems = useMemo(() => buildDefaultAIFormItemsForType(typeVal), [typeVal])
+  const optionalItems = useMemo(
+    () => buildOptionalAIFormItemsForType(typeVal, enableEndpoint),
+    [typeVal, enableEndpoint],
+  )
+
+  const renderCopyRow = useMemoizedFn((key: string, label: string, display: string, clip: string) => (
+    <div className={styles['readonly-ai-field-row']} key={key}>
+      <div className={styles['readonly-ai-label']}>{label}:</div>
+      <div className={styles['readonly-ai-control']}>
+        <YakitInput
+          readOnly
+          className={styles['ai-readonly-copy-input']}
+          value={display}
+          addonAfter={
+            <YakitButton
+              type="text2"
+              size="small"
+              icon={<OutlineClipboardcopyIcon />}
+              onClick={() => setClipboardText(clip)}
+            />
+          }
+        />
+      </div>
+    </div>
+  ))
+
+  const renderFieldByTemplate = useMemoizedFn((item: ThirdPartyAppConfigItemTemplate) => {
+    const raw = merged[item.Name]
+    if (item.Name === 'model_type' && item.Type === 'list') {
+      const label = pickOptionLabel(aiModelTypeOptions, raw)
+      const display = label || formatReadonlyEmptyAsDash(raw)
+      return renderCopyRow(item.Name, item.Verbose, display, String(raw ?? ''))
+    }
+    if (item.Name === 'api_type' && item.Type === 'list') {
+      const label = pickOptionLabel(aiAPITypeOptions, raw)
+      const display = label || formatReadonlyEmptyAsDash(raw)
+      return renderCopyRow(item.Name, item.Verbose, display, String(raw ?? ''))
+    }
+    if (item.Name === 'api_key') {
+      const display = formatReadonlyEmptyAsDash(raw)
+      return renderCopyRow(item.Name, item.Verbose, display, String(raw ?? ''))
+    }
+    if (item.Type === 'bool') {
+      const display = formatReadonlyEmptyAsDash(raw)
+      const clip =
+        raw === true || raw === 'true' ? 'true' : raw === false || raw === 'false' ? 'false' : String(raw ?? '')
+      return renderCopyRow(item.Name, item.Verbose, display, clip)
+    }
+    const display = formatReadonlyEmptyAsDash(raw)
+    return renderCopyRow(item.Name, item.Verbose, display, String(raw ?? ''))
+  })
+  const headersPack = headersToDisplayAndCopy((merged.Headers as KVPair[]) || [])
+
+  return (
+    <div className={classNames(styles['config-form'], styles['config-form-ai'], styles['ai-third-party-readonly'])}>
+      {renderCopyRow('Type', isMemfit() ? '厂商' : '类型', merged.Type, String(merged.Type ?? ''))}
+      {defaultItems.map((item) => renderFieldByTemplate(item))}
+      <YakitCollapse
+        defaultActiveKey={['1']}
+        bordered={false}
+        className={styles['ai-third-party-application-config-collapse']}
+      >
+        <Collapse.Panel header="高级配置" key="1" forceRender={true}>
+          {optionalItems.map((item) => renderFieldByTemplate(item))}
+          {renderCopyRow('Headers', 'Header', headersPack.display, headersPack.copy)}
+        </Collapse.Panel>
+      </YakitCollapse>
+    </div>
+  )
+})
+
+export interface AIThirdPartyApplicationConfig {
+  Type: string
+  api_key?: string
+  user_identifier?: string
+  model_type?: string
+  api_type?: string
+  model?: string
+  enable_endpoint?: boolean
+  base_url?: string
+  endpoint?: string
+  proxy?: string
+  Headers?: KVPair[]
+  ExtraParams?: KVPair[]
+}
+
+interface NewAIThirdPartyApplicationConfigBaseProps {
+  formValues?: AIThirdPartyApplicationConfig
+  // 禁止类型改变
+  disabledType?: boolean
+  // 是否可新增类型
+  canAddType?: boolean
+  FormProps?: {
+    layout: FormLayout
+    labelCol: number
+    wrapperCol: number
+  }
+  footer?: React.ReactNode
+  readOnly?: boolean
+  ref?: React.ForwardedRef<{ form: FormInstance }>
+}
+
+export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyApplicationConfigBaseProps> = React.memo(
   forwardRef((props, ref) => {
-    const { formValues = defautFormValues, disabledType = false, canAddType = true, FormProps, footer } = props
+    const {
+      formValues = defautFormValues as AIThirdPartyApplicationConfig,
+      disabledType = false,
+      canAddType = true,
+      FormProps,
+      footer,
+      readOnly,
+    } = props
+
     const [form] = Form.useForm()
     const typeVal = Form.useWatch('Type', form)
     const [options, setOptions] = useState<SelectOptionsProps[]>([])
@@ -588,13 +734,14 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
     }, [])
 
     useUpdateEffect(() => {
+      if (readOnly) return
       if (apiKeyWatch) {
         execModelNameOption.current = true
         getModelNameOption()
       } else {
         handleDefaultModalNameOption()
       }
-    }, [apiKeyWatch])
+    }, [apiKeyWatch, readOnly])
 
     const { run: getModelNameOption, cancel: cancelModelNameOption } = useDebounceFn(
       useMemoizedFn(() => {
@@ -671,12 +818,14 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
     }
     useDebounceEffect(
       () => {
+        if (readOnly) return
         handleDefaultModalNameOption()
       },
-      [typeVal],
+      [typeVal, readOnly],
       { wait: 300 },
     )
     useEffect(() => {
+      if (readOnly) return
       execModelNameOption.current = false
       cancelModelNameOption()
       if (typeVal === 'custom') {
@@ -684,7 +833,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
       } else {
         setActiveKey(undefined)
       }
-    }, [typeVal])
+    }, [typeVal, readOnly])
 
     // 切换类型，渲染不同表单项（目前只有输入框、开关、下拉）
     const renderAllFormItems = useMemoizedFn(() => {
@@ -824,6 +973,16 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplica
         Headers: headers.filter((_, i) => i !== index),
       })
     })
+
+    if (readOnly) {
+      return (
+        <div className={styles['config-form-wrapper']}>
+          <AIThirdPartyConfigReadonlyPanel merged={formValues} />
+          {footer ? <div className={styles['config-footer']}>{footer}</div> : null}
+        </div>
+      )
+    }
+
     return (
       <div className={styles['config-form-wrapper']}>
         <Form
