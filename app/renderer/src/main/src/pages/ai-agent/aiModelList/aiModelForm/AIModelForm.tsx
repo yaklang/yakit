@@ -129,6 +129,10 @@ export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationCon
     'proxy',
     'no_https',
     'api_type',
+    'base_url',
+    'endpoint',
+    'enable_endpoint',
+    'Headers',
     'webhook_url',
     'api_key_id', //测试不需要传这个给后端
   ])

@@ -761,6 +761,8 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
       endpoint: item.Provider.Endpoint,
       enable_endpoint: item.Provider.EnableEndpoint,
       Headers: item.Provider.Headers,
+      model: item.ModelName,
+      model_type: modelType,
     }
     const config = buildAIConfigHealthCheckConfig(value)
     grpcAIConfigHealthCheck({
