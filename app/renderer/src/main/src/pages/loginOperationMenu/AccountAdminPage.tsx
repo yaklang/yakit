@@ -1530,6 +1530,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
   const filterOption = (input: string, option) => {
     return (option!.children as unknown as string).toLowerCase().includes(input.toLowerCase())
   }
+  console.log(222)
 
   return (
     <Form labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} form={form} onFinish={onFinish}>
