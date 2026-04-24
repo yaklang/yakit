@@ -33,7 +33,6 @@ import { HTTPHeader } from '@/pages/mitm/MITMContentReplacerHeaderOperator'
 import YakitCollapse from '../yakitUI/YakitCollapse/YakitCollapse'
 import classNames from 'classnames'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 const { ipcRenderer } = window.require('electron')
@@ -517,8 +516,8 @@ const headersToDisplayAndCopy = (headers: KVPair[] | undefined) => {
   return { display: lines.join('\n'), copy: lines.join('\n') }
 }
 
-const buildDefaultAIFormItemsForType = (typeVal: string) => {
-  const items = cloneDeep(defaultAIFormItemsOfAI)
+const buildDefaultAIFormItemsForType = (typeVal: string, t) => {
+  const items = cloneDeep(defaultAIFormItemsOfAI(t))
   const { isRequired, data } = isShowRequiredApiKey(typeVal)
   if (isRequired) {
     items.push(data)
@@ -585,9 +584,10 @@ type AIThirdPartyConfigReadonlyPanelProps = {
 
 const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelProps> = React.memo((props) => {
   const { merged } = props
+  const { t, i18n } = useI18nNamespaces(['configNetwork'])
   const typeVal = String(merged.Type ?? '')
   const enableEndpoint = !!merged.enable_endpoint
-  const defaultItems = useMemo(() => buildDefaultAIFormItemsForType(typeVal), [typeVal])
+  const defaultItems = useMemo(() => buildDefaultAIFormItemsForType(typeVal, t), [typeVal, i18n])
   const optionalItems = useMemo(
     () => buildOptionalAIFormItemsForType(typeVal, enableEndpoint),
     [typeVal, enableEndpoint],
@@ -617,7 +617,7 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
   const renderFieldByTemplate = useMemoizedFn((item: ThirdPartyAppConfigItemTemplate) => {
     const raw = merged[item.Name]
     if (item.Name === 'model_type' && item.Type === 'list') {
-      const label = pickOptionLabel(aiModelTypeOptions, raw)
+      const label = pickOptionLabel(aiModelTypeOptions(t), raw)
       const display = label || formatReadonlyEmptyAsDash(raw)
       return renderCopyRow(item.Name, item.Verbose, display, String(raw ?? ''))
     }
