@@ -51,6 +51,8 @@
     "domainAssets": "Domain Assets",
     "penTest": "PenTest",
     "codeAudit": "Code Audit",
+    "irifyAiCodeAudit": "AI Code Audit",
+    "irifyAiCodeAuditDescribe": "Open a local project and use ReAct AI for assisted code audit.",
     "auditRuleCodeAnalysis": "Analyze code behavior by writing audit rules to identify risky code fragments; supports multiple languages such as Java, PHP, Yaklang, and Go (Golang).",
     "database": "Database",
     "securityTools": "Security Tools",

@@ -25,6 +25,7 @@ import { CVEViewer } from '@/pages/cve/CVEViewer'
 import { YakJavaDecompiler } from '@/pages/yakJavaDecompiler/YakJavaDecompiler'
 import { PageLoading } from './PageLoading'
 import {
+  PrivateOutlineAIAgentIcon,
   PrivateOutlineAuditCodeIcon,
   PrivateOutlineAuditHoleIcon,
   PrivateOutlineBasicCrawlerIcon,
@@ -91,6 +92,7 @@ import {
   PrivateSolidTCPPortLogIcon,
   PrivateSolidWebFuzzerIcon,
   PrivateSolidWebsocketFuzzerIcon,
+  PrivateSolidAIAgentIcon,
 } from './privateIcon'
 import { ControlAdminPage } from '@/pages/dynamicControl/DynamicControl'
 import { DebugMonacoEditorPage } from '@/pages/debugMonaco/DebugMonacoEditorPage'
@@ -160,6 +162,7 @@ import {
 import { SimpleDetect } from '@/pages/simpleDetect/SimpleDetect'
 import { YakitRoute } from '../enums/yakitRoute'
 import { YakRunner } from '@/pages/yakRunner/YakRunner'
+import { IrifyAiCodeAuditPage } from '@/pages/irifyAiCodeAudit/IrifyAiCodeAuditPage'
 import { YakRunnerCodeScan } from '@/pages/yakRunnerCodeScan/YakRunnerCodeScan'
 import { YakRunnerAuditCode } from '@/pages/yakRunnerAuditCode/YakRunnerAuditCode'
 import { AddYakitPlugin } from '@/pages/pluginEditor/addYakitPlugin/AddYakitPlugin'
@@ -368,6 +371,11 @@ export const YakitRouteToPageInfo: Record<
     labelUi: 'YakitRoute.codeAudit',
     describeUi: 'YakitRoute.auditRuleCodeAnalysis',
   },
+  'irify-ai-code-audit': {
+    label: 'AI代码审计',
+    labelUi: 'YakitRoute.irifyAiCodeAudit',
+    describeUi: 'YakitRoute.irifyAiCodeAuditDescribe',
+  },
   'yakrunner-project-manager': { label: '项目管理', labelUi: 'YakitRoute.projectManagement' },
   yakrunner_scanHistory: { label: '项目历史', labelUi: 'YakitRoute.projectHistory' },
   'rule-management': {
@@ -440,6 +448,7 @@ export const SingletonPageRoute: YakitRoute[] = [
   YakitRoute.Beta_WebShellManager,
   YakitRoute.Data_Statistics,
   YakitRoute.YakRunner_Audit_Code,
+  YakitRoute.Irify_AI_Code_Audit,
   YakitRoute.YakRunner_Project_Manager,
   YakitRoute.YakRunner_ScanHistory,
   YakitRoute.Rule_Management,
@@ -496,6 +505,7 @@ export const NoPaddingRoute: YakitRoute[] = [
   YakitRoute.ShellReceiver,
   YakitRoute.YakRunner_Code_Scan,
   YakitRoute.YakRunner_Audit_Code,
+  YakitRoute.Irify_AI_Code_Audit,
   YakitRoute.YakRunner_Project_Manager,
   YakitRoute.YakRunner_ScanHistory,
   YakitRoute.Rule_Management,
@@ -904,6 +914,8 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
       return <YakRunnerCodeScan pageId={params?.id || ''} />
     case YakitRoute.YakRunner_Audit_Code:
       return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo} />
+    case YakitRoute.Irify_AI_Code_Audit:
+      return <IrifyAiCodeAuditPage />
     case YakitRoute.YakRunner_Project_Manager:
       return <YakRunnerProjectManager />
     case YakitRoute.YakRunner_ScanHistory:
@@ -1080,6 +1092,10 @@ export const getPublicRouteMenu = (softMode: SoftMode) => {
           {
             page: YakitRoute.YakRunner_Audit_Code,
             ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code],
+          },
+          {
+            page: YakitRoute.Irify_AI_Code_Audit,
+            ...YakitRouteToPageInfo[YakitRoute.Irify_AI_Code_Audit],
           },
           {
             page: YakitRoute.YakRunner_Code_Scan,
@@ -1956,6 +1972,12 @@ export const PrivateAllMenus: Record<string, PrivateRouteMenuProps> = {
     hoverIcon: <PrivateSolidAuditCodeIcon />,
     ...YakitRouteToPageInfo[YakitRoute.YakRunner_Audit_Code],
   },
+  [YakitRoute.Irify_AI_Code_Audit]: {
+    page: YakitRoute.Irify_AI_Code_Audit,
+    icon: <PrivateOutlineAIAgentIcon />,
+    hoverIcon: <PrivateSolidAIAgentIcon />,
+    ...YakitRouteToPageInfo[YakitRoute.Irify_AI_Code_Audit],
+  },
   [YakitRoute.YakRunner_Audit_Hole]: {
     page: YakitRoute.YakRunner_Audit_Hole,
     icon: <PrivateOutlineAuditHoleIcon />,
@@ -2078,6 +2100,7 @@ export const PrivateExpertRouteMenu: PrivateRouteMenuProps[] = isIRify()
         children: [
           PrivateAllMenus[YakitRoute.YakRunner_Project_Manager],
           PrivateAllMenus[YakitRoute.YakRunner_Audit_Code],
+          PrivateAllMenus[YakitRoute.Irify_AI_Code_Audit],
           PrivateAllMenus[YakitRoute.YakRunner_Code_Scan],
           PrivateAllMenus[YakitRoute.Rule_Management],
           PrivateAllMenus[YakitRoute.YakRunner_Audit_Hole],

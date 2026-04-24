@@ -889,6 +889,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.YakRunner_Audit_Code:
         addYakRunnerAuditCodePage(params)
         break
+      case YakitRoute.Irify_AI_Code_Audit:
+        addIrifyAiCodeAuditPage(params)
+        break
       case YakitRoute.YakRunner_Code_Scan:
         addYakRunnerCodeScanPage(params)
         break
@@ -1056,6 +1059,44 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     setPagesData(YakitRoute.YakRunner_Audit_Code, pageNodeInfo)
     openMenuPage(
       { route: YakitRoute.YakRunner_Audit_Code },
+      {
+        pageParams: {
+          auditCodePageInfo: data
+            ? {
+                ...data,
+              }
+            : undefined,
+        },
+      },
+    )
+  })
+
+  const addIrifyAiCodeAuditPage = useMemoizedFn((data?: AuditCodePageInfoProps) => {
+    const isExist = pageCache.filter((item) => item.route === YakitRoute.Irify_AI_Code_Audit).length
+    if (isExist && data) {
+      emiter.emit('onAuditCodePageInfo', JSON.stringify(data))
+    }
+    const pageNodeInfo: PageProps = {
+      ...cloneDeep(defPage),
+      pageList: [
+        {
+          id: randomString(8),
+          routeKey: YakitRoute.Irify_AI_Code_Audit,
+          pageGroupId: '0',
+          pageId: YakitRoute.Irify_AI_Code_Audit,
+          pageName: YakitRouteToPageInfo[YakitRoute.Irify_AI_Code_Audit]?.label || '',
+          pageParamsInfo: {
+            auditCodePageInfo: data,
+          },
+          sortFieId: 0,
+        },
+      ],
+      routeKey: YakitRoute.Irify_AI_Code_Audit,
+      singleNode: true,
+    }
+    setPagesData(YakitRoute.Irify_AI_Code_Audit, pageNodeInfo)
+    openMenuPage(
+      { route: YakitRoute.Irify_AI_Code_Audit },
       {
         pageParams: {
           auditCodePageInfo: data
@@ -1500,6 +1541,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       }
       if (type === YakitRoute.YakRunner_Audit_Code) {
         openMenuPage({ route: YakitRoute.YakRunner_Audit_Code })
+      }
+      if (type === YakitRoute.Irify_AI_Code_Audit) {
+        openMenuPage({ route: YakitRoute.Irify_AI_Code_Audit })
       }
       if (type === YakitRoute.YakRunner_Audit_Hole) {
         openMenuPage({ route: YakitRoute.YakRunner_Audit_Hole })

@@ -15,6 +15,7 @@ import {
   aiChatDataStore,
   FlowAiStore,
   histroyAiStore,
+  irifyAiCodeAuditPageAiStore,
   knowledgeBaseDataStore,
   type ChatDataStoreKey,
 } from '@/pages/ai-agent/store/ChatDataStore'
@@ -67,6 +68,8 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
         return 'aiChatDataStore'
       case knowledgeBaseDataStore:
         return 'knowledgeBaseDataStore'
+      case irifyAiCodeAuditPageAiStore:
+        return 'irifyAiCodeAuditPageAiStore'
       default:
         if (store instanceof WebFuzzerAiStore) return 'WebFuzzerAiStore'
         return 'unknown'
