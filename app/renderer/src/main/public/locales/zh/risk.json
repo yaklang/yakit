@@ -33,7 +33,7 @@
     "select_export_fields": "选择导出字段",
     "risk_and_vulnerabilities": "风险与漏洞",
     "export_html_failed": "导出html失败：",
-    
+
     "expand_filter": "展开筛选",
     "all": "全部",
     "unread": "未读",
@@ -46,9 +46,9 @@
     "export_csv": "导出 CSV",
     "export_html": "导出 html",
     "vulnerability_detection": "漏洞检测",
-    "RowContextMenu":{
-        "delete_duplicate_title_data": "删除重复标题数据",
-        "openInNewWindow": "新窗口打开"
+    "RowContextMenu": {
+      "delete_duplicate_title_data": "删除重复标题数据",
+      "openInNewWindow": "新窗口打开"
     }
   },
   "YakitRiskSelectTag": {

@@ -1,560 +1,562 @@
-import React, {useEffect, useRef, useState} from "react"
-import {useMemoizedFn, useUpdateEffect} from "ahooks"
-import ReactResizeDetector from "react-resize-detector"
-import classNames from "classnames"
-import {OutlineChevrondoubledownIcon} from "@/assets/icon/outline"
-import styles from "./YakitResizeBox.module.scss"
+import React, { useEffect, useRef, useState } from 'react'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
+import ReactResizeDetector from 'react-resize-detector'
+import classNames from 'classnames'
+import { OutlineChevrondoubledownIcon } from '@/assets/icon/outline'
+import styles from './YakitResizeBox.module.scss'
 
 // 将像素与number都返回为number
 const convertToNumber = (value: string | number): number | null => {
-    if (typeof value === "string" && value.endsWith("px")) {
-        return parseInt(value, 10)
-    } else if (typeof value === "number") {
-        return value
-    } else {
-        return null
-    }
+  if (typeof value === 'string' && value.endsWith('px')) {
+    return parseInt(value, 10)
+  } else if (typeof value === 'number') {
+    return value
+  } else {
+    return null
+  }
 }
 
 // 将两个数字转化为整数百分比，并确保它们的总和为100%
 const calculatePercentages = (firstSizeNum: number, secondSizeNum: number) => {
-    const total = firstSizeNum + secondSizeNum
-    // 防止除以0 且此为异常情况 恢复为默认对半分
-    if (total === 0)
-        return {
-            firstSizePercent: "50%",
-            secondSizePercent: "50%"
-        }
-
-    const percentF = Math.round((firstSizeNum / total) * 100)
-    // 确保总和为100%
-    const percentS = 100 - percentF
-
+  const total = firstSizeNum + secondSizeNum
+  // 防止除以0 且此为异常情况 恢复为默认对半分
+  if (total === 0)
     return {
-        firstSizePercent: `${percentF}%`,
-        secondSizePercent: `${percentS}%`
+      firstSizePercent: '50%',
+      secondSizePercent: '50%',
     }
+
+  const percentF = Math.round((firstSizeNum / total) * 100)
+  // 确保总和为100%
+  const percentS = 100 - percentF
+
+  return {
+    firstSizePercent: `${percentF}%`,
+    secondSizePercent: `${percentS}%`,
+  }
 }
 
 export interface YakitResizeLineProps {
-    isVer?: boolean
-    dragResize?: boolean
-    minSize?: string | number
-    maxSize?: string | number
-    bodyRef: any
-    resizeRef: any
+  isVer?: boolean
+  dragResize?: boolean
+  minSize?: string | number
+  maxSize?: string | number
+  bodyRef: any
+  resizeRef: any
 
-    onStart?: () => void
-    onEnd?: () => void
-    onMouseUp: (distance: number) => void
-    dragMoveSize: (v: number) => void
+  onStart?: () => void
+  onEnd?: () => void
+  onMouseUp: (distance: number) => void
+  dragMoveSize: (v: number) => void
 }
 
 export const YakitResizeLine: React.FC<YakitResizeLineProps> = (props) => {
-    const {
-        isVer = false,
-        dragResize = false,
-        minSize,
-        maxSize,
-        bodyRef,
-        resizeRef,
-        onStart,
-        onEnd,
-        onMouseUp,
-        dragMoveSize
-    } = props
+  const {
+    isVer = false,
+    dragResize = false,
+    minSize,
+    maxSize,
+    bodyRef,
+    resizeRef,
+    onStart,
+    onEnd,
+    onMouseUp,
+    dragMoveSize,
+  } = props
 
-    const min = minSize ? Number.parseInt(minSize.toString()) || 100 : 100
-    const max = maxSize ? Number.parseInt(maxSize.toString()) || 100 : 100
+  const min = minSize ? Number.parseInt(minSize.toString()) || 100 : 100
+  const max = maxSize ? Number.parseInt(maxSize.toString()) || 100 : 100
 
-    const lineRef = useRef<HTMLDivElement>(null)
+  const lineRef = useRef<HTMLDivElement>(null)
 
-    const start = useRef<number>(0)
-    const first = useRef<number>(0)
-    const isMove = useRef<boolean>(false)
-    const activePointerId = useRef<number | null>(null)
-    const moveLen = useRef<number>(0)
+  const start = useRef<number>(0)
+  const first = useRef<number>(0)
+  const isMove = useRef<boolean>(false)
+  const activePointerId = useRef<number | null>(null)
+  const moveLen = useRef<number>(0)
 
-    // 解决闭包问题 实时更新状态
-    const getIsVer = useMemoizedFn(() => isVer)
-    const getDragResize = useMemoizedFn(() => dragResize)
-    const onPointerDown = (event: any) => {
-        if (!lineRef.current || !resizeRef.current) return
-        if (event.button !== 0) return // 只响应左键
-        const isVer = getIsVer()
-        const line = lineRef.current
-        const resize = resizeRef.current
+  // 解决闭包问题 实时更新状态
+  const getIsVer = useMemoizedFn(() => isVer)
+  const getDragResize = useMemoizedFn(() => dragResize)
+  const onPointerDown = (event: any) => {
+    if (!lineRef.current || !resizeRef.current) return
+    if (event.button !== 0) return // 只响应左键
+    const isVer = getIsVer()
+    const line = lineRef.current
+    const resize = resizeRef.current
 
-        resize.setPointerCapture(event.pointerId)
-        activePointerId.current = event.pointerId
-        if (onStart) onStart()
-        isMove.current = true
-        start.current = isVer ? event.layerY : event.layerX
-        first.current = isVer ? event.clientY : event.clientX
+    resize.setPointerCapture(event.pointerId)
+    activePointerId.current = event.pointerId
+    if (onStart) onStart()
+    isMove.current = true
+    start.current = isVer ? event.layerY : event.layerX
+    first.current = isVer ? event.clientY : event.clientX
 
-        line.style.willChange = "transform"
-        line.style.display = "inline-block"
+    line.style.willChange = 'transform'
+    line.style.display = 'inline-block'
 
-        // 生成移动分割线的初始坐标
-        if (isVer) line.style.transform = `translateY(${start.current}px)`
-        else line.style.transform = `translateX(${start.current}px)`
+    // 生成移动分割线的初始坐标
+    if (isVer) line.style.transform = `translateY(${start.current}px)`
+    else line.style.transform = `translateX(${start.current}px)`
+  }
+
+  const onPointerMove = (event: PointerEvent) => {
+    if (!isMove.current) return
+    if (event.pointerId !== activePointerId.current) return
+
+    const body = bodyRef.current
+    const line = lineRef.current
+    if (!body || !line) return
+
+    const isVer = getIsVer()
+    const dragResize = getDragResize()
+    const bodyRect = body.getBoundingClientRect()
+    const distance = [
+      isVer ? event.clientY - bodyRect.top : event.clientX - bodyRect.left,
+      isVer ? body.clientHeight - event.clientY + bodyRect.top : body.clientWidth - event.clientX + bodyRect.left,
+    ]
+
+    if (distance[0] <= min || distance[1] <= max) {
+      if (dragResize) line.style.display = 'none'
+      return
     }
 
-    const onPointerMove = (event: PointerEvent) => {
-        if (!isMove.current) return
-        if (event.pointerId !== activePointerId.current) return
+    line.style.display = 'inline-block'
 
-        const body = bodyRef.current
-        const line = lineRef.current
-        if (!body || !line) return
+    const second = isVer ? event.clientY : event.clientX
+    moveLen.current = start.current + second - first.current
 
-        const isVer = getIsVer()
-        const dragResize = getDragResize()
-        const bodyRect = body.getBoundingClientRect()
-        const distance = [
-            isVer ? event.clientY - bodyRect.top : event.clientX - bodyRect.left,
-            isVer ? body.clientHeight - event.clientY + bodyRect.top : body.clientWidth - event.clientX + bodyRect.left
-        ]
-
-        if (distance[0] <= min || distance[1] <= max) {
-            if (dragResize) line.style.display = "none"
-            return
-        }
-
-        line.style.display = "inline-block"
-
-        const second = isVer ? event.clientY : event.clientX
-        moveLen.current = start.current + second - first.current
-
-        if (isVer) {
-            line.style.transform = `translateY(${moveLen.current}px)`
-        } else {
-            line.style.transform = `translateX(${moveLen.current}px)`
-        }
-
-        if (dragResize) {
-            const delta = moveLen.current - start.current
-            if (delta !== 0) dragMoveSize(delta)
-        }
+    if (isVer) {
+      line.style.transform = `translateY(${moveLen.current}px)`
+    } else {
+      line.style.transform = `translateX(${moveLen.current}px)`
     }
 
-    /** 统一结束 */
-    const endPointer = () => {
-        if (!isMove.current) return
+    if (dragResize) {
+      const delta = moveLen.current - start.current
+      if (delta !== 0) dragMoveSize(delta)
+    }
+  }
 
-        const dragResize = getDragResize()
-        const line = lineRef.current
+  /** 统一结束 */
+  const endPointer = () => {
+    if (!isMove.current) return
 
-        onEnd?.()
+    const dragResize = getDragResize()
+    const line = lineRef.current
 
-        if (!dragResize) {
-            const delta = moveLen.current - start.current
-            if (delta !== 0) onMouseUp(delta)
-        }
+    onEnd?.()
 
-        if (line) {
-            line.style.display = "none"
-            line.style.willChange = "auto"
-        }
-
-        isMove.current = false
-        activePointerId.current = null
-        moveLen.current = 0
+    if (!dragResize) {
+      const delta = moveLen.current - start.current
+      if (delta !== 0) onMouseUp(delta)
     }
 
-    useEffect(() => {
-        const body = bodyRef.current
-        const resize = resizeRef.current
-        if (!body || !resize) return
+    if (line) {
+      line.style.display = 'none'
+      line.style.willChange = 'auto'
+    }
 
-        resize.addEventListener("pointerdown", onPointerDown)
-        body.addEventListener("pointermove", onPointerMove)
-        body.addEventListener("pointerup", endPointer)
-        body.addEventListener("pointercancel", endPointer)
-        body.addEventListener("lostpointercapture", endPointer)
+    isMove.current = false
+    activePointerId.current = null
+    moveLen.current = 0
+  }
 
-        return () => {
-            resize.removeEventListener("pointerdown", onPointerDown)
-            body.removeEventListener("pointermove", onPointerMove)
-            body.removeEventListener("pointerup", endPointer)
-            body.removeEventListener("pointercancel", endPointer)
-            body.removeEventListener("lostpointercapture", endPointer)
-        }
-    }, [min, max])
+  useEffect(() => {
+    const body = bodyRef.current
+    const resize = resizeRef.current
+    if (!body || !resize) return
 
-    return (
-        <div
-            ref={lineRef}
-            className={classNames(styles["resize-line-style"], {
-                [styles["resize-line-ver"]]: isVer,
-                [styles["resize-line-hor"]]: !isVer
-            })}
-        />
-    )
+    resize.addEventListener('pointerdown', onPointerDown)
+    body.addEventListener('pointermove', onPointerMove)
+    body.addEventListener('pointerup', endPointer)
+    body.addEventListener('pointercancel', endPointer)
+    body.addEventListener('lostpointercapture', endPointer)
+
+    return () => {
+      resize.removeEventListener('pointerdown', onPointerDown)
+      body.removeEventListener('pointermove', onPointerMove)
+      body.removeEventListener('pointerup', endPointer)
+      body.removeEventListener('pointercancel', endPointer)
+      body.removeEventListener('lostpointercapture', endPointer)
+    }
+  }, [min, max])
+
+  return (
+    <div
+      ref={lineRef}
+      className={classNames(styles['resize-line-style'], {
+        [styles['resize-line-ver']]: isVer,
+        [styles['resize-line-hor']]: !isVer,
+      })}
+    />
+  )
 }
 
 interface MouseUpCallBackProps {
-    firstSizeNum: number
-    secondSizeNum: number
-    firstSizePercent: string
-    secondSizePercent: string
+  firstSizeNum: number
+  secondSizeNum: number
+  firstSizePercent: string
+  secondSizePercent: string
 }
 
 export interface YakitResizeBoxProps {
-    /** 是否为竖向拖拽 默认横向拖拽 */
-    isVer?: boolean
-    /** 是否拖拽立即生效 默认为拖拽完成生效 */
-    dragResize?: boolean
-    /** 是否允许拖拽 默认可拖拽 */
-    freeze?: boolean
-    /** 是否默认展示浅色线条样式 */
-    isShowDefaultLineStyle?: boolean
-    /** body改变时是否重新计算宽高 */
-    isRecalculateWH?: boolean
-    /** 线条占据空间的方向 */
-    lineDirection?: "top" | "bottom" | "left" | "right"
-    /** 第一块所占比例 支持 百分比/像素 */
-    firstRatio?: string
-    /** 第一块最小大小 */
-    firstMinSize?: string | number
-    /** 第一块内容 */
-    firstNode: any
-    /** 第一块内容box样式 */
-    firstNodeStyle?: React.CSSProperties
+  /** 是否为竖向拖拽 默认横向拖拽 */
+  isVer?: boolean
+  /** 是否拖拽立即生效 默认为拖拽完成生效 */
+  dragResize?: boolean
+  /** 是否允许拖拽 默认可拖拽 */
+  freeze?: boolean
+  /** 是否默认展示浅色线条样式 */
+  isShowDefaultLineStyle?: boolean
+  /** body改变时是否重新计算宽高 */
+  isRecalculateWH?: boolean
+  /** 线条占据空间的方向 */
+  lineDirection?: 'top' | 'bottom' | 'left' | 'right'
+  /** 第一块所占比例 支持 百分比/像素 */
+  firstRatio?: string
+  /** 第一块最小大小 */
+  firstMinSize?: string | number
+  /** 第一块内容 */
+  firstNode: any
+  /** 第一块内容box样式 */
+  firstNodeStyle?: React.CSSProperties
 
-    /** 第二块所占比例 支持 百分比/像素 */
-    secondRatio?: string
-    /** 第二块最小大小 */
-    secondMinSize?: string | number
-    /** 第二块内容 */
-    secondNode: any
-    /** 第二块内容box样式 */
-    secondNodeStyle?: React.CSSProperties
+  /** 第二块所占比例 支持 百分比/像素 */
+  secondRatio?: string
+  /** 第二块最小大小 */
+  secondMinSize?: string | number
+  /** 第二块内容 */
+  secondNode: any
+  /** 第二块内容box样式 */
+  secondNodeStyle?: React.CSSProperties
 
-    /** 主样式 */
-    style?: React.CSSProperties
-    /** 不允许拖动时 拖拽线样式 */
-    lineStyle?: React.CSSProperties
-    lineInStyle?: React.CSSProperties
-    /** 鼠标抬起时的回调 */
-    onMouseUp?: (e: MouseUpCallBackProps) => void
-    /** 点击隐藏整个区域 */
-    onClickHiddenBox?: () => void
+  /** 主样式 */
+  style?: React.CSSProperties
+  /** 不允许拖动时 拖拽线样式 */
+  lineStyle?: React.CSSProperties
+  lineInStyle?: React.CSSProperties
+  /** 鼠标抬起时的回调 */
+  onMouseUp?: (e: MouseUpCallBackProps) => void
+  /** 点击隐藏整个区域 */
+  onClickHiddenBox?: () => void
 }
 
 export const YakitResizeBox: React.FC<YakitResizeBoxProps> = React.memo((props) => {
-    const {
-        isVer = false,
-        dragResize = false,
-        freeze = true,
-        isShowDefaultLineStyle = true,
-        isRecalculateWH = true,
-        lineDirection,
-        firstRatio = "50%",
-        firstMinSize = "100px",
-        firstNode,
-        firstNodeStyle,
-        secondRatio = "50%",
-        secondMinSize = "100px",
-        secondNode,
-        secondNodeStyle,
-        style,
-        lineStyle,
-        lineInStyle,
-        onMouseUp,
-        onClickHiddenBox,
-    } = props
+  const {
+    isVer = false,
+    dragResize = false,
+    freeze = true,
+    isShowDefaultLineStyle = true,
+    isRecalculateWH = true,
+    lineDirection,
+    firstRatio = '50%',
+    firstMinSize = '100px',
+    firstNode,
+    firstNodeStyle,
+    secondRatio = '50%',
+    secondMinSize = '100px',
+    secondNode,
+    secondNodeStyle,
+    style,
+    lineStyle,
+    lineInStyle,
+    onMouseUp,
+    onClickHiddenBox,
+  } = props
 
-    const bodyRef = useRef<HTMLDivElement>(null)
-    const firstRef = useRef<HTMLDivElement>(null)
-    const secondRef = useRef<HTMLDivElement>(null)
-    const lineRef = useRef<HTMLDivElement>(null)
-    const handleRef = useRef<HTMLDivElement>(null)
-    const maskRef = useRef<HTMLDivElement>(null)
-    const [bodyWidth, setBodyWidth] = useState<number>(0)
-    const [bodyHeight, setBodyHeight] = useState<number>(0)
-    let firstRenderRef = useRef<boolean>(true)
-    let perBodyWidth = useRef<number>()
-    let perBodyHeight = useRef<number>()
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const firstRef = useRef<HTMLDivElement>(null)
+  const secondRef = useRef<HTMLDivElement>(null)
+  const lineRef = useRef<HTMLDivElement>(null)
+  const handleRef = useRef<HTMLDivElement>(null)
+  const maskRef = useRef<HTMLDivElement>(null)
+  const [bodyWidth, setBodyWidth] = useState<number>(0)
+  const [bodyHeight, setBodyHeight] = useState<number>(0)
+  let firstRenderRef = useRef<boolean>(true)
+  let perBodyWidth = useRef<number>()
+  let perBodyHeight = useRef<number>()
 
-    // 拖拽时移动 缓存
-    const dragFirstSize = useRef<number>()
-    const dragSecondSize = useRef<number>()
+  // 拖拽时移动 缓存
+  const dragFirstSize = useRef<number>()
+  const dragSecondSize = useRef<number>()
 
-    // 最小值（存在 firstMinSize + secondMinSize > 整个控件）对此特殊情况额外处理，按照比例直接分配
-    const [FirstMinSize, setFirstMinSize] = useState<string | number>()
-    const [SecondMinSize, setSecondMinSize] = useState<string | number>(secondMinSize)
+  // 最小值（存在 firstMinSize + secondMinSize > 整个控件）对此特殊情况额外处理，按照比例直接分配
+  const [FirstMinSize, setFirstMinSize] = useState<string | number>()
+  const [SecondMinSize, setSecondMinSize] = useState<string | number>(secondMinSize)
 
-    useEffect(() => {
-        setFirstMinSize(firstMinSize)
-    }, [firstMinSize])
-    useUpdateEffect(() => {
-        setSecondMinSize(secondMinSize)
-    }, [secondMinSize])
+  useEffect(() => {
+    setFirstMinSize(firstMinSize)
+  }, [firstMinSize])
+  useUpdateEffect(() => {
+    setSecondMinSize(secondMinSize)
+  }, [secondMinSize])
 
-    // 特殊情况处理
-    const specialSizeFun = useMemoizedFn((size: number) => {
-        const firstMin = convertToNumber(firstMinSize)
-        const secondMin = convertToNumber(secondMinSize)
-        if (firstMin && secondMin) {
-            const limitMax = size - 8 //(拖拽线条预留 8)
-            if (firstMin + secondMin > limitMax) {
-                const ratioFirst = firstMin / (firstMin + secondMin)
-                const ratioSecond = secondMin / (firstMin + secondMin)
-                const countFirst = Math.floor(limitMax * ratioFirst)
-                const countSecond = Math.floor(limitMax * ratioSecond)
-                // 考虑余数，将多余的部分分配给其中一个值
-                const remainder = limitMax - (countFirst + countSecond)
-                // 此处，将余数都分配给 First，可以根据需求调整
-                const adjustedCountFirst = countFirst + remainder
-                setFirstMinSize(adjustedCountFirst)
-                setSecondMinSize(countSecond)
-            }
-        }
-    })
-
-    // 拖拽时移动
-    const dragMoveSize = useMemoizedFn((size: number) => {
-        if (!firstRef || !firstRef.current) return
-        if (!secondRef || !secondRef.current) return
-        if (!dragFirstSize.current || !dragSecondSize.current) return
-        const first = firstRef.current
-        const second = secondRef.current
-        const firstSize = `${dragFirstSize.current + size}px`
-        const secondSize = `${dragSecondSize.current - size}px`
-        if (isVer) {
-            first.style.height = firstSize
-            second.style.height = secondSize
-        } else {
-            first.style.width = firstSize
-            second.style.width = secondSize
-        }
-    })
-
-    const moveSize = useMemoizedFn((size: number) => {
-        if (!firstRef || !firstRef.current) return
-        if (!secondRef || !secondRef.current) return
-        const first = firstRef.current
-        const second = secondRef.current
-        const firstSizeNum = isVer ? first.clientHeight + size : first.clientWidth + size
-        const secondSizeNum = isVer ? second.clientHeight - size : second.clientWidth - size
-        const firstSize = `${firstSizeNum}px`
-        const secondSize = `${secondSizeNum}px`
-
-        if (isVer) {
-            first.style.height = firstSize
-            second.style.height = secondSize
-        } else {
-            first.style.width = firstSize
-            second.style.width = secondSize
-        }
-
-        if (onMouseUp) {
-            // 此处返回实际大小 与 比例 用于动态更新块中内容大小及添加缓存
-            const percent = calculatePercentages(firstSizeNum, secondSizeNum)
-            onMouseUp({firstSizeNum, secondSizeNum, ...percent})
-        }
-    })
-    // 页面大小变化时重新计算 第一/第二 块内容宽高
-    const bodyResize = (bodysize?: number) => {
-        if (!isRecalculateWH) return
-        if (!bodyRef || !bodyRef.current) return
-        if (!firstRef || !firstRef.current) return
-        if (!secondRef || !secondRef.current) return
-        const body = bodyRef.current
-        const first = firstRef.current
-        const second = secondRef.current
-        const bodySize = bodysize || (isVer ? body.clientHeight : body.clientWidth)
-        const firstSize = isVer ? first.clientHeight : first.clientWidth
-        const secondSize = isVer ? second.clientHeight : second.clientWidth
-
-        if (bodySize) {
-            // 重新计算时按照之前比例赋予新宽高
-            if (isVer) {
-                const firstHeight = (bodySize * firstSize) / (firstSize + secondSize)
-                const secondHeight = (bodySize * secondSize) / (firstSize + secondSize)
-                first.style.height = `${firstHeight}px`
-                second.style.height = `${secondHeight}px`
-            } else {
-                const firstWidth = (bodySize * firstSize) / (firstSize + secondSize)
-                const secondWidth = (bodySize * secondSize) / (firstSize + secondSize)
-                first.style.width = `${firstWidth}px`
-                second.style.width = `${secondWidth}px`
-            }
-        }
+  // 特殊情况处理
+  const specialSizeFun = useMemoizedFn((size: number) => {
+    const firstMin = convertToNumber(firstMinSize)
+    const secondMin = convertToNumber(secondMinSize)
+    if (firstMin && secondMin) {
+      const limitMax = size - 8 //(拖拽线条预留 8)
+      if (firstMin + secondMin > limitMax) {
+        const ratioFirst = firstMin / (firstMin + secondMin)
+        const ratioSecond = secondMin / (firstMin + secondMin)
+        const countFirst = Math.floor(limitMax * ratioFirst)
+        const countSecond = Math.floor(limitMax * ratioSecond)
+        // 考虑余数，将多余的部分分配给其中一个值
+        const remainder = limitMax - (countFirst + countSecond)
+        // 此处，将余数都分配给 First，可以根据需求调整
+        const adjustedCountFirst = countFirst + remainder
+        setFirstMinSize(adjustedCountFirst)
+        setSecondMinSize(countSecond)
+      }
     }
-    // 拖动开始 - 鼠标按下
-    const moveStart = useMemoizedFn(() => {
-        if (!maskRef || !maskRef.current) return
-        maskRef.current.style.display = "block"
-        // 实时拖动缓存
-        if (!firstRef || !firstRef.current) return
-        if (!secondRef || !secondRef.current) return
-        if (dragResize) {
-            const first = firstRef.current
-            const second = secondRef.current
-            dragFirstSize.current = isVer ? first.clientHeight : first.clientWidth
-            dragSecondSize.current = isVer ? second.clientHeight : second.clientWidth
-        }
-    })
-    // 拖动结束 - 鼠标抬起
-    const moveEnd = useMemoizedFn(() => {
-        if (!maskRef || !maskRef.current) return
-        maskRef.current.style.display = "none"
-        // 实时拖动缓存-还原
-        dragFirstSize.current = undefined
-        dragSecondSize.current = undefined
-    })
+  })
 
-    useEffect(() => {
-        if (firstRenderRef.current) return
-        bodyResize()
-    }, [bodyWidth, bodyHeight])
+  // 拖拽时移动
+  const dragMoveSize = useMemoizedFn((size: number) => {
+    if (!firstRef || !firstRef.current) return
+    if (!secondRef || !secondRef.current) return
+    if (!dragFirstSize.current || !dragSecondSize.current) return
+    const first = firstRef.current
+    const second = secondRef.current
+    const firstSize = `${dragFirstSize.current + size}px`
+    const secondSize = `${dragSecondSize.current - size}px`
+    if (isVer) {
+      first.style.height = firstSize
+      second.style.height = secondSize
+    } else {
+      first.style.width = firstSize
+      second.style.width = secondSize
+    }
+  })
 
-    // 阻止隐藏按钮操作向上冒泡
-    useEffect(() => {
-        const handle = handleRef.current
-        if (!handle) return;
+  const moveSize = useMemoizedFn((size: number) => {
+    if (!firstRef || !firstRef.current) return
+    if (!secondRef || !secondRef.current) return
+    const first = firstRef.current
+    const second = secondRef.current
+    const firstSizeNum = isVer ? first.clientHeight + size : first.clientWidth + size
+    const secondSizeNum = isVer ? second.clientHeight - size : second.clientWidth - size
+    const firstSize = `${firstSizeNum}px`
+    const secondSize = `${secondSizeNum}px`
 
-        const stop = (e: Event) => {
-            e.stopPropagation()
-        }
+    if (isVer) {
+      first.style.height = firstSize
+      second.style.height = secondSize
+    } else {
+      first.style.width = firstSize
+      second.style.width = secondSize
+    }
 
-        handle.addEventListener("mousedown", stop, {capture: true})
-        handle.addEventListener("pointerdown", stop, {capture: true})
-        handle.addEventListener("touchstart", stop, {capture: true})
-        handle.addEventListener("dragstart", stop, {capture: true})
+    if (onMouseUp) {
+      // 此处返回实际大小 与 比例 用于动态更新块中内容大小及添加缓存
+      const percent = calculatePercentages(firstSizeNum, secondSizeNum)
+      onMouseUp({ firstSizeNum, secondSizeNum, ...percent })
+    }
+  })
+  // 页面大小变化时重新计算 第一/第二 块内容宽高
+  const bodyResize = (bodysize?: number) => {
+    if (!isRecalculateWH) return
+    if (!bodyRef || !bodyRef.current) return
+    if (!firstRef || !firstRef.current) return
+    if (!secondRef || !secondRef.current) return
+    const body = bodyRef.current
+    const first = firstRef.current
+    const second = secondRef.current
+    const bodySize = bodysize || (isVer ? body.clientHeight : body.clientWidth)
+    const firstSize = isVer ? first.clientHeight : first.clientWidth
+    const secondSize = isVer ? second.clientHeight : second.clientWidth
 
-        return () => {
-            handle.removeEventListener("mousedown", stop, {capture: true})
-            handle.removeEventListener("pointerdown", stop, {capture: true})
-            handle.removeEventListener("touchstart", stop, {capture: true})
-            handle.removeEventListener("dragstart", stop, {capture: true})
-        }
-    }, [])
+    if (bodySize) {
+      // 重新计算时按照之前比例赋予新宽高
+      if (isVer) {
+        const firstHeight = (bodySize * firstSize) / (firstSize + secondSize)
+        const secondHeight = (bodySize * secondSize) / (firstSize + secondSize)
+        first.style.height = `${firstHeight}px`
+        second.style.height = `${secondHeight}px`
+      } else {
+        const firstWidth = (bodySize * firstSize) / (firstSize + secondSize)
+        const secondWidth = (bodySize * secondSize) / (firstSize + secondSize)
+        first.style.width = `${firstWidth}px`
+        second.style.width = `${secondWidth}px`
+      }
+    }
+  }
+  // 拖动开始 - 鼠标按下
+  const moveStart = useMemoizedFn(() => {
+    if (!maskRef || !maskRef.current) return
+    maskRef.current.style.display = 'block'
+    // 实时拖动缓存
+    if (!firstRef || !firstRef.current) return
+    if (!secondRef || !secondRef.current) return
+    if (dragResize) {
+      const first = firstRef.current
+      const second = secondRef.current
+      dragFirstSize.current = isVer ? first.clientHeight : first.clientWidth
+      dragSecondSize.current = isVer ? second.clientHeight : second.clientWidth
+    }
+  })
+  // 拖动结束 - 鼠标抬起
+  const moveEnd = useMemoizedFn(() => {
+    if (!maskRef || !maskRef.current) return
+    maskRef.current.style.display = 'none'
+    // 实时拖动缓存-还原
+    dragFirstSize.current = undefined
+    dragSecondSize.current = undefined
+  })
 
-    return (
-        <div ref={bodyRef} style={{...style, flexFlow: `${isVer ? "column" : "row"}`}} className={styles["resize-box"]}>
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!width || !height) return
-                    specialSizeFun(isVer ? height : width)
-                    // 第一次进入时记录宽高 优化后续性能
-                    if (firstRenderRef.current) {
-                        perBodyWidth.current = width
-                        perBodyHeight.current = height
-                        firstRenderRef.current = false
-                        return
-                    }
-                    if (isVer) {
-                        if (perBodyHeight.current === height) return
-                        perBodyHeight.current = height
-                        setBodyHeight(height)
-                    } else {
-                        if (perBodyWidth.current === width) return
-                        perBodyWidth.current = width
-                        setBodyWidth(width)
-                    }
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-            />
+  useEffect(() => {
+    if (firstRenderRef.current) return
+    bodyResize()
+  }, [bodyWidth, bodyHeight])
+
+  // 阻止隐藏按钮操作向上冒泡
+  useEffect(() => {
+    const handle = handleRef.current
+    if (!handle) return
+
+    const stop = (e: Event) => {
+      e.stopPropagation()
+    }
+
+    handle.addEventListener('mousedown', stop, { capture: true })
+    handle.addEventListener('pointerdown', stop, { capture: true })
+    handle.addEventListener('touchstart', stop, { capture: true })
+    handle.addEventListener('dragstart', stop, { capture: true })
+
+    return () => {
+      handle.removeEventListener('mousedown', stop, { capture: true })
+      handle.removeEventListener('pointerdown', stop, { capture: true })
+      handle.removeEventListener('touchstart', stop, { capture: true })
+      handle.removeEventListener('dragstart', stop, { capture: true })
+    }
+  }, [])
+
+  return (
+    <div ref={bodyRef} style={{ ...style, flexFlow: `${isVer ? 'column' : 'row'}` }} className={styles['resize-box']}>
+      <ReactResizeDetector
+        onResize={(width, height) => {
+          if (!width || !height) return
+          specialSizeFun(isVer ? height : width)
+          // 第一次进入时记录宽高 优化后续性能
+          if (firstRenderRef.current) {
+            perBodyWidth.current = width
+            perBodyHeight.current = height
+            firstRenderRef.current = false
+            return
+          }
+          if (isVer) {
+            if (perBodyHeight.current === height) return
+            perBodyHeight.current = height
+            setBodyHeight(height)
+          } else {
+            if (perBodyWidth.current === width) return
+            perBodyWidth.current = width
+            setBodyWidth(width)
+          }
+        }}
+        handleWidth={true}
+        handleHeight={true}
+        refreshMode={'debounce'}
+        refreshRate={50}
+      />
+      <div
+        ref={firstRef}
+        style={{
+          width: isVer ? '100%' : firstRatio === '50%' ? `calc(100% - ${secondRatio})` : firstRatio,
+          minWidth: isVer ? 'auto' : FirstMinSize,
+          minHeight: isVer ? FirstMinSize : 'auto',
+          height: isVer
+            ? firstRatio === '50%'
+              ? `calc(100% - ${secondRatio} - ${freeze ? '8px' : '0px'})`
+              : firstRatio
+            : '100%',
+          padding: `${isVer ? '0 0 2px 0' : '0 2px 0 0 '}`,
+          overflow: 'hidden',
+          ...firstNodeStyle,
+        }}
+      >
+        {typeof firstNode === 'function' ? firstNode() : firstNode}
+      </div>
+      {freeze ? (
+        <div
+          ref={lineRef}
+          style={{
+            width: `${isVer ? '100%' : '8px'}`,
+            height: `${isVer ? '8px' : '100%'}`,
+            cursor: `${isVer ? 'row-resize' : 'col-resize'}`,
+            ...lineStyle,
+          }}
+          className={classNames(styles['resize-split-line'], {
+            [styles['resize-split-line-top']]: lineDirection === 'top' && isVer,
+            [styles['resize-split-line-bottom']]: lineDirection === 'bottom' && isVer,
+            [styles['resize-split-line-left']]: lineDirection === 'left' && !isVer,
+            [styles['resize-split-line-right']]: lineDirection === 'right' && !isVer,
+          })}
+        >
+          {isVer && !!onClickHiddenBox && (
             <div
-                ref={firstRef}
-                style={{
-                    width: isVer ? "100%" : firstRatio === "50%" ? `calc(100% - ${secondRatio})` : firstRatio,
-                    minWidth: isVer ? "auto" : FirstMinSize,
-                    minHeight: isVer ? FirstMinSize : "auto",
-                    height: isVer
-                        ? firstRatio === "50%"
-                            ? `calc(100% - ${secondRatio} - ${freeze ? "8px" : "0px"})`
-                            : firstRatio
-                        : "100%",
-                    padding: `${isVer ? "0 0 2px 0" : "0 2px 0 0 "}`,
-                    overflow: "hidden",
-                    ...firstNodeStyle
-                }}
+              className={classNames(
+                styles['resize-split-handle'],
+                lineDirection === 'bottom' ? styles['resize-split-handle-bottom'] : styles['resize-split-handle-top'],
+              )}
+              ref={handleRef}
+              onClick={onClickHiddenBox}
             >
-                {typeof firstNode === "function" ? firstNode() : firstNode}
+              <OutlineChevrondoubledownIcon />
+              <span className={styles['resize-split-handle-text']}>收起</span>
             </div>
-            {freeze ? (
-                <div
-                    ref={lineRef}
-                    style={{
-                        width: `${isVer ? "100%" : "8px"}`,
-                        height: `${isVer ? "8px" : "100%"}`,
-                        cursor: `${isVer ? "row-resize" : "col-resize"}`,
-                        ...lineStyle
-                    }}
-                    className={classNames(styles["resize-split-line"], {
-                        [styles["resize-split-line-top"]]: lineDirection === "top" && isVer,
-                        [styles["resize-split-line-bottom"]]: lineDirection === "bottom" && isVer,
-                        [styles["resize-split-line-left"]]: lineDirection === "left" && !isVer,
-                        [styles["resize-split-line-right"]]: lineDirection === "right" && !isVer
-                    })}
-                >
-                    {isVer && !!onClickHiddenBox &&
-                        <div
-                            className={classNames(styles["resize-split-handle"], 
-                                lineDirection === "bottom" ? styles["resize-split-handle-bottom"] : styles["resize-split-handle-top"])}
-                            ref={handleRef}
-                            onClick={onClickHiddenBox}
-                        >
-                            <OutlineChevrondoubledownIcon />
-                            <span className={styles["resize-split-handle-text"]}>收起</span>
-                        </div>
-                    }
-                    <div
-                        style={{
-                            ...lineInStyle
-                        }}
-                        className={classNames({
-                            [styles["resize-split-line-in"]]: isShowDefaultLineStyle,
-                            [styles["resize-split-line-in-hide"]]: !isShowDefaultLineStyle,
-                            [styles["resize-split-line-in-ver"]]: isVer,
-                            [styles["resize-split-line-in-nover"]]: !isVer
-                        })}
-                    />
-                </div>
-            ) : (
-                <div style={lineStyle} />
-            )}
-            <div
-                ref={secondRef}
-                style={{
-                    width: isVer ? "100%" : firstRatio === "50%" ? secondRatio : `calc(100% - ${firstRatio})`,
-                    minWidth: isVer ? "auto" : SecondMinSize,
-                    minHeight: isVer ? SecondMinSize : "auto",
-                    height: isVer
-                        ? firstRatio === "50%"
-                            ? secondRatio
-                            : `calc(100% - ${firstRatio} - ${freeze ? "8px" : "0px"})`
-                        : "100%",
-                    padding: `${isVer ? "2px 0 0 0" : "0 0 0 2px"}`,
-                    overflow: "hidden",
-                    ...secondNodeStyle
-                }}
-            >
-                {typeof secondNode === "function" ? secondNode() : secondNode}
-            </div>
-            {freeze && (
-                <YakitResizeLine
-                    isVer={isVer}
-                    bodyRef={bodyRef}
-                    resizeRef={lineRef}
-                    minSize={FirstMinSize}
-                    maxSize={SecondMinSize}
-                    onStart={moveStart}
-                    onEnd={moveEnd}
-                    onMouseUp={moveSize}
-                    dragMoveSize={dragMoveSize}
-                    dragResize={dragResize}
-                />
-            )}
-            {/* 拖拽时给予遮罩层 */}
-            <div ref={maskRef} className={styles["mask-body"]} />
+          )}
+          <div
+            style={{
+              ...lineInStyle,
+            }}
+            className={classNames({
+              [styles['resize-split-line-in']]: isShowDefaultLineStyle,
+              [styles['resize-split-line-in-hide']]: !isShowDefaultLineStyle,
+              [styles['resize-split-line-in-ver']]: isVer,
+              [styles['resize-split-line-in-nover']]: !isVer,
+            })}
+          />
         </div>
-    )
+      ) : (
+        <div style={lineStyle} />
+      )}
+      <div
+        ref={secondRef}
+        style={{
+          width: isVer ? '100%' : firstRatio === '50%' ? secondRatio : `calc(100% - ${firstRatio})`,
+          minWidth: isVer ? 'auto' : SecondMinSize,
+          minHeight: isVer ? SecondMinSize : 'auto',
+          height: isVer
+            ? firstRatio === '50%'
+              ? secondRatio
+              : `calc(100% - ${firstRatio} - ${freeze ? '8px' : '0px'})`
+            : '100%',
+          padding: `${isVer ? '2px 0 0 0' : '0 0 0 2px'}`,
+          overflow: 'hidden',
+          ...secondNodeStyle,
+        }}
+      >
+        {typeof secondNode === 'function' ? secondNode() : secondNode}
+      </div>
+      {freeze && (
+        <YakitResizeLine
+          isVer={isVer}
+          bodyRef={bodyRef}
+          resizeRef={lineRef}
+          minSize={FirstMinSize}
+          maxSize={SecondMinSize}
+          onStart={moveStart}
+          onEnd={moveEnd}
+          onMouseUp={moveSize}
+          dragMoveSize={dragMoveSize}
+          dragResize={dragResize}
+        />
+      )}
+      {/* 拖拽时给予遮罩层 */}
+      <div ref={maskRef} className={styles['mask-body']} />
+    </div>
+  )
 })

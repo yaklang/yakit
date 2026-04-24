@@ -45,9 +45,9 @@
     "export_csv": "Export CSV",
     "export_html": "Export HTML",
     "vulnerability_detection": "Vulnerability Detection",
-    "RowContextMenu":{
-        "delete_duplicate_title_data": "Delete Duplicate Title Data",
-        "openInNewWindow": "Open in New Window"
+    "RowContextMenu": {
+      "delete_duplicate_title_data": "Delete Duplicate Title Data",
+      "openInNewWindow": "Open in New Window"
     }
   },
   "YakitRiskSelectTag": {

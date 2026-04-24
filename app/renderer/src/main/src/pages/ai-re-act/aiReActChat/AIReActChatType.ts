@@ -1,55 +1,55 @@
-import {AIAgentChatMode, HandleStartParams} from "@/pages/ai-agent/aiAgentChat/type"
-import {AIChatQSData} from "../hooks/aiRender"
-import {AIInputEvent} from "../hooks/grpcApi"
-import React from "react"
-import {AIChatTextareaProps, AIChatTextareaRefProps} from "@/pages/ai-agent/template/type"
+import { AIAgentChatMode, HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import { AIChatQSData } from '../hooks/aiRender'
+import { AIInputEvent } from '../hooks/grpcApi'
+import React from 'react'
+import { AIChatTextareaProps, AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
 
 export interface AIReActChatRefProps extends AIChatTextareaRefProps {
-    handleStart: (value: HandleStartParams) => void
+  handleStart: (value: HandleStartParams) => void
 }
 export interface AIHandleStartParams {
-    params: AIInputEvent
+  params: AIInputEvent
 }
 export interface AIHandleStartExtraProps {
-    chatId?: string
+  chatId?: string
 }
 export interface AIHandleStartResProps {
-    params: AIInputEvent
-    extraParams?: AIHandleStartExtraProps
-    onChat?: () => void
-    onChatFromHistory?: (sessionID: string) => void
+  params: AIInputEvent
+  extraParams?: AIHandleStartExtraProps
+  onChat?: () => void
+  onChatFromHistory?: (sessionID: string) => void
 }
 export interface AISendParams {
-    params: AIInputEvent
+  params: AIInputEvent
 }
 export interface AISendResProps {
-    params: AIInputEvent
+  params: AIInputEvent
 }
 export interface AIReActChatProps {
-    mode: AIAgentChatMode
-    chatContainerClassName?: string
-    chatContainerHeaderClassName?: string
-    showFreeChat: boolean
-    setShowFreeChat: (show: boolean) => void
-    title?: React.ReactNode
-    ref?: React.ForwardedRef<AIReActChatRefProps>
-    startRequest: (v: AIHandleStartParams) => Promise<AIHandleStartResProps>
-    sendRequest?: (v: AISendParams) => Promise<AISendResProps>
-    externalParameters?: {
-        rightIcon?: string | React.ReactNode
-        isOpen?: boolean
-        filterMentionType?: AIChatTextareaProps["filterMentionType"]
-        footerLeftTypes?: AIChatTextareaProps["footerLeftTypes"]
-    }
+  mode: AIAgentChatMode
+  chatContainerClassName?: string
+  chatContainerHeaderClassName?: string
+  showFreeChat: boolean
+  setShowFreeChat: (show: boolean) => void
+  title?: React.ReactNode
+  ref?: React.ForwardedRef<AIReActChatRefProps>
+  startRequest: (v: AIHandleStartParams) => Promise<AIHandleStartResProps>
+  sendRequest?: (v: AISendParams) => Promise<AISendResProps>
+  externalParameters?: {
+    rightIcon?: string | React.ReactNode
+    isOpen?: boolean
+    filterMentionType?: AIChatTextareaProps['filterMentionType']
+    footerLeftTypes?: AIChatTextareaProps['footerLeftTypes']
+  }
 }
 
 export interface AIReActLogProps {
-    logs: AIChatQSData[]
-    setLogVisible: (visible: boolean) => void
+  logs: AIChatQSData[]
+  setLogVisible: (visible: boolean) => void
 }
 
 export interface AIReActTimelineMessageProps {
-    message?: string
-    loading: boolean
-    setLoading: (loading: boolean) => void
+  message?: string
+  loading: boolean
+  setLoading: (loading: boolean) => void
 }
