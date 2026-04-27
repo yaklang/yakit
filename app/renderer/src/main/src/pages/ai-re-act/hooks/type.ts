@@ -263,7 +263,7 @@ export interface UseChatIPCEvents extends Omit<UseHistoryChatEvents, 'loadInit'>
   /** 切换历史会话展示 */
   onSwitchChat: (session?: string) => void
   /** 开始执行接口流 */
-  onStart: (params: AIChatIPCStartParams) => void
+  onStart: (params: AIChatIPCStartParams, cb?: () => void) => void
   /** 向执行中的接口流主动输入信息 */
   onSend: (params: AIChatSendParams) => void
   /** 主动结束正在执行中的接口流 */

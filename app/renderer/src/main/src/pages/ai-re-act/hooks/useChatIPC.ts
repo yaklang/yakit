@@ -607,7 +607,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     } catch {}
   })
 
-  const onStart = useMemoizedFn((args: AIChatIPCStartParams) => {
+  const onStart = useMemoizedFn((args: AIChatIPCStartParams, cb?: () => void) => {
     const { token, params, extraValue } = args
 
     if (execute) {
@@ -989,6 +989,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     setTimeout(() => {
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
+      cb?.()
     }, 50)
   })
 
