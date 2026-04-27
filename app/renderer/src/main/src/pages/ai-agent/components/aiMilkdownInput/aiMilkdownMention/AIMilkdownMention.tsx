@@ -14,6 +14,7 @@ import classNames from 'classnames'
 import { removeAIOffsetCommand } from '../customPlugin'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
+import i18n from '@/i18n/i18n'
 
 export const aiMentionFactory = slashFactory('ai-mention-commands')
 
@@ -21,7 +22,7 @@ interface AIMilkdownMentionProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   filterMode?: AIChatMentionProps['filterMode']
 }
-const mentionWidth = 300
+export const mentionWidth = () => (i18n.language === 'zh' ? 300 : 342)
 const mentionTarget = '@'
 
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
@@ -115,7 +116,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
       data-show="false"
       className={styles['ai-mention']}
       style={{
-        width: mentionWidth,
+        width: mentionWidth(),
       }}
       ref={ref}
     >

@@ -71,8 +71,6 @@
     "vulnerability_description": "Vulnerability Description",
     "solution": "Solution",
     "details": "Details",
-    "next": "Next",
-    "prev": "Prev",
     "originReq": "Raw request",
     "verificationRecord": "Verification Record"
   },

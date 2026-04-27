@@ -71,8 +71,6 @@
     "vulnerability_description": "漏洞描述",
     "solution": "解决方案",
     "details": "详情",
-    "next": "下一个",
-    "prev": "上一个",
     "originReq": "原始请求",
     "verificationRecord": "验证记录"
   },

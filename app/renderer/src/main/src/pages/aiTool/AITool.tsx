@@ -31,8 +31,10 @@ import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitD
 import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const [toolQueryType, setToolQueryType] = useState<ToolQueryType>('all')
   const emptyImageTarget = useEmptyImage('search')
   const [response, setResponse] = useState<GetAIToolListResponse>({
@@ -194,7 +196,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
           <YakitRadioButtons
             buttonStyle="solid"
             value={toolQueryType}
-            options={toolTypeOptions}
+            options={toolTypeOptions(t)}
             onChange={onToolQueryTypeChange}
           />
           <TableTotalAndSelectNumber total={listLength} />
@@ -252,6 +254,7 @@ export default AIToolPage
 
 const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
   const { index, data, onFavorite, onRemove } = props
+  const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false)
   const [visible, setVisible] = useState<boolean>(false)
 
@@ -286,12 +289,12 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
   }, [data?.IsBuiltin])
 
   const toolMenuData = useCreation(() => {
-    let baseMenu = toolMenu
+    let baseMenu = toolMenu(t)
     if (isBuiltin) {
-      baseMenu = toolMenu.filter((item) => (item as YakitMenuItemProps).key !== 'delete')
+      baseMenu = toolMenu(t).filter((item) => (item as YakitMenuItemProps).key !== 'delete')
     }
     return baseMenu
-  }, [isBuiltin])
+  }, [isBuiltin, i18n.language])
 
   return (
     <HubGridOpt

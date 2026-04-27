@@ -27,6 +27,7 @@ import directive from 'remark-directive'
 import { useMemoizedFn } from 'ahooks'
 import { aiCustomPlugin } from './customPlugin'
 import { customShiftEnterPlugin } from '@/components/MilkdownEditor/utils/utils'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import { AICustomCode } from './aiCustomCode/AICustomCode'
 
@@ -36,6 +37,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
   React.forwardRef((props, ref) => {
     const { readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper, onMemfitExtra, filterMode } =
       props
+    const { t } = useI18nNamespaces(['aiAgent'])
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
     useImperativeHandle(
@@ -78,7 +80,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           (ctx: Ctx) => () => {
             ctx.update(placeholderConfig.key, (prev) => ({
               ...prev,
-              text: '请告诉我，你想做什么...(shift + enter 换行)',
+              text: t('AIMilkdownInput.placeholder'),
             }))
           },
         ]

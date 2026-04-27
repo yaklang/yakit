@@ -40,8 +40,6 @@
     "deletePopconfirm": "删除录屏的同时会删除本地录屏文件"
   },
   "ReactPlayerVideo": {
-    "fileNotPlayable": "该视频文件不可播放",
-    "previous": "上一个",
-    "next": "下一个"
+    "fileNotPlayable": "该视频文件不可播放"
   }
 }

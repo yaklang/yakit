@@ -11,8 +11,10 @@ import { YakitSelectProps } from '@/components/yakitUI/YakitSelect/YakitSelectTy
 import { grpcAddLocalModel, grpcUpdateLocalModel } from '../utils'
 import { AILocalModelTypeEnum } from '../../defaultConstant'
 import { AddAIModelProps } from './AddAIModelType'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
   const { onCancel, defaultValues } = props
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [loading, setLoading] = useState<boolean>(false)
   const [form] = Form.useForm<AddLocalModelRequest>()
   useEffect(() => {
@@ -63,13 +65,17 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
   return (
     <div>
       <Form form={form} labelCol={{ span: 3 }} wrapperCol={{ span: 21 }} className={styles['ai-start-model-form']}>
-        <Form.Item label="模型名称" name="Name" rules={[{ required: true, message: '请输入模型名称' }]}>
+        <Form.Item
+          label={t('AddAIModel.modelName')}
+          name="Name"
+          rules={[{ required: true, message: t('AddAIModel.enterModelName') }]}
+        >
           <YakitInput disabled={!!defaultValues?.Name} />
         </Form.Item>
         <Form.Item
-          label="模型类型"
+          label={t('AddAIModel.modelType')}
           name="ModelType"
-          rules={[{ required: true, message: '请输入模型类型' }]}
+          rules={[{ required: true, message: t('AddAIModel.enterModelType') }]}
           initialValue={AILocalModelTypeEnum.AIChat}
         >
           <YakitSelect options={modelTypeOptions} />
@@ -77,21 +83,21 @@ export const AddAIModel: React.FC<AddAIModelProps> = React.memo((props) => {
         <YakitFormDragger
           formItemProps={{
             name: 'Path',
-            label: '文件地址',
-            rules: [{ required: true, message: '请输入文件地址' }],
+            label: t('AddAIModel.filePath'),
+            rules: [{ required: true, message: t('AddAIModel.enterFilePath') }],
           }}
         />
 
-        <Form.Item label="模型描述" name="Description">
+        <Form.Item label={t('AddAIModel.modelDescription')} name="Description">
           <YakitInput.TextArea rows={3} />
         </Form.Item>
       </Form>
       <div className={styles['button-group']}>
         <YakitButton type="outline2" size="large" onClick={onCancel}>
-          取消
+          {t('YakitButton.cancel')}
         </YakitButton>
         <YakitButton type="primary" size="large" loading={loading} onClick={handleSubmit}>
-          确定
+          {t('YakitButton.ok')}
         </YakitButton>
       </div>
     </div>

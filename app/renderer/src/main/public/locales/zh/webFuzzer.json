@@ -547,7 +547,6 @@
   "GlobalHotPatch": {
     "Global_hot_template": "全局热加载",
     "Global_hot_template_tip": "启用全局热加载后，会对全局所有流量统一处理",
-    "enabled": "已启用",
     "started": "(已启动)",
     "MITM_hot_patch": "MITM热加载"
   },

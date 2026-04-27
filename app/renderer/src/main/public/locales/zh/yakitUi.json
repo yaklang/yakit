@@ -58,6 +58,8 @@
     "disable": "禁用",
     "disable_all": "全部禁用",
     "enable": "启用",
+    "enabled": "已启用",
+    "notEnabled": "未启用",
     "deactivated": "停用",
     "detail": "详情",
     "stop": "停止",
@@ -110,7 +112,20 @@
     "install": "安装",
     "viewDetail": "查看详情",
     "send": "发送",
-    "stopTask": "停止任务"
+    "stopTask": "停止任务",
+    "saveAndExit": "保存并退出",
+    "getParams": "获取参数",
+    "autoDetect": "自动检测",
+    "openFile": "打开文件",
+    "openFolder": "打开文件夹",
+    "openFileLocation": "打开文件位置",
+    "recentOpen": "最近打开",
+    "next": "下一个",
+    "prev": "上一个",
+    "copyPath": "复制路径",
+    "showInFolder": "在文件夹中显示",
+    "viewFile": "查看文件",
+    "submitted": "提交"
   },
   "YakitNotification": {
     "unknown_error": "未知错误",
@@ -158,8 +173,8 @@
     "modifyFailed": "修改失败: {{error}}",
     "editSuccess": "编辑成功",
     "editFailed": "编辑失败: {{error}}",
-    "createSuccess": "新建成功",
-    "createFailed": "新建失败: {{error}}",
+    "newCreateSuccess": "新建成功",
+    "newCreateFailed": "新建失败: {{error}}",
     "addSuccess": "新增成功",
     "syncFailed": "同步失败：{{error}}",
     "addFailed": "添加失败：{{error}}",
@@ -169,7 +184,11 @@
     "installFailed": "安装失败：{{error}}",
     "updateContentFailed": "修改错误：{{error}}",
     "uninstallFailed": "卸载失败：{{error}}",
-    "startFailed": "启动失败：{{error}}"
+    "startFailed": "启动失败：{{error}}",
+    "createSuccess": "创建成功",
+    "createFailedNoError": "创建失败",
+    "renameSuccess": "重命名成功",
+    "renameFailedNoError": "重命名失败"
   },
   "YakitFormDragger": {
     "filePath": "文件路径",
@@ -265,7 +284,7 @@
     "info": "信息"
   },
   "YakitSpin": {
-    "loading": "加载中",
+    "loading": "加载中...",
     "loadMore": "加载更多..."
   },
   "YakitProgress": {

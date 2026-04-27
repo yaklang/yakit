@@ -8,6 +8,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../../defaultConstant'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface OperationCardFooterProps {
   copyStr?: string
@@ -16,10 +17,11 @@ export interface OperationCardFooterProps {
 }
 
 export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copyStr, callToolId, aiFilePath }) => {
+  const { t } = useI18nNamespaces(['yakitUi'])
   const handleDetails = useMemoizedFn(() => {
     if (!callToolId) return
     const m = showYakitDrawer({
-      title: '详情',
+      title: t('YakitButton.detail'),
       width: '40%',
       bodyStyle: { padding: 0 },
       content: <AIChatToolDrawerContent callToolId={callToolId} aiFilePath={aiFilePath} />,
@@ -57,7 +59,7 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
         </Tooltip>
       )}
       {aiFilePath && (
-        <Tooltip placement="top" title="查看文件">
+        <Tooltip placement="top" title={t('YakitButton.viewFile')}>
           <YakitButton
             size="small"
             type="text2"
@@ -68,7 +70,7 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
         </Tooltip>
       )}
       {callToolId && (
-        <Tooltip placement="top" title="查看详情">
+        <Tooltip placement="top" title={t('YakitButton.viewDetail')}>
           <YakitButton size="small" type="text2" color="default" icon={<OutlineLogIcon />} onClick={handleDetails} />
         </Tooltip>
       )}

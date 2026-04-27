@@ -1,108 +1,110 @@
-import {Dispatch, FC, SetStateAction} from "react"
+import { Dispatch, FC, SetStateAction } from 'react'
 
-import type {FormInstance} from "antd/es/form/Form"
+import type { FormInstance } from 'antd/es/form/Form'
 
-import {YakitModal} from "@/components/yakitUI/YakitModal/YakitModal"
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 
-import {failed, success} from "@/utils/notification"
-import {CreateKnowledgeBase} from "./CreateKnowledgeBase"
-import {getFileInfoList} from "../utils"
-import {randomString} from "@/utils/randomUtil"
-import {useKnowledgeBase} from "../hooks/useKnowledgeBase"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import styles from "../knowledgeBase.module.scss"
-import {useRequest} from "ahooks"
+import { failed, success } from '@/utils/notification'
+import { CreateKnowledgeBase } from './CreateKnowledgeBase'
+import { getFileInfoList } from '../utils'
+import { randomString } from '@/utils/randomUtil'
+import { useKnowledgeBase } from '../hooks/useKnowledgeBase'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import styles from '../knowledgeBase.module.scss'
+import { useRequest } from 'ahooks'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
 interface TKnowledgeBaseFormModalProps {
-    visible: boolean
-    title: string
-    handOpenKnowledgeBasesModal: () => void
-    form: FormInstance<any>
-    setKnowledgeBaseID?: (id: string) => void
-    setAddMode: Dispatch<SetStateAction<string[]>>
+  visible: boolean
+  title: string
+  handOpenKnowledgeBasesModal: () => void
+  form: FormInstance<any>
+  setKnowledgeBaseID?: (id: string) => void
+  setAddMode: Dispatch<SetStateAction<string[]>>
 }
 
 const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
-    title,
-    visible,
-    handOpenKnowledgeBasesModal,
-    form,
-    setKnowledgeBaseID,
-    setAddMode
+  title,
+  visible,
+  handOpenKnowledgeBasesModal,
+  form,
+  setKnowledgeBaseID,
+  setAddMode,
 }) => {
-    const {addKnowledgeBase} = useKnowledgeBase()
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { addKnowledgeBase } = useKnowledgeBase()
 
-    const {runAsync, loading} = useRequest(
-        async (params) => {
-            const result = await ipcRenderer.invoke("CreateKnowledgeBaseV2", {
-                Name: params.KnowledgeBaseName,
-                Description: params.KnowledgeBaseDescription,
-                Type: params.KnowledgeBaseType,
-                Tags: params.Tags,
-                CreatedFromUI: params.CreatedFromUI,
-                IsDefault: params.IsDefault ?? false
-            })
-            const KnowledgeBaseID = result?.KnowledgeBase?.ID
-            addKnowledgeBase({
-                ...params,
-                ID: KnowledgeBaseID
-            })
-            setKnowledgeBaseID?.(KnowledgeBaseID)
+  const { runAsync, loading } = useRequest(
+    async (params) => {
+      const result = await ipcRenderer.invoke('CreateKnowledgeBaseV2', {
+        Name: params.KnowledgeBaseName,
+        Description: params.KnowledgeBaseDescription,
+        Type: params.KnowledgeBaseType,
+        Tags: params.Tags,
+        CreatedFromUI: params.CreatedFromUI,
+        IsDefault: params.IsDefault ?? false,
+      })
+      const KnowledgeBaseID = result?.KnowledgeBase?.ID
+      addKnowledgeBase({
+        ...params,
+        ID: KnowledgeBaseID,
+      })
+      setKnowledgeBaseID?.(KnowledgeBaseID)
 
-            handOpenKnowledgeBasesModal()
-            return "suecess"
-        },
-        {
-            manual: true,
-            onSuccess: () => success("创建知识库成功"),
-            onError: (err) => failed(`创建知识库失败: ${err}`)
-        }
-    )
+      handOpenKnowledgeBasesModal()
+      return 'suecess'
+    },
+    {
+      manual: true,
+      onSuccess: () => success(t('KnowledgeBaseFormModal.createKnowledgeBaseSuccess')),
+      onError: (err) => failed(t('KnowledgeBaseFormModal.createKnowledgeBaseFailed', { error: err + '' })),
+    },
+  )
 
-    const handleCreateKnowledge = async () => {
-        const resultFormData = await form.validateFields()
-        const file = getFileInfoList(resultFormData.KnowledgeBaseFile)
+  const handleCreateKnowledge = async () => {
+    const resultFormData = await form.validateFields()
+    const file = getFileInfoList(resultFormData.KnowledgeBaseFile)
 
-        const streamToken = randomString(50)
-        const transformFormData = {
-            ...resultFormData,
-            CreatedFromUI: true,
-            KnowledgeBaseFile: file,
-            streamToken,
-            streamstep: 1,
-            addManuallyItem: false,
-            historyGenerateKnowledgeList: [],
-            IsImported: false
-        }
-        await runAsync(transformFormData)
-        setAddMode((pre) => [...pre, "manual"])
+    const streamToken = randomString(50)
+    const transformFormData = {
+      ...resultFormData,
+      CreatedFromUI: true,
+      KnowledgeBaseFile: file,
+      streamToken,
+      streamstep: 1,
+      addManuallyItem: false,
+      historyGenerateKnowledgeList: [],
+      IsImported: false,
     }
+    await runAsync(transformFormData)
+    setAddMode((pre) => [...pre, 'manual'])
+  }
 
-    return (
-        <YakitModal
-            title={title}
-            visible={visible}
-            onCancel={handOpenKnowledgeBasesModal}
-            onOk={handleCreateKnowledge}
-            width={600}
-            destroyOnClose
-            maskClosable={false}
-            footer={
-                <div className={styles["delete-yakit-hint"]}>
-                    <YakitButton type='outline1' onClick={handOpenKnowledgeBasesModal}>
-                        取消
-                    </YakitButton>
-                    <YakitButton onClick={handleCreateKnowledge} loading={loading}>
-                        确定
-                    </YakitButton>
-                </div>
-            }
-        >
-            <CreateKnowledgeBase form={form} />
-        </YakitModal>
-    )
+  return (
+    <YakitModal
+      title={title}
+      visible={visible}
+      onCancel={handOpenKnowledgeBasesModal}
+      onOk={handleCreateKnowledge}
+      width={600}
+      destroyOnClose
+      maskClosable={false}
+      footer={
+        <div className={styles['delete-yakit-hint']}>
+          <YakitButton type="outline1" onClick={handOpenKnowledgeBasesModal}>
+            {t('YakitButton.cancel')}
+          </YakitButton>
+          <YakitButton onClick={handleCreateKnowledge} loading={loading}>
+            {t('YakitButton.ok')}
+          </YakitButton>
+        </div>
+      }
+    >
+      <CreateKnowledgeBase form={form} />
+    </YakitModal>
+  )
 }
 
-export {KnowledgeBaseFormModal}
+export { KnowledgeBaseFormModal }

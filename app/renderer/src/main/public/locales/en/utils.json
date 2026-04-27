@@ -47,8 +47,6 @@
     "setSystemProxyFailed": "Failed to configure system proxy: {{error}}",
     "configSystemProxy": "Configure system proxy",
     "currentSystemProxyStatus": "Current system proxy status:",
-    "enabled": "Enabled",
-    "disabled": "Disabled",
     "systemProxy": "System proxy",
     "oneClickConfig": "One-click configure system proxy",
     "proxyHint": "Due to OS and Yak kernel limitations, the native MacOS OC/Swift interface cannot be used to set the proxy. Yak engine will open an osascript authorization page to change the system proxy. MacOS users can authorize it.",
@@ -82,7 +80,6 @@
   },
   "ConfigSystemMcp": {
     "currentStatus": "Current status:",
-    "enabled": "Enabled",
     "disabled": "Disabled",
     "startAddress": "Start address:",
     "startAddressHelp": "yak starts mcp via SSE; enter the start address where mcp is needed"

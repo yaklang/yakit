@@ -1652,7 +1652,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         labelWrap={true}
         validateMessages={{
           /* eslint-disable no-template-curly-in-string */
-          required: '${label} 是必填字段',
+          required: t('YakitForm.field_required_with_label', { label: '${label}' }),
         }}
         className={styles['audit-modal-form']}
       >

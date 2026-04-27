@@ -1,4 +1,12 @@
 {
+  "AiAgengt": {
+    "intelligentModels": "高质模型",
+    "lightweightModels": "轻量模型",
+    "visionModels": "视觉模式",
+    "callingMode": "调用模式",
+    "aiModel": "AI模型",
+    "focusMode": "专注模式"
+  },
   "AIAgentChat": {
     "templateDataError": "准备使用的模板数据异常，请稍后再试",
     "switchForgeTemplate": "切换forge模板",
@@ -19,8 +27,7 @@
     "replaceSkillTemplateConfirm": "是否要替换当前使用的技能模板?",
     "replaceToolConfirm": "是否要替换当前使用的工具?",
     "knowledgeNotBuiltTitle": "知识库未构建完成",
-    "knowledgeNotBuiltDesc": "知识未构建完成，是否确定关闭页面？",
-    "closeImmediately": "立即关闭"
+    "knowledgeNotBuiltDesc": "知识未构建完成，是否确定关闭页面？"
   },
   "AIReActTaskChatReview": {
     "hideReview": "隐藏，稍后审阅",
@@ -49,6 +56,16 @@
     "pinMenuOff": "点击icon高亮后则开启固定菜单栏，菜单栏不会在失焦后自动关闭"
   },
   "AIToolEditorInfoForm": {
+    "formInstanceMissing": "获取不到表单实例数据, 请关闭页面后重试",
+    "nameRequired": "名称不能为空",
+    "formValidateFailed": "表单验证失败，请检查必填项是否填写完整",
+    "basicInfo": "基础信息",
+    "toolName": "工具名称",
+    "toolNameRequired": "工具名称必填",
+    "toolNameMax100": "名称最长100位",
+    "description": "描述",
+    "descriptionRequired": "描述必填",
+    "tagRequired": "Tag必填",
     "writeCodeFirst": "请编写代码以后再点击生成",
     "aiGenerateHelp": "配置AI后可用AI生成描述与tags",
     "clickToGenerate": "点击生成",
@@ -64,11 +81,10 @@
     "openConfigTooltip": "打开ai侧边栏模型配置"
   },
   "AIModelList": {
-    "intelligentModels": "高质模型",
+    "onlineTooltip": "通过api访问模型,接受AI信息或向AI发送消息,可配置多个",
+    "localTooltip": "本地AI模型管理器用于管理本地AI模型,支持一键下载和安装模型,支持模型状态监控和管理。通过本地模型服务,可以实现本地化AI服务,无需依赖云端服务",
     "intelligentModelsDesc": "用于执行复杂度高的任务,对话框中可切换该模型",
-    "lightweightModels": "轻量模型",
     "lightweightModelsDesc": "用于执行简单任务和会话",
-    "visionModels": "视觉模式",
     "visionModelsDesc": "用于识别图片等,生成知识库和任务执行都会用到",
     "addModel": "添加模型",
     "addThirdPartyApp": "添加第三方应用",
@@ -85,7 +101,6 @@
   },
   "AIOnlineModeSetting": {
     "configUpdateFailed": "配置更新失败,未获取到全局ai配置,请重试",
-    "callingMode": "调用模式",
     "disableFallback": "禁用降级到轻量模型",
     "configErrorEdit": "配置错误，无法编辑"
   },
@@ -108,7 +123,14 @@
   "AILocalModelListItem": {
     "startModel": "启动模型 - {{name}}",
     "downloadModel": "下载模型",
-    "editLocalModel": "修改本地模型"
+    "deleteConfirm": "确定要删除厂商{{type}},模型名称为{{name}} 吗？",
+    "ipPort": "IP/端口: {{host}}:{{port}}",
+    "deleteModel": "删除模型",
+    "editLocalModel": "修改本地模型",
+    "deleteModelConfirm": "确认删除模型{{name}}吗？确认删除源文件则自定义添加的模型文件会被一起删除",
+    "deleteSourceFile": "是否删除源文件",
+    "disableConfirm": "确定要停用模型 {{name}} 吗？",
+    "downloadingModel": "模型 {{name}} 下载中..."
   },
   "AIAgent": {
     "getKnowledgeBaseFailed": "获取知识库列表失败: {{error}}",
@@ -136,11 +158,327 @@
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI模型配置",
-    "aiModel": "AI模型",
-    "highQualityModel": "高质模型",
-    "lightweightModel": "轻量模型",
-    "visionModel": "视觉模式",
-    "routingMode": "调用模式",
     "disableFallback": "禁用降级到轻量模型"
+  },
+  "AIToolEditor": {
+    "editToolInvalid": "尝试编辑的工具异常(ID: {{id}}), 请关闭页面重试",
+    "toolDetailMissing": "未获取到待编辑工具的详情, 请关闭页面重试",
+    "toolUnsaved": "工具未保存",
+    "saveToolConfirm": "是否要将工具保存?",
+    "saveCurrentAndEditClicked": "是否要将当前工具保存，并编辑点击的工具?",
+    "formMissing": "表单不存在",
+    "editIdRequired": "数据错误,编辑状态下ID不能为空",
+    "debugTaskStarted": "调试任务启动成功，运行时 ID: {{rId}}",
+    "jsonSchemaFailed": "jsonSchema校验失败",
+    "editTool": "编辑工具",
+    "newTool": "新建工具",
+    "sourceCode": "源码",
+    "execResult": "执行结果",
+    "clickExecuteToStart": "点击【执行】以开始",
+    "paramPreview": "参数预览",
+    "extraParamsOptional": "额外参数 (非必填)",
+    "basicCheck": "工具基础检测"
+  },
+  "AIChatTextarea": {
+    "dropToAddToChat": "松开以添加到对话"
+  },
+  "AIToolDecision": {
+    "decision": "决策"
+  },
+  "AIBottomSideBar": {
+    "terminal": "终端"
+  },
+  "AIStreamNode": {
+    "viewReference": "[查看文献]"
+  },
+  "AiFailPlanCard": {
+    "failureReason": "失败原因"
+  },
+  "AIToolList": {
+    "all": "全部",
+    "collect": "收藏",
+    "templateIdError": "该模板 ID('{{id}}') 异常, 无法编辑"
+  },
+  "KnowledgeSidebarList": {
+    "manual": "手动添加",
+    "external": "外部导入",
+    "other": "其他"
+  },
+  "DragKnowledge": {
+    "dragHintPrefix": "可将文件拖入框内，或",
+    "dragHintHighlight": "点击此处导入",
+    "dragHintSuffix": "即可开始创建知识库",
+    "dragSubHint": "数据会存到默认库，可选择多个文件",
+    "defaultKnowledgeBaseDescription": "系统默认知识库，存储常用知识内容，为AI对话提供上下文增强。",
+    "downloadAll": "一键下载在线知识库",
+    "downloadingAll": "下载中... ({{progress}}%)",
+    "downloadAllSuccess": "所有线上知识库下载完成",
+    "downloadAllFailed": "一键下载所有线上知识库失败: {{error}}",
+    "createKnowledgeBaseSuccess": "创建知识库成功",
+    "createKnowledgeBaseFailed": "创建知识库失败: {{error}}",
+    "getKnowledgeBaseListFailed": "获取知识库列表失败: {{error}}"
+  },
+  "KnowledgeBaseFormModal": {
+    "createKnowledgeBaseSuccess": "创建知识库成功",
+    "createKnowledgeBaseFailed": "创建知识库失败: {{error}}"
+  },
+  "GuideFooter": {
+    "start": "开始体验"
+  },
+  "KnowledgeBaseTable": {
+    "getGlobalKnowledgeBaseFailed": "获取全局知识库失败: {{error}}"
+  },
+  "AIAgentTabs": {
+    "historyChat": "历史会话",
+    "config": "配置",
+    "skill": "技能",
+    "tool": "工具"
+  },
+  "AIMentionTabs": {
+    "skill": "技能",
+    "tool": "工具",
+    "knowledgeBase": "知识库",
+    "fileSystem": "文件系统",
+    "allKnowledgeBase": "@所有知识库"
+  },
+  "AITabs": {
+    "taskContent": "任务内容",
+    "fileSystem": "文件系统",
+    "httpTraffic": "HTTP 流量",
+    "riskAndVulnerability": "漏洞与风险",
+    "readWriteLog": "读写日志"
+  },
+  "AIReviewRuleOptions": {
+    "manualDesc": "所有审阅都由用户自己操作",
+    "yoloDesc": "所有审阅默认执行，不进行询问",
+    "aiDesc": "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
+  },
+  "AIModelPolicyOptions": {
+    "auto": "自动选择",
+    "performance": "性能优先",
+    "cost": "成本优先",
+    "balance": "平衡策略"
+  },
+  "AIAgentChatTemplate": {
+    "timeline": "时间线"
+  },
+  "HistoryTaskTree": {
+    "stopCurrentTask": "停掉当前正在执行的任务，恢复此任务",
+    "restoreTaskConfirm": "是否确认恢复该此任务",
+    "updateTime": "更新时间: {{time}}"
+  },
+  "AITree": {
+    "cancelSubtaskConfirm": "是否确认取消该子任务，取消后会按顺序执行下一个子任务?"
+  },
+  "AIMemoryList": {
+    "recentMemory": "近期记忆({{count}})",
+    "scoreTitle": "C.O.R.E. P.A.C.T. Scores（记忆特征）"
+  },
+  "AIEcharts": {
+    "pressureValue": "压力值",
+    "latencyMs": "延迟(ms)",
+    "thresholdLine": "阈值分割线 ({{value}})"
+  },
+  "AddAIModel": {
+    "modelName": "模型名称",
+    "enterModelName": "请输入模型名称",
+    "modelType": "模型类型",
+    "enterModelType": "请输入模型类型",
+    "filePath": "文件地址",
+    "enterFilePath": "请输入文件地址",
+    "modelDescription": "模型描述"
+  },
+  "AIChatListItem": {
+    "thinking": "思考：",
+    "toolCall": "工具调用",
+    "taskEnd": "任务结束标志",
+    "taskEndDesc": "当前任务已经结束，下面为新的任务数据"
+  },
+  "ToolInvokerCard": {
+    "skipConfirm": "跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过",
+    "success": "成功",
+    "failed": "失败",
+    "cancelled": "已取消",
+    "startTime": "开始时间",
+    "duration": "执行时长",
+    "relatedRisks": "相关漏洞",
+    "httpTraffic": "HTTP 流量",
+    "refreshCodeBlockData": "刷新代码块数据"
+  },
+  "FileTreeSystemItem": {
+    "joinPathFailed": "路径拼接失败",
+    "renameSame": "重命名相同",
+    "renameJoinPathFailed": "重命名路径拼接失败",
+    "sendToChat": "发送到自由对话"
+  },
+  "FileTreeSystem": {
+    "myOpenedFiles": "我打开的文件"
+  },
+  "ExportAILogsModal": {
+    "title": "导出 AI 日志",
+    "remoteHint": "远程模式下导出后请打开~memfit\\yakit-projects\\temp路径查看导出文件",
+    "exportContent": "导出内容"
+  },
+  "FileList": {
+    "relatedFiles": "相关文件 ({{count}})",
+    "parseError": "PluginExecuteLogFile.FileItem解析错误: {{error}}"
+  },
+  "OperationLog": {
+    "folder": "文件夹",
+    "nonFolder": "非文件夹"
+  },
+  "FilePreview": {
+    "fileSystem": "文件系统",
+    "chooseFile": "请在左侧选择文件",
+    "binaryNotice": "此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。",
+    "openAnyway": "仍然打开",
+    "warningTitle": "文件警告",
+    "tooLarge": "文件过大，无法预览"
+  },
+  "AIChatContent": {
+    "noActiveChat": "当前没有活跃的会话",
+    "fileSystem": "文件系统",
+    "newChatTitle": "新会话",
+    "newChat": "新建会话",
+    "log": "日志",
+    "exportLog": "导出日志"
+  },
+  "AIContextToken": {
+    "pressure": "上下文压力",
+    "speed": "响应速度",
+    "peak": "峰值",
+    "dataDetails": "数据详情",
+    "limit": "限制",
+    "totalInput": "总输入",
+    "totalOutput": "总输出",
+    "input": "输入",
+    "output": "输出"
+  },
+  "InstallLlamaServerModelPrompt": {
+    "installing": "正在安装模型环境",
+    "proxySettings": "代理设置",
+    "proxyHelp": "非必填，用于下载加速，格式：http://proxy:port 或 socks5://proxyport",
+    "proxyPlaceholder": "留空则不使用代理",
+    "downloadAndInstall": "下载并安装",
+    "downloadModel": "开始下载模型"
+  },
+  "AIReActChatReview": {
+    "autoExecuteSuffix": "后将自动执行",
+    "error": "异常错误",
+    "toolCall": "工具调用",
+    "userPrompt": "主动询问",
+    "planReview": "计划审阅",
+    "taskReview": "任务审阅",
+    "startApp": "启动智能应用",
+    "params": "参数",
+    "details": "详细信息",
+    "enterDetails": "请输入一些细节信息",
+    "tellMeMore": "请告诉我更多信息...",
+    "submitForm": "提交表单内容",
+    "evaluating": "评估中...",
+    "aiRiskScore": "风险评分",
+    "loading": "加载中...",
+    "description": "描述",
+    "paramsGroup": "参数组"
+  },
+  "AIReviewResult": {
+    "planReview": "计划审阅",
+    "taskReview": "任务审阅",
+    "toolReview": "工具审阅",
+    "appReview": "智能应用审阅",
+    "userPrompt": "主动询问",
+    "reviewDecision": "Review 决策",
+    "unknownAction": "未知操作"
+  },
+  "AIFocusMode": {
+    "focusModeTooltip": "复杂场景限定使用框架，限制AI思考范围"
+  },
+  "HistoryChat": {
+    "title": "历史会话",
+    "noChatsToClear": "暂无可清除的会话",
+    "allChatsCleared": "已清空全部会话",
+    "clearFailed": "清除会话失败：{{error}}",
+    "noChatsBeforeDays": "暂无{{days}}天前的会话",
+    "clearedBeforeDays": "已清除{{days}}天前的会话",
+    "oneDay": "一天前",
+    "oneWeek": "一周前",
+    "thirtyDays": "30天前",
+    "clearConfirm": "确定要清除{{days}}的会话吗？此操作不可恢复",
+    "clearAll": "清空全部",
+    "clearAllConfirm": "确定要清除全部会话吗？此操作不可恢复",
+    "clearChats": "清除会话",
+    "newChat": "新建会话"
+  },
+  "AIMCP": {
+    "enableServerRefreshTools": "请启用该mcp服务器后刷新工具列表",
+    "toolList": "工具列表",
+    "protocolInfo": "Model Context Protocol(MCP)提供了标准化的Al模型上下文通信协议,支持SSE和WebSocket连接方式",
+    "disabledRefreshTools": "未启用,请启用后刷新工具列表",
+    "refresh": "刷新",
+    "enableTools": "启用工具",
+    "paramIntro": "参数介绍",
+    "addMcpServer": "添加MCP Server",
+    "mcpServerConfig": "MCP服务器配置",
+    "editMcp": "修改MCP",
+    "deleteMcpServer": "删除MCP Server",
+    "deleteMcpServerConfirm": "确定删除该MCP Server吗?",
+    "address": "地址: {{url}}",
+    "command": "命令: {{command}}",
+    "toolFetchFailed": "工具获取失败",
+    "toolCount": "{{count}}个工具",
+    "disableConfirm": "确定要停用 {{name}} 吗？"
+  },
+  "AIMCPForm": {
+    "serverUrl": "服务器URL",
+    "enterServerUrl": "请输入服务器URL",
+    "runCommand": "执行命令",
+    "enterRunCommand": "请输入执行命令",
+    "completeBeforeAdd": "请设置完成后再添加",
+    "serverName": "服务器名称",
+    "enterServerName": "请输入服务器名称",
+    "serverUrlExample": "例如: http://localhost:3000/sse",
+    "envVariables": "环境变量"
+  },
+  "AIMarkdown": {
+    "openFromNotepad": "从记事本中打开",
+    "downloadMd": "下载md文件",
+    "switchToPreview": "切换预览模式",
+    "switchToSource": "切换源码模式"
+  },
+  "AIMilkdownInput": {
+    "placeholder": "请告诉我，你想做什么...(shift + enter 换行)"
+  },
+  "AITaskQuery": {
+    "taskQueue": "任务队列",
+    "focusMode": "专注模式: {{mode}}"
+  },
+  "ForgeName": {
+    "exportForge": "导出技能",
+    "importForge": "导入技能",
+    "deleteForgeSuccess": "删除Forge模板成功",
+    "templateIdError": "该模板 ID('{{id}}') 异常, 无法编辑",
+    "noMoreDescription": "暂无更多说明",
+    "relatedTools": "关联工具",
+    "editForge": "编辑Forge",
+    "deleteForge": "删除Forge",
+    "deleteForgeConfirm": "是否删除该 Forge 模板?",
+    "fileName": "文件名",
+    "tool": "工具",
+    "chooseTool": "请选择工具",
+    "password": "密码",
+    "localPath": "本地路径",
+    "enterLocalPath": "请输入本地路径"
+  },
+  "HistoryChatList": {
+    "justNow": "刚刚",
+    "oneHour": "一小时前",
+    "oneDay": "一天前",
+    "oneWeek": "一周前",
+    "thirtyDays": "30天前",
+    "updateTitleFailed": "修改对话标题失败：{{error}}",
+    "chatNotFound": "未找到对应的对话",
+    "deleteFailed": "删除会话失败：{{error}}",
+    "editTitle": "编辑对话标题",
+    "deleteConfirm": "是否确认删除该历史对话，删除后将无法恢复"
   }
 }

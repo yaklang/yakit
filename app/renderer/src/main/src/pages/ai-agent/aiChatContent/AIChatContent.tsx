@@ -41,10 +41,12 @@ import {
 import AIContextToken from './AIContextToken/AIContextToken'
 import OperationLog from '../components/aiFileSystemList/OperationLog/OperationLog'
 import AIGlobalLoading from '../aiGlobalLoading/AIGlobalLoading'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { onChat, onChatFromHistory } = props
+    const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, historyState } =
       useChatIPCStore().chatIPCData
     const { activeChat } = useAIAgentStore()
@@ -88,7 +90,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     const onExportOk = useMemoizedFn(async (data: { types: string[]; outputPath: string }) => {
       if (!activeChat?.Id) {
-        failed('当前没有活跃的会话')
+        failed(t('AIChatContent.noActiveChat'))
         return
       }
       setExportLoading(true)
@@ -104,10 +106,10 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
           },
           true,
         )
-        yakitNotify('success', '导出成功')
+        yakitNotify('success', t('YakitNotification.exportSuccess'))
         setExportModalVisible(false)
       } catch (error) {
-        failed(`导出失败: ${error}`)
+        failed(t('YakitNotification.exportFailed', { error: error + '' }))
       } finally {
         setExportLoading(false)
       }
@@ -212,7 +214,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         const isShow = activeKey !== AITabsEnum.File_System && showHot
         return (
           <div className={styles['file-system-label']}>
-            文件系统
+            {t('AIChatContent.fileSystem')}
             <span hidden={!isShow} />
           </div>
         )
@@ -314,27 +316,27 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
             animationWrapperClassName={classNames(styles['expand-retract-animation-wrapper'], {
               [styles['expand-retract-animation-wrapper-hidden']]: !yakExecResult.card.length,
             })}
-            expandText="展开"
-            retractText="收起"
+            expandText={t('YakitButton.expand')}
+            retractText={t('YakitButton.collapse')}
           >
             <div className={styles['expand-retract-content']}>
               <div className={styles['header']}>
                 <div className={styles['title']}>
                   <SolidChatalt2Icon className={styles['chat-alt-icon']} />
-                  <div className={styles['chat-title']}>{activeChat?.Title || '新会话'}</div>
+                  <div className={styles['chat-title']}>{activeChat?.Title || t('AIChatContent.newChatTitle')}</div>
                   <Divider type="vertical" />
                   <YakitButton type="secondary2" icon={<OutlinePlussmIcon />} onClick={() => onNewChat()}>
-                    新建会话
+                    {t('AIChatContent.newChat')}
                   </YakitButton>
                   {/* <SideSettingButton /> */}
                 </div>
                 <div className={styles['extra']}>
                   <AIContextToken execute={execute} session={activeChat?.SessionID} />
                   <YakitButton type="secondary2" icon={<OutlineNewspaperIcon />} onClick={onOpenLog}>
-                    日志
+                    {t('AIChatContent.log')}
                   </YakitButton>
                   <YakitButton type="secondary2" icon={<OutlineClouddownloadIcon />} onClick={onOpenExportModal}>
-                    导出日志
+                    {t('AIChatContent.exportLog')}
                   </YakitButton>
                 </div>
               </div>
@@ -352,12 +354,14 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
           </ExpandAndRetract>
           <div className={styles['ai-chat-tab-wrapper']}>
             <YakitSideTab
+              key={i18n.language}
               type="horizontal"
               yakitTabs={yakitTabs}
               activeKey={activeKey}
               onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
               onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
               className={styles['tab-wrap']}
+              t={t}
             >
               <div className={styles['ai-chat-content']}>
                 <YakitResizeBox

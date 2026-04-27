@@ -58,6 +58,8 @@
     "disable": "Disable",
     "disable_all": "Disable All",
     "enable": "Enable",
+    "enabled": "Enabled",
+    "notEnabled": "Not Enabled",
     "deactivated": "Deactivated",
     "detail": "Detail",
     "stop": "Stop",
@@ -110,7 +112,20 @@
     "install": "Install",
     "viewDetail": "View detail",
     "send": "Send",
-    "stopTask": "Stop task"
+    "stopTask": "Stop task",
+    "saveAndExit": "Save and Exit",
+    "getParams": "Get Params",
+    "autoDetect": "Auto Detect",
+    "openFile": "Open File",
+    "openFolder": "Open Folder",
+    "openFileLocation": "Open file location",
+    "recentOpen": "Recently Opened",
+    "next": "Next",
+    "prev": "Previous",
+    "copyPath": "Copy path",
+    "showInFolder": "Show in folder",
+    "viewFile": "View file",
+    "submitted": "Submitted"
   },
   "YakitNotification": {
     "unknown_error": "Unknown Error",
@@ -158,8 +173,8 @@
     "modifyFailed": "Modification failed: {{error}}",
     "editSuccess": "Edited successfully",
     "editFailed": "Edit failed: {{error}}",
-    "createSuccess": "Created successfully",
-    "createFailed": "Creation failed: {{error}}",
+    "newCreateSuccess": "Created successfully",
+    "newCreateFailed": "Creation failed: {{error}}",
     "addSuccess": "Added successfully",
     "syncFailed": "Sync failed: {{error}}",
     "addFailed": "Failed to add: {{error}}",
@@ -169,7 +184,11 @@
     "installFailed": "Installation failed: {{error}}",
     "updateContentFailed": "Update failed: {{error}}",
     "uninstallFailed": "Uninstall failed: {{error}}",
-    "startFailed": "Start failed: {{error}}"
+    "startFailed": "Start failed: {{error}}",
+    "createSuccess": "Created successfully",
+    "createFailedNoError": "Creation failed",
+    "renameSuccess": "Renamed successfully",
+    "renameFailedNoError": "Rename failed"
   },
   "YakitFormDragger": {
     "filePath": "File Path",
@@ -265,7 +284,7 @@
     "info": "info"
   },
   "YakitSpin": {
-    "loading": "loading",
+    "loading": "loading...",
     "loadMore": "Load more..."
   },
   "YakitProgress": {

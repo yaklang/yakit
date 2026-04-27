@@ -16,6 +16,7 @@ import { AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -67,6 +68,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
 
 /** @name 树节点 */
 const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, aiTreeTitleExtraNode }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const syncIdOfStopSubTask = useRef<string>('')
 
   const { handleSendSyncMessage } = useChatIPCDispatcher()
@@ -114,10 +116,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
             <OutlineInformationcircleIcon className={styles['info-icon']} />
           </YakitPopover>
           {data.isLeaf && data.progress === 'processing' && (
-            <YakitPopconfirm
-              title={'是否确认取消该子任务，取消后会按顺序执行下一个子任务?'}
-              onConfirm={() => onCancelTask()}
-            >
+            <YakitPopconfirm title={t('AITree.cancelSubtaskConfirm')} onConfirm={() => onCancelTask()}>
               <YakitButton
                 size="small"
                 icon={<OutlineExitIcon />}

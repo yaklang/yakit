@@ -1051,7 +1051,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             )}
           </>
         )}
-        {(width === 0 && <YakitSpin spinning={true} tip="加载中..."></YakitSpin>) || (
+        {(width === 0 && <YakitSpin spinning={true} tip={t('YakitSpin.loading')}></YakitSpin>) || (
           <YakitSpin
             spinning={isHiddenLoadingUI ? false : loading !== undefined ? loading && pagination?.page == 1 : false}
           >

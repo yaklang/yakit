@@ -53,6 +53,9 @@ import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { cloneDeep } from 'lodash'
 import { AIForgeEditorPageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'aiAgent')
 const { ipcRenderer } = window.require('electron')
 
 export interface ForgeNameRef {
@@ -69,7 +72,7 @@ export interface ForgeNameRef {
 export const handleModifyAIForge = (info: AIForge, source?: YakitRoute) => {
   const id = Number(info.Id) || 0
   if (!id) {
-    yakitNotify('error', `该模板 ID('${info.Id}') 异常, 无法编辑`)
+    yakitNotify('error', tOriginal('ForgeName.templateIdError', { id: info.Id }))
     return
   }
   const params: AIForgeEditorPageInfoProps = { id: id, source: source || YakitRoute.AI_Agent }
@@ -100,6 +103,7 @@ export const handleAddAIForge = (source?: YakitRoute) => {
 }
 const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRef>) => {
   // const {} = props
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const batchExportRef = useRef<BatchExportAIforgeRef>(null)
   const importRef = useRef<ImportAIforgeRef>(null)
   // #region AIForge 模板增删改功能 使用功能
@@ -114,7 +118,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
   const handleDeleteAIForge = useMemoizedFn((info: AIForge) => {
     const id = Number(info.Id) || 0
     if (!id) {
-      yakitNotify('error', `该模板 ID('${info.Id}') 异常, 无法编辑`)
+      yakitNotify('error', t('ForgeName.templateIdError', { id: info.Id }))
       return
     }
     const isLoading = delStatus.includes(id)
@@ -122,7 +126,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
     setDelStatus((old) => [...old, id])
     grpcDeleteAIForge({ Id: id })
       .then(() => {
-        yakitNotify('success', '删除Forge模板成功')
+        yakitNotify('success', t('ForgeName.deleteForgeSuccess'))
         setData((old) => {
           return {
             ...old,
@@ -326,7 +330,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
           <YakitInput
             prefix={<OutlineSearchIcon className={styles['search-icon']} />}
             allowClear
-            placeholder="请输入关键词搜索"
+            placeholder={t('YakitInput.searchKeyWordPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -361,13 +365,15 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         </div>
 
                         <div className={styles['detail-content']}>
-                          <div className={styles['content-description']}>{Description || '暂无更多说明'}</div>
+                          <div className={styles['content-description']}>
+                            {Description || t('ForgeName.noMoreDescription')}
+                          </div>
 
                           {tools.length > 0 && (
                             <div className={styles['content-tools']}>
                               <div className={styles['tools-header']}>
                                 <SolidToolIcon />
-                                关联工具
+                                {t('ForgeName.relatedTools')}
                               </div>
 
                               <div className={styles['tools-body']}>
@@ -397,7 +403,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
 
                       <div className={styles['item-extra']}>
                         <Tooltip
-                          title={'导出技能'}
+                          title={t('ForgeName.exportForge')}
                           placement="topRight"
                           overlayClassName={styles['item-extra-tooltip']}
                         >
@@ -415,7 +421,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                           />
                         </Tooltip>
                         <Tooltip
-                          title={'编辑Forge'}
+                          title={t('ForgeName.editForge')}
                           placement="topRight"
                           overlayClassName={styles['item-extra-tooltip']}
                         >
@@ -429,12 +435,12 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                           />
                         </Tooltip>
                         <Tooltip
-                          title={'删除Forge'}
+                          title={t('ForgeName.deleteForge')}
                           placement="topRight"
                           overlayClassName={styles['item-extra-tooltip']}
                         >
                           <YakitPopconfirm
-                            title={'是否删除该 Forge 模板?'}
+                            title={t('ForgeName.deleteForgeConfirm')}
                             onConfirm={(e) => {
                               e?.stopPropagation()
                               handleDeleteAIForge(data)
@@ -462,7 +468,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
 
             {!isMore.current && !loading && (
               <div className={styles['forge-list-no-more']}>
-                <div className={styles['no-more-title']}>已经到底啦~</div>
+                <div className={styles['no-more-title']}>{t('YakitEmpty.end_of_list')}</div>
               </div>
             )}
             {loading && (
@@ -483,11 +489,12 @@ export default memo(ForwardForgeName)
 
 export const BatchExportAIforge = memo(
   forwardRef<BatchExportAIforgeRef, BatchExportAIforgeProps>((props, ref) => {
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
     const [exportExtra, setExportExtra] = useState<ImportExportModalExtra>({
       hint: false,
-      title: '导出技能',
+      title: t('ForgeName.exportForge'),
       type: 'export',
       apiKey: 'ExportAIForge',
     })
@@ -514,7 +521,7 @@ export const BatchExportAIforge = memo(
         if (exportPath.current) {
           openABSFileLocated(exportPath.current)
         }
-        yakitNotify('success', '导出成功')
+        yakitNotify('success', t('YakitNotification.exportSuccess'))
       }
       exportPath.current = ''
 
@@ -603,13 +610,13 @@ export const BatchExportAIforge = memo(
         }}
         renderForm={() => (
           <>
-            <Form.Item label="文件名" name="OutputName" rules={[{ required: true }]}>
+            <Form.Item label={t('ForgeName.fileName')} name="OutputName" rules={[{ required: true }]}>
               <YakitInput />
             </Form.Item>
-            <Form.Item label="工具" name="ToolNames">
+            <Form.Item label={t('ForgeName.tool')} name="ToolNames">
               <YakitSelect
                 showSearch
-                placeholder="请选择工具"
+                placeholder={t('ForgeName.chooseTool')}
                 optionFilterProp="children"
                 filterOption={false}
                 onSearch={debouncedSearch}
@@ -639,7 +646,7 @@ export const BatchExportAIforge = memo(
                 ))}
               </YakitSelect>
             </Form.Item>
-            <Form.Item label="密码" name="Password">
+            <Form.Item label={t('ForgeName.password')} name="Password">
               <YakitInput />
             </Form.Item>
           </>
@@ -662,11 +669,12 @@ export const BatchExportAIforge = memo(
 )
 export const ImportAIforge = memo(
   forwardRef<ImportAIforgeRef, ImportAIforgeProps>((props, ref) => {
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
     const [importExtra, setImportExtra] = useState<ImportExportModalExtra>({
       hint: false,
-      title: '导入技能',
+      title: t('ForgeName.importForge'),
       type: 'import',
       apiKey: 'ImportAIForge',
     })
@@ -685,7 +693,7 @@ export const ImportAIforge = memo(
     const handleFinishedImportHint = useMemoizedFn((result: boolean) => {
       if (result) {
         props.onSuccess?.()
-        yakitNotify('success', '导入成功')
+        yakitNotify('success', t('YakitNotification.imported'))
       }
 
       const index = logListRef.current.findIndex((i) => i.isError)
@@ -716,14 +724,14 @@ export const ImportAIforge = memo(
             <YakitFormDragger
               formItemProps={{
                 name: 'InputPath',
-                label: '本地路径',
-                rules: [{ required: true, message: '请输入本地路径' }],
+                label: t('ForgeName.localPath'),
+                rules: [{ required: true, message: t('ForgeName.enterLocalPath') }],
               }}
               multiple={false}
               selectType={importExtra?.apiKey === 'ImportAIForge' ? 'all' : 'file'}
               fileExtensionIsExist={false}
             />
-            <Form.Item label="密码" name="Password">
+            <Form.Item label={t('ForgeName.password')} name="Password">
               <YakitInput />
             </Form.Item>
           </>

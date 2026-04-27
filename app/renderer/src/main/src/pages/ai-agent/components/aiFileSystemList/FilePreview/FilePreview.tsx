@@ -24,8 +24,10 @@ import { getLocalFileName } from '@/components/MilkdownEditor/CustomFile/utils'
 import { onOpenFileFolder } from '../utils'
 import { historyStore, useHistoryItems } from '../store/useHistoryFolder'
 import FilePreviewRecentList from './components/FilePreviewRecentList'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const FilePreviewEmpty: FC = () => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   // 历史文件夹
   const historyItems = useHistoryItems()
   const [fileNames, setFileNames] = useState<string[]>([])
@@ -53,8 +55,8 @@ const FilePreviewEmpty: FC = () => {
   return (
     <div className={styles['file-preview-empty']}>
       <div className={styles['file-preview-empty-title']}>
-        <div className={styles['file-preview-empty-title-text']}>文件系统</div>
-        <div className={styles['file-preview-empty-title-subtitle']}>请在左侧选择文件</div>
+        <div className={styles['file-preview-empty-title-text']}>{t('FilePreview.fileSystem')}</div>
+        <div className={styles['file-preview-empty-title-subtitle']}>{t('FilePreview.chooseFile')}</div>
       </div>
       <div className={styles['file-preview-empty-content']}>
         <YakitButton
@@ -64,7 +66,7 @@ const FilePreviewEmpty: FC = () => {
           type="secondary2"
           onClick={() => onOpenFileFolder(false)}
         >
-          打开文件
+          {t('YakitButton.openFile')}
         </YakitButton>
         <YakitButton
           className={styles['file-preview-empty-content-button']}
@@ -73,10 +75,14 @@ const FilePreviewEmpty: FC = () => {
           type="secondary2"
           onClick={() => onOpenFileFolder(true)}
         >
-          打开文件夹
+          {t('YakitButton.openFolder')}
         </YakitButton>
         <div className={styles['file-preview-empty-content-recent']}>
-          <FilePreviewRecentList title="最近打开" files={recentFiles} onClickItem={historyStore.addHistoryItem} />
+          <FilePreviewRecentList
+            title={t('YakitButton.recentOpen')}
+            files={recentFiles}
+            onClickItem={historyStore.addHistoryItem}
+          />
         </div>
       </div>
     </div>
@@ -84,6 +90,7 @@ const FilePreviewEmpty: FC = () => {
 }
 
 const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const path = data?.path ?? ''
   const name = data?.name ?? ''
   const icon = data?.icon ?? 'default'
@@ -154,10 +161,10 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
           {isBinary ? (
             <Result
               status={'warning'}
-              subTitle={'此文件是二进制文件或使用了不受支持的文本编码，所以无法在文本编辑器中显示。'}
+              subTitle={t('FilePreview.binaryNotice')}
               extra={[
                 <YakitButton size="max" type="primary" onClick={() => setIsBinary(false)}>
-                  仍然打开
+                  {t('FilePreview.openAnyway')}
                 </YakitButton>,
               ]}
             />
@@ -175,14 +182,14 @@ const FilePreview: FC<{ data?: FileNodeProps }> = ({ data }) => {
         {/* 文件过大弹窗 */}
         <YakitHint
           visible={showFileHint}
-          title="文件警告"
-          content="文件过大，无法预览"
+          title={t('FilePreview.warningTitle')}
+          content={t('FilePreview.tooLarge')}
           cancelButtonProps={{ style: { display: 'none' } }}
           onOk={() => {
             setFileInfo(null)
             setShowFileHint(false)
           }}
-          okButtonText={'知道了'}
+          okButtonText={t('YakitButton.iKnow')}
         />
       </div>
     </div>

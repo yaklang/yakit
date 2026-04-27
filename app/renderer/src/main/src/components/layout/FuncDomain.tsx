@@ -888,7 +888,7 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
   return (
     <YakitModal
       title={t('RunNodeModal.runNode')}
-      width={506}
+      width={600}
       maskClosable={false}
       closable={true}
       visible={visible}
@@ -1232,6 +1232,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           type: 'white',
           footer: null,
           maskClosable: false,
+          width: i18n.language === 'zh' ? 500 : 650,
           // onCancel: () => m.destroy(),
           content: <ConfigPrivateDomain onClose={() => m.destroy()} />,
         })

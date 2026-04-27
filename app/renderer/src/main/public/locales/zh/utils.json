@@ -47,8 +47,6 @@
     "setSystemProxyFailed": "设置系统代理失败：{{error}}",
     "configSystemProxy": "配置系统代理",
     "currentSystemProxyStatus": "当前系统代理状态：",
-    "enabled": "已启用",
-    "disabled": "未启用",
     "systemProxy": "系统代理",
     "oneClickConfig": "一键配置系统代理",
     "proxyHint": "由于操作系统与 Yak 内核限制，无法使用原生 MacOS OC/Swift 接口实现设置代理。 Yak 引擎将弹出 osascript 授权页以改动系统代理，MacOS 用户认证即可。",
@@ -82,7 +80,6 @@
   },
   "ConfigSystemMcp": {
     "currentStatus": "当前状态：",
-    "enabled": "已启用",
     "disabled": "未启用",
     "startAddress": "启动地址：",
     "startAddressHelp": "yak以SSE方式启动mcp，在需要使用mcp的地方填入启动地址即可"

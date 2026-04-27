@@ -8,6 +8,8 @@ import { formatNumberUnits } from '../utils'
 import EChartsReact from 'echarts-for-react'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { AIContextStatsDetail } from '../type/aiChat'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'aiAgent')
 
 export interface AIEchartsDataKey {
   modelName: string
@@ -261,7 +263,7 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
     series: [
       {
         ...seriesBase,
-        name: '高质模型',
+        name: tOriginal('AiAgengt.intelligentModels'),
         xAxisIndex: 0,
         data: intelligent.data.map((val, index) => {
           if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
@@ -279,7 +281,7 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
       },
       {
         ...seriesBase,
-        name: '轻量模型',
+        name: tOriginal('AiAgengt.lightweightModels'),
         xAxisIndex: 1,
         data: lightweight.data.map((val, index) => {
           if (lightweight.lightweightIndex - 1 === index && val >= lightweight.maxValueLightweight) {
@@ -401,7 +403,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         color: colors['--Colors-Use-Neutral-Text-3-Secondary'],
         formatter: (v: number) => {
           if (v >= max) {
-            return '压力值'
+            return tOriginal('AIEcharts.pressureValue')
           }
           return `${formatNumberUnits(v)}`
         },
@@ -442,7 +444,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
     series: [
       {
         ...seriesBase,
-        name: '高质模型',
+        name: tOriginal('AiAgengt.intelligentModels'),
         xAxisIndex: 0,
         data: intelligent.data.map((val, index) => {
           if (intelligent.lastIntelligentIndex === index && val >= intelligent.maxValueIntelligent) {
@@ -462,7 +464,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
       },
       {
         ...seriesBase,
-        name: '轻量模型',
+        name: tOriginal('AiAgengt.lightweightModels'),
         xAxisIndex: 1,
         data: lightweight.data.map((val, index) => {
           if (lightweight.lightweightIndex === index && val >= lightweight.maxValueLightweight) {
@@ -481,7 +483,7 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
         }), // 轻量
       },
       {
-        name: `阈值分割线 (${formatNumberUnits(threshold)})`,
+        name: tOriginal('AIEcharts.thresholdLine', { value: formatNumberUnits(threshold) }),
         type: 'line',
         markLine: {
           silent: true,

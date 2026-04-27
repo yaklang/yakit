@@ -896,7 +896,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <div className={styles['title-style']} style={{ marginBottom: 2 }}>
                       {t('GlobalState.reverseNotConfigured')}{' '}
                       <YakitTag color={isReverseState ? 'success' : 'danger'}>
-                        {isReverseState ? t('GlobalState.enabled') : t('GlobalState.notEnabled')}
+                        {isReverseState ? t('YakitButton.enabled') : t('YakitButton.notEnabled')}
                       </YakitTag>
                     </div>
                     <div className={styles['subtitle-style']}>{t('GlobalState.reverseNotConfiguredDesc')}</div>
@@ -982,7 +982,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <div className={styles['system-proxy-title']}>
                       {t('GlobalState.systemProxy')}
                       <YakitTag color={systemProxy.Enable ? 'success' : 'danger'}>
-                        {systemProxy.Enable ? t('GlobalState.enabled') : t('GlobalState.notEnabled')}
+                        {systemProxy.Enable ? t('YakitButton.enabled') : t('YakitButton.notEnabled')}
                       </YakitTag>
                     </div>
                   </div>
@@ -1041,7 +1041,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                     <div className={styles['title-style']}>
                       {t('GlobalState.enabledNodes')}
                       <YakitTag color="success" style={{ marginLeft: 8 }}>
-                        {t('GlobalState.enabled')}
+                        {t('YakitButton.enabled')}
                       </YakitTag>
                     </div>
                   </div>

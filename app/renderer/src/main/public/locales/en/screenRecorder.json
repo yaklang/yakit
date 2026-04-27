@@ -40,8 +40,6 @@
     "deletePopconfirm": "Deleting the recording will also delete the local recording file"
   },
   "ReactPlayerVideo": {
-    "fileNotPlayable": "This video file cannot be played",
-    "previous": "Previous",
-    "next": "Next"
+    "fileNotPlayable": "This video file cannot be played"
   }
 }

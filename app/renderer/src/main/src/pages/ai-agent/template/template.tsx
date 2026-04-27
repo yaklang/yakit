@@ -89,7 +89,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       isOpen,
       filterMentionType,
     } = props
-    const { t } = useI18nNamespaces(['aiAgent'])
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { chatIPCData } = useChatIPCStore()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 
@@ -325,7 +325,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         onClick={handleSetTextareaFocus}
         ref={dropRef}
       >
-        {isHovering && <div className={styles['drag-hint']}>松开以添加到对话</div>}
+        {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <AIGlobalCommandPopover childrenClass={styles['code-btn-wrapper']}>
           <YakitSpin spinning={updateLoading} size="small">
             <YakitTag color="purple" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
@@ -353,7 +353,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   className={styles['btn-base']}
                 />
                 <OpenFileDropdown cb={onSetFileMention}>
-                  <UploadFileButton title="打开文件夹" className={styles['btn-base']} />
+                  <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />
                 </OpenFileDropdown>
 
                 {execute && (

@@ -19,6 +19,7 @@ import classNames from 'classnames'
 
 export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const { info, timestamp } = props
+  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { type, data } = info
   const { chatIPCData } = useChatIPCStore()
 
@@ -52,19 +53,19 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
   const title = useCreation(() => {
     switch (type) {
       case 'plan_review_require':
-        return '计划审阅'
+        return t('AIReviewResult.planReview')
       case 'task_review_require':
-        return '任务审阅'
+        return t('AIReviewResult.taskReview')
       case 'tool_use_review_require':
-        return '工具审阅'
+        return t('AIReviewResult.toolReview')
       case 'exec_aiforge_review_require':
-        return '智能应用审阅'
+        return t('AIReviewResult.appReview')
       case 'require_user_interactive':
-        return '主动询问'
+        return t('AIReviewResult.userPrompt')
       default:
-        return 'Review 决策'
+        return t('AIReviewResult.reviewDecision')
     }
-  }, [type])
+  }, [type, i18n.language])
   const userAction = useCreation(() => {
     let btnText: string = ''
     let userInput: string = ''
@@ -76,17 +77,17 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
         case 'exec_aiforge_review_require':
           const userSelected = JSON.parse(data.selected || '')
           if (data.optionValue === 'continue') {
-            btnText = '立即执行'
+            btnText = t('YakitButton.runNow')
           } else {
             const selectBtn = data.selectors.find((item) => item.value === data.optionValue)
-            btnText = selectBtn ? selectBtn.prompt : '未知操作'
+            btnText = selectBtn ? selectBtn.prompt : t('AIReviewResult.unknownAction')
           }
           userInput = userSelected.extra_prompt || ''
           break
         case 'require_user_interactive':
           const aiSelected = JSON.parse(data.selected || '')
           const aiSelectType = data.options.find((item) => (item.prompt || item.prompt_title) === data.optionValue)
-          btnText = aiSelectType?.prompt || aiSelectType?.prompt_title || '未知操作'
+          btnText = aiSelectType?.prompt || aiSelectType?.prompt_title || t('AIReviewResult.unknownAction')
           userInput = aiSelected.suggestion || ''
           break
         default:
@@ -98,7 +99,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
       btnText,
       userInput,
     }
-  }, [type, data])
+  }, [type, data, i18n.language])
   const renderContent = useMemoizedFn(() => {
     let paramsValue = !!userAction.userInput ? <PreWrapper code={userAction.userInput} /> : null
     switch (type) {

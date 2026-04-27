@@ -102,7 +102,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
           })}
         >
           {t('ConfigSystemProxy.currentSystemProxyStatus')}
-          <span>{current.Enable ? t('ConfigSystemProxy.enabled') : t('ConfigSystemProxy.disabled')}</span>
+          <span>{current.Enable ? t('YakitButton.enabled') : t('YakitButton.notEnabled')}</span>
         </div>
         <Form layout="vertical" style={{ padding: '0 24px 24px' }}>
           <Form.Item

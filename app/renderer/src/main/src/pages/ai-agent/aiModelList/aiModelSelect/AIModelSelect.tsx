@@ -67,9 +67,9 @@ export const onOpenConfigModal = (mountContainer, t: TFunction) => {
 }
 
 const modelType = (t: TFunction) => [
-  t('AIModelList.intelligentModels'),
-  t('AIModelList.lightweightModels'),
-  t('AIModelList.visionModels'),
+  t('AiAgengt.intelligentModels'),
+  t('AiAgengt.lightweightModels'),
+  t('AiAgengt.visionModels'),
 ]
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
@@ -388,7 +388,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                       <YakitSelect
                         size="small"
                         disabled={execute}
-                        options={AIModelPolicyOptions}
+                        options={AIModelPolicyOptions.map((item) => ({ ...item, label: t(item.label) }))}
                         value={policy}
                         onSelect={onSelectPolicy}
                         wrapperClassName={styles['select-policy-wrapper']}
@@ -424,7 +424,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 <div className={styles['select-content']}>
                   {!!intelligentModels.length && (
                     <AIModelSelectList
-                      title={t('AIModelList.intelligentModels')}
+                      title={t('AiAgengt.intelligentModels')}
                       subTitle={t('AIModelList.intelligentModelsDesc')}
                       list={intelligentModels}
                       onSelect={(item, index) =>
@@ -437,7 +437,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                   )}
                   {!execute && !!lightweightModels.length && (
                     <AIModelSelectList
-                      title={t('AIModelList.lightweightModels')}
+                      title={t('AiAgengt.lightweightModels')}
                       subTitle={t('AIModelList.lightweightModelsDesc')}
                       list={lightweightModels}
                       onSelect={(item, index) =>
@@ -450,7 +450,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                   )}
                   {!execute && !!visionModels.length && (
                     <AIModelSelectList
-                      title={t('AIModelList.visionModels')}
+                      title={t('AiAgengt.visionModels')}
                       subTitle={t('AIModelList.visionModelsDesc')}
                       list={visionModels}
                       onSelect={(item, index) =>

@@ -19,6 +19,7 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const { data, currentTaskItem } = props
@@ -97,6 +98,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
 
 const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((props) => {
   const { coordinatorId, taskIndex } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
   const { chatIPCData } = useChatIPCStore()
   const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
   const [visible, setVisible] = useState<boolean>(false)
@@ -182,7 +184,7 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
   })
   return isShow() ? (
     <YakitPopconfirm
-      title={isExecuting ? '停掉当前正在执行的任务，恢复此任务' : '是否确认恢复该此任务'}
+      title={isExecuting ? t('HistoryTaskTree.stopCurrentTask') : t('HistoryTaskTree.restoreTaskConfirm')}
       onConfirm={(e) => {
         e?.stopPropagation()
         setVisible(false)
@@ -220,6 +222,7 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
 /**任务历史的单个树节点 */
 const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => {
   const { item, currentCoordinatorId } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
   const time = useCreation(() => {
     return formatTimestamp(item.created_at_unix)
   }, [item.created_at_unix])
@@ -228,7 +231,9 @@ const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => 
   })
   return (
     <div className={styles['tree-item']}>
-      {!(item.coordinator_id === currentCoordinatorId) && <div className={styles['time']}>更新时间:{time}</div>}
+      {!(item.coordinator_id === currentCoordinatorId) && (
+        <div className={styles['time']}>{t('HistoryTaskTree.updateTime', { time })}</div>
+      )}
 
       <AITree tasks={item.task_tree} className={styles['tree-wrapper']} aiTreeTitleExtraNode={onAITreeTitleExtraNode} />
     </div>

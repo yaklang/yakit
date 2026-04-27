@@ -748,7 +748,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         // heardIcon={<OutlineLoadingIcon className={styles["icon-rotate-animation"]} />}
         title={t('AIAgentChat.knowledgeNotBuiltTitle')}
         content={t('AIAgentChat.knowledgeNotBuiltDesc')}
-        okButtonText={t('AIAgentChat.closeImmediately')}
+        okButtonText={t('YakitButton.closeNow')}
         onOk={() => onOK?.()}
         cancelButtonText={t('YakitButton.remindMeLater')}
         onCancel={onCancel}

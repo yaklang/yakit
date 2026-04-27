@@ -741,13 +741,13 @@ const CreateOrganizationForm: React.FC<CreateOrganizationFormProps> = (props) =>
     })
       .then((res: number) => {
         if (res) {
-          yakitNotify('success', t('YakitNotification.createSuccess'))
+          yakitNotify('success', t('YakitNotification.newCreateSuccess'))
           refresh({ name: values.name, key: res })
           onClose()
         }
       })
       .catch((err) => {
-        yakitNotify('error', t('YakitNotification.createFailed', { error: err + '' }))
+        yakitNotify('error', t('YakitNotification.newCreateFailed', { error: err + '' }))
       })
       .finally(() => {
         setLoading(false)

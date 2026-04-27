@@ -32,7 +32,7 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
   const { url, title, isPre, isNext, onPreClick, onNextClick } = props
   const [error, setError] = useState<string>()
   const playerRef = useRef<any>()
-  const { t } = useI18nNamespaces(['screenRecorder'])
+  const { t } = useI18nNamespaces(['screenRecorder', 'yakitUi'])
   useEffect(() => {
     if (!playerRef.current) return
     playerRef.current.load()
@@ -56,7 +56,7 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
         <BigPlayButton position="center" />
         {error && <div className={styles['player-video-tip']}>{t('ReactPlayerVideo.fileNotPlayable')}</div>}
         <ControlBar autoHide={true} disableDefaultControls={false} className={styles['player-control-bar']}>
-          <div className={isPre ? 'hint--top-right' : ''} aria-label={t('ReactPlayerVideo.previous')}>
+          <div className={isPre ? 'hint--top-right' : ''} aria-label={t('YakitButton.prev')}>
             <RewindIcon
               className={classNames(styles['bar-icon'], {
                 [styles['not-allowed-icon']]: !isPre,
@@ -72,7 +72,7 @@ export const ReactPlayerVideo: React.FC<ReactPlayerVideoProps> = React.memo((pro
               [styles['not-allowed-icon']]: error,
             })}
           />
-          <div className={isNext ? 'hint--top' : ''} aria-label={t('ReactPlayerVideo.next')}>
+          <div className={isNext ? 'hint--top' : ''} aria-label={t('YakitButton.next')}>
             <FastForwardIcon
               className={classNames(styles['bar-icon'], {
                 [styles['not-allowed-icon']]: !isNext,

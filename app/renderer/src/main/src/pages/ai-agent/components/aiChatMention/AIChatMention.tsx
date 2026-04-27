@@ -38,6 +38,8 @@ import FileTreeSystemList from '../aiFileSystemList/FileTreeSystemList/FileTreeS
 import { FileNodeProps } from '@/pages/yakRunner/FileTree/FileTreeType'
 import { KnowledgeBaseItem, useKnowledgeBase } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
 import { InputRef } from 'antd'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { mentionWidth } from '../aiMilkdownInput/aiMilkdownMention/AIMilkdownMention'
 
 const defaultRef: AIChatMentionListRefProps = {
   onRefresh: () => {},
@@ -50,6 +52,7 @@ const alphanumericKeys = [
 ]
 export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
   const { onSelect, defaultActiveTab, filterMode } = props
+  const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const [activeKey, setActiveKey, getActiveKey] = useGetSetState<AIMentionTabsEnum>(
     defaultActiveTab || AIMentionTabsEnum.Forge_Name,
   )
@@ -286,13 +289,21 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
   }, [customFolder?.length, filterMode])
 
   return (
-    <div className={styles['ai-chat-mention']} tabIndex={0} ref={mentionRef} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={styles['ai-chat-mention']}
+      tabIndex={0}
+      ref={mentionRef}
+      onClick={(e) => e.stopPropagation()}
+      style={{ width: mentionWidth() }}
+    >
       <YakitSideTab
+        key={i18n.language}
         className={styles['tab-wrapper']}
         type="horizontal"
         activeKey={activeKey}
         yakitTabs={mentionTabs}
         onActiveKey={onActiveKey}
+        t={t}
       >
         {activeKey !== AIMentionTabsEnum.File_System && (
           <YakitInput.Search

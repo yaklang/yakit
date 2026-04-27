@@ -64,11 +64,11 @@ export enum AIAgentTabListEnum {
   KnowledgeBase = 'knowledgeBase',
 }
 export const AiAgentTabList: YakitTabsProps[] = [
-  { value: AIAgentTabListEnum.History, label: '历史会话', icon: <OutlineSparklesIcon /> },
-  { value: AIAgentTabListEnum.Setting, label: '配置', icon: <OutlineCogIcon /> },
-  // {value: AIAgentTabListEnum.Forge_Name, label: "技能", icon: <OutlineTemplateIcon />},
-  // {value: AIAgentTabListEnum.Tool, label: "工具", icon: <OutlineWrenchIcon />},
-  { value: AIAgentTabListEnum.AI_Model, label: 'AI模型', icon: <OutlineChipIcon /> },
+  { value: AIAgentTabListEnum.History, label: 'AIAgentTabs.historyChat', icon: <OutlineSparklesIcon /> },
+  { value: AIAgentTabListEnum.Setting, label: 'AIAgentTabs.config', icon: <OutlineCogIcon /> },
+  // {value: AIAgentTabListEnum.Forge_Name, label: "AIAgentTabs.skill", icon: <OutlineTemplateIcon />},
+  // {value: AIAgentTabListEnum.Tool, label: "AIAgentTabs.tool", icon: <OutlineWrenchIcon />},
+  { value: AIAgentTabListEnum.AI_Model, label: 'AiAgengt.aiModel', icon: <OutlineChipIcon /> },
   { value: AIAgentTabListEnum.MCP, label: 'MCP', icon: <OutlineMCPIcon /> },
 ]
 export enum AIMentionTabsEnum {
@@ -84,11 +84,11 @@ export enum AIMentionTabsEnum {
   FocusMode = 'focusMode',
 }
 export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
-  { value: AIMentionTabsEnum.Forge_Name, label: '技能' },
-  { value: AIMentionTabsEnum.Tool, label: '工具' },
-  { value: AIMentionTabsEnum.KnowledgeBase, label: '知识库' },
-  { value: AIMentionTabsEnum.File_System, label: '文件系统' },
-  { value: AIMentionTabsEnum.FocusMode, label: '专注模式' },
+  { value: AIMentionTabsEnum.Forge_Name, label: 'AIMentionTabs.skill' },
+  { value: AIMentionTabsEnum.Tool, label: 'AIMentionTabs.tool' },
+  { value: AIMentionTabsEnum.KnowledgeBase, label: 'AIMentionTabs.knowledgeBase' },
+  { value: AIMentionTabsEnum.File_System, label: 'AIMentionTabs.fileSystem' },
+  { value: AIMentionTabsEnum.FocusMode, label: 'AiAgengt.focusMode' },
 ]
 
 /** ai-agent 聊天全局配置参数默认值 */
@@ -173,11 +173,11 @@ export enum AITabsEnum {
 }
 /** @name AI 默认展示的tab集合 */
 export const AITabs = {
-  'task-content': { label: '任务内容', value: AITabsEnum.Task_Content },
-  'file-system': { label: '文件系统', value: AITabsEnum.File_System },
-  http: { label: 'HTTP 流量', value: AITabsEnum.HTTP },
-  risk: { label: '漏洞与风险', value: AITabsEnum.Risk },
-  'operation-log': { label: '读写日志', value: AITabsEnum.Operation_Log },
+  'task-content': { label: 'AITabs.taskContent', value: AITabsEnum.Task_Content },
+  'file-system': { label: 'AITabs.fileSystem', value: AITabsEnum.File_System },
+  http: { label: 'AITabs.httpTraffic', value: AITabsEnum.HTTP },
+  risk: { label: 'AITabs.riskAndVulnerability', value: AITabsEnum.Risk },
+  'operation-log': { label: 'AITabs.readWriteLog', value: AITabsEnum.Operation_Log },
 }
 
 /** AI-Forge 列表查询条件里的页码默认条件 */
@@ -226,17 +226,17 @@ export const AIReviewRuleOptions = [
   {
     value: 'manual',
     label: 'Manual',
-    describe: '所有审阅都由用户自己操作',
+    describe: 'AIReviewRuleOptions.manualDesc',
   },
   {
     value: 'yolo',
     label: 'Yolo',
-    describe: '所有审阅默认执行，不进行询问',
+    describe: 'AIReviewRuleOptions.yoloDesc',
   },
   {
     value: 'ai',
     label: 'AI',
-    describe: '由AI判断审阅风险，低风险默认执行，高风险由用户操作',
+    describe: 'AIReviewRuleOptions.aiDesc',
   },
 ] as const
 export type AIReviewRuleOptionsType = (typeof AIReviewRuleOptions)[number]['value']
@@ -352,10 +352,10 @@ export enum AIModelPolicyEnum {
 }
 
 export const AIModelPolicyOptions = [
-  { value: AIModelPolicyEnum.PolicyAuto, label: '自动选择' },
-  { value: AIModelPolicyEnum.PolicyPerformance, label: '性能优先' },
-  { value: AIModelPolicyEnum.PolicyCost, label: '成本优先' },
-  { value: AIModelPolicyEnum.PolicyBalance, label: '平衡策略' },
+  { value: AIModelPolicyEnum.PolicyAuto, label: 'AIModelPolicyOptions.auto' },
+  { value: AIModelPolicyEnum.PolicyPerformance, label: 'AIModelPolicyOptions.performance' },
+  { value: AIModelPolicyEnum.PolicyCost, label: 'AIModelPolicyOptions.cost' },
+  { value: AIModelPolicyEnum.PolicyBalance, label: 'AIModelPolicyOptions.balance' },
 ]
 
 /**ai model type,下拉选择的值 */

@@ -8,6 +8,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import classNames from 'classnames'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -26,6 +27,7 @@ const AIStreamNode: FC<{
   session: string
   nodeLabel?: string
 }> = ({ chatType, token, index, session, nodeLabel }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const { stream } = useTypedStream({ chatType, token, session })
   const [open, setOpen] = useState(false)
   const [openPopover, setOpenPopover] = useState(false)
@@ -76,7 +78,7 @@ const AIStreamNode: FC<{
           colors="primary"
           size="small"
         >
-          [查看文献]
+          {t('AIStreamNode.viewReference')}
         </YakitButton>
       </YakitPopover>
     </div>

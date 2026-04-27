@@ -210,8 +210,6 @@
     "noLocalPluginDesc": "One-click to get official cloud plugin source",
     "reverseNotConfigured": "Global reverse connection not configured",
     "reverseNotConfiguredDesc": "May affect the use of some functions",
-    "enabled": "Enabled",
-    "notEnabled": "Not Enabled",
     "configGlobalReverse": "Configure Global Reverse Connection",
     "disable": "Disable",
     "toConfigure": "To Configure",

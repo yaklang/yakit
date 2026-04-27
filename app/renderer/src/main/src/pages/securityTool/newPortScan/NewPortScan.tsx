@@ -500,7 +500,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
             wrapperCol={{ span: 12 }} //这样设置是为了让输入框居中
             validateMessages={{
               /* eslint-disable no-template-curly-in-string */
-              required: t('YakitForm.requiredField'),
+              required: t('YakitForm.field_required_with_label', { label: '${label}' }),
             }}
             labelWrap={true}
           >

@@ -210,8 +210,6 @@
     "noLocalPluginDesc": "可一键获取官方云端插件源",
     "reverseNotConfigured": "全局反连未配置",
     "reverseNotConfiguredDesc": "可能会影响部分功能的使用",
-    "enabled": "已启用",
-    "notEnabled": "未启用",
     "configGlobalReverse": "配置全局反连",
     "disable": "停用",
     "toConfigure": "去配置",

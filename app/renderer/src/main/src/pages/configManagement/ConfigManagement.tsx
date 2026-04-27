@@ -172,6 +172,7 @@ const HOT_PATCH_PARAMS_GETTER_DEFAULT = `__getParams__ = func() {
 }`
 
 export const HotPatchManagement: React.FC = () => {
+  const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout', 'webFuzzer'])
   const [activeType, setActiveType] = useState<HotCodeType>('global')
   const [panelType, setPanelType] = useState<PanelHotCodeType>('mitm')
   const [globalTemplateList, setGlobalTemplateList] = useState<HotPatchTempItem[]>([])
@@ -200,8 +201,6 @@ export const HotPatchManagement: React.FC = () => {
   const userInfo = useStore((s) => s.userInfo)
   const selectRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(selectRef)
-
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout', 'webFuzzer'])
 
   const isGlobalType = useMemo(() => activeType === 'global', [activeType])
 
@@ -692,7 +691,7 @@ export const HotPatchManagement: React.FC = () => {
         value: 'httpflow-analyze',
       },
     ],
-    [t],
+    [i18n.language],
   )
 
   const onChangePanelType = useMemoizedFn((type: PanelHotCodeType) => {
@@ -745,7 +744,7 @@ export const HotPatchManagement: React.FC = () => {
             )}
             {type === 'global' && globalEnabledTemplateName === item.name && (
               <YakitTag className={styles['global-enabled-tag']} color="info">
-                {t('GlobalHotPatch.enabled')}
+                {t('YakitButton.enabled')}
               </YakitTag>
             )}
             {((!item.isDefault && source === 'local') || (source === 'online' && hasPermissions)) && (
@@ -815,7 +814,7 @@ export const HotPatchManagement: React.FC = () => {
 
   const renderMenu = useMemoizedFn(() => {
     return (
-      <div className={styles['type-panel']}>
+      <div className={styles['type-panel']} style={{ width: i18n.language === 'zh' ? 300 : 330 }}>
         <YakitResizeBox
           isVer={true}
           lineDirection="bottom"

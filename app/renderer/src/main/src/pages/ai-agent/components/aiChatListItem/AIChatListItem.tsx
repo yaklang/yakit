@@ -22,6 +22,7 @@ import StaticChatContent from './StaticChatContent/StaticChatContent'
 import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import useAIAgentStore from '../../useContext/useStore'
 import { AIManualIntervention } from '../aiManualIntervention/AIManualIntervention'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const chatContentExtraProps = {
   contentClassName: styles['content-wrapper'],
@@ -65,6 +66,7 @@ const isExtraShow = (extraValue: HandleStartParams['extraValue']) => {
 }
 export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) => {
   const { item, type, hasNext, itemIndex } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
 
   const { handleSendCasual } = useChatIPCDispatcher()
   const { taskChat, yakExecResult } = useChatIPCStore().chatIPCData
@@ -107,14 +109,20 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
       case AIChatQSDataTypeEnum.RESULT:
         return <AITriageChatContent isAnswer={true} content={data} {...chatContentExtraProps} />
       case AIChatQSDataTypeEnum.THOUGHT:
-        return <AITriageChatContent isAnswer={true} content={`思考：${data}`} {...chatContentExtraProps} />
+        return (
+          <AITriageChatContent
+            isAnswer={true}
+            content={`${t('AIChatListItem.thinking')}${data}`}
+            {...chatContentExtraProps}
+          />
+        )
       case AIChatQSDataTypeEnum.TOOL_RESULT:
         const { execFileRecord } = yakExecResult
         const fileList = execFileRecord.get(data.callToolId)
         return (
           !!data.type && (
             <ToolInvokerCard
-              titleText={'工具调用'}
+              titleText={t('AIChatListItem.toolCall')}
               fileList={fileList}
               modalInfo={{
                 time: Timestamp,
@@ -168,8 +176,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         return (
           <DividerCard
             status={AITaskStatus.cancel}
-            name="任务结束标志"
-            desc="当前任务已经结束，下面为新的任务数据"
+            name={t('AIChatListItem.taskEnd')}
+            desc={t('AIChatListItem.taskEndDesc')}
             success={0}
             error={0}
           />

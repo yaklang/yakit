@@ -30,6 +30,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import DragKnowledge from './DragKnowledge/DragKnowledge'
 import { useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface KnowledgeSidebarListProps {
   api?: ReturnType<typeof useMultipleHoldGRPCStream>[1]
@@ -42,6 +43,7 @@ export interface KnowledgeModalRef {
 }
 
 const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: Ref<KnowledgeModalRef>) => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { knowledgeBases, editKnowledgeBase } = useKnowledgeBase()
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
@@ -273,7 +275,7 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
           <YakitInput
             prefix={<OutlineSearchIcon className={styles['search-icon']} />}
             allowClear
-            placeholder="请输入关键词搜索"
+            placeholder={t('YakitInput.searchKeyWordPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -335,7 +337,11 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
                             <div className={styles['default-tag']}>默认知识库</div>
                           ) : (
                             <div className={styles['type-tag']}>
-                              {items.CreatedFromUI ? '手动创建' : items.IsImported ? '外部导入' : '其他'}
+                              {items.CreatedFromUI
+                                ? t('KnowledgeSidebarList.manual')
+                                : items.IsImported
+                                  ? t('KnowledgeSidebarList.external')
+                                  : t('KnowledgeSidebarList.other')}
                             </div>
                           )}
 
@@ -360,7 +366,7 @@ const KnowledgeSidebarList = ({ api, streams }: KnowledgeSidebarListProps, ref: 
                     </div>
                   )
                 })}
-                <div className={styles['min-reached']}>已经到底啦~</div>
+                <div className={styles['min-reached']}>{t('YakitEmpty.end_of_list')}</div>
               </>
             ) : (
               <DragKnowledge setAddMode={setAddMode} />

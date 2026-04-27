@@ -65,7 +65,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
           })}
         >
           {t('ConfigSystemMcp.currentStatus')}
-          <span>{enableMcp ? t('ConfigSystemMcp.enabled') : t('ConfigSystemMcp.disabled')}</span>
+          <span>{enableMcp ? t('YakitButton.enabled') : t('ConfigSystemMcp.disabled')}</span>
         </div>
         <Form layout="vertical" style={{ padding: '0 24px 24px' }}>
           <Form.Item label={t('ConfigSystemMcp.startAddress')} help={t('ConfigSystemMcp.startAddressHelp')}>

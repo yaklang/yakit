@@ -822,7 +822,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
     onTextAreaType,
     ...restProps
   } = props
-  const { t } = useI18nNamespaces(['yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const [uploadLoading, setUploadLoading] = useState<boolean>(false)
   const renderContent = useMemoizedFn((helpNode: ReactNode) => {
     return (
@@ -974,6 +974,7 @@ export const YakitDraggerContentPath: React.FC<YakitDraggerContentPathProps> = R
             <div className={styles['divider-line']}></div>
             <YakitPopover
               overlayClassName={styles['form-item-setting-dropdown']}
+              style={{ width: i18n.language === 'zh' ? 240 : 300 }}
               placement="bottomLeft"
               content={
                 <div onClick={(e) => e.stopPropagation()} style={{ padding: '0 8px' }}>

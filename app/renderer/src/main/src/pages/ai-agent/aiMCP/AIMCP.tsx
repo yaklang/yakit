@@ -50,6 +50,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { SolidToolIcon } from '@/assets/icon/solid'
 import { yakitNotify } from '@/utils/notification'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
   const [listType, setListType] = useState<'mcp' | 'mcp-tool'>('mcp')
@@ -82,6 +83,7 @@ export default AIMCP
 
 const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
   const { onBack, item } = props
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [mcpItem, setMCPItem] = useState<MCPServer>(item)
   const [loading, setLoading] = useState<boolean>(false)
   const [updateLoading, setUpdateLoading] = useState<boolean>(false)
@@ -95,7 +97,7 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
         if (res.Enable) {
           setMCPItem(res)
         } else {
-          yakitNotify('info', '请启用该mcp服务器后刷新工具列表')
+          yakitNotify('info', t('AIMCP.enableServerRefreshTools'))
         }
       })
       .finally(() =>
@@ -135,14 +137,14 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
     <div className={styles['ai-mcp-list-wrapper']}>
       <div className={styles['ai-mcp-list-header']}>
         <div className={styles['ai-mcp-list-header-left']}>
-          <span>工具列表</span>
-          <Tooltip title="Model Context Protocol(MCP)提供了标准化的Al模型上下文通信协议,支持SSE和WebSocket连接方式">
+          <span>{t('AIMCP.toolList')}</span>
+          <Tooltip title={t('AIMCP.protocolInfo')}>
             <OutlineInformationcircleIcon className={styles['info-icon']} />
           </Tooltip>
           <YakitRoundCornerTag>{toolLis.length}</YakitRoundCornerTag>
         </div>
         <YakitButton type="text" icon={<OutlineReplyIcon />} onClick={onBack}>
-          返回
+          {t('YakitButton.back')}
         </YakitButton>
       </div>
       <div className={styles['ai-tool-list-container']}>
@@ -166,13 +168,13 @@ const AIMCPToolList: React.FC<AIMCPToolListProps> = React.memo((props) => {
             loading={false}
           />
         ) : (
-          <YakitEmpty title="暂无数据" description="未启用,请启用后刷新工具列表">
+          <YakitEmpty title={t('YakitEmpty.noData')} description={t('AIMCP.disabledRefreshTools')}>
             <div className={styles['ai-mcp-tool-empty-btns']}>
               <YakitButton type="outline1" icon={<OutlineRefreshIcon />} loading={loading} onClick={getMcpItem}>
-                刷新
+                {t('YakitButton.refresh')}
               </YakitButton>
               <YakitButton type="primary" icon={<OutlinePlayIcon />} loading={updateLoading} onClick={updateMCPServer}>
-                启用工具
+                {t('AIMCP.enableTools')}
               </YakitButton>
             </div>
           </YakitEmpty>
@@ -199,13 +201,14 @@ const AIMCPToolItem: React.FC<AIMCPToolItemProps> = React.memo((props) => {
 
 const AIMCPToolItemPopoverContent: React.FC<AIMCPToolItemPopoverContentProps> = React.memo((props) => {
   const { toolItem } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
   return (
     <div className={styles['ai-mcp-tool-popover-content']}>
       <div className={styles['ai-mcp-tool-popover-title']}>{toolItem.Name}</div>
       <div className={styles['ai-mcp-tool-popover-description']}>{toolItem.Description}</div>
       {toolItem.Params.length > 0 ? (
         <div className={styles['ai-mcp-tool-param-list-wrapper']}>
-          <div className={styles['list-heard']}>参数介绍</div>
+          <div className={styles['list-heard']}>{t('AIMCP.paramIntro')}</div>
           <div className={styles['ai-mcp-tool-param-list']}>
             {toolItem.Params.map((item) => {
               return (
@@ -233,6 +236,7 @@ const AIMCPToolItemPopoverContent: React.FC<AIMCPToolItemPopoverContentProps> = 
 
 const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const { setCurrentMCP } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
   const [keyWord, setKeyWord] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
   const [spinning, setSpinning] = useState<boolean>(false)
@@ -301,7 +305,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   })
   const handleNewAIMCP = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: '添加MCP Server',
+      title: t('AIMCP.addMcpServer'),
       width: 600,
       content: (
         <AIMCPForm
@@ -330,8 +334,8 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
     <div className={styles['ai-mcp-list-wrapper']} ref={mcpListRef}>
       <div className={styles['ai-mcp-list-header']}>
         <div className={styles['ai-mcp-list-header-left']}>
-          <span>MCP服务器配置</span>
-          <Tooltip title="Model Context Protocol(MCP)提供了标准化的Al模型上下文通信协议,支持SSE和WebSocket连接方式">
+          <span>{t('AIMCP.mcpServerConfig')}</span>
+          <Tooltip title={t('AIMCP.protocolInfo')}>
             <OutlineInformationcircleIcon className={styles['info-icon']} />
           </Tooltip>
           <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
@@ -374,6 +378,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
 
 const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
   const { item, onRefresh, setCurrentMCP, onSetData } = props
+  const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const [visible, setVisible] = useState<boolean>(false)
   const [stopVisible, setStopVisible] = useState<boolean>(false)
@@ -431,7 +436,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
     if (item.Enable) return
     const defaultValues: UpdateMCPServerRequest = omit(item, ['Tools'])
     const m = showYakitModal({
-      title: '修改MCP',
+      title: t('AIMCP.editMcp'),
       width: '50%',
       content: (
         <AIMCPForm
@@ -450,11 +455,11 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
     const m = YakitModalConfirm({
       width: 420,
       type: 'white',
-      onCancelText: '取消',
-      onOkText: '删除',
+      onCancelText: t('YakitButton.cancel'),
+      onOkText: t('YakitButton.delete'),
       okButtonProps: { colors: 'danger' },
-      title: '删除MCP Server',
-      content: '确定删除该MCP Server吗?',
+      title: t('AIMCP.deleteMcpServer'),
+      content: t('AIMCP.deleteMcpServerConfirm'),
       onOk: () => {
         grpcDeleteMCPServer({ ID: item.ID }).then(() => {
           onRefresh()
@@ -470,7 +475,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
     let typeNode: ReactNode = <></>
     switch (item.Type) {
       case AIMCPServerTypeEnum.SSE:
-        desc = `地址: ${item.URL}`
+        desc = t('AIMCP.address', { url: item.URL })
         typeNode = (
           <YakitTag size="small" color="blue" className={styles['ai-mcp-type-tag']}>
             <OutlineGlobealtIcon className={styles['type-icon']} />
@@ -480,7 +485,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
         break
 
       case AIMCPServerTypeEnum.Stdio:
-        desc = `命令: ${item.Command}`
+        desc = t('AIMCP.command', { command: item.Command })
         typeNode = (
           <YakitTag size="small" color="green" className={styles['ai-mcp-type-tag']}>
             <OutlineDesktopcomputerIcon className={styles['type-icon']} />
@@ -496,23 +501,23 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
       desc,
       typeNode,
     }
-  }, [item.Type, item.URL, item.Command])
+  }, [item.Type, item.URL, item.Command, i18n.language])
   const localModelMenu: YakitMenuItemType[] = useCreation(() => {
     let menu: YakitMenuItemType[] = [
       {
         key: 'edit',
-        label: '编辑',
+        label: t('YakitButton.edit'),
         itemIcon: <OutlinePencilaltIcon />,
       },
       {
         key: 'delete',
-        label: '删除',
+        label: t('YakitButton.delete'),
         type: 'danger',
         itemIcon: <OutlineTrashIcon />,
       },
     ]
     return menu
-  }, [])
+  }, [i18n.language])
   return (
     <div className={styles['ai-mcp-list-item']} onClick={() => setCurrentMCP(item)}>
       <div className={styles['ai-mcp-heard']}>
@@ -522,13 +527,13 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
           {!!item.ErrorMsg ? (
             <Tooltip title={item.ErrorMsg}>
               <YakitTag size="small" color="danger" fullRadius>
-                工具获取失败
+                {t('AIMCP.toolFetchFailed')}
               </YakitTag>
             </Tooltip>
           ) : (
             item.Tools.length > 0 && (
               <YakitTag size="small" color="success" fullRadius>
-                {item.Tools.length}个工具
+                {t('AIMCP.toolCount', { count: item.Tools.length })}
               </YakitTag>
             )
           )}
@@ -545,7 +550,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
           >
             {item.Enable ? (
               <YakitPopconfirm
-                title={`确定要停用 ${item.Name} 吗？`}
+                title={t('AIMCP.disableConfirm', { name: item.Name })}
                 onConfirm={onStop}
                 onCancel={() => setStopVisible(false)}
                 visible={stopVisible}
@@ -554,12 +559,12 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                 okButtonProps={{ loading: stopLoading }}
               >
                 <YakitButton type="text" colors="danger" icon={<OutlineExitIcon />}>
-                  停用
+                  {t('YakitButton.deactivated')}
                 </YakitButton>
               </YakitPopconfirm>
             ) : (
               <YakitButton type="text" onClick={onStart} icon={<OutlinePlayIcon />}>
-                启用
+                {t('YakitButton.enable')}
               </YakitButton>
             )}
             {!item.Enable && (

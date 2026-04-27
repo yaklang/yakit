@@ -1,266 +1,264 @@
 .config-management-content {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
-    .hot-patch-management {
-        width: 100%;
+  .hot-patch-management {
+    width: 100%;
+    height: 100%;
+    display: flex;
+
+    .type-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--Colors-Use-Neutral-Bg);
+      border-right: 1px solid var(--Colors-Use-Neutral-Border);
+      gap: 8px;
+
+      .type-panel-section {
         height: 100%;
         display: flex;
+        flex-direction: column;
+      }
 
-        .type-panel {
-            width: 300px;
-            display: flex;
-            flex-direction: column;
-            background: var(--Colors-Use-Neutral-Bg);
-            border-right: 1px solid var(--Colors-Use-Neutral-Border);
-            gap: 8px;
+      .type-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        font-size: 12px;
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 
-            .type-panel-section {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-            }
+        .template-title {
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .info-icon {
+          margin-left: 4px;
+          transform: translateY(3px);
+          svg {
+            width: 16px;
+            height: 16px;
+            color: var(--Colors-Use-Neutral-Disable);
+          }
+        }
+      }
+      .type-panel-tabs {
+        padding: 8px 12px;
+      }
+      .type-template {
+        display: flex;
+        flex-direction: column;
+        padding: 8px;
+        gap: 8px;
+        flex: 1;
+        overflow: hidden;
 
-            .type-panel-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px;
-                font-size: 12px;
-                border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-
-                .template-title {
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
-                }
-                .info-icon {
-                    margin-left: 4px;
-                    transform: translateY(3px);
-                    svg {
-                        width: 16px;
-                        height: 16px;
-                        color: var(--Colors-Use-Neutral-Disable);
-                    }
-                }
-            }
-            .type-panel-tabs {
-                padding: 8px 12px;
-            }
-            .type-template {
-                display: flex;
-                flex-direction: column;
-                padding: 8px;
-                gap: 8px;
-                flex: 1;
-                overflow: hidden;
-
-                .type-template-scroll {
-                    height: 100%;
-                    display: flex;
-                    flex-direction: column;
-                    overflow-y: auto;
-                }
-
-                .template-section {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-
-                    .template-section-title {
-                        padding-left: 8px;
-                        font-size: 12px;
-                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                    }
-                }
-
-                .template-divider {
-                    height: 1px;
-                    background-color: var(--Colors-Use-Neutral-Border);
-                    margin: 0;
-                }
-
-                .type-template-item {
-                    border-radius: 8px;
-                    padding: 8px 12px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    cursor: pointer;
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
-                    font-weight: 600;
-                    line-height: 16px;
-
-                    &:hover {
-                        background-color: var(--Colors-Use-Neutral-Border);
-                    }
-
-                    &-active {
-                        background-color: var(--Colors-Use-Main-Primary);
-                        color: var(--Colors-Use-Main-On-Primary);
-
-                        .template-more-icon {
-                            opacity: 1 !important;
-                            svg {
-                                color: var(--Colors-Use-Main-On-Primary) !important;
-                            }
-                            &:hover {
-                                background-color: transparent !important;
-                                svg {
-                                    color: var(--Colors-Use-Main-On-Primary) !important;
-                                }
-                            }
-                        }
-
-                        &:hover {
-                            background-color: var(--Colors-Use-Main-Hover);
-                        }
-                    }
-                    .template-name {
-                        flex: 1;
-                        color: var(--Colors-Use-Neutral-Text-2-Secondary);
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                    }
-                    .global-enabled-tag {
-                        margin-left: 8px;
-                    }
-                    .template-more-icon {
-                        cursor: pointer;
-                        opacity: 0;
-                        transition: opacity 0.2s;
-                        flex-shrink: 0;
-                        padding: 4px;
-                        border-radius: 4px;
-
-                        &:hover {
-                            background-color: var(--Colors-Use-Main-Bg-Hover);
-                            svg {
-                                color: var(--Colors-Use-Main-Primary);
-                            }
-                        }
-
-                        svg {
-                            height: 16px;
-                            width: 16px;
-                            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                        }
-                    }
-
-                    &:hover {
-                        .template-more-icon {
-                            opacity: 1;
-                        }
-                    }
-                }
-            }
+        .type-template-scroll {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          overflow-y: auto;
         }
 
-        .editor-panel {
-            padding: 12px;
+        .template-section {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+
+          .template-section-title {
+            padding-left: 8px;
+            font-size: 12px;
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+          }
+        }
+
+        .template-divider {
+          height: 1px;
+          background-color: var(--Colors-Use-Neutral-Border);
+          margin: 0;
+        }
+
+        .type-template-item {
+          border-radius: 8px;
+          padding: 8px 12px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          cursor: pointer;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+          font-weight: 600;
+          line-height: 16px;
+
+          &:hover {
+            background-color: var(--Colors-Use-Neutral-Border);
+          }
+
+          &-active {
+            background-color: var(--Colors-Use-Main-Primary);
+            color: var(--Colors-Use-Main-On-Primary);
+
+            .template-more-icon {
+              opacity: 1 !important;
+              svg {
+                color: var(--Colors-Use-Main-On-Primary) !important;
+              }
+              &:hover {
+                background-color: transparent !important;
+                svg {
+                  color: var(--Colors-Use-Main-On-Primary) !important;
+                }
+              }
+            }
+
+            &:hover {
+              background-color: var(--Colors-Use-Main-Hover);
+            }
+          }
+          .template-name {
             flex: 1;
-            display: flex;
-            flex-direction: column;
+            color: var(--Colors-Use-Neutral-Text-2-Secondary);
             overflow: hidden;
-            gap: 12px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .global-enabled-tag {
+            margin-left: 8px;
+          }
+          .template-more-icon {
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            flex-shrink: 0;
+            padding: 4px;
+            border-radius: 4px;
 
-            .editor-title {
-                font-size: 16px;
-                font-weight: 600;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+            &:hover {
+              background-color: var(--Colors-Use-Main-Bg-Hover);
+              svg {
+                color: var(--Colors-Use-Main-Primary);
+              }
             }
 
-            .editor-header {
-                border-bottom: 1px solid var(--Colors-Use-Neutral-Line);
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-
-                .editor-header-right {
-                    display: flex;
-                    gap: 8px;
-                }
+            svg {
+              height: 16px;
+              width: 16px;
+              color: var(--Colors-Use-Neutral-Text-3-Secondary);
             }
+          }
 
-            .editor-left {
-                height: 100%;
+          &:hover {
+            .template-more-icon {
+              opacity: 1;
             }
-
-            .template-content-panel {
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                border-left: 1px solid var(--Colors-Use-Neutral-Line);
-
-                .template-content-header {
-                    background-color: var(--Colors-Use-Neutral-Bg);
-                    padding: 12px;
-                    border-bottom: 1px solid var(--Colors-Use-Neutral-Line);
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-
-                    .template-content-title {
-                        font-size: 14px;
-                        font-weight: 600;
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
-                    }
-
-                    .template-content-actions {
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-                }
-
-                .template-content-body {
-                    flex: 1;
-                    overflow: hidden;
-                }
-            }
+          }
         }
+      }
     }
+
+    .editor-panel {
+      padding: 12px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      gap: 12px;
+
+      .editor-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+
+      .editor-header {
+        border-bottom: 1px solid var(--Colors-Use-Neutral-Line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .editor-header-right {
+          display: flex;
+          gap: 8px;
+        }
+      }
+
+      .editor-left {
+        height: 100%;
+      }
+
+      .template-content-panel {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid var(--Colors-Use-Neutral-Line);
+
+        .template-content-header {
+          background-color: var(--Colors-Use-Neutral-Bg);
+          padding: 12px;
+          border-bottom: 1px solid var(--Colors-Use-Neutral-Line);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+
+          .template-content-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+          }
+
+          .template-content-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+        }
+
+        .template-content-body {
+          flex: 1;
+          overflow: hidden;
+        }
+      }
+    }
+  }
 }
 
 .template-popover {
-    :global(.ant-popover-inner-content) {
-        padding: 0 !important;
+  :global(.ant-popover-inner-content) {
+    padding: 0 !important;
+  }
+  .popover-menu-item {
+    width: 160px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    transition: background 0.2s;
+
+    svg {
+      height: 16px;
+      width: 16px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
-    .popover-menu-item {
-        width: 160px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        cursor: pointer;
-        border-radius: 4px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        transition: background 0.2s;
 
-        svg {
-            height: 16px;
-            width: 16px;
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-
-        &:hover {
-            background-color: var(--Colors-Use-Neutral-Border);
-        }
-
-        &-danger {
-            color: var(--Colors-Use-Error-Primary);
-            svg {
-                color: var(--Colors-Use-Danger-Text);
-            }
-        }
-
-
-        &-primary {
-            color: var(--Colors-Use-Main-Primary);
-            svg {
-                color: var(--Colors-Use-Main-Primary);
-            }
-        }
+    &:hover {
+      background-color: var(--Colors-Use-Neutral-Border);
     }
+
+    &-danger {
+      color: var(--Colors-Use-Error-Primary);
+      svg {
+        color: var(--Colors-Use-Danger-Text);
+      }
+    }
+
+    &-primary {
+      color: var(--Colors-Use-Main-Primary);
+      svg {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
 }

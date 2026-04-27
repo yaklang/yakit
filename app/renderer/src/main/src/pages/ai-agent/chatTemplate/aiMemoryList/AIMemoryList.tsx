@@ -15,6 +15,7 @@ import { OutlineTrashIcon } from '@/assets/icon/outline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import { grpcDeleteAIMemoryEntity } from '@/pages/memoryBase/utils'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
 const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
@@ -50,6 +51,7 @@ const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
   ]
 }
 const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
   const { chatIPCData } = useChatIPCStore()
   const { handleStop } = useChatIPCDispatcher()
   const { chatIPCEvents } = useChatIPCDispatcher()
@@ -113,7 +115,7 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
   return (
     <div className={styles['ai-memory-list-wrapper']}>
       <div className={styles['ai-memory-list-heard']}>
-        <div className={styles['title']}>近期记忆({list.length})</div>
+        <div className={styles['title']}>{t('AIMemoryList.recentMemory', { count: list.length })}</div>
         <YakitPopconfirm title="清空会停止当前会话后再清空，是否确认清空所有记忆" onConfirm={onClearMemoryConfirm}>
           <YakitButton
             type="outline1"
@@ -185,6 +187,7 @@ export default AIMemoryList
 
 export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props) => {
   const { item } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
   const echartsData = useCreation(() => {
     return {
       xData: [],
@@ -198,7 +201,7 @@ export const AIMemoryContent: React.FC<AIMemoryContentProps> = React.memo((props
         <div className={styles['heard-content']}>{item.content}</div>
       </div>
       <div className={styles['memory-popover-score-wrapper']}>
-        <div className={styles['title']}>C.O.R.E. P.A.C.T. Scores（记忆特征）</div>
+        <div className={styles['title']}>{t('AIMemoryList.scoreTitle')}</div>
         <div className={styles['score-list']}>
           {getScoreList(item).map((score, index) => (
             <div

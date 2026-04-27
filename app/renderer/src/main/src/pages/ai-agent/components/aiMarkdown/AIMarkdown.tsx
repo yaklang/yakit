@@ -21,9 +21,11 @@ import moment from 'moment'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
   const { content, nodeLabel, className, modalInfo, referenceNode } = props
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { goAddNotepad } = useGoEditNotepad()
 
@@ -83,13 +85,13 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
       titleExtra={<ModalInfo {...modalInfo} />}
       titleMore={
         <div className={styles['header-extra']}>
-          <Tooltip title="从记事本中打开">
+          <Tooltip title={t('AIMarkdown.openFromNotepad')}>
             <YakitButton size="small" type="text" icon={<OutlineNotebookIcon />} onClick={onGoToNote} />
           </Tooltip>
-          <Tooltip title="下载md文件">
+          <Tooltip title={t('AIMarkdown.downloadMd')}>
             <YakitButton size="small" type="text" icon={<OutlineDownloadIcon />} onClick={onDown} />
           </Tooltip>
-          <Tooltip title={type === 'code' ? '切换预览模式' : '切换源码模式'}>
+          <Tooltip title={type === 'code' ? t('AIMarkdown.switchToPreview') : t('AIMarkdown.switchToSource')}>
             <YakitButton
               size="small"
               type="text"
@@ -97,7 +99,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
               onClick={() => setType(type === 'code' ? 'preview' : 'code')}
             />
           </Tooltip>
-          <Tooltip title={expand ? '收起' : '展开'}>
+          <Tooltip title={expand ? t('YakitButton.collapse') : t('YakitButton.expand')}>
             <YakitButton
               size="small"
               type="text2"

@@ -31,40 +31,47 @@ import { ReActChatEventEnum, tagColors } from '../defaultConstant'
 import { YakitRoundCornerTag } from '@/components/yakitUI/YakitRoundCornerTag/YakitRoundCornerTag'
 import { yakitNotify } from '@/utils/notification'
 import { AIToolEditorPageInfoProps } from '@/store/pageInfo'
+import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, 'aiAgent')
 
 /**
  * 工具类型选项
  *  - 全部：展示全部工具
  *  - 收藏：只展示收藏的工具
  */
-export const toolTypeOptions = [
-  {
-    label: '全部',
-    value: 'all',
-  },
-  {
-    label: '收藏',
-    value: 'collect',
-  },
-]
+export const toolTypeOptions = (t: TFunction) => {
+  return [
+    {
+      label: t('AIToolList.all'),
+      value: 'all',
+    },
+    {
+      label: t('AIToolList.collect'),
+      value: 'collect',
+    },
+  ]
+}
 /**
  * 工具操作菜单
  *  - 复制：将工具的名称复制到剪贴板
  *  - 删除：删除该工具
  */
-export const toolMenu: YakitMenuItemType[] = [
-  {
-    key: 'copy',
-    label: '复制',
-    itemIcon: <OutlineClipboardcopyIcon />,
-  },
-  {
-    key: 'delete',
-    label: '删除',
-    type: 'danger',
-    itemIcon: <OutlineTrashIcon />,
-  },
-]
+export const toolMenu: (t: TFunction) => YakitMenuItemType[] = (t: TFunction) => {
+  return [
+    {
+      key: 'copy',
+      label: t('YakitButton.copy'),
+      itemIcon: <OutlineClipboardcopyIcon />,
+    },
+    {
+      key: 'delete',
+      label: t('YakitButton.delete'),
+      type: 'danger',
+      itemIcon: <OutlineTrashIcon />,
+    },
+  ]
+}
 /**
  * 打开编辑页面
  * @param item AITool 模板数据
@@ -73,7 +80,7 @@ export const toolMenu: YakitMenuItemType[] = [
  */
 export const handleModifyAITool = (item: AITool, source?: YakitRoute) => {
   if (!item.ID) {
-    yakitNotify('error', `该模板 ID('${item.ID}') 异常, 无法编辑`)
+    yakitNotify('error', tOriginal('AIToolList.templateIdError', { id: item.ID }))
     return
   }
   const params: AIToolEditorPageInfoProps = {
@@ -106,6 +113,7 @@ export const handleAddAITool = (source?: YakitRoute) => {
   )
 }
 const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [toolQueryType, setToolQueryType] = useState<ToolQueryType>('all')
   const [keyWord, setKeyWord] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
@@ -210,7 +218,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
             size="small"
             buttonStyle="solid"
             value={toolQueryType}
-            options={toolTypeOptions}
+            options={toolTypeOptions(t)}
             onChange={onToolQueryTypeChange}
           />
           <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
@@ -229,7 +237,7 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
         <YakitInput
           prefix={<OutlineSearchIcon className={styles['search-icon']} />}
           allowClear
-          placeholder="请输入关键词搜索"
+          placeholder={t('YakitInput.searchKeyWordPlaceholder')}
           value={keyWord}
           onChange={(e) => onSearch(e.target.value)}
         />
@@ -265,6 +273,7 @@ export default AIToolList
 
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
   const { item, onSetData, onRefresh, onSelect } = props
+  const { t } = useI18nNamespaces(['yakitUi'])
   const [visible, setVisible] = useState<boolean>(false)
   const onFavorite = useMemoizedFn((e) => {
     e.stopPropagation()
@@ -313,7 +322,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
   const onRemove = useMemoizedFn(() => {
     grpcDeleteAITool({ IDs: [item.ID] }).then(() => {
       onRefresh()
-      yakitNotify('success', '删除成功')
+      yakitNotify('success', t('YakitNotification.deleted'))
     })
   })
   const onEdit = useMemoizedFn((e) => {
@@ -359,7 +368,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
               <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
               <YakitDropdownMenu
                 menu={{
-                  data: toolMenu,
+                  data: toolMenu(t),
                   onClick: ({ key }) => menuSelect(key),
                 }}
                 dropdown={{

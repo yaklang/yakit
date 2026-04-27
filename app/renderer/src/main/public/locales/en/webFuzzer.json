@@ -547,7 +547,6 @@
   "GlobalHotPatch": {
     "Global_hot_template": "Global Hot-Reload Template",
     "Global_hot_template_tip": "After implementing global hot reloading of traffic, unified processing can be achieved across all systems.",
-    "enabled": "Enabled",
     "started": "(Started)",
     "MITM_hot_patch": "MITM Hot-Reload"
   },

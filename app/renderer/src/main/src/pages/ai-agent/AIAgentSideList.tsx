@@ -7,6 +7,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import classNames from 'classnames'
 import styles from './AIAgentSideList.module.scss'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AIChatSetting = React.lazy(() => import('./AIChatSetting/AIChatSetting'))
 const ForgeName = React.lazy(() => import('./forgeName/ForgeName'))
@@ -17,6 +18,7 @@ const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
 
 export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   // const {} = props
+  const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const [active, setActive] = useState<AIAgentTabListEnum>(AIAgentTabListEnum.History)
   const [show, setShow] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -106,6 +108,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
   return (
     <div className={styles['ai-agent-side-list']}>
       <YakitSideTab
+        key={i18n.language}
         type="vertical"
         yakitTabs={AiAgentTabList}
         activeKey={active}
@@ -113,6 +116,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
         className={styles['tab-wrap']}
         show={show}
         setShow={setShow}
+        t={t}
       >
         <div
           className={classNames(styles['tab-content'], {

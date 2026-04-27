@@ -32,6 +32,7 @@ import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitR
 import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
@@ -41,6 +42,7 @@ export enum AIChatLeft {
 /** @name chat-左侧侧边栏 */
 export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const { taskTree, taskName } = props
+  const { t, i18n } = useI18nNamespaces(['aiAgent'])
 
   const { chatIPCData } = useChatIPCStore()
   const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
@@ -132,7 +134,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
   const button = useMemo(() => {
     let options = [
-      { label: '时间线', value: AIChatLeft.Timeline },
+      { label: t('AIAgentChatTemplate.timeline'), value: AIChatLeft.Timeline },
       { label: '任务列表', value: AIChatLeft.TaskTree },
     ]
     return (
@@ -145,7 +147,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
         onChange={({ target }) => handleTabChange(target.value)}
       />
     )
-  }, [activeTab, handleTabChange])
+  }, [activeTab, handleTabChange, i18n.language])
   const extraProps = useCreation(() => {
     let p: Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'> = {}
     if (!length) {

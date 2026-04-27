@@ -146,6 +146,8 @@
     font-size: 12px;
     font-weight: 500;
     line-height: 16px;
+    writing-mode: vertical-rl; // 垂直排列，从右向左
+    text-orientation: mixed; // 默认值，保持文字自然方向（英文直立，中文正常）
   }
 }
 
@@ -231,7 +233,6 @@
   display: flex;
 }
 .editor-params-preview-wrapper {
-  width: 301px;
   height: 100%;
   border-left: 1px solid var(--Colors-Use-Neutral-Border);
   background: var(--Colors-Use-Neutral-Bg);

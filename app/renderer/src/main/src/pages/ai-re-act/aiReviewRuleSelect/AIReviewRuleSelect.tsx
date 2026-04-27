@@ -25,8 +25,10 @@ import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { Tooltip } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
+  const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const { setting } = useAIAgentStore()
   const { setSetting } = useAIAgentDispatcher()
 
@@ -124,7 +126,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
           onSelectModel(showType)
         }}
         options={AIReviewRuleOptions.map((item) => ({
-          icon: <Tooltip title={item.describe}>{getIcon(item.value)}</Tooltip>,
+          icon: <Tooltip title={t(item.describe)}>{getIcon(item.value)}</Tooltip>,
           value: item.value,
         }))}
         size="small"
