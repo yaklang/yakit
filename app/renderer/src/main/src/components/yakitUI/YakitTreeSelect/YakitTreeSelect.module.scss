@@ -1,166 +1,165 @@
 .yakit-tree-select-wrapper {
-    :global {
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            border-radius: 4px;
-        }
-
-        .ant-select-multiple .ant-select-selector {
-            padding: 0 8px;
-        }
-
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            border: 1px solid var(--Colors-Use-Neutral-Border);
-        }
-        .ant-select-multiple .ant-select-selection-item {
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
-            border: 1px solid var(--Colors-Use-Neutral-Border);
-            height: 20px;
-            line-height: 18px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-size: 12px;
-        }
+  :global {
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+      border-radius: 4px;
     }
+
+    .ant-select-multiple .ant-select-selector {
+      padding: 0 8px;
+    }
+
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+    }
+    .ant-select-multiple .ant-select-selection-item {
+      background-color: var(--Colors-Use-Neutral-Bg-Hover);
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      height: 20px;
+      line-height: 18px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+    }
+  }
 }
 
 .yakit-tree-select-dropdown {
-    --checkbox-active-color: var(--Colors-Use-Main-Pressed);
-    --checkbox-background-color: var(--Colors-Use-Main-Primary);
-    --checkbox-background-disabled-color: var(--Colors-Use-Neutral-Disable);
-    --checkbox-border-color: var(--Colors-Use-Neutral-Border);
-    --checkbox-border-disabled-color: var(--Colors-Use-Neutral-Disable);
-    --checkbox-border-primary-color: var(--Colors-Use-Main-Primary);
-    --checkbox-box-shadow-color: var(--Colors-Use-Main-Focus);
-    --checkbox-hover-color: var(--Colors-Use-Main-Hover);
-    .yakit-tree-select-switcher-icon {
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        svg {
-            height: 12px;
-            width: 12px;
-        }
+  --checkbox-active-color: var(--Colors-Use-Main-Pressed);
+  --checkbox-background-color: var(--Colors-Use-Main-Primary);
+  --checkbox-background-disabled-color: var(--Colors-Use-Neutral-Disable);
+  --checkbox-border-color: var(--Colors-Use-Neutral-Border);
+  --checkbox-border-disabled-color: var(--Colors-Use-Neutral-Disable);
+  --checkbox-border-primary-color: var(--Colors-Use-Main-Primary);
+  --checkbox-box-shadow-color: var(--Colors-Use-Main-Focus);
+  --checkbox-hover-color: var(--Colors-Use-Main-Hover);
+  .yakit-tree-select-switcher-icon {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    svg {
+      height: 12px;
+      width: 12px;
+    }
+  }
+
+  :global {
+    .ant-select-tree-checkbox-inner {
+      border-color: var(--checkbox-border-color);
+      border-radius: 4px;
+    }
+    .ant-select-tree-checkbox-checked::after {
+      border-color: var(--checkbox-border-primary-color);
+      border-radius: 4px;
+    }
+    .ant-select-tree-checkbox-wrapper {
+      align-items: center;
+      height: 16px;
+    }
+    .ant-select-tree-checkbox {
+      top: 0;
+    }
+    .ant-select-tree-checkbox-checked::after {
+      animation: yakitEffectCheckbox 0.36s ease-in-out;
+    }
+    .ant-select-tree-checkbox-wrapper:hover .ant-select-tree-checkbox-inner,
+    .ant-select-tree-checkbox:hover .ant-select-tree-checkbox-inner,
+    .ant-select-tree-checkbox-input:focus + .ant-select-tree-checkbox-inner {
+      border-color: var(--checkbox-border-primary-color);
+    }
+    .ant-select-tree-checkbox-wrapper:active .ant-select-tree-checkbox-inner,
+    .ant-select-tree-checkbox:active .ant-select-tree-checkbox-inner,
+    .ant-select-tree-checkbox-input:focus + .ant-select-tree-checkbox-inner {
+      border-color: var(--checkbox-border-primary-color);
+      box-shadow: 0 0 2px 2px var(--checkbox-box-shadow-color);
+    }
+    .ant-select-tree-checkbox-checked .ant-select-tree-checkbox-inner {
+      border-color: var(--checkbox-border-primary-color);
+      background-color: var(--checkbox-background-color);
+    }
+    .ant-select-tree-checkbox-checked:active {
+      .ant-select-tree-checkbox-inner {
+        box-shadow: 0 0 2px 2px var(--checkbox-box-shadow-color);
+      }
     }
 
-    :global {
-        .ant-select-tree-checkbox-inner {
-            border-color: var(--checkbox-border-color);
-            border-radius: 4px;
-        }
-        .ant-select-tree-checkbox-checked::after {
-            border-color: var(--checkbox-border-primary-color);
-            border-radius: 4px;
-        }
-        .ant-select-tree-checkbox-wrapper {
-            align-items: center;
-            height: 16px;
-        }
-        .ant-select-tree-checkbox {
-            top: 0;
-        }
-        .ant-select-tree-checkbox-checked::after {
-            animation: yakitEffectCheckbox 0.36s ease-in-out;
-        }
-        .ant-select-tree-checkbox-wrapper:hover .ant-select-tree-checkbox-inner,
-        .ant-select-tree-checkbox:hover .ant-select-tree-checkbox-inner,
-        .ant-select-tree-checkbox-input:focus + .ant-select-tree-checkbox-inner {
-            border-color: var(--checkbox-border-primary-color);
-        }
-        .ant-select-tree-checkbox-wrapper:active .ant-select-tree-checkbox-inner,
-        .ant-select-tree-checkbox:active .ant-select-tree-checkbox-inner,
-        .ant-select-tree-checkbox-input:focus + .ant-select-tree-checkbox-inner {
-            border-color: var(--checkbox-border-primary-color);
-            box-shadow: 0 0 2px 2px var(--checkbox-box-shadow-color);
-        }
-        .ant-select-tree-checkbox-checked .ant-select-tree-checkbox-inner {
-            border-color: var(--checkbox-border-primary-color);
-            background-color: var(--checkbox-background-color);
-        }
-        .ant-select-tree-checkbox-checked:active {
-            .ant-select-tree-checkbox-inner {
-                box-shadow: 0 0 2px 2px var(--checkbox-box-shadow-color);
-            }
-        }
-
-        .ant-select-tree-checkbox-indeterminate .ant-select-tree-checkbox-inner::after {
-            width: 10px;
-            height: 10px;
-            border-radius: 2px;
-            background-color: var(--checkbox-background-color);
-        }
-        .ant-select-tree-checkbox-indeterminate .ant-select-tree-checkbox-inner {
-            border-width: 2px !important;
-            border-color: var(--checkbox-border-primary-color);
-            background-color: #ffffff !important;
-        }
-        .ant-select-tree-checkbox-indeterminate:hover {
-            .ant-select-tree-checkbox-inner {
-                border-width: 2px;
-            }
-            .ant-select-tree-checkbox-inner::after {
-                background-color: var(--checkbox-background-color);
-            }
-        }
-        .ant-select-tree-checkbox-indeterminate:active {
-            .ant-select-tree-checkbox-inner {
-                border-color: var(--checkbox-active-color);
-                box-shadow: 0 0 2px 2px var(--checkbox-box-shadow-color);
-            }
-            .ant-select-tree-checkbox-inner::after {
-                background-color: var(--checkbox-active-color);
-            }
-        }
-
-        .ant-select-tree-checkbox-checked:hover {
-            .ant-select-tree-checkbox-inner {
-                border-color: var(--checkbox-hover-color);
-                background-color: var(--checkbox-hover-color);
-            }
-        }
-        .ant-select-tree-checkbox-checked:active {
-            .ant-select-tree-checkbox-inner {
-                border: 1px solid var(--checkbox-border-primary-color);
-                background-color: var(--checkbox-background-color);
-            }
-        }
-
-        .ant-select-tree-checkbox-indeterminate.ant-select-tree-checkbox-disabled
-            .ant-select-tree-checkbox-inner::after {
-            border-color: var(--checkbox-border-disabled-color);
-            background-color: var(--checkbox-background-disabled-color);
-        }
-        .ant-select-tree-checkbox-disabled.ant-select-tree-checkbox-checked .ant-select-tree-checkbox-inner::after {
-            border-color: #ffffff;
-        }
-        .ant-select-tree-checkbox-wrapper-checked {
-            .ant-select-tree-checkbox-disabled .ant-select-tree-checkbox-inner {
-                border-color: var(--checkbox-border-disabled-color) !important;
-                background-color: var(--checkbox-background-disabled-color);
-            }
-        }
-        .ant-select-tree-checkbox-disabled {
-            .ant-select-tree-checkbox-checked::after {
-                border: 1px solid var(--checkbox-border-color);
-            }
-            .ant-select-tree-checkbox-inner::after {
-                border-color: var(--checkbox-border-color);
-            }
-            .ant-select-tree-checkbox-inner {
-                background-color: var(--checkbox-border-color) !important;
-            }
-        }
-
-        .ant-select-tree-node-content-wrapper {
-            &:hover {
-                background-color: var(--Colors-Use-Neutral-Bg-Hover);
-            }
-        }
-
-        .ant-select-tree-switcher-loading-icon {
-            color: var(--Colors-Use-Main-Primary);
-        }
-
-        .ant-select-tree-list-scrollbar-thumb {
-            background: #c1c1c1 !important;
-            width: 6px !important;
-            transition: top 0.35s ease;
-        }
+    .ant-select-tree-checkbox-indeterminate .ant-select-tree-checkbox-inner::after {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      background-color: var(--checkbox-background-color);
     }
+    .ant-select-tree-checkbox-indeterminate .ant-select-tree-checkbox-inner {
+      border-width: 2px !important;
+      border-color: var(--checkbox-border-primary-color);
+      background-color: #ffffff !important;
+    }
+    .ant-select-tree-checkbox-indeterminate:hover {
+      .ant-select-tree-checkbox-inner {
+        border-width: 2px;
+      }
+      .ant-select-tree-checkbox-inner::after {
+        background-color: var(--checkbox-background-color);
+      }
+    }
+    .ant-select-tree-checkbox-indeterminate:active {
+      .ant-select-tree-checkbox-inner {
+        border-color: var(--checkbox-active-color);
+        box-shadow: 0 0 2px 2px var(--checkbox-box-shadow-color);
+      }
+      .ant-select-tree-checkbox-inner::after {
+        background-color: var(--checkbox-active-color);
+      }
+    }
+
+    .ant-select-tree-checkbox-checked:hover {
+      .ant-select-tree-checkbox-inner {
+        border-color: var(--checkbox-hover-color);
+        background-color: var(--checkbox-hover-color);
+      }
+    }
+    .ant-select-tree-checkbox-checked:active {
+      .ant-select-tree-checkbox-inner {
+        border: 1px solid var(--checkbox-border-primary-color);
+        background-color: var(--checkbox-background-color);
+      }
+    }
+
+    .ant-select-tree-checkbox-indeterminate.ant-select-tree-checkbox-disabled .ant-select-tree-checkbox-inner::after {
+      border-color: var(--checkbox-border-disabled-color);
+      background-color: var(--checkbox-background-disabled-color);
+    }
+    .ant-select-tree-checkbox-disabled.ant-select-tree-checkbox-checked .ant-select-tree-checkbox-inner::after {
+      border-color: #ffffff;
+    }
+    .ant-select-tree-checkbox-wrapper-checked {
+      .ant-select-tree-checkbox-disabled .ant-select-tree-checkbox-inner {
+        border-color: var(--checkbox-border-disabled-color) !important;
+        background-color: var(--checkbox-background-disabled-color);
+      }
+    }
+    .ant-select-tree-checkbox-disabled {
+      .ant-select-tree-checkbox-checked::after {
+        border: 1px solid var(--checkbox-border-color);
+      }
+      .ant-select-tree-checkbox-inner::after {
+        border-color: var(--checkbox-border-color);
+      }
+      .ant-select-tree-checkbox-inner {
+        background-color: var(--checkbox-border-color) !important;
+      }
+    }
+
+    .ant-select-tree-node-content-wrapper {
+      &:hover {
+        background-color: var(--Colors-Use-Neutral-Bg-Hover);
+      }
+    }
+
+    .ant-select-tree-switcher-loading-icon {
+      color: var(--Colors-Use-Main-Primary);
+    }
+
+    .ant-select-tree-list-scrollbar-thumb {
+      background: #c1c1c1 !important;
+      width: 6px !important;
+      transition: top 0.35s ease;
+    }
+  }
 }

@@ -1,5 +1,5 @@
-import {SegmentedProps} from "antd"
-import {SizeType} from "antd/lib/config-provider/SizeContext"
+import { SegmentedProps } from 'antd'
+import { SizeType } from 'antd/lib/config-provider/SizeContext'
 
 /**
  * @description: 分段器 Props
@@ -7,6 +7,6 @@ import {SizeType} from "antd/lib/config-provider/SizeContext"
  * @property {SizeType} size  尺寸
  */
 interface YakitSegmentedProps extends SegmentedProps {
-    wrapClassName?: string
-    size?: SizeType
+  wrapClassName?: string
+  size?: SizeType
 }

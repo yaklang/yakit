@@ -1,53 +1,53 @@
 %dot-wrapper {
-    width: 20px;
-    height: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  width: 20px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .list-item-wrapper {
-    display: inline-flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 8px;
-    width: 100%;
-    .bullet-dot-wrapper {
-        @extend %dot-wrapper;
-        .bullet-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background-color: var(--Colors-Use-Main-Primary);
-            color: var(--Colors-Use-Main-On-Primary);
-        }
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+  .bullet-dot-wrapper {
+    @extend %dot-wrapper;
+    .bullet-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background-color: var(--Colors-Use-Main-Primary);
+      color: var(--Colors-Use-Main-On-Primary);
     }
+  }
 
-    .label-dot-wrapper {
-        @extend %dot-wrapper;
-        color: var(--Colors-Use-Main-Primary);
-    }
+  .label-dot-wrapper {
+    @extend %dot-wrapper;
+    color: var(--Colors-Use-Main-Primary);
+  }
 
-    .checked-dot-wrapper {
-        @extend %dot-wrapper;
-        color: var(--Colors-Use-Main-Primary);
-        padding-bottom: 2px;
-    }
+  .checked-dot-wrapper {
+    @extend %dot-wrapper;
+    color: var(--Colors-Use-Main-Primary);
+    padding-bottom: 2px;
+  }
 
-    .list-item {
-        line-height: 24px;
-        flex: 1;
-        word-break: break-all;
-    }
+  .list-item {
+    line-height: 24px;
+    flex: 1;
+    word-break: break-all;
+  }
 
-    .list-item-checked {
-        text-decoration: line-through;
-        color: var(--Colors-Use-Neutral-Disable);
-    }
+  .list-item-checked {
+    text-decoration: line-through;
+    color: var(--Colors-Use-Neutral-Disable);
+  }
 }
 
 .list-item-checked-wrapper {
-    border-radius: 4px;
-    &:hover {
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);
-    }
+  border-radius: 4px;
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  }
 }

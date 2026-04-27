@@ -1,8 +1,8 @@
-import {CSSProperties, ReactNode} from "react"
-import {SearchProps} from "antd/lib/input"
-import {SelectProps} from "antd"
-import {YakitInputProps} from "../yakitUI/YakitInput/YakitInputType"
-import {YakitProtoCheckboxProps} from "./YakitProtoCheckbox/YakitProtoCheckbox"
+import { CSSProperties, ReactNode } from 'react'
+import { SearchProps } from 'antd/lib/input'
+import { SelectProps } from 'antd'
+import { YakitInputProps } from '../yakitUI/YakitInput/YakitInputType'
+import { YakitProtoCheckboxProps } from './YakitProtoCheckbox/YakitProtoCheckbox'
 
 /**
  * @description:表格的props描述，包裹虚拟表格的父元素需要设置高度
@@ -41,58 +41,58 @@ import {YakitProtoCheckboxProps} from "./YakitProtoCheckbox/YakitProtoCheckbox"
  * @property {boolean}  isRightClickBatchOperate 右键菜单批量操作，支持Shift + 鼠标左键同时点击
  */
 export interface TableVirtualResizeProps<T> {
-    size?: "small" | "middle" | "large"
-    ref?: any
-    /**
-     * @private 组件自用
-     */
-    getTableRef?: any
-    title?: string | ReactNode
-    renderTitle?: ReactNode
-    titleHeight?: number
-    isShowTitle?: boolean
-    extra?: ReactNode
-    data: T[]
-    overscan?: number
-    renderKey: string
-    columns: ColumnsTypeProps[]
-    rowSelection?: RowSelectionProps<T>
-    enableDrag?: boolean
-    onRowClick?: (record: T) => void
-    onRowContextMenu?: (record: T, recordList: T[], e: React.MouseEvent) => void
-    pagination?: PaginationProps
-    onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void
-    loading?: boolean
-    scrollToBottom?: number // 默认300
-    isReset?: boolean //重置表格条件 滚动至0
-    isShowTotal?: boolean
-    currentIndex?: number // 当前row的index
-    setCurrentIndex?: (v?: number) => void
-    scrollToIndex?: number | string // 滚动到指定index
-    isRefresh: boolean //刷新表格 滚动至0
-    disableSorting?: boolean //禁用排序
-    query?: object
-    currentSelectItem?: T
-    onSetCurrentRow?: (record?: T, cancelRender?: T) => void
-    onMoveRow?: (dragIndex: number, hoverIndex: number) => void
-    enableDragSort?: boolean
-    onMoveRowEnd?: () => void
-    useUpAndDown?: boolean
-    inMouseEnterTable?: boolean
-    containerClassName?: string
-    isRightClickBatchOperate?: boolean
-    /** 是否隐藏表格初始渲染时的 loadingUI */
-    isHiddenLoadingUI?: boolean
-    /** 用于重置排序的标志 */
-    isResetSort?: boolean
-    onRowDoubleClick?: (record?: T) => void
-    // TODO 单机行是否需要高亮显示
-    lineHighlight?: boolean
+  size?: 'small' | 'middle' | 'large'
+  ref?: any
+  /**
+   * @private 组件自用
+   */
+  getTableRef?: any
+  title?: string | ReactNode
+  renderTitle?: ReactNode
+  titleHeight?: number
+  isShowTitle?: boolean
+  extra?: ReactNode
+  data: T[]
+  overscan?: number
+  renderKey: string
+  columns: ColumnsTypeProps[]
+  rowSelection?: RowSelectionProps<T>
+  enableDrag?: boolean
+  onRowClick?: (record: T) => void
+  onRowContextMenu?: (record: T, recordList: T[], e: React.MouseEvent) => void
+  pagination?: PaginationProps
+  onChange?: (page: number, limit: number, sorter: SortProps, filters: any, extra?: any) => void
+  loading?: boolean
+  scrollToBottom?: number // 默认300
+  isReset?: boolean //重置表格条件 滚动至0
+  isShowTotal?: boolean
+  currentIndex?: number // 当前row的index
+  setCurrentIndex?: (v?: number) => void
+  scrollToIndex?: number | string // 滚动到指定index
+  isRefresh: boolean //刷新表格 滚动至0
+  disableSorting?: boolean //禁用排序
+  query?: object
+  currentSelectItem?: T
+  onSetCurrentRow?: (record?: T, cancelRender?: T) => void
+  onMoveRow?: (dragIndex: number, hoverIndex: number) => void
+  enableDragSort?: boolean
+  onMoveRowEnd?: () => void
+  useUpAndDown?: boolean
+  inMouseEnterTable?: boolean
+  containerClassName?: string
+  isRightClickBatchOperate?: boolean
+  /** 是否隐藏表格初始渲染时的 loadingUI */
+  isHiddenLoadingUI?: boolean
+  /** 用于重置排序的标志 */
+  isResetSort?: boolean
+  onRowDoubleClick?: (record?: T) => void
+  // TODO 单机行是否需要高亮显示
+  lineHighlight?: boolean
 }
 
 export interface SortProps {
-    order: "none" | "asc" | "desc"
-    orderBy: string
+  order: 'none' | 'asc' | 'desc'
+  orderBy: string
 }
 
 /**
@@ -117,40 +117,40 @@ export interface SortProps {
  * @property {ReactNode} afterIconExtra :在排序/搜索icon前 
  */
 export interface ColumnsTypeProps {
-    title: string
-    dataKey: string
-    width?: number
-    minWidth?: number
-    ellipsis?: boolean
-    align?: "left" | "right" | "center" //默认 left
-    fixed?: "left" | "right"
-    /** @access private */
-    left?: number // 外面不需要传，不接收，紧作为固定列使用
-    /** @access private */
-    right?: number // 外面不需要传，不接收，紧作为固定列使用
-    /** @access private 是否有默认宽度*/
-    isDefWidth?: boolean
-    render?: (text, record, index) => ReactNode
-    filterProps?: FilterProps
-    sorterProps?: SorterProps
-    enableDrag?: boolean
-    tip?: string
-    // extra?: ReactNode
-    beforeIconExtra?: ReactNode
-    afterIconExtra?: ReactNode
-    customStyle?: boolean
+  title: string
+  dataKey: string
+  width?: number
+  minWidth?: number
+  ellipsis?: boolean
+  align?: 'left' | 'right' | 'center' //默认 left
+  fixed?: 'left' | 'right'
+  /** @access private */
+  left?: number // 外面不需要传，不接收，紧作为固定列使用
+  /** @access private */
+  right?: number // 外面不需要传，不接收，紧作为固定列使用
+  /** @access private 是否有默认宽度*/
+  isDefWidth?: boolean
+  render?: (text, record, index) => ReactNode
+  filterProps?: FilterProps
+  sorterProps?: SorterProps
+  enableDrag?: boolean
+  tip?: string
+  // extra?: ReactNode
+  beforeIconExtra?: ReactNode
+  afterIconExtra?: ReactNode
+  customStyle?: boolean
 }
 
 interface FilterSearchInputProps extends SearchProps {
-    isShowIcon?: boolean
+  isShowIcon?: boolean
 }
 
 interface FilterSearchMultipleProps extends SelectProps {}
 
 export interface SorterProps {
-    sorterKey?: string
-    sorter?: string | boolean // boolean是否开启排序，string自定义
-    order?: string // none 无状态； asc 升序  desc 降序
+  sorterKey?: string
+  sorter?: string | boolean // boolean是否开启排序，string自定义
+  order?: string // none 无状态； asc 升序  desc 降序
 }
 
 /**
@@ -169,21 +169,21 @@ export interface SorterProps {
  */
 
 interface FilterInputProps extends YakitInputProps {
-    onRegular?: (value: string) => string
+  onRegular?: (value: string) => string
 }
 export interface FilterProps {
-    filterRender?: (closePopover: () => void) => ReactNode
-    filterOptionRender?: (d: any) => ReactNode
-    filterKey?: string
-    filtersType?: "select" | "input" | "dateTime"
-    filtersSelectAll?: FiltersSelectAllProps //是否显示所有
-    filters?: FiltersItemProps[] // 	表头的筛选菜单项c
-    filterSearch?: boolean // 筛选菜单项是否可搜索
-    filterSearchInputProps?: FilterSearchInputProps // input的props属性
-    filterMultipleProps?: FilterSearchMultipleProps // input的props属性
-    filterMultiple?: boolean // 是否多选 filtersType 为select才有效
-    filterIcon?: ReactNode // 自定义 filter 图标
-    filterInputProps?: FilterInputProps // input的props属性
+  filterRender?: (closePopover: () => void) => ReactNode
+  filterOptionRender?: (d: any) => ReactNode
+  filterKey?: string
+  filtersType?: 'select' | 'input' | 'dateTime'
+  filtersSelectAll?: FiltersSelectAllProps //是否显示所有
+  filters?: FiltersItemProps[] // 	表头的筛选菜单项c
+  filterSearch?: boolean // 筛选菜单项是否可搜索
+  filterSearchInputProps?: FilterSearchInputProps // input的props属性
+  filterMultipleProps?: FilterSearchMultipleProps // input的props属性
+  filterMultiple?: boolean // 是否多选 filtersType 为select才有效
+  filterIcon?: ReactNode // 自定义 filter 图标
+  filterInputProps?: FilterInputProps // input的props属性
 }
 /**
  *  @property {boolean} isAll 是否全选
@@ -191,9 +191,9 @@ export interface FilterProps {
  *  @property {string} valueAll 全选value
  */
 export interface FiltersSelectAllProps {
-    isAll: boolean
-    textAll?: string
-    valueAll?: strings
+  isAll: boolean
+  textAll?: string
+  valueAll?: strings
 }
 
 /**
@@ -206,55 +206,55 @@ export interface FiltersSelectAllProps {
  *  @property  getCheckboxProps	选择框的默认属性配置
  */
 export interface RowSelectionProps<T> {
-    isAll?: boolean
-    /**是否显示全选按钮 */
-    isShowAll?: boolean
-    type?: "checkbox" | "radio" //默认 checkbox
-    selectedRowKeys?: string[] | number[]
-    onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows: T) => void
-    onSelectAll?: (selectedRows: string[], selected: T[], checked: boolean) => void
-    /**	选择框的默认属性配置 */
-    getCheckboxProps?: (record: T) => YakitProtoCheckboxProps
+  isAll?: boolean
+  /**是否显示全选按钮 */
+  isShowAll?: boolean
+  type?: 'checkbox' | 'radio' //默认 checkbox
+  selectedRowKeys?: string[] | number[]
+  onChangeCheckboxSingle?: (c: boolean, selectedRowsKey: string, selectedRows: T) => void
+  onSelectAll?: (selectedRows: string[], selected: T[], checked: boolean) => void
+  /**	选择框的默认属性配置 */
+  getCheckboxProps?: (record: T) => YakitProtoCheckboxProps
 }
 
 export interface PaginationProps {
-    page: number
-    limit: number
-    total: number
-    onChange: (page: number, limit: number) => void
+  page: number
+  limit: number
+  total: number
+  onChange: (page: number, limit: number) => void
 }
 
 export interface ShowFixedShadowProps {
-    isShowLeftFixedShadow: boolean
-    isShowRightFixedShadow: boolean
+  isShowLeftFixedShadow: boolean
+  isShowRightFixedShadow: boolean
 }
 
 export interface ScrollProps {
-    scrollLeft: number
-    scrollRight: number
-    scrollBottom: number
+  scrollLeft: number
+  scrollRight: number
+  scrollBottom: number
 }
 
 export interface FiltersItemProps {
-    value: string
-    label: string
-    total?: string | number
+  value: string
+  label: string
+  total?: string | number
 }
 
 export interface SelectSearchProps {
-    loading?: boolean
-    originalList: FiltersItemProps[]
-    onSelect: (f: string | string[], record?: FiltersItemProps | FiltersItemProps[]) => void
-    value: string | string[]
-    filterProps?: FilterProps
-    onClose: () => void
-    onQuery: () => void
-    searchVal?: string
-    onChangeSearchVal?: (val: string) => void
-    selectContainerStyle?: CSSProperties
+  loading?: boolean
+  originalList: FiltersItemProps[]
+  onSelect: (f: string | string[], record?: FiltersItemProps | FiltersItemProps[]) => void
+  value: string | string[]
+  filterProps?: FilterProps
+  onClose: () => void
+  onQuery: () => void
+  searchVal?: string
+  onChangeSearchVal?: (val: string) => void
+  selectContainerStyle?: CSSProperties
 }
 
 export interface FixedWidthProps {
-    leftFixedWidth: number
-    rightFixedWidth: number
+  leftFixedWidth: number
+  rightFixedWidth: number
 }

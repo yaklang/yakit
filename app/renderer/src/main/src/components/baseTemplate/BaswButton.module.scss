@@ -1,15 +1,15 @@
 .base-tags-list {
-    width: 100%;
-    font-family: "PingFang HK";
-    font-size: 10px;
+  width: 100%;
+  font-family: 'PingFang HK';
+  font-size: 10px;
 }
 .base-tags-list-tag {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    background: var(--Colors-Use-Neutral-Bg);
-    border: 1px solid #eaecf3;
-    border-radius: 4px;
-    text-align: center;
-    cursor: default;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  background: var(--Colors-Use-Neutral-Bg);
+  border: 1px solid #eaecf3;
+  border-radius: 4px;
+  text-align: center;
+  cursor: default;
 }
 // new-ui
 // &-tag:hover {
@@ -17,31 +17,31 @@
 //     border: 1px solid #fbc6a1;
 // }
 .base-tags-list-tag:hover {
-    color: var(--Colors-Use-Main-Primary);
-    border: 1px solid var(--Colors-Use-Main-Border);
+  color: var(--Colors-Use-Main-Primary);
+  border: 1px solid var(--Colors-Use-Main-Border);
 }
 
 .base-tags-small-size {
-    height: 16px;
-    padding: 0px 6px;
-    border-radius: 2px;
-    font-weight: 400;
-    font-size: 11px;
-    line-height: 16px;
+  height: 16px;
+  padding: 0px 6px;
+  border-radius: 2px;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 16px;
 }
 .base-tags-size {
-    height: 20px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 400;
-    font-size: 11px;
-    line-height: 16px;
+  height: 20px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 16px;
 }
 .base-tags-big-size {
-    height: 24px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 16px;
+  height: 24px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
 }

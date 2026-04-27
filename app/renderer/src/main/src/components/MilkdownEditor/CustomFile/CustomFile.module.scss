@@ -1,143 +1,143 @@
 $fileDivHeight: 64px;
 .file-custom {
+  display: flex;
+  width: 400px;
+  height: $fileDivHeight;
+  padding: 8px 12px 8px 8px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  cursor: default;
+  user-select: none;
+  position: relative;
+  cursor: pointer;
+  margin-bottom: 20px;
+  .file-custom-content {
     display: flex;
-    width: 400px;
-    height: $fileDivHeight;
-    padding: 8px 12px 8px 8px;
     align-items: center;
+    flex: 1;
     gap: 8px;
-    border-radius: 8px;
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    cursor: default;
-    user-select: none;
-    position: relative;
-    cursor: pointer;
-    margin-bottom: 20px;
-    .file-custom-content {
-        display: flex;
-        align-items: center;
-        flex: 1;
-        gap: 8px;
-        overflow: hidden;
-        .file-type {
-            flex-shrink: 0;
-            width: 48px;
-            height: 48px;
-        }
-        .file-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1;
-            overflow: hidden;
-            .info-name {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-size: 16px;
-                font-weight: 500;
-                line-height: 24px;
-                height: 24px;
-
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                word-break: break-all;
-            }
-        }
-        .info-size {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 16px;
-        }
+    overflow: hidden;
+    .file-type {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
     }
-    .file-extra {
-        flex-shrink: 0;
+    .file-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      overflow: hidden;
+      .info-name {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 24px;
+        height: 24px;
 
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-all;
+      }
+    }
+    .info-size {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 16px;
+    }
+  }
+  .file-extra {
+    flex-shrink: 0;
+
+    .x-btn {
+      display: none;
+    }
+    .percent-loading {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 16px;
+      cursor: pointer;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 40px;
+      &:hover {
         .x-btn {
-            display: none;
+          display: flex;
         }
         .percent-loading {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 16px;
-            cursor: pointer;
+          display: none;
         }
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            min-width: 40px;
-            &:hover {
-                .x-btn {
-                    display: flex;
-                }
-                .percent-loading {
-                    display: none;
-                }
-            }
-        }
+      }
     }
-    .file-spinning {
-        align-items: center;
-        gap: 4px;
-        padding-top: 4px;
-    }
+  }
+  .file-spinning {
+    align-items: center;
+    gap: 4px;
+    padding-top: 4px;
+  }
 }
 .file-custom-selected {
-    border-color: var(--Colors-Use-Main-Primary);
-    &:hover {
-        border-color: var(--Colors-Use-Main-Focus);
-        box-shadow: 0 0 0 1px var(--Colors-Use-Basic-Shadow);
-    }
+  border-color: var(--Colors-Use-Main-Primary);
+  &:hover {
+    border-color: var(--Colors-Use-Main-Focus);
+    box-shadow: 0 0 0 1px var(--Colors-Use-Basic-Shadow);
+  }
 }
 
 .tooltip-action {
-    position: absolute;
-    bottom: $fileDivHeight;
-    display: flex;
-    align-items: center;
-    border-radius: 8px;
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    background: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 6px 20px 0px var(--Colors-Use-Basic-Shadow);
-    height: 52px;
-    padding: 12px;
-    gap: 8px;
+  position: absolute;
+  bottom: $fileDivHeight;
+  display: flex;
+  align-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Basic-Background);
+  box-shadow: 0px 6px 20px 0px var(--Colors-Use-Basic-Shadow);
+  height: 52px;
+  padding: 12px;
+  gap: 8px;
 }
 .success-action {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .error-action {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    min-width: 40px;
-    gap: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 40px;
+  gap: 4px;
 }
 .x-circle-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    padding: 4px;
-    cursor: pointer;
-    border-radius: 4px;
-    &:hover {
-        background-color: var(--Colors-Use-Neutral-Bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg);
+  }
+  .x-circle-icon {
+    svg {
+      width: 20px;
+      height: 20px;
+      color: var(--Colors-Use-Error-Primary);
     }
-    .x-circle-icon {
-        svg {
-            width: 20px;
-            height: 20px;
-            color: var(--Colors-Use-Error-Primary);
-        }
-    }
+  }
 }

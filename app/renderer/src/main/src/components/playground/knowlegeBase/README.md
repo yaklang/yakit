@@ -5,12 +5,14 @@
 ## 功能特性
 
 ### 知识库管理
+
 - 📁 新增知识库
 - ✏️ 编辑知识库信息
 - 🗑️ 删除知识库
 - 👁️ 查看知识库列表
 
 ### 知识条目管理
+
 - ➕ 新增知识条目
 - ✏️ 编辑知识条目
 - 🗑️ 删除知识条目
@@ -39,24 +41,26 @@ knowlegeBase/
 ## 使用方法
 
 ### 方法1：直接使用主组件
+
 ```tsx
 import { KnowledgeBaseManager } from '@/components/playground/knowlegeBase'
 
 function App() {
-    return (
-        <div style={{ height: '100vh' }}>
-            <KnowledgeBaseManager />
-        </div>
-    )
+  return (
+    <div style={{ height: '100vh' }}>
+      <KnowledgeBaseManager />
+    </div>
+  )
 }
 ```
 
 ### 方法2：使用演示组件
+
 ```tsx
 import { KnowledgeBaseDemo } from '@/components/playground/knowlegeBase'
 
 function App() {
-    return <KnowledgeBaseDemo />
+  return <KnowledgeBaseDemo />
 }
 ```
 
@@ -65,12 +69,14 @@ function App() {
 该组件依赖以下后端接口（通过 IPC 调用）：
 
 ### 知识库接口
+
 - `GetKnowledgeBaseNameList` - 获取知识库列表
 - `CreateKnowledgeBase` - 创建知识库
 - `UpdateKnowledgeBase` - 更新知识库
 - `DeleteKnowledgeBase` - 删除知识库
 
 ### 知识条目接口
+
 - `SearchKnowledgeBaseEntry` - 搜索知识条目
 - `CreateKnowledgeBaseEntry` - 创建知识条目
 - `UpdateKnowledgeBaseEntry` - 更新知识条目
@@ -79,33 +85,35 @@ function App() {
 ## 数据结构
 
 ### 知识库
+
 ```typescript
 interface KnowledgeBase {
-    Id: number
-    KnowledgeBaseName: string
-    KnowledgeBaseDescription: string
-    KnowledgeBaseType: string
-    CreatedAt?: string
-    UpdatedAt?: string
+  Id: number
+  KnowledgeBaseName: string
+  KnowledgeBaseDescription: string
+  KnowledgeBaseType: string
+  CreatedAt?: string
+  UpdatedAt?: string
 }
 ```
 
 ### 知识条目
+
 ```typescript
 interface KnowledgeBaseEntry {
-    ID: number
-    KnowledgeBaseId: number
-    KnowledgeTitle: string
-    KnowledgeType: string
-    ImportanceScore: number          // 1-10的重要度评分
-    Keywords: string[]               // 关键词数组
-    KnowledgeDetails: string         // 详细内容
-    Summary: string                  // 摘要
-    SourcePage: number              // 源页码
-    PotentialQuestions: string[]     // 潜在问题数组
-    PotentialQuestionsVector: number[] // 问题向量（后端生成）
-    CreatedAt?: string
-    UpdatedAt?: string
+  ID: number
+  KnowledgeBaseId: number
+  KnowledgeTitle: string
+  KnowledgeType: string
+  ImportanceScore: number // 1-10的重要度评分
+  Keywords: string[] // 关键词数组
+  KnowledgeDetails: string // 详细内容
+  Summary: string // 摘要
+  SourcePage: number // 源页码
+  PotentialQuestions: string[] // 潜在问题数组
+  PotentialQuestionsVector: number[] // 问题向量（后端生成）
+  CreatedAt?: string
+  UpdatedAt?: string
 }
 ```
 
@@ -115,18 +123,18 @@ interface KnowledgeBaseEntry {
 
 ```javascript
 // 获取知识库名称列表
-ipcMain.handle("GetKnowledgeBaseNameList", async (e, params) => {
-    return await asyncGetKnowledgeBaseNameList(params)
+ipcMain.handle('GetKnowledgeBaseNameList', async (e, params) => {
+  return await asyncGetKnowledgeBaseNameList(params)
 })
 
 // 创建知识库
-ipcMain.handle("CreateKnowledgeBase", async (e, params) => {
-    return await asyncCreateKnowledgeBase(params)
+ipcMain.handle('CreateKnowledgeBase', async (e, params) => {
+  return await asyncCreateKnowledgeBase(params)
 })
 
 // 搜索知识条目
-ipcMain.handle("SearchKnowledgeBaseEntry", async (e, params) => {
-    return await asyncSearchKnowledgeBaseEntry(params)
+ipcMain.handle('SearchKnowledgeBaseEntry', async (e, params) => {
+  return await asyncSearchKnowledgeBaseEntry(params)
 })
 ```
 
@@ -135,6 +143,7 @@ ipcMain.handle("SearchKnowledgeBaseEntry", async (e, params) => {
 组件使用 SCSS 模块化样式，可以通过修改对应的 `.module.scss` 文件来定制样式。
 
 ### 主要样式类
+
 - `.knowledge-base-manager` - 主容器样式
 - `.kb-item` - 知识库列表项样式
 - `.kb-item.selected` - 选中状态样式
@@ -155,7 +164,7 @@ ipcMain.handle("SearchKnowledgeBaseEntry", async (e, params) => {
 ## 开发状态
 
 - ✅ 知识库管理功能完成
-- ✅ 知识条目管理功能完成  
+- ✅ 知识条目管理功能完成
 - ✅ 搜索功能完成
 - ✅ 表格展示完成
 - ✅ 表单验证完成

@@ -1,19 +1,19 @@
 .pagination {
-    padding-top: 24px;
-    display: flex;
-    justify-content: flex-end;
+  padding-top: 24px;
+  display: flex;
+  justify-content: flex-end;
 }
 .export-select {
-    text-align: center;
-    .item {
-        margin-bottom: 10px;
-    }
-    .button-box {
-        padding: 8px 16px;
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);
-        border-top: 1px solid var(--Colors-Use-Neutral-Border);
-    }
+  text-align: center;
+  .item {
+    margin-bottom: 10px;
+  }
+  .button-box {
+    padding: 8px 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  }
 }

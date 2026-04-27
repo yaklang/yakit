@@ -1,5 +1,5 @@
-import {RadioGroupProps} from "antd"
-import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
+import { RadioGroupProps } from 'antd'
+import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 
 /**
  * @description: 按钮单选框Props
@@ -8,8 +8,8 @@ import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
  * @property {string} className
  * @property {string} wrapClassName
  */
-export interface YakitRadioButtonsProps extends Omit<RadioGroupProps, "size" | "optionType"> {
-    size?: YakitSizeType
-    className?: string
-    wrapClassName?: string
+export interface YakitRadioButtonsProps extends Omit<RadioGroupProps, 'size' | 'optionType'> {
+  size?: YakitSizeType
+  className?: string
+  wrapClassName?: string
 }

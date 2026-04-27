@@ -1,3 +1,3 @@
-import {JavaDecompilerOperator} from "./JavaDecompilerOperator"
+import { JavaDecompilerOperator } from './JavaDecompilerOperator'
 
 export default JavaDecompilerOperator

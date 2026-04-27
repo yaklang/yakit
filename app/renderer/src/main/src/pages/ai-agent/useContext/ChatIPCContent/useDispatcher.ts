@@ -1,7 +1,7 @@
-import {useContext} from "react"
-import ChatIPCContext, {ChatIPCContextDispatcher} from "./ChatIPCContent"
+import { useContext } from 'react'
+import ChatIPCContext, { ChatIPCContextDispatcher } from './ChatIPCContent'
 
 export default function useChatIPCDispatcher(): ChatIPCContextDispatcher {
-    const {dispatcher} = useContext(ChatIPCContext)
-    return dispatcher
+  const { dispatcher } = useContext(ChatIPCContext)
+  return dispatcher
 }

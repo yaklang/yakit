@@ -1,92 +1,92 @@
 .yakit-proto-switch-wrapper {
-    width: 20px;
-    height: 12px;
-    padding: 2px 2px 2px 10px;
-    margin: 2px;
-    background: var(--Colors-Use-Neutral-Disable);
-    border: 1px solid var(--Colors-Use-Neutral-Disable);
-    border-radius: 10px;
-    display: inline-flex;
-    position: relative;
-    cursor: pointer;
-    .yakit-proto-switch {
-        position: absolute;
-        top: 1px;
-        left: 2px;
-        width: 8px;
-        height: 8px;
-        transition: all 0.2s ease-in-out;
+  width: 20px;
+  height: 12px;
+  padding: 2px 2px 2px 10px;
+  margin: 2px;
+  background: var(--Colors-Use-Neutral-Disable);
+  border: 1px solid var(--Colors-Use-Neutral-Disable);
+  border-radius: 10px;
+  display: inline-flex;
+  position: relative;
+  cursor: pointer;
+  .yakit-proto-switch {
+    position: absolute;
+    top: 1px;
+    left: 2px;
+    width: 8px;
+    height: 8px;
+    transition: all 0.2s ease-in-out;
 
-        &::before {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            inset: 0;
-            background-color: var(--Colors-Use-Basic-Background);
-            border-radius: 9px;
-            box-shadow: 0 2px 4px var(--Colors-Use-Basic-Shadow);
-            transition: all 0.2s ease-in-out;
-            content: "";
-        }
+    &::before {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      inset: 0;
+      background-color: var(--Colors-Use-Basic-Background);
+      border-radius: 9px;
+      box-shadow: 0 2px 4px var(--Colors-Use-Basic-Shadow);
+      transition: all 0.2s ease-in-out;
+      content: '';
     }
+  }
 }
 
 .yakit-proto-switch-wrapper-focus {
-    box-shadow: 0 0 2px 2px var(--Colors-Use-Neutral-Bg);
+  box-shadow: 0 0 2px 2px var(--Colors-Use-Neutral-Bg);
 }
 .yakit-proto-switch-wrapper-checked-focus {
-    box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Focus);
+  box-shadow: 0 0 2px 2px var(--Colors-Use-Main-Focus);
 }
 
 .yakit-proto-switch-wrapper-checked {
-    background: var(--Colors-Use-Main-Primary);
-    color: var(--Colors-Use-Main-On-Primary);
-    border: 1px solid var(--Colors-Use-Main-Primary);
-    .yakit-proto-switch-checked {
-        transition: all 0.2s ease-in-out;
-        left: calc(100% - 10px);
-    }
-    &:hover {
-        background: var(--Colors-Use-Main-Hover);
-    }
-    &:active {
-        background: var(--Colors-Use-Main-Pressed);
-    }
-    &:focus {
-        box-shadow: 0 0 2px 2px var(--Colors-Use-Basic-Shadow);
-    }
+  background: var(--Colors-Use-Main-Primary);
+  color: var(--Colors-Use-Main-On-Primary);
+  border: 1px solid var(--Colors-Use-Main-Primary);
+  .yakit-proto-switch-checked {
+    transition: all 0.2s ease-in-out;
+    left: calc(100% - 10px);
+  }
+  &:hover {
+    background: var(--Colors-Use-Main-Hover);
+  }
+  &:active {
+    background: var(--Colors-Use-Main-Pressed);
+  }
+  &:focus {
+    box-shadow: 0 0 2px 2px var(--Colors-Use-Basic-Shadow);
+  }
 }
 
 .yakit-proto-switch-wrapper-disabled {
-    background: var(--Colors-Use-Neutral-Bg);
-    border: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Neutral-Bg);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  cursor: not-allowed;
+  .yakit-proto-switch-disabled {
     cursor: not-allowed;
-    .yakit-proto-switch-disabled {
-        cursor: not-allowed;
-        &::before {
-            cursor: not-allowed;
-        }
+    &::before {
+      cursor: not-allowed;
     }
-    &:hover {
-        background: var(--Colors-Use-Neutral-Bg);
-    }
-    &:active {
-        background: var(--Colors-Use-Neutral-Bg);
-    }
-    &:focus {
-        box-shadow: none;
-    }
+  }
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg);
+  }
+  &:active {
+    background: var(--Colors-Use-Neutral-Bg);
+  }
+  &:focus {
+    box-shadow: none;
+  }
 }
 
 .yakit-proto-switch-input {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-    opacity: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  opacity: 0;
 }
 .yakit-proto-switch-input-disabled {
-    cursor: not-allowed;
+  cursor: not-allowed;
 }

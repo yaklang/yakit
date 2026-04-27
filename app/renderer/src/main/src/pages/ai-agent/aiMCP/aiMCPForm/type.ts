@@ -1,6 +1,6 @@
-import {UpdateMCPServerRequest} from "../../type/aiMCP"
+import { UpdateMCPServerRequest } from '../../type/aiMCP'
 
 export interface AIMCPFormProps {
-    onCancel: () => void
-    defaultValues?: UpdateMCPServerRequest
+  onCancel: () => void
+  defaultValues?: UpdateMCPServerRequest
 }

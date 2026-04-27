@@ -1,280 +1,272 @@
-import React, {useEffect, useState, useRef, ReactNode, useMemo, forwardRef, useImperativeHandle} from "react"
-import ReactResizeDetector from "react-resize-detector"
-import {useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList} from "ahooks"
-import {LoadingOutlined} from "@ant-design/icons"
-import "./RollingLoadList.scss"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import React, { useEffect, useState, useRef, ReactNode, useMemo, forwardRef, useImperativeHandle } from 'react'
+import ReactResizeDetector from 'react-resize-detector'
+import { useDebounceEffect, useMemoizedFn, useSize, useThrottleFn, useVirtualList } from 'ahooks'
+import { LoadingOutlined } from '@ant-design/icons'
+import './RollingLoadList.scss'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export interface RollingLoadListProps<T> {
-    ref?: React.ForwardedRef<RollingLoadListRef>
-    rowKey?: string
-    data: T[]
-    loadMoreData: () => void
-    renderRow: (r: T, i: number) => ReactNode
-    page: number
-    hasMore: boolean
-    loading: boolean
-    scrollToNumber?: number
-    isRef?: boolean // 刷新全部
-    classNameRow?: string
-    classNameList?: string
-    defItemHeight: number
-    numberRoll?: number
-    isGridLayout?: boolean
-    defCol?: number
-    defOverscan?: number
-    recalculation?: boolean //刷新局部 data中某个item值更新需要重新计算
-    targetRef?: React.RefObject<any>
+  ref?: React.ForwardedRef<RollingLoadListRef>
+  rowKey?: string
+  data: T[]
+  loadMoreData: () => void
+  renderRow: (r: T, i: number) => ReactNode
+  page: number
+  hasMore: boolean
+  loading: boolean
+  scrollToNumber?: number
+  isRef?: boolean // 刷新全部
+  classNameRow?: string
+  classNameList?: string
+  defItemHeight: number
+  numberRoll?: number
+  isGridLayout?: boolean
+  defCol?: number
+  defOverscan?: number
+  recalculation?: boolean //刷新局部 data中某个item值更新需要重新计算
+  targetRef?: React.RefObject<any>
 }
 
 export interface RollingLoadListRef {
-    containerRef: React.RefObject<HTMLDivElement | null> | null
-    scrollTo: (index: number) => void
+  containerRef: React.RefObject<HTMLDivElement | null> | null
+  scrollTo: (index: number) => void
 }
 const classNameWidth = {
-    2: "width-50",
-    3: "width-33",
-    4: "width-25",
-    5: "width-20"
+  2: 'width-50',
+  3: 'width-33',
+  4: 'width-25',
+  5: 'width-20',
 }
 
 function RollingLoadListInner<T>(props: RollingLoadListProps<T>, ref: React.ForwardedRef<RollingLoadListRef>) {
-    const {
-        data,
-        loadMoreData,
-        renderRow,
-        page,
-        hasMore,
-        rowKey,
-        loading,
-        isRef,
-        classNameRow,
-        classNameList,
-        defItemHeight,
-        defOverscan,
-        numberRoll,
-        isGridLayout,
-        defCol,
-        recalculation,
-        targetRef
-    } = props
-    const {t, i18n} = useI18nNamespaces(["yakitUi"])
-    const [vlistHeigth, setVListHeight] = useState(600)
-    const [col, setCol] = useState<number>()
-    const [computeOriginalList, setComputeOriginalList] = useState(false)
-    const containerRef = useRef<HTMLDivElement>(null)
-    const wrapperRef = useRef<HTMLDivElement>(null)
-    let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
-    let preLength = useRef<number>(0)
-    let preData = useRef<any>([])
-    useImperativeHandle(
-        ref,
-        () => ({
-            containerRef,
-            scrollTo
-        }),
-        []
-    )
+  const {
+    data,
+    loadMoreData,
+    renderRow,
+    page,
+    hasMore,
+    rowKey,
+    loading,
+    isRef,
+    classNameRow,
+    classNameList,
+    defItemHeight,
+    defOverscan,
+    numberRoll,
+    isGridLayout,
+    defCol,
+    recalculation,
+    targetRef,
+  } = props
+  const { t, i18n } = useI18nNamespaces(['yakitUi'])
+  const [vlistHeigth, setVListHeight] = useState(600)
+  const [col, setCol] = useState<number>()
+  const [computeOriginalList, setComputeOriginalList] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  let indexMapRef = useRef<Map<string, number>>(new Map<string, number>())
+  let preLength = useRef<number>(0)
+  let preData = useRef<any>([])
+  useImperativeHandle(
+    ref,
+    () => ({
+      containerRef,
+      scrollTo,
+    }),
+    [],
+  )
 
-    const resetPre = useMemoizedFn(() => {
-        preLength.current = 0
-        preData.current = []
-        setComputeOriginalList(!computeOriginalList)
-    })
-    let originalList = useMemo(() => {
-        if (!col) return []
-        if (data.length < preLength.current) {
-            resetPre()
+  const resetPre = useMemoizedFn(() => {
+    preLength.current = 0
+    preData.current = []
+    setComputeOriginalList(!computeOriginalList)
+  })
+  let originalList = useMemo(() => {
+    if (!col) return []
+    if (data.length < preLength.current) {
+      resetPre()
+    }
+    const listByLength: any[] = []
+    const length = data.length
+    const remainder = preLength.current % col
+    if (remainder !== 0) {
+      preLength.current = preLength.current - remainder
+      const removeList = preData.current.pop()
+      removeList.forEach((element) => {
+        indexMapRef.current?.delete(`${element[rowKey || 'Id']}`)
+      })
+    }
+    for (let index = preLength.current; index < length; index += col) {
+      if (index % col === 0) {
+        const arr: any = []
+        for (let j = 0; j < col; j++) {
+          if (data[index + j]) {
+            const item = data[index + j]
+            indexMapRef.current?.set(`${item[rowKey || 'Id']}`, index + j)
+            arr.push(item)
+          }
         }
-        const listByLength: any[] = []
-        const length = data.length
-        const remainder = preLength.current % col
-        if (remainder !== 0) {
-            preLength.current = preLength.current - remainder
-            const removeList = preData.current.pop()
-            removeList.forEach((element) => {
-                indexMapRef.current?.delete(`${element[rowKey || "Id"]}`)
-            })
-        }
-        for (let index = preLength.current; index < length; index += col) {
-            if (index % col === 0) {
-                const arr: any = []
-                for (let j = 0; j < col; j++) {
-                    if (data[index + j]) {
-                        const item = data[index + j]
-                        indexMapRef.current?.set(`${item[rowKey || "Id"]}`, index + j)
-                        arr.push(item)
-                    }
-                }
-                listByLength.push(arr)
-            }
-        }
-        preLength.current = length
-        preData.current = preData.current.concat(listByLength)
-        return preData.current
-    }, [data.length, col, computeOriginalList])
-    const [list, scrollTo] = useVirtualList(originalList, {
-        containerTarget: containerRef,
-        wrapperTarget: wrapperRef,
-        itemHeight: defItemHeight,
-        overscan: defOverscan || 5
-    })
-    useDebounceEffect(
-        () => {
-            if (!hasMore) return
-            if (!containerRef || !wrapperRef) return
-            // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
-            const containerHeight = containerRef.current?.clientHeight || 0
-            const wrapperHeight = wrapperRef.current?.clientHeight
-            if (wrapperHeight && wrapperHeight <= containerHeight) {
-                loadMoreData()
-            }
-        },
-        [wrapperRef.current?.clientHeight, isRef, hasMore],
-        {wait: 200}
-    )
-    useEffect(() => {
-        resetPre()
-    }, [recalculation])
-    useEffect(() => {
-        resetPre()
-        scrollTo(0)
-    }, [isRef])
-    const isFirstNumberRoll = useRef(true) // 初次不执行
-    useEffect(() => {
-        onRollNumber()
-    }, [numberRoll, col])
-    const onRollNumber = useMemoizedFn(() => {
-        if (isFirstNumberRoll.current) {
-            isFirstNumberRoll.current = false
-        } else {
-            if (typeof numberRoll !== "number") return
-            // 初次不执行; 必须加上延时,不然元素可能还没有加载
-            setTimeout(() => {
-                scrollTo(numberRoll)
-            }, 100)
-        }
-    })
+        listByLength.push(arr)
+      }
+    }
+    preLength.current = length
+    preData.current = preData.current.concat(listByLength)
+    return preData.current
+  }, [data.length, col, computeOriginalList])
+  const [list, scrollTo] = useVirtualList(originalList, {
+    containerTarget: containerRef,
+    wrapperTarget: wrapperRef,
+    itemHeight: defItemHeight,
+    overscan: defOverscan || 5,
+  })
+  useDebounceEffect(
+    () => {
+      if (!hasMore) return
+      if (!containerRef || !wrapperRef) return
+      // wrapperRef 中的数据没有铺满 containerRef,那么就要请求更多的数据
+      const containerHeight = containerRef.current?.clientHeight || 0
+      const wrapperHeight = wrapperRef.current?.clientHeight
+      if (wrapperHeight && wrapperHeight <= containerHeight) {
+        loadMoreData()
+      }
+    },
+    [wrapperRef.current?.clientHeight, isRef, hasMore],
+    { wait: 200 },
+  )
+  useEffect(() => {
+    resetPre()
+  }, [recalculation])
+  useEffect(() => {
+    resetPre()
+    scrollTo(0)
+  }, [isRef])
+  const isFirstNumberRoll = useRef(true) // 初次不执行
+  useEffect(() => {
+    onRollNumber()
+  }, [numberRoll, col])
+  const onRollNumber = useMemoizedFn(() => {
+    if (isFirstNumberRoll.current) {
+      isFirstNumberRoll.current = false
+    } else {
+      if (typeof numberRoll !== 'number') return
+      // 初次不执行; 必须加上延时,不然元素可能还没有加载
+      setTimeout(() => {
+        scrollTo(numberRoll)
+      }, 100)
+    }
+  })
 
-    const {width} = useSize(document.querySelector("body")) || {width: 0, height: 0}
-    useDebounceEffect(
-        () => {
-            resetPre()
-            if (isGridLayout) {
-                onComputeItemHeight()
-            } else {
-                setCol(defCol || 1)
-            }
-        },
-        [isGridLayout, width],
-        {wait: 200, leading: true}
-    )
-    const onComputeItemHeight = useMemoizedFn(() => {
-        if (!width) return
-        if (defCol) {
-            setCol(defCol)
+  const { width } = useSize(document.querySelector('body')) || { width: 0, height: 0 }
+  useDebounceEffect(
+    () => {
+      resetPre()
+      if (isGridLayout) {
+        onComputeItemHeight()
+      } else {
+        setCol(defCol || 1)
+      }
+    },
+    [isGridLayout, width],
+    { wait: 200, leading: true },
+  )
+  const onComputeItemHeight = useMemoizedFn(() => {
+    if (!width) return
+    if (defCol) {
+      setCol(defCol)
+      return
+    }
+    const computeCol = 1
+    if (width <= 1024) {
+      setCol(computeCol * 2)
+    } else if (width >= 1024 && width < 1440) {
+      setCol(computeCol * 3)
+    } else if (width >= 1440) {
+      setCol(computeCol * 4)
+    }
+  })
+
+  const onScrollCapture = useThrottleFn(
+    () => {
+      if (wrapperRef && containerRef && !loading && hasMore) {
+        const dom = containerRef.current || {
+          scrollTop: 0,
+          clientHeight: 0,
+          scrollHeight: 0,
+        }
+        const contentScrollTop = dom.scrollTop //滚动条距离顶部
+        const clientHeight = dom.clientHeight //可视区域
+        const scrollHeight = dom.scrollHeight //滚动条内容的总高度
+        const scrollBottom = scrollHeight - contentScrollTop - clientHeight
+        if (scrollBottom <= 500) {
+          loadMoreData() // 获取数据的方法
+        }
+      }
+    },
+    { wait: 200, leading: false },
+  )
+  return (
+    <>
+      <ReactResizeDetector
+        onResize={(width, height) => {
+          if (!height) {
             return
-        }
-        const computeCol = 1
-        if (width <= 1024) {
-            setCol(computeCol * 2)
-        } else if (width >= 1024 && width < 1440) {
-            setCol(computeCol * 3)
-        } else if (width >= 1440) {
-            setCol(computeCol * 4)
-        }
-    })
-
-    const onScrollCapture = useThrottleFn(
-        () => {
-            if (wrapperRef && containerRef && !loading && hasMore) {
-                const dom = containerRef.current || {
-                    scrollTop: 0,
-                    clientHeight: 0,
-                    scrollHeight: 0
-                }
-                const contentScrollTop = dom.scrollTop //滚动条距离顶部
-                const clientHeight = dom.clientHeight //可视区域
-                const scrollHeight = dom.scrollHeight //滚动条内容的总高度
-                const scrollBottom = scrollHeight - contentScrollTop - clientHeight
-                if (scrollBottom <= 500) {
-                    loadMoreData() // 获取数据的方法
-                }
-            }
-        },
-        {wait: 200, leading: false}
-    )
-    return (
-        <>
-            <ReactResizeDetector
-                onResize={(width, height) => {
-                    if (!height) {
-                        return
-                    }
-                    setVListHeight(height)
-                }}
-                handleWidth={true}
-                handleHeight={true}
-                refreshMode={"debounce"}
-                refreshRate={50}
-                targetRef={targetRef}
-            />
-            <div
-                className={`container ${classNameList || ""}`}
-                style={{height: vlistHeigth}}
-                ref={containerRef}
-                onScroll={() => onScrollCapture.run()}
-            >
-                <div ref={wrapperRef}>
-                    {((isGridLayout && col && col > 1) || (!isGridLayout && col === 1)) &&
-                        list.map((i, index) => {
-                            const itemArr = i.data as any
-                            if (isGridLayout && col && col > 1) {
-                                return (
-                                    <div
-                                        className='display-flex'
-                                        key={itemArr.map((ele) => ele[rowKey || "Id"]).join("-") + "-" + index}
-                                    >
-                                        {itemArr.map((ele, number) => (
-                                            <div
-                                                className={`${(col && classNameWidth[col]) || ""} ${
-                                                    classNameRow || ""
-                                                }`}
-                                                key={ele[rowKey || "Id"] + "--" + index}
-                                            >
-                                                {renderRow(
-                                                    ele,
-                                                    indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )
-                            }
-                            return itemArr.map((ele, number) => (
-                                <div
-                                    className={`${(col && classNameWidth[col]) || ""} ${classNameRow || ""}`}
-                                    key={ele[rowKey || "Id"] + "--" + index}
-                                >
-                                    {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || "Id"]}`) || 0)}
-                                </div>
-                            ))
-                        })}
-                    {loading && hasMore && (
-                        <div className='grid-block text-center'>
-                            <LoadingOutlined />
-                        </div>
-                    )}
-                    {!loading && !hasMore && (page || 0) > 0 && (
-                        <div className='grid-block text-center no-more-text'>{t("YakitEmpty.noMoreData")}</div>
-                    )}
+          }
+          setVListHeight(height)
+        }}
+        handleWidth={true}
+        handleHeight={true}
+        refreshMode={'debounce'}
+        refreshRate={50}
+        targetRef={targetRef}
+      />
+      <div
+        className={`container ${classNameList || ''}`}
+        style={{ height: vlistHeigth }}
+        ref={containerRef}
+        onScroll={() => onScrollCapture.run()}
+      >
+        <div ref={wrapperRef}>
+          {((isGridLayout && col && col > 1) || (!isGridLayout && col === 1)) &&
+            list.map((i, index) => {
+              const itemArr = i.data as any
+              if (isGridLayout && col && col > 1) {
+                return (
+                  <div className="display-flex" key={itemArr.map((ele) => ele[rowKey || 'Id']).join('-') + '-' + index}>
+                    {itemArr.map((ele, number) => (
+                      <div
+                        className={`${(col && classNameWidth[col]) || ''} ${classNameRow || ''}`}
+                        key={ele[rowKey || 'Id'] + '--' + index}
+                      >
+                        {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || 'Id']}`) || 0)}
+                      </div>
+                    ))}
+                  </div>
+                )
+              }
+              return itemArr.map((ele, number) => (
+                <div
+                  className={`${(col && classNameWidth[col]) || ''} ${classNameRow || ''}`}
+                  key={ele[rowKey || 'Id'] + '--' + index}
+                >
+                  {renderRow(ele, indexMapRef.current?.get(`${ele[rowKey || 'Id']}`) || 0)}
                 </div>
+              ))
+            })}
+          {loading && hasMore && (
+            <div className="grid-block text-center">
+              <LoadingOutlined />
             </div>
-        </>
-    )
+          )}
+          {!loading && !hasMore && (page || 0) > 0 && (
+            <div className="grid-block text-center no-more-text">{t('YakitEmpty.noMoreData')}</div>
+          )}
+        </div>
+      </div>
+    </>
+  )
 }
 export const RollingLoadList = forwardRef(RollingLoadListInner) as <T>(
-    props: RollingLoadListProps<T> & {
-        ref?: React.ForwardedRef<RollingLoadListRef>
-    }
+  props: RollingLoadListProps<T> & {
+    ref?: React.ForwardedRef<RollingLoadListRef>
+  },
 ) => JSX.Element

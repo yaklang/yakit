@@ -23,7 +23,7 @@
           text-align: right;
 
           label::after {
-            content: ":";
+            content: ':';
             position: relative;
             top: -0.5px;
             margin: 0 8px 0 2px;
@@ -39,7 +39,6 @@
       }
 
       .ant-form-item-label {
-
         // 仅在相邻元素不是 .ant-form-item-control 时应用样式
         &:not(:has(+ .ant-form-item-control)) {
           text-align: left;
@@ -49,7 +48,7 @@
           }
 
           label::after {
-            content: "";
+            content: '';
             position: relative;
             top: -0.5px;
             margin: 0 8px 0 2px;

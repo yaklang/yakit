@@ -1,103 +1,103 @@
-import { handleOpenFileSystemDialog, OpenDialogOptions } from "@/utils/fileSystemDialog"
-import {HistoryItem, PathIncludeResult} from "./type"
-import { historyStore } from "./store/useHistoryFolder"
+import { handleOpenFileSystemDialog, OpenDialogOptions } from '@/utils/fileSystemDialog'
+import { HistoryItem, PathIncludeResult } from './type'
+import { historyStore } from './store/useHistoryFolder'
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
 /**
  * @returns 0：相等；1：A包含B；2：B包含A；3：无包含关系；4：异常
  */
 export const isPathIncluded = async (pathA: string, pathB: string): Promise<PathIncludeResult> => {
-    return await ipcRenderer.invoke("fetch-path-contains-relation", {
-        pathA,
-        pathB
-    })
+  return await ipcRenderer.invoke('fetch-path-contains-relation', {
+    pathA,
+    pathB,
+  })
 }
 
 export const mergeOnePath = async (origin: HistoryItem[], incoming: HistoryItem): Promise<HistoryItem[]> => {
-    const result: HistoryItem[] = []
-    let shouldAddIncoming = true
+  const result: HistoryItem[] = []
+  let shouldAddIncoming = true
 
-    for (const item of origin) {
-        const relation = await isPathIncluded(item.path, incoming.path)
+  for (const item of origin) {
+    const relation = await isPathIncluded(item.path, incoming.path)
 
-        if (relation === 0) {
-            // 相等
-            shouldAddIncoming = false
-            result.push(item)
-            continue
-        }
-
-        if (relation === 1) {
-            // item 包含 incoming
-            shouldAddIncoming = false
-            result.push(item)
-            continue
-        }
-
-        if (relation === 2) {
-            // incoming 包含 item
-            continue
-        }
-
-        if (relation === 3 || relation === 4) {
-            result.push(item)
-            continue
-        }
+    if (relation === 0) {
+      // 相等
+      shouldAddIncoming = false
+      result.push(item)
+      continue
     }
 
-    if (shouldAddIncoming) {
-        result.push(incoming)
+    if (relation === 1) {
+      // item 包含 incoming
+      shouldAddIncoming = false
+      result.push(item)
+      continue
     }
 
-    return result
+    if (relation === 2) {
+      // incoming 包含 item
+      continue
+    }
+
+    if (relation === 3 || relation === 4) {
+      result.push(item)
+      continue
+    }
+  }
+
+  if (shouldAddIncoming) {
+    result.push(incoming)
+  }
+
+  return result
 }
 
 export const mergePathArray = async (origin: HistoryItem[], incomingList: HistoryItem[]): Promise<HistoryItem[]> => {
-    let result: HistoryItem[] = [...origin]
+  let result: HistoryItem[] = [...origin]
 
-    for (const incoming of incomingList) {
-        result = await mergeOnePath(result, incoming)
-    }
+  for (const incoming of incomingList) {
+    result = await mergeOnePath(result, incoming)
+  }
 
-    return result
+  return result
 }
 
 export const checkPathIncludeRelation = async (
-    origin: HistoryItem[],
-    incoming: HistoryItem
+  origin: HistoryItem[],
+  incoming: HistoryItem,
 ): Promise<PathIncludeResult> => {
-    let hasIncomingContains = false
-    for (const item of origin) {
-        const relation = await isPathIncluded(item.path, incoming.path)
-        if (relation === PathIncludeResult.Error) {
-            return PathIncludeResult.Error
-        }
-        if (relation === PathIncludeResult.Equal) {
-            return PathIncludeResult.Equal
-        }
-
-        if (relation === PathIncludeResult.OriginContains) {
-            return PathIncludeResult.OriginContains
-        }
-        if (relation === PathIncludeResult.IncomingContains) {
-            hasIncomingContains = true
-        }
+  let hasIncomingContains = false
+  for (const item of origin) {
+    const relation = await isPathIncluded(item.path, incoming.path)
+    if (relation === PathIncludeResult.Error) {
+      return PathIncludeResult.Error
     }
-    if (hasIncomingContains) {
-        return PathIncludeResult.IncomingContains
+    if (relation === PathIncludeResult.Equal) {
+      return PathIncludeResult.Equal
     }
 
-    return PathIncludeResult.None
+    if (relation === PathIncludeResult.OriginContains) {
+      return PathIncludeResult.OriginContains
+    }
+    if (relation === PathIncludeResult.IncomingContains) {
+      hasIncomingContains = true
+    }
+  }
+  if (hasIncomingContains) {
+    return PathIncludeResult.IncomingContains
+  }
+
+  return PathIncludeResult.None
 }
 
 export const onOpenFileFolder = async (flag) => {
-    try {
-        const label = flag ? "文件夹" : "文件"
-        const args: OpenDialogOptions["properties"] = flag ? ["openDirectory"] : ["openFile"]
-        const {filePaths} = await handleOpenFileSystemDialog({title: `请选择${label}`, properties: args})
-        if (!filePaths.length) return
-        let absolutePath: string = filePaths[0].replace(/\\/g, "\\")
-        historyStore.addHistoryItem({path: absolutePath, isFolder: flag})
-    } catch {}
+  try {
+    const label = flag ? '文件夹' : '文件'
+    const args: OpenDialogOptions['properties'] = flag ? ['openDirectory'] : ['openFile']
+    const { filePaths } = await handleOpenFileSystemDialog({ title: `请选择${label}`, properties: args })
+    if (!filePaths.length) return
+    let absolutePath: string = filePaths[0].replace(/\\/g, '\\')
+    historyStore.addHistoryItem({ path: absolutePath, isFolder: flag })
+  } catch {}
 }

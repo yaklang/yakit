@@ -1,20 +1,20 @@
 .yakit-collapse-text {
-    .text-wrapper {
-        white-space: pre-wrap;
-        word-break: break-all;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 16px;
-        overflow: hidden;
-    }
-    .expand-btn {
-        margin-top: 8px;
-        cursor: pointer;
-        color: var(--Colors-Use-Main-Primary);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 16px;
-        user-select: none;
-    }
+  .text-wrapper {
+    white-space: pre-wrap;
+    word-break: break-all;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    overflow: hidden;
+  }
+  .expand-btn {
+    margin-top: 8px;
+    cursor: pointer;
+    color: var(--Colors-Use-Main-Primary);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    user-select: none;
+  }
 }

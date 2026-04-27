@@ -1,8 +1,8 @@
-import {Spin} from "antd"
-import React from "react"
-import {YakitSpinProps} from "./YakitSpinType"
-import styles from "./YakitSpin.module.scss"
-import classNames from "classnames"
+import { Spin } from 'antd'
+import React from 'react'
+import { YakitSpinProps } from './YakitSpinType'
+import styles from './YakitSpin.module.scss'
+import classNames from 'classnames'
 
 /**
  * 更新说明
@@ -15,11 +15,11 @@ import classNames from "classnames"
  * @augments YakitSpinProps 继承antd的 SpinProps 默认属性
  */
 export const YakitSpin: React.FC<YakitSpinProps> = (props) => {
-    return (
-        <Spin
-            {...props}
-            className={classNames(styles["yakit-spin"], props.wrapperClassName)}
-            wrapperClassName={classNames(styles["yakit-spin"], props.wrapperClassName)}
-        ></Spin>
-    )
+  return (
+    <Spin
+      {...props}
+      className={classNames(styles['yakit-spin'], props.wrapperClassName)}
+      wrapperClassName={classNames(styles['yakit-spin'], props.wrapperClassName)}
+    ></Spin>
+  )
 }

@@ -1,183 +1,182 @@
 .yakit-editor-code {
-    .content-length::after {
-        content: "auto";
-        margin-left: 2px;
-        padding: 1px 4px;
-        background-color: var(--yakit-colors-Neutral-40);
+  .content-length::after {
+    content: 'auto';
+    margin-left: 2px;
+    padding: 1px 4px;
+    background-color: var(--yakit-colors-Neutral-40);
 
-        border-radius: 3px;
-        /* 添加圆角以使样式更好看 */
-        /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    border-radius: 3px;
+    /* 添加圆角以使样式更好看 */
+    /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+
+  .content-length:hover.lang-zh::after {
+    content: '发包时自动修复，一般无需指定';
+    background-color: var(--yakit-colors-Neutral-40);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    padding: 5px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+  }
+
+  .content-length:hover.lang-en::after {
+    content: 'Automatically fixed when sending packets, usually no need to specify';
+    background-color: var(--yakit-colors-Neutral-40);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    padding: 5px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+  }
+
+  .host::after {
+    content: '?';
+    margin-left: 2px;
+    padding: 1px 4px;
+    background-color: var(--yakit-colors-Neutral-40);
+
+    border-radius: 3px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    // opacity: 0.3;
+  }
+
+  .host:hover.lang-zh::after {
+    content: '如需手动指定目标地址或 Host 碰撞，请在"左侧边栏-配置-真实Host"配置';
+    background-color: var(--yakit-colors-Neutral-40);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    padding: 5px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+  }
+
+  .host:hover.lang-en::after {
+    content: 'To manually specify the target address or perform Host collision, Please configure in "Left Sidebar - Configuration - Real Host"';
+    background-color: var(--yakit-colors-Neutral-40);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    padding: 5px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+  }
+
+  .host-privacy-mask-hidden {
+    color: transparent !important;
+    background-color: var(--yakit-colors-Neutral-40);
+    border-radius: 3px;
+    position: relative;
+    &::after {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      cursor: pointer;
+      user-select: none;
     }
-
-    .content-length:hover.lang-zh::after {
-        content: "发包时自动修复，一般无需指定";
-        background-color: var(--yakit-colors-Neutral-40);
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        padding: 5px;
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        border-radius: 4px;
+    &.lang-zh::after {
+      content: '隐私模式';
     }
-
-    .content-length:hover.lang-en::after {
-        content: "Automatically fixed when sending packets, usually no need to specify";
-        background-color: var(--yakit-colors-Neutral-40);
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        padding: 5px;
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        border-radius: 4px;
+    &.lang-en::after {
+      content: 'Privacy Mode';
     }
-
-    .host::after {
-        content: "?";
-        margin-left: 2px;
-        padding: 1px 4px;
-        background-color: var(--yakit-colors-Neutral-40);
-
-        border-radius: 3px;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        // opacity: 0.3;
+    &:hover {
+      background-color: var(--yakit-colors-Neutral-50);
     }
+  }
 
-    .host:hover.lang-zh::after {
-        content: '如需手动指定目标地址或 Host 碰撞，请在"左侧边栏-配置-真实Host"配置';
-        background-color: var(--yakit-colors-Neutral-40);
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        padding: 5px;
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        border-radius: 4px;
-    }
+  .unicode-decode {
+    background-color: var(--yakit-colors-Neutral-40);
+  }
 
-    .host:hover.lang-en::after {
-        content: 'To manually specify the target address or perform Host collision, Please configure in "Left Sidebar - Configuration - Real Host"';
-        background-color: var(--yakit-colors-Neutral-40);
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        padding: 5px;
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        border-radius: 4px;
-    }
+  .unicode-decode::after {
+    content: ' ';
+    background-color: var(--yakit-colors-Neutral-40);
+  }
 
-    .host-privacy-mask-hidden {
-        color: transparent !important;
-        background-color: var(--yakit-colors-Neutral-40);
-        border-radius: 3px;
-        position: relative;
-        &::after {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            cursor: pointer;
-            user-select: none;
-        }
-        &.lang-zh::after {
-            content: "隐私模式";
-        }
-        &.lang-en::after {
-            content: "Privacy Mode";
-        }
-        &:hover {
-            background-color: var(--yakit-colors-Neutral-50);
-        }
-    }
-
-
-    .unicode-decode {
-        background-color: var(--yakit-colors-Neutral-40);
-    }
-
-    .unicode-decode::after {
-        content: " ";
-        background-color: var(--yakit-colors-Neutral-40);
-    }
-
-    .unicode-decode-after {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        background-color: var(--yakit-colors-Neutral-40);
-        padding-left: 2px;
-        border-radius: 3px;
-        font-weight: bold;
-        cursor: none;
-        user-select: none;
-    }
-
-    .crlf::before {
-        content: "↵";
-        background-color: var(--yakit-colors-Neutral-40);
-        margin: 4px;
-        padding: 1px 4px;
-        /* 根据需要添加内边距 */
-        border-radius: 3px;
-        /* 添加圆角以使样式更好看 */
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
-    }
-
-    .lf::before {
-        content: "↓";
-        background-color: var(--yakit-colors-Neutral-40);
-        margin: 4px;
-        padding: 1px 4px;
-        /* 根据需要添加内边距 */
-        border-radius: 3px;
-        /* 添加圆角以使样式更好看 */
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
-    }
-
-    .hight-light-default-bg-color {
-        background-color: var(--Colors-Use-Success-Focus); // 代码高亮标记背景色
-        z-index: -1;
-    }
-
-    .hight-light-find-default-bg-color {
-        background-color: var(--yakit-colors-Neutral-40);
-        z-index: -1;
-    }
-
-    .hight-light-yak-runner-color {
-        background-color: var(--Colors-Use-Yellow-Bg);
-        z-index: -1;
-    }
-
-    .hight-light-rule-color {
-        background-color: var(--Colors-Use-Yellow-Bg);
-        z-index: -1;
-    }
-}
-
-.yakit-editor-wrap-style {
-    .crlf::before {
-        opacity: 0;
-    }
-
-    .lf::before {
-        opacity: 0;
-    }
-}
-
-.monaco-editor .find-widget {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
-}
-
-.unicode-decode {
-    background-color: var(--Colors-Use-Green-Border);
-}
-
-.unicode-decode::after {
-    content: " ";
-    background-color: var(--Colors-Use-Basic-Background);
-}
-
-.unicode-decode-after {
-    color: var(--Colors-Use-Neutral-Text-4-Help-text);
-    background-color: var(--Colors-Use-Neutral-Border);
+  .unicode-decode-after {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    background-color: var(--yakit-colors-Neutral-40);
     padding-left: 2px;
     border-radius: 3px;
     font-weight: bold;
     cursor: none;
     user-select: none;
-    opacity: 1 !important;
+  }
+
+  .crlf::before {
+    content: '↵';
+    background-color: var(--yakit-colors-Neutral-40);
+    margin: 4px;
+    padding: 1px 4px;
+    /* 根据需要添加内边距 */
+    border-radius: 3px;
+    /* 添加圆角以使样式更好看 */
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+  }
+
+  .lf::before {
+    content: '↓';
+    background-color: var(--yakit-colors-Neutral-40);
+    margin: 4px;
+    padding: 1px 4px;
+    /* 根据需要添加内边距 */
+    border-radius: 3px;
+    /* 添加圆角以使样式更好看 */
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    /* 设置文字颜色为白色，以便在灰色背景上更清晰可见 */
+  }
+
+  .hight-light-default-bg-color {
+    background-color: var(--Colors-Use-Success-Focus); // 代码高亮标记背景色
+    z-index: -1;
+  }
+
+  .hight-light-find-default-bg-color {
+    background-color: var(--yakit-colors-Neutral-40);
+    z-index: -1;
+  }
+
+  .hight-light-yak-runner-color {
+    background-color: var(--Colors-Use-Yellow-Bg);
+    z-index: -1;
+  }
+
+  .hight-light-rule-color {
+    background-color: var(--Colors-Use-Yellow-Bg);
+    z-index: -1;
+  }
+}
+
+.yakit-editor-wrap-style {
+  .crlf::before {
+    opacity: 0;
+  }
+
+  .lf::before {
+    opacity: 0;
+  }
+}
+
+.monaco-editor .find-widget {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary) !important;
+}
+
+.unicode-decode {
+  background-color: var(--Colors-Use-Green-Border);
+}
+
+.unicode-decode::after {
+  content: ' ';
+  background-color: var(--Colors-Use-Basic-Background);
+}
+
+.unicode-decode-after {
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  background-color: var(--Colors-Use-Neutral-Border);
+  padding-left: 2px;
+  border-radius: 3px;
+  font-weight: bold;
+  cursor: none;
+  user-select: none;
+  opacity: 1 !important;
 }

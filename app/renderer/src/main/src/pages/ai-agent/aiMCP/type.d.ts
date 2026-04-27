@@ -1,22 +1,22 @@
-import {MCPServer, MCPServerTool} from "../type/aiMCP"
+import { MCPServer, MCPServerTool } from '../type/aiMCP'
 
 export interface AIMCPProps {}
 export interface AIMCPListProps {
-    setCurrentMCP: (item: MCPServer) => void
+  setCurrentMCP: (item: MCPServer) => void
 }
 export interface AIMCPToolListProps {
-    item: MCPServer
-    onBack: () => void
+  item: MCPServer
+  onBack: () => void
 }
 export interface AIMCPToolItemProps {
-    toolItem: MCPServerTool
+  toolItem: MCPServerTool
 }
 export interface AIMCPToolItemPopoverContentProps {
-    toolItem: MCPServerTool
+  toolItem: MCPServerTool
 }
 export interface AIMCPListItemProps {
-    item: MCPServer
-    onRefresh: () => void
-    setCurrentMCP: (item: MCPServer) => void
-    onSetData: (item: MCPServer) => void
+  item: MCPServer
+  onRefresh: () => void
+  setCurrentMCP: (item: MCPServer) => void
+  onSetData: (item: MCPServer) => void
 }

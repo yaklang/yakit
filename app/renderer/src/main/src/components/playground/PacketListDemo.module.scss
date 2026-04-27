@@ -1,24 +1,23 @@
 .hex-editor {
-    height: 100%;
-    width: 100%;
-    :global {
-        .hNamKE.editAscii .byteValue.selection > .nybbleHighValue,
-        .hNamKE.notFocused .byteValue.selection > .nybbleHighValue,
-        .hNamKE.editAscii .byteValue.selection > .nybbleLowValue,
-        .hNamKE.notFocused .byteValue.selection > .nybbleLowValue {
-            background-color: var(--Colors-Use-Main-Primary) !important;
-            color: var(--Colors-Use-Main-On-Primary) !important;
-        }
-        .hNamKE.editHex .asciiValue.selectionCursor,
-        .hNamKE.notFocused .asciiValue.selectionCursor {
-            background-color: var(--Colors-Use-Main-Primary) !important;
-            color: var(--Colors-Use-Main-On-Primary) !important;
-        }
-        .hNamKE.editHex .asciiValue.selection,
-        .hNamKE.notFocused .asciiValue.selection {
-            background-color: var(--Colors-Use-Main-Primary) !important;
-            color: var(--Colors-Use-Main-On-Primary) !important;
-        }
+  height: 100%;
+  width: 100%;
+  :global {
+    .hNamKE.editAscii .byteValue.selection > .nybbleHighValue,
+    .hNamKE.notFocused .byteValue.selection > .nybbleHighValue,
+    .hNamKE.editAscii .byteValue.selection > .nybbleLowValue,
+    .hNamKE.notFocused .byteValue.selection > .nybbleLowValue {
+      background-color: var(--Colors-Use-Main-Primary) !important;
+      color: var(--Colors-Use-Main-On-Primary) !important;
     }
+    .hNamKE.editHex .asciiValue.selectionCursor,
+    .hNamKE.notFocused .asciiValue.selectionCursor {
+      background-color: var(--Colors-Use-Main-Primary) !important;
+      color: var(--Colors-Use-Main-On-Primary) !important;
+    }
+    .hNamKE.editHex .asciiValue.selection,
+    .hNamKE.notFocused .asciiValue.selection {
+      background-color: var(--Colors-Use-Main-Primary) !important;
+      color: var(--Colors-Use-Main-On-Primary) !important;
+    }
+  }
 }
-

@@ -1,10 +1,10 @@
 .hr-body {
-    padding: 12px 4px;
-    margin-bottom: 24px;
-    .hr {
-        border-top: 1px solid var(--Colors-Use-Neutral-Border);
-    }
-    &:hover {
-        background-color: var(--Colors-Use-Neutral-Bg-Hover);
-    }
+  padding: 12px 4px;
+  margin-bottom: 24px;
+  .hr {
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  }
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  }
 }

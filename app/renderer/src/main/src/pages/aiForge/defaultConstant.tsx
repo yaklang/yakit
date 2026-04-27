@@ -1,28 +1,28 @@
-import {ReactNode} from "react"
-import {SolidCollectionPluginIcon, SolidSparklesPluginIcon, SolidYakitPluginIcon} from "@/assets/icon/colors"
-import {AIForge} from "../ai-agent/type/forge"
+import { ReactNode } from 'react'
+import { SolidCollectionPluginIcon, SolidSparklesPluginIcon, SolidYakitPluginIcon } from '@/assets/icon/colors'
+import { AIForge } from '../ai-agent/type/forge'
 
 /** @name forge-类型 */
-export const DefaultForgeTypeList: {key: AIForge["ForgeType"]; name: string; icon: ReactNode; color: string}[] = [
-    {key: "yak", name: "Yak模板", icon: <SolidYakitPluginIcon />, color: "warning"},
-    {key: "config", name: "简易模板", icon: <SolidCollectionPluginIcon />, color: "cyan"},
-    {key: "skillmd", name: "技能模板", icon: <SolidSparklesPluginIcon />, color: "blue"}
+export const DefaultForgeTypeList: { key: AIForge['ForgeType']; name: string; icon: ReactNode; color: string }[] = [
+  { key: 'yak', name: 'Yak模板', icon: <SolidYakitPluginIcon />, color: 'warning' },
+  { key: 'config', name: '简易模板', icon: <SolidCollectionPluginIcon />, color: 'cyan' },
+  { key: 'skillmd', name: '技能模板', icon: <SolidSparklesPluginIcon />, color: 'blue' },
 ]
 
 /** @name forge-tag预设选项 */
 export const AIForgeBuiltInTag: string[] = [
-    "加密技术支持",
-    "模拟黑客攻击",
-    "处理安全事件",
-    "主动检测网络威胁",
-    "渗透测试",
-    "技术支持",
-    "生活助手",
-    "通用助手",
-    "数据分析",
-    "逻辑推理",
-    "娱乐",
-    "日志分析"
+  '加密技术支持',
+  '模拟黑客攻击',
+  '处理安全事件',
+  '主动检测网络威胁',
+  '渗透测试',
+  '技术支持',
+  '生活助手',
+  '通用助手',
+  '数据分析',
+  '逻辑推理',
+  '娱乐',
+  '日志分析',
 ]
 
 /** @name forge-yak类型默认源码 */

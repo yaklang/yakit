@@ -1,172 +1,172 @@
 .milkdown {
-    padding: 0 !important;
-    table{
-        margin-bottom: 20px;
+  padding: 0 !important;
+  table {
+    margin-bottom: 20px;
+  }
+  th,
+  td {
+    border: 1px solid #ccc;
+  }
+
+  milkdown-table-block {
+    display: block;
+    margin: 4px 0;
+  }
+
+  milkdown-table-block table {
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  milkdown-table-block .handle {
+    position: absolute;
+    z-index: 50;
+    cursor: grab;
+    font-size: 14px;
+    border-color: var(--Colors-Use-Neutral-Border);
+  }
+
+  milkdown-table-block .cell-handle {
+    left: -999px;
+    top: -999px;
+    z-index: 100;
+    height: 24px;
+    transition: opacity 0.2s ease 0.2s;
+    background-color: #fff;
+    padding: 0 8px;
+    border-radius: 4px;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  milkdown-table-block .cell-handle[data-role='col-drag-handle'] {
+    transform: translateY(50%);
+  }
+
+  milkdown-table-block .cell-handle[data-role='row-drag-handle'] {
+    transform: translateX(50%);
+  }
+
+  milkdown-table-block .cell-handle[data-show='false'] {
+    opacity: 0;
+  }
+
+  milkdown-table-block .line-handle[data-show='false'] {
+    opacity: 0;
+  }
+
+  milkdown-table-block .handle:hover {
+    opacity: 1;
+  }
+
+  milkdown-table-block .cell-handle .button-group {
+    position: absolute;
+    height: 30px;
+    top: -32px;
+    display: flex;
+    transform: translateX(-50%);
+    left: 50%;
+    background-color: var(--Colors-Use-Basic-Background);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+  }
+  milkdown-table-block .cell-handle .button-group[data-show='false'] {
+    display: none;
+  }
+  milkdown-table-block .cell-handle .button-group button {
+    padding-left: 8px;
+    padding-right: 8px;
+    width: max-content;
+  }
+  milkdown-table-block .cell-handle .button-group button:hover {
+    background-color: var(--Colors-Use-Neutral-Bg);
+  }
+
+  milkdown-table-block .line-handle {
+    background-color: var(--Colors-Use-Main-Border);
+    transition: opacity 0.2s ease-in-out;
+  }
+  milkdown-table-block .line-handle[data-role='x-line-drag-handle'] {
+    height: 2px;
+  }
+  milkdown-table-block .line-handle[data-role='y-line-drag-handle'] {
+    width: 2px;
+  }
+
+  milkdown-table-block .line-handle .add-button {
+    color: var(--Colors-Use-Main-Primary);
+    border: 1px solid var(--Colors-Use-Main-Border);
+    padding: 0 4px;
+    background: var(--Colors-Use-Basic-Background);
+    border-radius: 4px;
+    width: 24px;
+    cursor: pointer;
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
     }
-    th,
-    td {
-        border: 1px solid #ccc;
+  }
+
+  milkdown-table-block .line-handle[data-role='x-line-drag-handle'] .add-button {
+    position: absolute;
+    transform: translateX(-100%);
+    top: -12px;
+    height: 24px;
+  }
+
+  milkdown-table-block .line-handle[data-role='y-line-drag-handle'] .add-button {
+    position: absolute;
+    transform: translateX(-50%);
+    top: -24px;
+    height: 24px;
+  }
+
+  milkdown-table-block .line-handle[data-display-type='indicator'] .add-button {
+    display: none;
+  }
+
+  milkdown-table-block .drag-preview {
+    position: absolute;
+    z-index: 100;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    opacity: 0.5;
+    display: flex;
+    flex-direction: column;
+  }
+
+  milkdown-table-block .drag-preview table {
+    margin: 0;
+  }
+
+  milkdown-table-block .drag-preview[data-show='false'] {
+    display: none;
+  }
+
+  th,
+  td {
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    padding: 4px 16px;
+    .ProseMirror-selectednode {
+      background-color: transparent !important;
+    }
+    &:has(.ProseMirror-selectednode) {
+      outline: 1px solid var(--Colors-Use-Main-Border);
+      outline-offset: -1px;
     }
 
-    milkdown-table-block {
-        display: block;
-        margin: 4px 0;
+    .ProseMirror-selectednode {
+      outline: none;
+    }
+  }
+
+  .selectedCell {
+    &::after {
+      background-color: var(--Colors-Use-Main-Bg);
     }
 
-    milkdown-table-block table {
-        margin: 0 !important;
-        border-radius: 0 !important;
+    ::selection {
+      background: transparent;
     }
-
-    milkdown-table-block .handle {
-        position: absolute;
-        z-index: 50;
-        cursor: grab;
-        font-size: 14px;
-        border-color: var(--Colors-Use-Neutral-Border);
-    }
-
-    milkdown-table-block .cell-handle {
-        left: -999px;
-        top: -999px;
-        z-index: 100;
-        height: 24px;
-        transition: opacity 0.2s ease 0.2s;
-        background-color: #fff;
-        padding: 0 8px;
-        border-radius: 4px;
-        position: absolute;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    milkdown-table-block .cell-handle[data-role="col-drag-handle"] {
-        transform: translateY(50%);
-    }
-
-    milkdown-table-block .cell-handle[data-role="row-drag-handle"] {
-        transform: translateX(50%);
-    }
-
-    milkdown-table-block .cell-handle[data-show="false"] {
-        opacity: 0;
-    }
-
-    milkdown-table-block .line-handle[data-show="false"] {
-        opacity: 0;
-    }
-
-    milkdown-table-block .handle:hover {
-        opacity: 1;
-    }
-
-    milkdown-table-block .cell-handle .button-group {
-        position: absolute;
-        height: 30px;
-        top: -32px;
-        display: flex;
-        transform: translateX(-50%);
-        left: 50%;
-        background-color: var(--Colors-Use-Basic-Background);
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        border-radius: 4px;
-    }
-    milkdown-table-block .cell-handle .button-group[data-show="false"] {
-        display: none;
-    }
-    milkdown-table-block .cell-handle .button-group button {
-        padding-left: 8px;
-        padding-right: 8px;
-        width: max-content;
-    }
-    milkdown-table-block .cell-handle .button-group button:hover {
-        background-color: var(--Colors-Use-Neutral-Bg);
-    }
-
-    milkdown-table-block .line-handle {
-        background-color: var(--Colors-Use-Main-Border);
-        transition: opacity 0.2s ease-in-out;
-    }
-    milkdown-table-block .line-handle[data-role="x-line-drag-handle"] {
-        height: 2px;
-    }
-    milkdown-table-block .line-handle[data-role="y-line-drag-handle"] {
-        width: 2px;
-    }
-
-    milkdown-table-block .line-handle .add-button {
-        color: var(--Colors-Use-Main-Primary);
-        border: 1px solid var(--Colors-Use-Main-Border);
-        padding: 0 4px;
-        background: var(--Colors-Use-Basic-Background);
-        border-radius: 4px;
-        width: 24px;
-        cursor: pointer;
-        &:hover {
-            background: var(--Colors-Use-Neutral-Bg-Hover);
-        }
-    }
-
-    milkdown-table-block .line-handle[data-role="x-line-drag-handle"] .add-button {
-        position: absolute;
-        transform: translateX(-100%);
-        top: -12px;
-        height: 24px;
-    }
-
-    milkdown-table-block .line-handle[data-role="y-line-drag-handle"] .add-button {
-        position: absolute;
-        transform: translateX(-50%);
-        top: -24px;
-        height: 24px;
-    }
-
-    milkdown-table-block .line-handle[data-display-type="indicator"] .add-button {
-        display: none;
-    }
-
-    milkdown-table-block .drag-preview {
-        position: absolute;
-        z-index: 100;
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        opacity: 0.5;
-        display: flex;
-        flex-direction: column;
-    }
-
-    milkdown-table-block .drag-preview table {
-        margin: 0;
-    }
-
-    milkdown-table-block .drag-preview[data-show="false"] {
-        display: none;
-    }
-
-    th,
-    td {
-        border: 1px solid  var(--Colors-Use-Neutral-Border);
-        padding: 4px 16px;
-        .ProseMirror-selectednode {
-            background-color: transparent !important;
-        }
-        &:has(.ProseMirror-selectednode) {
-            outline: 1px solid var(--Colors-Use-Main-Border);
-            outline-offset: -1px;
-        }
-
-        .ProseMirror-selectednode {
-            outline: none;
-        }
-    }
-
-    .selectedCell {
-        &::after {
-            background-color: var(--Colors-Use-Main-Bg);
-        }
-
-        ::selection {
-            background: transparent;
-        }
-    }
+  }
 }

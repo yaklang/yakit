@@ -1,11 +1,11 @@
-import {AITool} from "../type/aiTool"
+import { AITool } from '../type/aiTool'
 
 export interface AIToolListProps {}
-export type ToolQueryType = "all" | "collect"
+export type ToolQueryType = 'all' | 'collect'
 
 export interface AIToolListItemProps {
-    item: AITool
-    onSetData: (value: AITool) => void
-    onRefresh: () => void
-    onSelect: (value: AITool) => void
+  item: AITool
+  onSetData: (value: AITool) => void
+  onRefresh: () => void
+  onSelect: (value: AITool) => void
 }

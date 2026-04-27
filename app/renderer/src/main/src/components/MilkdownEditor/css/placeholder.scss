@@ -1,12 +1,12 @@
 .milkdown {
-    .crepe-placeholder {
-        border-radius: 4px;
-    }
-    .crepe-placeholder::before {
-        position: absolute;
-        color: var(--Colors-Use-Neutral-Disable);
-        pointer-events: none;
-        height: 0;
-        content: attr(data-placeholder);
-    }
+  .crepe-placeholder {
+    border-radius: 4px;
+  }
+  .crepe-placeholder::before {
+    position: absolute;
+    color: var(--Colors-Use-Neutral-Disable);
+    pointer-events: none;
+    height: 0;
+    content: attr(data-placeholder);
+  }
 }

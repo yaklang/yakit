@@ -1,80 +1,80 @@
-import {SolidAnnotationIcon, SolidHashtagIcon} from "@/assets/icon/solid"
-import {useState, type FC, type ReactNode} from "react"
-import ChatCard from "./ChatCard"
-import FileList from "./FileList"
-import styles from "./StreamCard.module.scss"
-import ModalInfo, {type ModalInfoProps} from "./ModelInfo"
-import {AIYakExecFileRecord} from "@/pages/ai-re-act/hooks/aiRender"
-import { OperationCardFooter, OperationCardFooterProps } from "./OperationCardFooter/OperationCardFooter"
+import { SolidAnnotationIcon, SolidHashtagIcon } from '@/assets/icon/solid'
+import { useState, type FC, type ReactNode } from 'react'
+import ChatCard from './ChatCard'
+import FileList from './FileList'
+import styles from './StreamCard.module.scss'
+import ModalInfo, { type ModalInfoProps } from './ModelInfo'
+import { AIYakExecFileRecord } from '@/pages/ai-re-act/hooks/aiRender'
+import { OperationCardFooter, OperationCardFooterProps } from './OperationCardFooter/OperationCardFooter'
 
 interface StreamCardProps {
-    content?: ReactNode
-    fileList?: AIYakExecFileRecord[]
-    prompt?: string
-    titleText?: string
-    titleIcon?: ReactNode
+  content?: ReactNode
+  fileList?: AIYakExecFileRecord[]
+  prompt?: string
+  titleText?: string
+  titleIcon?: ReactNode
 
-    modalInfo?: ModalInfoProps
+  modalInfo?: ModalInfoProps
 
-    contentExtra?: ReactNode
-    /**参考资料 */
-    referenceNode?: ReactNode
-    operationInfo?: OperationCardFooterProps
+  contentExtra?: ReactNode
+  /**参考资料 */
+  referenceNode?: ReactNode
+  operationInfo?: OperationCardFooterProps
 }
 
-const PromptCard: FC<{prompt?: string}> = ({prompt}) => {
-    return (
-        <div className={styles["stream-prompt"]}>
-            <div className={styles["stream-prompt-title"]}>
-                <SolidAnnotationIcon />
-                Prompt
-            </div>
-            <div className={styles["stream-prompt-content"]}>{prompt}</div>
-        </div>
-    )
+const PromptCard: FC<{ prompt?: string }> = ({ prompt }) => {
+  return (
+    <div className={styles['stream-prompt']}>
+      <div className={styles['stream-prompt-title']}>
+        <SolidAnnotationIcon />
+        Prompt
+      </div>
+      <div className={styles['stream-prompt-content']}>{prompt}</div>
+    </div>
+  )
 }
 
 const StreamCard: FC<StreamCardProps> = ({
-    titleText,
-    titleIcon,
-    content,
-    fileList,
-    prompt,
-    modalInfo,
-    operationInfo,
-    contentExtra,
-    referenceNode
+  titleText,
+  titleIcon,
+  content,
+  fileList,
+  prompt,
+  modalInfo,
+  operationInfo,
+  contentExtra,
+  referenceNode,
 }) => {
-    const [active, setActive] = useState(false)
+  const [active, setActive] = useState(false)
 
-    const onClick = (e) => {
-        e.stopPropagation()
-        setActive(true)
-    }
-    const onMouseLeave = () => setActive(false)
+  const onClick = (e) => {
+    e.stopPropagation()
+    setActive(true)
+  }
+  const onMouseLeave = () => setActive(false)
 
-    return (
-        <ChatCard
-            titleText={titleText}
-            titleIcon={<div className={styles["stream-icon"]}>{titleIcon ?? <SolidHashtagIcon />}</div>}
-            titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
-            footer={prompt && <PromptCard prompt={prompt} />}
-        >
-            <div
-                className={styles["stream-content"]}
-                tabIndex={0}
-                onClick={onClick}
-                onMouseLeave={onMouseLeave}
-                style={{overflowY: active ? "auto" : "hidden"}}
-            >
-                {content}
-            </div>
-            {contentExtra}
-            {!!fileList?.length && <FileList fileList={fileList} />}
-            {referenceNode}
-            {operationInfo && <OperationCardFooter {...operationInfo} />}
-        </ChatCard>
-    )
+  return (
+    <ChatCard
+      titleText={titleText}
+      titleIcon={<div className={styles['stream-icon']}>{titleIcon ?? <SolidHashtagIcon />}</div>}
+      titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
+      footer={prompt && <PromptCard prompt={prompt} />}
+    >
+      <div
+        className={styles['stream-content']}
+        tabIndex={0}
+        onClick={onClick}
+        onMouseLeave={onMouseLeave}
+        style={{ overflowY: active ? 'auto' : 'hidden' }}
+      >
+        {content}
+      </div>
+      {contentExtra}
+      {!!fileList?.length && <FileList fileList={fileList} />}
+      {referenceNode}
+      {operationInfo && <OperationCardFooter {...operationInfo} />}
+    </ChatCard>
+  )
 }
 
 export default StreamCard

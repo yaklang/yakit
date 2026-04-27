@@ -1,24 +1,24 @@
 .engine-console {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--Colors-Use-Neutral-Bg);
+  padding: 12px 0 0 12px;
+
+  .baseConsole {
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    background: var(--Colors-Use-Neutral-Bg);
-    padding: 12px 0 0 12px;
 
-    .baseConsole {
-        width: 100%;
+    :global {
+      .xtrem {
         height: 100%;
-
-        :global {
-            .xtrem {
-                height: 100%;
-                background: var(--Colors-Use-Neutral-Bg);
-            }
-        }
+        background: var(--Colors-Use-Neutral-Bg);
+      }
     }
+  }
 }
 
 .engine-console-noMini {
-    border-left: 1px solid #b4bbca;
-    border-right: 1px solid #b4bbca;
+  border-left: 1px solid #b4bbca;
+  border-right: 1px solid #b4bbca;
 }

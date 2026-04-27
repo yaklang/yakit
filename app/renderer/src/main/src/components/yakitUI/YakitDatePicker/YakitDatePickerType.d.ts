@@ -1,6 +1,6 @@
-import {CSSProperties} from "react"
+import { CSSProperties } from 'react'
 
-import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
+import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 
 /**
  * @description YakitInputSearchProps 的属性
@@ -9,10 +9,10 @@ import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
  * @param {string} wrapperClassName
  * @param {CSSProperties} wrapperStyle
  */
-export interface YakitDatePickerProps extends Omit<DatePickerProps, "size"> {
-    size?: YakitSizeType
-    wrapperClassName?: string
-    wrapperStyle?: CSSProperties
+export interface YakitDatePickerProps extends Omit<DatePickerProps, 'size'> {
+  size?: YakitSizeType
+  wrapperClassName?: string
+  wrapperStyle?: CSSProperties
 }
 
 /**
@@ -22,8 +22,8 @@ export interface YakitDatePickerProps extends Omit<DatePickerProps, "size"> {
  * @param {string} wrapperClassName
  * @param {CSSProperties} wrapperStyle
  */
-export interface YakitRangePickerProps extends Omit<RangePickerProps, "size"> {
-    size?: YakitSizeType
-    wrapperClassName?: string
-    wrapperStyle?: CSSProperties
+export interface YakitRangePickerProps extends Omit<RangePickerProps, 'size'> {
+  size?: YakitSizeType
+  wrapperClassName?: string
+  wrapperStyle?: CSSProperties
 }

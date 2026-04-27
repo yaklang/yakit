@@ -1,11 +1,11 @@
 .yakit-xterm {
-    width: 100%;
-    height: 100%;
-    background: var(--Colors-Use-Neutral-Bg);
-    overflow: auto;
-    :global {
-        .xterm {
-            height: 100%;
-        }
+  width: 100%;
+  height: 100%;
+  background: var(--Colors-Use-Neutral-Bg);
+  overflow: auto;
+  :global {
+    .xterm {
+      height: 100%;
     }
+  }
 }

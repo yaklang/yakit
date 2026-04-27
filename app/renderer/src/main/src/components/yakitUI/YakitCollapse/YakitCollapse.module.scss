@@ -1,101 +1,101 @@
 .yakit-collapse {
-    padding: 0;
-    font-size: 12px;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    & > :global(.ant-collapse-item) {
-        :global {
-            .ant-collapse-extra {
-                display: flex;
-                align-items: center;
-            }
-            .ant-collapse-header {
-                padding: 8px 16px;
-                align-items: center;
-                height: 32px;
-                font-weight: 500;
-                line-height: 16px; /* 133.333% */
-            }
-            .ant-collapse-arrow {
-                width: 16px;
-                height: 16px;
-                color: var(--Colors-Use-Neutral-Text-4-Help-text);
-                svg {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
-            .ant-collapse-content > .ant-collapse-content-box {
-                padding: 4px 16px 24px;
-            }
+  padding: 0;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  & > :global(.ant-collapse-item) {
+    :global {
+      .ant-collapse-extra {
+        display: flex;
+        align-items: center;
+      }
+      .ant-collapse-header {
+        padding: 8px 16px;
+        align-items: center;
+        height: 32px;
+        font-weight: 500;
+        line-height: 16px; /* 133.333% */
+      }
+      .ant-collapse-arrow {
+        width: 16px;
+        height: 16px;
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        svg {
+          width: 16px;
+          height: 16px;
         }
+      }
+      .ant-collapse-content > .ant-collapse-content-box {
+        padding: 4px 16px 24px;
+      }
     }
+  }
 }
 
 .yakit-collapse-bordered-hidden {
-    & > :global(.ant-collapse-item) {
-        margin-bottom: 8px;
-        & > :global(.ant-collapse-header) {
-            border-top: 0;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            &:hover {
-                border-radius: 4px;
-                background: var(--Colors-Use-Neutral-Bg);
-            }
-        }
-        &:global(:last-child) {
-            border-radius: 4px;
-            margin-bottom: 0;
-            & > :global(.ant-collapse-header:hover) {
-                border-radius: 4px;
-            }
-        }
-        &:global(.ant-collapse-item-active) {
-            border-radius: 4px;
-            background: var(--Colors-Use-Neutral-Bg);
-            margin-bottom: 8px;
-            &:last-child {
-                margin-bottom: 0;
-            }
-        }
+  & > :global(.ant-collapse-item) {
+    margin-bottom: 8px;
+    & > :global(.ant-collapse-header) {
+      border-top: 0;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      &:hover {
+        border-radius: 4px;
+        background: var(--Colors-Use-Neutral-Bg);
+      }
     }
+    &:global(:last-child) {
+      border-radius: 4px;
+      margin-bottom: 0;
+      & > :global(.ant-collapse-header:hover) {
+        border-radius: 4px;
+      }
+    }
+    &:global(.ant-collapse-item-active) {
+      border-radius: 4px;
+      background: var(--Colors-Use-Neutral-Bg);
+      margin-bottom: 8px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
 }
 
 .yakit-collapse-bordered {
-    & > :global(.ant-collapse-item) {
-        margin-bottom: 0px;
-        & > :global(.ant-collapse-header) {
-            border-top: 1px solid var(--Colors-Use-Neutral-Border);
-            &:hover {
-                background-color: transparent;
-                border-radius: 0;
-            }
-            & > :global(.ant-collapse-expand-icon) {
-                color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            }
-            & > :global(.ant-collapse-header-text) {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-            }
-        }
-        &:global(:last-child) {
-            border-radius: 0;
-            & > :global(.ant-collapse-header:hover) {
-                border-radius: 0;
-            }
-        }
-        &:global(.ant-collapse-item-active) {
-            background-color: transparent;
-            border-radius: 0;
-            margin-bottom: 0;
-        }
+  & > :global(.ant-collapse-item) {
+    margin-bottom: 0px;
+    & > :global(.ant-collapse-header) {
+      border-top: 1px solid var(--Colors-Use-Neutral-Border);
+      &:hover {
+        background-color: transparent;
+        border-radius: 0;
+      }
+      & > :global(.ant-collapse-expand-icon) {
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      }
+      & > :global(.ant-collapse-header-text) {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
     }
+    &:global(:last-child) {
+      border-radius: 0;
+      & > :global(.ant-collapse-header:hover) {
+        border-radius: 0;
+      }
+    }
+    &:global(.ant-collapse-item-active) {
+      background-color: transparent;
+      border-radius: 0;
+      margin-bottom: 0;
+    }
+  }
 }
 .yakit-collapse-grey-divider {
-    :global {
-        .ant-collapse-ghost > .ant-collapse-item {
-            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-            &:last-child {
-                border-bottom: 0;
-            }
-        }
+  :global {
+    .ant-collapse-ghost > .ant-collapse-item {
+      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+      &:last-child {
+        border-bottom: 0;
+      }
     }
+  }
 }

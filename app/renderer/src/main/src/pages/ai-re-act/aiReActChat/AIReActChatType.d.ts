@@ -1,28 +1,28 @@
-import {AIAgentChatMode} from "@/pages/ai-agent/aiAgentChat/type"
-import {AIChatQSData} from "../hooks/aiRender"
+import { AIAgentChatMode } from '@/pages/ai-agent/aiAgentChat/type'
+import { AIChatQSData } from '../hooks/aiRender'
 
 export interface AIReActChatProps {
-    mode: AIAgentChatMode
-    chatContainerClassName?: string
-    chatContainerHeaderClassName?: string
-    showFreeChat: boolean
-    setShowFreeChat: (show: boolean) => void
-    title?: React.ReactNode
-    aiChatTextareaRef: ForwardedRef<AIChatTextareaRefProps>
-    handleSendAfter?: () => void
-    otherComponentCallsProps?: Partial<{
-        chevronleftButton: React.ReactNode
-        remoteButtion: React.ReactNode
-    }>
+  mode: AIAgentChatMode
+  chatContainerClassName?: string
+  chatContainerHeaderClassName?: string
+  showFreeChat: boolean
+  setShowFreeChat: (show: boolean) => void
+  title?: React.ReactNode
+  aiChatTextareaRef: ForwardedRef<AIChatTextareaRefProps>
+  handleSendAfter?: () => void
+  otherComponentCallsProps?: Partial<{
+    chevronleftButton: React.ReactNode
+    remoteButtion: React.ReactNode
+  }>
 }
 
 export interface AIReActLogProps {
-    logs: AIChatQSData[]
-    setLogVisible: (visible: boolean) => void
+  logs: AIChatQSData[]
+  setLogVisible: (visible: boolean) => void
 }
 
 export interface AIReActTimelineMessageProps {
-    message?: string
-    loading: boolean
-    setLoading: (loading: boolean) => void
+  message?: string
+  loading: boolean
+  setLoading: (loading: boolean) => void
 }

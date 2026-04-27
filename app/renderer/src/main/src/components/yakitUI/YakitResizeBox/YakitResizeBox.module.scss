@@ -1,128 +1,129 @@
 .resize-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--Colors-Use-Basic-Background);
+  .resize-split-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .resize-split-line-in {
+      background-color: var(--Colors-Use-Neutral-Border);
+    }
+    .resize-split-line-in-hide {
+      background-color: transparent;
+    }
+    .resize-split-line-in-ver {
+      width: 100%;
+      height: 1px;
+    }
+    .resize-split-line-in-nover {
+      width: 1px;
+      height: 100%;
+    }
+  }
+  .resize-split-line-top {
+    align-items: flex-start;
+  }
+  .resize-split-line-bottom {
+    align-items: flex-end;
+  }
+  .resize-split-line-left {
+    justify-content: flex-start;
+  }
+  .resize-split-line-right {
+    justify-content: flex-end;
+  }
+
+  .resize-split-line:hover {
+    .resize-split-line-in,
+    .resize-split-line-in-hide {
+      background-color: var(--Colors-Use-Main-Hover);
+    }
+    .resize-split-line-in-ver {
+      height: 2px;
+    }
+    .resize-split-line-in-nover {
+      width: 2px;
+    }
+  }
+
+  .resize-split-handle {
+    position: absolute;
+    z-index: 10;
+    cursor: pointer;
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 50%;
+    background: var(--Colors-Use-Basic-Background);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+
+    svg {
+      width: 12px;
+    }
+
+    .resize-split-handle-text {
+      max-width: 0;
+      overflow: hidden;
+    }
+
+    &:hover {
+      padding: 0 6px;
+      border-radius: 20px;
+      gap: 4px;
+      border-color: var(--Colors-Use-Main-Hover);
+      color: var(--Colors-Use-Main-Hover);
+
+      .resize-split-handle-text {
+        max-width: 160px;
+        color: var(--Colors-Use-Main-Hover);
+      }
+    }
+  }
+
+  .resize-split-handle-top {
+    transform: translate(-50%, -50%);
+  }
+
+  .resize-split-handle-bottom {
+    transform: translate(-50%, 50%);
+  }
+
+  .mask-body {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
     width: 100%;
     height: 100%;
-    display: flex;
-    position: relative;
-    overflow: hidden;
-    background-color: var(--Colors-Use-Basic-Background);
-    .resize-split-line {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        .resize-split-line-in {
-            background-color: var(--Colors-Use-Neutral-Border);
-        }
-        .resize-split-line-in-hide{
-            background-color: transparent;
-        }
-        .resize-split-line-in-ver {
-            width: 100%;
-            height: 1px;
-        }
-        .resize-split-line-in-nover {
-            width: 1px;
-            height: 100%;
-        }
-    }
-    .resize-split-line-top{
-        align-items:flex-start;
-    }
-    .resize-split-line-bottom{
-        align-items:flex-end;
-    }
-    .resize-split-line-left{
-        justify-content: flex-start;
-    }
-    .resize-split-line-right{
-        justify-content: flex-end;
-    }
-
-    .resize-split-line:hover {
-        .resize-split-line-in, .resize-split-line-in-hide {
-            background-color: var(--Colors-Use-Main-Hover);
-        }
-        .resize-split-line-in-ver{
-            height: 2px;
-        }
-        .resize-split-line-in-nover{
-            width: 2px;
-        }
-    }
-
-    .resize-split-handle {
-        position: absolute;
-        z-index: 10;
-        cursor: pointer;
-        left: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        height: 20px;
-        min-width: 20px;
-        border-radius: 50%;
-        background: var(--Colors-Use-Basic-Background);
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-
-        svg {
-            width: 12px;
-        }
-
-        .resize-split-handle-text {
-            max-width: 0;
-            overflow: hidden;
-        }
-
-        &:hover {
-            padding: 0 6px;
-            border-radius: 20px;
-            gap: 4px;
-            border-color: var(--Colors-Use-Main-Hover);
-            color: var(--Colors-Use-Main-Hover);
-            
-            .resize-split-handle-text {
-                max-width: 160px; 
-                color: var(--Colors-Use-Main-Hover);
-            }
-        }
-    }
-    
-    .resize-split-handle-top{
-        transform: translate(-50%, -50%);
-    }
-
-    .resize-split-handle-bottom{
-        transform: translate(-50%, 50%);
-    }
- 
-    .mask-body {
-        position: absolute;
-        top: 0;
-        left: 0;
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        display: none;
-        z-index: 9;
-    }
-    .resize-line-style {
-        display: none;
-        position: absolute;
-        z-index: 10;
-    }
-    .resize-line-hor {
-        top: 0;
-        bottom: 0;
-        left: 0;
-        height: 100%;
-        width: 2px;
-        background-color: var(--Colors-Use-Main-Hover);
-    }
-    .resize-line-ver {
-        left: 0;
-        right: 0;
-        top: 0;
-        width: 100%;
-        height: 2px;
-        background-color: var(--Colors-Use-Main-Hover);
-    }
+    display: none;
+    z-index: 9;
+  }
+  .resize-line-style {
+    display: none;
+    position: absolute;
+    z-index: 10;
+  }
+  .resize-line-hor {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    width: 2px;
+    background-color: var(--Colors-Use-Main-Hover);
+  }
+  .resize-line-ver {
+    left: 0;
+    right: 0;
+    top: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--Colors-Use-Main-Hover);
+  }
 }

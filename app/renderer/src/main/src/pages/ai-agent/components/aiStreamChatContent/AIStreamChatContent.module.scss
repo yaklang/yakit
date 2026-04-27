@@ -1,60 +1,60 @@
-@use "../../../../styles/mixin.scss" as mixin;
+@use '../../../../styles/mixin.scss' as mixin;
 .ai-stream-chat-content-wrapper {
-    border-radius: 8px;
-    // background: var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  // background: var(--Colors-Use-Neutral-Bg-Hover);
 }
 .ai-stream-chat-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  max-width: 100%;
+  gap: 4px;
+  border-left: 2px solid var(--Colors-Use-Neutral-Disable);
+  padding-left: 8px;
+  .title {
+    padding: 4px 0px;
+    border-radius: 8px 0 0 8px;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    max-width: 100%;
+    flex-shrink: 0;
     gap: 4px;
-    border-left: 2px solid var(--Colors-Use-Neutral-Disable);
-    padding-left: 8px;
-    .title {
-        padding: 4px 0px;
-        border-radius: 8px 0 0 8px;
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
-        gap: 4px;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 14px;
-        // @include mixin.mpb-color-text();
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    // @include mixin.mpb-color-text();
+  }
+  .ai-stream-content {
+    padding: 4px 12px 4px 0;
+    border-radius: 0 8px 8px 0;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    display: flex;
+    justify-content: flex-end;
+    position: relative;
+    .ai-mask {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      right: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        to right,
+        var(--Colors-Use-Basic-Background) 0%,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0) 80%,
+        transparent 100%
+      );
     }
-    .ai-stream-content {
-        padding: 4px 12px 4px 0;
-        border-radius: 0 8px 8px 0;
-        color: var(--Colors-Use-Neutral-Text-4-Help-text);
-        font-size: 11px;
-        font-weight: 400;
-        line-height: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-        display: flex;
-        justify-content: flex-end;
-        position: relative;
-        .ai-mask {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            right: 0;
-            pointer-events: none;
-            background: linear-gradient(
-                to right,
-                var(--Colors-Use-Basic-Background) 0%,
-                rgba(255, 255, 255, 0) 20%,
-                rgba(255, 255, 255, 0) 80%,
-                transparent 100%
-            );
-        }
-    }
+  }
 }
 
 .tooltip-stream-content {
-    max-height: 40vh;
-    overflow: auto;
+  max-height: 40vh;
+  overflow: auto;
 }

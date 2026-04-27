@@ -1,13 +1,12 @@
-.demo-packet-table-box{
-    height: 100%;
-    width: 100%;
-    :global {
-        .row-wrapper{
-            cursor: pointer;
-            &:hover{
-                background: var(--Colors-Use-Neutral-Bg-Hover);
-                
-            }
-        }
+.demo-packet-table-box {
+  height: 100%;
+  width: 100%;
+  :global {
+    .row-wrapper {
+      cursor: pointer;
+      &:hover {
+        background: var(--Colors-Use-Neutral-Bg-Hover);
+      }
     }
+  }
 }

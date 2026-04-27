@@ -1,197 +1,196 @@
 .webTree {
+  display: flex;
+  flex-direction: column;
+  .tree-top-wrap {
     display: flex;
-    flex-direction: column;
-    .tree-top-wrap {
-        display: flex;
-        justify-content: space-between;
+    justify-content: space-between;
+  }
+
+  .tree-wrap {
+    flex: 1;
+  }
+
+  :global {
+    .ant-tree-list-holder-inner {
+      background-color: var(--Colors-Use-Basic-Background);
+    }
+    .yakitTreeNode-icon {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      margin-top: 4px;
+      svg {
+        height: 16px;
+        width: 16px;
+        path {
+          stroke-width: 1.5;
+        }
+      }
     }
 
-    .tree-wrap {
-        flex: 1;
+    .yakit-flolder-icon {
+      color: var(--Colors-Use-Main-Primary);
     }
 
-    :global {
-        .ant-tree-list-holder-inner{
-            background-color: var(--Colors-Use-Basic-Background);
-        }
-        .yakitTreeNode-icon {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            margin-top: 4px;
-            svg {
-                height: 16px;
-                width: 16px;
-                path {
-                    stroke-width: 1.5;
-                }
-            }
-        }
+    .ant-spin-spinning {
+      margin-top: 20px;
+      .ant-spin-dot {
+        margin: auto;
+      }
+    }
 
-        .yakit-flolder-icon {
-            color: var(--Colors-Use-Main-Primary);
-        }
+    .ant-tree-indent-unit {
+      width: 10px;
+      background: var(--Colors-Use-Basic-Background);
+      &::before {
+        right: 0px;
+        background: var(--Colors-Use-Basic-Background);
+      }
+    }
+    .ant-tree-show-line .ant-tree-indent-unit::before {
+      border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    }
+    .ant-tree-indent-unit-end {
+      border-right: 1px solid var(--Colors-Use-Neutral-Border);
+    }
+    .ant-tree-switcher {
+      width: 22px;
+      background: var(--Colors-Use-Basic-Background);
+    }
+    .ant-tree-switcher-leaf-line {
+      display: none;
+    }
 
-        .ant-spin-spinning {
-            margin-top: 20px;
-            .ant-spin-dot {
-                margin: auto;
-            }
-        }
+    .ant-tree .ant-tree-treenode {
+      padding: 0;
+      background: var(--Colors-Use-Basic-Background);
+    }
 
-        .ant-tree-indent-unit {
-            width: 10px;
-            background: var(--Colors-Use-Basic-Background);
-            &::before {
-                right: 0px;
-                background: var(--Colors-Use-Basic-Background);
-            }
+    .ant-tree-treenode.ant-tree-treenode-switcher-open:not(.ant-tree-treenode-selected),
+    .ant-tree-treenode.ant-tree-treenode-switcher-close:not(.ant-tree-treenode-selected) {
+      align-items: center;
+      width: 100%;
+      padding: 0;
+      background-color: var(--Colors-Use-Basic-Background);
+      &:hover:not(:has(.ant-tree-checkbox-checked)) {
+        .ant-tree-switcher {
+          background-color: var(--Colors-Use-Neutral-Bg);
+          border-radius: 4px 0 0 4px;
         }
-        .ant-tree-show-line .ant-tree-indent-unit::before {
-            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+      }
+    }
+
+    .ant-tree-treenode:not(.ant-tree-treenode-selected) {
+      &:hover:not(:has(.ant-tree-checkbox-checked)) {
+        .ant-tree-switcher.ant-tree-switcher-noop {
+          background-color: var(--Colors-Use-Neutral-Bg-Hover);
+          border-radius: 4px 0 0 4px;
         }
-        .ant-tree-indent-unit-end {
-            border-right: 1px solid var(--Colors-Use-Neutral-Border);
+        .ant-tree-node-content-wrapper {
+          background-color: var(--Colors-Use-Neutral-Bg-Hover);
+          border-radius: 0 4px 4px 0;
+        }
+      }
+    }
+
+    .ant-tree-node-content-wrapper {
+      padding-left: 0;
+      transition: none;
+    }
+
+    .ant-tree-node-content-wrapper.ant-tree-node-selected {
+      .ant-tree-iconEle .anticon {
+        color: var(--Colors-Use-Main-On-Primary);
+      }
+      .ant-tree-title {
+        white-space: nowrap;
+        width: calc(100% - 24px);
+        color: var(--Colors-Use-Main-On-Primary);
+      }
+    }
+
+    .ant-tree-treenode.ant-tree-treenode-switcher-close.ant-tree-treenode-selected,
+    .ant-tree-treenode.ant-tree-treenode-switcher-open.ant-tree-treenode-selected {
+      .ant-tree-switcher {
+        background-color: var(--Colors-Use-Main-Pressed);
+        border-radius: 4px 0 0 4px;
+        .ant-tree-switcher-icon {
+          color: var(--Colors-Use-Main-On-Primary);
+        }
+      }
+
+      & > .ant-tree-node-content-wrapper.ant-tree-node-selected {
+        border-radius: 0 4px 4px 0;
+      }
+
+      &:hover {
+        .ant-tree-switcher {
+          background-color: var(--Colors-Use-Main-Primary);
+          color: var(--Colors-Use-Main-On-Primary);
+        }
+        .ant-tree-node-content-wrapper.ant-tree-node-selected {
+          background-color: var(--Colors-Use-Main-Hover);
+        }
+      }
+    }
+
+    .ant-tree-treenode.ant-tree-treenode-selected {
+      &:hover {
+        .ant-tree-switcher.ant-tree-switcher-noop {
+          background-color: var(--Colors-Use-Main-Hover);
+        }
+        .ant-tree-node-content-wrapper.ant-tree-node-selected {
+          background-color: var(--Colors-Use-Main-Hover);
+        }
+      }
+      .ant-tree-switcher.ant-tree-switcher-noop {
+        background-color: var(--Colors-Use-Main-Primary);
+        color: var(--Colors-Use-Main-On-Primary);
+        border-radius: 4px 0 0 4px;
+      }
+    }
+
+    .ant-tree-iconEle {
+      margin-right: 2px;
+    }
+
+    .ant-tree-node-content-wrapper {
+      display: flex;
+      width: 100%;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .ant-tree-title {
+      white-space: nowrap;
+      width: calc(100% - 24px);
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    //checkbox放到最前面
+    .ant-tree-treenode {
+      margin-bottom: 1px;
+      align-items: center;
+      .ant-tree-checkbox {
+        margin-top: 0;
+        order: -1;
+      }
+
+      // 让勾选的节点显示样式和选中一样
+      &:has(.ant-tree-checkbox-checked) {
+        .ant-tree-node-content-wrapper {
+          background-color: var(--Colors-Use-Main-Primary);
+
+          span {
+            color: var(--Colors-Use-Main-On-Primary);
+          }
         }
         .ant-tree-switcher {
-            width: 22px;
-            background: var(--Colors-Use-Basic-Background);
+          background-color: var(--Colors-Use-Main-Pressed);
+          border-radius: 4px 0 0 4px;
         }
-        .ant-tree-switcher-leaf-line {
-            display: none;
+        .ant-tree-node-content-wrapper,
+        .ant-tree-switcher svg {
+          color: var(--Colors-Use-Main-On-Primary);
         }
-
-        .ant-tree .ant-tree-treenode {
-            padding: 0;
-            background: var(--Colors-Use-Basic-Background);
-        }
-
-        .ant-tree-treenode.ant-tree-treenode-switcher-open:not(.ant-tree-treenode-selected),
-        .ant-tree-treenode.ant-tree-treenode-switcher-close:not(.ant-tree-treenode-selected) {
-            align-items: center;
-            width: 100%;
-            padding: 0;
-            background-color: var(--Colors-Use-Basic-Background);
-            &:hover:not(:has(.ant-tree-checkbox-checked)) {
-                .ant-tree-switcher {
-                    background-color: var(--Colors-Use-Neutral-Bg);
-                    border-radius: 4px 0 0 4px;
-                }
-                
-            }
-        }
-
-        .ant-tree-treenode:not(.ant-tree-treenode-selected) {
-            &:hover:not(:has(.ant-tree-checkbox-checked)) {
-                .ant-tree-switcher.ant-tree-switcher-noop {
-                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
-                    border-radius: 4px 0 0 4px;
-                }
-                .ant-tree-node-content-wrapper {
-                    background-color: var(--Colors-Use-Neutral-Bg-Hover);
-                    border-radius: 0 4px 4px 0;
-                }
-            }
-        }
-
-        .ant-tree-node-content-wrapper {
-            padding-left: 0;
-            transition: none;
-        }
-
-        .ant-tree-node-content-wrapper.ant-tree-node-selected {
-            .ant-tree-iconEle .anticon {
-                color: var(--Colors-Use-Main-On-Primary);
-            }
-            .ant-tree-title {
-                white-space: nowrap;
-                width: calc(100% - 24px);
-                color: var(--Colors-Use-Main-On-Primary);
-            }
-        }
-
-        .ant-tree-treenode.ant-tree-treenode-switcher-close.ant-tree-treenode-selected,
-        .ant-tree-treenode.ant-tree-treenode-switcher-open.ant-tree-treenode-selected {
-            .ant-tree-switcher {
-                background-color: var(--Colors-Use-Main-Pressed);
-                border-radius: 4px 0 0 4px;
-                .ant-tree-switcher-icon {
-                    color: var(--Colors-Use-Main-On-Primary);
-                }
-            }
-
-            & > .ant-tree-node-content-wrapper.ant-tree-node-selected {
-                border-radius: 0 4px 4px 0;
-            }
-
-            &:hover {
-                .ant-tree-switcher {
-                    background-color: var(--Colors-Use-Main-Primary);
-                    color: var(--Colors-Use-Main-On-Primary);
-                }
-                .ant-tree-node-content-wrapper.ant-tree-node-selected {
-                    background-color: var(--Colors-Use-Main-Hover);
-                }
-            }
-        }
-
-        .ant-tree-treenode.ant-tree-treenode-selected {
-            &:hover {
-                .ant-tree-switcher.ant-tree-switcher-noop {
-                    background-color: var(--Colors-Use-Main-Hover);
-                }
-                .ant-tree-node-content-wrapper.ant-tree-node-selected {
-                    background-color: var(--Colors-Use-Main-Hover);
-                }
-            }
-            .ant-tree-switcher.ant-tree-switcher-noop {
-                background-color: var(--Colors-Use-Main-Primary);
-                color: var(--Colors-Use-Main-On-Primary);
-                border-radius: 4px 0 0 4px;
-            }
-        }
-
-        .ant-tree-iconEle {
-            margin-right: 2px;
-        }
-
-        .ant-tree-node-content-wrapper {
-            display: flex;
-            width: 100%;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .ant-tree-title {
-            white-space: nowrap;
-            width: calc(100% - 24px);
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
-
-        //checkbox放到最前面
-        .ant-tree-treenode {
-            margin-bottom: 1px;
-            align-items: center;
-            .ant-tree-checkbox{
-                margin-top: 0;
-                order: -1;
-            }
-
-            // 让勾选的节点显示样式和选中一样
-            &:has(.ant-tree-checkbox-checked) {
-                .ant-tree-node-content-wrapper{
-                    background-color: var(--Colors-Use-Main-Primary);
-
-                    span {
-                        color: var(--Colors-Use-Main-On-Primary);
-                    }
-                }
-                .ant-tree-switcher  {
-                    background-color: var(--Colors-Use-Main-Pressed);
-                    border-radius: 4px 0 0 4px;
-                }
-                .ant-tree-node-content-wrapper,.ant-tree-switcher svg{
-                        color: var(--Colors-Use-Main-On-Primary)
-                }
-            }
-        }
-        
+      }
     }
+  }
 }

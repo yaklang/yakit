@@ -1,52 +1,52 @@
-import {AITool} from "../../type/aiTool"
-import {AIForge} from "../../type/forge"
-import {AIMentionTabsEnum, iconMap} from "../../defaultConstant"
-import {AIMentionCommandParams} from "../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin"
-import {KnowledgeBaseItem} from "@/pages/KnowledgeBase/hooks/useKnowledgeBase"
-import {AIMilkdownInputBaseProps} from "../aiMilkdownInput/type"
+import { AITool } from '../../type/aiTool'
+import { AIForge } from '../../type/forge'
+import { AIMentionTabsEnum, iconMap } from '../../defaultConstant'
+import { AIMentionCommandParams } from '../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
+import { AIMilkdownInputBaseProps } from '../aiMilkdownInput/type'
 
-export type AIMentionTypeItem = AIMentionCommandParams["mentionType"]
+export type AIMentionTypeItem = AIMentionCommandParams['mentionType']
 export type iconMapType = keyof typeof iconMap
 export interface AIChatMentionSelectItem {
-    id: string
-    name: string
+  id: string
+  name: string
 }
 export interface AIChatMentionProps {
-    defaultActiveTab?: AIMentionTabsEnum
-    onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
-    filterMode?: `${AIMentionTabsEnum}`[]
+  defaultActiveTab?: AIMentionTabsEnum
+  onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
+  filterMode?: `${AIMentionTabsEnum}`[]
 }
 interface AIChatMention {
-    keyWord: string
-    getContainer: () => HTMLElement | null
+  keyWord: string
+  getContainer: () => HTMLElement | null
 }
 export interface AIChatMentionListRefProps {
-    onRefresh: () => void
+  onRefresh: () => void
 }
 interface AIChatMentionRef {
-    ref?: React.ForwardedRef<AIChatMentionListRefProps>
+  ref?: React.ForwardedRef<AIChatMentionListRefProps>
 }
 export interface ForgeNameListOfMentionProps extends AIChatMention, AIChatMentionRef {
-    onSelect: (f: AIForge) => void
+  onSelect: (f: AIForge) => void
 }
 
 export interface ToolListOfMentionProps extends AIChatMention, AIChatMentionRef {
-    onSelect: (f: AITool) => void
+  onSelect: (f: AITool) => void
 }
 
 export interface KnowledgeBaseListOfMentionProps extends AIChatMention, AIChatMentionRef {
-    onSelect: (f: KnowledgeBaseItem) => void
+  onSelect: (f: KnowledgeBaseItem) => void
 }
 
 export interface AIMentionSelectItemProps {
-    isActive: boolean
-    item: AIChatMentionSelectItem
-    onSelect: () => void
+  isActive: boolean
+  item: AIChatMentionSelectItem
+  onSelect: () => void
 }
 export interface FileSystemTreeOfMentionProps {
-    onSelect: (path: string, isFolder: boolean) => void
+  onSelect: (path: string, isFolder: boolean) => void
 }
 
 export interface FocusModeOfMentionProps extends AIChatMention, AIChatMentionRef {
-    onSelect: (v) => void
+  onSelect: (v) => void
 }

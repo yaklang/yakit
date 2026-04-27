@@ -1,87 +1,87 @@
 .ai-mention {
-    // position: absolute;
-    position: fixed;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    border-radius: 8px;
-    overflow: hidden;
-    // padding: 0 12px;
-    box-shadow:
-        0 3px 6px -4px rgba(0, 0, 0, 0.12),
-        0 6px 16px 0 rgba(0, 0, 0, 0.08),
-        0 9px 28px 8px rgba(0, 0, 0, 0.05);
-    background-color: var(--Colors-Use-Basic-Background);
-    z-index: 99;
+  // position: absolute;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 8px;
+  overflow: hidden;
+  // padding: 0 12px;
+  box-shadow:
+    0 3px 6px -4px rgba(0, 0, 0, 0.12),
+    0 6px 16px 0 rgba(0, 0, 0, 0.08),
+    0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  background-color: var(--Colors-Use-Basic-Background);
+  z-index: 99;
 }
 
-.ai-mention[data-show="false"] {
-    display: none;
-    opacity: 0;
-    visibility: hidden;
+.ai-mention[data-show='false'] {
+  display: none;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .mention-custom {
-    cursor: pointer;
-    user-select: none;
-    overflow: hidden;
-    max-width: 150px;
-    margin-right: 4px;
-    &:not(.mention-custom-no-effect):hover {
-        background-color: var(--Colors-Use-Neutral-Border);
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  max-width: 150px;
+  margin-right: 4px;
+  &:not(.mention-custom-no-effect):hover {
+    background-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    svg {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+    :global {
+      .ant-tag-close-icon {
         svg {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+          color: var(--Colors-Use-Main-Primary);
         }
-        :global {
-            .ant-tag-close-icon {
-                svg {
-                    color: var(--Colors-Use-Main-Primary);
-                }
-            }
-        }
-        .mention-icon-wrapper {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        }
-    }
-    span {
-        overflow: hidden;
-    }
-    span[data-node-view-content="true"] {
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        word-break: break-all;
-    }
-    .mention-text {
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        word-break: break-all;
+      }
     }
     .mention-icon-wrapper {
-        width: 12px;
-        height: 12px;
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        color: var(--Colors-Use-Neutral-Text-2-Primary);
-        margin-right: 4px;
-        svg {
-            width: 12px;
-            height: 12px;
-        }
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
     }
+  }
+  span {
+    overflow: hidden;
+  }
+  span[data-node-view-content='true'] {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-break: break-all;
+  }
+  .mention-text {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-break: break-all;
+  }
+  .mention-icon-wrapper {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    margin-right: 4px;
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
 }
 .mention-custom-selected {
-    background-color: var(--Colors-Use-Main-Bg-Hover);
+  background-color: var(--Colors-Use-Main-Bg-Hover);
+  color: var(--Colors-Use-Main-Primary);
+  svg {
     color: var(--Colors-Use-Main-Primary);
-    svg {
-        color: var(--Colors-Use-Main-Primary);
-    }
+  }
 }
 
 .mention-custom-readonly {
-    margin-right: 2px;
+  margin-right: 2px;
 }

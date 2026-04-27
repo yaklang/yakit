@@ -1,24 +1,24 @@
 .question-wrapper {
-    justify-content: flex-start;
+  justify-content: flex-start;
 }
 .content-wrapper {
-    max-width: 100%;
-    max-height: 150px;
-    overflow-y: auto;
+  max-width: 100%;
+  max-height: 150px;
+  overflow-y: auto;
 }
 .review-wrapper {
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-    flex: none;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  flex: none;
 }
 
 .ai-mark-down-wrapper {
-    padding: 8px 12px;
-    background-color: var(--Colors-Use-Neutral-Bg-Hover);
-    border-radius: 8px;
+  padding: 8px 12px;
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
 }
 // 加权重
-.file-content-wrapper.file-content-wrapper { 
-    background-color: transparent;
-    padding: 0;
-    width: 100%;
+.file-content-wrapper.file-content-wrapper {
+  background-color: transparent;
+  padding: 0;
+  width: 100%;
 }

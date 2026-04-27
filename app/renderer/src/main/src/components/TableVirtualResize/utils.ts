@@ -2,18 +2,18 @@
  * @name 单元格背景色类型
  * @description 该类型必须按照升序排列
  */
-type CellColor = "BLUE" | "CYAN" | "GREEN" | "GREY" | "ORANGE" | "PURPLE" | "RED" | "YELLOW"
+type CellColor = 'BLUE' | 'CYAN' | 'GREEN' | 'GREY' | 'ORANGE' | 'PURPLE' | 'RED' | 'YELLOW'
 
 /** @name 单元格背景色类型对应Tag */
 export const TableCellToColorTag: Record<CellColor, string> = {
-    BLUE: "YAKIT_COLOR_BLUE",
-    CYAN: "YAKIT_COLOR_CYAN",
-    GREEN: "YAKIT_COLOR_GREEN",
-    GREY: "YAKIT_COLOR_GREY",
-    ORANGE: "YAKIT_COLOR_ORANGE",
-    PURPLE: "YAKIT_COLOR_PURPLE",
-    RED: "YAKIT_COLOR_RED",
-    YELLOW: "YAKIT_COLOR_YELLOW"
+  BLUE: 'YAKIT_COLOR_BLUE',
+  CYAN: 'YAKIT_COLOR_CYAN',
+  GREEN: 'YAKIT_COLOR_GREEN',
+  GREY: 'YAKIT_COLOR_GREY',
+  ORANGE: 'YAKIT_COLOR_ORANGE',
+  PURPLE: 'YAKIT_COLOR_PURPLE',
+  RED: 'YAKIT_COLOR_RED',
+  YELLOW: 'YAKIT_COLOR_YELLOW',
 }
 
 /**
@@ -23,19 +23,19 @@ export const TableCellToColorTag: Record<CellColor, string> = {
  * @description 过滤出来的颜色样式为 "table-cell-bg-{color}"
  */
 export const filterColorTag = (content?: string) => {
-    if (!content || content.indexOf("YAKIT_COLOR_") === -1) return ""
+  if (!content || content.indexOf('YAKIT_COLOR_') === -1) return ''
 
-    let colors: string[] = []
-    try {
-        colors = content
-            .split("|")
-            .filter((item) => item.indexOf("YAKIT_COLOR_") > -1)
-            .map((item) => (item.split("_").pop() || "").toLowerCase())
-            .filter((item) => !!item)
-            .sort()
-            .map((item) => `table-cell-bg-${item}`)
-    } catch (error) {}
-    return colors.length === 0 ? "" : colors.join(" ")
+  let colors: string[] = []
+  try {
+    colors = content
+      .split('|')
+      .filter((item) => item.indexOf('YAKIT_COLOR_') > -1)
+      .map((item) => (item.split('_').pop() || '').toLowerCase())
+      .filter((item) => !!item)
+      .sort()
+      .map((item) => `table-cell-bg-${item}`)
+  } catch (error) {}
+  return colors.length === 0 ? '' : colors.join(' ')
 }
 
 /**
@@ -43,50 +43,50 @@ export const filterColorTag = (content?: string) => {
  * @description 传入的内容中, 对应颜色的内容是由 filterColorTag 生成的
  */
 export const parseColorTag = (content?: string) => {
-    if (!content) return ""
+  if (!content) return ''
 
-    let colors: string[] = []
-    try {
-        colors = content
-            .split(" ")
-            .map((item) => (item.split("-").pop() || "").toLowerCase())
-            .filter((item) => !!item)
-            .sort()
-            .slice(0, 3)
-    } catch (error) {}
-    return colors.length === 0 ? "" : colors.join("-")
+  let colors: string[] = []
+  try {
+    colors = content
+      .split(' ')
+      .map((item) => (item.split('-').pop() || '').toLowerCase())
+      .filter((item) => !!item)
+      .sort()
+      .slice(0, 3)
+  } catch (error) {}
+  return colors.length === 0 ? '' : colors.join('-')
 }
 
 /**
  * @name 判断是否为单色的情况下，同时颜色为红色和灰色
  */
 export const isCellRedSingleColor = (content?: string) => {
-    if (!content) return false
+  if (!content) return false
 
-    try {
-        const colors: string[] = content.split(" ").filter((item) => !!item && item.indexOf("table-cell-bg-") > -1)
-        if (colors.length === 1 && colors[0] === "table-cell-bg-red") return true
-        if (colors.length === 1 && colors[0] === "table-cell-bg-grey") return true
-        else return false
-    } catch (error) {
-        return false
-    }
+  try {
+    const colors: string[] = content.split(' ').filter((item) => !!item && item.indexOf('table-cell-bg-') > -1)
+    if (colors.length === 1 && colors[0] === 'table-cell-bg-red') return true
+    if (colors.length === 1 && colors[0] === 'table-cell-bg-grey') return true
+    else return false
+  } catch (error) {
+    return false
+  }
 }
 
 // 判断是否是红色/灰色的单色样式
-export const getSingleColorType = (content?: string): "red" | "grey" | undefined => {
-    if (!content) return
+export const getSingleColorType = (content?: string): 'red' | 'grey' | undefined => {
+  if (!content) return
 
-    try {
-        const colors = content.split(" ").filter((item) => !!item && item.includes("table-cell-bg-"))
+  try {
+    const colors = content.split(' ').filter((item) => !!item && item.includes('table-cell-bg-'))
 
-        if (colors.length === 1) {
-            if (colors[0] === "table-cell-bg-red") return "red"
-            if (colors[0] === "table-cell-bg-grey") return "grey"
-        }
-    } catch (e) {
-        return
+    if (colors.length === 1) {
+      if (colors[0] === 'table-cell-bg-red') return 'red'
+      if (colors[0] === 'table-cell-bg-grey') return 'grey'
     }
-
+  } catch (e) {
     return
+  }
+
+  return
 }

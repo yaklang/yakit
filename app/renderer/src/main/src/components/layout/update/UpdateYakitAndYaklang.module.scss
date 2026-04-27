@@ -1,70 +1,70 @@
 // ---------- UpdateYakitHint ----------
 .update-yakit-hint {
-    .content {
-        .download-info-wrapper {
-            margin-top: 16px;
-            display: flex;
-            align-items: center;
-            height: 16px;
-            font-size: 12px;
-            color: var(--Colors-Use-Neutral-Disable);
-            .divider-wrapper {
-                margin: 0 8px;
-                width: 1px;
-                height: 12px;
-                border-left: 1px solid var(--Colors-Use-Neutral-Border);
-            }
-        }
-
-        .hint-right-content {
-            margin-top: 8px;
-            font-size: 14px;
-            line-height: 20px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
-        .hint-right-update-content {
-            box-sizing: border-box;
-            margin-top: 8px;
-            max-height: 108px;
-            overflow: hidden auto;
-
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            padding: 12px;
-            gap: 6px;
-
-            background: var(--Colors-Use-Basic-Background);
-            border: 1px solid var(--Colors-Use-Neutral-Border);
-            border-radius: 4px;
-
-            font-size: 12px;
-            line-height: 18px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
+  .content {
+    .download-info-wrapper {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      height: 16px;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Disable);
+      .divider-wrapper {
+        margin: 0 8px;
+        width: 1px;
+        height: 12px;
+        border-left: 1px solid var(--Colors-Use-Neutral-Border);
+      }
     }
 
-    .footer {
-        margin-top: 24px;
-        display: flex;
-        justify-content: space-between;
-
-        .btn-group {
-            display: flex;
-            gap: 8px;
-        }
+    .hint-right-content {
+      margin-top: 8px;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
     }
+    .hint-right-update-content {
+      box-sizing: border-box;
+      margin-top: 8px;
+      max-height: 108px;
+      overflow: hidden auto;
+
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 12px;
+      gap: 6px;
+
+      background: var(--Colors-Use-Basic-Background);
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      border-radius: 4px;
+
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+  }
+
+  .footer {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+  }
 }
 
 // ---------- UpdateYakHint ----------
 .version-wrapper {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 .version-header {
-    padding-right: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 94px;
+  padding-right: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 94px;
 }

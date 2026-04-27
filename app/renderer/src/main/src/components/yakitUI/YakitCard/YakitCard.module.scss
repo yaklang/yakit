@@ -1,53 +1,53 @@
 .yakit-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid var(--Colors-Use-Neutral-Border);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
 
-    .yakit-card-heard {
-        display: flex;
-        justify-content: space-between;
-        height: 32px;
-        align-items: center;
-        padding: 6px 12px;
-        line-height: 16px;
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-        .yakit-card-heard-title {
-            font-weight: 500;
-            font-size: 12px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            overflow: hidden;
-        }
-        .yakit-card-heard-extra {
-            display: flex;
-            align-items: center;
-            flex: 1;
-            justify-content: flex-end;
-        }
-    }
-    .yakit-card-icon {
-        width: 16px;
-        height: 16px;
-        margin-left: 8px;
-        cursor: pointer;
-        svg {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            width: 16px;
-            height: 16px;
-            &:hover {
-                color: var(--Colors-Use-Main-Hover);
-            }
-        }
-    }
-}
-.yakit-card-heard-body{
-    padding: 12px;
+  .yakit-card-heard {
     display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
+    justify-content: space-between;
+    height: 32px;
+    align-items: center;
+    padding: 6px 12px;
+    line-height: 16px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    .yakit-card-heard-title {
+      font-weight: 500;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      overflow: hidden;
+    }
+    .yakit-card-heard-extra {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      justify-content: flex-end;
+    }
+  }
+  .yakit-card-icon {
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    cursor: pointer;
+    svg {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      width: 16px;
+      height: 16px;
+      &:hover {
+        color: var(--Colors-Use-Main-Hover);
+      }
+    }
+  }
 }
-.yakit-card-bordered-hidden{
-    border: none;
+.yakit-card-heard-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+.yakit-card-bordered-hidden {
+  border: none;
 }

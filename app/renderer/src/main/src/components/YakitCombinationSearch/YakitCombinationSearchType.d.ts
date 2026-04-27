@@ -1,8 +1,8 @@
-import {YakitInputSearchProps} from "../yakitUI/YakitInput/YakitInputType"
-import {YakitSelectProps} from "../yakitUI/YakitSelect/YakitSelectType"
+import { YakitInputSearchProps } from '../yakitUI/YakitInput/YakitInputType'
+import { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
 interface OptionProps {
-    label: string
-    value: string | number
+  label: string
+  value: string | number
 }
 /**
  * @description 组合搜索
@@ -16,23 +16,23 @@ interface OptionProps {
  * @param {YakitInputSearchProps} inputSearchModuleTypeProps afterModuleType=input,时传入的inputProps
  * @param {YakitSelectProps} selectModuleTypeProps afterModuleType=select,时传入的inputProps
  */
-export interface YakitCombinationSearchProps extends Omit<InputProps, "size"> {
-    afterModuleType?: "input" | "select"
-    beforeOptionWidth?: number
-    valueBeforeOption?: string | number
-    addonBeforeOption?: OptionProps[]
-    onSelectBeforeOption?: (o: string) => void
-    wrapperClassName?: string
-    selectProps?: YakitSelectProps
-    inputSearchModuleTypeProps?: YakitInputSearchProps
-    selectModuleTypeProps?: SelectModuleTypeProps
+export interface YakitCombinationSearchProps extends Omit<InputProps, 'size'> {
+  afterModuleType?: 'input' | 'select'
+  beforeOptionWidth?: number
+  valueBeforeOption?: string | number
+  addonBeforeOption?: OptionProps[]
+  onSelectBeforeOption?: (o: string) => void
+  wrapperClassName?: string
+  selectProps?: YakitSelectProps
+  inputSearchModuleTypeProps?: YakitInputSearchProps
+  selectModuleTypeProps?: SelectModuleTypeProps
 }
 
 interface SelectModuleTypeProps extends YakitSelectProps {
-    data?: any[]
-    optText?: string
-    optValue?: string
-    optKey?: string
-    optDisabled?: string
-    renderOpt?: (info: any) => ReactNode
+  data?: any[]
+  optText?: string
+  optValue?: string
+  optKey?: string
+  optDisabled?: string
+  renderOpt?: (info: any) => ReactNode
 }

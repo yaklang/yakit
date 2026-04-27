@@ -1,52 +1,52 @@
 .block-wrapper {
-    position: absolute;
-    left: -32px !important;
-    .tooltip-popover-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        padding: 4px;
-        border-radius: 4px;
-        border: 1px solid var(--Colors-Use-Neutral-Border);
-        cursor: pointer;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-        &:hover {
-            background: var(--Colors-Use-Neutral-Bg-Hover);
-            color: var(--Colors-Use-Main-Primary);
-        }
+  position: absolute;
+  left: -32px !important;
+  .tooltip-popover-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    cursor: pointer;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    svg {
+      width: 16px;
+      height: 16px;
     }
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+      color: var(--Colors-Use-Main-Primary);
+    }
+  }
 }
-.block-wrapper[data-show="false"]{
-    display: none;
+.block-wrapper[data-show='false'] {
+  display: none;
 }
 .tooltip-popover {
-    padding-top: 0;
-    :global {
-        .ant-popover-arrow {
-            display: none;
-        }
-        .ant-popover-inner {
-            /* 投影-大 */
-            box-shadow: 0px 6px 20px 0px var(--Colors-Use-Basic-Shadow);
-            border: 1px solid var(--Colors-Use-Neutral-Border);
-            border-radius: 8px;
-        }
+  padding-top: 0;
+  :global {
+    .ant-popover-arrow {
+      display: none;
     }
-    .tooltip-popover-content {
-        width: 210px;
-        display: flex;
-        align-items: center;
-        // padding: 12px;
-        gap: 8px;
-        flex-wrap: wrap;
-        svg {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
+    .ant-popover-inner {
+      /* 投影-大 */
+      box-shadow: 0px 6px 20px 0px var(--Colors-Use-Basic-Shadow);
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      border-radius: 8px;
     }
+  }
+  .tooltip-popover-content {
+    width: 210px;
+    display: flex;
+    align-items: center;
+    // padding: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    svg {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+  }
 }

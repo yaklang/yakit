@@ -1,15 +1,15 @@
-import {Ctx} from "@milkdown/kit/ctx"
-import {prosePluginsCtx} from "@milkdown/kit/core"
-import {Plugin, PluginKey} from "prosemirror-state"
-import {TextSelection} from "prosemirror-state"
-import {$command} from "@milkdown/kit/utils"
+import { Ctx } from '@milkdown/kit/ctx'
+import { prosePluginsCtx } from '@milkdown/kit/core'
+import { Plugin, PluginKey } from 'prosemirror-state'
+import { TextSelection } from 'prosemirror-state'
+import { $command } from '@milkdown/kit/utils'
 
 type LockGuardOptions = {
-    mentionTypes: string[]
-    lockAttr?: string
+  mentionTypes: string[]
+  lockAttr?: string
 }
 
-const DEFAULT_LOCK_ATTR = "lock"
+const DEFAULT_LOCK_ATTR = 'lock'
 
 /**
  * 根据配置生成一个「是否为锁定 mention 节点」的判断函数
@@ -22,17 +22,17 @@ const DEFAULT_LOCK_ATTR = "lock"
  *
  */
 function createIsLockedMention(options: LockGuardOptions) {
-    const {mentionTypes, lockAttr = DEFAULT_LOCK_ATTR} = options
+  const { mentionTypes, lockAttr = DEFAULT_LOCK_ATTR } = options
 
-    // 将 mentionTypes 转为 Set，提高查询性能
-    const typeSet = new Set(mentionTypes)
+  // 将 mentionTypes 转为 Set，提高查询性能
+  const typeSet = new Set(mentionTypes)
 
-    return function isLockedMention(node: any) {
-        if (!node?.attrs) return false
-        if (node.attrs[lockAttr] !== true) return false
-        if (!typeSet.has(node.attrs.mentionType)) return false
-        return true
-    }
+  return function isLockedMention(node: any) {
+    if (!node?.attrs) return false
+    if (node.attrs[lockAttr] !== true) return false
+    if (!typeSet.has(node.attrs.mentionType)) return false
+    return true
+  }
 }
 
 /**
@@ -42,51 +42,51 @@ function createIsLockedMention(options: LockGuardOptions) {
  *   - isLockedAtCursor：光标态判断
  */
 function createLockGuards(options: LockGuardOptions) {
-    const isLockedMention = createIsLockedMention(options)
+  const isLockedMention = createIsLockedMention(options)
 
-    /**
-     * 判断某个文档区间内是否包含被锁定的 mention 节点
-     * - 使用 nodesBetween
-     * - 一旦命中立即中断遍历（return false）
-     */
-    function hasLockedNodeInRange(state, from, to) {
-        let locked = false
-        state.doc.nodesBetween(from, to, (node) => {
-            if (isLockedMention(node)) {
-                locked = true
-                return false
-            }
-        })
-        return locked
-    }
-
-    /**
-     * 判断当前光标位置是否「处于锁定 mention 的影响范围内」
-     * - 不扫描整棵树
-     * - 只检查常数个节点
-     */
-    function isLockedAtCursor(state) {
-        const {selection} = state
-        if (!(selection instanceof TextSelection)) return false
-
-        // 多选：直接走范围扫描
-        if (!selection.empty) {
-            return hasLockedNodeInRange(state, selection.from, selection.to)
-        }
-
-        // 单点光标
-        const $pos = state.doc.resolve(selection.from)
-
-        if (isLockedMention($pos.parent)) return true
-        if (isLockedMention($pos.nodeBefore)) return true
-        if (isLockedMention($pos.nodeAfter)) return true
-
+  /**
+   * 判断某个文档区间内是否包含被锁定的 mention 节点
+   * - 使用 nodesBetween
+   * - 一旦命中立即中断遍历（return false）
+   */
+  function hasLockedNodeInRange(state, from, to) {
+    let locked = false
+    state.doc.nodesBetween(from, to, (node) => {
+      if (isLockedMention(node)) {
+        locked = true
         return false
+      }
+    })
+    return locked
+  }
+
+  /**
+   * 判断当前光标位置是否「处于锁定 mention 的影响范围内」
+   * - 不扫描整棵树
+   * - 只检查常数个节点
+   */
+  function isLockedAtCursor(state) {
+    const { selection } = state
+    if (!(selection instanceof TextSelection)) return false
+
+    // 多选：直接走范围扫描
+    if (!selection.empty) {
+      return hasLockedNodeInRange(state, selection.from, selection.to)
     }
-    return {
-        hasLockedNodeInRange,
-        isLockedAtCursor
-    }
+
+    // 单点光标
+    const $pos = state.doc.resolve(selection.from)
+
+    if (isLockedMention($pos.parent)) return true
+    if (isLockedMention($pos.nodeBefore)) return true
+    if (isLockedMention($pos.nodeAfter)) return true
+
+    return false
+  }
+  return {
+    hasLockedNodeInRange,
+    isLockedAtCursor,
+  }
 }
 
 /**
@@ -96,111 +96,110 @@ function createLockGuards(options: LockGuardOptions) {
  * - 所有判断均基于 mentionType + lock 属性
  */
 export function createLockGuardPlugin(options: LockGuardOptions) {
-    const {hasLockedNodeInRange, isLockedAtCursor} = createLockGuards(options)
+  const { hasLockedNodeInRange, isLockedAtCursor } = createLockGuards(options)
 
-    return new Plugin({
-        key: new PluginKey(`lock-guard-${options.mentionTypes.join("-")}`),
+  return new Plugin({
+    key: new PluginKey(`lock-guard-${options.mentionTypes.join('-')}`),
 
-        props: {
-            handleKeyDown(view, event) {
-                if (event.key !== "Backspace" && event.key !== "Delete") return false
+    props: {
+      handleKeyDown(view, event) {
+        if (event.key !== 'Backspace' && event.key !== 'Delete') return false
 
-                if (isLockedAtCursor(view.state)) {
-                    event.preventDefault()
-                    return true
-                }
-                return false
-            },
-
-            /**
-             * DOM 层：拦截剪切行为
-             */
-            handleDOMEvents: {
-                cut(view, event) {
-                    const {selection} = view.state
-                    if (
-                        selection instanceof TextSelection &&
-                        !selection.empty &&
-                        hasLockedNodeInRange(view.state, selection.from, selection.to)
-                    ) {
-                        event.preventDefault()
-                        return true
-                    }
-                    return false
-                }
-            }
-        },
-
-        /**
-         * transaction 层兜底：
-         * - 防止程序性删除
-         * - 防止第三方插件绕过 DOM 事件
-         */
-        filterTransaction(tr, state) {
-            if (!tr.docChanged) return true
-
-            // 单点光标且不在锁定区域，直接放行（性能优化）
-            const sel = state.selection
-            if (sel instanceof TextSelection && sel.empty && !isLockedAtCursor(state)) {
-                return true
-            }
-
-            // 检查 replace / delete step 是否影响锁定节点
-            for (const step of tr.steps) {
-                const json = step.toJSON?.()
-                if (!json || json.stepType !== "replace") continue
-
-                if (json.from !== json.to && hasLockedNodeInRange(state, json.from, json.to)) {
-                    return false
-                }
-            }
-
-            return true
+        if (isLockedAtCursor(view.state)) {
+          event.preventDefault()
+          return true
         }
-    })
+        return false
+      },
+
+      /**
+       * DOM 层：拦截剪切行为
+       */
+      handleDOMEvents: {
+        cut(view, event) {
+          const { selection } = view.state
+          if (
+            selection instanceof TextSelection &&
+            !selection.empty &&
+            hasLockedNodeInRange(view.state, selection.from, selection.to)
+          ) {
+            event.preventDefault()
+            return true
+          }
+          return false
+        },
+      },
+    },
+
+    /**
+     * transaction 层兜底：
+     * - 防止程序性删除
+     * - 防止第三方插件绕过 DOM 事件
+     */
+    filterTransaction(tr, state) {
+      if (!tr.docChanged) return true
+
+      // 单点光标且不在锁定区域，直接放行（性能优化）
+      const sel = state.selection
+      if (sel instanceof TextSelection && sel.empty && !isLockedAtCursor(state)) {
+        return true
+      }
+
+      // 检查 replace / delete step 是否影响锁定节点
+      for (const step of tr.steps) {
+        const json = step.toJSON?.()
+        if (!json || json.stepType !== 'replace') continue
+
+        if (json.from !== json.to && hasLockedNodeInRange(state, json.from, json.to)) {
+          return false
+        }
+      }
+
+      return true
+    },
+  })
 }
 
 /** Milkdown 插件：注入 ProseMirror Plugin */
 export const preventDeleteLockedMentionPlugin = () => {
-    const plugin = createLockGuardPlugin({
-        mentionTypes: ["knowledgeBase"]
-    })
+  const plugin = createLockGuardPlugin({
+    mentionTypes: ['knowledgeBase'],
+  })
 
-    return (ctx: Ctx) => {
-        ctx.update(prosePluginsCtx, (plugins) => [...plugins, plugin])
-        return () => {}
-    }
+  return (ctx: Ctx) => {
+    ctx.update(prosePluginsCtx, (plugins) => [...plugins, plugin])
+    return () => {}
+  }
 }
 
 /** 移除一个偏移量 */
 export const removeAIOffsetCommand = $command(`command-remove-offset`, (ctx) => () => (state, dispatch) => {
-    const {selection, tr} = state
-    if (!(selection instanceof TextSelection)) return false
-    const {from} = selection
-    tr.deleteRange(from - 1, from)
-    dispatch?.(tr.scrollIntoView())
-    return true
+  const { selection, tr } = state
+  if (!(selection instanceof TextSelection)) return false
+  const { from } = selection
+  tr.deleteRange(from - 1, from)
+  dispatch?.(tr.scrollIntoView())
+  return true
 })
 
-
 /** 在当前位置插入纯文本 */
-export const insertAtCurrentPosition = $command<string, string>("command-insertAtCurrentPosition", (ctx) => (props) => {
-    return (state, dispatch) => {
-        if (!props) return false
+export const insertAtCurrentPosition = $command<string, string>('command-insertAtCurrentPosition', (ctx) => (props) => {
+  return (state, dispatch) => {
+    if (!props) return false
 
-        const textNode = state.schema.text(props || "")
+    const textNode = state.schema.text(props || '')
 
-        // 插入节点
-        const transaction = state.tr.replaceSelectionWith(textNode)
-        if (dispatch) {
-            dispatch(transaction)
-        }
-
-        return true // 表示命令成功执行
+    // 插入节点
+    const transaction = state.tr.replaceSelectionWith(textNode)
+    if (dispatch) {
+      dispatch(transaction)
     }
+
+    return true // 表示命令成功执行
+  }
 })
 
 /** 你的自定义插件集合 */
 export const aiCustomPlugin = () => {
-    return [removeAIOffsetCommand, preventDeleteLockedMentionPlugin(),insertAtCurrentPosition]
+  return [removeAIOffsetCommand, preventDeleteLockedMentionPlugin(), insertAtCurrentPosition]
 }

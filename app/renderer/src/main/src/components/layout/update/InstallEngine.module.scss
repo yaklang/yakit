@@ -1,427 +1,427 @@
 // 重启 yakit 提示框
 .relaunch-hint {
-    height: 80px;
-    padding: 24px;
-    display: flex;
-    align-items: center;
+  height: 80px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
 }
 
 /* ----- 公共类 ----- */
 .hidden-wrapper {
-    display: none;
+  display: none;
 }
 
 .modal-top-wrapper {
-    z-index: 999 !important;
+  z-index: 999 !important;
 }
 
 .modal-wrapper {
-    position: absolute;
-    z-index: 100;
+  position: absolute;
+  z-index: 100;
 }
 
 /* ----- InstallEngine ----- */
 .install-engine-mask {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .install-update-modal {
-    width: 448px;
-    top: 35%;
-    left: calc(50% - 224px);
+  width: 448px;
+  top: 35%;
+  left: calc(50% - 224px);
 }
 .modal-yaklang-engine-hint {
-    box-sizing: border-box;
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
+  border-radius: 4px;
+
+  .yaklang-engine-hint-wrapper {
     width: 100%;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
-    border-radius: 4px;
+    padding: 24px;
+    display: flex;
+    gap: 16px;
+    position: relative;
 
-    .yaklang-engine-hint-wrapper {
-        width: 100%;
-        padding: 24px;
-        display: flex;
-        gap: 16px;
-        position: relative;
-
-        .hint-draggle-body {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 24px;
-        }
-
-        .hint-left-wrapper {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            .hint-icon {
-                width: 32px;
-                height: 32px;
-            }
-            .qs-icon {
-                width: 20px;
-                height: 20px;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                cursor: pointer;
-                svg {
-                    width: 20px;
-                    height: 20px;
-                }
-            }
-            .qs-icon:hover {
-                color: var(--Colors-Use-Main-Primary);
-            }
-        }
-
-        .hint-right-wrapper {
-            flex: 1;
-            .hint-right-title {
-                height: 24px;
-                font-weight: 600;
-                font-size: 16px;
-                line-height: 24px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-            }
-
-            .hint-right-download {
-                .download-info-wrapper {
-                    margin-top: 16px;
-                    display: flex;
-                    height: 16px;
-                    font-size: 12px;
-                    line-height: 16px;
-                    color: var(--Colors-Use-Neutral-Disable);
-                    .divider-wrapper {
-                        margin: 0 8px;
-                        width: 1px;
-                        height: 16px;
-                        display: flex;
-                        align-items: center;
-                        .divider-style {
-                            width: 100%;
-                            height: 12px;
-                            border: 1px solid var(--Colors-Use-Neutral-Border);
-                        }
-                    }
-                }
-                .download-btn {
-                    margin-top: 24px;
-                    display: flex;
-                    justify-content: right;
-                }
-            }
-
-            .hint-right-content {
-                margin-top: 8px;
-                font-size: 14px;
-                line-height: 20px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-            }
-            .hint-right-macarm {
-                margin-top: 8px;
-                box-sizing: border-box;
-                padding: 12px;
-                background: var(--Colors-Use-Neutral-Bg);
-                border: 1px solid var(--Colors-Use-Neutral-Border);
-                border-radius: 4px;
-                .mac-arm-hint {
-                    font-size: 12px;
-                    line-height: 16px;
-                    color: var(--Colors-Use-Neutral-Text-1-Title);
-                }
-                .mac-arm-command {
-                    margin-top: 8px;
-                    display: flex;
-                    align-items: center;
-                    height: 20px;
-                    padding: 4px 6px;
-                    background: var(--Colors-Use-Main-Bg);
-                    border: 1px solid var(--Colors-Use-Main-Border);
-                    border-radius: 4px;
-
-                    font-size: 11px;
-                    color: var(--Colors-Use-Main-Primary);
-                    .copy-icon {
-                        margin-left: 8px;
-                        svg {
-                            width: 12px;
-                            height: 12px;
-                        }
-                    }
-                }
-            }
-            // 后续看看能不能整合成全局动画
-            .agr-shake-animation {
-                -webkit-animation-name: shake;
-                animation-name: shake;
-                -webkit-animation-iteration-count: 1;
-                animation-iteration-count: 1;
-                -webkit-animation-duration: 1s;
-                animation-duration: 1s;
-                -webkit-animation-fill-mode: both;
-                animation-fill-mode: both;
-                -webkit-animation-timing-function: ease;
-                animation-timing-function: ease;
-            }
-
-            @-webkit-keyframes shake {
-                0%,
-                100% {
-                    -webkit-transform: translateX(0);
-                }
-
-                10%,
-                30%,
-                50%,
-                70%,
-                90% {
-                    -webkit-transform: translateX(-5px);
-                }
-
-                20%,
-                40%,
-                60%,
-                80% {
-                    -webkit-transform: translateX(5px);
-                }
-            }
-
-            @keyframes shake {
-                0%,
-                100% {
-                    transform: translateX(0);
-                }
-
-                10%,
-                30%,
-                50%,
-                70%,
-                90% {
-                    transform: translateX(-5px);
-                }
-
-                20%,
-                40%,
-                60%,
-                80% {
-                    transform: translateX(5px);
-                }
-            }
-            .hint-right-agreement {
-                margin-top: 8px;
-                height: 24px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                font-size: 12px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                .agreement-checkbox {
-                    :global {
-                        .ant-checkbox-inner {
-                            border: 1px solid var(--Colors-Use-Neutral-Disable);
-                            border-radius: 4px;
-                        }
-                        .ant-checkbox-checked .ant-checkbox-inner {
-                            background-color: var(--Colors-Use-Main-Primary);
-                            border-color: var(--Colors-Use-Main-Primary);
-                        }
-                        .ant-checkbox-checked::after {
-                            border: 0px;
-                        }
-                    }
-                }
-                .agreement-danger-checkbox {
-                    :global {
-                        .ant-checkbox-inner {
-                            border: 1px solid var(--Colors-Use-Error-Primary);
-                            border-radius: 4px;
-                        }
-                        .ant-checkbox-checked::after {
-                            border: 0px;
-                        }
-                    }
-                }
-
-                .agreement-style {
-                    color: var(--Colors-Use-Main-Primary);
-                    cursor: pointer;
-                }
-            }
-            .hint-right-btn {
-                margin-top: 24px;
-                display: flex;
-                justify-content: space-between;
-
-                .btn-group-wrapper {
-                    display: flex;
-                    gap: 8px;
-                }
-            }
-        }
+    .hint-draggle-body {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 24px;
     }
+
+    .hint-left-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      .hint-icon {
+        width: 32px;
+        height: 32px;
+      }
+      .qs-icon {
+        width: 20px;
+        height: 20px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        cursor: pointer;
+        svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+      .qs-icon:hover {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+
+    .hint-right-wrapper {
+      flex: 1;
+      .hint-right-title {
+        height: 24px;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 24px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+
+      .hint-right-download {
+        .download-info-wrapper {
+          margin-top: 16px;
+          display: flex;
+          height: 16px;
+          font-size: 12px;
+          line-height: 16px;
+          color: var(--Colors-Use-Neutral-Disable);
+          .divider-wrapper {
+            margin: 0 8px;
+            width: 1px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            .divider-style {
+              width: 100%;
+              height: 12px;
+              border: 1px solid var(--Colors-Use-Neutral-Border);
+            }
+          }
+        }
+        .download-btn {
+          margin-top: 24px;
+          display: flex;
+          justify-content: right;
+        }
+      }
+
+      .hint-right-content {
+        margin-top: 8px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+      .hint-right-macarm {
+        margin-top: 8px;
+        box-sizing: border-box;
+        padding: 12px;
+        background: var(--Colors-Use-Neutral-Bg);
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-radius: 4px;
+        .mac-arm-hint {
+          font-size: 12px;
+          line-height: 16px;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .mac-arm-command {
+          margin-top: 8px;
+          display: flex;
+          align-items: center;
+          height: 20px;
+          padding: 4px 6px;
+          background: var(--Colors-Use-Main-Bg);
+          border: 1px solid var(--Colors-Use-Main-Border);
+          border-radius: 4px;
+
+          font-size: 11px;
+          color: var(--Colors-Use-Main-Primary);
+          .copy-icon {
+            margin-left: 8px;
+            svg {
+              width: 12px;
+              height: 12px;
+            }
+          }
+        }
+      }
+      // 后续看看能不能整合成全局动画
+      .agr-shake-animation {
+        -webkit-animation-name: shake;
+        animation-name: shake;
+        -webkit-animation-iteration-count: 1;
+        animation-iteration-count: 1;
+        -webkit-animation-duration: 1s;
+        animation-duration: 1s;
+        -webkit-animation-fill-mode: both;
+        animation-fill-mode: both;
+        -webkit-animation-timing-function: ease;
+        animation-timing-function: ease;
+      }
+
+      @-webkit-keyframes shake {
+        0%,
+        100% {
+          -webkit-transform: translateX(0);
+        }
+
+        10%,
+        30%,
+        50%,
+        70%,
+        90% {
+          -webkit-transform: translateX(-5px);
+        }
+
+        20%,
+        40%,
+        60%,
+        80% {
+          -webkit-transform: translateX(5px);
+        }
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+
+        10%,
+        30%,
+        50%,
+        70%,
+        90% {
+          transform: translateX(-5px);
+        }
+
+        20%,
+        40%,
+        60%,
+        80% {
+          transform: translateX(5px);
+        }
+      }
+      .hint-right-agreement {
+        margin-top: 8px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        .agreement-checkbox {
+          :global {
+            .ant-checkbox-inner {
+              border: 1px solid var(--Colors-Use-Neutral-Disable);
+              border-radius: 4px;
+            }
+            .ant-checkbox-checked .ant-checkbox-inner {
+              background-color: var(--Colors-Use-Main-Primary);
+              border-color: var(--Colors-Use-Main-Primary);
+            }
+            .ant-checkbox-checked::after {
+              border: 0px;
+            }
+          }
+        }
+        .agreement-danger-checkbox {
+          :global {
+            .ant-checkbox-inner {
+              border: 1px solid var(--Colors-Use-Error-Primary);
+              border-radius: 4px;
+            }
+            .ant-checkbox-checked::after {
+              border: 0px;
+            }
+          }
+        }
+
+        .agreement-style {
+          color: var(--Colors-Use-Main-Primary);
+          cursor: pointer;
+        }
+      }
+      .hint-right-btn {
+        margin-top: 24px;
+        display: flex;
+        justify-content: space-between;
+
+        .btn-group-wrapper {
+          display: flex;
+          gap: 8px;
+        }
+      }
+    }
+  }
 }
 
 /* ----- AgreementContentModal & QuestionModal ----- */
 .yakit-agr-modal {
-    width: 624px;
-    top: 30%;
-    left: calc(50% - 312px);
+  width: 624px;
+  top: 30%;
+  left: calc(50% - 312px);
 }
 .yaklang-qs-modal {
-    width: 697px;
-    top: 30%;
-    left: calc(50% - 348px);
+  width: 697px;
+  top: 30%;
+  left: calc(50% - 348px);
 }
 .yakit-info-modal {
-    width: 100%;
-    background: var(--Colors-Use-Neutral-Bg);
-    border: 1px solid var(--Colors-Use-Neutral-Border);
-    box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
-    border-radius: 4px;
+  width: 100%;
+  background: var(--Colors-Use-Neutral-Bg);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
+  border-radius: 4px;
 
-    .modal-header {
-        box-sizing: border-box;
-        height: 36px;
-        display: flex;
-        align-items: center;
+  .modal-header {
+    box-sizing: border-box;
+    height: 36px;
+    display: flex;
+    align-items: center;
 
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-        border-radius: 4px 4px 0px 0px;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px 4px 0px 0px;
 
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+  .mac-header {
+    gap: 12px;
+    .close-wrapper {
+      width: 36px;
+      height: 36px;
+      padding: 10px;
+      display: flex;
+      cursor: pointer;
+      .close-btn {
+        padding: 2px;
+        .btn-icon {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background-color: var(--Colors-Use-Error-Primary);
+        }
+      }
+    }
+  }
+  .win-header {
+    justify-content: space-between;
+    .header-title {
+      margin-left: 12px;
+    }
+    .close-wrapper {
+      width: 36px;
+      height: 36px;
+      padding: 8px;
+      .icon-style {
+        color: var(--Colors-Use-Neutral-Disable);
+      }
+    }
+    .close-wrapper:hover {
+      .icon-style {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
+
+  .agreement-content-modal-wrapper {
+    .modal-body {
+      padding: 16px 24px 24px 24px;
+      .body-title {
+        height: 24px;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 16px;
+        line-height: 24px;
         color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+      .body-content {
+        margin-top: 8px;
+        font-size: 14px;
+        line-height: 24px;
+        text-align: justify;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        .sign-content {
+          color: var(--Colors-Use-Error-Primary);
+        }
+        .underline-content {
+          color: var(--Colors-Use-Error-Primary);
+          text-decoration: underline;
+        }
+        .sign-bold-content {
+          color: var(--Colors-Use-Error-Primary);
+          font-weight: 500;
+        }
+      }
     }
-    .mac-header {
+  }
+
+  .question-modal-wrapper {
+    .modal-body {
+      padding: 16px 24px 24px 24px;
+      .body-hint {
+        font-size: 14px;
+        line-height: 24px;
+        text-align: justify;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        .hint-sign {
+          color: var(--Colors-Use-Error-Primary);
+        }
+      }
+      .body-link {
+        margin-top: 8px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px;
         gap: 12px;
-        .close-wrapper {
-            width: 36px;
-            height: 36px;
-            padding: 10px;
-            display: flex;
-            cursor: pointer;
-            .close-btn {
-                padding: 2px;
-                .btn-icon {
-                    width: 12px;
-                    height: 12px;
-                    border-radius: 50%;
-                    background-color: var(--Colors-Use-Error-Primary);
-                }
-            }
-        }
-    }
-    .win-header {
-        justify-content: space-between;
-        .header-title {
-            margin-left: 12px;
-        }
-        .close-wrapper {
-            width: 36px;
-            height: 36px;
-            padding: 8px;
-            .icon-style {
-                color: var(--Colors-Use-Neutral-Disable);
-            }
-        }
-        .close-wrapper:hover {
-            .icon-style {
-                color: var(--Colors-Use-Main-Primary);
-            }
-        }
-    }
+        border: 1px solid var(--Colors-Use-Neutral-Border);
+        border-radius: 4px;
+        .link-opt {
+          display: flex;
+          align-items: center;
+          .link-title {
+            font-size: 12px;
+            text-align: justify;
+            text-align-last: justify;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+          }
 
-    .agreement-content-modal-wrapper {
-        .modal-body {
-            padding: 16px 24px 24px 24px;
-            .body-title {
-                height: 24px;
-                font-weight: 600;
-                font-size: 16px;
-                line-height: 24px;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
+          .link-style {
+            margin-left: 8px;
+            flex: 1;
+            padding: 4px 6px;
+            background: var(--Colors-Use-Neutral-Bg-Hover);
+            border: 1px solid var(--Colors-Use-Neutral-Border);
+            border-radius: 4px;
+            font-size: 11px;
+            line-height: 12px;
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            word-break: break-all;
+            .copy-icon {
+              margin-left: 8px;
+              display: inline-block;
+              cursor: pointer;
             }
-            .body-content {
-                margin-top: 8px;
-                font-size: 14px;
-                line-height: 24px;
-                text-align: justify;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                .sign-content {
-                    color: var(--Colors-Use-Error-Primary);
-                }
-                .underline-content {
-                    color: var(--Colors-Use-Error-Primary);
-                    text-decoration: underline;
-                }
-                .sign-bold-content {
-                    color: var(--Colors-Use-Error-Primary);
-                    font-weight: 500;
-                }
-            }
+          }
         }
+      }
     }
-
-    .question-modal-wrapper {
-        .modal-body {
-            padding: 16px 24px 24px 24px;
-            .body-hint {
-                font-size: 14px;
-                line-height: 24px;
-                text-align: justify;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                .hint-sign {
-                    color: var(--Colors-Use-Error-Primary);
-                }
-            }
-            .body-link {
-                margin-top: 8px;
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px;
-                gap: 12px;
-                border: 1px solid var(--Colors-Use-Neutral-Border);
-                border-radius: 4px;
-                .link-opt {
-                    display: flex;
-                    align-items: center;
-                    .link-title {
-                        font-size: 12px;
-                        text-align: justify;
-                        text-align-last: justify;
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
-                    }
-
-                    .link-style {
-                        margin-left: 8px;
-                        flex: 1;
-                        padding: 4px 6px;
-                        background: var(--Colors-Use-Neutral-Bg-Hover);
-                        border: 1px solid var(--Colors-Use-Neutral-Border);
-                        border-radius: 4px;
-                        font-size: 11px;
-                        line-height: 12px;
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
-                        word-break: break-all;
-                        .copy-icon {
-                            margin-left: 8px;
-                            display: inline-block;
-                            cursor: pointer;
-                        }
-                    }
-                }
-            }
-        }
-    }
+  }
 }

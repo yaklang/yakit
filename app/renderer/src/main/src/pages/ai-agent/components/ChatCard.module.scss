@@ -1,71 +1,71 @@
-@use "../../../styles/mixin.scss" as mixin;
+@use '../../../styles/mixin.scss' as mixin;
 
 .chat-card {
+  width: 100%;
+  padding: 4px 8px;
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  // gap: 4px;
+
+  &-title {
     width: 100%;
-    padding: 4px 8px;
-    background-color: var(--Colors-Use-Neutral-Bg-Hover);
-    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0 8px;
+
+    &-left {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      // padding: 4px 8px 0 0;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    &-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+
+      svg {
+        width: 100%;
+        height: 100%;
+        color: var(--Colors-Use-Neutral-Text-2-Primary);
+      }
+    }
+
+    &-text {
+      min-width: 0;
+      max-width: 20em;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 16px;
+      letter-spacing: 0.5px;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      @include mixin.text-ellipsis(1, false, false, true);
+    }
+
+    &-extra {
+      flex: 1;
+      @include mixin.text-ellipsis(1, false, false, true);
+    }
+
+    &-more {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      overflow: hidden;
+    }
+  }
+
+  &-footer {
     display: flex;
     flex-direction: column;
-    // gap: 4px;
-
-    &-title {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 0 8px;
-
-        &-left {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            // padding: 4px 8px 0 0;
-            flex: 1 1 auto;
-            min-width: 0;
-        }
-
-        &-icon {
-            width: 16px;
-            height: 16px;
-            flex-shrink: 0;
-
-            svg {
-                width: 100%;
-                height: 100%;
-                color: var(--Colors-Use-Neutral-Text-2-Primary);
-            }
-        }
-
-        &-text {
-            min-width: 0;
-            max-width: 20em;
-            font-size: 12px;
-            font-style: normal;
-            font-weight: 500;
-            line-height: 16px; 
-            letter-spacing: 0.5px;
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            @include mixin.text-ellipsis(1, false, false, true);
-        }
-
-        &-extra {
-            flex: 1;
-            @include mixin.text-ellipsis(1, false, false, true);
-        }
-
-        &-more {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            overflow: hidden;
-        }
-    }
-
-    &-footer {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
+    gap: 4px;
+  }
 }

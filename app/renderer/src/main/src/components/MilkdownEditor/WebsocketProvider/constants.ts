@@ -1,4 +1,4 @@
-import {NotepadActionsProps, NotepadSaveStatusProps, WSConnectedStatusProps} from "./WebsocketProviderType"
+import { NotepadActionsProps, NotepadSaveStatusProps, WSConnectedStatusProps } from './WebsocketProviderType'
 
 /**同步消息 */
 export const messageSync = 0
@@ -10,21 +10,21 @@ export const messageAwareness = 1
 export const messageAuth = 2
 
 export const notepadActions: NotepadActionsProps = {
-    join: "joinDoc",
-    leave: "leaveDoc",
-    edit: "editDoc"
+  join: 'joinDoc',
+  leave: 'leaveDoc',
+  edit: 'editDoc',
 }
 
 /**ws 链接状态 */
 export const wsConnectedStatus: WSConnectedStatusProps = {
-    connected: "connected",
-    disconnected: "disconnected",
-    connecting: "connecting"
+  connected: 'connected',
+  disconnected: 'disconnected',
+  connecting: 'connecting',
 }
 
 /**ws 文档保存状态 */
 export const notepadSaveStatus: NotepadSaveStatusProps = {
-    saveProgress: "saveProgress",
-    saveSuccess: "saveSuccess",
-    saveError: "saveError"
+  saveProgress: 'saveProgress',
+  saveSuccess: 'saveSuccess',
+  saveError: 'saveError',
 }

@@ -3,9 +3,9 @@
  * @param {string} showText 需要展示的文字
  */
 export interface YakitCopyTextProps {
-    copyText?: string
-    showText: string
-    onAfterCopy?: (e: MouseEvent) => void
-    iconColor?: string
-    wrapStyle?: CSSProperties
+  copyText?: string
+  showText: string
+  onAfterCopy?: (e: MouseEvent) => void
+  iconColor?: string
+  wrapStyle?: CSSProperties
 }

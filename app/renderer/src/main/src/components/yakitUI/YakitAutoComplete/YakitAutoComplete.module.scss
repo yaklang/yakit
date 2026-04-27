@@ -1,160 +1,160 @@
 // ========================== disabled ==========================
 .yakit-auto-complete-disabled {
-    :global {
-        .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
-            border: 1px solid var(--Colors-Use-Neutral-Border);
-        }
+  :global {
+    .ant-select-disabled.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+      background-color: var(--Colors-Use-Neutral-Bg-Hover);
+      border: 1px solid var(--Colors-Use-Neutral-Border);
     }
+  }
 }
 
 // ========================== middle ==========================
 .yakit-auto-complete-wrapper {
-    --yakit-box-shadow-color: var(--Colors-Use-Main-Focus);
-    --yakit-border-hover-color: var(--Colors-Use-Main-Hover);
-    --yakit-border-focus-color: var(--Colors-Use-Main-Primary);
-    --yakit-font-color: var(--Colors-Use-Main-Primary);
+  --yakit-box-shadow-color: var(--Colors-Use-Main-Focus);
+  --yakit-border-hover-color: var(--Colors-Use-Main-Hover);
+  --yakit-border-focus-color: var(--Colors-Use-Main-Primary);
+  --yakit-font-color: var(--Colors-Use-Main-Primary);
 
-    display: inline-flex;
-    width: 100%;
+  display: inline-flex;
+  width: 100%;
 
-    :global {
-        .ant-select {
-            width: 100%;
-        }
-        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-            height: 28px;
-            padding: 6px 12px;
-            border-radius: 4px;
-            border-color: var(--Colors-Use-Neutral-Border);
-            background: var(--Colors-Use-Basic-Background);
-        }
-
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            height: 26px;
-            font-size: 12px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
-
-        .ant-select-disabled:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            color: var(--Colors-Use-Neutral-Disable);
-        }
-
-        .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
-            border-color: var(--yakit-border-hover-color);
-        }
-        .ant-select-focused .ant-select-selector {
-            border-radius: 4px;
-            border-color: var(--yakit-border-focus-color);
-            box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
-        }
-        .ant-select-single .ant-select-selector .ant-select-selection-item,
-        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
-            line-height: 14px;
-            font-size: 12px;
-            color: var(--Colors-Use-Neutral-Disable);
-        }
+  :global {
+    .ant-select {
+      width: 100%;
     }
+    .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+      height: 28px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      border-color: var(--Colors-Use-Neutral-Border);
+      background: var(--Colors-Use-Basic-Background);
+    }
+
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+      height: 26px;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    .ant-select-disabled:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+
+    .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+      border-color: var(--yakit-border-hover-color);
+    }
+    .ant-select-focused .ant-select-selector {
+      border-radius: 4px;
+      border-color: var(--yakit-border-focus-color);
+      box-shadow: 0 0 0 2px var(--yakit-box-shadow-color);
+    }
+    .ant-select-single .ant-select-selector .ant-select-selection-item,
+    .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+      line-height: 14px;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Disable);
+    }
+  }
 }
 
 // ========================== small ==========================
 .yakit-auto-complete-wrapper-small {
-    :global {
-        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-            height: 24px;
-            padding: 4px 8px;
-        }
-
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            height: 22px;
-            font-size: 12px;
-        }
+  :global {
+    .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+      height: 24px;
+      padding: 4px 8px;
     }
+
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+      height: 22px;
+      font-size: 12px;
+    }
+  }
 }
 
 // ========================== large ==========================
 .yakit-auto-complete-wrapper-large {
-    :global {
-        .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-            height: 32px;
-        }
-
-        .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
-            height: 30px;
-            font-size: 14px;
-        }
-        .ant-select-single .ant-select-selector .ant-select-selection-item,
-        .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
-            line-height: 18px;
-        }
+  :global {
+    .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+      height: 32px;
     }
+
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-search-input {
+      height: 30px;
+      font-size: 14px;
+    }
+    .ant-select-single .ant-select-selector .ant-select-selection-item,
+    .ant-select-single .ant-select-selector .ant-select-selection-placeholder {
+      line-height: 18px;
+    }
+  }
 }
 
 // ========================== popup ==========================
 .yakit-auto-complete-popup {
-    --auto-complete-font-color: var(--Colors-Use-Main-Primary);
-    --auto-complete-background-color: var(--Colors-Use-Main-Bg);
+  --auto-complete-font-color: var(--Colors-Use-Main-Primary);
+  --auto-complete-background-color: var(--Colors-Use-Main-Bg);
 
-    padding: 6px 4px;
-    border-radius: 4px;
-    background: var(--Colors-Use-Basic-Background);
-    box-shadow: 0 8px 16px var(--Colors-Use-Basic-Shadow);
-    border: 1px solid var(--Colors-Use-Neutral-Border);
+  padding: 6px 4px;
+  border-radius: 4px;
+  background: var(--Colors-Use-Basic-Background);
+  box-shadow: 0 8px 16px var(--Colors-Use-Basic-Shadow);
+  border: 1px solid var(--Colors-Use-Neutral-Border);
 
-    :global {
-        .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-            color: var(--auto-complete-font-color);
-            background-color: var(--auto-complete-background-color);
-        }
-
-        .ant-select-item {
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 12px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
-
-        .ant-select-item-group {
-            padding: 4px 8px 2px;
-            font-size: 12px;
-            min-height: auto;
-        }
+  :global {
+    .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+      color: var(--auto-complete-font-color);
+      background-color: var(--auto-complete-background-color);
     }
+
+    .ant-select-item {
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    .ant-select-item-group {
+      padding: 4px 8px 2px;
+      font-size: 12px;
+      min-height: auto;
+    }
+  }
 }
 
 .group-section-title {
-    color: var(--Colors-Use-Main-Primary);
-    font-size: 12px;
-    line-height: 20px;
+  color: var(--Colors-Use-Main-Primary);
+  font-size: 12px;
+  line-height: 20px;
 }
 
 .group-empty-placeholder {
-    font-size: 12px;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
 }
 
 .yakit-auto-complete-popup-y {
-    transform: translateY(-2px);
+  transform: translateY(-2px);
 }
 
 .yakit-option-item {
-    display: flex;
-    justify-content: space-between;
-    &-label {
-        flex: 1;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+  display: flex;
+  justify-content: space-between;
+  &-label {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .option-item-close {
+    svg {
+      width: 16px;
+      height: 16px;
+      margin-top: 4px;
+      color: var(--Colors-Use-Main-Primary);
+      &:hover {
+        color: var(--Colors-Use-Error-Primary);
+      }
     }
-    .option-item-close {
-        svg {
-            width: 16px;
-            height: 16px;
-            margin-top: 4px;
-            color: var(--Colors-Use-Main-Primary);
-            &:hover {
-                color: var(--Colors-Use-Error-Primary);
-            }
-        }
-    }
+  }
 }

@@ -1,21 +1,21 @@
 .table-total-select {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  .table-total-select-item {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
 
-    .table-total-select-item {
-        display: flex;
-        align-items: center;
-
-        .table-total-select-text {
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            font-size: 12px;
-            margin-right: 4px;
-        }
-
-        .table-total-select-number {
-            color: var(--Colors-Use-Main-Primary);
-            font-size: 12px;
-        }
+    .table-total-select-text {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      font-size: 12px;
+      margin-right: 4px;
     }
+
+    .table-total-select-number {
+      color: var(--Colors-Use-Main-Primary);
+      font-size: 12px;
+    }
+  }
 }

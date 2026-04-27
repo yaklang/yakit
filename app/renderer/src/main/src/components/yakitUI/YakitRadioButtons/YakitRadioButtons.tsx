@@ -1,8 +1,8 @@
-import {Checkbox, Radio} from "antd"
-import React from "react"
-import {YakitRadioButtonsProps} from "./YakitRadioButtonsType"
-import styles from "./YakitRadioButtons.module.scss"
-import classNames from "classnames"
+import { Checkbox, Radio } from 'antd'
+import React from 'react'
+import { YakitRadioButtonsProps } from './YakitRadioButtonsType'
+import styles from './YakitRadioButtons.module.scss'
+import classNames from 'classnames'
 
 /**
  * 更新说明
@@ -19,31 +19,31 @@ import classNames from "classnames"
  * @params {string} className RadioGroup  className
  */
 export const YakitRadioButtons: React.FC<YakitRadioButtonsProps> = (props) => {
-    const {className, size, wrapClassName, ...restProps} = props
-    return (
-        <div
-            className={classNames(
-                {
-                    [styles["yakit-radio-buttons-solid"]]: props.buttonStyle === "solid"
-                },
-                wrapClassName
-            )}
-        >
-            <Radio.Group
-                {...restProps}
-                size='middle'
-                optionType='button'
-                className={classNames(
-                    styles["yakit-radio-buttons-middle"],
-                    {
-                        [styles["yakit-radio-buttons-solid"]]: props.buttonStyle === "solid",
-                        [styles["yakit-radio-buttons-max-large"]]: size === "maxLarge",
-                        [styles["yakit-radio-buttons-large"]]: size === "large",
-                        [styles["yakit-radio-buttons-small"]]: size === "small"
-                    },
-                    className
-                )}
-            />
-        </div>
-    )
+  const { className, size, wrapClassName, ...restProps } = props
+  return (
+    <div
+      className={classNames(
+        {
+          [styles['yakit-radio-buttons-solid']]: props.buttonStyle === 'solid',
+        },
+        wrapClassName,
+      )}
+    >
+      <Radio.Group
+        {...restProps}
+        size="middle"
+        optionType="button"
+        className={classNames(
+          styles['yakit-radio-buttons-middle'],
+          {
+            [styles['yakit-radio-buttons-solid']]: props.buttonStyle === 'solid',
+            [styles['yakit-radio-buttons-max-large']]: size === 'maxLarge',
+            [styles['yakit-radio-buttons-large']]: size === 'large',
+            [styles['yakit-radio-buttons-small']]: size === 'small',
+          },
+          className,
+        )}
+      />
+    </div>
+  )
 }
