@@ -83,6 +83,7 @@ import { WatchFolderID } from '@/pages/yakRunner/FileTreeMap/watchFolderID'
 import { randomString } from '@/utils/randomUtil'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useIrifyWorkbenchAiAttachRef } from './IrifyWorkbenchAiAttachContext'
 const { ipcRenderer } = window.require('electron')
 
 // 模拟tabs分块及对应文件
@@ -127,6 +128,16 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   const [activeFile, setActiveFile] = useState<FileDetailInfo>()
   const [runnerTabsId, setRunnerTabsId] = useState<string>()
   const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
+
+  const irifyWorkbenchAttachRef = useIrifyWorkbenchAiAttachRef()
+  useEffect(() => {
+    if (!irifyWorkbenchAttachRef) return
+    if (fileTree.length > 0 && fileTree[0].path?.trim()) {
+      irifyWorkbenchAttachRef.current.projectRootAbsPath = fileTree[0].path.trim()
+    } else {
+      irifyWorkbenchAttachRef.current.projectRootAbsPath = undefined
+    }
+  }, [fileTree, irifyWorkbenchAttachRef])
 
   const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
     if (getMapFileDetail(path).isCreate) {

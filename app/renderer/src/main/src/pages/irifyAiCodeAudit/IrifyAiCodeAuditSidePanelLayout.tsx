@@ -6,7 +6,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
-import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { useIrifyAiCodeAuditReActChat } from './IrifyAiCodeAuditReActChatProvider'
 import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
@@ -36,7 +36,8 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
   sideTabs: YakitTabsProps[]
 }> = ({ placement, children, rootClassName, sideTabs }) => {
   const { t, i18n } = useI18nNamespaces(['history'])
-  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const { renderIrifyAiReActChat, setShowFreeChat, irifyAiReActChatBridge, focusModeLoop } =
+    useIrifyAiCodeAuditReActChat()
 
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -65,7 +66,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
 
   const aiChat =
     activeKey === 'ai' &&
-    renderHistoryAIReActChat({
+    renderIrifyAiReActChat({
       className: styles.aiChatWrap,
       externalParameters: {
         isOpen: false,
@@ -76,7 +77,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
                 type="text2"
                 icon={<OutlinePlusIcon />}
                 onClick={() => {
-                  const { activeID, events, onStop, onChatFromHistory, setActiveChat } = historyAIReActChatBridge
+                  const { activeID, events, onStop, onChatFromHistory, setActiveChat } = irifyAiReActChatBridge
                   if (activeID) {
                     onStop()
                     events.onReset()
