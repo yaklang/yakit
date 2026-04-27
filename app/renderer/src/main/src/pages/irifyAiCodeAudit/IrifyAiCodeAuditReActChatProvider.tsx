@@ -1,4 +1,13 @@
-import React, { createContext, memo, PropsWithChildren, useCallback, useContext, useMemo, useRef } from 'react'
+import React, {
+  createContext,
+  memo,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react'
 import { useCreation, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
 import { cloneDeep } from 'lodash'
 
@@ -32,6 +41,7 @@ import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import emiter from '@/utils/eventBus/eventBus'
 import { appendCodeAuditTargetAttachmentToEvent } from './codeAuditAttachment'
 import { IrifyWorkbenchAiAttachProvider, IrifyWorkbenchAiAttachRef } from './IrifyWorkbenchAiAttachContext'
 
@@ -89,6 +99,19 @@ const IrifyAiCodeAuditReActChatProviderInner = memo(function IrifyAiCodeAuditReA
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
   const refRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onSeed = (text: string) => {
+      const apply = () => aiReActChatRef.current?.setValue(text)
+      apply()
+      window.setTimeout(apply, 50)
+      window.setTimeout(apply, 200)
+    }
+    emiter.on('onIrifyAiCodeAuditSeedChatDraft', onSeed)
+    return () => {
+      emiter.off('onIrifyAiCodeAuditSeedChatDraft', onSeed)
+    }
+  }, [])
 
   const [inViewport = true] = useInViewport(refRef)
 

@@ -915,7 +915,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.YakRunner_Audit_Code:
       return <YakRunnerAuditCode auditCodePageInfo={params?.auditCodePageInfo} />
     case YakitRoute.Irify_AI_Code_Audit:
-      return <IrifyAiCodeAuditPage />
+      return <IrifyAiCodeAuditPage auditCodePageInfo={params?.auditCodePageInfo} />
     case YakitRoute.YakRunner_Project_Manager:
       return <YakRunnerProjectManager />
     case YakitRoute.YakRunner_ScanHistory:
