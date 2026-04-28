@@ -20,6 +20,9 @@ import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { Tooltip } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import useAIAgentStore from '../../useContext/useStore'
+import { formatAIAgentSetting } from '../../utils'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const { data, currentTaskItem } = props
@@ -101,6 +104,9 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
   const { t } = useI18nNamespaces(['aiAgent'])
   const { chatIPCData } = useChatIPCStore()
   const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
+  const { activeChat } = useAIAgentStore()
+  const { getSetting } = useAIAgentDispatcher()
+
   const [visible, setVisible] = useState<boolean>(false)
 
   const sendRecoverParamsRef = useRef<SendRecoverParams>()
@@ -133,10 +139,9 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
     const currentCoordinatorId = getTaskInfo()?.coordinatorId || ''
     const taskInfo = getTaskInfo()
     let show = true
+    if (!chatIPCData.execute) return true
     if (coordinatorId === currentCoordinatorId) {
       show = taskInfo?.status === AITaskStatus.error && !chatIPCData?.taskStatus?.loading
-    } else {
-      show = chatIPCData?.execute
     }
     // 如果当前有任务正在等待被恢复
     if (sendRecoverParamsRef.current) {
@@ -178,8 +183,28 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
         syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
         SyncJsonInput: JSON.stringify({ task_id: taskId }),
       })
-    } else {
+    } else if (chatIPCData.execute) {
       onSendRecover(sendRecoverParamsRef.current)
+    } else if (activeChat?.SessionID && getSetting) {
+      const session = activeChat?.SessionID
+      chatIPCEvents.onStart(
+        {
+          token: session,
+          params: {
+            IsStart: true,
+            Params: {
+              ...formatAIAgentSetting(getSetting()),
+              UserQuery: '',
+              TimelineSessionID: session,
+              CoordinatorId: '',
+              Sequence: 1,
+            },
+          },
+        },
+        () => {
+          sendRecoverParamsRef.current && onSendRecover(sendRecoverParamsRef.current)
+        },
+      )
     }
   })
   return isShow() ? (
