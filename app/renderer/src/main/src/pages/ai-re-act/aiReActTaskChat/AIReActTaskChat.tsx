@@ -156,7 +156,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
   })
 
   const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchTaskChatID()
+    return chatIPCEvents.fetchCurrentTaskPlanID()
   })
   const getTaskId = useMemoizedFn(() => {
     return getTaskInfo()?.taskID
@@ -425,7 +425,7 @@ const AIManualAddition: React.FC<AIManualAdditionProps> = React.memo((props) => 
     // 加入上下文后，停止任务再恢复任务
     syncIdOfAddAndReExecute.current = randomString(8)
     onAddToContext(syncIdOfAddAndReExecute.current)
-    const info = chatIPCEvents.fetchTaskChatID()
+    const info = chatIPCEvents.fetchCurrentTaskPlanID()
     const taskId = info?.taskID
     const coordinatorId = info?.coordinatorId
     if (!coordinatorId) return
@@ -608,7 +608,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
     return chatIPCData.cancelTaskLoading
   }, [chatIPCData.cancelTaskLoading])
   const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchTaskChatID()
+    return chatIPCEvents.fetchCurrentTaskPlanID()
   })
 
   const renderBtn = useMemoizedFn(() => {
