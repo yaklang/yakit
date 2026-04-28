@@ -27,8 +27,6 @@ export interface AIChatData {
     timelineID: string
     chatID: string
   }
-  /** 记录数据里所有的coordinatorIDs */
-  coordinatorIDs: string[]
   /** 记录数据里所有的httpRunTimeIDs */
   httpRunTimeIDs: UseChatIPCState['httpRunTimeIDs']
   /** 记录数据里所有的riskRunTimeIDs */

@@ -124,7 +124,7 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
   }, [isExecuting, taskIndex, sendRecoverParamsRef.current?.taskIndex])
 
   const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchTaskChatID()
+    return chatIPCEvents.fetchCurrentTaskPlanID()
   })
   const getTaskId = useMemoizedFn(() => {
     const taskInfo = getTaskInfo()
