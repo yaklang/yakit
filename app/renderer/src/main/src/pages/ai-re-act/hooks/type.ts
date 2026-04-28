@@ -278,8 +278,10 @@ export interface UseChatIPCEvents {
   fetchToken: () => string
   /** 获取当前执行接口流的请求参数 */
   fetchAIRequest: () => AIStartParams | undefined
+  /** 获取当前执行的自由对话问题(这个问题可能引起的是任务规划)对应的任务ID */
+  fetchCurrentCasualTaskID: () => string
   /** 获取当前执行任务规划的问题详情 */
-  fetchTaskChatID: () => TaskChatTaskInfo | undefined
+  fetchCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
   /** 获取当前外界传入的数据类实例 */
   fetchChatDataStore: () => UseChatIPCParams['cacheDataStore']
   /** 切换历史会话展示 */

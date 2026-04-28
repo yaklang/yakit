@@ -78,7 +78,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     return memoryList?.memories?.length
   }, [memoryList?.memories?.length])
   const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchTaskChatID()
+    return chatIPCEvents.fetchCurrentTaskPlanID()
   })
 
   const handleCancelExpand = useMemoizedFn(() => {
