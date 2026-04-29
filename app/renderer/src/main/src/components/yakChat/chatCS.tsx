@@ -1612,6 +1612,7 @@ interface PluginRunStatusProps {
 
 const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
   const { status, pluginNameList, progressList, infoList, runtimeId } = props
+  const { t } = useI18nNamespaces(['plugin', 'yakitRoute'])
 
   const containerRef = useRef(null)
   const wrapperRef = useRef(null)
@@ -1631,10 +1632,10 @@ const PluginRunStatus: React.FC<PluginRunStatusProps> = memo((props) => {
     let defaultActiveKey: string = ''
     switch (status) {
       case 'info':
-        defaultActiveKey = '漏洞与风险'
+        defaultActiveKey = t('YakitRoute.vulnerabilityAndrisk')
         break
       case 'succee':
-        defaultActiveKey = 'HTTP 流量'
+        defaultActiveKey = t('PluginExecResultDefaultTabs.HTTPtraffic')
         break
       case 'fail':
         defaultActiveKey = 'Console'

@@ -155,7 +155,7 @@ export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
 )
 
 const ConnectivityCheckAction: React.FC = React.memo(() => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
   const [connectivityVisible, setConnectivityVisible] = useState(false)
   const [isConnectivityChecking, setIsConnectivityChecking] = useState(false)
   const [connectivityRuntimeId, setConnectivityRuntimeId] = useState('')
@@ -318,7 +318,7 @@ const ConnectivityCheckAction: React.FC = React.memo(() => {
             streamInfo={connectivityStreamInfo}
             runtimeId={connectivityRuntimeId}
             loading={isConnectivityChecking}
-            defaultActiveKey="日志"
+            defaultActiveKey={t('PluginExecResultDefaultTabs.log')}
           />
         </div>
       </YakitModal>

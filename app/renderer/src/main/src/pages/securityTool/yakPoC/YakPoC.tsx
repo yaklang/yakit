@@ -916,7 +916,7 @@ const PluginGroupGridItem: React.FC<PluginGroupGridItemProps> = React.memo((prop
   )
 })
 const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['yakPoC', 'yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['yakPoC', 'yakitUi'])
   const { selectGroupList, onClearAll, pageId, pageInfo, onInitInputValueAfter, type } = props
   const pluginBatchExecuteContentRef = useRef<HybridScanExecuteContentRefProps>(null)
 
@@ -1033,7 +1033,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
   return (
     <>
       {isShowPluginAndLog && (
-        <div className={styles['midden-wrapper']}>
+        <div className={styles['midden-wrapper']} style={{ width: i18n.language === 'zh' ? 300 : 350 }}>
           <div className={styles['midden-heard']}>
             <YakitRadioButtons
               size="small"
@@ -1129,27 +1129,29 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
           </div>
         </ExpandAndRetract>
         <div className={styles['yak-poc-executor-body']}>
-          <HybridScanExecuteContent
-            ref={pluginBatchExecuteContentRef}
-            isExpand={isExpand}
-            setIsExpand={setIsExpand}
-            onInitInputValueAfter={onInitInputValueAfter}
-            selectNum={selectGroupNum}
-            setProgressList={setProgressList}
-            pauseLoading={pauseLoading}
-            setPauseLoading={setPauseLoading}
-            continueLoading={continueLoading}
-            setContinueLoading={setContinueLoading}
-            pluginInfo={pluginInfo}
-            executeStatus={executeStatus}
-            setExecuteStatus={onSetExecuteStatus}
-            setPluginExecuteLog={setPluginExecuteLog}
-            setHidden={setHidden}
-            dataScanParams={dataScanParams}
-            pageId={pageId}
-            initRuntimeId={pageInfo.runtimeId}
-            hybridScanTaskSource="yakPoc"
-          />
+          <div className={styles['yak-poc-executor-body-cont']}>
+            <HybridScanExecuteContent
+              ref={pluginBatchExecuteContentRef}
+              isExpand={isExpand}
+              setIsExpand={setIsExpand}
+              onInitInputValueAfter={onInitInputValueAfter}
+              selectNum={selectGroupNum}
+              setProgressList={setProgressList}
+              pauseLoading={pauseLoading}
+              setPauseLoading={setPauseLoading}
+              continueLoading={continueLoading}
+              setContinueLoading={setContinueLoading}
+              pluginInfo={pluginInfo}
+              executeStatus={executeStatus}
+              setExecuteStatus={onSetExecuteStatus}
+              setPluginExecuteLog={setPluginExecuteLog}
+              setHidden={setHidden}
+              dataScanParams={dataScanParams}
+              pageId={pageId}
+              initRuntimeId={pageInfo.runtimeId}
+              hybridScanTaskSource="yakPoc"
+            />
+          </div>
         </div>
       </div>
       <React.Suspense fallback={<>loading...</>}>

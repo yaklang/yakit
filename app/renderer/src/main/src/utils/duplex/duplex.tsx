@@ -155,7 +155,7 @@ export const startupDuplexConn = () => {
                       setOpenPerformanceTips(false)
                       yakitNotify('success', '已关闭数据写入慢提示')
                     }}
-                    style={{ position: 'absolute', right: -5, bottom: -2, fontSize: 14 }}
+                    style={{ position: 'absolute', right: i18n.language === 'zh' ? -5 : -25, bottom: -2, fontSize: 14 }}
                   >
                     不再提醒
                   </YakitButton>

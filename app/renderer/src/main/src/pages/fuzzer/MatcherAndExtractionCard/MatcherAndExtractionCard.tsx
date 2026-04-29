@@ -495,11 +495,11 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
     })
     const isSmallMode: boolean = useMemo(() => {
       if (width) {
-        return width < 550
+        return i18n.language === 'zh' ? width < 550 : width < 650
       } else {
         return false
       }
-    }, [width])
+    }, [width, i18n.language])
     return (
       <YakitSpin spinning={executeLoading}>
         <div className={styles['matching-extraction']} ref={contentRef}>
@@ -940,7 +940,7 @@ export const MatcherItem: React.FC<MatcherItemProps> = React.memo((props) => {
           />
         </LabelNodeItem>
         <LabelNodeItem label={t('MatcherItem.match_range')} column={isSmallMode}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <YakitSegmented
               size="small"
               value={isRequest ? t('HTTPFuzzerPageTable.request') : t('HTTPFuzzerPageTable.response')}
@@ -1284,7 +1284,7 @@ export const ExtractorItem: React.FC<ExtractorItemProps> = React.memo((props) =>
       default:
         return <></>
     }
-  }, [extractorItem.Type, extractorItem.RegexpMatchGroup, extractorItem.XPathAttribute, i18n.language])
+  }, [extractorItem.Type, extractorItem.RegexpMatchGroup, extractorItem.XPathAttribute, i18n.language, isSmallMode])
   return (
     <>
       <div

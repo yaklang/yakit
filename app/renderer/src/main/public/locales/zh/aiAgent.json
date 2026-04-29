@@ -245,7 +245,6 @@
     "taskContent": "任务内容",
     "fileSystem": "文件系统",
     "httpTraffic": "HTTP 流量",
-    "riskAndVulnerability": "漏洞与风险",
     "readWriteLog": "读写日志"
   },
   "AIReviewRuleOptions": {

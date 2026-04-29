@@ -1,6 +1,5 @@
 {
   "SimpleDetect": {
-    "riskTab": "漏洞与风险",
     "portTab": "扫描端口列表",
     "logTab": "日志",
     "runtimeIdNotSet": "未设置正常的 runtimeId",

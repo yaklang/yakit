@@ -745,7 +745,13 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         <AutoCard style={{ height: 'auto' }}>
           <AutoSpin spinning={loading} tip={t('ConfigNetworkPage.loading')}>
             {params && (
-              <Form size={'small'} labelCol={{ span: 5 }} wrapperCol={{ span: 14 }} onSubmitCapture={() => submit()}>
+              <Form
+                size={'small'}
+                labelCol={{ span: 5 }}
+                wrapperCol={{ span: 14 }}
+                onSubmitCapture={() => submit()}
+                labelWrap
+              >
                 <Divider orientation={'left'} style={{ marginTop: '0px' }}>
                   {t('ConfigNetworkPage.dnsConfig')}
                 </Divider>
@@ -1747,7 +1753,7 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
     <>
       <YakitDrawer
         // placement='right'
-        width="50%"
+        width="max(700px, 50%)"
         closable={false}
         onClose={() => onClose()}
         visible={visible}

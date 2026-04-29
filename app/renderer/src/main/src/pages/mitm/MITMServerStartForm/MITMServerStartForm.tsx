@@ -392,7 +392,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
           form={form}
           onFinish={onStartMITM}
           labelCol={{ span: width > 610 ? 5 : 9 }}
-          wrapperCol={{ span: width > 610 ? 13 : 11 }}
+          wrapperCol={{ span: width > 610 ? 15 : 16 }}
         >
           <Item
             label={t('MITMServerForm.hijackHost')}
@@ -536,30 +536,32 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
               </span>
             }
           >
-            <div className={styles['form-rule-body']}>
-              <div className={styles['form-rule']} onClick={() => props.setVisible(true)}>
-                <div className={styles['form-rule-text']}>
-                  {t('MITMServerForm.existingRules', { count: rules.length })}
-                </div>
-                <div className={styles['form-rule-icon']}>
-                  <CogIcon />
+            <div className={styles['form-rule-wrapper']}>
+              <div className={styles['form-rule-body']}>
+                <div className={styles['form-rule']} onClick={() => props.setVisible(true)}>
+                  <div className={styles['form-rule-text']}>
+                    {t('MITMServerForm.existingRules', { count: rules.length })}
+                  </div>
+                  <div className={styles['form-rule-icon']}>
+                    <CogIcon />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className={styles['form-rule-button']} style={{ right: -185 }}>
-              <RuleExportAndImportButton
-                ref={ruleButtonRef}
-                isUseDefRules={isUseDefRules}
-                setIsUseDefRules={setIsUseDefRules}
-                onOkImport={() => getRules()}
-              />
+              <div>
+                <RuleExportAndImportButton
+                  ref={ruleButtonRef}
+                  isUseDefRules={isUseDefRules}
+                  setIsUseDefRules={setIsUseDefRules}
+                  onOkImport={() => getRules()}
+                />
+              </div>
             </div>
           </Item>
           <Item label={t('MITMServerForm.enablePlugin')} name="enableInitialPlugin" valuePropName="checked">
             <YakitSwitch size="large" onChange={(checked) => onSwitchPlugin(checked)} />
           </Item>
           <Item label={' '} colon={false}>
-            <Space>
+            <div className={styles['mitm-submit-btns']}>
               <YakitButton type="primary" size="large" htmlType="submit">
                 {t('MITMServerForm.startHijack')}
               </YakitButton>
@@ -586,7 +588,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
               <YakitButton type="text" size="large" onClick={() => setAdvancedFormVisible(true)}>
                 {t('MITMServerForm.advancedConfig')}
               </YakitButton>
-            </Space>
+            </div>
           </Item>
         </Form>
         {/* 代理劫持弹窗 */}

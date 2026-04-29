@@ -229,7 +229,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         className={styles['advanced-configuration-drawer']}
         visible={visible}
         onClose={() => onClose()}
-        width="40%"
+        width="max(700px, 40%)"
         title={
           <div className={styles['advanced-configuration-drawer-title']}>
             <div className={styles['advanced-configuration-drawer-title-text']}>
@@ -252,7 +252,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
         }
         maskClosable={false}
       >
-        <Form labelCol={{ span: 6 }} wrapperCol={{ span: 18 }} form={form}>
+        <Form labelCol={{ span: 8 }} wrapperCol={{ span: 16 }} form={form}>
           <Form.Item
             label={t('MITMFormAdvancedConfiguration.dnsServer')}
             name="dnsServers"

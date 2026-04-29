@@ -97,6 +97,7 @@ import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamTy
 import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { InstallPluginModal } from './InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 interface KnowledgeBaseContentProps {
   knowledgeBaseID: string
@@ -133,6 +134,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     inViewport,
     loading,
   } = props
+  const { t } = useI18nNamespaces(['plugin'])
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
   const [streams, api] = useMultipleHoldGRPCStream()
   const { refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync } = useCheckKnowledgePlugin()
@@ -863,7 +865,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                 streamInfo={streams[aIModelAvailableTokens]}
                 runtimeId={streams[aIModelAvailableTokens]?.runtimeId ?? ''}
                 loading={streams[aIModelAvailableTokens]?.loading ?? false}
-                defaultActiveKey="日志"
+                defaultActiveKey={t('PluginExecResultDefaultTabs.log')}
               />
             </div>
           </YakitModal>

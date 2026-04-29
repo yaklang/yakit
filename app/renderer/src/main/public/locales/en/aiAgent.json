@@ -245,7 +245,6 @@
     "taskContent": "Task Content",
     "fileSystem": "File System",
     "httpTraffic": "HTTP Traffic",
-    "riskAndVulnerability": "Vulnerabilities and Risks",
     "readWriteLog": "Read/Write Log"
   },
   "AIReviewRuleOptions": {

@@ -141,5 +141,9 @@
     "escFullScreen": "按 Esc 即可退出全屏",
     "anonymous": "匿名",
     "filterCondition": "筛选条件"
+  },
+  "PluginExecResultDefaultTabs": {
+    "HTTPtraffic": "HTTP 流量",
+    "log": "日志"
   }
 }

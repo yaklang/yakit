@@ -536,7 +536,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
               <div>
                 <div className="table-title">
                   <Space>
-                    风险与漏洞
+                    漏洞与风险
                     <Tooltip title="刷新会重置所有查询条件">
                       <Button
                         size={'small'}
@@ -549,12 +549,12 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                     </Tooltip>
                   </Space>
                   <Space>
-                    <ExportExcel getData={getData} btnProps={{ size: 'small' }} fileName="风险与漏洞" />
+                    <ExportExcel getData={getData} btnProps={{ size: 'small' }} fileName="漏洞与风险" />
                     <YakitPopconfirm
                       title={
                         selectedRowKeys.length > 0
-                          ? '确定删除选择的风险与漏洞吗？不可恢复'
-                          : '确定删除所有风险与漏洞吗? 不可恢复'
+                          ? '确定删除选择的漏洞与风险吗？不可恢复'
+                          : '确定删除所有漏洞与风险吗? 不可恢复'
                       }
                       onConfirm={onRemove}
                     >

@@ -141,5 +141,9 @@
     "escFullScreen": "Press Esc to exit full screen",
     "anonymous": "anonymous",
     "filterCondition": "Filter Condition"
+  },
+  "PluginExecResultDefaultTabs": {
+    "HTTPtraffic": "HTTP traffic",
+    "log": "Log"
   }
 }

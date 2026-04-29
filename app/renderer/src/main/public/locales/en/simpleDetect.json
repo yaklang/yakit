@@ -1,6 +1,5 @@
 {
   "SimpleDetect": {
-    "riskTab": "Risks and Vulnerabilities",
     "portTab": "Port List",
     "logTab": "Logs",
     "runtimeIdNotSet": "Runtime ID is not set properly",

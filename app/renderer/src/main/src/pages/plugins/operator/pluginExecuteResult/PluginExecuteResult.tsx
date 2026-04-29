@@ -72,6 +72,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
     PluginTabsRightNode,
     isCrawler = false,
   } = props
+  const { t, i18n } = useI18nNamespaces(['yakitRoute'])
 
   const [allTotal, setAllTotal] = useState<number>(0)
   const [tempTotal, setTempTotal] = useState<number>(0) // 在risk表没有展示之前得临时显示在tab上得小红点计数
@@ -162,7 +163,7 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
 
   const showTabs = useMemo(() => {
     if (!tempTotal && !streamInfo.tabsState.find((item) => item.type === 'ssa-risk')) {
-      return streamInfo.tabsState.filter((item) => item.tabName !== '漏洞与风险')
+      return streamInfo.tabsState.filter((item) => item.tabName !== t('YakitRoute.vulnerabilityAndrisk'))
     }
     return streamInfo.tabsState
   }, [streamInfo.tabsState, tempTotal])
@@ -434,7 +435,7 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
   )
 })
 
-/**风险与漏洞tab表 */
+/**漏洞与风险tab表 */
 export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps> = React.memo((props) => {
   const { runtimeId, runTimeIDs, filterTagDom } = props
   const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi', 'yakitRoute'])
@@ -475,7 +476,7 @@ export const VulnerabilitiesRisksTable: React.FC<VulnerabilitiesRisksTableProps>
           renderTitle={
             <div className={styles['table-renderTitle']}>
               <div className={styles['table-renderTitle-left']}>
-                <span>{t('YakitRoute.riskAndVulnerability')}</span>
+                <span>{t('YakitRoute.vulnerabilityAndrisk')}</span>
                 <TableTotalAndSelectNumber total={allTotal} />
                 {filterTagDom}
               </div>
@@ -531,7 +532,7 @@ export const AuditHoleTableOnTab: React.FC<AuditHoleTableOnTabProps> = React.mem
         renderTitle={
           <div className={styles['table-renderTitle']}>
             <div className={styles['table-renderTitle-left']}>
-              <span>{t('YakitRoute.riskAndVulnerability')}</span>
+              <span>{t('YakitRoute.vulnerabilityAndrisk')}</span>
               <TableTotalAndSelectNumber total={allTotal} />
             </div>
             <YakitButton type="outline2" size="small" onClick={onJumpAuditHole}>

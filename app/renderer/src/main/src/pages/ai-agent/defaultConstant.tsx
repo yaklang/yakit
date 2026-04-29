@@ -176,7 +176,7 @@ export const AITabs = {
   'task-content': { label: 'AITabs.taskContent', value: AITabsEnum.Task_Content },
   'file-system': { label: 'AITabs.fileSystem', value: AITabsEnum.File_System },
   http: { label: 'AITabs.httpTraffic', value: AITabsEnum.HTTP },
-  risk: { label: 'AITabs.riskAndVulnerability', value: AITabsEnum.Risk },
+  risk: { label: 'YakitRoute.vulnerabilityAndrisk', value: AITabsEnum.Risk },
   'operation-log': { label: 'AITabs.readWriteLog', value: AITabsEnum.Operation_Log },
 }
 

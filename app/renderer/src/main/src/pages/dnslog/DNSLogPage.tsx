@@ -578,7 +578,7 @@ export const DNSLogPage: React.FC<DNSLogPageProp> = (props) => {
                 )}
               </div>
               {token !== '' && (
-                <Row style={{ marginTop: 5 }} align="bottom">
+                <Row style={{ marginTop: 5 }} align="bottom" gutter={8}>
                   <Col style={{ fontSize: 12, color: 'var(--Colors-Use-Neutral-Text-1-Title)' }}>
                     {t('DNSLogPage.activeDomain')}
                   </Col>

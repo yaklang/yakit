@@ -7,7 +7,6 @@
     "types": "个类型"
   },
   "BruteExecuteContent": {
-    "riskAndVulnerability": "漏洞与风险",
     "logs": "日志",
     "inputTarget": "输入目标",
     "targetPlaceholder": "内容规则 域名(:端口)/IP(:端口)/IP段，如需批量输入请在此框以逗号分割",

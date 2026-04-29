@@ -247,7 +247,7 @@ const BruteExecute: React.FC<BruteExecuteProps> = React.memo((props) => {
 
 const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
   forwardRef((props, ref) => {
-    const { t, i18n } = useI18nNamespaces(['brute', 'yakitUi'])
+    const { t, i18n } = useI18nNamespaces(['brute', 'yakitUi', 'yakitRoute'])
     const { bruteType, isExpand, executeStatus, setExecuteStatus, setIsExpand, selectNum, setProgressList, pageInfo } =
       props
     const [form] = Form.useForm()
@@ -263,7 +263,7 @@ const BruteExecuteContent: React.FC<BruteExecuteContentProps> = React.memo(
 
     const defaultTabs = useCreation(() => {
       const tabs = [
-        { tabName: t('BruteExecuteContent.riskAndVulnerability'), type: 'risk' },
+        { tabName: t('YakitRoute.vulnerabilityAndrisk'), type: 'risk' },
         { tabName: t('BruteExecuteContent.logs'), type: 'log' },
         { tabName: 'Console', type: 'console' },
       ]

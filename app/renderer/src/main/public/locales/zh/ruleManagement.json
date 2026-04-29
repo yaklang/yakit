@@ -11,7 +11,6 @@
     "formMissing": "未获取到表单信息，请关闭弹框重试!",
     "saveAndCloseConfirm": "请问是否要保存规则并关闭弹框？",
     "formRequired": "请填写完整规则必须信息",
-    "riskTab": "漏洞与风险",
     "logTab": "日志",
     "auditResultTab": "审计结果",
     "rule": "规则",

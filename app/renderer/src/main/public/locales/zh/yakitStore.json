@@ -4,8 +4,7 @@
       "PluginResultUI": {
         "taskProgressID": "任务进度ID：",
         "log": "日志",
-        "taskExtraLogAndResult": "任务额外日志与结果",
-        "vulnerabilitiesAndRisks": "漏洞与风险"
+        "taskExtraLogAndResult": "任务额外日志与结果"
       }
     }
   }

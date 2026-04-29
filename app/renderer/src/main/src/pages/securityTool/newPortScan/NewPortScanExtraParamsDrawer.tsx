@@ -100,7 +100,7 @@ const NewPortScanExtraParamsDrawer: React.FC<NewPortScanExtraParamsDrawerProps> 
       className={styles['port-scan-execute-extra-params-drawer']}
       visible={visible}
       onClose={onClose}
-      width="65%"
+      width="max(700px, 65%)"
       title={t('NewPortScanExecuteContent.extraParams')}
     >
       <Form size="small" labelWrap={true} labelCol={{ span: 6 }} wrapperCol={{ span: 18 }} form={form}>

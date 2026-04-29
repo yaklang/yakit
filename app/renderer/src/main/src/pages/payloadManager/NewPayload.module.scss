@@ -73,7 +73,7 @@
   }
   @media screen and (max-width: 1100px) {
     .payload-list-box {
-      width: 200px;
+      width: 300px;
     }
   }
   .payload-content {
@@ -87,6 +87,8 @@
     .header {
       display: flex;
       flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: space-between;
       .title-box {
         display: inline-flex;
         align-items: center;
@@ -127,7 +129,6 @@
         }
       }
       .extra {
-        flex: 1;
         display: flex;
         justify-content: flex-end;
         gap: 8px;

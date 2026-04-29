@@ -69,7 +69,7 @@ export const WebsocketFuzzer: React.FC<WebsocketFuzzerProp> = (props) => {
           />
         }
         firstRatio="30%"
-        firstMinSize="450px"
+        firstMinSize="480px"
         firstNodeStyle={{ padding: 0 }}
         secondNode={<WebsocketFlowViewer wsFlowList={wsFlowList} loading={loading} />}
         secondRatio="70%"

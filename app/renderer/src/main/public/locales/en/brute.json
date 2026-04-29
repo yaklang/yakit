@@ -7,7 +7,6 @@
     "types": "Types"
   },
   "BruteExecuteContent": {
-    "riskAndVulnerability": "Vulnerability & Risk",
     "logs": "Logs",
     "inputTarget": "Input Targets",
     "targetPlaceholder": "Content rules: domain(:port)/IP(:port)/IP range, separate by comma for batch input",

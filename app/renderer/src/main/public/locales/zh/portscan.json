@@ -82,7 +82,6 @@
   "NewPortScanExecuteContent": {
     "portScanList": "扫描端口列表",
     "httpTraffic": "HTTP 流量",
-    "riskAndVulnerability": "漏洞与风险",
     "logs": "日志",
     "riskAssessmentReport": "风险评估报告",
     "extraParams": "额外参数"

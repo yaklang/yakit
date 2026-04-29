@@ -2647,7 +2647,7 @@ interface UIOpRiskProp {
   isEngineLink: boolean
 }
 
-/** 最新风险与漏洞信息 */
+/** 最新漏洞与风险信息 */
 interface LatestRiskInfo {
   Title: string
   Id: number
@@ -2679,7 +2679,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   const [show, setShow] = useState<boolean>(false)
 
-  /** 查询最新风险与漏洞信息节点 */
+  /** 查询最新漏洞与风险信息节点 */
   const fetchNode = useRef<number>(0)
   const [risks, setRisks] = useState<RisksProps>({
     Data: [],
@@ -2715,7 +2715,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       .catch(() => {})
   })
 
-  /** 获取最新的风险与漏洞信息(5秒一次) */
+  /** 获取最新的漏洞与风险信息(5秒一次) */
   useEffect(() => {
     if (isEngineLink) {
       if (timeRef.current) clearInterval(timeRef.current)
@@ -2918,7 +2918,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   const [show, setShow] = useState<boolean>(false)
 
-  /** 查询最新风险与漏洞信息节点 */
+  /** 查询最新漏洞与风险信息节点 */
   const fetchNode = useRef<number>(0)
   const [risks, setRisks] = useState<QueryNewSSARisksResponse>({
     Data: [],
@@ -2946,7 +2946,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     })
   })
 
-  /** 获取最新的风险与漏洞信息(5秒一次) */
+  /** 获取最新的漏洞与风险信息(5秒一次) */
   useEffect(() => {
     if (isEngineLink) {
       if (timeRef.current) clearInterval(timeRef.current)
@@ -3496,6 +3496,7 @@ interface CrashLogModalProps {
 }
 const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
   const { crashLogParams, onClose } = props
+  const { t } = useI18nNamespaces(['plugin'])
 
   const tokenRef = useRef<string>(randomString(40))
   const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>('default')
@@ -3572,7 +3573,7 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
           streamInfo={streamInfo}
           runtimeId={runtimeId}
           loading={isExecuting}
-          defaultActiveKey="日志"
+          defaultActiveKey={t('PluginExecResultDefaultTabs.log')}
           pluginExecuteResultWrapper={styles['plugin-execute-result-wrapper']}
         />
       </div>

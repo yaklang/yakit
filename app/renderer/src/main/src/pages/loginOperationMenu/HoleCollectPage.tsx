@@ -343,7 +343,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
             <div>
               <div className={styles['table-title']}>
                 <Space>
-                  {t('YakitRoute.riskAndVulnerability')}
+                  {t('YakitRoute.vulnerabilityAndrisk')}
                   <Tooltip title={t('HoleCollectPage.refreshTooltip')}>
                     <YakitButton
                       size={'small'}

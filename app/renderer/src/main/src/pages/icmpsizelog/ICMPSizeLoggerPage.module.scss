@@ -1,5 +1,11 @@
 .icmp-wrapper {
   border-top: none;
+  .icmp-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 
 .description-text {

@@ -293,7 +293,7 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
 
 const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo(
   forwardRef((props, ref) => {
-    const { t, i18n } = useI18nNamespaces(['portscan', 'yakitUi'])
+    const { t, i18n } = useI18nNamespaces(['portscan', 'yakitUi', 'yakitRoute'])
     const {
       isExpand,
       executeStatus,
@@ -326,7 +326,7 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
       return [
         { tabName: t('NewPortScanExecuteContent.portScanList'), type: 'port' },
         { tabName: t('NewPortScanExecuteContent.httpTraffic'), type: 'http' },
-        { tabName: t('NewPortScanExecuteContent.riskAndVulnerability'), type: 'risk' },
+        { tabName: t('YakitRoute.vulnerabilityAndrisk'), type: 'risk' },
         { tabName: t('NewPortScanExecuteContent.logs'), type: 'log' },
         { tabName: 'Console', type: 'console' },
       ]

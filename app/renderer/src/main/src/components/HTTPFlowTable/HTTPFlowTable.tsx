@@ -5465,7 +5465,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
   return (
     <YakitDrawer
       visible={true}
-      width="40%"
+      width="max(700px, 40%)"
       className={style['history-advanced-set-wrapper']}
       onClose={handleClose}
       title={
@@ -5506,7 +5506,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
         <div className={style['history-advanced-set-item']}>
           <div className={style['history-advanced-set-item-title']}>
             {t('AdvancedSet.listDisplayFieldsAndOrder')}
-            <YakitButton type="text" size="small" onClick={handleResetColumn}>
+            <YakitButton type="text" onClick={handleResetColumn}>
               {t('YakitButton.reset')}
             </YakitButton>
           </div>

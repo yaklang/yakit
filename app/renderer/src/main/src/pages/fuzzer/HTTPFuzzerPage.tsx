@@ -2780,7 +2780,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
               </div>
               <YakitResizeBox
                 firstMinSize={380}
-                secondMinSize={480}
+                secondMinSize={500}
                 isShowDefaultLineStyle={false}
                 style={{ overflow: 'hidden' }}
                 lineStyle={{ display: firstFull || secondFull ? 'none' : '' }}

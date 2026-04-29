@@ -410,7 +410,12 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         cancelText={t('YakitButton.cancel')}
         className={styles['proxy-rules-config-modal']}
       >
-        <Form form={form} layout={'horizontal'} labelCol={{ span: 8 }} wrapperCol={{ span: 16 }}>
+        <Form
+          form={form}
+          layout={'horizontal'}
+          labelCol={{ span: isEndpoints ? (i18n.language === 'zh' ? 4 : 5) : i18n.language === 'zh' ? 5 : 8 }}
+          wrapperCol={{ span: isEndpoints ? (i18n.language === 'zh' ? 20 : 19) : i18n.language === 'zh' ? 19 : 16 }}
+        >
           {isEndpoints ? (
             <>
               <Form.Item

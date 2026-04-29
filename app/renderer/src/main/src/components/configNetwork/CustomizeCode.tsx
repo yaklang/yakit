@@ -346,7 +346,7 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
   return (
     <YakitModal
       visible={visible}
-      width={600}
+      width={650}
       title={title}
       onCancel={onCancel}
       onOk={onOk}
@@ -354,7 +354,7 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
       afterClose={() => form.resetFields()}
       confirmLoading={confirmLoading}
     >
-      <Form labelCol={{ span: 5 }} wrapperCol={{ span: 18 }} form={form}>
+      <Form labelCol={{ span: 6 }} wrapperCol={{ span: 17 }} form={form}>
         <Item
           label={t('ConfigNetworkPage.name')}
           name="Name"

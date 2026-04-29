@@ -566,7 +566,7 @@ export const cleanObject = <T extends Record<string, any>>(obj: T): Partial<Filt
 /** @name 新建|编辑规则抽屉 */
 export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
   const { getContainer, info, visible, onCallback } = props
-  const { t, i18n } = useI18nNamespaces(['ruleManagement', 'yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['ruleManagement', 'yakitUi', 'yakitRoute'])
   const alertMsgRef = useRef<{ [key: string]: AlertMessage }>(info?.AlertMsg || {})
   const getContainerSize = useSize(getContainer)
   // 抽屉展示高度
@@ -935,7 +935,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
 
   const getTabsState = useMemo(() => {
     const tabsState: HoldGRPCStreamProps.InfoTab[] = [
-      { tabName: t('EditRuleDrawer.riskTab'), type: 'ssa-risk' },
+      { tabName: t('YakitRoute.vulnerabilityAndrisk'), type: 'ssa-risk' },
       { tabName: t('EditRuleDrawer.logTab'), type: 'log' },
       { tabName: 'Console', type: 'console' },
     ]

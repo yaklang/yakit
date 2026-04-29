@@ -860,7 +860,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
           exportKey={RemoteGV.RiskExportFields}
           getData={getExcelData}
           onClose={() => m.destroy()}
-          fileName={t('YakitRoute.riskAndVulnerability')}
+          fileName={t('YakitRoute.vulnerabilityAndrisk')}
           getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
         />
       ),
@@ -1347,7 +1347,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
                         ></YakitButton>
                       </Tooltip>
                     )}
-                    <div className={styles['table-renderTitle-text']}>{t('YakitRoute.riskAndVulnerability')}</div>
+                    <div className={styles['table-renderTitle-text']}>{t('YakitRoute.vulnerabilityAndrisk')}</div>
                     <YakitRadioButtons
                       value={type}
                       onChange={(e) => {

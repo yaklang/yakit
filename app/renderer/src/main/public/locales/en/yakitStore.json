@@ -4,8 +4,7 @@
       "PluginResultUI": {
         "taskProgressID": "Task Progress ID:",
         "log": "Log",
-        "taskExtraLogAndResult": "Task extra logs and results",
-        "vulnerabilitiesAndRisks": "Vulnerabilities & Risks"
+        "taskExtraLogAndResult": "Task extra logs and results"
       }
     }
   }

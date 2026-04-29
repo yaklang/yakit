@@ -80,14 +80,14 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
   return (
     <YakitCard
       className={style['icmp-wrapper']}
-      headStyle={{ padding: '25px 15px' }}
+      headStyle={{ height: 'auto' }}
       title={
-        <Space>
+        <div className={style['icmp-title']}>
           ICMP Size Logger
           <div className={style['description-text']}>{t('ICMPSizeLoggerPage.description')}</div>
           <Divider type={'vertical'} />
           <div className={style['set-ping-size-wrap']}>
-            {t('ICMPSizeLoggerPage.setPingSize')}
+            {t('ICMPSizeLoggerPage.setPingSize')}&nbsp;
             <YakitInputNumber disabled={true} value={size} className={style['ping-size-input-number']} />
           </div>
           <YakitButton disabled={loading} onClick={refresh}>
@@ -96,7 +96,7 @@ export const ICMPSizeLoggerPage: React.FC<ICMPSizeLoggerPageProp> = (props) => {
           <YakitButton type="text" disabled={loading} icon={<ReloadOutlined />} onClick={update}>
             {t('YakitButton.refresh')}
           </YakitButton>
-        </Space>
+        </div>
       }
     >
       <Row align="middle">

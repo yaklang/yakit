@@ -259,7 +259,7 @@ module.exports = (win, getClient) => {
     return await asyncResetRiskTableStats(params)
   })
 
-  /** 获取最新的风险与漏洞数据 */
+  /** 获取最新的漏洞与风险数据 */
   const asyncFetchLatestRisk = (params) => {
     return new Promise((resolve, reject) => {
       getClient().QueryNewRisk(params, (err, data) => {

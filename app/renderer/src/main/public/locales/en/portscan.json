@@ -82,7 +82,6 @@
   "NewPortScanExecuteContent": {
     "portScanList": "Scan Port List",
     "httpTraffic": "HTTP Traffic",
-    "riskAndVulnerability": "Vulnerability & Risk",
     "logs": "Logs",
     "riskAssessmentReport": " Risk Assessment Report",
     "extraParams": "Extra Params"

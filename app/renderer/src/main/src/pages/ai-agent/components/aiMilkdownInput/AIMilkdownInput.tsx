@@ -37,7 +37,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
   React.forwardRef((props, ref) => {
     const { readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper, onMemfitExtra, filterMode } =
       props
-    const { t } = useI18nNamespaces(['aiAgent'])
+    const { t, i18n } = useI18nNamespaces(['aiAgent'])
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
     useImperativeHandle(
@@ -125,7 +125,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(customPlugin)
         )
       },
-      [readonly, defaultValue],
+      [readonly, defaultValue, i18n.language],
     )
     useEffect(() => {
       if (loading) return

@@ -71,7 +71,7 @@
     "batchPOCScan": "Freely select the required POCs to perform batch vulnerability detection.",
     "historyAnalyzer": "History Analyzer",
     "vulnerability": "Vulnerability",
-    "riskAndVulnerability": "Risk & Vulnerability",
+    "vulnerabilityAndrisk": "Vulnerability & Risk",
     "manageAllDetectedVulnerabilitiesAndRisks": "Manage All Detected Vulnerabilities and Risks",
     "falsePositiveRecords": "False Positive Records",
     "port": "Port",
