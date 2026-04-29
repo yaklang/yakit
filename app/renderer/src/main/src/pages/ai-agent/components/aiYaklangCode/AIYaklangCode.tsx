@@ -9,14 +9,8 @@ import styles from './AIYaklangCode.module.scss'
 import { useCreation, useMemoizedFn, useThrottleEffect } from 'ahooks'
 import { NewHTTPPacketEditor } from '@/utils/editors'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import {
-  WebFuzzerAiStore,
-  aiChatDataStore,
-  FlowAiStore,
-  histroyAiStore,
-  knowledgeBaseDataStore,
-  type ChatDataStoreKey,
-} from '@/pages/ai-agent/store/ChatDataStore'
+import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
+import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 
 export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) => {
   const { content: defContent, nodeLabel, modalInfo, contentType, referenceNode } = props
@@ -56,23 +50,7 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
     const store = chatIPCEvents.fetchChatDataStore()
     return store instanceof WebFuzzerAiStore ? store.fuzzerPageId : undefined
   }, [chatIPCEvents])
-
-  const chatDataStoreKey = useMemo((): ChatDataStoreKey => {
-    const store = chatIPCEvents.fetchChatDataStore()
-    switch (store) {
-      case histroyAiStore:
-        return 'histroyAiStore'
-      case FlowAiStore:
-        return 'FlowAiStore'
-      case aiChatDataStore:
-        return 'aiChatDataStore'
-      case knowledgeBaseDataStore:
-        return 'knowledgeBaseDataStore'
-      default:
-        if (store instanceof WebFuzzerAiStore) return 'WebFuzzerAiStore'
-        return 'unknown'
-    }
-  }, [chatIPCEvents])
+  const { chatDataStoreKey } = useGetChatDataStoreKey()
 
   const isWebFuzzerAiStore = useMemo(() => {
     return chatDataStoreKey === 'WebFuzzerAiStore'
