@@ -1,6 +1,7 @@
 import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
 import { AIChatMentionProps } from '../aiChatMention/type'
+import { ChatDataStoreKey } from '../../store/ChatDataStore'
 
 export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 
@@ -22,4 +23,6 @@ export interface AIMilkdownInputBaseProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   // 外部传入需要筛选掉的选项
   filterMode?: AIChatMentionProps['filterMode']
+  /**文件缓存路径 */
+  chatDataStoreKey: ChatDataStoreKey
 }

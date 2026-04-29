@@ -23,6 +23,7 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
+import useGetChatDataStoreKey from '../hooks/useGetChatDataStoreKey'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -220,6 +221,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const onSetQuestion = useMemoizedFn((value: string) => {
       aiChatTextareaRef?.current?.setValue(value ?? '')
     })
+    const { chatDataStoreKey } = useGetChatDataStoreKey()
     return (
       <>
         <div
@@ -269,6 +271,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         </div>
                       }
                       footerLeftTypes={externalParameters?.footerLeftTypes}
+                      chatDataStoreKey={chatDataStoreKey}
                     />
                   </div>
                 </div>

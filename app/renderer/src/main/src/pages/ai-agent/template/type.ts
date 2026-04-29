@@ -6,6 +6,7 @@ import { AIChatMentionProps } from '../components/aiChatMention/type'
 import { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
 import { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 import { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
+import { ChatDataStoreKey } from '../store/ChatDataStore'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
@@ -58,6 +59,7 @@ export interface AIChatTextareaProps {
   isOpen?: boolean
   filterMentionType?: AIChatMentionProps['filterMode']
   footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
+  chatDataStoreKey: ChatDataStoreKey
 }
 
 export interface FileToChatQuestionList {

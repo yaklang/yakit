@@ -595,9 +595,8 @@ module.exports = (win, getClient) => {
 
   ipcMain.handle('save-ai-image', (event, params, token) => {
     return new Promise((resolve, reject) => {
-      const { buffer, filename, sessionID = '' } = params
-
-      const url = path.join(aiImageTemp, sessionID)
+      const { buffer, filename, sessionID = '', chatDataStoreKey } = params
+      const url = path.join(aiImageTemp, chatDataStoreKey, sessionID)
       // 确保目录存在
       if (!fs.existsSync(url)) {
         fs.mkdirSync(url, { recursive: true })

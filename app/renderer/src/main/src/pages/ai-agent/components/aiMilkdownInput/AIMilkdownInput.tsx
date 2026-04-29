@@ -40,8 +40,16 @@ const remarkDirective = $remark(`remark-directive`, () => directive)
 
 export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.memo(
   React.forwardRef((props, ref) => {
-    const { readonly, defaultValue, onUpdateContent, onUpdateEditor, classNameWrapper, onMemfitExtra, filterMode } =
-      props
+    const {
+      readonly,
+      defaultValue,
+      onUpdateContent,
+      onUpdateEditor,
+      classNameWrapper,
+      onMemfitExtra,
+      filterMode,
+      chatDataStoreKey,
+    } = props
     const { t, i18n } = useI18nNamespaces(['aiAgent'])
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
@@ -66,7 +74,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           upload,
           $view(imageSchema.node, () =>
             nodeViewFactory({
-              component: () => <AICustomFile sessionId={sessionIdRef.current} />,
+              component: () => <AICustomFile sessionId={sessionIdRef.current} chatDataStoreKey={chatDataStoreKey} />,
             }),
           ),
           (ctx: Ctx) => () => {

@@ -21,17 +21,18 @@ import { AIChatTextareaSubmit } from '../../template/type'
 import { getAIReActRequestParams } from '../../utils'
 import { extractDataWithMilkdown } from '../aiMilkdownInput/utils'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
+import useGetChatDataStoreKey from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 
 export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((props) => {
   const { isAnswer, content, contentClassName, chatClassName, extraValue } = props
-
+  const { chatDataStoreKey } = useGetChatDataStoreKey()
   const [edit, setEdit] = useState<boolean>(false)
 
   const renderContent = useMemoizedFn(() => {
     if (!!extraValue?.showQS) {
       return (
         <>
-          <AIMilkdownInput defaultValue={`${extraValue?.showQS}`} readonly={true} />
+          <AIMilkdownInput defaultValue={`${extraValue?.showQS}`} readonly={true} chatDataStoreKey={chatDataStoreKey} />
         </>
       )
     }
@@ -79,6 +80,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
   const { extraValue, content, onCancel } = props
   const { activeChat } = useAIAgentStore()
   const { chatIPCEvents } = useChatIPCDispatcher()
+  const { chatDataStoreKey } = useGetChatDataStoreKey()
 
   const defaultValue = useCreation(() => {
     if (!!extraValue?.showQS) {
@@ -172,6 +174,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
           defaultValue={defaultValue}
           onUpdateEditor={onUpdateEditor}
           onUpdateContent={onUpdateContent}
+          chatDataStoreKey={chatDataStoreKey}
         />
       </div>
       <div className={styles['edit-footer']}>

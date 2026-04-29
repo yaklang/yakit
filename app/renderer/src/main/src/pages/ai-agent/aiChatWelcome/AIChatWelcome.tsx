@@ -319,6 +319,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
                   className={classNames({
                     [styles['input-body']]: !isEmptyAIMaterials,
                   })}
+                  chatDataStoreKey="aiChatDataStore"
                 >
                   {/* svg 定位点1/left */}
                   <div className={styles['line']} ref={lineStartRef} />

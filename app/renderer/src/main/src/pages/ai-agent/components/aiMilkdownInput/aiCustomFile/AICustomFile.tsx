@@ -12,8 +12,8 @@ import { Progress } from 'antd'
 const { ipcRenderer } = window.require('electron')
 
 export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
-  const { sessionId } = props
-  const { node, contentRef, selected, setAttrs } = useNodeViewContext()
+  const { sessionId, chatDataStoreKey } = props
+  const { node, contentRef, view, selected, setAttrs } = useNodeViewContext()
 
   const [showSrc, setShowSrc] = useState<string>('')
   const [progress, setProgress] = useState<number>(0)
@@ -22,14 +22,17 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
   const attrs = useCreation(() => {
     return node.attrs
   }, [node.attrs])
+  const editable = useCreation(() => {
+    return view.editable
+  }, [view.editable])
   useEffect(() => {
     // blob:开头需要上传，其他情况直接展示
-    if (attrs?.src && attrs?.src.startsWith('blob')) {
+    if (editable && attrs?.src && attrs?.src.startsWith('blob')) {
       onSaveLocal(attrs?.src)
     } else {
       setShowSrc(attrs?.src)
     }
-  }, [])
+  }, [editable])
 
   const handleIpcFinish = useMemoizedFn((e, path: string) => {
     setProgress(100)
@@ -73,6 +76,7 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
           buffer,
           filename,
           sessionID: sessionId,
+          chatDataStoreKey,
         },
         tokenRef.current,
       )

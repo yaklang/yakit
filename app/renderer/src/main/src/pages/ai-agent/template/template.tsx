@@ -99,6 +99,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       defaultValue,
       isOpen,
       filterMentionType,
+      chatDataStoreKey,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { chatIPCData } = useChatIPCStore()
@@ -357,6 +358,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             onUpdateContent={onUpdateContent}
             onMemfitExtra={onMemfitExtra}
             filterMode={filterMentionType}
+            chatDataStoreKey={chatDataStoreKey}
           />
           <div className={styles['footer']}>
             {inputFooterLeft ?? (
