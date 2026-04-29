@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useCreation, useDebounceFn, useGetState, useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
+import { useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
 import { API } from '@/services/swagger/resposeType'
 import styles from './DataStatistics.module.scss'
-import { failed, success, warn, info, yakitNotify } from '@/utils/notification'
+import { failed, yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
 import { UserIcon } from './icon'
 import { SolidCalendarIcon, SolidTrendingdownIcon, SolidTrendingupIcon } from '@/assets/icon/solid'
@@ -18,15 +18,19 @@ import locale from 'antd/es/date-picker/locale/zh_CN'
 import { RangePickerProps } from 'antd/lib/date-picker'
 import { YakitDatePicker } from '@/components/yakitUI/YakitDatePicker/YakitDatePicker'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineRefreshIcon, OutlineSearchIcon } from '@/assets/icon/outline'
-import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { PaginationSchema } from '../invoker/schema'
-import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
+import { OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
+import { message } from 'antd'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { defSort } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { IPTable, UserTable } from './UserTable/UserTable'
+import { IPTableRefProps, UserTableRefProps } from './UserTable/UserTableType'
 import { isEnpriTrace } from '@/utils/envfile'
 import { useTheme } from '@/hook/useTheme'
 const { RangePicker } = YakitDatePicker
+const { TabPane } = PluginTabs
 
 // 将分钟转换为小时，并保留两位小数
 const minutesToHours = (minutes: number) => {
@@ -638,12 +642,7 @@ export const UpsOrDowns: React.FC<UpsOrDownsProps> = (props) => {
     </div>
   )
 }
-interface TouristUsedDetailRequest extends API.TouristUsedDetailRequest {
-  page: number
-  limit: number
-  order_by: string
-  order: string
-}
+
 const batchRefreshMenuData: YakitMenuItemProps[] = [
   {
     key: 'noResetRefresh',
@@ -656,6 +655,10 @@ const batchRefreshMenuData: YakitMenuItemProps[] = [
 ]
 type RangeValue = [Moment | null, Moment | null] | null
 type showTypeValue = 'day' | 'week' | 'month' | 'year'
+export interface RangeTimeProps {
+  startTime: number
+  endTime: number
+}
 export interface DataStatisticsProps {}
 export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
   const ref = useRef(null)
@@ -750,126 +753,25 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
       })
   })
 
+  const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
+  const [openExportKeys, setOpenExportKeys] = useState<string[]>([]) // 侧边栏展开的key
+  const [exportVisible, setExportVisible] = useState<boolean>(false)
+  const [exportTitle, setExportTitle] = useState<string[]>([])
+
   /** 使用详情 start */
   const [detailOrIPDistribution, setDetailOrIPDistribution] = useState<'useDetail' | 'IPDistribution'>(
     isEnpriTrace() ? 'useDetail' : 'IPDistribution',
   )
-  const [tableQuery, setTableQuery] = useState<TouristUsedDetailRequest>({
-    startTime: moment().startOf('day').unix(),
-    endTime: moment().endOf('day').unix(),
-    page: 1,
-    limit: 20,
-    order_by: 'updated_at',
-    order: 'desc',
-  })
-  const [tableResponse, setTableResponse] = useState<API.TouristUsedDetailResponse>({
-    data: [],
-    pagemeta: {
-      page: 1,
-      limit: 20,
-      total: 0,
-      total_page: 0,
-    },
-  })
-  const isInitRequestRef = useRef<boolean>(true)
-  const [isRefresh, setIsRefresh] = useState<boolean>(false)
-  const [tableLoading, setTableLoading] = useState(false)
 
-  const columns: ColumnsTypeProps[] = [
-    {
-      title: '用户名',
-      dataKey: 'userName',
-      filterProps: {
-        filterKey: 'name',
-        filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
-      },
-      render: (text, record) => text || record.ip,
-    },
-    {
-      title: 'ip',
-      dataKey: 'ip',
-      width: 120,
-      filterProps: {
-        filterKey: 'ip',
-        filtersType: 'input',
-        filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
-      },
-    },
-    {
-      title: '最近一次登录时间',
-      dataKey: 'updated_at',
-      ellipsis: true,
-      render: (text) => <span>{moment.unix(text).format('YYYY-MM-DD HH:mm')}</span>,
-    },
-    {
-      title: '使用时长',
-      dataKey: 'totalRequestTimes',
-      render: (text) => <span>{text}h</span>,
-    },
-  ]
+  const [activeTab, setActiveTab] = useState<string>('ip')
+  const [rangeTime, setRangeTime] = useState<RangeTimeProps>()
 
-  useEffect(() => {
-    if (isEnpriTrace()) {
-      update(1)
-    }
-  }, [])
-
-  const queyChangeUpdateData = useDebounceFn(
-    () => {
-      // 初次不通过此处请求数据
-      if (!isInitRequestRef.current) {
-        update(1)
-      }
-    },
-    { wait: 300 },
-  ).run
   useUpdateEffect(() => {
-    queyChangeUpdateData()
-  }, [tableQuery])
-  const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
-    const newQuery = {
-      ...tableQuery,
-      ...filter,
-    }
-    setTableQuery(newQuery)
-  })
+    resetTableQuery()
+  }, [activeTab])
 
-  const update = useMemoizedFn((page: number) => {
-    const params: TouristUsedDetailRequest = {
-      ...tableQuery,
-      page,
-    }
-    const isInit = page === 1
-    isInitRequestRef.current = false
-    if (isInit) {
-      setTableLoading(true)
-    }
-    NetWorkApi<TouristUsedDetailRequest, API.TouristUsedDetailResponse>({
-      method: 'get',
-      url: 'tourist/used/detail',
-      params: {
-        ...params,
-      },
-    })
-      .then((res) => {
-        const data = res.data || []
-        const d = isInit ? data : tableResponse.data.concat(data)
-        setTableResponse({
-          ...res,
-          data: d,
-        })
-        if (isInit) {
-          setIsRefresh((prevIsRefresh) => !prevIsRefresh)
-        }
-      })
-      .catch((e) => {
-        yakitNotify('error', '获取使用详情列表失败：' + e)
-      })
-      .finally(() => {
-        setTableLoading(false)
-      })
-  })
+  const userTableRef = useRef<UserTableRefProps>(null)
+  const ipTableRef = useRef<IPTableRefProps>(null)
 
   useUpdateEffect(() => {
     if (detailOrIPDistribution === 'IPDistribution') {
@@ -888,20 +790,164 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
     return current && (current < beginDate || current >= moment().endOf('day'))
   }
 
+  const onExportFun = useMemoizedFn((exportParams) => {
+    setDownloadLoading(true)
+    NetWorkApi<API.ExportHTTPFlowWhere, string>({
+      method: 'post',
+      url: activeTab === 'ip' ? '/export/tourist/detail' : 'export/tourist',
+      data: { ...exportParams },
+      timeout: 2 * 60 * 1000,
+    })
+      .then((filePath: string) => {
+        NetWorkApi<null, string>({
+          method: 'get',
+          url: 'storage',
+        }).then((type) => {
+          if (['oss', 's3'].includes(type)) {
+            const a = document.createElement('a')
+            a.href = `${filePath}`
+            a.download = ''
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+          } else {
+            const { origin } = window.location
+            const match = filePath.match(/yakit-projects(\/[^]+)$/)
+            if (match) {
+              const a = document.createElement('a')
+              a.href = `${origin}/install_package${match[1]}`
+              a.download = ''
+              document.body.appendChild(a)
+              a.click()
+              document.body.removeChild(a)
+              yakitNotify('success', '导出成功')
+            } else {
+              message.error('下载失败')
+            }
+          }
+        })
+      })
+      .catch((e) => {
+        failed(`export httpflow failed: ${e}`)
+      })
+      .finally(() => {
+        setDownloadLoading(false)
+      })
+  })
+
+  const onExport = useMemoizedFn(() => {
+    // 后端限制一次性最多请求20000条数据
+    const getPageSize = 20000
+    const includeField = []
+    // 最大请求条数
+    let pageSize = 30
+    // 总共的条数
+    const total = activeTab === 'ip' ? ipTableRef.current?.getTotal() : userTableRef.current?.getTotal()
+    // 需要多少次请求
+    let count = Math.ceil((total || 0) / getPageSize)
+    const resultArray: number[] = []
+    for (let i = 1; i <= count; i++) {
+      resultArray.push(i)
+    }
+    const params = {
+      ...(activeTab === 'ip' ? ipTableRef.current?.getTableParams() : userTableRef.current?.getTableParams() || {}),
+      ...rangeTime,
+    }
+    const rangeObj = resultArray.map((item) => {
+      if (item === count) {
+        return {
+          range: `${(item - 1) * getPageSize || 1}-${total}`,
+          page: item,
+          start: (item - 1) * getPageSize || 1,
+          end: total,
+        }
+      }
+      return {
+        range: `${(item - 1) * getPageSize || 1}-${item * getPageSize}`,
+        page: item,
+        start: (item - 1) * getPageSize || 1,
+        end: item * getPageSize,
+      }
+    })
+    if (rangeObj.length === 0) {
+      message.warn('没有数据可以导出')
+      return
+    }
+    if (rangeObj.length === 1) {
+      const exportParams = {
+        ...params,
+        includeField,
+        exportType: 'xml',
+        page: 1,
+        limit: pageSize,
+        order: defSort.order,
+        order_by: defSort.orderBy || 'id',
+        start: rangeObj[0].start,
+        end: rangeObj[0].end,
+      }
+      onExportFun(exportParams)
+      return
+    }
+    const m = showYakitModal({
+      title: '导出范围',
+      content: (
+        <div style={{ padding: 24, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {rangeObj.map((item) => (
+            <YakitButton
+              key={item.range}
+              type="outline2"
+              onClick={() => {
+                const page = item.page
+                // 最大请求条数
+                let exportParams = {
+                  ...params,
+                  includeField,
+                  exportType: 'xml',
+                  page,
+                  limit: pageSize,
+                  order: defSort.order,
+                  order_by: defSort.orderBy || 'id',
+                  start: item.start,
+                  end: item.end,
+                }
+                onExportFun(exportParams)
+                m.destroy()
+              }}
+            >
+              {item.range}
+            </YakitButton>
+          ))}
+        </div>
+      ),
+      onCancel: () => {
+        m.destroy()
+      },
+      width: 650,
+      footer: null,
+      maskClosable: false,
+    })
+  })
+
+  const resetTableQuery = useMemoizedFn(() => {
+    setRangeTime(undefined)
+    if (activeTab === 'ip') {
+      ipTableRef.current?.debugVirtualTableEvent.refreshT()
+    } else {
+      userTableRef.current?.debugVirtualTableEvent.refreshT()
+    }
+  })
+
   const onRefreshMenuSelect = (key: string) => {
     switch (key) {
       case 'noResetRefresh':
-        update(1)
+        if (activeTab === 'ip') {
+          ipTableRef.current?.debugVirtualTableEvent.noResetRefreshT()
+        } else {
+          userTableRef.current?.debugVirtualTableEvent.noResetRefreshT()
+        }
         break
       case 'resetRefresh':
-        setTableQuery({
-          startTime: moment().startOf('day').unix(),
-          endTime: moment().endOf('day').unix(),
-          page: 1,
-          limit: 20,
-          order_by: 'updated_at',
-          order: 'desc',
-        })
+        resetTableQuery()
         break
       default:
         break
@@ -1124,22 +1170,22 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
             }}
           >
             {detailOrIPDistribution === 'useDetail' ? (
-              <div style={{ width: '100%', height: 'calc(100% - 30px)' }}>
-                <TableVirtualResize<API.TouristUsedDetail>
-                  renderKey={'id'}
-                  loading={tableLoading}
-                  query={tableQuery}
-                  isRefresh={isRefresh}
-                  titleHeight={42}
-                  title={<div className={styles['text']}>各账号使用时长统计</div>}
-                  extra={
+              <div style={{ width: '100%', height: 'calc(100% - 30px)', marginTop: 6 }}>
+                <PluginTabs
+                  activeKey={activeTab}
+                  onChange={(v) => {
+                    setActiveTab(v)
+                  }}
+                  wrapperClassName={styles['hijack-process-tabs']}
+                  tabBarExtraContent={
                     <div className={styles['table-extra']}>
                       <RangePicker
+                        size="small"
                         locale={locale}
                         value={
                           detailHackValue || [
-                            moment.unix(tableQuery.startTime || moment(today).unix()),
-                            moment.unix(tableQuery.endTime || moment(today).unix()),
+                            moment.unix(rangeTime?.startTime || moment(today).unix()),
+                            moment.unix(rangeTime?.endTime || moment(today).unix()),
                           ]
                         }
                         format={getDateFormat('day')}
@@ -1171,14 +1217,23 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                             } else {
                               secondDate = moment(secondDate).endOf('day')
                             }
-                            setTableQuery((prevTableQuery) => ({
-                              ...prevTableQuery,
+                            let time = {
                               startTime: moment(firstDate).unix(),
                               endTime: moment(secondDate).unix(),
-                            }))
+                            }
+                            setRangeTime(time)
+                            if (activeTab === 'ip') {
+                              ipTableRef.current?.setRangeTime(time)
+                            }
+                            if (activeTab === 'account') {
+                              userTableRef.current?.setRangeTime(time)
+                            }
                           }
                         }}
                       />
+                      <YakitButton size="small" type="primary" loading={downloadLoading} onClick={onExport}>
+                        导出
+                      </YakitButton>
                       <YakitDropdownMenu
                         menu={{
                           data: batchRefreshMenuData,
@@ -1195,20 +1250,14 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                       </YakitDropdownMenu>
                     </div>
                   }
-                  enableDrag={false}
-                  data={tableResponse.data}
-                  columns={columns}
-                  useUpAndDown
-                  pagination={{
-                    total: tableResponse.pagemeta.total,
-                    limit: tableResponse.pagemeta.limit,
-                    page: tableResponse.pagemeta.page,
-                    onChange: (page) => {
-                      update(page)
-                    },
-                  }}
-                  onChange={onTableChange}
-                ></TableVirtualResize>
+                >
+                  <TabPane key="ip" tab="按IP">
+                    <IPTable ref={ipTableRef} />
+                  </TabPane>
+                  <TabPane key="account" tab="按账号">
+                    <UserTable ref={userTableRef} />
+                  </TabPane>
+                </PluginTabs>
               </div>
             ) : (
               <>
