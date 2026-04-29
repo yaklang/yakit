@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 import styles from './AIReActChat.module.scss'
 import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
@@ -67,6 +67,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         handleStart: (value) => handleStart(value),
       }
     }, [])
+    useEffect(() => {
+      if (!!activeChat?.SessionID) {
+        aiChatTextareaRef.current.setValue('')
+      }
+    }, [activeChat?.SessionID])
     // #region 问题相关逻辑
     // 初始化 AI ReAct
     const handleSubmit = useMemoizedFn((value: AIChatTextareaSubmit) => {

@@ -48,7 +48,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
 
     const { getSession } = useSessionId()
 
-    const sessionIdRef = React.useRef<string>('')
+    const sessionIdRef = React.useRef<string>('') // 作为当前对话得文件路径
 
     useImperativeHandle(
       ref,
