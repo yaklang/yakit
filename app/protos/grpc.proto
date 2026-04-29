@@ -1934,6 +1934,9 @@ message AIStartParams {
 
   // 是否关闭工具执行期间的 interval review
   bool DisableToolIntervalReview = 36;
+
+  // 是否在 StartAIReAct 收到输入后同步执行任务链路，从而让意图识别同步执行
+  bool EnableSyncIntentRecognition = 37;
 }
 
 message AITaskFilter {

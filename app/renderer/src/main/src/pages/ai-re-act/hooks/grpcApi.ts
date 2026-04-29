@@ -107,6 +107,9 @@ export interface AIStartParams {
 
   // 是否关闭工具执行期间的 interval review(默认: false)
   DisableToolIntervalReview?: boolean
+
+  // 是否在 StartAIReAct 收到输入后同步执行任务链路，从而让意图识别同步执行
+  EnableSyncIntentRecognition?: boolean
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
