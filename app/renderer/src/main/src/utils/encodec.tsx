@@ -15,7 +15,7 @@ import { yakitCodec } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-const tOriginal = i18n.getFixedT(null, 'Encodec')
+const tOriginal = i18n.getFixedT(null, 'utils')
 
 export type CodecType =
   | 'fuzz'
