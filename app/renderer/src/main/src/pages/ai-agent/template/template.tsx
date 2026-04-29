@@ -63,6 +63,7 @@ import {
   AIManualAdditionPopover,
 } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -185,6 +186,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       } catch (error) {}
     })
 
+    const aiMilkdownInputRef = useRef<AIMilkdownInputRef>(null)
     const handleSubmit = useMemoizedFn(() => {
       const qs = getMarkdownValue()
       if (!qs.trim() || !editorMilkdown.current) return
@@ -194,6 +196,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         mentionList: mentions,
         showQS: qs,
         focusMode,
+        sessionId: aiMilkdownInputRef.current?.sessionId,
       }
       onSubmit && onSubmit(value)
     })
@@ -348,6 +351,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         </AIGlobalCommandPopover>
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
           <AIMilkdownInput
+            ref={aiMilkdownInputRef}
             defaultValue={defaultValue}
             onUpdateEditor={onUpdateEditor}
             onUpdateContent={onUpdateContent}

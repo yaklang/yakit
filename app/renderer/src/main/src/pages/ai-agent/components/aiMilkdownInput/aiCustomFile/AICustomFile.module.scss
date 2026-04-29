@@ -1,0 +1,35 @@
+.ai-custom-file {
+  padding: 2px;
+  max-height: 44px;
+  min-height: 44px;
+  width: fit-content;
+  position: relative;
+  min-width: 44px;
+  display: inline-flex;
+  img {
+    display: block;
+    height: 100%;
+    max-height: 40px;
+  }
+  .progress {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+.ai-custom-file-selected {
+  background-color: var(--Colors-Use-Main-Focus);
+  img {
+    opacity: 0.6;
+  }
+}
+
+.ai-custom-file-update {
+  background-color: var(--Colors-Use-Neutral-Bg-Hover);
+}

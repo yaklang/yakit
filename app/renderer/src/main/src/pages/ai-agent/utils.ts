@@ -5,6 +5,7 @@ import { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '../ai-re-act
 import { HandleStartParams } from './aiAgentChat/type'
 import { AIMentionCommandParams } from './components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { omit } from 'lodash'
+import { v4 as uuidv4 } from 'uuid'
 
 /**
  * @name 将一维tree转换成树结构
@@ -198,3 +199,8 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
   }
 }
 // #endregion
+
+/** 生成对话得 SessionId */
+export const createActiveChatSessionId = () => {
+  return uuidv4().replace(/-/g, '').substring(0, 16)
+}

@@ -16,9 +16,8 @@ import { ChevrondownButton, ChevronleftButton, RoundedStopButton } from './AIReA
 import { AIInputEvent, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
-import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import { createActiveChatSessionId, formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { v4 as uuidv4 } from 'uuid'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
@@ -82,7 +81,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
-      const { qs } = value
+      const { qs, sessionId } = value
       const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
 
       const request: AIStartParams = {
@@ -98,7 +97,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       } else if (!!setting.TimelineSessionID) {
         session = setting.TimelineSessionID
       } else {
-        session = uuidv4().replace(/-/g, '').substring(0, 16)
+        session = sessionId || createActiveChatSessionId()
       }
       request.TimelineSessionID = session
       const { extra, attachedResourceInfo } = getAIReActRequestParams(value)

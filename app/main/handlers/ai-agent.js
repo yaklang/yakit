@@ -1,6 +1,6 @@
 const { ipcMain, shell } = require('electron')
 const handlerHelper = require('./handleStreamWithContext')
-const { yakProjects, yakTemp } = require('../filePath')
+const { yakProjects, yakTemp, aiImageTemp } = require('../filePath')
 const fs = require('fs')
 const path = require('path')
 
@@ -592,4 +592,61 @@ module.exports = (win, getClient) => {
     return await asyncCountAIMemoryEntityTags(params)
   })
   // #endregion
+
+  ipcMain.handle('save-ai-image', (event, params, token) => {
+    return new Promise((resolve, reject) => {
+      const { buffer, filename, sessionID = '' } = params
+
+      const url = path.join(aiImageTemp, sessionID)
+      // 确保目录存在
+      if (!fs.existsSync(url)) {
+        fs.mkdirSync(url, { recursive: true })
+      }
+      const savePath = path.join(url, filename)
+      const data = Buffer.from(buffer)
+
+      const totalSize = data.length
+      // 设置分块写入大小为 256KB，图片较小时也能触发多次进度
+      const chunkSize = 50 * 1024
+      const writeStream = fs.createWriteStream(savePath)
+      let offset = 0
+
+      const writeNextChunk = () => {
+        if (offset >= totalSize) {
+          writeStream.end()
+          return
+        }
+
+        const end = Math.min(offset + chunkSize, totalSize)
+        const chunk = data.slice(offset, end)
+        const canContinue = writeStream.write(chunk)
+
+        offset = end
+
+        // 计算并向前端发送当前文件的写入进度事件
+        const progress = Math.round((offset / totalSize) * 100)
+        // 通过唯一标识区分并发送进度 (前端需使用 ipcRenderer.on 监听)
+        event.sender.send(`save-ai-image-progress-${token}`, progress)
+
+        if (canContinue) {
+          // 利用 setImmediate 避免阻塞主线程事件循环，让进度消息能顺畅返回前端
+          setImmediate(writeNextChunk)
+        } else {
+          writeStream.once('drain', writeNextChunk)
+        }
+      }
+
+      writeStream.on('finish', () => {
+        resolve(savePath)
+        event.sender.send(`save-ai-image-finish-${token}`, savePath)
+      })
+
+      writeStream.on('error', (err) => {
+        event.sender.send(`save-ai-image-err-${token}`, err)
+        reject(err)
+      })
+
+      writeNextChunk()
+    })
+  })
 }

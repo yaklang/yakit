@@ -125,7 +125,9 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
   )
 }
 
-interface AICustomMentionProps {}
+interface AICustomMentionProps {
+  sessionId?: string
+}
 export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
   const { node, selected, view, contentRef } = useNodeViewContext()
   const locked = useCreation(() => {

@@ -128,6 +128,8 @@ const yakProjects = path.join(YakitProjectPath, 'projects')
 /** yak temp相关文件路径 */
 const yakTemp = path.join(YakitProjectPath, 'temp')
 
+/** ai编辑器粘贴图片得临时路径  */
+const aiImageTemp = path.join(YakitProjectPath, 'aiImageTemp')
 module.exports = {
   YakitProjectPath,
 
@@ -156,4 +158,6 @@ module.exports = {
   yakTemp,
 
   yakOnlineRagLastest,
+
+  aiImageTemp,
 }
