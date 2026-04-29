@@ -32,6 +32,7 @@ import { upload, uploadConfig } from '@milkdown/kit/plugin/upload'
 import { Node } from '@milkdown/kit/prose/model'
 import { AICustomFile } from './aiCustomFile/AICustomFile'
 import { yakitNotify } from '@/utils/notification'
+import useSessionId from '@/pages/ai-re-act/hooks/useSessionId'
 
 import { AICustomCode } from './aiCustomCode/AICustomCode'
 
@@ -45,14 +46,17 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
     const nodeViewFactory = useNodeViewFactory()
     const pluginViewFactory = usePluginViewFactory()
 
-    const sessionIdRef = React.useRef<string>()
+    const { getSession } = useSessionId()
+
+    const sessionIdRef = React.useRef<string>('')
+
     useImperativeHandle(
       ref,
       () => ({
         setMention: (v: AIMentionCommandParams) => {
           onSetMention(v)
         },
-        sessionId: sessionIdRef.current,
+        getSessionId: () => sessionIdRef.current,
       }),
       [],
     )
@@ -62,13 +66,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           upload,
           $view(imageSchema.node, () =>
             nodeViewFactory({
-              component: () => (
-                <AICustomFile
-                  onSetSession={(id) => {
-                    sessionIdRef.current = id
-                  }}
-                />
-              ),
+              component: () => <AICustomFile sessionId={sessionIdRef.current} />,
             }),
           ),
           (ctx: Ctx) => () => {
@@ -91,6 +89,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                   }
                   images.push(file)
                 }
+
                 const nodes: Node[] = await Promise.all(
                   images.map((image) => {
                     const src = URL.createObjectURL(image)
@@ -101,7 +100,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
                     }) as unknown as Node
                   }),
                 )
-
+                const session = getSession(sessionIdRef.current)
+                sessionIdRef.current = session
                 return nodes
               },
             }))

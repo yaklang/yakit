@@ -16,12 +16,13 @@ import { ChevrondownButton, ChevronleftButton, RoundedStopButton } from './AIReA
 import { AIInputEvent, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
-import { createActiveChatSessionId, formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
+import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
+import useSessionId from '../hooks/useSessionId'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -51,6 +52,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     })
 
     const { activeChat, setting } = useAIAgentStore()
+    const { getSession } = useSessionId()
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
 
@@ -91,14 +93,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         Sequence: 1,
       }
 
-      let session = ''
-      if (!!sessionID) {
-        session = sessionID
-      } else if (!!setting.TimelineSessionID) {
-        session = setting.TimelineSessionID
-      } else {
-        session = sessionId || createActiveChatSessionId()
-      }
+      const session = getSession(sessionId)
+
       request.TimelineSessionID = session
       const { extra, attachedResourceInfo } = getAIReActRequestParams(value)
       // 发送初始化参数

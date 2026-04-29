@@ -5,8 +5,6 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import styles from './AICustomFile.module.scss'
 import classNames from 'classnames'
 
-import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
-import { createActiveChatSessionId } from '@/pages/ai-agent/utils'
 import { yakitNotify } from '@/utils/notification'
 import { randomString } from '@/utils/randomUtil'
 import { Progress } from 'antd'
@@ -14,20 +12,17 @@ import { Progress } from 'antd'
 const { ipcRenderer } = window.require('electron')
 
 export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
-  const { onSetSession } = props
+  const { sessionId } = props
   const { node, contentRef, selected, setAttrs } = useNodeViewContext()
-  const { activeChat } = useAIAgentStore()
 
   const [showSrc, setShowSrc] = useState<string>('')
   const [progress, setProgress] = useState<number>(0)
 
   const tokenRef = useRef<string>(randomString(8))
-  const sessionIdRef = useRef<string>('') // 整个组件的生命周期内只会上传一次，所以不需要清除
   const attrs = useCreation(() => {
     return node.attrs
   }, [node.attrs])
   useEffect(() => {
-    console.log('attrs', attrs)
     // blob:开头需要上传，其他情况直接展示
     if (attrs?.src && attrs?.src.startsWith('blob')) {
       onSaveLocal(attrs?.src)
@@ -38,7 +33,6 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
 
   const handleIpcFinish = useMemoizedFn((e, path: string) => {
     setProgress(100)
-    onSetSession(sessionIdRef.current)
     setAttrs({ src: path })
     setShowSrc(path)
   })
@@ -70,8 +64,6 @@ export const AICustomFile: React.FC<AICustomFileProps> = React.memo((props) => {
 
       const arrayBuffer = await blob.arrayBuffer()
       const buffer = new Uint8Array(arrayBuffer)
-      const sessionId = activeChat?.SessionID || sessionIdRef.current || createActiveChatSessionId()
-      sessionIdRef.current = sessionId
       setProgress(0)
       const filename = `image_${Date.now()}.${suffix}`
       setAttrs({ alt: filename })

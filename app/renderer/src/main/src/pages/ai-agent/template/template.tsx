@@ -143,7 +143,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [props.footerLeftTypes, isOpen])
 
     const { setting } = useAIAgentStore()
-    const { setSetting } = useAIAgentDispatcher()
     const [disabled, setDisabled] = useState<boolean>(false)
 
     const { isHovering, dropRef } = useAIChatDrop({
@@ -196,7 +195,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         mentionList: mentions,
         showQS: qs,
         focusMode,
-        sessionId: aiMilkdownInputRef.current?.sessionId,
+        sessionId: aiMilkdownInputRef.current?.getSessionId(),
       }
       onSubmit && onSubmit(value)
     })
@@ -327,6 +326,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
 
     const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
     const updateLoading = useCreation(() => aiGlobalConfigData.updateLoading, [aiGlobalConfigData.updateLoading])
+
     return (
       <div
         className={classNames(

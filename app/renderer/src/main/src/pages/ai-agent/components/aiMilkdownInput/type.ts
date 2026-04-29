@@ -6,7 +6,7 @@ export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 
 export interface AIMilkdownInputRef {
   setMention: (v: AIMentionCommandParams) => void
-  sessionId?: string
+  getSessionId: () => string
 }
 export interface AIMilkdownInputBaseProps {
   ref?: React.ForwardedRef<AIMilkdownInputRef>
