@@ -221,3 +221,23 @@
     }
   }
 }
+.yakit-range-picker-wrapper-small {
+  :global {
+    .ant-picker {
+      height: 20px;
+      padding: 1px 8px;
+    }
+
+    .ant-picker-input > input {
+      font-size: 12px;
+      line-height: 16px;
+    }
+  }
+
+  .picker-icon {
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+}

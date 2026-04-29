@@ -119,6 +119,7 @@ export declare namespace API {
     role_name?: string
     department_parent_id?: number
     department_parent_name?: string
+    nickName?: string
   }
   export interface UrmLoginRequest {
     user_name: string
@@ -167,23 +168,7 @@ export declare namespace API {
   export interface TouristUsedDetailResponse extends Paging {
     data: TouristUsedDetail[]
   }
-  export interface TouristUsedDetailRequest {
-    /**
-     * ip搜索
-     */
-    ip?: string
-    name?: string
-    /**
-     * 自选起始时间
-     */
-    startTime?: number
-    /**
-     * 自选结束时间
-     */
-    endTime?: number
-    afterId?: number
-    beforeId?: number
-  }
+  export interface TouristUsedDetailRequest extends TouristDetailWhere, Pagination {}
   export interface TouristUsedDetail extends GormBaseModel {
     userName?: string
     ip: string
@@ -192,6 +177,10 @@ export declare namespace API {
      * 所属组织
      */
     departmentName?: string
+    /**
+     * 昵称
+     */
+    nickName?: string
   }
   export interface TouristTimesResponse {
     dayTimes: number
@@ -239,6 +228,21 @@ export declare namespace API {
      * 图表横坐标
      */
     searchTime: string
+  }
+  export interface TouristDetailWhere {
+    /**
+     * ip搜索
+     */
+    ip?: string
+    name?: string
+    /**
+     * 自选起始时间
+     */
+    startTime?: number
+    /**
+     * 自选结束时间
+     */
+    endTime?: number
   }
   export interface TouristCityResponse {
     /**
@@ -1198,6 +1202,7 @@ export declare namespace API {
     user_name: string
     department: number
     role_id: number
+    nickName?: string
   }
   export interface NewRoleRequest {
     id?: number
@@ -1493,6 +1498,7 @@ export declare namespace API {
     hiddenIndex?: string
     fromPlugin?: string
     host?: string
+    operationType?: string
   }
   export interface HTTPFlowDeleteWhere {
     deleteAll?: boolean
@@ -1713,6 +1719,7 @@ export declare namespace API {
     user_name?: string
     department?: number
     role_id?: number
+    nickName?: string
   }
   export interface DepartmentListResponse extends Paging {
     data: DepartmentList[]

@@ -532,7 +532,7 @@ export interface ShieldData {
   data: (string | number)[]
 }
 
-const defSort: SortProps = {
+export const defSort: SortProps = {
   order: 'desc',
   orderBy: 'id',
 }

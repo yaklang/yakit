@@ -1308,7 +1308,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
       })
         .then((res: API.UrmEditListResponse) => {
           if (res.data) {
-            const { user_name, department_parent_id, department_id, role_id, role_name } = res.data
+            const { user_name, department_parent_id, department_id, role_id, role_name, nickName } = res.data
             const department = department_parent_id ? [department_parent_id, department_id] : [department_id]
             getDepartmentData(department_parent_id)
             let obj: any = {
@@ -1319,6 +1319,9 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
             }
             if (role_id) {
               obj.role_id = { key: role_id, value: role_name }
+            }
+            if (nickName) {
+              obj.nickName = nickName
             }
             form.setFieldsValue(obj)
           }
@@ -1354,34 +1357,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         yakitNotify('error', '失败：' + err)
       })
       .finally(() => {})
-  }
-  const loadData = (selectedOptions: DefaultOptionType[]) => {
-    const targetOption = selectedOptions[selectedOptions.length - 1]
-    targetOption.loading = true
-    if (targetOption.value) {
-      NetWorkApi<DepartmentGroupListRequest, API.DepartmentGroupList>({
-        method: 'get',
-        url: 'department/group',
-        params: {
-          departmentId: +targetOption.value,
-        },
-      })
-        .then((res: API.DepartmentGroupList) => {
-          if (Array.isArray(res.data)) {
-            targetOption.loading = false
-            const data = res.data.map((item) => ({
-              label: item.name,
-              value: item.id,
-            }))
-            targetOption.children = data
-            setDepData([...depData])
-          }
-        })
-        .catch((err) => {
-          yakitNotify('error', '失败：' + err)
-        })
-        .finally(() => {})
-    }
   }
   const initLoadData = (data, id) => {
     NetWorkApi<DepartmentGroupListRequest, API.DepartmentGroupList>({
@@ -1453,13 +1428,14 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
 
   const onFinish = useMemoizedFn((values) => {
     setLoading(true)
-    const { user_name, department, role_id } = values
+    const { user_name, department, role_id, nickName } = values
     // 编辑
     const departmentId: number = Array.isArray(department) ? department[department.length - 1] : department
     if (editInfo) {
       const params: API.EditUrmRequest = {
         uid: editInfo.uid,
         user_name,
+        nickName,
         department: departmentId,
         role_id: role_id?.key || role_id,
       }
@@ -1485,6 +1461,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         user_name,
         department: departmentId,
         role_id,
+        nickName,
       }
       NetWorkApi<API.NewUrmRequest, API.NewUrmResponse>({
         method: 'post',
@@ -1535,6 +1512,9 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
     <Form labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} form={form} onFinish={onFinish}>
       <Form.Item name="user_name" label="用户名" rules={[{ required: true, message: '该项为必填' }]}>
         <YakitInput placeholder="请输入用户名" allowClear />
+      </Form.Item>
+      <Form.Item name="nickName" label="昵称">
+        <YakitInput placeholder="请输入昵称" allowClear />
       </Form.Item>
       <Form.Item name="department" label="组织架构" rules={[{ required: true, message: '该项为必填' }]}>
         {/* <YakitCascader options={depData} loadData={loadData} placeholder='请选择组织架构' changeOnSelect /> */}
