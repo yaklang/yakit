@@ -555,7 +555,18 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
   })
 
   const [timeInterval, setTimeInterval, getTimeInterval] = useGetState<number>(5)
+  const [zoomScale, setZoomScale] = useState<number>(100)
   const timeRef = useRef<any>(null)
+
+  useEffect(() => {
+    getRemoteValue(RemoteGV.GlobalStateZoomScale).then((scale: any) => {
+      const currentScale = Number(scale)
+      if (!Number.isFinite(currentScale)) return
+      const normalizeScale = Math.max(50, Math.min(200, Math.round(currentScale)))
+      setZoomScale(normalizeScale)
+    })
+  }, [])
+
   // 启动全局状态轮询定时器
   useEffect(() => {
     let timer: any = null
@@ -618,6 +629,23 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
       }
     },
     [timeInterval],
+    { wait: 300 },
+  )
+
+  // 修改缩放比例后
+  useDebounceEffect(
+    () => {
+      const normalizeScale = Math.max(50, Math.min(200, Math.round(zoomScale || 100)))
+      const zoomFactor = normalizeScale / 100
+
+      // 通过 Electron 原生缩放能力实现，避免 CSS zoom 带来的布局异常
+      yakitApp.setZoomFactor(zoomFactor)
+
+      setRemoteValue(RemoteGV.GlobalStateZoomScale, `${normalizeScale}`)
+
+      if (normalizeScale !== zoomScale) setZoomScale(normalizeScale)
+    },
+    [zoomScale],
     { wait: 300 },
   )
 
@@ -1051,22 +1079,42 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
           )}
         </div>
         <div className={styles['body-setting']}>
-          {t('GlobalState.statusRefreshInterval')}
-          <YakitInputNumber
-            size="small"
-            type="horizontal"
-            wrapperClassName={styles['yakit-input-number']}
-            min={1}
-            formatter={(value) => `${value}s`}
-            parser={(value) => value!.replace('s', '')}
-            value={timeInterval}
-            onChange={(value) => {
-              if (!value) setTimeInterval(1)
-              else {
-                if (+value !== timeInterval) setTimeInterval(+value || 5)
-              }
-            }}
-          />
+          <div className={styles['body-setting-item']}>
+            {t('GlobalState.statusRefreshInterval')}
+            <YakitInputNumber
+              size="small"
+              type="horizontal"
+              wrapperClassName={styles['yakit-input-number']}
+              min={1}
+              formatter={(value) => `${value}s`}
+              parser={(value) => value!.replace('s', '')}
+              value={timeInterval}
+              onChange={(value) => {
+                if (!value) setTimeInterval(1)
+                else {
+                  if (+value !== timeInterval) setTimeInterval(+value || 5)
+                }
+              }}
+            />
+          </div>
+          <div className={styles['body-setting-item']}>
+            {t('GlobalState.zoomScale')}
+            <YakitInputNumber
+              size="small"
+              type="horizontal"
+              wrapperClassName={styles['yakit-input-number']}
+              min={1}
+              formatter={(value) => `${value}%`}
+              parser={(value) => value!.replace('%', '')}
+              value={zoomScale}
+              onChange={(value) => {
+                if (!value) setZoomScale(100)
+                else {
+                  if (+value !== zoomScale) setZoomScale(+value || 100)
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     )
@@ -1153,22 +1201,42 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
           </div>
         )}
         <div className={styles['body-setting']}>
-          {t('GlobalState.statusRefreshInterval')}
-          <YakitInputNumber
-            size="small"
-            type="horizontal"
-            wrapperClassName={styles['yakit-input-number']}
-            min={1}
-            formatter={(value) => `${value}s`}
-            parser={(value) => value!.replace('s', '')}
-            value={timeInterval}
-            onChange={(value) => {
-              if (!value) setTimeInterval(1)
-              else {
-                if (+value !== timeInterval) setTimeInterval(+value || 5)
-              }
-            }}
-          />
+          <div className={styles['body-setting-item']}>
+            {t('GlobalState.statusRefreshInterval')}
+            <YakitInputNumber
+              size="small"
+              type="horizontal"
+              wrapperClassName={styles['yakit-input-number']}
+              min={1}
+              formatter={(value) => `${value}s`}
+              parser={(value) => value!.replace('s', '')}
+              value={timeInterval}
+              onChange={(value) => {
+                if (!value) setTimeInterval(1)
+                else {
+                  if (+value !== timeInterval) setTimeInterval(+value || 5)
+                }
+              }}
+            />
+          </div>
+          <div className={styles['body-setting-item']}>
+            {t('GlobalState.zoomScale')}
+            <YakitInputNumber
+              size="small"
+              type="horizontal"
+              wrapperClassName={styles['yakit-input-number']}
+              min={1}
+              formatter={(value) => `${value}%`}
+              parser={(value) => value!.replace('%', '')}
+              value={zoomScale}
+              onChange={(value) => {
+                if (!value) setZoomScale(100)
+                else {
+                  if (+value !== zoomScale) setZoomScale(+value || 100)
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     )

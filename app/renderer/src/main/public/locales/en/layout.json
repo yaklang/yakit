@@ -220,6 +220,7 @@
     "configured": "Configured",
     "systemProxy": "System Proxy",
     "statusRefreshInterval": "Status Refresh Interval",
+    "zoomScale": "Zoom Scale Adjustment",
     "promotePcapUserPermissionFailed": "Failed to elevate Pcap user permissions: {{error}}",
     "allConfigsNormal": "All configurations are normal",
     "enabledNodes": "Enabled nodes",

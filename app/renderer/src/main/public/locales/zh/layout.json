@@ -220,6 +220,7 @@
     "configured": "已配置",
     "systemProxy": "系统代理",
     "statusRefreshInterval": "状态刷新间隔时间",
+    "zoomScale": "缩放比例调整",
     "promotePcapUserPermissionFailed": "提升 Pcap 用户权限失败：{{error}}",
     "allConfigsNormal": "所有配置均正常",
     "enabledNodes": "启用节点",

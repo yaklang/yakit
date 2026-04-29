@@ -61,6 +61,7 @@ process.on('loaded', function () {
       killRunNode: (pid) => invoke('kill-run-node', { pid }),
       userSignOut: () => send('user-sign-out'),
       triggerDevtool: () => invoke('trigger-devtool'),
+      setZoomFactor: (factor) => invoke('set-main-window-zoom-factor', factor),
       reload: () => invoke('trigger-reload'),
       reloadWithCacheBypass: () => invoke('trigger-reload-cache'),
       exitApp: (params) => invoke('app-exit', params),

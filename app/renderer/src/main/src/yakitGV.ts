@@ -41,6 +41,8 @@ export enum RemoteGV {
     LinkDatabase = "link-database",
     /** @name 全局状态的查询间隔时间 */
     GlobalStateTimeInterval = "global-state-time-interval",
+    /** @name 全局状态的页面缩放比例 */
+    GlobalStateZoomScale = "global-state-zoom-scale",
     /** @name 全局Chrome启动路径 */
     GlobalChromePath = "global-chrome-path",
     /** @name 软件内菜单展示模式 */

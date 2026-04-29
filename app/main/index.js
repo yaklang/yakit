@@ -520,6 +520,14 @@ function registerGlobalIPC() {
     return
   })
 
+  /** 设置主窗口缩放比例(类原生应用缩放) */
+  ipcMain.handle('set-main-window-zoom-factor', (_e, factor) => {
+    const nextFactor = Number(factor)
+    if (!Number.isFinite(nextFactor)) return
+    const normalizeFactor = Math.min(2, Math.max(0.5, nextFactor))
+    win?.webContents?.setZoomFactor(normalizeFactor)
+  })
+
   // ------------------- 主题相关 -------------------
   ipcMain.handle('set-theme', (_e, theme) => {
     ;[

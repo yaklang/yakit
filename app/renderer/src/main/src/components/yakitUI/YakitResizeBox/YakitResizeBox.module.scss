@@ -63,25 +63,24 @@
     border-radius: 50%;
     background: var(--Colors-Use-Basic-Background);
     border: 1px solid var(--Colors-Use-Neutral-Border);
+    padding: 0 6px;
+    border-radius: 20px;
+    gap: 4px;
 
     svg {
       width: 12px;
     }
 
     .resize-split-handle-text {
-      max-width: 0;
+      max-width: 160px;
       overflow: hidden;
     }
 
     &:hover {
-      padding: 0 6px;
-      border-radius: 20px;
-      gap: 4px;
       border-color: var(--Colors-Use-Main-Hover);
       color: var(--Colors-Use-Main-Hover);
 
       .resize-split-handle-text {
-        max-width: 160px;
         color: var(--Colors-Use-Main-Hover);
       }
     }

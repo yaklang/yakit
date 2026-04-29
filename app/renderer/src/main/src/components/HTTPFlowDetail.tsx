@@ -931,6 +931,12 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
     setDecodeStr('')
   }, [id])
 
+  // 呼出右边编解码组件
+  const execAutoDecodeCallback = useMemoizedFn(() => {
+    setFold(false)
+    setInfoType('codec')
+  })
+
   const detailRequestAndResponse = useMemoizedFn(() => {
     if (!flow) return <></>
     return (
@@ -941,6 +947,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         highLightText={highLightText}
         highLightItem={highLightItem}
         onDecode={onDecode}
+        execAutoDecodeCallback={execAutoDecodeCallback}
         {...props}
       />
     )
@@ -1268,6 +1275,7 @@ interface HTTPFlowDetailRequestAndResponseProps extends HTTPFlowDetailProp {
   highLightText?: HistoryHighLightText[]
   highLightItem?: HistoryHighLightText
   onDecode: (text: string) => void
+  execAutoDecodeCallback: () => void
 }
 
 interface HTTPFlowBareProps {
@@ -1296,6 +1304,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     noPacketModifier = false,
     noOpenPacketNewWindow = false,
     onDecode,
+    execAutoDecodeCallback,
   } = props
   const { t, i18n } = useI18nNamespaces(['history'])
 
@@ -1801,6 +1810,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             noOpenPacketNewWindow={noOpenPacketNewWindow}
             extraEditorProps={{
               renderLineHighlight: 'none',
+              isShowSelectRangeMenu: true,
+              execAutoDecodeCallback,
             }}
           />
         )
@@ -1934,6 +1945,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             noOpenPacketNewWindow={noOpenPacketNewWindow}
             extraEditorProps={{
               renderLineHighlight: 'none',
+              isShowSelectRangeMenu: true,
+              execAutoDecodeCallback,
             }}
           />
         )

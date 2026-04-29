@@ -20,6 +20,7 @@ interface YakitBridge {
     killRunNode: (pid: number) => Promise<unknown>
     userSignOut: () => void
     triggerDevtool: () => Promise<unknown>
+    setZoomFactor: (factor: number) => Promise<unknown>
     reload: () => Promise<unknown>
     reloadWithCacheBypass: () => Promise<unknown>
     exitApp: (params: Record<string, unknown>) => Promise<unknown>

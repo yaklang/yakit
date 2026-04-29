@@ -1117,10 +1117,12 @@ interface HTTPFuzzerRangeReadOnlyEditorMenuProps {
     rangeValue: string
     fizzRangeTimeoutId?: any
     close: () => void
+    // 外部接管解码后的操作 现用于history编解码呼出
+    execAutoDecodeCallback?: () => void
 }
 
 export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnlyEditorMenuProps> = (props) => {
-    const {editorInfo, rangeValue, fizzRangeTimeoutId, close} = props
+    const {editorInfo, rangeValue, fizzRangeTimeoutId, close, execAutoDecodeCallback} = props
     const {t, i18n} = useI18nNamespaces(["webFuzzer"])
     const [segmentedType, setSegmentedType] = useState<"decode">()
     const {direction, top = 0, left = 0, bottom = 0, right = 0} = editorInfo || {}
@@ -1172,7 +1174,8 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
         >
             <div className={styles["http-fuzzer-read-editor-simple"]}>
                 <div className={styles["show-box"]}>
-                    <div className={styles["decode-box"]} onClick={() => execAutoDecode(rangeValue)}>
+                    <div className={styles["decode-box"]} onClick={() =>
+                      execAutoDecodeCallback?execAutoDecodeCallback():execAutoDecode(rangeValue)}>
                         <IconSolidSparklesIcon className={styles[""]} />
                         <div className={styles["content"]}>{t("HTTPFuzzerRangeReadOnlyEditorMenu.decode")}</div>
                     </div>
