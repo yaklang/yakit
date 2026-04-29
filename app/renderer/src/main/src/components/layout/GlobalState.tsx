@@ -560,6 +560,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
 
   useEffect(() => {
     getRemoteValue(RemoteGV.GlobalStateZoomScale).then((scale: any) => {
+      if (!scale) return
       const currentScale = Number(scale)
       if (!Number.isFinite(currentScale)) return
       const normalizeScale = Math.max(50, Math.min(200, Math.round(currentScale)))
@@ -646,7 +647,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
       if (normalizeScale !== zoomScale) setZoomScale(normalizeScale)
     },
     [zoomScale],
-    { wait: 300 },
+    { wait: 500 },
   )
 
   const [show, setShow] = useState<boolean>(false)
@@ -1077,44 +1078,61 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
               </div>
             </>
           )}
+          {/* 应用缩放 */}
+          <div className={styles['body-info']}>
+            <div className={styles['info-left']}>
+              <HelpIcon />
+              <div className={styles['left-body']}>
+                <div className={styles['system-proxy-title']}>
+                  {t('GlobalState.zoomScale')}
+                  <YakitInputNumber
+                    size="small"
+                    type="horizontal"
+                    wrapperClassName={styles['yakit-input-number']}
+                    min={1}
+                    formatter={(value) => `${value}%`}
+                    parser={(value) => value!.replace('%', '')}
+                    value={zoomScale}
+                    onChange={(value) => {
+                      if (!value) setZoomScale(100)
+                      else {
+                        if (+value !== zoomScale) setZoomScale(+value || 100)
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className={styles['info-right']}>
+              <YakitButton
+                type="text"
+                className={styles['btn-style']}
+                onClick={() => {
+                  setZoomScale(100)
+                }}
+              >
+                {t('YakitButton.reset')}
+              </YakitButton>
+            </div>
+          </div>
         </div>
         <div className={styles['body-setting']}>
-          <div className={styles['body-setting-item']}>
-            {t('GlobalState.statusRefreshInterval')}
-            <YakitInputNumber
-              size="small"
-              type="horizontal"
-              wrapperClassName={styles['yakit-input-number']}
-              min={1}
-              formatter={(value) => `${value}s`}
-              parser={(value) => value!.replace('s', '')}
-              value={timeInterval}
-              onChange={(value) => {
-                if (!value) setTimeInterval(1)
-                else {
-                  if (+value !== timeInterval) setTimeInterval(+value || 5)
-                }
-              }}
-            />
-          </div>
-          <div className={styles['body-setting-item']}>
-            {t('GlobalState.zoomScale')}
-            <YakitInputNumber
-              size="small"
-              type="horizontal"
-              wrapperClassName={styles['yakit-input-number']}
-              min={1}
-              formatter={(value) => `${value}%`}
-              parser={(value) => value!.replace('%', '')}
-              value={zoomScale}
-              onChange={(value) => {
-                if (!value) setZoomScale(100)
-                else {
-                  if (+value !== zoomScale) setZoomScale(+value || 100)
-                }
-              }}
-            />
-          </div>
+          {t('GlobalState.statusRefreshInterval')}
+          <YakitInputNumber
+            size="small"
+            type="horizontal"
+            wrapperClassName={styles['yakit-input-number']}
+            min={1}
+            formatter={(value) => `${value}s`}
+            parser={(value) => value!.replace('s', '')}
+            value={timeInterval}
+            onChange={(value) => {
+              if (!value) setTimeInterval(1)
+              else {
+                if (+value !== timeInterval) setTimeInterval(+value || 5)
+              }
+            }}
+          />
         </div>
       </div>
     )
@@ -1133,6 +1151,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
     isChecking,
     Array.from(runNodeList).length,
     i18n.language,
+    zoomScale,
   ])
 
   const irifyContent = useMemo(() => {
@@ -1198,49 +1217,66 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                 </div>
               </div>
             )}
+            {/* 应用缩放 */}
+            <div className={styles['body-info']}>
+              <div className={styles['info-left']}>
+                <HelpIcon />
+                <div className={styles['left-body']}>
+                  <div className={styles['system-proxy-title']}>
+                    {t('GlobalState.zoomScale')}
+                    <YakitInputNumber
+                      size="small"
+                      type="horizontal"
+                      wrapperClassName={styles['yakit-input-number']}
+                      min={1}
+                      formatter={(value) => `${value}%`}
+                      parser={(value) => value!.replace('%', '')}
+                      value={zoomScale}
+                      onChange={(value) => {
+                        if (!value) setZoomScale(100)
+                        else {
+                          if (+value !== zoomScale) setZoomScale(+value || 100)
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className={styles['info-right']}>
+                <YakitButton
+                  type="text"
+                  className={styles['btn-style']}
+                  onClick={() => {
+                    setZoomScale(100)
+                  }}
+                >
+                  {t('YakitButton.reset')}
+                </YakitButton>
+              </div>
+            </div>
           </div>
         )}
         <div className={styles['body-setting']}>
-          <div className={styles['body-setting-item']}>
-            {t('GlobalState.statusRefreshInterval')}
-            <YakitInputNumber
-              size="small"
-              type="horizontal"
-              wrapperClassName={styles['yakit-input-number']}
-              min={1}
-              formatter={(value) => `${value}s`}
-              parser={(value) => value!.replace('s', '')}
-              value={timeInterval}
-              onChange={(value) => {
-                if (!value) setTimeInterval(1)
-                else {
-                  if (+value !== timeInterval) setTimeInterval(+value || 5)
-                }
-              }}
-            />
-          </div>
-          <div className={styles['body-setting-item']}>
-            {t('GlobalState.zoomScale')}
-            <YakitInputNumber
-              size="small"
-              type="horizontal"
-              wrapperClassName={styles['yakit-input-number']}
-              min={1}
-              formatter={(value) => `${value}%`}
-              parser={(value) => value!.replace('%', '')}
-              value={zoomScale}
-              onChange={(value) => {
-                if (!value) setZoomScale(100)
-                else {
-                  if (+value !== zoomScale) setZoomScale(+value || 100)
-                }
-              }}
-            />
-          </div>
+          {t('GlobalState.statusRefreshInterval')}
+          <YakitInputNumber
+            size="small"
+            type="horizontal"
+            wrapperClassName={styles['yakit-input-number']}
+            min={1}
+            formatter={(value) => `${value}s`}
+            parser={(value) => value!.replace('s', '')}
+            value={timeInterval}
+            onChange={(value) => {
+              if (!value) setTimeInterval(1)
+              else {
+                if (+value !== timeInterval) setTimeInterval(+value || 5)
+              }
+            }}
+          />
         </div>
       </div>
     )
-  }, [timeInterval, state, stateNum, showCheckEngine, isChecking, ruleUpdate, i18n.language])
+  }, [timeInterval, state, stateNum, showCheckEngine, isChecking, ruleUpdate, i18n.language, zoomScale])
 
   return (
     <>

@@ -142,6 +142,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     isHiddenLoadingUI = false,
     onRowDoubleClick,
     lineHighlight,
+    disableDeselect,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const defItemHeight = useCreation(() => {
@@ -716,7 +717,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         props.onRowClick(record)
       }
       // 反选
-      if (currentRow && currentRow[renderKey] === record[renderKey]) {
+      if (!disableDeselect && currentRow && currentRow[renderKey] === record[renderKey]) {
         setCurrentRow(undefined)
 
         onSetCurrentRow && onSetCurrentRow(undefined, record)

@@ -1720,9 +1720,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   const onSetCurrentRow = useDebounceFn(
     (rowDate: HTTPFlow | undefined) => {
-      if (rowDate) {
-        onRowClick(getHTTPFlowReqAndResToString(rowDate))
-      }
+      onRowClick(rowDate ? getHTTPFlowReqAndResToString(rowDate) : undefined)
     },
     { wait: 200, leading: true },
   ).run
@@ -4423,6 +4421,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           useUpAndDown={true}
           containerClassName={containerClassName}
           onRowDoubleClick={onHTTPFlowTableRowDoubleClick}
+          disableDeselect={true}
         />
       </div>
       <HTTPFlowTableFormConfiguration

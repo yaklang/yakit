@@ -88,6 +88,8 @@ export interface TableVirtualResizeProps<T> {
   onRowDoubleClick?: (record?: T) => void
   // TODO 单机行是否需要高亮显示
   lineHighlight?: boolean
+  // 禁用表格反选
+  disableDeselect?: boolean
 }
 
 export interface SortProps {
@@ -97,24 +99,24 @@ export interface SortProps {
 
 /**
  * @description: 表格列的props描述
- * @property {string}  title: 表格列的标题 
- * @property {string} dataKey: 表格列的key,用于查询条件等  
- * @property {number} width: 表格列的宽度  
- * @property {number} minWidth: 表格列的最小宽度 
- * @property {boolean} ellipsis: 超出...，默认true 
- * @property {"left" | "right" | "center"} align: 文字对齐方向，默认 left 
+ * @property {string}  title: 表格列的标题
+ * @property {string} dataKey: 表格列的key,用于查询条件等
+ * @property {number} width: 表格列的宽度
+ * @property {number} minWidth: 表格列的最小宽度
+ * @property {boolean} ellipsis: 超出...，默认true
+ * @property {"left" | "right" | "center"} align: 文字对齐方向，默认 left
  * @property {"left" | "right"} fixed:固定列，目前不支持隔空固定,固定列的右边如果多列，最偏左的一列，需要自己修改样式
  * .virtual-table-row-content+.virtual-table-row-fixed-right:nth-last-child(1) {
         border-left: 1px solid #EAECF3;
         box-shadow: -4px 0px 6px rgba(133, 137, 158, 0.1);
     }
- * @property {(text, record, index) => ReactNode} render：自定义渲染每列的单元格  
- * @property {FilterProps} filterProps：筛选表格配置  
- * @property {SorterProps} sorterProps：表格排序配置 
- * @property {boolean} enableDrag：表格排序配置 
- * @property {string} tip :提示 
- * @property {ReactNode} beforeIconExtra :在排序/搜索icon前 
- * @property {ReactNode} afterIconExtra :在排序/搜索icon前 
+ * @property {(text, record, index) => ReactNode} render：自定义渲染每列的单元格
+ * @property {FilterProps} filterProps：筛选表格配置
+ * @property {SorterProps} sorterProps：表格排序配置
+ * @property {boolean} enableDrag：表格排序配置
+ * @property {string} tip :提示
+ * @property {ReactNode} beforeIconExtra :在排序/搜索icon前
+ * @property {ReactNode} afterIconExtra :在排序/搜索icon前
  */
 export interface ColumnsTypeProps {
   title: string

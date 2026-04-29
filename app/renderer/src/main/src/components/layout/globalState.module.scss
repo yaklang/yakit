@@ -210,11 +210,10 @@
 
   .body-setting {
     box-sizing: border-box;
-    height: 76px;
+    height: 44px;
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
     gap: 8px;
     background: var(--Colors-Use-Neutral-Bg-Hover);
     border-radius: 0px 0px 4px 4px;
@@ -224,9 +223,5 @@
     // .yakit-input-number {
     //     background-color: var(--Colors-Use-Neutral-Bg);
     // }
-    .body-setting-item {
-      display: flex;
-      gap: 8px;
-    }
   }
 }

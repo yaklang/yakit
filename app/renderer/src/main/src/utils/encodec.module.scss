@@ -1,9 +1,27 @@
-.http-flow-codec{
-    height: 100%;
-    overflow: auto;
-    padding: 0px 6px;
+.http-flow-codec {
+  height: 100%;
+  overflow: auto;
+  padding: 0px 6px;
 }
 
-.decode-step-title{
-    width: 100%;
+.decode-step-title {
+  width: 100%;
+  font-size: 11px;
+}
+
+.auto-decode-container {
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  :global {
+    .ant-card-head {
+      height: 24px !important;
+      min-height: 24px !important;
+    }
+  }
+}
+
+.auto-decode-container-title {
+  font-size: 11px;
 }

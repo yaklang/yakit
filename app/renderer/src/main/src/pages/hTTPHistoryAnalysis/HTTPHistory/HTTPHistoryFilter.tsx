@@ -2470,6 +2470,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         currentSelectItem={clickRow}
         onSetCurrentRow={onSetCurrentRow}
         onRowDoubleClick={onHTTPFlowFilterTableRowDoubleClick}
+        disableDeselect={true}
       />
       {/* 高级筛选抽屉 */}
       <HTTPFlowTableFormConfiguration

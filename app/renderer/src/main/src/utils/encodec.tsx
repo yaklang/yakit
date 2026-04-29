@@ -191,11 +191,14 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
     setResult(data)
   }, [data])
   return (
-    <Space style={{ width: '100%' }} direction={'vertical'}>
+    <div className={styles['auto-decode-container']}>
       {isShowSource && (
-        <AutoCard title={t('Encodec.selectContent')} size={'small'}>
+        <AutoCard
+          title={<span className={styles['auto-decode-container-title']}>{t('Encodec.selectContent')}</span>}
+          size={'small'}
+        >
           <div style={{ height: 120 }}>
-            <YakitEditor noMiniMap={true} type={'html'} value={source} readOnly={true} />
+            <YakitEditor noMiniMap={true} type={'html'} value={source} readOnly={true} noLineNumber={true} />
           </div>
         </AutoCard>
       )}
@@ -222,6 +225,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                           type={'html'}
                           noMiniMap={true}
                           readOnly={true}
+                          noLineNumber={true}
                           value={new Buffer(i.Origin).toString('utf8')}
                         />
                       </div>
@@ -240,6 +244,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                 noMiniMap={true}
                 type={'html'}
                 value={new Buffer(i.Result).toString('utf8')}
+                noLineNumber={true}
                 setValue={(s) => {
                   const req = getResult()
                   req[index].Modify = true
@@ -258,7 +263,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
           </AutoCard>
         )
       })}
-    </Space>
+    </div>
   )
 })
 export const execAutoDecode = async (text: string) => {
