@@ -106,9 +106,11 @@ export default function useHttpVirtualTableHook<
     finalParams = { ...finalParams, ...verifyResult.pagination }
     grpcFun(finalParams)
       .then((rsp: DataResponseProps<DataT, DataKey>) => {
-        console.log("rsp", rsp);
-        
-        let newData: DataT[] = verifyResult.isReverse ? (rsp[responseKey.data]||[]).reverse() : (rsp[responseKey.data]||[])
+        console.log('rsp', rsp)
+
+        let newData: DataT[] = verifyResult.isReverse
+          ? (rsp[responseKey.data] || []).reverse()
+          : rsp[responseKey.data] || []
         if (initResDataFun) {
           newData = initResDataFun(newData)
         }
@@ -164,7 +166,7 @@ export default function useHttpVirtualTableHook<
             isAllowSetEndLoopRef.current = false
           }
           setIsRefresh(!isRefresh)
-          setPagination(old=>({...old,...{limit: rsp.pagemeta.limit, page: rsp.pagemeta.page}}))
+          setPagination((old) => ({ ...old, ...{ limit: rsp.pagemeta.limit, page: rsp.pagemeta.page } }))
           setData([...newData])
           if (['desc', 'none'].includes(query.order)) {
             maxIdRef.current = newData.length > 0 ? newData[0][responseKey.id] : 0
