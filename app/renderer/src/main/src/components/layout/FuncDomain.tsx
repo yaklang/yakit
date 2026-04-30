@@ -71,7 +71,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
-import { OutlinePencilaltIcon, OutlineSearchIcon, OutlineWrenchIcon } from '@/assets/icon/outline'
+import { OutlinePencilaltIcon, OutlineRefreshIcon, OutlineSearchIcon, OutlineWrenchIcon } from '@/assets/icon/outline'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import { DebugPluginRequest, apiDebugPlugin } from '@/pages/plugins/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
@@ -1531,6 +1531,7 @@ interface UIOpUpdateProps {
   isUpdateYakit?: boolean // 下载引擎之前判断yakit是否需要先更新
   // 是否为内网版本
   intranet?: boolean
+  fetchIntranetYakitVersion?: () => void
 }
 
 /** @name Yakit版本以及更新内容 */
@@ -1546,6 +1547,7 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
     onUpdateEdit,
     intranet,
     onResetUpdateWait,
+    fetchIntranetYakitVersion,
   } = props
 
   // 是否可编辑
@@ -1602,9 +1604,10 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
             <YakitWhiteSvgIcon />
           </div>
           <div>
-            <div className={styles['update-title']}>{`${versionTitle()} ${getReleaseEditionName()} ${
-              lastVersion || version
-            }`}</div>
+            <div className={styles['update-title']}>
+              {`${versionTitle()} ${getReleaseEditionName()} ${lastVersion || version}`}{' '}
+              {intranet && fetchIntranetYakitVersion && <OutlineRefreshIcon onClick={fetchIntranetYakitVersion} />}
+            </div>
             <div className={styles['update-time']}>{`当前版本: ${version}`}</div>
           </div>
         </div>
@@ -2071,7 +2074,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
     setIsIntranet(intranet)
   }, [eeSystemConfig])
 
-  useUpdateEffect(() => {
+  // 获取最新内网版本号
+  const fetchIntranetYakitVersion = useMemoizedFn(() => {
     if (isIntranet) {
       // 从内网读取版本号
       grpcFetchIntranetYakitVersion().then((filePath: string) => {
@@ -2098,6 +2102,10 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         setYakitLastIntranetVersion(data)
       })
     }
+  })
+
+  useUpdateEffect(() => {
+    fetchIntranetYakitVersion()
   }, [isIntranet])
 
   /** 获取最新Yakit版本号 */
@@ -2449,6 +2457,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     isUpdate={isUpdateYakitIntranet}
                     intranet={true}
                     onResetUpdateWait={() => setIsIntranetYakitUpdateWait(false)}
+                    fetchIntranetYakitVersion={fetchIntranetYakitVersion}
                   />
                 )}
 

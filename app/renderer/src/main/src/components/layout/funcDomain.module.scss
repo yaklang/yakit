@@ -423,6 +423,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        svg {
+          height: 14px;
+          width: 14px;
+          cursor: pointer;
+        }
       }
       .update-simple-title {
         height: 28px;
