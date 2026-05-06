@@ -16,7 +16,7 @@ function useSessionId() {
     }
     return session
   })
-  return { getSession }
+  return { getSession } as const
 }
 
 export default useSessionId

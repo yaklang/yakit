@@ -27,7 +27,7 @@ function useGetChatDataStoreKey() {
         return 'unknown'
     }
   }, [chatIPCEvents])
-  return { chatDataStoreKey }
+  return { chatDataStoreKey } as const
 }
 
 export default useGetChatDataStoreKey
