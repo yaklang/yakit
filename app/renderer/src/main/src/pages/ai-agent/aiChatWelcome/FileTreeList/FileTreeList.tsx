@@ -3,8 +3,10 @@ import { useState } from 'react'
 import { useCustomFolder } from '../../components/aiFileSystemList/store/useCustomFolder'
 import FileTreeSystemListWapper from '../../components/aiFileSystemList/FileTreeSystemListWapper/FileTreeSystemListWapper'
 import FileTreeDrop from '../FileTreeDrop/FileTreeDrop'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const FileTreeList = () => {
+  const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const [selected, setSelected] = useState<FileNodeProps>()
   // 用户文件夹
   const customFolder = useCustomFolder()
@@ -15,7 +17,7 @@ const FileTreeList = () => {
         <FileTreeSystemListWapper
           isOpen
           key="customFolder"
-          title="我打开的文件"
+          title={t('FileTreeSystem.myOpenedFiles')}
           selected={selected}
           path={customFolder}
           setSelected={setSelected}

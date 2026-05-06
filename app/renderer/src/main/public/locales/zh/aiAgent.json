@@ -259,7 +259,8 @@
     "balance": "平衡策略"
   },
   "AIAgentChatTemplate": {
-    "timeline": "时间线"
+    "timeline": "时间线",
+    "tasklist": "任务列表"
   },
   "HistoryTaskTree": {
     "stopCurrentTask": "停掉当前正在执行的任务，恢复此任务",

@@ -42,9 +42,9 @@
     "stoppingTask": "Stopping task ..."
   },
   "AIChatWelcome": {
-    "knowledgeBase": "Knowledge Base",
-    "skillBase": "Skill Base",
-    "toolBase": "Tool Base",
+    "knowledgeBase": "Knowledge",
+    "skillBase": "Skill",
+    "toolBase": "Tool",
     "expandResources": "Expand Resources",
     "WelcomeHomeSubTitle": "Your intelligent security assistant",
     "maybeYouWantToAsk": "Maybe you want to ask:",
@@ -259,7 +259,8 @@
     "balance": "Balanced"
   },
   "AIAgentChatTemplate": {
-    "timeline": "Timeline"
+    "timeline": "Timeline",
+    "tasklist": "Task List"
   },
   "HistoryTaskTree": {
     "stopCurrentTask": "Stop the current task and restore this one",

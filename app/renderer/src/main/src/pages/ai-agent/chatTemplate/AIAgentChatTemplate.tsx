@@ -135,7 +135,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const button = useMemo(() => {
     let options = [
       { label: t('AIAgentChatTemplate.timeline'), value: AIChatLeft.Timeline },
-      { label: '任务列表', value: AIChatLeft.TaskTree },
+      { label: t('AIAgentChatTemplate.tasklist'), value: AIChatLeft.TaskTree },
     ]
     return (
       <YakitRadioButtons

@@ -167,7 +167,7 @@ const HistoryChat = memo(() => {
                   type="outline1"
                   loading={clearLoading}
                 >
-                  {t('YakitButton.cancel')}
+                  {t('YakitButton.delete')}
                 </YakitButton>
               </Tooltip>
             </YakitDropdownMenu>
