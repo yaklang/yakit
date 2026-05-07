@@ -1,5 +1,5 @@
-import {SimpleDetectPageInfoProps} from "@/store/pageInfo"
+import { SimpleDetectPageInfoProps } from '@/store/pageInfo'
 
 export const defaultSimpleDetectPageInfo: SimpleDetectPageInfoProps = {
-    runtimeId: ""
+  runtimeId: '',
 }

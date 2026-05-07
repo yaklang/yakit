@@ -1,50 +1,50 @@
-@use "../securityTool.scss" as securityTool;
+@use '../securityTool.scss' as securityTool;
 
 .port-scan-execute-extra-params-drawer {
-    :global {
-        .ant-drawer-body {
-            padding: 0;
-        }
-        .ant-collapse-item:first-child > .ant-collapse-header {
-            border-top: 0;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-        }
+  :global {
+    .ant-drawer-body {
+      padding: 0;
     }
+    .ant-collapse-item:first-child > .ant-collapse-header {
+      border-top: 0;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+  }
 }
-.port-scan-params-wrapper{
-    padding: 24px;
+.port-scan-params-wrapper {
+  padding: 24px;
 }
 
 .to-end {
-    text-align: center;
-    color: var(--Colors-Use-Neutral-Disable);
-    font-size: 11px;
-    padding-top: 12px;
-    padding-bottom: 24px;
+  text-align: center;
+  color: var(--Colors-Use-Neutral-Disable);
+  font-size: 11px;
+  padding-top: 12px;
+  padding-bottom: 24px;
 }
 
-.form-Panel{
-    padding-bottom: 0;
+.form-Panel {
+  padding-bottom: 0;
 }
-.form-no-style-wrapper{
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.form-no-style-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .ports-form-extra {
-    @extend %display-flex-center;
+  @extend %display-flex-center;
 }
 
 .divider-style {
-    @extend %divider-style;
+  @extend %divider-style;
 }
 
 .preset-port-group-wrapper {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    grid-gap: 12px;
-    padding: 12px;
-    border-radius: 4px;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-gap: 12px;
+  padding: 12px;
+  border-radius: 4px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
 }

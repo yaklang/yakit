@@ -314,5 +314,5 @@ const templateStr = `<!DOCTYPE html>
 `
 
 module.exports = {
-    templateStr
+  templateStr,
 }

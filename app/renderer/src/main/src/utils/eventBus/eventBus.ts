@@ -1,44 +1,44 @@
-import mitt from "mitt"
-import {MitmEventProps} from "./events/mitm"
-import {WebFuzzerEventProps} from "./events/webFuzzer"
-import {SimpleDetectEventProps} from "./events/simpleDetect"
-import {EditorEventProps} from "./events/editor"
-import {HistoryEventProps} from "./events/history"
-import {PluginsEventProps} from "./events/plugins"
-import {MainOperatorEventProps} from "./events/main"
-import {PayLoadEventProps} from "./events/payload"
-import {ProjectMagEventProps} from "./events/projectMag"
-import {WebShellEventProps} from "./events/webShell"
-import {RefreshDataEventProps} from "./events/refreshData"
-import {UpdateYakitYaklangEventProps} from "./events/updateYakitYaklang"
-import {GlobalEventProps} from "./events/global"
-import {PluginBatchExecutorProps} from "./events/pluginBatchExecutor"
-import {YakitRiskProps} from "./events/yakitRisk"
-import {YakRunnerEventProps} from "./events/yakRunner"
-import {YakRunnerAuditEventProps} from "./events/yakRunnerAudit"
-import {YakRunnerCodeScanEventProps} from "./events/yakRunnerCodeScan"
-import {yakJavaDecompilerEventProps} from "./events/yakJavaDecompiler"
-import {NotepadEventProps} from "./events/notepad"
-import {ShortcutKeyEventProps} from "./events/shortcutKey"
-import {AIAgentEventProps} from "./events/aiAgent"
-import {YakRunnerScanHistoryEventProps} from "./events/yakRunnerScanHistory"
-import {AIReActEventProps} from "./events/aiReAct"
-import {ReportPageEventProps} from "./events/reportPage"
-import {YakKnowledgeRepositoryEventProps} from "./events/aiRepository"
-import {MainWinOperatorEventProps} from "./events/mainWin";
-import {RuleManagementEventProps} from "./events/ruleManagement"
+import mitt from 'mitt'
+import { MitmEventProps } from './events/mitm'
+import { WebFuzzerEventProps } from './events/webFuzzer'
+import { SimpleDetectEventProps } from './events/simpleDetect'
+import { EditorEventProps } from './events/editor'
+import { HistoryEventProps } from './events/history'
+import { PluginsEventProps } from './events/plugins'
+import { MainOperatorEventProps } from './events/main'
+import { PayLoadEventProps } from './events/payload'
+import { ProjectMagEventProps } from './events/projectMag'
+import { WebShellEventProps } from './events/webShell'
+import { RefreshDataEventProps } from './events/refreshData'
+import { UpdateYakitYaklangEventProps } from './events/updateYakitYaklang'
+import { GlobalEventProps } from './events/global'
+import { PluginBatchExecutorProps } from './events/pluginBatchExecutor'
+import { YakitRiskProps } from './events/yakitRisk'
+import { YakRunnerEventProps } from './events/yakRunner'
+import { YakRunnerAuditEventProps } from './events/yakRunnerAudit'
+import { YakRunnerCodeScanEventProps } from './events/yakRunnerCodeScan'
+import { yakJavaDecompilerEventProps } from './events/yakJavaDecompiler'
+import { NotepadEventProps } from './events/notepad'
+import { ShortcutKeyEventProps } from './events/shortcutKey'
+import { AIAgentEventProps } from './events/aiAgent'
+import { YakRunnerScanHistoryEventProps } from './events/yakRunnerScanHistory'
+import { AIReActEventProps } from './events/aiReAct'
+import { ReportPageEventProps } from './events/reportPage'
+import { YakKnowledgeRepositoryEventProps } from './events/aiRepository'
+import { MainWinOperatorEventProps } from './events/mainWin'
+import { RuleManagementEventProps } from './events/ruleManagement'
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
-    ? [Contrast<T, X>] extends [never]
-        ? OneToArr<T, Y>
-        : string
-    : number
+  ? [Contrast<T, X>] extends [never]
+    ? OneToArr<T, Y>
+    : string
+  : number
 type ArrContrast<E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
-    ? OneToArr<X, Y> extends number
-        ? ArrContrast<Y>
-        : string
-    : number
+  ? OneToArr<X, Y> extends number
+    ? ArrContrast<Y>
+    : string
+  : number
 type Exchange<T> = T extends number ? boolean : never
 type Joins<T extends object[]> = T extends [infer H extends object, ...infer U extends object[]] ? H & Joins<U> : {}
 
@@ -53,34 +53,34 @@ type Joins<T extends object[]> = T extends [infer H extends object, ...infer U e
  * - 建议不要在map方法内的组件设置事件监听，如果需要设置，请自行解决如何区别不同页面同事件监听的问题
  */
 type Events = [
-    MitmEventProps,
-    WebFuzzerEventProps,
-    SimpleDetectEventProps,
-    EditorEventProps,
-    HistoryEventProps,
-    PluginsEventProps,
-    MainOperatorEventProps,
-    PayLoadEventProps,
-    ProjectMagEventProps,
-    WebShellEventProps,
-    RefreshDataEventProps,
-    UpdateYakitYaklangEventProps,
-    GlobalEventProps,
-    PluginBatchExecutorProps,
-    YakitRiskProps,
-    YakRunnerEventProps,
-    YakRunnerAuditEventProps,
-    YakRunnerCodeScanEventProps,
-    yakJavaDecompilerEventProps,
-    NotepadEventProps,
-    ShortcutKeyEventProps,
-    AIAgentEventProps,
-    YakRunnerScanHistoryEventProps,
-    AIReActEventProps,
-    ReportPageEventProps,
-    YakKnowledgeRepositoryEventProps,
-    MainWinOperatorEventProps,
-    RuleManagementEventProps
+  MitmEventProps,
+  WebFuzzerEventProps,
+  SimpleDetectEventProps,
+  EditorEventProps,
+  HistoryEventProps,
+  PluginsEventProps,
+  MainOperatorEventProps,
+  PayLoadEventProps,
+  ProjectMagEventProps,
+  WebShellEventProps,
+  RefreshDataEventProps,
+  UpdateYakitYaklangEventProps,
+  GlobalEventProps,
+  PluginBatchExecutorProps,
+  YakitRiskProps,
+  YakRunnerEventProps,
+  YakRunnerAuditEventProps,
+  YakRunnerCodeScanEventProps,
+  yakJavaDecompilerEventProps,
+  NotepadEventProps,
+  ShortcutKeyEventProps,
+  AIAgentEventProps,
+  YakRunnerScanHistoryEventProps,
+  AIReActEventProps,
+  ReportPageEventProps,
+  YakKnowledgeRepositoryEventProps,
+  MainWinOperatorEventProps,
+  RuleManagementEventProps,
 ]
 
 type CheckVal = Exchange<ArrContrast<Events>>

@@ -1,3 +1,3 @@
 export type EditorEventProps = {
-    refreshEditorOperationRecord?: string
+  refreshEditorOperationRecord?: string
 }

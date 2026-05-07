@@ -1,33 +1,33 @@
 .not-installed-empty {
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin: auto;
-    margin-top: 144px;
-    .not-installed-buttons {
-        margin-top: 16px;
-    }
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  margin-top: 144px;
+  .not-installed-buttons {
+    margin-top: 16px;
+  }
 }
 
 .download-progress {
-    :global {
-        .ant-progress-text {
-            margin-bottom: 8px;
-        }
+  :global {
+    .ant-progress-text {
+      margin-bottom: 8px;
     }
+  }
 }
 .download-progress-messages {
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 24px;
-    min-height: 30px;
-    max-height: 200px;
-    overflow-y: auto;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 24px;
+  min-height: 30px;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .screenRecorderInstallModal {
-    top: 25vh;
+  top: 25vh;
 }

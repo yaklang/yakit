@@ -1,24 +1,24 @@
-import {KVPair} from "@/models/kv"
+import { KVPair } from '@/models/kv'
 
 export interface HTTPRequestBuilderParams {
-    IsHttps: boolean
+  IsHttps: boolean
 
-    IsRawHTTPRequest: boolean
-    RawHTTPRequest: Uint8Array | Buffer
+  IsRawHTTPRequest: boolean
+  RawHTTPRequest: Uint8Array | Buffer
 
-    Method: string
-    Input?: string
+  Method: string
+  Input?: string
 
-    Path: string[]
-    GetParams: KVPair[]
-    Headers: KVPair[]
-    Cookie: KVPair[]
+  Path: string[]
+  GetParams: KVPair[]
+  Headers: KVPair[]
+  Cookie: KVPair[]
 
-    Body: Uint8Array
-    PostParams: KVPair[]
-    MultipartParams: KVPair[]
-    MultipartFileParams: KVPair[]
+  Body: Uint8Array
+  PostParams: KVPair[]
+  MultipartParams: KVPair[]
+  MultipartFileParams: KVPair[]
 
-    IsHttpFlowId: boolean
-    HTTPFlowId: number[]
+  IsHttpFlowId: boolean
+  HTTPFlowId: number[]
 }

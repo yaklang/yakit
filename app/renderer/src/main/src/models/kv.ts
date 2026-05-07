@@ -1,4 +1,4 @@
 export interface KVPair {
-    Key: string
-    Value: string
+  Key: string
+  Value: string
 }

@@ -1,8 +1,7 @@
-const {ipcMain} = require("electron");
+const { ipcMain } = require('electron')
 
 module.exports = (win, getClient) => {
-    ipcMain.handle("http-analyze", (e, data) => {
-        getClient().HTTPRequestAnalyzer(data, (err, result) => {
-        })
-    })
+  ipcMain.handle('http-analyze', (e, data) => {
+    getClient().HTTPRequestAnalyzer(data, (err, result) => {})
+  })
 }

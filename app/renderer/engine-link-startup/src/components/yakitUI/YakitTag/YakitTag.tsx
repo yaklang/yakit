@@ -1,14 +1,14 @@
-import {Tag} from "antd"
-import React, {useState} from "react"
-import {CopyComponentsProps, YakitTagProps} from "./YakitTagType"
-import styles from "./YakitTag.module.scss"
-import classNames from "classnames"
-import {useMemoizedFn} from "ahooks"
-import {CheckOutlined, LoadingOutlined} from "@ant-design/icons"
-import {setClipboardText} from "@/utils/clipboard"
-import {OutlineXIcon} from "@/assets/outline"
-import {yakitNotify} from "@/utils/notification"
-import {DocumentDuplicateSvgIcon} from "@/assets/newIcon"
+import { Tag } from 'antd'
+import React, { useState } from 'react'
+import { CopyComponentsProps, YakitTagProps } from './YakitTagType'
+import styles from './YakitTag.module.scss'
+import classNames from 'classnames'
+import { useMemoizedFn } from 'ahooks'
+import { CheckOutlined, LoadingOutlined } from '@ant-design/icons'
+import { setClipboardText } from '@/utils/clipboard'
+import { OutlineXIcon } from '@/assets/outline'
+import { yakitNotify } from '@/utils/notification'
+import { DocumentDuplicateSvgIcon } from '@/assets/newIcon'
 
 /**
  * 更新说明
@@ -26,90 +26,88 @@ import {DocumentDuplicateSvgIcon} from "@/assets/newIcon"
  * @param {e} onAfterCopy 复制后的回调
  */
 export const YakitTag: React.FC<YakitTagProps> = (props) => {
-    const {color, size, disable, className, enableCopy, iconColor, copyText, border, fullRadius, ...restProps} = props
-    const onAfterCopy = useMemoizedFn((e) => {
-        if (props.onAfterCopy) props.onAfterCopy(e)
-    })
-    return (
-        <Tag
-            {...restProps}
-            closeIcon={
-                (enableCopy && (
-                    <CopyComponents copyText={copyText || ""} onAfterCopy={onAfterCopy} iconColor={iconColor} />
-                )) ||
-                props.closeIcon || <OutlineXIcon />
-            }
-            closable={props.closable || enableCopy}
-            className={classNames(
-                styles["yakit-tag-middle"],
-                {
-                    [styles["yakit-tag-small"]]: size === "small",
-                    [styles["yakit-tag-large"]]: size === "large",
-                    [styles["yakit-tag-default-color"]]: !color,
-                    [styles["yakit-tag-danger"]]: color === "danger",
-                    [styles["yakit-tag-info"]]: color === "info",
-                    [styles["yakit-tag-success"]]: color === "success" || color === "green",
-                    [styles["yakit-tag-warning"]]: color === "warning",
-                    [styles["yakit-tag-serious"]]: color === "serious" || color === "red",
-                    [styles["yakit-tag-yellow"]]: color === "yellow",
-                    [styles["yakit-tag-purple"]]: color === "purple",
-                    [styles["yakit-tag-blue"]]: color === "blue",
-                    [styles["yakit-tag-cyan"]]: color === "cyan",
-                    [styles["yakit-tag-bluePurple"]]: color === "bluePurple",
-                    [styles["yakit-tag-white"]]: color === "white",
-                    [styles["yakit-tag-border"]]: border !== false,
-                    [styles["yakit-tag-fullRadius"]]: !!fullRadius
-                },
-                className
-            )}
-            onClose={(e) => {
-                if (disable || enableCopy) return
-                if (props.onClose) props.onClose(e)
-            }}
-        >
-            {enableCopy && copyText ? (
-                <span className='content-ellipsis' title={copyText}>
-                    {copyText}
-                </span>
-            ) : (
-                props.children
-            )}
-        </Tag>
-    )
+  const { color, size, disable, className, enableCopy, iconColor, copyText, border, fullRadius, ...restProps } = props
+  const onAfterCopy = useMemoizedFn((e) => {
+    if (props.onAfterCopy) props.onAfterCopy(e)
+  })
+  return (
+    <Tag
+      {...restProps}
+      closeIcon={
+        (enableCopy && <CopyComponents copyText={copyText || ''} onAfterCopy={onAfterCopy} iconColor={iconColor} />) ||
+        props.closeIcon || <OutlineXIcon />
+      }
+      closable={props.closable || enableCopy}
+      className={classNames(
+        styles['yakit-tag-middle'],
+        {
+          [styles['yakit-tag-small']]: size === 'small',
+          [styles['yakit-tag-large']]: size === 'large',
+          [styles['yakit-tag-default-color']]: !color,
+          [styles['yakit-tag-danger']]: color === 'danger',
+          [styles['yakit-tag-info']]: color === 'info',
+          [styles['yakit-tag-success']]: color === 'success' || color === 'green',
+          [styles['yakit-tag-warning']]: color === 'warning',
+          [styles['yakit-tag-serious']]: color === 'serious' || color === 'red',
+          [styles['yakit-tag-yellow']]: color === 'yellow',
+          [styles['yakit-tag-purple']]: color === 'purple',
+          [styles['yakit-tag-blue']]: color === 'blue',
+          [styles['yakit-tag-cyan']]: color === 'cyan',
+          [styles['yakit-tag-bluePurple']]: color === 'bluePurple',
+          [styles['yakit-tag-white']]: color === 'white',
+          [styles['yakit-tag-border']]: border !== false,
+          [styles['yakit-tag-fullRadius']]: !!fullRadius,
+        },
+        className,
+      )}
+      onClose={(e) => {
+        if (disable || enableCopy) return
+        if (props.onClose) props.onClose(e)
+      }}
+    >
+      {enableCopy && copyText ? (
+        <span className="content-ellipsis" title={copyText}>
+          {copyText}
+        </span>
+      ) : (
+        props.children
+      )}
+    </Tag>
+  )
 }
 
 export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
-    const {className, iconColor} = props
-    const [loading, setLoading] = useState<boolean>(false)
-    const [isShowSure, setIsShowSure] = useState<boolean>(false)
-    const onCopy = useMemoizedFn((e) => {
-        e.stopPropagation()
-        if (!props.copyText) return
-        setLoading(true)
-        setClipboardText(props.copyText, {
-            hiddenHint: true,
-            finalCallback: () => {
-                setTimeout(() => {
-                    setLoading(false)
-                    setIsShowSure(true)
-                    setTimeout(() => {
-                        setIsShowSure(false)
-                    }, 2000)
-                    yakitNotify("success", "复制成功")
-                }, 1000)
-            }
-        })
-        if (props.onAfterCopy) props.onAfterCopy(e)
+  const { className, iconColor } = props
+  const [loading, setLoading] = useState<boolean>(false)
+  const [isShowSure, setIsShowSure] = useState<boolean>(false)
+  const onCopy = useMemoizedFn((e) => {
+    e.stopPropagation()
+    if (!props.copyText) return
+    setLoading(true)
+    setClipboardText(props.copyText, {
+      hiddenHint: true,
+      finalCallback: () => {
+        setTimeout(() => {
+          setLoading(false)
+          setIsShowSure(true)
+          setTimeout(() => {
+            setIsShowSure(false)
+          }, 2000)
+          yakitNotify('success', '复制成功')
+        }, 1000)
+      },
     })
-    return (
-        <div className={classNames(styles["yakit-copy"], className || "")} onClick={onCopy}>
-            {(loading && <LoadingOutlined style={{color: "var(--Colors-Use-Main-Primary)"}} />) || (
-                <>
-                    {(isShowSure && <CheckOutlined style={{color: "var(--Colors-Use-Success-Primary)"}} />) || (
-                        <DocumentDuplicateSvgIcon style={{color: iconColor || "var(--Colors-Use-Main-Primary)"}} />
-                    )}
-                </>
-            )}
-        </div>
-    )
+    if (props.onAfterCopy) props.onAfterCopy(e)
+  })
+  return (
+    <div className={classNames(styles['yakit-copy'], className || '')} onClick={onCopy}>
+      {(loading && <LoadingOutlined style={{ color: 'var(--Colors-Use-Main-Primary)' }} />) || (
+        <>
+          {(isShowSure && <CheckOutlined style={{ color: 'var(--Colors-Use-Success-Primary)' }} />) || (
+            <DocumentDuplicateSvgIcon style={{ color: iconColor || 'var(--Colors-Use-Main-Primary)' }} />
+          )}
+        </>
+      )}
+    </div>
+  )
 }

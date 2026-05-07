@@ -1,3 +1,3 @@
-export interface SinglePluginExecutionProps{
-    yakScriptId: number
+export interface SinglePluginExecutionProps {
+  yakScriptId: number
 }

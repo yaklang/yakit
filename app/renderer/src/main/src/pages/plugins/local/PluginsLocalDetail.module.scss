@@ -1,56 +1,53 @@
 %plugin-tab-content {
-    width: 100%;
-    height: 100%;
-    padding: 0 12px 12px;
-    overflow: hidden overlay;
-    display: flex;
-    flex: 1;
-    flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0 12px 12px;
+  overflow: hidden overlay;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 }
 .details-content-wrapper {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    // padding-top: 12px;
-    :global {
-        .ant-tabs-right > .ant-tabs-nav .ant-tabs-tab {
-            margin-top: 4px;
-            border-color: var(--Colors-Use-Neutral-Border)
-        }
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  // padding-top: 12px;
+  :global {
+    .ant-tabs-right > .ant-tabs-nav .ant-tabs-tab {
+      margin-top: 4px;
+      border-color: var(--Colors-Use-Neutral-Border);
     }
-    .plugin-info-wrapper {
-        @extend %plugin-tab-content;
-        padding-top: 12px;
-        .extra {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+  }
+  .plugin-info-wrapper {
+    @extend %plugin-tab-content;
+    padding-top: 12px;
+    .extra {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .plugin-execute-wrapper {
-        @extend %plugin-tab-content;
-        padding: 0;
-        padding-bottom: 12px;
-        .plugin-execute-spin {
-            display: flex;
-            flex: 1;
-            align-items: center;
-            padding-top: 10%;
-        }
+  }
+  .plugin-execute-wrapper {
+    @extend %plugin-tab-content;
+    padding: 0;
+    padding-bottom: 12px;
+    .plugin-execute-spin {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      padding-top: 10%;
     }
+  }
 }
 
 .plugin-execute-result-wrapper {
-    padding: 12px 12px 0;
+  padding: 12px 12px 0;
 }
 
 // 详情-审核完的编辑器样式
 .details-editor-wrapper {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    margin-top: 12px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  margin-top: 12px;
 }
-
-
-

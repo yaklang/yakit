@@ -1,3 +1,3 @@
 export interface NotepadOnlineListProps {
-    notepadHash: string
+  notepadHash: string
 }

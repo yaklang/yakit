@@ -1,9 +1,5 @@
-import { StepsProps,StepProps } from 'antd';
+import { StepsProps, StepProps } from 'antd'
 
-export interface YakitStepsProps extends StepsProps {
+export interface YakitStepsProps extends StepsProps {}
 
-}
-
-export interface YakitStepProps extends StepProps{
-
-}
+export interface YakitStepProps extends StepProps {}

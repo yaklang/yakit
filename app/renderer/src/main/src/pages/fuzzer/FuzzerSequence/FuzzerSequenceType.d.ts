@@ -1,25 +1,25 @@
-import {WebFuzzerPageInfoProps} from "../../../store/pageInfo"
-import {FuzzerResponse, FuzzerRequestProps} from "../HTTPFuzzerPage"
-import {AdvancedConfigValueProps} from "../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType"
+import { WebFuzzerPageInfoProps } from '../../../store/pageInfo'
+import { FuzzerResponse, FuzzerRequestProps } from '../HTTPFuzzerPage'
+import { AdvancedConfigValueProps } from '../HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import {
-    MatcherAndExtractionRefProps,
-    MatcherValueProps,
-    ExtractorValueProps,
-    MatcherActiveKey
-} from "../MatcherAndExtractionCard/MatcherAndExtractionCardType"
-import {WebFuzzerType} from "../WebFuzzerPage/WebFuzzerPageType"
-import {FuzzerResChartData} from "../FuzzerConcurrentLoad/FuzzerConcurrentLoad"
-import {HTTPFuzzerPageTableDebugPayload} from "../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable"
+  MatcherAndExtractionRefProps,
+  MatcherValueProps,
+  ExtractorValueProps,
+  MatcherActiveKey,
+} from '../MatcherAndExtractionCard/MatcherAndExtractionCardType'
+import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
+import { FuzzerResChartData } from '../FuzzerConcurrentLoad/FuzzerConcurrentLoad'
+import { HTTPFuzzerPageTableDebugPayload } from '../components/HTTPFuzzerPageTable/HTTPFuzzerPageTable'
 /**
  * @description 序列props
  * @property {string} pageId页面节点id
  * @function setType
  */
 export interface FuzzerSequenceProps {
-    groupId: string
-    pageId?: string
-    setType?: (s: WebFuzzerType) => void
-    type: WebFuzzerType
+  groupId: string
+  pageId?: string
+  setType?: (s: WebFuzzerType) => void
+  type: WebFuzzerType
 }
 
 /**
@@ -32,22 +32,22 @@ export interface FuzzerSequenceProps {
  *  @property {boolean} disabled 序列item是否disabled状态
  */
 export interface SequenceProps extends ExtraSettingProps {
-    id: string
-    name: string
-    pageId: string
-    pageGroupId: string
-    pageName: string
-    // pageParams: WebFuzzerPageInfoProps
-    disabled?: boolean
+  id: string
+  name: string
+  pageId: string
+  pageGroupId: string
+  pageName: string
+  // pageParams: WebFuzzerPageInfoProps
+  disabled?: boolean
 }
 /**
  * @description 额外的一些序列配置
  */
 export interface ExtraSettingProps {
-    /**@name 是否继承Cookies */
-    inheritCookies: boolean
-    /**@name 是否继承变量 */
-    inheritVariables: boolean
+  /**@name 是否继承Cookies */
+  inheritCookies: boolean
+  /**@name 是否继承变量 */
+  inheritVariables: boolean
 }
 /**
  * @description 序列item
@@ -67,24 +67,24 @@ export interface ExtraSettingProps {
  * @function onShowSetting 显示页面的高级配置部分参数
  */
 export interface SequenceItemProps {
-    item: SequenceProps
-    index: number
-    errorIndex: number
-    isSelect: boolean
-    isDragging: boolean
-    isShowLine: boolean
-    disabled?: boolean
-    pageNodeList: SequenceProps[]
-    /**是否显示高级配置 */
-    isShowSetting: boolean
-    onUpdateItemPage: (s: SequenceProps) => void
-    onUpdateItem: (s: SequenceProps) => void
-    onApplyOtherNodes: (e: ExtraSettingProps) => void
-    onRemove: (s: SequenceProps) => void
-    onSelect: (s: SequenceProps) => void
-    /**显示页面的高级配置部分参数 */
-    onShowSetting: (s: SequenceProps) => void
-    selectedList: string[]
+  item: SequenceProps
+  index: number
+  errorIndex: number
+  isSelect: boolean
+  isDragging: boolean
+  isShowLine: boolean
+  disabled?: boolean
+  pageNodeList: SequenceProps[]
+  /**是否显示高级配置 */
+  isShowSetting: boolean
+  onUpdateItemPage: (s: SequenceProps) => void
+  onUpdateItem: (s: SequenceProps) => void
+  onApplyOtherNodes: (e: ExtraSettingProps) => void
+  onRemove: (s: SequenceProps) => void
+  onSelect: (s: SequenceProps) => void
+  /**显示页面的高级配置部分参数 */
+  onShowSetting: (s: SequenceProps) => void
+  selectedList: string[]
 }
 /**
  * @description 返回参数
@@ -96,15 +96,15 @@ export interface SequenceItemProps {
  * @property {FuzzerResponse[]} failedFuzzer 失败数据list
  */
 export interface ResponseProps {
-    id: string
-    successCount: number
-    failedCount: number
-    onlyOneResponse: FuzzerResponse
-    successFuzzer: FuzzerResponse[]
-    failedFuzzer: FuzzerResponse[]
-    runtimeIdFuzzer: string[]
-    fuzzerTableMaxData: number
-    fuzzerResChartData: FuzzerResChartData[]
+  id: string
+  successCount: number
+  failedCount: number
+  onlyOneResponse: FuzzerResponse
+  successFuzzer: FuzzerResponse[]
+  failedFuzzer: FuzzerResponse[]
+  runtimeIdFuzzer: string[]
+  fuzzerTableMaxData: number
+  fuzzerResChartData: FuzzerResChartData[]
 }
 /**
  * @description HTTPFuzzerSequence接口返回类型
@@ -112,8 +112,8 @@ export interface ResponseProps {
  * @property {FuzzerResponse} Response
  */
 export interface FuzzerSequenceResponse {
-    Request: FuzzerRequestProps
-    Response: FuzzerResponse
+  Request: FuzzerRequestProps
+  Response: FuzzerResponse
 }
 /**
  * @description 请求和响应
@@ -134,35 +134,35 @@ export interface FuzzerSequenceResponse {
  * @function onSaveMatcherAndExtractionDrawer
  */
 export interface SequenceResponseProps {
-    ref?: React.ForwardedRef<SequenceResponseRefProps>
-    loading: boolean
-    requestInfo?: WebFuzzerPageInfoProps
-    responseInfo?: ResponseProps
-    extractedMap: Map<string, string>
-    hotPatchCode: string
-    hotPatchCodeWithParamGetter: string
-    setHotPatchCode: (s: string) => void
-    setHotPatchCodeWithParamGetter: (s: string) => void
-    onShowAll: () => void
-    onDebug: (payload: HTTPFuzzerPageTableDebugPayload) => void
-    matcherValue: MatcherValueProps
-    extractorValue: ExtractorValueProps
-    showMatcherAndExtraction?: boolean
-    setShowMatcherAndExtraction?: (b: boolean) => void
-    onSaveMatcherAndExtractionDrawer: (m: MatcherValueProps, e: ExtractorValueProps) => void
-    activeType: MatchingAndExtraction
-    activeKey: string
-    defActiveKeyAndOrder: MatcherActiveKey,
-    webFuzzerNewEditorRef: any
-    inViewport: boolean
-    isConcurrency: boolean
-    onMatchSubmit?: () => void
-    onOpenMatcherDrawer?: () => void
-    hasExtractorRules?: boolean
+  ref?: React.ForwardedRef<SequenceResponseRefProps>
+  loading: boolean
+  requestInfo?: WebFuzzerPageInfoProps
+  responseInfo?: ResponseProps
+  extractedMap: Map<string, string>
+  hotPatchCode: string
+  hotPatchCodeWithParamGetter: string
+  setHotPatchCode: (s: string) => void
+  setHotPatchCodeWithParamGetter: (s: string) => void
+  onShowAll: () => void
+  onDebug: (payload: HTTPFuzzerPageTableDebugPayload) => void
+  matcherValue: MatcherValueProps
+  extractorValue: ExtractorValueProps
+  showMatcherAndExtraction?: boolean
+  setShowMatcherAndExtraction?: (b: boolean) => void
+  onSaveMatcherAndExtractionDrawer: (m: MatcherValueProps, e: ExtractorValueProps) => void
+  activeType: MatchingAndExtraction
+  activeKey: string
+  defActiveKeyAndOrder: MatcherActiveKey
+  webFuzzerNewEditorRef: any
+  inViewport: boolean
+  isConcurrency: boolean
+  onMatchSubmit?: () => void
+  onOpenMatcherDrawer?: () => void
+  hasExtractorRules?: boolean
 }
 
 export interface SequenceResponseRefProps {
-    validate: () => Promise<boolean>
+  validate: () => Promise<boolean>
 }
 /**
  * @description 返回响应头部
@@ -176,19 +176,19 @@ export interface SequenceResponseRefProps {
  * @function onPluginDebugger 打开调试插件
  */
 export interface SequenceResponseHeardProps {
-    disabled: boolean
-    droppedCount: number
-    currentSequenceItemName: string
-    currentSequenceItemPageName: string
-    advancedConfigValue?: AdvancedConfigValueProps
-    setAdvancedConfigValue: (configValue: AdvancedConfigValueProps) => void
-    responseInfo?: ResponseProps
-    onShowAll: () => void
-    getHttpParams: () => FuzzerRequestProps[]
-    onPluginDebugger: (code: string) => void
-    isConcurrency: boolean
-    onMatchSubmit?: () => void
-    onOpenMatcherDrawer?: () => void
+  disabled: boolean
+  droppedCount: number
+  currentSequenceItemName: string
+  currentSequenceItemPageName: string
+  advancedConfigValue?: AdvancedConfigValueProps
+  setAdvancedConfigValue: (configValue: AdvancedConfigValueProps) => void
+  responseInfo?: ResponseProps
+  onShowAll: () => void
+  getHttpParams: () => FuzzerRequestProps[]
+  onPluginDebugger: (code: string) => void
+  isConcurrency: boolean
+  onMatchSubmit?: () => void
+  onOpenMatcherDrawer?: () => void
 }
 
 /**
@@ -198,18 +198,18 @@ export interface SequenceResponseHeardProps {
  * @function setShowAllResponse
  */
 export interface ResponseCardProps {
-    showAllResponse: boolean
-    responseMap: Map<string, ResponseProps>
-    setShowAllResponse: () => void
+  showAllResponse: boolean
+  responseMap: Map<string, ResponseProps>
+  setShowAllResponse: () => void
 }
 
 export interface WebFuzzerDroppedProps {
-    /**序列丢弃数据key */
-    fuzzer_index: string
-    /**序列丢弃数据key下面的每一个任务key */
-    fuzzer_sequence_index: string
-    /**wf丢弃数据key */
-    fuzzer_tab_index: string
-    /**丢弃个数 */
-    discard_count: number
+  /**序列丢弃数据key */
+  fuzzer_index: string
+  /**序列丢弃数据key下面的每一个任务key */
+  fuzzer_sequence_index: string
+  /**wf丢弃数据key */
+  fuzzer_tab_index: string
+  /**丢弃个数 */
+  discard_count: number
 }

@@ -1,8 +1,8 @@
 {
-    "DataCompare": {
-        "comparer": "Data Comparer"
-    },
-    "DataCompareModal": {
-        "codeCompare": "Code Compare"
-    }
+  "DataCompare": {
+    "comparer": "Data Comparer"
+  },
+  "DataCompareModal": {
+    "codeCompare": "Code Compare"
+  }
 }

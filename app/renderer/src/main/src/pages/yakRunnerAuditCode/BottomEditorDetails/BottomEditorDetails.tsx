@@ -1,268 +1,265 @@
-import React, {useEffect, useState} from "react"
-import {useMemoizedFn} from "ahooks"
-import styles from "./BottomEditorDetails.module.scss"
-import classNames from "classnames"
-import {BottomEditorDetailsProps, ShowItemType} from "./BottomEditorDetailsType"
-import {OutlineXIcon} from "@/assets/icon/outline"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import useStore from "../hooks/useStore"
-import emiter from "@/utils/eventBus/eventBus"
-import {PaperAirplaneIcon} from "@/assets/newIcon"
-import {RuleEditorBox} from "./RuleEditorBox/RuleEditorBox"
-import useDispatcher from "../hooks/useDispatcher"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import useShortcutKeyTrigger from "@/utils/globalShortcutKey/events/useShortcutKeyTrigger"
-import {HoleDispose} from "./HoleDispose/HoleDispose"
-import {QuerySSARisksResponse, SSARisk} from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
-import {RightBugAuditResult} from "@/pages/risks/YakitRiskTable/YakitRiskTable"
-import {openSSARiskNewWindow} from "@/utils/openWebsite"
-import {JSONParseLog} from "@/utils/tool"
-import { yakitNotify } from "@/utils/notification"
-import { openAIForge } from "@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils"
-const {ipcRenderer} = window.require("electron")
+import React, { useEffect, useState } from 'react'
+import { useMemoizedFn } from 'ahooks'
+import styles from './BottomEditorDetails.module.scss'
+import classNames from 'classnames'
+import { BottomEditorDetailsProps, ShowItemType } from './BottomEditorDetailsType'
+import { OutlineXIcon } from '@/assets/icon/outline'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import useStore from '../hooks/useStore'
+import emiter from '@/utils/eventBus/eventBus'
+import { PaperAirplaneIcon } from '@/assets/newIcon'
+import { RuleEditorBox } from './RuleEditorBox/RuleEditorBox'
+import useDispatcher from '../hooks/useDispatcher'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
+import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
+import { HoleDispose } from './HoleDispose/HoleDispose'
+import { QuerySSARisksResponse, SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import { RightBugAuditResult } from '@/pages/risks/YakitRiskTable/YakitRiskTable'
+import { openSSARiskNewWindow } from '@/utils/openWebsite'
+import { JSONParseLog } from '@/utils/tool'
+import { yakitNotify } from '@/utils/notification'
+import { openAIForge } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/utils'
+const { ipcRenderer } = window.require('electron')
 
 // 编辑器区域 展示详情（输出/语法检查/终端/帮助信息）
 export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) => {
-    const {isShowEditorDetails, setEditorDetails, showItem, setShowItem} = props
-    const {projectName, auditExecuting} = useStore()
-    const {setAuditRule} = useDispatcher()
-    // 不再重新加载的元素
-    const [showType, setShowType] = useState<ShowItemType[]>([])
-    // monaco输入内容
-    const [ruleEditor, setRuleEditor] = useState<string>("")
-    // 展示所需的BugHash
-    const [bugHash, setBugHash] = useState<string>("")
-    const [info, setInfo] = useState<SSARisk>()
+  const { isShowEditorDetails, setEditorDetails, showItem, setShowItem } = props
+  const { projectName, auditExecuting } = useStore()
+  const { setAuditRule } = useDispatcher()
+  // 不再重新加载的元素
+  const [showType, setShowType] = useState<ShowItemType[]>([])
+  // monaco输入内容
+  const [ruleEditor, setRuleEditor] = useState<string>('')
+  // 展示所需的BugHash
+  const [bugHash, setBugHash] = useState<string>('')
+  const [info, setInfo] = useState<SSARisk>()
 
-    const toAI = useMemoizedFn((e) => {
-        e.stopPropagation()
-        if (!ruleEditor) {
-            yakitNotify("warning", "未找到规则内容，无法进行AI美化")
-            return
+  const toAI = useMemoizedFn((e) => {
+    e.stopPropagation()
+    if (!ruleEditor) {
+      yakitNotify('warning', '未找到规则内容，无法进行AI美化')
+      return
+    }
+    const params = {
+      query: {
+        ForgeName: 'sf_rule_completion',
+      },
+      handleParamsUIConfig: (paramsUIConfig) => {
+        paramsUIConfig.map((item) => {
+          if (item.Field === 'file_content') {
+            item.DefaultValue = ruleEditor
+          }
+          return item
+        })
+        return paramsUIConfig
+      },
+      jsonParseLogParams: {
+        page: 'YakRunnerAuditCode',
+        fun: 'toAI',
+      },
+    }
+    openAIForge(params)
+  })
+
+  // 数组去重
+  const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+
+  const onResetAuditRuleFun = useMemoizedFn((v: string) => {
+    setRuleEditor(v)
+  })
+
+  useEffect(() => {
+    emiter.on('onResetAuditRule', onResetAuditRuleFun)
+    return () => {
+      emiter.off('onResetAuditRule', onResetAuditRuleFun)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (showItem && isShowEditorDetails) {
+      if (showType.includes(showItem)) return
+      setShowType((arr) => filterItem([...arr, showItem]))
+    }
+  }, [showItem, isShowEditorDetails])
+
+  const onOpenBottomDetailFun = useMemoizedFn((v: string) => {
+    try {
+      const { type }: { type: ShowItemType } = JSONParseLog(v, {
+        page: 'BottomEditorDetails',
+        fun: 'onOpenBottomDetailFun',
+      })
+      setEditorDetails(true)
+      setShowItem(type)
+    } catch (error) {}
+  })
+
+  const onCodeAuditOpenBugDetailFun = useMemoizedFn((hash: string) => {
+    ipcRenderer
+      .invoke('QuerySSARisks', {
+        Filter: {
+          Hash: [hash],
+        },
+      })
+      .then((res: QuerySSARisksResponse) => {
+        const { Data } = res
+        if (Data.length > 0) {
+          setInfo(Data[0])
+          setBugHash(hash)
         }
-        const params = {
-            query: {
-                ForgeName: "sf_rule_completion"
-            },
-            handleParamsUIConfig: (paramsUIConfig) => {
-                paramsUIConfig.map((item) => {
-                    if (item.Field === "file_content") {
-                        item.DefaultValue = ruleEditor
-                    }
-                    return item
-                })
-                return paramsUIConfig
-            },
-            jsonParseLogParams: {
-                page: "YakRunnerAuditCode",
-                fun: "toAI"
-            }
-        }
-        openAIForge(params)
-    })
+      })
+      .catch((err) => {})
+  })
 
-    // 数组去重
-    const filterItem = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
+  useEffect(() => {
+    emiter.on('onCodeAuditOpenBottomDetail', onOpenBottomDetailFun)
+    // 打开编译BUG详情
+    emiter.on('onCodeAuditOpenBugDetail', onCodeAuditOpenBugDetailFun)
+    return () => {
+      emiter.off('onCodeAuditOpenBottomDetail', onOpenBottomDetailFun)
+      emiter.off('onCodeAuditOpenBugDetail', onCodeAuditOpenBugDetailFun)
+    }
+  }, [])
 
-    const onResetAuditRuleFun = useMemoizedFn((v: string) => {
-        setRuleEditor(v)
-    })
+  const onAuditRuleSubmit = useMemoizedFn(() => {
+    if (!projectName || ruleEditor.length === 0) return
+    setAuditRule && setAuditRule(ruleEditor)
+    emiter.emit('onAuditRuleSubmit', ruleEditor)
+  })
 
-    useEffect(() => {
-        emiter.on("onResetAuditRule", onResetAuditRuleFun)
-        return () => {
-            emiter.off("onResetAuditRule", onResetAuditRuleFun)
-        }
-    }, [])
+  const onStopAuditRule = useMemoizedFn(() => {
+    emiter.emit('onStopAuditRule')
+  })
 
-    useEffect(() => {
-        if (showItem && isShowEditorDetails) {
-            if (showType.includes(showItem)) return
-            setShowType((arr) => filterItem([...arr, showItem]))
-        }
-    }, [showItem, isShowEditorDetails])
+  useShortcutKeyTrigger('submit*aduit', () => {
+    if (isShowEditorDetails && showItem === 'ruleEditor') {
+      onAuditRuleSubmit()
+    }
+  })
 
-    const onOpenBottomDetailFun = useMemoizedFn((v: string) => {
-        try {
-            const {type}: {type: ShowItemType} = JSONParseLog(v, {
-                page: "BottomEditorDetails",
-                fun: "onOpenBottomDetailFun"
-            })
-            setEditorDetails(true)
-            setShowItem(type)
-        } catch (error) {}
-    })
-
-    const onCodeAuditOpenBugDetailFun = useMemoizedFn((hash: string) => {
-        ipcRenderer
-            .invoke("QuerySSARisks", {
-                Filter: {
-                    Hash: [hash]
-                }
-            })
-            .then((res: QuerySSARisksResponse) => {
-                const {Data} = res
-                if (Data.length > 0) {
-                    setInfo(Data[0])
-                    setBugHash(hash)
-                }
-            })
-            .catch((err) => {})
-    })
-
-    useEffect(() => {
-        emiter.on("onCodeAuditOpenBottomDetail", onOpenBottomDetailFun)
-        // 打开编译BUG详情
-        emiter.on("onCodeAuditOpenBugDetail", onCodeAuditOpenBugDetailFun)
-        return () => {
-            emiter.off("onCodeAuditOpenBottomDetail", onOpenBottomDetailFun)
-            emiter.off("onCodeAuditOpenBugDetail", onCodeAuditOpenBugDetailFun)
-        }
-    }, [])
-
-    const onAuditRuleSubmit = useMemoizedFn(() => {
-        if (!projectName || ruleEditor.length === 0) return
-        setAuditRule && setAuditRule(ruleEditor)
-        emiter.emit("onAuditRuleSubmit", ruleEditor)
-    })
-
-    const onStopAuditRule = useMemoizedFn(() => {
-        emiter.emit("onStopAuditRule")
-    })
-
-    useShortcutKeyTrigger("submit*aduit", () => {
-        if (isShowEditorDetails && showItem === "ruleEditor") {
-            onAuditRuleSubmit()
-        }
-    })
-
-    return (
-        <div className={styles["bottom-editor-details"]}>
-            <div className={styles["header"]}>
-                <div className={styles["select-box"]}>
-                    <div
-                        className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "ruleEditor",
-                            [styles["no-active-item"]]: showItem !== "ruleEditor"
-                        })}
-                        onClick={() => setShowItem("ruleEditor")}
-                    >
-                        <div className={styles["title"]}>规则编写</div>
-                    </div>
-                    <div
-                        className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "holeDetail",
-                            [styles["no-active-item"]]: showItem !== "holeDetail"
-                        })}
-                        onClick={() => setShowItem("holeDetail")}
-                    >
-                        <div className={styles["title"]}>漏洞详情</div>
-                    </div>
-                    <div
-                        className={classNames(styles["item"], {
-                            [styles["active-item"]]: showItem === "holeDispose",
-                            [styles["no-active-item"]]: showItem !== "holeDispose"
-                        })}
-                        onClick={() => setShowItem("holeDispose")}
-                    >
-                        <div className={styles["title"]}>漏洞处置</div>
-                    </div>
-                </div>
-                <div className={styles["extra"]}>
-                    {showItem === "ruleEditor" && (
-                        <>
-                            <YakitButton
-                                onClick={toAI}
-                                disabled={auditExecuting}
-                            >
-                                美化
-                            </YakitButton>
-                            {auditExecuting ? (
-                                <YakitButton danger icon={<PaperAirplaneIcon />} onClick={onStopAuditRule}>
-                                    暂停执行
-                                </YakitButton>
-                            ) : (
-                                <YakitButton
-                                    icon={<PaperAirplaneIcon />}
-                                    onClick={onAuditRuleSubmit}
-                                    disabled={!projectName || ruleEditor.length === 0}
-                                >
-                                    开始审计
-                                </YakitButton>
-                            )}
-                        </>
-                    )}
-                    <YakitButton
-                        type='text2'
-                        icon={<OutlineXIcon />}
-                        onClick={() => {
-                            setEditorDetails(false)
-                        }}
-                    />
-                </div>
-            </div>
-            <div className={styles["content"]}>
-                {showType.includes("ruleEditor") && (
-                    <div
-                        className={classNames(styles["render-hideen"], {
-                            [styles["render-show"]]: showItem === "ruleEditor"
-                        })}
-                    >
-                        <RuleEditorBox
-                            ruleEditor={ruleEditor}
-                            setRuleEditor={setRuleEditor}
-                            disabled={auditExecuting}
-                            onAuditRuleSubmit={onAuditRuleSubmit}
-                        />
-                    </div>
-                )}
-                {showType.includes("holeDetail") && (
-                    <div
-                        className={classNames(styles["render-hideen"], {
-                            [styles["render-show"]]: showItem === "holeDetail"
-                        })}
-                    >
-                        {bugHash ? (
-                            <>
-                                {info && (
-                                    <RightBugAuditResult
-                                        info={info}
-                                        extra={
-                                            <YakitButton
-                                                type='primary'
-                                                onClick={() => {
-                                                    openSSARiskNewWindow(info)
-                                                }}
-                                            >
-                                                新窗口打开
-                                            </YakitButton>
-                                        }
-                                    />
-                                )}
-                            </>
-                        ) : (
-                            <div className={styles["no-audit"]}>
-                                <YakitEmpty title='暂无漏洞' />
-                            </div>
-                        )}
-                    </div>
-                )}
-                {showType.includes("holeDispose") && (
-                    <div
-                        className={classNames(styles["render-hideen"], {
-                            [styles["render-show"]]: showItem === "holeDispose"
-                        })}
-                    >
-                        {bugHash ? (
-                            <HoleDispose RiskHash={bugHash} info={info} />
-                        ) : (
-                            <div className={styles["no-audit"]}>
-                                <YakitEmpty title='请选择漏洞进行处置' />
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+  return (
+    <div className={styles['bottom-editor-details']}>
+      <div className={styles['header']}>
+        <div className={styles['select-box']}>
+          <div
+            className={classNames(styles['item'], {
+              [styles['active-item']]: showItem === 'ruleEditor',
+              [styles['no-active-item']]: showItem !== 'ruleEditor',
+            })}
+            onClick={() => setShowItem('ruleEditor')}
+          >
+            <div className={styles['title']}>规则编写</div>
+          </div>
+          <div
+            className={classNames(styles['item'], {
+              [styles['active-item']]: showItem === 'holeDetail',
+              [styles['no-active-item']]: showItem !== 'holeDetail',
+            })}
+            onClick={() => setShowItem('holeDetail')}
+          >
+            <div className={styles['title']}>漏洞详情</div>
+          </div>
+          <div
+            className={classNames(styles['item'], {
+              [styles['active-item']]: showItem === 'holeDispose',
+              [styles['no-active-item']]: showItem !== 'holeDispose',
+            })}
+            onClick={() => setShowItem('holeDispose')}
+          >
+            <div className={styles['title']}>漏洞处置</div>
+          </div>
         </div>
-    )
+        <div className={styles['extra']}>
+          {showItem === 'ruleEditor' && (
+            <>
+              <YakitButton onClick={toAI} disabled={auditExecuting}>
+                美化
+              </YakitButton>
+              {auditExecuting ? (
+                <YakitButton danger icon={<PaperAirplaneIcon />} onClick={onStopAuditRule}>
+                  暂停执行
+                </YakitButton>
+              ) : (
+                <YakitButton
+                  icon={<PaperAirplaneIcon />}
+                  onClick={onAuditRuleSubmit}
+                  disabled={!projectName || ruleEditor.length === 0}
+                >
+                  开始审计
+                </YakitButton>
+              )}
+            </>
+          )}
+          <YakitButton
+            type="text2"
+            icon={<OutlineXIcon />}
+            onClick={() => {
+              setEditorDetails(false)
+            }}
+          />
+        </div>
+      </div>
+      <div className={styles['content']}>
+        {showType.includes('ruleEditor') && (
+          <div
+            className={classNames(styles['render-hideen'], {
+              [styles['render-show']]: showItem === 'ruleEditor',
+            })}
+          >
+            <RuleEditorBox
+              ruleEditor={ruleEditor}
+              setRuleEditor={setRuleEditor}
+              disabled={auditExecuting}
+              onAuditRuleSubmit={onAuditRuleSubmit}
+            />
+          </div>
+        )}
+        {showType.includes('holeDetail') && (
+          <div
+            className={classNames(styles['render-hideen'], {
+              [styles['render-show']]: showItem === 'holeDetail',
+            })}
+          >
+            {bugHash ? (
+              <>
+                {info && (
+                  <RightBugAuditResult
+                    info={info}
+                    extra={
+                      <YakitButton
+                        type="primary"
+                        onClick={() => {
+                          openSSARiskNewWindow(info)
+                        }}
+                      >
+                        新窗口打开
+                      </YakitButton>
+                    }
+                  />
+                )}
+              </>
+            ) : (
+              <div className={styles['no-audit']}>
+                <YakitEmpty title="暂无漏洞" />
+              </div>
+            )}
+          </div>
+        )}
+        {showType.includes('holeDispose') && (
+          <div
+            className={classNames(styles['render-hideen'], {
+              [styles['render-show']]: showItem === 'holeDispose',
+            })}
+          >
+            {bugHash ? (
+              <HoleDispose RiskHash={bugHash} info={info} />
+            ) : (
+              <div className={styles['no-audit']}>
+                <YakitEmpty title="请选择漏洞进行处置" />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }

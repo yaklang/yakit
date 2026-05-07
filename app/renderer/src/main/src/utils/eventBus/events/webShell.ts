@@ -1,3 +1,3 @@
 export type WebShellEventProps = {
-    onWebShellBackTree?: string
+  onWebShellBackTree?: string
 }

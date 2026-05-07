@@ -1,11 +1,11 @@
-@use "../ModifyNotepad.module.scss";
+@use '../ModifyNotepad.module.scss';
 
 .modify-notepad-local-heard-extra {
-    @extend %display-flex-center;
-    justify-content: flex-end;
-    gap: 8px;
+  @extend %display-flex-center;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .matcher-number {
-    color: var(--yakit-helper-text-color);
+  color: var(--yakit-helper-text-color);
 }

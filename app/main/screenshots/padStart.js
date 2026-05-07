@@ -6,10 +6,10 @@
  * @param {string} chars
  * @returns {string}
  */
-module.exports = function padStart(string, length = 0, chars = " ") {
-    let str = String(string)
-    while (str.length < length) {
-        str = `${chars}${str}`
-    }
-    return str
+module.exports = function padStart(string, length = 0, chars = ' ') {
+  let str = String(string)
+  while (str.length < length) {
+    str = `${chars}${str}`
+  }
+  return str
 }

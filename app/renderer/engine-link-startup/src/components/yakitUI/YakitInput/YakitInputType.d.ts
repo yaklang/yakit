@@ -1,11 +1,11 @@
-import {InputProps, SelectProps} from "antd"
-import {SizeType} from "antd/lib/config-provider/SizeContext"
+import { InputProps, SelectProps } from 'antd'
+import { SizeType } from 'antd/lib/config-provider/SizeContext'
 
-import {PasswordProps, SearchProps, TextAreaProps} from "antd/lib/input"
-import {CSSProperties} from "react"
+import { PasswordProps, SearchProps, TextAreaProps } from 'antd/lib/input'
+import { CSSProperties } from 'react'
 
-import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
-import {YakitSelectProps} from "../YakitSelect/YakitSelectType"
+import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
+import { YakitSelectProps } from '../YakitSelect/YakitSelectType'
 
 /**
  * @description YakitInputNumberProps 的属性
@@ -14,10 +14,10 @@ import {YakitSelectProps} from "../YakitSelect/YakitSelectType"
  * @param {string} wrapperClassName
  * @param {CSSProperties} wrapperStyle
  */
-export interface YakitInputProps extends Omit<InputProps, "size"> {
-    size?: YakitSizeType
-    wrapperClassName?: string
-    wrapperStyle?: CSSProperties
+export interface YakitInputProps extends Omit<InputProps, 'size'> {
+  size?: YakitSizeType
+  wrapperClassName?: string
+  wrapperStyle?: CSSProperties
 }
 /**
  * @description YakitInputSearchProps 的属性
@@ -26,10 +26,10 @@ export interface YakitInputProps extends Omit<InputProps, "size"> {
  * @param {string} wrapperClassName
  * @param {CSSProperties} wrapperStyle
  */
-export interface YakitInputSearchProps extends Omit<SearchProps, "size"> {
-    size?: YakitSizeType
-    wrapperClassName?: string
-    wrapperStyle?: CSSProperties
+export interface YakitInputSearchProps extends Omit<SearchProps, 'size'> {
+  size?: YakitSizeType
+  wrapperClassName?: string
+  wrapperStyle?: CSSProperties
 }
 /**
  * @description InternalTextAreaProps 的属性
@@ -40,10 +40,10 @@ export interface YakitInputSearchProps extends Omit<SearchProps, "size"> {
  * @param {boolean} isShowResize 是否显示右下角的拖拽icon，false时,icon和功能都会消失
  */
 export interface InternalTextAreaProps extends TextAreaProps {
-    wrapperClassName?: string
-    resizeClassName?: string
-    wrapperStyle?: React.CSSProperties
-    isShowResize?: boolean
+  wrapperClassName?: string
+  resizeClassName?: string
+  wrapperStyle?: React.CSSProperties
+  isShowResize?: boolean
 }
 
 /**
@@ -52,8 +52,8 @@ export interface InternalTextAreaProps extends TextAreaProps {
  * @param {string} wrapperClassName
  * @param {CSSProperties} wrapperStyle
  */
-export interface InternalInputPasswordProps extends Omit<PasswordProps, "size"> {
-    wrapperClassName?: string
-    size?: YakitSizeType
-    wrapperStyle?: React.CSSProperties
+export interface InternalInputPasswordProps extends Omit<PasswordProps, 'size'> {
+  wrapperClassName?: string
+  size?: YakitSizeType
+  wrapperStyle?: React.CSSProperties
 }

@@ -1,183 +1,183 @@
 /* ---------- EditorCode ----------*/
 .editor-code {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .editor-code-header {
-    padding: 12px 12px 8px 12px;
+  padding: 12px 12px 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  .header-tab-bar {
     display: flex;
     align-items: center;
-    gap: 16px;
-    .header-tab-bar {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        .expand-btn {
-            width: 24px;
-            height: 24px;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            border-radius: 4px;
-            cursor: pointer;
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-            &:hover {
-                background-color: var(--Colors-Use-Neutral-Bg);
-                color: var(--Colors-Use-Main-Primary);
-            }
-        }
+    gap: 8px;
+    .expand-btn {
+      width: 24px;
+      height: 24px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      border-radius: 4px;
+      cursor: pointer;
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+      &:hover {
+        background-color: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Main-Primary);
+      }
     }
-    .header-title {
-        flex: 1;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        .title-style {
-            flex: 1;
-            overflow: hidden;
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            font-size: 11px;
-            font-weight: 400;
-            line-height: 16px;
-        }
+  }
+  .header-title {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .title-style {
+      flex: 1;
+      overflow: hidden;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 16px;
     }
+  }
 }
 
 .editor-code-container {
-    padding: 0 12px 12px 12px;
-    flex: 1;
-    overflow: hidden;
+  padding: 0 12px 12px 12px;
+  flex: 1;
+  overflow: hidden;
 }
 
 .editor-code-tab-body {
+  height: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  display: flex;
+  .editor-operation-and-execution {
     height: 100%;
-    border-radius: 4px;
-    border: 1px solid var(--Colors-Use-Neutral-Border);
+    flex: 1;
+    border-radius: 4px 0px 0px 4px;
+    overflow: hidden;
+  }
+
+  .editor-params {
+    width: 301px;
+    height: 100%;
     display: flex;
-    .editor-operation-and-execution {
-        height: 100%;
-        flex: 1;
-        border-radius: 4px 0px 0px 4px;
-        overflow: hidden;
-    }
+    flex-direction: column;
+    border-radius: 0px 4px 4px 0px;
+    border-left: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
+    .header {
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 
-    .editor-params {
-        width: 301px;
-        height: 100%;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 16px;
+      .header-extra {
         display: flex;
-        flex-direction: column;
-        border-radius: 0px 4px 4px 0px;
-        border-left: 1px solid var(--Colors-Use-Neutral-Border);
-        background: var(--Colors-Use-Neutral-Bg);
-        .header {
-            padding: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px;
-            .header-extra {
-                display: flex;
-                justify-content: flex-end;
-                align-items: center;
-                .divider-style {
-                    margin-right: 8px;
-                    width: 1px;
-                    height: 12px;
-                    background-color: var(--Colors-Use-Neutral-Border);
-                }
-            }
+        justify-content: flex-end;
+        align-items: center;
+        .divider-style {
+          margin-right: 8px;
+          width: 1px;
+          height: 12px;
+          background-color: var(--Colors-Use-Neutral-Border);
         }
-        .container {
+      }
+    }
+    .container {
+      flex: 1;
+      overflow: hidden;
+      .form-wrapper {
+        height: 100%;
+        overflow: hidden auto;
+        padding-top: 8px;
+
+        :global {
+          .ant-form-item-label > label {
+            font-size: 12px;
+          }
+        }
+
+        .custom-params-wrapper {
+          padding: 0 12px;
+        }
+        .optional-params-wrapper {
+          padding: 0 12px;
+        }
+        .additional-params-divider {
+          margin: 16px 12px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 4px;
+          .text-style {
+            color: var(--Colors-Use-Neutral-Text-3-Secondary);
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 16px;
+          }
+          .divider-style {
             flex: 1;
             overflow: hidden;
-            .form-wrapper {
-                height: 100%;
-                overflow: hidden auto;
-                padding-top: 8px;
-
-                :global {
-                    .ant-form-item-label > label {
-                        font-size: 12px;
-                    }
-                }
-
-                .custom-params-wrapper {
-                    padding: 0 12px;
-                }
-                .optional-params-wrapper {
-                    padding: 0 12px;
-                }
-                .additional-params-divider {
-                    margin: 16px 12px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    gap: 4px;
-                    .text-style {
-                        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                        font-size: 12px;
-                        font-weight: 600;
-                        line-height: 16px;
-                    }
-                    .divider-style {
-                        flex: 1;
-                        overflow: hidden;
-                        height: 1px;
-                        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
-                    }
-                }
-
-                .to-end {
-                    text-align: center;
-                    color: var(--Colors-Use-Neutral-Disable);
-                    font-size: 11px;
-                    padding-top: 12px;
-                    padding-bottom: 24px;
-                }
-            }
+            height: 1px;
+            border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+          }
         }
+
+        .to-end {
+          text-align: center;
+          color: var(--Colors-Use-Neutral-Disable);
+          font-size: 11px;
+          padding-top: 12px;
+          padding-bottom: 24px;
+        }
+      }
     }
+  }
 }
 .editor-code-pane-show {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 .editor-code-pane-hidden {
-    display: none;
+  display: none;
 }
 
 .editor-code-tab-execute {
-    padding: 0 12px;
-    overflow: hidden auto;
+  padding: 0 12px;
+  overflow: hidden auto;
+  display: flex;
+  flex-direction: column;
+  .plugin-executing-progress {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-top: 12px;
+  }
+  .result-body {
+    flex: 1;
+    overflow: hidden;
+    min-height: 510px;
+    padding-bottom: 6px;
     display: flex;
     flex-direction: column;
-    .plugin-executing-progress {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 16px;
-        padding-top: 12px;
-    }
-    .result-body {
-        flex: 1;
-        overflow: hidden;
-        min-height: 510px;
-        padding-bottom: 6px;
-        display: flex;
-        flex-direction: column;
-    }
+  }
 }

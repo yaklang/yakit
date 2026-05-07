@@ -1,10 +1,10 @@
-import {APIFunc} from "@/apiUtils/type"
-import {NetWorkApi} from "@/services/fetch"
-import {API} from "@/services/swagger/resposeType"
-import {yakitNotify} from "@/utils/notification"
+import { APIFunc } from '@/apiUtils/type'
+import { NetWorkApi } from '@/services/fetch'
+import { API } from '@/services/swagger/resposeType'
+import { yakitNotify } from '@/utils/notification'
 
 export interface UserSearchQuery {
-    keywords: string
+  keywords: string
 }
 
 /**
@@ -13,30 +13,30 @@ export interface UserSearchQuery {
  * @returns
  */
 export const apiGetUserSearch: APIFunc<UserSearchQuery, API.UserOrdinaryResponse> = (query) => {
-    return new Promise((resolve, reject) => {
-        try {
-            if (!query.keywords) {
-                resolve({
-                    data: []
-                })
-            } else {
-                NetWorkApi<UserSearchQuery, API.UserOrdinaryResponse>({
-                    method: "get",
-                    url: "user/search",
-                    params: {
-                        ...query
-                    }
-                })
-                    .then(resolve)
-                    .catch((err) => {
-                        yakitNotify("error", "apiGetUserSearch获取普通用户失败:" + err)
-                        reject(err)
-                    })
-            }
-        } catch (error) {
-            reject(error)
-        }
-    })
+  return new Promise((resolve, reject) => {
+    try {
+      if (!query.keywords) {
+        resolve({
+          data: [],
+        })
+      } else {
+        NetWorkApi<UserSearchQuery, API.UserOrdinaryResponse>({
+          method: 'get',
+          url: 'user/search',
+          params: {
+            ...query,
+          },
+        })
+          .then(resolve)
+          .catch((err) => {
+            yakitNotify('error', 'apiGetUserSearch获取普通用户失败:' + err)
+            reject(err)
+          })
+      }
+    } catch (error) {
+      reject(error)
+    }
+  })
 }
 
 /**
@@ -45,20 +45,20 @@ export const apiGetUserSearch: APIFunc<UserSearchQuery, API.UserOrdinaryResponse
  * @returns
  */
 export const apiSetNotepadPermission: APIFunc<API.PostNotepadPermissionRequest, API.ActionSucceeded> = (query) => {
-    return new Promise((resolve, reject) => {
-        try {
-            NetWorkApi<API.PostNotepadPermissionRequest, API.ActionSucceeded>({
-                method: "post",
-                url: "notepad/permission",
-                data: query
-            })
-                .then(resolve)
-                .catch((err) => {
-                    yakitNotify("error", "设置笔记本权限失败：" + err)
-                    reject(err)
-                })
-        } catch (error) {
-            reject(error)
-        }
-    })
+  return new Promise((resolve, reject) => {
+    try {
+      NetWorkApi<API.PostNotepadPermissionRequest, API.ActionSucceeded>({
+        method: 'post',
+        url: 'notepad/permission',
+        data: query,
+      })
+        .then(resolve)
+        .catch((err) => {
+          yakitNotify('error', '设置笔记本权限失败：' + err)
+          reject(err)
+        })
+    } catch (error) {
+      reject(error)
+    }
+  })
 }

@@ -1,27 +1,27 @@
-import {API} from "@/services/swagger/resposeType"
+import { API } from '@/services/swagger/resposeType'
 
 export interface NotepadShareModalProps {
-    notepadInfo: API.GetNotepadList
-    onClose: () => void
+  notepadInfo: API.GetNotepadList
+  onClose: () => void
 }
 
 export interface SelectUserProps {
-    id: number
-    name: string
+  id: number
+  name: string
 }
 export interface NotepadCollaboratorInfoProps extends API.CollaboratorInfo {
-    imgNode?: ReactNode
+  imgNode?: ReactNode
 }
 
 export interface NotepadRoleProps {
-    adminPermission: "admin"
-    viewPermission: "view"
-    editPermission: "edit"
-    removePermission: ""
+  adminPermission: 'admin'
+  viewPermission: 'view'
+  editPermission: 'edit'
+  removePermission: ''
 }
 
 export type NotepadPermissionType = NotepadRoleProps[keyof NotepadRoleProps]
 
 export interface UserListProps extends API.UserList {
-    avatarColor?: string
+  avatarColor?: string
 }

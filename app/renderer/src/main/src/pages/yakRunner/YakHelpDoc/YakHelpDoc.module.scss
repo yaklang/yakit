@@ -1,42 +1,42 @@
 .yak-help-doc {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  .header {
     display: flex;
-    flex-direction: column;
-    .header {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        padding: 4px 12px;
-        align-items: center;
-        align-self: stretch;
-        .title {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px;
-        }
-        .extra {
-            svg {
-                height: 16px;
-                width: 16px;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            }
-        }
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 4px 12px;
+    align-items: center;
+    align-self: stretch;
+    .title {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 16px;
     }
-    .filter-box{
-        padding: 0px 12px 8px 12px;
-        .search-icon{
-            svg{
-                height: 16px;
-                width: 16px;
-                color: #85899E;
-            }
-        }
+    .extra {
+      svg {
+        height: 16px;
+        width: 16px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      }
     }
-    .content {
-        flex: 1;
-        overflow: hidden;
+  }
+  .filter-box {
+    padding: 0px 12px 8px 12px;
+    .search-icon {
+      svg {
+        height: 16px;
+        width: 16px;
+        color: #85899e;
+      }
     }
+  }
+  .content {
+    flex: 1;
+    overflow: hidden;
+  }
 }

@@ -5,10 +5,10 @@
  * @property faultImg 每个页面可以传自己的故障图。例如消息页面接口返回502，就展示消息页面的故障图加报错信息
  */
 export interface OnlineJudgmentProps {
-    ref?: any
-    isJudgingLogin?:boolean
-    children: ReactNode
-    faultImg?: string
+  ref?: any
+  isJudgingLogin?: boolean
+  children: ReactNode
+  faultImg?: string
 }
 
 /**
@@ -17,6 +17,6 @@ export interface OnlineJudgmentProps {
  * @property 错误信息
  * */
 export interface OnlineResponseStatusProps {
-    code: number
-    message: string
+  code: number
+  message: string
 }

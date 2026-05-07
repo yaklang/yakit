@@ -1,26 +1,26 @@
 .yakit-plugin-hub {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: relative;
 
-    .list {
-        max-width: 100%;
-        &.out-list {
-            width: 100%;
-        }
+  .list {
+    max-width: 100%;
+    &.out-list {
+      width: 100%;
     }
+  }
 
-    .detail {
-        flex: 1;
-        overflow: hidden;
-    }
+  .detail {
+    flex: 1;
+    overflow: hidden;
+  }
 
-    .hidden {
-        display: none;
-    }
+  .hidden {
+    display: none;
+  }
 }
 
 .update-local-hint {
-    top: 20%;
+  top: 20%;
 }

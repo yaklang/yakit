@@ -1,14 +1,14 @@
 .site-tag-plus {
-    background: #fff;
-    border-style: dashed;
+  background: #fff;
+  border-style: dashed;
 }
 
 .edit-tag {
-    user-select: none;
+  user-select: none;
 }
 
 .tag-input {
-    width: 78px;
-    margin-right: 8px;
-    vertical-align: top;
+  width: 78px;
+  margin-right: 8px;
+  vertical-align: top;
 }

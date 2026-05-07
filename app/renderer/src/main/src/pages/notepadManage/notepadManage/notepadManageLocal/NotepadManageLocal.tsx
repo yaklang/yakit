@@ -1,515 +1,509 @@
-import React, {useEffect, useRef, useState} from "react"
-import {NotepadLocalActionProps, NotepadManageLocalListProps, NotepadManageLocalProps} from "./NotepadManageLocalType"
+import React, { useEffect, useRef, useState } from 'react'
+import { NotepadLocalActionProps, NotepadManageLocalListProps, NotepadManageLocalProps } from './NotepadManageLocalType'
 import {
-    DeleteNoteRequest,
-    Note,
-    NoteFilter,
-    QueryNoteRequest,
-    QueryNoteResponse,
-    grpcDeleteNote,
-    grpcQueryNote,
-    grpcQueryNoteById
-} from "../utils"
-import {genDefaultPagination} from "@/pages/invoker/schema"
-import {cloneDeep} from "lodash"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
+  DeleteNoteRequest,
+  Note,
+  NoteFilter,
+  QueryNoteRequest,
+  QueryNoteResponse,
+  grpcDeleteNote,
+  grpcQueryNote,
+  grpcQueryNoteById,
+} from '../utils'
+import { genDefaultPagination } from '@/pages/invoker/schema'
+import { cloneDeep } from 'lodash'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
-    OutlineChevrondownIcon,
-    OutlineChevronupIcon,
-    OutlineExportIcon,
-    OutlineImportIcon,
-    OutlinePencilaltIcon,
-    OutlinePlusIcon,
-    OutlineSearchIcon,
-    OutlineTrashIcon
-} from "@/assets/icon/outline"
-import {useCreation, useDebounceFn, useInViewport, useMemoizedFn} from "ahooks"
-import styles from "./NotepadManageLocal.module.scss"
-import {YakitSpin} from "@/components/yakitUI/YakitSpin/YakitSpin"
-import {TableTotalAndSelectNumber} from "@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber"
-import {YakitInput} from "@/components/yakitUI/YakitInput/YakitInput"
-import {YakitPopconfirm} from "@/components/yakitUI/YakitPopconfirm/YakitPopconfirm"
-import {defaultNoteFilter} from "@/defaultConstants/ModifyNotepad"
-import {Divider} from "antd"
-import {timeMap} from "../NotepadManage"
-import {YakitEmpty} from "@/components/yakitUI/YakitEmpty/YakitEmpty"
-import {YakitVirtualList} from "@/components/yakitUI/YakitVirtualList/YakitVirtualList"
-import {VirtualListColumns} from "@/components/yakitUI/YakitVirtualList/YakitVirtualListType"
-import {YakitDropdownMenu} from "@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu"
-import {NotepadExport, NotepadImport} from "./NotepadImportAndExport"
-import {formatTimestamp} from "@/utils/timeUtil"
-import {YakitResizeBox} from "@/components/yakitUI/YakitResizeBox/YakitResizeBox"
-import {YakitTabsProps} from "@/components/yakitSideTab/YakitSideTabType"
-import {YakitSideTab} from "@/components/yakitSideTab/YakitSideTab"
-import {useGoEditNotepad} from "../../hook/useGoEditNotepad"
-import {getNotepadNameByEdition} from "@/pages/layout/NotepadMenu/utils"
-import {YakitRoute} from "@/enums/yakitRoute"
-import {useEmptyImage} from "@/hook/useResultEmpty/SearchEmpty"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+  OutlineChevrondownIcon,
+  OutlineChevronupIcon,
+  OutlineExportIcon,
+  OutlineImportIcon,
+  OutlinePencilaltIcon,
+  OutlinePlusIcon,
+  OutlineSearchIcon,
+  OutlineTrashIcon,
+} from '@/assets/icon/outline'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import styles from './NotepadManageLocal.module.scss'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { defaultNoteFilter } from '@/defaultConstants/ModifyNotepad'
+import { Divider } from 'antd'
+import { timeMap } from '../NotepadManage'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
+import { YakitVirtualList } from '@/components/yakitUI/YakitVirtualList/YakitVirtualList'
+import { VirtualListColumns } from '@/components/yakitUI/YakitVirtualList/YakitVirtualListType'
+import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
+import { NotepadExport, NotepadImport } from './NotepadImportAndExport'
+import { formatTimestamp } from '@/utils/timeUtil'
+import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
+import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
+import { useGoEditNotepad } from '../../hook/useGoEditNotepad'
+import { getNotepadNameByEdition } from '@/pages/layout/NotepadMenu/utils'
+import { YakitRoute } from '@/enums/yakitRoute'
+import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const NotepadLocalSearch = React.lazy(() => import("./NotepadLocalSearch"))
+const NotepadLocalSearch = React.lazy(() => import('./NotepadLocalSearch'))
 
 const yakitTab: YakitTabsProps[] = [
-    {
-        icon: <OutlineSearchIcon />,
-        label: "NotepadManageLocal.fullTextSearch",
-        value: "全文搜索"
-    }
+  {
+    icon: <OutlineSearchIcon />,
+    label: 'NotepadManageLocal.fullTextSearch',
+    value: '全文搜索',
+  },
 ]
 const NotepadManageLocal: React.FC<NotepadManageLocalProps> = React.memo((props) => {
-    const {t, i18n} = useI18nNamespaces(["notepad"])
-    const [activeKey, setActiveKey] = useState<string>("全文搜索")
-    const [show, setShow] = useState<boolean>(true)
-    return (
-        <>
-            <YakitResizeBox
-                freeze={show}
-                lineDirection='right'
-                firstRatio={show ? "260px" : "25px"}
-                firstNodeStyle={show ? {padding: 0} : {padding: 0, maxWidth: 25}}
-                firstMinSize={show ? 260 : 25}
-                secondMinSize={600}
-                firstNode={
-                    <div className={styles["note-local-left"]}>
-                        <YakitSideTab
-                            key={i18n.language}
-                            show={show}
-                            setShow={setShow}
-                            yakitTabs={yakitTab}
-                            activeKey={activeKey}
-                            onActiveKey={setActiveKey}
-                            t={t}
-                        />
-                        <NotepadLocalSearch />
-                    </div>
-                }
-                secondNodeStyle={show ? {overflow: "unset", padding: 0} : {padding: 0, minWidth: "calc(100% - 25px)"}}
-                secondNode={<NotepadManageLocalList />}
+  const { t, i18n } = useI18nNamespaces(['notepad'])
+  const [activeKey, setActiveKey] = useState<string>('全文搜索')
+  const [show, setShow] = useState<boolean>(true)
+  return (
+    <>
+      <YakitResizeBox
+        freeze={show}
+        lineDirection="right"
+        firstRatio={show ? '260px' : '25px'}
+        firstNodeStyle={show ? { padding: 0 } : { padding: 0, maxWidth: 25 }}
+        firstMinSize={show ? 260 : 25}
+        secondMinSize={600}
+        firstNode={
+          <div className={styles['note-local-left']}>
+            <YakitSideTab
+              key={i18n.language}
+              show={show}
+              setShow={setShow}
+              yakitTabs={yakitTab}
+              activeKey={activeKey}
+              onActiveKey={setActiveKey}
+              t={t}
             />
-        </>
-    )
+            <NotepadLocalSearch />
+          </div>
+        }
+        secondNodeStyle={show ? { overflow: 'unset', padding: 0 } : { padding: 0, minWidth: 'calc(100% - 25px)' }}
+        secondNode={<NotepadManageLocalList />}
+      />
+    </>
+  )
 })
 export default NotepadManageLocal
 
 const defaultQueryNoteRequest = {
-    Filter: cloneDeep(defaultNoteFilter),
-    Pagination: genDefaultPagination(20)
+  Filter: cloneDeep(defaultNoteFilter),
+  Pagination: genDefaultPagination(20),
 }
 
 const timeShow = {
-    created_at: "CreateAt",
-    updated_at: "UpdateAt"
+  created_at: 'CreateAt',
+  updated_at: 'UpdateAt',
 }
 const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) => {
-    const {t, i18n} = useI18nNamespaces(["notepad", "yakitUi"])
-    const {goAddNotepad} = useGoEditNotepad()
-    const emptyImageTarget = useEmptyImage("search")
-    const [pageLoading, setPageLoading] = useState<boolean>(false)
+  const { t, i18n } = useI18nNamespaces(['notepad', 'yakitUi'])
+  const { goAddNotepad } = useGoEditNotepad()
+  const emptyImageTarget = useEmptyImage('search')
+  const [pageLoading, setPageLoading] = useState<boolean>(false)
 
-    const [refresh, setRefresh] = useState<boolean>(true)
-    const [allCheck, setAllCheck] = useState<boolean>(false)
-    const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
+  const [refresh, setRefresh] = useState<boolean>(true)
+  const [allCheck, setAllCheck] = useState<boolean>(false)
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
 
-    const [keyWord, setKeyWord] = useState<string>("")
-    const [query, setQuery] = useState<QueryNoteRequest>(cloneDeep(defaultQueryNoteRequest))
-    const [hasMore, setHasMore] = useState<boolean>(true)
-    const [listLoading, setListLoading] = useState<boolean>(true)
-    const [response, setResponse] = useState<QueryNoteResponse>({
-        Data: [],
-        Pagination: genDefaultPagination(20),
-        Total: 0
-    })
+  const [keyWord, setKeyWord] = useState<string>('')
+  const [query, setQuery] = useState<QueryNoteRequest>(cloneDeep(defaultQueryNoteRequest))
+  const [hasMore, setHasMore] = useState<boolean>(true)
+  const [listLoading, setListLoading] = useState<boolean>(true)
+  const [response, setResponse] = useState<QueryNoteResponse>({
+    Data: [],
+    Pagination: genDefaultPagination(20),
+    Total: 0,
+  })
 
-    const [sorterKey, setSorterKey] = useState<string>("updated_at")
-    const [timeSortVisible, setTimeSortVisible] = useState<boolean>(false)
+  const [sorterKey, setSorterKey] = useState<string>('updated_at')
+  const [timeSortVisible, setTimeSortVisible] = useState<boolean>(false)
 
-    const [exportVisible, setExportVisible] = useState<boolean>(false)
-    const [importVisible, setImportVisible] = useState<boolean>(false)
+  const [exportVisible, setExportVisible] = useState<boolean>(false)
+  const [importVisible, setImportVisible] = useState<boolean>(false)
 
-    const totalRef = useRef<number>(0)
-    const notepadRef = useRef<HTMLDivElement>(null)
+  const totalRef = useRef<number>(0)
+  const notepadRef = useRef<HTMLDivElement>(null)
 
-    const [inViewPort = true] = useInViewport(notepadRef)
+  const [inViewPort = true] = useInViewport(notepadRef)
 
-    useEffect(() => {
-        getList()
-        fetchInitTotal()
-    }, [inViewPort, refresh])
+  useEffect(() => {
+    getList()
+    fetchInitTotal()
+  }, [inViewPort, refresh])
 
-    const getFilter = useCreation(() => {
-        return {
-            ...query.Filter,
-            Keyword: [keyWord]
+  const getFilter = useCreation(() => {
+    return {
+      ...query.Filter,
+      Keyword: [keyWord],
+    }
+  }, [keyWord])
+  const actionFilter = useCreation(() => {
+    const filter = allCheck ? getFilter : cloneDeep(defaultNoteFilter)
+    return allCheck
+      ? {
+          ...filter,
+          Id: [],
         }
-    }, [keyWord])
-    const actionFilter = useCreation(() => {
-        const filter = allCheck ? getFilter : cloneDeep(defaultNoteFilter)
-        return allCheck
-            ? {
-                  ...filter,
-                  Id: []
-              }
-            : {
-                  ...filter,
-                  Id: selectedRowKeys.map((ele) => +ele)
-              }
-    }, [getFilter, allCheck, selectedRowKeys])
-
-    const columns: VirtualListColumns<Note>[] = useCreation(() => {
-        return [
-            {
-                title: t("NotepadManageLocalList.title"),
-                dataIndex: "Title"
-            },
-            {
-                title: t("NotepadManageLocalList.updatedAt"),
-                dataIndex: timeShow[sorterKey],
-                render: (text, record: Note) => <div className={styles["time-cell"]}>{formatTimestamp(text)}</div>,
-                filterProps: {
-                    filterRender: () => (
-                        <YakitDropdownMenu
-                            menu={{
-                                data: [
-                                    {
-                                        key: "updated_at",
-                                        label: t("NotepadManageLocalList.updatedAt")
-                                    },
-                                    {
-                                        key: "created_at",
-                                        label: t("NotepadManageLocalList.createdAt")
-                                    }
-                                ],
-                                onClick: ({key}) => {
-                                    setSorterKey(key)
-                                    setTimeSortVisible(false)
-                                    setRefresh(!refresh)
-                                }
-                            }}
-                            dropdown={{
-                                visible: timeSortVisible,
-                                onVisibleChange: setTimeSortVisible
-                            }}
-                        >
-                            <YakitButton type='text2'>
-                                <span style={{marginRight: 8}}>{timeMap(t)[sorterKey]}</span>
-                                {timeSortVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
-                            </YakitButton>
-                        </YakitDropdownMenu>
-                    )
-                }
-            },
-            {
-                title: t("YakitTable.action"),
-                dataIndex: "action",
-                width: 180,
-                render: (_, record: Note) => (
-                    <>
-                        <NotepadLocalAction
-                            record={record}
-                            onSingleRemoveAfter={() => {
-                                setResponse((prev) => ({
-                                    ...prev,
-                                    Data: prev.Data.filter((ele) => ele.Id !== record.Id),
-                                    Total: +prev.Total - 1
-                                }))
-                            }}
-                        />
-                    </>
-                )
-            }
-        ]
-    }, [sorterKey, timeSortVisible, i18n.language])
-
-    const selectNumber = useCreation(() => {
-        if (allCheck) {
-            return +response.Total
-        } else {
-            return selectedRowKeys.length
+      : {
+          ...filter,
+          Id: selectedRowKeys.map((ele) => +ele),
         }
-    }, [allCheck, selectedRowKeys.length, response.Total])
+  }, [getFilter, allCheck, selectedRowKeys])
 
-    const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: Note[], checked: boolean) => {
-        setAllCheck(checked)
-        setSelectedRowKeys(newSelectedRowKeys)
-    })
-
-    const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: Note) => {
-        if (c) {
-            setSelectedRowKeys([...selectedRowKeys, key])
-        } else {
-            setAllCheck(false)
-            const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== key)
-            setSelectedRowKeys(newSelectedRowKeys)
-        }
-    })
-
-    const fetchInitTotal = useMemoizedFn(() => {
-        grpcQueryNote({
-            ...defaultQueryNoteRequest,
-            Pagination: {
-                ...genDefaultPagination(1, 1)
-            }
-        })
-            .then((res) => {
-                totalRef.current = +res.Total
-            })
-            .catch(() => {})
-    })
-
-    const getList = useDebounceFn(
-        useMemoizedFn(async (page?: number) => {
-            setListLoading(true)
-            const newQuery: QueryNoteRequest = {
-                Filter: getFilter,
-                Pagination: {
-                    ...query.Pagination,
-                    OrderBy: sorterKey,
-                    Page: page || 1
-                }
-            }
-            try {
-                const res = await grpcQueryNote(newQuery)
-                if (!res.Data) res.Data = []
-                const length = +res.Pagination.Page === 1 ? res.Data.length : res.Data.length + response.Data.length
-                setHasMore(length < +res.Total)
-                let newRes: QueryNoteResponse = {
-                    Data: +res?.Pagination.Page === 1 ? res?.Data : [...response.Data, ...(res?.Data || [])],
-                    Pagination: res?.Pagination || {
-                        ...genDefaultPagination(20)
-                    },
-                    Total: res.Total
-                }
-                setResponse(newRes)
-                if (+res.Pagination.Page === 1) {
-                    onSelectAll([], [], false)
-                } else {
-                    if (allCheck) {
-                        const newSelectedRowKeys: string[] = response.Data.map((ele) => `${ele.Id}`)
-                        setSelectedRowKeys((v) => [...v, ...newSelectedRowKeys])
-                    }
-                }
-            } catch (error) {}
-            setTimeout(() => {
-                setListLoading(false)
-            }, 300)
-        }),
-        {wait: 200, leading: true}
-    ).run
-
-    const loadMoreData = useDebounceFn(
-        () => {
-            getList(+response.Pagination.Page + 1)
+  const columns: VirtualListColumns<Note>[] = useCreation(() => {
+    return [
+      {
+        title: t('NotepadManageLocalList.title'),
+        dataIndex: 'Title',
+      },
+      {
+        title: t('NotepadManageLocalList.updatedAt'),
+        dataIndex: timeShow[sorterKey],
+        render: (text, record: Note) => <div className={styles['time-cell']}>{formatTimestamp(text)}</div>,
+        filterProps: {
+          filterRender: () => (
+            <YakitDropdownMenu
+              menu={{
+                data: [
+                  {
+                    key: 'updated_at',
+                    label: t('NotepadManageLocalList.updatedAt'),
+                  },
+                  {
+                    key: 'created_at',
+                    label: t('NotepadManageLocalList.createdAt'),
+                  },
+                ],
+                onClick: ({ key }) => {
+                  setSorterKey(key)
+                  setTimeSortVisible(false)
+                  setRefresh(!refresh)
+                },
+              }}
+              dropdown={{
+                visible: timeSortVisible,
+                onVisibleChange: setTimeSortVisible,
+              }}
+            >
+              <YakitButton type="text2">
+                <span style={{ marginRight: 8 }}>{timeMap(t)[sorterKey]}</span>
+                {timeSortVisible ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />}
+              </YakitButton>
+            </YakitDropdownMenu>
+          ),
         },
-        {wait: 200, leading: true}
-    ).run
+      },
+      {
+        title: t('YakitTable.action'),
+        dataIndex: 'action',
+        width: 180,
+        render: (_, record: Note) => (
+          <>
+            <NotepadLocalAction
+              record={record}
+              onSingleRemoveAfter={() => {
+                setResponse((prev) => ({
+                  ...prev,
+                  Data: prev.Data.filter((ele) => ele.Id !== record.Id),
+                  Total: +prev.Total - 1,
+                }))
+              }}
+            />
+          </>
+        ),
+      },
+    ]
+  }, [sorterKey, timeSortVisible, i18n.language])
 
-    const onBatchRemove = useMemoizedFn(() => {
-        let removeParams: DeleteNoteRequest = {
-            Filter: actionFilter
+  const selectNumber = useCreation(() => {
+    if (allCheck) {
+      return +response.Total
+    } else {
+      return selectedRowKeys.length
+    }
+  }, [allCheck, selectedRowKeys.length, response.Total])
+
+  const onSelectAll = useMemoizedFn((newSelectedRowKeys: string[], selected: Note[], checked: boolean) => {
+    setAllCheck(checked)
+    setSelectedRowKeys(newSelectedRowKeys)
+  })
+
+  const onChangeCheckboxSingle = useMemoizedFn((c: boolean, key: string, selectedRows: Note) => {
+    if (c) {
+      setSelectedRowKeys([...selectedRowKeys, key])
+    } else {
+      setAllCheck(false)
+      const newSelectedRowKeys = selectedRowKeys.filter((ele) => ele !== key)
+      setSelectedRowKeys(newSelectedRowKeys)
+    }
+  })
+
+  const fetchInitTotal = useMemoizedFn(() => {
+    grpcQueryNote({
+      ...defaultQueryNoteRequest,
+      Pagination: {
+        ...genDefaultPagination(1, 1),
+      },
+    })
+      .then((res) => {
+        totalRef.current = +res.Total
+      })
+      .catch(() => {})
+  })
+
+  const getList = useDebounceFn(
+    useMemoizedFn(async (page?: number) => {
+      setListLoading(true)
+      const newQuery: QueryNoteRequest = {
+        Filter: getFilter,
+        Pagination: {
+          ...query.Pagination,
+          OrderBy: sorterKey,
+          Page: page || 1,
+        },
+      }
+      try {
+        const res = await grpcQueryNote(newQuery)
+        if (!res.Data) res.Data = []
+        const length = +res.Pagination.Page === 1 ? res.Data.length : res.Data.length + response.Data.length
+        setHasMore(length < +res.Total)
+        let newRes: QueryNoteResponse = {
+          Data: +res?.Pagination.Page === 1 ? res?.Data : [...response.Data, ...(res?.Data || [])],
+          Pagination: res?.Pagination || {
+            ...genDefaultPagination(20),
+          },
+          Total: res.Total,
         }
+        setResponse(newRes)
+        if (+res.Pagination.Page === 1) {
+          onSelectAll([], [], false)
+        } else {
+          if (allCheck) {
+            const newSelectedRowKeys: string[] = response.Data.map((ele) => `${ele.Id}`)
+            setSelectedRowKeys((v) => [...v, ...newSelectedRowKeys])
+          }
+        }
+      } catch (error) {}
+      setTimeout(() => {
+        setListLoading(false)
+      }, 300)
+    }),
+    { wait: 200, leading: true },
+  ).run
 
-        setPageLoading(true)
-        grpcDeleteNote(removeParams)
-            .then(() => {
-                setRefresh(!refresh)
-            })
-            .finally(() =>
-                setTimeout(() => {
-                    setPageLoading(false)
-                }, 200)
-            )
-    })
-    /** 搜索内容 */
-    const onSearch = useMemoizedFn((val: string) => {
-        setKeyWord(val)
+  const loadMoreData = useDebounceFn(
+    () => {
+      getList(+response.Pagination.Page + 1)
+    },
+    { wait: 200, leading: true },
+  ).run
+
+  const onBatchRemove = useMemoizedFn(() => {
+    let removeParams: DeleteNoteRequest = {
+      Filter: actionFilter,
+    }
+
+    setPageLoading(true)
+    grpcDeleteNote(removeParams)
+      .then(() => {
         setRefresh(!refresh)
-    })
+      })
+      .finally(() =>
+        setTimeout(() => {
+          setPageLoading(false)
+        }, 200),
+      )
+  })
+  /** 搜索内容 */
+  const onSearch = useMemoizedFn((val: string) => {
+    setKeyWord(val)
+    setRefresh(!refresh)
+  })
 
-    const onBatchExport = useMemoizedFn(() => {
-        setExportVisible(true)
-    })
+  const onBatchExport = useMemoizedFn(() => {
+    setExportVisible(true)
+  })
 
-    const onBatchImport = useMemoizedFn(() => {
-        setImportVisible(true)
-    })
-    const name = useCreation(() => {
-        return getNotepadNameByEdition()
-    }, [])
-    return (
-        <YakitSpin spinning={pageLoading}>
-            <div className={styles["notepad-manage"]} ref={notepadRef}>
-                <div className={styles["notepad-manage-heard"]}>
-                    <div className={styles["heard-title"]}>
-                        <span className='content-ellipsis'>{name}管理</span>
-                        <TableTotalAndSelectNumber total={response.Total} selectNum={selectNumber} />
-                    </div>
-                    <div className={styles["heard-extra"]}>
-                        <YakitInput.Search
-                            value={keyWord}
-                            placeholder={t("YakitInput.searchKeyWordPlaceholder")}
-                            onChange={(e) => setKeyWord(e.target.value)}
-                            onSearch={onSearch}
-                        />
-                        <Divider type='vertical' style={{margin: 0}} />
-                        <YakitPopconfirm
-                            title={
-                                selectNumber > 0
-                                    ? t("NotepadManageLocalList.confirmDeleteSelected")
-                                    : t("NotepadManageLocalList.confirmDeleteAll")
-                            }
-                            onConfirm={onBatchRemove}
-                        >
-                            <YakitButton
-                                type='outline2'
-                                danger
-                                icon={<OutlineTrashIcon />}
-                                disabled={totalRef.current === 0}
-                                loading={pageLoading}
-                            >
-                                {t("YakitButton.delete")}
-                            </YakitButton>
-                        </YakitPopconfirm>
-                        <YakitButton
-                            type='outline2'
-                            icon={<OutlineExportIcon />}
-                            disabled={totalRef.current === 0}
-                            onClick={onBatchExport}
-                            loading={pageLoading}
-                        >
-                            {t("YakitButton.batchExport")}
-                        </YakitButton>
-                        <YakitButton type='outline2' icon={<OutlineImportIcon />} onClick={onBatchImport}>
-                            {t("YakitButton.import")}
-                        </YakitButton>
-                        <Divider type='vertical' style={{margin: 0}} />
-                        <YakitButton type='primary' icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
-                            {t("YakitButton.new")}
-                        </YakitButton>
-                    </div>
-                </div>
-                {totalRef.current === 0 || +response.Total === 0 ? (
-                    totalRef.current === 0 ? (
-                        <YakitEmpty style={{paddingTop: 48}} description={t("NotepadManageOnline.noData")} />
-                    ) : (
-                        <YakitEmpty
-                            image={emptyImageTarget}
-                            imageStyle={{margin: "96px auto 12px", height: 200}}
-                            title={t("YakitEmpty.searchEmpty")}
-                        />
-                    )
-                ) : (
-                    <YakitVirtualList<Note>
-                        loading={listLoading}
-                        hasMore={hasMore}
-                        columns={columns}
-                        data={response.Data}
-                        page={+(response.Pagination.Page || 1)}
-                        loadMoreData={loadMoreData}
-                        renderKey='Id'
-                        rowSelection={{
-                            isAll: allCheck,
-                            type: "checkbox",
-                            selectedRowKeys,
-                            onSelectAll: onSelectAll,
-                            onChangeCheckboxSingle
-                        }}
-                    />
-                )}
-            </div>
-            {exportVisible && (
-                <NotepadExport
-                    filter={actionFilter}
-                    onClose={() => setExportVisible(false)}
-                    getContainer={
-                        document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined
-                    }
-                />
-            )}
-            {importVisible && (
-                <NotepadImport
-                    onClose={() => setImportVisible(false)}
-                    onImportSuccessAfter={() => setRefresh(!refresh)}
-                    getContainer={
-                        document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined
-                    }
-                />
-            )}
-        </YakitSpin>
-    )
+  const onBatchImport = useMemoizedFn(() => {
+    setImportVisible(true)
+  })
+  const name = useCreation(() => {
+    return getNotepadNameByEdition()
+  }, [])
+  return (
+    <YakitSpin spinning={pageLoading}>
+      <div className={styles['notepad-manage']} ref={notepadRef}>
+        <div className={styles['notepad-manage-heard']}>
+          <div className={styles['heard-title']}>
+            <span className="content-ellipsis">{name}管理</span>
+            <TableTotalAndSelectNumber total={response.Total} selectNum={selectNumber} />
+          </div>
+          <div className={styles['heard-extra']}>
+            <YakitInput.Search
+              value={keyWord}
+              placeholder={t('YakitInput.searchKeyWordPlaceholder')}
+              onChange={(e) => setKeyWord(e.target.value)}
+              onSearch={onSearch}
+            />
+            <Divider type="vertical" style={{ margin: 0 }} />
+            <YakitPopconfirm
+              title={
+                selectNumber > 0
+                  ? t('NotepadManageLocalList.confirmDeleteSelected')
+                  : t('NotepadManageLocalList.confirmDeleteAll')
+              }
+              onConfirm={onBatchRemove}
+            >
+              <YakitButton
+                type="outline2"
+                danger
+                icon={<OutlineTrashIcon />}
+                disabled={totalRef.current === 0}
+                loading={pageLoading}
+              >
+                {t('YakitButton.delete')}
+              </YakitButton>
+            </YakitPopconfirm>
+            <YakitButton
+              type="outline2"
+              icon={<OutlineExportIcon />}
+              disabled={totalRef.current === 0}
+              onClick={onBatchExport}
+              loading={pageLoading}
+            >
+              {t('YakitButton.batchExport')}
+            </YakitButton>
+            <YakitButton type="outline2" icon={<OutlineImportIcon />} onClick={onBatchImport}>
+              {t('YakitButton.import')}
+            </YakitButton>
+            <Divider type="vertical" style={{ margin: 0 }} />
+            <YakitButton type="primary" icon={<OutlinePlusIcon />} onClick={() => goAddNotepad()}>
+              {t('YakitButton.new')}
+            </YakitButton>
+          </div>
+        </div>
+        {totalRef.current === 0 || +response.Total === 0 ? (
+          totalRef.current === 0 ? (
+            <YakitEmpty style={{ paddingTop: 48 }} description={t('NotepadManageOnline.noData')} />
+          ) : (
+            <YakitEmpty
+              image={emptyImageTarget}
+              imageStyle={{ margin: '96px auto 12px', height: 200 }}
+              title={t('YakitEmpty.searchEmpty')}
+            />
+          )
+        ) : (
+          <YakitVirtualList<Note>
+            loading={listLoading}
+            hasMore={hasMore}
+            columns={columns}
+            data={response.Data}
+            page={+(response.Pagination.Page || 1)}
+            loadMoreData={loadMoreData}
+            renderKey="Id"
+            rowSelection={{
+              isAll: allCheck,
+              type: 'checkbox',
+              selectedRowKeys,
+              onSelectAll: onSelectAll,
+              onChangeCheckboxSingle,
+            }}
+          />
+        )}
+      </div>
+      {exportVisible && (
+        <NotepadExport
+          filter={actionFilter}
+          onClose={() => setExportVisible(false)}
+          getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined}
+        />
+      )}
+      {importVisible && (
+        <NotepadImport
+          onClose={() => setImportVisible(false)}
+          onImportSuccessAfter={() => setRefresh(!refresh)}
+          getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined}
+        />
+      )}
+    </YakitSpin>
+  )
 }
 
 const NotepadLocalAction: React.FC<NotepadLocalActionProps> = React.memo((props) => {
-    const {t} = useI18nNamespaces(["notepad"])
-    const {record, onSingleRemoveAfter} = props
-    const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
-    const [editLoading, setEditLoading] = useState<boolean>(false)
-    const [exportVisible, setExportVisible] = useState<boolean>(false)
-    const {goEditNotepad} = useGoEditNotepad()
-    const filterRef = useRef<NoteFilter>({
-        ...cloneDeep(defaultNoteFilter),
-        Id: [record.Id]
-    })
+  const { t } = useI18nNamespaces(['notepad'])
+  const { record, onSingleRemoveAfter } = props
+  const [removeItemLoading, setRemoveItemLoading] = useState<boolean>(false)
+  const [editLoading, setEditLoading] = useState<boolean>(false)
+  const [exportVisible, setExportVisible] = useState<boolean>(false)
+  const { goEditNotepad } = useGoEditNotepad()
+  const filterRef = useRef<NoteFilter>({
+    ...cloneDeep(defaultNoteFilter),
+    Id: [record.Id],
+  })
 
-    const onEdit = useMemoizedFn(() => {
-        setEditLoading(true)
-        grpcQueryNoteById(record.Id)
-            .then((res) => {
-                goEditNotepad({notepadHash: `${res.Id}`, title: res.Title})
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    setEditLoading(false)
-                }, 200)
-            })
-    })
+  const onEdit = useMemoizedFn(() => {
+    setEditLoading(true)
+    grpcQueryNoteById(record.Id)
+      .then((res) => {
+        goEditNotepad({ notepadHash: `${res.Id}`, title: res.Title })
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setEditLoading(false)
+        }, 200)
+      })
+  })
 
-    const onExport = useMemoizedFn(() => {
-        setExportVisible(true)
-    })
+  const onExport = useMemoizedFn(() => {
+    setExportVisible(true)
+  })
 
-    const onSingleRemove = useMemoizedFn(() => {
-        const removeParams: DeleteNoteRequest = {
-            Filter: filterRef.current
-        }
-        setRemoveItemLoading(true)
-        grpcDeleteNote(removeParams)
-            .then(() => {
-                onSingleRemoveAfter()
-            })
-            .finally(() =>
-                setTimeout(() => {
-                    setRemoveItemLoading(false)
-                }, 200)
-            )
-    })
+  const onSingleRemove = useMemoizedFn(() => {
+    const removeParams: DeleteNoteRequest = {
+      Filter: filterRef.current,
+    }
+    setRemoveItemLoading(true)
+    grpcDeleteNote(removeParams)
+      .then(() => {
+        onSingleRemoveAfter()
+      })
+      .finally(() =>
+        setTimeout(() => {
+          setRemoveItemLoading(false)
+        }, 200),
+      )
+  })
 
-    return (
-        <div>
-            <YakitButton
-                type='text2'
-                icon={<OutlinePencilaltIcon />}
-                onClick={onEdit}
-                loading={editLoading}
-                disabled={removeItemLoading}
-            />
+  return (
+    <div>
+      <YakitButton
+        type="text2"
+        icon={<OutlinePencilaltIcon />}
+        onClick={onEdit}
+        loading={editLoading}
+        disabled={removeItemLoading}
+      />
 
-            <Divider type='vertical' style={{margin: "0 8px"}} />
+      <Divider type="vertical" style={{ margin: '0 8px' }} />
 
-            <YakitButton type='text2' icon={<OutlineExportIcon />} onClick={onExport} />
+      <YakitButton type="text2" icon={<OutlineExportIcon />} onClick={onExport} />
 
-            <Divider type='vertical' style={{margin: "0 8px"}} />
-            <YakitPopconfirm title={t("NotepadAction.confirmDelete")} onConfirm={() => onSingleRemove()}>
-                <YakitButton type='text' danger loading={removeItemLoading} icon={<OutlineTrashIcon />} />
-            </YakitPopconfirm>
-            {exportVisible && (
-                <NotepadExport
-                    filter={filterRef.current}
-                    onClose={() => setExportVisible(false)}
-                    getContainer={
-                        document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined
-                    }
-                />
-            )}
-        </div>
-    )
+      <Divider type="vertical" style={{ margin: '0 8px' }} />
+      <YakitPopconfirm title={t('NotepadAction.confirmDelete')} onConfirm={() => onSingleRemove()}>
+        <YakitButton type="text" danger loading={removeItemLoading} icon={<OutlineTrashIcon />} />
+      </YakitPopconfirm>
+      {exportVisible && (
+        <NotepadExport
+          filter={filterRef.current}
+          onClose={() => setExportVisible(false)}
+          getContainer={document.getElementById(`main-operator-page-body-${YakitRoute.Notepad_Manage}`) || undefined}
+        />
+      )}
+    </div>
+  )
 })

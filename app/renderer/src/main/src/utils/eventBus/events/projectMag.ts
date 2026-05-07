@@ -1,5 +1,5 @@
 export type ProjectMagEventProps = {
   onSwitchEngine?: string
-  onGetProjectInfo? : string
+  onGetProjectInfo?: string
   onRefreshProjectList?: string
 }

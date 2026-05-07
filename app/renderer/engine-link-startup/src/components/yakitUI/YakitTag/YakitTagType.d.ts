@@ -1,6 +1,6 @@
-import {TagProps} from "antd"
-import {CheckableTagProps} from "antd/lib/tag"
-import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
+import { TagProps } from 'antd'
+import { CheckableTagProps } from 'antd/lib/tag'
+import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
 
 /**
  * @description YakitTagProps 的属性
@@ -15,32 +15,32 @@ import type {YakitSizeType} from "../YakitInputNumber/YakitInputNumberType"
  */
 
 export type YakitTagColor =
-    | "danger"
-    | "info"
-    | "success"
-    | "green"
-    | "warning"
-    | "serious"
-    | "red"
-    | "yellow"
-    | "purple"
-    | "blue"
-    | "cyan"
-    | "bluePurple"
-    | "white"
+  | 'danger'
+  | 'info'
+  | 'success'
+  | 'green'
+  | 'warning'
+  | 'serious'
+  | 'red'
+  | 'yellow'
+  | 'purple'
+  | 'blue'
+  | 'cyan'
+  | 'bluePurple'
+  | 'white'
 
-export interface YakitTagProps extends Omit<TagProps, "color"> {
-    size?: YakitSizeType
-    color?: YakitTagColor
-    disable?: boolean
-    enableCopy?: boolean
-    onAfterCopy?: (e: MouseEvent) => void
-    copyText?: string
-    iconColor?: string
-    /**是否全圆角 */
-    fullRadius?: boolean
-    /**是否有边框 */
-    border?: boolean
+export interface YakitTagProps extends Omit<TagProps, 'color'> {
+  size?: YakitSizeType
+  color?: YakitTagColor
+  disable?: boolean
+  enableCopy?: boolean
+  onAfterCopy?: (e: MouseEvent) => void
+  copyText?: string
+  iconColor?: string
+  /**是否全圆角 */
+  fullRadius?: boolean
+  /**是否有边框 */
+  border?: boolean
 }
 /**
  * @description: 复制文字
@@ -50,10 +50,10 @@ export interface YakitTagProps extends Omit<TagProps, "color"> {
  * @param {string} iconColor 复制Icon文字
  */
 export interface CopyComponentsProps {
-    className?: string
-    onAfterCopy?: (e: MouseEvent) => void
-    copyText: string
-    iconColor?: string
+  className?: string
+  onAfterCopy?: (e: MouseEvent) => void
+  copyText: string
+  iconColor?: string
 }
 
 /**
@@ -63,7 +63,7 @@ export interface CopyComponentsProps {
  * @param {boolean} disable
  */
 export interface YakitCheckableTagProps extends CheckableTagProps {
-    children?: ReactNode
-    wrapClassName?: string
-    disable?: boolean
+  children?: ReactNode
+  wrapClassName?: string
+  disable?: boolean
 }

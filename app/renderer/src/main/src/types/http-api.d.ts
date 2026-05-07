@@ -5,12 +5,12 @@
 
 /** http接口请求体里的分页定义 */
 export interface HTTPRequestParameters {
-    /** 页码 */
-    page?: number
-    /** 单页条数(不传默认 20) */
-    limit?: number
-    /** 排序字段(不传默认 created_at) */
-    order_by?: string
-    /** 排序顺序(不传默认 desc) */
-    order?: "asc" | "desc"
+  /** 页码 */
+  page?: number
+  /** 单页条数(不传默认 20) */
+  limit?: number
+  /** 排序字段(不传默认 created_at) */
+  order_by?: string
+  /** 排序顺序(不传默认 desc) */
+  order?: 'asc' | 'desc'
 }

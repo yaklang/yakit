@@ -1,11 +1,11 @@
-import React from "react"
-import styles from "./FingerprintManage.module.scss"
-import { SafeMarkdown, StreamMarkdown } from "../assetViewer/reportRenders/markdownRender"
+import React from 'react'
+import styles from './FingerprintManage.module.scss'
+import { SafeMarkdown, StreamMarkdown } from '../assetViewer/reportRenders/markdownRender'
 
 interface FingerprintRuleDomProp {}
 export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
-    // 目录内容单独提取
-    const toc = `
+  // 目录内容单独提取
+  const toc = `
 - [介绍](#介绍)
 - [运算符](#运算符)
   - [关系运算符](#关系运算符)
@@ -21,7 +21,7 @@ export const FingerprintRuleDom: React.FC<FingerprintRuleDomProp> = (props) => {
   - [运行时变量](#运行时变量)
     `.trim()
 
-    const mdContent = `
+  const mdContent = `
     ## 介绍
 
 新版指纹通过一条表达式实现，通过内置变量和运算符实现对流量匹配。
@@ -132,23 +132,23 @@ body = "ThinkPHP"
 如需要使用正则 \`Polylang(?: (Pro))?\` 匹配 header 中 X-redirected-by 字段的值，则编写为表达式为：\`header_X-redirected-by ~= Polylang(?: (Pro))\`
 `.trim()
 
-    return (
-        <div style={{height: 700, display: "flex"}}>
-            <div
-                style={{
-                    width: 200,
-                    borderRight: "1px solid var(--Colors-Use-Neutral-Border)",
-                    padding: "8px",
-                    background: "var(--Colors-Use-Basic-Background)"
-                }}
-            >
-                <div className={styles["toc-list"]}>
-                    <StreamMarkdown content={toc} />
-                </div>
-            </div>
-            <div style={{flex: 1, padding: 24, overflowY: "auto"}}>
-                <StreamMarkdown content={mdContent} />
-            </div>
+  return (
+    <div style={{ height: 700, display: 'flex' }}>
+      <div
+        style={{
+          width: 200,
+          borderRight: '1px solid var(--Colors-Use-Neutral-Border)',
+          padding: '8px',
+          background: 'var(--Colors-Use-Basic-Background)',
+        }}
+      >
+        <div className={styles['toc-list']}>
+          <StreamMarkdown content={toc} />
         </div>
-    )
+      </div>
+      <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
+        <StreamMarkdown content={mdContent} />
+      </div>
+    </div>
+  )
 }

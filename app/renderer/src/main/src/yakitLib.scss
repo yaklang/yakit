@@ -2,44 +2,44 @@
 // 比如内容单行、多行省略之类的，还有动画的注册
 
 html {
-    // 多行内容省略-行数
-    --yakit-ellipsis-row: 2;
+  // 多行内容省略-行数
+  --yakit-ellipsis-row: 2;
 }
 
 // 单行内容省略
 .yakit-content-single-ellipsis {
-    white-space: nowrap;
-    word-wrap: normal;
-    text-overflow: ellipsis;
-    overflow: hidden;
+  white-space: nowrap;
+  word-wrap: normal;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 // 多行内容省略
 // 行数可通过设置 变量 --yakit-ellipsis-row 控制
 .yakit-content-multiLine-ellipsis {
-    display: -webkit-box;
-    line-clamp: var(--yakit-ellipsis-row);
-    -webkit-line-clamp: var(--yakit-ellipsis-row);
-    -webkit-box-orient: vertical;
+  display: -webkit-box;
+  line-clamp: var(--yakit-ellipsis-row);
+  -webkit-line-clamp: var(--yakit-ellipsis-row);
+  -webkit-box-orient: vertical;
 }
 
 // icon 图标转圈动画
 .icon-rotate-animation {
-    animation: rotate 1s linear infinite;
+  animation: rotate 1s linear infinite;
 }
 @keyframes rotate {
-    0% {
-        -webkit-transform: rotate(0deg);
-    }
-    25% {
-        -webkit-transform: rotate(90deg);
-    }
-    50% {
-        -webkit-transform: rotate(180deg);
-    }
-    75% {
-        -webkit-transform: rotate(270deg);
-    }
-    100% {
-        -webkit-transform: rotate(360deg);
-    }
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  25% {
+    -webkit-transform: rotate(90deg);
+  }
+  50% {
+    -webkit-transform: rotate(180deg);
+  }
+  75% {
+    -webkit-transform: rotate(270deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
 }

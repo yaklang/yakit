@@ -1,123 +1,123 @@
-@use "../../plugins.scss";
+@use '../../plugins.scss';
 .plugin-head-executing-wrapper {
+  @extend %display-flex-center;
+  justify-content: flex-end;
+  .plugin-head-executing {
     @extend %display-flex-center;
     justify-content: flex-end;
-    .plugin-head-executing {
-        @extend %display-flex-center;
-        justify-content: flex-end;
-        flex: 1;
-        // min-width: 280px;
-        flex-shrink: 0;
-        gap: 8px;
-    }
+    flex: 1;
+    // min-width: 280px;
+    flex-shrink: 0;
+    gap: 8px;
+  }
 }
 
 .plugin-execute-form-item {
-    width: 100%;
+  width: 100%;
 }
 
 .plugin-execute-form-wrapper {
-    display: grid;
-    grid-template-rows: 1fr;
-    transition: all 0.3s ease;
-    padding: 24px 12px 0;
-    :global {
-        .ant-form {
-            overflow: hidden;
-        }
-        .json-schema-form {
-            display: block;
-            .json-schema-row-form {
-                .ant-form-item-label {
-                    flex: 0 0 25% !important;
-                }
-                .ant-form-item-label + .ant-form-item-control {
-                    flex: 0 0 50% !important;
-                }
-                // 需询问后端是否可从schema中移除
-                #root_auth__error,
-                #root_proxy__error {
-                    display: none;
-                }
-            }
-        }
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: all 0.3s ease;
+  padding: 24px 12px 0;
+  :global {
+    .ant-form {
+      overflow: hidden;
     }
-    .plugin-execute-form-operate {
-        @extend %display-flex-center;
-        .plugin-execute-form-operate-start {
-            margin-right: 8px;
+    .json-schema-form {
+      display: block;
+      .json-schema-row-form {
+        .ant-form-item-label {
+          flex: 0 0 25% !important;
         }
+        .ant-form-item-label + .ant-form-item-control {
+          flex: 0 0 50% !important;
+        }
+        // 需询问后端是否可从schema中移除
+        #root_auth__error,
+        #root_proxy__error {
+          display: none;
+        }
+      }
     }
+  }
+  .plugin-execute-form-operate {
+    @extend %display-flex-center;
+    .plugin-execute-form-operate-start {
+      margin-right: 8px;
+    }
+  }
 }
 .plugin-execute-form-wrapper-hidden {
-    grid-template-rows: 0fr;
-    padding-top: 0;
+  grid-template-rows: 0fr;
+  padding-top: 0;
 }
 .code-wrapper {
-    width: 100%;
-    margin-bottom: 0px !important;
-    :global {
-        .ant-form-item-control-input-content {
-            height: 300px;
-            border: 1px solid var(--Colors-Use-Neutral-Border);
-        }
+  width: 100%;
+  margin-bottom: 0px !important;
+  :global {
+    .ant-form-item-control-input-content {
+      height: 300px;
+      border: 1px solid var(--Colors-Use-Neutral-Border);
     }
+  }
 }
 .code-error-wrapper {
-    :global {
-        .ant-card-bordered {
-            border: 0;
-        }
-        .ant-form-item-control-input-content {
-            border-radius: 2px;
-            border: 1px solid var(--Colors-Use-Error-Primary);
-            &:focus-within {
-                box-shadow: 0 0 0 2px var(--Colors-Use-Error-Bg-Hover);
-            }
-        }
+  :global {
+    .ant-card-bordered {
+      border: 0;
     }
+    .ant-form-item-control-input-content {
+      border-radius: 2px;
+      border: 1px solid var(--Colors-Use-Error-Primary);
+      &:focus-within {
+        box-shadow: 0 0 0 2px var(--Colors-Use-Error-Bg-Hover);
+      }
+    }
+  }
 }
 
 .plugin-execute-progress-wrapper {
-    @extend %display-flex-center;
+  @extend %display-flex-center;
+  flex: 1;
+  flex-shrink: 0;
+  gap: 4px;
+  max-width: 200px;
+  :global {
+    .ant-progress-line {
+      min-width: 120px;
+    }
+    .ant-progress-show-info .ant-progress-outer {
+      margin-right: calc(-2.5em - 8px);
+      padding-right: calc(2.5em + 8px);
+    }
+    .ant-progress-text {
+      width: 2.5em;
+    }
+  }
+  .plugin-execute-progress-name {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px; /* 133.333% */
+    max-width: 80px;
     flex: 1;
-    flex-shrink: 0;
-    gap: 4px;
-    max-width: 200px;
-    :global {
-        .ant-progress-line {
-            min-width: 120px;
-        }
-        .ant-progress-show-info .ant-progress-outer {
-            margin-right: calc(-2.5em - 8px);
-            padding-right: calc(2.5em + 8px);
-        }
-        .ant-progress-text {
-            width: 2.5em;
-        }
-    }
-    .plugin-execute-progress-name {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 16px; /* 133.333% */
-        max-width: 80px;
-        flex: 1;
-        display: flex;
-    }
+    display: flex;
+  }
 }
 
 .plugin-head-executing-progress {
-    @extend %display-flex-center;
-    flex-wrap: wrap;
-    gap: 16px;
-    padding: 12px;
-    padding-bottom: 0;
+  @extend %display-flex-center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px;
+  padding-bottom: 0;
 }
 
 .expand-retract {
-    // padding-top: 0;
-    .expand-retract-animation-wrapper {
-        top: 85%;
-    }
+  // padding-top: 0;
+  .expand-retract-animation-wrapper {
+    top: 85%;
+  }
 }

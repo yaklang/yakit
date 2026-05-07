@@ -1,53 +1,53 @@
-.code-scan-result-table{
-    height: 100%;
-    .virtual-table-header-wrap {
+.code-scan-result-table {
+  height: 100%;
+  .virtual-table-header-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .virtual-table-heard-left {
+      display: flex;
+      align-items: center;
+      margin-left: 12px;
+      .virtual-table-heard-left-item {
         display: flex;
         align-items: center;
-        gap: 8px;
-        .virtual-table-heard-left {
-            display: flex;
-            align-items: center;
-            margin-left: 12px;
-            .virtual-table-heard-left-item {
-                display: flex;
-                align-items: center;
-                .virtual-table-heard-left-text {
-                    color: var(--Colors-Use-Neutral-Disable);
-                    font-size: 12px;
-                    margin-right: 4px;
-                }
+        .virtual-table-heard-left-text {
+          color: var(--Colors-Use-Neutral-Disable);
+          font-size: 12px;
+          margin-right: 4px;
+        }
 
-                .virtual-table-heard-left-number {
-                    color: var(--Colors-Use-Main-Primary);
-                    font-size: 12px;
-                }
-            }
+        .virtual-table-heard-left-number {
+          color: var(--Colors-Use-Main-Primary);
+          font-size: 12px;
         }
+      }
     }
-    .domainAsset-table-extra {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-right: 12px;
+  }
+  .domainAsset-table-extra {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 12px;
+  }
+  .filter-icon {
+    svg {
+      width: 16px;
+      height: 16px;
     }
-    .filter-icon {
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
+  }
 }
 
-.code-scan-result{
-    height: 100%
+.code-scan-result {
+  height: 100%;
 }
 
 .body-length-checkbox {
-    display: flex;
-    align-items: center;
-    margin-right: 12px;
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
 
-    .tip {
-        margin-left: 4px;
-    }
+  .tip {
+    margin-left: 4px;
+  }
 }

@@ -1,42 +1,42 @@
 .btn-footer {
-    margin-top: 24px;
-    margin-left: 106px;
-    margin-bottom: 32px;
+  margin-top: 24px;
+  margin-left: 106px;
+  margin-bottom: 32px;
 
-    button {
-        margin-right: 12px;
-    }
+  button {
+    margin-right: 12px;
+  }
 }
 
 .content-value {
-    display: flex;
-    align-items: center;
-    margin-top: 12px;
-    height: 24px;
-    line-height: 24px;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
+  display: flex;
+  align-items: center;
+  margin-top: 12px;
+  height: 24px;
+  line-height: 24px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
 
-    .label-text {
-        margin-right: 6px;
-        width: 150px;
-        text-align: right;
-    }
+  .label-text {
+    margin-right: 6px;
+    width: 150px;
+    text-align: right;
+  }
 }
 
 .display-flex {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .importYamlPopTitle {
-    .importText {
-        color: var(--Colors-Use-Neutral-Text-4-Help-text);
-        font-size: 14px;
-        font-weight: normal;
-        margin-left: 16px;
-    }
+  .importText {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    font-size: 14px;
+    font-weight: normal;
+    margin-left: 16px;
+  }
 }
 
 .multimodeImportYaml {
-    height: 500px;
+  height: 500px;
 }

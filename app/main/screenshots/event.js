@@ -1,7 +1,7 @@
 module.exports = class Event {
-    defaultPrevented = false
+  defaultPrevented = false
 
-    preventDefault() {
-        this.defaultPrevented = true
-    }
+  preventDefault() {
+    this.defaultPrevented = true
+  }
 }

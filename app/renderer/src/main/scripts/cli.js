@@ -1,4 +1,4 @@
-const {execSync} = require("child_process")
+const { execSync } = require('child_process')
 
 /**
  * @synchronize [IDENTIFIER_NAME]
@@ -6,33 +6,33 @@ const {execSync} = require("child_process")
  * 修改此项时，请务必同步修改另外几处。
  */
 const versionMap = {
-    yakit: "yakit",
-    yakitEE: "enterprise",
-    yakitSE: "simple-enterprise",
-    irify: "irify",
-    irifyEE: "irify-enterprise",
-    memfit: "memfit"
+  yakit: 'yakit',
+  yakitEE: 'enterprise',
+  yakitSE: 'simple-enterprise',
+  irify: 'irify',
+  irifyEE: 'irify-enterprise',
+  memfit: 'memfit',
 }
 
 const resolvedVersion = () => {
-    const cliVersion = process.env.CLIVersion
-    if (!cliVersion || !versionMap[cliVersion]) {
-        console.error("未指定版本号或版本号无效, 请传入正确的版本, 例如: (yakit|yakitEE|yakitSE|irify|irifyEE|memfit)")
-        return null
-    }
-    return versionMap[cliVersion]
+  const cliVersion = process.env.CLIVersion
+  if (!cliVersion || !versionMap[cliVersion]) {
+    console.error('未指定版本号或版本号无效, 请传入正确的版本, 例如: (yakit|yakitEE|yakitSE|irify|irifyEE|memfit)')
+    return null
+  }
+  return versionMap[cliVersion]
 }
 
 const resolvedBuild = () => {
-    const cliBuild = process.env.CLIBuild
-    if (cliBuild === "true") return true
-    return false
+  const cliBuild = process.env.CLIBuild
+  if (cliBuild === 'true') return true
+  return false
 }
 
 const resolvedDevtools = () => {
-    const cliBuild = process.env.CLIDevtools
-    if (cliBuild === "true") return true
-    return false
+  const cliBuild = process.env.CLIDevtools
+  if (cliBuild === 'true') return true
+  return false
 }
 
 const version = resolvedVersion()
@@ -43,29 +43,29 @@ const devtools = resolvedDevtools()
 if (!version) process.exit(1)
 
 const envs = {
-    ...process.env,
-    REACT_APP_PLATFORM: version
+  ...process.env,
+  REACT_APP_PLATFORM: version,
 }
 
 if (build) {
-    envs.GENERATE_SOURCEMAP = false
-    if (devtools) envs.REACT_APP_DEVTOOL = "true"
+  envs.GENERATE_SOURCEMAP = false
+  if (devtools) envs.REACT_APP_DEVTOOL = 'true'
 } else {
-    envs.BROWSER = "none"
-    envs.REACT_APP_DEVTOOL = "true"
+  envs.BROWSER = 'none'
+  envs.REACT_APP_DEVTOOL = 'true'
 }
 
-console.log("Main-Render ready to start")
+console.log('Main-Render ready to start')
 
-const scriptName = build ? "react-app-rewired build" : "react-app-rewired start"
+const scriptName = build ? 'react-app-rewired build' : 'react-app-rewired start'
 
 try {
-    execSync(scriptName, {
-        stdio: "inherit",
-        env: {...envs}
-    })
+  execSync(scriptName, {
+    stdio: 'inherit',
+    env: { ...envs },
+  })
 } catch (error) {
-    console.error(`Failed to execute script: ${scriptName}`)
-    console.error(error?.message || error)
-    process.exit(1)
+  console.error(`Failed to execute script: ${scriptName}`)
+  console.error(error?.message || error)
+  process.exit(1)
 }

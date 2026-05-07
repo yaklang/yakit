@@ -1,21 +1,21 @@
 interface ExecResult {
-    Progress: number
-    IsMessage: boolean
-    Message?: Uint8Array
+  Progress: number
+  IsMessage: boolean
+  Message?: Uint8Array
 }
 
 interface BinaryInfo {
-    Name: string
-    InstallPath: string
-    installToken: string
-    Description: string
+  Name: string
+  InstallPath: string
+  installToken: string
+  Description: string
 }
 
 interface AllInstallPluginsProps {
-    onInstallPlug: (installPlug: boolean) => void
-    binariesToInstall: BinaryInfo[] | undefined
-    binariesToInstallRefreshAsync: () => Promise<any[]>
-    isShow?: boolean
+  onInstallPlug: (installPlug: boolean) => void
+  binariesToInstall: BinaryInfo[] | undefined
+  binariesToInstallRefreshAsync: () => Promise<any[]>
+  isShow?: boolean
 }
 
-export type {ExecResult, BinaryInfo, AllInstallPluginsProps}
+export type { ExecResult, BinaryInfo, AllInstallPluginsProps }

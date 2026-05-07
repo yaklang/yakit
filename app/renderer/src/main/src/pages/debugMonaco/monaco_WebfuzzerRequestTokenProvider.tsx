@@ -1,14 +1,14 @@
-import React from "react";
-import {monaco} from "react-monaco-editor";
+import React from 'react'
+import { monaco } from 'react-monaco-editor'
 
-export const MONACO_SPEC_WEBFUZZER_REQUEST = "webfuzzer-request";
+export const MONACO_SPEC_WEBFUZZER_REQUEST = 'webfuzzer-request'
 
-monaco.languages.register({id: MONACO_SPEC_WEBFUZZER_REQUEST});
+monaco.languages.register({ id: MONACO_SPEC_WEBFUZZER_REQUEST })
 monaco.languages.setTokensProvider(MONACO_SPEC_WEBFUZZER_REQUEST, {
-    tokenize: (line: string, state) => {
-        return {endState: {}, tokens: []} as any;
-    },
-    getInitialState: () => {
-        return {} as any;
-    }
+  tokenize: (line: string, state) => {
+    return { endState: {}, tokens: [] } as any
+  },
+  getInitialState: () => {
+    return {} as any
+  },
 })

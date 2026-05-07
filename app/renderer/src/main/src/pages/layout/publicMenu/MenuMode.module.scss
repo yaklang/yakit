@@ -1,95 +1,95 @@
 .menu-mode-wrapper {
+  height: 72px;
+  display: inline-flex;
+  gap: 4px;
+
+  .divider-style {
+    width: 1px;
     height: 72px;
-    display: inline-flex;
+    background-color: var(--Colors-Use-Neutral-Border);
+  }
+
+  .menu-icon-wrapper {
+    flex: 1 0 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .icon-wrapper {
+    display: flex;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .child-icon-wrapper:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+  .title-style {
+    height: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 11px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    word-break: keep-all;
+    white-space: nowrap;
+    user-select: none;
+    text-align: center;
+  }
+
+  .disable-style {
+    opacity: 0.3;
+    cursor: not-allowed !important;
+    svg {
+      cursor: not-allowed !important;
+    }
+  }
+
+  .vertical-menu-wrapper {
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .vertical-menu-wrapper:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+  .horizontal-menu-wrapper {
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
     gap: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .horizontal-menu-wrapper:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+  .parent-menu-wrapper {
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
 
-    .divider-style {
-        width: 1px;
-        height: 72px;
-        background-color: var(--Colors-Use-Neutral-Border);
+    .childs-menu-wrapper {
+      flex: 1 0 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 4px 0;
+      gap: 4px;
     }
+  }
 
-    .menu-icon-wrapper {
-        flex: 1 0 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .icon-wrapper {
-        display: flex;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    .child-icon-wrapper:hover {
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-    }
-    .title-style {
-        height: 12px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 11px;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        word-break: keep-all;
-        white-space: nowrap;
-        user-select: none;
-        text-align: center;
-    }
-
-    .disable-style {
-        opacity: 0.3;
-        cursor: not-allowed !important;
-        svg {
-            cursor: not-allowed !important;
-        }
-    }
-
+  .multiple-vertical-menu-wrapper {
+    display: flex;
+    gap: 8px;
     .vertical-menu-wrapper {
-        padding: 4px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        border-radius: 4px;
-        cursor: pointer;
+      padding-top: 4px;
     }
-    .vertical-menu-wrapper:hover {
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-    }
-    .horizontal-menu-wrapper {
-        padding: 2px 4px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    .horizontal-menu-wrapper:hover {
-        background: var(--Colors-Use-Neutral-Bg-Hover);
-    }
-    .parent-menu-wrapper {
-        padding: 4px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-
-        .childs-menu-wrapper {
-            flex: 1 0 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 4px 0;
-            gap: 4px;
-        }
-    }
-
-    .multiple-vertical-menu-wrapper {
-        display: flex;
-        gap: 8px;
-        .vertical-menu-wrapper {
-            padding-top: 4px;
-        }
-    }
+  }
 }

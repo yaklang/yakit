@@ -1,24 +1,24 @@
 .left-side-bar {
+  height: 100%;
+  display: flex;
+
+  &-content {
+    flex: 1;
+    overflow: hidden;
     height: 100%;
-    display: flex;
-
-    &-content {
-        flex: 1;
-        overflow: hidden;
-        height: 100%;
-        .content-wrapper {
-            width: 100%;
-            height: 100%;
-        }
-
-        .hidden-content {
-            display: none;
-        }
+    .content-wrapper {
+      width: 100%;
+      height: 100%;
     }
+
+    .hidden-content {
+      display: none;
+    }
+  }
 }
 
 .folded {
-    .left-side-bar-content {
-        width: 0;
-    }
+  .left-side-bar-content {
+    width: 0;
+  }
 }

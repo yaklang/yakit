@@ -1,19 +1,24 @@
-import { YakParamProps } from "@/pages/plugins/pluginsType"
+import { YakParamProps } from '@/pages/plugins/pluginsType'
 
 export namespace ImportMenuConfig {
-    export const Params: YakParamProps[] = [
-        {
-            Field: "config-file", FieldVerbose: "配置文件(zip/json)",
-            Required: true, TypeVerbose: "upload-path", DefaultValue: "",
-            Help: "用于导入配置文件：配置菜单栏",
-        },
-        {
-            Field: "delete-old", FieldVerbose: "删除旧配置？",
-            TypeVerbose: "boolean", DefaultValue: "",
-            Help: "师傅删除旧的配置",
-        },
-    ]
-    export const Code = `# YakCode
+  export const Params: YakParamProps[] = [
+    {
+      Field: 'config-file',
+      FieldVerbose: '配置文件(zip/json)',
+      Required: true,
+      TypeVerbose: 'upload-path',
+      DefaultValue: '',
+      Help: '用于导入配置文件：配置菜单栏',
+    },
+    {
+      Field: 'delete-old',
+      FieldVerbose: '删除旧配置？',
+      TypeVerbose: 'boolean',
+      DefaultValue: '',
+      Help: '师傅删除旧的配置',
+    },
+  ]
+  export const Code = `# YakCode
 yakit.AutoInitYakit()
 tempDir = yakit.GetHomeTempDir()
 

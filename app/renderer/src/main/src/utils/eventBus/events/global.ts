@@ -1,48 +1,48 @@
-import {YakitRoute} from "@/enums/yakitRoute"
+import { YakitRoute } from '@/enums/yakitRoute'
 
 export type GlobalEventProps = {
-    /** 软件顶部是否能拖拽移动软件 */
-    setYakitHeaderDraggable: boolean
-    /**切换二级菜单的选中项目 */
-    switchSubMenuItem: string
-    /**自动上传项目 */
-    autoUploadProject: string
-    /**触发性能采样 */
-    performanceSampling?: string
-    cancelPerformanceSampling?: string
-    /**刷新顶部漏洞风险的已读未读状态 */
-    onRefRisksRead: string
-    /**系统代理已刷新 */
-    onRefConfigSystemProxy: string
-    /**消息通知查看全部 */
-    openAllMessageNotification?: string
-    /**切换一级菜单的选中key */
-    switchMenuItem: string
-    /**关闭当前页面 传页面id */
-    onCloseCurrentPage: string
-    /**
-     * 关闭一级菜单
-     * OnlyPageCache
-     * @param {YakitRoute} route
-     * @param {string} menuName 当route为YakitRoute.Plugin_OP时，menuName必传，其他可不传
-     * @param {OnlyPageCache}assignPage 删除页面后指定某个页面展示 //LINK app\renderer\src\main\src\pages\layout\mainOperatorContent\MainOperatorContent.tsx#remove-menuPage
-     */
-    onCloseFirstMenu: string
-    /**
-     * 更新二级菜单的名字，从页面上发送的信号
-     * @param {YakitRoute} route
-     * @param {string} value tab名称
-     * @param {string} pageId 修改的页面id
-     */
-    onUpdateSubMenuNameFormPage: string
-    /**更新单例页面的标签名 */
-    onUpdateSingletonPageName: string
-    /**二级标签页数量限制 */
-    onUpdateSecondaryTabsNum: number
-    /**日志数量限制 */
-    onUpdateLimitLogNum: number
-    /** 远程控制受控端密钥弹窗自动关闭 */
-    onCloseControlMyselfModal?: string
-    /** 菜单栏设置菜单选项 */
-    onUIOpSettingMenuSelect: string
+  /** 软件顶部是否能拖拽移动软件 */
+  setYakitHeaderDraggable: boolean
+  /**切换二级菜单的选中项目 */
+  switchSubMenuItem: string
+  /**自动上传项目 */
+  autoUploadProject: string
+  /**触发性能采样 */
+  performanceSampling?: string
+  cancelPerformanceSampling?: string
+  /**刷新顶部漏洞风险的已读未读状态 */
+  onRefRisksRead: string
+  /**系统代理已刷新 */
+  onRefConfigSystemProxy: string
+  /**消息通知查看全部 */
+  openAllMessageNotification?: string
+  /**切换一级菜单的选中key */
+  switchMenuItem: string
+  /**关闭当前页面 传页面id */
+  onCloseCurrentPage: string
+  /**
+   * 关闭一级菜单
+   * OnlyPageCache
+   * @param {YakitRoute} route
+   * @param {string} menuName 当route为YakitRoute.Plugin_OP时，menuName必传，其他可不传
+   * @param {OnlyPageCache}assignPage 删除页面后指定某个页面展示 //LINK app\renderer\src\main\src\pages\layout\mainOperatorContent\MainOperatorContent.tsx#remove-menuPage
+   */
+  onCloseFirstMenu: string
+  /**
+   * 更新二级菜单的名字，从页面上发送的信号
+   * @param {YakitRoute} route
+   * @param {string} value tab名称
+   * @param {string} pageId 修改的页面id
+   */
+  onUpdateSubMenuNameFormPage: string
+  /**更新单例页面的标签名 */
+  onUpdateSingletonPageName: string
+  /**二级标签页数量限制 */
+  onUpdateSecondaryTabsNum: number
+  /**日志数量限制 */
+  onUpdateLimitLogNum: number
+  /** 远程控制受控端密钥弹窗自动关闭 */
+  onCloseControlMyselfModal?: string
+  /** 菜单栏设置菜单选项 */
+  onUIOpSettingMenuSelect: string
 }

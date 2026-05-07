@@ -1,25 +1,25 @@
 // user info
 const USER_INFO = {
-    /** 是否登录 */
-    isLogin: false,
-    /** 登录平台 */
-    platform: null,
-    githubName: null,
-    githubHeadImg: null,
-    wechatName: null,
-    wechatHeadImg: null,
-    companyName: null,
-    companyHeadImg: null,
-    qqName: null,
-    qqHeadImg: null,
-    /** 角色 */
-    role: null,
-    token: null,
-    user_id: 0
+  /** 是否登录 */
+  isLogin: false,
+  /** 登录平台 */
+  platform: null,
+  githubName: null,
+  githubHeadImg: null,
+  wechatName: null,
+  wechatHeadImg: null,
+  companyName: null,
+  companyHeadImg: null,
+  qqName: null,
+  qqHeadImg: null,
+  /** 角色 */
+  role: null,
+  token: null,
+  user_id: 0,
 }
 const HttpSetting = {
-    httpBaseURL: "https://www.yaklang.com",
-    wsBaseURL: "wss://www.yaklang.com"
+  httpBaseURL: 'https://www.yaklang.com',
+  wsBaseURL: 'wss://www.yaklang.com',
 }
 
 /**
@@ -30,15 +30,15 @@ const HttpSetting = {
  * @property {String} caPem 远端引擎证书密钥
  */
 const GLOBAL_YAK_SETTING = {
-    status: false,
-    sudo: false,
-    defaultYakGRPCAddr: "127.0.0.1:8087",
-    password: "",
-    caPem: ""
+  status: false,
+  sudo: false,
+  defaultYakGRPCAddr: '127.0.0.1:8087',
+  password: '',
+  caPem: '',
 }
 
 module.exports = {
-    USER_INFO,
-    HttpSetting,
-    GLOBAL_YAK_SETTING
+  USER_INFO,
+  HttpSetting,
+  GLOBAL_YAK_SETTING,
 }

@@ -1,105 +1,105 @@
-import React, {useState} from "react"
-import {ByCursorMenuItemProps} from "@/utils/showByCursor"
-import {Space} from "antd"
-import {execPacketScan, execPacketScanFromRaw} from "@/pages/packetScanner/PacketScanner"
-import {YakitButton} from "@/components/yakitUI/YakitButton/YakitButton"
-import {YakitPopover} from "@/components/yakitUI/YakitPopover/YakitPopover"
-import styles from "./packetScanner.module.scss"
-import {useI18nNamespaces} from "@/i18n/useI18nNamespaces"
+import React, { useState } from 'react'
+import { ByCursorMenuItemProps } from '@/utils/showByCursor'
+import { Space } from 'antd'
+import { execPacketScan, execPacketScanFromRaw } from '@/pages/packetScanner/PacketScanner'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import styles from './packetScanner.module.scss'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /**
  * @description 数据包扫描的默认菜单数据
  */
-export const packetScanDefaultValue: {Verbose: string; VerboseUi?: string; Keyword?: string}[] = [
-    {Verbose: "批量执行", VerboseUi: "HTTPFlowTable.RowContextMenu.batchExecute", Keyword: undefined},
-    {
-        Verbose: "网络设备与OA系统",
-        VerboseUi: "HTTPFlowTable.RowContextMenu.networkDevicesAndOASystem",
-        Keyword:
-            "锐捷,若依,金和,金山,金蝶,致远,Seeyou,seeyou,通达,tonged,Tongda,银澎,浪潮,泛微,方维,帆软,向日葵,ecshop,dahua,huawei,zimbra,coremail,Coremail,邮件服务器"
-    },
-    {
-        Verbose: "安全产品",
-        VerboseUi: "HTTPFlowTable.RowContextMenu.securityProduct",
-        Keyword: "防火墙,行为管理,绿盟,天擎,tianqing,防篡改,网御星云,安防,审计系统,天融信,安全系统"
-    },
-    {Verbose: "FastJSON", Keyword: "fastjson,FastJson,FastJSON"},
-    {Verbose: "Log4j", Keyword: "Log4j,log4j,Log4shell,log4shell,Log4Shell"},
-    {Verbose: "Weblogic", Keyword: "weblogic,Weblogic"},
-    {
-        Verbose: "远程代码执行（扫描）",
-        VerboseUi: "HTTPFlowTable.RowContextMenu.remoteCodeExecutionScan",
-        Keyword: "RCE,rce"
-    },
-    {Verbose: "XSS", Keyword: "xss,XSS"},
-    {Verbose: "Java", Keyword: "Java"},
-    {Verbose: "Tomcat", Keyword: "Tomcat"},
-    {Verbose: "IIS", Keyword: "IIS"},
-    {Verbose: "Nginx", Keyword: "Nginx"},
-    {Verbose: "Shiro", Keyword: "Shiro"},
-    {Verbose: "SQL注入", VerboseUi: "HTTPFlowTable.RowContextMenu.sQLInjection", Keyword: "SQL注入"}
+export const packetScanDefaultValue: { Verbose: string; VerboseUi?: string; Keyword?: string }[] = [
+  { Verbose: '批量执行', VerboseUi: 'HTTPFlowTable.RowContextMenu.batchExecute', Keyword: undefined },
+  {
+    Verbose: '网络设备与OA系统',
+    VerboseUi: 'HTTPFlowTable.RowContextMenu.networkDevicesAndOASystem',
+    Keyword:
+      '锐捷,若依,金和,金山,金蝶,致远,Seeyou,seeyou,通达,tonged,Tongda,银澎,浪潮,泛微,方维,帆软,向日葵,ecshop,dahua,huawei,zimbra,coremail,Coremail,邮件服务器',
+  },
+  {
+    Verbose: '安全产品',
+    VerboseUi: 'HTTPFlowTable.RowContextMenu.securityProduct',
+    Keyword: '防火墙,行为管理,绿盟,天擎,tianqing,防篡改,网御星云,安防,审计系统,天融信,安全系统',
+  },
+  { Verbose: 'FastJSON', Keyword: 'fastjson,FastJson,FastJSON' },
+  { Verbose: 'Log4j', Keyword: 'Log4j,log4j,Log4shell,log4shell,Log4Shell' },
+  { Verbose: 'Weblogic', Keyword: 'weblogic,Weblogic' },
+  {
+    Verbose: '远程代码执行（扫描）',
+    VerboseUi: 'HTTPFlowTable.RowContextMenu.remoteCodeExecutionScan',
+    Keyword: 'RCE,rce',
+  },
+  { Verbose: 'XSS', Keyword: 'xss,XSS' },
+  { Verbose: 'Java', Keyword: 'Java' },
+  { Verbose: 'Tomcat', Keyword: 'Tomcat' },
+  { Verbose: 'IIS', Keyword: 'IIS' },
+  { Verbose: 'Nginx', Keyword: 'Nginx' },
+  { Verbose: 'Shiro', Keyword: 'Shiro' },
+  { Verbose: 'SQL注入', VerboseUi: 'HTTPFlowTable.RowContextMenu.sQLInjection', Keyword: 'SQL注入' },
 ]
 
 export const GetPacketScanByCursorMenuItem = (id: number): ByCursorMenuItemProps => {
-    return {
-        title: "数据包扫描",
-        onClick: () => {},
-        subMenuItems: packetScanDefaultValue.map((i) => {
-            return {
-                id: i.Keyword,
-                title: i.VerboseUi || i.Verbose,
-                onClick: () => {
-                    execPacketScan({
-                        httpFlowIds: [id],
-                        value: i,
-                        https: false
-                    })
-                }
-            }
-        })
-    }
+  return {
+    title: '数据包扫描',
+    onClick: () => {},
+    subMenuItems: packetScanDefaultValue.map((i) => {
+      return {
+        id: i.Keyword,
+        title: i.VerboseUi || i.Verbose,
+        onClick: () => {
+          execPacketScan({
+            httpFlowIds: [id],
+            value: i,
+            https: false,
+          })
+        },
+      }
+    }),
+  }
 }
 
 export interface PacketScanButtonProp {
-    packetGetter: () => {https: boolean; httpRequest: Uint8Array}
+  packetGetter: () => { https: boolean; httpRequest: Uint8Array }
 }
 
 export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
-    const {t, i18n} = useI18nNamespaces(["webFuzzer", "history"])
-    const [visible, setVisible] = useState<false | undefined>(undefined)
-    return (
-        <YakitPopover
-            key={"数据包扫描"}
-            title={t("PacketScanButton.packetScan")}
-            trigger={["click"]}
-            visible={visible}
-            content={
-                <Space direction={"vertical"} style={{width: i18n.language === "zh" ? 150 : 200}}>
-                    {packetScanDefaultValue.map((i, n) => {
-                        return (
-                            <YakitButton
-                                className={styles["yakit-button-theme"]}
-                                type='outline2'
-                                onClick={() => {
-                                    const {https, httpRequest} = props.packetGetter()
-                                    setVisible(false)
-                                    setTimeout(() => {
-                                        setVisible(undefined)
-                                    }, 300)
-                                    execPacketScanFromRaw(https, httpRequest, i)
-                                }}
-                                key={`${i.Verbose}+${n}`}
-                            >
-                                {t(i.VerboseUi || i.Verbose )}
-                            </YakitButton>
-                        )
-                    })}
-                </Space>
-            }
-        >
-            <YakitButton size={"small"} type='outline2'>
-                {t("PacketScanButton.packetScan")}
-            </YakitButton>
-        </YakitPopover>
-    )
+  const { t, i18n } = useI18nNamespaces(['webFuzzer', 'history'])
+  const [visible, setVisible] = useState<false | undefined>(undefined)
+  return (
+    <YakitPopover
+      key={'数据包扫描'}
+      title={t('PacketScanButton.packetScan')}
+      trigger={['click']}
+      visible={visible}
+      content={
+        <Space direction={'vertical'} style={{ width: i18n.language === 'zh' ? 150 : 200 }}>
+          {packetScanDefaultValue.map((i, n) => {
+            return (
+              <YakitButton
+                className={styles['yakit-button-theme']}
+                type="outline2"
+                onClick={() => {
+                  const { https, httpRequest } = props.packetGetter()
+                  setVisible(false)
+                  setTimeout(() => {
+                    setVisible(undefined)
+                  }, 300)
+                  execPacketScanFromRaw(https, httpRequest, i)
+                }}
+                key={`${i.Verbose}+${n}`}
+              >
+                {t(i.VerboseUi || i.Verbose)}
+              </YakitButton>
+            )
+          })}
+        </Space>
+      }
+    >
+      <YakitButton size={'small'} type="outline2">
+        {t('PacketScanButton.packetScan')}
+      </YakitButton>
+    </YakitPopover>
+  )
 }

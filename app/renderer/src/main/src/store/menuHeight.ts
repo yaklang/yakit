@@ -1,28 +1,28 @@
-import {createWithEqualityFn} from "zustand/traditional"
+import { createWithEqualityFn } from 'zustand/traditional'
 
 interface MenuBodyHeightProps {
-    firstTabMenuBodyHeight: number
+  firstTabMenuBodyHeight: number
 }
 interface MenuBodyHeightStoreProps {
-    menuBodyHeight: MenuBodyHeightProps
-    /**更新 menuBodyHeight*/
-    updateMenuBodyHeight: (v: MenuBodyHeightProps) => void
+  menuBodyHeight: MenuBodyHeightProps
+  /**更新 menuBodyHeight*/
+  updateMenuBodyHeight: (v: MenuBodyHeightProps) => void
 }
 
 export const useMenuHeight = createWithEqualityFn<MenuBodyHeightStoreProps>(
-    (set, get) => ({
+  (set, get) => ({
+    menuBodyHeight: {
+      firstTabMenuBodyHeight: 0,
+    },
+    updateMenuBodyHeight: (value) => {
+      const newVal = get().menuBodyHeight
+      set({
         menuBodyHeight: {
-            firstTabMenuBodyHeight: 0
+          ...newVal,
+          ...value,
         },
-        updateMenuBodyHeight: (value) => {
-            const newVal = get().menuBodyHeight
-            set({
-                menuBodyHeight: {
-                    ...newVal,
-                    ...value
-                }
-            })
-        }
-    }),
-    Object.is
+      })
+    },
+  }),
+  Object.is,
 )

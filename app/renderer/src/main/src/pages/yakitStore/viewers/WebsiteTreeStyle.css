@@ -1,60 +1,60 @@
 .ellipsis-tree {
-    width: 100%;
+  width: 100%;
 }
 
 .ellipsis-tree .ant-tree-node-content-wrapper {
-    width: 100%;
+  width: 100%;
 }
 
 .ellipsis-tree .ant-tree-title {
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .ellipsis-tree .ant-tree-list .ant-tree-treenode {
-    width: 100%;
-    max-width: 100%;
+  width: 100%;
+  max-width: 100%;
 }
 
 .ellipsis-tree .titleContent {
-    max-width: 300px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    box-sizing: border-box;
-    position: relative;
-    display: inline-block;
-    height: 24px;
-    line-height: 24px;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
+  height: 24px;
+  line-height: 24px;
 }
-.Website-tree-spin{
-    height: 100%;
+.Website-tree-spin {
+  height: 100%;
 }
-.Website-tree-card{
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+.Website-tree-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
-.Website-tree-card .ant-card-head-wrapper{
-    align-items: flex-start;
+.Website-tree-card .ant-card-head-wrapper {
+  align-items: flex-start;
 }
-.Website-tree-card .ant-card-body{
-    flex: 1;
-    overflow-y: auto;
+.Website-tree-card .ant-card-body {
+  flex: 1;
+  overflow-y: auto;
 }
-.Website-tree-card .ant-card-body .ant-tree-list-holder div:first-child{
-    overflow: initial !important;
+.Website-tree-card .ant-card-body .ant-tree-list-holder div:first-child {
+  overflow: initial !important;
 }
-.Website-tree-card .ant-card-head{
-    min-width: auto;
+.Website-tree-card .ant-card-head {
+  min-width: auto;
 }
 .flex-card .ant-card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }

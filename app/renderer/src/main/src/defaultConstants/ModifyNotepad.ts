@@ -1,18 +1,18 @@
-import {ModifyNotepadPageInfoProps} from "@/store/pageInfo"
-import {NoteFilter} from "@/pages/notepadManage/notepadManage/utils"
+import { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
+import { NoteFilter } from '@/pages/notepadManage/notepadManage/utils'
 
 export const defaultModifyNotepadPageInfo: ModifyNotepadPageInfoProps = {
-    domId: "",
-    notepadHash: "",
-    title: "",
-    keyWordInfo: {
-        keyWord: "",
-        position: 0
-    }
+  domId: '',
+  notepadHash: '',
+  title: '',
+  keyWordInfo: {
+    keyWord: '',
+    position: 0,
+  },
 }
 
 export const defaultNoteFilter: NoteFilter = {
-    Id: [],
-    Title: [],
-    Keyword: []
+  Id: [],
+  Title: [],
+  Keyword: [],
 }

@@ -1,4 +1,4 @@
-const {screen} = require("electron")
+const { screen } = require('electron')
 
 /**
  * @typedef {Object} Display - 窗口坐标和宽高相关信息
@@ -14,15 +14,15 @@ const {screen} = require("electron")
  * @return {Display}
  */
 module.exports = () => {
-    const point = screen.getCursorScreenPoint()
-    const {id, bounds, scaleFactor} = screen.getDisplayNearestPoint(point)
+  const point = screen.getCursorScreenPoint()
+  const { id, bounds, scaleFactor } = screen.getDisplayNearestPoint(point)
 
-    return {
-        id,
-        x: Math.floor(bounds.x),
-        y: Math.floor(bounds.y),
-        width: Math.floor(bounds.width),
-        height: Math.floor(bounds.height),
-        scaleFactor
-    }
+  return {
+    id,
+    x: Math.floor(bounds.x),
+    y: Math.floor(bounds.y),
+    width: Math.floor(bounds.width),
+    height: Math.floor(bounds.height),
+    scaleFactor,
+  }
 }

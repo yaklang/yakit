@@ -14,7 +14,6 @@ handle = func(origin /*string*/) {
 }
 `
 
-
 export const CustomDnsLogPlatformTemplate = `
 yakit.AutoInitYakit()
 

@@ -1,33 +1,33 @@
 .trustListPage {
-    height: calc(100% - 30px);
-    .virtual-table-header-wrap {
+  height: calc(100% - 30px);
+  .virtual-table-header-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .virtual-table-heard-left {
+      display: flex;
+      align-items: center;
+
+      .virtual-table-heard-left-item {
         display: flex;
         align-items: center;
-        gap: 8px;
-        .virtual-table-heard-left {
-            display: flex;
-            align-items: center;
 
-            .virtual-table-heard-left-item {
-                display: flex;
-                align-items: center;
-
-                .virtual-table-heard-left-text {
-                    color: var(--Colors-Use-Neutral-Disable);
-                    font-size: 12px;
-                    margin-right: 4px;
-                }
-
-                .virtual-table-heard-left-number {
-                    color: var(--Colors-Use-Main-Primary);
-                    font-size: 12px;
-                }
-            }
+        .virtual-table-heard-left-text {
+          color: var(--Colors-Use-Neutral-Disable);
+          font-size: 12px;
+          margin-right: 4px;
         }
+
+        .virtual-table-heard-left-number {
+          color: var(--Colors-Use-Main-Primary);
+          font-size: 12px;
+        }
+      }
     }
-    .newTrustListPage-table-extra {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
+  }
+  .newTrustListPage-table-extra {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }

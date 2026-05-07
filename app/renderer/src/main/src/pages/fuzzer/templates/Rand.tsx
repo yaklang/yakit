@@ -1,4 +1,4 @@
 export interface RandStrWithLenProp {
-    origin: string
-    setOrigin: (origin: string) => any
+  origin: string
+  setOrigin: (origin: string) => any
 }

@@ -1,27 +1,27 @@
 .document-collect-tree {
-    height: 100%;
-    padding: 0px 0px 0px 4px;
+  height: 100%;
+  padding: 0px 0px 0px 4px;
 }
 
-.hole-item-title{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
+.hole-item-title {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
 }
 
-.document-collect{
-    height: 100%;
+.document-collect {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  padding-right: 0;
+  .tree-top-wrap {
     display: flex;
-    flex-direction: column;
-    padding: 15px;
-    padding-right: 0;
-    .tree-top-wrap {
-        display: flex;
-        justify-content: space-between;
-    }
-    .tree-wrap {
-        flex: 1;
-        display: flex;
-    }
+    justify-content: space-between;
+  }
+  .tree-wrap {
+    flex: 1;
+    display: flex;
+  }
 }

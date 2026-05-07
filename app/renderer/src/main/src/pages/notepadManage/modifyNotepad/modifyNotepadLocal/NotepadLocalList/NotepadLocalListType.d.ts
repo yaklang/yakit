@@ -1,3 +1,3 @@
 export interface NotepadLocalListProps {
-    noteId: number
+  noteId: number
 }

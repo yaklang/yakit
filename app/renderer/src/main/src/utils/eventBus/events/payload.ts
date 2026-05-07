@@ -1,7 +1,7 @@
 export type PayLoadEventProps = {
-    refreshListEvent?: string
-    refreshTableEvent?: string
+  refreshListEvent?: string
+  refreshTableEvent?: string
 
-    // online
-    refreshOnlineListEvent?: string
+  // online
+  refreshOnlineListEvent?: string
 }

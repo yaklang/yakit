@@ -1,40 +1,40 @@
 .notepad-manage {
-    padding: 16px;
-    overflow: hidden;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+  padding: 16px;
+  overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .notepad-manage-heard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  overflow: hidden;
+  gap: 12px;
+  .heard-title {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    gap: 16px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
     overflow: hidden;
-    gap: 12px;
-    .heard-title {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        font-size: 16px;
-        font-weight: 600;
-        line-height: 24px;
-        overflow: hidden;
-    }
-    .heard-extra {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-    }
+  }
+  .heard-extra {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
 }
 
 .time-cell {
-    padding: 0 8px;
+  padding: 0 8px;
 
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 16px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
 }

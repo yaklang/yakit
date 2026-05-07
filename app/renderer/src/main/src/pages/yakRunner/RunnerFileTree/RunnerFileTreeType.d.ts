@@ -1,9 +1,9 @@
 export interface RunnerFileTreeProps {
-    addFileTab: () => void
+  addFileTab: () => void
 }
 
 export interface OpenedFileProps {}
 
 export interface OpenFolderDraggerProps {
-    setAbsolutePath: (v: string) => void
+  setAbsolutePath: (v: string) => void
 }

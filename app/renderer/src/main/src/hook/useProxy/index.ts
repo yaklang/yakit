@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react"
-import { useMemoizedFn } from "ahooks"
-import { randomString } from "@/utils/randomUtil"
-import { GlobalProxyRulesConfig, grpcGetGlobalProxyRulesConfig, grpcSetGlobalProxyRulesConfig } from "@/apiUtils/grpc"
-import { useI18nNamespaces } from "@/i18n/useI18nNamespaces"
+import { useEffect, useMemo, useState } from 'react'
+import { useMemoizedFn } from 'ahooks'
+import { randomString } from '@/utils/randomUtil'
+import { GlobalProxyRulesConfig, grpcGetGlobalProxyRulesConfig, grpcSetGlobalProxyRulesConfig } from '@/apiUtils/grpc'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /** @name 代理下拉选项类型 */
 export interface ProxyOption {
@@ -66,7 +66,7 @@ let isInitialized = false
 const updateGlobalConfig = (config: GlobalProxyRulesConfig): void => {
   globalProxyConfig = config
   isInitialized = true
-  subscribers.forEach(cb => cb())
+  subscribers.forEach((cb) => cb())
 }
 
 /**
@@ -77,9 +77,17 @@ const updateGlobalConfig = (config: GlobalProxyRulesConfig): void => {
  */
 export const parseUrl = (url: string): ParsedUrlResult => {
   try {
-    const { username = '', password = '', protocol = '', host = '', pathname = '', search = '', hash = '' } = new URL(url)
-    const path = pathname === '/' ? '' : pathname, 
-      isHttps = protocol.includes('http') || protocol.includes("https")
+    const {
+      username = '',
+      password = '',
+      protocol = '',
+      host = '',
+      pathname = '',
+      search = '',
+      hash = '',
+    } = new URL(url)
+    const path = pathname === '/' ? '' : pathname,
+      isHttps = protocol.includes('http') || protocol.includes('https')
     const Url = !isHttps ? `${protocol}${path}${search}${hash}` : `${protocol}//${host}${path}${search}${hash}`
     return { Url, UserName: username, Password: password }
   } catch (error) {
@@ -95,7 +103,7 @@ export const parseUrl = (url: string): ParsedUrlResult => {
  */
 export const useProxy = (): UseProxyReturn => {
   const [proxyConfig, setProxyConfig] = useState<GlobalProxyRulesConfig>(globalProxyConfig)
-  const { t, i18n } = useI18nNamespaces(["mitm"])
+  const { t, i18n } = useI18nNamespaces(['mitm'])
 
   // 订阅全局配置变化
   useEffect(() => {
@@ -140,15 +148,17 @@ export const useProxy = (): UseProxyReturn => {
    */
   const getProxyValue = useMemoizedFn((selection: string[]): ProxyValue => {
     const normalizedSelection = selection.map((item) => `${item}`.trim()).filter((item) => item.length > 0)
-    const proxyEndpoints = normalizedSelection.filter((item) => !item.startsWith('route') && !proxyConfig.Endpoints.find(({ Id }) => Id === item)?.Disabled)
-      .map((id) => comparePointUrl(id)).join(',')
+    const proxyEndpoints = normalizedSelection
+      .filter((item) => !item.startsWith('route') && !proxyConfig.Endpoints.find(({ Id }) => Id === item)?.Disabled)
+      .map((id) => comparePointUrl(id))
+      .join(',')
     const ProxyRuleIds = normalizedSelection
-      .filter((item) => item.startsWith("route") && !proxyConfig.Routes.find(({ Id }) => Id === item)?.Disabled)
-      .join(",")
+      .filter((item) => item.startsWith('route') && !proxyConfig.Routes.find(({ Id }) => Id === item)?.Disabled)
+      .join(',')
 
     return {
       proxyEndpoints,
-      ProxyRuleIds
+      ProxyRuleIds,
     }
   })
 
@@ -161,15 +171,15 @@ export const useProxy = (): UseProxyReturn => {
     const { Routes = [], Endpoints = [] } = proxyConfig
     return [
       ...Routes.map(({ Name, Id, Disabled }) => ({
-        label: `${t("MITMRuleFromModal.rule_group")}: ${Name}${Disabled ? `(${t("ProxyConfig.disabled")})` : ""}`,
+        label: `${t('MITMRuleFromModal.rule_group')}: ${Name}${Disabled ? `(${t('ProxyConfig.disabled')})` : ''}`,
         value: Id,
-        disabled: Disabled
+        disabled: Disabled,
       })),
       ...Endpoints.map(({ Url, Id, Disabled }) => ({
-        label: `${t("ProxyConfig.Points")}: ${Url}${Disabled ? `(${t("ProxyConfig.disabled")})` : ""}`,
+        label: `${t('ProxyConfig.Points')}: ${Url}${Disabled ? `(${t('ProxyConfig.disabled')})` : ''}`,
         value: Id,
-        disabled: Disabled
-      }))
+        disabled: Disabled,
+      })),
     ]
   }, [proxyConfig, t])
 
@@ -181,13 +191,11 @@ export const useProxy = (): UseProxyReturn => {
   const proxyPointsOptions = useMemo((): ProxyOption[] => {
     const { Endpoints = [] } = proxyConfig
     return Endpoints.map(({ Url, Disabled }) => ({
-      label: Disabled ? `${Url} (${t("ProxyConfig.disabled")})` : Url,
+      label: Disabled ? `${Url} (${t('ProxyConfig.disabled')})` : Url,
       value: Url,
-      disabled: Disabled
+      disabled: Disabled,
     }))
-
   }, [proxyConfig, t])
-
 
   /**
    * @name 获取代理配置
@@ -237,7 +245,9 @@ export const useProxy = (): UseProxyReturn => {
    */
   const checkProxyEndpoints = useMemoizedFn((proxy?: string[]): void => {
     if (!proxy?.length) return
-    const newEndpoints = proxy.filter((item) => !item.startsWith('route') && proxyConfig.Endpoints.every(({ Id, Url }) => ![Id, Url].includes(item)))
+    const newEndpoints = proxy.filter(
+      (item) => !item.startsWith('route') && proxyConfig.Endpoints.every(({ Id, Url }) => ![Id, Url].includes(item)),
+    )
     if (newEndpoints.length) {
       const config = {
         ...proxyConfig,
@@ -246,8 +256,8 @@ export const useProxy = (): UseProxyReturn => {
           ...newEndpoints.map((url) => {
             const { Url, UserName, Password } = parseUrl(url)
             return { Name: Url, Url, Id: `ep-${randomString(8)}`, UserName, Password }
-          })
-        ]
+          }),
+        ],
       }
       saveProxyConfig(config)
     }
@@ -264,8 +274,6 @@ export const useProxy = (): UseProxyReturn => {
     comparePointUrl,
     saveProxyConfig,
     checkProxyEndpoints,
-    proxyPointsOptions
+    proxyPointsOptions,
   }
 }
-
-

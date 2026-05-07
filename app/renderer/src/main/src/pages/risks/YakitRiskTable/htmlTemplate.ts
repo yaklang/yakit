@@ -1,6 +1,6 @@
 /**漏洞与风险 导出html模板 */
 export const getHtmlTemplate = () => {
-    const html = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
     <html>
     
     <head>
@@ -275,11 +275,11 @@ export const getHtmlTemplate = () => {
     </body>
     
     </html>`
-    return html
+  return html
 }
 
 export const getHtmlEnTemplate = () => {
-    const html = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html>
 
 <head>
@@ -557,5 +557,5 @@ export const getHtmlEnTemplate = () => {
 </body>
 
 </html>`
-    return html
+  return html
 }

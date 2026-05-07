@@ -1,123 +1,123 @@
 .software-settings-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  .software-settings-container {
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    .software-settings-container {
+    display: flex;
+
+    .left-wrapper {
+      height: 100%;
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+      border-right: 1px solid var(--Colors-Use-Neutral-Border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      overflow: hidden;
+
+      .navbar-logo {
+        width: 101px;
+        height: 32px;
+        svg {
+          // width: 101px;
+          height: 32px;
+        }
+      }
+      .prject-logo-mini svg {
+        width: 32px;
+        height: 32px;
+      }
+
+      .navbar-list-wrapper {
         width: 100%;
-        height: 100%;
-        display: flex;
+        flex: 1;
+        overflow: hidden;
+        .list-body {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          .list-opt-body {
+            width: 100%;
+            height: 36px;
+            padding: 8px;
 
-        .left-wrapper {
-            height: 100%;
-            background: var(--Colors-Use-Neutral-Bg-Hover);
-            border-right: 1px solid var(--Colors-Use-Neutral-Border);
             display: flex;
-            flex-direction: column;
             justify-content: space-between;
-            align-items: flex-start;
-            gap: 24px;
-            overflow: hidden;
+            align-items: center;
+            gap: 8px;
 
-            .navbar-logo {
-                width: 101px;
-                height: 32px;
-                svg {
-                    // width: 101px;
-                    height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            .opt-title {
+              width: 110px;
+              height: 20px;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              font-size: 14px;
+            }
+            .opt-notes {
+              width: 139px;
+              height: 20px;
+              display: flex;
+              justify-content: right;
+              align-items: center;
+              font-size: 11px;
+              .text-style {
+                max-width: 139px;
+              }
+            }
+          }
+          .list-opt {
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            :global {
+              .ant-typography {
+                color: var(--Colors-Use-Neutral-Text-1-Title);
+              }
+            }
+          }
+          .list-opt:hover {
+            background: var(--Colors-Use-Neutral-Bg);
+          }
+          .list-opt-selected {
+            background: var(--Colors-Use-Main-Bg);
+            .opt-title {
+              color: var(--Colors-Use-Main-Primary);
+            }
+            .opt-notes {
+              :global {
+                .ant-typography {
+                  color: var(--Colors-Use-Main-Border);
                 }
+              }
             }
-            .prject-logo-mini svg{
-                width: 32px;
-                height: 32px;
-            }
-
-            .navbar-list-wrapper {
-                width: 100%;
-                flex: 1;
-                overflow: hidden;
-                .list-body {
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 16px;
-                    .list-opt-body {
-                        width: 100%;
-                        height: 36px;
-                        padding: 8px;
-
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        gap: 8px;
-
-                        border-radius: 4px;
-                        cursor: pointer;
-                        .opt-title {
-                            width: 110px;
-                            height: 20px;
-                            display: flex;
-                            align-items: center;
-                            gap: 4px;
-                            font-size: 14px;
-                        }
-                        .opt-notes {
-                            width: 139px;
-                            height: 20px;
-                            display: flex;
-                            justify-content: right;
-                            align-items: center;
-                            font-size: 11px;
-                            .text-style {
-                                max-width: 139px;
-                            }
-                        }
-                    }
-                    .list-opt {
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
-                        :global {
-                            .ant-typography {
-                                color: var(--Colors-Use-Neutral-Text-1-Title);
-                            }
-                        }
-                    }
-                    .list-opt:hover {
-                        background: var(--Colors-Use-Neutral-Bg);
-                    }
-                    .list-opt-selected {
-                        background: var(--Colors-Use-Main-Bg);
-                        .opt-title {
-                            color: var(--Colors-Use-Main-Primary);
-                        }
-                        .opt-notes {
-                            :global {
-                                .ant-typography {
-                                    color: var(--Colors-Use-Main-Border);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            .navbar-footer {
-                width: 100%;
-            }
+          }
         }
+      }
 
-        .left-body {
-            width: 301px;
-            padding: 16px 12px 24px 16px;
-        }
-        .left-mini-body {
-            width: 52px;
-            padding: 16px 8px 24px 8px;
-        }
-
-        .right-wrapper {
-            flex: 1;
-            height: 100%;
-            overflow: hidden;
-        }
+      .navbar-footer {
+        width: 100%;
+      }
     }
+
+    .left-body {
+      width: 301px;
+      padding: 16px 12px 24px 16px;
+    }
+    .left-mini-body {
+      width: 52px;
+      padding: 16px 8px 24px 8px;
+    }
+
+    .right-wrapper {
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+    }
+  }
 }

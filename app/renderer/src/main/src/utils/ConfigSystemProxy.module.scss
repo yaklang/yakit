@@ -1,65 +1,65 @@
 .config-system-proxy {
-    :global {
-        .ant-form-item-explain ant-form-item-explain-connected {
-            font-weight: 400;
-            font-size: 14px;
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  :global {
+    .ant-form-item-explain ant-form-item-explain-connected {
+      font-weight: 400;
+      font-size: 14px;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
+  }
+  .config-system-proxy-heard {
+    padding: 18px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .config-system-proxy-title {
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+    .close-icon {
+      svg {
+        width: 16px;
+        height: 16px;
+        color: var(--Colors-Use-Neutral-Disable);
+        &:hover {
+          color: var(--Colors-Use-Main-Primary);
         }
-    }
-    .config-system-proxy-heard {
-        padding: 18px 24px 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        .config-system-proxy-title {
-            font-weight: 600;
-            font-size: 14px;
-            line-height: 20px;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
+        &:active {
+          color: var(--Colors-Use-Main-Pressed);
         }
-        .close-icon {
-            svg {
-                width: 16px;
-                height: 16px;
-                color: var(--Colors-Use-Neutral-Disable);
-                &:hover {
-                    color: var(--Colors-Use-Main-Primary);
-                }
-                &:active {
-                    color: var(--Colors-Use-Main-Pressed);
-                }
-            }
-        }
+      }
     }
-    .config-system-proxy-status-success {
-        margin-top: 8px;
-        margin-bottom: 16px;
-        padding: 8px 24px;
-        height: 32px;
-        font-weight: 400;
-        font-size: 12px;
-        line-height: 16px;
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-        background-color: var(--Colors-Use-Success-Bg);
-        span {
-            color: var(--Colors-Use-Success-Primary);
-        }
+  }
+  .config-system-proxy-status-success {
+    margin-top: 8px;
+    margin-bottom: 16px;
+    padding: 8px 24px;
+    height: 32px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    background-color: var(--Colors-Use-Success-Bg);
+    span {
+      color: var(--Colors-Use-Success-Primary);
     }
-    .config-system-proxy-status-danger {
-        background-color: var(--Colors-Use-Error-Bg-Hover);
-        span {
-            color: var(--Colors-Use-Error-Primary);
-        }
+  }
+  .config-system-proxy-status-danger {
+    background-color: var(--Colors-Use-Error-Bg-Hover);
+    span {
+      color: var(--Colors-Use-Error-Primary);
     }
-    .config-system-proxy-btns {
-        display: flex;
-        justify-content: flex-end;
-        flex: 1;
-        gap: 8px;
-    }
-    .config-select-path{
-        color: var(--Colors-Use-Main-Primary);
-        font-size: 12px;
-        cursor: pointer;
-    }
+  }
+  .config-system-proxy-btns {
+    display: flex;
+    justify-content: flex-end;
+    flex: 1;
+    gap: 8px;
+  }
+  .config-select-path {
+    color: var(--Colors-Use-Main-Primary);
+    font-size: 12px;
+    cursor: pointer;
+  }
 }

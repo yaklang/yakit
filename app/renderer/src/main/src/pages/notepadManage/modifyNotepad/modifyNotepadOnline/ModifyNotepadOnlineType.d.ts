@@ -1,3 +1,3 @@
-import {ModifyNotepadProps} from "../ModifyNotepadType"
+import { ModifyNotepadProps } from '../ModifyNotepadType'
 
 export interface ModifyNotepadOnlineProps extends ModifyNotepadProps {}

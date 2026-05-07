@@ -1,106 +1,106 @@
-@use "../../../modifyNotepad/modifyNotepadOnline/NotepadOnlineList/NotepadOnlineList.module.scss" as NotepadOnlineList;
-@include NotepadOnlineList.notepad-list-body("local");
+@use '../../../modifyNotepad/modifyNotepadOnline/NotepadOnlineList/NotepadOnlineList.module.scss' as NotepadOnlineList;
+@include NotepadOnlineList.notepad-list-body('local');
 .notepad-local-list-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 12px 0 12px 12px;
+
+  .notepad-list-header {
     display: flex;
-    flex-direction: column;
-    height: 100%;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px 8px 0;
+    .notepad-list-header-btns {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      .icon-16 {
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  .notepad-list-table-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    border-radius: 4px;
+    margin-right: 8px;
+    margin-bottom: 2px;
+    user-select: none;
+  }
+
+  .notepad-col-title {
+    flex: 1;
     overflow: hidden;
-    padding: 12px 0 12px 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .notepad-col-time {
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
 
-    .notepad-list-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 8px 8px 0;
-        .notepad-list-header-btns {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-shrink: 0;
-            .icon-16 {
-                svg {
-                    width: 16px;
-                    height: 16px;
-                }
-            }
-        }
-    }
+  .notepad-list {
+    padding-right: 4px;
+  }
 
-    .notepad-list-table-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        height: 32px;
-        padding: 0 8px;
-        font-size: 12px;
-        font-weight: 400;
+  .notepad-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+
+    .notepad-row-item {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 8px;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      border-top: 1px solid var(--Colors-Use-Neutral-Border);
+      font-size: 13px;
+      color: var(--yakit-header-color);
+
+      .notepad-col-time {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      }
+
+      &:hover {
+        background: var(--Colors-Use-Neutral-Bg);
         border-radius: 4px;
-        margin-right: 8px;
-        margin-bottom: 2px;
-        user-select: none;
-    }
-
-    .notepad-col-title {
-        flex: 1;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
-    .notepad-col-time {
-        flex-shrink: 0;
-        text-align: right;
-        font-size: 12px;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    }
-
-    .notepad-list {
-        padding-right: 4px;
-    }
-
-    .notepad-row {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        padding: 0;
-
-        .notepad-row-item {
-            display: flex;
-            gap: 8px;
-            width: 100%;
-            padding: 12px 8px;
-            align-items: center;
-            cursor: pointer;
-            user-select: none;
-            border-top: 1px solid var(--Colors-Use-Neutral-Border);
-            font-size: 13px;
-            color: var(--yakit-header-color);
-
-            .notepad-col-time {
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            }
-
-            &:hover {
-                background: var(--Colors-Use-Neutral-Bg);
-                border-radius: 4px;
-                border-top-color: transparent;
-            }
-        }
-
-        &:first-child .notepad-row-item {
-            border-top-color: transparent;
-        }
-
-        .notepad-row-item-active {
-            background: var(--Colors-Use-Neutral-Bg);
-            border-top-color: transparent;
-            &:hover {
-                background: var(--Colors-Use-Primary-Light);
-            }
-        }
-    }
-
-    .notepad-row:hover + .notepad-row .notepad-row-item {
         border-top-color: transparent;
+      }
     }
+
+    &:first-child .notepad-row-item {
+      border-top-color: transparent;
+    }
+
+    .notepad-row-item-active {
+      background: var(--Colors-Use-Neutral-Bg);
+      border-top-color: transparent;
+      &:hover {
+        background: var(--Colors-Use-Primary-Light);
+      }
+    }
+  }
+
+  .notepad-row:hover + .notepad-row .notepad-row-item {
+    border-top-color: transparent;
+  }
 }

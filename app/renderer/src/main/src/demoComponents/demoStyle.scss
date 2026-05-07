@@ -1,87 +1,87 @@
 // ---------- DemoItemRadioButton ----------
 .demo-item-radio-button-wrapper {
-    display: inline-flex;
-    gap: 6px;
-    .ant-radio-button-wrapper:not(:first-child)::before {
-        display: none;
-    }
+  display: inline-flex;
+  gap: 6px;
+  .ant-radio-button-wrapper:not(:first-child)::before {
+    display: none;
+  }
 
-    .ant-radio-button-wrapper {
-        border-left-width: 1px;
-        border-radius: 4px !important;
-    }
+  .ant-radio-button-wrapper {
+    border-left-width: 1px;
+    border-radius: 4px !important;
+  }
 }
 
 // ---------- DemoVirtualTable ----------
 .demo-virtual-table-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-left: 6px;
+  padding-right: 6px;
+  .list-header {
     width: 100%;
-    height: 100%;
-    overflow: hidden;
+    height: 30px;
     display: flex;
-    flex-direction: column;
-    padding-left: 6px;
-    padding-right: 6px;
-    .list-header {
+    gap: 8px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    .header-opt-wrapper {
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-weight: 600;
+      font-size: 14px;
+    }
+  }
+  .list-body {
+    width: 100%;
+    flex: 1;
+    overflow: hidden;
+    .list-container {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      overflow-anchor: none;
+      scroll-behavior: smooth;
+      .row-wrapper {
         width: 100%;
-        height: 30px;
+        height: 40px;
         display: flex;
         gap: 8px;
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-        .header-opt-wrapper {
+        .col-wrapper {
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
+          font-size: 14px;
+          .content-body {
+            width: 100%;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-weight: 600;
-            font-size: 14px;
+          }
         }
+      }
+      .row-wrapper + .row-wrapper {
+        border-top: 1px solid var(--Colors-Use-Neutral-Border);
+      }
     }
-    .list-body {
-        width: 100%;
-        flex: 1;
-        overflow: hidden;
-        .list-container {
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            overflow-anchor: none;
-            scroll-behavior: smooth;
-            .row-wrapper {
-                width: 100%;
-                height: 40px;
-                display: flex;
-                gap: 8px;
-                .col-wrapper {
-                    overflow: hidden;
-                    display: flex;
-                    align-items: center;
-                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                    font-size: 14px;
-                    .content-body {
-                        width: 100%;
-                        overflow: hidden;
-                    }
-                }
-            }
-            .row-wrapper + .row-wrapper {
-                border-top: 1px solid var(--Colors-Use-Neutral-Border);
-            }
-        }
-        .loading-wrapper {
-            width: 100%;
-            height: 32px;
-            .loading-style {
-                align-items: center;
-            }
-        }
-        .no-more-wrapper {
-            width: 100%;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--Colors-Use-Neutral-Disable);
-            font-size: 12px;
-        }
+    .loading-wrapper {
+      width: 100%;
+      height: 32px;
+      .loading-style {
+        align-items: center;
+      }
     }
+    .no-more-wrapper {
+      width: 100%;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--Colors-Use-Neutral-Disable);
+      font-size: 12px;
+    }
+  }
 }

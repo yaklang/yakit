@@ -1,125 +1,125 @@
 .status-cards-body {
-    margin: 8px 4px;
+  margin: 8px 4px;
 
-    .ant-statistic-content-value {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-    }
-}
-
-.status-cards-tag {
+  .ant-statistic-content-value {
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
+  }
+}
+
+.status-cards-tag {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .font-color-000 {
-    color: #000;
+  color: #000;
 }
 
 .tooltip-title {
-    .ant-statistic {
-        border-bottom: 1px solid #e5e5e5;
-        padding-bottom: 6px;
-        margin-top: 6px;
+  .ant-statistic {
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 6px;
+    margin-top: 6px;
 
-        &:last-child {
-            border-bottom: 0;
-            padding-bottom: 0;
-        }
+    &:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
     }
+  }
 
-    .ant-statistic-content-value {
-        word-break: break-word;
-    }
+  .ant-statistic-content-value {
+    word-break: break-word;
+  }
 
-    .tooltip-id {
-        color: #000;
-        font-weight: 500;
-        margin-bottom: 0;
-    }
+  .tooltip-id {
+    color: #000;
+    font-weight: 500;
+    margin-bottom: 0;
+  }
 }
 
 .status-cards-info {
-    .ant-tooltip-inner {
-        max-height: 200px;
-        overflow-y: auto;
-    }
+  .ant-tooltip-inner {
+    max-height: 200px;
+    overflow-y: auto;
+  }
 }
 
 .btn-body {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
-    padding: 12px;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  padding: 12px;
 
-    .ant-statistic-content-value {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-    }
+  .ant-statistic-content-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
 }
 
 .font-color-000 {
-    color: #000;
+  color: #000;
 }
 
 .tooltip-title {
-    .ant-statistic {
-        border-bottom: 1px solid #e5e5e5;
-        padding-bottom: 6px;
-        margin-top: 6px;
+  .ant-statistic {
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 6px;
+    margin-top: 6px;
 
-        &:last-child {
-            border-bottom: 0;
-            padding-bottom: 0;
-        }
+    &:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
     }
+  }
 
-    .ant-statistic-content-value {
-        word-break: break-word;
-    }
+  .ant-statistic-content-value {
+    word-break: break-word;
+  }
 
-    .tooltip-id {
-        color: #000;
-        font-weight: 500;
-        margin-bottom: 0;
-    }
+  .tooltip-id {
+    color: #000;
+    font-weight: 500;
+    margin-bottom: 0;
+  }
 }
 
 .status-cards-info {
-    .ant-tooltip-inner {
-        max-height: 200px;
-        overflow-y: auto;
-    }
+  .ant-tooltip-inner {
+    max-height: 200px;
+    overflow-y: auto;
+  }
 }
 
 .base-table {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .passive-log-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-flow: column;
-    .log-timeline {
-        padding-top: 1px;
-        flex: 1;
-        overflow-y: auto;
-        .ant-timeline-item-head-blue {
-            color: var(--Colors-Use-Main-Primary);
-            border-color: var(--Colors-Use-Main-Primary);
-        }
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+  .log-timeline {
+    padding-top: 1px;
+    flex: 1;
+    overflow-y: auto;
+    .ant-timeline-item-head-blue {
+      color: var(--Colors-Use-Main-Primary);
+      border-color: var(--Colors-Use-Main-Primary);
     }
+  }
 }

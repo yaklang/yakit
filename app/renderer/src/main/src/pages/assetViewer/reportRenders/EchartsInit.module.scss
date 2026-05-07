@@ -1,65 +1,65 @@
 .echarts-box {
-    text-align: center;
+  text-align: center;
 
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 @media only screen and (max-width: 1500px) {
-    .echarts-box {
-        display: block;
+  .echarts-box {
+    display: block;
+  }
+  .echarts-box {
+    .echart-detail {
+      .echart-detail-item {
+        margin-top: 0px !important;
+      }
     }
-    .echarts-box {
-        .echart-detail {
-            .echart-detail-item {
-                margin-top: 0px !important;
-            }
-        }
-    }
+  }
 }
 .echarts-box {
-    .echart-item {
-        width: 100%;
-        max-width: 50%;
-        min-width: 300px;
-        height: 400px;
-        display: inline-block;
-        flex: 1;
+  .echart-item {
+    width: 100%;
+    max-width: 50%;
+    min-width: 300px;
+    height: 400px;
+    display: inline-block;
+    flex: 1;
+  }
+  @media only screen and (min-width: 1200px) {
+    .echarts-box-hollow-pie {
+      display: inline-block;
+      width: 50%;
     }
-    @media only screen and (min-width: 1200px) {
-        .echarts-box-hollow-pie {
-          display: inline-block;
-          width: 50%;
-        }
+  }
+  .echart-item.echart-item-hollow-pie {
+    min-width: 400px;
+    max-width: 600px;
+  }
+  .echart-item.echart-item-multi-pie {
+    min-width: 570px;
+    max-width: 666px;
+    margin-top: 40px;
+  }
+  .echart-detail {
+    flex: 1;
+    .echart-detail-item {
+      margin-top: 24px;
+      text-align: initial;
+      .echart-detail-item-title {
+        font-weight: bold;
+        font-size: 14px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      }
+      .echart-detail-item-content {
+        font-size: 12px;
+        padding: 2px 0 0 0px;
+        margin-top: 4px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        line-height: 22px;
+      }
     }
-    .echart-item.echart-item-hollow-pie {
-        min-width: 400px;
-        max-width: 600px;
-    }
-    .echart-item.echart-item-multi-pie {
-        min-width: 570px;
-        max-width: 666px;
-        margin-top: 40px;
-    }
-    .echart-detail {
-        flex: 1;
-        .echart-detail-item {
-            margin-top: 24px;
-            text-align: initial;
-            .echart-detail-item-title {
-                font-weight: bold;
-                font-size: 14px;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary)
-            }
-            .echart-detail-item-content {
-                font-size: 12px;
-                padding: 2px 0 0 0px;
-                margin-top: 4px;
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                line-height: 22px;
-            }
-        }
-    }
+  }
 }

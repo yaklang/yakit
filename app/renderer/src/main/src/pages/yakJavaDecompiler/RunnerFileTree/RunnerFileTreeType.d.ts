@@ -1,7 +1,5 @@
 export interface RunnerFileTreeProps {
-    boxHeight: number
+  boxHeight: number
 }
 
-export interface OpenedFileProps{
-    
-}
+export interface OpenedFileProps {}

@@ -1,14 +1,14 @@
-import {getReleaseEditionName} from "../envfile"
+import { getReleaseEditionName } from '../envfile'
 
 export interface LocalInfoProps {
-    system: string
-    arch: string
-    localYakit: string
-    localYaklang: string
+  system: string
+  arch: string
+  localYakit: string
+  localYaklang: string
 }
 
 export const ReportBug = (system_info?: LocalInfoProps): string => {
-    let tpl = `
+  let tpl = `
 ## 问题描述
 
 请在此处提供您遇到的问题的详细描述。请描述问题的表现、发生的频率、影响范围以及任何其他相关信息。如果可能，请提供具体的步骤来重现该问题。
@@ -41,11 +41,11 @@ export const ReportBug = (system_info?: LocalInfoProps): string => {
 如果您有任何其他有关该问题的信息或评论，请在此处添加。
 
 `
-    tpl = encodeURIComponent(tpl)
-    return tpl
+  tpl = encodeURIComponent(tpl)
+  return tpl
 }
 export const FeatureRequest = (): string => {
-    let tpl = `
+  let tpl = `
 ## 需求描述
 
 请清晰明确地描述你遇到的问题，例如：我在使用该产品时总是遇到以下问题...
@@ -62,6 +62,6 @@ export const FeatureRequest = (): string => {
 
 请提供任何与该功能请求相关的上下文信息、截图或其他材料等。
 `
-    tpl = encodeURIComponent(tpl)
-    return tpl
+  tpl = encodeURIComponent(tpl)
+  return tpl
 }

@@ -1,57 +1,57 @@
 /* 隐藏上传拖拽框的虚线边框样式(全局多处使用该样式类，修改时需谨慎) */
 .targets-upload-dragger.ant-upload.ant-upload-drag {
-    background-color: #fff;
-    border: 0;
+  background-color: #fff;
+  border: 0;
 }
 .targets-upload-dragger.ant-upload.ant-upload-drag .ant-upload {
-    padding: 6px 0;
+  padding: 6px 0;
 }
 
 .scan-port-tabs {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 .scan-port-tabs .ant-tabs-tab {
-    padding: 5px 0;
+  padding: 5px 0;
 }
 
 .scan-port-tabs .scan-port-body {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-flow: row;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-flow: row;
 }
 
 .scan-port-tabs .scan-port-body .right-container {
-    flex: 1;
-    padding-left: 10px;
-    overflow-x: hidden;
-    display: flex;
-    flex-flow: column;
+  flex: 1;
+  padding-left: 10px;
+  overflow-x: hidden;
+  display: flex;
+  flex-flow: column;
 }
 .scan-port-tabs .scan-port-body .right-container .form-item-margin {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 .scan-port-tabs .scan-port-body .right-container .form-submit-style {
-    margin: 0 0 4px 7px;
+  margin: 0 0 4px 7px;
 }
 .scan-port-tabs .ant-tabs-ink-bar {
-    background: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Main-Primary);
 }
 
 .link-button-bfc {
-    padding: 4px 0;
-    margin-left: 15px;
+  padding: 4px 0;
+  margin-left: 15px;
 }
 
 .link-button-bfc-reload {
-    padding: 4px 0;
+  padding: 4px 0;
 }
 
 .port-scan-upload-del {
-    margin-left: 12px;
-    cursor: pointer;
+  margin-left: 12px;
+  cursor: pointer;
 }
 .port-scan-upload-del:hover {
-    color: red;
+  color: red;
 }

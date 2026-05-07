@@ -1,5 +1,5 @@
 export namespace OutputAsset {
-    export const outputDomainByKeyword = `loglevel("info")
+  export const outputDomainByKeyword = `loglevel("info")
 yakit.Info("Start to EXPORT Asset")
 
 yakit.AutoInitYakit()
@@ -68,7 +68,7 @@ for domain = range domains {
 }
 
 yakit.File(fileActually, "Domain Assets", "Domain Assets：Domain,Address,HTTPTitle")`
-    export const outputPortByNetwork = `yakit.AutoInitYakit()
+  export const outputPortByNetwork = `yakit.AutoInitYakit()
 
 # Input your code!
 network = cli.String("network")

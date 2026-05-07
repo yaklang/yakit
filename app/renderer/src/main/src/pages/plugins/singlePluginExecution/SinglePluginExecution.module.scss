@@ -1,13 +1,13 @@
-@use "../plugins.scss";
+@use '../plugins.scss';
 .filter-extra-wrapper {
-    display: inline-flex;
-    align-items: center;
+  display: inline-flex;
+  align-items: center;
 }
 
 .single-plugin-wrapper {
+  height: 100%;
+  display: flex;
+  .plugin-tab-wrap {
     height: 100%;
-    display: flex;
-    .plugin-tab-wrap {
-        height: 100%;
-    }
+  }
 }

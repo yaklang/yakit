@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 
 export const PortScanPluginTemplate: string = `/*
 端口扫描插件在每一次端口扫描的时候将会执行

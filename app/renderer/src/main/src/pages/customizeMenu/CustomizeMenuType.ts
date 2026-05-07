@@ -1,9 +1,9 @@
-import {YakScript} from "../invoker/schema"
-import {EnhancedCustomRouteMenuProps} from "./utils"
+import { YakScript } from '../invoker/schema'
+import { EnhancedCustomRouteMenuProps } from './utils'
 
 export interface CustomizeMenuProps {
-    visible: boolean
-    onClose: () => void
+  visible: boolean
+  onClose: () => void
 }
 
 /**
@@ -15,11 +15,11 @@ export interface CustomizeMenuProps {
  * @property onRemove 删除该项
  */
 export interface FirstMenuProps {
-    menuData: EnhancedCustomRouteMenuProps[]
-    setMenuData: (s: EnhancedCustomRouteMenuProps[]) => void
-    currentFirstMenu?: EnhancedCustomRouteMenuProps
-    onSelect: (s: EnhancedCustomRouteMenuProps) => void
-    onRemove: (s: EnhancedCustomRouteMenuProps) => void
+  menuData: EnhancedCustomRouteMenuProps[]
+  setMenuData: (s: EnhancedCustomRouteMenuProps[]) => void
+  currentFirstMenu?: EnhancedCustomRouteMenuProps
+  onSelect: (s: EnhancedCustomRouteMenuProps) => void
+  onRemove: (s: EnhancedCustomRouteMenuProps) => void
 }
 /**
  * @name 一级菜单项
@@ -32,12 +32,12 @@ export interface FirstMenuProps {
  * @property onRemove 删除该项
  */
 export interface FirstMenuItemProps {
-    menuItem: EnhancedCustomRouteMenuProps
-    currentMenuItem?: EnhancedCustomRouteMenuProps
-    isDragging: boolean
-    onSelect: (s: EnhancedCustomRouteMenuProps) => void
-    destinationDrag: string
-    onRemove: (s: EnhancedCustomRouteMenuProps) => void
+  menuItem: EnhancedCustomRouteMenuProps
+  currentMenuItem?: EnhancedCustomRouteMenuProps
+  isDragging: boolean
+  onSelect: (s: EnhancedCustomRouteMenuProps) => void
+  destinationDrag: string
+  onRemove: (s: EnhancedCustomRouteMenuProps) => void
 }
 
 /**
@@ -50,12 +50,12 @@ export interface FirstMenuItemProps {
  * @property onEdit 编辑二级菜单
  */
 export interface SecondMenuProps {
-    currentFirstMenu?: EnhancedCustomRouteMenuProps
-    editCurrentFirstMenu: (s: string) => void
-    subMenuData: EnhancedCustomRouteMenuProps[]
-    onRemoveFirstMenu: () => void
-    onRemoveSecondMenu: (m: EnhancedCustomRouteMenuProps) => void
-    onEdit: (m: EnhancedCustomRouteMenuProps) => void
+  currentFirstMenu?: EnhancedCustomRouteMenuProps
+  editCurrentFirstMenu: (s: string) => void
+  subMenuData: EnhancedCustomRouteMenuProps[]
+  onRemoveFirstMenu: () => void
+  onRemoveSecondMenu: (m: EnhancedCustomRouteMenuProps) => void
+  onEdit: (m: EnhancedCustomRouteMenuProps) => void
 }
 /**
  * @name 二级菜单项
@@ -65,10 +65,10 @@ export interface SecondMenuProps {
  * @property onEdit 编辑二级菜单
  */
 export interface SecondMenuItemProps {
-    menuItem: EnhancedCustomRouteMenuProps
-    isDragging: boolean
-    onRemoveSecondMenu: (m: EnhancedCustomRouteMenuProps) => void
-    onEdit: (m: EnhancedCustomRouteMenuProps) => void
+  menuItem: EnhancedCustomRouteMenuProps
+  isDragging: boolean
+  onRemoveSecondMenu: (m: EnhancedCustomRouteMenuProps) => void
+  onEdit: (m: EnhancedCustomRouteMenuProps) => void
 }
 
 /**
@@ -81,12 +81,12 @@ export interface SecondMenuItemProps {
  * @property SystemRouteMenuData 系统所有二级菜单
  */
 export interface FeaturesAndPluginProps {
-    destinationDrag: string
-    setPluginList: (s: YakScript[]) => void
-    onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
-    subMenuData: EnhancedCustomRouteMenuProps[]
-    onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
-    SystemRouteMenuData: EnhancedCustomRouteMenuProps[]
+  destinationDrag: string
+  setPluginList: (s: YakScript[]) => void
+  onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
+  subMenuData: EnhancedCustomRouteMenuProps[]
+  onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
+  SystemRouteMenuData: EnhancedCustomRouteMenuProps[]
 }
 
 /**
@@ -100,13 +100,13 @@ export interface FeaturesAndPluginProps {
  * @property SystemRouteMenuData 系统所有二级菜单
  */
 export interface SystemFunctionListProps {
-    keywords: string
-    isSearch: boolean
-    destinationDrag: string
-    onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
-    subMenuData: EnhancedCustomRouteMenuProps[]
-    onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
-    SystemRouteMenuData: EnhancedCustomRouteMenuProps[]
+  keywords: string
+  isSearch: boolean
+  destinationDrag: string
+  onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
+  subMenuData: EnhancedCustomRouteMenuProps[]
+  onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
+  SystemRouteMenuData: EnhancedCustomRouteMenuProps[]
 }
 
 /**
@@ -119,12 +119,12 @@ export interface SystemFunctionListProps {
  * @property onRemoveMenu 删除二级菜单
  */
 export interface SystemRouteMenuDataItemProps {
-    item: EnhancedCustomRouteMenuProps
-    isDragging: boolean
-    destinationDrag: string
-    onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
-    isDragDisabled: boolean
-    onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
+  item: EnhancedCustomRouteMenuProps
+  isDragging: boolean
+  destinationDrag: string
+  onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
+  isDragDisabled: boolean
+  onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
 }
 
 /**
@@ -138,13 +138,13 @@ export interface SystemRouteMenuDataItemProps {
  * @property onRemoveMenu 删除二级菜单
  */
 export interface PluginLocalListProps {
-    keywords: string
-    isSearch: boolean
-    destinationDrag: string
-    setPluginList: (s: YakScript[]) => void
-    onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
-    subMenuData: EnhancedCustomRouteMenuProps[]
-    onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
+  keywords: string
+  isSearch: boolean
+  destinationDrag: string
+  setPluginList: (s: YakScript[]) => void
+  onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
+  subMenuData: EnhancedCustomRouteMenuProps[]
+  onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
 }
 
 /**
@@ -157,16 +157,16 @@ export interface PluginLocalListProps {
  * @property onRemoveMenu 删除二级菜单
  */
 export interface PluginLocalItemProps {
-    plugin: YakScript
-    isDragging: boolean
-    destinationDrag: string
-    onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
-    isDragDisabled: boolean
-    onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
+  plugin: YakScript
+  isDragging: boolean
+  destinationDrag: string
+  onAddMenuData: (m: EnhancedCustomRouteMenuProps) => void
+  isDragDisabled: boolean
+  onRemoveMenu: (m: EnhancedCustomRouteMenuProps) => void
 }
 
 export interface PluginLocalInfoProps {
-    plugin: YakScript
-    wrapperClassName?: string
-    getScriptInfo?: (YakScript) => void
+  plugin: YakScript
+  wrapperClassName?: string
+  getScriptInfo?: (YakScript) => void
 }

@@ -1,79 +1,79 @@
-@use "../securityTool/securityTool.scss" as securityTool;
+@use '../securityTool/securityTool.scss' as securityTool;
 
 %flex-center {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 %column-center {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .simple-detect-wrapper {
-    @extend %column-center;
-    overflow: hidden;
-    height: 100%;
-    .simple-detect-heard {
-        // padding: 8px;
-        z-index: 9;
-        height: 50px;
-        .simple-detect-heard-tabName {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-size: 16px;
-            font-weight: 600;
-            line-height: 24px; /* 150% */
-        }
-        .simple-detect-heard-operate {
-            @extend %flex-center;
-        }
+  @extend %column-center;
+  overflow: hidden;
+  height: 100%;
+  .simple-detect-heard {
+    // padding: 8px;
+    z-index: 9;
+    height: 50px;
+    .simple-detect-heard-tabName {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 24px; /* 150% */
     }
-    .simple-detect-content {
-        padding: 16px;
-        padding-top: 0;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: auto;
+    .simple-detect-heard-operate {
+      @extend %flex-center;
+    }
+  }
+  .simple-detect-content {
+    padding: 16px;
+    padding-top: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
 
-        .simple-detect-form-wrapper {
-            padding-top: 24px;
-            display: grid;
-            grid-template-rows: 1fr;
-            transition: all 0.3s ease;
-            :global {
-                .ant-form {
-                    overflow: hidden;
-                }
-            }
-            .simple-detect-form-operate {
-                @extend %flex-center;
-                .simple-detect-form-operate-start {
-                    margin-right: 8px;
-                }
-            }
+    .simple-detect-form-wrapper {
+      padding-top: 24px;
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: all 0.3s ease;
+      :global {
+        .ant-form {
+          overflow: hidden;
         }
-        .simple-detect-form-wrapper-hidden {
-            padding-top: 0;
-            grid-template-rows: 0fr;
+      }
+      .simple-detect-form-operate {
+        @extend %flex-center;
+        .simple-detect-form-operate-start {
+          margin-right: 8px;
         }
+      }
     }
+    .simple-detect-form-wrapper-hidden {
+      padding-top: 0;
+      grid-template-rows: 0fr;
+    }
+  }
 }
 .plugin-group-wrapper {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    grid-gap: 12px;
-    padding: 12px;
-    border-radius: 4px;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-    margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-gap: 12px;
+  padding: 12px;
+  border-radius: 4px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  margin-top: 8px;
 }
 .form-extra {
-    @extend %flex-center;
-    gap: 8px 0;
-    flex-wrap: wrap;
+  @extend %flex-center;
+  gap: 8px 0;
+  flex-wrap: wrap;
 }
 
 .divider-style {
-    @extend %divider-style;
-    margin-right: 8px;
+  @extend %divider-style;
+  margin-right: 8px;
 }

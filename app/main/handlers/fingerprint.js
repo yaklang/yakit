@@ -1,8 +1,8 @@
-const { ipcMain } = require("electron")
-const fs = require("fs")
-const path = require("path")
-const https = require("https")
-const { yakProjects } = require("../filePath")
+const { ipcMain } = require('electron')
+const fs = require('fs')
+const path = require('path')
+const https = require('https')
+const { yakProjects } = require('../filePath')
 
 module.exports = (win, getClient) => {
   const asyncGetAllFingerprintGroup = (params) => {
@@ -17,7 +17,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 获取本地指纹组列表数据
-  ipcMain.handle("GetAllFingerprintGroup", async (e, params) => {
+  ipcMain.handle('GetAllFingerprintGroup', async (e, params) => {
     return await asyncGetAllFingerprintGroup(params)
   })
 
@@ -33,7 +33,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 创建本地指纹组
-  ipcMain.handle("CreateFingerprintGroup", async (e, params) => {
+  ipcMain.handle('CreateFingerprintGroup', async (e, params) => {
     return await asyncCreateFingerprintGroup(params)
   })
 
@@ -49,7 +49,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 更新本地指纹组
-  ipcMain.handle("RenameFingerprintGroup", async (e, params) => {
+  ipcMain.handle('RenameFingerprintGroup', async (e, params) => {
     return await asyncRenameFingerprintGroup(params)
   })
 
@@ -65,7 +65,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 删除本地指纹组
-  ipcMain.handle("DeleteFingerprintGroup", async (e, params) => {
+  ipcMain.handle('DeleteFingerprintGroup', async (e, params) => {
     return await asyncDeleteFingerprintGroup(params)
   })
 
@@ -81,7 +81,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 获取本地指纹列表数据
-  ipcMain.handle("QueryFingerprint", async (e, params) => {
+  ipcMain.handle('QueryFingerprint', async (e, params) => {
     return await asyncQueryFingerprint(params)
   })
 
@@ -97,7 +97,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 删除本地指纹列表数据
-  ipcMain.handle("DeleteFingerprint", async (e, params) => {
+  ipcMain.handle('DeleteFingerprint', async (e, params) => {
     return await asyncDeleteFingerprint(params)
   })
 
@@ -113,7 +113,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 更新本地指纹
-  ipcMain.handle("UpdateFingerprint", async (e, params) => {
+  ipcMain.handle('UpdateFingerprint', async (e, params) => {
     return await asyncUpdateFingerprint(params)
   })
 
@@ -129,20 +129,20 @@ module.exports = (win, getClient) => {
     })
   }
   // 创建本地指纹
-  ipcMain.handle("CreateFingerprint", async (e, params) => {
+  ipcMain.handle('CreateFingerprint', async (e, params) => {
     return await asyncCreateFingerprint(params)
   })
 
   // 导出指纹
-  const handlerHelper = require("./handleStreamWithContext")
+  const handlerHelper = require('./handleStreamWithContext')
   const exportFingerprintMap = new Map()
-  ipcMain.handle("cancel-ExportFingerprint", handlerHelper.cancelHandler(exportFingerprintMap))
-  ipcMain.handle("ExportFingerprint", (_, params, token) => {
+  ipcMain.handle('cancel-ExportFingerprint', handlerHelper.cancelHandler(exportFingerprintMap))
+  ipcMain.handle('ExportFingerprint', (_, params, token) => {
     const { TargetPath } = params
     if (!fs.existsSync(yakProjects)) {
       try {
         fs.mkdirSync(yakProjects, { recursive: true })
-      } catch (error) { }
+      } catch (error) {}
     }
     params.TargetPath = path.join(yakProjects, TargetPath)
     let stream = getClient().ExportFingerprint(params)
@@ -151,8 +151,8 @@ module.exports = (win, getClient) => {
 
   // 导入指纹
   const importFingerprintMap = new Map()
-  ipcMain.handle("cancel-ImportFingerprint", handlerHelper.cancelHandler(importFingerprintMap))
-  ipcMain.handle("ImportFingerprint", (_, params, token) => {
+  ipcMain.handle('cancel-ImportFingerprint', handlerHelper.cancelHandler(importFingerprintMap))
+  ipcMain.handle('ImportFingerprint', (_, params, token) => {
     let stream = getClient().ImportFingerprint(params)
     handlerHelper.registerHandler(win, stream, importFingerprintMap, token)
   })
@@ -169,7 +169,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 查询指纹集合的所属组交集
-  ipcMain.handle("GetFingerprintGroupSetByFilter", async (e, params) => {
+  ipcMain.handle('GetFingerprintGroupSetByFilter', async (e, params) => {
     return await asyncGetFingerprintGroupSetByFilter(params)
   })
 
@@ -185,7 +185,7 @@ module.exports = (win, getClient) => {
     })
   }
   // 更新指纹里的本地组
-  ipcMain.handle("BatchUpdateFingerprintToGroup", async (e, params) => {
+  ipcMain.handle('BatchUpdateFingerprintToGroup', async (e, params) => {
     return await asyncBatchUpdateFingerprintToGroup(params)
   })
 
@@ -194,9 +194,9 @@ module.exports = (win, getClient) => {
       if (!fs.existsSync(yakProjects)) {
         try {
           fs.mkdirSync(yakProjects, { recursive: true })
-        } catch (error) { }
+        } catch (error) {}
       }
-      
+
       // 判断是否有写入权限
       const dir = path.dirname(savePath)
       try {
@@ -225,9 +225,9 @@ module.exports = (win, getClient) => {
         }
       }
 
-      const request = https.get("https://yaklang.oss-cn-beijing.aliyuncs.com/fingerprints.zip", (res) => {
+      const request = https.get('https://yaklang.oss-cn-beijing.aliyuncs.com/fingerprints.zip', (res) => {
         if (res.statusCode !== 200) {
-          safeUnlink(file, savePath, () => { })
+          safeUnlink(file, savePath, () => {})
           return reject(new Error(`Download failed with status ${res.statusCode}`))
         }
 
@@ -240,26 +240,26 @@ module.exports = (win, getClient) => {
 
         // 文件写入失败
         file.on('error', (err) => {
-          safeUnlink(file, savePath, () => { })
+          safeUnlink(file, savePath, () => {})
           reject(err)
         })
 
         // 下载流错误
         res.on('error', (err) => {
-          safeUnlink(file, savePath, () => { })
+          safeUnlink(file, savePath, () => {})
           reject(err)
         })
       })
 
       // 请求错误
       request.on('error', (err) => {
-        safeUnlink(file, savePath, () => { })
+        safeUnlink(file, savePath, () => {})
         reject(err)
       })
     })
   }
   // 下载默认指纹到指定路径
-  ipcMain.handle("DownloadFingerprint", async (e, savePath) => {
+  ipcMain.handle('DownloadFingerprint', async (e, savePath) => {
     return await asyncDownloadFingerprint(savePath)
   })
 }

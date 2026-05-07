@@ -1,138 +1,138 @@
-import {ReactNode} from "react"
-import {CodeScoreSmokingEvaluateResponseProps} from "@/pages/plugins/funcTemplateType"
-import {IMonacoEditorMarker} from "@/utils/editorMarkers"
-import { SSARisk } from "../../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType"
+import { ReactNode } from 'react'
+import { CodeScoreSmokingEvaluateResponseProps } from '@/pages/plugins/funcTemplateType'
+import { IMonacoEditorMarker } from '@/utils/editorMarkers'
+import { SSARisk } from '../../yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
 export interface CursorPosition {
-    lineNumber: number // 当前行号
-    column: number // 当前字符位置
+  lineNumber: number // 当前行号
+  column: number // 当前字符位置
 }
 
 export interface Selection {
-    startLineNumber: number // 开始-行号
-    startColumn: number // 开始-字符位置
-    endLineNumber: number // 结束-行号
-    endColumn: number // 结束-字符位置
-    // 此处为审计结果处来源
-    source?: {
-        // 路径
-        title: string
-        // 节点
-        node_id: string
-        // 审计结果加载参数
-        auditRightParams: AuditEmiterYakUrlProps
-    }
+  startLineNumber: number // 开始-行号
+  startColumn: number // 开始-字符位置
+  endLineNumber: number // 结束-行号
+  endColumn: number // 结束-字符位置
+  // 此处为审计结果处来源
+  source?: {
+    // 路径
+    title: string
+    // 节点
+    node_id: string
+    // 审计结果加载参数
+    auditRightParams: AuditEmiterYakUrlProps
+  }
 }
 
 export interface FileDetailInfo {
-    /** 文件名 */
-    name: string
-    /** 父级路径 */
-    parent: string | null
-    /** 路径 可做唯一标识符 */
-    path: string
-    /** 图标 */
-    icon: string
-    /** 代码 */
-    code: string
-    /** 文件语言 */
-    language?: string
-    /** 打开文件的时间戳（用于打开编辑器列表排序） */
-    openTimestamp: number
-    /** 文件是否为文本文件 */
-    isPlainText: boolean
-    /** 文件归属((单独打开/文件树打开)/审计树打开) */
-    fileSourceType: "file" | "audit"
-    /** 文件是否有未保存的更改 */
-    isDirty?: boolean
-    /** 文件是否是当前活动的文件 */
-    isActive?: boolean
-    /** 当前光标位置 */
-    position?: CursorPosition
-    /** 当前选择区域 */
-    selections?: Selection
-    /** 高亮显示区域 */
-    highLightRange?: Selection
-    /** 是否未保存（用于临时文件创建） */
-    isUnSave?: boolean
-    /** 是否已被外部删除（文件树监控-删除） */
-    isDelete?: boolean
-    /** 漏洞汇总（代码打开时执行） */
-    syntaxCheck?: SSARisk[]
-    /** 帮助信息（代码坐标获取时执行） */
-    helpInfo?: any
+  /** 文件名 */
+  name: string
+  /** 父级路径 */
+  parent: string | null
+  /** 路径 可做唯一标识符 */
+  path: string
+  /** 图标 */
+  icon: string
+  /** 代码 */
+  code: string
+  /** 文件语言 */
+  language?: string
+  /** 打开文件的时间戳（用于打开编辑器列表排序） */
+  openTimestamp: number
+  /** 文件是否为文本文件 */
+  isPlainText: boolean
+  /** 文件归属((单独打开/文件树打开)/审计树打开) */
+  fileSourceType: 'file' | 'audit'
+  /** 文件是否有未保存的更改 */
+  isDirty?: boolean
+  /** 文件是否是当前活动的文件 */
+  isActive?: boolean
+  /** 当前光标位置 */
+  position?: CursorPosition
+  /** 当前选择区域 */
+  selections?: Selection
+  /** 高亮显示区域 */
+  highLightRange?: Selection
+  /** 是否未保存（用于临时文件创建） */
+  isUnSave?: boolean
+  /** 是否已被外部删除（文件树监控-删除） */
+  isDelete?: boolean
+  /** 漏洞汇总（代码打开时执行） */
+  syntaxCheck?: SSARisk[]
+  /** 帮助信息（代码坐标获取时执行） */
+  helpInfo?: any
 
-    // 由于输出和终端直接显示所有的 因此不再绑定在单个文件上
-    /** 输出（执行时注入） */
-    // output?: any
-    /** 终端 */
-    // terminal?: any
+  // 由于输出和终端直接显示所有的 因此不再绑定在单个文件上
+  /** 输出（执行时注入） */
+  // output?: any
+  /** 终端 */
+  // terminal?: any
 }
 
 // 将所有属性变为可选
 export type OptionalFileDetailInfo = Partial<FileDetailInfo>
 
 export interface RunnerTabsProps {
-    tabsId: string
-    wrapperClassName?: string
+  tabsId: string
+  wrapperClassName?: string
 }
 
 export interface RunYakParamsProps {
-    Script: string
-    WorkDir?: string
-    ScriptPath: string
+  Script: string
+  WorkDir?: string
+  ScriptPath: string
 }
 
 export interface RunnerTabBarProps {
-    tabsId: string
-    tabsList: FileDetailInfo[]
-    extra?: ReactNode
-    handleContextMenu: (info: FileDetailInfo) => void
-    onRemoveCurrent: (info: FileDetailInfo) => void
+  tabsId: string
+  tabsList: FileDetailInfo[]
+  extra?: ReactNode
+  handleContextMenu: (info: FileDetailInfo) => void
+  onRemoveCurrent: (info: FileDetailInfo) => void
 }
 
 export interface RunnerTabBarItemProps {
-    index: number
-    info: FileDetailInfo
-    tabsId: string
-    handleContextMenu: (info: FileDetailInfo) => void
-    onRemoveCurrent: (info: FileDetailInfo) => void
+  index: number
+  info: FileDetailInfo
+  tabsId: string
+  handleContextMenu: (info: FileDetailInfo) => void
+  onRemoveCurrent: (info: FileDetailInfo) => void
 }
 
 export interface RunnerTabPaneProps {
-    tabsId: string
+  tabsId: string
 }
 
 export interface AuditCodeWelcomePageProps {
-    setShowCompileModal: (v: boolean) => void
+  setShowCompileModal: (v: boolean) => void
 }
 
 export interface YakitRunnerSaveModalProps {
-    info: FileDetailInfo
-    isShowModal: boolean
-    setShowModal: (v: boolean) => void
-    onRemoveFun: (info: FileDetailInfo) => void
-    waitSaveList: FileDetailInfo[]
-    setWaitSaveList: (v: FileDetailInfo[]) => void
-    setWaitRemoveOtherItem: (v: FileDetailInfo | undefined) => void
-    setWaitRemoveAll: (v: boolean) => void
+  info: FileDetailInfo
+  isShowModal: boolean
+  setShowModal: (v: boolean) => void
+  onRemoveFun: (info: FileDetailInfo) => void
+  waitSaveList: FileDetailInfo[]
+  setWaitSaveList: (v: FileDetailInfo[]) => void
+  setWaitRemoveOtherItem: (v: FileDetailInfo | undefined) => void
+  setWaitRemoveAll: (v: boolean) => void
 }
 
-export type SplitDirectionProps = "top" | "bottom" | "left" | "right"
+export type SplitDirectionProps = 'top' | 'bottom' | 'left' | 'right'
 
-export type WidgetClickTypeProps = "previous" | "next" | "detail"
+export type WidgetClickTypeProps = 'previous' | 'next' | 'detail'
 
 export interface CodeScanMonacoWidgetProps {
-    source?: {
-        title: string
-        node_id: string
-        auditRightParams: AuditEmiterYakUrlProps
-    }
-    closeFizzRangeWidget:()=>void
+  source?: {
+    title: string
+    node_id: string
+    auditRightParams: AuditEmiterYakUrlProps
+  }
+  closeFizzRangeWidget: () => void
 }
 
 export interface WidgetControlProps {
-    hasPrevious: boolean;
-    hasNext: boolean;
-    previousValue: GraphInfoProps | null;
-    nextValue: GraphInfoProps | null;
+  hasPrevious: boolean
+  hasNext: boolean
+  previousValue: GraphInfoProps | null
+  nextValue: GraphInfoProps | null
 }

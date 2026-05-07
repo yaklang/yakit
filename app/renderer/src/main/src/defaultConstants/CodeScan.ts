@@ -1,4 +1,3 @@
-import {CodeScanPageInfoProps} from "@/store/pageInfo"
+import { CodeScanPageInfoProps } from '@/store/pageInfo'
 
-export const defaultCodeScanPageInfo: CodeScanPageInfoProps = {
-}
+export const defaultCodeScanPageInfo: CodeScanPageInfoProps = {}

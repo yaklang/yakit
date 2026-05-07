@@ -1,90 +1,87 @@
-import {useEffect, useRef, useState} from "react"
-import {useMemoizedFn} from "ahooks"
-import { randomString } from "@/utils/randomUtil"
+import { useEffect, useRef, useState } from 'react'
+import { useMemoizedFn } from 'ahooks'
+import { randomString } from '@/utils/randomUtil'
 
-const {ipcRenderer} = window.require("electron")
+const { ipcRenderer } = window.require('electron')
 
 interface StreamConcurrencyConfig<TData> {
-    onData: (data: TData) => void
-    onStreamEnd?: () => void
+  onData: (data: TData) => void
+  onStreamEnd?: () => void
 }
 
 export const useStreamConcurrency = <TData = any, TParams = any>({
-    onData,
-    onStreamEnd,
+  onData,
+  onStreamEnd,
 }: StreamConcurrencyConfig<TData>) => {
-    const cleanupRef = useRef<(() => void) | null>(null)
-    const tokenRef = useRef<string>(randomString(40))
-    const [loading, setLoading] = useState<boolean>(false)
-    const startConcurrency = useMemoizedFn((params: TParams) => {
-        if (cleanupRef.current) {
-            cleanupRef.current()
-        }
-        setLoading(true)
-
-        const token = tokenRef.current
-
-        const dataToken = `${token}-data`
-        const errToken = `${token}-error`
-        const endToken = `${token}-end`
-
-        const handleData = (_: any, data: TData) => {
-            onData(data)
-        }
-
-        const handleError = () => {
-            onStreamEnd?.()
-        }
-
-        const handleEnd = () => {
-            setLoading(false)
-            onStreamEnd?.()
-            if (cleanupRef.current) {
-                cleanupRef.current()
-                cleanupRef.current = null
-            }
-        }
-
-        ipcRenderer.on(dataToken, handleData)
-        ipcRenderer.on(errToken, handleError)
-        ipcRenderer.on(endToken, handleEnd)
-
-        ipcRenderer.invoke("HTTPFuzzerGroup", params, token).catch(() => {
-            onStreamEnd?.()
-            if (cleanupRef.current) {
-                cleanupRef.current()
-                cleanupRef.current = null
-            }
-        })
-
-        cleanupRef.current = () => {
-            ipcRenderer.invoke("cancel-HTTPFuzzerGroup", token)
-            ipcRenderer.removeAllListeners(dataToken)
-            ipcRenderer.removeAllListeners(errToken)
-            ipcRenderer.removeAllListeners(endToken)
-        }
-    })
-
-    const cancelConcurrency = useMemoizedFn(() => {
-        if (cleanupRef.current) {
-            cleanupRef.current()
-            cleanupRef.current = null
-        }
-        setLoading(false)
-    })
-
-    
-    useEffect(() => {
-        return () => {
-            cancelConcurrency()
-        }
-    }, [])
-
-    return { 
-        startConcurrency, 
-        cancelConcurrency, 
-        loading
+  const cleanupRef = useRef<(() => void) | null>(null)
+  const tokenRef = useRef<string>(randomString(40))
+  const [loading, setLoading] = useState<boolean>(false)
+  const startConcurrency = useMemoizedFn((params: TParams) => {
+    if (cleanupRef.current) {
+      cleanupRef.current()
     }
+    setLoading(true)
+
+    const token = tokenRef.current
+
+    const dataToken = `${token}-data`
+    const errToken = `${token}-error`
+    const endToken = `${token}-end`
+
+    const handleData = (_: any, data: TData) => {
+      onData(data)
+    }
+
+    const handleError = () => {
+      onStreamEnd?.()
+    }
+
+    const handleEnd = () => {
+      setLoading(false)
+      onStreamEnd?.()
+      if (cleanupRef.current) {
+        cleanupRef.current()
+        cleanupRef.current = null
+      }
+    }
+
+    ipcRenderer.on(dataToken, handleData)
+    ipcRenderer.on(errToken, handleError)
+    ipcRenderer.on(endToken, handleEnd)
+
+    ipcRenderer.invoke('HTTPFuzzerGroup', params, token).catch(() => {
+      onStreamEnd?.()
+      if (cleanupRef.current) {
+        cleanupRef.current()
+        cleanupRef.current = null
+      }
+    })
+
+    cleanupRef.current = () => {
+      ipcRenderer.invoke('cancel-HTTPFuzzerGroup', token)
+      ipcRenderer.removeAllListeners(dataToken)
+      ipcRenderer.removeAllListeners(errToken)
+      ipcRenderer.removeAllListeners(endToken)
+    }
+  })
+
+  const cancelConcurrency = useMemoizedFn(() => {
+    if (cleanupRef.current) {
+      cleanupRef.current()
+      cleanupRef.current = null
+    }
+    setLoading(false)
+  })
+
+  useEffect(() => {
+    return () => {
+      cancelConcurrency()
+    }
+  }, [])
+
+  return {
+    startConcurrency,
+    cancelConcurrency,
+    loading,
+  }
 }
-
-

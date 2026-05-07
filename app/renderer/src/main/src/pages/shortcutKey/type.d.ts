@@ -1,10 +1,7 @@
-import {ShortcutKeyPageName} from "@/utils/globalShortcutKey/events/pageMaps"
+import { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
 
 export interface ShortcutKeyProps {
-    page: ShortcutKeyPageName
+  page: ShortcutKeyPageName
 }
 
-
-export interface ShortcutKeyListProps {
-    
-}
+export interface ShortcutKeyListProps {}

@@ -1,590 +1,590 @@
 .audit-code {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    padding-left: 4px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding-left: 4px;
+  display: flex;
+  flex-direction: column;
+  .header {
+    padding: 4px 8px;
+    height: 32px;
     display: flex;
-    flex-direction: column;
-    .header {
-        padding: 4px 8px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        .title {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    .title {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 16px;
+    }
+    .extra {
+      flex: 1;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      align-items: center;
+    }
+  }
+  .textarea-box {
+    padding: 0px 8px 8px 8px;
+  }
+  .no-audit {
+    padding-top: 80px;
+  }
+  .no-data {
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    margin-top: 8px;
+  }
+  .audit-tree {
+    flex: 1;
+    overflow: hidden;
+  }
+  .audit-log {
+    flex: 1;
+    overflow: auto;
+    .audit-log-wrapper {
+      overflow: auto;
+      :global {
+        .ant-tabs-nav {
+          display: none;
         }
-        .extra {
-            flex: 1;
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            align-items: center;
-        }
+      }
     }
-    .textarea-box {
-        padding: 0px 8px 8px 8px;
-    }
-    .no-audit {
-        padding-top: 80px;
-    }
-    .no-data {
-        font-style: normal;
-        font-weight: 400;
-        font-size: 12px;
-        line-height: 16px;
-        text-align: center;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        margin-top: 8px;
-    }
-    .audit-tree {
-        flex: 1;
-        overflow: hidden;
-    }
-    .audit-log {
-        flex: 1;
-        overflow: auto;
-        .audit-log-wrapper {
-            overflow: auto;
-            :global {
-                .ant-tabs-nav {
-                    display: none;
-                }
-            }
-        }
-    }
+  }
 }
 
 .audit-form-footer {
-    overflow: hidden;
-    width: 100%;
-    padding: var(--modal-footer-padding);
-    background-color: var(--modal-header-footer-background);
-    border-top: 1px solid var(--modal-header-footer-border);
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 8px;
+  overflow: hidden;
+  width: 100%;
+  padding: var(--modal-footer-padding);
+  background-color: var(--modal-header-footer-background);
+  border-top: 1px solid var(--modal-header-footer-border);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }
 
 .audit-tree {
-    height: 100%;
-    padding: 0px 0px 0px 4px;
-    :global {
-        .ant-tree {
-            background-color: var(--Colors-Use-Basic-Background);
-        }
-        .ant-tree .ant-tree-treenode {
-            padding-bottom: 0;
-        }
-        .ant-tree-switcher {
-            display: none;
-        }
-        .ant-tree .ant-tree-node-content-wrapper {
-            padding: 0;
-            line-height: normal;
-            min-height: auto;
-            border-radius: 0;
-        }
-        .ant-tree .ant-tree-node-content-wrapper:hover {
-            background-color: transparent;
-        }
-        .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
-            background-color: transparent;
-        }
-        .ant-tree.ant-tree-block-node .ant-tree-list-holder-inner .ant-tree-node-content-wrapper {
-            flex: 1;
-            overflow: hidden;
-        }
-        .ant-tree-indent-unit {
-            width: 0px;
-        }
-        // 树的滚动条
-        .ant-tree-list-scrollbar {
-            width: 6px !important;
-        }
-        .ant-tree-list-scrollbar-thumb {
-            background: var(--Colors-Use-Basic-Background) !important;
-        }
+  height: 100%;
+  padding: 0px 0px 0px 4px;
+  :global {
+    .ant-tree {
+      background-color: var(--Colors-Use-Basic-Background);
     }
+    .ant-tree .ant-tree-treenode {
+      padding-bottom: 0;
+    }
+    .ant-tree-switcher {
+      display: none;
+    }
+    .ant-tree .ant-tree-node-content-wrapper {
+      padding: 0;
+      line-height: normal;
+      min-height: auto;
+      border-radius: 0;
+    }
+    .ant-tree .ant-tree-node-content-wrapper:hover {
+      background-color: transparent;
+    }
+    .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+      background-color: transparent;
+    }
+    .ant-tree.ant-tree-block-node .ant-tree-list-holder-inner .ant-tree-node-content-wrapper {
+      flex: 1;
+      overflow: hidden;
+    }
+    .ant-tree-indent-unit {
+      width: 0px;
+    }
+    // 树的滚动条
+    .ant-tree-list-scrollbar {
+      width: 6px !important;
+    }
+    .ant-tree-list-scrollbar-thumb {
+      background: var(--Colors-Use-Basic-Background) !important;
+    }
+  }
 
-    :global(.ant-tree-treenode-loading) {
-        .audit-tree-node {
-            .node-switcher {
-                display: none;
-            }
-            .node-loading {
-                display: flex;
-            }
-        }
+  :global(.ant-tree-treenode-loading) {
+    .audit-tree-node {
+      .node-switcher {
+        display: none;
+      }
+      .node-loading {
+        display: flex;
+      }
     }
+  }
 }
 
 .tree-bottom {
-    position: relative;
-    height: 22px;
-    text-align: center;
-    color: var(--Colors-Use-Neutral-Disable);
-    font-size: 11px;
-    line-height: 22px;
+  position: relative;
+  height: 22px;
+  text-align: center;
+  color: var(--Colors-Use-Neutral-Disable);
+  font-size: 11px;
+  line-height: 22px;
 }
 
 .tree-more {
-    position: relative;
-    height: 22px;
-    text-align: center;
-    color: var(--Colors-Use-Neutral-Text-1-Title);
-    font-size: 11px;
-    line-height: 22px;
-    &:hover {
-        color: var(--Colors-Use-Main-Primary);
-    }
+  position: relative;
+  height: 22px;
+  text-align: center;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 11px;
+  line-height: 22px;
+  &:hover {
+    color: var(--Colors-Use-Main-Primary);
+  }
 }
 
 .audit-tree-node {
-    padding: 3px 12px 3px 8px;
-    display: flex;
-    align-content: center;
-    align-items: center;
-    gap: 2px;
-    cursor: pointer;
-    user-select: none;
-    .node-switcher {
-        width: 16px;
-        height: 16px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        svg {
-            width: 16px;
-            height: 16px;
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            transition: transform 0.3s;
-        }
-        &.expanded {
-            svg {
-                transform: rotate(90deg);
-            }
-        }
-    }
-    .node-loading {
-        display: none;
-        width: 16px;
-        height: 16px;
-        justify-content: center;
-        align-items: center;
-        svg {
-            width: 12px;
-            height: 12px;
-            color: var(--Colors-Use-Main-Primary);
-        }
-    }
-    .node-error {
-        svg {
-            color: var(--Colors-Use-Error-Primary);
-        }
-    }
-    .img-box {
-        width: 16px;
-        height: 16px;
-    }
-
-    .node-content {
-        flex: 1;
-        overflow: hidden;
-        display: flex;
-        gap: 8px;
-        align-content: center;
-
-        .content-body {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            gap: 4px;
-            .detail {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                font-size: 12px;
-                font-weight: 500;
-                line-height: 16px;
-                overflow: hidden;
-
-                flex-shrink: 0; /* 防止这个元素被压缩  */
-                .detail-tag {
-                    margin-left: 4px;
-                }
-            }
-            .name {
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                font-size: 12px;
-                font-weight: 500;
-                line-height: 16px;
-                overflow: hidden;
-
-                flex-shrink: 1; /* 允许这个元素被压缩 */
-            }
-            .name-active {
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-            }
-        }
-        .bug {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            display: flex;
-            align-items: center;
-            svg {
-                height: 14px;
-                width: 14px;
-            }
-        }
-        .active-bug {
-            color: var(--Colors-Use-Main-Primary);
-        }
-        .count {
-            color: var(--Colors-Use-Neutral-Text-3-Secondary);
-            font-size: 12px;
-            font-weight: 400;
-            line-height: 16px;
-        }
-    }
-
-    &:hover {
-        border-radius: 4px;
-        background-color: var(--Colors-Use-Neutral-Bg);
-    }
-
-    &.node-selected {
-        background-color: var(--Colors-Use-Main-Bg);
-    }
-    &.node-foucsed {
-        border: 1px solid var(--Colors-Use-Main-Border);
-        background-color: var(--Colors-Use-Main-Bg);
-        border-radius: 4px;
-        padding-top: 2px;
-        padding-bottom: 2px;
-    }
-
-    .icon-box {
-        display: flex;
-        svg {
-            height: 16px;
-            width: 16px;
-        }
-    }
-    .hint-icon {
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    }
-    .info-icon {
-        color: var(--Colors-Use-Blue-Primary);
-    }
-    .warn-icon {
-        color: var(--Colors-Use-Warning-Primary);
-    }
-    .error-icon {
-        color: var(--Colors-Use-Error-Primary);
-    }
-}
-
-.audit-history-table {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    .header {
-        padding: 8px 16px;
-        height: 40px;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-        background: var(--Colors-Use-Neutral-Bg);
-        .main {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 8px;
-            .title {
-                font-size: 14px;
-                font-weight: 600;
-                line-height: 20px;
-            }
-            .sub-title {
-                display: flex;
-                flex-direction: row;
-                gap: 4px;
-                .text {
-                    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                    font-size: 12px;
-                    font-weight: 400;
-                    line-height: 16px;
-                }
-                .number {
-                    color: var(--Colors-Use-Main-Primary);
-                    font-size: 12px;
-                    font-weight: 400;
-                    line-height: 16px;
-                }
-            }
-        }
-        .extra {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 8px;
-            .search-icon {
-                color: var(--Colors-Use-Neutral-Text-3-Secondary);
-                svg {
-                    height: 12px;
-                    width: 12px;
-                    path {
-                        stroke-width: 1.5;
-                    }
-                }
-            }
-        }
-    }
-    .table {
-        padding: 12px 16px;
-        flex: 1;
-        overflow: hidden;
-        .audit-virtual-list {
-            height: 100%;
-        }
-        .audit-text {
-            overflow: hidden;
-        }
-
-        .audit-opt {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 12px;
-        }
-    }
-}
-
-.additional-params-divider {
-    margin: 16px 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 4px;
-    .text-style {
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 16px;
-    }
-    .divider-style {
-        flex: 1;
-        overflow: hidden;
-        height: 1px;
-        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
-    }
-}
-.project-manager-edit {
-    // 以下为jsonSchema样式特殊处理---start
-    .form-json-schema-wrapper {
-        padding: 0px 16px;
-        max-height: 600px;
-        overflow: auto;
-        *:has(> label[title="基础信息"]),
-        *:has(> label[title="代码源配置"]),
-        *:has(> label[title="编译配置"]) {
-            display: none;
-        }
-    }
-    .baseInfo {
-        fieldset[id="root"] > div:first-child > div:nth-child(2) {
-            height: 0px;
-            overflow: hidden;
-        }
-        fieldset[id="root"] > div:first-child > div:nth-child(3) {
-            height: 0px;
-            overflow: hidden;
-        }
-    }
-    .codeSource {
-        fieldset[id="root"] > div:first-child > div:first-child {
-            height: 0px;
-            overflow: hidden;
-        }
-        fieldset[id="root"] > div:first-child > div:nth-child(3) {
-            height: 0px;
-            overflow: hidden;
-        }
-    }
-    .compile {
-        fieldset[id="root"] > div:first-child > div:first-child {
-            height: 0px;
-            overflow: hidden;
-        }
-        fieldset[id="root"] > div:first-child > div:nth-child(2) {
-            height: 0px;
-            overflow: hidden;
-        }
-    }
-    // 以上为jsonSchema样式特殊处理---end
-
-    .form-type-radio {
-        padding: 0px 16px;
-    }
-    .project-manager-edit-form {
-        padding: 8px 24px 8px 24px;
-    }
-    .opt-btn {
-        padding: 0px 24px;
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-}
-
-.extra-icon {
+  padding: 3px 12px 3px 8px;
+  display: flex;
+  align-content: center;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  user-select: none;
+  .node-switcher {
     width: 16px;
     height: 16px;
-    box-sizing: content-box;
-    padding: 4px;
-    border-radius: 4px;
-    cursor: pointer;
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     svg {
-        width: 16px;
-        height: 16px;
+      width: 16px;
+      height: 16px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      transition: transform 0.3s;
     }
-    &:hover {
-        background-color: var(--Colors-Use-Neutral-Bg);
-        color: var(--Colors-Use-Main-Primary);
+    &.expanded {
+      svg {
+        transform: rotate(90deg);
+      }
     }
-}
+  }
+  .node-loading {
+    display: none;
+    width: 16px;
+    height: 16px;
+    justify-content: center;
+    align-items: center;
+    svg {
+      width: 12px;
+      height: 12px;
+      color: var(--Colors-Use-Main-Primary);
+    }
+  }
+  .node-error {
+    svg {
+      color: var(--Colors-Use-Error-Primary);
+    }
+  }
+  .img-box {
+    width: 16px;
+    height: 16px;
+  }
 
-.audit-modal-form {
-    .custom-params-wrapper {
-        padding-right: 16px;
-    }
-    :global {
-        .json-schema-form {
-            .json-schema-row-form {
-                // 需询问后端是否可从schema中移除
-                #root_auth__error,
-                #root_proxy__error {
-                    display: none;
-                }
-            }
-        }
-    }
-}
-
-.audit-history-list {
-    padding: 4px 8px;
+  .node-content {
     flex: 1;
     overflow: hidden;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    .header {
+    gap: 8px;
+    align-content: center;
+
+    .content-body {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 4px;
+      .detail {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        overflow: hidden;
+
+        flex-shrink: 0; /* 防止这个元素被压缩  */
+        .detail-tag {
+          margin-left: 4px;
+        }
+      }
+      .name {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        overflow: hidden;
+
+        flex-shrink: 1; /* 允许这个元素被压缩 */
+      }
+      .name-active {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+    }
+    .bug {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      display: flex;
+      align-items: center;
+      svg {
+        height: 14px;
+        width: 14px;
+      }
+    }
+    .active-bug {
+      color: var(--Colors-Use-Main-Primary);
+    }
+    .count {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 16px;
+    }
+  }
+
+  &:hover {
+    border-radius: 4px;
+    background-color: var(--Colors-Use-Neutral-Bg);
+  }
+
+  &.node-selected {
+    background-color: var(--Colors-Use-Main-Bg);
+  }
+  &.node-foucsed {
+    border: 1px solid var(--Colors-Use-Main-Border);
+    background-color: var(--Colors-Use-Main-Bg);
+    border-radius: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  .icon-box {
+    display: flex;
+    svg {
+      height: 16px;
+      width: 16px;
+    }
+  }
+  .hint-icon {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+  .info-icon {
+    color: var(--Colors-Use-Blue-Primary);
+  }
+  .warn-icon {
+    color: var(--Colors-Use-Warning-Primary);
+  }
+  .error-icon {
+    color: var(--Colors-Use-Error-Primary);
+  }
+}
+
+.audit-history-table {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .header {
+    padding: 8px 16px;
+    height: 40px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
+    .main {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      .title {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 20px;
+      }
+      .sub-title {
         display: flex;
         flex-direction: row;
         gap: 4px;
-    }
-    .onlyRisk-box {
-        padding: 4px 8px;
-    }
-    .audit-history-list-container {
-        flex: 1;
-        overflow: hidden;
-        .history-item-box {
-            padding: 2px;
-            border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-            .history-item {
-                margin-bottom: 4px;
-                cursor: pointer;
-                padding: 4px 12px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                color: var(--Colors-Use-Neutral-Text-1-Title);
-                .title {
-                    display: flex;
-                    gap: 6px;
-                }
-                &:hover {
-                    border-color: transparent;
-                    box-shadow:
-                        0 1px 2px -2px var(--Colors-Use-Basic-Shadow) 0 3px 6px 0 var(--Colors-Use-Basic-Shadow),
-                        0 5px 12px 4px var(--Colors-Use-Basic-Shadow);
-                }
-            }
+        .text {
+          color: var(--Colors-Use-Neutral-Text-3-Secondary);
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 16px;
         }
+        .number {
+          color: var(--Colors-Use-Main-Primary);
+          font-size: 12px;
+          font-weight: 400;
+          line-height: 16px;
+        }
+      }
     }
+    .extra {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      .search-icon {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        svg {
+          height: 12px;
+          width: 12px;
+          path {
+            stroke-width: 1.5;
+          }
+        }
+      }
+    }
+  }
+  .table {
+    padding: 12px 16px;
+    flex: 1;
+    overflow: hidden;
+    .audit-virtual-list {
+      height: 100%;
+    }
+    .audit-text {
+      overflow: hidden;
+    }
+
+    .audit-opt {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+  }
 }
 
 .additional-params-divider {
-    margin: 16px 12px;
+  margin: 16px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  .text-style {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+  }
+  .divider-style {
+    flex: 1;
+    overflow: hidden;
+    height: 1px;
+    border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+  }
+}
+.project-manager-edit {
+  // 以下为jsonSchema样式特殊处理---start
+  .form-json-schema-wrapper {
+    padding: 0px 16px;
+    max-height: 600px;
+    overflow: auto;
+    *:has(> label[title='基础信息']),
+    *:has(> label[title='代码源配置']),
+    *:has(> label[title='编译配置']) {
+      display: none;
+    }
+  }
+  .baseInfo {
+    fieldset[id='root'] > div:first-child > div:nth-child(2) {
+      height: 0px;
+      overflow: hidden;
+    }
+    fieldset[id='root'] > div:first-child > div:nth-child(3) {
+      height: 0px;
+      overflow: hidden;
+    }
+  }
+  .codeSource {
+    fieldset[id='root'] > div:first-child > div:first-child {
+      height: 0px;
+      overflow: hidden;
+    }
+    fieldset[id='root'] > div:first-child > div:nth-child(3) {
+      height: 0px;
+      overflow: hidden;
+    }
+  }
+  .compile {
+    fieldset[id='root'] > div:first-child > div:first-child {
+      height: 0px;
+      overflow: hidden;
+    }
+    fieldset[id='root'] > div:first-child > div:nth-child(2) {
+      height: 0px;
+      overflow: hidden;
+    }
+  }
+  // 以上为jsonSchema样式特殊处理---end
+
+  .form-type-radio {
+    padding: 0px 16px;
+  }
+  .project-manager-edit-form {
+    padding: 8px 24px 8px 24px;
+  }
+  .opt-btn {
+    padding: 0px 24px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+}
+
+.extra-icon {
+  width: 16px;
+  height: 16px;
+  box-sizing: content-box;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg);
+    color: var(--Colors-Use-Main-Primary);
+  }
+}
+
+.audit-modal-form {
+  .custom-params-wrapper {
+    padding-right: 16px;
+  }
+  :global {
+    .json-schema-form {
+      .json-schema-row-form {
+        // 需询问后端是否可从schema中移除
+        #root_auth__error,
+        #root_proxy__error {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+.audit-history-list {
+  padding: 4px 8px;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  .header {
+    display: flex;
+    flex-direction: row;
     gap: 4px;
-    .text-style {
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 16px;
+  }
+  .onlyRisk-box {
+    padding: 4px 8px;
+  }
+  .audit-history-list-container {
+    flex: 1;
+    overflow: hidden;
+    .history-item-box {
+      padding: 2px;
+      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+      .history-item {
+        margin-bottom: 4px;
+        cursor: pointer;
+        padding: 4px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        .title {
+          display: flex;
+          gap: 6px;
+        }
+        &:hover {
+          border-color: transparent;
+          box-shadow:
+            0 1px 2px -2px var(--Colors-Use-Basic-Shadow) 0 3px 6px 0 var(--Colors-Use-Basic-Shadow),
+            0 5px 12px 4px var(--Colors-Use-Basic-Shadow);
+        }
+      }
     }
-    .divider-style {
-        flex: 1;
-        overflow: hidden;
-        height: 1px;
-        border-top: 1px dashed var(--Colors-Use-Neutral-Border);
-    }
+  }
+}
+
+.additional-params-divider {
+  margin: 16px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+  .text-style {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+  }
+  .divider-style {
+    flex: 1;
+    overflow: hidden;
+    height: 1px;
+    border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+  }
 }
 
 .agent-down-stream-proxy {
-    color: var(--Colors-Use-Main-Primary);
-    display: inline-flex;
-    cursor: pointer;
+  color: var(--Colors-Use-Main-Primary);
+  display: inline-flex;
+  cursor: pointer;
 }
 
 .extra-params-divider {
-    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
 }
 
 .tooltip-line-feed {
-    :global {
-        .ant-tooltip-inner {
-            white-space: pre-wrap;
-        }
+  :global {
+    .ant-tooltip-inner {
+      white-space: pre-wrap;
     }
+  }
 }
 
 .modal-sub-title {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 8px;
-    .clear-button {
-        padding: 0 12px 0 0;
-    }
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  .clear-button {
+    padding: 0 12px 0 0;
+  }
 }
 
 .agent-down-stream-proxy {
-    color: var(--Colors-Use-Main-Primary);
-    display: inline-flex;
-    cursor: pointer;
+  color: var(--Colors-Use-Main-Primary);
+  display: inline-flex;
+  cursor: pointer;
 }
 
 .hint-right-btn {
-    margin-top: 24px;
-    display: flex;
-    justify-content: space-between;
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
 
-    .btn-group-wrapper {
-        display: flex;
-        gap: 8px;
-    }
+  .btn-group-wrapper {
+    display: flex;
+    gap: 8px;
+  }
 }

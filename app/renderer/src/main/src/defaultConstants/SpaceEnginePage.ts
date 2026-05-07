@@ -1,3 +1,3 @@
-import {SpaceEnginePageInfoProps} from "@/store/pageInfo"
+import { SpaceEnginePageInfoProps } from '@/store/pageInfo'
 
 export const defaultSpaceEnginePageInfo: SpaceEnginePageInfoProps = {}

@@ -1,5 +1,5 @@
-import {RiskPageInfoProps} from "@/store/pageInfo"
+import { RiskPageInfoProps } from '@/store/pageInfo'
 
 export const defaultRiskPageInfo: RiskPageInfoProps = {
-    SeverityList: []
+  SeverityList: [],
 }

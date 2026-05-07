@@ -1,56 +1,56 @@
-@use "../yakit-colors-component.scss" as components;
+@use '../yakit-colors-component.scss' as components;
 
-$color-names: Main, Error, Warning, Success, "Blue";
-$color-tag-names: "Purple", "Magenta", "Lake-blue", "Cyan", "Green", "Red", "Orange", "Yellow", "Grey";
+$color-names: Main, Error, Warning, Success, 'Blue';
+$color-tag-names: 'Purple', 'Magenta', 'Lake-blue', 'Cyan', 'Green', 'Red', 'Orange', 'Yellow', 'Grey';
 
-html[data-theme="light"] {
-    // @include generator.generate-all-theme-colors(light);
-    @include components.generate-neutral-semantic-colors(light);
-    @include components.generate-basic-semantic-colors(light);
-    @include components.generate-status-semantic-colors(light);
+html[data-theme='light'] {
+  // @include generator.generate-all-theme-colors(light);
+  @include components.generate-neutral-semantic-colors(light);
+  @include components.generate-basic-semantic-colors(light);
+  @include components.generate-status-semantic-colors(light);
 
-    @each $color in $color-names {
-        @include components.generate-semantic-colors($color, light);
-    }
-    @each $color in $color-tag-names {
-        @include components.generate-tag-semantic-colors($color, light);
-    }
-    --mitm-bg-image: url("../assets/mitm-bg-light.png");
-    --mitm-bg-color: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0) 21.72%,
-        rgba(255, 255, 255, 0.6) 37.87%,
-        #fff 102.46%
-    );
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        color: #353639;
-    }
+  @each $color in $color-names {
+    @include components.generate-semantic-colors($color, light);
+  }
+  @each $color in $color-tag-names {
+    @include components.generate-tag-semantic-colors($color, light);
+  }
+  --mitm-bg-image: url('../assets/mitm-bg-light.png');
+  --mitm-bg-color: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 21.72%,
+    rgba(255, 255, 255, 0.6) 37.87%,
+    #fff 102.46%
+  );
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #353639;
+  }
 }
-html[data-theme="dark"] {
-    // @include generator.generate-all-theme-colors(dark);
-    @include components.generate-neutral-semantic-colors(dark);
-    @include components.generate-basic-semantic-colors(dark);
-    @include components.generate-status-semantic-colors(dark);
+html[data-theme='dark'] {
+  // @include generator.generate-all-theme-colors(dark);
+  @include components.generate-neutral-semantic-colors(dark);
+  @include components.generate-basic-semantic-colors(dark);
+  @include components.generate-status-semantic-colors(dark);
 
-    @each $color in $color-names {
-        @include components.generate-semantic-colors($color, dark);
-    }
-    @each $color in $color-tag-names {
-        @include components.generate-tag-semantic-colors($color, dark);
-    }
-    --mitm-bg-image: url("../assets/mitm-bg-dark.png");
-    --mitm-bg-color: linear-gradient(181deg, rgba(52, 33, 21, 0) 0.51%, rgba(23, 23, 23, 0.6) 20.79%, #171717 101.92%);
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        color: #c8d0dd;
-    }
+  @each $color in $color-names {
+    @include components.generate-semantic-colors($color, dark);
+  }
+  @each $color in $color-tag-names {
+    @include components.generate-tag-semantic-colors($color, dark);
+  }
+  --mitm-bg-image: url('../assets/mitm-bg-dark.png');
+  --mitm-bg-color: linear-gradient(181deg, rgba(52, 33, 21, 0) 0.51%, rgba(23, 23, 23, 0.6) 20.79%, #171717 101.92%);
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #c8d0dd;
+  }
 }

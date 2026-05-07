@@ -1,237 +1,240 @@
-import {Paging} from "@/utils/yakQueryHTTPFlow"
-import {SyntaxFlowResult} from "../yakRunnerCodeScan/YakRunnerCodeScanType"
-import {UserInfoProps} from "@/store"
-import {RuleManagementPageInfoProps} from "@/store/pageInfo";
+import { Paging } from '@/utils/yakQueryHTTPFlow'
+import { SyntaxFlowResult } from '../yakRunnerCodeScan/YakRunnerCodeScanType'
+import { UserInfoProps } from '@/store'
+import { RuleManagementPageInfoProps } from '@/store/pageInfo'
 
-export interface RuleManagementProps{
-    ruleManagementPageInfo?: RuleManagementPageInfoProps
+export interface RuleManagementProps {
+  ruleManagementPageInfo?: RuleManagementPageInfoProps
 }
 
 export interface LocalRuleGroupListPropsRefProps {
-    handleReset: () => void
+  handleReset: () => void
 }
 export interface LocalRuleGroupListProps {
-    ref?: ForwardedRef<LocalRuleGroupListPropsRefProps>
-    isrefresh?: boolean
-    onGroupChange: (groups: string[]) => void
-    currentPageTabRouteKey: string
-    canUpload: boolean
-    userInfo: UserInfoProps
-    onRefreshOnlienRuleManagement: () => void
+  ref?: ForwardedRef<LocalRuleGroupListPropsRefProps>
+  isrefresh?: boolean
+  onGroupChange: (groups: string[]) => void
+  currentPageTabRouteKey: string
+  canUpload: boolean
+  userInfo: UserInfoProps
+  onRefreshOnlienRuleManagement: () => void
 }
 
 type RuleImportExportModalExtra = {
-    hint: boolean
+  hint: boolean
 } & {
-    title: "导出规则" | "导入规则"
-    type: "export" | "import"
+  title: '导出规则' | '导入规则'
+  type: 'export' | 'import'
 }
 export interface RuleImportExportModalProps {
-    /** 是否被dom节点包含 */
-    getContainer?: HTMLElement
-    width?: number
-    extra: RuleImportExportModalExtra
-    filterData: Pick<SyntaxFlowRuleFilter, "RuleNames" | "Language" | "GroupNames" | "Purpose" | "Keyword" | "FilterRuleKind" | "FilterLibRuleKind"> & {
-        allCheck: boolean
-    }
-    onCallback: (result: boolean) => void
+  /** 是否被dom节点包含 */
+  getContainer?: HTMLElement
+  width?: number
+  extra: RuleImportExportModalExtra
+  filterData: Pick<
+    SyntaxFlowRuleFilter,
+    'RuleNames' | 'Language' | 'GroupNames' | 'Purpose' | 'Keyword' | 'FilterRuleKind' | 'FilterLibRuleKind'
+  > & {
+    allCheck: boolean
+  }
+  onCallback: (result: boolean) => void
 }
 
 export interface EditRuleDrawerProps {
-    /** 是否被dom节点包含 */
-    getContainer?: HTMLElement
-    info?: SyntaxFlowRule
-    visible: boolean
-    onCallback: (result: boolean, info?: SyntaxFlowRule) => void
+  /** 是否被dom节点包含 */
+  getContainer?: HTMLElement
+  info?: SyntaxFlowRule
+  visible: boolean
+  onCallback: (result: boolean, info?: SyntaxFlowRule) => void
 }
 
 export interface UpdateRuleToGroupProps {
-    allCheck: boolean
-    rules: SyntaxFlowRule[]
-    filters: SyntaxFlowRuleFilter
-    /** 完成操作后触发规则组数据刷新 */
-    callback: () => void
+  allCheck: boolean
+  rules: SyntaxFlowRule[]
+  filters: SyntaxFlowRuleFilter
+  /** 完成操作后触发规则组数据刷新 */
+  callback: () => void
 }
 
 export interface RuleDebugAuditDetailProps {
-    auditData: SyntaxFlowResult[]
-    info: SyntaxFlowResult
+  auditData: SyntaxFlowResult[]
+  info: SyntaxFlowResult
 }
 
 export interface RuleDebugAuditListProps {
-    auditData: SyntaxFlowResult[]
-    onDetail: (info: SyntaxFlowResult) => void
+  auditData: SyntaxFlowResult[]
+  onDetail: (info: SyntaxFlowResult) => void
 }
 
 export interface RuleUploadAndDownloadModalProps {
-    getContainer?: string | HTMLElement | getContainerFunc | false
-    type: string
-    apiKey: string
-    token: string
-    onCancel: () => void
-    onSuccess: () => void
+  getContainer?: string | HTMLElement | getContainerFunc | false
+  type: string
+  apiKey: string
+  token: string
+  onCancel: () => void
+  onSuccess: () => void
 }
 
 interface OnlineRuleGroupListPropsRefProps {
-    handleReset: () => void
+  handleReset: () => void
 }
 export interface OnlineRuleGroupListProps {
-    ref?: ForwardedRef<OnlineRuleGroupListPropsRefProps>
-    isrefresh?: boolean
-    onGroupChange: (groups: string[]) => void
-    currentPageTabRouteKey: string
-    canDel: boolean
-    userInfo: UserInfoProps
-    onRefreshRuleManagement: () => void
+  ref?: ForwardedRef<OnlineRuleGroupListPropsRefProps>
+  isrefresh?: boolean
+  onGroupChange: (groups: string[]) => void
+  currentPageTabRouteKey: string
+  canDel: boolean
+  userInfo: UserInfoProps
+  onRefreshRuleManagement: () => void
 }
 
 export interface RelatedHoleListProps {
-    info?: SyntaxFlowRule
-    visible: boolean
-    alertMsgRef: React.MutableRefObject<{[key: string]: AlertMessage}>
+  info?: SyntaxFlowRule
+  visible: boolean
+  alertMsgRef: React.MutableRefObject<{ [key: string]: AlertMessage }>
 }
 
 /** ---------- 规则组相关接口定义 Start ---------- */
 // #region
 export interface SyntaxFlowRuleGroupFilter {
-    GroupNames?: string[]
-    KeyWord?: string
-    FilterGroupKind?: string // "buildin"内置组, "unBuildIn"非内置组, 空为所有
+  GroupNames?: string[]
+  KeyWord?: string
+  FilterGroupKind?: string // "buildin"内置组, "unBuildIn"非内置组, 空为所有
 }
 export interface QuerySyntaxFlowRuleGroupRequest {
-    Filter: SyntaxFlowRuleGroupFilter
-    Pagination: Paging
+  Filter: SyntaxFlowRuleGroupFilter
+  Pagination: Paging
 }
 
 export interface SyntaxFlowGroup {
-    GroupName: string
-    Count: number
-    IsBuildIn: boolean
+  GroupName: string
+  Count: number
+  IsBuildIn: boolean
 }
 export interface QuerySyntaxFlowRuleGroupResponse {
-    Group: SyntaxFlowGroup[]
-    Pagination: Paging
+  Group: SyntaxFlowGroup[]
+  Pagination: Paging
 }
 
 export interface CreateSyntaxFlowGroupRequest {
-    GroupName: string
+  GroupName: string
 }
 export interface UpdateSyntaxFlowRuleGroupRequest {
-    OldGroupName: string
-    NewGroupName: string
+  OldGroupName: string
+  NewGroupName: string
 }
 
 export interface DeleteSyntaxFlowRuleGroupRequest {
-    Filter: SyntaxFlowRuleGroupFilter
+  Filter: SyntaxFlowRuleGroupFilter
 }
 
 export interface UpdateSyntaxFlowRuleAndGroupRequest {
-    Filter: SyntaxFlowRuleFilter
-    AddGroups: string[]
-    RemoveGroups: string[]
-    All?: boolean // 废弃
+  Filter: SyntaxFlowRuleFilter
+  AddGroups: string[]
+  RemoveGroups: string[]
+  All?: boolean // 废弃
 }
 
 export interface QuerySyntaxFlowSameGroupRequest {
-    Filter: SyntaxFlowRuleFilter
+  Filter: SyntaxFlowRuleFilter
 }
 export interface QuerySyntaxFlowSameGroupResponse {
-    Group: SyntaxFlowGroup[]
+  Group: SyntaxFlowGroup[]
 }
 // #endregion
 /** ---------- 规则组相关接口定义 End ---------- */
 
 /** ---------- 规则相关接口定义 Start ---------- */
 // #region
-export type FilterRuleKind = "buildIn" | "unBuildIn"
-export type FilterLibRuleKind = "lib" | "noLib" | ""
+export type FilterRuleKind = 'buildIn' | 'unBuildIn'
+export type FilterLibRuleKind = 'lib' | 'noLib' | ''
 export interface SyntaxFlowRuleFilter {
-    RuleNames?: string[]
-    Language?: string[]
-    GroupNames?: string[]
-    Severity?: string[]
-    Purpose?: string[]
-    Tag?: string[]
-    Keyword?: string
+  RuleNames?: string[]
+  Language?: string[]
+  GroupNames?: string[]
+  Severity?: string[]
+  Purpose?: string[]
+  Tag?: string[]
+  Keyword?: string
 
-    AfterId?: number
-    BeforeId?: number
+  AfterId?: number
+  BeforeId?: number
 
-    FilterRuleKind?: FilterRuleKind // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
-    FilterLibRuleKind?: FilterLibRuleKind // 是否显示Lib规则
+  FilterRuleKind?: FilterRuleKind // "buildIn"内置规则，"unBuildIn"非内置规则组, 空为所有规则
+  FilterLibRuleKind?: FilterLibRuleKind // 是否显示Lib规则
 
-    Ids?: number[]
+  Ids?: number[]
 }
 export interface QuerySyntaxFlowRuleRequest {
-    Filter?: SyntaxFlowRuleFilter
-    Pagination: Paging
+  Filter?: SyntaxFlowRuleFilter
+  Pagination: Paging
 }
 
 export interface SyntaxFlowRule {
-    Id: number
+  Id: number
 
-    RuleName: string
-    Content: string
+  RuleName: string
+  Content: string
 
-    Language: string
-    Type: string
-    Severity: string
-    Purpose: string
-    IsBuildInRule: boolean
+  Language: string
+  Type: string
+  Severity: string
+  Purpose: string
+  IsBuildInRule: boolean
 
-    Title: string
-    TitleZh: string
-    Description: string
-    Verified: boolean
-    AllowIncluded: boolean
-    IncludedName: string
-    Tag: string
+  Title: string
+  TitleZh: string
+  Description: string
+  Verified: boolean
+  AllowIncluded: boolean
+  IncludedName: string
+  Tag: string
 
-    Hash: string
+  Hash: string
 
-    GroupName: string[]
+  GroupName: string[]
 
-    AlertMsg: {[key: string]: AlertMessage}
+  AlertMsg: { [key: string]: AlertMessage }
 }
 
 export interface AlertMessage {
-    Title: string
-    TitleZh: string
-    Description: string
-    Solution: string
-    Severity: string
-    Purpose: string
-    Msg: string
-    Cve: string
-    RiskType: string
-    Tag: string
-    Extra: {[key: string]: string}
+  Title: string
+  TitleZh: string
+  Description: string
+  Solution: string
+  Severity: string
+  Purpose: string
+  Msg: string
+  Cve: string
+  RiskType: string
+  Tag: string
+  Extra: { [key: string]: string }
 }
 
 export interface QuerySyntaxFlowRuleResponse {
-    Pagination: Paging
-    Rule: SyntaxFlowRule[]
-    Total: number
+  Pagination: Paging
+  Rule: SyntaxFlowRule[]
+  Total: number
 }
 
 export interface SyntaxFlowRuleInput {
-    RuleName: string
-    Content: string
-    Language: string
-    Tags?: string[] // 无效，不知道后端是否有用
-    GroupNames: string[]
-    Description: string
-    AlertMsg: {[key: string]: AlertMessage}
+  RuleName: string
+  Content: string
+  Language: string
+  Tags?: string[] // 无效，不知道后端是否有用
+  GroupNames: string[]
+  Description: string
+  AlertMsg: { [key: string]: AlertMessage }
 }
 export interface CreateSyntaxFlowRuleRequest {
-    SyntaxFlowInput: SyntaxFlowRuleInput
+  SyntaxFlowInput: SyntaxFlowRuleInput
 }
 export interface UpdateSyntaxFlowRuleRequest {
-    SyntaxFlowInput: SyntaxFlowRuleInput
+  SyntaxFlowInput: SyntaxFlowRuleInput
 }
 
 export interface DeleteSyntaxFlowRuleRequest {
-    Filter: SyntaxFlowRuleFilter
+  Filter: SyntaxFlowRuleFilter
 }
 // #endregion
 /** ---------- 规则相关接口定义 End ---------- */
@@ -239,18 +242,18 @@ export interface DeleteSyntaxFlowRuleRequest {
 /** ---------- 线上规则相关接口定义 Start ---------- */
 // #region
 export interface SyntaxFlowRuleToOnlineRequest {
-    Pagination?: Paging
-    Filter: SyntaxFlowRuleFilter
-    Token: string
+  Pagination?: Paging
+  Filter: SyntaxFlowRuleFilter
+  Token: string
 }
 export interface SyntaxFlowRuleOnlineProgress {
-    Progress: number
-    Message: string
-    MessageType: string
+  Progress: number
+  Message: string
+  MessageType: string
 }
 export interface DownloadSyntaxFlowRuleRequest {
-    Token: string
-    Filter: SyntaxFlowRuleFilter
+  Token: string
+  Filter: SyntaxFlowRuleFilter
 }
 // #endregion
 /** ---------- 线上规则相关接口定义 End ---------- */

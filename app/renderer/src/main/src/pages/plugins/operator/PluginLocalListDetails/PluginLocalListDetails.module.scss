@@ -1,25 +1,25 @@
 .plugin-list-right-wrapper {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    height: 100%;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
 }
 
 .details-filter-extra-wrapper {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    path {
-        stroke-width: 1.5;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  path {
+    stroke-width: 1.5;
+  }
+  .loading-icon {
+    width: 26px;
+    text-align: center;
+    color: var(--Colors-Use-Main-Primary);
+    svg {
+      width: 16px;
+      height: 16px;
     }
-    .loading-icon {
-        width: 26px;
-        text-align: center;
-        color: var(--Colors-Use-Main-Primary);
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-    }
+  }
 }

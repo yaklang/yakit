@@ -1,10 +1,10 @@
 export interface WebFuzzerSynSettingProps {
-    pageId: string
-    onClose: () => void
+  pageId: string
+  onClose: () => void
 }
 
 export interface WebFuzzerSynSettingFormValueProps {
-    type: string[]
-    range: string
-    ids: string[]
+  type: string[]
+  range: string
+  ids: string[]
 }

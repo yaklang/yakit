@@ -1,28 +1,28 @@
-import {Paging} from "@/utils/yakQueryHTTPFlow"
+import { Paging } from '@/utils/yakQueryHTTPFlow'
 
 /** 规则类型渲染 tag */
-export const RuleType: Record<string, {key: string; name: string}> = {
-    audit: {key: "audit", name: "Code Audit"},
-    vuln: {key: "vuln", name: "Vulnerability"},
-    config: {key: "config", name: "Config"},
-    security: {key: "security", name: "Security Hotspot"}
+export const RuleType: Record<string, { key: string; name: string }> = {
+  audit: { key: 'audit', name: 'Code Audit' },
+  vuln: { key: 'vuln', name: 'Vulnerability' },
+  config: { key: 'config', name: 'Config' },
+  security: { key: 'security', name: 'Security Hotspot' },
 }
 /** 规则可选类型 */
-export const RuleTypeList: {value: string; label: string}[] = [
-    {value: "audit", label: "Code Audit"},
-    {value: "vuln", label: "Vulnerability"},
-    {value: "config", label: "Config"},
-    {value: "security", label: "Security Hotspot"}
+export const RuleTypeList: { value: string; label: string }[] = [
+  { value: 'audit', label: 'Code Audit' },
+  { value: 'vuln', label: 'Vulnerability' },
+  { value: 'config', label: 'Config' },
+  { value: 'security', label: 'Security Hotspot' },
 ]
 
 /** 规则可选语言 */
-export const RuleLanguageList: {value: string; label: string}[] = [
-    {value: "java", label: "Java"},
-    {value: "php", label: "PHP"},
-    {value: "yak", label: "Yaklang"},
-    {value: "js", label: "JavaScript"},
-    {value: "golang", label: "Golang"},
-    {value: "general", label: "通用"}
+export const RuleLanguageList: { value: string; label: string }[] = [
+  { value: 'java', label: 'Java' },
+  { value: 'php', label: 'PHP' },
+  { value: 'yak', label: 'Yaklang' },
+  { value: 'js', label: 'JavaScript' },
+  { value: 'golang', label: 'Golang' },
+  { value: 'general', label: '通用' },
 ]
 
 /** 默认的规则源码 */
@@ -46,17 +46,17 @@ export const DefaultRuleContent = `desc(
 
 /** 规则(导入|导出)弹框的宽度和表单的比例 */
 export const RuleImportExportModalSize = {
-    export: {
-        width: 520,
-        labelCol: 5,
-        wrapperCol: 18
-    },
-    import: {
-        width: 680,
-        labelCol: 6,
-        wrapperCol: 17
-    }
+  export: {
+    width: 520,
+    labelCol: 5,
+    wrapperCol: 18,
+  },
+  import: {
+    width: 680,
+    labelCol: 6,
+    wrapperCol: 17,
+  },
 }
 
 /** 规则组默认的搜索 pagemeta 条件 */
-export const DefaultRuleGroupFilterPageMeta: Paging = {Page: 1, Limit: 1000, OrderBy: "created_at", Order: "desc"}
+export const DefaultRuleGroupFilterPageMeta: Paging = { Page: 1, Limit: 1000, OrderBy: 'created_at', Order: 'desc' }

@@ -1,5 +1,5 @@
-import { ShowItemType } from "../BottomEditorDetails/BottomEditorDetailsType";
+import { ShowItemType } from '../BottomEditorDetails/BottomEditorDetailsType'
 
 export interface BottomSideBarProps {
-    onOpenEditorDetails:(v:ShowItemType)=>void
+  onOpenEditorDetails: (v: ShowItemType) => void
 }

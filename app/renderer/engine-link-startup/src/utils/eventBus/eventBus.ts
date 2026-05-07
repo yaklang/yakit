@@ -1,17 +1,17 @@
-import mitt from "mitt"
-import {StartupPageEventProps} from "./events/startupPageEventProps"
+import mitt from 'mitt'
+import { StartupPageEventProps } from './events/startupPageEventProps'
 
 type Contrast<T extends object, E extends object> = [keyof T & keyof E] extends [never] ? never : string
 type OneToArr<T extends object, E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
-    ? [Contrast<T, X>] extends [never]
-        ? OneToArr<T, Y>
-        : string
-    : number
+  ? [Contrast<T, X>] extends [never]
+    ? OneToArr<T, Y>
+    : string
+  : number
 type ArrContrast<E extends object[]> = E extends [infer X extends object, ...infer Y extends object[]]
-    ? OneToArr<X, Y> extends number
-        ? ArrContrast<Y>
-        : string
-    : number
+  ? OneToArr<X, Y> extends number
+    ? ArrContrast<Y>
+    : string
+  : number
 type Exchange<T> = T extends number ? boolean : never
 type Joins<T extends object[]> = T extends [infer H extends object, ...infer U extends object[]] ? H & Joins<U> : {}
 

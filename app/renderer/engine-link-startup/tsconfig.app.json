@@ -2,11 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -24,10 +20,6 @@
     "declaration": false, // ✅ 禁止生成声明文件
     "composite": false // ✅ 彻底关闭 project reference 机制
   },
-  "exclude": [
-    "./env-cmdrc"
-  ],
-  "include": [
-    "src"
-  ]
+  "exclude": ["./env-cmdrc"],
+  "include": ["src"]
 }

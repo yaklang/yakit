@@ -1,5 +1,3 @@
-const {ipcMain} = require("electron");
+const { ipcMain } = require('electron')
 
-module.exports = (win, getClient) => {
-
-}
+module.exports = (win, getClient) => {}

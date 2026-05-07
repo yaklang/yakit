@@ -1,3 +1,3 @@
 export type RuleManagementEventProps = {
-    onRuleManagementPageInfo: string
+  onRuleManagementPageInfo: string
 }

@@ -1,145 +1,142 @@
-@use "../../components/TableVirtualResize/styleFunction.scss" as tools;
+@use '../../components/TableVirtualResize/styleFunction.scss' as tools;
 
 .websocket-frame-history {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 
-    .base-cell {
-        padding: 6px 8px;
+  .base-cell {
+    padding: 6px 8px;
+  }
+  .flex-cell {
+    flex: 1;
+    overflow: hidden;
+  }
+  .table-header {
+    background-color: var(--Colors-Use-Neutral-Bg);
+    display: flex;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    .header-cell {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 16px;
     }
-    .flex-cell {
-        flex: 1;
-        overflow: hidden;
-    }
-    .table-header {
-        background-color: var(--Colors-Use-Neutral-Bg);
-        display: flex;
-        border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
-        .header-cell {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 16px;
-        }
-    }
+  }
 }
 
 .websocket-frame-history-table {
-    flex: 1;
+  flex: 1;
+  overflow: hidden;
+  .table-body {
+    height: 100%;
+    overflow: hidden auto;
+  }
+
+  .table-tr {
+    display: flex;
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+    .tr-cell {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      line-height: 16px;
+    }
+    &:hover {
+      background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+  }
+  .table-tr:first-child {
+    border-top: 0;
+  }
+  .cell-data-verbose {
+    display: inline-block;
+    width: 100%;
     overflow: hidden;
-    .table-body {
-        height: 100%;
-        overflow: hidden auto;
-    }
+  }
+  .cell-tag-style {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
 
-    .table-tr {
-        display: flex;
-        border-top: 1px solid var(--Colors-Use-Neutral-Border);
-        .tr-cell {
-            color: var(--Colors-Use-Neutral-Text-1-Title);
-            font-size: 12px;
-            line-height: 16px;
-        }
-        &:hover {
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
-        }
+  .table-footer-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
+  }
+  .table-footer-loading {
+    min-height: 40px;
+    .loading-style {
+      justify-content: center;
+      align-items: center;
     }
-    .table-tr:first-child {
-        border-top: 0;
-    }
-    .cell-data-verbose {
-        display: inline-block;
-        width: 100%;
-        overflow: hidden;
-    }
-    .cell-tag-style {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-    }
+  }
 
-    .table-footer-empty {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 40px;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        font-size: 12px;
-    }
-    .table-footer-loading {
-        min-height: 40px;
-        .loading-style {
-            justify-content: center;
-            align-items: center;
-        }
-    }
-
-    @mixin generate-permutations-class-name($allTypes: (), $prefix: ()) {
-        // 剩余需要遍历的变量数组为空
-        @if length($allTypes) != 0 {
-            @each $type in $allTypes {
-                $pre: append($prefix, $type, $separator: comma);
-                @if length($pre) == 1 {
-                    // 单色情况
-                    @if $type == red {
-                        // 单色-红色单独处理
-                        .table-tr.table-row-red {
-                            background: var(--Colors-Use-Error-Primary);
-                            color: var(--Colors-Use-Neutral-Text-1-Title);
-                            font-weight: bold;
-                            &:hover {
-                                background: var(--Colors-Use-Error-Pressed);
-                            }
-                        }
-                    } @else {
-                        // 单色-其他颜色处理
-                        .table-tr.table-row-#{$type} {
-                            background: tools.generate-transparen(#{tools.fetch-color($type, "backgroundColor")}, 20%);
-                            color: var(--Colors-Use-Neutral-Text-1-Title);
-                            &:hover {
-                                background: tools.generate-transparen(
-                                    #{tools.fetch-color($type, "backgroundColor")},
-                                    30%
-                                );
-                            }
-                        }
-                    }
-                } @else {
-                    // 多色情况
-                    $gbColors: tools.generate-colors($pre);
-                    .table-tr.table-row-#{tools.generate-class-name($pre)} {
-                        background: tools.generate-gradient($gbColors, 20%);
-                        color: var(--Colors-Use-Neutral-Text-1-Title);
-                        &:hover {
-                            background: tools.generate-gradient($gbColors, 30%);
-                        }
-                    }
-                }
-
-                $remaining: if(
-                    index($allTypes, $type) == length($allTypes),
-                    (),
-                    tools.get-range($allTypes, index($allTypes, $type) + 1)
-                );
-                @if length($pre) <3 {
-                    @include generate-permutations-class-name($remaining, $pre);
-                } @else {
-                }
+  @mixin generate-permutations-class-name($allTypes: (), $prefix: ()) {
+    // 剩余需要遍历的变量数组为空
+    @if length($allTypes) != 0 {
+      @each $type in $allTypes {
+        $pre: append($prefix, $type, $separator: comma);
+        @if length($pre) == 1 {
+          // 单色情况
+          @if $type == red {
+            // 单色-红色单独处理
+            .table-tr.table-row-red {
+              background: var(--Colors-Use-Error-Primary);
+              color: var(--Colors-Use-Neutral-Text-1-Title);
+              font-weight: bold;
+              &:hover {
+                background: var(--Colors-Use-Error-Pressed);
+              }
             }
+          } @else {
+            // 单色-其他颜色处理
+            .table-tr.table-row-#{$type} {
+              background: tools.generate-transparen(#{tools.fetch-color($type, 'backgroundColor')}, 20%);
+              color: var(--Colors-Use-Neutral-Text-1-Title);
+              &:hover {
+                background: tools.generate-transparen(#{tools.fetch-color($type, 'backgroundColor')}, 30%);
+              }
+            }
+          }
+        } @else {
+          // 多色情况
+          $gbColors: tools.generate-colors($pre);
+          .table-tr.table-row-#{tools.generate-class-name($pre)} {
+            background: tools.generate-gradient($gbColors, 20%);
+            color: var(--Colors-Use-Neutral-Text-1-Title);
+            &:hover {
+              background: tools.generate-gradient($gbColors, 30%);
+            }
+          }
         }
+
+        $remaining: if(
+          index($allTypes, $type) == length($allTypes),
+          (),
+          tools.get-range($allTypes, index($allTypes, $type) + 1)
+        );
+        @if length($pre) <3 {
+          @include generate-permutations-class-name($remaining, $pre);
+        } @else {
+        }
+      }
     }
-    $allColorTypes: map-keys(tools.$allColors);
-    @include generate-permutations-class-name($allColorTypes);
+  }
+  $allColorTypes: map-keys(tools.$allColors);
+  @include generate-permutations-class-name($allColorTypes);
 }
 
 .websocket-detail-modal {
-    height: 400px;
-    display: flex;
-    flex-direction: column;
-    .editor-body {
-        flex: 1;
-        overflow: hidden;
-        padding-top: 6px;
-    }
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  .editor-body {
+    flex: 1;
+    overflow: hidden;
+    padding-top: 6px;
+  }
 }
