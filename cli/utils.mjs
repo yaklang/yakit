@@ -4,20 +4,20 @@
  * @param {Function} selector 从模块中选择需要的部分
  */
 const importWithHint = async (packageName, selector) => {
-    try {
-        const mod = await import(packageName)
-        return selector(mod)
-    } catch (error) {
-        const msg = String(error?.message || "")
-        const isMissingDependency = error?.code === "ERR_MODULE_NOT_FOUND" && msg.includes(`'${packageName}'`)
+  try {
+    const mod = await import(packageName)
+    return selector(mod)
+  } catch (error) {
+    const msg = String(error?.message || '')
+    const isMissingDependency = error?.code === 'ERR_MODULE_NOT_FOUND' && msg.includes(`'${packageName}'`)
 
-        if (isMissingDependency) {
-            console.log(`\n缺少依赖: ${packageName}`)
-            console.log("请先在项目根目录执行: yarn install\n")
-            process.exit(1)
-        }
-        throw error
+    if (isMissingDependency) {
+      console.log(`\n缺少依赖: ${packageName}`)
+      console.log('请先在项目根目录执行: yarn install\n')
+      process.exit(1)
     }
+    throw error
+  }
 }
 
 /**
@@ -27,20 +27,20 @@ const importWithHint = async (packageName, selector) => {
  * @param {String} rightKey 右侧展示字段名
  */
 const genCLIDisplayList = (arr, leftKey, rightKey) => {
-    try {
-        // 先找到最长项的长度
-        const maxLength = arr.reduce((max, item) => {
-            return Math.max(max, item[leftKey].length)
-        }, 0)
+  try {
+    // 先找到最长项的长度
+    const maxLength = arr.reduce((max, item) => {
+      return Math.max(max, item[leftKey].length)
+    }, 0)
 
-        return arr
-            .map((item) => {
-                return `  ${item[leftKey].padEnd(maxLength + 4)}${item[rightKey]}`
-            })
-            .join("\n")
-    } catch (error) {
-        return ""
-    }
+    return arr
+      .map((item) => {
+        return `  ${item[leftKey].padEnd(maxLength + 4)}${item[rightKey]}`
+      })
+      .join('\n')
+  } catch (error) {
+    return ''
+  }
 }
 
-export {importWithHint, genCLIDisplayList}
+export { importWithHint, genCLIDisplayList }

@@ -1,7 +1,7 @@
 name: Feature Request / 功能建议
 description: Submit a new feature request / 提出一个新功能建议
-title: "[Feature]: "
-labels: ["enhancement"]
+title: '[Feature]: '
+labels: ['enhancement']
 body:
   - type: markdown
     attributes:

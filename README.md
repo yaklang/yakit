@@ -1,6 +1,6 @@
 
 <p align="center">
-  <a href="https://yaklang.io/"><img src="imgs/head.jpg" style="width: 400px"/></a> 
+  <a href="https://yaklang.io/"><img src="imgs/head.jpg" style="width: 400px"/></a>
  <h2 align="center">Yakit-交互式应用安全测试平台</h2>
 <p align="center">
 <img src="https://img.shields.io/github/issues-pr/yaklang/yakit">
@@ -18,12 +18,12 @@
   <a href="https://github.com/yaklang/yakit/issues">问题反馈</a> •
   <a href="https://yaklang.io/">进入官网</a> •
   <a href="#社区 ">加入社区</a> •
-  <a href="#项目架构">项目架构</a> 
+  <a href="#项目架构">项目架构</a>
 </p>
 
 <p align="center">
- :book:语言选择： <a href="https://github.com/yaklang/yakit/blob/master/README-EN.md">English</a> • 
-  <a href="https://github.com/yaklang/yakit/blob/main/README.md">中文</a> 
+ :book:语言选择： <a href="https://github.com/yaklang/yakit/blob/master/README-EN.md">English</a> •
+  <a href="https://github.com/yaklang/yakit/blob/main/README.md">中文</a>
 </p>
 
 ---

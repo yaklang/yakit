@@ -1,19 +1,19 @@
 /** 前端业务版本的介绍和值 */
 const BusinessVersionOption = [
-    {value: "yakit", name: "Yakit CE"},
-    {value: "yakitEE", name: "Yakit EE: enpritrace"},
-    {value: "yakitSE", name: "Yakit SE: simple-enpritrace"},
-    {value: "irify", name: "Irify CE: irify"},
-    {value: "irifyEE", name: "Irify EE: irify-enpritrace"},
-    {value: "memfit", name: "Memfit CE: memfit"}
+  { value: 'yakit', name: 'Yakit CE' },
+  { value: 'yakitEE', name: 'Yakit EE: enpritrace' },
+  { value: 'yakitSE', name: 'Yakit SE: simple-enpritrace' },
+  { value: 'irify', name: 'Irify CE: irify' },
+  { value: 'irifyEE', name: 'Irify EE: irify-enpritrace' },
+  { value: 'memfit', name: 'Memfit CE: memfit' },
 ]
 
 /** electron命令中 -s 支持选项的介绍和值 */
 const ElectronSystemOption = [
-    {value: "win", name: "win: Windows 系统"},
-    {value: "mac", name: "mac: MacOS 系统"},
-    {value: "linux", name: "linux: Linux 系统"},
-    {value: "mwl", name: "mwl: 多平台 (Mac + Windows + Linux)"}
+  { value: 'win', name: 'win: Windows 系统' },
+  { value: 'mac', name: 'mac: MacOS 系统' },
+  { value: 'linux', name: 'linux: Linux 系统' },
+  { value: 'mwl', name: 'mwl: 多平台 (Mac + Windows + Linux)' },
 ]
 
 /** render命令的示例 */
@@ -65,9 +65,9 @@ const InstallCMDExamplesDoc = `
 `
 
 export {
-    BusinessVersionOption,
-    ElectronSystemOption,
-    RenderCMDExamplesDoc,
-    ElectronCMDExamplesDoc,
-    InstallCMDExamplesDoc
+  BusinessVersionOption,
+  ElectronSystemOption,
+  RenderCMDExamplesDoc,
+  ElectronCMDExamplesDoc,
+  InstallCMDExamplesDoc,
 }

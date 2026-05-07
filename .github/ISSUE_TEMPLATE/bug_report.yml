@@ -1,7 +1,7 @@
 name: Bug Report / Bug 报告
 description: Submit a bug report to help us improve / 提交一个 bug 帮助我们改进产品
-title: "[Bug]: "
-labels: ["bug"]
+title: '[Bug]: '
+labels: ['bug']
 body:
   - type: markdown
     attributes:
@@ -17,7 +17,7 @@ body:
       placeholder: e.g. / 例如：v1.4.0-0122
     validations:
       required: true
-  
+
   - type: input
     id: engine_version
     attributes:
@@ -26,7 +26,7 @@ body:
       placeholder: e.g. / 例如：1.3.8-beta8
     validations:
       required: true
-  
+
   - type: checkboxes
     id: version-check
     attributes:
@@ -35,7 +35,7 @@ body:
       options:
         - label: I confirm this issue (bug) has not been fixed in the latest version / 我确定这个问题（BUG）在完全更新版本后没有修复
           required: true
-  
+
         - label: I confirm this is a reproducible bug / 我确定这个是一个可复现的 BUG
           required: true
 

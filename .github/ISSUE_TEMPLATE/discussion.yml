@@ -1,7 +1,7 @@
 name: Discussion / 答疑讨论
 description: Start a new discussion topic / 开启一个新的答疑讨论主题
-title: "[Discussion]: "
-labels: ["discussion"]
+title: '[Discussion]: '
+labels: ['discussion']
 body:
   - type: markdown
     attributes:

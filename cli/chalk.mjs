@@ -1,19 +1,19 @@
-import {importWithHint} from "./utils.mjs"
-const chalk = await importWithHint("chalk", (mod) => mod.default)
+import { importWithHint } from './utils.mjs'
+const chalk = await importWithHint('chalk', (mod) => mod.default)
 
 // 主题色
-const MainChalk = chalk.hex("#B06028")
+const MainChalk = chalk.hex('#B06028')
 // 红色
-const RedChalk = chalk.hex("#D93F3F")
+const RedChalk = chalk.hex('#D93F3F')
 // 蓝色
-const BlueChalk = chalk.hex("#2D7CE8")
+const BlueChalk = chalk.hex('#2D7CE8')
 // 黄色
-const YellowChalk = chalk.hex("#DF900C")
+const YellowChalk = chalk.hex('#DF900C')
 // 绿色
-const GreenChalk = chalk.hex("#11A976")
+const GreenChalk = chalk.hex('#11A976')
 // 青色
-const CyanChalk = chalk.hex("#1E6C76")
+const CyanChalk = chalk.hex('#1E6C76')
 // 灰色
-const GrayChalk = chalk.hex("#5F636B")
+const GrayChalk = chalk.hex('#5F636B')
 
-export {MainChalk, RedChalk, BlueChalk, YellowChalk, GreenChalk, CyanChalk, GrayChalk}
+export { MainChalk, RedChalk, BlueChalk, YellowChalk, GreenChalk, CyanChalk, GrayChalk }

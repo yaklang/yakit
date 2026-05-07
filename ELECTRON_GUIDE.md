@@ -15,7 +15,7 @@ npm install --save-dev electron
 brew install pkg-config pixman cairo pango
 ```
 
-### Install React for Electron 
+### Install React for Electron
 
 https://www.section.io/engineering-education/desktop-application-with-react/
 

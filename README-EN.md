@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://yaklang.io/"><img src="imgs/head.jpg" style="width: 400px"/></a> 
+  <a href="https://yaklang.io/"><img src="imgs/head.jpg" style="width: 400px"/></a>
  <h2 align="center"> YAKIT-A Cyber Security ALL-IN-ONE Platform based on Yak language</h2>
 <p align="center">
 <img src="https://img.shields.io/github/issues-pr/yaklang/yakit">
@@ -17,12 +17,12 @@
   <a href="https://github.com/yaklang/yakit/issues">Issue feedback</a> •
   <a href="https://yaklang.io/">Official website</a> •
   <a href="#Community">Community</a> •
-  <a href="#Architecture">Architecture</a> 
+  <a href="#Architecture">Architecture</a>
 </p>
 
 <p align="center">
- :book:Language： <a href="https://github.com/yaklang/yakit/blob/master/README-EN.md">English</a> • 
-  <a href="https://github.com/yaklang/yakit/blob/master/README.md">中文</a> 
+ :book:Language： <a href="https://github.com/yaklang/yakit/blob/master/README-EN.md">English</a> •
+  <a href="https://github.com/yaklang/yakit/blob/master/README.md">中文</a>
 </p>
 
 ---
@@ -93,7 +93,7 @@ The Web Fuzzer module supports user-defined HTTP raw request sending. To make it
 </h3>
 
 
-### Fuzztag 
+### Fuzztag
 
 The Web Fuzzer module supports seamless integration of functionalities such as Host collision, Intruder, and directory brute-forcing through Fuzz tags. For example, in a single parameter brute-forcing scenario, let's take the user ID as an example. You can use the {{int(1-10)}} tag to automatically generate a range of IDs for brute-forcing. In scenarios where multiple parameters need to be brute-forced, the Cartesian product of the parameters is used for the brute-forcing. This eliminates the need to select the brute-forcing method and import dictionaries, reducing user operation steps and aligning with user habits compared to BurpSuite's Intruder module.
 
@@ -136,19 +136,19 @@ Prerequisites:
 Steps:
 
 1. Install dependencies at repo root
-     
+
      ```bash
      yarn
      ```
 
 2. Install renderer dependencies
-     
+
      ```bash
      yarn install-render
      ```
 
 3. Start development (starts React renderer and Electron)
-     
+
      ```bash
      yarn dev
      ```
