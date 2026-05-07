@@ -35,6 +35,7 @@ import classNames from 'classnames'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
+import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -1048,7 +1049,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             bordered={false}
             className={styles['ai-third-party-application-config-collapse']}
           >
-            <Collapse.Panel header="高级配置" key="1" forceRender={true}>
+            <YakitCollapse.YakitPanel header="高级配置" key="1" forceRender={true}>
               {/* 可选的表单项 */}
               {renderOptionalFormItems()}
               <Form.Item label={'Header'} name="Headers">
@@ -1084,7 +1085,45 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                   添加
                 </YakitButton>
               </Form.Item>
-            </Collapse.Panel>
+            </YakitCollapse.YakitPanel>
+            <YakitCollapse.YakitPanel header="模型配置" key="2">
+              <Form.Item label="Enable Thiking" name="EnableThinking">
+                <YakitSelect
+                  options={[
+                    { label: '不设置', value: 'no-set' },
+                    { label: '开启', value: 'open' },
+                    { label: '不开启', value: 'close' },
+                  ]}
+                />
+              </Form.Item>
+              <Form.Item label="Max Tokens" name="MaxTokens">
+                <YakitInputNumber min={1} max={163840} />
+              </Form.Item>
+              <Form.Item label="Temperature" name="Temperature">
+                <YakitInputNumber min={0} max={2} step={0.1} />
+              </Form.Item>
+              <Form.Item label="Top-P" name="TopP">
+                <YakitInputNumber min={0} max={1} step={0.1} />
+              </Form.Item>
+              <Form.Item label="Top-K" name="TopK">
+                <YakitInputNumber min={0} max={100} />
+              </Form.Item>
+              <Form.Item label="Frequency Penalty" name="FrequencyPenalty">
+                <YakitInputNumber min={0} max={2} step={0.1} />
+              </Form.Item>
+              <Form.Item label="Reasoning Effort" name="ReasoningEffort">
+                <YakitSelect
+                  options={[
+                    { label: '不设置', value: 'no-set' },
+                    { label: 'none', value: 'none' },
+                    { label: 'low', value: 'low' },
+                    { label: 'middle', value: 'middle' },
+                    { label: 'high', value: 'high' },
+                    { label: 'xhigh', value: 'xhigh' },
+                  ]}
+                />
+              </Form.Item>
+            </YakitCollapse.YakitPanel>
           </YakitCollapse>
         </Form>
         <div className={styles['config-footer']}>{footer}</div>

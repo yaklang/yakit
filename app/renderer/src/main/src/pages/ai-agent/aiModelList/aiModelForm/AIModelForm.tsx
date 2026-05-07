@@ -32,7 +32,7 @@ import { AIModelTypeEnum, AIModelTypeInterFileNameEnum } from '../../defaultCons
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, has, isNil } from 'lodash'
 import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import styles from './AIModelForm.module.scss'
@@ -165,7 +165,58 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     endpoint: config.Endpoint ?? '',
     enable_endpoint: config.EnableEndpoint ?? false,
     Headers: config.Headers ?? [],
+    EnableThinking: has(config, 'EnableThinking') ? `${config.EnableThinking === true ? 'open' : 'close'}` : 'no-set',
+    MaxTokens: config?.MaxTokens,
+    Temperature: config?.Temperature,
+    TopP: config?.TopP,
+    TopK: config?.TopK,
+    FrequencyPenalty: config?.FrequencyPenalty,
+    ReasoningEffort: config?.ReasoningEffort || 'no-set',
   } as AIThirdPartyApplicationConfig
+}
+
+const formValueToAIConfigProvider = (res) => {
+  const date: ThirdPartyApplicationConfig = {
+    Type: res.Type,
+    APIKey: res.api_key,
+    APIType: normalizeAIAPIType(res.api_type),
+    Domain: res.domain,
+    Proxy: res.proxy,
+    NoHttps: res.no_https,
+    ExtraParams: [],
+    BaseURL: res.base_url,
+    Endpoint: res.endpoint,
+    EnableEndpoint: res.enable_endpoint,
+    Headers: res.Headers,
+    /** 下面这些字段ai中没有 */
+    // UserIdentifier: "",
+    // UserSecret: "",
+    // Namespace: "",
+    // WebhookURL: "",
+    // Disabled: false
+  }
+  if (has(res, 'EnableThinking') && res.EnableThinking !== 'no-set') {
+    date.EnableThinking = res.EnableThinking === 'open'
+  }
+  if (has(res, 'MaxTokens') && !isNil(res.MaxTokens)) {
+    date.MaxTokens = res.MaxTokens
+  }
+  if (has(res, 'Temperature') && !isNil(res.Temperature)) {
+    date.Temperature = res.Temperature
+  }
+  if (has(res, 'TopP') && !isNil(res.TopP)) {
+    date.TopP = res.TopP
+  }
+  if (has(res, 'TopK') && !isNil(res.TopK)) {
+    date.TopK = res.TopK
+  }
+  if (has(res, 'FrequencyPenalty') && !isNil(res.FrequencyPenalty)) {
+    date.FrequencyPenalty = res.FrequencyPenalty
+  }
+  if (has(res, 'ReasoningEffort') && res.ReasoningEffort !== 'no-set') {
+    date.ReasoningEffort = res.ReasoningEffort
+  }
+  return date
 }
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   const { item, aiModelType, onSuccess, onClose } = props
@@ -229,23 +280,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       const newItem: AIModelConfig = {
         ProviderId: res.api_key_id,
         Provider: {
-          Type: res.Type,
-          APIKey: res.api_key,
-          APIType: normalizeAIAPIType(res.api_type),
-          Domain: res.domain,
-          Proxy: res.proxy,
-          NoHttps: res.no_https,
-          ExtraParams: [],
-          BaseURL: res.base_url,
-          Endpoint: res.endpoint,
-          EnableEndpoint: res.enable_endpoint,
-          Headers: res.Headers,
-          /** 下面这些字段ai中没有 */
-          // UserIdentifier: "",
-          // UserSecret: "",
-          // Namespace: "",
-          // WebhookURL: "",
-          // Disabled: false
+          ...formValueToAIConfigProvider(res),
         },
         ModelName: res.model,
         ExtraParams: [],
