@@ -1531,7 +1531,7 @@ interface UIOpUpdateProps {
   isUpdateYakit?: boolean // 下载引擎之前判断yakit是否需要先更新
   // 是否为内网版本
   intranet?: boolean
-  fetchIntranetYakitVersion?: () => void
+  fetchIntranetYakitVersion?: (v: boolean) => void
 }
 
 /** @name Yakit版本以及更新内容 */
@@ -1606,7 +1606,9 @@ const UIOpUpdateYakit: React.FC<UIOpUpdateProps> = React.memo((props) => {
           <div>
             <div className={styles['update-title']}>
               {`${versionTitle()} ${getReleaseEditionName()} ${lastVersion || version}`}{' '}
-              {intranet && fetchIntranetYakitVersion && <OutlineRefreshIcon onClick={fetchIntranetYakitVersion} />}
+              {intranet && fetchIntranetYakitVersion && (
+                <OutlineRefreshIcon onClick={() => fetchIntranetYakitVersion(true)} />
+              )}
             </div>
             <div className={styles['update-time']}>{`当前版本: ${version}`}</div>
           </div>
@@ -2075,7 +2077,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   }, [eeSystemConfig])
 
   // 获取最新内网版本号
-  const fetchIntranetYakitVersion = useMemoizedFn(() => {
+  const fetchIntranetYakitVersion = useMemoizedFn((isShowInfo: boolean = false) => {
     if (isIntranet) {
       // 从内网读取版本号
       grpcFetchIntranetYakitVersion().then((filePath: string) => {
@@ -2100,6 +2102,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
           }
         }
         setYakitLastIntranetVersion(data)
+        if (isShowInfo) {
+          info('内网版版本号刷新成功')
+        }
       })
     }
   })
@@ -2447,7 +2452,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             <div className={styles['notice-version-wrapper']}>
               <div className={styles['version-wrapper']}>
                 {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
-                {yakitLastIntranetVersion.length > 0 && !isYakitIntranetDownloading && (
+                {isEnpriTrace() && !isYakitIntranetDownloading && (
                   <UIOpUpdateYakit
                     version={yakitVersion}
                     lastVersion={yakitLastIntranetVersion}
