@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useInViewport, useMemoizedFn } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
 import { API } from '@/services/swagger/resposeType'
@@ -11,9 +11,11 @@ import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/Tab
 import useHttpVirtualTableHook from '@/hook/useHttpVirtualTableHook/useHttpVirtualTableHook'
 import ReactResizeDetector from 'react-resize-detector'
 import { RangeTimeProps } from '../DataStatistics'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 export const UserTable: React.FC<UserTableProps> = React.memo(
   forwardRef((_, ref) => {
+    const { t } = useI18nNamespaces(['dataStatistics'])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const onFirst = useMemoizedFn(() => {
       setIsRefresh(!isRefresh)
@@ -44,42 +46,45 @@ export const UserTable: React.FC<UserTableProps> = React.memo(
         onFirst,
       })
 
-    const columns: ColumnsTypeProps[] = [
-      {
-        title: '用户名',
-        dataKey: 'userName',
-        filterProps: {
-          filterKey: 'name',
-          filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+    const columns: ColumnsTypeProps[] = useMemo(
+      () => [
+        {
+          title: t('UserTable.userName'),
+          dataKey: 'userName',
+          filterProps: {
+            filterKey: 'name',
+            filtersType: 'input',
+            filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          },
+          render: (text, record) => text || record.ip,
         },
-        render: (text, record) => text || record.ip,
-      },
-      {
-        title: '昵称',
-        dataKey: 'nickName',
-        width: 120,
-        // filterProps: {
-        //   filterKey: 'userName',
-        //   filtersType: 'input',
-        //   filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
-        // },
-      },
-      {
-        title: '最近一次登录时间',
-        dataKey: 'updated_at',
-        ellipsis: true,
-        render: (text) => <span>{moment.unix(text).format('YYYY-MM-DD HH:mm')}</span>,
-      },
-      {
-        title: '使用时长（h）',
-        dataKey: 'totalRequestTimes',
-      },
-      {
-        title: '所属组织',
-        dataKey: 'departmentName',
-      },
-    ]
+        {
+          title: t('UserTable.nickName'),
+          dataKey: 'nickName',
+          width: 120,
+          // filterProps: {
+          //   filterKey: 'userName',
+          //   filtersType: 'input',
+          //   filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          // },
+        },
+        {
+          title: t('UserTable.lastLoginTime'),
+          dataKey: 'updated_at',
+          ellipsis: true,
+          render: (text) => <span>{moment.unix(text).format('YYYY-MM-DD HH:mm')}</span>,
+        },
+        {
+          title: t('UserTable.usageDurationHours'),
+          dataKey: 'totalRequestTimes',
+        },
+        {
+          title: t('UserTable.organization'),
+          dataKey: 'departmentName',
+        },
+      ],
+      [t],
+    )
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
       let sort = { ...newSort }
@@ -106,7 +111,7 @@ export const UserTable: React.FC<UserTableProps> = React.memo(
         getTotal: () => tableTotal,
         getColumns: () => columns,
       }),
-      [tableParams, tableTotal],
+      [tableParams, tableTotal, columns],
     )
 
     /**table所在的div大小发生变化 */
@@ -158,6 +163,7 @@ export const UserTable: React.FC<UserTableProps> = React.memo(
 
 export const IPTable: React.FC<IPTableProps> = React.memo(
   forwardRef((_, ref) => {
+    const { t } = useI18nNamespaces(['dataStatistics'])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const onFirst = useMemoizedFn(() => {
       setIsRefresh(!isRefresh)
@@ -188,42 +194,45 @@ export const IPTable: React.FC<IPTableProps> = React.memo(
         onFirst,
       })
 
-    const columns: ColumnsTypeProps[] = [
-      {
-        title: '用户名',
-        dataKey: 'userName',
-        filterProps: {
-          filterKey: 'name',
-          filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+    const columns: ColumnsTypeProps[] = useMemo(
+      () => [
+        {
+          title: t('UserTable.userName'),
+          dataKey: 'userName',
+          filterProps: {
+            filterKey: 'name',
+            filtersType: 'input',
+            filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          },
+          render: (text, record) => text || record.ip,
         },
-        render: (text, record) => text || record.ip,
-      },
-      {
-        title: 'ip',
-        dataKey: 'ip',
-        width: 120,
-        filterProps: {
-          filterKey: 'ip',
-          filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+        {
+          title: t('UserTable.ipColumn'),
+          dataKey: 'ip',
+          width: 120,
+          filterProps: {
+            filterKey: 'ip',
+            filtersType: 'input',
+            filterIcon: <OutlineSearchIcon className={styles['filter-icon']} />,
+          },
         },
-      },
-      {
-        title: '最近一次登录时间',
-        dataKey: 'updated_at',
-        ellipsis: true,
-        render: (text) => <span>{moment.unix(text).format('YYYY-MM-DD HH:mm')}</span>,
-      },
-      {
-        title: '使用时长（h）',
-        dataKey: 'totalRequestTimes',
-      },
-      {
-        title: '所属组织',
-        dataKey: 'departmentName',
-      },
-    ]
+        {
+          title: t('UserTable.lastLoginTime'),
+          dataKey: 'updated_at',
+          ellipsis: true,
+          render: (text) => <span>{moment.unix(text).format('YYYY-MM-DD HH:mm')}</span>,
+        },
+        {
+          title: t('UserTable.usageDurationHours'),
+          dataKey: 'totalRequestTimes',
+        },
+        {
+          title: t('UserTable.organization'),
+          dataKey: 'departmentName',
+        },
+      ],
+      [t],
+    )
 
     const onTableChange = useMemoizedFn((page: number, limit: number, newSort: SortProps, filter: any) => {
       let sort = { ...newSort }
@@ -250,7 +259,7 @@ export const IPTable: React.FC<IPTableProps> = React.memo(
         getTotal: () => tableTotal,
         getColumns: () => columns,
       }),
-      [tableParams, tableTotal],
+      [tableParams, tableTotal, columns],
     )
 
     /**table所在的div大小发生变化 */
