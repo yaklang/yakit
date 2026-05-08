@@ -9,7 +9,7 @@ import {
   YakitWhiteSvgIcon,
 } from './icons'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
-import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, success, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import { ConfigPrivateDomain } from '../ConfigPrivateDomain/ConfigPrivateDomain'
@@ -2064,17 +2064,25 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   // 后台隐藏下载内网版
   const [_, { onDownloadStart }] = useDownloadYakit({ onDownloadFinish })
 
-  useEffect(() => {
-    if (!isEnpriTrace()) return
-    // 是否从内网读取版本号
-    let intranet = false
-    eeSystemConfig.forEach((item) => {
-      if (item.configName === 'clientUpdateType' && item.isOpen) {
-        intranet = true
+  useDebounceEffect(
+    () => {
+      if (!isEnpriTrace()) return
+      // 是否从内网读取版本号
+      let intranet = false
+      eeSystemConfig.forEach((item) => {
+        if (item.configName === 'clientUpdateType' && item.isOpen) {
+          intranet = true
+        }
+      })
+      if (isIntranet && intranet) {
+        fetchIntranetYakitVersion()
+      } else {
+        setIsIntranet(intranet)
       }
-    })
-    setIsIntranet(intranet)
-  }, [eeSystemConfig])
+    },
+    [eeSystemConfig],
+    { wait: 200 },
+  )
 
   // 获取最新内网版本号
   const fetchIntranetYakitVersion = useMemoizedFn((isShowInfo: boolean = false) => {
@@ -2106,6 +2114,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
           info('内网版版本号刷新成功')
         }
       })
+    } else {
+      isShowInfo && yakitNotify('error', '获取版本失败')
     }
   })
 
