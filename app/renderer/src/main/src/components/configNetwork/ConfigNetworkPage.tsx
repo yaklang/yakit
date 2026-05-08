@@ -142,8 +142,6 @@ export interface ThirdPartyApplicationConfig {
   EnableEndpoint?: boolean
   Headers?: KVPair[]
   /**为空，不传给后端 */
-  EnableThinking?: boolean
-  /**为空，不传给后端 */
   MaxTokens?: number
   /**为空，不传给后端 */
   Temperature?: number
@@ -155,6 +153,8 @@ export interface ThirdPartyApplicationConfig {
   FrequencyPenalty?: number
   /**为空，不传给后端 */
   ReasoningEffort?: string
+  /**为空，不传给后端 */
+  EnableThinkingOpt?: boolean
 }
 type TenumBuffer = Buffer | Uint8Array
 

@@ -992,7 +992,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
         <Form
           form={form}
           layout={FormProps?.layout ?? 'horizontal'}
-          labelCol={{ span: FormProps?.labelCol ?? 5 }}
+          labelCol={{ span: FormProps?.labelCol ?? 6 }}
           wrapperCol={{ span: FormProps?.wrapperCol ?? 18 }}
           initialValues={initialValues}
           onValuesChange={(changedValues, allValues) => {
@@ -1087,7 +1087,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               </Form.Item>
             </YakitCollapse.YakitPanel>
             <YakitCollapse.YakitPanel header="模型配置" key="2">
-              <Form.Item label="Enable Thiking" name="EnableThinking">
+              <Form.Item label="Enable Thiking" name="EnableThinkingOpt">
                 <YakitSelect
                   options={[
                     { label: '不设置', value: 'no-set' },

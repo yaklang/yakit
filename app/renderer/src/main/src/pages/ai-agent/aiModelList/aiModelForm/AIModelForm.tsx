@@ -165,7 +165,9 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     endpoint: config.Endpoint ?? '',
     enable_endpoint: config.EnableEndpoint ?? false,
     Headers: config.Headers ?? [],
-    EnableThinking: has(config, 'EnableThinking') ? `${config.EnableThinking === true ? 'open' : 'close'}` : 'no-set',
+    EnableThinkingOpt: has(config, 'EnableThinkingOpt')
+      ? `${config.EnableThinkingOpt === true ? 'open' : 'close'}`
+      : 'no-set',
     MaxTokens: config?.MaxTokens,
     Temperature: config?.Temperature,
     TopP: config?.TopP,
@@ -195,8 +197,8 @@ const formValueToAIConfigProvider = (res) => {
     // WebhookURL: "",
     // Disabled: false
   }
-  if (has(res, 'EnableThinking') && res.EnableThinking !== 'no-set') {
-    date.EnableThinking = res.EnableThinking === 'open'
+  if (has(res, 'EnableThinkingOpt') && res.EnableThinkingOpt !== 'no-set') {
+    date.EnableThinkingOpt = res.EnableThinkingOpt === 'open'
   }
   if (has(res, 'MaxTokens') && !isNil(res.MaxTokens)) {
     date.MaxTokens = res.MaxTokens
