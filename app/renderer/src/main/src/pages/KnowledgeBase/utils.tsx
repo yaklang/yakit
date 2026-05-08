@@ -47,6 +47,7 @@ import joyrideFirstStepImg from '@/pages/KnowledgeBase/images/joyride-first-step
 import knowledgeJoyrideThree from '@/pages/KnowledgeBase/images/knowledge-joyride-three.mp4'
 import { Step } from 'react-joyride'
 import styles from './knowledgeBase.module.scss'
+import { RuleObject } from 'antd/lib/form'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1041,6 +1042,30 @@ const downloadOnlineRagWithEvents = (
 
 const exclude = ['llama-server', 'model-Qwen3-Embedding-0.6B-Q4']
 
+type TValidatorFilePath = (_: RuleObject, value: string) => Promise<any>
+
+const ValidatorFilePath: TValidatorFilePath = (_, value) => {
+  if (!value) {
+    return Promise.reject('请上传文件')
+  }
+
+  const files = value.split(',').map((i) => i.trim())
+
+  for (const file of files) {
+    // 兼容 windows/mac
+    const fileName = file.split('/').pop()?.split('\\').pop()
+
+    // 必须存在扩展名
+    const reg = /^.+\.[^.]+$/
+
+    if (!fileName || !reg.test(fileName)) {
+      return Promise.reject('请上传有效的文件')
+    }
+  }
+
+  return Promise.resolve()
+}
+
 export {
   targetInstallList,
   getFileInfoList,
@@ -1076,4 +1101,5 @@ export {
   downloadWithEvents,
   downloadOnlineRagWithEvents,
   exclude,
+  ValidatorFilePath,
 }

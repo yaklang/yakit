@@ -12,7 +12,7 @@ import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import type { FormInstance } from 'antd/es/form/Form'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import styles from '../knowledgeBase.module.scss'
-import { extractFileName, knowledgeTypeOptions } from '../utils'
+import { extractFileName, knowledgeTypeOptions, ValidatorFilePath } from '../utils'
 import { useKnowledgeBase } from '../hooks/useKnowledgeBase'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import classNames from 'classnames'
@@ -78,28 +78,7 @@ const CreateKnowledgeBase: FC<{ form: FormInstance<any>; type?: 'new' }> = ({ fo
           label: '上传文件',
           rules: [
             {
-              validator: (_, value) => {
-                if (value) {
-                  // 多个文件用逗号分隔
-                  const files = value.split(',').map((i) => i.trim())
-
-                  // 校验格式：必须有文件名 + 后缀
-                  const reg = /^[^.\/]+?\.[^.\/]+$/
-
-                  for (const file of files) {
-                    // 取文件名 (兼容 windows、mac 路径)
-                    const fileName = file.split('/').pop()?.split('\\').pop()
-
-                    if (!fileName || !reg.test(fileName)) {
-                      return Promise.reject('请上传有效的文件')
-                    }
-                  }
-
-                  return Promise.resolve()
-                } else {
-                  return Promise.resolve()
-                }
-              },
+              validator: ValidatorFilePath,
             },
           ],
         }}

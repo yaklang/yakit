@@ -9,7 +9,7 @@ import { Dispatch, SetStateAction, useEffect, useRef } from 'react'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { KnowledgeBaseContentProps } from '../TKnowledgeBase'
 import { KnowledgeBaseItem, useKnowledgeBase } from '../hooks/useKnowledgeBase'
-import { extractFileName } from '../utils'
+import { extractFileName, ValidatorFilePath } from '../utils'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { randomString } from '@/utils/randomUtil'
 
@@ -201,28 +201,7 @@ const ImportModal: React.FC<TImportModalProps> = (props) => {
             name: 'importPath',
             rules: [
               {
-                validator: (_, value) => {
-                  if (!value) {
-                    return Promise.reject('请上传文件')
-                  }
-
-                  // 多个文件用逗号分隔
-                  const files = value.split(',').map((i) => i.trim())
-
-                  // 校验格式：必须有文件名 + 后缀
-                  const reg = /^[^.\/]+?\.[^.\/]+$/
-
-                  for (const file of files) {
-                    // 取文件名 (兼容 windows、mac 路径)
-                    const fileName = file.split('/').pop()?.split('\\').pop()
-
-                    if (!fileName || !reg.test(fileName)) {
-                      return Promise.reject('请上传有效的文件')
-                    }
-                  }
-
-                  return Promise.resolve()
-                },
+                validator: ValidatorFilePath,
               },
             ],
           }}
