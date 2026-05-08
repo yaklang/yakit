@@ -1086,7 +1086,15 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 </YakitButton>
               </Form.Item>
             </YakitCollapse.YakitPanel>
-            <YakitCollapse.YakitPanel header="模型配置" key="2">
+            <YakitCollapse.YakitPanel
+              header={
+                <div className={styles['panel-heard']}>
+                  <span className={styles['title']}>模型配置</span>
+                  <span className={styles['tip']}>以下值可以为空，为空代表不设置</span>
+                </div>
+              }
+              key="2"
+            >
               <Form.Item label="Enable Thiking" name="EnableThinkingOpt">
                 <YakitSelect
                   options={[

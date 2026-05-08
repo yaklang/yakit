@@ -440,6 +440,28 @@
   .config-form {
     padding: 24px 24px 0 24px;
     .ai-third-party-application-config-collapse {
+      .panel-heard {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        line-height: 16px;
+        .title {
+          font-weight: 500;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+        .tip {
+          color: var(--Colors-Use-Neutral-Text-4-Help-text);
+        }
+      }
+      :global(.ant-collapse-header:hover) {
+        .panel-heard {
+          background-color: var(--Colors-Use-Basic-Background);
+          .title {
+            color: var(--Colors-Use-Main-Primary);
+          }
+        }
+      }
       :global {
         .ant-collapse-item {
           background-color: var(--Colors-Use-Basic-Background);
