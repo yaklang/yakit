@@ -25,6 +25,7 @@ import {
   OutlineCodeIcon,
   OutlineCogIcon,
   OutlineHandIcon,
+  OutlinePhotographIcon,
 } from '@/assets/icon/outline'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
@@ -52,7 +53,6 @@ import { isString } from 'lodash'
 import OpenFileDropdown, { OpenFileDropdownItem } from '../aiChatWelcome/OpenFileDropdown/OpenFileDropdown'
 import { UploadFileButton } from '@/pages/ai-re-act/aiReActChat/AIReActComponent'
 import { insertAtCurrentPosition } from '../components/aiMilkdownInput/customPlugin'
-import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
@@ -328,6 +328,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
     const updateLoading = useCreation(() => aiGlobalConfigData.updateLoading, [aiGlobalConfigData.updateLoading])
 
+    const onSelectImage = useMemoizedFn(() => {
+      aiMilkdownInputRef.current?.setImage()
+    })
+
     return (
       <div
         className={classNames(
@@ -402,6 +406,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     </YakitButton>
                   </AIManualAdditionPopover>
                 )}
+                <YakitButton
+                  type="text2"
+                  radius="50%"
+                  icon={<OutlinePhotographIcon />}
+                  onClick={onSelectImage}
+                  className={styles['btn-base']}
+                />
               </div>
             )}
 

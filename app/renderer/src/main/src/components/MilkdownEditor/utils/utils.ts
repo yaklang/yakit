@@ -250,7 +250,7 @@ export const createDivider = (action: (fn: (ctx: Ctx) => void) => void, view: Ed
 }
 
 const FileMaxSize = 1024 * 1024 * 1024
-const imgTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif', '.webp', '.svg']
+export const imgTypes = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.tif', '.webp', '.svg']
 
 /**上传图片和文件 */
 export const uploadFileInMilkdown = (

@@ -2,6 +2,7 @@ import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorT
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
 import { AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
 import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
+import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 
 /**md编辑器中匹配出提及相关数据/纯文本 */
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
@@ -91,4 +92,8 @@ export const aiInputWithParamsTemplate = (data: AIInputWithParamsTemplate) => {
 ${JSON.stringify(data.param || {}, null, 2)}
 \`\`\`
   `
+}
+
+export const getAIImageSuffix = () => {
+  return imgTypes.map((ext) => ext.slice(1))
 }

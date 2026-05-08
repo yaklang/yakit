@@ -8,7 +8,7 @@ import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { useNodeViewFactory, usePluginViewFactory } from '@prosemirror-adapter/react'
 import { $view } from '@milkdown/kit/utils'
 import { Ctx } from '@milkdown/kit/ctx'
-import { codeBlockSchema, commonmark, imageSchema } from '@milkdown/kit/preset/commonmark'
+import { codeBlockSchema, commonmark, imageSchema, insertImageCommand } from '@milkdown/kit/preset/commonmark'
 import { gfm } from '@milkdown/kit/preset/gfm'
 import classNames from 'classnames'
 import styles from './AIMilkdownInput.module.scss'
@@ -35,6 +35,8 @@ import { yakitNotify } from '@/utils/notification'
 import useSessionId from '@/pages/ai-re-act/hooks/useSessionId'
 
 import { AICustomCode } from './aiCustomCode/AICustomCode'
+import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
+import { getAIImageSuffix } from './utils'
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
 
@@ -63,6 +65,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
       () => ({
         setMention: (v: AIMentionCommandParams) => {
           onSetMention(v)
+        },
+        setImage: () => {
+          onSetImage()
         },
         getSessionId: () => sessionIdRef.current,
       }),
@@ -209,6 +214,29 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
 
     const onSetMention = useMemoizedFn((params: AIMentionCommandParams) => {
       get()?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+    })
+    const onSetImage = useMemoizedFn(() => {
+      handleOpenFileSystemDialog({
+        properties: ['openFile', 'multiSelections'],
+        filters: [
+          { name: '图片', extensions: getAIImageSuffix() }, // 关键：设置文件过滤器
+        ],
+      }).then((data) => {
+        if (data.filePaths.length > 8) {
+          yakitNotify('warning', '一次最多只能上传8张图片')
+        }
+        const filePaths = data.filePaths.slice(0, 8)
+        const filesLength = filePaths.length
+        for (let index = 0; index < filesLength; index++) {
+          const element = filePaths[index]
+          get()?.action(
+            callCommand(insertImageCommand.key, {
+              src: element,
+              alt: element,
+            }),
+          )
+        }
+      })
     })
     return (
       <div className={classNames(styles['ai-milkdown-input'], classNameWrapper)}>
