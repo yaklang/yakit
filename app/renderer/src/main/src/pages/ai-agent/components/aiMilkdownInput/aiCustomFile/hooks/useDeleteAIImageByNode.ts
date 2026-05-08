@@ -45,7 +45,7 @@ function useDeleteAIImageByNode(params?: UseDeleteAIImageByNodeParams) {
       removeListeners()
     })
 
-    const newParams = {
+    const newParams: DeleteAIImageByNodeRequest = {
       ...params,
       token,
     }
