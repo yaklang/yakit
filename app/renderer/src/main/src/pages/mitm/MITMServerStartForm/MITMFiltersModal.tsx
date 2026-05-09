@@ -366,6 +366,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
   return (
     <YakitModal
       visible={visible}
+      destroyOnClose
       onCancel={() => {
         setVisible(false)
       }}

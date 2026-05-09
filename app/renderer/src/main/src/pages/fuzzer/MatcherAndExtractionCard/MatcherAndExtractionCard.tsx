@@ -1023,19 +1023,6 @@ export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueLi
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'webFuzzer'])
   const onChangeGroupItemValue = useMemoizedFn((v: string, number: number) => {
-    const splitRe = supportCommaSeparated && includeCommaDelimiter ? /[,;\n]+/ : supportCommaSeparated ? /[;\n]+/ : null
-    if (splitRe && splitRe.test(v)) {
-      const parts = v
-        .split(splitRe)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0)
-      if (parts.length > 1) {
-        const newGroup = [...group]
-        newGroup.splice(number, 1, ...parts)
-        onEditGroup(newGroup)
-        return
-      }
-    }
     group[number] = v
     onEditGroup(group)
   })
@@ -1051,6 +1038,7 @@ export const MatcherAndExtractionValueList: React.FC<MatcherAndExtractionValueLi
               ) : (
                 <>
                   <AutoTextarea
+                    autoSizeOnMount
                     value={groupItem}
                     onChange={(e) => {
                       onChangeGroupItemValue(e.target.value, number)
