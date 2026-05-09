@@ -102,6 +102,23 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
         <Form.Item
           label={
             <>
+              同步执行意图识别
+              <Tooltip
+                overlayClassName={styles['form-info-icon-tooltip']}
+                title={'收到输入后同步进入任务执行链路，让意图识别在当前请求内同步执行'}
+              >
+                <OutlineInformationcircleIcon className={styles['info-icon']} />
+              </Tooltip>
+            </>
+          }
+          name="EnableSyncIntentRecognition"
+          valuePropName="checked"
+        >
+          <YakitSwitch />
+        </Form.Item>
+        <Form.Item
+          label={
+            <>
               风险阈值
               <Tooltip
                 overlayClassName={styles['form-info-icon-tooltip']}

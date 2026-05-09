@@ -128,6 +128,8 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     }
     data.DisableToolIntervalReview =
       setting.DisableToolIntervalReview ?? AIAgentSettingDefault.DisableToolIntervalReview
+    data.EnableSyncIntentRecognition =
+      setting.EnableSyncIntentRecognition ?? AIAgentSettingDefault.EnableSyncIntentRecognition
   } catch (error) {}
 
   return { ...data }
