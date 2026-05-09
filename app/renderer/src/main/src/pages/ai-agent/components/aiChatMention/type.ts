@@ -3,7 +3,6 @@ import { AIForge } from '../../type/forge'
 import { AIMentionTabsEnum, iconMap } from '../../defaultConstant'
 import { AIMentionCommandParams } from '../aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { KnowledgeBaseItem } from '@/pages/KnowledgeBase/hooks/useKnowledgeBase'
-import { AIMilkdownInputBaseProps } from '../aiMilkdownInput/type'
 
 export type AIMentionTypeItem = AIMentionCommandParams['mentionType']
 export type iconMapType = keyof typeof iconMap

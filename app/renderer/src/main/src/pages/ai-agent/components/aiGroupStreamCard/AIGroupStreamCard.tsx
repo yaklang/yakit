@@ -3,12 +3,19 @@ import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo } fro
 import styles from './AIGroupStreamCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineArrowsexpandIcon, OutlineChevrondownIcon, OutlineChevronupIcon } from '@/assets/icon/outline'
+import {
+  OutlineArrowsexpandIcon,
+  OutlineBrainIcon,
+  OutlineChevronsDownUpIcon,
+  OutlineChevronsUpDownIcon,
+} from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useClickAway, useMemoizedFn } from 'ahooks'
+import { Tooltip } from 'antd'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
@@ -100,8 +107,15 @@ const AIGroupStreamCard: FC<{
   const content = stream?.data.content || ''
   const shouldShowMask = useMemo(() => content.length > STREAM_MASK_THRESHOLD, [content])
   const contentRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const [isFocus, setIsFocus] = useState(false)
   const [isScroll, setIsScroll] = useState(false)
   const allowAutoScrollRef = useRef<boolean>(true)
+
+  useClickAway(() => {
+    if (isFocus) setIsFocus(false)
+  }, [containerRef])
 
   // 点击其他地方取消滚动
   useEffect(() => {
@@ -170,19 +184,58 @@ const AIGroupStreamCard: FC<{
     }
   }, [hasNext])
 
+  const onSetFocus = useMemoizedFn(() => {
+    setIsFocus(true)
+  })
   if (!stream) return null
   return (
-    <div className={styles.container}>
-      <div className={styles.title} onClick={() => setExpand(!expand)}>
+    <div
+      className={classNames(styles.container, {
+        [styles['container-focus']]: isFocus,
+      })}
+      ref={containerRef}
+      onClick={onSetFocus}
+    >
+      <div
+        className={styles.title}
+        onClick={() => {
+          setExpand(!expand)
+        }}
+      >
         <div className={styles['title-node-label']}>
-          {/* <OutlineSparklesColorsIcon /> */}
+          <OutlineBrainIcon className={styles['brain-icon']} />
           {nodeLabel}
         </div>
         <div className={styles['stream-text']}>
           {shouldShowMask && <div className={styles['ai-mask']} />}
-          <p>{!expand && <span>{content}</span>}</p>
+          <p
+            className={classNames({
+              [styles['stream-text-hidden']]: expand,
+            })}
+          >
+            <span>{content}</span>
+          </p>
         </div>
-        <YakitButton size="small" type="text" icon={expand ? <OutlineChevronupIcon /> : <OutlineChevrondownIcon />} />
+        <Tooltip title="展开">
+          <YakitButton
+            size="small"
+            type="text"
+            icon={<OutlineChevronsUpDownIcon />}
+            className={classNames(styles['expand-btn'], {
+              [styles['hidden-expand-btn']]: expand,
+            })}
+          />
+        </Tooltip>
+        <Tooltip title="收起">
+          <YakitButton
+            size="small"
+            type="text"
+            icon={<OutlineChevronsDownUpIcon />}
+            className={classNames(styles['expand-btn'], {
+              [styles['hidden-expand-btn']]: !expand,
+            })}
+          />
+        </Tooltip>
       </div>
       <div
         className={classNames(styles.content, {
