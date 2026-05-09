@@ -210,6 +210,7 @@ process.on('loaded', function () {
       editBaseUrl: (baseUrl) => invoke('edit-baseUrl', { baseUrl }),
       requestPasswordReset: () => invoke('reset-password'),
       onSignInData: (callback) => subscribe('fetch-signin-data', callback),
+      onSignCCBInData: (callback) => subscribe('fetch-signin-ccb-data', callback),
       onBaseUrlStatus: (callback) => subscribe('edit-baseUrl-status', callback),
     },
     release: {

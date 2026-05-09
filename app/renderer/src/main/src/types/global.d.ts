@@ -169,6 +169,7 @@ interface YakitBridge {
     editBaseUrl: (baseUrl: string) => Promise<any>
     requestPasswordReset: () => Promise<any>
     onSignInData: (callback: (payload: any) => void) => BridgeCleanup
+    onSignCCBInData: (callback: (payload: any) => void) => BridgeCleanup
     onBaseUrlStatus: (callback: (payload: any) => void) => BridgeCleanup
   }
   release: {
