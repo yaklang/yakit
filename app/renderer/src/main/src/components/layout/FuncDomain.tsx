@@ -2088,32 +2088,36 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const fetchIntranetYakitVersion = useMemoizedFn((isShowInfo: boolean = false) => {
     if (isIntranet) {
       // 从内网读取版本号
-      grpcFetchIntranetYakitVersion().then((filePath: string) => {
-        const match = filePath.match(/EnpriTrace-([\d.-]+)/)
-        const version = match ? match[1] : ''
-        const data = `v${version.endsWith('-') ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
+      grpcFetchIntranetYakitVersion()
+        .then((filePath: string) => {
+          const match = filePath.match(/EnpriTrace-([\d.-]+)/)
+          const version = match ? match[1] : ''
+          const data = `v${version.endsWith('-') ? version.slice(0, -1) : version}` // 去掉末尾的'-'符号
 
-        // 企业版初次进入时 如若配置文件为强制更新则隐藏下载更新内容后弹出提示框
-        if (isUpdateEnpriTraceRef.current && data.length > 0) {
-          const isUpdateYakit = data !== '' && removePrefixV(data) !== removePrefixV(yakitVersion)
-          // 是否强制更新
-          let forceUpdate = false
-          eeSystemConfig.forEach((item) => {
-            if (item.configName === 'forceUpdate') {
-              forceUpdate = item.isOpen
+          // 企业版初次进入时 如若配置文件为强制更新则隐藏下载更新内容后弹出提示框
+          if (isUpdateEnpriTraceRef.current && data.length > 0) {
+            const isUpdateYakit = data !== '' && removePrefixV(data) !== removePrefixV(yakitVersion)
+            // 是否强制更新
+            let forceUpdate = false
+            eeSystemConfig.forEach((item) => {
+              if (item.configName === 'forceUpdate') {
+                forceUpdate = item.isOpen
+              }
+            })
+            if (isUpdateYakit && forceUpdate) {
+              isUpdateEnpriTraceRef.current = false
+              setYakitIntranetDownloading(true)
+              onDownloadStart()
             }
-          })
-          if (isUpdateYakit && forceUpdate) {
-            isUpdateEnpriTraceRef.current = false
-            setYakitIntranetDownloading(true)
-            onDownloadStart()
           }
-        }
-        setYakitLastIntranetVersion(data)
-        if (isShowInfo) {
-          info('内网版版本号刷新成功')
-        }
-      })
+          setYakitLastIntranetVersion(data)
+          if (isShowInfo) {
+            info('内网版版本号刷新成功')
+          }
+        })
+        .catch(() => {
+          isShowInfo && yakitNotify('error', '获取版本失败')
+        })
     } else {
       isShowInfo && yakitNotify('error', '获取版本失败')
     }
