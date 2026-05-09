@@ -180,13 +180,24 @@ const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedReso
 }
 /** @name 将前端的结构转化为符合定义的结构 */
 export const getAIReActRequestParams = (value: HandleStartParams) => {
-  const { extraValue, mentionList = [], showQS } = value
+  const { extraValue, mentionList = [], imageList = [], showQS } = value
   let extra: HandleStartParams['extraValue'] = {}
   let attachedResourceInfo: AIInputEvent['AttachedResourceInfo'] = []
   for (let item of mentionList) {
     const addItem = getResourceInfoByMention(item)
     if (addItem) {
       attachedResourceInfo = [...attachedResourceInfo, addItem] // 不需要去重，按显示顺序给后端
+    }
+  }
+
+  for (let item of imageList) {
+    const addImageItem = {
+      Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_FILE,
+      Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_PATH,
+      Value: item,
+    }
+    if (addImageItem) {
+      attachedResourceInfo = [...attachedResourceInfo, addImageItem]
     }
   }
   if (!!showQS) {

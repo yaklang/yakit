@@ -190,10 +190,11 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const handleSubmit = useMemoizedFn(() => {
       const qs = getMarkdownValue()
       if (!qs.trim() || !editorMilkdown.current) return
-      const { mentions, plainText } = extractDataWithMilkdown(editorMilkdown.current)
+      const { mentions, imageList, plainText } = extractDataWithMilkdown(editorMilkdown.current)
       const value: AIChatTextareaSubmit = {
         qs,
         mentionList: mentions,
+        imageList,
         showQS: qs,
         focusMode,
         sessionId: aiMilkdownInputRef.current?.getSessionId(),
@@ -387,6 +388,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     isHover={inputSettingVisible}
                   />
                 </AIInputSettingPopover>
+                <YakitButton
+                  type="text2"
+                  radius="50%"
+                  icon={<OutlinePhotographIcon />}
+                  onClick={onSelectImage}
+                  className={styles['btn-base']}
+                />
                 {execute && (
                   <AIManualAdditionPopover
                     chatType="reAct"
@@ -406,13 +414,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     </YakitButton>
                   </AIManualAdditionPopover>
                 )}
-                <YakitButton
-                  type="text2"
-                  radius="50%"
-                  icon={<OutlinePhotographIcon />}
-                  onClick={onSelectImage}
-                  className={styles['btn-base']}
-                />
               </div>
             )}
 

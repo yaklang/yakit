@@ -16,6 +16,8 @@ export interface AIChatTextareaSubmit {
   /**前端展示的md格式 */
   showQS?: string
   mentionList?: AIMentionCommandParams[]
+  /**图片 */
+  imageList?: string[]
   focusMode?: string
   /** 新建会话得 默认sessionId */
   sessionId?: string
