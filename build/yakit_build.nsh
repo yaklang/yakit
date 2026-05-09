@@ -217,7 +217,8 @@ FunctionEnd
         CreateDirectory "$INSTDIR\yakit-projects"
         ClearErrors
         ; 旧版本数据可能包含多层目录和隐藏文件，这里必须递归复制，且不要在安装阶段直接删源目录
-        ExecWait '"$SYSDIR\cmd.exe" /C xcopy "$PROFILE\yakit-projects" "$INSTDIR\yakit-projects\\" /E /I /H /K /Y /C >nul' $0
+        nsExec::Exec '"$SYSDIR\cmd.exe" /C xcopy "$PROFILE\yakit-projects" "$INSTDIR\yakit-projects\\" /E /I /H /K /Y /C >nul 2>&1'
+        Pop $0
         ${If} $0 != 0
             DetailPrint "迁移yakit-projects文件夹失败..."
         ${Else}

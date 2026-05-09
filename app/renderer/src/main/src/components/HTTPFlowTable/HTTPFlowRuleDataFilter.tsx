@@ -494,13 +494,14 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
     <div className={styles['rule-data-filter']} ref={wrapperRef}>
       <div className={styles['rule-data-filter-header-bar']}>
         <div className={styles['rule-data-filter-search']}>
-          <YakitInput.Search
+          {t('HTTPFlowExtractedDataTable.ruleData')}
+          {/* <YakitInput.Search
             placeholder={t('HTTPFlowRuleDataFilter.searchPlaceholder')}
             value={searchValue}
             allowClear
             onSearch={() => reloadFirstPage()}
             onChange={(e) => setSearchValue(e.target.value)}
-          />
+          /> */}
         </div>
         <div className={styles['rule-data-filter-actions']}>
           <YakitButton
