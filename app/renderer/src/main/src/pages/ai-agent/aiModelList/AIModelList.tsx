@@ -441,6 +441,7 @@ export const getTipByType = (routingPolicy: AIModelPolicyEnum, t: TFunction) => 
 const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((props) => {
   const { onRefresh } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const zhLang = i18n.language === 'zh'
   const [visible, setVisible] = useState<boolean>(false)
   const [form] = Form.useForm()
   const routingPolicy = Form.useWatch('RoutingPolicy', form)
@@ -485,8 +486,8 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
   return (
     <YakitPopover
       content={
-        <div className={styles['ai-online-mode-setting-popover']} style={{ width: i18n.language === 'zh' ? 500 : 700 }}>
-          <Form form={form} labelCol={{ span: 10 }} wrapperCol={{ span: 14 }}>
+        <div className={styles['ai-online-mode-setting-popover']} style={{ width: zhLang ? 500 : 700 }}>
+          <Form form={form} labelCol={{ span: zhLang ? 8 : 10 }} wrapperCol={{ span: zhLang ? 16 : 14 }}>
             <Form.Item
               name="RoutingPolicy"
               label={t('AiAgengt.callingMode')}
