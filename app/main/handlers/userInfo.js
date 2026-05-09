@@ -16,6 +16,10 @@ const LOGIN_ALLOWED_HOSTS = {
 }
 
 const normalizeLoginUrl = (type, targetUrl) => {
+  if (type === 'ccb') {
+    return targetUrl
+  }
+
   const allowedHosts = LOGIN_ALLOWED_HOSTS[type]
   if (!allowedHosts) {
     throw new Error('unsupported login type')
