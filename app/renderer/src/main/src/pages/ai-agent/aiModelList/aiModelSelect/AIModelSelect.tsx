@@ -1,8 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AIModelItemProps, AIModelSelectListProps, AIModelSelectProps, AISelectType } from './AIModelSelectType'
+import {
+  AIModelItemProps,
+  AIModelSelectListProps,
+  AIModelSelectProps,
+  AISelectType,
+  EnableThinkingOptType,
+} from './AIModelSelectType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
-import { AIGlobalConfig, AIModelConfig, AIModelTypeFileName, grpcSetAIGlobalConfig, isForcedSetAIModal } from '../utils'
+import { AIGlobalConfig, AIModelConfig, AIModelTypeFileName, isForcedSetAIModal } from '../utils'
 import styles from './AIModelSelect.module.scss'
 import classNames from 'classnames'
 import { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
@@ -10,6 +16,7 @@ import {
   AIAgentTabListEnum,
   AIModelPolicyEnum,
   AIModelPolicyOptions,
+  AIModelTypeEnum,
   AIModelTypeInterFileNameEnum,
   AIOnlineModelIconMap,
   defaultAIGlobalConfig,
@@ -20,17 +27,19 @@ import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleS
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import {
+  OutlineBrainIcon,
   OutlineCheckIcon,
   OutlineCogIcon,
   OutlineInformationcircleIcon,
+  OutlinePencilaltIcon,
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
-import { cloneDeep, isEqual } from 'lodash'
+import { cloneDeep, has, isEqual } from 'lodash'
 import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Avatar, Tooltip } from 'antd'
+import { Avatar, Form, Tooltip } from 'antd'
 import { AIAgentTriggerEventInfo } from '../../aiAgentType'
 import { yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -424,6 +433,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 <div className={styles['select-content']}>
                   {!!intelligentModels.length && (
                     <AIModelSelectList
+                      type={AIModelTypeEnum.TierIntelligent}
                       title={t('AiAgengt.intelligentModels')}
                       subTitle={t('AIModelList.intelligentModelsDesc')}
                       list={intelligentModels}
@@ -433,10 +443,12 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           index,
                         })
                       }
+                      onEdit={() => {}}
                     />
                   )}
                   {!execute && !!lightweightModels.length && (
                     <AIModelSelectList
+                      type={AIModelTypeEnum.TierLightweight}
                       title={t('AiAgengt.lightweightModels')}
                       subTitle={t('AIModelList.lightweightModelsDesc')}
                       list={lightweightModels}
@@ -446,10 +458,12 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           index,
                         })
                       }
+                      onEdit={() => {}}
                     />
                   )}
                   {!execute && !!visionModels.length && (
                     <AIModelSelectList
+                      type={AIModelTypeEnum.TierVision}
                       title={t('AiAgengt.visionModels')}
                       subTitle={t('AIModelList.visionModelsDesc')}
                       list={visionModels}
@@ -459,6 +473,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           index,
                         })
                       }
+                      onEdit={() => {}}
                     />
                   )}
                 </div>
@@ -483,7 +498,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-  const { title, subTitle, list, onSelect } = props
+  const { title, subTitle, list, onSelect, type, onEdit } = props
   return (
     <div className={styles['ai-model-select-list-wrapper']}>
       <div className={styles['ai-model-select-list-wrapper-header']}>
@@ -501,7 +516,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
             className={classNames(styles['ai-online-model-list-row'])}
             onClick={() => onSelect(item, index)}
           >
-            <AIModelItem value={item.ModelName} aiService={item.Provider.Type} checked={index === 0} />
+            <AIModelItem type={type} item={item} checked={index === 0} onEdit={(item) => onEdit(item, index)} />
           </div>
         ))}
       </div>
@@ -512,12 +527,32 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
 export const getIconByAI = (value) => {
   return AIOnlineModelIconMap[value] || <OutlineAtomIconByStatus size="small" />
 }
+export const EnableThinkingOptions = [
+  { label: '不设置', value: 'no-set' },
+  { label: '开启', value: 'open' },
+  { label: '不开启', value: 'close' },
+]
+
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
-  const { value, aiService, checked } = props
+  const { type, item, checked, onEdit } = props
+
+  const value = useCreation(() => {
+    return item?.ModelName
+  }, [item?.ModelName])
+  const aiService = useCreation(() => {
+    return item.Provider?.Type
+  }, [item?.Provider?.Type])
   const icon = useCreation(() => {
     if (!aiService) return <></>
     return getIconByAI(aiService)
   }, [aiService])
+  const enableThinkingOpt = useCreation(() => {
+    return has(item, ['Provider', 'EnableThinkingOpt'])
+      ? item?.Provider?.EnableThinkingOpt
+        ? 'open'
+        : 'close'
+      : 'no-set'
+  }, [item])
 
   return (
     <div className={classNames(styles['select-option-wrapper'])}>
@@ -526,8 +561,13 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
         <div className={styles['option-text']} title={value}>
           {value}
         </div>
+        {type === AIModelTypeEnum.TierIntelligent && enableThinkingOpt === 'open' && (
+          <OutlineBrainIcon className={styles['brain-icon']} />
+        )}
       </div>
-      {checked && <OutlineCheckIcon className={styles['check-icon']} />}
+      <div className={styles['select-option-right']}>
+        {checked && <OutlineCheckIcon className={styles['check-icon']} />}
+      </div>
     </div>
   )
 })

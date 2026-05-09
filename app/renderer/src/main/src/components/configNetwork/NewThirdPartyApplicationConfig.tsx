@@ -36,6 +36,7 @@ import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
+import { EnableThinkingOptions } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -1096,13 +1097,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               key="2"
             >
               <Form.Item label="Enable Thiking" name="EnableThinkingOpt">
-                <YakitSelect
-                  options={[
-                    { label: '不设置', value: 'no-set' },
-                    { label: '开启', value: 'open' },
-                    { label: '不开启', value: 'close' },
-                  ]}
-                />
+                <YakitSelect options={EnableThinkingOptions} />
               </Form.Item>
               <Form.Item label="Max Tokens" name="MaxTokens">
                 <YakitInputNumber min={1} max={163840} />

@@ -195,7 +195,7 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
   } as AIThirdPartyApplicationConfig
 }
 
-const formValueToAIConfigProvider = (res) => {
+export const formValueToAIConfigProvider = (res) => {
   const date: ThirdPartyApplicationConfig = {
     Type: res.Type,
     APIKey: res.api_key,

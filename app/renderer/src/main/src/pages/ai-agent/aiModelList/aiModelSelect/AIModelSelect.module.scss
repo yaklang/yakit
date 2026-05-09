@@ -63,6 +63,21 @@
   overflow: hidden;
   color: var(--Colors-Use-Neutral-Text-1-Title);
 
+  &:hover {
+    .edit-icon {
+      display: flex;
+    }
+  }
+  .edit-icon {
+    display: none;
+  }
+  .brain-icon {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
   .option-text {
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -83,6 +98,11 @@
     align-items: center;
     gap: 4px;
     overflow: hidden;
+  }
+  .select-option-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
   .check-icon {
     color: var(--Colors-Use-Main-Primary);
