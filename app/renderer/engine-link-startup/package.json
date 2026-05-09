@@ -1,7 +1,7 @@
 {
   "name": "engine-link-startup",
   "private": true,
-  "version": "2.04.24",
+  "version": "2.05.09",
   "type": "module",
   "scripts": {
     "cli": "node scripts/cli.cjs",
