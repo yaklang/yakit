@@ -53,7 +53,6 @@ import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
 import useHistoryChat from './useHistoryChat'
 
 const { ipcRenderer } = window.require('electron')
-
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
 
 function useChatIPC(params?: UseChatIPCParams) {

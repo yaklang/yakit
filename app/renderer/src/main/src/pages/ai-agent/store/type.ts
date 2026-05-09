@@ -1,16 +1,23 @@
-import type { REGISTERED_STORES } from './constants'
+import type { StoreName } from './constants'
 
-export type StoreName = (typeof REGISTERED_STORES)[number]
+export type { StoreName }
 
 // 一条聊天消息记录，对应消息表中的单行数据。
 export interface DialogueRecord {
   id: string
   orderNum: number
   type: string
-  content: string
   isGroup: boolean
+  children?: string
   sessionId: string
   isHistory?: boolean
+}
+
+export interface DialogueContentRecord {
+  sessionId: string
+  id: string
+  content: string
+  pid: string
 }
 
 export interface GetDialoguesData {
@@ -30,6 +37,15 @@ export interface GetDialoguesParams {
 export interface SetDialoguesParams {
   storeName: StoreName
   data: DialogueRecord | DialogueRecord[]
+}
+
+export interface SetDialogueContentParams {
+  data: DialogueContentRecord | DialogueContentRecord[]
+}
+
+export interface GetDialogueContentsByPidParams {
+  sessionId: string
+  pids: string[]
 }
 
 export interface ClearStoreParams {

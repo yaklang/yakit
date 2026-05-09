@@ -6,9 +6,10 @@ import { generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
 import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AITaskInfoProps } from './aiRender'
+import { AITaskInfoProps, AIChatQSDataType, ReActChatRenderItem } from './aiRender'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIChatLogData, AIChatLogToInfo } from './type'
+import { DialogueRecord } from '@/pages/ai-agent/store/type'
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -123,3 +124,28 @@ export const isToolExecStream = (nodeID: string) => {
   if (isToolStdoutStream(nodeID)) return true
   return false
 }
+
+/**
+ * indexedDB 数据库数据转 ReActChatRenderItem
+ */
+export const indexedDBDataToReActChatRenderItem = (
+  chatType: ReActChatRenderItem['chatType'],
+  data: DialogueRecord[],
+): Omit<ReActChatRenderItem, 'renderNum'>[] =>
+  data.map((item) => {
+    if (item.isGroup) {
+      return {
+        chatType,
+        token: item.id,
+        type: item.type as AIChatQSDataType,
+        isGroup: true as const,
+        children: JSON.parse(item.children || '[]'),
+      }
+    }
+    return {
+      chatType,
+      token: item.id,
+      type: item.type as AIChatQSDataType,
+      isGroup: false,
+    }
+  })

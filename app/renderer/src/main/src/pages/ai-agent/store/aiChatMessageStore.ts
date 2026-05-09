@@ -1,19 +1,27 @@
 import {
   COMPOUND_KEY,
+  CONTENT_COMPOUND_KEY,
   DB_NAME,
   dbVersion,
+  DIALOGUE_CONTENT_STORE,
+  INDEX_BY_CONTENT_SESSION,
   INDEX_BY_SESSION_ORDER,
+  INDEX_BY_SESSION_PID,
   REGISTERED_STORES,
   SESSION_METADATA_STORE,
   SESSION_ORDER,
+  SESSION_PID,
 } from './constants'
 import type {
   ClearStoreParams,
   DeleteSessionParams,
+  DialogueContentRecord,
   DialogueRecord,
+  GetDialogueContentsByPidParams,
   GetDialoguesData,
   GetDialoguesParams,
   SessionMetadataRecord,
+  SetDialogueContentParams,
   SetDialoguesParams,
   StoreName,
 } from './type'
@@ -31,8 +39,10 @@ function ensureRegisteredStores(storeNames: string[]): asserts storeNames is Sto
   }
 }
 
-function ensureClearableStore(storeName: string): asserts storeName is StoreName | typeof SESSION_METADATA_STORE {
-  if (storeName === SESSION_METADATA_STORE) return
+function ensureClearableStore(
+  storeName: string,
+): asserts storeName is StoreName | typeof SESSION_METADATA_STORE | typeof DIALOGUE_CONTENT_STORE {
+  if (storeName === SESSION_METADATA_STORE || storeName === DIALOGUE_CONTENT_STORE) return
   ensureRegisteredStore(storeName)
 }
 
@@ -91,6 +101,13 @@ class AIChatMessageStore {
           // session 元数据单独存放，只需要按 sessionId 主键读取。
           if (!db.objectStoreNames.contains(SESSION_METADATA_STORE)) {
             db.createObjectStore(SESSION_METADATA_STORE, { keyPath: 'sessionId' })
+          }
+
+          // 对话正文表：存储 group 节点下子消息的具体内容。
+          if (!db.objectStoreNames.contains(DIALOGUE_CONTENT_STORE)) {
+            const contentStore = db.createObjectStore(DIALOGUE_CONTENT_STORE, { keyPath: CONTENT_COMPOUND_KEY })
+            contentStore.createIndex(INDEX_BY_SESSION_PID, SESSION_PID, { unique: false })
+            contentStore.createIndex(INDEX_BY_CONTENT_SESSION, 'sessionId', { unique: false })
           }
         }
       })
@@ -216,6 +233,44 @@ class AIChatMessageStore {
     })
   }
 
+  async setDialogueContent({ data }: SetDialogueContentParams): Promise<void> {
+    const db = await this.open()
+    const list = Array.isArray(data) ? data : [data]
+    if (!list.length) return
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DIALOGUE_CONTENT_STORE, 'readwrite')
+      const store = tx.objectStore(DIALOGUE_CONTENT_STORE)
+
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+      tx.onabort = () => reject(tx.error)
+
+      for (const item of list) {
+        store.put(item)
+      }
+    })
+  }
+
+  async getDialogueContentsByPid({
+    sessionId,
+    pids,
+  }: GetDialogueContentsByPidParams): Promise<DialogueContentRecord[]> {
+    if (!pids.length) return []
+    const db = await this.open()
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DIALOGUE_CONTENT_STORE, 'readonly')
+      const pidIndex = tx.objectStore(DIALOGUE_CONTENT_STORE).index(INDEX_BY_SESSION_PID)
+
+      const requests = pids.map((pid) => pidIndex.getAll(IDBKeyRange.only([sessionId, pid])))
+
+      tx.oncomplete = () => resolve(requests.flatMap((req) => req.result as DialogueContentRecord[]))
+      tx.onerror = () => reject(tx.error)
+      tx.onabort = () => reject(tx.error)
+    })
+  }
+
   async setSessionMetadata(data: SessionMetadataRecord): Promise<void> {
     const db = await this.open()
 
@@ -256,7 +311,7 @@ class AIChatMessageStore {
     const db = await this.open()
 
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([...storeNames, SESSION_METADATA_STORE], 'readwrite')
+      const tx = db.transaction([...storeNames, SESSION_METADATA_STORE, DIALOGUE_CONTENT_STORE], 'readwrite')
       const metadataStore = tx.objectStore(SESSION_METADATA_STORE)
 
       tx.oncomplete = () => resolve()
@@ -270,16 +325,24 @@ class AIChatMessageStore {
         const orderIndex = dialogueStore.index(INDEX_BY_SESSION_ORDER)
         const range = IDBKeyRange.bound([sessionId, Number.NEGATIVE_INFINITY], [sessionId, Number.POSITIVE_INFINITY])
 
-        const req = orderIndex.openCursor(range, 'next')
-        req.onsuccess = () => {
-          const cursor = req.result
-          if (!cursor) return
-
-          cursor.delete()
-          cursor.continue()
+        const keysReq = orderIndex.getAllKeys(range)
+        keysReq.onsuccess = () => {
+          for (const key of keysReq.result) {
+            dialogueStore.delete(key)
+          }
         }
-        req.onerror = () => reject(req.error)
+        keysReq.onerror = () => reject(keysReq.error)
       }
+
+      // 同步删除该 session 下所有对话正文记录。
+      const contentStore = tx.objectStore(DIALOGUE_CONTENT_STORE)
+      const contentKeysReq = contentStore.index(INDEX_BY_CONTENT_SESSION).getAllKeys(IDBKeyRange.only(sessionId))
+      contentKeysReq.onsuccess = () => {
+        for (const key of contentKeysReq.result) {
+          contentStore.delete(key)
+        }
+      }
+      contentKeysReq.onerror = () => reject(contentKeysReq.error)
     })
   }
 
