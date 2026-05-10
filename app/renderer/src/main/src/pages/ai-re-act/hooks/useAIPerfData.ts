@@ -7,11 +7,23 @@ import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 
 const CONTEXT_STATS_SERIES_MAX = 50
 
-/** 首次建立 role_order 时，若存在这些 role_name 则按此顺序排在前面 */
+/**
+ * 首次建立 role_order 时，若存在这些 role_name 则按此顺序排在前面。
+ *
+ * P1.1 之后 aireact 已经把老的 semi_dynamic 段彻底拆成 semi_dynamic_1
+ * (Skills Context + CacheToolCall) 与 semi_dynamic_2 (Persistent +
+ * Schema + OutputExample) 两个独立 role；老的 semi_dynamic 已被移除,
+ * 不再保留兜底位。
+ *
+ * 字节统计图 "从下往上" 的堆叠物理顺序固定为:
+ *   high_static -> frozen_block -> semi_dynamic_1 -> semi_dynamic_2 ->
+ *   timelineOpen -> dynamic
+ */
 const CONTEXT_STATS_ROLE_NAME_ORDER = [
   'high_static',
   'frozen_block',
-  'semi_dynamic',
+  'semi_dynamic_1',
+  'semi_dynamic_2',
   'timelineOpen',
   'dynamic',
 ] as const
@@ -135,39 +147,54 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
           const incomingRoles = Array.isArray(data.role_stats) ? data.role_stats : []
           const ts = Number(res.Timestamp) || 0
 
-          if (incomingRoles.length > 0 && d.role_order.length === 0) {
-            if (d.times.length > 0) {
-              d.times = []
-            }
-            d.role_order = []
-            d.role_labels = {}
-            d.role_series = {}
-
-            const seenNames = new Set<string>()
-            const incomingOrder: string[] = []
-            const labels: Record<string, string> = {}
+          if (incomingRoles.length > 0) {
+            // 每个 turn 后端都会按 promptSectionRolesInOrder 推全集 6 个 role
+            // (P1.1: high_static / frozen_block / semi_dynamic_1 / semi_dynamic_2 /
+            // timelineOpen / dynamic), 即便 bytes 为 0 也会预填. 所以这里每次
+            // 都用 incoming 重新 reconcile role_order, 既能让新出现的 role
+            // (如 semi_dynamic_1/2) 按 CONTEXT_STATS_ROLE_NAME_ORDER 物理顺序
+            // 插入, 也能把 incoming 里彻底消失的老 role (如老的 'semi_dynamic')
+            // 自动 evict 掉, 避免历史会话残留的图例顺序污染.
+            const incomingMap = new Map<string, AIAgentGrpcApi.PromptProfileRoleStat>()
             for (const r of incomingRoles) {
-              const name = r.role_name
-              if (!name || seenNames.has(name)) continue
-              seenNames.add(name)
-              incomingOrder.push(name)
-              labels[name] = r.role_name_zh || name
+              if (!r.role_name || incomingMap.has(r.role_name)) continue
+              incomingMap.set(r.role_name, r)
             }
 
             const preferred = new Set<string>(CONTEXT_STATS_ROLE_NAME_ORDER)
-            const ordered: string[] = []
+            const desiredOrder: string[] = []
             for (const name of CONTEXT_STATS_ROLE_NAME_ORDER) {
-              if (seenNames.has(name)) ordered.push(name)
+              if (incomingMap.has(name)) desiredOrder.push(name)
             }
-            for (const name of incomingOrder) {
-              if (!preferred.has(name)) ordered.push(name)
+            for (const name of incomingMap.keys()) {
+              if (!preferred.has(name) && !desiredOrder.includes(name)) {
+                desiredOrder.push(name)
+              }
             }
 
-            for (const name of ordered) {
-              d.role_order.push(name)
-              d.role_labels[name] = labels[name] ?? name
-              d.role_series[name] = []
+            const oldOrderSet = new Set(d.role_order)
+            const newOrderSet = new Set(desiredOrder)
+
+            // 新出现的 role: 用 0 补齐已积累的 d.times 长度, 让历史时间轴上
+            // 这条线从 0 起步, 而不是凭空错位
+            for (const name of desiredOrder) {
+              const r = incomingMap.get(name)
+              if (!oldOrderSet.has(name)) {
+                d.role_labels[name] = r?.role_name_zh || name
+                d.role_series[name] = new Array(d.times.length).fill(0)
+              } else if (r?.role_name_zh) {
+                d.role_labels[name] = r.role_name_zh
+              }
             }
+            // 老 role (如 'semi_dynamic') 在 incoming 中彻底消失 -> 释放 series
+            for (const name of d.role_order) {
+              if (!newOrderSet.has(name)) {
+                delete d.role_labels[name]
+                delete d.role_series[name]
+              }
+            }
+
+            d.role_order = desiredOrder
           }
 
           stats.prompt_bytes = data.prompt_bytes ?? 0
