@@ -84,8 +84,8 @@ export function applyRequestContentToWebFuzzerPage(pageId: string, raw: string):
 }
 
 /**
- * 由引擎 `http_fuzz_request_change` 推送：按 `op` 写入 Web Fuzzer。
- * 当前仅处理 `replace`；其它 `op` 在 `switch` 的 `default` 中预留扩展。
+ * 由引擎 `http_fuzz_request_change` 推送：携带可写 `request.raw` 时按整包替换写入 Web Fuzzer。
+ * `op` 可为 `replace` 或占位字符串；casual 审阅合并写回时也会沿用入队时的 `change`，不依赖 `op`。
  */
 export type ApplyHttpFuzzRequestChangeOptions = {
   /** 为 true 时跳过「与上次 replace 完全相同则忽略」；用于 casual 分段保留等仍须触发写回/刷新的场景 */
@@ -97,41 +97,30 @@ export function applyHttpFuzzRequestChangeToWebFuzzerPage(
   data: AIAgentGrpcApi.HttpFuzzRequestChange,
   options?: ApplyHttpFuzzRequestChangeOptions,
 ): void {
-  const op = data?.op
-
-  switch (op) {
-    case 'replace': {
-      const fn = pageApplyHandlers.get(pageId)
-      if (!fn) {
-        yakitFailed('未找到对应的 Web Fuzzer 页，请保持该页已打开。')
-        return
-      }
-      const raw = data?.request?.raw
-      if (raw == null || String(raw).trim() === '') return
-      const normalizedRaw = String(raw)
-      const isHttps = data.request.is_https
-      const lastApplied = lastAppliedReplaceRequestByPage.get(pageId)
-      if (
-        !options?.skipReplaceDedup &&
-        lastApplied &&
-        lastApplied.raw === normalizedRaw &&
-        lastApplied.isHttps === isHttps
-      ) {
-        return
-      }
-
-      lastAppliedReplaceRequestByPage.set(pageId, {
-        raw: normalizedRaw,
-        isHttps,
-      })
-      fn(normalizedRaw, { isHttps })
-      return
-    }
-    default:
-      // 预留：非 `replace` 的 `op`（如 patch、merge 等）在此分支自行扩展；
-      // 需要写请求盒时可复用 `pageApplyHandlers.get(pageId)` 或抽新函数。
-      break
+  const fn = pageApplyHandlers.get(pageId)
+  if (!fn) {
+    yakitFailed('未找到对应的 Web Fuzzer 页，请保持该页已打开。')
+    return
   }
+  const raw = data?.request?.raw
+  if (raw == null || String(raw).trim() === '') return
+  const normalizedRaw = String(raw)
+  const isHttps = data.request?.is_https
+  const lastApplied = lastAppliedReplaceRequestByPage.get(pageId)
+  if (
+    !options?.skipReplaceDedup &&
+    lastApplied &&
+    lastApplied.raw === normalizedRaw &&
+    lastApplied.isHttps === isHttps
+  ) {
+    return
+  }
+
+  lastAppliedReplaceRequestByPage.set(pageId, {
+    raw: normalizedRaw,
+    isHttps,
+  })
+  fn(normalizedRaw, { isHttps })
 }
 
 export { WebFuzzerAiRequestCompareModalContent } from './webFuzzerAiRequestCompareModalContent'

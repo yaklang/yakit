@@ -10,6 +10,7 @@ import styles from './WebFuzzerCasualReplaceReviewOverlay.module.scss'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { NewHTTPCard } from '@/utils/editors'
 
 function norm(s: string): string {
   return s.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
@@ -186,58 +187,65 @@ const WebFuzzerCasualReplaceReviewOverlay = memo(function WebFuzzerCasualReplace
     return request
   }, [payload.change])
 
-  return (
-    <div className={styles['overlay']} role="dialog" aria-modal="true">
-      <div className={styles['diffWrap']}>
-        <YakitMonacoDiffInline
-          key={`${roundKey}:${diffNonce}:${draftIncoming}`}
-          reuseKey={roundKey}
-          original={reviewBaseline}
-          incoming={draftIncoming}
-          hunks={hunks}
-          onDecision={setChangeDecision}
-          language="http"
-        />
-      </div>
-      {hunks.length > 0 && (
-        <div className={styles['bulkBar']}>
-          <YakitButton type="text2" onClick={handleRejectAll}>
-            {t('HTTPFuzzerPage.aiCasualRejectAll')}
+  const bulkExtra =
+    hunks.length > 0 ? (
+      <div className={styles['bulkExtra']}>
+        <YakitButton size={'small'} type="outline1" onClick={handleRejectAll}>
+          {t('HTTPFuzzerPage.aiCasualRejectAll')}
+        </YakitButton>
+        <div className={styles['bulkAcceptWrap']}>
+          <YakitButton
+            onClick={handleAcceptAll}
+            size={'small'}
+            onMouseEnter={handleAcceptMetaEnter}
+            onMouseLeave={handleAcceptMetaLeave}
+          >
+            {t('HTTPFuzzerPage.aiCasualAcceptAll')}
           </YakitButton>
-          <div className={styles['bulkAcceptWrap']}>
-            <YakitButton
-              onClick={handleAcceptAll}
+          {showAcceptMeta && (
+            <div
+              className={styles['acceptMetaCard']}
               onMouseEnter={handleAcceptMetaEnter}
               onMouseLeave={handleAcceptMetaLeave}
             >
-              {t('HTTPFuzzerPage.aiCasualAcceptAll')}
-            </YakitButton>
-            {showAcceptMeta && (
-              <div
-                className={styles['acceptMetaCard']}
-                onMouseEnter={handleAcceptMetaEnter}
-                onMouseLeave={handleAcceptMetaLeave}
-              >
-                <div className={styles['acceptMetaTitle']}>
-                  <div> {t('HTTPFuzzerPage.aiCasualAcceptAllMetaTitle')}</div>
-                  <CopyComponents
-                    className={classNames(styles['copy-icon-style'])}
-                    copyText={JSON.stringify(acceptMetaPreview, null, 2)}
-                  />
-                </div>
-                {Object.keys(acceptMetaPreview ?? {}).map((it) => {
-                  const value = acceptMetaPreview?.[it]
-                  return (
-                    <div key={it}>
-                      {it}: {value !== undefined && value !== null ? JSON.stringify(value, null, 2) : '-'}
-                    </div>
-                  )
-                })}
+              <div className={styles['acceptMetaTitle']}>
+                <div> {t('HTTPFuzzerPage.aiCasualAcceptAllMetaTitle')}</div>
+                <CopyComponents
+                  className={classNames(styles['copy-icon-style'])}
+                  copyText={JSON.stringify(acceptMetaPreview, null, 2)}
+                />
               </div>
-            )}
-          </div>
+              {Object.keys(acceptMetaPreview ?? {}).map((it) => {
+                const value = acceptMetaPreview?.[it]
+                return (
+                  <div key={it}>
+                    {it}: {value !== undefined && value !== null ? JSON.stringify(value, null, 2) : '-'}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+    ) : null
+
+  return (
+    <div className={styles['overlay']} role="dialog" aria-modal="true">
+      <div className={styles['cardStretch']}>
+        <NewHTTPCard bordered={true} title={<span style={{ fontSize: 12 }}>Request</span>} extra={bulkExtra}>
+          <div className={styles['diffWrap']}>
+            <YakitMonacoDiffInline
+              key={`${roundKey}:${diffNonce}:${draftIncoming}`}
+              reuseKey={roundKey}
+              original={reviewBaseline}
+              incoming={draftIncoming}
+              hunks={hunks}
+              onDecision={setChangeDecision}
+              language="http"
+            />
+          </div>
+        </NewHTTPCard>
+      </div>
     </div>
   )
 })

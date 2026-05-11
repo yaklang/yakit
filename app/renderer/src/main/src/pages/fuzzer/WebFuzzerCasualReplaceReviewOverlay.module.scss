@@ -8,31 +8,37 @@
   outline: none;
 }
 
+.cardStretch {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .diffWrap {
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-.bulkBar {
-  position: absolute;
-  right: 48px;
-  bottom: 4px;
-  z-index: 60;
+.bulkExtra {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: var(--Colors-Use-Neutral-Bg-Hover);
-  border: 1px solid var(--Colors-Use-Neutral-Border);
-  box-shadow: 0 6px 24px var(--Colors-Use-Basic-Shadow);
+}
+
+.bulkAcceptWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
 .acceptMetaCard {
   position: absolute;
-  right: -8px;
-  bottom: 36px;
+  right: 0;
+  top: calc(100% + 2px);
+  z-index: 70;
   width: 400px;
   max-width: min(70vw, 520px);
   max-height: 180px;
@@ -41,6 +47,7 @@
   border: 1px solid var(--Colors-Use-Neutral-Border);
   background: var(--Colors-Use-Basic-Background);
   box-shadow: 0 10px 30px var(--Colors-Use-Basic-Shadow);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
 }
 
 .acceptMetaTitle {
