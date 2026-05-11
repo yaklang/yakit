@@ -167,6 +167,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_PLAN_EXEC_TASKS = 'plan_exec_tasks',
   /** 加入上下文,这个sync_type,后端返回带sync_id时代表这个操作已经执行;后端那边不存在异步逻辑 */
   SYNC_TYPE_USER_INTERVENTION = 'user_intervention',
+  /** 获取历史会话数据 */
+  SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
 }
 
 export interface AIInputEvent {

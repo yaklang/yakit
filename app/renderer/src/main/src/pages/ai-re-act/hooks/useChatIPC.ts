@@ -51,6 +51,7 @@ import { DeepPartial } from '@/pages/ai-agent/store/ChatDataStore'
 import { AIChatQSData, ReActChatBaseInfo } from './aiRender'
 import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
 import useHistoryChat from './useHistoryChat'
+import { handleResetForNewSession } from './grpcAIMessageHandlers'
 
 const { ipcRenderer } = window.require('electron')
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
@@ -584,6 +585,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     taskChatEvent.handleResetData()
 
     tempUserQuestionRequest.current = []
+
+    // 清除类型处理方法库里的临时数据
+    handleResetForNewSession()
   })
 
   /** 建立会话连接后需要同步的数据 */
@@ -663,7 +667,11 @@ function useChatIPC(params?: UseChatIPCParams) {
         cacheDataStore?.create(token)
       } catch (error) {}
       // 历史数据的初始化加载
-      historyEvents.loadInit(token)
+      // historyEvents.loadInit(token)
+
+      // setTimeout(() => {
+      //   historyEvents.loadMore('chatID', token)
+      // }, 5000)
     }
     handleResetBeforeStart()
     chatID.current = token
@@ -1038,6 +1046,13 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
       cb?.()
+      // if (isInit) {
+      //   sendRequest({
+      //     IsSyncMessage: true,
+      //     SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
+      //     SyncJsonInput: JSON.stringify({ limit: 50 }),
+      //   })
+      // }
     }, 50)
   })
 

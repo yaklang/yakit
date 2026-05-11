@@ -315,30 +315,13 @@ export interface AIChatLogToStream {
 export type AIChatLogData = AIChatLogToInfo | AIChatLogToStream
 
 export interface UseAIChatLogEvents {
-  /** 获取当前执行接口流的唯一标识符 */
-  pushLog: (log: AIChatLogData) => void
-  /** 都劝我 */
+  pushLog: UseHookBaseParams['pushLog']
   sendStreamLog: (uuid: string) => void
   /** 获取当前执行接口流的请求参数 */
   clearLogs: () => AIStartParams | undefined
   /** 关闭展示日志的页面窗口 */
   cancelLogsWin: () => void
 }
-// #endregion
-
-// #region useChatContent相关定义
-export interface UseChatContentParams extends UseHookStateFunc {
-  chatType: ReActChatRenderItem['chatType']
-  getContentMap: (token: string) => AIChatQSData | undefined
-  setContentMap: (token: string, content: AIChatQSData) => void
-  deleteContentMap: (token: string) => void
-  /** 获取当前执行接口流的唯一标识符 */
-  pushLog: (log: AIChatLogData) => void
-  /** 未识别的类型数据, 由外界自主识别处理 */
-  handleUnkData: (res: AIOutputEvent) => void
-}
-
-export interface UseChatContentEvents extends UseHookBaseEvents {}
 // #endregion
 
 // #region useHistoryChat相关定义
@@ -367,4 +350,37 @@ export interface UseHistoryChatEvents {
   /** 加载更多数据 */
   loadMore: (type: loadMoreType, session: string) => void
 }
+// #endregion
+
+// #region AI-Agent相关grpc流数据处理逻辑
+export interface AIMessageHandlerParams extends UseHookStateFunc {
+  /** grpc流原始数据 */
+  res: AIOutputEvent
+  /** 处理数据的额外补充数据 */
+  info: {
+    chatType: ReActChatRenderItem['chatType']
+  }
+  /** 获取流接口请求参数 */
+  getRequest: () => AIAgentSetting | undefined
+  getContentMap: (token: string) => AIChatQSData | undefined
+  setContentMap: (token: string, content: AIChatQSData) => void
+  /** 将数据推送到日志集合中 */
+  pushLog: UseHookBaseParams['pushLog']
+  /** review 类型相关变量和方法 */
+  review?: {
+    /** 设置review数据 */
+    handleSetReview?: (newReview: AIChatQSData | undefined) => void
+    /** 获取review数据 */
+    handleGetReview?: () => AIChatQSData | undefined
+    /** review 触发回调事件 */
+    onReview?: UseTaskChatParams['onReview']
+    /** plan_review 补充数据 */
+    onReviewExtra?: UseTaskChatParams['onReviewExtra']
+    /** 触发 review-release 后的回调事件 */
+    onReviewRelease?: (id: string) => void
+    /** 将 review 数据处理成需要展示的UI数据 */
+    handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
+  }
+}
+export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #endregion
