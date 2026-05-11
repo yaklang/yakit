@@ -128,16 +128,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const onHttpFuzzRequestChange = useMemoizedFn((data: AIAgentGrpcApi.HttpFuzzRequestChange) => {
     if (!httpFuzzTabPageId) return
 
-    // casual 问答期间：`replace` 不自动写包；入队审阅（页内合并为「问答开始前快照 vs 最新一条 raw」）
-    if (casualLoadingRef.current && data?.op === 'replace') {
+    // casual 问答期间：有完整 raw 时不自动写包，入队审阅（`op` 仅占位描述，不作为筛选项）
+    if (casualLoadingRef.current) {
       const nextRaw = data?.request?.raw
       if (nextRaw != null && String(nextRaw).trim() !== '' && initialRequestInCasualRef.current != null) {
         enqueueWebFuzzerCasualReplaceReview(httpFuzzTabPageId, {
           original: initialRequestInCasualRef.current ?? '',
           change: data,
         })
+        return
       }
-      return
     }
 
     applyHttpFuzzRequestChangeToWebFuzzerPage(httpFuzzTabPageId, data)
