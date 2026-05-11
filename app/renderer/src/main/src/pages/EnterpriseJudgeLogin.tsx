@@ -10,6 +10,10 @@ import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
+
+/** 构建期配置：默认需要 License 验证；CI 可设为 false 跳过校验流程 */
+const requireEnterpriseLicense = process.env.REACT_APP_REQUIRE_ENTERPRISE_LICENSE !== 'false'
+
 export interface EnterpriseJudgeLoginProps {
   setJudgeLicense: (v: boolean) => void
   setJudgeLogin: (v: boolean) => void
@@ -19,14 +23,16 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
   const { setJudgeLicense, setJudgeLogin } = props
   // License
   // const [licenseVerified, setLicenseVerified] = useState<boolean>(false)
-  const [activateLicense, setActivateLicense] = useState<boolean>(!!SystemInfo.isDev)
-  const [loading, setLoading] = useState<boolean>(true)
+  const [activateLicense, setActivateLicense] = useState<boolean>(!requireEnterpriseLicense || !!SystemInfo.isDev)
+  const [loading, setLoading] = useState<boolean>(requireEnterpriseLicense)
   const [licensePageLoading, setLicensePageLoading] = useState<boolean>(false)
   useEffect(() => {
+    if (!requireEnterpriseLicense) {
+      return
+    }
     // 验证License
     judgeLicense()
   }, [])
-
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
   const judgeLogin = () => {
     ipcRenderer

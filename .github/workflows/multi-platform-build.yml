@@ -49,6 +49,11 @@ on:
                 required: false
                 type: boolean
                 default: false
+            requireEnterpriseLicense:
+                description: "Enterprise (ee) build: require License verification on startup (default on)"
+                required: false
+                type: boolean
+                default: true
 
 jobs:
     build_yakit:
@@ -59,7 +64,7 @@ jobs:
 
         steps:
             - name: Display incoming configuration parameters
-              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }}
+              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }} ${{ inputs.requireEnterpriseLicense }}
 
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
@@ -165,6 +170,8 @@ jobs:
             - name: "Build EE Render"
               if: ${{ inputs.version == 'ee' }}
               working-directory: ./
+              env:
+                  REACT_APP_REQUIRE_ENTERPRISE_LICENSE: ${{ inputs.requireEnterpriseLicense && 'true' || 'false' }}
               run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-enterprise
 
             - name: "Build SE Render"
