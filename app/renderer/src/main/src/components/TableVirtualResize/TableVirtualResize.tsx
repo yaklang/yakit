@@ -79,6 +79,38 @@ interface DragItem {
   type: string
 }
 
+interface DragSelectionBox {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+interface DragSelectionState {
+  active: boolean
+  container: any
+  contentHeight: number
+  contentWidth: number
+  headerHeight: number
+  rectLeft: number
+  rectTop: number
+  startClientX: number
+  startClientY: number
+  lastClientX: number
+  lastClientY: number
+  startViewportX: number
+  startViewportY: number
+  startContentX: number
+  startContentY: number
+  viewportHeight: number
+  viewportWidth: number
+}
+
+interface DragSelectionRange {
+  start: number
+  end: number
+}
+
 function TableVirtualResizeFunction<T>(props: TableVirtualResizeProps<T>, ref: React.ForwardedRef<any>) {
   const containerRef = useRef<any>(null)
   useImperativeHandle(
@@ -171,10 +203,18 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   }) // 拖拽的columns index
   const containerRef = useRef<any>(null)
   const wrapperRef = useRef<any>(null)
-  const columnsRef = useRef(null)
+  const columnsRef = useRef<any>(null)
   const tableRef = useRef<any>(null)
   const lineStartX = useRef<number>(0) // 拖拽线开始位置
   const lineEndX = useRef<number>(0) // 拖拽线结束位置
+  const dragSelectionStateRef = useRef<DragSelectionState | null>(null)
+  const dragSelectionRangeRef = useRef<DragSelectionRange | null>(null)
+  const dragSelectionInitialKeysRef = useRef<Set<React.Key>>(new Set())
+  const dragSelectionFrameRef = useRef<number>()
+  const dragSelectionAutoScrollRef = useRef<number>()
+  const dragSelectionBoxRef = useRef<DragSelectionBox | null>(null)
+  const dragSelectionOverlayRef = useRef<HTMLDivElement>(null)
+  const skipRowClickAfterDragRef = useRef<boolean>(false)
   const tablePosition = useRef<tablePosition>({
     left: 0,
     top: 0,
@@ -570,6 +610,367 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     rowSelection.onChangeCheckboxSingle(checked, key, row)
   })
 
+  const getDragSelectionPoint = useMemoizedFn(
+    (dragSelectionState: DragSelectionState, clientX: number, clientY: number) => {
+      const maxBodyHeight = Math.max(dragSelectionState.viewportHeight - dragSelectionState.headerHeight, 0)
+      const viewportX = Math.min(Math.max(clientX - dragSelectionState.rectLeft, 0), dragSelectionState.viewportWidth)
+      const viewportY = Math.min(
+        Math.max(clientY - dragSelectionState.rectTop, dragSelectionState.headerHeight),
+        dragSelectionState.viewportHeight,
+      )
+
+      return {
+        viewportX,
+        viewportY,
+        contentX: dragSelectionState.container.scrollLeft + viewportX,
+        contentY:
+          dragSelectionState.container.scrollTop +
+          Math.min(Math.max(clientY - dragSelectionState.rectTop - dragSelectionState.headerHeight, 0), maxBodyHeight),
+      }
+    },
+  )
+
+  const getDragSelectionRange = useMemoizedFn(
+    (
+      dragSelectionState: DragSelectionState,
+      startContentX: number,
+      startContentY: number,
+      currentContentX: number,
+      currentContentY: number,
+    ): DragSelectionRange | null => {
+      if (data.length <= 0) return null
+
+      const minX = Math.min(startContentX, currentContentX)
+      const maxX = Math.max(startContentX, currentContentX)
+      if (maxX <= 0 || minX >= dragSelectionState.contentWidth) return null
+
+      const minY = Math.max(Math.min(startContentY, currentContentY), 0)
+      const maxY = Math.min(Math.max(startContentY, currentContentY), dragSelectionState.contentHeight)
+      if (maxY <= minY) return null
+
+      const start = Math.min(Math.max(Math.floor(minY / defItemHeight), 0), data.length - 1)
+      const end = Math.min(Math.max(Math.floor(Math.max(maxY - 1, 0) / defItemHeight), 0), data.length - 1)
+
+      return {
+        start,
+        end,
+      }
+    },
+  )
+
+  const updateDragSelectionBox = useMemoizedFn((nextBox?: DragSelectionBox) => {
+    const overlay = dragSelectionOverlayRef.current
+    const prevBox = dragSelectionBoxRef.current
+
+    if (!nextBox) {
+      dragSelectionBoxRef.current = null
+      if (!overlay) return
+
+      overlay.style.opacity = '0'
+      overlay.style.width = '0px'
+      overlay.style.height = '0px'
+      overlay.style.transform = 'translate3d(0, 0, 0)'
+      return
+    }
+
+    if (
+      prevBox &&
+      prevBox.left === nextBox.left &&
+      prevBox.top === nextBox.top &&
+      prevBox.width === nextBox.width &&
+      prevBox.height === nextBox.height
+    ) {
+      return
+    }
+
+    dragSelectionBoxRef.current = nextBox
+    if (!overlay) return
+
+    overlay.style.opacity = '1'
+    overlay.style.width = `${nextBox.width}px`
+    overlay.style.height = `${nextBox.height}px`
+    overlay.style.transform = `translate3d(${nextBox.left}px, ${nextBox.top}px, 0)`
+  })
+
+  const isRowCheckboxDisabled = useMemoizedFn((record: T) => {
+    const currentRecord = record as any
+    const key = currentRecord?.[renderKey]
+
+    return !!(currentRecord?.disabled || currentRecord?.Disabled || checkboxPropsMap.get(key)?.disabled)
+  })
+
+  const commitDragSelectionRange = useMemoizedFn(() => {
+    const range = dragSelectionRangeRef.current
+    if (!range) return
+
+    const start = Math.max(range.start, 0)
+    const end = Math.min(range.end, data.length - 1)
+    if (start > end) return
+
+    for (let index = start; index <= end; index++) {
+      const record = data[index]
+      if (!record || isRowCheckboxDisabled(record)) continue
+
+      const key = (renderKey ? record[renderKey] : index) as React.Key
+      if (dragSelectionInitialKeysRef.current.has(key)) continue
+
+      onChangeCheckboxSingle(true, key as string, record)
+    }
+  })
+
+  const flushDragSelection = useMemoizedFn(() => {
+    dragSelectionFrameRef.current = undefined
+
+    const dragSelectionState = dragSelectionStateRef.current
+    if (!dragSelectionState || !dragSelectionState.active) return
+
+    const currentPoint = getDragSelectionPoint(
+      dragSelectionState,
+      dragSelectionState.lastClientX,
+      dragSelectionState.lastClientY,
+    )
+
+    updateDragSelectionBox({
+      left: Math.min(dragSelectionState.startViewportX, currentPoint.viewportX),
+      top: Math.min(dragSelectionState.startViewportY, currentPoint.viewportY),
+      width: Math.abs(currentPoint.viewportX - dragSelectionState.startViewportX),
+      height: Math.abs(currentPoint.viewportY - dragSelectionState.startViewportY),
+    })
+
+    const nextRange = getDragSelectionRange(
+      dragSelectionState,
+      dragSelectionState.startContentX,
+      dragSelectionState.startContentY,
+      currentPoint.contentX,
+      currentPoint.contentY,
+    )
+    dragSelectionRangeRef.current = nextRange
+  })
+
+  const scheduleDragSelectionUpdate = useMemoizedFn(() => {
+    if (dragSelectionFrameRef.current) return
+    dragSelectionFrameRef.current = window.requestAnimationFrame(() => {
+      flushDragSelection()
+    })
+  })
+
+  const getDragSelectionAutoScrollDelta = useMemoizedFn((dragSelectionState: DragSelectionState) => {
+    const bodyTop = dragSelectionState.rectTop + dragSelectionState.headerHeight
+    const bodyBottom = dragSelectionState.rectTop + dragSelectionState.viewportHeight
+    const autoScrollThreshold = Math.max(defItemHeight + 8, 36)
+    const autoScrollMinStep = Math.max(defItemHeight / 2, 8)
+    const autoScrollMaxStep = defItemHeight * 2
+
+    if (dragSelectionState.lastClientY < bodyTop + autoScrollThreshold) {
+      const distance = bodyTop + autoScrollThreshold - dragSelectionState.lastClientY
+      return -Math.min(autoScrollMaxStep, Math.max(autoScrollMinStep, distance / 3))
+    }
+
+    if (dragSelectionState.lastClientY > bodyBottom - autoScrollThreshold) {
+      const distance = dragSelectionState.lastClientY - (bodyBottom - autoScrollThreshold)
+      return Math.min(autoScrollMaxStep, Math.max(autoScrollMinStep, distance / 3))
+    }
+
+    return 0
+  })
+
+  const runDragSelectionAutoScroll = useMemoizedFn(() => {
+    dragSelectionAutoScrollRef.current = undefined
+
+    const dragSelectionState = dragSelectionStateRef.current
+    if (!dragSelectionState || !dragSelectionState.active) return
+
+    const { container } = dragSelectionState
+    const delta = getDragSelectionAutoScrollDelta(dragSelectionState)
+    if (!delta) return
+
+    const maxScrollTop = Math.max(container.scrollHeight - container.clientHeight, 0)
+    const nextScrollTop = Math.min(Math.max(container.scrollTop + delta, 0), maxScrollTop)
+    if (nextScrollTop === container.scrollTop) return
+
+    container.scrollTop = nextScrollTop
+    scheduleDragSelectionUpdate()
+    dragSelectionAutoScrollRef.current = window.requestAnimationFrame(() => {
+      runDragSelectionAutoScroll()
+    })
+  })
+
+  const ensureDragSelectionAutoScroll = useMemoizedFn(() => {
+    const dragSelectionState = dragSelectionStateRef.current
+    if (!dragSelectionState || !dragSelectionState.active || !getDragSelectionAutoScrollDelta(dragSelectionState)) {
+      return
+    }
+
+    if (dragSelectionAutoScrollRef.current) return
+    dragSelectionAutoScrollRef.current = window.requestAnimationFrame(() => {
+      runDragSelectionAutoScroll()
+    })
+  })
+
+  const resetDragSelection = useMemoizedFn((suppressRowClick?: boolean) => {
+    document.removeEventListener('mousemove', onDragSelectionMouseMove)
+    document.removeEventListener('mouseup', onDragSelectionMouseUp)
+
+    if (dragSelectionFrameRef.current) {
+      window.cancelAnimationFrame(dragSelectionFrameRef.current)
+      dragSelectionFrameRef.current = undefined
+    }
+    if (dragSelectionAutoScrollRef.current) {
+      window.cancelAnimationFrame(dragSelectionAutoScrollRef.current)
+      dragSelectionAutoScrollRef.current = undefined
+    }
+
+    dragSelectionStateRef.current = null
+    dragSelectionRangeRef.current = null
+    dragSelectionInitialKeysRef.current = new Set<React.Key>()
+    updateDragSelectionBox(undefined)
+
+    if (suppressRowClick) {
+      skipRowClickAfterDragRef.current = true
+    }
+  })
+
+  const finishDragSelection = useMemoizedFn(() => {
+    const dragSelectionState = dragSelectionStateRef.current
+    if (!dragSelectionState) return
+
+    if (dragSelectionState.active) {
+      flushDragSelection()
+      commitDragSelectionRange()
+    }
+
+    resetDragSelection(dragSelectionState.active)
+  })
+
+  const activateDragSelection = useMemoizedFn((dragSelectionState: DragSelectionState) => {
+    dragSelectionState.active = true
+    if ((selectedRows?.length || 0) > 0) {
+      setSelectedRows([])
+    }
+    preSelectRef.current = undefined
+    window?.getSelection()?.removeAllRanges()
+  })
+
+  const createDragSelectionState = useMemoizedFn((container: HTMLDivElement, clientX: number, clientY: number) => {
+    const rect = container.getBoundingClientRect()
+
+    return {
+      active: false,
+      container,
+      contentHeight: data.length * defItemHeight,
+      contentWidth:
+        wrapperRef.current?.scrollWidth ||
+        wrapperRef.current?.clientWidth ||
+        columns
+          .map((item) => item.width || item.minWidth || colWidth || 0)
+          .reduce((prev, current) => prev + current, 0),
+      headerHeight: columnsRef.current?.clientHeight || (size === 'middle' ? 32 : 28),
+      rectLeft: rect.left,
+      rectTop: rect.top,
+      startClientX: clientX,
+      startClientY: clientY,
+      lastClientX: clientX,
+      lastClientY: clientY,
+      startViewportX: 0,
+      startViewportY: 0,
+      startContentX: 0,
+      startContentY: 0,
+      viewportHeight: container.clientHeight,
+      viewportWidth: container.clientWidth,
+    } as DragSelectionState
+  })
+
+  const canStartDragSelection = useMemoizedFn((event: React.MouseEvent<HTMLDivElement>) => {
+    if (
+      event.button !== 0 ||
+      event.shiftKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey ||
+      !rowSelection ||
+      rowSelection.type === 'radio' ||
+      !rowSelection.onChangeCheckboxSingle
+    ) {
+      return false
+    }
+
+    const target = event.target as HTMLElement | null
+    return !!(
+      target &&
+      !target.closest('[data-drag-selection-ignore="true"]') &&
+      !target.closest('input, button, textarea, select, label, a')
+    )
+  })
+
+  const onDragSelectionMouseMove = useMemoizedFn((event: MouseEvent) => {
+    const dragSelectionState = dragSelectionStateRef.current
+    if (!dragSelectionState) return
+
+    if ((event.buttons & 1) === 0) {
+      finishDragSelection()
+      return
+    }
+
+    dragSelectionState.lastClientX = event.clientX
+    dragSelectionState.lastClientY = event.clientY
+
+    if (!dragSelectionState.active) {
+      const moveX = Math.abs(event.clientX - dragSelectionState.startClientX)
+      const moveY = Math.abs(event.clientY - dragSelectionState.startClientY)
+      if (Math.max(moveX, moveY) < 4) return
+
+      activateDragSelection(dragSelectionState)
+    }
+
+    event.preventDefault()
+    scheduleDragSelectionUpdate()
+    ensureDragSelectionAutoScroll()
+  })
+
+  const onDragSelectionMouseUp = useMemoizedFn(() => {
+    finishDragSelection()
+  })
+
+  const onMouseDownDragSelection = useMemoizedFn((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!canStartDragSelection(event)) return
+
+    const container = containerRef.current
+    if (!container) return
+    const selectedRowKeys = rowSelection?.selectedRowKeys || []
+
+    const nextDragSelectionState = createDragSelectionState(container, event.clientX, event.clientY)
+
+    if (event.clientY <= nextDragSelectionState.rectTop + nextDragSelectionState.headerHeight) return
+
+    const startPoint = getDragSelectionPoint(nextDragSelectionState, event.clientX, event.clientY)
+
+    resetDragSelection(false)
+    skipRowClickAfterDragRef.current = false
+    dragSelectionInitialKeysRef.current = new Set<React.Key>(selectedRowKeys as React.Key[])
+    nextDragSelectionState.startViewportX = startPoint.viewportX
+    nextDragSelectionState.startViewportY = startPoint.viewportY
+    nextDragSelectionState.startContentX = startPoint.contentX
+    nextDragSelectionState.startContentY = startPoint.contentY
+    dragSelectionStateRef.current = nextDragSelectionState
+
+    document.addEventListener('mousemove', onDragSelectionMouseMove)
+    document.addEventListener('mouseup', onDragSelectionMouseUp)
+  })
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', onDragSelectionMouseMove)
+      document.removeEventListener('mouseup', onDragSelectionMouseUp)
+
+      if (dragSelectionFrameRef.current) {
+        window.cancelAnimationFrame(dragSelectionFrameRef.current)
+      }
+      if (dragSelectionAutoScrollRef.current) {
+        window.cancelAnimationFrame(dragSelectionAutoScrollRef.current)
+      }
+    }
+  }, [onDragSelectionMouseMove, onDragSelectionMouseUp])
+
   const onMouseMoveLine = useMemoizedFn((e) => {
     if (!tablePosition.current.left) return
     if (lineIndex < 0) return
@@ -694,6 +1095,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   ).run
   const preSelectRef = useRef<T>() //用来存Shift+Click的第一个目标item
   const onRowClick = useMemoizedFn((record: T, rowIndex: number) => {
+    if (skipRowClickAfterDragRef.current) {
+      skipRowClickAfterDragRef.current = false
+      return
+    }
+
     if (preSelectRef.current) {
       // 多选 批量选中
       const startKey = preSelectRef.current[renderKey]
@@ -1093,6 +1499,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                   },
                   containerClassName,
                 )}
+                onMouseDown={onMouseDownDragSelection}
               >
                 <div ref={columnsRef} className={classNames(styles['virtual-table-col'])}>
                   {columns.map((columnsItem, cIndex) => (
@@ -1164,6 +1571,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                 </div>
                 {/* </DndProvider> */}
               </div>
+              <div ref={dragSelectionOverlayRef} className={styles['virtual-table-select-area']} />
               <div
                 className={classNames(styles['virtual-table-list-pagination'])}
                 style={{ display: scroll.scrollBottom <= 10 ? '' : 'none' }}

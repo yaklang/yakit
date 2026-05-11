@@ -475,6 +475,20 @@
       }
     }
 
+    .virtual-table-select-area {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 8;
+      border: 1px solid var(--Colors-Use-Main-Primary);
+      background-color: color-mix(in srgb, var(--Colors-Use-Main-Primary) 12%, transparent);
+      box-sizing: border-box;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate3d(0, 0, 0);
+      will-change: transform, width, height;
+    }
+
     .check {
       margin-right: 4px;
       height: 16px;
