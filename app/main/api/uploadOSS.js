@@ -2,14 +2,14 @@
  * TODO: OSS上传,后期需要整合
  * LINK - ./upload.js#split-upload
  */
-const { httpApi } = require('../httpServer')
-const { ipcMain } = require('electron')
-const fs = require('fs')
-const customPath = require('path')
-const FormData = require('form-data')
-const { hashChunk } = require('../toolsFunc')
-const axios = require('axios')
-const PATH = require('path')
+const {httpApi} = require("../httpServer")
+const {ipcMain} = require("electron")
+const fs = require("fs")
+const customPath = require("path")
+const FormData = require("form-data")
+const {hashChunk, formatApiErrorDetail} = require("../toolsFunc")
+const axios = require("axios")
+const PATH = require("path")
 
 module.exports = (win, getClient) => {
   const streamOSSplitSUpload = new Map()
@@ -129,17 +129,56 @@ module.exports = (win, getClient) => {
               res,
               progress,
             })
-            resolve()
-          } else {
-            let data = `未知错误`
-            if (res?.data?.reason) {
-              data = `code ${res.code}: ${res.data.reason.toString()}`
-            } else if (res?.data) {
-              data = `code ${res.code}: ${res.data.toString()}`
-            } else if (res?.message?.message) {
-              data = `code ${res.code}: ${res.message.message.toString()}`
-            } else if (res) {
-              data = `code ${res.code}: ${res.toString()}`
+                .then(async (res) => {
+                    if (res.code === 200) {
+                        const progress = Math.floor(percent * 100)
+                        win.webContents.send(`oss-split-upload-${token}-data`, {
+                            res,
+                            progress
+                        })
+                        resolve()
+                    } else {
+                        let detail = "未知错误"
+                        if (res?.data?.reason != null) {
+                            detail = formatApiErrorDetail(res.data.reason)
+                        } else if (res?.data != null) {
+                            detail = formatApiErrorDetail(res.data)
+                        } else if (res?.message != null) {
+                            const m = res.message
+                            detail =
+                                typeof m === "object" && m !== null && m.message != null
+                                    ? formatApiErrorDetail(m.message)
+                                    : formatApiErrorDetail(m)
+                        } else if (res) {
+                            detail = formatApiErrorDetail({
+                                code: res.code,
+                                data: res.data,
+                                message: res.message
+                            })
+                        }
+                        reject(`code ${res.code}: ${detail}`)
+                    }
+                })
+                .catch((err) => {
+                    reject(`重传三次失败：${err}`)
+                })
+        })
+    }
+
+    // 获取链接里面得信息
+    ipcMain.handle("get-http-file-link-info", (event, params) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // 发送 HEAD 请求
+                const response = await axios.head(params)
+                const value = {
+                    fileName: PATH.basename(params),
+                    size: response.headers["content-length"],
+                    type: response.headers["content-type"]
+                }
+                resolve(value)
+            } catch (error) {
+                reject(error)
             }
             reject(data)
           }

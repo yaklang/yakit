@@ -1,10 +1,10 @@
-const { service, httpApi } = require('../httpServer')
-const { ipcMain } = require('electron')
-const fs = require('fs')
-const customPath = require('path')
-const FormData = require('form-data')
-const { Readable } = require('stream')
-const { hashChunk } = require('../toolsFunc')
+const {service, httpApi} = require("../httpServer")
+const {ipcMain} = require("electron")
+const fs = require("fs")
+const customPath = require("path")
+const FormData = require("form-data")
+const {Readable} = require("stream")
+const {hashChunk, formatApiErrorDetail} = require("../toolsFunc")
 
 module.exports = (win, getClient) => {
   ipcMain.handle('upload-group-data', async (event, params) => {
@@ -89,10 +89,55 @@ module.exports = (win, getClient) => {
             } else if (res) {
               data = `code ${res.code}: ${res.toString()}`
             }
-            reject(data)
-            return
-          }
-          resolve(res)
+            formData.append("index", chunkIndex)
+            formData.append("totalChunks", totalChunks)
+            formData.append("fileName", fileName)
+            formData.append("type", type)
+            fileHash && formData.append("fileHash", fileHash)
+            // console.log("参数---", fileName, fileHash)
+            httpApi({
+                method: "post",
+                url,
+                data: formData,
+                headers: {"Content-Type": `multipart/form-data; boundary=${formData.getBoundary()}`},
+                timeout: percent === 1 && totalChunks > 3 ? 60 * 1000 * 10 : 60 * 1000,
+                argParams: {
+                    retryCount: 3
+                }
+            })
+                .then(async (res) => {
+                    const progress = Math.floor(percent * 100)
+                    win.webContents.send(`callback-split-upload-${token}`, {
+                        res,
+                        progress
+                    })
+                    if (res.code !== 200) {
+                        let detail = "未知错误"
+                        if (res?.data?.reason != null) {
+                            detail = formatApiErrorDetail(res.data.reason)
+                        } else if (res?.data != null) {
+                            detail = formatApiErrorDetail(res.data)
+                        } else if (res?.message != null) {
+                            const m = res.message
+                            detail =
+                                typeof m === "object" && m !== null && m.message != null
+                                    ? formatApiErrorDetail(m.message)
+                                    : formatApiErrorDetail(m)
+                        } else if (res) {
+                            detail = formatApiErrorDetail({
+                                code: res.code,
+                                data: res.data,
+                                message: res.message
+                            })
+                        }
+                        reject(`code ${res.code}: ${detail}`)
+                        return
+                    }
+                    resolve(res)
+                })
+                .catch((err) => {
+                    reject(`重传三次失败：${err}`)
+                })
         })
         .catch((err) => {
           reject(`重传三次失败：${err}`)
