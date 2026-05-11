@@ -61,3 +61,5 @@ yarn.lock
 .serena/
 .ci-changed-files-list.txt
 pr-ci-changed-files-list.txt
+
+out/

@@ -102,7 +102,7 @@ export const EngineLog: React.FC<EngineLogProps> = React.memo((props) => {
 
           const row = Math.floor(height / 18.5)
           const col = Math.floor(width / 10)
-          if (xtermRef) xtermFit(xtermRef, col, row)
+          if (xtermRef) xtermFit(xtermRef, 22, row)
         }}
         handleWidth={true}
         handleHeight={true}
