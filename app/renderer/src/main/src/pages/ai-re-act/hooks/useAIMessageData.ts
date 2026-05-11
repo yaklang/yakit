@@ -11,6 +11,17 @@ import type {
   UseAIMessageDataEvents,
 } from './type'
 
+interface SessionMetadata {
+  offset: number
+}
+
+interface SaveParams extends AIFnBaseParams {
+  casualElements: ReActChatRenderItem[]
+  taskElements: ReActChatRenderItem[]
+  contentMap: Record<string, DialogueContentRecord[]>
+  sessionMetadata: SessionMetadata
+}
+
 const LIMIT = 10
 
 const useAIMessageData = ({
@@ -110,7 +121,46 @@ const useAIMessageData = ({
     }
   }
 
-  const save = () => {}
+  const save = async ({ sessionId, casualElements, taskElements, contentMap, sessionMetadata }: SaveParams) => {
+    const sessionMetadataPromise = aiChatMessageStore.setSessionMetadata({
+      sessionId,
+      offset: sessionMetadata.offset,
+    })
+    const casualDialoguesPromise = aiChatMessageStore.setDialogues({
+      storeName: `${type}CasualDB`,
+      data: casualElements.map((item, index) => ({
+        id: item.token,
+        type: item.type,
+        isGroup: item.isGroup || false,
+        children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
+        sessionId,
+        orderNum: index,
+      })),
+    })
+    const taskDialoguesPromise = aiChatMessageStore.setDialogues({
+      storeName: `${type}TaskDB`,
+      data: taskElements.map((item, index) => ({
+        id: item.token,
+        type: item.type,
+        isGroup: item.isGroup || false,
+        children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
+        sessionId,
+        orderNum: index,
+      })),
+    })
+    const allContents = [...Object.values(contentMap)].flat()
+    const dialogueContentPromise = aiChatMessageStore.setDialogueContent({
+      data: allContents,
+    })
+    await Promise.all([
+      sessionMetadataPromise,
+      casualDialoguesPromise,
+      taskDialoguesPromise,
+      dialogueContentPromise,
+    ]).catch((err) => {
+      console.error('保存聊天数据失败', err)
+    })
+  }
 
   // ─── 重置 ────────────────────────────────────────────────────────────
   const reset: UseAIMessageDataEvents['handleReset'] = () => {
@@ -132,6 +182,7 @@ const useAIMessageData = ({
     initRequest,
     loadMore,
     reset,
+    save,
     grpcLoadMoreWrapper,
   }
 }
