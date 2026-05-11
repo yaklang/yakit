@@ -170,9 +170,7 @@ jobs:
             - name: "Build EE Render"
               if: ${{ inputs.version == 'ee' }}
               working-directory: ./
-              env:
-                  REACT_APP_REQUIRE_ENTERPRISE_LICENSE: ${{ inputs.requireEnterpriseLicense && 'true' || 'false' }}
-              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}-enterprise
+              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}${{ inputs.requireEnterpriseLicense && '-enterprise' || '-enterprise-no-license' }}
 
             - name: "Build SE Render"
               if: ${{ inputs.version == 'se' }}
