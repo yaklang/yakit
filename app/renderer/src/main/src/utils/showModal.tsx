@@ -8,6 +8,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import i18n from '@/i18n/i18n'
+import { ModalI18nNode, ModalI18nRender } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
 export interface BaseModalProp extends ModalProps, React.ComponentProps<any> {
@@ -39,8 +40,9 @@ export const BaseModal: React.FC<BaseModalProp> = (props) => {
   )
 }
 
-export interface ShowModalProps extends BaseModalProp {
-  content?: React.ReactNode
+export interface ShowModalProps extends Omit<BaseModalProp, 'title' | 'content'> {
+  title?: ModalI18nNode
+  content?: ModalI18nNode
   modalAfterClose?: () => any
   type?: string
   hiddenHeader?: boolean
@@ -58,10 +60,12 @@ export const showModal = (props: ShowModalProps) => {
       if (!modalRootDiv) {
         modalRootDiv = createRoot(div)
       }
+      const { title, content, ...restConfig } = targetConfig
       modalRootDiv.render(
         <>
           <BaseModal
-            {...(targetConfig as ModalProps)}
+            {...(restConfig as ModalProps)}
+            title={<ModalI18nRender node={title} />}
             onVisibleSetter={(r) => {
               setter = r
             }}
@@ -87,7 +91,7 @@ export const showModal = (props: ShowModalProps) => {
                 )
               }}
             >
-              {targetConfig.content}
+              <ModalI18nRender node={content} />
             </ErrorBoundary>
           </BaseModal>
         </>,
@@ -165,7 +169,7 @@ export const showDrawer = (props: ShowDrawerProps) => {
 
   let onDestroy: ((i: boolean) => any) | undefined = () => undefined
   let drawerRootDiv
-  const render = (targetConfig: ShowModalProps) => {
+  const render = (targetConfig: ShowDrawerProps) => {
     setTimeout(() => {
       if (!drawerRootDiv) {
         drawerRootDiv = createRoot(div)
