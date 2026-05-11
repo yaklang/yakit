@@ -818,13 +818,11 @@ export declare namespace AIAgentGrpcApi {
     code: number
     count: number
   }
-
   /** `http_flow_fuzz_status` 事件中 progress 内响应体长度聚合项（最多前 3 项） */
   export interface HttpFlowFuzzStatusResponseLengthGroup {
     body_length: number
     count: number
   }
-
   /** `http_flow_fuzz_status` 的 working 状态携带的结构化进度 */
   export interface HttpFlowFuzzStatusProgress {
     total_requests: number
@@ -839,7 +837,6 @@ export declare namespace AIAgentGrpcApi {
     status_counts: HttpFlowFuzzStatusStatusCount[]
     response_length_groups: HttpFlowFuzzStatusResponseLengthGroup[]
   }
-
   /**
    * `http_flow_fuzz_status` 事件载荷（Type: http_flow_fuzz_status，IsJson: true）。
    * fuzz_id 与 runtime_id 同值，可作为卡片主键；start / working / finish 共用同一 fuzz_id。
@@ -869,6 +866,15 @@ export declare namespace AIAgentGrpcApi {
         reason: string
         action_name?: string
       }
+
+  export interface RecoveryHistory {
+    block_count: number
+    event_count: number
+    has_more: boolean
+    next_start_id: number
+    requested_start_id: number
+    session_id: string
+  }
 }
 
 // #region AI相关普通接口的请求和定义结构

@@ -314,6 +314,8 @@ function useTaskChat(params: UseTaskChatParams) {
       handleSend,
       handleCloseGrpc,
       handlePlanExecEnd,
+      getContentMap,
+      setContentMap,
       setElements: setElements,
       getElements: getElements,
       handleUserManualIntervention,

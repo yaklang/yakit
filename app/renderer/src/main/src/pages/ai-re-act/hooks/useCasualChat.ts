@@ -158,6 +158,8 @@ function useCasualChat(params: UseCasualChatParams) {
       handleSetData,
       handleResetData,
       handleSend,
+      getContentMap,
+      setContentMap,
       setElements: setElements,
       getElements: getElements,
       handleUserManualIntervention,

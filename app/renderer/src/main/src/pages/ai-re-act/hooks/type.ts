@@ -1,5 +1,5 @@
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import {
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type {
   AIChatQSData,
   AIChatQSDataType,
   AIStreamOutput,
@@ -7,12 +7,13 @@ import {
   ReActChatBaseInfo,
   ReActChatRenderItem,
 } from './aiRender'
-import { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n, AIStartParams, AITaskStatus } from './grpcApi'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
-import { Dispatch, SetStateAction } from 'react'
-import { AIChatData } from '@/pages/ai-agent/type/aiChat'
-import { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
+import type { Dispatch, SetStateAction } from 'react'
+import type { Domain } from '@/pages/ai-agent/store/constants'
+import type { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n, AIStartParams, AITaskStatus } from './grpcApi'
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
+import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
+import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 
 // #region 公共 hoos 事件
 export interface UseHookBaseParams {
@@ -33,6 +34,8 @@ export type handleSendFunc = (params: {
 }) => void
 
 interface UseHookStateFunc {
+  getContentMap: (token: string) => AIChatQSData | undefined
+  setContentMap: (token: string, content: AIChatQSData) => void
   setElements: Dispatch<SetStateAction<ReActChatRenderItem[]>>
   getElements: () => ReActChatRenderItem[]
 }
@@ -237,6 +240,8 @@ export interface UseChatIPCState {
   historyState: UseHistoryChatState
   /** 流推送的提示文案（notify / rate-limit），展示时长由 duration 系列字段控制，到期自动清空 */
   notifyMessage: { type: 'notify' | 'rate-limit'; content: string; label: AIOutputI18n } | null
+  /** 请求历史数据相关State */
+  requestHistoryState: UseAIMessageDataState
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
@@ -297,6 +302,8 @@ export interface UseChatIPCEvents extends Omit<UseHistoryChatEvents, 'loadInit'>
   handleResetTarget: (target: 'memoryList') => void
   /** 用户手动干预的执行事件 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 加载更多历史数据 */
+  handleLoadMoreHistory: (type: ReActChatBaseInfo['chatType']) => void
 }
 // #endregion
 
@@ -362,8 +369,6 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
   }
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
-  getContentMap: (token: string) => AIChatQSData | undefined
-  setContentMap: (token: string, content: AIChatQSData) => void
   /** 将数据推送到日志集合中 */
   pushLog: UseHookBaseParams['pushLog']
   /** review 类型相关变量和方法 */
@@ -383,4 +388,72 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
   }
 }
 export type AIMessageHandler = (params: AIMessageHandlerParams) => void
+// #endregion
+
+// #region useAIMessageData相关定义
+export interface AIMessageDataProps {
+  type: Domain
+  setContentMap: (
+    chatType: ReActChatBaseInfo['chatType'],
+    ...args: Parameters<UseHookStateFunc['setContentMap']>
+  ) => void
+  setCasualElements: UseHookStateFunc['setElements'] // todo 要加renderNum
+  setTaskElements: UseHookStateFunc['setElements'] // todo 要加renderNum
+  grpcLoadMore?: (request: { limit: number; start_id?: number }) => void
+}
+
+export interface AIFnBaseParams {
+  sessionId: string
+}
+
+export interface LoadMoreParams extends AIFnBaseParams {
+  chatType: ReActChatBaseInfo['chatType']
+}
+
+/** 游标：记录每个 store 下一次加载的起始位置 */
+export interface PaginationCursors {
+  casualId?: string
+  taskId?: string
+}
+
+export interface UseAIMessageDataState {
+  /** 初始化加载中 */
+  initLoading: boolean
+  /** 加载更多加载中 */
+  loadMoreLoading: boolean //react?task对话
+  /** save的加载状态 */
+  saveLoading: boolean
+}
+export interface UseAIMessageDataEvents {
+  /** 给UI使用的hasmore获取方法 */
+  handleHasMore: (chatType: ReActChatBaseInfo['chatType']) => boolean
+  /** grpc请求历史数据的返回数据 */
+  handleGrpcLoadMore: (res: AIAgentGrpcApi.RecoveryHistory) => void
+  /** 初始化加载 */
+  handleLoadInit: (session: string) => Promise<void>
+  /** 加载更多数据 */
+  handleLoadMore: (session: string, ...args: Parameters<UseChatIPCEvents['handleLoadMoreHistory']>) => Promise<void>
+  /** 重置状态 */
+  handleReset: () => void
+  /** 保存数据 */
+  handleSave: (
+    session: string,
+    data: {
+      beforeID: string
+      casualElements: AIChatData['casualChat']['elements']
+      taskElements: AIChatData['taskChat']['elements']
+      casualContentMap: AIChatData['casualChat']['contents']
+      taskContentMap: AIChatData['taskChat']['contents']
+    },
+  ) => void
+
+  /** grpc接口关闭后的后续处理逻辑 */
+  handleCloseGrpc: () => void
+  /** 当前任务规划结束-触发UI展示结束标识 */
+  handlePlanExecEnd: (res: AIOutputEvent) => void
+  /** 用户手动介入逻辑 */
+  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 清空当前任务树 */
+  handleResetPlanTree: () => void
+}
 // #endregion

@@ -1,32 +1,15 @@
-import { SetStateAction, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import aiChatMessageStore from '../../ai-agent/store/aiChatMessageStore'
-import type { ReActChatBaseInfo, ReActChatRenderItem } from './aiRender'
-import type { DialogueContentRecord, GetDialoguesData, StoreName } from '../../ai-agent/store/type'
+import type { GetDialoguesData, StoreName } from '../../ai-agent/store/type'
 import { useMemoizedFn } from 'ahooks'
 import { indexedDBDataToReActChatRenderItem } from './utils'
-import { Domain } from '@/pages/ai-agent/store/constants'
-
-interface AIMessageDataProps {
-  setContentMap: (chatType: ReActChatBaseInfo['chatType'], items: DialogueContentRecord[]) => void
-  setCasualElements: (items: SetStateAction<Omit<ReActChatRenderItem, 'renderNum'>[]>) => void
-  setTaskElements: (items: SetStateAction<Omit<ReActChatRenderItem, 'renderNum'>[]>) => void
-  grpcLoadMore?: () => Promise<void>
-  type: Domain
-}
-
-interface AIFnBaseParams {
-  sessionId: string
-}
-
-interface LoadMoreParams extends AIFnBaseParams {
-  chatType: ReActChatBaseInfo['chatType']
-}
-
-/** 游标：记录每个 store 下一次加载的起始位置 */
-interface PaginationCursors {
-  casualId?: string
-  taskId?: string
-}
+import type {
+  AIMessageDataProps,
+  PaginationCursors,
+  AIFnBaseParams,
+  LoadMoreParams,
+  UseAIMessageDataEvents,
+} from './type'
 
 const LIMIT = 10
 
@@ -45,7 +28,7 @@ const useAIMessageData = ({
   // 分页id
   const cursorsRef = useRef<PaginationCursors>({})
 
-  const initRequest = async ({ sessionId }: AIFnBaseParams) => {
+  const initRequest: UseAIMessageDataEvents['handleLoadInit'] = async ({ sessionId }: AIFnBaseParams) => {
     setInitLoading(true)
     // 重置分页状态
     reset()
@@ -85,7 +68,7 @@ const useAIMessageData = ({
   }
 
   // ─── 加载更多：按 chatType 分别翻页 ─────────────────────────────────
-  const loadMore = async ({ sessionId, chatType }: LoadMoreParams) => {
+  const loadMore: UseAIMessageDataEvents['handleLoadMore'] = async ({ sessionId, chatType }: LoadMoreParams) => {
     const isCasual = chatType === 'reAct'
     const hasMore = isCasual ? hasMoreRef.current.casual : hasMoreRef.current.task
 
@@ -130,12 +113,12 @@ const useAIMessageData = ({
   const save = () => {}
 
   // ─── 重置 ────────────────────────────────────────────────────────────
-  const reset = () => {
+  const reset: UseAIMessageDataEvents['handleReset'] = () => {
     hasMoreRef.current = { casual: true, task: true }
     cursorsRef.current = {}
   }
 
-  const grpcLoadMoreWrapper = useMemoizedFn(async (has_more: boolean) => {
+  const grpcLoadMoreWrapper: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(async (has_more: boolean) => {
     hasMoreRef.current.casual = has_more
   })
 

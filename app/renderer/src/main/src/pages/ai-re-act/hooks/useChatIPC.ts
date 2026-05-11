@@ -13,10 +13,13 @@ import {
   AIChatIPCStartParams,
   AIChatSendParams,
   AIFileSystemPin,
+  AIMessageDataProps,
   AIQuestionQueues,
   CasualLoadingStatus,
   PlanLoadingStatus,
   TaskChatTaskInfo,
+  UseAIMessageDataEvents,
+  UseAIMessageDataState,
   UseCasualChatEvents,
   UseChatIPCEvents,
   UseChatIPCParams,
@@ -52,6 +55,7 @@ import { AIChatQSData, ReActChatBaseInfo } from './aiRender'
 import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
 import useHistoryChat from './useHistoryChat'
 import { handleResetForNewSession } from './grpcAIMessageHandlers'
+import useAIMessageData from './useAIMessageData'
 
 const { ipcRenderer } = window.require('electron')
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
@@ -382,7 +386,40 @@ function useChatIPC(params?: UseChatIPCParams) {
   })
   // #endregion
 
-  // #region 会话的历史数据
+  /** 向对应列表(自由对话|任务规划)里的map设置数据 */
+  const handleSetContentMap: AIMessageDataProps['setContentMap'] = useMemoizedFn((chatType, token, content) => {
+    if (chatType === 'reAct') {
+      casualChatEvent.setContentMap(token, content)
+    } else if (chatType === 'task') {
+      taskChatEvent.setContentMap(token, content)
+    }
+  })
+
+  // #region 历史数据的请求hook
+  const [requestState, requestEvents] = useAIMessageData({
+    type: 'ai',
+    setContentMap: handleSetContentMap,
+    setCasualElements: casualChatEvent.setElements,
+    setTaskElements: taskChatEvent.setElements,
+    grpcLoadMore: (request) => {
+      sendRequest({
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
+        SyncJsonInput: JSON.stringify(request),
+      })
+    },
+  })
+
+  /** 请求更多数据加载 */
+  const handleLoadMore: UseChatIPCEvents['handleLoadMoreHistory'] = useMemoizedFn(
+    (chatType: ReActChatBaseInfo['chatType'], request: AIInputEvent) => {
+      if (!chatID.current) return
+      return requestEvents.handleLoadMore(chatID.current, chatType)
+    },
+  )
+  // #endregion
+
+  // #region 会话的历史数据  后面删除
   const [historyState, historyEvents] = useHistoryChat({
     getChatDataStore,
     setTimelines: setReActTimelines,
@@ -604,32 +641,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_MEMORY_CONTEXT })
   })
 
-  /** 获取历史时间线 */
-  const fetchHistoryTimelines = useMemoizedFn(async (session: string) => {
-    try {
-      setReActTimelines([])
-      const { Events, Total } = await grpcQueryAIEvent({
-        Filter: {
-          SessionID: session,
-          NodeId: ['timeline_item'],
-        },
-        Pagination: {
-          Page: 1,
-          Limit: 1000,
-          OrderBy: 'created_at',
-          Order: 'desc',
-        },
-      })
-      if (Total === 0) return
-
-      const timelineItems: AIAgentGrpcApi.TimelineItem[] = Events.map((item) => {
-        let ipcContent = Uint8ArrayToString(item.Content) || ''
-        return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
-      }).reverse()
-      setReActTimelines((old) => [...timelineItems, ...old])
-    } catch (error) {}
-  })
-
   /** 保存state类型的数据 */
   const saveStateDataOfEnd = useMemoizedFn((session: string) => {
     if (delChats.current.includes(session)) {
@@ -649,6 +660,10 @@ function useChatIPC(params?: UseChatIPCParams) {
     }
     try {
       cacheDataStore?.updater(session, answer)
+      /**
+       * TODO:
+       * 会话启动的初始化save
+       */
     } catch {}
   })
 
@@ -666,12 +681,6 @@ function useChatIPC(params?: UseChatIPCParams) {
       try {
         cacheDataStore?.create(token)
       } catch (error) {}
-      // 历史数据的初始化加载
-      // historyEvents.loadInit(token)
-
-      // setTimeout(() => {
-      //   historyEvents.loadMore('chatID', token)
-      // }, 5000)
     }
     handleResetBeforeStart()
     chatID.current = token
@@ -1046,13 +1055,10 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
       cb?.()
-      // if (isInit) {
-      //   sendRequest({
-      //     IsSyncMessage: true,
-      //     SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_HISTORY,
-      //     SyncJsonInput: JSON.stringify({ limit: 50 }),
-      //   })
-      // }
+      /**
+       * TODO:
+       * 会话启动的初始化initRequest
+       */
     }, 50)
   })
 
@@ -1250,6 +1256,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleUserManualIntervention,
       fetchHasMore: historyEvents.fetchHasMore,
       loadMore: historyEvents.loadMore,
+      handleLoadMoreHistory: handleLoadMore,
     }
   }, [])
 

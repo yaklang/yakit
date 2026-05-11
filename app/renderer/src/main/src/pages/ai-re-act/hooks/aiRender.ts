@@ -210,6 +210,10 @@ export interface ReActChatBaseInfo {
   type: AIChatQSDataType
   /** 触发渲染的次数, 无实际逻辑意义 */
   renderNum: number
+  /** 是否是已缓存数据 */
+  isCached?: boolean
+  /** 缓存数据里的顺序 */
+  cacheOrder?: number
 }
 export interface ReActChatElement extends ReActChatBaseInfo {
   /** 标记不是组 */
