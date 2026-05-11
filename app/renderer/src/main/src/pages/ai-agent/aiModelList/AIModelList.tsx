@@ -619,7 +619,7 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
             )}
             {!!aiGlobalConfig?.LightweightModels.length && (
               <AIOnlineModel
-                title={t('AIModelList.lightweightModels')}
+                title={t('AiAgengt.lightweightModels')}
                 subTitle={t('AIModelList.lightweightModelsDesc')}
                 list={aiGlobalConfig?.LightweightModels || []}
                 onEdit={(index) =>
