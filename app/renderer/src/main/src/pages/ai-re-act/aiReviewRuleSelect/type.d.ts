@@ -11,4 +11,7 @@ export interface AIChatSelectProps extends Omit<YakitSelectProps, 'dropdownRende
   getList?: () => void
   children?: React.ReactNode
   setOpen?: (open: boolean) => void
+
+  /** 点击这个元素不关闭弹窗 */
+  closestClassName?: string
 }

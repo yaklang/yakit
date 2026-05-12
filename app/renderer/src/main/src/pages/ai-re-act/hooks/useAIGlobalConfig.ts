@@ -23,9 +23,14 @@ interface UseAIGlobalConfigEvents {
   /** 设置到全局变量中 */
   setConfigStore: (data: AIGlobalConfig) => void
 }
-function useAIGlobalConfig(): [UseAIGlobalConfigData, UseAIGlobalConfigEvents]
+interface UseAIGlobalConfigParams {
+  isShowLoading?: boolean
+}
+function useAIGlobalConfig(params?: UseAIGlobalConfigParams): [UseAIGlobalConfigData, UseAIGlobalConfigEvents]
 
-function useAIGlobalConfig() {
+/** TODO - 待优化:每次使用这个hooks都会刷新一下数据 */
+function useAIGlobalConfig(params) {
+  const { isShowLoading } = params || {}
   const { aiGlobalConfig, isInit, setConfig, setQueryLoading, queryLoading } = useAIGlobalConfigStore(
     (s) => ({
       isInit: s.isInit,
@@ -42,7 +47,7 @@ function useAIGlobalConfig() {
   const aiGlobalConfigRef = useRef<AIGlobalConfig>()
 
   useEffect(() => {
-    isInit && getAIGlobalConfig()
+    isInit && getAIGlobalConfig(isShowLoading !== false)
   }, [isInit])
   /** 刷新，会设置全局变量中的值和ref */
   const getAIGlobalConfig = useMemoizedFn((isShowLoading?: boolean) => {
@@ -74,7 +79,7 @@ function useAIGlobalConfig() {
       grpcSetAIGlobalConfig(config)
         .then(() => {
           aiGlobalConfigRef.current = cloneDeep(config)
-          setConfig({ ...config })
+          setConfig(aiGlobalConfigRef.current)
           getAIGlobalConfig(false)
           resolve()
         })

@@ -91,9 +91,9 @@ export interface AIStartParams {
 
   /** 是否允许生成报告，默认不允许 */
   AllowGenerateReport?: boolean
-  /**选择 AI 服务 */
+  /** @deprecated 选择 AI 服务 */
   AIService?: string
-  /**选择 AI 服务模型名称 */
+  /** @deprecated 选择 AI 服务模型名称 */
   AIModelName?: string
   ReActMaxIteration?: number
   /** 时间线上下文限制（默认100） */
@@ -127,6 +127,7 @@ export interface AIStartParams {
 export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AllowRequireForUserInteract = 'AllowRequireForUserInteract',
   HotPatchType_AgreePolicy = 'AgreePolicy',
+  /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',
   HotPatchType_RiskControlScore = 'RiskControlScore',
   HotPatchType_AIModelName = 'ModelName',

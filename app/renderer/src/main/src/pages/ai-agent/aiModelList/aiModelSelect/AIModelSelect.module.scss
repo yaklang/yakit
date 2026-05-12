@@ -55,59 +55,6 @@
     height: 12px;
   }
 }
-.select-option-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-  overflow: hidden;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
-
-  &:hover {
-    .edit-icon {
-      display: flex;
-    }
-  }
-  .edit-icon {
-    display: none;
-  }
-  .brain-icon {
-    color: var(--Colors-Use-Neutral-Text-3-Secondary);
-    svg {
-      width: 14px;
-      height: 14px;
-    }
-  }
-  .option-text {
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    word-break: break-all;
-    max-width: 250px;
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-  .icon-pencilalt {
-    color: var(--Colors-Use-Neutral-Text-4-Help-text);
-  }
-  .select-option-left {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    overflow: hidden;
-  }
-  .select-option-right {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .check-icon {
-    color: var(--Colors-Use-Main-Primary);
-  }
-}
 
 .select-option {
   display: flex;
@@ -155,6 +102,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  position: relative;
   &-header {
     display: flex;
     flex-direction: column;
@@ -189,18 +137,63 @@
   .select-option-wrapper {
     display: flex;
     align-items: center;
-    gap: 4px;
     justify-content: space-between;
+    gap: 4px;
     overflow: hidden;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
     flex: 1;
+    height: 20px;
+    &:hover {
+      .edit-icon {
+        display: flex;
+      }
+    }
+    .edit-icon {
+      display: none;
+    }
+    .brain-icon {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+    .option-text {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      word-break: break-all;
+      max-width: 250px;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+    .icon-pencilalt {
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    }
     .select-option-left {
       display: flex;
       align-items: center;
       gap: 4px;
       overflow: hidden;
-      font-size: 14px;
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-      line-height: 16px;
+    }
+    .select-option-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .check-icon {
+      color: var(--Colors-Use-Main-Primary);
+    }
+  }
+  .select-option-wrapper-select {
+    .select-option-left {
+      color: var(--Colors-Use-Main-Primary);
+    }
+    .edit-icon {
+      display: flex;
     }
   }
 }
@@ -233,6 +226,66 @@
     }
     .ant-select-item:not(.ant-select-item-option-grouped) {
       padding: 6px 8px;
+    }
+  }
+}
+.edit-content {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  width: 0;
+  height: 0;
+  transform: translate(-9999px, -9999px);
+  background-color: var(--Colors-Use-Basic-Background);
+  box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+  border-radius: 4px;
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  z-index: 1050;
+}
+
+.edit-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  .edit-content-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 2px;
+
+    .edit-content-title {
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      width: 100%;
+      padding: 0 4px;
+    }
+    .edit-content-options {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+      .edit-content-options-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        border-radius: 4px;
+        padding: 0 4px;
+        flex: 1;
+        width: 100%;
+        &:hover {
+          background-color: var(--Colors-Use-Neutral-Bg-Hover);
+        }
+      }
+      .edit-content-check {
+        color: var(--Colors-Use-Main-Primary);
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+      }
     }
   }
 }

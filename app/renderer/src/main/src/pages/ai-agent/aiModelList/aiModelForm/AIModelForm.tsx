@@ -183,9 +183,7 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     endpoint: config.Endpoint ?? '',
     enable_endpoint: config.EnableEndpoint ?? false,
     Headers: config.Headers ?? [],
-    EnableThinkingOpt: has(config, 'EnableThinkingOpt')
-      ? `${config.EnableThinkingOpt === true ? 'open' : 'close'}`
-      : 'no-set',
+    EnableThinkingOpt: getEnableThinkingOpt(config),
     MaxTokens: config?.MaxTokens,
     Temperature: config?.Temperature,
     TopP: config?.TopP,
@@ -194,7 +192,33 @@ export const buildAIConfigHealthCheckFormValues = (config: ThirdPartyApplication
     ReasoningEffort: config?.ReasoningEffort || 'no-set',
   } as AIThirdPartyApplicationConfig
 }
+export const getEnableThinkingOpt = (config: ThirdPartyApplicationConfig) => {
+  return has(config, 'EnableThinkingOpt') ? `${config.EnableThinkingOpt === true ? 'open' : 'close'}` : 'no-set'
+}
 
+export const parseEnableThinkingOptValue = (val: any): boolean | undefined => {
+  if (isNil(val) || val === 'no-set') return undefined
+  return val === 'open'
+}
+
+export const parseValidStringOption = (val: any): string | undefined => {
+  if (isNil(val) || val === 'no-set') return undefined
+  return val
+}
+
+export const parseValidNumberOption = (val: any): number | undefined => {
+  if (isNil(val) || val === '') return undefined
+  return Number(val)
+}
+// 常规数字字段
+const numberFields: Array<keyof ThirdPartyApplicationConfig> = [
+  'MaxTokens',
+  'Temperature',
+  'TopP',
+  'TopK',
+  'FrequencyPenalty',
+]
+type NumberFieldKey = (typeof numberFields)[number]
 export const formValueToAIConfigProvider = (res) => {
   const date: ThirdPartyApplicationConfig = {
     Type: res.Type,
@@ -215,27 +239,21 @@ export const formValueToAIConfigProvider = (res) => {
     // WebhookURL: "",
     // Disabled: false
   }
-  if (has(res, 'EnableThinkingOpt') && res.EnableThinkingOpt !== 'no-set') {
-    date.EnableThinkingOpt = res.EnableThinkingOpt === 'open'
-  }
-  if (has(res, 'MaxTokens') && !isNil(res.MaxTokens)) {
-    date.MaxTokens = res.MaxTokens
-  }
-  if (has(res, 'Temperature') && !isNil(res.Temperature)) {
-    date.Temperature = res.Temperature
-  }
-  if (has(res, 'TopP') && !isNil(res.TopP)) {
-    date.TopP = res.TopP
-  }
-  if (has(res, 'TopK') && !isNil(res.TopK)) {
-    date.TopK = res.TopK
-  }
-  if (has(res, 'FrequencyPenalty') && !isNil(res.FrequencyPenalty)) {
-    date.FrequencyPenalty = res.FrequencyPenalty
-  }
-  if (has(res, 'ReasoningEffort') && res.ReasoningEffort !== 'no-set') {
-    date.ReasoningEffort = res.ReasoningEffort
-  }
+  // 1. 单独处理特殊规则字段
+  const enableThinkingOpt = parseEnableThinkingOptValue(res.EnableThinkingOpt)
+  if (enableThinkingOpt !== undefined) date.EnableThinkingOpt = enableThinkingOpt
+
+  const reasoningEffort = parseValidStringOption(res.ReasoningEffort)
+  if (reasoningEffort !== undefined) date.ReasoningEffort = reasoningEffort
+
+  const extraData: Partial<Record<NumberFieldKey, number>> = {}
+  numberFields.forEach((key) => {
+    const val = parseValidNumberOption(res[key])
+    if (val !== undefined) {
+      extraData[key] = val
+    }
+  })
+  Object.assign(date, extraData)
   return date
 }
 export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
@@ -251,7 +269,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   let currentIndexInConfigRef = useRef<number>(-1) //更新时，该值为当前模型在全局配置列表中的下标
   const [inViewport = true] = useInViewport(footerRef)
 
-  const [aiGlobalConfigData, event] = useAIGlobalConfig()
+  const [aiGlobalConfigData, event] = useAIGlobalConfig({ isShowLoading: false })
 
   const isAdd = useCreation(() => {
     return !item
@@ -307,7 +325,6 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       }
       const setConfigOptions = {
         modelType: res.model_type,
-        aiModelName: newItem.ModelName,
       }
       if (isAdd) {
         onAdd(newItem, setConfigOptions)
@@ -318,7 +335,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
   })
   const onAdd = useMemoizedFn((newItem: AIModelConfig, options: AIModelFormAddOptions) => {
     if (!aiGlobalConfigData?.aiGlobalConfigRef.current) return
-    const { modelType, aiModelName } = options
+    const { modelType } = options
     const newConfig: AIGlobalConfig = cloneDeep(aiGlobalConfigData?.aiGlobalConfigRef.current)
 
     const fileName = getFileNameByModelType(modelType)
@@ -330,26 +347,18 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       return
     }
     newConfig[fileName].push(newItem)
-    onSetAIGlobalConfig(newConfig, {
-      aiService: newItem.Provider.Type,
-      aiModelName,
-    })
+    onSetAIGlobalConfig(newConfig)
   })
 
   const onUpdate = useMemoizedFn((newItem: AIModelConfig, options: AIModelFormUpdateOptions) => {
     try {
       if (!aiGlobalConfigData?.aiGlobalConfigRef.current || currentIndexInConfigRef.current === -1) return
 
-      const { modelType, aiModelName } = options
+      const { modelType } = options
       const newConfig: AIGlobalConfig = cloneDeep(aiGlobalConfigData?.aiGlobalConfigRef.current)
 
       const fileName = getFileNameByModelType(modelType)
       if (!fileName) return
-      const item = {
-        aiService: newItem.Provider.Type,
-        aiModelName,
-        fileName,
-      }
 
       if (!fileName) return
       const oldUpdateItem = aiGlobalConfigData?.aiGlobalConfigRef.current?.[fileName][currentIndexInConfigRef.current]
@@ -379,32 +388,19 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         newConfig[fileName][currentIndexInConfigRef.current] = newUpdateItem
       }
 
-      onSetAIGlobalConfig(newConfig, item)
+      onSetAIGlobalConfig(newConfig)
     } catch (error) {
       isShowSaveLoadingRef.current = true
       yakitNotify('error', `更新AI模型配置失败:${error}`)
     }
   })
-  const onSetAIGlobalConfig = useMemoizedFn((config: AIGlobalConfig, option: AIModelFormSetAIGlobalConfigOptions) => {
+  const onSetAIGlobalConfig = useMemoizedFn((config: AIGlobalConfig) => {
     isShowSaveLoadingRef.current && setLoading(true)
     event
       .setAIGlobalConfig(config)
       .then(() => {
-        const { aiService, aiModelName, fileName } = option
         onSuccess?.()
         emiter.emit('onRefreshAvailableAIModelList', `${isAdd}`)
-        fileName &&
-          emiter.emit(
-            'aiModelSelectChange',
-            JSON.stringify({
-              type: 'online',
-              params: {
-                fileName,
-                AIService: aiService,
-                AIModelName: aiModelName,
-              },
-            }),
-          )
         onClose?.()
       })
       .finally(() => {

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
+  AIModelEditContentItemProps,
+  AIModelEditContentProps,
   AIModelItemProps,
   AIModelSelectListProps,
   AIModelSelectProps,
   AISelectType,
-  EnableThinkingOptType,
 } from './AIModelSelectType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
@@ -24,7 +25,6 @@ import {
 } from '../../defaultConstant'
 import { getTipByType, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
 import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import {
   OutlineBrainIcon,
@@ -34,20 +34,20 @@ import {
   OutlinePencilaltIcon,
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
-import { cloneDeep, has, isEqual } from 'lodash'
-import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { cloneDeep, has, isEqual, isNil, omit } from 'lodash'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Avatar, Form, Tooltip } from 'antd'
-import { AIAgentTriggerEventInfo } from '../../aiAgentType'
+import { Avatar, Tooltip } from 'antd'
 import { yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { createPortal } from 'react-dom'
+import { getEnableThinkingOpt, parseEnableThinkingOptValue } from '../aiModelForm/AIModelForm'
+import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {
   const m = YakitModalConfirm({
@@ -84,11 +84,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { isOpen = true, mountContainer } = props
 
-  const { setSetting } = useAIAgentDispatcher()
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   //#region AI model
   const { chatIPCData } = useChatIPCStore()
-  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
 
   const [aiType, setAIType] = useState<AISelectType>('online') //暂时只有online，后续会加"local"
 
@@ -102,52 +100,34 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
   const [open, setOpen] = useState<boolean>(false)
 
   const refRef = useRef<HTMLDivElement>(null)
+  const dropdownRenderRef = useRef<HTMLDivElement>(null)
+  const dropdownRenderRectRef = useRef<DOMRect>()
+
   const aiGlobalConfigRef = useRef<AIGlobalConfig>()
   const [inViewport = true] = useInViewport(refRef)
 
   useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        const rect = dropdownRenderRef.current?.getBoundingClientRect()
+        dropdownRenderRectRef.current = rect
+      }, 200)
+    }
+  }, [open])
+
+  useEffect(() => {
     if (!inViewport) return
     getAIModelListOption()
+
     emiter.on('onRefreshAvailableAIModelList', onRefreshAvailableAIModelList)
-    emiter.on('aiModelSelectChange', onAIModelSelectChange)
     return () => {
       emiter.off('onRefreshAvailableAIModelList', onRefreshAvailableAIModelList)
-      emiter.off('aiModelSelectChange', onAIModelSelectChange)
     }
   }, [inViewport])
 
   const onRefreshAvailableAIModelList = useMemoizedFn(() => {
     setOnlineLoading(true)
     getAIModelListOption()
-  })
-
-  /**外界ai模型的执行变化,触发里面的热更新 */
-  const onAIModelSelectChange = useMemoizedFn((res: string) => {
-    try {
-      const data: AIAgentTriggerEventInfo = JSON.parse(res)
-      const { type, params } = data
-      setAIType(type as AISelectType)
-      const fileName = params?.fileName as AIModelTypeFileName
-
-      if (fileName === AIModelTypeInterFileNameEnum.IntelligentModels) {
-        if (execute) {
-          handleSendConfigHotpatch({
-            hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
-            params: {
-              AIService: params?.AIService || '',
-              AIModelName: params?.AIModelName || '',
-            },
-          })
-        }
-        setSetting?.((old) => {
-          return {
-            ...old,
-            AIService: params?.AIService || '',
-            AIModelName: params?.AIModelName || '',
-          }
-        })
-      }
-    } catch (error) {}
   })
 
   const getAIModelListOption = useDebounceFn(
@@ -187,43 +167,14 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
   })
   const [_, event] = useAIGlobalConfig()
   /**
-   * execute为true:热更新ai配置,热更新只支持 intelligentModels
-   * execute为false:更新全局配置
+   * 更新AI配置
    * */
   const onSetAI = useMemoizedFn(() => {
     if (intelligentModels.length === 0) return
-    const aiService = intelligentModels[0]?.Provider.Type || ''
-    const aiModelName = intelligentModels[0]?.ModelName || ''
-
-    if (execute) {
-      handleSendConfigHotpatch({
-        hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_AIService,
-        params: {
-          AIService: aiService,
-          AIModelName: aiModelName,
-        },
-      })
-      setTimeout(() => {
-        getAIModelListOption()
-        if (aiType === 'online') {
-          event.onRefresh()
-        } else {
-          emiter.emit('onRefreshAIModelList')
-        }
-      }, 500)
-    } else {
-      event.setAIGlobalConfig(aiModelOptions.onlineModels).then(() => {
-        setAIModelOptions((v) => ({ ...v, onlineModels: cloneDeep(aiModelOptions.onlineModels) }))
-        aiGlobalConfigRef.current = cloneDeep(aiModelOptions.onlineModels)
-        if (aiType === 'local') emiter.emit('onRefreshAIModelList')
-      })
-    }
-    setSetting?.((old) => {
-      return {
-        ...old,
-        AIService: aiService,
-        AIModelName: aiModelName,
-      }
+    event.setAIGlobalConfig(aiModelOptions.onlineModels).then(() => {
+      setAIModelOptions((v) => ({ ...v, onlineModels: cloneDeep(aiModelOptions.onlineModels) }))
+      aiGlobalConfigRef.current = cloneDeep(aiModelOptions.onlineModels)
+      if (aiType === 'local') emiter.emit('onRefreshAIModelList')
     })
   })
 
@@ -354,6 +305,28 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
       })
     },
   )
+  const onEdit = useMemoizedFn(
+    (
+      item: AIModelConfig,
+      options: {
+        fileName: AIModelTypeFileName
+        index: number
+      },
+    ) => {
+      const { fileName, index } = options
+      setAIModelOptions((old) => {
+        const newList = [...old.onlineModels[fileName]]
+        newList.splice(index, 1, item)
+        return {
+          ...old,
+          onlineModels: {
+            ...old.onlineModels,
+            [fileName]: newList,
+          },
+        }
+      })
+    },
+  )
   const openModelTab = useMemoizedFn(() => {
     if (currentRouteKey !== YakitRoute.AI_Agent) {
       emiter.emit(
@@ -389,7 +362,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
         <AIChatSelect
           dropdownRender={(menu) => {
             return (
-              <div className={styles['drop-select-wrapper']}>
+              <div className={styles['drop-select-wrapper']} ref={dropdownRenderRef}>
                 <div className={styles['select-title']}>
                   <div className={styles['select-title-left']}>
                     <span>{t('AIModelSelect.selectModel')}</span>
@@ -443,7 +416,13 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           index,
                         })
                       }
-                      onEdit={() => {}}
+                      onEdit={(item, index) =>
+                        onEdit(item, {
+                          fileName: AIModelTypeInterFileNameEnum.IntelligentModels,
+                          index,
+                        })
+                      }
+                      dropdownRenderRectRef={dropdownRenderRectRef.current}
                     />
                   )}
                   {!execute && !!lightweightModels.length && (
@@ -487,6 +466,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
           setOpen={onSetOpen}
           optionLabelProp="label"
           value="select"
+          closestClassName={`.${styles['edit-content']}`}
         >
           {renderContent()}
         </AIChatSelect>
@@ -498,7 +478,102 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-  const { title, subTitle, list, onSelect, type, onEdit } = props
+  const { title, subTitle, list, onSelect, type, onEdit, dropdownRenderRectRef } = props
+  const [currentSelectIndex, setCurrentSelectIndex] = useState<number>()
+  const [currentItem, setCurrentItem] = useState<AIModelConfig>()
+
+  const [editStyle, setEditStyle] = useState<React.CSSProperties>()
+
+  const hideTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      clearHideTimer()
+    }
+  }, [])
+
+  const onSelectItem = useMemoizedFn((e, item: AIModelConfig, index: number) => {
+    onSelect(item, index)
+    setCurrentSelectIndex(undefined)
+  })
+
+  const onMouseEnterEditContent = useMemoizedFn((e) => {
+    e.stopPropagation()
+    clearHideTimer()
+  })
+  const onMouseLeaveEditContent = useMemoizedFn((e) => {
+    e.stopPropagation()
+    hideEditContent()
+  })
+  // 清除延迟隐藏定时器
+  const clearHideTimer = useMemoizedFn(() => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current)
+      hideTimerRef.current = null
+    }
+  })
+
+  const onMouseEnterEdit = useMemoizedFn((e: React.MouseEvent, item: AIModelConfig, index: number) => {
+    clearHideTimer()
+    if (!dropdownRenderRectRef) return
+    const { left = 0, right = 0, width } = dropdownRenderRectRef || {}
+
+    const rightContextWidth = 120
+    const rightContextHeight = 110
+    // 判断右侧屏幕剩余空间是否满足：如果不满足，则在 dropdownRenderRectRef 的左方展示
+    const spaceOnRight = window.innerWidth - right
+    let toLeft = spaceOnRight < rightContextWidth ? left - rightContextWidth - 6 : right + 6
+
+    // 判断下方屏幕剩余高度是否足够居中显示的一半高度
+    const spaceOnBottom = window.innerHeight - e.clientY
+    const halfHeight = rightContextHeight / 2
+    let toTop = 0
+
+    if (spaceOnBottom >= halfHeight) {
+      // 下方空间足够，垂直方向根据鼠标居中
+      toTop = e.clientY - halfHeight
+    } else {
+      // 下方空间不足，元素完整显示在鼠标位置的上方
+      toTop = e.clientY - rightContextHeight + 24
+    }
+
+    // 屏幕左/上边界安全防御
+    if (toLeft < 0) toLeft = width
+    if (toTop < 0) toTop = 0
+    setCurrentItem(item)
+    setCurrentSelectIndex(index)
+    setEditStyle({
+      transform: `translate(${toLeft}px, ${toTop}px)`,
+      width: rightContextWidth,
+      height: rightContextHeight,
+    })
+  })
+  const onMouseLeaveList = useMemoizedFn(() => {
+    hideEditContent()
+  })
+  // 统一的隐藏逻辑：开启定时器，如果 150ms 内没有被再次打断，则关闭弹窗
+  const hideEditContent = useMemoizedFn(() => {
+    clearHideTimer()
+    hideTimerRef.current = setTimeout(() => {
+      setCurrentItem(undefined)
+      setCurrentSelectIndex(undefined)
+      setEditStyle(undefined)
+    }, 150)
+  })
+  const isShowEditContent = useCreation(() => {
+    return !isNil(currentSelectIndex) && !!currentItem
+  }, [currentSelectIndex, currentItem])
+  const onEditContentChange = useMemoizedFn((v: AIModelConfig) => {
+    if (isNil(currentSelectIndex)) return
+    setCurrentItem(() => ({
+      ...v,
+      Provider: {
+        ...v.Provider,
+      },
+    }))
+    onEdit(v, currentSelectIndex)
+  })
   return (
     <div className={styles['ai-model-select-list-wrapper']}>
       <div className={styles['ai-model-select-list-wrapper-header']}>
@@ -514,9 +589,96 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
           <div
             key={index}
             className={classNames(styles['ai-online-model-list-row'])}
-            onClick={() => onSelect(item, index)}
+            onClick={(e) => onSelectItem(e, item, index)}
           >
-            <AIModelItem type={type} item={item} checked={index === 0} onEdit={(item) => onEdit(item, index)} />
+            <AIModelItem
+              type={type}
+              item={item}
+              checked={index === 0}
+              isSelected={index === currentSelectIndex}
+              onEdit={(item) => onEdit(item, index)}
+              onMouseEnterEdit={(e) => onMouseEnterEdit(e, item, index)}
+              onMouseLeaveEdit={onMouseLeaveList}
+            />
+          </div>
+        ))}
+      </div>
+      {createPortal(
+        <div
+          className={classNames(styles['edit-content'])}
+          style={isShowEditContent ? { ...editStyle } : {}}
+          onClick={(e) => e.stopPropagation()}
+          onMouseEnter={onMouseEnterEditContent}
+          onMouseLeave={onMouseLeaveEditContent}
+        >
+          {<AIModelEditContent item={currentItem} onEdit={onEditContentChange} />}
+        </div>,
+        document.body,
+      )}
+    </div>
+  )
+})
+
+const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props) => {
+  const { item, onEdit } = props
+
+  const onEditChange = useMemoizedFn((v: string, filed: keyof ThirdPartyApplicationConfig) => {
+    if (!item) return
+    let newItemProvider = cloneDeep(item.Provider)
+    switch (filed) {
+      case 'EnableThinkingOpt':
+        const enableThinkingOpt = parseEnableThinkingOptValue(v)
+        if (enableThinkingOpt !== undefined) {
+          newItemProvider.EnableThinkingOpt = enableThinkingOpt
+        } else {
+          newItemProvider = omit(newItemProvider, ['EnableThinkingOpt'])
+        }
+        break
+      default:
+        break
+    }
+
+    onEdit?.({
+      ...item,
+      Provider: {
+        ...newItemProvider,
+      },
+    })
+  })
+  const enableThinkingOpt = useCreation(() => {
+    if (!item?.Provider) return 'no-set'
+    return getEnableThinkingOpt(item?.Provider)
+  }, [item?.Provider])
+  return (
+    <div className={styles['edit-content-wrapper']}>
+      <AIModelEditContentItem
+        filed="EnableThinkingOpt"
+        options={EnableThinkingOptions}
+        title="Enable Thiking"
+        value={enableThinkingOpt}
+        onChange={(v) => onEditChange(v, 'EnableThinkingOpt')}
+      />
+    </div>
+  )
+})
+
+const AIModelEditContentItem: React.FC<AIModelEditContentItemProps> = React.memo((props) => {
+  const { title, options, onChange, value } = props
+  const onSelect = useMemoizedFn((v: string) => {
+    onChange(v)
+  })
+  return (
+    <div className={styles['edit-content-item']}>
+      <div className={styles['edit-content-title']}>{title}</div>
+      <div className={styles['edit-content-options']}>
+        {options.map((option) => (
+          <div
+            key={option.value}
+            className={styles['edit-content-options-item']}
+            onClick={() => onSelect(option.value)}
+          >
+            <span>{option.label}</span>
+            {value === option.value && <OutlineCheckIcon className={styles['edit-content-check']} />}
           </div>
         ))}
       </div>
@@ -534,7 +696,7 @@ export const EnableThinkingOptions = [
 ]
 
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
-  const { type, item, checked, onEdit } = props
+  const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props
 
   const value = useCreation(() => {
     return item?.ModelName
@@ -555,7 +717,12 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   }, [item])
 
   return (
-    <div className={classNames(styles['select-option-wrapper'])}>
+    <div
+      className={classNames(styles['select-option-wrapper'], {
+        [styles['select-option-wrapper-select']]: !!isSelected,
+      })}
+      onMouseLeave={onMouseLeaveEdit}
+    >
       <div className={styles['select-option-left']}>
         {icon}
         <div className={styles['option-text']} title={value}>
@@ -567,6 +734,18 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
       </div>
       <div className={styles['select-option-right']}>
         {checked && <OutlineCheckIcon className={styles['check-icon']} />}
+        {type === AIModelTypeEnum.TierIntelligent && (
+          <YakitButton
+            type="text2"
+            size="small"
+            className={styles['edit-icon']}
+            icon={<OutlinePencilaltIcon />}
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+            onMouseEnter={onMouseEnterEdit}
+          />
+        )}
       </div>
     </div>
   )

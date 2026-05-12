@@ -209,17 +209,6 @@ export const onSelectAIModel = (data: {
     grpcSetAIGlobalConfig(newAIGlobalConfig).then(() => {
       onSuccess()
     })
-    emiter.emit(
-      'aiModelSelectChange',
-      JSON.stringify({
-        type: 'online',
-        params: {
-          AIService: item.Provider.Type,
-          AIModelName: item.ModelName,
-          fileName,
-        },
-      }),
-    )
     emiter.emit('onRefreshAvailableAIModelList')
   } catch (error) {}
 }

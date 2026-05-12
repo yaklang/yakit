@@ -107,7 +107,6 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   EnableQwenNoThinkMode: false,
   AllowPlanUserInteract: true,
   PlanUserInteractMaxCount: 3,
-  AIService: '',
   ReActMaxIteration: 100,
   TimelineItemLimit: 100,
   TimelineContentSizeLimit: 60,

@@ -4,6 +4,7 @@ import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnu
 import { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '../ai-re-act/hooks/grpcApi'
 import { HandleStartParams } from './aiAgentChat/type'
 import { AIMentionCommandParams } from './components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import { omit } from 'lodash'
 
 /**
  * @name 将一维tree转换成树结构
@@ -69,8 +70,11 @@ export const formatNumberUnits = (num: number) => {
 
 /** @name 将全局配置信息转换为可以请求的数据结构 */
 export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting => {
-  const data: AIAgentSetting = { ...setting }
-
+  /**
+   * AIService/AIModelName 已经废弃
+   */
+  let data: AIAgentSetting = { ...setting }
+  data = omit(data, ['AIService', 'AIModelName'])
   try {
     data.EnableSystemFileSystemOperator =
       setting.EnableSystemFileSystemOperator ?? AIAgentSettingDefault.EnableSystemFileSystemOperator
@@ -107,9 +111,6 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
       } else {
         data.PlanUserInteractMaxCount = 3
       }
-    }
-    if (!isNil(setting?.AIService)) {
-      data.AIService = setting.AIService
     }
     if (!isNil(setting?.ReActMaxIteration)) {
       data.ReActMaxIteration = setting.ReActMaxIteration || AIAgentSettingDefault.ReActMaxIteration

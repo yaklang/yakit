@@ -37,6 +37,7 @@ import { SplitView } from '../yakRunner/SplitView/SplitView'
 import { AIBottomDetails } from './aiBottomDetails/AIBottomDetails'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { omit } from 'lodash'
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = '20260113'
@@ -113,7 +114,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
   // 缓存全局配置数据
   useUpdateEffect(() => {
-    setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(getSetting()))
+    const cache = omit(getSetting(), ['AIService', 'AIModelName'])
+    setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
   }, [setting])
 
   const loadHistoryData = useMemoizedFn(async (): Promise<number> => {
@@ -183,8 +185,9 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             try {
               const cache = JSON.parse(res) as AIAgentSetting
               if (typeof cache !== 'object') return
+              const newCache = omit(cache, ['AIService', 'AIModelName'])
               setSetting({
-                ...cache,
+                ...newCache,
                 SyncPerceptionTrigger: false,
                 EnablePlan: false,
               })

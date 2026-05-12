@@ -167,7 +167,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 export default AIReviewRuleSelect
 
 export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
-  const { getList, dropdownRender, children, setOpen: defSetOpen, ...rest } = props
+  const { getList, dropdownRender, children, setOpen: defSetOpen, closestClassName, ...rest } = props
   const [open, setOpen] = useControllableValue(props, {
     defaultValue: false,
     valuePropName: 'open',
@@ -177,17 +177,19 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
   const selectWrapperRef = useRef<HTMLDivElement>(null)
   const dropdownRenderRef = useRef<HTMLDivElement>(null)
 
-  useClickAway(() => {
-    if (open) setOpen(false)
-  }, [selectWrapperRef])
+  useClickAway(
+    (e: Event) => {
+      const target = e.target as HTMLElement
+      // 如果点击的元素或其父级是我们不想触发关闭的元素（如二级悬浮层），直接忽略
+      if (closestClassName && target.closest(closestClassName)) {
+        return
+      }
+      if (open) setOpen(false)
+    },
+    [selectWrapperRef, dropdownRenderRef],
+    'mousedown',
+  )
 
-  const onMouseEnterDropdown = useMemoizedFn((e) => {
-    e.stopPropagation()
-  })
-  const onMouseLeaveDropdown = useMemoizedFn((e) => {
-    e.stopPropagation()
-    setOpen(false)
-  })
   const onSelectWrapperClick = useMemoizedFn((e) => {
     if (open) {
       setOpen(false)
@@ -199,11 +201,7 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
     setOpen(true)
     getList && getList()
   })
-  const onDropdownRender = useMemoizedFn((menu) => (
-    <div onMouseEnter={onMouseEnterDropdown} onMouseLeave={onMouseLeaveDropdown} ref={dropdownRenderRef}>
-      {dropdownRender(menu, setOpen)}
-    </div>
-  ))
+  const onDropdownRender = useMemoizedFn((menu) => <div ref={dropdownRenderRef}>{dropdownRender(menu, setOpen)}</div>)
   return (
     <div ref={selectWrapperRef} className={classNames(styles['ai-chat-select-wrapper'])} onClick={onSelectWrapperClick}>
       <YakitSelect
