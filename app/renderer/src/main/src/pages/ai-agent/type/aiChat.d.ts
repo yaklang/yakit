@@ -30,8 +30,8 @@ export interface AIContextSectionsDetail {
 export interface AIChatData {
   /** 获取历史数据时的最早ID节点 */
   beforeID: {
-    timelineID: string
-    chatID: string
+    timelineID: number
+    chatID: number
   }
   /** 记录数据里所有的coordinatorIDs */
   coordinatorIDs: string[]

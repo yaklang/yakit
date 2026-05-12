@@ -165,7 +165,7 @@ class AIChatMessageStore {
         if (desc) {
           // desc=true: 取锚点之后更“新”的消息。
           const range = IDBKeyRange.bound(
-            [sessionId, anchor.orderNum],
+            [sessionId, anchor.cacheOrder],
             [sessionId, Number.POSITIVE_INFINITY],
             true,
             false,
@@ -175,7 +175,7 @@ class AIChatMessageStore {
           // desc=false: 取锚点之前更“旧”的消息。
           const range = IDBKeyRange.bound(
             [sessionId, Number.NEGATIVE_INFINITY],
-            [sessionId, anchor.orderNum],
+            [sessionId, anchor.cacheOrder],
             false,
             true,
           )
@@ -206,12 +206,12 @@ class AIChatMessageStore {
       tx.onabort = () => reject(tx.error)
 
       // 找第一个 isHistory:true 的记录作锚点，用它的 orderNum 推导新消息的相对位置。
-      const anchorIdx = list.findIndex((item) => item.isHistory)
+      const anchorIdx = list.findIndex((item) => item.isCached)
 
       if (anchorIdx !== -1) {
-        const anchorOrderNum = list[anchorIdx].orderNum
+        const anchorOrderNum = list[anchorIdx].cacheOrder
         for (let i = 0; i < list.length; i++) {
-          if (!list[i].isHistory) {
+          if (!list[i].isCached) {
             store.put({ ...list[i], orderNum: anchorOrderNum + (i - anchorIdx) })
           }
         }
@@ -225,7 +225,7 @@ class AIChatMessageStore {
       cursorReq.onerror = () => reject(cursorReq.error)
       cursorReq.onsuccess = () => {
         const cursor = cursorReq.result
-        let base = cursor ? (cursor.value as DialogueRecord).orderNum + 1 : 0
+        let base = cursor ? (cursor.value as DialogueRecord).cacheOrder + 1 : 0
         for (const item of list) {
           store.put({ ...item, orderNum: base++ })
         }

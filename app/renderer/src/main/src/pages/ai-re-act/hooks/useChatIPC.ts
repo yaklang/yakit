@@ -412,7 +412,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   /** 请求更多数据加载 */
   const handleLoadMore: UseChatIPCEvents['handleLoadMoreHistory'] = useMemoizedFn(
-    (chatType: ReActChatBaseInfo['chatType'], request: AIInputEvent) => {
+    (chatType: ReActChatBaseInfo['chatType']) => {
       if (!chatID.current) return
       return requestEvents.handleLoadMore(chatID.current, chatType)
     },
@@ -660,10 +660,14 @@ function useChatIPC(params?: UseChatIPCParams) {
     }
     try {
       cacheDataStore?.updater(session, answer)
-      /**
-       * TODO:
-       * 会话启动的初始化save
-       */
+      const store = getChatDataStore()
+      if (!store) return
+      requestEvents.handleSave(session, {
+        casualElements: store.casualChat.elements,
+        taskElements: store.taskChat.elements,
+        casualContentMap: store.casualChat.contents,
+        taskContentMap: store.taskChat.contents,
+      })
     } catch {}
   })
 
@@ -700,6 +704,14 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
         // console.log('onStart-res', res, ipcContent)
+
+        if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
+          const httpNotice = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
+          const chatStore = getChatDataStore()
+          if (chatStore) chatStore.beforeID.chatID = httpNotice.next_start_id
+          requestEvents.handleGrpcLoadMore(httpNotice)
+          return
+        }
 
         if (res.Type === 'yak_httpflow_count') {
           // 产生一条http流量数据时的通知
@@ -1055,10 +1067,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
       cb?.()
-      /**
-       * TODO:
-       * 会话启动的初始化initRequest
-       */
+      requestEvents.handleLoadInit(token)
     }, 50)
   })
 
@@ -1214,6 +1223,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       cancelTaskLoading,
       historyState,
       notifyMessage,
+      requestHistoryState: requestState,
     }
   }, [
     execute,

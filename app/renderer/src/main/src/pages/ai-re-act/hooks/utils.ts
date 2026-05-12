@@ -131,7 +131,7 @@ export const isToolExecStream = (nodeID: string) => {
 export const indexedDBDataToReActChatRenderItem = (
   chatType: ReActChatRenderItem['chatType'],
   data: DialogueRecord[],
-): Omit<ReActChatRenderItem, 'renderNum'>[] =>
+): ReActChatRenderItem[] =>
   data.map((item) => {
     if (item.isGroup) {
       return {
@@ -140,6 +140,8 @@ export const indexedDBDataToReActChatRenderItem = (
         type: item.type as AIChatQSDataType,
         isGroup: true as const,
         children: JSON.parse(item.children || '[]'),
+        renderNum: 0,
+        isCached: true,
       }
     }
     return {
@@ -147,5 +149,7 @@ export const indexedDBDataToReActChatRenderItem = (
       token: item.id,
       type: item.type as AIChatQSDataType,
       isGroup: false,
+      renderNum: 0,
+      isCached: true,
     }
   })

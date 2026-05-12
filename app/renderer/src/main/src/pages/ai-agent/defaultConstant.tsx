@@ -298,6 +298,12 @@ export const defaultChatIPCData: UseChatIPCState = {
     chatsLoading: false,
   },
   notifyMessage: null,
+  requestHistoryState: {
+    initLoading: false,
+    casualLoadMoreLoading: false,
+    taskLoadMoreLoading: false,
+    saveLoading: false,
+  },
 }
 //#endregion
 

@@ -26,10 +26,10 @@ export const DIALOGUE_CONTENT_STORE = 'dialogueContent'
 // 消息表主键：同一 session 下用消息 id 唯一定位一条记录。
 export const COMPOUND_KEY: [keyof DialogueRecord, keyof DialogueRecord] = ['sessionId', 'id']
 
-// 消息表排序索引：支持按 session 内的 orderNum 做分页读取。
-export const SESSION_ORDER: [keyof DialogueRecord, keyof DialogueRecord] = ['sessionId', 'orderNum']
+// 消息表排序索引：支持按 session 内的 cacheOrder 做分页读取。
+export const SESSION_ORDER: [keyof DialogueRecord, keyof DialogueRecord] = ['sessionId', 'cacheOrder']
 
-export const INDEX_BY_SESSION_ORDER = 'bySessionIdAndOrderNum'
+export const INDEX_BY_SESSION_ORDER = 'bySessionIdAndCacheOrder'
 
 // 对话正文表主键：sessionId + id 唯一定位一条正文。
 export const CONTENT_COMPOUND_KEY: [keyof DialogueContentRecord, keyof DialogueContentRecord] = ['sessionId', 'id']

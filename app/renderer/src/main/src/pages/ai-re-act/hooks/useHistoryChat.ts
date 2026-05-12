@@ -47,7 +47,7 @@ function useHistoryChat(params?: UseHistoryChatParams) {
   } = params || {}
 
   // 更新当前session的历史数据请求基线(beforeID)
-  const updateBeforeID = useMemoizedFn((type: loadMoreType, chatID: string) => {
+  const updateBeforeID = useMemoizedFn((type: loadMoreType, chatID: number) => {
     const dataStore = getChatDataStore?.()
     if (dataStore && dataStore.beforeID) {
       dataStore.beforeID[type] = chatID
@@ -85,7 +85,7 @@ function useHistoryChat(params?: UseHistoryChatParams) {
         return
       }
 
-      updateBeforeID('timelineID', `${Events[Events.length - 1].ID}`)
+      updateBeforeID('timelineID', Number(Events[Events.length - 1].ID))
       const timelineItems: AIAgentGrpcApi.TimelineItem[] = Events.map((item) => {
         let ipcContent = Uint8ArrayToString(item.Content) || ''
         return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
@@ -1101,7 +1101,7 @@ function useHistoryChat(params?: UseHistoryChatParams) {
         hasMoreChats.current = false
         return
       }
-      updateBeforeID('chatID', `${Events[Events.length - 1].ID}`)
+      updateBeforeID('chatID', Number(Events[Events.length - 1].ID))
       isUpdateCasual.current = false
       handleChatData([...Events])
       updateCasualElement(session)

@@ -69,6 +69,7 @@ export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
     handleUserManualIntervention: () => {},
     fetchHasMore: () => true,
     loadMore: () => {},
+    handleLoadMoreHistory: () => {},
   },
   handleSendCasual: () => {},
   handleSendTask: () => {},

@@ -397,8 +397,8 @@ export interface AIMessageDataProps {
     chatType: ReActChatBaseInfo['chatType'],
     ...args: Parameters<UseHookStateFunc['setContentMap']>
   ) => void
-  setCasualElements: UseHookStateFunc['setElements'] // todo 要加renderNum
-  setTaskElements: UseHookStateFunc['setElements'] // todo 要加renderNum
+  setCasualElements: UseHookStateFunc['setElements']
+  setTaskElements: UseHookStateFunc['setElements']
   grpcLoadMore?: (request: { limit: number; start_id?: number }) => void
 }
 
@@ -406,26 +406,26 @@ export interface AIFnBaseParams {
   sessionId: string
 }
 
-export interface LoadMoreParams extends AIFnBaseParams {
-  chatType: ReActChatBaseInfo['chatType']
-}
-
 /** 游标：记录每个 store 下一次加载的起始位置 */
 export interface PaginationCursors {
   casualId?: string
   taskId?: string
+}
+export interface SessionMetadata {
+  offset: number
 }
 
 export interface UseAIMessageDataState {
   /** 初始化加载中 */
   initLoading: boolean
   /** 加载更多加载中 */
-  loadMoreLoading: boolean //react?task对话
+  casualLoadMoreLoading: boolean
+  taskLoadMoreLoading: boolean
   /** save的加载状态 */
   saveLoading: boolean
 }
 export interface UseAIMessageDataEvents {
-  /** 给UI使用的hasmore获取方法 */
+  /** 给UI使用的hasMore获取方法 */
   handleHasMore: (chatType: ReActChatBaseInfo['chatType']) => boolean
   /** grpc请求历史数据的返回数据 */
   handleGrpcLoadMore: (res: AIAgentGrpcApi.RecoveryHistory) => void
@@ -439,21 +439,11 @@ export interface UseAIMessageDataEvents {
   handleSave: (
     session: string,
     data: {
-      beforeID: string
       casualElements: AIChatData['casualChat']['elements']
       taskElements: AIChatData['taskChat']['elements']
       casualContentMap: AIChatData['casualChat']['contents']
       taskContentMap: AIChatData['taskChat']['contents']
     },
   ) => void
-
-  /** grpc接口关闭后的后续处理逻辑 */
-  handleCloseGrpc: () => void
-  /** 当前任务规划结束-触发UI展示结束标识 */
-  handlePlanExecEnd: (res: AIOutputEvent) => void
-  /** 用户手动介入逻辑 */
-  handleUserManualIntervention: (chatInfo: AIChatQSData) => void
-  /** 清空当前任务树 */
-  handleResetPlanTree: () => void
 }
 // #endregion

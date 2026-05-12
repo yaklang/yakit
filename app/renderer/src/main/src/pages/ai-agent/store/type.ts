@@ -5,12 +5,12 @@ export type { StoreName }
 // 一条聊天消息记录，对应消息表中的单行数据。
 export interface DialogueRecord {
   id: string
-  orderNum: number
+  cacheOrder: number
   type: string
   isGroup: boolean
   children?: string
   sessionId: string
-  isHistory?: boolean
+  isCached?: boolean
 }
 
 export interface DialogueContentRecord {
