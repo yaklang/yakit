@@ -29,10 +29,15 @@ const CONTEXT_STATS_ROLE_NAME_ORDER = [
 ] as const
 
 const trimContextStatsSeries = (d: AIContextStatsDetail['data']) => {
+  if (!Array.isArray(d.total_prompt_bytes)) d.total_prompt_bytes = []
+  if (!Array.isArray(d.total_prompt_tokens)) d.total_prompt_tokens = []
   while (d.times.length > CONTEXT_STATS_SERIES_MAX) {
     d.times.shift()
+    d.total_prompt_bytes.shift()
+    d.total_prompt_tokens.shift()
     for (const name of d.role_order) {
       d.role_series[name]?.shift()
+      d.role_tokens[name]?.shift()
     }
   }
 }
@@ -198,17 +203,26 @@ function useAIPerfData(params?: UseAIPerfDataParams) {
           }
 
           stats.prompt_bytes = data.prompt_bytes ?? 0
+          stats.prompt_tokens = data.prompt_tokens ?? 0
           d.times.push(ts)
+          d.total_prompt_bytes.push(data.prompt_bytes ?? 0)
+          d.total_prompt_tokens.push(data.prompt_tokens ?? 0)
 
           if (d.role_order.length > 0) {
             const map = new Map<string, number>()
+            const tokenMap = new Map<string, number>()
             for (const r of incomingRoles) {
               if (!d.role_order.includes(r.role_name)) continue
               map.set(r.role_name, r.role_bytes ?? 0)
+              tokenMap.set(r.role_name, r.role_tokens ?? 0)
             }
             for (const name of d.role_order) {
               if (!d.role_series[name]) d.role_series[name] = []
               d.role_series[name].push(map.get(name) ?? 0)
+            }
+            for (const name of d.role_order) {
+              if (!d.role_tokens[name]) d.role_tokens[name] = []
+              d.role_tokens[name].push(tokenMap.get(name) ?? 0)
             }
           }
 

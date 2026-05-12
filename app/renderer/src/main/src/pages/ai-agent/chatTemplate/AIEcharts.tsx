@@ -808,12 +808,17 @@ const TOKEN_COUNT_ROLE_COLOR_KEYS = [
   '--yakit-colors-Orange-50',
 ]
 
-// 上下文字节统计
-const getTokenCountChartData = (contextStatsData?: AIContextStatsDetail['data']) => {
+export type ContextStatsChartMetric = 'bytes' | 'tokens'
+
+// 上下文字节 / Token 统计
+const getTokenCountChartData = (
+  contextStatsData?: AIContextStatsDetail['data'],
+  metric: ContextStatsChartMetric = 'bytes',
+) => {
   const times = contextStatsData?.times || []
   const roleOrder = contextStatsData?.role_order || []
   const roleLabels = contextStatsData?.role_labels || {}
-  const roleSeries = contextStatsData?.role_series || {}
+  const roleSeries = metric === 'tokens' ? contextStatsData?.role_tokens || {} : contextStatsData?.role_series || {}
 
   if (roleOrder.length > 0) {
     const stackSums = times.map((_, i) => roleOrder.reduce((sum, key) => sum + (Number(roleSeries[key]?.[i]) || 0), 0))
@@ -885,14 +890,17 @@ const withAlpha = (color: string, alpha: number) => {
 const getTokenCountOption = (
   colors: Record<string, string>,
   contextStatsData?: AIContextStatsDetail['data'],
+  metric: ContextStatsChartMetric = 'bytes',
 ): EChartsOption => {
-  const tokenCountData = getTokenCountChartData(contextStatsData)
+  const tokenCountData = getTokenCountChartData(contextStatsData, metric)
   const yAxisInterval = getNiceAxisInterval(tokenCountData.yAxisMax)
   const totalColor = colors['--yakit-colors-Success-50']
   const systemPromptColor = colors['--yakit-colors-Blue-50']
   const borderColor = colors['--Colors-Use-Neutral-Border']
   const textColor = colors['--Colors-Use-Neutral-Text-3-Secondary']
   const titleColor = colors['--Colors-Use-Neutral-Text-2-Primary']
+  const totalsAtIndex =
+    metric === 'tokens' ? contextStatsData?.total_prompt_tokens || [] : contextStatsData?.total_prompt_bytes || []
 
   const buildStackedAreaLine = (
     name: string,
@@ -994,11 +1002,17 @@ const getTokenCountOption = (
       formatter: (params) => {
         const list = Array.isArray(params) ? params : [params]
         const axisValue = Number(list?.[0]?.axisValue || 0)
+        const dataIndex = Number(list?.[0]?.dataIndex ?? 0)
         const timeLabel = axisValue ? moment.unix(axisValue).format('YYYY-MM-DD HH:mm:ss') : ''
+        const totalsBytes = totalsAtIndex
+        const totalAtPoint = Number(totalsBytes[dataIndex] ?? 0)
 
         const rows = list
           .map((item) => {
-            return `${item.marker}${item.seriesName} ${formatNumberUnits(Number(item.value || 0))}`
+            const val = Number(item.value || 0)
+            const pct =
+              totalAtPoint > 0 ? ` (${((val / totalAtPoint) * 100).toFixed(1)}%)` : ''
+            return `${item.marker}${item.seriesName} ${formatNumberUnits(val)}${pct}`
           })
           .join('<br/>')
 
@@ -1039,6 +1053,12 @@ const getTokenCountOption = (
           margin: 10,
           formatter: (value) => moment.unix(Number(value)).format('HH:mm'),
         },
+        /** 类目轴值为 Unix 秒，十字准线默认会把原始数标在图底，与 tooltip 时间重复且难读 */
+        axisPointer: {
+          label: {
+            show: false,
+          },
+        },
       },
     ],
     yAxis: [
@@ -1072,9 +1092,13 @@ const getTokenCountOption = (
 
 export const TokenCountEcharts: FC<{
   contextStatsData?: AIContextStatsDetail['data']
-}> = memo(({ contextStatsData }) => {
+  metric?: ContextStatsChartMetric
+}> = memo(({ contextStatsData, metric = 'bytes' }) => {
   const colors = useGetColorsByTheme()
-  const option = useMemo(() => getTokenCountOption(colors, contextStatsData), [colors, contextStatsData])
+  const option = useMemo(
+    () => getTokenCountOption(colors, contextStatsData, metric),
+    [colors, contextStatsData, metric],
+  )
 
   return <ReactECharts option={option} style={{ width: '100%', height: 240 }} />
 })

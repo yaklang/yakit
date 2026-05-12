@@ -729,6 +729,7 @@ export declare namespace AIAgentGrpcApi {
     role_name: string
     role_name_zh?: string
     role_bytes: number
+    role_tokens: number
   }
 
   /** 上下文字节统计和上下文成分 */
@@ -737,7 +738,7 @@ export declare namespace AIAgentGrpcApi {
     nonce: string
     /** 总字节数 */
     prompt_bytes: number
-    prompt_tokens?: number
+    prompt_tokens: number
     prompt_lines: number
     section_count: number
     included_section_count: number
