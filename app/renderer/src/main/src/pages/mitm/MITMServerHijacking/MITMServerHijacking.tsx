@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Divider, Form, notification, Tooltip, Typography } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import ChromeLauncherButton from '@/pages/mitm/MITMChromeLauncher'
@@ -58,7 +58,7 @@ type MITMStatus = 'hijacking' | 'hijacked' | 'idle'
 const { Text } = Typography
 
 export interface MITMServerHijackingProp {
-  addr: string
+  showPort: string[]
   host: string
   port: number
   disableCACertPage: boolean
@@ -103,7 +103,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     host,
     port,
     disableCACertPage,
-    addr,
+    showPort,
     status,
     setStatus,
     autoForward,
@@ -323,13 +323,23 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     grpcMITMSetDownstreamProxy(proxyValue)
   })
 
+  const showAddr = useMemo(() => {
+    const maxDisplay = 5 // 最多显示5个端口
+    const displayData = showPort.slice(0, maxDisplay).join(', ') // 取前3个
+    const remainingCount = showPort.length - maxDisplay // 剩余数量
+    const showPortText = remainingCount > 0 ? `${displayData} +${remainingCount}...` : displayData
+    return `${host}:${showPortText}`
+  }, [host, showPort])
+
   return (
     <div className={style['mitm-server']}>
       <div className={style['mitm-server-heard']} ref={heardRef}>
         <div className={style['mitm-server-title']}>
           <div className={style['mitm-server-heard-name']}>劫持 HTTP Request</div>
           <div className={style['mitm-server-heard-addr']}>
-            <span className={style['mitm-server-heard-addr-text']}>{addr}</span>
+            <span className={style['mitm-server-heard-addr-text']}>
+              <Tooltip title={`${host}:${showPort}`}>{showAddr}</Tooltip>
+            </span>
             <div className={style['mitm-server-heard-addr-tags']}>
               {tip
                 .split('|')

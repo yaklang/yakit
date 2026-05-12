@@ -121,9 +121,10 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
   const statusRef = useRef<MitmStatus>(status)
   const [isHasParams, setIsHasParams] = useState<boolean>(false) // mitm插件类型是否带参数
   // 通过启动表单的内容
-  const [addr, setAddr] = useState('')
   const [host, setHost] = useState('127.0.0.1')
   const [port, setPort] = useState(8083)
+  const extraPortRef = useRef<string[]>([])
+  const [showPort, setShowPort] = useState(['8083'])
   const [disableCACertPage, setDisableCACertPage] = useState(false)
   const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false)
   const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
@@ -312,7 +313,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
       certs: ClientCertificate[],
       extra?: ExtraMITMServerProps,
     ) => {
-      setAddr(`${host}:${port}`)
+      const extraPort = extra?.ExtraPort || []
+      extraPortRef.current = extraPort
+      setShowPort([...new Set([port, ...extraPort])])
       setHost(host)
       setPort(port)
       setDisableCACertPage(extra?.disableCACertPage || false)
@@ -426,7 +429,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         return (
           <MITMServerHijacking
             port={port}
-            addr={addr}
+            showPort={showPort}
             host={host}
             disableCACertPage={disableCACertPage}
             status={status}
@@ -457,27 +460,27 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     }
   })
 
+  const onChangeAddrAndEnableInitialPlugin = useMemoizedFn((values) => {
+    try {
+      const valObj = JSONParseLog(values, { page: 'MITMPage', fun: 'onChangeAddrAndEnableInitialPlugin' }) || {}
+      if (valObj.version !== mitmVersion) return
+      setShowPort([...new Set([valObj.port, ...extraPortRef.current])])
+      setHost(valObj.host)
+      setPort(valObj.port)
+      setEnableInitialMITMPlugin(valObj.enableInitialPlugin)
+      if (!valObj.enableInitialPlugin) {
+        emiter.emit('onClearMITMHackPlugin', mitmVersion)
+      }
+      setRemoteValue(MITMConsts.MITMDefaultPort, `${valObj.port}`)
+      onSetRemoteValuesBase({
+        cacheHistoryDataKey: CacheDropDownGV.MITMDefaultHostHistoryList,
+        newValue: valObj.host,
+        isCacheDefaultValue: true,
+      })
+      setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, valObj.enableInitialPlugin ? 'true' : '')
+    } catch (error) {}
+  })
   useEffect(() => {
-    const onChangeAddrAndEnableInitialPlugin = (values) => {
-      try {
-        const valObj = JSONParseLog(values, { page: 'MITMPage', fun: 'onChangeAddrAndEnableInitialPlugin' }) || {}
-        if (valObj.version !== mitmVersion) return
-        setAddr(`http://${valObj.host}:${valObj.port} ${t('MITMPage.or')} socks5://${valObj.host}:${valObj.port}`)
-        setHost(valObj.host)
-        setPort(valObj.port)
-        setEnableInitialMITMPlugin(valObj.enableInitialPlugin)
-        if (!valObj.enableInitialPlugin) {
-          emiter.emit('onClearMITMHackPlugin', mitmVersion)
-        }
-        setRemoteValue(MITMConsts.MITMDefaultPort, `${valObj.port}`)
-        onSetRemoteValuesBase({
-          cacheHistoryDataKey: CacheDropDownGV.MITMDefaultHostHistoryList,
-          newValue: valObj.host,
-          isCacheDefaultValue: true,
-        })
-        setRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN, valObj.enableInitialPlugin ? 'true' : '')
-      } catch (error) {}
-    }
     emiter.on('onChangeAddrAndEnableInitialPlugin', onChangeAddrAndEnableInitialPlugin)
     return () => {
       emiter.off('onChangeAddrAndEnableInitialPlugin', onChangeAddrAndEnableInitialPlugin)
@@ -515,6 +518,7 @@ export interface ExtraMITMServerProps {
   dnsServers: string[]
   hosts: KVPair[]
   EnableHostsMappingBeforeDownstreamProxy: boolean
+  ExtraPort: string[]
   /**@name 过滤WebSocket */
   filterWebsocket: boolean
   /**禁用初始页 */

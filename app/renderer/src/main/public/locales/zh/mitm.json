@@ -190,8 +190,7 @@
     "ruleGroup": "规则组：",
     "downstreamProxy": "下游代理：",
     "onlyGMTLS": "|仅国密 TLS",
-    "enableProxyAuth": "|开启代理认证",
-    "or": "或"
+    "enableProxyAuth": "|开启代理认证"
   },
   "MITMServer": {
     "passive_plugin": "被动插件",
@@ -339,6 +338,7 @@
     "proxyAuthHelp": "为劫持代理启动认证，需要在代理客户端配置代理认证信息",
     "proxyAuthUsername": "代理认证用户名",
     "proxyAuthPassword": "代理认证密码",
+    "extraPort": "额外监听端口",
     "filterWebsocket": "过滤WebSocket",
     "disableInitPage": "禁用初始页",
     "disableInitPageHelp": "开启后免配置启动不会访问初始页面",

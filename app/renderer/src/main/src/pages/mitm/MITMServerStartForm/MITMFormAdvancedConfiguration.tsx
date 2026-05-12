@@ -372,6 +372,18 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             </>
           )}
           <Form.Item
+            label={t('MITMFormAdvancedConfiguration.extraPort')}
+            name="ExtraPort"
+            rules={[
+              {
+                pattern: /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
+                message: '请输入正确的端口号',
+              },
+            ]}
+          >
+            <YakitSelect mode="tags"></YakitSelect>
+          </Form.Item>
+          <Form.Item
             label={t('MITMFormAdvancedConfiguration.filterWebsocket')}
             name="filterWebsocket"
             valuePropName="checked"

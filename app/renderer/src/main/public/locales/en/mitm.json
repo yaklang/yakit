@@ -190,8 +190,7 @@
     "ruleGroup": "Rule Group: ",
     "downstreamProxy": "Downstream Proxy: ",
     "onlyGMTLS": "|GM-TLS Only",
-    "enableProxyAuth": "|Enable Proxy Auth",
-    "or": "or"
+    "enableProxyAuth": "|Enable Proxy Auth"
   },
   "MITMServer": {
     "passive_plugin": "Passive Plugin",
@@ -339,6 +338,7 @@
     "proxyAuthHelp": "Enable authentication for the hijack proxy and configure it in the proxy client.",
     "proxyAuthUsername": "Proxy Auth Username",
     "proxyAuthPassword": "Proxy Auth Password",
+    "extraPort": "Additional listening port",
     "filterWebsocket": "Filter WebSocket",
     "disableInitPage": "Disable Initial Page",
     "disableInitPageHelp": "When enabled, startup without configuration will not visit the initial page.",

@@ -8852,6 +8852,11 @@ message MITMV2Request{
   string SNI = 51; // SNI 值
   bool OverwriteSNI = 52; // 是否覆盖自动推断的 SNI
   repeated KVPair SNIMapping = 53; // SNI 映射表，支持 glob 通配符
+
+  // Additional ports for the MITM listener to bind simultaneously.
+  // When non-empty, the server will listen on Port (primary) and all ExtraPorts.
+  // All ports share the same MITM server instance and configuration.
+  repeated uint32 ExtraPorts = 57;
 }
 
 message MITMV2Response {
