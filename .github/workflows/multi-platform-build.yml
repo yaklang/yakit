@@ -49,11 +49,11 @@ on:
                 required: false
                 type: boolean
                 default: false
-            requireEnterpriseLicense:
-                description: "Enterprise (ee) build: require License verification on startup (default on)"
+            skipEnterpriseLicense:
+                description: "Enterprise (ee): check to skip License verification; leave unchecked for default License check"
                 required: false
                 type: boolean
-                default: true
+                default: false
 
 jobs:
     build_yakit:
@@ -64,7 +64,7 @@ jobs:
 
         steps:
             - name: Display incoming configuration parameters
-              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }} ${{ inputs.requireEnterpriseLicense }}
+              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }} ${{ inputs.skipEnterpriseLicense }}
 
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
@@ -170,7 +170,7 @@ jobs:
             - name: "Build EE Render"
               if: ${{ inputs.version == 'ee' }}
               working-directory: ./
-              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}${{ inputs.requireEnterpriseLicense && '-enterprise' || '-enterprise-no-license' }}
+              run: yarn build-renders${{ inputs.devTool && '-test' || '' }}${{ inputs.skipEnterpriseLicense && '-enterprise-no-license' || '-enterprise' }}
 
             - name: "Build SE Render"
               if: ${{ inputs.version == 'se' }}
