@@ -163,3 +163,51 @@ export const RestoreTabContent: React.FC<RestoreTabContentProps> = React.memo((p
     </div>
   )
 })
+
+interface DuplicateTabContentProps {
+  maxCount: number
+  subPageCount: number
+  onClose: () => void
+  onDuplicate: (count: number) => Promise<void> | void
+}
+
+export const DuplicateTabContent: React.FC<DuplicateTabContentProps> = React.memo((props) => {
+  const { maxCount, subPageCount, onClose, onDuplicate } = props
+  const { t } = useI18nNamespaces(['layout', 'yakitUi'])
+  const [number, setNumber] = useState<number>(1)
+
+  const onOK = useMemoizedFn(() => {
+    const canAddCount = maxCount - subPageCount
+    if (number > canAddCount) {
+      yakitNotify('info', t('TabRenameModalContent.duplicateLimitExceeded', { count: canAddCount }))
+      return
+    }
+    onDuplicate(number)
+    onClose()
+  })
+
+  return (
+    <div className={styles['restore-tab-content']}>
+      <div className={styles['item']}>
+        <span>{t('TabRenameModalContent.duplicateTabs')}</span>
+        <YakitInputNumber
+          min={1}
+          max={maxCount}
+          style={{ width: 300 }}
+          value={number}
+          onChange={(v) => setNumber(v as number)}
+        />
+        <span>{t('TabRenameModalContent.piece')}</span>
+      </div>
+      <div className={styles['item-tip']}>{t('TabRenameModalContent.duplicateLimitExceeded', { count: maxCount })}</div>
+      <div className={styles['footer']}>
+        <YakitButton type="outline2" onClick={onClose}>
+          {t('YakitButton.cancel')}
+        </YakitButton>
+        <YakitButton type="primary" onClick={onOK}>
+          {t('YakitButton.ok')}
+        </YakitButton>
+      </div>
+    </div>
+  )
+})

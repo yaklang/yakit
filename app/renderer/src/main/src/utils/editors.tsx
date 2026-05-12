@@ -1080,7 +1080,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                                     setFontSize(size)
                                   }}
                                 />
-                                px
+                                <span style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }}>px</span>
                               </div>
                             </Form.Item>
                           )}

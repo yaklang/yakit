@@ -139,6 +139,9 @@
     "overwriteCurrentTab": "覆盖当前标签",
     "addRestoreTab": "新增恢复标签页",
     "restoreLimitExceeded": "恢复标签数超过上限",
+    "duplicateTabs": "复制标签页",
+    "duplicateLimitExceeded": "复制标签页数量不能超过 {{count}} 个",
+    "piece": "个",
     "restoreTabs": "恢复 {{count}} 个标签页",
     "tabPage": "个标签页"
   },

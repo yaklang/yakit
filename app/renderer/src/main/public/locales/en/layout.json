@@ -139,6 +139,9 @@
     "overwriteCurrentTab": "Overwrite Current Tab",
     "addRestoreTab": "Add Restored Tab",
     "restoreLimitExceeded": "The number of restored labels exceeds the limit.",
+    "duplicateTabs": "Duplicate tabs",
+    "duplicateLimitExceeded": "The duplicate tab count cannot exceed {{count}}",
+    "piece": "piece",
     "restoreTabs": "Restore {{count}} tabs",
     "tabPage": "tab pages"
   },

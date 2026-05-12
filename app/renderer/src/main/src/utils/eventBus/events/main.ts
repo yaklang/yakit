@@ -1,3 +1,5 @@
+import { MultipleNodeInfo } from '@/pages/layout/mainOperatorContent/MainOperatorContentType'
+
 export type MainOperatorEventProps = {
   /** 远程打开一个页面 */
   openPage: string
@@ -14,4 +16,6 @@ export type MainOperatorEventProps = {
 
   /**二级路由Tab数据变化 */
   secondMenuTabDataChange: string
+  /**复制 webfuzzer 标签页 */
+  onDuplicateWebFuzzerTabs: { item: MultipleNodeInfo; count: number }
 }

@@ -149,7 +149,7 @@ import { defaultAddYakitScriptPageInfo } from '@/defaultConstants/AddYakitScript
 import { useMenuHeight } from '@/store/menuHeight'
 import { HybridScanInputTarget } from '@/models/HybridScan'
 import { defaultWebsocketFuzzerPageInfo } from '@/defaultConstants/WebsocketFuzzer'
-import { RecoveryModel, RestoreTabContent } from './TabRenameModalContent'
+import { DuplicateTabContent, RecoveryModel, RestoreTabContent } from './TabRenameModalContent'
 import {
   FuzzerConfig,
   QueryFuzzerConfigRequest,
@@ -196,6 +196,7 @@ const Close_Group_Tip = 'close-group_tip'
 const colorList = ['purple', 'blue', 'lakeBlue', 'green', 'red', 'orange', 'bluePurple', 'grey']
 const droppable = 'droppable'
 const droppableGroup = 'droppableGroup'
+const duplicateWebFuzzerTabsEvent = 'onDuplicateWebFuzzerTabs'
 const pageTabItemRightOperation: (t: TFunction) => YakitMenuItemType[] = (t) => {
   return [
     {
@@ -1635,6 +1636,66 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       yakitNotify('error', t('MainOperatorContent.openWFFailed', { error: `${error}` }))
     }
   })
+
+  const onDuplicateWebFuzzerTabs = useMemoizedFn(({ item, count }: { item: MultipleNodeInfo; count: number }) => {
+    const currentItem = queryPagesDataById(YakitRoute.HTTPFuzzer, item.id)
+    const webFuzzerPageInfo = currentItem?.pageParamsInfo?.webFuzzerPageInfo
+    if (!webFuzzerPageInfo) return
+
+    const { request = defaultPostTemplate, advancedConfigValue, advancedConfigShow, hotPatchCode } = webFuzzerPageInfo
+
+    const pageParams: ComponentParams = {
+      request,
+      system: item.pageParams?.system,
+      advancedConfigValue,
+      advancedConfigShow,
+      hotPatchCode,
+    }
+
+    const baseName = item.verbose || currentItem?.pageName
+    const key = routeConvertKey(YakitRoute.HTTPFuzzer, '')
+
+    const newPageCache = cloneDeep(getPageCache())
+    const currentPageCache = newPageCache.find((ele) => ele.route === YakitRoute.HTTPFuzzer)
+    if (!currentPageCache) return
+
+    const baseSortId = (currentPageCache.multipleNode?.length || 0) + 1
+    const createdNodes: MultipleNodeInfo[] = Array.from({ length: count }, (_, index) => {
+      const time = `${Date.now()}-${index}`
+      const tabId = `${key}-[${randomString(6)}]-${time}`
+      return {
+        id: tabId,
+        verbose: `${baseName}(${index + 1})`,
+        time,
+        pageParams: {
+          ...pageParams,
+          id: tabId,
+          groupId: '0',
+        },
+        groupId: '0',
+        sortFieId: baseSortId + index,
+      }
+    })
+
+    currentPageCache.multipleNode.push(...createdNodes)
+    currentPageCache.multipleLength = (currentPageCache.multipleLength || 0) + createdNodes.length
+    currentPageCache.openFlag = false
+    currentPageCache.selectSubItem = false
+
+    createdNodes.forEach((node) => {
+      addFuzzerList(node.id, node, node.sortFieId)
+    })
+
+    setPageCache(newPageCache)
+  })
+
+  useEffect(() => {
+    emiter.on(duplicateWebFuzzerTabsEvent, onDuplicateWebFuzzerTabs)
+    return () => {
+      emiter.off(duplicateWebFuzzerTabsEvent, onDuplicateWebFuzzerTabs)
+    }
+  }, [])
+
   /** websocket fuzzer 和 Fuzzer 类似 */
   const addWebsocketFuzzer = useMemoizedFn(
     (res: { tls: boolean; request: Uint8Array; openFlag?: boolean; toServer?: Uint8Array }) => {
@@ -4627,6 +4688,22 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         emiter.off('onCloseSubPageByInfo', onCloseSubPageByInfoFun)
       }
     }, [])
+
+    const onShowDuplicateModal = useMemoizedFn((item: MultipleNodeInfo) => {
+      const m = showYakitModal({
+        title: (modalT) => modalT('TabRenameModalContent.duplicateTabs'),
+        footer: null,
+        content: (
+          <DuplicateTabContent
+            maxCount={secondaryTabsNumRef.current}
+            subPageCount={getSubPageTotal(subPage)}
+            onClose={() => m.destroy()}
+            onDuplicate={(count) => emiter.emit(duplicateWebFuzzerTabsEvent, { item, count })}
+          />
+        ),
+      })
+    })
+
     /**
      * @description 页面节点的右键点击事件
      */
@@ -4662,10 +4739,17 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
       }
       if (currentTabKey === YakitRoute.HTTPFuzzer) {
-        menuData.push({
-          label: t('MainOperatorContent.restoreTab'),
-          key: 'restoreTab',
-        })
+        menuData = [
+          ...menuData,
+          {
+            label: t('TabRenameModalContent.duplicateTabs'),
+            key: 'duplicateTab',
+          },
+          {
+            label: t('MainOperatorContent.restoreTab'),
+            key: 'restoreTab',
+          },
+        ]
       }
 
       // 固定页面支持多开页面需要移除关闭标签选项
@@ -4706,6 +4790,9 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
                 break
               case 'newGroup':
                 onNewGroup(item)
+                break
+              case 'duplicateTab':
+                onShowDuplicateModal(item)
                 break
               case 'restoreTab':
                 onRestoreHistory(currentTabKey)
