@@ -11,7 +11,7 @@ import classNames from 'classnames'
 import { BaseOptionType } from 'antd/lib/select'
 import { YakitTag } from '../YakitTag/YakitTag'
 import { ChevronDownIcon, ChevronUpIcon } from '@/assets/newIcon'
-import { useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { CacheDataHistoryProps, YakitOptionTypeProps, onGetRemoteValuesBase, onSetRemoteValuesBase } from '../utils'
 import { setRemoteValue } from '@/utils/kv'
 import { yakitNotify } from '@/utils/notification'
@@ -19,6 +19,7 @@ import { OutlineCheckIcon, OutlineXIcon } from '@/assets/icon/outline'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
+import { has } from 'lodash'
 
 const { Option, OptGroup } = Select
 
@@ -256,6 +257,10 @@ export const YakitSelectCustom = <ValueType, OptionType>(
       defaultValue: cacheHistoryData.defaultValue,
     }
   }
+  const showSuffixIcon = useCreation(() => {
+    if (has(props, 'open')) return props.open
+    return show
+  }, [props.open, show])
   return (
     <div
       ref={selectRef}
@@ -275,7 +280,7 @@ export const YakitSelectCustom = <ValueType, OptionType>(
     >
       <Select
         suffixIcon={
-          props.open || show ? (
+          showSuffixIcon ? (
             <ChevronUpIcon className={styles['yakit-select-icon']} />
           ) : (
             <ChevronDownIcon className={styles['yakit-select-icon']} />
