@@ -234,15 +234,21 @@ export const getContextStatsData = (contextStats?: AIContextStatsDetail['data'])
   if (!contextStats) {
     return {
       times: [],
+      total_prompt_bytes: [],
+      total_prompt_tokens: [],
       role_order: [],
       role_labels: {},
       role_series: {},
+      role_tokens: {},
     }
   }
   return {
     times: contextStats.times || [],
+    total_prompt_bytes: contextStats.total_prompt_bytes || [],
+    total_prompt_tokens: contextStats.total_prompt_tokens || [],
     role_order: contextStats.role_order || [],
     role_labels: contextStats.role_labels || {},
     role_series: contextStats.role_series || {},
+    role_tokens: contextStats.role_tokens || {},
   }
 }

@@ -75,11 +75,15 @@ export class ChatDataStore {
         },
         contextStats: {
           prompt_bytes: 0,
+          prompt_tokens: 0,
           data: {
             times: [],
+            total_prompt_bytes: [],
+            total_prompt_tokens: [],
             role_order: [],
             role_labels: {},
             role_series: {},
+            role_tokens: {},
           },
         },
         contextSections: { summary: new Map(), sections: [] },

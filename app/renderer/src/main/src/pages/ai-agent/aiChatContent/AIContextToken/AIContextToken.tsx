@@ -9,6 +9,7 @@ import {
   ResponseSpeedEcharts,
   ResponseSpeedEchartsProps,
   TokenCountEcharts,
+  type ContextStatsChartMetric,
 } from '../../chatTemplate/AIEcharts'
 import styles from '../AIChatContent.module.scss'
 import { FC, memo, useCallback, useEffect, useRef, useState } from 'react'
@@ -18,6 +19,7 @@ import {
   OutlineArrowdownIcon,
   OutlineArrowupIcon,
   OutlinePresentationchartlineIcon,
+  OutlineSwitchhorizontalIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
 import classNames from 'classnames'
@@ -255,6 +257,11 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
     return data
   }, [aiGlobalConfig.IntelligentModels, aiGlobalConfig.LightweightModels])
 
+  const [contextStatsMetric, setContextStatsMetric] = useState<ContextStatsChartMetric>('bytes')
+  const toggleContextStatsMetric = useMemoizedFn(() => {
+    setContextStatsMetric((m) => (m === 'bytes' ? 'tokens' : 'bytes'))
+  })
+
   const intelligentToken = useCreation(() => {
     if (!tierConsumption?.intelligent) return [0, 0, 0]
     const input = tierConsumption.intelligent.input_consumption || 0
@@ -287,6 +294,13 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
   const contextStatsData = useCreation(() => {
     return getContextStatsData(contextStats?.data)
   }, [renderNumber, contextStats])
+
+  const contextStatsTotalDisplay = useCreation(() => {
+    if (contextStatsMetric === 'tokens') {
+      return formatNumberUnits(contextStats?.prompt_tokens ?? 0)
+    }
+    return formatNumberUnits(contextStats?.prompt_bytes ?? 0)
+  }, [contextStatsMetric, contextStats?.prompt_bytes, contextStats?.prompt_tokens])
 
   // 上下文成分
   const contextSectionsData = useCreation(() => {
@@ -398,18 +412,30 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
             <AICostDetailsEcharts dataEcharts={costEcharts} />
           </div>
         )}
-        {!!contextStats?.prompt_bytes && (
+        {(!!contextStats?.prompt_bytes || !!contextStats?.prompt_tokens) && (
           <div className={styles['cost-wrapper']}>
             <div className={styles['echarts-heard']}>
               <div className={styles['echarts-heard-left']}>
-                <div className={styles['title']}>上下文字节统计</div>
-                <div className={styles['unit']}>（单位: Byte）</div>
+                <div className={styles['title']}>
+                  {contextStatsMetric === 'bytes' ? '上下文字节统计' : '上下文Token统计'}
+                </div>
+                <div className={styles['unit']}>
+                  {contextStatsMetric === 'bytes' ? '（单位: Byte）' : '（单位: Token）'}
+                </div>
+                <Tooltip title={contextStatsMetric === 'bytes' ? '切换为 Token' : '切换为字节'}>
+                  <YakitButton
+                    icon={<OutlineSwitchhorizontalIcon />}
+                    type="text2"
+                    onClick={toggleContextStatsMetric}
+                    size="small"
+                  />
+                </Tooltip>
               </div>
               <div className={styles['total']}>
-                总数 <span>{contextStats?.prompt_bytes}</span>
+                总数 <span>{contextStatsTotalDisplay}</span>
               </div>
             </div>
-            <TokenCountEcharts contextStatsData={contextStatsData} />
+            <TokenCountEcharts contextStatsData={contextStatsData} metric={contextStatsMetric} />
           </div>
         )}
         {contextSectionsData?.sections.length > 0 && (

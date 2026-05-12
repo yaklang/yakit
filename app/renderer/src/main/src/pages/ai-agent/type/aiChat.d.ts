@@ -6,12 +6,18 @@ import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {
   prompt_bytes: AIAgentGrpcApi.ContextStatsSections['prompt_bytes']
+  prompt_tokens: AIAgentGrpcApi.ContextStatsSections['prompt_tokens']
   data: {
     times: number[]
+    /** 供图表 tooltip 占比 */
+    total_prompt_bytes: number[]
+    /** 供图表 tooltip 占比 */
+    total_prompt_tokens: number[]
     /** 首次非空 role_stats 锁定顺序；后续多余 role 丢弃 */
     role_order: string[]
     role_labels: Record<string, string>
     role_series: Record<string, number[]>
+    role_tokens: Record<string, number[]>
   }
 }
 
