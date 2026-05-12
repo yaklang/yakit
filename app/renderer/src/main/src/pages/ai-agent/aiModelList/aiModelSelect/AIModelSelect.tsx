@@ -517,6 +517,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   const onMouseEnterEdit = useMemoizedFn((e: React.MouseEvent, item: AIModelConfig, index: number) => {
     clearHideTimer()
     if (!dropdownRenderRectRef) return
+    if (isEqual(currentSelectIndex, index)) return
     const { left = 0, right = 0, width } = dropdownRenderRectRef || {}
 
     const rightContextWidth = 120
@@ -603,15 +604,18 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
           </div>
         ))}
       </div>
+      {/* 必须通过createPortal方式建立元素(原因：初次不渲染) */}
       {createPortal(
         <div
           className={classNames(styles['edit-content'])}
-          style={isShowEditContent ? { ...editStyle } : {}}
+          style={editStyle}
           onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
           onMouseEnter={onMouseEnterEditContent}
           onMouseLeave={onMouseLeaveEditContent}
         >
-          {<AIModelEditContent item={currentItem} onEdit={onEditContentChange} />}
+          {isShowEditContent && <AIModelEditContent item={currentItem} onEdit={onEditContentChange} />}
         </div>,
         document.body,
       )}
