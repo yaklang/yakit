@@ -1,3 +1,32 @@
+import type {
+  AIChatIPCNotifyMessage,
+  AIChatIPCStartParams,
+  AIChatSendParams,
+  AIFileSystemPin,
+  AIMessageDataProps,
+  AIQuestionQueues,
+  CasualLoadingStatus,
+  PlanLoadingStatus,
+  TaskChatTaskInfo,
+  UseCasualChatEvents,
+  UseChatIPCEvents,
+  UseChatIPCParams,
+  UseChatIPCState,
+  UseHookBaseParams,
+  UseTaskChatEvents,
+} from './type'
+import type {
+  AIAgentGrpcApi,
+  AIEventQueryRequest,
+  AIInputEvent,
+  AIOutputEvent,
+  AIOutputI18n,
+  AIStartParams,
+} from './grpcApi'
+import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
+import type { DeepPartial } from '@/pages/ai-agent/store/ChatDataStore'
+import type { AIChatQSData, ReActChatBaseInfo } from './aiRender'
+
 import { useEffect, useRef, useState } from 'react'
 import { yakitNotify } from '@/utils/notification'
 import { useCreation, useInterval, useMemoizedFn, useThrottleFn } from 'ahooks'
@@ -8,34 +37,7 @@ import useCasualChat from './useCasualChat'
 import useYakExecResult, { UseYakExecResultTypes } from './useYakExecResult'
 import useTaskChat from './useTaskChat'
 import { genErrorLogData, genExecTasks, handleGrpcDataPushLog } from './utils'
-import {
-  AIChatIPCNotifyMessage,
-  AIChatIPCStartParams,
-  AIChatSendParams,
-  AIFileSystemPin,
-  AIMessageDataProps,
-  AIQuestionQueues,
-  CasualLoadingStatus,
-  PlanLoadingStatus,
-  TaskChatTaskInfo,
-  UseAIMessageDataEvents,
-  UseAIMessageDataState,
-  UseCasualChatEvents,
-  UseChatIPCEvents,
-  UseChatIPCParams,
-  UseChatIPCState,
-  UseHookBaseParams,
-  UseTaskChatEvents,
-} from './type'
-import {
-  AIAgentGrpcApi,
-  AIInputEvent,
-  AIInputEventSyncTypeEnum,
-  AIOutputEvent,
-  AIOutputI18n,
-  AIStartParams,
-  AITaskStatus,
-} from './grpcApi'
+import { AITaskStatus, AIInputEventSyncTypeEnum } from './grpcApi'
 import useAIChatLog from './useAIChatLog'
 import cloneDeep from 'lodash/cloneDeep'
 import {
@@ -49,9 +51,6 @@ import {
 import useThrottleState from '@/hook/useThrottleState'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import useAINodeLabel from './useAINodeLabel'
-import { AIChatData } from '@/pages/ai-agent/type/aiChat'
-import { DeepPartial } from '@/pages/ai-agent/store/ChatDataStore'
-import { AIChatQSData, ReActChatBaseInfo } from './aiRender'
 import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
 import useHistoryChat from './useHistoryChat'
 import { handleResetForNewSession } from './grpcAIMessageHandlers'
@@ -398,6 +397,7 @@ function useChatIPC(params?: UseChatIPCParams) {
   // #region 历史数据的请求hook
   const [requestState, requestEvents] = useAIMessageData({
     type: 'ai',
+    getChatStore: getChatDataStore,
     setContentMap: handleSetContentMap,
     setCasualElements: casualChatEvent.setElements,
     setTaskElements: taskChatEvent.setElements,
@@ -671,7 +671,26 @@ function useChatIPC(params?: UseChatIPCParams) {
     } catch {}
   })
 
-  const onStart = useMemoizedFn((args: AIChatIPCStartParams, cb?: () => void) => {
+  /** 获取对应session会话的流数据最新ID, 用于获取历史数据的偏移量 */
+  const handleGetLatestID = useMemoizedFn(async (session: string) => {
+    let lastID = 0
+    try {
+      const request: AIEventQueryRequest = {
+        Filter: {
+          SessionID: session,
+        },
+        Pagination: { Page: 1, Limit: 1, OrderBy: 'created_at', Order: 'desc' },
+      }
+      const { Events } = await grpcQueryAIEvent(request)
+      if (Events.length) lastID = Number(Events[0].ID) || 0
+    } catch {
+    } finally {
+      const chatStore = getChatDataStore()
+      if (chatStore) chatStore.beforeID.chatID = lastID
+    }
+  })
+
+  const onStart = useMemoizedFn(async (args: AIChatIPCStartParams, cb?: () => void) => {
     const { token, params, extraValue } = args
 
     if (execute) {
@@ -691,6 +710,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     setExecute(true)
 
     aiRequest.current = params.Params
+
+    await handleGetLatestID(token)
 
     ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
       try {

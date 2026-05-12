@@ -9,13 +9,20 @@ import type {
 } from './aiRender'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '@/pages/ai-agent/store/constants'
-import type { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n, AIStartParams, AITaskStatus } from './grpcApi'
+import type {
+  AIAgentGrpcApi,
+  AIInputEvent,
+  AIOutputEvent,
+  AIOutputI18n,
+  AIStartParams,
+  AITaskStatusType,
+} from './grpcApi'
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 
-// #region 公共 hoos 事件
+// #region 公共 hooks 事件
 export interface UseHookBaseParams {
   /** 将数据推送到日志集合中 */
   pushLog: (log: AIChatLogData) => void
@@ -264,7 +271,7 @@ export interface AIChatSendParams {
 /** 任务规划的taskID和状态 */
 export interface TaskChatTaskInfo {
   taskID: string
-  status: AITaskStatus
+  status: AITaskStatusType
   coordinatorId: AIOutputEvent['CoordinatorId']
 }
 
@@ -393,6 +400,7 @@ export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #region useAIMessageData相关定义
 export interface AIMessageDataProps {
   type: Domain
+  getChatStore: UseHookBaseParams['getChatDataStore']
   setContentMap: (
     chatType: ReActChatBaseInfo['chatType'],
     ...args: Parameters<UseHookStateFunc['setContentMap']>
@@ -402,17 +410,10 @@ export interface AIMessageDataProps {
   grpcLoadMore?: (request: { limit: number; start_id?: number }) => void
 }
 
-export interface AIFnBaseParams {
-  sessionId: string
-}
-
 /** 游标：记录每个 store 下一次加载的起始位置 */
 export interface PaginationCursors {
   casualId?: string
   taskId?: string
-}
-export interface SessionMetadata {
-  offset: number
 }
 
 export interface UseAIMessageDataState {

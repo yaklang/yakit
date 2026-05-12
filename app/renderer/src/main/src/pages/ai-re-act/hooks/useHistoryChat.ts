@@ -10,7 +10,13 @@ import type {
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import type { PaginationSchema } from '@/pages/invoker/schema'
 import { yakitNotify } from '@/utils/notification'
-import { AITaskStatus, type AIAgentGrpcApi, type AIEventQueryRequest, type AIOutputEvent } from './grpcApi'
+import {
+  AITaskStatus,
+  AITaskStatusType,
+  type AIAgentGrpcApi,
+  type AIEventQueryRequest,
+  type AIOutputEvent,
+} from './grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import { useRef, useState } from 'react'
 import {
@@ -411,7 +417,7 @@ function useHistoryChat(params?: UseHistoryChatParams) {
    * 记录任务规划里叶子任务的执行结果状态
    * task_uuid=>status
    */
-  const taskUUIDToStatus = useRef<Map<string, AITaskStatus | undefined>>(new Map())
+  const taskUUIDToStatus = useRef<Map<string, AITaskStatusType | undefined>>(new Map())
 
   // 解析数据方法
   const handleChatData = useMemoizedFn((res: AIOutputEvent[]) => {

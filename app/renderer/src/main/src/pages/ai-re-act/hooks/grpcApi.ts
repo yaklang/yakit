@@ -258,6 +258,7 @@ export enum AITaskStatus {
   skipped = 'skipped',
   created = '',
 }
+export type AITaskStatusType = `${AITaskStatus}`
 
 export declare namespace AIAgentGrpcApi {
   /** 上传/下载 Token 量 */
@@ -380,7 +381,7 @@ export declare namespace AIAgentGrpcApi {
     name: string
     /** 正文 */
     goal: string
-    progress?: AITaskStatus
+    progress?: AITaskStatusType
     subtasks?: AITaskInfoProps[]
     /**评阅时树节点是否被删 */
     isRemove: boolean
@@ -410,7 +411,7 @@ export declare namespace AIAgentGrpcApi {
       /** 后端供(push_task|pop_task)对应的唯一标识 */
       task_uuid?: string
       /** 后端供pop_task反馈的任务执行状态 */
-      task_status?: AITaskStatus
+      task_status?: AITaskStatusType
     }
     type: string
   }
@@ -604,7 +605,7 @@ export declare namespace AIAgentGrpcApi {
     created_at: string
     focus_mode: string
     id: string
-    status: AITaskStatus
+    status: AITaskStatusType
     user_input: string
   }
   /** 问题队列信息 */

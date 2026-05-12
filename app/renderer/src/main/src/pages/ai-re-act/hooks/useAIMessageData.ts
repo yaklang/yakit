@@ -8,11 +8,12 @@ import type { AIMessageDataProps, PaginationCursors, UseAIMessageDataEvents, Use
 const LIMIT = 10
 
 const useAIMessageData = ({
+  type,
+  getChatStore,
   setContentMap,
   setCasualElements,
   setTaskElements,
   grpcLoadMore,
-  type,
 }: AIMessageDataProps): [UseAIMessageDataState, UseAIMessageDataEvents] => {
   const [initLoading, setInitLoading] = useState(false)
   const [taskLoadMoreLoading, setTaskLoadMoreLoading] = useState(false)
