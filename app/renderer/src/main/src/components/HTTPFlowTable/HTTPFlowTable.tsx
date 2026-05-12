@@ -4808,6 +4808,10 @@ export const contentType: FiltersItemProps[] = [
     label: 'x-javascript',
   },
   {
+    value: 'css',
+    label: 'css',
+  },
+  {
     value: 'html',
     label: 'html',
   },
