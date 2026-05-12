@@ -4,7 +4,7 @@ export type { StoreName }
 
 // 一条聊天消息记录，对应消息表中的单行数据。
 export interface DialogueRecord {
-  id: string
+  token: string
   cacheOrder: number
   type: string
   isGroup: boolean
@@ -15,9 +15,9 @@ export interface DialogueRecord {
 
 export interface DialogueContentRecord {
   sessionId: string
-  id: string
+  token: string
   content: string
-  pid: string
+  pToken: string
 }
 
 export interface GetDialoguesData {
@@ -29,7 +29,7 @@ export interface GetDialoguesData {
 export interface GetDialoguesParams {
   storeName: StoreName
   sessionId: string
-  id?: string
+  token?: string
   limit?: number
   desc?: boolean
 }
@@ -45,7 +45,7 @@ export interface SetDialogueContentParams {
 
 export interface GetDialogueContentsByPidParams {
   sessionId: string
-  pids: string[]
+  pTokens: string[]
 }
 
 export interface ClearStoreParams {

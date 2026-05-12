@@ -6,11 +6,11 @@ import {
   DIALOGUE_CONTENT_STORE,
   INDEX_BY_CONTENT_SESSION,
   INDEX_BY_SESSION_ORDER,
-  INDEX_BY_SESSION_PID,
+  INDEX_BY_SESSION_PTOKEN,
   REGISTERED_STORES,
   SESSION_METADATA_STORE,
   SESSION_ORDER,
-  SESSION_PID,
+  SESSION_PTOKEN,
 } from './constants'
 import type {
   ClearStoreParams,
@@ -106,7 +106,7 @@ class AIChatMessageStore {
           // 对话正文表：存储 group 节点下子消息的具体内容。
           if (!db.objectStoreNames.contains(DIALOGUE_CONTENT_STORE)) {
             const contentStore = db.createObjectStore(DIALOGUE_CONTENT_STORE, { keyPath: CONTENT_COMPOUND_KEY })
-            contentStore.createIndex(INDEX_BY_SESSION_PID, SESSION_PID, { unique: false })
+            contentStore.createIndex(INDEX_BY_SESSION_PTOKEN, SESSION_PTOKEN, { unique: false })
             contentStore.createIndex(INDEX_BY_CONTENT_SESSION, 'sessionId', { unique: false })
           }
         }
@@ -117,15 +117,15 @@ class AIChatMessageStore {
 
   /**
    * 获取指定 session 的消息列表。
-   * @param id 锚点 id，特殊值 `""`/`undefined`/`"-1"` 表示不使用锚点；其他值表示以该 id 为锚点。
-   * @param desc 仅在传入业务 `id` 作锚点时有效：`false` 取 **更早**（`orderNum < 锚点`），`true` 取 **更晚**（`orderNum > 锚点`）。
+   * @param token 锚点 token，特殊值 `""`/`undefined`/`"-1"` 表示不使用锚点；其他值表示以该 token 为锚点。
+   * @param desc 仅在传入业务 `token` 作锚点时有效：`false` 取 **更早**（`cacheOrder < 锚点`），`true` 取 **更晚**（`cacheOrder > 锚点`）。
    * @param limit `-1` 表示该模式下不限制条数（无锚点为全 session 升序；有锚点为该方向上全量）。
    * @returns 符合条件的消息列表和是否有更多的标记。
    */
   async getDialogues({
     storeName,
     sessionId,
-    id,
+    token,
     desc = false,
     limit = 10,
   }: GetDialoguesParams): Promise<GetDialoguesData> {
@@ -144,7 +144,7 @@ class AIChatMessageStore {
         [sessionId, Number.POSITIVE_INFINITY],
       )
 
-      const noAnchor = id === '' || id === undefined || id === '-1'
+      const noAnchor = token === '' || token === undefined || token === '-1'
 
       if (noAnchor) {
         // 无锚点时取当前 session 末尾一批；limit=-1 则全量顺序读取。
@@ -153,7 +153,7 @@ class AIChatMessageStore {
         return
       }
 
-      const anchorReq = store.get([sessionId, id])
+      const anchorReq = store.get([sessionId, token])
       anchorReq.onsuccess = () => {
         const anchor = anchorReq.result as DialogueRecord | undefined
 
@@ -205,14 +205,14 @@ class AIChatMessageStore {
       tx.onerror = () => reject(tx.error)
       tx.onabort = () => reject(tx.error)
 
-      // 找第一个 isHistory:true 的记录作锚点，用它的 orderNum 推导新消息的相对位置。
+      // 找第一个 isHistory:true 的记录作锚点，用它的 cacheOrder 推导新消息的相对位置。
       const anchorIdx = list.findIndex((item) => item.isCached)
 
       if (anchorIdx !== -1) {
         const anchorOrderNum = list[anchorIdx].cacheOrder
         for (let i = 0; i < list.length; i++) {
           if (!list[i].isCached) {
-            store.put({ ...list[i], orderNum: anchorOrderNum + (i - anchorIdx) })
+            store.put({ ...list[i], cacheOrder: anchorOrderNum + (i - anchorIdx) })
           }
         }
         return
@@ -227,7 +227,7 @@ class AIChatMessageStore {
         const cursor = cursorReq.result
         let base = cursor ? (cursor.value as DialogueRecord).cacheOrder + 1 : 0
         for (const item of list) {
-          store.put({ ...item, orderNum: base++ })
+          store.put({ ...item, cacheOrder: base++ })
         }
       }
     })
@@ -254,16 +254,16 @@ class AIChatMessageStore {
 
   async getDialogueContentsByPid({
     sessionId,
-    pids,
+    pTokens,
   }: GetDialogueContentsByPidParams): Promise<DialogueContentRecord[]> {
-    if (!pids.length) return []
+    if (!pTokens.length) return []
     const db = await this.open()
 
     return new Promise((resolve, reject) => {
       const tx = db.transaction(DIALOGUE_CONTENT_STORE, 'readonly')
-      const pidIndex = tx.objectStore(DIALOGUE_CONTENT_STORE).index(INDEX_BY_SESSION_PID)
+      const pidIndex = tx.objectStore(DIALOGUE_CONTENT_STORE).index(INDEX_BY_SESSION_PTOKEN)
 
-      const requests = pids.map((pid) => pidIndex.getAll(IDBKeyRange.only([sessionId, pid])))
+      const requests = pTokens.map((pToken) => pidIndex.getAll(IDBKeyRange.only([sessionId, pToken])))
 
       tx.oncomplete = () => resolve(requests.flatMap((req) => req.result as DialogueContentRecord[]))
       tx.onerror = () => reject(tx.error)

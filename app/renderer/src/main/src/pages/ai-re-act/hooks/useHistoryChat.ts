@@ -1154,7 +1154,7 @@ function useHistoryChat(params?: UseHistoryChatParams) {
     Promise.allSettled([
       handleHistoryTimelines(session),
       handleHistoryFileSystem(session),
-      handleHistoryChats(session),
+      // handleHistoryChats(session),
     ]).finally(() => {
       setTimeout(() => {
         setInitLoading(false)
@@ -1172,8 +1172,8 @@ function useHistoryChat(params?: UseHistoryChatParams) {
         handleHistoryTimelines(session)
         break
       case 'chatID':
-        if (getChatsLoading()) return
-        handleHistoryChats(session)
+        // if (getChatsLoading()) return
+        // handleHistoryChats(session)
         break
 
       default:

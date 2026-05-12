@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import aiChatMessageStore from '../../ai-agent/store/aiChatMessageStore'
 import type { GetDialoguesData, StoreName } from '../../ai-agent/store/type'
 import { useMemoizedFn } from 'ahooks'
-import { indexedDBDataToReActChatRenderItem } from './utils'
+import { getTreeDataIds, indexedDBDataToReActChatRenderItem, toDialogueData } from './utils'
 import type { AIMessageDataProps, PaginationCursors, UseAIMessageDataEvents, UseAIMessageDataState } from './type'
 
 const LIMIT = 10
@@ -24,7 +24,7 @@ const useAIMessageData = ({
   // 分页id
   const cursorsRef = useRef<PaginationCursors>({})
   // 记录后端的id
-  const grpcIdRef = useRef<number>()
+  const grpcIdRef = useRef<number>(-1)
 
   const handleLoadInit: UseAIMessageDataEvents['handleLoadInit'] = async (sessionId) => {
     setInitLoading(true)
@@ -38,43 +38,38 @@ const useAIMessageData = ({
         aiChatMessageStore.getDialogues({ storeName: `${type}TaskDB`, sessionId, limit: LIMIT }),
         aiChatMessageStore.getSessionMetadata(sessionId),
       ])
-      if (sessionMetadata?.offset === -1) {
-        grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
-      }
-      grpcIdRef.current = sessionMetadata?.offset
-      // 记录分页游标（第一条记录的 id）
-      cursorsRef.current = {
-        casualId: casualResult.items.at(0)?.id,
-        taskId: taskResult.items.at(0)?.id,
-      }
-      if (!casualResult.hasMore) {
-        grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
-        console.log('1111:', 1111, grpcIdRef.current)
-        hasMoreRef.current = {
-          casual: false,
-          task: taskResult.hasMore,
-        }
+      if (sessionMetadata?.offset !== undefined && sessionMetadata.offset !== -1) {
+        grpcIdRef.current = sessionMetadata?.offset
+        const chatStore = getChatStore()
+        if (chatStore) chatStore.beforeID.chatID = sessionMetadata.offset
       } else {
-        hasMoreRef.current = {
-          casual: casualResult.hasMore,
-          task: taskResult.hasMore,
-        }
+        grpcIdRef.current = getChatStore()?.beforeID.chatID ?? -1
       }
-      console.log('casualResult:', casualResult)
-      setCasualElements(indexedDBDataToReActChatRenderItem('reAct', casualResult.items))
-      setTaskElements(indexedDBDataToReActChatRenderItem('task', taskResult.items))
+      // 记录分页游标（第一条记录的 token）
+      cursorsRef.current = {
+        casualId: casualResult.items.at(0)?.token,
+        taskId: taskResult.items.at(0)?.token,
+      }
+      hasMoreRef.current = { casual: casualResult.hasMore, task: taskResult.hasMore }
+      if (!casualResult.hasMore && grpcIdRef.current > 0) {
+        grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
+      }
 
-      // 用每条记录的 id 作为 pid 查询对应的正文内容。
+      // 用每条记录的 token 作为 pToken 查询对应的正文内容。
+      console.log(' getTreeDataIds(casualResult.items) :', casualResult, getTreeDataIds(casualResult.items))
       const [casualContents, taskContents] = await Promise.all([
-        aiChatMessageStore.getDialogueContentsByPid({ sessionId, pids: casualResult.items.map((item) => item.id) }),
-        aiChatMessageStore.getDialogueContentsByPid({ sessionId, pids: taskResult.items.map((item) => item.id) }),
+        aiChatMessageStore.getDialogueContentsByPid({ sessionId, pTokens: getTreeDataIds(casualResult.items) }),
+        aiChatMessageStore.getDialogueContentsByPid({ sessionId, pTokens: getTreeDataIds(taskResult.items) }),
       ])
       casualContents.forEach((item) => {
-        setContentMap('reAct', item.id, JSON.parse(item.content))
+        setContentMap('reAct', item.token, JSON.parse(item.content))
       })
       taskContents.forEach((item) => {
-        setContentMap('task', item.id, JSON.parse(item.content))
+        setContentMap('task', item.token, JSON.parse(item.content))
       })
+      console.log('casualResult:', casualResult, casualContents, taskContents, getChatStore())
+      setCasualElements(indexedDBDataToReActChatRenderItem('reAct', casualResult.items))
+      setTaskElements(indexedDBDataToReActChatRenderItem('task', taskResult.items))
     } catch (err) {
       throw err instanceof Error ? err : new Error('未知错误')
     } finally {
@@ -98,34 +93,30 @@ const useAIMessageData = ({
       const result: GetDialoguesData = await aiChatMessageStore.getDialogues({
         storeName,
         sessionId,
-        id: cursorId,
+        token: cursorId,
         limit: LIMIT,
       })
 
+      const contents = await aiChatMessageStore.getDialogueContentsByPid({
+        sessionId,
+        pTokens: result.items.map((item) => item.token),
+      })
+      contents.forEach((item) => {
+        setContentMap(chatType, item.token, JSON.parse(item.content))
+      })
       // 更新游标
       if (isCasual) {
-        cursorsRef.current.casualId = result.items.at(0)?.id
-        if (!result.hasMore) {
-          grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
-          hasMoreRef.current.casual = false
-        } else {
-          hasMoreRef.current.casual = result.hasMore
-        }
+        cursorsRef.current.casualId = result.items.at(0)?.token
+        hasMoreRef.current.casual = result.hasMore
+        if (!result.hasMore) grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
         setCasualElements((prev) => [...prev, ...indexedDBDataToReActChatRenderItem('reAct', result.items)])
       } else {
-        cursorsRef.current.taskId = result.items.at(0)?.id
+        cursorsRef.current.taskId = result.items.at(0)?.token
         hasMoreRef.current.task = result.hasMore
         setTaskElements((prev) => [...prev, ...indexedDBDataToReActChatRenderItem('task', result.items)])
       }
-
-      const contents = await aiChatMessageStore.getDialogueContentsByPid({
-        sessionId,
-        pids: result.items.map((item) => item.id),
-      })
-      contents.forEach((item) => {
-        setContentMap(chatType, item.id, JSON.parse(item.content))
-      })
     } catch (err) {
+      console.log('err:', err)
     } finally {
       isCasual ? setCasualLoadMoreLoading(false) : setTaskLoadMoreLoading(false)
     }
@@ -137,40 +128,27 @@ const useAIMessageData = ({
   ) => {
     console.log('handleSave:', casualElements, casualContentMap)
     setSaveLoading(true)
+
     const sessionMetadataPromise = aiChatMessageStore.setSessionMetadata({
       sessionId,
       offset: grpcIdRef.current || 0,
     })
     const casualDialoguesPromise = aiChatMessageStore.setDialogues({
       storeName: `${type}CasualDB`,
-      data: casualElements.map((item, index) => ({
-        id: item.token,
-        type: item.type,
-        isGroup: item.isGroup || false,
-        children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
-        sessionId,
-        cacheOrder: index,
-      })),
+      data: toDialogueData(casualElements, sessionId),
     })
     const taskDialoguesPromise = aiChatMessageStore.setDialogues({
       storeName: `${type}TaskDB`,
-      data: taskElements.map((item, index) => ({
-        id: item.token,
-        type: item.type,
-        isGroup: item.isGroup || false,
-        children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
-        sessionId,
-        cacheOrder: index,
-      })),
+      data: toDialogueData(taskElements, sessionId),
     })
     const allContents = [...casualContentMap.values(), ...taskContentMap.values()]
 
     const dialogueContentPromise = aiChatMessageStore.setDialogueContent({
       data: allContents.map((content) => ({
-        id: content.id,
+        token: content.id,
         sessionId,
         content: JSON.stringify(content),
-        pid: content.id,
+        pToken: content.id,
       })),
     })
     await Promise.all([sessionMetadataPromise, casualDialoguesPromise, taskDialoguesPromise, dialogueContentPromise])

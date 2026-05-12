@@ -417,6 +417,13 @@ function useChatIPC(params?: UseChatIPCParams) {
       return requestEvents.handleLoadMore(chatID.current, chatType)
     },
   )
+  /** 是否还有更多历史数据 */
+  const handleHasMore: UseChatIPCEvents['handleHasMoreHistory'] = useMemoizedFn(
+    (chatType: ReActChatBaseInfo['chatType']) => {
+      if (!chatID.current) return false
+      return requestEvents.handleHasMore(chatType)
+    },
+  )
   // #endregion
 
   // #region 会话的历史数据  后面删除
@@ -1288,6 +1295,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       fetchHasMore: historyEvents.fetchHasMore,
       loadMore: historyEvents.loadMore,
       handleLoadMoreHistory: handleLoadMore,
+      handleHasMoreHistory: handleHasMore,
     }
   }, [])
 

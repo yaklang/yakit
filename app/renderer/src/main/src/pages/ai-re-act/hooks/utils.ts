@@ -136,7 +136,7 @@ export const indexedDBDataToReActChatRenderItem = (
     if (item.isGroup) {
       return {
         chatType,
-        token: item.id,
+        token: item.token,
         type: item.type as AIChatQSDataType,
         isGroup: true as const,
         children: JSON.parse(item.children || '[]'),
@@ -146,10 +146,36 @@ export const indexedDBDataToReActChatRenderItem = (
     }
     return {
       chatType,
-      token: item.id,
+      token: item.token,
       type: item.type as AIChatQSDataType,
       isGroup: false,
       renderNum: 0,
+      children: JSON.parse(item.children || '[]'),
       isCached: true,
     }
   })
+
+export function getTreeDataIds(tree: DialogueRecord[]): string[] {
+  return tree.flatMap((item) => {
+    let children: DialogueRecord[] = []
+    if (item.children) {
+      try {
+        children = JSON.parse(item.children)
+      } catch {
+        children = []
+      }
+    }
+
+    return [item.token, ...getTreeDataIds(children)]
+  })
+}
+
+export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: string) =>
+  elements.map((item, index) => ({
+    token: item.token,
+    type: item.type,
+    isGroup: item.isGroup || false,
+    children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
+    sessionId,
+    cacheOrder: index,
+  }))

@@ -311,6 +311,8 @@ export interface UseChatIPCEvents extends Omit<UseHistoryChatEvents, 'loadInit'>
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
   /** 加载更多历史数据 */
   handleLoadMoreHistory: (type: ReActChatBaseInfo['chatType']) => void
+  /** 获取更多历史数据 */
+  handleHasMoreHistory: (type: ReActChatBaseInfo['chatType']) => boolean
 }
 // #endregion
 

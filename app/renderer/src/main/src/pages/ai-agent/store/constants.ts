@@ -24,17 +24,17 @@ export const SESSION_METADATA_STORE = 'sessionMetadata'
 export const DIALOGUE_CONTENT_STORE = 'dialogueContent'
 
 // 消息表主键：同一 session 下用消息 id 唯一定位一条记录。
-export const COMPOUND_KEY: [keyof DialogueRecord, keyof DialogueRecord] = ['sessionId', 'id']
+export const COMPOUND_KEY: [keyof DialogueRecord, keyof DialogueRecord] = ['sessionId', 'token']
 
 // 消息表排序索引：支持按 session 内的 cacheOrder 做分页读取。
 export const SESSION_ORDER: [keyof DialogueRecord, keyof DialogueRecord] = ['sessionId', 'cacheOrder']
 
 export const INDEX_BY_SESSION_ORDER = 'bySessionIdAndCacheOrder'
 
-// 对话正文表主键：sessionId + id 唯一定位一条正文。
-export const CONTENT_COMPOUND_KEY: [keyof DialogueContentRecord, keyof DialogueContentRecord] = ['sessionId', 'id']
-// 对话正文表 pid 索引：用于按 group 节点 id 查询其所有子正文。
-export const SESSION_PID: [keyof DialogueContentRecord, keyof DialogueContentRecord] = ['sessionId', 'pid']
-export const INDEX_BY_SESSION_PID = 'bySessionIdAndPid'
+// 对话正文表主键：sessionId + token 唯一定位一条正文。
+export const CONTENT_COMPOUND_KEY: [keyof DialogueContentRecord, keyof DialogueContentRecord] = ['sessionId', 'token']
+// 对话正文表 pToken 索引：用于按 group 节点 token 查询其所有子正文。
+export const SESSION_PTOKEN: [keyof DialogueContentRecord, keyof DialogueContentRecord] = ['sessionId', 'pToken']
+export const INDEX_BY_SESSION_PTOKEN = 'bySessionIdAndPToken'
 // 对话正文表 sessionId 单字段索引：用于按 session 全量删除。
 export const INDEX_BY_CONTENT_SESSION = 'byContentSessionId'
