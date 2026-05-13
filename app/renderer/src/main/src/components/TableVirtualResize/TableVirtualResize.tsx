@@ -88,6 +88,7 @@ interface DragSelectionBox {
 
 interface DragSelectionState {
   active: boolean
+  additive: boolean
   container: any
   contentHeight: number
   contentWidth: number
@@ -214,6 +215,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const dragSelectionAutoScrollRef = useRef<number>()
   const dragSelectionBoxRef = useRef<DragSelectionBox | null>(null)
   const dragSelectionOverlayRef = useRef<HTMLDivElement>(null)
+  const dragSelectionUserSelectRef = useRef<string | null>(null)
   const skipRowClickAfterDragRef = useRef<boolean>(false)
   const tablePosition = useRef<tablePosition>({
     left: 0,
@@ -703,19 +705,46 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const range = dragSelectionRangeRef.current
     if (!range) return
 
+    const dragSelectionState = dragSelectionStateRef.current
+
     const start = Math.max(range.start, 0)
     const end = Math.min(range.end, data.length - 1)
     if (start > end) return
+
+    const nextRangeKeys = new Set<React.Key>()
+    const recordMap = new Map<React.Key, T>()
 
     for (let index = start; index <= end; index++) {
       const record = data[index]
       if (!record || isRowCheckboxDisabled(record)) continue
 
       const key = (renderKey ? record[renderKey] : index) as React.Key
-      if (dragSelectionInitialKeysRef.current.has(key)) continue
+      nextRangeKeys.add(key)
+      recordMap.set(key, record)
+    }
+
+    const selectedRowKeys = new Set<React.Key>((rowSelection?.selectedRowKeys || []) as React.Key[])
+
+    if (!dragSelectionState?.additive) {
+      selectedRowKeys.forEach((key) => {
+        if (nextRangeKeys.has(key)) return
+
+        const record = recordMap.get(key) || data.find((item, idx) => (renderKey ? item[renderKey] : idx) === key)
+        if (!record || isRowCheckboxDisabled(record)) return
+
+        onChangeCheckboxSingle(false, key as string, record)
+      })
+    }
+
+    nextRangeKeys.forEach((key) => {
+      if (dragSelectionState?.additive && dragSelectionInitialKeysRef.current.has(key)) return
+      if (!dragSelectionState?.additive && selectedRowKeys.has(key)) return
+
+      const record = recordMap.get(key)
+      if (!record) return
 
       onChangeCheckboxSingle(true, key as string, record)
-    }
+    })
   })
 
   const flushDragSelection = useMemoizedFn(() => {
@@ -811,6 +840,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     document.removeEventListener('mousemove', onDragSelectionMouseMove)
     document.removeEventListener('mouseup', onDragSelectionMouseUp)
 
+    if (dragSelectionUserSelectRef.current !== null) {
+      document.body.style.userSelect = dragSelectionUserSelectRef.current
+      dragSelectionUserSelectRef.current = null
+    }
+
     if (dragSelectionFrameRef.current) {
       window.cancelAnimationFrame(dragSelectionFrameRef.current)
       dragSelectionFrameRef.current = undefined
@@ -851,41 +885,42 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     window?.getSelection()?.removeAllRanges()
   })
 
-  const createDragSelectionState = useMemoizedFn((container: HTMLDivElement, clientX: number, clientY: number) => {
-    const rect = container.getBoundingClientRect()
+  const createDragSelectionState = useMemoizedFn(
+    (container: HTMLDivElement, clientX: number, clientY: number, additive: boolean) => {
+      const rect = container.getBoundingClientRect()
 
-    return {
-      active: false,
-      container,
-      contentHeight: data.length * defItemHeight,
-      contentWidth:
-        wrapperRef.current?.scrollWidth ||
-        wrapperRef.current?.clientWidth ||
-        columns
-          .map((item) => item.width || item.minWidth || colWidth || 0)
-          .reduce((prev, current) => prev + current, 0),
-      headerHeight: columnsRef.current?.clientHeight || (size === 'middle' ? 32 : 28),
-      rectLeft: rect.left,
-      rectTop: rect.top,
-      startClientX: clientX,
-      startClientY: clientY,
-      lastClientX: clientX,
-      lastClientY: clientY,
-      startViewportX: 0,
-      startViewportY: 0,
-      startContentX: 0,
-      startContentY: 0,
-      viewportHeight: container.clientHeight,
-      viewportWidth: container.clientWidth,
-    } as DragSelectionState
-  })
+      return {
+        active: false,
+        additive,
+        container,
+        contentHeight: data.length * defItemHeight,
+        contentWidth:
+          wrapperRef.current?.scrollWidth ||
+          wrapperRef.current?.clientWidth ||
+          columns
+            .map((item) => item.width || item.minWidth || colWidth || 0)
+            .reduce((prev, current) => prev + current, 0),
+        headerHeight: columnsRef.current?.clientHeight || (size === 'middle' ? 32 : 28),
+        rectLeft: rect.left,
+        rectTop: rect.top,
+        startClientX: clientX,
+        startClientY: clientY,
+        lastClientX: clientX,
+        lastClientY: clientY,
+        startViewportX: 0,
+        startViewportY: 0,
+        startContentX: 0,
+        startContentY: 0,
+        viewportHeight: container.clientHeight,
+        viewportWidth: container.clientWidth,
+      } as DragSelectionState
+    },
+  )
 
   const canStartDragSelection = useMemoizedFn((event: React.MouseEvent<HTMLDivElement>) => {
     if (
       event.button !== 0 ||
       event.shiftKey ||
-      event.ctrlKey ||
-      event.metaKey ||
       event.altKey ||
       !rowSelection ||
       rowSelection.type === 'radio' ||
@@ -922,12 +957,18 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       activateDragSelection(dragSelectionState)
     }
 
+    dragSelectionState.additive = event.ctrlKey || event.metaKey
+
     event.preventDefault()
     scheduleDragSelectionUpdate()
     ensureDragSelectionAutoScroll()
   })
 
-  const onDragSelectionMouseUp = useMemoizedFn(() => {
+  const onDragSelectionMouseUp = useMemoizedFn((event: MouseEvent) => {
+    const dragSelectionState = dragSelectionStateRef.current
+    if (dragSelectionState) {
+      dragSelectionState.additive = event.ctrlKey || event.metaKey
+    }
     finishDragSelection()
   })
 
@@ -938,13 +979,25 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     if (!container) return
     const selectedRowKeys = rowSelection?.selectedRowKeys || []
 
-    const nextDragSelectionState = createDragSelectionState(container, event.clientX, event.clientY)
+    const nextDragSelectionState = createDragSelectionState(
+      container,
+      event.clientX,
+      event.clientY,
+      event.ctrlKey || event.metaKey,
+    )
 
     if (event.clientY <= nextDragSelectionState.rectTop + nextDragSelectionState.headerHeight) return
 
     const startPoint = getDragSelectionPoint(nextDragSelectionState, event.clientX, event.clientY)
 
     resetDragSelection(false)
+    event.preventDefault()
+    if (dragSelectionUserSelectRef.current === null) {
+      dragSelectionUserSelectRef.current = document.body.style.userSelect || ''
+    }
+    document.body.style.userSelect = 'none'
+    window?.getSelection()?.removeAllRanges()
+
     skipRowClickAfterDragRef.current = false
     dragSelectionInitialKeysRef.current = new Set<React.Key>(selectedRowKeys as React.Key[])
     nextDragSelectionState.startViewportX = startPoint.viewportX
