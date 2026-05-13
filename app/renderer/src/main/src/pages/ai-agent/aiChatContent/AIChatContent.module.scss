@@ -327,20 +327,12 @@
       height: 20px;
       .echarts-heard-left {
         @extend %display-flex-center;
-        gap: 4px;
+        gap: 8px;
         font-size: 14px;
         line-height: 20px;
         .threshold {
           color: var(--Colors-Use-Error-Primary);
         }
-        .unit {
-          color: var(--Colors-Use-Neutral-Text-4-Help-text);
-          color: var(--Colors-Use-Neutral-Text-4-Help-text, #9ca3b1);
-          font-size: 12px;
-          font-weight: 400;
-          line-height: 16px;
-        }
-
         .title {
           color: var(--Colors-Use-Neutral-Text-1-Title);
           font-weight: 500;
