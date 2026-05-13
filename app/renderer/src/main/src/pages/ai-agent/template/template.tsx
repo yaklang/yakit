@@ -19,7 +19,13 @@ import {
 } from './type'
 import { Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineArrowupIcon, OutlineAtsymbolIcon, OutlineCodeIcon, OutlineHandIcon } from '@/assets/icon/outline'
+import {
+  OutlineArrowupIcon,
+  OutlineAtsymbolIcon,
+  OutlineCodeIcon,
+  OutlineCogIcon,
+  OutlineHandIcon,
+} from '@/assets/icon/outline'
 import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
@@ -51,7 +57,11 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AIGlobalCommandPopover, AIManualAdditionPopover } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
+import {
+  AIGlobalCommandPopover,
+  AIInputSettingPopover,
+  AIManualAdditionPopover,
+} from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
@@ -94,6 +104,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 
     const [manualAdditionVisible, setManualAdditionVisible] = useState<boolean>(false)
+
+    const [inputSettingVisible, setInputSettingVisible] = useState<boolean>(false)
 
     const footerLeftTypes: FooterLeftTypesComponentProps[] = useCreation(() => {
       if (!!props.footerLeftTypes?.length) {
@@ -355,7 +367,16 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 <OpenFileDropdown cb={onSetFileMention}>
                   <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />
                 </OpenFileDropdown>
-
+                <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
+                  <YakitButton
+                    type="text2"
+                    radius="50%"
+                    icon={<OutlineCogIcon />}
+                    onClick={(e) => e.stopPropagation()}
+                    className={styles['btn-base']}
+                    isHover={inputSettingVisible}
+                  />
+                </AIInputSettingPopover>
                 {execute && (
                   <AIManualAdditionPopover
                     chatType="reAct"

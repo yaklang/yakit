@@ -98,6 +98,9 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
     data.EnableQwenNoThinkMode = setting.EnableQwenNoThinkMode ?? AIAgentSettingDefault.EnableQwenNoThinkMode
     data.AllowPlanUserInteract = setting.AllowPlanUserInteract ?? AIAgentSettingDefault.AllowPlanUserInteract
 
+    data.SyncPerceptionTrigger = setting.SyncPerceptionTrigger ?? AIAgentSettingDefault.SyncPerceptionTrigger
+    data.EnablePlan = setting.EnablePlan ?? AIAgentSettingDefault.EnablePlan
+
     if (setting?.AllowPlanUserInteract) {
       if (!isNil(setting?.PlanUserInteractMaxCount)) {
         data.PlanUserInteractMaxCount = setting.PlanUserInteractMaxCount || 3

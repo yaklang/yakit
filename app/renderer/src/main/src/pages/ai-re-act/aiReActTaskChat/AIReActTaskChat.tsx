@@ -3,6 +3,8 @@ import {
   AIGlobalCommandPopoverProps,
   AIGlobalCommandProps,
   AIGlobalCommandRefProps,
+  AIInputSettingFormProps,
+  AIInputSettingPopoverProps,
   AIManualAdditionPopoverProps,
   AIManualAdditionProps,
   AIReActTaskChatContentProps,
@@ -33,7 +35,7 @@ import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/use
 import { AIChatQSData, AIChatQSDataTypeEnum, AIReviewType } from '../hooks/aiRender'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
-import { Tooltip } from 'antd'
+import { Form } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
 import { randomString } from '@/utils/randomUtil'
@@ -48,6 +50,8 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
 import AIReActTaskEmpty from './AIReActTaskEmpty'
+import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
@@ -312,6 +316,56 @@ export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = R
       content={<AIManualAddition chatType={chatType} onCancel={() => setManualAdditionVisible(false)} />}
       onVisibleChange={setManualAdditionVisible}
       trigger={'click'}
+    >
+      {children}
+    </YakitPopover>
+  )
+})
+
+export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React.memo((props) => {
+  const { children } = props
+
+  const { setting } = useAIAgentStore()
+  const { setSetting } = useAIAgentDispatcher()
+
+  const [visible, setVisible] = useControllableValue<boolean>(props, {
+    defaultValue: false,
+    valuePropName: 'visible',
+    trigger: 'setVisible',
+  })
+  const [form] = Form.useForm<AIInputSettingFormProps>()
+
+  const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
+    setSetting?.((v) => ({
+      ...v,
+      ...changedValues,
+    }))
+  })
+  return (
+    <YakitPopover
+      visible={visible}
+      content={
+        <Form
+          form={form}
+          labelCol={{ span: 18 }}
+          wrapperCol={{ span: 6 }}
+          onValuesChange={onValuesChange}
+          initialValues={{
+            SyncPerceptionTrigger: setting.SyncPerceptionTrigger,
+            EnablePlan: setting.EnablePlan,
+          }}
+        >
+          <Form.Item label="SyncPerceptionTrigger" name="SyncPerceptionTrigger" valuePropName="checked">
+            <YakitSwitch />
+          </Form.Item>
+          <Form.Item label="EnablePlan" name="EnablePlan" valuePropName="checked">
+            <YakitSwitch />
+          </Form.Item>
+        </Form>
+      }
+      onVisibleChange={setVisible}
+      trigger={'click'}
+      destroyTooltipOnHide={true}
     >
       {children}
     </YakitPopover>

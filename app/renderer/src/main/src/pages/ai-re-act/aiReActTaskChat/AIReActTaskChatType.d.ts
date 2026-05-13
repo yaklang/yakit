@@ -46,6 +46,13 @@ export interface AIManualAdditionPopoverProps {
   chatType: AIManualAdditionProps['chatType']
 }
 
+export interface AIInputSettingPopoverProps {
+  children?: ReactNode
+  visible?: boolean
+  setVisible?: (v: boolean) => void
+}
+export interface AIInputSettingFormProps extends Pick<AIStartParams, 'SyncPerceptionTrigger' | 'EnablePlan'> {}
+
 export interface AIGlobalCommandRefProps {
   value: string
 }
