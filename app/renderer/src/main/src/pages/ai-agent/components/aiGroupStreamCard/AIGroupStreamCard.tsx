@@ -203,7 +203,7 @@ const AIGroupStreamCard: FC<{
         }}
       >
         <div className={styles['title-node-label']}>
-          <OutlineBrainIcon className={styles['brain-icon']} />
+          {/* <OutlineBrainIcon className={styles['brain-icon']} /> */}
           {nodeLabel}
         </div>
         <div className={styles['stream-text']}>
