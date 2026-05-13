@@ -376,8 +376,27 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             name="ExtraPort"
             rules={[
               {
-                pattern: /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
-                message: '请输入正确的端口号',
+                validator: async (_, value) => {
+                  // 允许空值
+                  if (!value) {
+                    return Promise.resolve()
+                  }
+
+                  // 统一转为数组处理（单个字符串也会转为数组）
+                  const portList = Array.isArray(value) ? value : [value]
+
+                  // 端口号正则（1-65535）
+                  const portRegex = /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
+
+                  for (const port of portList) {
+                    const strPort = String(port).trim()
+                    if (!portRegex.test(strPort)) {
+                      throw new Error('请输入正确的端口号（1-65535）')
+                    }
+                  }
+
+                  return Promise.resolve()
+                },
               },
             ]}
           >
