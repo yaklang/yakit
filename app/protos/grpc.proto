@@ -7158,6 +7158,12 @@ message MITMContentReplacer {
 
   // Multi-stage chained regex output (global mode).
   repeated RegexOutputStage SecondaryStages = 22;
+
+  // When true, Rule is treated as a plain-text literal: special regex characters
+  // (e.g. `.`, `*`, `+`) are matched literally without needing to be escaped.
+  // When false (default, zero value), Rule is compiled as a regular expression,
+  // preserving backward compatibility with existing rules.
+  bool ExactMatch = 23;
 }
 
 message RemoveHookParams {

@@ -5,6 +5,8 @@
     "execution_order": "Execution Order",
     "rule_name": "Rule Name",
     "rule_content": "Rule Content",
+    "Literal_matching": "Literal matching",
+    "Literal_matching_desc": "When enabled, the rule content is treated as \"plain text\" and regex special characters are automatically escaped. For example, '1.0' is converted to '1\\.0', preventing characters like .*+ from being interpreted as regex expressions.",
     "replacement_result": "Replacement Result",
     "http_header_cookie_priority_tip": "HTTP Header and HTTP Cookie have a higher priority and will overwrite the body content",
     "on_off": "On/Off",

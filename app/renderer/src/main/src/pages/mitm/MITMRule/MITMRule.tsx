@@ -668,6 +668,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
           VerboseName: 'RULE:' + randomString(10),
           ExtraCookies: [],
           ExtraHeaders: [],
+          ExactMatch: false,
         }
         setCurrentItem(defRowDate)
       } else {

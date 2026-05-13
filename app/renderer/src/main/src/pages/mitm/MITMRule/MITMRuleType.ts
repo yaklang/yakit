@@ -15,6 +15,7 @@ export interface MITMContentReplacerRule {
   Index: number
   Rule: string
   SecondaryStages?: MITMSecondaryStagesItem[]
+  ExactMatch: boolean
   ExcludeSuffix?: string[]
   RegexpGroups: number[]
   /** @description 捕获组输出模板，支持 $1、\1、{1} */

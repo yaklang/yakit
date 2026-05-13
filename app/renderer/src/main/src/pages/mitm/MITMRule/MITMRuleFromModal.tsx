@@ -242,7 +242,20 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
           >
             <RuleContent getRule={getRule} ref={ruleContentRef} />
           </Form.Item>
-
+          <Form.Item
+            label={
+              <span className={styles['form-label']}>
+                {t('MITMRule.Literal_matching')}
+                <Tooltip title={t('MITMRule.Literal_matching_desc')}>
+                  <OutlineInformationcircleIcon className={styles['info-icon']} />
+                </Tooltip>
+              </span>
+            }
+            name="ExactMatch"
+            valuePropName="checked"
+          >
+            <YakitSwitch />
+          </Form.Item>
           <Form.Item label={t('MITMRuleFromModal.format_type')}>
             <YakitRadioButtons
               size="large"
