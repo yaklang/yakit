@@ -75,7 +75,7 @@ const HistoryChatList: FC<{
 }> = ({ search }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { chats, activeChat } = useAIAgentStore()
-  const { setChats, setActiveChat, loadHistoryData, getChats } = useAIAgentDispatcher()
+  const { setChats, setActiveChat, loadHistoryData, getChats, setSetting } = useAIAgentDispatcher()
   const listRef = useRef<HTMLDivElement | null>(null)
   const chatTotalRef = useRef(0)
   const editInfo = useRef<AISession>()
@@ -184,6 +184,7 @@ const HistoryChatList: FC<{
     // if (!info.request) {
     //     yakitNotify("warning", "当前对话无请求参数信息，无法使用重新执行功能")
     // }
+    setSetting?.((old) => ({ ...old, SyncPerceptionTrigger: false, EnablePlan: false }))
     setActiveChat && setActiveChat(info)
   })
 

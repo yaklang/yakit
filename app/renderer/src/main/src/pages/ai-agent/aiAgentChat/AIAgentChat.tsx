@@ -65,7 +65,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat } = useAIAgentStore()
-  const { setChats, setActiveChat, getSetting } = useAIAgentDispatcher()
+  const { setChats, setActiveChat, getSetting, setSetting } = useAIAgentDispatcher()
 
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
@@ -281,6 +281,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
         switch (data.type as ReActChatEventEnum) {
           // 新开聊天对话窗
           case ReActChatEventEnum.NEW_CHAT:
+            setSetting?.((old) => ({ ...old, SyncPerceptionTrigger: false, EnablePlan: false }))
             setActiveChat?.(undefined)
             setTimeout(() => {
               setMode('welcome')

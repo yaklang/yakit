@@ -183,7 +183,11 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
             try {
               const cache = JSON.parse(res) as AIAgentSetting
               if (typeof cache !== 'object') return
-              setSetting(cache)
+              setSetting({
+                ...cache,
+                SyncPerceptionTrigger: false,
+                EnablePlan: false,
+              })
             } catch (error) {}
           })
           .catch(() => {})

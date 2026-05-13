@@ -26,6 +26,7 @@ import {
   OutlineCodeIcon,
   OutlineExitIcon,
   OutlineHandIcon,
+  OutlineInformationcircleIcon,
   OutlinePlay2Icon,
   OutlinePositionIcon,
   RedoDotIcon,
@@ -35,7 +36,7 @@ import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/use
 import { AIChatQSData, AIChatQSDataTypeEnum, AIReviewType } from '../hooks/aiRender'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
-import { Form } from 'antd'
+import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
 import { randomString } from '@/utils/randomUtil'
@@ -355,10 +356,35 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             EnablePlan: setting.EnablePlan,
           }}
         >
-          <Form.Item label="SyncPerceptionTrigger" name="SyncPerceptionTrigger" valuePropName="checked">
+          <Form.Item
+            label={
+              <>
+                同步意图识别
+                <Tooltip overlayClassName={styles['form-info-icon-tooltip']} title={'开启后回答精度更高，但速度会变慢'}>
+                  <OutlineInformationcircleIcon className={styles['info-icon']} />
+                </Tooltip>
+              </>
+            }
+            name="SyncPerceptionTrigger"
+            valuePropName="checked"
+          >
             <YakitSwitch />
           </Form.Item>
-          <Form.Item label="EnablePlan" name="EnablePlan" valuePropName="checked">
+          <Form.Item
+            label={
+              <>
+                任务规划
+                <Tooltip
+                  overlayClassName={styles['form-info-icon-tooltip']}
+                  title={'开启后会进入Plan模式，进行任务规划和执行'}
+                >
+                  <OutlineInformationcircleIcon className={styles['info-icon']} />
+                </Tooltip>
+              </>
+            }
+            name="EnablePlan"
+            valuePropName="checked"
+          >
             <YakitSwitch />
           </Form.Item>
         </Form>

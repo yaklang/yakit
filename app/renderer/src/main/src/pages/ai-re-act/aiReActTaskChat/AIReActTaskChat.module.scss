@@ -277,3 +277,19 @@
   }
 }
 // #endregion
+
+// #region AIInputSettingPopover
+.form-info-icon-tooltip {
+  padding-bottom: 2px;
+}
+.info-icon {
+  cursor: pointer;
+  margin-left: 2px;
+  svg {
+    width: 16px;
+    height: 16px;
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  }
+}
+
+// #endregion

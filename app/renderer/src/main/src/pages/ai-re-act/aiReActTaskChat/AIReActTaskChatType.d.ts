@@ -2,6 +2,7 @@ import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AIRecommendItem, RandomAIMaterialsDataProps } from '@/pages/ai-agent/aiChatWelcome/type'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { ReactNode } from 'react'
+import { AIStartParams } from '../hooks/grpcApi'
 
 export interface AIReActTaskChatProps {
   setShowFreeChat: (show: boolean) => void
