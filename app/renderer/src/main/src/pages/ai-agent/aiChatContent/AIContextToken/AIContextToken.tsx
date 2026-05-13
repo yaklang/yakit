@@ -19,7 +19,6 @@ import {
   OutlineArrowdownIcon,
   OutlineArrowupIcon,
   OutlinePresentationchartlineIcon,
-  OutlineSwitchhorizontalIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
 import classNames from 'classnames'
@@ -37,6 +36,7 @@ import { Tooltip } from 'antd'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import ContextTable from './ContextTable/ContextTable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 
 const AIContextToken: FC<{
   session?: string
@@ -257,10 +257,8 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
     return data
   }, [aiGlobalConfig.IntelligentModels, aiGlobalConfig.LightweightModels])
 
-  const [contextStatsMetric, setContextStatsMetric] = useState<ContextStatsChartMetric>('bytes')
-  const toggleContextStatsMetric = useMemoizedFn(() => {
-    setContextStatsMetric((m) => (m === 'bytes' ? 'tokens' : 'bytes'))
-  })
+  const [contextStatsMetric, setContextStatsMetric] = useState<ContextStatsChartMetric>('tokens')
+  const [chartMetricPopoverOpen, setChartMetricPopoverOpen] = useState(false)
 
   const intelligentToken = useCreation(() => {
     if (!tierConsumption?.intelligent) return [0, 0, 0]
@@ -417,19 +415,21 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
             <div className={styles['echarts-heard']}>
               <div className={styles['echarts-heard-left']}>
                 <div className={styles['title']}>
-                  {contextStatsMetric === 'bytes' ? '上下文字节统计' : '上下文Token统计'}
+                  上下文统计
+                  {/* {contextStatsMetric === 'bytes' ? '上下文字节统计' : '上下文Token统计'} */}
                 </div>
-                <div className={styles['unit']}>
-                  {contextStatsMetric === 'bytes' ? '（单位: Byte）' : '（单位: Token）'}
-                </div>
-                <Tooltip title={contextStatsMetric === 'bytes' ? '切换为 Token' : '切换为字节'}>
-                  <YakitButton
-                    icon={<OutlineSwitchhorizontalIcon />}
-                    type="text2"
-                    onClick={toggleContextStatsMetric}
-                    size="small"
-                  />
-                </Tooltip>
+                <YakitRadioButtons
+                  size="small"
+                  value={contextStatsMetric}
+                  buttonStyle="solid"
+                  onChange={(v) => {
+                    setContextStatsMetric(v.target.value as ContextStatsChartMetric)
+                  }}
+                  options={[
+                    { value: 'tokens', label: 'Token' },
+                    { value: 'bytes', label: 'Byte' },
+                  ]}
+                />
               </div>
               <div className={styles['total']}>
                 总数 <span>{contextStatsTotalDisplay}</span>

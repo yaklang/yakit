@@ -134,6 +134,14 @@
   .expand-icon-expanded {
     transform: rotate(0);
   }
+
+  .count-column-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 100%;
+  }
 }
 
 .filter-dropdown {
@@ -174,5 +182,23 @@
 
   .filter-action-btn {
     min-width: 56px;
+  }
+}
+.metric-table-filter-dropdown {
+  padding-top: 5px;
+  :global {
+    .ant-popover-inner-content {
+      padding: 4px;
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+      border-radius: 4px;
+    }
+  }
+}
+.table-metric-filter-icon-dropdown {
+  padding-left: 4px;
+  svg {
+    width: 14px;
+    height: 14px;
   }
 }
