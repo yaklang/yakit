@@ -48,11 +48,11 @@ const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string, noConfirm
       }
 
       let m = showYakitModal({
-        title: tOriginal('ShowInBrowser.confirmOpenTitle'),
+        title: (modalT) => modalT('ShowInBrowser.confirmOpenTitle'),
         width: '50%',
-        content: (
+        content: (modalT) => (
           <Space direction={'vertical'} style={{ maxWidth: '100%' }}>
-            <Alert type={'info'} message={tOriginal('ShowInBrowser.infoMessage')} />
+            <Alert type={'info'} message={modalT('ShowInBrowser.infoMessage')} />
             <CopyableField text={res.FacadesUrl} mark={true} />
             <YakitButton
               onClick={() => {
@@ -61,7 +61,7 @@ const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string, noConfirm
               }}
               type={'primary'}
             >
-              {tOriginal('ShowInBrowser.confirmOpen')}
+              {modalT('ShowInBrowser.confirmOpen')}
             </YakitButton>
           </Space>
         ),

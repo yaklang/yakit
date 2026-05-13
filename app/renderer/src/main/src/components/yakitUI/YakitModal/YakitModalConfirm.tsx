@@ -12,7 +12,7 @@ import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'yakitUi')
 
-export type ModalI18nNode = React.ReactNode | ((modalT: TFunction) => React.ReactNode)
+export type ModalI18nNode = React.ReactNode | ((modalT: TFunction) => React.ReactNode) | string
 
 export const ALL_MODAL_I18N_NAMESPACES = [
   'yakitUi',
@@ -96,16 +96,16 @@ export interface YakitModalConfirmProps extends Omit<YakitBaseModalProp, 'title'
   modalAfterClose?: () => any
   onOk?: (e) => any
   onCancel?: (e) => any
-  onOkText?: string
-  onCancelText?: string
+  onOkText?: ModalI18nNode
+  onCancelText?: ModalI18nNode
   showConfirmLoading?: boolean
 }
 
 interface YakitBaseModalProps extends YakitModalProp, React.ComponentProps<any> {
   onVisibleSetter?: (setter: (i: boolean) => void) => void
   showConfirmLoading?: boolean
-  onCancelText?: string
-  onOkText?: string
+  onCancelText?: ModalI18nNode
+  onOkText?: ModalI18nNode
 }
 
 export const YakitModalConfirm = (props: YakitModalConfirmProps) => {
@@ -215,7 +215,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
             }}
             {...props.cancelButtonProps}
           >
-            {props.onCancelText || t('YakitButton.cancel')}
+            {props.onCancelText ? <ModalI18nRender node={props.onCancelText} /> : t('YakitButton.cancel')}
           </YakitButton>
           <YakitButton
             onClick={(e) => {
@@ -229,7 +229,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
             loading={loading}
             {...props.okButtonProps}
           >
-            {props.onOkText || t('YakitButton.ok')}
+            {props.onOkText ? <ModalI18nRender node={props.onOkText} /> : t('YakitButton.ok')}
           </YakitButton>
         </div>
       }
@@ -263,7 +263,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
 
 export const debugYakitModal = (y: any) => {
   const m = showYakitModal({
-    title: tOriginal('YakitModalConfirm.debugInfo'),
+    title: (modalT) => modalT('YakitModalConfirm.debugInfo'),
     width: '50%',
     content: (
       <div style={{ marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20 }}>{JSON.stringify(y)}</div>
@@ -276,7 +276,7 @@ export const debugYakitModal = (y: any) => {
 
 export const debugYakitModalAny = (y: any) => {
   const m = showYakitModal({
-    title: tOriginal('YakitModalConfirm.debugInfo'),
+    title: (modalT) => modalT('YakitModalConfirm.debugInfo'),
     width: '50%',
     content: <div style={{ marginLeft: 20, marginRight: 20, marginTop: 16, marginBottom: 20 }}>{y}</div>,
     onOk: () => {

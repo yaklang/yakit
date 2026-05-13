@@ -2014,32 +2014,36 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   const [exportDataKey, setExportDataKey] = useState<string[]>([])
   const onExcelExport = (list: number[]) => {
     percentContainerRef.current = currentPageTabRouteKey
-    const titleValue = configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey }))
-    const exportValue = [
-      ...titleValue,
-      { title: t('HTTPFlowTable.requestPacket'), key: 'request' },
-      { title: t('HTTPFlowTable.responsePacket'), key: 'response' },
-    ]
     const m = showYakitModal({
-      title: t('HTTPFlowTable.exportFields'),
-      content: (
-        <ExportSelect
-          exportValue={exportValue}
-          initCheckValue={
-            toWebFuzzer
-              ? exportValue.filter((i) => !['GetParamsTotal', 'request', 'response'].includes(i.key))
-              : exportValue
-          }
-          setExportTitle={(v: string[]) => {
-            setExportDataKey(['Id', ...v])
-          }}
-          exportKey={toWebFuzzer ? 'WEBFUZZER-HISTORY-EXPORT-KEYS' : 'MITM-HTTP-HISTORY-EXPORT-KEYS'}
-          fileName={!toWebFuzzer ? 'History' : 'WebFuzzer'}
-          getData={(pagination) => getExcelData(pagination, list)}
-          onClose={() => m.destroy()}
-          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
-        />
-      ),
+      title: (modalT) => modalT('HTTPFlowTable.exportFields'),
+      content: (modalT) => {
+        const exportValue = [
+          ...configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey })),
+          { title: modalT('HTTPFlowTable.requestPacket'), key: 'request' },
+          { title: modalT('HTTPFlowTable.responsePacket'), key: 'response' },
+        ]
+
+        return (
+          <ExportSelect
+            exportValue={exportValue}
+            initCheckValue={
+              toWebFuzzer
+                ? exportValue.filter((i) => !['GetParamsTotal', 'request', 'response'].includes(i.key))
+                : exportValue
+            }
+            setExportTitle={(v: string[]) => {
+              setExportDataKey(['Id', ...v])
+            }}
+            exportKey={toWebFuzzer ? 'WEBFUZZER-HISTORY-EXPORT-KEYS' : 'MITM-HTTP-HISTORY-EXPORT-KEYS'}
+            fileName={!toWebFuzzer ? 'History' : 'WebFuzzer'}
+            getData={(pagination) => getExcelData(pagination, list)}
+            onClose={() => m.destroy()}
+            getContainer={
+              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+            }
+          />
+        )
+      },
       onCancel: () => {
         m.destroy()
       },
@@ -2171,28 +2175,32 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   const percentContainerRef = useRef<string>(currentPageTabRouteKey)
   const onHarExport = (ids: number[]) => {
     percentContainerRef.current = currentPageTabRouteKey
-    const titleValue = configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey }))
-    const harFieldOptions = [
-      ...titleValue,
-      { title: t('HTTPFlowTable.requestPacket'), key: 'request' },
-      { title: t('HTTPFlowTable.responsePacket'), key: 'response' },
-    ]
     const m = showYakitModal({
-      title: t('HTTPFlowTable.exportFields'),
-      content: (
-        <ExportSelect
-          exportValue={harFieldOptions}
-          initCheckValue={harFieldOptions}
-          setExportTitle={(v: string[]) => {
-            setExportDataKey(['Id', ...v])
-          }}
-          exportKey={!toWebFuzzer ? 'MITM-HISTORY-EXPORT-KEYS' : 'WEBFUZZER-HISTORY-EXPORT-KEYS'}
-          getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
-          onClose={() => m.destroy()}
-          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
-          onHarExport={() => handleClickHarExport(ids)}
-        />
-      ),
+      title: (modalT) => modalT('HTTPFlowTable.exportFields'),
+      content: (modalT) => {
+        const harFieldOptions = [
+          ...configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey })),
+          { title: modalT('HTTPFlowTable.requestPacket'), key: 'request' },
+          { title: modalT('HTTPFlowTable.responsePacket'), key: 'response' },
+        ]
+
+        return (
+          <ExportSelect
+            exportValue={harFieldOptions}
+            initCheckValue={harFieldOptions}
+            setExportTitle={(v: string[]) => {
+              setExportDataKey(['Id', ...v])
+            }}
+            exportKey={!toWebFuzzer ? 'MITM-HISTORY-EXPORT-KEYS' : 'WEBFUZZER-HISTORY-EXPORT-KEYS'}
+            getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
+            onClose={() => m.destroy()}
+            getContainer={
+              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+            }
+            onHarExport={() => handleClickHarExport(ids)}
+          />
+        )
+      },
       onCancel: () => {
         m.destroy()
         setSelectedRowKeys([])

@@ -2111,8 +2111,8 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
           const m = YakitModalConfirm({
             width: 420,
             type: 'white',
-            title: t('YakitModal.closePrompt'),
-            content: t('NewCodec.saveUpdateConfirm'),
+            title: (modalT) => modalT('YakitModal.closePrompt'),
+            content: (modalT) => modalT('NewCodec.saveUpdateConfirm'),
             onCancel() {
               m.destroy()
             },

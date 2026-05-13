@@ -101,7 +101,7 @@ const GeneralExporter: React.FC<GeneralExporterProp> = (props) => {
 export type ExportDataType = 'all' | 'payload' | 'extracted'
 export const exportData = (data: ExtractableData[], exportType: ExportDataType = 'all') => {
   const m = showYakitModal({
-    title: tOriginal('Exporter.exportData'),
+    title: (modalT) => modalT('Exporter.exportData'),
     width: 700,
     footer: null,
     content: (
@@ -311,7 +311,7 @@ const GeneralExporterForm: React.FC<GeneralExporterFormProp> = (props) => {
         }) as ExtractableData[]
 
         showYakitModal({
-          title: t('GeneralExporterForm.generateExportFile'),
+          title: (modalT) => modalT('GeneralExporterForm.generateExportFile'),
           width: 700,
           footer: null,
           content: (

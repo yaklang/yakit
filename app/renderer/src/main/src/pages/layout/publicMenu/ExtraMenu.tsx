@@ -57,9 +57,9 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
         form.setFieldsValue({ historyharPath: '' })
 
         const m = showYakitModal({
-          title: t('Layout.ExtraMenu.importHARHistoryData'),
+          title: (modalT) => modalT('Layout.ExtraMenu.importHARHistoryData'),
           width: 600,
-          content: (
+          content: (modalT) => (
             <div style={{ padding: 15 }}>
               <Form form={form}>
                 <YakitFormDragger
@@ -108,7 +108,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
                       })
                   }}
                 >
-                  {t('YakitButton.import')}
+                  {modalT('YakitButton.import')}
                 </YakitButton>
               </div>
             </div>

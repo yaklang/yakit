@@ -11,16 +11,16 @@ export const invalidCacheAndUserData = (delTemporaryProject) => {
   let checked = false
   const m = showYakitModal({
     type: 'white',
-    title: tOriginal('InvalidCacheAndUserData.title'),
-    content: (
+    title: (modalT) => modalT('InvalidCacheAndUserData.title'),
+    content: (modalT) => (
       <Space direction={'vertical'} style={{ width: '100%', padding: 20 }}>
         <Alert
           type="success"
-          message={tOriginal('InvalidCacheAndUserData.resetHint', { name: getReleaseEditionName() })}
+          message={modalT('InvalidCacheAndUserData.resetHint', { name: getReleaseEditionName() })}
         />
-        <Alert type="success" message={tOriginal('InvalidCacheAndUserData.warning')} />
+        <Alert type="success" message={modalT('InvalidCacheAndUserData.warning')} />
         <YakitCheckbox onChange={(e) => (checked = e.target.checked)}>
-          {tOriginal('InvalidCacheAndUserData.syncDeleteDatabase')}
+          {modalT('InvalidCacheAndUserData.syncDeleteDatabase')}
         </YakitCheckbox>
       </Space>
     ),

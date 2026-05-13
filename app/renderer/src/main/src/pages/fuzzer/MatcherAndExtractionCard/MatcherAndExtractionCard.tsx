@@ -211,7 +211,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
 
     const onShowUseInstructions = useMemoizedFn(() => {
       const m = showYakitModal({
-        title: t('MatcherAndExtraction.matchersAndExtractorsUseInstructions'),
+        title: (modalT) => modalT('MatcherAndExtraction.matchersAndExtractorsUseInstructions'),
         type: 'white',
         onOkText: t('MatcherAndExtraction.understand'),
         onOk: () => m.destroy(),
@@ -284,8 +284,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
           let m = YakitModalConfirm({
             width: 420,
             type: 'white',
-            onCancelText: t('YakitButton.do_not_apply'),
-            onOkText: t('YakitButton.apply'),
+            onCancelText: (modalT) => modalT('YakitButton.do_not_apply'),
+            onOkText: (modalT) => modalT('YakitButton.apply'),
             icon: <ExclamationCircleOutlined />,
             onOk: () => {
               resolve(data)
@@ -297,7 +297,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
               // m.destroy()
               onClose()
             },
-            content: t('MatcherAndExtraction.apply_changes_prompt'),
+            content: (modalT) => modalT('MatcherAndExtraction.apply_changes_prompt'),
           })
         }
       })
@@ -376,7 +376,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             return
           }
           showYakitModal({
-            title: t('MatcherAndExtraction.extractionResult'),
+            title: (modalT) => modalT('MatcherAndExtraction.extractionResult'),
             width: '60%',
             footer: <></>,
             content: <ExtractionResultsContent list={obj.Values || []} />,
@@ -478,8 +478,8 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
         let m = YakitModalConfirm({
           width: 420,
           type: 'white',
-          onCancelText: t('YakitButton.doNotSave'),
-          onOkText: t('YakitButton.save'),
+          onCancelText: (modalT) => modalT('YakitButton.doNotSave'),
+          onOkText: (modalT) => modalT('YakitButton.save'),
           icon: <ExclamationCircleOutlined />,
           onOk: () => {
             onApplyConfirm('save')
@@ -489,7 +489,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
             onClose()
             // m.destroy()
           },
-          content: t('MatcherAndExtraction.save_changes_prompt'),
+          content: (modalT) => modalT('MatcherAndExtraction.save_changes_prompt'),
         })
       }
     })

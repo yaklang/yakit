@@ -212,7 +212,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
       ? `${query.Filter?.Programs[0]}-${t('YakRunnerScanHistory.ssaReport')}`
       : undefined
     const m = showYakitModal({
-      title: t('YakRunnerScanHistory.exportReport'),
+      title: (modalT) => modalT('YakRunnerScanHistory.exportReport'),
       content: (
         <div style={{ padding: 20 }}>
           <YakitInput

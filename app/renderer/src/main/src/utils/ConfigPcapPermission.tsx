@@ -114,7 +114,7 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
 export const showPcapPermission = () => {
   const m = showYakitModal({
     type: 'white',
-    title: tOriginal('ConfigPcapPermission.modalTitle'),
+    title: (modalT) => modalT('ConfigPcapPermission.modalTitle'),
     width: '50%',
     content: (
       <ConfigPcapPermissionForm

@@ -462,14 +462,14 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
   const handleConfigureHost = (key: number, Host?: string) => {
     hostRef.current = Host || ''
     const m = showYakitModal({
-      title: t('ConfigNetworkPage.inputHostTitle'),
-      content: (
+      title: (modalT) => modalT('ConfigNetworkPage.inputHostTitle'),
+      content: (modalT) => (
         <div style={{ paddingTop: 20 }}>
           <Form labelCol={{ span: 5 }} wrapperCol={{ span: 18 }} size={'small'}>
-            <Form.Item label={t('ConfigNetworkPage.domain')} help={t('ConfigNetworkPage.domainHelp')}>
+            <Form.Item label={modalT('ConfigNetworkPage.domain')} help={modalT('ConfigNetworkPage.domainHelp')}>
               <YakitInput
                 defaultValue={hostRef.current}
-                placeholder={t('ConfigNetworkPage.domainPlaceholder')}
+                placeholder={modalT('ConfigNetworkPage.domainPlaceholder')}
                 allowClear
                 onChange={(e) => {
                   const { value } = e.target
@@ -520,11 +520,11 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
               type="outline2"
               onClick={() => {
                 const m = showYakitModal({
-                  title: t('ConfigNetworkPage.passwordUnlock'),
-                  content: (
+                  title: (modalT) => modalT('ConfigNetworkPage.passwordUnlock'),
+                  content: (modalT) => (
                     <div style={{ padding: 20 }}>
                       <YakitInput.Password
-                        placeholder={t('ConfigNetworkPage.enterCertificatePassword')}
+                        placeholder={modalT('ConfigNetworkPage.enterCertificatePassword')}
                         allowClear
                         onChange={(e) => {
                           const { value } = e.target
@@ -907,7 +907,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                         key={index}
                         onClick={() => {
                           let m = showYakitModal({
-                            title: t('ConfigNetworkPage.editThirdPartyApp'),
+                            title: (modalT) => modalT('ConfigNetworkPage.editThirdPartyApp'),
                             width: 600,
                             closable: true,
                             maskClosable: false,
@@ -958,7 +958,7 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     type={'outline1'}
                     onClick={() => {
                       let m = showYakitModal({
-                        title: t('ConfigNetworkPage.addThirdPartyApp'),
+                        title: (modalT) => modalT('ConfigNetworkPage.addThirdPartyApp'),
                         width: 600,
                         footer: null,
                         closable: true,

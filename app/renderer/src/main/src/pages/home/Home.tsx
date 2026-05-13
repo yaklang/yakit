@@ -507,32 +507,32 @@ const Home: React.FC<HomeProp> = (props) => {
   })
   const showManualInstallGuide = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: t('Home.cert.manualInstallTitle'),
+      title: (modalT) => modalT('Home.cert.manualInstallTitle'),
       width: '600px',
       centered: true,
-      content: (
+      content: (modalT) => (
         <div
           style={{
             padding: 15,
             color: 'var(--Colors-Use-Neutral-Text-1-Title)',
           }}
         >
-          {t('Home.cert.manualInstallSteps')}
+          {modalT('Home.cert.manualInstallSteps')}
           <br />
           <br />
-          1. {t('Home.cert.manualInstallStep1')}
+          1. {modalT('Home.cert.manualInstallStep1')}
           <br />
-          2. {t('Home.cert.manualInstallStep2')}
+          2. {modalT('Home.cert.manualInstallStep2')}
           <br />
-          3. {t('Home.cert.manualInstallStep3')}
-          <br />
-          <br />
-          {t('Home.cert.manualInstallSafeHint')}
-          <br />
-          {t('Home.cert.manualInstallReadyHint')}
+          3. {modalT('Home.cert.manualInstallStep3')}
           <br />
           <br />
-          {t('Home.cert.contactForHelp')}
+          {modalT('Home.cert.manualInstallSafeHint')}
+          <br />
+          {modalT('Home.cert.manualInstallReadyHint')}
+          <br />
+          <br />
+          {modalT('Home.cert.contactForHelp')}
         </div>
       ),
       onOk: () => {
@@ -576,17 +576,19 @@ const Home: React.FC<HomeProp> = (props) => {
   const showAutoInstallFailure = useMemoizedFn((reason?: string) => {
     const modal = showYakitModal({
       type: 'white',
-      title: t('Home.cert.autoInstallFailedTitle'),
+      title: (modalT) => modalT('Home.cert.autoInstallFailedTitle'),
       width: '520px',
       centered: true,
       okText: t('Home.cert.autoInstallFailedManualBtn'),
       cancelText: t('YakitButton.cancel'),
-      content: (
+      content: (modalT) => (
         <div style={{ padding: 15 }}>
-          <div style={{ marginBottom: 10 }}>{t('Home.cert.autoInstallFailedDesc')}</div>
-          <div style={{ color: 'var(--Colors-Use-Danger-Text)' }}>{reason || t('YakitNotification.unknown_error')}</div>
+          <div style={{ marginBottom: 10 }}>{modalT('Home.cert.autoInstallFailedDesc')}</div>
+          <div style={{ color: 'var(--Colors-Use-Danger-Text)' }}>
+            {reason || modalT('YakitNotification.unknown_error')}
+          </div>
           {renderAutoInstallSuggestion(reason)}
-          <div style={{ marginTop: 16 }}>{t('Home.cert.autoInstallGuideHint')}</div>
+          <div style={{ marginTop: 16 }}>{modalT('Home.cert.autoInstallGuideHint')}</div>
         </div>
       ),
       onOk: () => {
@@ -628,7 +630,7 @@ const Home: React.FC<HomeProp> = (props) => {
   const handleBlastingExample = (animationType: string) => {
     const m = showYakitModal({
       type: 'white',
-      title: t('Home.webFuzzerDemo'),
+      title: (modalT) => modalT('Home.webFuzzerDemo'),
       width: 650,
       content: (
         <BlastingAnimationAemonstration
@@ -648,9 +650,9 @@ const Home: React.FC<HomeProp> = (props) => {
     e.stopPropagation()
     const m = showYakitModal({
       type: 'white',
-      title: (
+      title: (modalT) => (
         <div className={styles['sequence-animation-pop-title']}>
-          {t('Home.webFuzzerSequenceDemo')}
+          {modalT('Home.webFuzzerSequenceDemo')}
           <div
             className={styles['subtitle-help-wrapper']}
             onClick={() => ipcRenderer.invoke('open-url', WebsiteGV.WebFuzzerAddress)}

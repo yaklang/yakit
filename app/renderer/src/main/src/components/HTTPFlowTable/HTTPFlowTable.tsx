@@ -2747,28 +2747,32 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
   const onExcelExport = (list) => {
     percentContainerRef.current = currentPageTabRouteKey
-    const titleValue = configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey }))
-    const exportValue = [
-      ...titleValue,
-      { title: t('HTTPFlowTable.requestPacket'), key: 'request' },
-      { title: t('HTTPFlowTable.responsePacket'), key: 'response' },
-    ]
     const m = showYakitModal({
-      title: t('HTTPFlowTable.exportFields'),
-      content: (
-        <ExportSelect
-          exportValue={exportValue}
-          initCheckValue={exportValue}
-          setExportTitle={(v: string[]) => {
-            setExportDataKey(['Id', ...v])
-          }}
-          exportKey={'MITM-HISTORY-EXPORT-KEYS'}
-          fileName={'History'}
-          getData={(pagination) => getExcelData(pagination, list)}
-          onClose={() => m.destroy()}
-          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
-        />
-      ),
+      title: (modalT) => modalT('HTTPFlowTable.exportFields'),
+      content: (modalT) => {
+        const exportValue = [
+          ...configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey })),
+          { title: modalT('HTTPFlowTable.requestPacket'), key: 'request' },
+          { title: modalT('HTTPFlowTable.responsePacket'), key: 'response' },
+        ]
+
+        return (
+          <ExportSelect
+            exportValue={exportValue}
+            initCheckValue={exportValue}
+            setExportTitle={(v: string[]) => {
+              setExportDataKey(['Id', ...v])
+            }}
+            exportKey={'MITM-HISTORY-EXPORT-KEYS'}
+            fileName={'History'}
+            getData={(pagination) => getExcelData(pagination, list)}
+            onClose={() => m.destroy()}
+            getContainer={
+              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+            }
+          />
+        )
+      },
       onCancel: () => {
         m.destroy()
         setSelectedRowKeys([])
@@ -2789,28 +2793,32 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const percentContainerRef = useRef<string>(currentPageTabRouteKey)
   const onHarExport = (ids: number[]) => {
     percentContainerRef.current = currentPageTabRouteKey
-    const titleValue = configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey }))
-    const harFieldOptions = [
-      ...titleValue,
-      { title: t('HTTPFlowTable.requestPacket'), key: 'request' },
-      { title: t('HTTPFlowTable.responsePacket'), key: 'response' },
-    ]
     const m = showYakitModal({
-      title: t('HTTPFlowTable.exportFields'),
-      content: (
-        <ExportSelect
-          exportValue={harFieldOptions}
-          initCheckValue={harFieldOptions}
-          setExportTitle={(v: string[]) => {
-            setExportDataKey(['Id', ...v])
-          }}
-          exportKey={'MITM-HISTORY-EXPORT-KEYS'}
-          getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
-          onClose={() => m.destroy()}
-          getContainer={document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined}
-          onHarExport={() => handleClickHarExport(ids)}
-        />
-      ),
+      title: (modalT) => modalT('HTTPFlowTable.exportFields'),
+      content: (modalT) => {
+        const harFieldOptions = [
+          ...configColumnRef.current.map((item) => ({ title: item.title, key: item.dataKey })),
+          { title: modalT('HTTPFlowTable.requestPacket'), key: 'request' },
+          { title: modalT('HTTPFlowTable.responsePacket'), key: 'response' },
+        ]
+
+        return (
+          <ExportSelect
+            exportValue={harFieldOptions}
+            initCheckValue={harFieldOptions}
+            setExportTitle={(v: string[]) => {
+              setExportDataKey(['Id', ...v])
+            }}
+            exportKey={'MITM-HISTORY-EXPORT-KEYS'}
+            getData={() => Promise.resolve()} //getData这里没用到 传空promise为了解决报错
+            onClose={() => m.destroy()}
+            getContainer={
+              document.getElementById(`main-operator-page-body-${percentContainerRef.current}`) || undefined
+            }
+            onHarExport={() => handleClickHarExport(ids)}
+          />
+        )
+      },
       onCancel: () => {
         m.destroy()
         setSelectedRowKeys([])
@@ -3809,7 +3817,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       return
     }
     const m = showYakitModal({
-      title: t('HTTPFlowTable.shareData'),
+      title: (modalT) => modalT('HTTPFlowTable.shareData'),
       content: <ShareModal module={YakitRoute.DB_HTTPHistory} shareContent={JSON.stringify(ids)} />,
       onCancel: () => {
         m.destroy()

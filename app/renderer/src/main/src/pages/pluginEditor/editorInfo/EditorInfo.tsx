@@ -306,7 +306,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
     }, [searchTempExampleVal, getTempExampleList])
     const onOpenHelpModal = (tempExampleItem: TempExampleInfo) => {
       const m = showYakitModal({
-        title: t('EditorInfo.templateExamples'),
+        title: (modalT) => modalT('EditorInfo.templateExamples'),
         type: 'white',
         width: '60vw',
         centered: true,
@@ -328,7 +328,7 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
     }, [searchQaDocumentVal, qaDocumentLableList])
     const onOpenQaDocModal = (label: string) => {
       const m = showYakitModal({
-        title: t('EditorInfo.faq'),
+        title: (modalT) => modalT('EditorInfo.faq'),
         type: 'white',
         width: '60vw',
         centered: true,

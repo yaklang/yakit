@@ -305,7 +305,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   })
   const handleNewAIMCP = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: t('AIMCP.addMcpServer'),
+      title: (modalT) => modalT('AIMCP.addMcpServer'),
       width: 600,
       content: (
         <AIMCPForm
@@ -436,7 +436,7 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
     if (item.Enable) return
     const defaultValues: UpdateMCPServerRequest = omit(item, ['Tools'])
     const m = showYakitModal({
-      title: t('AIMCP.editMcp'),
+      title: (modalT) => modalT('AIMCP.editMcp'),
       width: '50%',
       content: (
         <AIMCPForm
@@ -455,11 +455,11 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
     const m = YakitModalConfirm({
       width: 420,
       type: 'white',
-      onCancelText: t('YakitButton.cancel'),
-      onOkText: t('YakitButton.delete'),
+      onCancelText: (modalT) => modalT('YakitButton.cancel'),
+      onOkText: (modalT) => modalT('YakitButton.delete'),
       okButtonProps: { colors: 'danger' },
-      title: t('AIMCP.deleteMcpServer'),
-      content: t('AIMCP.deleteMcpServerConfirm'),
+      title: (modalT) => modalT('AIMCP.deleteMcpServer'),
+      content: (modalT) => modalT('AIMCP.deleteMcpServerConfirm'),
       onOk: () => {
         grpcDeleteMCPServer({ ID: item.ID }).then(() => {
           onRefresh()

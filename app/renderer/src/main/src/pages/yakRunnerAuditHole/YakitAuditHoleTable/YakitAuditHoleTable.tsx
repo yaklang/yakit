@@ -720,9 +720,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
 
   const onOpenSelect = useMemoizedFn((record: SSARisk) => {
     const m = showYakitModal({
-      title: (
+      title: (modalT) => (
         <div className="content-ellipsis">
-          {t('YakitAuditHoleTable.sequenceTitle', { id: record.Id, title: record.TitleVerbose || record.Title })}
+          {modalT('YakitAuditHoleTable.sequenceTitle', { id: record.Id, title: record.TitleVerbose || record.Title })}
         </div>
       ),
       content: <YakitRiskSelectTag ids={[record.Id]} onClose={() => m.destroy()} onCreate={onCreateTags} />,
@@ -1076,7 +1076,9 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
                       onClick={(e) => {
                         e.stopPropagation()
                         const m = showYakitModal({
-                          title: <div className="content-ellipsis">{t('YakitAuditHoleTable.batchDisposal')}</div>,
+                          title: (modalT) => (
+                            <div className="content-ellipsis">{modalT('YakitAuditHoleTable.batchDisposal')}</div>
+                          ),
                           content: (
                             <YakitRiskSelectTag
                               ids={selectedRowKeys}

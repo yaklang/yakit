@@ -272,14 +272,14 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
     })
 
     let m = showYakitModal({
-      title: t('SpaceEngineFormContent.addThirdPartyApp'),
+      title: (modalT) => modalT('SpaceEngineFormContent.addThirdPartyApp'),
       width: 600,
       closable: true,
       maskClosable: false,
       footer: null,
-      content: (
+      content: (modalT) => (
         <>
-          <div className={styles['ai-describe']}>{t('SpaceEngineFormContent.pleaseConfigureApiKey')}</div>
+          <div className={styles['ai-describe']}>{modalT('SpaceEngineFormContent.pleaseConfigureApiKey')}</div>
 
           <NewThirdPartyApplicationConfig
             formValues={{
@@ -352,7 +352,7 @@ const SpaceEngineFormContent: React.FC<SpaceEngineFormContentProps> = React.memo
   }, [engineStatus])
   const onOpenHelpModal = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: t('SpaceEngineFormContent.zoomeyeBasicSyntax'),
+      title: (modalT) => modalT('SpaceEngineFormContent.zoomeyeBasicSyntax'),
       type: 'white',
       width: '60vw',
       cancelButtonProps: { style: { display: 'none' } },

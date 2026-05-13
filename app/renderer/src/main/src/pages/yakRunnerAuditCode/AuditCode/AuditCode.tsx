@@ -2697,7 +2697,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 onClick={(e) => {
                   e.stopPropagation()
                   const m = showYakitModal({
-                    title: t('AuditCode.editProject'),
+                    title: (modalT) => modalT('AuditCode.editProject'),
                     width: 600,
                     type: 'white',
                     footer: null,

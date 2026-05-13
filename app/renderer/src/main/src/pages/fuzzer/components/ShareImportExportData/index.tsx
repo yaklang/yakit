@@ -110,7 +110,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
   const handleShare = useMemoizedFn(() => {
     getShareContent((content) => {
       const m = showYakitModal({
-        title: t('ShareImportExportData.sharePacketId'),
+        title: (modalT) => modalT('ShareImportExportData.sharePacketId'),
         content: <ShareModal module={module} shareContent={JSON.stringify(content)} />,
         footer: null,
       })
@@ -203,15 +203,15 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
     yamlContRef.current = ''
     const m = showYakitModal({
       type: 'white',
-      title: (
+      title: (modalT) => (
         <div className={styles.importYamlPopTitle}>
-          {t('ShareImportExportData.importYamlFile')}
+          {modalT('ShareImportExportData.importYamlFile')}
           <span className={styles.importText}>
-            {t('YakitDraggerContent.drag_file_tip')}
+            {modalT('YakitDraggerContent.drag_file_tip')}
             <YakitButton type="text" onClick={onOpenSystemDialog} style={{ fontSize: 14 }}>
-              {t('YakitDraggerContent.click_here')}
+              {modalT('YakitDraggerContent.click_here')}
             </YakitButton>
-            {t('ShareImportExportData.uploadOrPasteCode')}
+            {modalT('ShareImportExportData.uploadOrPasteCode')}
           </span>
         </div>
       ),

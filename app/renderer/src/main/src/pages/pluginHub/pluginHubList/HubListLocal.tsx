@@ -468,7 +468,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     }
     const m = showYakitModal({
       type: 'white',
-      title: t('HubListLocal.batchUpload'),
+      title: (modalT) => modalT('HubListLocal.batchUpload'),
       content: (
         <PluginLocalUpload
           pluginNames={list}
@@ -557,7 +557,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     if (exportModal) return
     try {
       let m = showYakitModal({
-        title: t('HubListLocal.exportPlugin'),
+        title: (modalT) => modalT('HubListLocal.exportPlugin'),
         width: 450,
         closable: true,
         maskClosable: false,

@@ -256,9 +256,11 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
   // 保存过滤器
   const onSaveFilter = useMemoizedFn(() => {
     const m = showYakitModal({
-      title:
-        filterType === 'filter' ? t('MITMFiltersModal.save_filter_config') : t('MITMFiltersModal.save_hijack_config'),
-      content: (
+      title: (modalT) =>
+        filterType === 'filter'
+          ? modalT('MITMFiltersModal.save_filter_config')
+          : modalT('MITMFiltersModal.save_hijack_config'),
+      content: (modalT) => (
         <div className={styles['mitm-save-filter']}>
           <YakitInput.TextArea
             placeholder={t('MITMFiltersModal.name_placeholder', {
@@ -316,7 +318,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
                 })
               }}
             >
-              {t('YakitButton.save')}
+              {modalT('YakitButton.save')}
             </YakitButton>
           </div>
         </div>

@@ -194,8 +194,8 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
       let m = YakitModalConfirm({
         width: 420,
         type: 'white',
-        onCancelText: t('YakitButton.cancel'),
-        onOkText: t('YakitButton.confirm'),
+        onCancelText: (modalT) => modalT('YakitButton.cancel'),
+        onOkText: (modalT) => modalT('YakitButton.confirm'),
         icon: <ExclamationCircleOutlined />,
         style: { top: '20%' },
         onOk: () => {
@@ -210,7 +210,7 @@ export const HTTPFuzzerHotPatch: React.FC<HTTPFuzzerHotPatchProp> = (props) => {
           props.onCancel()
           m.destroy()
         },
-        content: t('HTTPFuzzerHotPatch.enableModifiedHotReload'),
+        content: (modalT) => modalT('HTTPFuzzerHotPatch.enableModifiedHotReload'),
       })
     } else {
       props.onCancel()

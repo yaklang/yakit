@@ -2525,7 +2525,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       ipcRenderer.invoke('QueryYakScript', newParams).then((item: QueryYakScriptsResponse) => {
         if (item.Data.length === 0) {
           const m = showYakitModal({
-            title: t('MainOperatorContent.importPlugin'),
+            title: (modalT) => modalT('MainOperatorContent.importPlugin'),
             type: 'white',
             content: <DownloadAllPlugin onClose={() => m.destroy()} />,
             bodyStyle: { padding: 24 },
@@ -3146,7 +3146,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.HTTPFuzzer:
         setRecoveryModel('coverage')
         const m = showYakitModal({
-          title: t('MainOperatorContent.restoreTab'),
+          title: (modalT) => modalT('MainOperatorContent.restoreTab'),
           footer: null,
           content: (
             <RestoreTabContent
@@ -3527,8 +3527,8 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     const m = YakitModalConfirm({
       width: 420,
       type: 'white',
-      onCancelText: t('YakitButton.cancel'),
-      onOkText: t('MainOperatorContent.closeAll'),
+      onCancelText: (modalT) => modalT('YakitButton.cancel'),
+      onOkText: (modalT) => modalT('MainOperatorContent.closeAll'),
       icon: <ExclamationCircleOutlined />,
       onOk: () => {
         const fixedTabs = pageCache.filter((ele) => getDefaultFixedTabs(softMode).includes(ele.route))
@@ -3547,7 +3547,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
       // onCancel: () => {
       //     m.destroy()
       // },
-      content: t('MainOperatorContent.closeAllTabsTitle'),
+      content: (modalT) => modalT('MainOperatorContent.closeAllTabsTitle'),
     })
   })
   /**关闭其他标签页 如果有首页需要保留首页*/
@@ -3555,8 +3555,8 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
     const m = YakitModalConfirm({
       width: 420,
       type: 'white',
-      onCancelText: t('YakitButton.cancel'),
-      onOkText: t('MainOperatorContent.closeOther'),
+      onCancelText: (modalT) => modalT('YakitButton.cancel'),
+      onOkText: (modalT) => modalT('MainOperatorContent.closeOther'),
       icon: <ExclamationCircleOutlined />,
       onOk: () => {
         if (pageCache.length <= 0) return
@@ -3574,7 +3574,7 @@ const TabList: React.FC<TabListProps> = React.memo((props) => {
       // onCancel: () => {
       //     m.destroy()
       // },
-      content: t('MainOperatorContent.keepCurrentCloseOthers'),
+      content: (modalT) => modalT('MainOperatorContent.keepCurrentCloseOthers'),
     })
   })
   return (
@@ -4815,10 +4815,10 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         footer: null,
         closable: false,
         hiddenHeader: true,
-        content: (
+        content: (modalT) => (
           <React.Suspense fallback={<div>loading...</div>}>
             <TabRenameModalContent
-              title={t('YakitButton.rename')}
+              title={modalT('YakitButton.rename')}
               onClose={() => {
                 m.destroy()
               }}
@@ -4917,7 +4917,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
 
     const openBatchNewGroup = useMemoizedFn((item: MultipleNodeInfo) => {
       const m = showYakitModal({
-        title: t('MainOperatorContent.createGroup'),
+        title: (modalT) => modalT('MainOperatorContent.createGroup'),
         footer: null,
         content: (
           <BatchAddNewGroup
@@ -5184,8 +5184,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const m = YakitModalConfirm({
           width: 420,
           type: 'white',
-          onCancelText: t('YakitButton.cancel'),
-          onOkText: t('MainOperatorContent.closeOther'),
+          onCancelText: (modalT) => modalT('YakitButton.cancel'),
+          onOkText: (modalT) => modalT('MainOperatorContent.closeOther'),
           icon: <ExclamationCircleOutlined />,
           onOk: () => {
             const newSubPage: MultipleNodeInfo[] = [item]
@@ -5210,15 +5210,15 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
           // onCancel: () => {
           //     m.destroy()
           // },
-          content: t('MainOperatorContent.keepCurrentCloseOthersInGroup'),
+          content: (modalT) => modalT('MainOperatorContent.keepCurrentCloseOthersInGroup'),
         })
       } else {
         // 关闭组内的其他tabs
         const m = YakitModalConfirm({
           width: 420,
           type: 'white',
-          onCancelText: t('YakitButton.cancel'),
-          onOkText: t('MainOperatorContent.closeOtherInGroup'),
+          onCancelText: (modalT) => modalT('YakitButton.cancel'),
+          onOkText: (modalT) => modalT('MainOperatorContent.closeOtherInGroup'),
           icon: <ExclamationCircleOutlined />,
           onOk: () => {
             const groupItem = subPage[index]
@@ -5240,7 +5240,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
           // onCancel: () => {
           //     m.destroy()
           // },
-          content: t('MainOperatorContent.keepCurrentCloseOthersInGroup'),
+          content: (modalT) => modalT('MainOperatorContent.keepCurrentCloseOthersInGroup'),
         })
       }
     })
@@ -5449,8 +5449,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         const m = YakitModalConfirm({
           width: 420,
           type: 'white',
-          onCancelText: t('YakitButton.cancel'),
-          onOkText: t('MainOperatorContent.closeGroup'),
+          onCancelText: (modalT) => modalT('YakitButton.cancel'),
+          onOkText: (modalT) => modalT('MainOperatorContent.closeGroup'),
           icon: <ExclamationCircleOutlined />,
           onOk: () => {
             getIsCloseGroupTip()
@@ -5485,8 +5485,8 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
       const m = YakitModalConfirm({
         width: 420,
         type: 'white',
-        onCancelText: t('YakitButton.cancel'),
-        onOkText: t('MainOperatorContent.closeOther'),
+        onCancelText: (modalT) => modalT('YakitButton.cancel'),
+        onOkText: (modalT) => modalT('MainOperatorContent.closeOther'),
         icon: <ExclamationCircleOutlined />,
         onOk: () => {
           const newPage = [{ ...groupItem }]
@@ -5515,7 +5515,7 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         // onCancel: () => {
         //     m.destroy()
         // },
-        content: t('MainOperatorContent.keepCurrentGroupCloseOthers'),
+        content: (modalT) => modalT('MainOperatorContent.keepCurrentGroupCloseOthers'),
       })
     })
     /**

@@ -73,9 +73,9 @@ const Login: React.FC<LoginProp> = (props) => {
       if (ok) {
         const m = YakitModalConfirm({
           type: 'white',
-          title: t('Login.dataSync'),
+          title: (modalT) => modalT('Login.dataSync'),
           icon: <ExclamationCircleOutlined />,
-          content: t('Login.syncDataConfirm'),
+          content: (modalT) => modalT('Login.syncDataConfirm'),
           onOk() {
             apiDownloadPluginMine()
             setTimeout(() => setLoading(false), 200)

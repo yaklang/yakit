@@ -217,7 +217,7 @@ const AutoDecode: React.FC<AutoDecodeProps> = React.memo((prop: AutoDecodeProps)
                 size={'small'}
                 onClick={() => {
                   showYakitModal({
-                    title: t('Encodec.originText'),
+                    title: (modalT) => modalT('Encodec.originText'),
                     width: '50%',
                     content: (
                       <div style={{ height: 280 }}>
@@ -271,7 +271,7 @@ export const execAutoDecode = async (text: string) => {
     .autoDecode({ Data: text })
     .then((e: { Results: AutoDecodeResult[] }) => {
       showYakitModal({
-        title: tOriginal('Encodec.autoDecodeSmart'),
+        title: (modalT) => modalT('Encodec.autoDecodeSmart'),
         width: '60%',
         content: <AutoDecode data={e.Results}></AutoDecode>,
       })
@@ -298,9 +298,9 @@ export const execCodec = async (
       if (replaceEditor) {
         let m = showYakitModal({
           width: '50%',
-          content: (
+          content: (modalT) => (
             <AutoCard
-              title={tOriginal('Encodec.codeResult')}
+              title={modalT('Encodec.codeResult')}
               bordered={false}
               extra={
                 <YakitButton
@@ -316,7 +316,7 @@ export const execCodec = async (
                   }}
                   size={'small'}
                 >
-                  {tOriginal('Encodec.replaceContent')}
+                  {modalT('Encodec.replaceContent')}
                 </YakitButton>
               }
               size={'small'}
@@ -331,7 +331,7 @@ export const execCodec = async (
 
       if (noPrompt) {
         showYakitModal({
-          title: tOriginal('Encodec.codeResult'),
+          title: (modalT) => modalT('Encodec.codeResult'),
           width: '50%',
           content: (
             <div style={{ width: '100%' }}>

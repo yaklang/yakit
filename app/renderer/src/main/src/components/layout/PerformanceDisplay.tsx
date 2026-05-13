@@ -272,7 +272,7 @@ const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
                         onClick={() => {
                           setShow(false)
                           showYakitModal({
-                            title: t('PerformanceDisplay.yakProcessDetails'),
+                            title: (modalT) => modalT('PerformanceDisplay.yakProcessDetails'),
                             content: <div style={{ padding: 8 }}>{JSON.stringify(i)}</div>,
                             footer: null,
                           })

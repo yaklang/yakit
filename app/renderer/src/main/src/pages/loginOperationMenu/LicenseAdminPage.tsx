@@ -407,7 +407,7 @@ const LicenseForm: React.FC<LicenseFormProps> = (props) => {
           requestFun(params)
           m.destroy()
         },
-        content: t('LicenseForm.changeUserCountWarning'),
+        content: (modalT) => modalT('LicenseForm.changeUserCountWarning'),
       })
     } else {
       requestFun(params)
@@ -628,7 +628,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
         onCancel()
         refresh()
         const m = showYakitModal({
-          title: t('CreateLicense.generateSuccess'),
+          title: (modalT) => modalT('CreateLicense.generateSuccess'),
           content: (
             <div style={{ padding: 15 }}>
               <Paragraph>

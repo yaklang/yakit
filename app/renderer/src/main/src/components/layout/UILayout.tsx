@@ -798,8 +798,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             maskClosable: false,
             keyboard: false,
             type: 'white',
-            title: t('UILayout.unpackBuiltinEngineNeedRestart'),
-            content: (
+            title: (modalT) => modalT('UILayout.unpackBuiltinEngineNeedRestart'),
+            content: (modalT) => (
               <div style={{ height: 80, padding: 24, display: 'flex', alignItems: 'center' }}>
                 <YakitButton
                   onClick={() => {
@@ -811,7 +811,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                       })
                   }}
                 >
-                  {t('UILayout.restartNow')}
+                  {modalT('UILayout.restartNow')}
                 </YakitButton>
               </div>
             ),
@@ -1251,7 +1251,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             openAIByChatCS(codecParams)
           } else {
             let m = showYakitModal({
-              title: t('UILayout.addThirdPartyApp'),
+              title: (modalT) => modalT('UILayout.addThirdPartyApp'),
               width: 600,
               footer: null,
               closable: true,

@@ -2266,7 +2266,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   /**同步WF数据 */
   const onSynWF = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: t('HTTPFuzzerPage.syncConfig'),
+      title: (modalT) => modalT('HTTPFuzzerPage.syncConfig'),
       content: (
         <React.Suspense>
           <WebFuzzerSynSetting pageId={props.id} onClose={() => m.destroy()} />
@@ -2704,7 +2704,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     onClick={() => {
                       const m = showYakitModal({
                         type: 'white',
-                        title: t('HTTPFuzzerPage.webFuzzerDemo'),
+                        title: (modalT) => modalT('HTTPFuzzerPage.webFuzzerDemo'),
                         width: 480,
                         content: <BlastingAnimationAemonstration></BlastingAnimationAemonstration>,
                         footer: null,

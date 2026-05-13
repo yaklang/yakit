@@ -363,11 +363,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       handleReplaceActiveForge(forge, useForge)
     } else {
       const m = YakitModalConfirm({
-        title: t('AIAgentChat.switchForgeTemplate'),
+        title: (modalT) => modalT('AIAgentChat.switchForgeTemplate'),
         width: 420,
         footer: undefined,
         footerStyle: { padding: '0 24px 24px' },
-        content: (
+        content: (modalT) => (
           <div className={styles['forge-modal-content']}>
             <Trans
               i18nKey="AIAgentChat.interruptConfirm"
@@ -379,7 +379,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
             <b>
               {forge.ForgeVerboseName}({forge.ForgeName})
             </b>
-            {t('AIAgentChat.forgeTemplate')}
+            {modalT('AIAgentChat.forgeTemplate')}
           </div>
         ),
         onOk: () => {
@@ -403,11 +403,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       handleReplaceActiveTool(toolValue.ID)
     } else {
       const m = YakitModalConfirm({
-        title: t('AIAgentChat.executeTool'),
+        title: (modalT) => modalT('AIAgentChat.executeTool'),
         width: 420,
         footer: undefined,
         footerStyle: { padding: '0 24px 24px' },
-        content: (
+        content: (modalT) => (
           <div className={styles['forge-modal-content']}>
             {!!chatIPCData.execute ? (
               <>
@@ -421,12 +421,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
                 <b>
                   {toolValue.VerboseName}({toolValue.Name})
                 </b>
-                {t('AIAgentChat.forgeTemplate')}
+                {modalT('AIAgentChat.forgeTemplate')}
               </>
             ) : (
               <>
-                {t('AIAgentChat.confirmExecute')}
-                {toolValue.VerboseName}({toolValue.Name}){t('AIAgentChat.toolSuffix')}
+                {modalT('AIAgentChat.confirmExecute')}
+                {toolValue.VerboseName}({toolValue.Name}){modalT('AIAgentChat.toolSuffix')}
               </>
             )}
           </div>

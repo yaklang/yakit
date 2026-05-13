@@ -308,7 +308,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
       })
       .then((rsp: { Results: { Key: string; Value: string }[] }) => {
         showYakitModal({
-          title: t('VariablePanel.renderedVariableContent'),
+          title: (modalT) => modalT('VariablePanel.renderedVariableContent'),
           footer: <></>,
           width: '60%',
           content: (

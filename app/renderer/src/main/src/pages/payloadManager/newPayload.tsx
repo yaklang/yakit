@@ -3146,7 +3146,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
   const onCopyToOtherPayload = useMemoizedFn((id?: number) => {
     copyMoveValueRef.current = undefined
     const m = showYakitModal({
-      title: t('PayloadLocalContent.backupToOther'),
+      title: (modalT) => modalT('PayloadLocalContent.backupToOther'),
       width: 400,
       type: 'white',
       closable: false,
@@ -3167,7 +3167,7 @@ export const PayloadLocalContent: React.FC<PayloadLocalContentProps> = (props) =
   const onMoveToOtherPayload = useMemoizedFn((id?: number) => {
     copyMoveValueRef.current = undefined
     const y = showYakitModal({
-      title: t('PayloadLocalContent.moveToOther'),
+      title: (modalT) => modalT('PayloadLocalContent.moveToOther'),
       width: 400,
       type: 'white',
       closable: false,

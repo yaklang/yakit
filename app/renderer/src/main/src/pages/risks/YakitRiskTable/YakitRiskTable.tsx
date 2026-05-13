@@ -763,9 +763,9 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
   })
   const onOpenSelect = useMemoizedFn((record: Risk) => {
     const m = showYakitModal({
-      title: (
+      title: (modalT) => (
         <div className="content-ellipsis">
-          {t('YakitTable.order')}【{record.Id}】- {record.TitleVerbose || record.Title}
+          {modalT('YakitTable.order')}【{record.Id}】- {record.TitleVerbose || record.Title}
         </div>
       ),
       content: <YakitRiskSelectTag info={record} onClose={() => m.destroy()} onSave={onSaveTags} />,
@@ -849,7 +849,7 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       .filter((ele) => ele.isDefaultChecked)
       .map((item) => ({ title: item.label, key: item.value }))
     const m = showYakitModal({
-      title: t('YakitRiskTable.select_export_fields'),
+      title: (modalT) => modalT('YakitRiskTable.select_export_fields'),
       content: (
         <ExportSelect
           exportValue={exportValue}

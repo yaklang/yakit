@@ -676,7 +676,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
     }, [])
     const onViewExecResults = useMemoizedFn((list) => {
       showYakitModal({
-        title: t('HTTPFuzzerPageTable.extractionResult'),
+        title: (modalT) => modalT('HTTPFuzzerPageTable.extractionResult'),
         width: '60%',
         footer: <></>,
         content: <ExtractionResultsContent list={list} />,

@@ -109,7 +109,7 @@ export const setAIModal = (params: {
 }) => {
   const { modelType, item, onSuccess, mountContainer, t } = params
   let m = showYakitModal({
-    title: t('AIModelList.addThirdPartyApp'),
+    title: (modalT) => modalT('AIModelList.addThirdPartyApp'),
     width: 600,
     footer: null,
     closable: true,
@@ -311,7 +311,7 @@ const AIModelList: React.FC<AIModelListProps> = React.memo((props) => {
   })
   const onAddLocal = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: t('AIModelList.addLocalModel'),
+      title: (modalT) => modalT('AIModelList.addLocalModel'),
       width: '50%',
       content: (
         <AddAIModel
@@ -914,7 +914,7 @@ const AILocalModelList: React.FC<AILocalModelListProps> = React.memo(
 
     const installLlamaServer = useMemoizedFn(() => {
       const m = showYakitModal({
-        title: t('AILocalModelList.installLlamaServer'),
+        title: (modalT) => modalT('AILocalModelList.installLlamaServer'),
         width: '50%',
         maskClosable: false,
         type: 'white',
@@ -1060,7 +1060,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
   const onStart = useMemoizedFn((e) => {
     e.stopPropagation()
     const m = showYakitModal({
-      title: t('AILocalModelListItem.startModel', { name: item.Name }),
+      title: (modalT) => modalT('AILocalModelListItem.startModel', { name: item.Name }),
       width: '50%',
       content: (
         <AIStartModelForm
@@ -1096,7 +1096,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
   const onDown = useMemoizedFn((e) => {
     e.stopPropagation()
     const m = showYakitModal({
-      title: t('AILocalModelListItem.downloadModel'),
+      title: (modalT) => modalT('AILocalModelListItem.downloadModel'),
       subTitle: item.Name,
       width: '50%',
       content: (
@@ -1130,7 +1130,7 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
   })
   const onEdit = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: t('AILocalModelListItem.editLocalModel'),
+      title: (modalT) => modalT('AILocalModelListItem.editLocalModel'),
       width: '50%',
       content: (
         <AddAIModel

@@ -204,7 +204,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
       } else {
         failed(t('MITMPage.serverErrorOrClosed'))
         const m = showYakitModal({
-          title: t('MITMPage.startMitmServerError'),
+          title: (modalT) => modalT('MITMPage.startMitmServerError'),
           type: 'white',
           cancelButtonProps: { style: { display: 'none' } },
           content: <div style={{ padding: '12px 24px' }}>{msg}</div>,

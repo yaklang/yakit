@@ -1047,12 +1047,12 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
   }
   const onSyncPluginToEE = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: t('PluginManage.syncTitle'),
+      title: (modalT) => modalT('PluginManage.syncTitle'),
       type: 'white',
       maskClosable: false,
-      content: (
+      content: (modalT) => (
         <div className={styles['syncToEE']}>
-          <div className={styles['syncToEE-title']}>{t('PluginManage.syncConfirm')}</div>
+          <div className={styles['syncToEE-title']}>{modalT('PluginManage.syncConfirm')}</div>
           <div className={styles['syncToEE-footer']}>
             <YakitButton type="outline2" onClick={() => m.destroy()}>
               {t('YakitButton.cancel')}
@@ -1149,7 +1149,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                       switch (key) {
                         case 'resetAll':
                           let m = showYakitModal({
-                            title: t('YakitButton.resetAll'),
+                            title: (modalT) => modalT('YakitButton.resetAll'),
                             centered: true,
                             width: 400,
                             closable: true,
@@ -1181,7 +1181,9 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                 </YakitButton>
                               </div>
                             ),
-                            content: <div style={{ padding: 15 }}>{t('PluginManage.resetConfirm')}</div>,
+                            content: (modalT) => (
+                              <div style={{ padding: 15 }}>{modalT('PluginManage.resetConfirm')}</div>
+                            ),
                             onCancel: () => {
                               m.destroy()
                             },

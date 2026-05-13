@@ -79,10 +79,10 @@ export const isDifferenceGreaterThan30Seconds = (timestamp1, timestamp2) => {
 /**笔记本错误弹窗 */
 export const showOnlineErrorNotification = (event: { code: number; reason: string; onOk: () => void }) => {
   const m = showYakitModal({
-    title: tOriginal('MilkdownEditor.onlineError.exception'),
-    content: (
+    title: (modalT) => modalT('MilkdownEditor.onlineError.exception'),
+    content: (modalT) => (
       <span>
-        {tOriginal('MilkdownEditor.onlineError.errorReason')} {event.code}:{event.reason}
+        {modalT('MilkdownEditor.onlineError.errorReason')} {event.code}:{event.reason}
       </span>
     ),
     maskClosable: false,
@@ -354,10 +354,10 @@ const CustomMilkdown: React.FC<CustomMilkdownProps> = React.memo((props) => {
     const { title } = collabParams
     // 弹出框，显示网络异常，关闭/保存按钮
     const s = showYakitModal({
-      title: t('MilkdownEditor.initEditor.documentMissing'),
-      content: (
+      title: (modalT) => modalT('MilkdownEditor.initEditor.documentMissing'),
+      content: (modalT) => (
         <span>
-          {t('MilkdownEditor.initEditor.errorReason')} {event.reason}
+          {modalT('MilkdownEditor.initEditor.errorReason')} {event.reason}
         </span>
       ),
       maskClosable: false,

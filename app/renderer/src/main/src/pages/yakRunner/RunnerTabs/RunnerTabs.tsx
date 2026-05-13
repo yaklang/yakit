@@ -465,7 +465,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   const onRename = useMemoizedFn((info: FileDetailInfo) => {
     let newName: string = info.name
     const m = showYakitModal({
-      title: t('YakitButton.rename'),
+      title: (modalT) => modalT('YakitButton.rename'),
       content: (
         <RenameYakitModalBox
           name={info.name}

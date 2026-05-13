@@ -1129,7 +1129,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
     setStateLoading(true)
     if (info.is_private) {
       const m = showYakitModal({
-        title: t('OwnOptFooterExtra.pluginBasicDetection'),
+        title: (modalT) => modalT('OwnOptFooterExtra.pluginBasicDetection'),
         type: 'white',
         width: '50%',
         centered: true,

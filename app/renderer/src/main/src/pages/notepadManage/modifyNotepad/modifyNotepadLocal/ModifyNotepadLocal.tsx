@@ -229,8 +229,8 @@ const ModifyNotepadLocal: React.FC<ModifyNotepadLocalProps> = React.memo((props)
     setNote((v) => ({ ...v, Id: 0 }))
     // 关闭/保存按钮
     const s = showYakitModal({
-      title: t('ModifyNotepad.dataErrorMissingDeleted'),
-      content: <span>{t('ModifyNotepad.errorReason', { message })}</span>,
+      title: (modalT) => modalT('ModifyNotepad.dataErrorMissingDeleted'),
+      content: (modalT) => <span>{modalT('ModifyNotepad.errorReason', { message })}</span>,
       maskClosable: false,
       closable: false,
       confirmLoading: true,

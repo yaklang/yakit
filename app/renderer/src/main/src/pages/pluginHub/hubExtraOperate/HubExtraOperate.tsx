@@ -399,7 +399,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       if (!online) return
       if (online.is_private) {
         const m = showYakitModal({
-          title: t('HubExtraOperate.basicCheck'),
+          title: (modalT) => modalT('HubExtraOperate.basicCheck'),
           type: 'white',
           width: '50%',
           centered: true,
@@ -435,7 +435,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       activeOperate.current = ''
       if (!local) return
       const m = showYakitModal({
-        title: t('HubExtraOperate.addToMenuTitle', { id: local.Id }),
+        title: (modalT) => modalT('HubExtraOperate.addToMenuTitle', { id: local.Id }),
         content: <AddPluginMenuContent onCancel={() => m.destroy()} script={local} />,
         onCancel: () => {
           m.destroy()
@@ -448,7 +448,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       activeOperate.current = ''
       if (!local) return
       const m = showYakitModal({
-        title: t('HubExtraOperate.removeFromMenuTitle'),
+        title: (modalT) => modalT('HubExtraOperate.removeFromMenuTitle'),
         footer: null,
         content: <RemovePluginMenuContent pluginName={local.ScriptName} />,
         onCancel: () => {
@@ -470,7 +470,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       if (exportModal) return
       try {
         let m = showYakitModal({
-          title: t('HubExtraOperate.exportPlugin'),
+          title: (modalT) => modalT('HubExtraOperate.exportPlugin'),
           width: 450,
           closable: true,
           maskClosable: false,

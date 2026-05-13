@@ -385,18 +385,18 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
     const m = YakitModalConfirm({
       width: 420,
       closable: false,
-      title: t('Layout.HeardMenu.pluginLoadFailed'),
+      title: (modalT) => modalT('Layout.HeardMenu.pluginLoadFailed'),
       showConfirmLoading: true,
       type: 'white',
-      content: (
+      content: (modalT) => (
         <div className={styles['modal-content']}>
           {showName}
-          {t('Layout.HeardMenu.menuMissing')}
+          {modalT('Layout.HeardMenu.menuMissing')}
           <span className={styles['menuItem-yakScripName']}>{menuItem.pluginName}</span>
-          {t('Layout.HeardMenu.plugin')}
+          {modalT('Layout.HeardMenu.plugin')}
         </div>
       ),
-      onOkText: t('YakitButton.redownload'),
+      onOkText: (modalT) => modalT('YakitButton.redownload'),
       onOk: () => {
         singleDownloadPlugin(menuItem, source, () => {
           // 下载插件成功，自动销毁弹框

@@ -42,10 +42,10 @@ import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 export const onOpenConfigModal = (mountContainer, t: TFunction) => {
   const m = YakitModalConfirm({
-    title: t('AIModelSelect.configTitle'),
+    title: (modalT) => modalT('AIModelSelect.configTitle'),
     width: 420,
-    onOkText: t('AIModelSelect.toConfigure'),
-    content: <div>{t('AIModelSelect.configDesc')}</div>,
+    onOkText: (modalT) => modalT('AIModelSelect.toConfigure'),
+    content: (modalT) => <div>{modalT('AIModelSelect.configDesc')}</div>,
     closable: false,
     maskClosable: false,
     keyboard: false,

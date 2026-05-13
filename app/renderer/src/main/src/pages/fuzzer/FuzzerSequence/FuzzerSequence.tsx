@@ -1860,14 +1860,14 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                 if (isConcurrency) return
                 const m = showYakitModal({
                   type: 'white',
-                  title: (
+                  title: (modalT) => (
                     <div className={styles['sequence-animation-pop-title']}>
-                      {t('FuzzerSequence.webfuzzer_sequence_demo')}
+                      {modalT('FuzzerSequence.webfuzzer_sequence_demo')}
                       <div
                         className={styles['subtitle-help-wrapper']}
                         onClick={() => ipcRenderer.invoke('open-url', WebsiteGV.WebFuzzerAddress)}
                       >
-                        <span className={styles['text-style']}>{t('FuzzerSequence.official_documentation')}</span>
+                        <span className={styles['text-style']}>{modalT('FuzzerSequence.official_documentation')}</span>
                         <OutlineQuestionmarkcircleIcon />
                       </div>
                     </div>

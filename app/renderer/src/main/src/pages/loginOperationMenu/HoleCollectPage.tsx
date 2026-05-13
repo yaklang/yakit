@@ -229,7 +229,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                 }
                 showModal({
                   width: '80%',
-                  title: t('YakitButton.detail'),
+                  title: (modalT) => modalT('YakitButton.detail'),
                   content: (
                     <div style={{ overflow: 'auto' }}>
                       <RiskDetails info={info} quotedRequest={i.quoted_request} quotedResponse={i.quoted_response} />

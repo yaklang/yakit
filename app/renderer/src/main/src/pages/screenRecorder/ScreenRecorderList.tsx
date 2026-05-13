@@ -621,7 +621,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
   })
   const onEdit = useMemoizedFn(() => {
     const m = showYakitModal({
-      title: t('ScreenRecorderListItem.editVideoInfo'),
+      title: (modalT) => modalT('ScreenRecorderListItem.editVideoInfo'),
       type: 'white',
       width: 720,
       onOkText: t('YakitButton.save'),
@@ -648,11 +648,11 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
           })
           .catch(() => {})
       },
-      content: (
+      content: (modalT) => (
         <Form
           form={form}
           initialValues={{
-            VideoName: item.VideoName || `${t('ScreenRecorderListItem.video')}-${item.Id}`,
+            VideoName: item.VideoName || `${modalT('ScreenRecorderListItem.video')}-${item.Id}`,
             NoteInfo: item.NoteInfo,
           }}
           layout="vertical"
@@ -661,11 +661,11 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
           <Form.Item
             name="VideoName"
             label={t('ScreenRecorderListItem.videoName')}
-            rules={[{ required: true, message: t('YakitForm.requiredField') }]}
+            rules={[{ required: true, message: modalT('YakitForm.requiredField') }]}
           >
             <YakitInput maxLength={50} />
           </Form.Item>
-          <Form.Item name="NoteInfo" label={t('ScreenRecorderListItem.notes')}>
+          <Form.Item name="NoteInfo" label={modalT('ScreenRecorderListItem.notes')}>
             <YakitInput.TextArea rows={6} />
           </Form.Item>
         </Form>

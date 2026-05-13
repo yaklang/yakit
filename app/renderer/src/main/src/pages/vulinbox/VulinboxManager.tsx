@@ -169,7 +169,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                   type={'primary'}
                   onClick={() => {
                     const m = showYakitModal({
-                      title: t('VulinboxManager.startParams'),
+                      title: (modalT) => modalT('VulinboxManager.startParams'),
                       width: '50%',
                       footer: <div style={{ height: 30 }} />,
                       content: (
@@ -212,7 +212,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
               title={t('VulinboxManager.installConfirm')}
               onConfirm={() => {
                 const m = showYakitModal({
-                  title: t('VulinboxManager.installTitle'),
+                  title: (modalT) => modalT('VulinboxManager.installTitle'),
                   width: '50%',
                   onOk: () => {
                     m.destroy()
@@ -239,8 +239,8 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
               type="text"
               onClick={() => {
                 showYakitModal({
-                  title: t('VulinboxManager.downloadAddresses'),
-                  content: (
+                  title: (modalT) => modalT('VulinboxManager.downloadAddresses'),
+                  content: (modalT) => (
                     <div style={{ margin: 20, overflowX: 'auto' }}>
                       {[
                         {
@@ -278,10 +278,10 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                             onClick={() => {
                               setClipboardText(item.url, {
                                 hiddenHint: false,
-                                hintText: t('YakitNotification.copySuccess'),
+                                hintText: modalT('YakitNotification.copySuccess'),
                               })
                             }}
-                            title={t('YakitNotification.copySuccess')}
+                            title={modalT('YakitNotification.copySuccess')}
                           >
                             {item.url}
                           </code>
@@ -290,12 +290,12 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
                             onClick={() => {
                               setClipboardText(item.url, {
                                 hiddenHint: false,
-                                hintText: t('YakitNotification.copySuccess'),
+                                hintText: modalT('YakitNotification.copySuccess'),
                               })
                             }}
-                            title={t('YakitNotification.copySuccess')}
+                            title={modalT('YakitNotification.copySuccess')}
                           >
-                            {t('YakitButton.copy')}
+                            {modalT('YakitButton.copy')}
                           </YakitButton>
                         </div>
                       ))}

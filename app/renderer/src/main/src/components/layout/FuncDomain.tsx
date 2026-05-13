@@ -502,7 +502,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       .then((data: { Ok: boolean; Reason: string }) => {
         if (data.Ok) {
           const m = showYakitModal({
-            title: t('FuncDomain.screenRecordingNotice'),
+            title: (modalT) => modalT('FuncDomain.screenRecordingNotice'),
             footer: null,
             type: 'white',
             width: 520,
@@ -1226,7 +1226,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           return
         }
         const m = showYakitModal({
-          title: t('UIOpSetting.configPrivateDomain'),
+          title: (modalT) => modalT('UIOpSetting.configPrivateDomain'),
           type: 'white',
           footer: null,
           maskClosable: false,
@@ -1238,7 +1238,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'reverse':
         showYakitModal({
           type: 'white',
-          title: t('UIOpSetting.configGlobalReverse'),
+          title: (modalT) => modalT('UIOpSetting.configGlobalReverse'),
           width: 800,
           content: (
             <div style={{ width: 800 }}>

@@ -530,7 +530,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
             type="text"
             onClick={() => {
               const m = showYakitModal({
-                title: t('OrganizationAdmin.addFirstLevelDepartment'),
+                title: (modalT) => modalT('OrganizationAdmin.addFirstLevelDepartment'),
                 width: 500,
                 content: (
                   <CreateOrganizationForm
@@ -651,7 +651,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                               onSelectDepartmentId(key)
                             }
                             const m = showYakitModal({
-                              title: t('OrganizationAdmin.addSecondLevelDepartment'),
+                              title: (modalT) => modalT('OrganizationAdmin.addSecondLevelDepartment'),
                               width: 500,
                               content: (
                                 <CreateOrganizationForm

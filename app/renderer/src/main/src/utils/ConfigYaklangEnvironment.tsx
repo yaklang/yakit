@@ -209,7 +209,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
 
 export const showConfigYaklangEnvironment = (title?: string) => {
   showYakitModal({
-    title: title ? title : tOriginal('ConfigYaklangEnvironment.configYaklangSystemEnvironmentVariable'),
+    title: (modalT) => (title ? title : modalT('ConfigYaklangEnvironment.configYaklangSystemEnvironmentVariable')),
     width: 800,
     content: (
       <>
