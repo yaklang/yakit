@@ -69,6 +69,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     onSyncIDChange,
     getSetting,
     onHttpFuzzRequestChange,
+    onGetHttpFlowFuzzStatus,
   } = params || {}
 
   const { getLabelByParams } = useAINodeLabel()
@@ -708,6 +709,12 @@ function useChatIPC(params?: UseChatIPCParams) {
           // http_fuzz_request_change
           const httpFuzzRequest = JSON.parse(ipcContent) as AIAgentGrpcApi.HttpFuzzRequestChange
           onHttpFuzzRequestChange?.(httpFuzzRequest)
+          return
+        }
+
+        if (res.Type === 'http_flow_fuzz_status') {
+          const httpFlowFuzzStatus = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
+          onGetHttpFlowFuzzStatus?.(httpFlowFuzzStatus)
           return
         }
 

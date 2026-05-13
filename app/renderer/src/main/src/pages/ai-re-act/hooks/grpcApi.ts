@@ -809,6 +809,58 @@ export declare namespace AIAgentGrpcApi {
     }
     source_action: string
   }
+
+  /** `http_flow_fuzz_status` 事件中 progress 内状态码聚合项（最多前 3 项） */
+  export interface HttpFlowFuzzStatusStatusCount {
+    code: number
+    count: number
+  }
+
+  /** `http_flow_fuzz_status` 事件中 progress 内响应体长度聚合项（最多前 3 项） */
+  export interface HttpFlowFuzzStatusResponseLengthGroup {
+    body_length: number
+    count: number
+  }
+
+  /** `http_flow_fuzz_status` 的 working 状态携带的结构化进度 */
+  export interface HttpFlowFuzzStatusProgress {
+    total_requests: number
+    successful_responses: number
+    failed_requests: number
+    saved_httpflow_count: number
+    /** 最近一次响应状态码，可能缺失 */
+    last_status_code?: number
+    /** 平均响应耗时（毫秒），可能缺失 */
+    average_response_ms?: number
+    interesting_sample_num: number
+    status_counts: HttpFlowFuzzStatusStatusCount[]
+    response_length_groups: HttpFlowFuzzStatusResponseLengthGroup[]
+  }
+
+  /**
+   * `http_flow_fuzz_status` 事件载荷（Type: http_flow_fuzz_status，IsJson: true）。
+   * fuzz_id 与 runtime_id 同值，可作为卡片主键；start / working / finish 共用同一 fuzz_id。
+   */
+  export type GetHttpFlowFuzzStatus =
+    | {
+        status: 'start'
+        fuzz_id: string
+        runtime_id: string
+        action_name: string
+      }
+    | {
+        status: 'working'
+        fuzz_id: string
+        runtime_id: string
+        action_name: string
+        progress: HttpFlowFuzzStatusProgress
+      }
+    | {
+        status: 'finish'
+        fuzz_id: string
+        runtime_id: string
+        action_name: string
+      }
 }
 
 // #region AI相关普通接口的请求和定义结构

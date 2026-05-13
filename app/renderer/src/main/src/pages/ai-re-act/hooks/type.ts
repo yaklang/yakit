@@ -166,6 +166,9 @@ export interface UseChatIPCParams {
 
   /** http_fuzz_request_change事件的回调 */
   onHttpFuzzRequestChange?: (data: AIAgentGrpcApi.HttpFuzzRequestChange) => void
+
+  /** http_flow_fuzz_status */
+  onGetHttpFlowFuzzStatus?: (data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => void
 }
 
 /** 会话文件系统-pin */

@@ -143,12 +143,17 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     applyHttpFuzzRequestChangeToWebFuzzerPage(httpFuzzTabPageId, data)
   })
 
+  const onGetHttpFlowFuzzStatus = useMemoizedFn((data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => {
+    console.log(data, 'data')
+  })
+
   const [chatIPCData, events] = useChatIPC({
     cacheDataStore,
     onHttpFuzzRequestChange,
+    onGetHttpFlowFuzzStatus,
   })
 
-  const { execute, casualStatus } = chatIPCData
+  const { execute, casualStatus, httpRunTimeIDs, riskRunTimeIDs } = chatIPCData
 
   useEffect(() => {
     if (!httpFuzzTabPageId) {
