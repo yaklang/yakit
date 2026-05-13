@@ -1659,7 +1659,13 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const currentPageCache = newPageCache.find((ele) => ele.route === YakitRoute.HTTPFuzzer)
     if (!currentPageCache) return
 
-    const baseSortId = (currentPageCache.multipleNode?.length || 0) + 1
+    const { index, subIndex } = getPageItemById(currentPageCache.multipleNode || [], item.id)
+    const targetGroupId = subIndex !== -1 && index !== -1 ? currentPageCache.multipleNode[index].id : '0'
+    const groupChildrenLength =
+      targetGroupId !== '0' && index !== -1 ? currentPageCache.multipleNode[index].groupChildren?.length || 0 : 0
+
+    const baseSortId =
+      targetGroupId !== '0' ? groupChildrenLength + 1 : (currentPageCache.multipleNode?.length || 0) + 1
     const createdNodes: MultipleNodeInfo[] = Array.from({ length: count }, (_, index) => {
       const time = `${Date.now()}-${index}`
       const tabId = `${key}-[${randomString(6)}]-${time}`
@@ -1670,14 +1676,21 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         pageParams: {
           ...pageParams,
           id: tabId,
-          groupId: '0',
+          groupId: targetGroupId,
         },
-        groupId: '0',
+        groupId: targetGroupId,
         sortFieId: baseSortId + index,
       }
     })
 
-    currentPageCache.multipleNode.push(...createdNodes)
+    if (targetGroupId !== '0' && index !== -1) {
+      currentPageCache.multipleNode[index].groupChildren = [
+        ...(currentPageCache.multipleNode[index].groupChildren || []),
+        ...createdNodes,
+      ]
+    } else {
+      currentPageCache.multipleNode.push(...createdNodes)
+    }
     currentPageCache.multipleLength = (currentPageCache.multipleLength || 0) + createdNodes.length
     currentPageCache.openFlag = false
     currentPageCache.selectSubItem = false
@@ -4739,12 +4752,17 @@ const SubTabs: React.FC<SubTabsProps> = React.memo(
         })
       }
       if (currentTabKey === YakitRoute.HTTPFuzzer) {
+        if (subIndex !== -1) {
+          menuData = [
+            ...menuData,
+            {
+              label: t('TabRenameModalContent.duplicateTabs'),
+              key: 'duplicateTab',
+            },
+          ]
+        }
         menuData = [
           ...menuData,
-          {
-            label: t('TabRenameModalContent.duplicateTabs'),
-            key: 'duplicateTab',
-          },
           {
             label: t('MainOperatorContent.restoreTab'),
             key: 'restoreTab',
