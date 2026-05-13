@@ -294,6 +294,27 @@
     "taskEnd": "任务结束标志",
     "taskEndDesc": "当前任务已经结束，下面为新的任务数据"
   },
+  "AIHttpFlowFuzzStatusCard": {
+    "title": "发包统计",
+    "badgeStarting": "准备中",
+    "badgeSending": "发送中",
+    "badgeDone": "已完成",
+    "viewDetail": "查看详情",
+    "detailTitle": "发包详情",
+    "sentTotal": "已发包数",
+    "successCount": "成功数",
+    "failCount": "失败数",
+    "avgMs": "平均响应耗时",
+    "dash": "—",
+    "savedFlows": "已落库 HTTPFlow",
+    "interesting": "可疑样本",
+    "lastStatus": "最近状态码",
+    "statusDistribution": "状态码分布",
+    "lengthDistribution": "响应体长度分布",
+    "colCode": "状态码",
+    "colLength": "长度(bytes)",
+    "colCount": "数量"
+  },
   "ToolInvokerCard": {
     "skipConfirm": "跳过会取消工具调用，使用当前输出结果进行后续工作决策，是否确认跳过",
     "success": "成功",

@@ -406,6 +406,7 @@ function useCasualChat(params?: UseCasualChatParams) {
       setElements: setElements,
       getElements: getElements,
       handleUserManualIntervention,
+      handleHttpFlowFuzzStatus: chatContentEvent.handleHttpFlowFuzzStatus,
     }
   }, [])
 

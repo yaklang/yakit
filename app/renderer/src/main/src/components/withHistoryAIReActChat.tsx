@@ -153,7 +153,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     onGetHttpFlowFuzzStatus,
   })
 
-  const { execute, casualStatus, httpRunTimeIDs, riskRunTimeIDs } = chatIPCData
+  const { execute, casualStatus } = chatIPCData
 
   useEffect(() => {
     if (!httpFuzzTabPageId) {

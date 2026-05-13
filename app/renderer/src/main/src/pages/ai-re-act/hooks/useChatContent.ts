@@ -16,7 +16,13 @@ import {
   DefaultToolResultSummary,
 } from './defaultConstant'
 import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AIChatQSData, AIChatQSDataType, AIChatQSDataTypeEnum, AIToolResult, ReActChatGroupElement } from './aiRender'
+import {
+  AIChatQSData,
+  AIChatQSDataType,
+  AIChatQSDataTypeEnum,
+  AIToolResult,
+  ReActChatGroupElement,
+} from './aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 
 function useChatContent(params: UseChatContentParams): UseChatContentEvents
@@ -794,6 +800,85 @@ function useChatContent(params: UseChatContentParams) {
   })
   // #endregion
 
+  /** http_flow_fuzz_status：按 fuzz_id 创建/更新发包统计卡片 */
+  const handleHttpFlowFuzzStatus = useMemoizedFn((res: AIOutputEvent) => {
+    try {
+      const ipcContent = Uint8ArrayToString(res.Content) || ''
+      const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
+      if (!payload?.fuzz_id) {
+        pushLog(genErrorLogData(res.Timestamp, `${res.Type} 数据缺少 fuzz_id`))
+        return
+      }
+      const { fuzz_id } = payload
+      const cardType = AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS
+      const existing = getContentMap(fuzz_id)
+
+      if (payload.status === 'start') {
+        if (existing?.type === cardType) {
+          existing.data.action_name = payload.action_name
+          existing.data.runtime_id = payload.runtime_id
+          existing.data.engine_status = 'start'
+          updateElements({ mapKey: fuzz_id, type: cardType })
+          return
+        }
+        const chatData: AIChatQSData = {
+          ...genBaseAIChatData(res),
+          id: fuzz_id,
+          chatType,
+          type: cardType,
+          data: {
+            fuzz_id,
+            runtime_id: payload.runtime_id,
+            action_name: payload.action_name,
+            engine_status: 'start',
+          },
+        }
+        setContentMap(fuzz_id, chatData)
+        updateElements({ mapKey: fuzz_id, type: cardType })
+        return
+      }
+
+      if (payload.status === 'working') {
+        if (!existing || existing.type !== cardType) {
+          const chatData: AIChatQSData = {
+            ...genBaseAIChatData(res),
+            id: fuzz_id,
+            chatType,
+            type: cardType,
+            data: {
+              fuzz_id,
+              runtime_id: payload.runtime_id,
+              action_name: payload.action_name,
+              engine_status: 'working',
+              progress: payload.progress,
+            },
+          }
+          setContentMap(fuzz_id, chatData)
+        } else {
+          existing.data.action_name = payload.action_name
+          existing.data.runtime_id = payload.runtime_id
+          existing.data.engine_status = 'working'
+          existing.data.progress = payload.progress
+        }
+        updateElements({ mapKey: fuzz_id, type: cardType })
+        return
+      }
+
+      if (payload.status === 'finish') {
+        if (!existing || existing.type !== cardType) return
+        existing.data.engine_status = 'finish'
+        existing.data.action_name = payload.action_name
+        existing.data.runtime_id = payload.runtime_id
+        updateElements({ mapKey: fuzz_id, type: cardType })
+      }
+    } catch (error) {
+      handleGrpcDataPushLog({
+        info: res,
+        pushLog: pushLog,
+      })
+    }
+  })
+
   // #region 自由对话和任务规划的公共类型数据处理逻辑
   /** 参考资料类型-数据处理 */
   const handleStreamAppendReference = useMemoizedFn((res: AIOutputEvent) => {
@@ -1062,7 +1147,7 @@ function useChatContent(params: UseChatContentParams) {
   })
 
   const events: UseChatContentEvents = useCreation(() => {
-    return { handleSetData, handleResetData }
+    return { handleSetData, handleResetData, handleHttpFlowFuzzStatus }
   }, [])
 
   return events

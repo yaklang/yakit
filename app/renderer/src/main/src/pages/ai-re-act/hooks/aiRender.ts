@@ -185,6 +185,8 @@ export enum AIChatQSDataTypeEnum {
   STREAM_GROUP = 'stream_group',
   /** 用户手动介入上下文 */
   USER_MANUAL_INTERVENTION = 'user_manual_intervention',
+  /** HTTP 流 fuzz 执行状态卡片（http_flow_fuzz_status） */
+  HTTP_FLOW_FUZZ_STATUS = 'http_flow_fuzz_status',
 }
 
 export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
@@ -262,6 +264,19 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
   UserManualInterventionContext
 >
 
+/** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */
+export interface HttpFlowFuzzStatusCardData {
+  fuzz_id: string
+  runtime_id: string
+  action_name: string
+  /** 引擎最近一次状态 */
+  engine_status: 'start' | 'working' | 'finish'
+  /** working 推送的进度；finish 时保留最后一次 */
+  progress?: AIAgentGrpcApi.HttpFlowFuzzStatusProgress
+}
+
+type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
+
 export type AIChatQSData =
   | ChatQuestion
   | ChatStream
@@ -284,4 +299,5 @@ export type AIChatQSData =
   | ChatUserManualIntervention
   | ChatToolCallParams
   | ChatApiRequestFailed
+  | ChatHttpFlowFuzzStatus
 // #endregion

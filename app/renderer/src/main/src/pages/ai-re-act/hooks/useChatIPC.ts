@@ -715,6 +715,11 @@ function useChatIPC(params?: UseChatIPCParams) {
         if (res.Type === 'http_flow_fuzz_status') {
           const httpFlowFuzzStatus = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
           onGetHttpFlowFuzzStatus?.(httpFlowFuzzStatus)
+          if (planCoordinatorId.current === res.CoordinatorId) {
+            taskChatEvent.handleHttpFlowFuzzStatus(res)
+          } else {
+            casualChatEvent.handleHttpFlowFuzzStatus(res)
+          }
           return
         }
 

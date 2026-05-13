@@ -294,6 +294,27 @@
     "taskEnd": "Task End",
     "taskEndDesc": "The current task has ended, below is the new task data"
   },
+  "AIHttpFlowFuzzStatusCard": {
+    "title": "Packet statistics",
+    "badgeStarting": "Starting",
+    "badgeSending": "Sending",
+    "badgeDone": "Completed",
+    "viewDetail": "Details",
+    "detailTitle": "Fuzz details",
+    "sentTotal": "Requests sent",
+    "successCount": "Succeeded",
+    "failCount": "Failed",
+    "avgMs": "Avg response (ms)",
+    "dash": "—",
+    "savedFlows": "HTTP flows saved",
+    "interesting": "Interesting samples",
+    "lastStatus": "Last status code",
+    "statusDistribution": "Status code distribution",
+    "lengthDistribution": "Response body length distribution",
+    "colCode": "Code",
+    "colLength": "Length (bytes)",
+    "colCount": "Count"
+  },
   "ToolInvokerCard": {
     "skipConfirm": "Skipping will cancel the tool call and use the current output for follow-up decisions. Confirm skip?",
     "success": "Success",
