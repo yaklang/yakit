@@ -23,6 +23,7 @@ import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import useAIAgentStore from '../../useContext/useStore'
 import { AIManualIntervention } from '../aiManualIntervention/AIManualIntervention'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AIModelErrorPrompt } from './aiModelErrorPrompt/AIModelErrorPrompt'
 
 const chatContentExtraProps = {
   contentClassName: styles['content-wrapper'],
@@ -210,5 +211,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
       />
     )
   })
-  return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
+  return (
+    <React.Fragment key={item.token}>
+      {/* {renderContent()} */}
+      <AIModelErrorPrompt item={item} />
+    </React.Fragment>
+  )
 })
