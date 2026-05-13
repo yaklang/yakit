@@ -1006,11 +1006,15 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
                   })}
                   key={item.value}
                 >
-                  <YakitCheckbox checked={checked} onChange={() => onTagItemClick(item)}>
+                  <YakitCheckbox
+                    checked={checked}
+                    onChange={() => onTagItemClick(item)}
+                    wrapperClassName={styles['list-item-checkbox']}
+                  >
                     <span className={styles['list-item-left']}>
-                      <span className={styles['item-title']} title={item.label}>
-                        {item.label}
-                      </span>
+                      <Tooltip title={item.label}>
+                        <span className={styles['item-title']}>{item.label}</span>
+                      </Tooltip>
                     </span>
                   </YakitCheckbox>
                 </label>
@@ -1025,12 +1029,16 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
                 })}
                 key={item.process}
               >
-                <YakitCheckbox checked={checked} onChange={() => onProcessItemClick(item)}>
+                <YakitCheckbox
+                  checked={checked}
+                  onChange={() => onProcessItemClick(item)}
+                  wrapperClassName={styles['list-item-checkbox']}
+                >
                   <span className={styles['list-item-left']}>
                     {item.icon ? <span className={styles['item-icon']}>{item.icon}</span> : null}
-                    <span className={styles['item-title']} title={item.process}>
-                      {item.process}
-                    </span>
+                    <Tooltip title={item.process}>
+                      <span className={styles['item-title']}>{item.process}</span>
+                    </Tooltip>
                   </span>
                 </YakitCheckbox>
               </label>
