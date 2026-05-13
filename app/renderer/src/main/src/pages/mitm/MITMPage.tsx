@@ -313,7 +313,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
       certs: ClientCertificate[],
       extra?: ExtraMITMServerProps,
     ) => {
-      const extraPort = extra?.ExtraPort || []
+      const extraPort = extra?.ExtraPorts || []
       extraPortRef.current = extraPort
       setShowPort([...new Set([port, ...extraPort])])
       setHost(host)
@@ -518,7 +518,7 @@ export interface ExtraMITMServerProps {
   dnsServers: string[]
   hosts: KVPair[]
   EnableHostsMappingBeforeDownstreamProxy: boolean
-  ExtraPort: string[]
+  ExtraPorts: string[]
   /**@name 过滤WebSocket */
   filterWebsocket: boolean
   /**禁用初始页 */

@@ -373,7 +373,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
           )}
           <Form.Item
             label={t('MITMFormAdvancedConfiguration.extraPort')}
-            name="ExtraPort"
+            name="ExtraPorts"
             rules={[
               {
                 validator: async (_, value) => {

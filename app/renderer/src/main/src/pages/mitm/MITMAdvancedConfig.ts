@@ -17,7 +17,7 @@ interface AdvancedConfigurationFromValue {
   dnsServers: string[]
   etcHosts: KVPair[]
   EnableHostsMappingBeforeDownstreamProxy: boolean
-  ExtraPort: string[]
+  ExtraPorts: string[]
   filterWebsocket: boolean
   disableCACertPage: boolean
   DisableSystemProxy: boolean
@@ -84,7 +84,7 @@ const createDefaultAdvancedConfig = (): AdvancedConfigurationFromValue => ({
   dnsServers: [...defaultDnsServers],
   etcHosts: [],
   EnableHostsMappingBeforeDownstreamProxy: false,
-  ExtraPort: [],
+  ExtraPorts: [],
   filterWebsocket: false,
   disableCACertPage: false,
   DisableSystemProxy: false,
@@ -111,7 +111,7 @@ const fieldConfigs: RemoteFieldConfig[] = [
     key: RemoteGV.MITMEnableHostsMappingBeforeDownstreamProxy,
     read: parseBoolean,
   },
-  { field: 'ExtraPort', key: MITMConsts.MITMDefaultExtraPort, read: (raw) => parseJSON(raw, []) },
+  { field: 'ExtraPorts', key: MITMConsts.MITMDefaultExtraPort, read: (raw) => parseJSON(raw, []) },
   { field: 'filterWebsocket', key: MITMConsts.MITMDefaultFilterWebsocket, read: parseBoolean },
   { field: 'disableCACertPage', key: RemoteGV.MITMDisableCACertPage, read: parseBoolean },
   { field: 'DisableSystemProxy', key: RemoteGV.MITMDisableSystemProxy, read: parseBoolean },
@@ -214,7 +214,7 @@ const buildMitmExtra = (params: AdvancedConfigurationFromValue): ExtraMITMServer
     dnsServers,
     etcHosts,
     EnableHostsMappingBeforeDownstreamProxy,
-    ExtraPort,
+    ExtraPorts,
     filterWebsocket,
     disableCACertPage,
     DisableSystemProxy,
@@ -234,7 +234,7 @@ const buildMitmExtra = (params: AdvancedConfigurationFromValue): ExtraMITMServer
     dnsServers,
     hosts: etcHosts,
     EnableHostsMappingBeforeDownstreamProxy,
-    ExtraPort,
+    ExtraPorts,
     filterWebsocket,
     disableCACertPage,
     DisableSystemProxy,
@@ -270,7 +270,7 @@ const buildMitmExtraV2 = (extra?: ExtraMITMServerProps) => {
     dnsServers,
     hosts,
     EnableHostsMappingBeforeDownstreamProxy,
-    ExtraPort,
+    ExtraPorts,
     filterWebsocket,
     disableCACertPage,
     DisableSystemProxy,
@@ -292,7 +292,7 @@ const buildMitmExtraV2 = (extra?: ExtraMITMServerProps) => {
     DnsServers: dnsServers,
     HostsMapping: hosts,
     EnableHostsMappingBeforeDownstreamProxy,
-    ExtraPort: ExtraPort.map((item) => parseInt(item) || 0).filter((item) => Boolean(item)),
+    ExtraPorts: ExtraPorts.map((item) => parseInt(item) || 0).filter((item) => Boolean(item)),
     FilterWebsocket: filterWebsocket,
     DisableCACertPage: disableCACertPage,
     DisableSystemProxy,
