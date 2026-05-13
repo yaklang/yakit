@@ -107,6 +107,11 @@ export interface AIStartParams {
 
   // 是否关闭工具执行期间的 interval review(默认: false)
   DisableToolIntervalReview?: boolean
+  // 为 true 时，MaybeTriggerPerceptionAfterAction / MaybeTriggerPerceptionAfterVerification /
+  // TriggerPerceptionOnSpin 内直接同步调用 TriggerPerception；默认 false 时为异步 goroutine 调用
+  SyncPerceptionTrigger?: boolean
+  /** 是否进入任务规划 */
+  EnablePlan?: boolean
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
