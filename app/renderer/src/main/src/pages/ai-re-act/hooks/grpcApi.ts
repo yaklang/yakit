@@ -722,6 +722,7 @@ export declare namespace AIAgentGrpcApi {
     lines: number
     summary?: string
     children?: AIContextSections[]
+    estimated_tokens: number
   }
 
   /** prompt_profile 中按 role 拆分的字节统计项 */
