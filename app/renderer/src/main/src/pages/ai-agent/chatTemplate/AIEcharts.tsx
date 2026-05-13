@@ -1010,8 +1010,7 @@ const getTokenCountOption = (
         const rows = list
           .map((item) => {
             const val = Number(item.value || 0)
-            const pct =
-              totalAtPoint > 0 ? ` (${((val / totalAtPoint) * 100).toFixed(1)}%)` : ''
+            const pct = totalAtPoint > 0 ? ` (${((val / totalAtPoint) * 100).toFixed(1)}%)` : ''
             return `${item.marker}${item.seriesName} ${formatNumberUnits(val)}${pct}`
           })
           .join('<br/>')
