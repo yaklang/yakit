@@ -1029,6 +1029,20 @@ function useChatContent(params: UseChatContentParams) {
         handleStreamAppendReference(res)
         return
       }
+
+      // 模型/API 请求失败
+      if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
+        const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIApiRequestFailedPayload
+        const chatData: AIChatQSData = {
+          ...genBaseAIChatData(res),
+          chatType,
+          type: AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
+          data,
+        }
+        setContentMap(chatData.id, chatData)
+        updateElements({ mapKey: chatData.id, type: chatData.type })
+        return
+      }
       // #endregion
 
       handleUnkData(res)

@@ -326,6 +326,18 @@ export declare namespace AIAgentGrpcApi {
     task_index: string
   }
 
+  /**
+   * api_request_failed + NodeId ai_call_failure 时 Content(JSON) 结构
+   */
+  export interface AIApiRequestFailedPayload {
+    error_code: string
+    model_tier: string
+    provider_name: string
+    model_name: string
+    cause: string
+    liteforge_action: string
+  }
+
   /** review_release 释放消息 */
   export interface ReviewRelease {
     /** review对应的id */

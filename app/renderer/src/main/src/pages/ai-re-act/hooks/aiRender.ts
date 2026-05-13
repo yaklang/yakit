@@ -155,6 +155,8 @@ export enum AIChatQSDataTypeEnum {
   TOOL_RESULT = 'tool_result',
   /**工具结果详情:参数 */
   TOOL_CALL_PARAM = 'tool_call_param',
+  /**模型/API 请求失败 */
+  AI_API_REQUEST_FAILED = 'ai_api_request_failed',
   /**计划审阅 */
   PLAN_REVIEW_REQUIRE = 'plan_review_require',
   /**任务审阅 */
@@ -228,6 +230,10 @@ type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, { qs: string
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
 type ChatToolCallParams = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_PARAM, AIAgentGrpcApi.AIToolCallParams>
+type ChatApiRequestFailed = AIChatQSDataBase<
+  AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
+  AIAgentGrpcApi.AIApiRequestFailedPayload
+>
 
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
 type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
@@ -277,4 +283,5 @@ export type AIChatQSData =
   | ChatStreamGroup
   | ChatUserManualIntervention
   | ChatToolCallParams
+  | ChatApiRequestFailed
 // #endregion
