@@ -54,54 +54,56 @@ function useTaskChat(params: UseTaskChatParams) {
     activeLeafTasks.current.clear()
   })
 
-  /** 任务节点开始执行, 生成UI展示的信息 */
-  const handleTaskStartNode = useMemoizedFn((res: AIOutputEvent, nodeInfo: AIAgentGrpcApi.ChangeTask) => {
+  /**
+   * 任务节点开始执行, 生成UI展示的信息
+   * 实时数据里 先给push_task，后给pop_task，所以push_task是生成数据的主要依据
+   * 任务规划里该类型只有实时数据
+   */
+  const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
     try {
-      // 任务树根节点不进行节点展示
-      if (nodeInfo.task.index === '1') return
+      let ipcContent = Uint8ArrayToString(res.Content) || ''
+      const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
+      if (!info.task.task_uuid || info.task.index === '1') return
+      if (res.IsSync) return
 
-      const chatData: AIChatQSData = {
-        ...genBaseAIChatData(res),
-        chatType: 'task',
-        type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
-        data: {
-          taskIndex: nodeInfo.task.index,
-          taskName: nodeInfo.task.name,
-          goal: nodeInfo.task.goal,
-          status: AITaskStatus.inProgress,
-        },
+      let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
+      if (!taskNodeInfo) {
+        taskNodeInfo = {
+          ...genBaseAIChatData(res),
+          id: info.task.task_uuid,
+          chatType: 'task',
+          type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
+          data: {
+            taskIndex: info.task.index,
+            taskName: info.task.name,
+            goal: info.task.goal,
+            status: info.task.task_status || AITaskStatus.inProgress,
+          },
+        }
+        setContentMap(taskNodeInfo.id, taskNodeInfo)
       }
-      if (nodeInfo.task.task_uuid) chatData.id = nodeInfo.task.task_uuid
-      activeLeafTasks.current.add(chatData.id)
-      setContentMap(chatData.id, chatData)
-      setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }])
-    } catch (error) {}
-  })
-  /** 任务节点结束执行, 更新UI展示的信息 */
-  const handleTaskEndNode = useMemoizedFn((nodeInfo: AIAgentGrpcApi.ChangeTask) => {
-    try {
-      // 任务树根节点不进行节点展示
-      if (nodeInfo.task.index === '1') return
-      // 任务结束时, 如果没有task_uuid则不进行UI更新, 因为无法确定哪个节点结束了
-      if (!nodeInfo.task.task_uuid) return
 
-      // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
-      activeLeafTasks.current.delete(nodeInfo.task.task_uuid)
-
-      const taskNodeInfo = getContentMap(nodeInfo.task.task_uuid)
-      if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
-        return
-      }
-      taskNodeInfo.data.status = nodeInfo.task.task_status
-      setElements((old) => {
-        return old.map((item) => {
-          if (item.token === taskNodeInfo.id && item.type === taskNodeInfo.type) {
-            return { ...item, renderNum: item.renderNum + 1 }
-          }
-          return item
+      if (info.type === 'push_task') {
+        activeLeafTasks.current.add(taskNodeInfo.id)
+        setElements((old) => [
+          ...old,
+          { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'task' },
+        ])
+      } else if (info.type === 'pop_task') {
+        // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
+        activeLeafTasks.current.delete(info.task.task_uuid)
+        if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
+        taskNodeInfo.data.status = info.task.task_status
+        setElements((old) => {
+          return old.map((item) => {
+            if (item.token === taskNodeInfo!.id && item.type === taskNodeInfo!.type) {
+              return { ...item, renderNum: item.renderNum + 1 }
+            }
+            return item
+          })
         })
-      })
-    } catch (error) {}
+      }
+    } catch {}
   })
 
   /** 更新任务树指定任务节点的状态 */
@@ -207,21 +209,20 @@ function useTaskChat(params: UseTaskChatParams) {
         return
       }
 
-      let ipcContent = Uint8ArrayToString(res.Content) || ''
+      const ipcContent = Uint8ArrayToString(res.Content) || ''
 
       if (res.Type === 'structured' && res.NodeId === 'system') {
         const data = JSON.parse(ipcContent) || ''
 
-        if (!!data && typeof data === 'object' && data?.type === 'push_task') {
+        if (data && typeof data === 'object' && data?.type === 'push_task') {
           const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-          handleTaskStartNode(res, info)
+          handleTaskNode(res)
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
         }
 
-        if (!!data && typeof data === 'object' && data?.type === 'pop_task') {
+        if (data && typeof data === 'object' && data?.type === 'pop_task') {
           // 结束任务 & 请求更新任务树最新状态数据
-          const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-          handleTaskEndNode(info)
+          handleTaskNode(res)
           sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
         }
         return

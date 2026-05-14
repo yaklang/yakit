@@ -96,10 +96,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       setExportLoading(true)
       //
       try {
-        // const ids = aiChatDataStore.get(activeChat.request.TimelineSessionID || "default")?.coordinatorIDs || []
         await grpcExportAILogs(
           {
-            // CoordinatorIDs: ids,
             SessionID: activeChat.SessionID,
             ExportDataTypes: data.types,
             OutputPath: data.outputPath,

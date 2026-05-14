@@ -6,17 +6,17 @@ import type {
   UseCasualChatState,
 } from './type'
 import type { AIChatQSData, AIReviewType, ReActChatRenderItem } from './aiRender'
-import type { AIOutputEvent } from './grpcApi'
+import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import { AITaskStatus } from './grpcApi'
 import { useRef } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
-import { handleGrpcDataPushLog } from './utils'
-import { v4 as uuidv4 } from 'uuid'
+import { genBaseAIChatData, handleGrpcDataPushLog } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIChatQSDataTypeEnum } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import moment from 'moment'
 import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
+import { Uint8ArrayToString } from '@/utils/str'
 
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -39,6 +39,45 @@ function useCasualChat(params: UseCasualChatParams) {
     contentMap && contentMap.set(mapKey, value)
   })
 
+  /**
+   * 任务节点开始执行, 生成UI展示的信息
+   * 历史数据里 先给pop_task，后给push_task，所以pop_task是生成数据的主要依据
+   * 自由对话里该类型只有历史数据
+   */
+  const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
+    try {
+      let ipcContent = Uint8ArrayToString(res.Content) || ''
+      const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
+      if (!info.task.task_uuid || info.task.index === '1') return
+      if (!res.IsSync) return
+
+      let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
+      if (!taskNodeInfo) {
+        taskNodeInfo = {
+          ...genBaseAIChatData(res),
+          id: info.task.task_uuid,
+          chatType: 'reAct',
+          type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
+          data: {
+            taskIndex: info.task.index,
+            taskName: info.task.name,
+            goal: info.task.goal,
+            status: info.task.task_status || AITaskStatus.error,
+          },
+        }
+        setContentMap(taskNodeInfo.id, taskNodeInfo)
+      }
+
+      if (info.type === 'push_task') {
+        if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
+        setElements((old) => [
+          { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'reAct' },
+          ...old,
+        ])
+      }
+    } catch {}
+  })
+
   // #region review数据-hook缓存数据
   const review = useRef<AIChatQSData>()
   const handleGetReview = useMemoizedFn(() => {
@@ -55,6 +94,9 @@ function useCasualChat(params: UseCasualChatParams) {
       let funcKey = res.Type
       if (res.Type === 'structured' && res.NodeId === 'stream-finished') {
         // stream数据结束标识
+        funcKey = res.NodeId
+      } else if (res.Type === 'structured' && res.NodeId === 'react_task_dequeue') {
+        // 用户问题开始执行标识
         funcKey = res.NodeId
       }
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
@@ -77,6 +119,15 @@ function useCasualChat(params: UseCasualChatParams) {
         return
       }
 
+      if (res.Type === 'structured' && res.NodeId === 'system') {
+        const ipcContent = Uint8ArrayToString(res.Content) || ''
+        const data = JSON.parse(ipcContent) || ''
+        if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
+          handleTaskNode(res)
+        }
+        return
+      }
+
       // 未识别类型全部归档到日志处理
       handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })
     } catch (error) {
@@ -88,9 +139,9 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   // 用户问题或review的主动操作
-  const handleSend: handleSendFunc = useMemoizedFn(({ request, optionValue, extraValue, cb }) => {
+  const handleSend: handleSendFunc = useMemoizedFn(({ request, optionValue, cb }) => {
     try {
-      const { IsInteractiveMessage, InteractiveId, IsFreeInput, FreeInput } = request
+      const { IsInteractiveMessage, InteractiveId } = request
       if (IsInteractiveMessage && InteractiveId) {
         if (!review.current || (review.current.data as AIReviewType)?.id !== InteractiveId) {
           yakitNotify('error', '未获取到 review 信息, 操作无效')
@@ -112,24 +163,6 @@ function useCasualChat(params: UseCasualChatParams) {
           })
         })
       }
-
-      if (IsFreeInput && FreeInput && !cb) {
-        // 用户问题
-        const chatData: AIChatQSData = {
-          id: uuidv4(),
-          chatType: 'reAct',
-          type: AIChatQSDataTypeEnum.QUESTION,
-          Timestamp: moment().unix(),
-          data: { qs: FreeInput || '', setting: request },
-          AIService: '',
-          AIModelName: '',
-          extraValue: extraValue,
-        }
-
-        setContentMap(chatData.id, chatData)
-        setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct' }])
-      }
-
       cb && cb()
     } catch (error) {}
   })

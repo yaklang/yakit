@@ -138,18 +138,6 @@ function useChatIPC(params?: UseChatIPCParams) {
   const [execute, setExecute, getExecute] = useGetSetState(false)
   // #endregion
 
-  // CoordinatorIDs
-  const updateCoordinatorIDs = useMemoizedFn((id: string) => {
-    const ids = getChatDataStore()?.coordinatorIDs
-    if (!ids) {
-      try {
-        cacheDataStore?.updater(chatID.current, { coordinatorIDs: [id] })
-      } catch (error) {}
-    } else {
-      if (!ids.includes(id)) ids.push(id)
-    }
-  })
-
   // #region 接口更新的(文件|文件夹)数据集合
   const [grpcFolders, setGrpcFolders] = useState<AIFileSystemPin[]>([])
   const handleSetGrpcFolders = useMemoizedFn((info: AIFileSystemPin) => {
@@ -456,52 +444,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     { wait: 50, leading: false },
   ).run
 
-  /** 暂存用户问题的请求数据 */
-  const tempUserQuestionRequest = useRef<{ request: AIInputEvent; extra?: AIChatIPCStartParams['extraValue'] }[]>([])
-  // 问题入队|出队变化时-进行通知逻辑
-  const handleQuestionQueueStatusChange = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const { NodeId } = res
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
-      if (NodeId === 'react_task_dequeue') {
-        if (!!data.focus_mode) {
-          // 记录专注模式状态
-          handleFocusModeChange(data.react_task_id, data.focus_mode)
-        } else {
-          // 非专注模式状态
-          handleResetFocusMode()
-        }
-
-        // 将用户的问题回显到UI上
-        const findIndex = tempUserQuestionRequest.current.findIndex(
-          (item) =>
-            item.request.Params?.UserQuery === data.react_task_input ||
-            item.request.FreeInput === data.react_task_input,
-        )
-        const qsInfo = tempUserQuestionRequest.current[findIndex]
-        if (findIndex !== -1) {
-          casualChatEvent.handleSend({
-            request: {
-              ...qsInfo.request,
-              IsFreeInput: true,
-              FreeInput: qsInfo.request?.Params?.UserQuery || qsInfo.request?.FreeInput || '',
-            },
-            extraValue: qsInfo.extra,
-          })
-          tempUserQuestionRequest.current.splice(findIndex, 1)
-        }
-      }
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: logEvents.pushLog,
-      })
-    } finally {
-      handleTriggerQuestionQueueRequest()
-    }
-  })
-
   // 问题队列清空操作-进行通知逻辑
   const handleReActTaskCleared = useMemoizedFn((res: AIOutputEvent) => {
     try {
@@ -537,10 +479,6 @@ function useChatIPC(params?: UseChatIPCParams) {
 
       if (params.IsConfigHotpatch) {
         aiRequest.current = { ...(aiRequest.current || {}), ...(params.Params || {}) }
-      }
-
-      if (params.IsFreeInput) {
-        tempUserQuestionRequest.current.push({ request: params, extra: extraValue })
       }
 
       switch (type) {
@@ -628,8 +566,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     yakExecResultEvent.handleResetData()
     casualChatEvent.handleResetData()
     taskChatEvent.handleResetData()
-
-    tempUserQuestionRequest.current = []
 
     // 清除类型处理方法库里的临时数据
     handleResetForNewSession()
@@ -723,11 +659,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
       try {
-        // 记录会话中所有的 CoordinatorId
-        if (res.CoordinatorId) {
-          updateCoordinatorIDs(res.CoordinatorId)
-        }
-        if (!!res.SyncID) {
+        if (res.SyncID) {
           onSyncIDChange?.(res.SyncID)
         }
 
@@ -735,10 +667,10 @@ function useChatIPC(params?: UseChatIPCParams) {
         // console.log('onStart-res', res, ipcContent)
 
         if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
-          const httpNotice = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
+          const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
           const chatStore = getChatDataStore()
-          if (chatStore) chatStore.beforeID.chatID = httpNotice.next_start_id
-          requestEvents.handleGrpcLoadMore(httpNotice)
+          if (chatStore) chatStore.beforeID.chatID = recoveryHistory.next_start_id
+          requestEvents.handleGrpcLoadMore(recoveryHistory)
           return
         }
 
@@ -746,23 +678,28 @@ function useChatIPC(params?: UseChatIPCParams) {
           // 产生一条http流量数据时的通知
           // 不能在这个if里return，因为这个数据在工具卡片中还要进行计数逻辑使用
           const httpNotice = JSON.parse(ipcContent) as AIAgentGrpcApi.HTTPTrafficNotice
-          setHttpRunTimeIDs((old) => {
-            if (old.includes(httpNotice.runtime_id)) return old
-            return [...old, httpNotice.runtime_id]
-          })
+          if (!res.IsSync) {
+            setHttpRunTimeIDs((old) => {
+              if (old.includes(httpNotice.runtime_id)) return old
+              return [...old, httpNotice.runtime_id]
+            })
+          }
         }
 
         if (res.Type === 'yak_risk_count') {
           // 产生一条risk流量数据时的通知
           // 不能在这个if里return，因为这个数据在工具卡片中还要进行计数逻辑使用
           const riskNotice = JSON.parse(ipcContent) as AIAgentGrpcApi.RiskTrafficNotice
-          setRiskRunTimeIDs((old) => {
-            if (old.includes(riskNotice.runtime_id)) return old
-            return [...old, riskNotice.runtime_id]
-          })
+          if (!res.IsSync) {
+            setRiskRunTimeIDs((old) => {
+              if (old.includes(riskNotice.runtime_id)) return old
+              return [...old, riskNotice.runtime_id]
+            })
+          }
         }
 
         if (res.Type === 'http_fuzz_request_change') {
+          if (res.IsSync) return
           // http_fuzz_request_change
           const httpFuzzRequest = JSON.parse(ipcContent) as AIAgentGrpcApi.HttpFuzzRequestChange
           onHttpFuzzRequestChange?.(httpFuzzRequest)
@@ -775,6 +712,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         if (res.Type === 'structured' && res.NodeId === 'session_title') {
+          if (res.IsSync) return
           // 生成会话的名称
           const nameInfo = JSON.parse(ipcContent) as { title: string }
           if (nameInfo && nameInfo.title && !!setSessionChatName) setSessionChatName(chatID.current, nameInfo.title)
@@ -782,6 +720,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         if (res.Type === 'start_plan_and_execution') {
+          if (res.IsSync) return
           // 触发任务规划，并传出任务规划流的标识 coordinator_id
           const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
           if (startInfo.coordinator_id && planCoordinatorId.current !== startInfo.coordinator_id) {
@@ -809,6 +748,7 @@ function useChatIPC(params?: UseChatIPCParams) {
           return
         }
         if (res.Type === 'end_plan_and_execution') {
+          if (res.IsSync) return
           // 结束任务规划，并传出任务规划流的标识 coordinator_id
           const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
           if (startInfo.coordinator_id && planCoordinatorId.current === startInfo.coordinator_id) {
@@ -870,21 +810,32 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         if (['filesystem_pin_directory', 'filesystem_pin_filename'].includes(res.Type)) {
+          if (res.IsSync) return
           // 会话在本地缓存数据的(文件夹/文件)路径-更新就通知[不区分自由对话和任务规划]
           const { path } = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
           handleSetGrpcFolders({ path, isFolder: res.Type === 'filesystem_pin_directory' })
           return
         }
 
-        if (res.Type === 'structured' && ['react_task_enqueue', 'react_task_dequeue'].includes(res.NodeId)) {
-          // 展示只通知自由对话里的问题出入队消息
+        if (res.Type === 'structured' && res.NodeId === 'react_task_dequeue') {
+          // 自由对话里的问题出队消息
           if (planCoordinatorId.current === res.CoordinatorId) return
-          // 问题入队/问题出队
-          handleQuestionQueueStatusChange(res)
-          return
+
+          if (!res.IsSync) {
+            handleTriggerQuestionQueueRequest()
+            const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
+            if (data.focus_mode) {
+              // 记录专注模式状态
+              handleFocusModeChange(data.react_task_id, data.focus_mode)
+            } else {
+              // 非专注模式状态
+              handleResetFocusMode()
+            }
+          }
+          // 不能return，因为自由对话的hook要进行问题的UI渲染逻辑处理
         }
         if (res.Type === 'structured' && res.NodeId === 'react_task_cleared') {
-          // 展示只通知自由对话里的问题出入队消息
+          // 自由对话里的问题队列清空消息
           if (planCoordinatorId.current === res.CoordinatorId) return
           // 问题队列清空操作
           handleReActTaskCleared(res)
@@ -905,12 +856,14 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         if (UseAIPerfDataTypes.includes(res.Type)) {
+          if (res.IsSync) return
           // AI性能数据处理
           aiPerfDataEvent.handleSetData(res)
           return
         }
 
         if (UseYakExecResultTypes.includes(res.Type)) {
+          if (res.IsSync) return
           // 执行过程中插件输出的卡片
           yakExecResultEvent.handleSetData(res)
           return
@@ -929,6 +882,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         if (res.Type === 'structured' && res.NodeId === 'timeline_item') {
+          if (res.IsSync) return
           /* 实时时间线单条 */
           const timelineItem = JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
           setReActTimelines((old) => [...old, timelineItem])
@@ -946,10 +900,8 @@ function useChatIPC(params?: UseChatIPCParams) {
               Timestamp: res.Timestamp,
               data: data,
             })
-          } else if (res.NodeId === 'timeline') {
-            // 一次性获取完整时间线数据, 暂无使用位置
-            return
           } else if (res.NodeId === 'react_task_status_changed') {
+            if (res.IsSync) return
             // 只负责获取自由对话的任务状态
             if (planCoordinatorId.current === res.CoordinatorId) return
             /* 问题的状态变化 */
@@ -971,6 +923,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             }
             return
           } else if (res.NodeId === 'status') {
+            if (res.IsSync) return
             const data = JSON.parse(ipcContent) as { key: string; value: string }
             if (data.key === 're-act-loading-status-key') {
               if (planCoordinatorId.current === res.CoordinatorId) {
@@ -1007,12 +960,17 @@ function useChatIPC(params?: UseChatIPCParams) {
           } else {
             // 因为流数据有日志类型，所以都放入日志逻辑过滤一遍
             if (res.NodeId === 'stream-finished') {
-              const { event_writer_id } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
+              const { event_writer_id, is_reason, is_system } = JSON.parse(
+                ipcContent,
+              ) as AIAgentGrpcApi.AIStreamFinished
               if (!event_writer_id) {
                 logEvents.pushLog(genErrorLogData(res.Timestamp, `stream-finished数据异常, event_writer_id缺失`))
                 return
               }
               logEvents.sendStreamLog(event_writer_id)
+
+              // 非stream数据不需要进行后续的流结束处理逻辑
+              if (is_reason || is_system) return
             }
 
             if (planCoordinatorId.current === res.CoordinatorId) {
@@ -1084,12 +1042,10 @@ function useChatIPC(params?: UseChatIPCParams) {
       ipcRenderer.removeAllListeners(`${token}-error`)
     })
     // ipcRenderer.on(`${token}-error`, (e, err: any) => {
-    // console.log("error", err)
-    // yakitNotify('error', `AI执行失败: ${err}`)
+    //   console.log('error', err)
+    //   yakitNotify('error', `AI执行失败: ${err}`)
     // })
     // console.log('start-ai-re-act', token, params)
-
-    tempUserQuestionRequest.current.push({ request: params, extra: extraValue })
 
     ipcRenderer.invoke('start-ai-re-act', token, params)
     setTimeout(() => {

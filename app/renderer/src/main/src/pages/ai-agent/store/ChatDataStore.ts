@@ -30,7 +30,6 @@ export class ChatDataStore {
         timelineID: -1,
         chatID: -1,
       },
-      coordinatorIDs: [],
       httpRunTimeIDs: [],
       riskRunTimeIDs: [],
       yakExecResult: { card: [], execFileRecord: new Map(), yakExecResultLogs: [] },

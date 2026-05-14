@@ -10,6 +10,7 @@ import type {
   ReActChatGroupElement,
   ReActChatRenderItem,
 } from './aiRender'
+
 import { Uint8ArrayToString } from '@/utils/str'
 import {
   genBaseAIChatData,
@@ -27,6 +28,7 @@ import {
   DefaultToolResultSummary,
 } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
+import { v4 as uuidv4 } from 'uuid'
 
 // #region Common Utils
 /** grpc流数据转换成错误信息输出到日志中 */
@@ -124,7 +126,7 @@ const handleResult: AIMessageHandler = (request) => {
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { result, after_stream } = (JSON.parse(ipcContent) as AIAgentGrpcApi.AIChatResult) || {}
-  if (!!after_stream) return
+  if (after_stream) return
 
   const chatData: AIChatQSData = {
     ...genBaseAIChatData(res),
@@ -207,6 +209,33 @@ const handleFailPlanAndExecution: AIMessageHandler = (request) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
+  }
+  setContentMap(chatData.id, chatData)
+  handleUpdateUISingleState(
+    res.IsSync,
+    { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
+    request.setElements,
+  )
+}
+
+/** Type='structured'&NodeId='react_task_dequeue' 生成用户问题到自由对话的UI上展示 */
+const handleReactTaskDequeue: AIMessageHandler = (request) => {
+  const { res, info, setContentMap } = request
+  if (res.Type !== 'structured' || res.NodeId !== 'react_task_dequeue') return
+  // 任务规划-该类型数据为无效数据
+  if (info.chatType === 'task') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
+  const chatData: AIChatQSData = {
+    id: uuidv4(),
+    chatType: 'reAct',
+    type: AIChatQSDataTypeEnum.QUESTION,
+    Timestamp: res.Timestamp,
+    data: { qs: data.react_task_input || '', setting: {} },
+    AIService: '',
+    AIModelName: '',
+    extraValue: { showQS: data.react_task_input || '' },
   }
   setContentMap(chatData.id, chatData)
   handleUpdateUISingleState(
@@ -1026,7 +1055,7 @@ const handleToolCallSummary: AIMessageHandler = (request) => {
 const handleTrafficCount: AIMessageHandler = (request) => {
   const { res, getContentMap, pushLog } = request
   // 历史数据中的流量计数无效
-  if (res.IsSync) return
+  // if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.HTTPTrafficNotice & AIAgentGrpcApi.RiskTrafficNotice
@@ -1542,19 +1571,21 @@ const handleReviewRelease: AIMessageHandler = (request) => {
   if (res.IsSync) {
     const reviewDetail = getContentMap(data.id)
     if (!reviewDetail) return
-    if (
-      [
-        AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
-        AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
-        AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
-        AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
-        AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE,
-      ].includes(reviewDetail.type)
-    ) {
-      return
+    switch (reviewDetail.type) {
+      case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
+      case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
+      case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+      case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
+      case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
+        reviewDetail.data.selected = JSON.stringify({ suggestion: 'continue' })
+        reviewDetail.data.optionValue = 'continue'
+        handleUpdateUISingleState(
+          res.IsSync,
+          { mapKey: reviewDetail.id, type: reviewDetail.type, chatType: reviewDetail.chatType },
+          request.setElements,
+        )
+        return
     }
-    ;(reviewDetail as any).selected = JSON.stringify(data.params)
-    ;(reviewDetail as any).optionValue = data.params?.suggestion || 'continue'
   } else {
     const reviewDetail = review?.handleGetReview?.()
     if (!reviewDetail) return
@@ -1637,4 +1668,5 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   ai_review_countdown: handleAIReviewCountdown,
   ai_review_end: handleAIReviewEnd,
   review_release: handleReviewRelease,
+  react_task_dequeue: handleReactTaskDequeue,
 }
