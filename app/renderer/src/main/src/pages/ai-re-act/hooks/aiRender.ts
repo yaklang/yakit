@@ -268,7 +268,8 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
 export interface HttpFlowFuzzStatusCardData {
   fuzz_id: string
   runtime_id: string
-  action_name: string
+  /** 发包动作原因与目的（对应事件字段 reason） */
+  reason: string
   /** 引擎最近一次状态 */
   engine_status: 'start' | 'working' | 'finish'
   /** working 推送的进度；finish 时保留最后一次 */

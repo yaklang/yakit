@@ -93,7 +93,44 @@
   .http-history-table-title-space-between {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .http-history-table-title-left-cluster {
+    flex: 1 1 0%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /** filterTagDom（如 WebFuzzer AI runtimeId）在窄宽度下收窄，避免挤掉右侧搜索等按钮 */
+  .http-history-table-filter-tag-wrap {
+    min-width: 0;
+    flex: 1 1 0%;
+    max-width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+
+    :global(.ant-tag) {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    :global(.ant-tag .ant-tag-close-icon),
+    :global(.ant-tag .anticon-close) {
+      flex-shrink: 0;
+    }
+
+    :global(.ant-tag span.content-ellipsis) {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
   }
 
   .http-history-table-row {
@@ -127,12 +164,13 @@
   }
 
   .http-history-table-right {
-    width: 100%;
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 8px;
-    flex: 1;
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    margin-left: auto;
 
     .http-history-table-right-item {
       display: flex;

@@ -1,0 +1,51 @@
+@keyframes yakit-solid-loading-spin-cw {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes yakit-solid-loading-spin-ccw {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.yakit-solid-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+}
+
+.yakit-solid-loading--inline {
+  display: inline-flex;
+}
+
+.yakit-solid-loading-icon-wrap {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.yakit-solid-loading-icon-wrap--spin {
+  animation: yakit-solid-loading-spin-cw 0.9s linear infinite;
+}
+
+.yakit-solid-loading-icon-wrap--spin-ccw {
+  animation-name: yakit-solid-loading-spin-ccw;
+}
+
+.yakit-solid-loading-tip {
+  text-align: center;
+  word-break: break-word;
+}

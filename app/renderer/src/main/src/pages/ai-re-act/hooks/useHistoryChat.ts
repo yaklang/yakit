@@ -896,71 +896,7 @@ function useHistoryChat(params?: UseHistoryChatParams) {
           handleParseCasual({ mapKey: chatData.id, type: chatData.type })
           continue
         }
-        if (item.Type === 'http_flow_fuzz_status') {
-          const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
-          if (!payload?.fuzz_id) continue
-          const { fuzz_id } = payload
-          const cardType = AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS
-          const existing = getCasualContentMap(fuzz_id)
 
-          if (payload.status === 'start') {
-            if (existing?.type === cardType) {
-              existing.data.action_name = payload.action_name
-              existing.data.runtime_id = payload.runtime_id
-              existing.data.engine_status = 'start'
-              handleParseCasual({ mapKey: fuzz_id, type: cardType })
-              continue
-            }
-            const chatData: AIChatQSData = {
-              ...genBaseAIChatData(item),
-              id: fuzz_id,
-              chatType: 'reAct',
-              type: cardType,
-              data: {
-                fuzz_id,
-                runtime_id: payload.runtime_id,
-                action_name: payload.action_name,
-                engine_status: 'start',
-              },
-            }
-            setCasualContentMap(fuzz_id, chatData)
-            handleParseCasual({ mapKey: fuzz_id, type: cardType })
-            continue
-          }
-          if (payload.status === 'working') {
-            if (!existing || existing.type !== cardType) {
-              const chatData: AIChatQSData = {
-                ...genBaseAIChatData(item),
-                id: fuzz_id,
-                chatType: 'reAct',
-                type: cardType,
-                data: {
-                  fuzz_id,
-                  runtime_id: payload.runtime_id,
-                  action_name: payload.action_name,
-                  engine_status: 'working',
-                  progress: payload.progress,
-                },
-              }
-              setCasualContentMap(fuzz_id, chatData)
-            } else {
-              existing.data.action_name = payload.action_name
-              existing.data.runtime_id = payload.runtime_id
-              existing.data.engine_status = 'working'
-              existing.data.progress = payload.progress
-            }
-            handleParseCasual({ mapKey: fuzz_id, type: cardType })
-            continue
-          }
-          if (payload.status === 'finish') {
-            if (!existing || existing.type !== cardType) continue
-            existing.data.engine_status = 'finish'
-            existing.data.action_name = payload.action_name
-            existing.data.runtime_id = payload.runtime_id
-            handleParseCasual({ mapKey: fuzz_id, type: cardType })
-          }
-          continue
-        }
         if (item.Type === 'fail_plan_and_execution') {
           const chatData: AIChatQSData = {
             ...genBaseAIChatData(item),

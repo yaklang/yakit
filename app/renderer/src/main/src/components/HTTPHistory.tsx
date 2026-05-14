@@ -427,6 +427,8 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
   onSetHasNewData?: (f: boolean) => void
   setOnlyShowFirstNode?: (only: boolean) => void
   setSecondNodeVisible?: (show: boolean) => void
+  /** 预设排除列，透传至 `HTTPFlowTable.defaultExcludeColumnsKey` */
+  defaultExcludeColumnsKey?: string[]
 }
 /**
  * 此组件用于实时流量表和编辑器
@@ -462,6 +464,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     showRefresh = true,
     showFlod = true,
     showHistoryAnalysisBtn = false,
+    onHistoryAnalysisClick,
+    defaultExcludeColumnsKey,
   } = props
 
   const hTTPFlowRealTimeTableAndEditorRef = useRef<HTMLDivElement>(null)
@@ -605,6 +609,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
               httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
               titleHeight={titleHeight}
               showHistoryAnalysisBtn={showHistoryAnalysisBtn}
+              onHistoryAnalysisClick={onHistoryAnalysisClick}
+              defaultExcludeColumnsKey={defaultExcludeColumnsKey}
             />
           </div>
         )}

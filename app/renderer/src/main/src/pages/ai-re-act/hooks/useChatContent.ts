@@ -16,13 +16,7 @@ import {
   DefaultToolResultSummary,
 } from './defaultConstant'
 import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import {
-  AIChatQSData,
-  AIChatQSDataType,
-  AIChatQSDataTypeEnum,
-  AIToolResult,
-  ReActChatGroupElement,
-} from './aiRender'
+import { AIChatQSData, AIChatQSDataType, AIChatQSDataTypeEnum, AIToolResult, ReActChatGroupElement } from './aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 
 function useChatContent(params: UseChatContentParams): UseChatContentEvents
@@ -810,12 +804,14 @@ function useChatContent(params: UseChatContentParams) {
         return
       }
       const { fuzz_id } = payload
+      const reasonText = payload.reason
+
       const cardType = AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS
       const existing = getContentMap(fuzz_id)
 
       if (payload.status === 'start') {
         if (existing?.type === cardType) {
-          existing.data.action_name = payload.action_name
+          existing.data.reason = reasonText
           existing.data.runtime_id = payload.runtime_id
           existing.data.engine_status = 'start'
           updateElements({ mapKey: fuzz_id, type: cardType })
@@ -829,7 +825,7 @@ function useChatContent(params: UseChatContentParams) {
           data: {
             fuzz_id,
             runtime_id: payload.runtime_id,
-            action_name: payload.action_name,
+            reason: reasonText,
             engine_status: 'start',
           },
         }
@@ -848,14 +844,14 @@ function useChatContent(params: UseChatContentParams) {
             data: {
               fuzz_id,
               runtime_id: payload.runtime_id,
-              action_name: payload.action_name,
+              reason: reasonText,
               engine_status: 'working',
               progress: payload.progress,
             },
           }
           setContentMap(fuzz_id, chatData)
         } else {
-          existing.data.action_name = payload.action_name
+          existing.data.reason = reasonText
           existing.data.runtime_id = payload.runtime_id
           existing.data.engine_status = 'working'
           existing.data.progress = payload.progress
@@ -867,7 +863,7 @@ function useChatContent(params: UseChatContentParams) {
       if (payload.status === 'finish') {
         if (!existing || existing.type !== cardType) return
         existing.data.engine_status = 'finish'
-        existing.data.action_name = payload.action_name
+        existing.data.reason = reasonText
         existing.data.runtime_id = payload.runtime_id
         updateElements({ mapKey: fuzz_id, type: cardType })
       }

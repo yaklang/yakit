@@ -103,7 +103,9 @@
     "aiCasualRejectAll": "全部放弃",
     "aiCasualAcceptAll": "全部应用",
 
-    "aiCasualAcceptAllMetaTitle": "即将应用的配置"
+    "aiCasualAcceptAllMetaTitle": "即将应用的配置",
+    "responseTabManual": "手动发包",
+    "responseTabAi": "AI发包"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{{droppedCount}}]个响应",

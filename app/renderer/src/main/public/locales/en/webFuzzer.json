@@ -103,7 +103,9 @@
     "aiCasualRejectAll": "Reject all",
     "aiCasualAcceptAll": "Accept all",
 
-    "aiCasualAcceptAllMetaTitle": "Setting to apply"
+    "aiCasualAcceptAllMetaTitle": "Setting to apply",
+    "responseTabManual": "Manual fuzz",
+    "responseTabAi": "AI fuzz"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{{droppedCount}}] responses",

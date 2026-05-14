@@ -295,6 +295,8 @@ export interface HistoryTableTitleShow {
   showRefresh?: boolean
   /** 是否显示流量分析器 */
   showHistoryAnalysisBtn?: boolean
+  /** 若传入则覆盖默认行为（打开独立流量分析页），用于 Web Fuzzer 等需带上下文跳转的场景 */
+  onHistoryAnalysisClick?: () => void
 }
 
 export interface HTTPFlowTableProp extends HistoryTableTitleShow {
@@ -330,6 +332,10 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
   onSetTableTotal?: (t: number) => void
   onSetTableSelectNum?: (s: number) => void
   onSetHasNewData?: (f: boolean) => void
+  /**
+   * 作为 `excludeColumnsKey` 的初值并跳过远程缓存读取，
+   */
+  defaultExcludeColumnsKey?: string[]
 }
 
 export const StatusCodeToColor = (code: number) => {
@@ -697,6 +703,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onSetTableSelectNum,
     onSetHasNewData,
     showHistoryAnalysisBtn = false,
+    onHistoryAnalysisClick,
+    defaultExcludeColumnsKey,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'history'])
 
@@ -1830,12 +1838,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return excludeCustomColumnsKey.includes(key) || noColumnsKey.includes(key)
   })
   // 排除展示的列（包含noColumnsKey）
-  const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(noColumnsKey)
+  const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(() => {
+    if (defaultExcludeColumnsKey && defaultExcludeColumnsKey.length > 0) {
+      // 预设排除：把 noColumnsKey 一并合入，保证不可能出现的列也被剔除
+      return Array.from(new Set([...defaultExcludeColumnsKey, ...noColumnsKey]))
+    }
+    return noColumnsKey
+  })
   // 默认所有列展示顺序
   const defalutColumnsOrderRef = useRef<string[]>(defalutColumnsOrder.filter((key) => !noColumnsKey.includes(key)))
   // 所有列展示顺序（不包含excludeCustomColumnsKey）
   const [columnsOrder, setColumnsOrder] = useState<string[]>([])
   useEffect(() => {
+    // 预设排除列模式下，不读取远程缓存，避免被全局列设置覆盖
+    if (defaultExcludeColumnsKey && defaultExcludeColumnsKey.length > 0) return
     if (inViewport) {
       debugToPrintLogs({
         page: 'HTTPFlowTable',
@@ -4301,7 +4317,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                       ))}
                     </div>
                   )}
-                  <div className={style['http-history-table-flex']} style={{ gap: 8 }}>
+                  <div
+                    className={classNames(
+                      style['http-history-table-flex'],
+                      style['http-history-table-title-left-cluster'],
+                    )}
+                    style={{ gap: 8 }}
+                  >
                     {shieldData?.data.length > 0 && (
                       <HTTPFlowShield
                         shieldData={shieldData}
@@ -4322,7 +4344,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                         </span>
                       </div>
                     </div>
-                    {filterTagDom}
+                    {filterTagDom ? (
+                      <div className={style['http-history-table-filter-tag-wrap']}>{filterTagDom}</div>
+                    ) : null}
                     {onlyFavoriteTag}
                   </div>
                   <div className={style['http-history-table-right']}>
@@ -4484,6 +4508,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                           type="outline2"
                           icon={<PublicHTTPHistoryIcon />}
                           onClick={() => {
+                            if (onHistoryAnalysisClick) {
+                              onHistoryAnalysisClick()
+                              return
+                            }
                             emiter.emit(
                               'openPage',
                               JSON.stringify({

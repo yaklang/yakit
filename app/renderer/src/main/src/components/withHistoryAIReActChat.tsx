@@ -32,6 +32,7 @@ import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   getWebFuzzerPageRequestString,
   enqueueWebFuzzerCasualReplaceReview,
+  pushAIFuzzStatusRuntimeIdToWebFuzzerPage,
 } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
@@ -143,8 +144,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     applyHttpFuzzRequestChangeToWebFuzzerPage(httpFuzzTabPageId, data)
   })
 
+  // AI `http_flow_fuzz_status` 推送：把每次最新的 `runtime_id` 静默推到当前 fuzzer 页签的处理器中。
+  // 用户点击「查看详情」会显式再次推送并要求打开抽屉，所以这里不主动打开。
   const onGetHttpFlowFuzzStatus = useMemoizedFn((data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => {
-    console.log(data, 'data')
+    if (!httpFuzzTabPageId) return
+    const runtimeId = data?.runtime_id
+    if (!runtimeId) return
+    pushAIFuzzStatusRuntimeIdToWebFuzzerPage(httpFuzzTabPageId, runtimeId, { source: 'auto' })
   })
 
   const [chatIPCData, events] = useChatIPC({

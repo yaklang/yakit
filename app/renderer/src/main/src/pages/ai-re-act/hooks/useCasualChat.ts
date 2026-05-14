@@ -38,6 +38,9 @@ function useCasualChat(params?: UseCasualChatParams) {
     contentMap && contentMap.delete(mapKey)
   })
 
+  /** handleSpecialData 早于 useChatContent，http_flow_fuzz_status 需延后调用 chatContent 内方法 */
+  const chatContentHandlersRef = useRef<{ handleHttpFlowFuzzStatus: (res: AIOutputEvent) => void } | null>(null)
+
   // #region review事件转换成UI处理逻辑
   const review = useRef<AIChatQSData>()
 
@@ -297,6 +300,11 @@ function useCasualChat(params?: UseCasualChatParams) {
         return
       }
 
+      if (res.Type === 'http_flow_fuzz_status') {
+        chatContentHandlersRef.current?.handleHttpFlowFuzzStatus(res)
+        return
+      }
+
       // 未识别类型全部归档到日志处理
       handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })
     } catch (error) {
@@ -317,6 +325,7 @@ function useCasualChat(params?: UseCasualChatParams) {
     pushLog: handlePushLog,
     handleUnkData: handleSpecialData,
   })
+  chatContentHandlersRef.current = chatContentEvent
   // #endregion
 
   // 处理数据方法

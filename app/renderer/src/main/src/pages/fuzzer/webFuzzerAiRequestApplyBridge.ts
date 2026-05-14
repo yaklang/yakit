@@ -92,6 +92,53 @@ export type ApplyHttpFuzzRequestChangeOptions = {
   skipReplaceDedup?: boolean
 }
 
+/**
+ * AI `http_flow_fuzz_status` 推送通道：
+ * - 自动：AI 流式事件每次到达时调用（`source: 'auto'`），由 fuzzer 页签内更新最新 `runtime_id`，
+ *   右侧响应区在没有本地发包数据时会替换为按该 `runtime_id` 过滤的 history 表；
+ * - 显式：用户在卡片中点击「查看详情」（`source: 'manual'`），把本卡片的 `runtime_id` 推过去，
+ *   同样驱动右侧 history 表（已显示则按新 key 重新加载）。
+ *
+ * 与上面的 `registerWebFuzzerPageApplyRequestFromCard` 走相同的 pageId 注册模式，
+ * 用 `HTTPFuzzerPageCore` 挂载时注册、卸载时反注册。
+ */
+export type WebFuzzerOnAIFuzzStatusOptions = {
+  source: 'auto' | 'manual'
+}
+
+export type WebFuzzerOnAIFuzzStatusHandler = (runtimeId: string, options: WebFuzzerOnAIFuzzStatusOptions) => void
+
+const pageAIFuzzStatusHandlers = new Map<string, WebFuzzerOnAIFuzzStatusHandler>()
+
+export function registerWebFuzzerPageOnAIFuzzStatus(
+  pageId: string,
+  handler: WebFuzzerOnAIFuzzStatusHandler,
+): () => void {
+  pageAIFuzzStatusHandlers.set(pageId, handler)
+  return () => {
+    if (pageAIFuzzStatusHandlers.get(pageId) === handler) {
+      pageAIFuzzStatusHandlers.delete(pageId)
+    }
+  }
+}
+
+/** 是否已有对应 fuzzer 页签注册了 AI fuzz status 处理器（点击「查看详情」回退到全局跳转时使用） */
+export function hasWebFuzzerPageOnAIFuzzStatus(pageId: string): boolean {
+  return pageAIFuzzStatusHandlers.has(pageId)
+}
+
+/** 向指定 fuzzer 页签推送一次 `runtime_id`；未注册时静默丢弃。 */
+export function pushAIFuzzStatusRuntimeIdToWebFuzzerPage(
+  pageId: string,
+  runtimeId: string,
+  options: WebFuzzerOnAIFuzzStatusOptions,
+): void {
+  if (!runtimeId) return
+  const fn = pageAIFuzzStatusHandlers.get(pageId)
+  if (!fn) return
+  fn(runtimeId, options)
+}
+
 export function applyHttpFuzzRequestChangeToWebFuzzerPage(
   pageId: string,
   data: AIAgentGrpcApi.HttpFuzzRequestChange,

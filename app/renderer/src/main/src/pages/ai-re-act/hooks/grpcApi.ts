@@ -846,20 +846,25 @@ export declare namespace AIAgentGrpcApi {
         status: 'start'
         fuzz_id: string
         runtime_id: string
-        action_name: string
+        /** 发包动作原因与目的说明 */
+        reason: string
+        /** @deprecated 兼容旧载荷 */
+        action_name?: string
       }
     | {
         status: 'working'
         fuzz_id: string
         runtime_id: string
-        action_name: string
+        reason: string
+        action_name?: string
         progress: HttpFlowFuzzStatusProgress
       }
     | {
         status: 'finish'
         fuzz_id: string
         runtime_id: string
-        action_name: string
+        reason: string
+        action_name?: string
       }
 }
 
