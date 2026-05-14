@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import MDEditor from '@uiw/react-md-editor'
-import rehypeSanitize from 'rehype-sanitize'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import { useTheme } from '@/hook/useTheme'
 import { ErrorBoundary } from 'react-error-boundary'
 import { StreamdownProps, Streamdown, MathPlugin } from 'streamdown'
@@ -13,6 +13,20 @@ import { mermaid } from '@streamdown/mermaid'
 import { math } from '@streamdown/math'
 import rehypeSlug from 'rehype-slug'
 import { yakitNotify } from '@/utils/notification'
+
+// Allow data URIs for raster image formats only (excludes SVG to prevent script injection).
+// Two-layer defense: protocols allows "data" scheme, attributes regex restricts to image/* with base64 encoding.
+const sanitizeSchemaWithDataImage = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    img: [...(defaultSchema.attributes?.img || []), ['src', /^data:image\/(png|jpeg|jpg|gif|webp|bmp);base64,/i]],
+  },
+  protocols: {
+    ...defaultSchema.protocols,
+    src: [...(defaultSchema.protocols?.src || []), 'data'],
+  },
+}
 const { ipcRenderer } = window.require('electron')
 const { Markdown } = MDEditor
 
@@ -66,7 +80,7 @@ export const SafeMarkdown: React.FC<SafeMarkdownProp> = (props) => {
         source={source}
         // rehypeSanitize 防止 XSS 攻击
         // rehypeSlug 用于生成锚点 此处带前缀user-content-
-        rehypePlugins={[rehypeSlug, rehypeSanitize]}
+        rehypePlugins={[rehypeSlug, [rehypeSanitize, sanitizeSchemaWithDataImage]]}
         className={classNames(styles['safe-markdown'], className)}
         style={style}
         warpperElement={{ 'data-color-mode': theme }}
@@ -326,7 +340,7 @@ export const StreamMarkdown: React.FC<StreamMarkdownProps> = React.memo((props) 
               theme: theme === 'dark' ? 'dark' : 'default',
             },
           }}
-          rehypePlugins={[rehypeSlug as any, rehypeSanitize]}
+          rehypePlugins={[rehypeSlug as any, [rehypeSanitize, sanitizeSchemaWithDataImage]]}
           components={{
             a: (aProps) => {
               return (
