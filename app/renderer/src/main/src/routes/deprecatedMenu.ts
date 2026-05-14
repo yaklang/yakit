@@ -34,4 +34,5 @@ export const EnterpriseDeprecatedSecondMenu: string[] = [
   '我的插件',
   '本地插件',
   'MITM 交互式劫持 v2',
+  '风险与漏洞',
 ]
