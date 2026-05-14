@@ -11,8 +11,8 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
-import { TabKey } from './aiFileSystemList/type'
 import { useMemoizedFn } from 'ahooks'
+import { isIRify } from '@/utils/envfile'
 
 export interface FileListItem {
   name: string
@@ -51,7 +51,7 @@ const FileList: FC<FileListProps> = ({ title, fileList }) => {
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log }))
   }
   const onOpenFileByPath = useMemoizedFn((path: string, isDir: boolean) => {
-    if (!isDir) {
+    if (!isDir && isIRify()) {
       const name = getFileName(path, isDir)
       emiter.emit('onOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
     }
