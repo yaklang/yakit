@@ -1,4 +1,4 @@
-import type { StoreName } from './constants'
+import type { Domain, StoreName } from './constants'
 
 export type { StoreName }
 
@@ -53,8 +53,8 @@ export interface ClearStoreParams {
 }
 
 export interface DeleteSessionParams {
-  storeNames: StoreName[]
-  sessionId: string
+  domain: Domain
+  sessions: string[]
 }
 
 // session 级元数据，目前只维护 offset。

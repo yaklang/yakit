@@ -1,11 +1,13 @@
 import { useMemoizedFn, useThrottleFn } from 'ahooks'
 import { useEffect, useRef } from 'react'
+import type React from 'react'
 import type { VirtuosoHandle } from 'react-virtuoso'
 
 interface UseVirtuosoAutoScrollProps {
   total?: number
+  isPrependingRef?: React.MutableRefObject<boolean>
 }
-const useVirtuosoAutoScroll = ({ total }: UseVirtuosoAutoScrollProps) => {
+const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScrollProps) => {
   const virtuosoRef = useRef<VirtuosoHandle>(null)
   const isAtBottomRef = useRef(true)
   /** 用户正在主动滚动（wheel / touch / keyboard） */
@@ -134,6 +136,8 @@ const useVirtuosoAutoScroll = ({ total }: UseVirtuosoAutoScrollProps) => {
 
   const { run: handleTotalListHeightChanged } = useThrottleFn(
     () => {
+      // 向上加载历史数据时高度变化，不应触发滚动到底部
+      if (isPrependingRef?.current) return
       if (isAtBottomRef.current && !userScrollingRef.current) {
         smartScrollToBottom()
       }

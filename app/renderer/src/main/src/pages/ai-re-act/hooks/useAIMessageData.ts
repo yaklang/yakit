@@ -56,7 +56,6 @@ const useAIMessageData = ({
       }
 
       // 用每条记录的 token 作为 pToken 查询对应的正文内容。
-      console.log(' getTreeDataIds(casualResult.items) :', casualResult, getTreeDataIds(casualResult.items))
       const [casualContents, taskContents] = await Promise.all([
         aiChatMessageStore.getDialogueContentsByPid({ sessionId, pTokens: getTreeDataIds(casualResult.items) }),
         aiChatMessageStore.getDialogueContentsByPid({ sessionId, pTokens: getTreeDataIds(taskResult.items) }),
@@ -67,7 +66,6 @@ const useAIMessageData = ({
       taskContents.forEach((item) => {
         setContentMap('task', item.token, JSON.parse(item.content))
       })
-      console.log('casualResult:', casualResult, casualContents, taskContents, getChatStore())
       setCasualElements(indexedDBDataToReActChatRenderItem('reAct', casualResult.items))
       setTaskElements(indexedDBDataToReActChatRenderItem('task', taskResult.items))
     } catch (err) {
@@ -108,12 +106,12 @@ const useAIMessageData = ({
       if (isCasual) {
         cursorsRef.current.casualId = result.items.at(0)?.token
         hasMoreRef.current.casual = result.hasMore
-        if (!result.hasMore) grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
-        setCasualElements((prev) => [...prev, ...indexedDBDataToReActChatRenderItem('reAct', result.items)])
+        if (!result.hasMore && grpcIdRef.current > 0) grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
+        setCasualElements((prev) => [...indexedDBDataToReActChatRenderItem('reAct', result.items), ...prev])
       } else {
         cursorsRef.current.taskId = result.items.at(0)?.token
         hasMoreRef.current.task = result.hasMore
-        setTaskElements((prev) => [...prev, ...indexedDBDataToReActChatRenderItem('task', result.items)])
+        setTaskElements((prev) => [...indexedDBDataToReActChatRenderItem('task', result.items), ...prev])
       }
     } catch (err) {
       console.log('err:', err)
@@ -126,7 +124,6 @@ const useAIMessageData = ({
     sessionId,
     { casualElements, taskElements, casualContentMap, taskContentMap },
   ) => {
-    console.log('handleSave:', casualElements, casualContentMap)
     setSaveLoading(true)
 
     const sessionMetadataPromise = aiChatMessageStore.setSessionMetadata({
@@ -168,14 +165,28 @@ const useAIMessageData = ({
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(
     async ({ has_more, next_start_id }) => {
-      console.log('1111:', { has_more, next_start_id })
-      hasMoreRef.current.casual = has_more
+      if (grpcIdRef.current > 0) {
+        hasMoreRef.current.casual = has_more
+      }
       grpcIdRef.current = next_start_id
     },
   )
 
   const handleHasMore: UseAIMessageDataEvents['handleHasMore'] = (chatType) => {
     return hasMoreRef.current[chatType === 'reAct' ? 'casual' : 'task']
+  }
+
+  const handleDeleteSession: UseAIMessageDataEvents['handleDeleteSession'] = async (sessions) => {
+    setSaveLoading(true)
+    try {
+      await aiChatMessageStore.deleteSession({ domain: type, sessions })
+      // 删除成功后重置状态
+      handleReset()
+    } catch (err) {
+      console.error('删除聊天数据失败', err)
+    } finally {
+      setSaveLoading(false)
+    }
   }
 
   return [
@@ -194,6 +205,7 @@ const useAIMessageData = ({
       handleSave,
       handleGrpcLoadMore,
       handleHasMore,
+      handleDeleteSession,
     },
   ]
 }

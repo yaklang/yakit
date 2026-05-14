@@ -23,6 +23,7 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useLoadHistory from '../hooks/useLoadHistory'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const getAIReferenceNodeByType = (contentType?: string) => {
   switch (contentType) {
@@ -102,29 +103,30 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
       return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} referenceNode={referenceNode} />
   }
 })
-const TYPE = 'chatID'
+const TYPE = 'reAct'
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
   const { chats } = props
   const {
     casualStatus: { loading, title },
-    historyState: { chatsLoading },
+    requestHistoryState: { casualLoadMoreLoading },
     systemStream,
   } = useChatIPCStore().chatIPCData
 
   const { activeChat } = useAIAgentStore()
 
-  const { fetchHasMore, loadMore } = useChatIPCDispatcher().chatIPCEvents
-  const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged } = useVirtuosoAutoScroll({
-    total: chats.elements.length,
-  })
+  const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
 
   // 向上滚动加载
-  const { firstItemIndex, handleLoadMore } = useLoadHistory({
-    loading: chatsLoading,
+  const { firstItemIndex, handleAtTopStateChange, isPrependingRef } = useLoadHistory({
+    loading: casualLoadMoreLoading,
     dataLength: chats.elements.length,
     SessionID: activeChat?.SessionID || '',
-    fetchHasMore: () => fetchHasMore(TYPE),
-    loadMore: () => loadMore(TYPE, activeChat?.SessionID || ''),
+    fetchHasMore: () => handleHasMoreHistory(TYPE),
+    loadMore: () => handleLoadMoreHistory(TYPE),
+  })
+  const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged } = useVirtuosoAutoScroll({
+    total: chats.elements.length,
+    isPrependingRef,
   })
   const renderItem = useCallback(
     (index: number, item?: ReActChatRenderItem) => {
@@ -148,6 +150,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   const { displayValue, mode } = useAISystemStream({
     value: title,
     systemStream,
+    enabled: loading,
   })
   const Footer = useCallback(
     () =>
@@ -167,13 +170,22 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
       ) : null,
     [loading, mode, displayValue],
   )
-
+  const Header = useCallback(
+    () =>
+      casualLoadMoreLoading ? (
+        <div style={{ height: 20, position: 'relative' }}>
+          <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+        </div>
+      ) : null,
+    [casualLoadMoreLoading],
+  )
   const components = useMemo(
     () => ({
       Item,
       Footer,
+      Header,
     }),
-    [Footer, Item],
+    [Footer, Header, Item],
   )
 
   return (
@@ -189,8 +201,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         initialTopMostItemIndex={chats.elements.length > 1 ? chats.elements.length - 1 : 0}
         components={components}
         atBottomThreshold={50}
-        startReached={handleLoadMore}
-        // increaseViewportBy={{top: 160, bottom: 160}}
+        skipAnimationFrameInResizeObserver
+        atTopStateChange={handleAtTopStateChange}
+        // startReached={handleLoadMore}
+        // increaseViewportBy={{ top: 200, bottom: 0 }}
         className={styles['re-act-contents-list']}
       />
     </div>

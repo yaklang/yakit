@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEffect } from 'ahooks'
+import { useControllableValue, useCreation, useMemoizedFn, useMount, useUpdateEffect, useWhyDidYouUpdate } from 'ahooks'
 import { AIAgentChatStreamProps, AIChatLeftSideProps, AIChatToolDrawerContentProps } from '../aiAgentType'
 import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -33,6 +33,8 @@ import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
+import useAIAgentStore from '../useContext/useStore'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
@@ -198,20 +200,22 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 })
 
 /** @name chat-信息流展示 */
+const TYPE = 'task'
 export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) => {
   const { streams, scrollToBottom, taskStatus, session } = props
-  const { virtuosoRef, setIsAtBottomRef, setScrollerRef, scrollToIndex, handleTotalListHeightChanged } =
-    useVirtuosoAutoScroll({ total: streams.length })
+
   const [highlightedItem, setHighlightedItem] = useState<{ index: number; token: number } | null>(null)
   const highlightRafRef = useRef<number>(0)
   const highlightObserverRef = useRef<IntersectionObserver | null>(null)
+  const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
   useUpdateEffect(() => {
     scrollToIndex('LAST')
   }, [scrollToBottom])
 
   const {
-    chatIPCData: { systemStream },
-  } = useChatIPCStore()
+    systemStream,
+    requestHistoryState: { taskLoadMoreLoading },
+  } = useChatIPCStore().chatIPCData
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
   useEffect(() => {
     if (!highlightedItem) return
@@ -224,6 +228,18 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
       window.clearTimeout(clearTimer)
     }
   }, [highlightedItem])
+
+  // 向上滚动加载
+  const { firstItemIndex, handleAtTopStateChange, isPrependingRef } = useLoadHistory({
+    loading: taskLoadMoreLoading,
+    dataLength: streams.length,
+    SessionID: session,
+    fetchHasMore: () => handleHasMoreHistory(TYPE),
+    loadMore: () => handleLoadMoreHistory(TYPE),
+  })
+
+  const { virtuosoRef, setIsAtBottomRef, setScrollerRef, scrollToIndex, handleTotalListHeightChanged } =
+    useVirtuosoAutoScroll({ total: streams.length, isPrependingRef })
 
   const cleanupHighlightWatcher = useMemoizedFn(() => {
     if (highlightRafRef.current) {
@@ -270,12 +286,15 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const renderItem = (index: number, stream: ReActChatRenderItem) => {
-    if (!stream.token) return null
-    const hasNext = streams.length - index > 1
-    return <AIChatListItem key={stream.token} hasNext={hasNext} item={stream} type="task-agent" />
-  }
-
+  const renderItem = useCallback(
+    (index: number, stream: ReActChatRenderItem) => {
+      if (!stream.token) return null
+      const arrayIndex = index - firstItemIndex
+      const hasNext = streams.length - arrayIndex > 1
+      return <AIChatListItem key={stream.token} hasNext={hasNext} item={stream} type="task-agent" />
+    },
+    [firstItemIndex, streams.length],
+  )
   const Item = useCallback(
     ({ children, style, 'data-index': dataIndex }) => (
       <div
@@ -296,13 +315,22 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     () => <TaskLoading className={styles['task-loading-footer']} taskStatus={taskStatus} systemStream={systemStream} />,
     [taskStatus, systemStream],
   )
-
+  const Header = useCallback(
+    () =>
+      taskLoadMoreLoading ? (
+        <div style={{ height: 20, position: 'relative' }}>
+          <YakitSpin style={{ position: 'absolute', display: 'inline' }} spinning />
+        </div>
+      ) : null,
+    [taskLoadMoreLoading],
+  )
   const components = useMemo(
     () => ({
       Item,
       Footer,
+      Header,
     }),
-    [Footer, Item],
+    [Footer, Header, Item],
   )
 
   const onScrollToIndex = useMemoizedFn((id) => {
@@ -336,6 +364,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
       <Virtuoso<ReActChatRenderItem>
         ref={virtuosoRef}
         scrollerRef={setScrollerRef}
+        firstItemIndex={firstItemIndex}
         atBottomStateChange={setIsAtBottomRef}
         style={{ height: '100%', width: '100%' }}
         data={streams}
@@ -345,7 +374,9 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         atBottomThreshold={100}
         initialTopMostItemIndex={streams.length > 1 ? streams.length - 1 : 0}
         skipAnimationFrameInResizeObserver
-        overscan={20}
+        // overscan={20}
+        atTopStateChange={handleAtTopStateChange}
+        // startReached={handleLoadMore}
         // increaseViewportBy={{top: 160, bottom: 160}}
         components={components}
       />

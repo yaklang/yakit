@@ -567,7 +567,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   // #region 外界进行删除会话数据操作时的重置逻辑
   const delChats = useRef<string[]>([])
-  const onDelChats = useMemoizedFn((session: string[]) => {
+  const onDelChats = useMemoizedFn(async (session: string[]) => {
     const filterSessions = session.filter((item) => !delChats.current.includes(item))
     delChats.current.push(...filterSessions)
 
@@ -581,6 +581,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         err = error
       }
     }
+    await requestEvents.handleDeleteSession(filterSessions)
     if (failedSessions.length > 0 && !!err) {
       yakitNotify('error', `删除会话(${failedSessions.join(',')})失败: ${err}`)
     }

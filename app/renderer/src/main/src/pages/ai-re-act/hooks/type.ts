@@ -448,5 +448,7 @@ export interface UseAIMessageDataEvents {
       taskContentMap: AIChatData['taskChat']['contents']
     },
   ) => void
+  /** 删除会话 */
+  handleDeleteSession: (sessionId: string[]) => void
 }
 // #endregion

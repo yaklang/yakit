@@ -2,6 +2,7 @@ import {
   COMPOUND_KEY,
   CONTENT_COMPOUND_KEY,
   DB_NAME,
+  DOMAINS,
   dbVersion,
   DIALOGUE_CONTENT_STORE,
   INDEX_BY_CONTENT_SESSION,
@@ -33,9 +34,9 @@ function ensureRegisteredStore(storeName: string): asserts storeName is StoreNam
   }
 }
 
-function ensureRegisteredStores(storeNames: string[]): asserts storeNames is StoreName[] {
-  for (const storeName of storeNames) {
-    ensureRegisteredStore(storeName)
+function ensureRegisteredDomain(domain: string): void {
+  if (!DOMAINS.includes(domain as (typeof DOMAINS)[number])) {
+    throw new Error(` 未注册的 domain: ${domain}，请在 DOMAINS 中注册后重试。`)
   }
 }
 
@@ -303,46 +304,57 @@ class AIChatMessageStore {
     })
   }
 
-  async deleteSession({ storeNames, sessionId }: DeleteSessionParams): Promise<void> {
-    ensureRegisteredStores(storeNames)
+  async deleteSession({ domain, sessions }: DeleteSessionParams): Promise<void> {
+    ensureRegisteredDomain(domain)
 
-    if (!sessionId || !storeNames.length) return
+    if (!sessions.length) return
+
+    const targetSessions = sessions.filter(Boolean)
+    if (!targetSessions.length) return
+
+    const storeNames: StoreName[] = [`${domain}TaskDB`, `${domain}CasualDB`]
+    for (const storeName of storeNames) {
+      ensureRegisteredStore(storeName)
+    }
 
     const db = await this.open()
 
     return new Promise((resolve, reject) => {
       const tx = db.transaction([...storeNames, SESSION_METADATA_STORE, DIALOGUE_CONTENT_STORE], 'readwrite')
       const metadataStore = tx.objectStore(SESSION_METADATA_STORE)
+      const contentStore = tx.objectStore(DIALOGUE_CONTENT_STORE)
+      const contentSessionIndex = contentStore.index(INDEX_BY_CONTENT_SESSION)
 
       tx.oncomplete = () => resolve()
       tx.onerror = () => reject(tx.error)
       tx.onabort = () => reject(tx.error)
 
-      metadataStore.delete(sessionId)
+      for (const sessionId of targetSessions) {
+        metadataStore.delete(sessionId)
 
-      for (const storeName of storeNames) {
-        const dialogueStore = tx.objectStore(storeName)
-        const orderIndex = dialogueStore.index(INDEX_BY_SESSION_ORDER)
-        const range = IDBKeyRange.bound([sessionId, Number.NEGATIVE_INFINITY], [sessionId, Number.POSITIVE_INFINITY])
+        for (const storeName of storeNames) {
+          const dialogueStore = tx.objectStore(storeName)
+          const orderIndex = dialogueStore.index(INDEX_BY_SESSION_ORDER)
+          const range = IDBKeyRange.bound([sessionId, Number.NEGATIVE_INFINITY], [sessionId, Number.POSITIVE_INFINITY])
 
-        const keysReq = orderIndex.getAllKeys(range)
-        keysReq.onsuccess = () => {
-          for (const key of keysReq.result) {
-            dialogueStore.delete(key)
+          const keysReq = orderIndex.getAllKeys(range)
+          keysReq.onsuccess = () => {
+            for (const key of keysReq.result) {
+              dialogueStore.delete(key)
+            }
+          }
+          keysReq.onerror = () => reject(keysReq.error)
+        }
+
+        // 同步删除该 session 下所有对话正文记录。
+        const contentKeysReq = contentSessionIndex.getAllKeys(IDBKeyRange.only(sessionId))
+        contentKeysReq.onsuccess = () => {
+          for (const key of contentKeysReq.result) {
+            contentStore.delete(key)
           }
         }
-        keysReq.onerror = () => reject(keysReq.error)
+        contentKeysReq.onerror = () => reject(contentKeysReq.error)
       }
-
-      // 同步删除该 session 下所有对话正文记录。
-      const contentStore = tx.objectStore(DIALOGUE_CONTENT_STORE)
-      const contentKeysReq = contentStore.index(INDEX_BY_CONTENT_SESSION).getAllKeys(IDBKeyRange.only(sessionId))
-      contentKeysReq.onsuccess = () => {
-        for (const key of contentKeysReq.result) {
-          contentStore.delete(key)
-        }
-      }
-      contentKeysReq.onerror = () => reject(contentKeysReq.error)
     })
   }
 
