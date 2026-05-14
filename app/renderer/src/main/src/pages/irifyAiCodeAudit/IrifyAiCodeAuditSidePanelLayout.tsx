@@ -91,6 +91,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
           </>
         ),
         footerLeftTypes: [
+          AIInputInnerFeatureEnum.AIReviewRuleSelect,
           AIInputInnerFeatureEnum.AIModelSelect,
           {
             type: AIInputInnerFeatureEnum.AIFocusMode,

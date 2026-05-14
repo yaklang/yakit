@@ -12,6 +12,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { TabKey } from './aiFileSystemList/type'
+import { useMemoizedFn } from 'ahooks'
 
 export interface FileListItem {
   name: string
@@ -49,6 +50,13 @@ const FileList: FC<FileListProps> = ({ title, fileList }) => {
   const switchAIActTab = () => {
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log }))
   }
+  const onOpenFileByPath = useMemoizedFn((path: string, isDir: boolean) => {
+    if (!isDir) {
+      const name = getFileName(path, isDir)
+      emiter.emit('onOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
+    }
+  })
+
   return (
     <div className={styles['file-list']}>
       <div className={styles['file-list-title']}>
@@ -76,8 +84,18 @@ const FileList: FC<FileListProps> = ({ title, fileList }) => {
                   >
                     {action}
                   </YakitTag>
-                  <div className={styles['file-list-item-icon']}>{Icon}</div>
-                  <div className={styles['file-list-item-name']}>{dangerFile}</div>
+                  <div
+                    className={styles['file-list-item-icon']}
+                    onClick={() => onOpenFileByPath(data.path, data.is_dir)}
+                  >
+                    {Icon}
+                  </div>
+                  <div
+                    className={styles['file-list-item-name']}
+                    onClick={() => onOpenFileByPath(data.path, data.is_dir)}
+                  >
+                    {dangerFile}
+                  </div>
                   <div className={styles['file-list-item-desc']}>{message}</div>
                 </div>
                 <div className={styles['file-list-item-actions']}>
