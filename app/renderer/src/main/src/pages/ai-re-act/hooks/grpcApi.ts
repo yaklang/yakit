@@ -691,6 +691,24 @@ export declare namespace AIAgentGrpcApi {
     /** 任务树根节点的name(前端逻辑，仅供UI使用) */
     root_task_name: string
   }
+
+  /** 通知消息 */
+  export interface Notify {
+    /** 警告提示类型，用于前端路由和样式区分。当前取值为 notify、rate-limit */
+    type: 'notify' | 'rate-limit'
+    warning_type: string
+    /** 面向用户展示的提示内容，可能包含换行 */
+    content: string
+    /** 警告提示持续时间，单位秒 */
+    duration: number
+    /** 警告提示持续时间，单位毫秒 */
+    duration_ms: number
+    /** 警告提示持续时间，单位秒 */
+    duration_seconds: number
+    /** 警告提示时间戳 */
+    timestamp: number
+  }
+
   /** 任务规划历史列表 */
   export interface PlanHistoryList {
     records: PlanHistory[]

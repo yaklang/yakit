@@ -239,6 +239,45 @@ function useChatIPC(params?: UseChatIPCParams) {
   })
   // #endregion
 
+  // #region 通知消息相关逻辑
+  const [notifyMessage, setNotifyMessage] = useState<{ type: 'notify' | 'rate-limit'; content: string } | null>(null)
+  const notifyMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handleSetNotifyMessage = useMemoizedFn((raw: AIAgentGrpcApi.Notify) => {
+    if (notifyMessageTimerRef.current !== null) {
+      clearTimeout(notifyMessageTimerRef.current)
+      notifyMessageTimerRef.current = null
+    }
+    const { type, content } = raw
+    setNotifyMessage({ type, content })
+
+    let durationMs = 0
+    if (typeof raw.duration_ms === 'number' && !Number.isNaN(raw.duration_ms) && raw.duration_ms > 0) {
+      durationMs = raw.duration_ms
+    } else if (
+      typeof raw.duration_seconds === 'number' &&
+      !Number.isNaN(raw.duration_seconds) &&
+      raw.duration_seconds > 0
+    ) {
+      durationMs = raw.duration_seconds * 1000
+    } else if (typeof raw.duration === 'number' && !Number.isNaN(raw.duration) && raw.duration > 0) {
+      durationMs = raw.duration * 1000
+    }
+    if (durationMs > 0) {
+      notifyMessageTimerRef.current = setTimeout(() => {
+        notifyMessageTimerRef.current = null
+        setNotifyMessage(null)
+      }, durationMs)
+    }
+  })
+  const handleResetNotifyMessage = useMemoizedFn(() => {
+    if (notifyMessageTimerRef.current !== null) {
+      clearTimeout(notifyMessageTimerRef.current)
+      notifyMessageTimerRef.current = null
+    }
+    setNotifyMessage(null)
+  })
+  // #endregion
+
   // #region 历史任务规划列表相关逻辑
   const [planHistoryList, setPlanHistoryList] = useState<AIAgentGrpcApi.PlanHistoryList>(
     cloneDeep(DefaultPlanHistoryList),
@@ -531,6 +570,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     handleResetReActTimelines()
     handleResetSystemStream()
     handleResetFocusMode()
+    handleResetNotifyMessage()
     handleResetPlanHistoryList()
     handleResetCasualChatLoading()
     handleResetTaskChatID()
@@ -784,6 +824,12 @@ function useChatIPC(params?: UseChatIPCParams) {
           if (planCoordinatorId.current === res.CoordinatorId) return
           // 问题队列清空操作
           handleReActTaskCleared(res)
+          return
+        }
+
+        if (res.Type === 'notify' && res.NodeId === 'notify') {
+          const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Notify
+          handleSetNotifyMessage(data)
           return
         }
 
@@ -1140,6 +1186,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       cancelCasualLoading,
       cancelTaskLoading,
       historyState,
+      notifyMessage,
     }
   }, [
     execute,
@@ -1161,6 +1208,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     cancelCasualLoading,
     cancelTaskLoading,
     historyState,
+    notifyMessage,
   ])
 
   const event: UseChatIPCEvents = useCreation(() => {
