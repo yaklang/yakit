@@ -2591,7 +2591,13 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
           <>
             <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{path}</div>
             <Tooltip title={t('YakitButton.copy')}>
-              <div className={styles['extra-icon']} onClick={() => setClipboardText(path)}>
+              <div
+                className={styles['extra-icon']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setClipboardText(path)
+                }}
+              >
                 <OutlineDocumentduplicateIcon />
               </div>
             </Tooltip>
