@@ -64,7 +64,7 @@ export const isEqualAIModel = (item: AIModelConfig, newItem: AIModelConfig) => {
 }
 
 /**获取ai模型对应的键名,通过模型类型 */
-const getFileNameByModelType = (type: AIModelTypeEnum) => {
+export const getFileNameByModelType = (type: AIModelTypeEnum) => {
   let fileName: AIModelTypeFileName | null = null
   switch (type) {
     case AIModelTypeEnum.TierIntelligent:
@@ -98,6 +98,24 @@ export const getModelTypeByFileName = (fileName: string) => {
       break
   }
   return modelType
+}
+export const getModelLabelByModelType = (type: AIModelTypeEnum) => {
+  let label: string = ''
+  switch (type) {
+    case AIModelTypeEnum.TierIntelligent:
+      label = '高质模型'
+      break
+    case AIModelTypeEnum.TierLightweight:
+      label = '轻量模型'
+      break
+    case AIModelTypeEnum.TierVision:
+      label = '视觉模型'
+      break
+    default:
+      label = '未知类型'
+      break
+  }
+  return label
 }
 export const buildAIConfigHealthCheckConfig = (values): ThirdPartyApplicationConfig => {
   const config: ThirdPartyApplicationConfig = {

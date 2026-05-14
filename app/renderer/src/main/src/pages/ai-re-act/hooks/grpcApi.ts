@@ -331,7 +331,7 @@ export declare namespace AIAgentGrpcApi {
    */
   export interface AIApiRequestFailedPayload {
     error_code: string
-    model_tier: string
+    model_tier: AIModelTypeEnum
     provider_name: string
     model_name: string
     cause: string

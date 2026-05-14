@@ -230,7 +230,7 @@ type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, { qs: string
 export type ChatStream = AIChatQSDataBase<AIChatQSDataTypeEnum.STREAM, AIStreamOutput>
 type ChatToolCallResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_RESULT, AIStreamOutput>
 type ChatToolCallParams = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_PARAM, AIAgentGrpcApi.AIToolCallParams>
-type ChatApiRequestFailed = AIChatQSDataBase<
+export type ChatApiRequestFailed = AIChatQSDataBase<
   AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
   AIAgentGrpcApi.AIApiRequestFailedPayload
 >

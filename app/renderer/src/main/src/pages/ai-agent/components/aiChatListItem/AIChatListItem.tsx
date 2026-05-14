@@ -187,8 +187,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
       case AIChatQSDataTypeEnum.FAIL_REACT:
         return <AiFailPlanCard item={data} />
       case AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED:
-        // PS: 等待接入UI组件
-        return <></>
+        return <AIModelErrorPrompt item={itemData} />
       default:
         return <></>
     }
@@ -214,10 +213,5 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
       />
     )
   })
-  return (
-    <React.Fragment key={item.token}>
-      {/* {renderContent()} */}
-      <AIModelErrorPrompt item={item} />
-    </React.Fragment>
-  )
+  return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
 })

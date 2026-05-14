@@ -1,0 +1,12 @@
+.model-error-content {
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--Colors-Use-Basic-Background);
+  margin-top: 2px;
+  .model-error-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+}
