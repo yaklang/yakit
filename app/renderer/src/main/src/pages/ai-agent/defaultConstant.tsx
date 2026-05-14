@@ -296,6 +296,7 @@ export const defaultChatIPCData: UseChatIPCState = {
     timelinesLoading: false,
     chatsLoading: false,
   },
+  notifyMessage: null,
 }
 //#endregion
 
