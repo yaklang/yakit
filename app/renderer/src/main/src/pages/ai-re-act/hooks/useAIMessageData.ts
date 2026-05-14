@@ -3,9 +3,24 @@ import aiChatMessageStore from '../../ai-agent/store/aiChatMessageStore'
 import type { GetDialoguesData, StoreName } from '../../ai-agent/store/type'
 import { useMemoizedFn } from 'ahooks'
 import { getTreeDataIds, indexedDBDataToReActChatRenderItem, toDialogueData } from './utils'
-import type { AIMessageDataProps, PaginationCursors, UseAIMessageDataEvents, UseAIMessageDataState } from './type'
+import type {
+  AIFileSystemPin,
+  AIMessageDataProps,
+  loadMoreType,
+  PaginationCursors,
+  UseAIMessageDataEvents,
+  UseAIMessageDataState,
+} from './type'
+import { yakitNotify } from '@/utils/notification'
+import { AIAgentGrpcApi, AIEventQueryRequest } from './grpcApi'
+import type { PaginationSchema } from '@/pages/invoker/schema'
+import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
+import { Uint8ArrayToString } from '@/utils/str'
 
 const LIMIT = 10
+
+const DefaultHistoryPagination: PaginationSchema = { Page: 1, Limit: 200, OrderBy: 'created_at', Order: 'desc' }
 
 const useAIMessageData = ({
   type,
@@ -13,6 +28,8 @@ const useAIMessageData = ({
   setContentMap,
   setCasualElements,
   setTaskElements,
+  setTimelines,
+  setGrpcFiles,
   grpcLoadMore,
 }: AIMessageDataProps): [UseAIMessageDataState, UseAIMessageDataEvents] => {
   const [initLoading, setInitLoading] = useState(false)
@@ -37,6 +54,8 @@ const useAIMessageData = ({
         aiChatMessageStore.getDialogues({ storeName: `${type}CasualDB`, sessionId, limit: LIMIT }),
         aiChatMessageStore.getDialogues({ storeName: `${type}TaskDB`, sessionId, limit: LIMIT }),
         aiChatMessageStore.getSessionMetadata(sessionId),
+        handleHistoryTimelines(sessionId),
+        handleHistoryFileSystem(sessionId),
       ])
       if (sessionMetadata?.offset !== undefined && sessionMetadata.offset !== -1) {
         grpcIdRef.current = sessionMetadata?.offset
@@ -69,7 +88,7 @@ const useAIMessageData = ({
       setCasualElements(indexedDBDataToReActChatRenderItem('reAct', casualResult.items))
       setTaskElements(indexedDBDataToReActChatRenderItem('task', taskResult.items))
     } catch (err) {
-      throw err instanceof Error ? err : new Error('未知错误')
+      yakitNotify('error', err instanceof Error ? err.message : '未知错误')
     } finally {
       setInitLoading(false)
     }
@@ -77,6 +96,20 @@ const useAIMessageData = ({
 
   // ─── 加载更多：按 chatType 分别翻页 ─────────────────────────────────
   const handleLoadMore: UseAIMessageDataEvents['handleLoadMore'] = async (sessionId, chatType) => {
+    switch (chatType) {
+      case 'timelines':
+        handleHistoryTimelines(sessionId)
+        break
+      case 'reAct':
+      case 'task':
+        handleLoadMoreChatData(sessionId, chatType)
+        break
+      default:
+        break
+    }
+  }
+
+  const handleLoadMoreChatData = useMemoizedFn(async (sessionId, chatType) => {
     const isCasual = chatType === 'reAct'
     const hasMore = isCasual ? hasMoreRef.current.casual : hasMoreRef.current.task
     const loadMoreLoading = isCasual ? casualLoadMoreLoading : taskLoadMoreLoading
@@ -114,11 +147,11 @@ const useAIMessageData = ({
         setTaskElements((prev) => [...indexedDBDataToReActChatRenderItem('task', result.items), ...prev])
       }
     } catch (err) {
-      console.log('err:', err)
+      yakitNotify('error', err instanceof Error ? err.message : '未知错误')
     } finally {
       isCasual ? setCasualLoadMoreLoading(false) : setTaskLoadMoreLoading(false)
     }
-  }
+  })
 
   const handleSave: UseAIMessageDataEvents['handleSave'] = async (
     sessionId,
@@ -149,8 +182,8 @@ const useAIMessageData = ({
       })),
     })
     await Promise.all([sessionMetadataPromise, casualDialoguesPromise, taskDialoguesPromise, dialogueContentPromise])
-      .catch((err) => {
-        console.error('保存聊天数据失败', err)
+      .catch(() => {
+        yakitNotify('error', '保存聊天数据失败')
       })
       .finally(() => {
         setSaveLoading(false)
@@ -173,6 +206,7 @@ const useAIMessageData = ({
   )
 
   const handleHasMore: UseAIMessageDataEvents['handleHasMore'] = (chatType) => {
+    if (chatType === 'timelines') return hasMoreTimeline.current
     return hasMoreRef.current[chatType === 'reAct' ? 'casual' : 'task']
   }
 
@@ -189,6 +223,88 @@ const useAIMessageData = ({
     }
   }
 
+  // 更新当前session的历史数据请求基线(beforeID)
+  const updateBeforeID = useMemoizedFn((type: loadMoreType, chatID: number) => {
+    const dataStore = getChatStore?.()
+    if (dataStore && dataStore.beforeID) {
+      dataStore.beforeID[type] = chatID
+    }
+  })
+
+  // #region 历史数据-时间线
+  const [timelinesLoading, setTimelinesLoading, getTimelinesLoading] = useGetSetState(false)
+  const hasMoreTimeline = useRef(true)
+  const getTimelineBeforeID = useMemoizedFn(() => {
+    return getChatStore?.()?.beforeID?.timelineID || undefined
+  })
+  const handleHistoryTimelines = useMemoizedFn(async (session: string) => {
+    if (getTimelinesLoading()) return
+    if (!hasMoreTimeline.current) return
+    if (getTimelinesLoading()) return
+
+    if (!session) {
+      yakitNotify('error', '会话ID不存在，无法获取历史聊天记录')
+      return
+    }
+
+    const request: AIEventQueryRequest = {
+      Filter: { SessionID: session, NodeId: ['timeline_item'] },
+      Pagination: { ...DefaultHistoryPagination },
+    }
+    if (getTimelineBeforeID()) {
+      request.Pagination!.BeforeId = Number(getTimelineBeforeID())
+    }
+    setTimelinesLoading(true)
+    try {
+      const { Events, Total } = await grpcQueryAIEvent(request, true)
+      if (Number(Total) === 0) {
+        hasMoreTimeline.current = false
+        return
+      }
+
+      updateBeforeID('timelineID', Number(Events[Events.length - 1].ID))
+      const timelineItems: AIAgentGrpcApi.TimelineItem[] = Events.map((item) => {
+        let ipcContent = Uint8ArrayToString(item.Content) || ''
+        return JSON.parse(ipcContent) as AIAgentGrpcApi.TimelineItem
+      }).reverse()
+      hasMoreTimeline.current = Events.length === request.Pagination?.Limit!
+      setTimelines?.((old) => [...timelineItems, ...old])
+    } catch {
+    } finally {
+      setTimeout(() => {
+        setTimelinesLoading(false)
+      }, 200)
+    }
+  })
+  // #endregion
+
+  // #region 历史数据-运行产生的文件记录
+  const handleHistoryFileSystem = useMemoizedFn(async (session: string) => {
+    if (!session) {
+      yakitNotify('error', '会话ID不存在，无法获取历史聊天记录')
+      return
+    }
+
+    const request: AIEventQueryRequest = {
+      Filter: { SessionID: session, EventType: ['filesystem_pin_directory', 'filesystem_pin_filename'] },
+      Pagination: { ...DefaultHistoryPagination, Limit: -1 },
+    }
+    try {
+      const { Events, Total } = await grpcQueryAIEvent(request)
+      if (Total === 0) return
+
+      const files: AIFileSystemPin[] = Events.map((item) => {
+        let ipcContent = Uint8ArrayToString(item.Content) || ''
+        const { path } = JSON.parse(ipcContent) as AIAgentGrpcApi.FileSystemPin
+        return { path, isFolder: item.Type === 'filesystem_pin_directory' }
+      })
+      // 去重
+      const filterFiles: AIFileSystemPin[] = [...new Map(files.map((item) => [item.path, item])).values()]
+      setGrpcFiles?.((old) => [...filterFiles, ...old])
+    } catch {}
+  })
+  // #endregion
+
   return [
     {
       /** 初始化加载中 */
@@ -197,6 +313,8 @@ const useAIMessageData = ({
       casualLoadMoreLoading,
       taskLoadMoreLoading,
       saveLoading,
+      /** 时间线加载中 */
+      timelinesLoading,
     },
     {
       handleLoadInit,

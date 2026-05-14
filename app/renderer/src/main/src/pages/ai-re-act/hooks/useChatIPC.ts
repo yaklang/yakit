@@ -6,6 +6,8 @@ import type {
   AIMessageDataProps,
   AIQuestionQueues,
   CasualLoadingStatus,
+  HistoryChatType,
+  loadMoreType,
   PlanLoadingStatus,
   TaskChatTaskInfo,
   UseCasualChatEvents,
@@ -408,22 +410,20 @@ function useChatIPC(params?: UseChatIPCParams) {
         SyncJsonInput: JSON.stringify(request),
       })
     },
+    setGrpcFiles: setGrpcFolders,
+    setTimelines: setReActTimelines,
   })
 
   /** 请求更多数据加载 */
-  const handleLoadMore: UseChatIPCEvents['handleLoadMoreHistory'] = useMemoizedFn(
-    (chatType: ReActChatBaseInfo['chatType']) => {
-      if (!chatID.current) return
-      return requestEvents.handleLoadMore(chatID.current, chatType)
-    },
-  )
+  const handleLoadMore: UseChatIPCEvents['handleLoadMoreHistory'] = useMemoizedFn((chatType: HistoryChatType) => {
+    if (!chatID.current) return
+    return requestEvents.handleLoadMore(chatID.current, chatType)
+  })
   /** 是否还有更多历史数据 */
-  const handleHasMore: UseChatIPCEvents['handleHasMoreHistory'] = useMemoizedFn(
-    (chatType: ReActChatBaseInfo['chatType']) => {
-      if (!chatID.current) return false
-      return requestEvents.handleHasMore(chatType)
-    },
-  )
+  const handleHasMore: UseChatIPCEvents['handleHasMoreHistory'] = useMemoizedFn((chatType: HistoryChatType) => {
+    if (!chatID.current) return false
+    return requestEvents.handleHasMore(chatType)
+  })
   // #endregion
 
   // #region 会话的历史数据  后面删除

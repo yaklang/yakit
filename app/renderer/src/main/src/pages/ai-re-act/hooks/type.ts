@@ -310,9 +310,9 @@ export interface UseChatIPCEvents extends Omit<UseHistoryChatEvents, 'loadInit'>
   /** 用户手动干预的执行事件 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
   /** 加载更多历史数据 */
-  handleLoadMoreHistory: (type: ReActChatBaseInfo['chatType']) => void
+  handleLoadMoreHistory: (chatType: HistoryChatType) => void
   /** 获取更多历史数据 */
-  handleHasMoreHistory: (type: ReActChatBaseInfo['chatType']) => boolean
+  handleHasMoreHistory: (type: ReActChatBaseInfo['chatType'] | 'timelines') => boolean
 }
 // #endregion
 
@@ -410,6 +410,8 @@ export interface AIMessageDataProps {
   setCasualElements: UseHookStateFunc['setElements']
   setTaskElements: UseHookStateFunc['setElements']
   grpcLoadMore?: (request: { limit: number; start_id?: number }) => void
+  setTimelines: Dispatch<SetStateAction<AIAgentGrpcApi.TimelineItem[]>>
+  setGrpcFiles: Dispatch<SetStateAction<AIFileSystemPin[]>>
 }
 
 /** 游标：记录每个 store 下一次加载的起始位置 */
@@ -426,16 +428,21 @@ export interface UseAIMessageDataState {
   taskLoadMoreLoading: boolean
   /** save的加载状态 */
   saveLoading: boolean
+  /** 时间线加载中 */
+  timelinesLoading: boolean
 }
+
+export type HistoryChatType = ReActChatBaseInfo['chatType'] | 'timelines'
+
 export interface UseAIMessageDataEvents {
   /** 给UI使用的hasMore获取方法 */
-  handleHasMore: (chatType: ReActChatBaseInfo['chatType']) => boolean
+  handleHasMore: (chatType: HistoryChatType) => boolean
   /** grpc请求历史数据的返回数据 */
   handleGrpcLoadMore: (res: AIAgentGrpcApi.RecoveryHistory) => void
   /** 初始化加载 */
   handleLoadInit: (session: string) => Promise<void>
   /** 加载更多数据 */
-  handleLoadMore: (session: string, ...args: Parameters<UseChatIPCEvents['handleLoadMoreHistory']>) => Promise<void>
+  handleLoadMore: (session: string, chatType: HistoryChatType) => Promise<void>
   /** 重置状态 */
   handleReset: () => void
   /** 保存数据 */

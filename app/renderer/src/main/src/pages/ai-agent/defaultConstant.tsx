@@ -303,6 +303,7 @@ export const defaultChatIPCData: UseChatIPCState = {
     casualLoadMoreLoading: false,
     taskLoadMoreLoading: false,
     saveLoading: false,
+    timelinesLoading: false,
   },
 }
 //#endregion
