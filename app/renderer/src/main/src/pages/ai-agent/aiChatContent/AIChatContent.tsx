@@ -47,7 +47,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { onChat, onChatFromHistory } = props
     const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
-    const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, historyState } =
+    const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, requestHistoryState } =
       useChatIPCStore().chatIPCData
     const { activeChat } = useAIAgentStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -304,7 +304,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     return (
       <div className={styles['ai-chat-content-wrapper']}>
-        <AIGlobalLoading loopAnimationMode="sequential" loading={historyState.initLoading}>
+        <AIGlobalLoading loopAnimationMode="sequential" loading={requestHistoryState.initLoading}>
           <ExpandAndRetract
             isExpand={isExpand}
             onExpand={onExpand}

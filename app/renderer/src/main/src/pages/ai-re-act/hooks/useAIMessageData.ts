@@ -158,7 +158,7 @@ const useAIMessageData = ({
     } else if (isCasual && hasMoreRef.current.grpc && grpcIdRef.current > 0) {
       // grpc 加载更多（仅限 casual）
       setCasualLoadMoreLoading(true)
-      grpcLoadMore?.({ limit: 200, start_id: grpcIdRef.current })
+      await grpcLoadMore?.({ limit: 60, start_id: grpcIdRef.current })
     }
   })
 
@@ -208,7 +208,6 @@ const useAIMessageData = ({
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(
     async ({ has_more, next_start_id }) => {
-      console.log(' has_more, next_start_id:', has_more, next_start_id, grpcIdRef)
       if (has_more === false) {
         grpcIdRef.current = 0
         hasMoreRef.current.grpc = false
@@ -234,7 +233,7 @@ const useAIMessageData = ({
       // 删除成功后重置状态
       handleReset()
     } catch (err) {
-      console.error('删除聊天数据失败', err)
+      yakitNotify('error', err instanceof Error ? err.message : '删除聊天数据失败')
     } finally {
       setSaveLoading(false)
     }

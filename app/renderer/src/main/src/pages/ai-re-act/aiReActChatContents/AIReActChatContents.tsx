@@ -117,7 +117,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
 
   // 向上滚动加载
-  const { firstItemIndex, handleAtTopStateChange, isPrependingRef } = useLoadHistory({
+  const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
     loading: casualLoadMoreLoading,
     dataLength: chats.elements.length,
     SessionID: activeChat?.SessionID || '',
@@ -137,7 +137,6 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     },
     [chats.elements.length, firstItemIndex],
   )
-
   const Item = useCallback(
     ({ children, style, 'data-index': dataIndex }) => (
       <div key={dataIndex} style={style} data-index={dataIndex} className={styles['item-wrapper']}>
@@ -202,8 +201,8 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
         components={components}
         atBottomThreshold={50}
         skipAnimationFrameInResizeObserver
-        atTopStateChange={handleAtTopStateChange}
-        // startReached={handleLoadMore}
+        // atTopStateChange={handleAtTopStateChange}
+        startReached={handleLoadMore}
         // increaseViewportBy={{ top: 200, bottom: 0 }}
         className={styles['re-act-contents-list']}
       />

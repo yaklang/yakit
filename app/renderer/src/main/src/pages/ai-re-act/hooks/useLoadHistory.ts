@@ -1,5 +1,6 @@
 import { useMemoizedFn } from 'ahooks'
 import { useEffect, useRef, useState } from 'react'
+
 const PREPEND_OFFSET = 1000000
 
 interface UseLoadHistoryProps {
@@ -9,71 +10,91 @@ interface UseLoadHistoryProps {
   loadMore: () => void
   SessionID: string
 }
+
 const useLoadHistory = ({ loading, dataLength, SessionID, fetchHasMore, loadMore }: UseLoadHistoryProps) => {
   const [firstItemIndex, setFirstItemIndex] = useState(PREPEND_OFFSET)
-  /** 正在向上加载历史中，用于外部抑制自动滚动到底部 */
-  const isPrependingRef = useRef(false)
-  /** 当前是否处于顶部，用于顶部连续加载 */
-  const atTopRef = useRef(false)
-  /** 同一次到顶过程中，最多自动续拉一次，避免卡在顶端时无限连拉 */
-  const topAutoLoadDoneRef = useRef(false)
 
-  // getDerivedStateFromProps 模式：在 render 阶段检测 dataLength 变化并同步更新
-  // firstItemIndex，确保 data 和 firstItemIndex 在同一次 DOM commit 中变化，避免滚动抖动
+  const isPrependingRef = useRef(false)
+  const atTopRef = useRef(false)
+  const wasLoadingRef = useRef(false)
+
+  // 【新增核心机制】：排队锁。用于接住那些因为 React 状态延迟而“撞墙”的请求
+  const pendingRequestRef = useRef(false)
+
+  // 【核心机制：Render 阶段状态派生】(保留你的完美逻辑)
   const [prevDataLength, setPrevDataLength] = useState(dataLength)
-  if (dataLength !== prevDataLength) {
+  const [prevSessionID, setPrevSessionID] = useState(SessionID)
+
+  if (SessionID !== prevSessionID) {
+    setFirstItemIndex(PREPEND_OFFSET)
+    setPrevDataLength(dataLength)
+    setPrevSessionID(SessionID)
+    pendingRequestRef.current = false // 切换会话清空排队
+  } else if (dataLength !== prevDataLength) {
     const diff = dataLength - prevDataLength
     if (diff > 0 && isPrependingRef.current) {
       setFirstItemIndex((prev) => Math.max(0, prev - diff))
-      isPrependingRef.current = false
     }
     setPrevDataLength(dataLength)
   }
 
   const handleLoadMore = useMemoizedFn(() => {
-    console.log('handleLoadMore:', { loading, fetchHasMore: fetchHasMore(), SessionID })
-    if (loading || !fetchHasMore() || !SessionID) return
+    if (!fetchHasMore() || !SessionID) return
+
+    // 【关键修复】：如果当前还没解锁，不要直接 return 丢弃！
+    // 把它标记为 pending，等 loading 结束时立刻补发
+    if (loading) {
+      pendingRequestRef.current = true
+      return
+    }
+
     isPrependingRef.current = true
-    console.log('加载历史')
     loadMore()
   })
 
   const handleAtTopStateChange = useMemoizedFn((atTop: boolean) => {
     atTopRef.current = atTop
-    if (!atTop) {
-      topAutoLoadDoneRef.current = false
-      return
+    if (atTop) {
+      handleLoadMore()
+    } else {
+      // 离开顶部，清空排队
+      pendingRequestRef.current = false
     }
-    handleLoadMore()
   })
 
+  // 3. 统一处理加载完成后的副作用
   useEffect(() => {
-    // 仅在一次真实加载结束后，且仍在顶部时自动补拉一次，避免反复连拉
-    if (wasLoadingRef.current && !loading && atTopRef.current && !topAutoLoadDoneRef.current) {
-      topAutoLoadDoneRef.current = true
-      handleLoadMore()
-    }
-  }, [loading, dataLength, handleLoadMore])
-
-  // loading 结束但数据没变（无更多数据），释放锁
-  const wasLoadingRef = useRef(false)
-  useEffect(() => {
+    // 判定条件：刚结束加载 (之前是 true，现在是 false)
     if (wasLoadingRef.current && !loading) {
+      // 在 DOM Commit 后安全释放向上插入的标记
       isPrependingRef.current = false
+
+      // 【关键修复】：释放后立刻检查，刚才 loading 期间是不是有被拦截的请求？
+      if (pendingRequestRef.current) {
+        pendingRequestRef.current = false
+        handleLoadMore()
+      }
+      // 兜底补拉：去掉了会导致死锁的 topAutoLoadDoneRef，改用安全的延迟探针
+      else if (atTopRef.current) {
+        setTimeout(() => {
+          if (atTopRef.current && fetchHasMore()) {
+            handleLoadMore()
+          }
+        }, 50)
+      }
     }
     wasLoadingRef.current = loading
-  }, [loading])
+  }, [loading, handleLoadMore, fetchHasMore])
 
-  // 切换会话时重置，避免不同会话的索引互相干扰
+  // 4. 会话切换清理杂项 Ref
   useEffect(() => {
-    setFirstItemIndex(PREPEND_OFFSET)
-    setPrevDataLength(dataLength)
     wasLoadingRef.current = false
     isPrependingRef.current = false
     atTopRef.current = false
-    topAutoLoadDoneRef.current = false
+    pendingRequestRef.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [SessionID])
+
   return {
     firstItemIndex,
     handleLoadMore,

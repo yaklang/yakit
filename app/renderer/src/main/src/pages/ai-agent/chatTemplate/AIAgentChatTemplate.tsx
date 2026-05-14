@@ -230,7 +230,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   }, [highlightedItem])
 
   // 向上滚动加载
-  const { firstItemIndex, handleAtTopStateChange, isPrependingRef } = useLoadHistory({
+  const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
     loading: taskLoadMoreLoading,
     dataLength: streams.length,
     SessionID: session,
@@ -375,8 +375,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
         initialTopMostItemIndex={streams.length > 1 ? streams.length - 1 : 0}
         skipAnimationFrameInResizeObserver
         // overscan={20}
-        atTopStateChange={handleAtTopStateChange}
-        // startReached={handleLoadMore}
+        // atTopStateChange={handleAtTopStateChange}
+        startReached={handleLoadMore}
         // increaseViewportBy={{top: 160, bottom: 160}}
         components={components}
       />
