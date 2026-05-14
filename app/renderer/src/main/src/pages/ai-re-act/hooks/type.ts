@@ -232,6 +232,8 @@ export interface UseChatIPCState {
   cancelTaskLoading: boolean
   /** 历史数据获取的状态 */
   historyState: UseHistoryChatState
+  /** 流推送的提示文案（notify / rate-limit），展示时长由 duration 系列字段控制，到期自动清空 */
+  notifyMessage: { type: 'notify' | 'rate-limit'; content: string } | null
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
