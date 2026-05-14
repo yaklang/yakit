@@ -354,6 +354,7 @@
     "input": "Input",
     "output": "Output",
     "cache": "Cache",
+    "cacheTooltip": "Cache hit ratio",
     "switchChartMetric": "Switch between Token and Byte"
   },
   "InstallLlamaServerModelPrompt": {

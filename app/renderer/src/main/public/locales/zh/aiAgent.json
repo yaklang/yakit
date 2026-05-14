@@ -354,6 +354,7 @@
     "input": "输入",
     "output": "输出",
     "cache": "缓存",
+    "cacheTooltip": "缓存占输入百分比",
     "switchChartMetric": "切换 Token / Byte"
   },
   "InstallLlamaServerModelPrompt": {
