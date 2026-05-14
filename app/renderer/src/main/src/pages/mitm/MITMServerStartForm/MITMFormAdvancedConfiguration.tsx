@@ -313,14 +313,14 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             valuePropName="checked"
             help={t('AdvancedConfiguration.hosts_mapping_priority_help')}
           >
-            <YakitSwitch size="large" />
+            <YakitSwitch />
           </Form.Item>
           <Form.Item
             label={t('HttpQueryAdvancedConfig.disable_system_proxy')}
             name="DisableSystemProxy"
             valuePropName="checked"
           >
-            <YakitSwitch size="large" />
+            <YakitSwitch />
           </Form.Item>
           {enableGMTLS && (
             <>
@@ -330,7 +330,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 help={t('MITMFormAdvancedConfiguration.gmTLSFirstHelp')}
                 valuePropName="checked"
               >
-                <YakitSwitch size="large" />
+                <YakitSwitch />
               </Form.Item>
               <Form.Item
                 label={t('MITMFormAdvancedConfiguration.gmTLSOnly')}
@@ -338,7 +338,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 help={t('MITMFormAdvancedConfiguration.gmTLSOnlyHelp')}
                 valuePropName="checked"
               >
-                <YakitSwitch size="large" />
+                <YakitSwitch />
               </Form.Item>
             </>
           )}
@@ -348,7 +348,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             help={t('MITMFormAdvancedConfiguration.proxyAuthHelp')}
             valuePropName="checked"
           >
-            <YakitSwitch size="large" />
+            <YakitSwitch />
           </Form.Item>
           {enableProxyAuth && (
             <>
@@ -399,6 +399,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                 },
               },
             ]}
+            style={{ alignItems: 'center' }}
           >
             <YakitSelect mode="tags"></YakitSelect>
           </Form.Item>
@@ -407,7 +408,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             name="filterWebsocket"
             valuePropName="checked"
           >
-            <YakitSwitch size="large" />
+            <YakitSwitch />
           </Form.Item>
           <Form.Item
             label={t('MITMFormAdvancedConfiguration.disableInitPage')}
@@ -415,21 +416,21 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
             valuePropName="checked"
             help={t('MITMFormAdvancedConfiguration.disableInitPageHelp')}
           >
-            <YakitSwitch size="large" />
+            <YakitSwitch />
           </Form.Item>
           <Form.Item
             label={t('MITMFormAdvancedConfiguration.enableWebsocketCompression')}
             name="DisableWebsocketCompression"
             valuePropName="checked"
           >
-            <YakitSwitch size="large" />
+            <YakitSwitch />
           </Form.Item>
           <Form.Item
             label={t('MITMFormAdvancedConfiguration.pluginConcurrency')}
             name="PluginConcurrency"
-            style={{ marginBottom: 12 }}
+            style={{ alignItems: 'center' }}
           >
-            <YakitInputNumber type="horizontal" size="small" min={1} defaultValue={20} />
+            <YakitInputNumber type="horizontal" min={1} defaultValue={20} />
           </Form.Item>
           <Form.Item label={t('AdvancedConfiguration.sni_config')} className={styles['sni-rules']}>
             <Form.List name="SNIMapping">
