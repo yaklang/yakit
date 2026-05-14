@@ -50,13 +50,16 @@ const useAIMessageData = ({
 
     try {
       await aiChatMessageStore.open()
-      const [casualResult, taskResult, sessionMetadata] = await Promise.all([
+      const [casualSettled, taskSettled, metaSettled] = await Promise.allSettled([
         aiChatMessageStore.getDialogues({ storeName: `${type}CasualDB`, sessionId, limit: LIMIT }),
         aiChatMessageStore.getDialogues({ storeName: `${type}TaskDB`, sessionId, limit: LIMIT }),
         aiChatMessageStore.getSessionMetadata(sessionId),
         handleHistoryTimelines(sessionId),
         handleHistoryFileSystem(sessionId),
       ])
+      const casualResult = casualSettled.status === 'fulfilled' ? casualSettled.value : { items: [], hasMore: false }
+      const taskResult = taskSettled.status === 'fulfilled' ? taskSettled.value : { items: [], hasMore: false }
+      const sessionMetadata = metaSettled.status === 'fulfilled' ? metaSettled.value : undefined
       if (sessionMetadata?.offset !== undefined && sessionMetadata.offset !== -1) {
         grpcIdRef.current = sessionMetadata?.offset
         const chatStore = getChatStore()
@@ -194,6 +197,7 @@ const useAIMessageData = ({
   const handleReset: UseAIMessageDataEvents['handleReset'] = () => {
     hasMoreRef.current = { casual: true, task: true }
     cursorsRef.current = {}
+    grpcIdRef.current = -1
   }
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(
