@@ -18,7 +18,7 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import { Uint8ArrayToString } from '@/utils/str'
 
-const LIMIT = 10
+const LIMIT = 30
 
 const DefaultHistoryPagination: PaginationSchema = { Page: 1, Limit: 200, OrderBy: 'created_at', Order: 'desc' }
 
@@ -202,6 +202,9 @@ const useAIMessageData = ({
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(
     async ({ has_more, next_start_id }) => {
+      if (has_more === false) {
+        grpcIdRef.current = 0
+      }
       if (grpcIdRef.current > 0) {
         hasMoreRef.current.casual = has_more
       }
