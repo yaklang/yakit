@@ -31,8 +31,10 @@ const useLoadHistory = ({ loading, dataLength, SessionID, fetchHasMore, loadMore
   }
 
   const handleLoadMore = useMemoizedFn(() => {
+    console.log('handleLoadMore:', { loading, fetchHasMore: fetchHasMore(), SessionID })
     if (loading || !fetchHasMore() || !SessionID) return
     isPrependingRef.current = true
+    console.log('加载历史')
     loadMore()
   })
 

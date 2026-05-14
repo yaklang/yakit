@@ -37,7 +37,7 @@ const useAIMessageData = ({
   const [casualLoadMoreLoading, setCasualLoadMoreLoading] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
   // 是否还有数据
-  const hasMoreRef = useRef({ casual: true, task: true })
+  const hasMoreRef = useRef({ casual: true, task: true, grpc: true })
   // 分页id
   const cursorsRef = useRef<PaginationCursors>({})
   // 记录后端的id
@@ -72,9 +72,9 @@ const useAIMessageData = ({
         casualId: casualResult.items.at(0)?.token,
         taskId: taskResult.items.at(0)?.token,
       }
-      hasMoreRef.current = { casual: casualResult.hasMore, task: taskResult.hasMore }
+      hasMoreRef.current = { casual: casualResult.hasMore, task: taskResult.hasMore, grpc: grpcIdRef.current > 0 }
       if (!casualResult.hasMore && grpcIdRef.current > 0) {
-        grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
+        grpcLoadMore?.({ limit: LIMIT, start_id: grpcIdRef.current })
       }
 
       // 用每条记录的 token 作为 pToken 查询对应的正文内容。
@@ -117,42 +117,48 @@ const useAIMessageData = ({
     const hasMore = isCasual ? hasMoreRef.current.casual : hasMoreRef.current.task
     const loadMoreLoading = isCasual ? casualLoadMoreLoading : taskLoadMoreLoading
     // 没有更多数据或正在加载时直接返回，防止重复请求
-    if (!hasMore || loadMoreLoading) return
+    if (loadMoreLoading) return
+    // 判断indexedDB是否还有数据可加载，没有则尝试通过grpc加载（仅限 casual）
+    if (hasMore) {
+      isCasual ? setCasualLoadMoreLoading(true) : setTaskLoadMoreLoading(true)
+      try {
+        const storeName = (isCasual ? `${type}CasualDB` : `${type}TaskDB`) as StoreName
+        const cursorId = isCasual ? cursorsRef.current.casualId : cursorsRef.current.taskId
 
-    isCasual ? setCasualLoadMoreLoading(true) : setTaskLoadMoreLoading(true)
-    try {
-      const storeName = (isCasual ? `${type}CasualDB` : `${type}TaskDB`) as StoreName
-      const cursorId = isCasual ? cursorsRef.current.casualId : cursorsRef.current.taskId
+        const result: GetDialoguesData = await aiChatMessageStore.getDialogues({
+          storeName,
+          sessionId,
+          token: cursorId,
+          limit: LIMIT,
+        })
 
-      const result: GetDialoguesData = await aiChatMessageStore.getDialogues({
-        storeName,
-        sessionId,
-        token: cursorId,
-        limit: LIMIT,
-      })
-
-      const contents = await aiChatMessageStore.getDialogueContentsByPid({
-        sessionId,
-        pTokens: result.items.map((item) => item.token),
-      })
-      contents.forEach((item) => {
-        setContentMap(chatType, item.token, JSON.parse(item.content))
-      })
-      // 更新游标
-      if (isCasual) {
-        cursorsRef.current.casualId = result.items.at(0)?.token
-        hasMoreRef.current.casual = result.hasMore
-        if (!result.hasMore && grpcIdRef.current > 0) grpcLoadMore?.({ limit: 1, start_id: grpcIdRef.current })
-        setCasualElements((prev) => [...indexedDBDataToReActChatRenderItem('reAct', result.items), ...prev])
-      } else {
-        cursorsRef.current.taskId = result.items.at(0)?.token
-        hasMoreRef.current.task = result.hasMore
-        setTaskElements((prev) => [...indexedDBDataToReActChatRenderItem('task', result.items), ...prev])
+        const contents = await aiChatMessageStore.getDialogueContentsByPid({
+          sessionId,
+          pTokens: result.items.map((item) => item.token),
+        })
+        contents.forEach((item) => {
+          setContentMap(chatType, item.token, JSON.parse(item.content))
+        })
+        // 更新游标
+        if (isCasual) {
+          cursorsRef.current.casualId = result.items.at(0)?.token
+          hasMoreRef.current.casual = result.hasMore
+          if (!result.hasMore && grpcIdRef.current > 0) grpcLoadMore?.({ limit: LIMIT, start_id: grpcIdRef.current })
+          setCasualElements((prev) => [...indexedDBDataToReActChatRenderItem('reAct', result.items), ...prev])
+        } else {
+          cursorsRef.current.taskId = result.items.at(0)?.token
+          hasMoreRef.current.task = result.hasMore
+          setTaskElements((prev) => [...indexedDBDataToReActChatRenderItem('task', result.items), ...prev])
+        }
+      } catch (err) {
+        yakitNotify('error', err instanceof Error ? err.message : '未知错误')
+      } finally {
+        isCasual ? setCasualLoadMoreLoading(false) : setTaskLoadMoreLoading(false)
       }
-    } catch (err) {
-      yakitNotify('error', err instanceof Error ? err.message : '未知错误')
-    } finally {
-      isCasual ? setCasualLoadMoreLoading(false) : setTaskLoadMoreLoading(false)
+    } else if (isCasual && hasMoreRef.current.grpc && grpcIdRef.current > 0) {
+      // grpc 加载更多（仅限 casual）
+      setCasualLoadMoreLoading(true)
+      grpcLoadMore?.({ limit: 200, start_id: grpcIdRef.current })
     }
   })
 
@@ -195,26 +201,30 @@ const useAIMessageData = ({
 
   // ─── 重置 ────────────────────────────────────────────────────────────
   const handleReset: UseAIMessageDataEvents['handleReset'] = () => {
-    hasMoreRef.current = { casual: true, task: true }
+    hasMoreRef.current = { casual: true, task: true, grpc: true }
     cursorsRef.current = {}
     grpcIdRef.current = -1
   }
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(
     async ({ has_more, next_start_id }) => {
+      console.log(' has_more, next_start_id:', has_more, next_start_id, grpcIdRef)
       if (has_more === false) {
         grpcIdRef.current = 0
+        hasMoreRef.current.grpc = false
       }
       if (grpcIdRef.current > 0) {
-        hasMoreRef.current.casual = has_more
+        hasMoreRef.current.grpc = has_more
       }
       grpcIdRef.current = next_start_id
+      setCasualLoadMoreLoading(false)
     },
   )
 
   const handleHasMore: UseAIMessageDataEvents['handleHasMore'] = (chatType) => {
     if (chatType === 'timelines') return hasMoreTimeline.current
-    return hasMoreRef.current[chatType === 'reAct' ? 'casual' : 'task']
+    if (chatType === 'task') return hasMoreRef.current.task
+    return hasMoreRef.current.casual || hasMoreRef.current.grpc
   }
 
   const handleDeleteSession: UseAIMessageDataEvents['handleDeleteSession'] = async (sessions) => {
