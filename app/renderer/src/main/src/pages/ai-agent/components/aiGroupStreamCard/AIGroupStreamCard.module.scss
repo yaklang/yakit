@@ -3,10 +3,10 @@
 .container {
   width: 100%;
   border-radius: 8px;
-  padding: 6px 8px 0 8px;
+  padding: 2px 4px 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  // gap: 4px;
   border: 1px solid transparent;
   &:hover {
     background: var(--Colors-Use-Neutral-Bg);
@@ -140,7 +140,7 @@
   }
 }
 .container-focus {
-  border-color: var(--Colors-Use-Neutral-Disable);
+  border-color: var(--Colors-Use-Main-Hover);
   background: var(--Colors-Use-Neutral-Bg);
   .stream-text {
     .ai-mask {
