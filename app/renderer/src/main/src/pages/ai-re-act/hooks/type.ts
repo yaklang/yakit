@@ -243,8 +243,6 @@ export interface UseChatIPCState {
   cancelCasualLoading: boolean
   /** 用户主动取消问题的loading状态(任务规划) */
   cancelTaskLoading: boolean
-  /** 历史数据获取的状态 */
-  historyState: UseHistoryChatState
   /** 流推送的提示文案（notify / rate-limit），展示时长由 duration 系列字段控制，到期自动清空 */
   notifyMessage: { type: 'notify' | 'rate-limit'; content: string; label: AIOutputI18n } | null
   /** 请求历史数据相关State */
@@ -275,7 +273,7 @@ export interface TaskChatTaskInfo {
   coordinatorId: AIOutputEvent['CoordinatorId']
 }
 
-export interface UseChatIPCEvents extends Omit<UseHistoryChatEvents, 'loadInit'> {
+export interface UseChatIPCEvents {
   /** 获取当前执行接口流的唯一标识符 */
   fetchToken: () => string
   /** 获取当前执行接口流的请求参数 */
@@ -311,8 +309,8 @@ export interface UseChatIPCEvents extends Omit<UseHistoryChatEvents, 'loadInit'>
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
   /** 加载更多历史数据 */
   handleLoadMoreHistory: (chatType: HistoryChatType) => void
-  /** 获取更多历史数据 */
-  handleHasMoreHistory: (type: ReActChatBaseInfo['chatType'] | 'timelines') => boolean
+  /** 是否还有更多历史数据 */
+  handleHasMoreHistory: (type: HistoryChatType) => boolean
 }
 // #endregion
 
@@ -337,34 +335,6 @@ export interface UseAIChatLogEvents {
   clearLogs: () => AIStartParams | undefined
   /** 关闭展示日志的页面窗口 */
   cancelLogsWin: () => void
-}
-// #endregion
-
-// #region useHistoryChat相关定义
-export interface UseHistoryChatParams {
-  getChatDataStore: UseHookBaseParams['getChatDataStore']
-  setTimelines: Dispatch<SetStateAction<AIAgentGrpcApi.TimelineItem[]>>
-  setGrpcFiles: Dispatch<SetStateAction<AIFileSystemPin[]>>
-  setCasualElements: UseHookStateFunc['setElements']
-  getCasualElements: UseHookStateFunc['getElements']
-  setTaskElements: UseHookStateFunc['setElements']
-  getTaskElements: UseHookStateFunc['getElements']
-}
-
-export interface UseHistoryChatState {
-  initLoading: boolean
-  timelinesLoading: boolean
-  chatsLoading: boolean
-}
-
-export type loadMoreType = keyof AIChatData['beforeID']
-export interface UseHistoryChatEvents {
-  /** 是否还有更多数据 */
-  fetchHasMore: (type: loadMoreType) => boolean
-  /** 初始化加载数据 */
-  loadInit: (session: string) => void
-  /** 加载更多数据 */
-  loadMore: (type: loadMoreType, session: string) => void
 }
 // #endregion
 
@@ -400,6 +370,8 @@ export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #endregion
 
 // #region useAIMessageData相关定义
+export type loadMoreType = keyof AIChatData['beforeID']
+
 export interface AIMessageDataProps {
   type: Domain
   getChatStore: UseHookBaseParams['getChatDataStore']

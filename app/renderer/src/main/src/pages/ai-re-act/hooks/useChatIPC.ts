@@ -7,7 +7,6 @@ import type {
   AIQuestionQueues,
   CasualLoadingStatus,
   HistoryChatType,
-  loadMoreType,
   PlanLoadingStatus,
   TaskChatTaskInfo,
   UseCasualChatEvents,
@@ -44,7 +43,7 @@ import useAIChatLog from './useAIChatLog'
 import cloneDeep from 'lodash/cloneDeep'
 import {
   convertNodeIdToVerbose,
-  DeafultAIQuestionQueues,
+  DefaultAIQuestionQueues,
   DefaultCasualLoadingStatus,
   DefaultMemoryList,
   DefaultPlanHistoryList,
@@ -54,7 +53,6 @@ import useThrottleState from '@/hook/useThrottleState'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import useAINodeLabel from './useAINodeLabel'
 import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
-import useHistoryChat from './useHistoryChat'
 import { handleResetForNewSession } from './grpcAIMessageHandlers'
 import useAIMessageData from './useAIMessageData'
 
@@ -167,10 +165,10 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   // #region 问题队列相关逻辑
   // 问题队列(自由对话专属)[todo: 后续存在任务规划的问题队列后，需要放入对应的hook中进行处理和储存]
-  const [questionQueue, setQuestionQueue] = useState<AIQuestionQueues>(cloneDeep(DeafultAIQuestionQueues))
+  const [questionQueue, setQuestionQueue] = useState<AIQuestionQueues>(cloneDeep(DefaultAIQuestionQueues))
 
   const handleResetQuestionQueue = useMemoizedFn(() => {
-    setQuestionQueue(cloneDeep(DeafultAIQuestionQueues))
+    setQuestionQueue(cloneDeep(DefaultAIQuestionQueues))
   })
   // #endregion
 
@@ -414,18 +412,6 @@ function useChatIPC(params?: UseChatIPCParams) {
   })
   // #endregion
 
-  // #region 会话的历史数据  后面删除
-  const [historyState, historyEvents] = useHistoryChat({
-    getChatDataStore,
-    setTimelines: setReActTimelines,
-    setGrpcFiles: setGrpcFolders,
-    setCasualElements: casualChatEvent.setElements,
-    getCasualElements: casualChatEvent.getElements,
-    setTaskElements: taskChatEvent.setElements,
-    getTaskElements: taskChatEvent.getElements,
-  })
-  // #endregion
-
   /** 用户主动取消问题的loading状态变换 */
   const handleCancelLoadingChange = useMemoizedFn((type: ReActChatBaseInfo['chatType'], status: boolean) => {
     if (type === 'reAct') {
@@ -635,7 +621,7 @@ function useChatIPC(params?: UseChatIPCParams) {
   })
 
   const onStart = useMemoizedFn(async (args: AIChatIPCStartParams, cb?: () => void) => {
-    const { token, params, extraValue } = args
+    const { token, params } = args
 
     if (execute) {
       yakitNotify('warning', 'useChatIPC AI任务正在执行中，请稍后再试！')
@@ -1206,7 +1192,6 @@ function useChatIPC(params?: UseChatIPCParams) {
       planHistoryList,
       cancelCasualLoading,
       cancelTaskLoading,
-      historyState,
       notifyMessage,
       requestHistoryState: requestState,
     }
@@ -1229,8 +1214,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     planHistoryList,
     cancelCasualLoading,
     cancelTaskLoading,
-    historyState,
     notifyMessage,
+    requestState,
   ])
 
   const event: UseChatIPCEvents = useCreation(() => {
@@ -1249,8 +1234,6 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleCancelLoadingChange,
       handleResetTarget,
       handleUserManualIntervention,
-      fetchHasMore: historyEvents.fetchHasMore,
-      loadMore: historyEvents.loadMore,
       handleLoadMoreHistory: handleLoadMore,
       handleHasMoreHistory: handleHasMore,
     }

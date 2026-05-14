@@ -101,7 +101,7 @@ export enum AIStreamContentType {
 }
 
 /** 问题队列-默认值 */
-export const DeafultAIQuestionQueues: AIQuestionQueues = {
+export const DefaultAIQuestionQueues: AIQuestionQueues = {
   total: 0,
   data: [],
 }

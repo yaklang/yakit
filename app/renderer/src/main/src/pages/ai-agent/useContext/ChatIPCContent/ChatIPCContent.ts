@@ -67,8 +67,6 @@ export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
     handleCancelLoadingChange: () => {},
     handleResetTarget: () => {},
     handleUserManualIntervention: () => {},
-    fetchHasMore: () => true,
-    loadMore: () => {},
     handleLoadMoreHistory: () => {},
     handleHasMoreHistory: () => false,
   },
