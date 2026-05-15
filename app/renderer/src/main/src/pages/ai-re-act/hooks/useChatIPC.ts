@@ -617,6 +617,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     } finally {
       const chatStore = getChatDataStore()
       if (chatStore) chatStore.beforeID.chatID = lastID
+      return lastID
     }
   })
 
@@ -641,7 +642,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     aiRequest.current = params.Params
 
-    await handleGetLatestID(token)
+    const nextID = await handleGetLatestID(token)
 
     ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
       try {
@@ -1038,7 +1039,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
       cb?.()
-      requestEvents.handleLoadInit(token)
+      requestEvents.handleLoadInit(token, nextID)
     }, 50)
   })
 

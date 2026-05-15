@@ -412,7 +412,7 @@ export interface UseAIMessageDataEvents {
   /** grpc请求历史数据的返回数据 */
   handleGrpcLoadMore: (res: AIAgentGrpcApi.RecoveryHistory) => void
   /** 初始化加载 */
-  handleLoadInit: (session: string) => Promise<void>
+  handleLoadInit: (session: string, offset: number) => Promise<void>
   /** 加载更多数据 */
   handleLoadMore: (session: string, chatType: HistoryChatType) => Promise<void>
   /** 重置状态 */
