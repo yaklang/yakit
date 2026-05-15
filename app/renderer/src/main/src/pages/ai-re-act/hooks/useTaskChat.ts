@@ -646,7 +646,6 @@ function useTaskChat(params?: UseTaskChatParams) {
       getElements: getElements,
       handleUserManualIntervention,
       handleResetPlanTree,
-      handleHttpFlowFuzzStatus: chatContentEvent.handleHttpFlowFuzzStatus,
     }
   }, [])
 

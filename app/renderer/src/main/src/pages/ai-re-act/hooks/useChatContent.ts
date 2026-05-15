@@ -16,7 +16,14 @@ import {
   DefaultToolResultSummary,
 } from './defaultConstant'
 import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AIChatQSData, AIChatQSDataType, AIChatQSDataTypeEnum, AIToolResult, ReActChatGroupElement } from './aiRender'
+import {
+  AIChatQSData,
+  AIChatQSDataType,
+  AIChatQSDataTypeEnum,
+  AIToolResult,
+  HttpFlowFuzzStatusCardData,
+  ReActChatGroupElement,
+} from './aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 
 function useChatContent(params: UseChatContentParams): UseChatContentEvents
@@ -794,84 +801,51 @@ function useChatContent(params: UseChatContentParams) {
   })
   // #endregion
 
-  /** http_flow_fuzz_status：按 fuzz_id 创建/更新发包统计卡片 */
+  /**
+   * http_flow_fuzz_status：按 fuzz_id 创建/更新「发包统计」卡片。
+   */
   const handleHttpFlowFuzzStatus = useMemoizedFn((res: AIOutputEvent) => {
     try {
       const ipcContent = Uint8ArrayToString(res.Content) || ''
       const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
-      if (!payload?.fuzz_id) {
+      const { fuzz_id, runtime_id, reason, status } = payload
+      if (!fuzz_id) {
         pushLog(genErrorLogData(res.Timestamp, `${res.Type} 数据缺少 fuzz_id`))
         return
       }
-      const { fuzz_id } = payload
-      const reasonText = payload.reason
 
       const cardType = AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS
       const existing = getContentMap(fuzz_id)
+      const isExistingCard = existing?.type === cardType
 
-      if (payload.status === 'start') {
-        if (existing?.type === cardType) {
-          existing.data.reason = reasonText
-          existing.data.runtime_id = payload.runtime_id
-          existing.data.engine_status = 'start'
-          updateElements({ mapKey: fuzz_id, type: cardType })
-          return
-        }
+      // 引擎结束态没有对应卡片时直接丢弃，保留原行为
+      if (status === 'finish' && !isExistingCard) return
+
+      const nextData: HttpFlowFuzzStatusCardData = {
+        fuzz_id,
+        runtime_id,
+        reason,
+        engine_status: status,
+        // 仅 `working` 覆盖 progress；其它状态保留上一次（新建时默认 undefined）
+        progress: status === 'working' ? payload.progress : isExistingCard ? existing!.data.progress : undefined,
+      }
+
+      if (isExistingCard) {
+        Object.assign(existing!.data, nextData)
+      } else {
         const chatData: AIChatQSData = {
           ...genBaseAIChatData(res),
           id: fuzz_id,
           chatType,
           type: cardType,
-          data: {
-            fuzz_id,
-            runtime_id: payload.runtime_id,
-            reason: reasonText,
-            engine_status: 'start',
-          },
+          data: nextData,
         }
         setContentMap(fuzz_id, chatData)
-        updateElements({ mapKey: fuzz_id, type: cardType })
-        return
       }
 
-      if (payload.status === 'working') {
-        if (!existing || existing.type !== cardType) {
-          const chatData: AIChatQSData = {
-            ...genBaseAIChatData(res),
-            id: fuzz_id,
-            chatType,
-            type: cardType,
-            data: {
-              fuzz_id,
-              runtime_id: payload.runtime_id,
-              reason: reasonText,
-              engine_status: 'working',
-              progress: payload.progress,
-            },
-          }
-          setContentMap(fuzz_id, chatData)
-        } else {
-          existing.data.reason = reasonText
-          existing.data.runtime_id = payload.runtime_id
-          existing.data.engine_status = 'working'
-          existing.data.progress = payload.progress
-        }
-        updateElements({ mapKey: fuzz_id, type: cardType })
-        return
-      }
-
-      if (payload.status === 'finish') {
-        if (!existing || existing.type !== cardType) return
-        existing.data.engine_status = 'finish'
-        existing.data.reason = reasonText
-        existing.data.runtime_id = payload.runtime_id
-        updateElements({ mapKey: fuzz_id, type: cardType })
-      }
+      updateElements({ mapKey: fuzz_id, type: cardType })
     } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: pushLog,
-      })
+      handleGrpcDataPushLog({ info: res, pushLog })
     }
   })
 
@@ -1143,7 +1117,7 @@ function useChatContent(params: UseChatContentParams) {
   })
 
   const events: UseChatContentEvents = useCreation(() => {
-    return { handleSetData, handleResetData, handleHttpFlowFuzzStatus }
+    return { handleSetData, handleResetData }
   }, [])
 
   return events

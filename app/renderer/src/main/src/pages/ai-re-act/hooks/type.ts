@@ -81,7 +81,6 @@ export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc
   handleSend: handleSendFunc
   /** 用户手动介入逻辑 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
-  handleHttpFlowFuzzStatus: (res: AIOutputEvent) => void
 }
 // #endregion
 
@@ -120,7 +119,6 @@ export interface UseTaskChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
   /** 清空当前任务树 */
   handleResetPlanTree: () => void
-  handleHttpFlowFuzzStatus: (res: AIOutputEvent) => void
 }
 // #endregion
 
@@ -340,10 +338,7 @@ export interface UseChatContentParams extends UseHookStateFunc {
   handleUnkData: (res: AIOutputEvent) => void
 }
 
-export interface UseChatContentEvents extends UseHookBaseEvents {
-  /** http_flow_fuzz_status：创建/更新发包统计卡片 */
-  handleHttpFlowFuzzStatus: (res: AIOutputEvent) => void
-}
+export interface UseChatContentEvents extends UseHookBaseEvents {}
 // #endregion
 
 // #region useHistoryChat相关定义

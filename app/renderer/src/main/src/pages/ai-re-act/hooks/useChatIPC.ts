@@ -713,18 +713,8 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         if (res.Type === 'http_flow_fuzz_status') {
-          try {
-            const httpFlowFuzzStatus = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
-            onGetHttpFlowFuzzStatus?.(httpFlowFuzzStatus)
-          } catch {
-            // UI 侧由 handleSetData → handleSpecialData 再解析并记日志
-          }
-          if (planCoordinatorId.current === res.CoordinatorId) {
-            taskChatEvent.handleHttpFlowFuzzStatus(res)
-          } else {
-            casualChatEvent.handleSetData(res)
-          }
-          return
+          const httpFlowFuzzStatus = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
+          onGetHttpFlowFuzzStatus?.(httpFlowFuzzStatus)
         }
 
         if (res.Type === 'structured' && res.NodeId === 'session_title') {
