@@ -24,7 +24,6 @@ export interface AIModelFormSetAIGlobalConfigOptions {
 }
 
 interface AddOrUpdateOptions {
-  aiModelName: string
   modelType: AIModelTypeEnumType
 }
 export interface AIModelFormAddOptions extends AddOrUpdateOptions {}
