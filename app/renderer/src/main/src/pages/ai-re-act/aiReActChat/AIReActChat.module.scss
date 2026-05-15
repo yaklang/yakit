@@ -269,3 +269,42 @@
   margin: 0;
   font-size: 12px;
 }
+
+.notify-message {
+  display: flex;
+  align-items: center;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  margin-bottom: 2px;
+
+  .content-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden; // 关键：隐藏滚动出该容器的文本
+    white-space: nowrap;
+    width: 100%;
+    margin: 0 2px;
+    .marquee-inner {
+      display: flex;
+      width: max-content; // 确保宽度紧贴内容撑开
+      animation: scroll-marquee 10s linear infinite;
+    }
+
+    .content {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      white-space: nowrap;
+      padding-right: 80px;
+    }
+  }
+}
+
+@keyframes scroll-marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

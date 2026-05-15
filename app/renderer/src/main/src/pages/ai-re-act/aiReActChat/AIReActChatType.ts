@@ -3,6 +3,7 @@ import { AIChatQSData } from '../hooks/aiRender'
 import { AIInputEvent } from '../hooks/grpcApi'
 import React from 'react'
 import { AIChatTextareaProps, AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
+import { UseChatIPCState } from '../hooks/type'
 
 export interface AIReActChatRefProps extends AIChatTextareaRefProps {
   handleStart: (value: HandleStartParams) => void
@@ -43,6 +44,9 @@ export interface AIReActChatProps {
   }
 }
 
+export interface AINotifyMessageProps {
+  notifyMessage: UseChatIPCState['notifyMessage']
+}
 export interface AIReActLogProps {
   logs: AIChatQSData[]
   setLogVisible: (visible: boolean) => void
