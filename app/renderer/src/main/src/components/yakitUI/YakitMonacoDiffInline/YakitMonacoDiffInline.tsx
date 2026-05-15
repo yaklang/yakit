@@ -131,13 +131,20 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
         if (!overlayEl) return
         if (!overlayEl.parentElement) return
 
-        const containerRect = overlayEl.parentElement.getBoundingClientRect()
+        const overlayRect = overlayEl.getBoundingClientRect()
         const editorDom = modEditor.getDomNode() as HTMLElement | null
         const editorRect = editorDom?.getBoundingClientRect()
         if (!editorRect) return
 
-        const scrollTopOffset = editorRect.top - containerRect.top
+        const scrollTopOffset = editorRect.top - overlayRect.top
+        const scrollLeftOffset = editorRect.left - overlayRect.left
+        const marginX = 10
+        const gapX = 8
+        const gapY = 4
         const visibleRanges = modEditor.getVisibleRanges()
+        const pad = 4
+        const stackGap = 4
+        const maxBottom = overlayRect.height - pad
         overlayBars.forEach((item) => {
           const visible = visibleRanges.some(
             (r) => item.lineNumber >= r.startLineNumber && item.lineNumber <= r.endLineNumber,
@@ -146,19 +153,66 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
           if (!visible) return
 
           const barHeight = item.dom.offsetHeight || 32
-          const vis = modEditor.getScrolledVisiblePosition({
-            lineNumber: item.lineNumber,
+          const ln = item.lineNumber
+          const visCol1 = modEditor.getScrolledVisiblePosition({
+            lineNumber: ln,
             column: 1,
           })
-          if (!vis) {
+          if (!visCol1) {
             item.dom.style.display = 'none'
             return
           }
-          const baseTop = scrollTopOffset + vis.top + vis.height + 2
-          const stackGap = 4
-          const top = baseTop + item.stackIndex * (barHeight + stackGap)
-          const clampedTop = Math.max(0, Math.min(top, containerRect.height - barHeight))
-          item.dom.style.top = `${clampedTop}px`
+
+          const maxCol = modifiedModel.getLineMaxColumn(ln)
+          const lastCol = Math.max(1, maxCol > 1 ? maxCol - 1 : 1)
+          const visTail =
+            modEditor.getScrolledVisiblePosition({
+              lineNumber: ln,
+              column: lastCol,
+            }) || visCol1
+          /** Monaco typings 未声明 width，但运行时该字段存在；仅用类型断言读取以避免 TS 报错 */
+          const visTailWidth = (visTail as unknown as { width: number }).width
+          const rowTop = scrollTopOffset + visTail.top
+          const rowBottom = scrollTopOffset + visTail.top + visTail.height
+          const textRight = scrollLeftOffset + visTail.left + visTailWidth
+          const editorRight = scrollLeftOffset + editorRect.width - marginX
+
+          const barBox = item.dom.getBoundingClientRect()
+          const barW = barBox.width > 2 ? barBox.width : item.dom.offsetWidth || 220
+
+          let leftPx = textRight + gapX
+          const fitsRightOfText = leftPx + barW <= editorRight
+          if (!fitsRightOfText) {
+            leftPx = Math.max(scrollLeftOffset + marginX, editorRight - barW)
+          }
+
+          const stackOffset = item.stackIndex * (barHeight + stackGap)
+          let baseTop: number
+          if (fitsRightOfText) {
+            baseTop = rowTop + Math.max(0, (visTail.height - barHeight) / 2)
+          } else {
+            baseTop = rowBottom + gapY
+          }
+          let topPx = baseTop + stackOffset
+
+          if (topPx + barHeight > maxBottom) {
+            const aboveTailRow = rowTop - barHeight - 2 - stackOffset
+            const aboveFirstRow = scrollTopOffset + visCol1.top - barHeight - 2 - stackOffset
+            if (aboveTailRow >= pad) {
+              topPx = aboveTailRow
+            } else if (aboveFirstRow >= pad) {
+              topPx = aboveFirstRow
+            } else {
+              topPx = Math.max(pad, Math.min(topPx, maxBottom - barHeight))
+            }
+          }
+
+          item.dom.style.top = `${Math.max(0, topPx)}px`
+          const editorLeftMin = scrollLeftOffset + marginX
+          const editorLeftMax = scrollLeftOffset + editorRect.width - barW - marginX
+          leftPx = Math.max(editorLeftMin, Math.min(leftPx, editorLeftMax, overlayRect.width - barW - marginX))
+          item.dom.style.left = `${leftPx}px`
+          item.dom.style.right = 'auto'
         })
       }
 

@@ -8,7 +8,11 @@
   overflow-x: hidden;
 }
 
+/* 与 HTTPFuzzerPage 内 casual 审阅 overlay（z-index ~30）同列兄弟时，须压在其上。
+ * 勿对父级加 position: relative：子项为 position:absolute 且脱离文档流时，父级高度为 0，序列/并发整块会塌缩、点击无反应。 */
 .fuzzer-sequence-list {
+  z-index: 50;
+
   &-item {
     position: absolute;
     top: 0;
