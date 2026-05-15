@@ -142,6 +142,18 @@ export interface UserManualInterventionContext {
   content: string
 }
 
+/** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */
+export interface HttpFlowFuzzStatusCardData {
+  fuzz_id: string
+  runtime_id: string
+  /** 发包动作原因与目的（对应事件字段 reason） */
+  reason: string
+  /** 引擎最近一次状态 */
+  engine_status: 'start' | 'working' | 'finish'
+  /** working 推送的进度；finish 时保留最后一次 */
+  progress?: AIAgentGrpcApi.HttpFlowFuzzStatusProgress
+}
+
 export enum AIChatQSDataTypeEnum {
   /**用户的自由输入 */
   QUESTION = 'question',
@@ -263,18 +275,6 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
   AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
   UserManualInterventionContext
 >
-
-/** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */
-export interface HttpFlowFuzzStatusCardData {
-  fuzz_id: string
-  runtime_id: string
-  /** 发包动作原因与目的（对应事件字段 reason） */
-  reason: string
-  /** 引擎最近一次状态 */
-  engine_status: 'start' | 'working' | 'finish'
-  /** working 推送的进度；finish 时保留最后一次 */
-  progress?: AIAgentGrpcApi.HttpFlowFuzzStatusProgress
-}
 
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 

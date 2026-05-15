@@ -1098,6 +1098,12 @@ function useChatContent(params: UseChatContentParams) {
         updateElements({ mapKey: chatData.id, type: chatData.type })
         return
       }
+
+      // 发包统计卡片：按 fuzz_id 维护一张 HTTP_FLOW_FUZZ_STATUS 卡片
+      if (res.Type === 'http_flow_fuzz_status') {
+        handleHttpFlowFuzzStatus(res)
+        return
+      }
       // #endregion
 
       handleUnkData(res)
