@@ -1,5 +1,5 @@
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
-import { AIModelTypeEnum } from '../../defaultConstant'
+import { AIModelTypeEnum, AIModelTypeEnumType } from '../../defaultConstant'
 import { AIEchartsDataKey, ContextPressureEchartsProps } from '../../chatTemplate/AIEcharts'
 import { AIContextStatsDetail } from '../../type/aiChat'
 import { AIChatData } from '../../type/aiChat'
@@ -69,21 +69,21 @@ export const isPerfDataChanged = (prev: PerfData, next: PerfData): boolean => {
  * @returns
  */
 export const getPressuresData = (
-  pressure?: Record<AIModelTypeEnum, AIAgentGrpcApi.Pressure[]>,
+  pressure?: Record<AIModelTypeEnumType, AIAgentGrpcApi.Pressure[]>,
   sliceLength?: number,
 ) => {
-  let data: Record<AIModelTypeEnum, AIEchartsDataKey[]> = {
+  let data: Record<AIModelTypeEnumType, AIEchartsDataKey[]> = {
     [AIModelTypeEnum.TierIntelligent]: [],
     [AIModelTypeEnum.TierLightweight]: [],
     [AIModelTypeEnum.TierVision]: [],
   }
-  let xData: Record<AIModelTypeEnum, number[]> = {
+  let xData: Record<AIModelTypeEnumType, number[]> = {
     [AIModelTypeEnum.TierIntelligent]: [],
     [AIModelTypeEnum.TierLightweight]: [],
     [AIModelTypeEnum.TierVision]: [],
   }
   // 要求总数据的最大值，不受sliceLength的影响
-  let maxValue: Record<AIModelTypeEnum, number> = {
+  let maxValue: Record<AIModelTypeEnumType, number> = {
     [AIModelTypeEnum.TierIntelligent]: 0,
     [AIModelTypeEnum.TierLightweight]: 0,
     [AIModelTypeEnum.TierVision]: 0,
@@ -141,19 +141,22 @@ export const getPressuresData = (
  * @param sliceLength 截取长度，默认不截取，获取全部数据
  * @returns
  */
-export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirstCostMS[]>, sliceLength?: number) => {
+export const getCostData = (
+  cost?: Record<AIModelTypeEnumType, AIAgentGrpcApi.AIFirstCostMS[]>,
+  sliceLength?: number,
+) => {
   let data: ContextPressureEchartsProps['dataEcharts']['data'] = {
     [AIModelTypeEnum.TierIntelligent]: [],
     [AIModelTypeEnum.TierLightweight]: [],
     [AIModelTypeEnum.TierVision]: [],
   }
-  let xData: Record<AIModelTypeEnum, number[]> = {
+  let xData: Record<AIModelTypeEnumType, number[]> = {
     [AIModelTypeEnum.TierIntelligent]: [],
     [AIModelTypeEnum.TierLightweight]: [],
     [AIModelTypeEnum.TierVision]: [],
   }
   // 要求总数据的最大值，不受sliceLength的影响
-  let maxValue: Record<AIModelTypeEnum, number> = {
+  let maxValue: Record<AIModelTypeEnumType, number> = {
     [AIModelTypeEnum.TierIntelligent]: 0,
     [AIModelTypeEnum.TierLightweight]: 0,
     [AIModelTypeEnum.TierVision]: 0,
@@ -209,7 +212,7 @@ export const getCostData = (cost?: Record<AIModelTypeEnum, AIAgentGrpcApi.AIFirs
  * @param pressure 压力未处理前的数据
  * @returns
  */
-export const getThreshold = (pressure?: Record<AIModelTypeEnum, AIAgentGrpcApi.Pressure[]>) => {
+export const getThreshold = (pressure?: Record<AIModelTypeEnumType, AIAgentGrpcApi.Pressure[]>) => {
   let threshold: number = 0
   const intelligentLength = pressure?.intelligent?.length || 0
   const lightweightLength = pressure?.lightweight?.length || 0

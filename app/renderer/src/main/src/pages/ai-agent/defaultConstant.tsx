@@ -368,6 +368,7 @@ export enum AIModelTypeEnum {
   TierVision = 'vision',
 }
 
+export type AIModelTypeEnumType = `${AIModelTypeEnum}`
 /**接口字段名对应 */
 export const AIModelTypeInterFileNameEnum: { [K in AIModelTypeFileName]: K } = {
   /** 高质模型 */

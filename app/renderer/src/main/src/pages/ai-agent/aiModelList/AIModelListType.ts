@@ -3,7 +3,7 @@ import { YakitSizeType } from '@/components/yakitUI/YakitInputNumber/YakitInputN
 import { type ModalProps } from 'antd'
 import { ReactNode } from 'react'
 import { AIModelConfig, AIModelTypeFileName } from './utils'
-import { AIModelTypeEnum } from '../defaultConstant'
+import { AIModelTypeEnumType } from '../defaultConstant'
 
 export interface AIModelListProps extends Partial<Pick<AIOnlineModelListProps, 'mountContainer'>> {}
 
@@ -37,7 +37,7 @@ export interface AIOnlineModelListItemProps {
   onRemove: (item: AIModelConfig) => void
   onEdit: (item: AIModelConfig) => void
   checked: boolean
-  modelType: `${AIModelTypeEnum}`
+  modelType: AIModelTypeEnumType
 }
 export interface OutlineAtomIconByStatusProps {
   isReady?: boolean

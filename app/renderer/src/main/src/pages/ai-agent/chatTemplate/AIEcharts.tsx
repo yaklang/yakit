@@ -1,7 +1,7 @@
 import React, { FC, memo, useEffect, useMemo, useRef } from 'react'
 import ReactECharts, { EChartsOption } from 'echarts-for-react'
 import { useDebounceFn } from 'ahooks'
-import { AIModelTypeEnum } from '../defaultConstant'
+import { AIModelTypeEnum, AIModelTypeEnumType } from '../defaultConstant'
 import { formatTimestamp } from '@/utils/timeUtil'
 import moment from 'moment'
 import { formatNumberUnits } from '../utils'
@@ -18,9 +18,9 @@ export interface AIEchartsDataKey {
 //#region 上下文压力 echarts图表
 export interface ContextPressureEchartsProps {
   dataEcharts: {
-    data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
-    xData: Record<AIModelTypeEnum, number[]>
-    maxValue: Record<AIModelTypeEnum, number>
+    data: Record<AIModelTypeEnumType, AIEchartsDataKey[]>
+    xData: Record<AIModelTypeEnumType, number[]>
+    maxValue: Record<AIModelTypeEnumType, number>
   }
   threshold: number
 }
@@ -50,7 +50,7 @@ export const ContextPressureEcharts: React.FC<ContextPressureEchartsProps> = Rea
 })
 
 const AIModelTypeMap: Record<
-  AIModelTypeEnum,
+  AIModelTypeEnumType,
   {
     backgroundColor?: string
   }
@@ -66,7 +66,7 @@ const AIModelTypeMap: Record<
 const getDetailsXAxis = (data: {
   xData: number[]
   colors: Record<string, string>
-  type: AIModelTypeEnum
+  type: AIModelTypeEnumType
   valueFormatter: (v: number) => string | number
 }) => {
   const { xData, colors, type, valueFormatter } = data
@@ -310,9 +310,9 @@ const getContextPressureOption = (value: ContextPressureOptionProps): EChartsOpt
 
 export interface AIPressureDetailsEchartsProps {
   dataEcharts: {
-    data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
-    xData: Record<AIModelTypeEnum, number[]>
-    maxValue: Record<AIModelTypeEnum, number>
+    data: Record<AIModelTypeEnumType, AIEchartsDataKey[]>
+    xData: Record<AIModelTypeEnumType, number[]>
+    maxValue: Record<AIModelTypeEnumType, number>
   }
   threshold: number
 }
@@ -512,9 +512,9 @@ const getPressureDetailsOption = (value: PressureDetailsOptionProps): EChartsOpt
 //#region 响应速度 echarts图表
 export interface ResponseSpeedEchartsProps {
   dataEcharts: {
-    data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
-    xData: Record<AIModelTypeEnum, number[]>
-    maxValue: Record<AIModelTypeEnum, number>
+    data: Record<AIModelTypeEnumType, AIEchartsDataKey[]>
+    xData: Record<AIModelTypeEnumType, number[]>
+    maxValue: Record<AIModelTypeEnumType, number>
   }
 }
 export const ResponseSpeedEcharts: React.FC<ResponseSpeedEchartsProps> = React.memo((props) => {
@@ -642,9 +642,9 @@ const getResponseSpeedOption = (
 
 export interface AICostDetailsEchartsProps {
   dataEcharts: {
-    data: Record<AIModelTypeEnum, AIEchartsDataKey[]>
-    xData: Record<AIModelTypeEnum, number[]>
-    maxValue: Record<AIModelTypeEnum, number>
+    data: Record<AIModelTypeEnumType, AIEchartsDataKey[]>
+    xData: Record<AIModelTypeEnumType, number[]>
+    maxValue: Record<AIModelTypeEnumType, number>
   }
 }
 export const AICostDetailsEcharts: React.FC<AICostDetailsEchartsProps> = React.memo((props) => {

@@ -28,7 +28,7 @@ import {
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { YakitAutoCompleteProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AIModelTypeEnum, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
+import { AIModelTypeEnum, AIModelTypeEnumType, AIModelTypeInterFileNameEnum } from '../../defaultConstant'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { yakitNotify } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
@@ -64,7 +64,7 @@ export const isEqualAIModel = (item: AIModelConfig, newItem: AIModelConfig) => {
 }
 
 /**获取ai模型对应的键名,通过模型类型 */
-export const getFileNameByModelType = (type: AIModelTypeEnum) => {
+export const getFileNameByModelType = (type: AIModelTypeEnumType) => {
   let fileName: AIModelTypeFileName | null = null
   switch (type) {
     case AIModelTypeEnum.TierIntelligent:
@@ -83,7 +83,7 @@ export const getFileNameByModelType = (type: AIModelTypeEnum) => {
 }
 /**通过键名获取对应的模型类型 */
 export const getModelTypeByFileName = (fileName: string) => {
-  let modelType: AIModelTypeEnum | null = null
+  let modelType: AIModelTypeEnumType | null = null
   switch (fileName) {
     case AIModelTypeInterFileNameEnum.IntelligentModels:
       modelType = AIModelTypeEnum.TierIntelligent
@@ -99,7 +99,7 @@ export const getModelTypeByFileName = (fileName: string) => {
   }
   return modelType
 }
-export const getModelLabelByModelType = (type: AIModelTypeEnum) => {
+export const getModelLabelByModelType = (type: AIModelTypeEnumType) => {
   let label: string = ''
   switch (type) {
     case AIModelTypeEnum.TierIntelligent:

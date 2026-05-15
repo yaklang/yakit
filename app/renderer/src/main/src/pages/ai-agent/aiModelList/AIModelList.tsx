@@ -73,6 +73,7 @@ import {
   AIModelPolicyEnum,
   AIModelPolicyOptions,
   AIModelTypeEnum,
+  AIModelTypeEnumType,
   AIModelTypeInterFileNameEnum,
   AIOnlineModelIconMap,
 } from '../defaultConstant'
@@ -742,7 +743,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     }
     setAIModal({
       item: newItem,
-      modelType: modelType as AIModelTypeEnum,
+      modelType: modelType as AIModelTypeEnumType,
       t,
       onSuccess: () => {
         emiter.emit('onRefreshAIModelList')
@@ -773,7 +774,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
       Content: '测试成功',
     })
       .then((response) => {
-        const aiModelType = (modelType || AIModelTypeEnum.TierIntelligent) as AIModelTypeEnum
+        const aiModelType = (modelType || AIModelTypeEnum.TierIntelligent) as AIModelTypeEnumType
         const m = showYakitModal({
           hiddenHeader: true,
           type: 'white',
