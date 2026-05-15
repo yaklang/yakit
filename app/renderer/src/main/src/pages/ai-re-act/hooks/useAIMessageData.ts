@@ -43,7 +43,7 @@ const useAIMessageData = ({
   // 记录后端的id
   const grpcIdRef = useRef<number>(-1)
 
-  const handleLoadInit: UseAIMessageDataEvents['handleLoadInit'] = async (sessionId) => {
+  const handleLoadInit: UseAIMessageDataEvents['handleLoadInit'] = async (sessionId, offset) => {
     setInitLoading(true)
     // 重置分页状态
     handleReset()
@@ -65,7 +65,7 @@ const useAIMessageData = ({
         const chatStore = getChatStore()
         if (chatStore) chatStore.beforeID.chatID = sessionMetadata.offset
       } else {
-        grpcIdRef.current = getChatStore()?.beforeID.chatID ?? -1
+        grpcIdRef.current = offset ?? -1
       }
       // 记录分页游标（第一条记录的 token）
       cursorsRef.current = {
