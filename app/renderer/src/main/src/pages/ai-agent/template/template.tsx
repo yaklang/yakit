@@ -378,6 +378,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 <OpenFileDropdown cb={onSetFileMention}>
                   <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />
                 </OpenFileDropdown>
+                <YakitButton
+                  type="text2"
+                  radius="50%"
+                  icon={<OutlinePhotographIcon />}
+                  onClick={onSelectImage}
+                  className={styles['btn-base']}
+                />
                 <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
                   <YakitButton
                     type="text2"
@@ -388,13 +395,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                     isHover={inputSettingVisible}
                   />
                 </AIInputSettingPopover>
-                <YakitButton
-                  type="text2"
-                  radius="50%"
-                  icon={<OutlinePhotographIcon />}
-                  onClick={onSelectImage}
-                  className={styles['btn-base']}
-                />
                 {execute && (
                   <AIManualAdditionPopover
                     chatType="reAct"
