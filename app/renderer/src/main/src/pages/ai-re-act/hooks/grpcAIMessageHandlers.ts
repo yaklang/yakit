@@ -6,6 +6,7 @@ import type {
   AIReviewType,
   AIToolResult,
   ChatStream,
+  HttpFlowFuzzStatusCardData,
   ReActChatBaseInfo,
   ReActChatGroupElement,
   ReActChatRenderItem,
@@ -252,20 +253,20 @@ const handleApiRequestFailed: AIMessageHandler = (request) => {
   // 历史数据无用-不处理
   if (res.IsSync) return
 
-  // const ipcContent = Uint8ArrayToString(res.Content) || ''
-  // const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIApiRequestFailedPayload
-  // const chatData: AIChatQSData = {
-  //   ...genBaseAIChatData(res),
-  //   chatType: info.chatType,
-  //   type: AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
-  //   data,
-  // }
-  // setContentMap(chatData.id, chatData)
-  // handleUpdateUISingleState(
-  //   res.IsSync,
-  //   { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
-  //   request.setElements,
-  // )
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIApiRequestFailedPayload
+  const chatData: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    chatType: info.chatType,
+    type: AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
+    data,
+  }
+  setContentMap(chatData.id, chatData)
+  handleUpdateUISingleState(
+    res.IsSync,
+    { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
+    request.setElements,
+  )
 }
 
 /** Type='http_flow_fuzz_status' 发包统计卡片：按 fuzz_id 维护一张 HTTP_FLOW_FUZZ_STATUS 卡片 */
@@ -275,48 +276,48 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
   // 历史数据无用-不处理
   if (res.IsSync) return
 
-  // const ipcContent = Uint8ArrayToString(res.Content) || ''
-  // const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
-  // const { fuzz_id, runtime_id, reason, status } = payload
-  // if (!fuzz_id) {
-  //   handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type} 数据缺少 fuzz_id`))
-  //   return
-  // }
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
+  const { fuzz_id, runtime_id, reason, status } = payload
+  if (!fuzz_id) {
+    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type} 数据缺少 fuzz_id`))
+    return
+  }
 
-  // const cardType = AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS
-  // const existing = getContentMap(fuzz_id)
-  // const isExistingCard = existing?.type === cardType
+  const cardType = AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS
+  const existing = getContentMap(fuzz_id)
+  const isExistingCard = existing?.type === cardType
 
-  // // 引擎结束态没有对应卡片时直接丢弃，保留原行为
-  // if (status === 'finish' && !isExistingCard) return
+  // 引擎结束态没有对应卡片时直接丢弃，保留原行为
+  if (status === 'finish' && !isExistingCard) return
 
-  // const nextData: HttpFlowFuzzStatusCardData = {
-  //   fuzz_id,
-  //   runtime_id,
-  //   reason,
-  //   engine_status: status,
-  //   // 仅 `working` 覆盖 progress；其它状态保留上一次（新建时默认 undefined）
-  //   progress: status === 'working' ? payload.progress : isExistingCard ? existing!.data.progress : undefined,
-  // }
+  const nextData: HttpFlowFuzzStatusCardData = {
+    fuzz_id,
+    runtime_id,
+    reason,
+    engine_status: status,
+    // 仅 `working` 覆盖 progress；其它状态保留上一次（新建时默认 undefined）
+    progress: status === 'working' ? payload.progress : isExistingCard ? existing!.data.progress : undefined,
+  }
 
-  // if (isExistingCard) {
-  //   Object.assign(existing!.data, nextData)
-  // } else {
-  //   const chatData: AIChatQSData = {
-  //     ...genBaseAIChatData(res),
-  //     id: fuzz_id,
-  //     chatType: info.chatType,
-  //     type: cardType,
-  //     data: nextData,
-  //   }
-  //   setContentMap(fuzz_id, chatData)
-  // }
+  if (isExistingCard) {
+    Object.assign(existing!.data, nextData)
+  } else {
+    const chatData: AIChatQSData = {
+      ...genBaseAIChatData(res),
+      id: fuzz_id,
+      chatType: info.chatType,
+      type: cardType,
+      data: nextData,
+    }
+    setContentMap(fuzz_id, chatData)
+  }
 
-  // handleUpdateUISingleState(
-  //   res.IsSync,
-  //   { mapKey: fuzz_id, type: cardType, chatType: info.chatType },
-  //   request.setElements,
-  // )
+  handleUpdateUISingleState(
+    res.IsSync,
+    { mapKey: fuzz_id, type: cardType, chatType: info.chatType },
+    request.setElements,
+  )
 }
 // #endregion
 
@@ -1681,7 +1682,7 @@ const handleReviewRelease: AIMessageHandler = (request) => {
     reviewInfo.optionValue = 'continue'
     const chatData: AIChatQSData = {
       ...reviewDetail,
-      data: info as any,
+      data: reviewInfo as any,
     }
     review?.handleSetReview && review.handleSetReview(undefined)
     if (info.chatType === 'task') {

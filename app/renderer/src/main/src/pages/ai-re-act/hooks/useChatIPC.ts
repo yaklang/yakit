@@ -804,6 +804,11 @@ function useChatIPC(params?: UseChatIPCParams) {
           return
         }
 
+        if (res.Type === 'structured' && res.NodeId === 'react_task_enqueue') {
+          if (res.IsSync) return
+          if (planCoordinatorId.current === res.CoordinatorId) return
+          handleTriggerQuestionQueueRequest()
+        }
         if (res.Type === 'structured' && res.NodeId === 'react_task_dequeue') {
           // 自由对话里的问题出队消息
           if (planCoordinatorId.current === res.CoordinatorId) return
