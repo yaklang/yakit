@@ -186,7 +186,7 @@ const AIContextToken: FC<{
       <YakitPopover
         content={
           <AIEchartsDetails
-            overallToken={[token[0], token[1], token[2], token[3]]}
+            overallToken={[token[0], token[1], token[2]]}
             tierConsumption={aiDataRef?.consumption?.tier_consumption}
             pressure={aiDataRef?.pressure}
             firstCost={aiDataRef?.firstCost}
@@ -219,7 +219,7 @@ interface CurrentModel {
   lightweightModels?: AIModelConfig
 }
 interface AIEchartsDetailsProps {
-  overallToken: [number | string, number | string, number | string, number | string]
+  overallToken: [number | string, number | string, number | string]
   /** ref */
   tierConsumption?: AIAgentGrpcApi.Consumption['tier_consumption']
   /** ref */
@@ -259,7 +259,6 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
   }, [aiGlobalConfig.IntelligentModels, aiGlobalConfig.LightweightModels])
 
   const [contextStatsMetric, setContextStatsMetric] = useState<ContextStatsChartMetric>('tokens')
-  const [chartMetricPopoverOpen, setChartMetricPopoverOpen] = useState(false)
 
   const intelligentToken = useCreation(() => {
     if (!tierConsumption?.intelligent) return [0, 0, 0, 0]
@@ -423,10 +422,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
           <div className={styles['cost-wrapper']}>
             <div className={styles['echarts-heard']}>
               <div className={styles['echarts-heard-left']}>
-                <div className={styles['title']}>
-                  上下文统计
-                  {/* {contextStatsMetric === 'bytes' ? '上下文字节统计' : '上下文Token统计'} */}
-                </div>
+                <div className={styles['title']}>上下文统计</div>
                 <YakitRadioButtons
                   size="small"
                   value={contextStatsMetric}
