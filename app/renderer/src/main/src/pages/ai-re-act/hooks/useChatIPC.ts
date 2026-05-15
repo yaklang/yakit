@@ -29,6 +29,7 @@ import {
   AIInputEvent,
   AIInputEventSyncTypeEnum,
   AIOutputEvent,
+  AIOutputI18n,
   AIStartParams,
   AITaskStatus,
 } from './grpcApi'
@@ -240,15 +241,15 @@ function useChatIPC(params?: UseChatIPCParams) {
   // #endregion
 
   // #region 通知消息相关逻辑
-  const [notifyMessage, setNotifyMessage] = useState<{ type: 'notify' | 'rate-limit'; content: string } | null>(null)
+  const [notifyMessage, setNotifyMessage] = useState<UseChatIPCState['notifyMessage'] | null>(null)
   const notifyMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const handleSetNotifyMessage = useMemoizedFn((raw: AIAgentGrpcApi.Notify) => {
+  const handleSetNotifyMessage = useMemoizedFn((raw: AIAgentGrpcApi.Notify, label: AIOutputI18n) => {
     if (notifyMessageTimerRef.current !== null) {
       clearTimeout(notifyMessageTimerRef.current)
       notifyMessageTimerRef.current = null
     }
     const { type, content } = raw
-    setNotifyMessage({ type, content })
+    setNotifyMessage({ type, content, label })
 
     let durationMs = 0
     if (typeof raw.duration_ms === 'number' && !Number.isNaN(raw.duration_ms) && raw.duration_ms > 0) {
@@ -829,7 +830,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (res.Type === 'notify' && res.NodeId === 'notify') {
           const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Notify
-          handleSetNotifyMessage(data)
+          handleSetNotifyMessage(data, res.NodeIdVerbose)
           return
         }
 

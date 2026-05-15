@@ -22,6 +22,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
+import useAINodeLabel from '../hooks/useAINodeLabel'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -286,8 +287,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
 const AINotifyMessage: React.FC<AINotifyMessageProps> = React.memo((props) => {
   const { notifyMessage } = props
+  const { nodeLabel } = useAINodeLabel(notifyMessage?.label)
   return (
     <div className={styles['notify-message']}>
+      <div>{nodeLabel}</div>
       <div className={styles['content-wrapper']}>
         <div className={styles['marquee-inner']}>
           <div className={styles['content']}>{notifyMessage?.content}</div>

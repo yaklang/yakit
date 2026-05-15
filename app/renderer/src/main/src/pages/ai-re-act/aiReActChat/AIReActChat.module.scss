@@ -273,21 +273,23 @@
 .notify-message {
   display: flex;
   align-items: center;
-  color: var(--Colors-Use-Neutral-Text-1-Title);
+  color: var(--Colors-Use-Main-Primary);
   font-size: 12px;
   margin-bottom: 2px;
+  gap: 8px;
 
   .content-wrapper {
     display: flex;
     flex: 1;
     overflow: hidden; // 关键：隐藏滚动出该容器的文本
     white-space: nowrap;
-    width: 100%;
+    // width: 100%;
     margin: 0 2px;
+    color: var(--Colors-Use-Main-Hover);
     .marquee-inner {
       display: flex;
       width: max-content; // 确保宽度紧贴内容撑开
-      animation: scroll-marquee 10s linear infinite;
+      animation: scroll-marquee 20s linear infinite;
     }
 
     .content {

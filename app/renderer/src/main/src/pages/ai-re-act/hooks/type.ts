@@ -7,7 +7,7 @@ import {
   ReActChatBaseInfo,
   ReActChatRenderItem,
 } from './aiRender'
-import { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIStartParams, AITaskStatus } from './grpcApi'
+import { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n, AIStartParams, AITaskStatus } from './grpcApi'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { Dispatch, SetStateAction } from 'react'
@@ -233,7 +233,7 @@ export interface UseChatIPCState {
   /** 历史数据获取的状态 */
   historyState: UseHistoryChatState
   /** 流推送的提示文案（notify / rate-limit），展示时长由 duration 系列字段控制，到期自动清空 */
-  notifyMessage: { type: 'notify' | 'rate-limit'; content: string } | null
+  notifyMessage: { type: 'notify' | 'rate-limit'; content: string; label: AIOutputI18n } | null
 }
 
 /** 开始启动流接口的唯一token、请求参数和额外参数 */
