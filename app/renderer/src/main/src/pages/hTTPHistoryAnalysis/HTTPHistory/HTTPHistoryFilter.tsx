@@ -247,7 +247,6 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
   })
   // #endregion
 
-  console.log(runtimeId, 'runtimeId')
   return (
     <div className={styles['HTTPHistoryFilter']}>
       <YakitResizeBox
