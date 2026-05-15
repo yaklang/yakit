@@ -1,5 +1,5 @@
 import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
-import { editorViewCtx, parserCtx, schema } from '@milkdown/kit/core'
+import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
 import { AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
 import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
