@@ -133,8 +133,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       }
       const { key, value } = payload
 
-      if (key === AITabsEnum.HTTP && httpRunTimeIDs.length === 0) return
-      if (key === AITabsEnum.Risk && riskRunTimeIDs.length === 0) return
+      if (key === AITabsEnum.HTTP && httpRunTimeIDs.length === 0 && RelatedRuntimeIDs.length === 0) return
+      if (key === AITabsEnum.Risk && riskRunTimeIDs.length === 0 && RelatedRuntimeIDs.length === 0) return
       handleTabStateChange(key, value)
     })
 
