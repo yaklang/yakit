@@ -621,7 +621,10 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
         const d = isInit ? resData : (response?.Data || []).concat(resData)
         const displayItems = buildCompileHistoryDisplayList(d)
         if (displayItems.length > 0) {
-          setClickItem(displayItems[0].program)
+          const selectedProgram = pageInfo.SelectedProgramName
+            ? displayItems.find((item) => item.program.Name === pageInfo.SelectedProgramName)?.program
+            : undefined
+          setClickItem(selectedProgram || displayItems[0].program)
         }
         const isMore = resData.length < res.Pagination.Limit || d.length === response.Total
 

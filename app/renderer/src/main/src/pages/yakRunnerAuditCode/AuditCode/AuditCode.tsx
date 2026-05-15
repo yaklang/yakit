@@ -125,6 +125,9 @@ import cloneDeep from 'lodash/cloneDeep'
 import { RJSFSchema } from '@rjsf/utils'
 import { TrashIcon } from '@/assets/newIcon'
 import { IRifyUpdateProjectManagerModal } from '@/pages/YakRunnerProjectManager/YakRunnerProjectManager'
+import { ProjectManagerExpandableList } from './ProjectManagerExpandableList'
+import { SSAProgram } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
+import { AuditCodePageInfoProps } from '@/store/pageInfo'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -2423,6 +2426,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     params: DeleteSSAProjectRequest
   }>()
   const [isAllowIRifyUpdate, setIsAllowIRifyUpdate] = useState<boolean>(false)
+  const [expandedProjectIds, setExpandedProjectIds] = useState<number[]>([])
   // 接口是否正在请求
   const isGrpcRef = useRef<boolean>(false)
   const afterId = useRef<number>()
@@ -2551,6 +2555,82 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
       failed(t('YakitNotification.deleteFailed', { error: String(error) }))
     } finally {
       setLoading(false)
+    }
+  })
+
+  const onOpenProjectHistory = useMemoizedFn((record: SSAProjectResponse, program?: SSAProgram) => {
+    emiter.emit(
+      'openPage',
+      JSON.stringify({
+        route: YakitRoute.YakRunner_ScanHistory,
+        params: {
+          Programs: [record.ProjectName],
+          ProjectIds: [record.ID],
+          SelectedProgramName: program?.Name,
+        },
+      }),
+    )
+  })
+
+  const onToggleProjectExpand = useMemoizedFn((record: SSAProjectResponse) => {
+    setExpandedProjectIds((prev) => {
+      if (prev.includes(record.ID)) {
+        return prev.filter((id) => id !== record.ID)
+      }
+      return [...prev, record.ID]
+    })
+  })
+
+  const onOpenCompileCodeScan = useMemoizedFn(async (record: SSAProjectResponse, program: SSAProgram) => {
+    try {
+      const selectTotal = await getGroupNamesTotal({ GroupNames: [program.Language || record.Language] })
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.YakRunner_Code_Scan,
+          params: {
+            projectName: record.ProjectName,
+            projectId: record.ID,
+            historyName: [program.Name],
+            GroupNames: [program.Language || record.Language],
+            selectTotal,
+          },
+        }),
+      )
+    } catch (error) {
+      failed(t('AuditCode.jumpCodeScanFailed', { error: String(error) }))
+    }
+  })
+
+  const onOpenCompileAuditCode = useMemoizedFn((program: SSAProgram) => {
+    const params: AuditCodePageInfoProps = {
+      Schema: 'syntaxflow',
+      Location: program.Name,
+      Path: `/`,
+    }
+    emiter.emit(
+      'openPage',
+      JSON.stringify({
+        route: YakitRoute.YakRunner_Audit_Code,
+        params,
+      }),
+    )
+  })
+
+  const onDeleteCompileHistory = useMemoizedFn(async (projectId: number, programId: number) => {
+    try {
+      await ipcRenderer.invoke('DeleteSSAPrograms', {
+        Filter: {
+          Ids: [programId],
+        },
+      })
+      success(t('AuditCode.deleteSuccess'))
+      if (expandedProjectIds.includes(projectId)) {
+        setRefresh(!refresh)
+      }
+      update(true)
+    } catch (error) {
+      failed(t('YakitNotification.deleteFailed', { error: String(error) }))
     }
   })
 
@@ -2684,16 +2764,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 icon={<OutlineClockIcon />}
                 onClick={(e) => {
                   e.stopPropagation()
-                  emiter.emit(
-                    'openPage',
-                    JSON.stringify({
-                      route: YakitRoute.YakRunner_ScanHistory,
-                      params: {
-                        Programs: [record.ProjectName],
-                        ProjectIds: [record.ID],
-                      },
-                    }),
-                  )
+                  if (pageType === 'projectManager') {
+                    onOpenProjectHistory(record)
+                    return
+                  }
+                  onOpenProjectHistory(record)
                 }}
               />
             </Tooltip>
@@ -2855,25 +2930,52 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
       </div>
 
       <div className={styles['table']}>
-        <YakitVirtualList<SSAProjectResponse>
-          className={styles['audit-virtual-list']}
-          loading={loading}
-          refresh={refresh}
-          hasMore={hasMore}
-          columns={columns}
-          data={data}
-          page={pagination.Page}
-          loadMoreData={loadMoreData}
-          renderKey="ID"
-          rowSelection={{
-            isAll: isAllSelect,
-            type: 'checkbox',
-            selectedRowKeys,
-            onSelectAll: onSelectAll,
-            onChangeCheckboxSingle: onSelectChange,
-          }}
-          onClickRow={onClickRow}
-        />
+        {pageType === 'projectManager' ? (
+          <ProjectManagerExpandableList
+            className={styles['audit-virtual-list']}
+            loading={loading}
+            refresh={refresh}
+            hasMore={hasMore}
+            columns={columns}
+            data={data}
+            page={pagination.Page}
+            loadMoreData={loadMoreData}
+            renderKey="ID"
+            rowSelection={{
+              isAll: isAllSelect,
+              type: 'checkbox',
+              selectedRowKeys,
+              onSelectAll: onSelectAll,
+              onChangeCheckboxSingle: onSelectChange,
+            }}
+            expandedProjectIds={expandedProjectIds}
+            onToggleExpand={onToggleProjectExpand}
+            onOpenProjectHistory={onOpenProjectHistory}
+            onOpenCodeScan={onOpenCompileCodeScan}
+            onOpenAuditCode={onOpenCompileAuditCode}
+            onDeleteCompile={onDeleteCompileHistory}
+          />
+        ) : (
+          <YakitVirtualList<SSAProjectResponse>
+            className={styles['audit-virtual-list']}
+            loading={loading}
+            refresh={refresh}
+            hasMore={hasMore}
+            columns={columns}
+            data={data}
+            page={pagination.Page}
+            loadMoreData={loadMoreData}
+            renderKey="ID"
+            rowSelection={{
+              isAll: isAllSelect,
+              type: 'checkbox',
+              selectedRowKeys,
+              onSelectAll: onSelectAll,
+              onChangeCheckboxSingle: onSelectChange,
+            }}
+            onClickRow={onClickRow}
+          />
+        )}
       </div>
 
       <IRifyUpdateProjectManagerModal visible={isAllowIRifyUpdate} onClose={() => setIsAllowIRifyUpdate(false)} />

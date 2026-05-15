@@ -366,6 +366,207 @@
   }
 }
 
+.project-manager-expandable-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+
+  .project-manager-expandable-columns,
+  .project-manager-expandable-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 8px;
+  }
+
+  .project-manager-expandable-columns {
+    height: 32px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    transition: padding-right 0.3s ease;
+  }
+
+  .project-manager-expandable-columns-scroll {
+    padding-right: 8px;
+  }
+
+  .project-manager-expandable-content {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .project-manager-expandable-container {
+    overflow-y: overlay;
+    overflow-anchor: none;
+  }
+
+  .project-manager-expandable-checkbox {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .project-manager-expandable-column {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .project-manager-expandable-column-flex {
+    flex: 1;
+  }
+
+  .project-manager-expandable-expand-column {
+    width: 40px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .project-manager-expandable-group {
+    border-top: 1px solid var(--Colors-Use-Neutral-Border);
+
+    &:first-child {
+      border-top-width: 0;
+    }
+  }
+
+  .project-manager-expandable-item {
+    min-height: 48px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+      border-radius: 8px;
+    }
+  }
+
+  .project-manager-expandable-item-expanded {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+    border-radius: 8px 8px 0 0;
+  }
+
+  .project-manager-expandable-loading,
+  .project-manager-expandable-no-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    color: var(--Colors-Use-Neutral-Disable);
+    font-size: 12px;
+  }
+
+  .project-compile-preview {
+    margin: 0 8px 8px 40px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--Colors-Use-Neutral-Bg);
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  .project-compile-preview-compact {
+    margin-bottom: 6px;
+    padding: 4px 10px;
+  }
+
+  .project-compile-preview-header,
+  .project-compile-preview-row {
+    display: grid;
+    grid-template-columns: minmax(140px, 1.4fr) 96px 96px 132px;
+    gap: 8px;
+    align-items: center;
+    min-height: 28px;
+  }
+
+  .project-compile-preview-header {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+    border-bottom: 1px dashed var(--Colors-Use-Neutral-Border);
+    margin-bottom: 2px;
+    padding-bottom: 2px;
+    min-height: 24px;
+  }
+
+  .project-compile-preview-row {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  .project-compile-preview-row-clickable {
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+  }
+
+  .project-compile-preview-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .project-compile-preview-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .project-compile-preview-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+  }
+
+  .project-compile-preview-empty {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 11px;
+    line-height: 16px;
+    padding: 2px 0;
+  }
+
+  .project-compile-preview-more {
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 11px;
+    line-height: 22px;
+    user-select: none;
+    border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+    background: transparent;
+    transition:
+      color 0.15s,
+      background 0.15s;
+
+    &:hover {
+      color: var(--Colors-Use-Main-Primary);
+      background: var(--Colors-Use-Main-Bg);
+    }
+  }
+}
+
 .additional-params-divider {
   margin: 16px 12px;
   display: flex;
