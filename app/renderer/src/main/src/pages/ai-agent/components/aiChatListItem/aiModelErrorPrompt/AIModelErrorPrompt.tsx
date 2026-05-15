@@ -59,7 +59,7 @@ export const AIModelErrorPrompt: React.FC<AIModelErrorPromptProps> = React.memo(
       titleText="模型错误"
       titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
       titleMore={
-        <Tooltip title="点此编辑当模型">
+        <Tooltip title="点此编辑当前模型">
           <YakitButton type="text2" size="small" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
         </Tooltip>
       }
