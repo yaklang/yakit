@@ -1096,7 +1096,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               }
               key="2"
             >
-              <Form.Item label="Enable Thiking" name="EnableThinkingOpt">
+              <Form.Item label="Enable Thinking" name="EnableThinkingOpt">
                 <YakitSelect options={EnableThinkingOptions} />
               </Form.Item>
               <Form.Item label="Max Tokens" name="MaxTokens">
