@@ -15,12 +15,21 @@ import rehypeSlug from 'rehype-slug'
 import { yakitNotify } from '@/utils/notification'
 
 // Allow data URIs for raster image formats only (excludes SVG to prevent script injection).
-// Two-layer defense: protocols allows "data" scheme, attributes regex restricts to image/* with base64 encoding.
+// The bare "src" string entry in defaultSchema.attributes.img grants unconditional allowance, so it must be
+// replaced entirely with explicit allowlists: one tuple for http/https URLs, one for base64 raster data URIs.
+// The two tuples have OR semantics — a src value passes if it matches either entry.
 const sanitizeSchemaWithDataImage = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
-    img: [...(defaultSchema.attributes?.img || []), ['src', /^data:image\/(png|jpeg|jpg|gif|webp|bmp);base64,/i]],
+    img: [
+      // Preserve all non-src attributes from the default schema (ariaDescribedBy, ariaLabel, etc.)
+      ...(defaultSchema.attributes?.img || []).filter((entry) => entry !== 'src'),
+      // Allow http/https image URLs (mirrors the original "src" allowance scoped to safe protocols)
+      ['src', /^https?:\/\//i],
+      // Allow base64-encoded raster images via data URI; SVG excluded to prevent embedded script execution
+      ['src', /^data:image\/(png|jpeg|jpg|gif|webp|bmp);base64,/i],
+    ],
   },
   protocols: {
     ...defaultSchema.protocols,
