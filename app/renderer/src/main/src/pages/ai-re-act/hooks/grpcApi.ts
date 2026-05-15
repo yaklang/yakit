@@ -253,7 +253,10 @@ export declare namespace AIAgentGrpcApi {
     input_consumption: number
     output_consumption: number
     consumption_uuid: string
-    tier_consumption: Record<AIModelTypeEnumType, { input_consumption: number; output_consumption: number }>
+    tier_consumption: Record<
+      AIModelTypeEnumType,
+      { cache_hit_token: number; input_consumption: number; output_consumption: number }
+    >
   }
 
   /** 上下文压力 */
