@@ -310,7 +310,9 @@ export const showYakitModal = (props: ShowModalV2Props) => {
           <YakitBaseModal
             bodyStyle={{ padding: 0 }}
             {...(targetConfig as YakitModalProp)}
-            title={<ModalI18nRender node={targetConfig.title} />}
+            title={
+              targetConfig.title !== undefined ? <ModalI18nRender node={targetConfig.title} /> : targetConfig.title
+            }
             onVisibleSetter={(r) => {
               setter = r
             }}

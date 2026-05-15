@@ -65,7 +65,7 @@ export const showModal = (props: ShowModalProps) => {
         <>
           <BaseModal
             {...(restConfig as ModalProps)}
-            title={<ModalI18nRender node={title} />}
+            title={title !== undefined ? <ModalI18nRender node={title} /> : title}
             onVisibleSetter={(r) => {
               setter = r
             }}

@@ -257,6 +257,12 @@ export const generateGroupId = (gIndex?: number) => {
   return groupId
 }
 
+const generateTabIdentity = (key: string, index?: number) => {
+  const time = `${Date.now()}${typeof index === 'number' ? `-${index}` : ''}`
+  const tabId = `${key}-[${randomString(6)}]-${time}`
+  return { time, tabId }
+}
+
 /**
  * 收集所有的组
  */
@@ -361,8 +367,7 @@ const rebuildMultipleNodeTree = (key: string, cache: MultipleNodeInfo[]): Multip
       newGroupId = '0'
     } else {
       // 2. 普通节点
-      const time = new Date().getTime().toString()
-      const tabId = `${key}-[${randomString(6)}]-${time}`
+      const { tabId } = generateTabIdentity(key)
       newId = tabId
     }
 
@@ -1667,8 +1672,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const baseSortId =
       targetGroupId !== '0' ? groupChildrenLength + 1 : (currentPageCache.multipleNode?.length || 0) + 1
     const createdNodes: MultipleNodeInfo[] = Array.from({ length: count }, (_, index) => {
-      const time = `${Date.now()}-${index}`
-      const tabId = `${key}-[${randomString(6)}]-${time}`
+      const { time, tabId } = generateTabIdentity(key, index)
       return {
         id: tabId,
         verbose: `${baseName}(${index + 1})`,
@@ -1971,8 +1975,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         const key = routeConvertKey(route, pluginName)
         let tabName = routeKeyToLabel.get(key) || menuName
 
-        const time = new Date().getTime().toString()
-        const tabId = `${key}-[${randomString(6)}]-${time}`
+        const { time, tabId } = generateTabIdentity(key)
 
         let verbose =
           nodeParams?.verbose || `${tabName}-${filterPage.length > 0 ? (filterPage[0].multipleLength || 0) + 1 : 1}`

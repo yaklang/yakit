@@ -647,7 +647,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       if (maxX <= 0 || minX >= dragSelectionState.contentWidth) return null
 
       const minY = Math.max(Math.min(startContentY, currentContentY), 0)
-      const maxY = Math.min(Math.max(startContentY, currentContentY), dragSelectionState.contentHeight)
+      const currentContentHeight = data.length * defItemHeight
+      const maxY = Math.min(Math.max(startContentY, currentContentY), currentContentHeight)
       if (maxY <= minY) return null
 
       const start = Math.min(Math.max(Math.floor(minY / defItemHeight), 0), data.length - 1)
