@@ -98,6 +98,8 @@ function useCasualChat(params: UseCasualChatParams) {
       } else if (res.Type === 'structured' && res.NodeId === 'react_task_dequeue') {
         // 用户问题开始执行标识
         funcKey = res.NodeId
+      } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
+        funcKey = res.Type
       }
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
       if (handleFunc) {

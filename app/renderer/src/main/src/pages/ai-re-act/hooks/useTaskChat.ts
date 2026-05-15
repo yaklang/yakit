@@ -186,6 +186,8 @@ function useTaskChat(params: UseTaskChatParams) {
       if (res.Type === 'structured' && res.NodeId === 'stream-finished') {
         // stream数据结束标识
         funcKey = res.NodeId
+      } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
+        funcKey = res.Type
       }
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
       if (handleFunc) {
