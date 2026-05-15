@@ -43,6 +43,8 @@ const useAIMessageData = ({
   // 记录后端的id
   const grpcIdRef = useRef<number>(-1)
 
+  const isInitGrpc = useRef(false)
+
   const handleLoadInit: UseAIMessageDataEvents['handleLoadInit'] = async (sessionId, offset) => {
     setInitLoading(true)
     // 重置分页状态
@@ -74,6 +76,7 @@ const useAIMessageData = ({
       }
       hasMoreRef.current = { casual: casualResult.hasMore, task: taskResult.hasMore, grpc: grpcIdRef.current > 0 }
       if (!casualResult.hasMore && grpcIdRef.current > 0) {
+        isInitGrpc.current = true
         grpcLoadMore?.({ limit: LIMIT, start_id: grpcIdRef.current })
       }
 
@@ -93,6 +96,7 @@ const useAIMessageData = ({
     } catch (err) {
       yakitNotify('error', err instanceof Error ? err.message : '未知错误')
     } finally {
+      if (isInitGrpc.current) return
       setInitLoading(false)
     }
   }
@@ -217,6 +221,10 @@ const useAIMessageData = ({
       }
       grpcIdRef.current = next_start_id
       setCasualLoadMoreLoading(false)
+      if (isInitGrpc.current) {
+        setInitLoading(false)
+        isInitGrpc.current = false
+      }
     },
   )
 
