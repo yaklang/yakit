@@ -1673,7 +1673,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
             lineNumber: currentPos?.lineNumber || 0,
             column: currentPos?.column || 0,
           },
-          preference: [1, 2],
+          preference: [2, 1],
         }
       },
       update: function () {
