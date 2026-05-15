@@ -126,21 +126,22 @@ export const AIHttpFlowFuzzStatusCard: React.FC<AIHttpFlowFuzzStatusCardProps> =
 
         <div ref={statsRef} className={classNames(styles.stats, statsCompact && styles['stats--compact'])}>
           <div className={classNames(styles['stat-tile'], styles['stat-tile-total'])}>
-            <div className={styles['stat-value']}>{total}</div>
+            <div className={classNames(styles['stat-value'], styles['total'])}>{total}</div>
             <div className={styles['stat-label']}>{t('AIHttpFlowFuzzStatusCard.sentTotal')}</div>
           </div>
+
           <div className={classNames(styles['stat-tile'], styles['stat-tile-ok'])}>
-            <div className={styles['stat-value']}>{ok}</div>
+            <div className={classNames(styles['stat-value'], styles['ok'])}>{ok}</div>
             <div className={styles['stat-label']}>{t('AIHttpFlowFuzzStatusCard.successCount')}</div>
           </div>
+
           <div className={classNames(styles['stat-tile'], styles['stat-tile-fail'])}>
-            <div className={styles['stat-value']}>{fail}</div>
+            <div className={classNames(styles['stat-value'], styles['fail'])}>{fail}</div>
             <div className={styles['stat-label']}>{t('AIHttpFlowFuzzStatusCard.failCount')}</div>
           </div>
+
           <div className={classNames(styles['stat-tile'], styles['stat-tile-avg'])}>
-            <div className={styles['stat-value']}>
-              {avgMs != null ? `${avgMs}ms` : `${t('AIHttpFlowFuzzStatusCard.dash')}ms`}
-            </div>
+            <div className={classNames(styles['stat-value'], styles['avg'])}>{avgMs ? `${avgMs}ms` : '-'}</div>
             <div className={styles['stat-label']}>{t('AIHttpFlowFuzzStatusCard.avgMs')}</div>
           </div>
         </div>

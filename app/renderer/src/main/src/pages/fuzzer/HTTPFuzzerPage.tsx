@@ -3116,32 +3116,56 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           key="ai"
                           disabled={allAiFuzzRuntimeIds.length === 0}
                         >
-                          {effectiveAiRuntimeId ? (
-                            <HTTPFlowRealTimeTableAndEditor
-                              key={effectiveAiRuntimeId}
-                              wrapperStyle={{ padding: 0 }}
-                              pageType="Plugin"
-                              runtimeId={effectiveAiRuntimeId}
-                              params={{ SourceType: 'scan' }}
-                              filterTagDom={aiFilterTagDom}
-                              defaultExcludeColumnsKey={aiFuzzTableExcludeColumnsKey}
-                              httpHistoryTableTitleStyle={{
-                                paddingTop: 12,
-                                paddingLeft: 8,
-                                paddingRight: 8,
-                              }}
-                              showSourceType={false}
-                              showAdvancedSearch={false}
-                              showProtocolType={false}
-                              showColorSwatch={false}
-                              showDelAll={false}
-                              showBatchActions={false}
-                              showFlod={false}
-                              showHistoryAnalysisBtn
-                              onHistoryAnalysisClick={jumpHTTPHistoryAnalysis}
-                              titleHeight={47}
-                            />
-                          ) : null}
+                          {/* AI tab：thin header 承载标题 + 放大/收起按钮，复用 secondFull 状态与手动 tab 共享布局切换 */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              height: '100%',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div className={classNames(styles['resize-card-heard'])}>
+                              <div className={styles['resize-card-heard-title']}>
+                                {t('HTTPFuzzerPage.aiTabTitle')}
+                              </div>
+                              <div className={styles['resize-card-heard-extra']}></div>
+                              <div
+                                className={styles['resize-card-icon']}
+                                onClick={() => setSecondFull(!secondFull)}
+                              >
+                                {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                              </div>
+                            </div>
+                            <div style={{ flex: 1, minHeight: 0 }}>
+                              {effectiveAiRuntimeId ? (
+                                <HTTPFlowRealTimeTableAndEditor
+                                  key={effectiveAiRuntimeId}
+                                  wrapperStyle={{ padding: 0 }}
+                                  pageType="Plugin"
+                                  runtimeId={effectiveAiRuntimeId}
+                                  params={{ SourceType: 'scan' }}
+                                  filterTagDom={aiFilterTagDom}
+                                  defaultExcludeColumnsKey={aiFuzzTableExcludeColumnsKey}
+                                  httpHistoryTableTitleStyle={{
+                                    paddingTop: 12,
+                                    paddingLeft: 8,
+                                    paddingRight: 8,
+                                  }}
+                                  showSourceType={false}
+                                  showAdvancedSearch={false}
+                                  showProtocolType={false}
+                                  showColorSwatch={false}
+                                  showDelAll={false}
+                                  showBatchActions={false}
+                                  showFlod={false}
+                                  showHistoryAnalysisBtn
+                                  onHistoryAnalysisClick={jumpHTTPHistoryAnalysis}
+                                  titleHeight={47}
+                                />
+                              ) : null}
+                            </div>
+                          </div>
                         </PluginTabs.TabPane>
                       </PluginTabs>
                     </div>

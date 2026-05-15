@@ -105,7 +105,8 @@
 
     "aiCasualAcceptAllMetaTitle": "即将应用的配置",
     "responseTabManual": "手动发包",
-    "responseTabAi": "AI发包"
+    "responseTabAi": "AI发包",
+    "aiTabTitle": "发包记录"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{{droppedCount}}]个响应",

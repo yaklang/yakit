@@ -105,7 +105,8 @@
 
     "aiCasualAcceptAllMetaTitle": "Setting to apply",
     "responseTabManual": "Manual fuzz",
-    "responseTabAi": "AI fuzz"
+    "responseTabAi": "AI fuzz",
+    "aiTabTitle": "Fuzz records"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{{droppedCount}}] responses",

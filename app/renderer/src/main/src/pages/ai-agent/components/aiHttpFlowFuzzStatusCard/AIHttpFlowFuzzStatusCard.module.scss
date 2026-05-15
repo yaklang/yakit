@@ -119,7 +119,7 @@
 
   .reason-row {
     display: flex;
-    padding: 8px 8px 4px 8px;
+    padding: 4px 8px 4px 8px;
     justify-content: space-between;
     align-items: center;
     align-self: stretch;
@@ -143,7 +143,7 @@
   .reason-text {
     flex: 1 1 0;
     min-width: 0;
-    font-size: 14px;
+    font-size: 12px;
     line-height: 20px;
     font-weight: 500;
     word-break: break-word;
@@ -192,8 +192,9 @@
     width: 100%;
     max-width: none;
     min-width: 0;
-    padding: 8px 10px 8px 8px;
+    padding: 2px 3px 2px 4px;
     border-radius: 4px;
+    justify-content: space-between;
   }
 
   .stat-tile-total {
@@ -220,7 +221,25 @@
     font-size: 20px;
     font-weight: 600;
     line-height: 28px;
-    color: var(--Colors-Use-Neutral-Text-1-Primary);
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .total {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+
+  .ok {
+    color: var(--Colors-Use-Success-Primary);
+  }
+
+  .fail {
+    color: var(--Colors-Use-Error-Primary);
+  }
+
+  .avg {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
   }
 
   .stat-label {
