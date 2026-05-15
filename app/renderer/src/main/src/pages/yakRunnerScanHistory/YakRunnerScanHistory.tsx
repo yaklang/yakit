@@ -376,7 +376,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
 
   const ResizeBoxProps = useCreation(() => {
     let p = {
-      firstRatio: '280px',
+      firstRatio: '380px',
     }
     return p
   }, [])
@@ -387,7 +387,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
       </div>
       <div className={styles['YakRunnerScanHistory-main']}>
         <YakitResizeBox
-          firstMinSize={'280px'}
+          firstMinSize={'360px'}
           firstNode={<CompileHistoryList pageInfo={pageInfo} clickItem={clickItem} setClickItem={setClickItem} />}
           secondNode={
             <TableVirtualResize<SyntaxFlowScanTask>
@@ -903,7 +903,7 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
             update(+response.Pagination.Page + 1)
           }}
           rowKey="displayId"
-          defItemHeight={36}
+          defItemHeight={44}
           renderRow={(rowData) => renderProgramRow(rowData)}
         />
       </div>
