@@ -3126,14 +3126,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                             }}
                           >
                             <div className={classNames(styles['resize-card-heard'])}>
-                              <div className={styles['resize-card-heard-title']}>
-                                {t('HTTPFuzzerPage.aiTabTitle')}
-                              </div>
+                              <div className={styles['resize-card-heard-title']}>{t('HTTPFuzzerPage.aiTabTitle')}</div>
                               <div className={styles['resize-card-heard-extra']}></div>
-                              <div
-                                className={styles['resize-card-icon']}
-                                onClick={() => setSecondFull(!secondFull)}
-                              >
+                              <div className={styles['resize-card-icon']} onClick={() => setSecondFull(!secondFull)}>
                                 {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
                               </div>
                             </div>
