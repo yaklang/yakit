@@ -170,6 +170,7 @@ const useAIMessageData = ({
     sessionId,
     { casualElements, taskElements, casualContentMap, taskContentMap },
   ) => {
+    if (casualElements.length === 0) return
     setSaveLoading(true)
 
     const sessionMetadataPromise = aiChatMessageStore.setSessionMetadata({
