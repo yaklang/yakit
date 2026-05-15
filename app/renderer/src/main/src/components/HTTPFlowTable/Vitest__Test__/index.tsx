@@ -3,29 +3,8 @@
  * 仓库根目录运行本目录全部用例：yarn test:vitest app/renderer/src/main/src/components/HTTPFlowTable/Vitest__Test__ --run
  */
 import React, { FC } from 'react'
-export const onConvertBodySizeByUnit = (length: number, unit: 'B' | 'K' | 'M') => {
-  switch (unit) {
-    case 'K':
-      return Number(length) * 1024
-    case 'M':
-      return Number(length) * 1024 * 1024
-    default:
-      return Number(length)
-  }
-}
-
-export const getHTTPFlowReqAndResToString = <T extends object & { Request?: Uint8Array; Response?: Uint8Array }>(
-  flow: T,
-) => {
-  return {
-    ...flow,
-    RequestString: flow?.Request?.length ? String.fromCharCode(...flow.Request) : '',
-    ResponseString: flow?.Response?.length ? String.fromCharCode(...flow.Response) : '',
-  } as T & {
-    RequestString: string
-    ResponseString: string
-  }
-}
+import { getHTTPFlowReqAndResToString, onConvertBodySizeByUnit } from '../HTTPFlowTable'
+import type { HTTPFlow } from '../HTTPFlowTable'
 
 export const filterData = <T extends object, K extends keyof T>(filterArr: T[], key: K) => {
   const valueSet = new Set<T[K]>()
@@ -105,7 +84,7 @@ const Vitest__Test__: FC<VitestTestProps> = ({ bodyLength = 2, unit = 'K' }) => 
   const flow = getHTTPFlowReqAndResToString({
     Request: new Uint8Array([65, 66]),
     Response: new Uint8Array([67]),
-  })
+  } as unknown as HTTPFlow)
   const deduplicated = filterData(
     [
       { Id: 1, Path: '/a' },

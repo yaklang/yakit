@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
-  filterData,
   getHTTPFlowReqAndResToString,
   onConvertBodySizeByUnit,
-} from '@/components/HTTPFlowTable/Vitest__Test__'
+  type HTTPFlow,
+} from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { filterData } from '@/components/HTTPFlowTable/Vitest__Test__'
 
 describe('HTTPFlowTable Vitest helpers', () => {
   it('converts request and response payloads to strings', () => {
@@ -11,7 +12,7 @@ describe('HTTPFlowTable Vitest helpers', () => {
       Id: 1,
       Request: new Uint8Array([72, 73]),
       Response: new Uint8Array([79, 75]),
-    })
+    } as unknown as HTTPFlow)
 
     expect(result).toMatchObject({
       Id: 1,
@@ -21,7 +22,7 @@ describe('HTTPFlowTable Vitest helpers', () => {
   })
 
   it('returns empty strings when payload is missing', () => {
-    const result = getHTTPFlowReqAndResToString({ Id: 2 })
+    const result = getHTTPFlowReqAndResToString({ Id: 2 } as unknown as HTTPFlow)
     expect(result).toMatchObject({
       Id: 2,
       RequestString: '',
