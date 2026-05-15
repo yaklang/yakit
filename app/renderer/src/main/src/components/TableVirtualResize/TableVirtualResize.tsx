@@ -206,6 +206,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const wrapperRef = useRef<any>(null)
   const columnsRef = useRef<any>(null)
   const tableRef = useRef<any>(null)
+  const shortcutFocusRef = useRef<HTMLDivElement>(null)
   const lineStartX = useRef<number>(0) // 拖拽线开始位置
   const lineEndX = useRef<number>(0) // 拖拽线结束位置
   const dragSelectionStateRef = useRef<DragSelectionState | null>(null)
@@ -974,6 +975,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   })
 
   const onMouseDownDragSelection = useMemoizedFn((event: React.MouseEvent<HTMLDivElement>) => {
+    shortcutFocusRef.current?.focus()
     if (!canStartDragSelection(event)) return
 
     const container = containerRef.current
@@ -992,7 +994,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     const startPoint = getDragSelectionPoint(nextDragSelectionState, event.clientX, event.clientY)
 
     resetDragSelection(false)
-    event.preventDefault()
     if (dragSelectionUserSelectRef.current === null) {
       dragSelectionUserSelectRef.current = document.body.style.userSelect || ''
     }
@@ -1450,7 +1451,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   })
 
   return (
-    <ShortcutKeyFocusHook style={{ height: '100%' }} focusId={focusIdRef.current ? [focusIdRef.current] : undefined}>
+    <ShortcutKeyFocusHook
+      style={{ height: '100%' }}
+      focusId={focusIdRef.current ? [focusIdRef.current] : undefined}
+      boxRef={shortcutFocusRef}
+    >
       <div
         className={classNames(styles['virtual-table'])}
         ref={tableRef}
