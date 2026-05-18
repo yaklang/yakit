@@ -1,5 +1,5 @@
 import { useMemoizedFn } from 'ahooks'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 const PREPEND_OFFSET = 1000000
 
@@ -18,10 +18,10 @@ const useLoadHistory = ({ loading, dataLength, SessionID, fetchHasMore, loadMore
   const atTopRef = useRef(false)
   const wasLoadingRef = useRef(false)
 
-  // 【新增核心机制】：排队锁。用于接住那些因为 React 状态延迟而“撞墙”的请求
+  // 排队锁
   const pendingRequestRef = useRef(false)
 
-  // 【核心机制：Render 阶段状态派生】(保留你的完美逻辑)
+  // 【核心机制：Render 阶段状态派生】
   const [prevDataLength, setPrevDataLength] = useState(dataLength)
   const [prevSessionID, setPrevSessionID] = useState(SessionID)
 
@@ -41,8 +41,6 @@ const useLoadHistory = ({ loading, dataLength, SessionID, fetchHasMore, loadMore
   const handleLoadMore = useMemoizedFn(() => {
     if (!fetchHasMore() || !SessionID) return
 
-    // 【关键修复】：如果当前还没解锁，不要直接 return 丢弃！
-    // 把它标记为 pending，等 loading 结束时立刻补发
     if (loading) {
       pendingRequestRef.current = true
       return

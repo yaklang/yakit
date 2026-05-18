@@ -371,6 +371,12 @@ class AIChatMessageStore {
       req.onerror = () => reject(req.error)
     })
   }
+  // 关闭数据库连接
+  async close(): Promise<void> {
+    const db = await this.open()
+    db.close()
+    this.dbPromise = null
+  }
 }
 
 const aiChatMessageStore = new AIChatMessageStore(dbVersion)
