@@ -1,5 +1,5 @@
 import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n, AITaskStatus } from './grpcApi'
+import { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n, AITaskStatusType } from './grpcApi'
 import { AIChatIPCStartParams } from './type'
 
 /** 工具流式输出里的可选操作列表 */
@@ -75,7 +75,7 @@ export interface AITaskStartInfo {
   taskIndex: string
   taskName: string
   goal: string
-  status?: AITaskStatus
+  status?: AITaskStatusType
 }
 
 interface ReviewSelectedOption {
@@ -210,6 +210,10 @@ export interface ReActChatBaseInfo {
   type: AIChatQSDataType
   /** 触发渲染的次数, 无实际逻辑意义 */
   renderNum: number
+  /** 是否是已缓存数据 */
+  isCached?: boolean
+  /** 缓存数据里的顺序 */
+  cacheOrder?: number
 }
 export interface ReActChatElement extends ReActChatBaseInfo {
   /** 标记不是组 */

@@ -47,7 +47,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { onChat, onChatFromHistory } = props
     const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
-    const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, historyState } =
+    const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, requestHistoryState } =
       useChatIPCStore().chatIPCData
     const { activeChat } = useAIAgentStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
@@ -96,10 +96,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       setExportLoading(true)
       //
       try {
-        // const ids = aiChatDataStore.get(activeChat.request.TimelineSessionID || "default")?.coordinatorIDs || []
         await grpcExportAILogs(
           {
-            // CoordinatorIDs: ids,
             SessionID: activeChat.SessionID,
             ExportDataTypes: data.types,
             OutputPath: data.outputPath,
@@ -135,8 +133,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       }
       const { key, value } = payload
 
-      if (key === AITabsEnum.HTTP && httpRunTimeIDs.length === 0) return
-      if (key === AITabsEnum.Risk && riskRunTimeIDs.length === 0) return
+      if (key === AITabsEnum.HTTP && httpRunTimeIDs.length === 0 && RelatedRuntimeIDs.length === 0) return
+      if (key === AITabsEnum.Risk && riskRunTimeIDs.length === 0 && RelatedRuntimeIDs.length === 0) return
       handleTabStateChange(key, value)
     })
 
@@ -306,7 +304,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
 
     return (
       <div className={styles['ai-chat-content-wrapper']}>
-        <AIGlobalLoading loopAnimationMode="sequential" loading={historyState.initLoading}>
+        <AIGlobalLoading loopAnimationMode="sequential" loading={requestHistoryState.initLoading}>
           <ExpandAndRetract
             isExpand={isExpand}
             onExpand={onExpand}

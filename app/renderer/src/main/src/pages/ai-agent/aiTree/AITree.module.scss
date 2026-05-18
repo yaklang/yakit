@@ -90,6 +90,7 @@
       p {
         margin: 0;
         @include mixin.text-ellipsis;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
       }
       svg {
         width: 16px;
@@ -119,6 +120,7 @@
 
       &-text {
         @include mixin.text-ellipsis(2, true, false, true);
+        color: var(--Colors-Use-Neutral-Text-1-Title);
       }
       &-tag {
         display: flex;

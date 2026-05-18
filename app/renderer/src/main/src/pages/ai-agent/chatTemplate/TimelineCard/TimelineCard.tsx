@@ -88,9 +88,10 @@ const TimelineCard: FC = () => {
   const { activeChat } = useAIAgentStore()
   const {
     reActTimelines,
-    historyState: { timelinesLoading },
+    // historyState: { timelinesLoading },
+    requestHistoryState: { timelinesLoading },
   } = useChatIPCStore().chatIPCData
-  const { fetchHasMore, loadMore } = useChatIPCDispatcher().chatIPCEvents
+  const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
   const { virtuosoRef, handleTotalListHeightChanged, setScrollerRef, setIsAtBottomRef } = useVirtuosoAutoScroll({
     total: reActTimelines.length,
   })
@@ -101,8 +102,8 @@ const TimelineCard: FC = () => {
     loading: timelinesLoading,
     dataLength: reActTimelines.length,
     SessionID: activeChat?.SessionID || '',
-    fetchHasMore: () => fetchHasMore(TYPE),
-    loadMore: () => loadMore(TYPE, activeChat?.SessionID || ''),
+    fetchHasMore: () => handleHasMoreHistory('timelines'),
+    loadMore: () => handleLoadMoreHistory('timelines'),
   })
 
   const components = useMemo<Components<AIAgentGrpcApi.TimelineItem>>(

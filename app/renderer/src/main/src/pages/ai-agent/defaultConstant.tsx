@@ -292,12 +292,14 @@ export const defaultChatIPCData: UseChatIPCState = {
   planHistoryList: cloneDeep(DefaultPlanHistoryList),
   cancelCasualLoading: false,
   cancelTaskLoading: false,
-  historyState: {
-    initLoading: false,
-    timelinesLoading: false,
-    chatsLoading: false,
-  },
   notifyMessage: null,
+  requestHistoryState: {
+    initLoading: false,
+    casualLoadMoreLoading: false,
+    taskLoadMoreLoading: false,
+    saveLoading: false,
+    timelinesLoading: false,
+  },
 }
 //#endregion
 

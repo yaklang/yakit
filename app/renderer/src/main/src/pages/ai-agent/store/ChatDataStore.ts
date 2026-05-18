@@ -27,10 +27,9 @@ export class ChatDataStore {
   private initDefaultData(): AIChatData {
     return {
       beforeID: {
-        timelineID: '',
-        chatID: '',
+        timelineID: -1,
+        chatID: -1,
       },
-      coordinatorIDs: [],
       httpRunTimeIDs: [],
       riskRunTimeIDs: [],
       yakExecResult: { card: [], execFileRecord: new Map(), yakExecResultLogs: [] },

@@ -6,9 +6,11 @@ import { generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
 import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AITaskInfoProps } from './aiRender'
+import { AITaskInfoProps, AIChatQSDataType, ReActChatRenderItem } from './aiRender'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIChatLogData, AIChatLogToInfo } from './type'
+import { DialogueRecord } from '@/pages/ai-agent/store/type'
+import { JSONParseLog } from '@/utils/tool'
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -123,3 +125,58 @@ export const isToolExecStream = (nodeID: string) => {
   if (isToolStdoutStream(nodeID)) return true
   return false
 }
+
+/**
+ * indexedDB 数据库数据转 ReActChatRenderItem
+ */
+export const indexedDBDataToReActChatRenderItem = (
+  chatType: ReActChatRenderItem['chatType'],
+  data: DialogueRecord[],
+): ReActChatRenderItem[] =>
+  data.map((item) => {
+    if (item.isGroup) {
+      return {
+        chatType,
+        token: item.token,
+        type: item.type as AIChatQSDataType,
+        isGroup: true as const,
+        children: JSONParseLog(item.children || '[]'),
+        renderNum: 0,
+        isCached: true,
+      }
+    }
+    return {
+      chatType,
+      token: item.token,
+      type: item.type as AIChatQSDataType,
+      isGroup: false,
+      renderNum: 0,
+      children: JSONParseLog(item.children || '[]'),
+      isCached: true,
+    }
+  })
+
+export function getTreeDataIds(tree: DialogueRecord[]): string[] {
+  return tree.flatMap((item) => {
+    let children: DialogueRecord[] = []
+    if (item.children) {
+      try {
+        children = JSONParseLog(item.children)
+      } catch {
+        children = []
+      }
+    }
+
+    return [item.token, ...getTreeDataIds(children)]
+  })
+}
+
+export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: string) =>
+  elements.map((item, index) => ({
+    token: item.token,
+    type: item.type,
+    isGroup: item.isGroup || false,
+    children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
+    sessionId,
+    cacheOrder: index,
+  }))

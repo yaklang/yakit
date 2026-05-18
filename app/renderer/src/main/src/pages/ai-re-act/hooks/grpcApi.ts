@@ -167,6 +167,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_PLAN_EXEC_TASKS = 'plan_exec_tasks',
   /** 加入上下文,这个sync_type,后端返回带sync_id时代表这个操作已经执行;后端那边不存在异步逻辑 */
   SYNC_TYPE_USER_INTERVENTION = 'user_intervention',
+  /** 获取历史会话数据 */
+  SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
 }
 
 export interface AIInputEvent {
@@ -256,6 +258,7 @@ export enum AITaskStatus {
   skipped = 'skipped',
   created = '',
 }
+export type AITaskStatusType = `${AITaskStatus}`
 
 export declare namespace AIAgentGrpcApi {
   /** 上传/下载 Token 量 */
@@ -378,7 +381,7 @@ export declare namespace AIAgentGrpcApi {
     name: string
     /** 正文 */
     goal: string
-    progress?: AITaskStatus
+    progress?: AITaskStatusType
     subtasks?: AITaskInfoProps[]
     /**评阅时树节点是否被删 */
     isRemove: boolean
@@ -408,7 +411,7 @@ export declare namespace AIAgentGrpcApi {
       /** 后端供(push_task|pop_task)对应的唯一标识 */
       task_uuid?: string
       /** 后端供pop_task反馈的任务执行状态 */
-      task_status?: AITaskStatus
+      task_status?: AITaskStatusType
     }
     type: string
   }
@@ -602,7 +605,7 @@ export declare namespace AIAgentGrpcApi {
     created_at: string
     focus_mode: string
     id: string
-    status: AITaskStatus
+    status: AITaskStatusType
     user_input: string
   }
   /** 问题队列信息 */
@@ -816,13 +819,11 @@ export declare namespace AIAgentGrpcApi {
     code: number
     count: number
   }
-
   /** `http_flow_fuzz_status` 事件中 progress 内响应体长度聚合项（最多前 3 项） */
   export interface HttpFlowFuzzStatusResponseLengthGroup {
     body_length: number
     count: number
   }
-
   /** `http_flow_fuzz_status` 的 working 状态携带的结构化进度 */
   export interface HttpFlowFuzzStatusProgress {
     total_requests: number
@@ -837,7 +838,6 @@ export declare namespace AIAgentGrpcApi {
     status_counts: HttpFlowFuzzStatusStatusCount[]
     response_length_groups: HttpFlowFuzzStatusResponseLengthGroup[]
   }
-
   /**
    * `http_flow_fuzz_status` 事件载荷（Type: http_flow_fuzz_status，IsJson: true）。
    * fuzz_id 与 runtime_id 同值，可作为卡片主键；start / working / finish 共用同一 fuzz_id。
@@ -867,6 +867,15 @@ export declare namespace AIAgentGrpcApi {
         reason: string
         action_name?: string
       }
+
+  export interface RecoveryHistory {
+    block_count: number
+    event_count: number
+    has_more: boolean
+    next_start_id: number
+    requested_start_id: number
+    session_id: string
+  }
 }
 
 // #region AI相关普通接口的请求和定义结构

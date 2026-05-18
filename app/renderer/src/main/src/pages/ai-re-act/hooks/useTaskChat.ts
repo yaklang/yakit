@@ -1,9 +1,4 @@
-import { useRef, useState } from 'react'
-import { useCreation, useMemoizedFn } from 'ahooks'
-import { Uint8ArrayToString } from '@/utils/str'
-import cloneDeep from 'lodash/cloneDeep'
-import { AIReviewJudgeLevelMap, DefaultCurrentExecTaskTree } from './defaultConstant'
-import {
+import type {
   AIChatLogData,
   CurrentExecTaskTree,
   handleSendFunc,
@@ -11,23 +6,24 @@ import {
   UseTaskChatParams,
   UseTaskChatState,
 } from './type'
-import {
-  genBaseAIChatData,
-  genErrorLogData,
-  genExecTasks,
-  handleGrpcDataPushLog,
-  isAutoExecuteReviewContinue,
-} from './utils'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
+import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import { useRef, useState } from 'react'
+import { useCreation, useMemoizedFn } from 'ahooks'
+import { Uint8ArrayToString } from '@/utils/str'
+import cloneDeep from 'lodash/cloneDeep'
+import { DefaultCurrentExecTaskTree } from './defaultConstant'
+import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog } from './utils'
 import { yakitNotify } from '@/utils/notification'
-import { AIAgentGrpcApi, AIInputEventSyncTypeEnum, AIOutputEvent, AITaskStatus } from './grpcApi'
-import { AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, AITaskInfoProps, ReActChatRenderItem } from './aiRender'
+import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
+import { AIChatQSDataTypeEnum } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import useChatContent from './useChatContent'
 import { has } from 'lodash'
+import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
 
-function useTaskChat(params?: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
+function useTaskChat(params: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
-function useTaskChat(params?: UseTaskChatParams) {
+function useTaskChat(params: UseTaskChatParams) {
   const { pushLog, getChatDataStore, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest } = params || {}
 
   const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
@@ -45,10 +41,6 @@ function useTaskChat(params?: UseTaskChatParams) {
     const contentMap = getChatDataStore?.()?.taskChat?.contents
     contentMap && contentMap.set(mapKey, value)
   })
-  const deleteContentMap = useMemoizedFn((mapKey: string) => {
-    const contentMap = getChatDataStore?.()?.taskChat?.contents
-    contentMap && contentMap.delete(mapKey)
-  })
 
   // #region 任务树相关逻辑
   const [plan, setPlan] = useState<CurrentExecTaskTree>(cloneDeep(DefaultCurrentExecTaskTree))
@@ -62,54 +54,56 @@ function useTaskChat(params?: UseTaskChatParams) {
     activeLeafTasks.current.clear()
   })
 
-  /** 任务节点开始执行, 生成UI展示的信息 */
-  const handleTaskStartNode = useMemoizedFn((res: AIOutputEvent, nodeInfo: AIAgentGrpcApi.ChangeTask) => {
+  /**
+   * 任务节点开始执行, 生成UI展示的信息
+   * 实时数据里 先给push_task，后给pop_task，所以push_task是生成数据的主要依据
+   * 任务规划里该类型只有实时数据
+   */
+  const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
     try {
-      // 任务树根节点不进行节点展示
-      if (nodeInfo.task.index === '1') return
+      let ipcContent = Uint8ArrayToString(res.Content) || ''
+      const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
+      if (!info.task.task_uuid || info.task.index === '1') return
+      if (res.IsSync) return
 
-      const chatData: AIChatQSData = {
-        ...genBaseAIChatData(res),
-        chatType: 'task',
-        type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
-        data: {
-          taskIndex: nodeInfo.task.index,
-          taskName: nodeInfo.task.name,
-          goal: nodeInfo.task.goal,
-          status: AITaskStatus.inProgress,
-        },
+      let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
+      if (!taskNodeInfo) {
+        taskNodeInfo = {
+          ...genBaseAIChatData(res),
+          id: info.task.task_uuid,
+          chatType: 'task',
+          type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
+          data: {
+            taskIndex: info.task.index,
+            taskName: info.task.name,
+            goal: info.task.goal,
+            status: info.task.task_status || AITaskStatus.inProgress,
+          },
+        }
+        setContentMap(taskNodeInfo.id, taskNodeInfo)
       }
-      if (nodeInfo.task.task_uuid) chatData.id = nodeInfo.task.task_uuid
-      activeLeafTasks.current.add(chatData.id)
-      setContentMap(chatData.id, chatData)
-      setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }])
-    } catch (error) {}
-  })
-  /** 任务节点结束执行, 更新UI展示的信息 */
-  const handleTaskEndNode = useMemoizedFn((nodeInfo: AIAgentGrpcApi.ChangeTask) => {
-    try {
-      // 任务树根节点不进行节点展示
-      if (nodeInfo.task.index === '1') return
-      // 任务结束时, 如果没有task_uuid则不进行UI更新, 因为无法确定哪个节点结束了
-      if (!nodeInfo.task.task_uuid) return
 
-      // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
-      activeLeafTasks.current.delete(nodeInfo.task.task_uuid)
-
-      const taskNodeInfo = getContentMap(nodeInfo.task.task_uuid)
-      if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
-        return
-      }
-      taskNodeInfo.data.status = nodeInfo.task.task_status
-      setElements((old) => {
-        return old.map((item) => {
-          if (item.token === taskNodeInfo.id && item.type === taskNodeInfo.type) {
-            return { ...item, renderNum: item.renderNum + 1 }
-          }
-          return item
+      if (info.type === 'push_task') {
+        activeLeafTasks.current.add(taskNodeInfo.id)
+        setElements((old) => [
+          ...old,
+          { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'task' },
+        ])
+      } else if (info.type === 'pop_task') {
+        // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
+        activeLeafTasks.current.delete(info.task.task_uuid)
+        if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
+        taskNodeInfo.data.status = info.task.task_status
+        setElements((old) => {
+          return old.map((item) => {
+            if (item.token === taskNodeInfo!.id && item.type === taskNodeInfo!.type) {
+              return { ...item, renderNum: item.renderNum + 1 }
+            }
+            return item
+          })
         })
-      })
-    } catch (error) {}
+      }
+    } catch {}
   })
 
   /** 更新任务树指定任务节点的状态 */
@@ -158,17 +152,20 @@ function useTaskChat(params?: UseTaskChatParams) {
   })
   // #endregion
 
-  // #region review事件转换成UI处理逻辑
+  // #region review数据-hook缓存数据
   const review = useRef<AIChatQSData>()
-  /** 记录plan_review补充信息的唯一ID */
-  const currentPlansId = useRef<string>('')
+  const handleGetReview = useMemoizedFn(() => {
+    return review.current
+  })
+  const handleSetReview = useMemoizedFn((newReview: AIChatQSData | undefined) => {
+    review.current = cloneDeep(newReview)
+  })
   const handleResetReview = useMemoizedFn(() => {
     review.current = undefined
-    currentPlansId.current = ''
   })
 
   // 将 review 数据处理成需要展示的UI数据
-  const handleRviewDataToUI = useMemoizedFn((reviewInfo: AIChatQSData) => {
+  const handleReviewDataToUI = useMemoizedFn((reviewInfo: AIChatQSData) => {
     if (reviewInfo.type === AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE && reviewInfo.data.optionValue === 'continue') {
       // plan_review, 选择是continue选项, 则进行UI任务树的生成
       const tasks = reviewInfo.data
@@ -180,353 +177,58 @@ function useTaskChat(params?: UseTaskChatParams) {
     }
   })
 
-  /** plan_review */
-  const handlePlanReview = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequire
-
-      if (!data?.id || !data?.plans || !data?.plans?.root_task || !data?.selectors || !data?.selectors?.length) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据异常: id:${data?.id || '-'}; selectors:${JSON.stringify(data?.selectors || '-')}; plans:${
-              !!data?.plans?.root_task ? 'valid' : 'invalid'
-            } data`,
-          ),
-        )
-        return
-      }
-
-      const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
-      const chatData: AIChatQSData = {
-        ...genBaseAIChatData(res),
-        chatType: 'task',
-        id: data.id,
-        type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
-        data: {
-          ...cloneDeep(data),
-          selected: isAuto ? JSON.stringify({ suggestion: 'continue' }) : undefined,
-          optionValue: isAuto ? 'continue' : undefined,
-        },
-      }
-      review.current = isAuto ? undefined : chatData
-      if (isAuto) {
-        setContentMap(chatData.id, cloneDeep(chatData))
-        setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }])
-        handleRviewDataToUI(chatData)
-      } else {
-        onReview && onReview(cloneDeep(chatData))
-      }
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-  /** plan_review 的补充数据 */
-  const handlePlanReviewExtra = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      if (!review.current || review.current.type !== AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
-        handlePushLog(genErrorLogData(res.Timestamp, `${res.Type}数据异常: 未找到对应plan_review_require数据`))
-        return
-      }
-
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequireExtra
-      if (
-        !data?.plans_id ||
-        !data?.index ||
-        !data?.keywords?.length ||
-        (currentPlansId.current && currentPlansId.current !== data.plans_id)
-      ) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据异常: plans_id:${data?.plans_id || '-'};index:${
-              data?.index || '-'
-            };keywords:${JSON.stringify(data?.keywords || '-')}`,
-          ),
-        )
-        return
-      }
-
-      if (!currentPlansId.current) currentPlansId.current = data.plans_id
-      const reviewInfo = review.current.data
-      if (!reviewInfo.taskExtra) reviewInfo.taskExtra = new Map()
-      reviewInfo.taskExtra.set(data.index, data)
-
-      const isAuto = isAutoExecuteReviewContinue({ getFunc: getRequest })
-      if (!isAuto && onReviewExtra) onReviewExtra(cloneDeep(data))
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-  // tool_review
-  const handleToolReview = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ToolUseReviewRequire
-      if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据异常: id:${data?.id || '-'}; selectors:${JSON.stringify(data?.selectors || '-')}`,
-          ),
-        )
-        return
-      }
-
-      const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
-      const chatData: AIChatQSData = {
-        ...genBaseAIChatData(res),
-        chatType: 'task',
-        id: data.id,
-        type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
-        data: {
-          ...cloneDeep(data),
-          selected: isAuto ? JSON.stringify({ suggestion: 'continue' }) : undefined,
-          optionValue: isAuto ? 'continue' : undefined,
-        },
-      }
-      review.current = isAuto ? undefined : chatData
-      if (isAuto) {
-        setContentMap(chatData.id, cloneDeep(chatData))
-        setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }])
-      } else {
-        onReview && onReview(cloneDeep(chatData))
-      }
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-  // task_review
-  const handleTaskReview = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TaskReviewRequire
-      if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据异常: id:${data?.id || '-'}; selectors:${JSON.stringify(data?.selectors || '-')}`,
-          ),
-        )
-        return
-      }
-
-      const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
-      const chatData: AIChatQSData = {
-        ...genBaseAIChatData(res),
-        chatType: 'task',
-        id: data.id,
-        type: AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
-        data: {
-          ...cloneDeep(data),
-          selected: isAuto ? JSON.stringify({ suggestion: 'continue' }) : undefined,
-          optionValue: isAuto ? 'continue' : undefined,
-        },
-      }
-      review.current = isAuto ? undefined : chatData
-      if (isAuto) {
-        setContentMap(chatData.id, cloneDeep(chatData))
-        setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }])
-      } else {
-        onReview && onReview(cloneDeep(chatData))
-      }
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-
-  // AI人机交互的review事件处理(require_user_interactive)
-  const handleUserRequireReview = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewRequire
-      if (!data?.id) {
-        handlePushLog(genErrorLogData(res.Timestamp, `${res.Type}数据异常: id:${data?.id || '-'}`))
-        return
-      }
-
-      const chatData: AIChatQSData = {
-        ...genBaseAIChatData(res),
-        chatType: 'task',
-        id: data.id,
-        type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
-        data: cloneDeep(data),
-      }
-      review.current = chatData
-      onReview && onReview(cloneDeep(chatData))
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-
-  // 处理 tool_review和forge_view 的 ai 判断得分事件
-  const handleReviewJudgement = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const score = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewJudgement
-
-      if (!score?.interactive_id) {
-        handlePushLog(
-          genErrorLogData(res.Timestamp, `${res.Type}数据异常: interactive_id:${score?.interactive_id || '-'}`),
-        )
-        return
-      }
-      if (
-        !review.current ||
-        review.current.type !== AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE ||
-        review.current.data.id !== score.interactive_id
-      ) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据异常(interactive_id:${score?.interactive_id || '-'})未找到对应review`,
-          ),
-        )
-        return
-      }
-
-      score.levelLabel = AIReviewJudgeLevelMap[score?.level || '']?.label || undefined
-      const info = review.current.data
-      if (!info.aiReview || (info.aiReview && typeof info.aiReview.seconds === 'undefined')) {
-        // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
-        info.aiReview = cloneDeep(score)
-        review.current.data = cloneDeep(info)
-      }
-      const isAuto = isAutoExecuteReviewContinue({ getFunc: getRequest })
-      if (!isAuto && onReview) onReview(cloneDeep(review.current))
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-
-  // 释放当前review信息
-  const handleReviewRelease = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      if (!review.current) return
-
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReviewRelease
-      if (!data?.id) {
-        handlePushLog(genErrorLogData(res.Timestamp, `${res.Type}数据异常: id:${data?.id || '-'}`))
-        return
-      }
-
-      const info = cloneDeep(review.current.data) as AIReviewType
-      if (info?.id !== data.id) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据(id:${data?.id || '-'})和当前展示review数据(id:${info?.id || '-'})不匹配`,
-          ),
-        )
-        return
-      }
-
-      info.selected = JSON.stringify({ suggestion: 'continue' })
-      info.optionValue = 'continue'
-      const chatData: AIChatQSData = {
-        ...review.current,
-        data: info as any,
-      }
-      handleResetReview()
-      handleRviewDataToUI(chatData)
-      setContentMap(chatData.id, chatData)
-      setElements((old) => {
-        return old.map((item) => {
-          if (item.token === chatData.id && item.type === chatData.type) {
-            return { ...item, renderNum: item.renderNum + 1 }
-          }
-          return item
-        })
-      })
-
-      const isAuto = isAutoExecuteReviewContinue({ type: chatData.type, getFunc: getRequest })
-      if (!isAuto && onReviewRelease) onReviewRelease(data.id)
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
   // #endregion
 
-  // 处理专属任务规划的特殊数据流
-  const handleSpecialData = useMemoizedFn((res: AIOutputEvent) => {
+  /** 处理数据方法 */
+  const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
     try {
-      let ipcContent = Uint8ArrayToString(res.Content) || ''
+      let funcKey = res.Type
+      if (res.Type === 'structured' && res.NodeId === 'stream-finished') {
+        // stream数据结束标识
+        funcKey = res.NodeId
+      } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
+        funcKey = res.Type
+      }
+      const handleFunc = grpcAIMessageHandlers[funcKey || '']
+      if (handleFunc) {
+        handleFunc({
+          res,
+          info: { chatType: 'task' },
+          getRequest,
+          setElements,
+          getElements,
+          setContentMap,
+          getContentMap,
+          pushLog: handlePushLog,
+          review: {
+            handleGetReview,
+            handleSetReview,
+            onReview,
+            onReviewExtra,
+            handleReviewDataToUI,
+          },
+        })
+        return
+      }
+
+      const ipcContent = Uint8ArrayToString(res.Content) || ''
 
       if (res.Type === 'structured' && res.NodeId === 'system') {
         const data = JSON.parse(ipcContent) || ''
 
-        if (!!data && typeof data === 'object' && data?.type === 'push_task') {
+        if (data && typeof data === 'object' && data?.type === 'push_task') {
           const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-          handleTaskStartNode(res, info)
+          handleTaskNode(res)
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
         }
 
-        if (!!data && typeof data === 'object' && data?.type === 'pop_task') {
+        if (data && typeof data === 'object' && data?.type === 'pop_task') {
           // 结束任务 & 请求更新任务树最新状态数据
-          const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-          handleTaskEndNode(info)
+          handleTaskNode(res)
           sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
         }
         return
-      }
-
-      if (res.Type === 'plan_review_require') {
-        handlePlanReview(res)
-        return
-      }
-      if (res.Type === 'plan_task_analysis') {
-        handlePlanReviewExtra(res)
-        return
-      }
-      if (res.Type === 'tool_use_review_require') {
-        handleToolReview(res)
-        return
-      }
-      if (res.Type === 'task_review_require') {
-        handleTaskReview(res)
-        return
-      }
-      if (res.Type === 'require_user_interactive') {
-        handleUserRequireReview(res)
-        return
-      }
-
-      if (['ai_review_start', 'ai_review_countdown', 'ai_review_end'].includes(res.Type)) {
-        handleReviewJudgement(res)
-        return
-      }
-
-      if (res.Type === 'review_release') {
-        // review释放通知
-        handleReviewRelease(res)
-        return
-      }
-
-      if (res.Type === 'plan') {
+      } else if (res.Type === 'plan') {
         // 更新正在执行的任务树
         const tasks = JSON.parse(ipcContent) as { root_task: AIAgentGrpcApi.PlanTask }
         if (has(tasks, 'root_task')) {
@@ -535,7 +237,6 @@ function useTaskChat(params?: UseTaskChatParams) {
         } else {
           setPlan(cloneDeep(DefaultCurrentExecTaskTree))
         }
-
         return
       }
 
@@ -549,35 +250,9 @@ function useTaskChat(params?: UseTaskChatParams) {
     }
   })
 
-  const chatContentEvent = useChatContent({
-    chatType: 'task',
-    getContentMap,
-    setContentMap,
-    deleteContentMap,
-    setElements,
-    getElements,
-    pushLog: handlePushLog,
-    handleUnkData: handleSpecialData,
-  })
-  // #endregion
-
-  /** 处理数据方法 */
-  const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      chatContentEvent.handleSetData(res)
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-
   const handleResetData = useMemoizedFn(() => {
     handleResetPlanTree()
     handleResetActiveLeafTasks()
-    handleResetReview()
-    chatContentEvent.handleResetData()
     setElements([])
   })
 
@@ -595,7 +270,7 @@ function useTaskChat(params?: UseTaskChatParams) {
       ;(chatData.data as AIReviewType).optionValue = optionValue
 
       handleResetReview()
-      handleRviewDataToUI(chatData)
+      handleReviewDataToUI(chatData)
       setContentMap(chatData.id, chatData)
       setElements((old) => old.concat({ token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }))
 
@@ -642,6 +317,8 @@ function useTaskChat(params?: UseTaskChatParams) {
       handleSend,
       handleCloseGrpc,
       handlePlanExecEnd,
+      getContentMap,
+      setContentMap,
       setElements: setElements,
       getElements: getElements,
       handleUserManualIntervention,

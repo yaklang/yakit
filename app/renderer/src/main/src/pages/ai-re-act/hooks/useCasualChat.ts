@@ -1,21 +1,26 @@
+import type {
+  AIChatLogData,
+  handleSendFunc,
+  UseCasualChatEvents,
+  UseCasualChatParams,
+  UseCasualChatState,
+} from './type'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem } from './aiRender'
+import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import { AITaskStatus } from './grpcApi'
 import { useRef } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
-import { genBaseAIChatData, genErrorLogData, handleGrpcDataPushLog, isAutoExecuteReviewContinue } from './utils'
-import { v4 as uuidv4 } from 'uuid'
-import { AIChatLogData, handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState } from './type'
-import { AIReviewJudgeLevelMap } from './defaultConstant'
+import { genBaseAIChatData, handleGrpcDataPushLog } from './utils'
 import { yakitNotify } from '@/utils/notification'
-import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AIChatQSData, AIChatQSDataTypeEnum, AIReviewType, ReActChatRenderItem } from './aiRender'
+import { AIChatQSDataTypeEnum } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import useChatContent from './useChatContent'
-import moment from 'moment'
+import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
+import { Uint8ArrayToString } from '@/utils/str'
 
-function useCasualChat(params?: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
+function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
-function useCasualChat(params?: UseCasualChatParams) {
+function useCasualChat(params: UseCasualChatParams) {
   const { pushLog, getChatDataStore, getRequest, onReviewRelease } = params || {}
 
   const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
@@ -33,267 +38,95 @@ function useCasualChat(params?: UseCasualChatParams) {
     const contentMap = getChatDataStore?.()?.casualChat?.contents
     contentMap && contentMap.set(mapKey, value)
   })
-  const deleteContentMap = useMemoizedFn((mapKey: string) => {
-    const contentMap = getChatDataStore?.()?.casualChat?.contents
-    contentMap && contentMap.delete(mapKey)
+
+  /**
+   * 任务节点开始执行, 生成UI展示的信息
+   * 历史数据里 先给pop_task，后给push_task，所以pop_task是生成数据的主要依据
+   * 自由对话里该类型只有历史数据
+   */
+  const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
+    try {
+      let ipcContent = Uint8ArrayToString(res.Content) || ''
+      const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
+      if (!info.task.task_uuid || info.task.index === '1') return
+      if (!res.IsSync) return
+
+      let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
+      if (!taskNodeInfo) {
+        taskNodeInfo = {
+          ...genBaseAIChatData(res),
+          id: info.task.task_uuid,
+          chatType: 'reAct',
+          type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
+          data: {
+            taskIndex: info.task.index,
+            taskName: info.task.name,
+            goal: info.task.goal,
+            status: info.task.task_status || AITaskStatus.error,
+          },
+        }
+        setContentMap(taskNodeInfo.id, taskNodeInfo)
+      }
+
+      if (info.type === 'push_task') {
+        if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
+        setElements((old) => [
+          { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'reAct' },
+          ...old,
+        ])
+      }
+    } catch {}
   })
 
-  // #region review事件转换成UI处理逻辑
+  // #region review数据-hook缓存数据
   const review = useRef<AIChatQSData>()
-
-  // tool_review
-  const handleToolReview = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ToolUseReviewRequire
-      if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据异常: id:${data?.id || '-'}; selectors:${JSON.stringify(data?.selectors || '-')}`,
-          ),
-        )
-        return
-      }
-
-      const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
-      const chatData: AIChatQSData = {
-        ...genBaseAIChatData(res),
-        chatType: 'reAct',
-        id: data.id,
-        type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
-        data: {
-          ...cloneDeep(data),
-          selected: isAuto ? JSON.stringify({ suggestion: 'continue' }) : undefined,
-          optionValue: isAuto ? 'continue' : undefined,
-        },
-      }
-      review.current = isAuto ? undefined : chatData
-      setContentMap(chatData.id, cloneDeep(chatData))
-      setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct' }])
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
+  const handleGetReview = useMemoizedFn(() => {
+    return review.current
   })
-  // forge_review 事件处理
-  const handleExecForgeReview = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ExecForgeReview
-      if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据异常: id:${data?.id || '-'}; selectors:${JSON.stringify(data?.selectors || '-')}`,
-          ),
-        )
-        return
-      }
-
-      const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
-      const chatData: AIChatQSData = {
-        ...genBaseAIChatData(res),
-        chatType: 'reAct',
-        id: data.id,
-        type: AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE,
-        data: {
-          ...cloneDeep(data),
-          selected: isAuto ? JSON.stringify({ suggestion: 'continue' }) : undefined,
-          optionValue: isAuto ? 'continue' : undefined,
-        },
-      }
-      review.current = isAuto ? undefined : chatData
-      setContentMap(chatData.id, cloneDeep(chatData))
-      setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct' }])
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-  // AI人机交互的review事件处理
-  const handleUserRequireReview = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewRequire
-      if (!data?.id) {
-        handlePushLog(genErrorLogData(res.Timestamp, `${res.Type}数据异常: id:${data?.id || '-'}`))
-        return
-      }
-
-      review.current = {
-        ...genBaseAIChatData(res),
-        chatType: 'reAct',
-        id: data.id,
-        type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
-        data: cloneDeep(data),
-      }
-      setContentMap(review.current.id, cloneDeep(review.current))
-      setElements((old) => {
-        const newArr = [...old]
-        if (!review.current) return newArr
-        newArr.push({ token: review.current.id, type: review.current.type, renderNum: 1, chatType: 'reAct' })
-        return newArr
-      })
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-
-  // 处理 tool_review和forge_view 的 ai 判断得分事件
-  const handleReviewJudgement = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const score = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewJudgement
-      if (!score?.interactive_id) {
-        handlePushLog(
-          genErrorLogData(res.Timestamp, `${res.Type}数据异常: interactive_id:${score?.interactive_id || '-'}`),
-        )
-        return
-      }
-
-      const { interactive_id } = score
-      score.levelLabel = AIReviewJudgeLevelMap[score?.level || '']?.label || undefined
-      if (
-        review.current &&
-        (review.current.type === AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE ||
-          review.current.type === AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE)
-      ) {
-        if (
-          !review.current.data.aiReview ||
-          (review.current.data.aiReview && typeof review.current.data.aiReview.seconds === 'undefined')
-        ) {
-          review.current.data.aiReview = cloneDeep(score)
-        }
-      }
-
-      const chatData = getContentMap(interactive_id)
-      if (
-        !!chatData &&
-        (chatData.type === AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE ||
-          chatData.type === AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE)
-      ) {
-        if (
-          !chatData.data.aiReview ||
-          (chatData.data.aiReview && typeof chatData.data.aiReview.seconds === 'undefined')
-        ) {
-          // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
-          chatData.data.aiReview = cloneDeep(score)
-          setElements((old) => {
-            return old.map((item) => {
-              if (item.token === chatData.id && item.type === chatData.type) {
-                return { ...item, renderNum: item.renderNum + 1 }
-              }
-              return item
-            })
-          })
-        }
-      } else {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据(interactive_id:${score?.interactive_id || '-'})未找到对应review`,
-          ),
-        )
-      }
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-
-  // 释放当前review信息
-  const handleReviewRelease = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      if (!review.current) return
-
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReviewRelease
-      if (!data?.id) {
-        handlePushLog(genErrorLogData(res.Timestamp, `${res.Type}数据异常: id:${data?.id || '-'}`))
-        return
-      }
-
-      const info = cloneDeep(review.current.data) as AIReviewType
-      if (info?.id !== data.id) {
-        handlePushLog(
-          genErrorLogData(
-            res.Timestamp,
-            `${res.Type}数据(id:${data?.id || '-'})和当前展示review数据(id:${info?.id || '-'})不匹配`,
-          ),
-        )
-        return
-      }
-
-      info.selected = JSON.stringify({ suggestion: 'continue' })
-      info.optionValue = 'continue'
-      const chatData: AIChatQSData = {
-        ...review.current,
-        data: info as any,
-      }
-      review.current = undefined
-      setContentMap(chatData.id, cloneDeep(chatData))
-      setElements((old) => {
-        return old.map((item) => {
-          if (item.token === chatData.id && item.type === chatData.type) {
-            return { ...item, renderNum: item.renderNum + 1 }
-          }
-          return item
-        })
-      })
-
-      const isAuto = isAutoExecuteReviewContinue({ type: chatData.type, getFunc: getRequest })
-      if (!isAuto) {
-        onReviewRelease && onReviewRelease(data.id)
-      }
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
+  const handleSetReview = useMemoizedFn((newReview: AIChatQSData | undefined) => {
+    review.current = cloneDeep(newReview)
   })
   // #endregion
 
-  // 处理专属自由对话的特殊数据流
-  const handleSpecialData = useMemoizedFn((res: AIOutputEvent) => {
+  // 处理数据方法
+  const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
     try {
-      if (res.Type === 'tool_use_review_require') {
-        handleToolReview(res)
-        return
+      let funcKey = res.Type
+      if (res.Type === 'structured' && res.NodeId === 'stream-finished') {
+        // stream数据结束标识
+        funcKey = res.NodeId
+      } else if (res.Type === 'structured' && res.NodeId === 'react_task_dequeue') {
+        // 用户问题开始执行标识
+        funcKey = res.NodeId
+      } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
+        funcKey = res.Type
       }
-      if (res.Type === 'require_user_interactive') {
-        handleUserRequireReview(res)
-        return
-      }
-      if (res.Type === 'exec_aiforge_review_require') {
-        handleExecForgeReview(res)
+      const handleFunc = grpcAIMessageHandlers[funcKey || '']
+      if (handleFunc) {
+        handleFunc({
+          res,
+          info: { chatType: 'reAct' },
+          getRequest,
+          setElements,
+          getElements,
+          setContentMap,
+          getContentMap,
+          pushLog: handlePushLog,
+          review: {
+            handleGetReview,
+            handleSetReview,
+            onReviewRelease,
+          },
+        })
         return
       }
 
-      if (['ai_review_start', 'ai_review_countdown', 'ai_review_end'].includes(res.Type)) {
-        handleReviewJudgement(res)
-        return
-      }
-
-      if (res.Type === 'review_release') {
-        // review释放通知
-        handleReviewRelease(res)
-        return
-      }
-
-      if (res.Type === 'success_react_task') {
-        // ReAct任务成功结束标志
-        // 暂时过滤不展示到UI上
+      if (res.Type === 'structured' && res.NodeId === 'system') {
+        const ipcContent = Uint8ArrayToString(res.Content) || ''
+        const data = JSON.parse(ipcContent) || ''
+        if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
+          handleTaskNode(res)
+        }
         return
       }
 
@@ -307,34 +140,10 @@ function useCasualChat(params?: UseCasualChatParams) {
     }
   })
 
-  const chatContentEvent = useChatContent({
-    chatType: 'reAct',
-    getContentMap,
-    setContentMap,
-    deleteContentMap,
-    setElements,
-    getElements,
-    pushLog: handlePushLog,
-    handleUnkData: handleSpecialData,
-  })
-  // #endregion
-
-  // 处理数据方法
-  const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      chatContentEvent.handleSetData(res)
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
-
   // 用户问题或review的主动操作
-  const handleSend: handleSendFunc = useMemoizedFn(({ request, optionValue, extraValue, cb }) => {
+  const handleSend: handleSendFunc = useMemoizedFn(({ request, optionValue, cb }) => {
     try {
-      const { IsInteractiveMessage, InteractiveId, IsFreeInput, FreeInput } = request
+      const { IsInteractiveMessage, InteractiveId } = request
       if (IsInteractiveMessage && InteractiveId) {
         if (!review.current || (review.current.data as AIReviewType)?.id !== InteractiveId) {
           yakitNotify('error', '未获取到 review 信息, 操作无效')
@@ -356,31 +165,12 @@ function useCasualChat(params?: UseCasualChatParams) {
           })
         })
       }
-
-      if (IsFreeInput && FreeInput && !cb) {
-        // 用户问题
-        const chatData: AIChatQSData = {
-          id: uuidv4(),
-          chatType: 'reAct',
-          type: AIChatQSDataTypeEnum.QUESTION,
-          Timestamp: moment().unix(),
-          data: { qs: FreeInput || '', setting: request },
-          AIService: '',
-          AIModelName: '',
-          extraValue: extraValue,
-        }
-
-        setContentMap(chatData.id, chatData)
-        setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'reAct' }])
-      }
-
       cb && cb()
     } catch (error) {}
   })
 
   const handleResetData = useMemoizedFn(() => {
     review.current = undefined
-    chatContentEvent.handleResetData()
     setElements([])
   })
 
@@ -403,6 +193,8 @@ function useCasualChat(params?: UseCasualChatParams) {
       handleSetData,
       handleResetData,
       handleSend,
+      getContentMap,
+      setContentMap,
       setElements: setElements,
       getElements: getElements,
       handleUserManualIntervention,
