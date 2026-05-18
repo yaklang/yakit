@@ -21,6 +21,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineChevrondoubleleftIcon,
   OutlineChevrondoublerightIcon,
+  OutlineDownloadIcon,
   OutlineImportIcon,
   OutlinePauseIcon,
   OutlinePlayIcon,
@@ -37,6 +38,7 @@ import useDispatcher from '../hooks/useDispatcher'
 import { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerType'
 import { IMonacoEditor } from '@/utils/editors'
 import {
+  getCodeByPath,
   getDefaultActiveFile,
   getOpenFileInfo,
   getPathParent,
@@ -53,7 +55,8 @@ import {
   updateAreaFileInfo,
 } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
-import { failed, warn, success } from '@/utils/notification'
+import { failed, warn, success, yakitNotify } from '@/utils/notification'
+import { yakitDialog } from '@/services/electronBridge'
 import emiter from '@/utils/eventBus/eventBus'
 import { Divider, Result } from 'antd'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -72,19 +75,21 @@ import { openFolder } from '../RunnerFileTree/RunnerFileTree'
 import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isIRify } from '@/utils/envfile'
 
 const { ipcRenderer } = window.require('electron')
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   const { tabsId, wrapperClassName } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
-  const { areaInfo, activeFile, runnerTabsId, fileTree } = useStore()
+  const { areaInfo, activeFile, runnerTabsId } = useStore()
   const { setActiveFile, setAreaInfo, setRunnerTabsId } = useDispatcher()
   const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
   const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
 
   const [modalInfo, setModalInfo] = useState<FileDetailInfo>()
   const [isShowModal, setShowModal] = useState<boolean>(false)
+  const [downloadLoading, setDownloadLoading] = useState(false)
 
   useEffect(() => {
     let direction: SplitDirectionProps[] = []
@@ -116,6 +121,9 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     let val: boolean = false
     tabsList.some((item) => {
       if (item.isActive && item.language === 'yak') {
+        val = true
+      }
+      if (isIRify() && item.isActive && item.language === 'markdown') {
         val = true
       }
       return item.isActive
@@ -620,6 +628,36 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
   })
 
+  const onDownloadReport = useMemoizedFn(async () => {
+    let code = activeFile?.code
+    if (!code && activeFile?.path) {
+      code = await getCodeByPath(activeFile?.path)
+    }
+    if (!code?.trim()) {
+      yakitNotify('error', '报告内容为空，无法导出')
+      return
+    }
+    const baseName = (activeFile?.name || 'report').replace(/\.(md|markdown)$/i, '') || 'report'
+    setDownloadLoading(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      const saveRes = await yakitDialog.showSaveDialog(`${baseName}.pdf`)
+      if (saveRes.canceled || !saveRes.filePath) return
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
+      await ipcRenderer.invoke('PrintMarkdownPdfFromTemplate', {
+        outputPath: saveRes.filePath,
+        code,
+        name: activeFile?.name,
+        theme,
+      })
+      success('PDF 导出成功')
+    } catch (e) {
+      failed(`PDF 导出失败: ${e}`)
+    } finally {
+      setDownloadLoading(false)
+    }
+  })
+
   const extraDom = useMemoizedFn(() => {
     return (
       <div className={styles['extra-box']}>
@@ -627,24 +665,34 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         <>
           {splitDirection.length > 0 && isShowExtra && <Divider type={'vertical'} style={{ margin: '4px 0px 0px' }} />}
         </>
-        {isShowExtra && (
-          <>
-            {runnerTabsId === tabsId ? (
-              <YakitButton colors="danger" icon={<OutlinePauseIcon />} onClick={onStopYak}>
-                {t('YakitButton.stop')}
-              </YakitButton>
-            ) : (
-              <YakitButton
-                icon={<OutlinePlayIcon />}
-                loading={runnerTabsId === tabsId}
-                disabled={!!runnerTabsId && runnerTabsId !== tabsId}
-                onClick={onRunYak}
-              >
-                {t('YakitButton.execute')}
-              </YakitButton>
-            )}
-          </>
-        )}
+        {isShowExtra &&
+          (activeFile?.language === 'markdown' ? (
+            <YakitButton
+              onClick={onDownloadReport}
+              loading={downloadLoading}
+              disabled={downloadLoading}
+              icon={<OutlineDownloadIcon />}
+            >
+              下载报告
+            </YakitButton>
+          ) : (
+            <>
+              {runnerTabsId === tabsId ? (
+                <YakitButton colors="danger" icon={<OutlinePauseIcon />} onClick={onStopYak}>
+                  {t('YakitButton.stop')}
+                </YakitButton>
+              ) : (
+                <YakitButton
+                  icon={<OutlinePlayIcon />}
+                  loading={runnerTabsId === tabsId}
+                  disabled={!!runnerTabsId && runnerTabsId !== tabsId}
+                  onClick={onRunYak}
+                >
+                  {t('YakitButton.execute')}
+                </YakitButton>
+              )}
+            </>
+          ))}
       </div>
     )
   })

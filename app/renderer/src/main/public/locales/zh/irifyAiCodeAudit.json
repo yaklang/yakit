@@ -1,0 +1,7 @@
+{
+  "welcomeTitle": "IRify AI 代码审计",
+  "welcomeHint": "使用右侧与 AI 协作，进行安全审查与代码问答。打开本地文件夹即可开始。",
+  "quickStart": "快速开始",
+  "openLocalFolder": "打开本地文件夹",
+  "recentlyOpened": "最近打开"
+}
