@@ -623,6 +623,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     }
   })
 
+  /** 建立grpc流后, 延迟50ms定时执行一次的方法, 如果快速切换会话时, 执行取消上次定时器 */
+  const startTimeout = useRef<NodeJS.Timeout | null>(null)
   const onStart = useMemoizedFn(async (args: AIChatIPCStartParams, cb?: () => void) => {
     const { token, params } = args
 
@@ -1042,7 +1044,11 @@ function useChatIPC(params?: UseChatIPCParams) {
     // console.log('start-ai-re-act', token, params)
 
     ipcRenderer.invoke('start-ai-re-act', token, params)
-    setTimeout(() => {
+    if (startTimeout.current) {
+      clearTimeout(startTimeout.current)
+      startTimeout.current = null
+    }
+    startTimeout.current = setTimeout(() => {
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
       cb?.()
@@ -1101,7 +1107,7 @@ function useChatIPC(params?: UseChatIPCParams) {
           },
         })
       }
-    }, 200)
+    }, 40)
   })
 
   const [switchLoading, setSwitchLoading] = useState(false)
@@ -1123,7 +1129,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     if (execute) {
       endAfterSession.current = session || 'clear'
       // 这里使用chatID是因为session是替换chatID的新值，所以需要先取消旧session的会话
-      onClose(chatID.current)
+      setTimeout(() => {
+        onClose(chatID.current)
+      }, 50)
     } else {
       endAfterSession.current = ''
       // 直接切换数据逻辑

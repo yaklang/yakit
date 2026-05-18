@@ -1188,6 +1188,8 @@ const handleYakRisk: AIMessageHandler = (request) => {
 // #endregion
 
 // #region review相关的处理逻辑
+/** 保存那些review_release先出现的历史review数据的id */
+let reviewReleaseID: Record<string, AIAgentGrpcApi.ReviewRelease> = {}
 /** 记录plan_review补充信息的唯一ID */
 let currentPlanReviewId = ''
 
@@ -1223,7 +1225,19 @@ const handlePlanReview: AIMessageHandler = (request) => {
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
+    const target = reviewReleaseID[data.id]
+    if (target) {
+      chatData.data.selected = JSON.stringify(target.params)
+      chatData.data.optionValue = target.params?.suggestion || 'continue'
+    }
     setContentMap(chatData.id, cloneDeep(chatData))
+    if (target) {
+      handleUpdateUISingleState(
+        res.IsSync,
+        { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
+        request.setElements,
+      )
+    }
     return
   }
 
@@ -1328,7 +1342,19 @@ const handleTaskReview: AIMessageHandler = (request) => {
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
+    const target = reviewReleaseID[data.id]
+    if (target) {
+      chatData.data.selected = JSON.stringify(target.params)
+      chatData.data.optionValue = target.params?.suggestion || 'continue'
+    }
     setContentMap(chatData.id, cloneDeep(chatData))
+    if (target) {
+      handleUpdateUISingleState(
+        res.IsSync,
+        { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
+        request.setElements,
+      )
+    }
     return
   }
 
@@ -1389,7 +1415,19 @@ const handleToolReview: AIMessageHandler = (request) => {
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
+    const target = reviewReleaseID[data.id]
+    if (target) {
+      chatData.data.selected = JSON.stringify(target.params)
+      chatData.data.optionValue = target.params?.suggestion || 'continue'
+    }
     setContentMap(chatData.id, cloneDeep(chatData))
+    if (target) {
+      handleUpdateUISingleState(
+        res.IsSync,
+        { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
+        request.setElements,
+      )
+    }
     return
   }
 
@@ -1447,7 +1485,19 @@ const handleUserInteractive: AIMessageHandler = (request) => {
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
+    const target = reviewReleaseID[data.id]
+    if (target) {
+      chatData.data.selected = JSON.stringify(target.params)
+      chatData.data.optionValue = target.params?.suggestion || 'continue'
+    }
     setContentMap(chatData.id, cloneDeep(chatData))
+    if (target) {
+      handleUpdateUISingleState(
+        res.IsSync,
+        { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
+        request.setElements,
+      )
+    }
     return
   }
 
@@ -1495,7 +1545,19 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
+    const target = reviewReleaseID[data.id]
+    if (target) {
+      chatData.data.selected = JSON.stringify(target.params)
+      chatData.data.optionValue = target.params?.suggestion || 'continue'
+    }
     setContentMap(chatData.id, cloneDeep(chatData))
+    if (target) {
+      handleUpdateUISingleState(
+        res.IsSync,
+        { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
+        request.setElements,
+      )
+    }
     return
   }
 
@@ -1646,15 +1708,18 @@ const handleReviewRelease: AIMessageHandler = (request) => {
 
   if (res.IsSync) {
     const reviewDetail = getContentMap(data.id)
-    if (!reviewDetail) return
+    if (!reviewDetail) {
+      reviewReleaseID[data.id] = data
+      return
+    }
     switch (reviewDetail.type) {
       case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
       case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
-        reviewDetail.data.selected = JSON.stringify({ suggestion: 'continue' })
-        reviewDetail.data.optionValue = 'continue'
+        reviewDetail.data.selected = JSON.stringify(data.params)
+        reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
         handleUpdateUISingleState(
           res.IsSync,
           { mapKey: reviewDetail.id, type: reviewDetail.type, chatType: reviewDetail.chatType },
@@ -1706,6 +1771,7 @@ const handleReviewRelease: AIMessageHandler = (request) => {
 /** 切换session会话后的重置逻辑 */
 export const handleResetForNewSession: () => void = () => {
   ToolResultForStreamError.clear()
+  reviewReleaseID = {}
   currentPlanReviewId = ''
 }
 
