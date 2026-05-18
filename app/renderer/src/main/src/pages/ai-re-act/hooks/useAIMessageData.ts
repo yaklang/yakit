@@ -216,6 +216,8 @@ const useAIMessageData = ({
 
     hasMoreTimeline.current = true
     setTimelinesLoading(false)
+
+    isInitGrpc.current = false
   }
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(

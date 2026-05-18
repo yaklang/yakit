@@ -10,6 +10,7 @@ import { AITaskInfoProps, AIChatQSDataType, ReActChatRenderItem } from './aiRend
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIChatLogData, AIChatLogToInfo } from './type'
 import { DialogueRecord } from '@/pages/ai-agent/store/type'
+import { JSONParseLog } from '@/utils/tool'
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -139,7 +140,7 @@ export const indexedDBDataToReActChatRenderItem = (
         token: item.token,
         type: item.type as AIChatQSDataType,
         isGroup: true as const,
-        children: JSON.parse(item.children || '[]'),
+        children: JSONParseLog(item.children || '[]'),
         renderNum: 0,
         isCached: true,
       }
@@ -150,7 +151,7 @@ export const indexedDBDataToReActChatRenderItem = (
       type: item.type as AIChatQSDataType,
       isGroup: false,
       renderNum: 0,
-      children: JSON.parse(item.children || '[]'),
+      children: JSONParseLog(item.children || '[]'),
       isCached: true,
     }
   })
@@ -160,7 +161,7 @@ export function getTreeDataIds(tree: DialogueRecord[]): string[] {
     let children: DialogueRecord[] = []
     if (item.children) {
       try {
-        children = JSON.parse(item.children)
+        children = JSONParseLog(item.children)
       } catch {
         children = []
       }
