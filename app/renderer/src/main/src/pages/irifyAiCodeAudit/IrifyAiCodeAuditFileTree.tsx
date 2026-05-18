@@ -127,8 +127,6 @@ export const openFolder = () => {
   }
 }
 
-const { ipcRenderer } = window.require('electron')
-
 export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const { addFileTab } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])

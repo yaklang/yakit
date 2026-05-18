@@ -21,6 +21,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineChevrondoubleleftIcon,
   OutlineChevrondoublerightIcon,
+  OutlineDownloadIcon,
   OutlineImportIcon,
   OutlinePauseIcon,
   OutlinePlayIcon,
@@ -72,13 +73,14 @@ import { openFolder } from '../RunnerFileTree/RunnerFileTree'
 import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isIRify } from '@/utils/envfile'
 
 const { ipcRenderer } = window.require('electron')
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   const { tabsId, wrapperClassName } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
-  const { areaInfo, activeFile, runnerTabsId, fileTree } = useStore()
+  const { areaInfo, activeFile, runnerTabsId } = useStore()
   const { setActiveFile, setAreaInfo, setRunnerTabsId } = useDispatcher()
   const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
   const [splitDirection, setSplitDirection] = useState<SplitDirectionProps[]>([])
@@ -116,6 +118,9 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     let val: boolean = false
     tabsList.some((item) => {
       if (item.isActive && item.language === 'yak') {
+        val = true
+      }
+      if (isIRify() && item.isActive && item.language === 'markdown') {
         val = true
       }
       return item.isActive
@@ -620,6 +625,10 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
   })
 
+  const onDownloadReport = useMemoizedFn(() => {
+    console.log('下载PDF报告', activeFile)
+  })
+
   const extraDom = useMemoizedFn(() => {
     return (
       <div className={styles['extra-box']}>
@@ -627,24 +636,29 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         <>
           {splitDirection.length > 0 && isShowExtra && <Divider type={'vertical'} style={{ margin: '4px 0px 0px' }} />}
         </>
-        {isShowExtra && (
-          <>
-            {runnerTabsId === tabsId ? (
-              <YakitButton colors="danger" icon={<OutlinePauseIcon />} onClick={onStopYak}>
-                {t('YakitButton.stop')}
-              </YakitButton>
-            ) : (
-              <YakitButton
-                icon={<OutlinePlayIcon />}
-                loading={runnerTabsId === tabsId}
-                disabled={!!runnerTabsId && runnerTabsId !== tabsId}
-                onClick={onRunYak}
-              >
-                {t('YakitButton.execute')}
-              </YakitButton>
-            )}
-          </>
-        )}
+        {isShowExtra &&
+          (activeFile?.language === 'markdown' ? (
+            <YakitButton onClick={onDownloadReport} icon={<OutlineDownloadIcon />}>
+              下载报告
+            </YakitButton>
+          ) : (
+            <>
+              {runnerTabsId === tabsId ? (
+                <YakitButton colors="danger" icon={<OutlinePauseIcon />} onClick={onStopYak}>
+                  {t('YakitButton.stop')}
+                </YakitButton>
+              ) : (
+                <YakitButton
+                  icon={<OutlinePlayIcon />}
+                  loading={runnerTabsId === tabsId}
+                  disabled={!!runnerTabsId && runnerTabsId !== tabsId}
+                  onClick={onRunYak}
+                >
+                  {t('YakitButton.execute')}
+                </YakitButton>
+              )}
+            </>
+          ))}
       </div>
     )
   })

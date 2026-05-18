@@ -473,6 +473,15 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
     }
   })
 
+  const onOpenTemporaryFileFun = useMemoizedFn((data: any) => {
+    try {
+      const { name, code, icon, language } = JSON.parse(data)
+      addFileTab({ name, code, icon, language })
+    } catch (error) {
+      failed(`error: ${error}`)
+    }
+  })
+
   useEffect(() => {
     // 监听文件树打开
     emiter.on('onIrifyAiCodeAuditOpenFileTree', onOpenFileTreeFun)
@@ -484,12 +493,15 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
     emiter.on('onGetCodeByPathCache', onGetCodeByPathCacheFun)
     // 监听一级页面关闭事件
     emiter.on('onCloseYakRunner', onCloseYakRunnerFun)
+    // 打开临时文件
+    emiter.on('onOpenTemporaryFile', onOpenTemporaryFileFun)
     return () => {
       emiter.off('onIrifyAiCodeAuditOpenFileTree', onOpenFileTreeFun)
       emiter.off('onRefreshTree', onRefreshTreeFun)
       emiter.off('onOpenFileByPath', onOpenFileByPathFun)
       emiter.off('onGetCodeByPathCache', onGetCodeByPathCacheFun)
       emiter.off('onCloseYakRunner', onCloseYakRunnerFun)
+      emiter.off('onOpenTemporaryFile', onOpenTemporaryFileFun)
     }
   }, [])
 
@@ -645,19 +657,19 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   const unTitleCountRef = useRef<number>(1)
 
   const addFileTab = useThrottleFn(
-    (e?: any, params?: { name: string; code: string }) => {
+    (params?: { name?: string; code?: string; icon?: string; language?: string }) => {
       // 新建临时文件
       const scratchFile: FileDetailInfo = {
-        name: `Untitle-${unTitleCountRef.current}.yak`,
+        name: params?.name || `Untitle-${unTitleCountRef.current}.yak`,
         code: params?.code || '# input your yak code\nprintln(`Hello Yak World!`)',
-        icon: '_f_yak',
+        icon: params?.icon || '_f_yak',
         isActive: true,
         openTimestamp: moment().unix(),
         isPlainText: true,
         // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
-        path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
+        path: `${uuidv4()}-${params?.name || `Untitle-${unTitleCountRef.current}`}.${params?.language || 'yak'}`,
         parent: null,
-        language: 'yak',
+        language: params?.language || 'yak',
         isUnSave: true,
       }
       unTitleCountRef.current += 1
@@ -1019,13 +1031,6 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
     })
     return () => {
       ipcRenderer.removeAllListeners('client-yak-end')
-    }
-  }, [])
-
-  useEffect(() => {
-    ipcRenderer.on('fetch-send-to-yak-running', () => {})
-    return () => {
-      ipcRenderer.removeAllListeners('fetch-send-to-yak-running')
     }
   }, [])
 
