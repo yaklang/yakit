@@ -38,6 +38,7 @@ import useDispatcher from '../hooks/useDispatcher'
 import { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerType'
 import { IMonacoEditor } from '@/utils/editors'
 import {
+  getCodeByPath,
   getDefaultActiveFile,
   getOpenFileInfo,
   getPathParent,
@@ -54,7 +55,8 @@ import {
   updateAreaFileInfo,
 } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
-import { failed, warn, success } from '@/utils/notification'
+import { failed, warn, success, yakitNotify } from '@/utils/notification'
+import { yakitDialog } from '@/services/electronBridge'
 import emiter from '@/utils/eventBus/eventBus'
 import { Divider, Result } from 'antd'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
@@ -87,6 +89,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
 
   const [modalInfo, setModalInfo] = useState<FileDetailInfo>()
   const [isShowModal, setShowModal] = useState<boolean>(false)
+  const [downloadLoading, setDownloadLoading] = useState(false)
 
   useEffect(() => {
     let direction: SplitDirectionProps[] = []
@@ -625,8 +628,34 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
     })
   })
 
-  const onDownloadReport = useMemoizedFn(() => {
-    console.log('下载PDF报告', activeFile)
+  const onDownloadReport = useMemoizedFn(async () => {
+    let code = activeFile?.code
+    if (!code && activeFile?.path) {
+      code = await getCodeByPath(activeFile?.path)
+    }
+    if (!code?.trim()) {
+      yakitNotify('error', '报告内容为空，无法导出')
+      return
+    }
+    const baseName = (activeFile?.name || 'report').replace(/\.(md|markdown)$/i, '') || 'report'
+    setDownloadLoading(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      const saveRes = await yakitDialog.showSaveDialog(`${baseName}.pdf`)
+      if (saveRes.canceled || !saveRes.filePath) return
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
+      await ipcRenderer.invoke('PrintMarkdownPdfFromTemplate', {
+        outputPath: saveRes.filePath,
+        code,
+        name: activeFile?.name,
+        theme,
+      })
+      success('PDF 导出成功')
+    } catch (e) {
+      failed(`PDF 导出失败: ${e}`)
+    } finally {
+      setDownloadLoading(false)
+    }
   })
 
   const extraDom = useMemoizedFn(() => {
@@ -638,7 +667,12 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         </>
         {isShowExtra &&
           (activeFile?.language === 'markdown' ? (
-            <YakitButton onClick={onDownloadReport} icon={<OutlineDownloadIcon />}>
+            <YakitButton
+              onClick={onDownloadReport}
+              loading={downloadLoading}
+              disabled={downloadLoading}
+              icon={<OutlineDownloadIcon />}
+            >
               下载报告
             </YakitButton>
           ) : (
