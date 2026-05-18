@@ -10,6 +10,7 @@ export interface OpenFileDropdownItem {
 interface OpenFileDropdownProps {
   children: ReactNode
   cb?: (data: OpenFileDropdownItem) => void
+  onSelectImage: () => void
 }
 
 async function openFileOrFolder(properties: OpenDialogOptions['properties']): Promise<string | undefined> {
@@ -20,7 +21,7 @@ async function openFileOrFolder(properties: OpenDialogOptions['properties']): Pr
   if (!filePaths || filePaths.length === 0) return
   return filePaths[0].replace(/\\/g, '\\')
 }
-const OpenFileDropdown: FC<OpenFileDropdownProps> = ({ children, cb }) => {
+const OpenFileDropdown: FC<OpenFileDropdownProps> = ({ children, cb, onSelectImage }) => {
   const dropdownMenu = useMemo(() => {
     return {
       data: [
@@ -32,18 +33,30 @@ const OpenFileDropdown: FC<OpenFileDropdownProps> = ({ children, cb }) => {
           label: '打开文件夹',
           key: 'open-folder',
         },
+        {
+          label: '打开图片',
+          key: 'open-image',
+        },
       ],
       onClick: ({ key }: { key: string }) => {
-        const isFolder = key === 'open-folder'
-        openFileOrFolder(isFolder ? ['openDirectory'] : ['openFile'])
-          .then((path) => {
-            if (!path) return
-            cb?.({
-              path,
-              isFolder,
-            })
-          })
-          .catch(() => {})
+        switch (key) {
+          case 'open-image':
+            onSelectImage()
+            break
+
+          default:
+            const isFolder = key === 'open-folder'
+            openFileOrFolder(isFolder ? ['openDirectory'] : ['openFile'])
+              .then((path) => {
+                if (!path) return
+                cb?.({
+                  path,
+                  isFolder,
+                })
+              })
+              .catch(() => {})
+            break
+        }
       },
     }
   }, [])

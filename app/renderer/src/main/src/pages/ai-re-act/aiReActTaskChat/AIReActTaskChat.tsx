@@ -370,23 +370,6 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           >
             <YakitSwitch />
           </Form.Item>
-          <Form.Item
-            label={
-              <>
-                任务规划
-                <Tooltip
-                  overlayClassName={styles['form-info-icon-tooltip']}
-                  title={'开启后会进入Plan模式，进行任务规划和执行'}
-                >
-                  <OutlineInformationcircleIcon className={styles['info-icon']} />
-                </Tooltip>
-              </>
-            }
-            name="EnablePlan"
-            valuePropName="checked"
-          >
-            <YakitSwitch />
-          </Form.Item>
         </Form>
       }
       onVisibleChange={setVisible}

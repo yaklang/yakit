@@ -7,7 +7,7 @@ import { Tag } from 'antd'
 const { CheckableTag } = Tag
 
 export const YakitCheckableTag: React.FC<YakitCheckableTagProps> = React.memo((props) => {
-  const { wrapClassName, disable, className, ...resProps } = props
+  const { wrapClassName, disable, ...resProps } = props
   return (
     <div
       className={classNames(
