@@ -274,7 +274,6 @@ const useAIMessageData = ({
   const handleHistoryTimelines = useMemoizedFn(async (session: string) => {
     if (getTimelinesLoading()) return
     if (!hasMoreTimeline.current) return
-    if (getTimelinesLoading()) return
 
     if (!session) {
       yakitNotify('error', '会话ID不存在，无法获取历史聊天记录')
@@ -334,7 +333,10 @@ const useAIMessageData = ({
       })
       // 去重
       const filterFiles: AIFileSystemPin[] = [...new Map(files.map((item) => [item.path, item])).values()]
-      setGrpcFiles?.((old) => [...filterFiles, ...old])
+      setGrpcFiles?.((old) => {
+        const newFiles = [...new Map([...filterFiles, ...old].map((item) => [item.path, item])).values()]
+        return newFiles
+      })
     } catch {}
   })
   // #endregion
