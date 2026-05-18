@@ -90,6 +90,10 @@
         transform: rotate(90deg);
       }
     }
+
+    &.hidden {
+      visibility: hidden;
+    }
   }
   .node-loading {
     display: none;
