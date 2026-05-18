@@ -1025,8 +1025,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     })
     ipcRenderer.on(`${token}-end`, (e, res: any) => {
       // console.log("end", res)
-      saveStateDataOfEnd(token)
       handleResetGrpcStatus()
+      saveStateDataOfEnd(token)
       if (endAfterSession.current) {
         handleSwitchSessionData(endAfterSession.current)
       }
@@ -1052,7 +1052,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
       cb?.()
-      requestEvents.handleLoadInit(token, nextID)
+      if (!params.Params?.UserQuery) requestEvents.handleLoadInit(token, nextID)
     }, 50)
   })
 
