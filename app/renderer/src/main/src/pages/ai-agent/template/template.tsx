@@ -17,17 +17,18 @@ import {
   FooterLeftTypesComponentProps,
   QSInputTextareaProps,
 } from './type'
-import { Input } from 'antd'
+import { Input, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineArrowupIcon,
   OutlineAtsymbolIcon,
+  OutlineBanIcon,
+  OutlineBrainCircuitIcon,
   OutlineCodeIcon,
   OutlineCogIcon,
   OutlineHandIcon,
-  OutlinePhotographIcon,
 } from '@/assets/icon/outline'
-import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
 import { TextAreaRef } from 'antd/lib/input/TextArea'
 import classNames from 'classnames'
 import styles from './template.module.scss'
@@ -64,6 +65,8 @@ import {
 } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
+import useAIAgentDispatcher from '../useContext/useDispatcher'
+import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -144,6 +147,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [props.footerLeftTypes, isOpen])
 
     const { setting } = useAIAgentStore()
+    const { setSetting } = useAIAgentDispatcher()
     const [disabled, setDisabled] = useState<boolean>(false)
 
     const { isHovering, dropRef } = useAIChatDrop({
@@ -333,6 +337,18 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       aiMilkdownInputRef.current?.setImage()
     })
 
+    const enablePlan = useCreation(() => {
+      return !!setting?.EnablePlan
+    }, [setting?.EnablePlan])
+    const onSetPlan = useDebounceFn(
+      useMemoizedFn((checked) => {
+        setSetting?.((v) => ({
+          ...v,
+          EnablePlan: checked,
+        }))
+      }),
+      { wait: 200, leading: true },
+    ).run
     return (
       <div
         className={classNames(
@@ -368,6 +384,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           <div className={styles['footer']}>
             {inputFooterLeft ?? (
               <div className={styles['footer-left']}>
+                <Tooltip title="开启后会进入Plan模式,进行任务规划和执行">
+                  <YakitCheckableTag className={styles['plan-btn']} checked={enablePlan} onChange={onSetPlan}>
+                    {enablePlan ? <OutlineBrainCircuitIcon /> : <OutlineBanIcon />}
+                    Plan
+                  </YakitCheckableTag>
+                </Tooltip>
                 <YakitButton
                   type="text2"
                   radius="50%"
@@ -375,16 +397,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                   onClick={onMention}
                   className={styles['btn-base']}
                 />
-                <OpenFileDropdown cb={onSetFileMention}>
+                <OpenFileDropdown cb={onSetFileMention} onSelectImage={onSelectImage}>
                   <UploadFileButton title={t('YakitButton.openFolder')} className={styles['btn-base']} />
                 </OpenFileDropdown>
-                <YakitButton
-                  type="text2"
-                  radius="50%"
-                  icon={<OutlinePhotographIcon />}
-                  onClick={onSelectImage}
-                  className={styles['btn-base']}
-                />
                 <AIInputSettingPopover visible={inputSettingVisible} setVisible={setInputSettingVisible}>
                   <YakitButton
                     type="text2"
