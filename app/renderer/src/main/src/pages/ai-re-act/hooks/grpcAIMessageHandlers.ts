@@ -236,6 +236,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
     data: { qs: data.react_task_input || '', setting: {} },
     AIService: '',
     AIModelName: '',
+    // showQS为了UI渲染方便，重新构建的字段
     extraValue: { showQS: data.react_task_input || '' },
   }
   setContentMap(chatData.id, chatData)

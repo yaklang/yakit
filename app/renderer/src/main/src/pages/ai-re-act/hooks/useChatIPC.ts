@@ -555,6 +555,8 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     // 清除类型处理方法库里的临时数据
     handleResetForNewSession()
+    // 重置历史数据请求
+    requestEvents.handleReset()
   })
 
   /** 建立会话连接后需要同步的数据 */
@@ -1064,6 +1066,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         setSwitchLoading(false)
       }, 200)
       endAfterSession.current = ''
+      cacheDataStore?.clear()
       return
     }
 
@@ -1077,6 +1080,8 @@ function useChatIPC(params?: UseChatIPCParams) {
       yakExecResultEvent.handleSetYakResult(chatData.yakExecResult || {})
       casualChatEvent.setElements(chatData.casualChat?.elements || [])
       taskChatEvent.setElements(chatData.taskChat?.elements || [])
+    } else {
+      cacheDataStore?.clear()
     }
     endAfterSession.current = ''
     setTimeout(() => {
