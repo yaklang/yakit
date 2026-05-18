@@ -363,6 +363,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     <div className={styles['ai-agent-chat-stream']}>
       <Virtuoso<ReActChatRenderItem>
         ref={virtuosoRef}
+        key={session}
         scrollerRef={setScrollerRef}
         firstItemIndex={firstItemIndex}
         atBottomStateChange={setIsAtBottomRef}

@@ -190,6 +190,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   return (
     <div className={styles['ai-re-act-chat-contents']}>
       <Virtuoso
+        key={activeChat?.SessionID}
         ref={virtuosoRef}
         scrollerRef={setScrollerRef}
         firstItemIndex={firstItemIndex}
