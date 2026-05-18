@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState, startTransition } from 'react'
 import { useInViewport, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { FileTreeNodeProps, FileTreeProps, FileNodeProps, FileNodeMapProps } from './FileTreeType'
 import { SystemInfo } from '@/constants/hardware'
@@ -33,8 +33,6 @@ import {
   updateAreaFileInfo,
   updateAreaFilesPathInfo,
 } from '../utils'
-import useStore from '../hooks/useStore'
-import useDispatcher from '../hooks/useDispatcher'
 import {
   getMapAllFolderKey,
   getMapFolderDetail,
@@ -49,8 +47,6 @@ import { OpenFileByPathProps } from '../YakRunnerType'
 import { setClipboardText } from '@/utils/clipboard'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const { ipcRenderer } = window.require('electron')
-
 const FolderMenu: (t: TFunction) => YakitMenuItemProps[] = (t) => {
   return [
     { label: t('YakitButton.newFile'), key: 'newFile' },
@@ -61,8 +57,18 @@ const FolderMenu: (t: TFunction) => YakitMenuItemProps[] = (t) => {
 }
 
 export const FileTree: React.FC<FileTreeProps> = memo((props) => {
-  const { folderPath, data, onLoadData, onSelect, onExpand, foucsedKey, setFoucsedKey, expandedKeys, setExpandedKeys } =
-    props
+  const {
+    folderPath,
+    data,
+    onLoadData,
+    onSelect,
+    onExpand,
+    storeRefs,
+    foucsedKey,
+    setFoucsedKey,
+    expandedKeys,
+    setExpandedKeys,
+  } = props
   const treeRef = useRef<any>(null)
   const wrapper = useRef<HTMLDivElement>(null)
   const size = useSize(wrapper)
@@ -85,6 +91,9 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
   const selectedKeys = useMemo(() => {
     return selectedNodes.map((node) => node.path)
   }, [selectedNodes])
+
+  const expandedKeySet = useMemo(() => new Set(expandedKeys), [expandedKeys])
+  const selectedKeySet = useMemo(() => new Set(selectedKeys), [selectedKeys])
 
   const scrollExpandedKeys = useRef<string[]>([])
   const scrollExpandedKeysFun = useMemoizedFn((path) => {
@@ -207,27 +216,43 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
   })
 
   const handleExpand = useMemoizedFn((expanded: boolean, node: FileNodeProps) => {
-    let arr = [...expandedKeys]
-    if (expanded) {
-      arr = arr.filter((item) => item !== node.path)
-    } else {
-      arr = [...arr, node.path]
-    }
+    const arr = expanded ? expandedKeys.filter((item) => item !== node.path) : [...expandedKeys, node.path]
     if (selectedNodes.length > 0) setSelectedNodes([selectedNodes[selectedNodes.length - 1]])
     setFoucsedKey(node.path)
-    onSaveYakRunnerLastExpanded([...arr])
-    setExpandedKeys([...arr])
+    onSaveYakRunnerLastExpanded(arr)
+    startTransition(() => {
+      setExpandedKeys(arr)
+    })
     if (onExpand) {
       onExpand(arr, { expanded: !expanded, node })
     }
   })
 
+  const titleRender = useMemoizedFn((nodeData: FileNodeProps) => {
+    return (
+      <FileTreeNode
+        isDownCtrlCmd={isDownCtrlCmd}
+        info={nodeData}
+        folderPath={folderPath}
+        storeRefs={storeRefs}
+        isFoucsed={foucsedKey === nodeData.path}
+        isSelected={selectedKeySet.has(nodeData.path)}
+        isExpanded={expandedKeySet.has(nodeData.path)}
+        onSelected={handleSelect}
+        onExpanded={handleExpand}
+        copyPath={copyPath}
+        setCopyPath={setCopyPath}
+        setFoucsedKey={setFoucsedKey}
+      />
+    )
+  })
+
   return (
     <div ref={wrapper} className={styles['file-tree']}>
       <Tree
-        // virtual={false}
         ref={treeRef}
         height={size?.height}
+        itemHeight={22}
         fieldNames={{ title: 'name', key: 'path', children: 'children' }}
         treeData={data}
         blockNode={true}
@@ -237,34 +262,21 @@ export const FileTree: React.FC<FileTreeProps> = memo((props) => {
         loadData={onLoadData}
         // 解决重复打开同一个项目时 能加载
         loadedKeys={[]}
-        titleRender={(nodeData) => {
-          return (
-            <FileTreeNode
-              isDownCtrlCmd={isDownCtrlCmd}
-              info={nodeData}
-              foucsedKey={foucsedKey}
-              selectedKeys={selectedKeys}
-              expandedKeys={expandedKeys}
-              onSelected={handleSelect}
-              onExpanded={handleExpand}
-              copyPath={copyPath}
-              setCopyPath={setCopyPath}
-              setFoucsedKey={setFoucsedKey}
-            />
-          )
-        }}
+        titleRender={titleRender}
       />
     </div>
   )
 })
 
-const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
+const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
   const {
     isDownCtrlCmd,
     info,
-    foucsedKey,
-    selectedKeys,
-    expandedKeys,
+    folderPath,
+    storeRefs,
+    isFoucsed,
+    isSelected,
+    isExpanded,
     onSelected,
     onExpanded,
     copyPath,
@@ -272,8 +284,6 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
     setFoucsedKey,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
-  const { areaInfo, activeFile, fileTree } = useStore()
-  const { setAreaInfo, setActiveFile, setFileTree } = useDispatcher()
   // 是否为输入模式
   const [isInput, setInput] = useState<boolean>(false)
   // 是否为编辑（用于默认选中文件名）
@@ -282,18 +292,6 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
   const inputRef = useRef<any>(null)
 
   const [removeCheckVisible, setRemoveCheckVisible] = useState<boolean>(false)
-
-  const isFoucsed = useMemo(() => {
-    return foucsedKey === info.path
-  }, [foucsedKey, info.path])
-
-  const isSelected = useMemo(() => {
-    return selectedKeys.includes(info.path)
-  }, [selectedKeys, info.path])
-
-  const isExpanded = useMemo(() => {
-    return expandedKeys.includes(info.path)
-  }, [expandedKeys, info.path])
 
   const handleSelect = useMemoizedFn(() => {
     onSelected(isSelected, info)
@@ -335,13 +333,12 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
 
   // 复制相对路径
   const onCopyRelativePath = useMemoizedFn(async () => {
-    if (fileTree.length === 0) {
+    if (!folderPath) {
       failed(t('FileTree.copyRelativePathFailed'))
       return
     }
     try {
-      const basePath = fileTree[0].path
-      const relativePath = await getRelativePath(basePath, info.path)
+      const relativePath = await getRelativePath(folderPath, info.path)
       setClipboardText(relativePath)
     } catch (error) {}
   })
@@ -422,10 +419,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         setRemoveCheckVisible(true)
         break
       case 'copy':
-        if (!!foucsedKey) {
-          setCopyPath(foucsedKey)
-          // success(`已获取路径 ${foucsedKey}`)
-        }
+        setCopyPath(info.path)
         break
       case 'paste':
         onPaste()
@@ -442,6 +436,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
   }, [])
 
   const onRenameFun = useMemoizedFn(async () => {
+    const { areaInfo, activeFile } = storeRefs.current
+    const { setAreaInfo, setActiveFile } = storeRefs.current
     try {
       if (value.length !== 0 && value !== info.name) {
         // 重命名 调用接口成功后更新tree
@@ -675,7 +671,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
       },
     ]
     const CloseFolder: YakitMenuItemType[] = []
-    if (fileTree.length > 0 && info.path === fileTree[0].path) {
+    if (folderPath && info.path === folderPath) {
       CloseFolder.push({
         label: t('FileTree.closeFolder'),
         key: 'closeFolder',
@@ -706,11 +702,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
         ...base,
       ]
     }
-  }, [info, copyPath, i18n.language])
+  }, [info, copyPath, folderPath, i18n.language])
 
   // 此处关闭文件夹由于审计树没有树右键 因此只有文件树存在
   const closeFolder = useMemoizedFn(() => {
-    setFileTree && setFileTree([])
+    storeRefs.current.setFileTree?.([])
   })
 
   const handleContextMenu = useMemoizedFn(() => {
@@ -842,4 +838,23 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
       />
     </>
   )
+}, fileTreeNodePropsAreEqual)
+
+function fileTreeNodePropsAreEqual(prev: FileTreeNodeProps, next: FileTreeNodeProps) {
+  if (prev.storeRefs !== next.storeRefs) return false
+  if (prev.isDownCtrlCmd !== next.isDownCtrlCmd) return false
+  if (prev.isFoucsed !== next.isFoucsed) return false
+  if (prev.isSelected !== next.isSelected) return false
+  if (prev.isExpanded !== next.isExpanded) return false
+  if (prev.copyPath !== next.copyPath) return false
+  if (prev.folderPath !== next.folderPath) return false
+  if (prev.info.path !== next.info.path) return false
+  if (prev.info.name !== next.info.name) return false
+  if (prev.info.isLeaf !== next.info.isLeaf) return false
+  if (prev.info.isFolder !== next.info.isFolder) return false
+  if (prev.info.isBottom !== next.info.isBottom) return false
+  if (prev.info.isCreate !== next.info.isCreate) return false
+  if (prev.info.depth !== next.info.depth) return false
+  if (prev.info.icon !== next.info.icon) return false
+  return true
 }

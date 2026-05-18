@@ -12,6 +12,7 @@ import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '@/pages/yakR
 import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import useStore from '@/pages/yakRunner/hooks/useStore'
 import useDispatcher from '@/pages/yakRunner/hooks/useDispatcher'
+import useYakRunnerStoreRefs from '@/pages/yakRunner/hooks/useYakRunnerStoreRefs'
 import { FileTree } from '@/pages/yakRunner/FileTree/FileTree'
 
 import classNames from 'classnames'
@@ -133,6 +134,7 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { fileTree, areaInfo, activeFile } = useStore()
   const { handleFileLoadData, setAreaInfo, setActiveFile, setFileTree } = useDispatcher()
+  const storeRefs = useYakRunnerStoreRefs()
 
   const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
   // 选中的文件或文件夹
@@ -738,6 +740,7 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
                 <FileTree
                   folderPath={fileTree.length > 0 ? fileTree[0].path : ''}
                   data={fileDetailTree}
+                  storeRefs={storeRefs}
                   onLoadData={onLoadData}
                   onSelect={onSelectFileTree}
                   foucsedKey={foucsedKey}

@@ -1,19 +1,20 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
+import React, { memo, useEffect, useMemo, useState } from 'react'
+import { useMemoizedFn } from 'ahooks'
 import { OpenedFileProps, OpenFolderDraggerProps, RunnerFileTreeProps } from './RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinCompileIcon, OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { CollapseList } from '../CollapseList/CollapseList'
 import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
 import { FileDefault, FileSuffix, KeyToIcon } from '../FileTree/icon'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
+import useYakRunnerStoreRefs from '../hooks/useYakRunnerStoreRefs'
 import { FileTree } from '../FileTree/FileTree'
 
 import classNames from 'classnames'
 import styles from './RunnerFileTree.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
 import {
   getDefaultActiveFile,
@@ -29,7 +30,6 @@ import {
   removeYakRunnerAreaFileInfo,
   removeAreaFilesInfo,
   setAreaFileActive,
-  setYakRunnerHistory,
   updateAreaFileInfo,
   updateAreaFileInfoToDelete,
 } from '../utils'
@@ -122,13 +122,12 @@ export const openFolder = () => {
   }
 }
 
-const { ipcRenderer } = window.require('electron')
-
 export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const { addFileTab } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { fileTree, areaInfo, activeFile } = useStore()
   const { handleFileLoadData, setAreaInfo, setActiveFile, setFileTree } = useDispatcher()
+  const storeRefs = useYakRunnerStoreRefs()
 
   const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
   // 选中的文件或文件夹
@@ -734,6 +733,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
                 <FileTree
                   folderPath={fileTree.length > 0 ? fileTree[0].path : ''}
                   data={fileDetailTree}
+                  storeRefs={storeRefs}
                   onLoadData={onLoadData}
                   onSelect={onSelectFileTree}
                   foucsedKey={foucsedKey}
