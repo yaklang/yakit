@@ -186,7 +186,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { formatTimeYMD } from '@/utils/timeUtil'
 import { type LoggerData, useLogger } from '@/hook/useLogger/useLogger'
 import i18n from '@/i18n/i18n'
-import { maskProxyPassword } from '../mitm/MITMServerStartForm/MITMServerStartForm'
+import { defHost, defPort, maskProxyPassword } from '../mitm/MITMServerStartForm/MITMServerStartForm'
 import { ExportDataType } from '@/utils/exporter'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
@@ -3263,7 +3263,7 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
       .then((res: GetSystemProxyResult) => {
         setSystemProxy({
           ...res,
-          CurrentProxy: res.CurrentProxy ? res.CurrentProxy : '127.0.0.1:8083',
+          CurrentProxy: res.CurrentProxy ? res.CurrentProxy : `${defHost}:${defPort}`,
         })
       })
       .catch((err) => debugToPrintLog(err))
@@ -3322,12 +3322,17 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
         </Tooltip>
       )}
       {isShowSystemProxy && (
-        <YakitTag color="green">
+        <YakitTag
+          color="green"
+          closable={true}
+          onClose={() => {
+            emiter.emit('onCloseSystemProxy')
+          }}
+        >
           {t('FuzzerExtraShow.systemProxy')}
           {systemProxy?.CurrentProxy}
         </YakitTag>
       )}
-
       {advancedConfigValue.actualHost && (
         <YakitTag color="danger" className={classNames(styles['actualHost-text'], 'content-ellipsis')}>
           {t('FuzzerExtraShow.realHost')}

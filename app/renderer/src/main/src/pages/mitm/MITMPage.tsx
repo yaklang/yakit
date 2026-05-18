@@ -33,7 +33,13 @@ import {
   YakFilterRemoteObj,
   YakModuleListHeard,
 } from './MITMServerHijacking/MITMPluginLocalList'
-import { ClientCertificate, maskProxyPassword, MITMServerStartForm } from './MITMServerStartForm/MITMServerStartForm'
+import {
+  ClientCertificate,
+  defHost,
+  defPort,
+  maskProxyPassword,
+  MITMServerStartForm,
+} from './MITMServerStartForm/MITMServerStartForm'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
@@ -111,6 +117,8 @@ export interface MITMResponse extends MITMFilterSchema {
   traceInfo: TraceInfo
 }
 
+export type TipPart = { key: string; value?: string }
+
 export const CONST_DEFAULT_ENABLE_INITIAL_PLUGIN = 'CONST_DEFAULT_ENABLE_INITIAL_PLUGIN'
 
 export type MitmStatus = 'idle' | 'hijacked' | 'hijacking'
@@ -121,14 +129,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
   const statusRef = useRef<MitmStatus>(status)
   const [isHasParams, setIsHasParams] = useState<boolean>(false) // mitm插件类型是否带参数
   // 通过启动表单的内容
-  const [host, setHost] = useState('127.0.0.1')
-  const [port, setPort] = useState(8083)
+  const [host, setHost] = useState(defHost)
+  const [port, setPort] = useState(+defPort)
   const extraPortRef = useRef<string[]>([])
-  const [showPort, setShowPort] = useState(['8083'])
+  const [showPort, setShowPort] = useState([defPort])
   const [disableCACertPage, setDisableCACertPage] = useState(false)
   const [enableInitialMITMPlugin, setEnableInitialMITMPlugin] = useState(false)
   const [defaultPlugins, setDefaultPlugins] = useState<string[]>([])
-  const [tip, setTip] = useState('')
+  const [tipParts, setTipParts] = useState<TipPart[]>([])
 
   // 自动转发 与 劫持响应的自动设置
   const [autoForward, setAutoForward] = useState<ManualHijackTypeProps>('log')
@@ -331,12 +339,18 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         certs,
         extra,
       )
-      let tip = ''
+
+      const parts: TipPart[] = []
       if (downstreamProxyRuleId || downstreamProxy) {
         const proxyStr = downstreamProxyRuleId
           ? `规则组：${Routes.find(({ Id }) => Id === downstreamProxyRuleId)?.Name}`
           : `${maskProxyPassword(downstreamProxy)}`
-        tip += `下游代理：${proxyStr}`
+
+        parts.push({
+          key: 'downstreamProxy',
+          value: proxyStr,
+        })
+
         if (downstreamProxyRuleId) {
           setDownstreamProxyStr(downstreamProxyRuleId)
         } else {
@@ -355,14 +369,11 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
       }
 
       if (extra) {
-        if (extra.onlyEnableGMTLS) {
-          tip += '|仅国密 TLS'
-        }
-        if (extra.enableProxyAuth) {
-          tip += '|开启代理认证'
-        }
+        if (extra.onlyEnableGMTLS) parts.push({ key: 'onlyEnableGMTLS' })
+        if (extra.enableProxyAuth) parts.push({ key: 'enableProxyAuth' })
       }
-      setTip(tip)
+
+      setTipParts(parts)
     },
   )
 
@@ -372,11 +383,9 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
       if (downstreamProxyStr.startsWith('route') || downstreamProxyStr.startsWith('ep')) {
         const option = proxyRouteOptions.find(({ value }) => value === downstreamProxyStr)
         if (downstreamProxyStr.startsWith('ep')) {
-          return `${maskProxyPassword(comparePointUrl(downstreamProxyStr))}${
-            option?.disabled ? ` (${t('ProxyConfig.disabled')})` : ''
-          }`
+          return `${maskProxyPassword(comparePointUrl(downstreamProxyStr))}${option?.disabled ? ` (已禁用)` : ''}`
         }
-        return proxyRouteOptions.find(({ value }) => value === downstreamProxyStr)?.label
+        return proxyRouteOptions.find(({ value }) => value === downstreamProxyStr)?.tagLabel
       }
       return maskProxyPassword(downstreamProxyStr)
     }
@@ -384,8 +393,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     const label = getLabel()
     if (!label) return
 
-    const newTip = `${t('ProxyConfig.downstream_agent')}：${label}`
-    setTip((prev) => (prev === newTip ? prev : newTip))
+    setTipParts((prev) => prev.map((item) => (item.key === 'downstreamProxy' ? { ...item, value: label } : item)))
   })
 
   useDeepCompareEffect(() => {
@@ -439,8 +447,8 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             defaultPlugins={defaultPlugins}
             enableInitialMITMPlugin={enableInitialMITMPlugin}
             setVisible={setVisible}
-            tip={tip}
-            onSetTip={setTip}
+            tipParts={tipParts}
+            setTipParts={setTipParts}
             downstreamProxyStr={downstreamProxyStr}
             setDownstreamProxyStr={setDownstreamProxyStr}
             isHasParams={isHasParams}

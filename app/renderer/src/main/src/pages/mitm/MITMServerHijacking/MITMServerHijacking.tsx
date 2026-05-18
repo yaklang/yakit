@@ -4,7 +4,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import ChromeLauncherButton from '@/pages/mitm/MITMChromeLauncher'
 import { info, yakitNotify } from '@/utils/notification'
 import { useCreation, useMemoizedFn, useSize } from 'ahooks'
-import { MITMServer } from '@/pages/mitm/MITMPage'
+import { MITMServer, TipPart } from '@/pages/mitm/MITMPage'
 import style from './MITMServerHijacking.module.scss'
 import { QuitIcon } from '@/assets/newIcon'
 import classNames from 'classnames'
@@ -14,7 +14,7 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { MITMConsts } from '../MITMConsts'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
-import { maskProxyPassword } from '../MITMServerStartForm/MITMServerStartForm'
+import { defHost, defPort, maskProxyPassword } from '../MITMServerStartForm/MITMServerStartForm'
 import { PageNodeItemProps, usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -53,6 +53,8 @@ import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamTy
 import { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { StreamUpdateState } from './PluginsOutput/StreamProcessor'
 import { loadAdvancedConfig, updateAdvancedConfig } from '../MITMAdvancedConfig'
+import { cloneDeep } from 'lodash'
+import { apiGetSystemProxy, GetSystemProxyResult } from '@/utils/ConfigSystemProxy'
 
 type MITMStatus = 'hijacking' | 'hijacked' | 'idle'
 const { Text } = Typography
@@ -70,8 +72,8 @@ export interface MITMServerHijackingProp {
   setAutoForward: React.Dispatch<React.SetStateAction<ManualHijackTypeProps>>
   onLoading?: (loading: boolean) => any
   setVisible: (b: boolean) => void
-  tip: string
-  onSetTip: (tip: string) => void
+  tipParts: TipPart[]
+  setTipParts: React.Dispatch<React.SetStateAction<TipPart[]>>
   downstreamProxyStr: string
   setDownstreamProxyStr: (proxy: string) => void
   isHasParams: boolean
@@ -109,8 +111,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     autoForward,
     setAutoForward,
     setVisible,
-    tip,
-    onSetTip,
+    tipParts,
+    setTipParts,
     downstreamProxyStr,
     setDownstreamProxyStr,
     isHasParams,
@@ -308,11 +310,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
   }, [])
 
   const downStreamTagClose = useMemoizedFn(() => {
-    const tipStr = tip
-      .split('|')
-      .filter((item) => !item.startsWith('下游代理'))
-      .join('|')
-    onSetTip(tipStr)
+    const newParts = (tipParts || []).filter((p) => p.key !== 'downstreamProxy')
+    setTipParts(newParts)
     setDownstreamProxyStr('')
 
     const proxyValue: MITMSetDownstreamProxyRequest = {
@@ -323,9 +322,39 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     grpcMITMSetDownstreamProxy(proxyValue)
   })
 
+  const mapProxyValue = (value: string) => {
+    if (value.includes('规则组')) {
+      return value.replace('规则组', t('MITMRuleFromModal.rule_group'))
+    }
+    if (value.includes('已禁用')) {
+      return value.replace('已禁用', t('ProxyConfig.disabled'))
+    }
+    if (value.includes('代理节点')) {
+      return value.replace('代理节点', t('ProxyConfig.Points'))
+    }
+    return value
+  }
+
+  const [systemProxy, setSystemProxy] = useState<GetSystemProxyResult>()
+  useEffect(() => {
+    getConfigSystemProxy()
+    emiter.on('onRefConfigSystemProxy', getConfigSystemProxy)
+    return () => {
+      emiter.off('onRefConfigSystemProxy', getConfigSystemProxy)
+    }
+  }, [])
+  const getConfigSystemProxy = useMemoizedFn(() => {
+    apiGetSystemProxy().then((res: GetSystemProxyResult) => {
+      setSystemProxy({
+        ...res,
+        CurrentProxy: res.CurrentProxy ? res.CurrentProxy : `${defHost}:${defPort}`,
+      })
+    })
+  })
+
   const showAddr = useMemo(() => {
     const maxDisplay = 5 // 最多显示5个端口
-    const displayData = showPort.slice(0, maxDisplay).join(', ') // 取前3个
+    const displayData = showPort.slice(0, maxDisplay).join(', ') // 取前5个
     const remainingCount = showPort.length - maxDisplay // 剩余数量
     const showPortText = remainingCount > 0 ? `${displayData} +${remainingCount}...` : displayData
     return `${host}:${showPortText}`
@@ -341,19 +370,45 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
               <Tooltip title={`${host}:${showPort}`}>{showAddr}</Tooltip>
             </span>
             <div className={style['mitm-server-heard-addr-tags']}>
-              {tip
-                .split('|')
-                .filter((item) => item)
-                .map((item) =>
-                  !item.startsWith('下游代理') ? (
-                    <YakitTag color="success" key={item}>
-                      {item}
-                    </YakitTag>
-                  ) : (
-                    <YakitTag closable={true} onClose={downStreamTagClose} key={item}>
-                      {item}
-                    </YakitTag>
-                  ),
+              {(tipParts || [])
+                .map((p, idx) => {
+                  if (p.key === 'downstreamProxy') {
+                    return (
+                      <YakitTag closable={true} onClose={downStreamTagClose} key={`tip-${idx}`}>
+                        {`${t('ProxyConfig.downstream_agent')}: ${mapProxyValue(p.value as string)}`}
+                      </YakitTag>
+                    )
+                  }
+                  if (p.key === 'onlyEnableGMTLS') {
+                    return (
+                      <YakitTag color="success" key={`tip-${idx}`}>
+                        仅国密 TLS
+                      </YakitTag>
+                    )
+                  }
+                  if (p.key === 'enableProxyAuth') {
+                    return (
+                      <YakitTag color="success" key={`tip-${idx}`}>
+                        开启代理认证
+                      </YakitTag>
+                    )
+                  }
+                  return null
+                })
+                .filter(Boolean)}
+              {!disableSystemProxy &&
+                systemProxy?.Enable &&
+                tipParts.findIndex((item) => item.key === 'downstreamProxy') === -1 && (
+                  <YakitTag
+                    color="green"
+                    closable={true}
+                    onClose={() => {
+                      emiter.emit('onCloseSystemProxy')
+                    }}
+                  >
+                    {'系统代理'}
+                    {systemProxy?.CurrentProxy}
+                  </YakitTag>
                 )}
               {globalEnabledTemplateName && (
                 <YakitTag closable onClose={onDisableGlobalHotPatch}>
@@ -518,8 +573,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         onCloseModal={() => setDownStreamAgentModalVisible(false)}
         downstreamProxyStr={downstreamProxyStr}
         setDownstreamProxyStr={setDownstreamProxyStr}
-        tip={tip}
-        onSetTip={onSetTip}
+        tipParts={tipParts}
+        setTipParts={setTipParts}
       ></DownStreamAgentModal>
       <Divider style={{ margin: '8px 0 0 0' }} />
       <div className={style['mitm-server-body']}>
@@ -562,8 +617,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
 interface DownStreamAgentModalProp {
   downStreamAgentModalVisible: boolean
   onCloseModal: () => void
-  tip: string
-  onSetTip: (tip: string) => void
+  tipParts: TipPart[]
+  setTipParts: React.Dispatch<React.SetStateAction<TipPart[]>>
   setDownstreamProxyStr: (proxy: string) => void
   downstreamProxyStr: string
 }
@@ -573,8 +628,8 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     downStreamAgentModalVisible,
     downstreamProxyStr = '',
     onCloseModal,
-    tip,
-    onSetTip,
+    tipParts,
+    setTipParts,
     setDownstreamProxyStr,
   } = props
   const [form] = Form.useForm()
@@ -586,7 +641,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     return mitmContent.mitmStore.version
   }, [mitmContent.mitmStore.version])
   const onOKFun = useMemoizedFn(async () => {
-    const tipArr = tip.split('|')
+    const existingParts = cloneDeep(tipParts)
 
     const downstreamProxy = form.getFieldsValue().downstreamProxy || []
     if (downstreamProxy.some((item) => proxyRouteOptions.find(({ value }) => value === item)?.disabled)) {
@@ -608,33 +663,22 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         if (item.startsWith('route') || item.startsWith('ep')) {
           const option = proxyRouteOptions.find(({ value }) => value === item)
           if (item.startsWith('ep')) {
-            return `${comparePointUrl(item)}${option?.disabled ? ` (${t('ProxyConfig.disabled')})` : ''}`
+            return `${comparePointUrl(item)}${option?.disabled ? `(已禁用)` : ''}`
           }
-          return proxyRouteOptions.find(({ value }) => value === item)?.label
+          return proxyRouteOptions.find(({ value }) => value === item)?.tagLabel
         }
         return item
       })
-      if (tip.indexOf('下游代理') === -1) {
-        onSetTip(
-          `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}` +
-            (tip.indexOf('|') === 0 ? tip : `|${tip}`),
-        )
-      } else {
-        const tipStr = tipArr
-          .map((item) => {
-            if (item.startsWith('下游代理')) {
-              return `下游代理：${downstreamProxyName.map((item) => maskProxyPassword(item))}`
-            } else {
-              return item
-            }
-          })
-          .join('|')
-        onSetTip(tipStr)
-      }
+
+      // 更新或新增 downstreamProxy 条目
+      const others = existingParts.filter((p) => p.key !== 'downstreamProxy')
+      others.push({ key: 'downstreamProxy', value: downstreamProxyName.map((i) => maskProxyPassword(i)).join(',') })
+      setTipParts(others)
       setDownstreamProxyStr(downstreamProxy.join(','))
     } else {
-      const tipStr = tipArr.filter((item) => !item.startsWith('下游代理')).join('|')
-      onSetTip(tipStr)
+      // 删除 downstreamProxy 条目
+      const others = existingParts.filter((p) => p.key !== 'downstreamProxy')
+      setTipParts(others)
       setDownstreamProxyStr('')
     }
     onClose()

@@ -105,6 +105,7 @@ import { useSoftMode, YakitModeEnum } from '@/store/softMode'
 import { getNotepadNameByEdition } from '../layout/NotepadMenu/utils'
 import styles from './home.module.scss'
 import { SystemInfo } from '@/constants/hardware'
+import { defHost, defPort } from '../mitm/MITMServerStartForm/MITMServerStartForm'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -420,17 +421,17 @@ const Home: React.FC<HomeProp> = (props) => {
             const obj = JSON.parse(e) || {}
             form.setFieldsValue({ host: obj.defaultValue })
           } catch (error) {
-            form.setFieldsValue({ host: '127.0.0.1' })
+            form.setFieldsValue({ host: defHost })
           }
         } else {
-          form.setFieldsValue({ host: '127.0.0.1' })
+          form.setFieldsValue({ host: defHost })
         }
       })
       getRemoteValue(MITMConsts.MITMDefaultPort).then((e) => {
         if (!!e) {
           form.setFieldsValue({ port: e })
         } else {
-          form.setFieldsValue({ port: '8083' })
+          form.setFieldsValue({ port: defPort })
         }
       })
       getRemoteValue(CONST_DEFAULT_ENABLE_INITIAL_PLUGIN).then((a) => {
@@ -1235,8 +1236,8 @@ const Home: React.FC<HomeProp> = (props) => {
                                       e.stopPropagation()
                                       toMITMHacker({
                                         immediatelyLaunchedInfo: {
-                                          host: hostWatch || '127.0.0.1',
-                                          port: portWatch || '8083',
+                                          host: hostWatch || defHost,
+                                          port: portWatch || defPort,
                                           enableInitialPlugin: form.getFieldValue('enableInitialPlugin') === true,
                                         },
                                       })

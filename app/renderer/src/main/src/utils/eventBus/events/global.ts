@@ -45,4 +45,6 @@ export type GlobalEventProps = {
   onCloseControlMyselfModal?: string
   /** 菜单栏设置菜单选项 */
   onUIOpSettingMenuSelect: string
+  /** 系统代理关闭 */
+  onCloseSystemProxy?: string
 }

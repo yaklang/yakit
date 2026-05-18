@@ -8,6 +8,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 export interface ProxyOption {
   /** 显示标签 */
   label: string
+  /** 用于mitm tag显示，翻译在tag处处理 */
+  tagLabel?: string
   /** 选项值（规则组ID或代理节点ID/URL） */
   value: string
   /** 是否禁用 */
@@ -172,11 +174,13 @@ export const useProxy = (): UseProxyReturn => {
     return [
       ...Routes.map(({ Name, Id, Disabled }) => ({
         label: `${t('MITMRuleFromModal.rule_group')}: ${Name}${Disabled ? `(${t('ProxyConfig.disabled')})` : ''}`,
+        tagLabel: `规则组: ${Name}${Disabled ? `(已禁用)` : ''}`,
         value: Id,
         disabled: Disabled,
       })),
       ...Endpoints.map(({ Url, Id, Disabled }) => ({
         label: `${t('ProxyConfig.Points')}: ${Url}${Disabled ? `(${t('ProxyConfig.disabled')})` : ''}`,
+        tagLabel: `代理节点: ${Url}${Disabled ? `(已禁用)` : ''}`,
         value: Id,
         disabled: Disabled,
       })),
