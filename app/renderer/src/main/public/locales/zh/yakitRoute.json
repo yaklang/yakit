@@ -51,6 +51,8 @@
     "domainAssets": "域名资产",
     "penTest": "渗透测试",
     "codeAudit": "代码审计",
+    "irifyAiCodeAudit": "AI代码审计",
+    "irifyAiCodeAuditDescribe": "本地目录打开项目，使用 ReAct AI 辅助代码审计",
     "auditRuleCodeAnalysis": "通过编写审计规则对代码行为进行分析，发现代码中的风险片段，支持Java、PHP、Yaklang、Golang等多种语言",
     "database": "数据库",
     "securityTools": "安全工具",

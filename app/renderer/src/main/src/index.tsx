@@ -6,18 +6,19 @@ import NewApp from './NewApp'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { DndProvider } from 'react-dnd'
 // import {createRoot} from "react-dom/client"
-import './yakitUI.scss'
-import './theme/yakit.scss'
-import './yakitLib.scss'
-import './assets/global.scss'
-import { Suspense, useEffect, useState } from 'react'
-import ChildNewApp from './ChildNewApp'
-import { getLocalValue } from './utils/kv'
-import { GetMainColor, getRemoteI18nGV } from './utils/envfile'
-import i18n from '@/i18n/i18n'
-import { useTheme } from './hook/useTheme'
-import { generateAllThemeColors } from './yakit-colors-generator'
-import { debugToPrintLogs } from './utils/logCollection'
+import "./yakitUI.scss"
+import "./theme/yakit.scss"
+import "./yakitLib.scss"
+import "./assets/global.scss"
+import {Suspense, useEffect, useState} from "react"
+import ChildNewApp from "./ChildNewApp"
+import MarkdownPdfPrintPage from "./pages/yakRunner/MarkdownPdfPrint/MarkdownPdfPrintPage"
+import {getLocalValue} from "./utils/kv"
+import {GetMainColor, getRemoteI18nGV} from "./utils/envfile"
+import i18n from "@/i18n/i18n"
+import {useTheme} from "./hook/useTheme"
+import {generateAllThemeColors} from "./yakit-colors-generator"
+import { debugToPrintLogs } from "./utils/logCollection"
 
 window.MonacoEnvironment = {
   getWorkerUrl: function (moduleId, label) {
@@ -108,15 +109,18 @@ const App = () => {
     applyThemeColors(theme, generateAllThemeColor)
   }, [theme])
 
-  return windowType === 'child' ? <ChildNewApp /> : <NewApp />
+    if (windowType === "markdown-pdf-print") {
+        return <MarkdownPdfPrintPage />
+    }
+    return windowType === "child" ? <ChildNewApp /> : <NewApp />
 }
 
 // 只在子窗口移除 loading
-if (window.location.search.includes('window=child')) {
-  const initialLoading = document.getElementById('initial-loading')
-  if (initialLoading) {
-    initialLoading.remove()
-  }
+if (window.location.search.includes("window=child") || window.location.search.includes("window=markdown-pdf-print")) {
+    const initialLoading = document.getElementById("initial-loading")
+    if (initialLoading) {
+        initialLoading.remove()
+    }
 }
 
 // const divRoot = document.getElementById("root")

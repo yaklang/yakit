@@ -367,6 +367,15 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
             <div className={styles['title-style']}>{t('YakitRoute.codeAudit')}</div>
           </div>
           <div className={styles['divider-style']}></div>
+          <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.Irify_AI_Code_Audit)}>
+            <div className={styles['menu-icon-wrapper']}>
+              <div className={styles['icon-wrapper']}>
+                <PublicAIAgentIcon />
+              </div>
+            </div>
+            <div className={styles['title-style']}>{t('YakitRoute.irifyAiCodeAudit')}</div>
+          </div>
+          <div className={styles['divider-style']}></div>
           <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.YakRunner_Code_Scan)}>
             <div className={styles['menu-icon-wrapper']}>
               <div className={styles['icon-wrapper']}>
