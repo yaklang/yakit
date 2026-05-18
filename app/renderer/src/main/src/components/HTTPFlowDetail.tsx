@@ -13,7 +13,7 @@ import { HTTPFlowForWebsocketViewer, WebSocketEditor } from '@/pages/websocket/H
 import { WebsocketFrameHistory } from '@/pages/websocket/WebsocketFrameHistory'
 
 import styles from './hTTPFlowDetail.module.scss'
-import { useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useControllableValue, useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
   ExtractedDataFilter,
   HTTPFlowExtractedData,
@@ -1007,7 +1007,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
       <div style={{ height: showHeaderInfo ? 'calc(100% - 50px)' : '100%' }}>
         {showFlod ? (
           <YakitResizeBox
-            key={isFold + '' + flow?.Id + flow?.HiddenIndex}
+            key={isFold + ''}
             freeze={!isFold}
             isRecalculateWH={!isFold}
             firstNode={detailRequestAndResponse()}
@@ -1527,42 +1527,40 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   const [codeKey, setCodeKey] = useState<string>('utf-8')
   const [codeLoading, setCodeLoading] = useState<boolean>(false)
   const [codeValue, setCodeValue] = useState<string>('')
-  useDebounceEffect(
-    () => {
-      if (flow) {
-        setCodeKey('utf-8')
-        const reqArr = highLightItem?.IsMatchRequest ? [highLightItem] : []
-        const resArr = highLightItem ? (!highLightItem.IsMatchRequest ? [highLightItem] : []) : []
-        if (reqArr.length) {
-          setReqTypeOptionVal(undefined)
-          setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, '')
-        } else {
-          getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
-            if (!!res) {
-              setReqTypeOptionVal(res)
-            } else {
-              setReqTypeOptionVal(undefined)
-            }
-          })
-        }
-
-        if (resArr.length) {
-          setResTypeOptionVal(undefined)
-          setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, '')
-        } else {
-          getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
-            if (!!res) {
-              setResTypeOptionVal(res)
-            } else {
-              setResTypeOptionVal(undefined)
-            }
-          })
-        }
+  useEffect(() => {
+    setCodeKey('utf-8')
+    const reqArr = highLightItem?.IsMatchRequest ? [highLightItem] : []
+    const resArr = highLightItem ? (!highLightItem.IsMatchRequest ? [highLightItem] : []) : []
+    if (reqArr.length) {
+      setReqTypeOptionVal(undefined)
+      setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, '')
+    } else {
+      if (!reqTypeOptionVal) {
+        getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
+          if (!!res) {
+            setReqTypeOptionVal(res)
+          } else {
+            setReqTypeOptionVal(undefined)
+          }
+        })
       }
-    },
-    [flow, highLightItem],
-    { wait: 300 },
-  )
+    }
+
+    if (resArr.length) {
+      setResTypeOptionVal(undefined)
+      setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, '')
+    } else {
+      if (!resTypeOptionVal) {
+        getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
+          if (!!res) {
+            setResTypeOptionVal(res)
+          } else {
+            setResTypeOptionVal(undefined)
+          }
+        })
+      }
+    }
+  }, [highLightItem])
 
   // 响应额外按钮
   const secondNodeResExtraBtn = () => {

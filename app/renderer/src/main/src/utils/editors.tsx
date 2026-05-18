@@ -13,7 +13,7 @@ import { EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled }
 import { HTTPFlowBodyByIdRequest, HTTPPacketFuzzable } from '../components/HTTPHistory'
 import ReactResizeDetector from 'react-resize-detector'
 
-import { useDebounceFn, useMemoizedFn, useUpdateEffect, useWhyDidYouUpdate } from 'ahooks'
+import { useControllableValue, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { Buffer } from 'buffer'
 import { StringToUint8Array, Uint8ArrayToString } from './str'
 import { getRemoteValue } from '@/utils/kv'
@@ -583,8 +583,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     showDefaultExtra = true,
     dataCompare,
     editorOperationRecord,
-    typeOptionVal,
-    onTypeOptionVal,
     highLightText,
     highLightFind,
     highLightFindClass,
@@ -601,7 +599,12 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [noWordwrap, setNoWordwrap] = useState(false)
   const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
 
-  const [type, setType] = useState<'beautify' | 'hex' | 'render'>()
+  const [type, setType] = useControllableValue<RenderTypeOptionVal | undefined>(props, {
+    defaultValue: undefined,
+    valuePropName: 'typeOptionVal',
+    trigger: 'onTypeOptionVal',
+  })
+
   const editorHighLightText = useMemo(() => {
     return type === undefined ? highLightText || [] : []
   }, [type, highLightText])
@@ -612,7 +615,6 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [typeOptions, setTypeOptions] = useState<TypeOptionsProps[]>([])
   const [showValue, setShowValue] = useState<string>(originValue)
   const [renderHtml, setRenderHTML] = useState<React.ReactNode>()
-  // const [typeLoading, setTypeLoading] = useState<boolean>(false)
   const { theme } = useTheme()
 
   // 对比loading
@@ -894,46 +896,18 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
 
   useEffect(() => {
     setRenderHTML(undefined)
-    setShowValue(originValue)
     setTypeOptionFn()
   }, [originValue, setTypeOptionFn])
 
-  const isShowBeautifyRenderRef = useRef<boolean>()
-  useEffect(() => {
-    isShowBeautifyRenderRef.current = isShowBeautifyRender
-  }, [isShowBeautifyRender])
-
-  useUpdateEffect(() => {
-    setType(typeOptionVal)
-    if (typeOptionVal === 'beautify') {
-      if (originValue) {
-        beautifyCode()
-      }
-    } else if (typeOptionVal === 'render') {
-      if (originValue) {
-        renderCode()
-      }
-    } else if (typeOptionVal === 'hex') {
-      if (originValue) {
-        setRenderHTML(undefined)
-        setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
-      }
-    }
-  }, [typeOptionVal, originValue])
-
   const beautifyCode = useDebounceFn(
     useMemoizedFn(async () => {
-      if (!isShowBeautifyRenderRef.current || typeOptions.findIndex((i) => i.value === 'beautify') === -1) return
-      // setTypeLoading(true)
-      setRenderHTML(undefined)
-      if (originValue.length > 0) {
-        let beautifyValue = await prettifyPacketCode(originValue)
-        setShowValue(Uint8ArrayToString(beautifyValue as Uint8Array))
-        // setTypeLoading(false)
-      } else {
-        setShowValue('')
-        // setTypeLoading(false)
+      if (!isShowBeautifyRender || typeOptions.findIndex((i) => i.value === 'beautify') === -1) {
+        setType(undefined)
+        return
       }
+      setRenderHTML(undefined)
+      let beautifyValue = await prettifyPacketCode(originValue)
+      setShowValue(Uint8ArrayToString(beautifyValue as Uint8Array))
     }),
     {
       wait: 300,
@@ -941,31 +915,33 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   ).run
   const renderCode = useDebounceFn(
     useMemoizedFn(async () => {
-      if (!isShowBeautifyRenderRef.current || typeOptions.findIndex((i) => i.value === 'render') === -1) return
-      // setTypeLoading(true)
+      if (!isShowBeautifyRender || typeOptions.findIndex((i) => i.value === 'render') === -1) {
+        setType(undefined)
+        return
+      }
       let renderValue = await prettifyPacketRender(originalPackage || StringToUint8Array(originValue))
       setRenderHTML(
         <iframe srcDoc={renderValue as string} style={{ width: '100%', height: '100%', border: 'none' }} sandbox="" />,
       )
-      // setTypeLoading(false)
     }),
     { wait: 300 },
   ).run
 
-  useUpdateEffect(() => {
-    onTypeOptionVal && onTypeOptionVal(type)
-    if (originValue && type === undefined) {
-      setRenderHTML(undefined)
-      setShowValue(originValue)
-    } else if (originValue && type === 'beautify') {
-      beautifyCode()
-    } else if (originValue && type === 'render') {
-      renderCode()
-    } else if (originValue && type === 'hex') {
-      setRenderHTML(undefined)
-      setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
+  useEffect(() => {
+    if (originValue) {
+      if (type === undefined) {
+        setRenderHTML(undefined)
+        setShowValue(originValue)
+      } else if (type === 'beautify') {
+        beautifyCode()
+      } else if (type === 'render') {
+        renderCode()
+      } else if (type === 'hex') {
+        setRenderHTML(undefined)
+        setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
+      }
     }
-  }, [type])
+  }, [type, originValue])
 
   const handleEditorMount = useMemoizedFn((editor: YakitIMonacoEditor) => {
     setMonacoEditor(editor)
@@ -1220,10 +1196,7 @@ export const NewHTTPCard: React.FC<NewHTTPCardProps> = (props) => {
       <Card
         className={'flex-card'}
         size={'small'}
-        loading={
-          loading
-          // || typeLoading
-        }
+        loading={loading}
         bordered={bordered}
         style={{ height: '100%', width: '100%', backgroundColor: 'var(--Colors-Use-Basic-Background)' }}
         title={title}
