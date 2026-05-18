@@ -75,10 +75,6 @@ const useAIMessageData = ({
         taskId: taskResult.items.at(0)?.token,
       }
       hasMoreRef.current = { casual: casualResult.hasMore, task: taskResult.hasMore, grpc: grpcIdRef.current > 0 }
-      if (!casualResult.hasMore && grpcIdRef.current > 0) {
-        isInitGrpc.current = true
-        grpcLoadMore?.({ limit: LIMIT, start_id: grpcIdRef.current })
-      }
 
       // 用每条记录的 token 作为 pToken 查询对应的正文内容。
       const [casualContents, taskContents] = await Promise.all([
@@ -93,6 +89,11 @@ const useAIMessageData = ({
       })
       setCasualElements(indexedDBDataToReActChatRenderItem('reAct', casualResult.items))
       setTaskElements(indexedDBDataToReActChatRenderItem('task', taskResult.items))
+
+      if (!casualResult.hasMore && grpcIdRef.current > 0) {
+        isInitGrpc.current = true
+        grpcLoadMore?.({ limit: LIMIT, start_id: grpcIdRef.current })
+      }
     } catch (err) {
       yakitNotify('error', err instanceof Error ? err.message : '未知错误')
     } finally {
@@ -209,6 +210,12 @@ const useAIMessageData = ({
     hasMoreRef.current = { casual: true, task: true, grpc: true }
     cursorsRef.current = {}
     grpcIdRef.current = -1
+
+    setCasualLoadMoreLoading(false)
+    setTaskLoadMoreLoading(false)
+
+    hasMoreTimeline.current = true
+    setTimelinesLoading(false)
   }
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(
