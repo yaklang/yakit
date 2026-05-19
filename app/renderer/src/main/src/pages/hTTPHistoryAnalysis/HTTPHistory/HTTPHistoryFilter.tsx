@@ -228,7 +228,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
   const [curTags, setCurTags] = useState<string[]>([])
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
-
+  const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState(0)
   // 表格参数改变
   const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
     onSetHTTPFlowFilter(queryParams)
@@ -304,6 +304,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                 <HTTPFlowRuleDataFilter
                   queryparamsStr={rulesQueryparams}
                   onSetFilterRows={setMitmAggregateFilterRows}
+                  httpFlowTableDataLength={httpFlowTableDataLength}
                 />
               </div>
               <div style={{ display: activeKey === 'ai' ? 'block' : 'none', height: '100%' }}>
@@ -373,6 +374,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
               webFuzzerPageId={webFuzzerPageId}
               closable={closable}
               mitmAggregateFilterRows={mitmAggregateFilterRows}
+              onDataChange={setHttpFlowTableDataLength}
             />
           </div>
         }
@@ -431,6 +433,7 @@ interface HTTPFlowTableProps {
   webFuzzerPageId?: string
   closable?: boolean
   mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
+  onDataChange?: (dataLength: number) => void
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
   const {
@@ -451,6 +454,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     webFuzzerPageId,
     closable = true,
     mitmAggregateFilterRows = [],
+    onDataChange,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'history', 'yakitRoute'])
   const { currentPageTabRouteKey, queryPagesDataById } = usePageInfo(
@@ -2352,6 +2356,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         const d = isInit ? dataHasClassName : mergeHTTPFlowsById(data, dataHasClassName)
         setData(d)
         setTotal(onlyFavorite && tagsFilter.length > 0 ? d.length : res.Total)
+        onDataChange?.(res.Total)
 
         const page = { ...res.Pagination }
         delete page['AfterId']

@@ -205,6 +205,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [curTags, setCurTags] = useState<string[]>([])
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
+  const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
 
   const mitmContent = useContext(MITMContext)
 
@@ -323,6 +324,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                   baseParams={historyProps.params}
                   queryparamsStr={rulesQueryparams}
                   onSetFilterRows={setMitmAggregateFilterRows}
+                  httpFlowTableDataLength={httpFlowTableDataLength}
                   resetTableAndEditorShow={(table, editor) => {
                     setOnlyShowFirstNode(table)
                     setSecondNodeVisible(editor)
@@ -383,6 +385,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
               curTags={curTags}
               mitmAggregateFilterRows={mitmAggregateFilterRows}
               onQueryParams={onQueryParams}
+              onSetTableTotal={setHttpFlowTableDataLength}
               setOnlyShowFirstNode={setOnlyShowFirstNode}
               setSecondNodeVisible={setSecondNodeVisible}
               showHistoryAnalysisBtn
