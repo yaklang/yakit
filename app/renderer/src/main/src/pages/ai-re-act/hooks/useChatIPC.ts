@@ -654,6 +654,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     }
     handleResetBeforeStart()
     chatID.current = token
+
+    /** 先设置等待文案再设置为执行中 */
+    setCasualTitle('等待回复中....')
     setExecute(true)
 
     aiRequest.current = params.Params
@@ -827,6 +830,7 @@ function useChatIPC(params?: UseChatIPCParams) {
           if (!res.IsSync) {
             handleTriggerQuestionQueueRequest()
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
+            currentCasualTaskID.current = data.react_task_id
             if (data.focus_mode) {
               // 记录专注模式状态
               handleFocusModeChange(data.react_task_id, data.focus_mode)
@@ -910,7 +914,6 @@ function useChatIPC(params?: UseChatIPCParams) {
             if (currentTaskPlanID.current?.coordinatorId === res.CoordinatorId) return
             /* 问题的状态变化 */
             const { react_task_id, react_task_now_status } = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
-
             if (['completed', 'aborted'].includes(react_task_now_status)) {
               if (currentCasualTaskID.current && currentCasualTaskID.current === react_task_id) {
                 // 问题任务完成或者者被中止后，重置当前问题任务id
@@ -1051,7 +1054,6 @@ function useChatIPC(params?: UseChatIPCParams) {
       startTimeout.current = null
     }
     startTimeout.current = setTimeout(() => {
-      setCasualTitle('自由对话开始')
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
       cb?.()
