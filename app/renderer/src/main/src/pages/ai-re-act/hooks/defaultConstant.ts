@@ -1,6 +1,6 @@
 import { AIToolResult } from './aiRender'
 import { AIAgentGrpcApi, AIOutputI18n } from './grpcApi'
-import { AIQuestionQueues, CasualLoadingStatus, CurrentExecTaskTree, PlanLoadingStatus } from './type'
+import { AIQuestionQueues, CurrentExecTaskTree, PlanLoadingStatus } from './type'
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
@@ -124,11 +124,6 @@ export const DefaultMemoryList: AIAgentGrpcApi.MemoryEntryList = {
   },
 }
 
-/** 自由对话(ReAct)loading-默认值 */
-export const DefaultCasualLoadingStatus: CasualLoadingStatus = {
-  loading: false,
-  title: 'thinking...',
-}
 /** 任务规划loading-默认值 */
 export const DefaultPlanLoadingStatus: PlanLoadingStatus = {
   loading: false,

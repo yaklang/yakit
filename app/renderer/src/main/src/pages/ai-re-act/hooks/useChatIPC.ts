@@ -5,7 +5,6 @@ import type {
   AIFileSystemPin,
   AIMessageDataProps,
   AIQuestionQueues,
-  CasualLoadingStatus,
   HistoryChatType,
   PlanLoadingStatus,
   TaskChatTaskInfo,
@@ -44,7 +43,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import {
   convertNodeIdToVerbose,
   DefaultAIQuestionQueues,
-  DefaultCasualLoadingStatus,
   DefaultMemoryList,
   DefaultPlanHistoryList,
   DefaultPlanLoadingStatus,
@@ -330,20 +328,23 @@ function useChatIPC(params?: UseChatIPCParams) {
   /** 自由对话状态变换的计数 */
   const casualChatID = useRef(0)
   /** 自由对话(ReAct)的loading状态 */
-  const [casualStatus, setCasualStatus] = useState<CasualLoadingStatus>(cloneDeep(DefaultCasualLoadingStatus))
+  /** 自由对话loading状态中的显示文案 */
+  const [casualTitle, setCasualTitle] = useState<string>('')
+  /** 自由对话是否在进行中 */
+  const [casualLoading, setCasualLoading] = useState<boolean>(false)
   const handleUpdateCasualStatus = useMemoizedFn((type: 'add' | 'remove' | 'reset') => {
     if (type === 'reset') {
       casualChatID.current = 0
-      setCasualStatus(cloneDeep(DefaultCasualLoadingStatus))
+      setCasualLoading(false)
+      setCasualTitle('')
       return
     }
 
     if (type === 'add') {
-      casualChatID.current += 1
+      setCasualLoading(true)
     } else if (type === 'remove') {
-      casualChatID.current -= 1
+      setCasualLoading(false)
     }
-    setCasualStatus((old) => ({ ...old, loading: casualChatID.current > 0 }))
   })
 
   const [casualChat, casualChatEvent] = useCasualChat({
@@ -735,7 +736,6 @@ function useChatIPC(params?: UseChatIPCParams) {
             }
             // 开始任务规划后，刷新历史任务树
             sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
-            handleUpdateCasualStatus('remove')
             // 任务规划的loading开始置为true
             setTaskStatus(() => ({ loading: true, plan: '加载中...', task: '加载中...' }))
             // 触发任务规划UI展示的回调
@@ -752,7 +752,6 @@ function useChatIPC(params?: UseChatIPCParams) {
           // 结束任务规划，并传出任务规划流的标识 coordinator_id
           const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
           if (startInfo.coordinator_id && currentTaskPlanID.current?.coordinatorId === startInfo.coordinator_id) {
-            handleUpdateCasualStatus('add')
             taskChatEvent.handlePlanExecEnd(res)
             /**先修改任务状态loading，再改变任务树的状态 */
             handleResetTaskStatus()
@@ -835,6 +834,7 @@ function useChatIPC(params?: UseChatIPCParams) {
               // 非专注模式状态
               handleResetFocusMode()
             }
+            handleUpdateCasualStatus('add')
           }
           // 不能return，因为自由对话的hook要进行问题的UI渲染逻辑处理
         }
@@ -911,8 +911,6 @@ function useChatIPC(params?: UseChatIPCParams) {
             /* 问题的状态变化 */
             const { react_task_id, react_task_now_status } = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
 
-            if (react_task_now_status === 'processing') handleUpdateCasualStatus('add')
-
             if (['completed', 'aborted'].includes(react_task_now_status)) {
               if (currentCasualTaskID.current && currentCasualTaskID.current === react_task_id) {
                 // 问题任务完成或者者被中止后，重置当前问题任务id
@@ -941,12 +939,7 @@ function useChatIPC(params?: UseChatIPCParams) {
                 })
               } else {
                 // 自由对话-loading展示标题
-                setCasualStatus((old) => {
-                  if (old.loading) {
-                    return { ...old, title: data.value || 'thinking...' }
-                  }
-                  return old
-                })
+                setCasualTitle(data.value)
               }
             } else if (data.key === 'plan-executing-loading-status-key') {
               if (currentTaskPlanID.current?.coordinatorId === res.CoordinatorId) {
@@ -1058,6 +1051,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       startTimeout.current = null
     }
     startTimeout.current = setTimeout(() => {
+      setCasualTitle('自由对话开始')
       handleSyncDataAfterConnect()
       handleStartSyncDataInterval()
       cb?.()
@@ -1210,10 +1204,13 @@ function useChatIPC(params?: UseChatIPCParams) {
       taskChat,
       grpcFolders,
       questionQueue,
-      casualStatus,
       reActTimelines,
       memoryList,
+
       taskStatus,
+      casualTitle,
+      casualLoading,
+
       systemStream,
       focusMode,
       switchLoading,
@@ -1232,10 +1229,13 @@ function useChatIPC(params?: UseChatIPCParams) {
     taskChat,
     grpcFolders,
     questionQueue,
-    casualStatus,
     reActTimelines,
     memoryList,
+
     taskStatus,
+    casualTitle,
+    casualLoading,
+
     systemStream,
     focusMode,
     switchLoading,
