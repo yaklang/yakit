@@ -41,7 +41,7 @@ import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { VirtualPaging } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { CheckboxChangeEvent } from 'antd/lib/checkbox'
-import { apiOpenSSAProject, apiQuerySSAPrograms } from './utils'
+import { apiQuerySSAPrograms } from './utils'
 import { getGroupNamesTotal } from '../yakRunnerCodeScan/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -587,16 +587,6 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
     Total: 0,
   })
   useEffect(() => {
-    const projectIds = pageInfo?.ProjectIds?.filter((id) => id > 0) || []
-    if (projectIds.length === 1) {
-      apiOpenSSAProject(projectIds[0])
-        .then(() => update(1))
-        .catch((e) => {
-          failed('打开项目数据库失败：' + e)
-          setLoading(false)
-        })
-      return
-    }
     update(1)
   }, [pageInfo])
 

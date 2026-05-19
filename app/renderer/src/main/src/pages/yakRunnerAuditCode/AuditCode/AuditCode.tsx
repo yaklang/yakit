@@ -85,7 +85,6 @@ import {
   apiFetchQuerySyntaxFlowResult,
   getGroupNamesTotal,
 } from '@/pages/yakRunnerCodeScan/utils'
-import { apiOpenSSAProject } from '@/pages/yakRunnerScanHistory/utils'
 import {
   CreateSSAProjectResponse,
   DeleteSyntaxFlowResultRequest,
@@ -2637,14 +2636,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
               <YakitButton
                 type="text"
                 icon={<OutlineReloadScanIcon />}
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation()
-                  try {
-                    await apiOpenSSAProject(record.ID)
-                    setJSONStringConfig(record.JSONStringConfig)
-                  } catch (error) {
-                    failed(t('AuditCode.openProjectFailed', { error: String(error) }))
-                  }
+                  setJSONStringConfig(record.JSONStringConfig)
                 }}
               />
             </Tooltip>
@@ -2656,7 +2650,6 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                 onClick={async (e) => {
                   e.stopPropagation()
                   try {
-                    await apiOpenSSAProject(record.ID)
                     const selectTotal = await getGroupNamesTotal({ GroupNames: [record.Language] })
                     emiter.emit(
                       'openPage',
@@ -2683,23 +2676,18 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
               <YakitButton
                 type="text"
                 icon={<OutlineClockIcon />}
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation()
-                  try {
-                    await apiOpenSSAProject(record.ID)
-                    emiter.emit(
-                      'openPage',
-                      JSON.stringify({
-                        route: YakitRoute.YakRunner_ScanHistory,
-                        params: {
-                          Programs: [record.ProjectName],
-                          ProjectIds: [record.ID],
-                        },
-                      }),
-                    )
-                  } catch (error) {
-                    failed(t('AuditCode.openProjectFailed', { error: String(error) }))
-                  }
+                  emiter.emit(
+                    'openPage',
+                    JSON.stringify({
+                      route: YakitRoute.YakRunner_ScanHistory,
+                      params: {
+                        Programs: [record.ProjectName],
+                        ProjectIds: [record.ID],
+                      },
+                    }),
+                  )
                 }}
               />
             </Tooltip>
@@ -2764,22 +2752,17 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     deleteParams && onDelete({ ...deleteParams.params, DeleteMode: 'delete_all' })
   })
 
-  const onClickRow = useMemoizedFn(async (record: SSAProjectResponse) => {
-    try {
-      await apiOpenSSAProject(record.ID)
-      emiter.emit(
-        'openPage',
-        JSON.stringify({
-          route: YakitRoute.YakRunner_ScanHistory,
-          params: {
-            Programs: [record.ProjectName],
-            ProjectIds: [record.ID],
-          },
-        }),
-      )
-    } catch (error) {
-      failed(t('AuditCode.openProjectFailed', { error: String(error) }))
-    }
+  const onClickRow = useMemoizedFn((record: SSAProjectResponse) => {
+    emiter.emit(
+      'openPage',
+      JSON.stringify({
+        route: YakitRoute.YakRunner_ScanHistory,
+        params: {
+          Programs: [record.ProjectName],
+          ProjectIds: [record.ID],
+        },
+      }),
+    )
   })
   return (
     <div
