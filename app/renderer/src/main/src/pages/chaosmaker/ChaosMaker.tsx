@@ -188,6 +188,7 @@ export const ChaosMakerPage: React.FC<ChaosMakerPageProp> = (props) => {
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           lineHeight: '25px',
+                          color: 'var(--Colors-Use-Neutral-Text-3-Secondary)',
                         }}
                       >
                         <Tooltip title={e.Description}>{e.Description}</Tooltip>

@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Space, Table, Tabs, Tag } from 'antd'
+import { Space, Tag } from 'antd'
+import YakitTabs from '@/components/yakitUI/YakitTabs/YakitTabs'
+import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
+import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { ChaosMakerRuleGroup } from '@/pages/chaosmaker/ChaosMaker'
 import { useMemoizedFn } from 'ahooks'
 import {
@@ -119,67 +122,52 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
         couldBeenReset={activeTab !== 'tables'}
         onReset={props.onReset}
       />
-      <Tabs style={{ height: '100%' }} activeKey={activeTab} type={'card'} onChange={(e) => {}}>
-        <Tabs.TabPane disabled={running} key="tables" tab={'规则列表'}>
-          <Table<ChaosMakerRule>
-            style={{ flex: 1 }}
-            columns={[
-              { title: '规则名', render: (i: ChaosMakerRule) => i.NameZh || i.Name },
-              { title: '规则类型', render: (i: ChaosMakerRule) => i.ClassType },
-              { title: '相关', render: (i: ChaosMakerRule) => (i['CVE'] || []).join(', ') },
-            ]}
-            rowKey={(i) => i['Id']}
+      <YakitTabs style={{ height: '100%' }} activeKey={activeTab} type={'card'} onChange={(e) => {}}>
+        <YakitTabs.YakitTabPane disabled={running} key="tables" tab={'规则列表'}>
+          <TableVirtualResize<ChaosMakerRule>
+            isRefresh={false}
+            columns={
+              [
+                {
+                  title: '规则名',
+                  dataKey: 'NameZh',
+                  render: (_, i: ChaosMakerRule) => i.NameZh || i.Name,
+                },
+                { title: '规则类型', dataKey: 'ClassType' },
+                {
+                  title: '相关',
+                  dataKey: 'CVE',
+                  render: (_, i: ChaosMakerRule) => (i['CVE'] || []).join(', '),
+                },
+              ] as ColumnsTypeProps[]
+            }
+            renderKey={'Id'}
+            data={data}
+            loading={loading}
             size={'small'}
-            dataSource={data}
-            rowSelection={{
-              type: 'radio',
-              selectedRowKeys: selectedRowKeys?.Id ? [selectedRowKeys.Id] : [],
-              onChange: (keys) => {
-                if (typeof keys === 'object') {
-                  let found = false
-                  data.forEach((i) => {
-                    if (found) {
-                      return
-                    }
-                    if (`${i.Id}` === `${keys[0]}`) {
-                      if (!!i) {
-                        showDrawer({
-                          title: '流量规则详情',
-                          width: '30%',
-                          content: <div>{JSON.stringify(i)}</div>,
-                        })
-                      }
-                      setSelectedRowKeys(i)
-                      found = true
-                    }
-                  })
-                }
-              },
+            currentSelectItem={selectedRowKeys}
+            onRowClick={(i: ChaosMakerRule) => {
+              showDrawer({
+                title: '流量规则详情',
+                width: '30%',
+                content: <div>{JSON.stringify(i)}</div>,
+              })
+              setSelectedRowKeys(i)
             }}
             pagination={{
-              pageSize: limit,
-              simple: true,
-              showSizeChanger: true,
+              page: pagination.Page,
+              limit,
               total,
-              current: pagination.Page,
-              pageSizeOptions: ['5', '10', '20'],
-              onChange: (page: number, limit?: number) => {
-                // dispatch({type: "updateParams", payload: {page, limit}})
-                update(page, limit)
-              },
-              onShowSizeChange: (old, limit) => {
-                // dispatch({type: "updateParams", payload: {page: 1, limit}})
-                update(1, limit)
-              },
+              onChange: (page: number, newLimit: number) => update(page, newLimit),
             }}
-          ></Table>
-        </Tabs.TabPane>
+          />
+        </YakitTabs.YakitTabPane>
         {running && (
-          <Tabs.TabPane key={'steps'} tab={'运行状态'}>
+          <YakitTabs.YakitTabPane key={'steps'} tab={'运行状态'}>
             <ChaosMakerRunningSteps params={executeParam} />
-          </Tabs.TabPane>
+          </YakitTabs.YakitTabPane>
         )}
-      </Tabs>
+      </YakitTabs>
     </AutoCard>
   )
 }
