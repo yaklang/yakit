@@ -111,6 +111,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     casualLoading,
     requestHistoryState: { casualLoadMoreLoading },
     systemStream,
+    execute,
   } = useChatIPCStore().chatIPCData
 
   const { activeChat } = useAIAgentStore()
@@ -153,25 +154,26 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     enabled: casualLoading,
   })
   const Footer = useCallback(
-    () => (
-      <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
-        {casualTitle ? (
-          <Loading
-            size={14}
-            style={{
-              marginTop: 8,
-            }}
-          >
-            <div className="text-ellipsis" style={{ fontWeight: 400, display: 'flex', alignItems: 'center' }}>
-              {mode === 'value' ? displayValue : <ScrollText text={displayValue as string} />}
-            </div>
-          </Loading>
-        ) : (
-          '自由对话已完成'
-        )}
-      </div>
-    ),
-    [casualTitle, mode, displayValue],
+    () =>
+      execute ? (
+        <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
+          {!!casualTitle ? (
+            <Loading
+              size={14}
+              style={{
+                marginTop: 8,
+              }}
+            >
+              <div className="text-ellipsis" style={{ fontWeight: 400, display: 'flex', alignItems: 'center' }}>
+                {mode === 'value' ? displayValue : <ScrollText text={displayValue as string} />}
+              </div>
+            </Loading>
+          ) : (
+            <div className={styles['end']}>当前会话已结束</div>
+          )}
+        </div>
+      ) : null,
+    [casualTitle, mode, displayValue, execute],
   )
   const Header = useCallback(
     () =>
@@ -190,7 +192,6 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     }),
     [Footer, Header, Item],
   )
-
   return (
     <div className={styles['ai-re-act-chat-contents']}>
       <Virtuoso

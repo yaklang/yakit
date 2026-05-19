@@ -13,7 +13,7 @@ import classNames from 'classnames'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { ChevrondownButton, ChevronleftButton, RoundedStopButton } from './AIReActComponent'
-import { AIInputEvent, AIStartParams } from '../hooks/grpcApi'
+import { AIInputEvent, AIInputEventSyncTypeEnum, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
@@ -24,6 +24,7 @@ import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
 import useGetChatDataStoreKey from '../hooks/useGetChatDataStoreKey'
+import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -39,7 +40,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const { setChats, setActiveChat } = useAIAgentDispatcher()
 
     const { chatIPCData } = useChatIPCStore()
-    const { chatIPCEvents, handleStop, handleSendSyncMessage } = useChatIPCDispatcher()
+    const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
     const focusMode = useCreation(() => chatIPCData.focusMode, [chatIPCData.focusMode])
     const notifyMessage = useCreation(() => chatIPCData.notifyMessage, [chatIPCData.notifyMessage])
@@ -222,6 +223,23 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       aiChatTextareaRef?.current?.setValue(value ?? '')
     })
     const { chatDataStoreKey } = useGetChatDataStoreKey()
+    const cancelCasualLoading = useCreation(() => {
+      return chatIPCData.cancelCasualLoading
+    }, [chatIPCData.cancelCasualLoading])
+    const casualLoading = useCreation(() => {
+      return chatIPCData.casualLoading
+    }, [chatIPCData.casualLoading])
+    const handleStopCasualTask = useMemoizedFn(() => {
+      const currentCasualTaskID = chatIPCEvents.fetchCurrentCasualTaskID()
+      if (!chatIPCData.execute || !currentCasualTaskID) return
+
+      chatIPCEvents.handleCancelLoadingChange('reAct', true)
+      const params: AISendSyncMessageParams = {
+        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+        SyncJsonInput: JSON.stringify({ task_id: currentCasualTaskID }),
+      }
+      handleSendSyncMessage(params)
+    })
     return (
       <>
         <div
@@ -267,7 +285,13 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       isOpen={externalParameters?.isOpen}
                       inputFooterRight={
                         <div className={styles['extra-footer-right']}>
-                          {execute && <RoundedStopButton onClick={handleStop} style={{ width: 24, height: 24 }} />}
+                          {casualLoading && (
+                            <RoundedStopButton
+                              loading={cancelCasualLoading}
+                              onClick={handleStopCasualTask}
+                              style={{ width: 24, height: 24 }}
+                            />
+                          )}
                         </div>
                       }
                       footerLeftTypes={externalParameters?.footerLeftTypes}
