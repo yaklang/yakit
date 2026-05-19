@@ -107,7 +107,8 @@ const TYPE = 'reAct'
 export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo((props) => {
   const { chats } = props
   const {
-    casualStatus: { loading, title },
+    casualTitle,
+    casualLoading,
     requestHistoryState: { casualLoadMoreLoading },
     systemStream,
   } = useChatIPCStore().chatIPCData
@@ -147,14 +148,14 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   )
 
   const { displayValue, mode } = useAISystemStream({
-    value: title,
+    value: casualTitle,
     systemStream,
-    enabled: loading,
+    enabled: casualLoading,
   })
   const Footer = useCallback(
-    () =>
-      loading ? (
-        <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
+    () => (
+      <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
+        {casualTitle ? (
           <Loading
             size={14}
             style={{
@@ -165,9 +166,12 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
               {mode === 'value' ? displayValue : <ScrollText text={displayValue as string} />}
             </div>
           </Loading>
-        </div>
-      ) : null,
-    [loading, mode, displayValue],
+        ) : (
+          '自由对话已完成'
+        )}
+      </div>
+    ),
+    [casualTitle, mode, displayValue],
   )
   const Header = useCallback(
     () =>

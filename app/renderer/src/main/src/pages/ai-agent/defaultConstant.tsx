@@ -282,7 +282,6 @@ export const defaultChatIPCData: UseChatIPCState = {
     total: 0,
     data: [],
   },
-  casualStatus: { loading: false, title: '' },
   reActTimelines: [],
   memoryList: { ...DefaultMemoryList },
   taskStatus: { loading: false, plan: '', task: '' },
@@ -300,6 +299,8 @@ export const defaultChatIPCData: UseChatIPCState = {
     saveLoading: false,
     timelinesLoading: false,
   },
+  casualLoading: false,
+  casualTitle: '',
 }
 //#endregion
 
