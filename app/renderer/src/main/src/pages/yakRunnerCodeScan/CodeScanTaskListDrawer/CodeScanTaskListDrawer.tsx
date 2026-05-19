@@ -21,7 +21,7 @@ import { shallow } from 'zustand/shallow'
 import { SyntaxFlowScanRequest } from '../YakRunnerCodeScanType'
 import { CreateReportContentProps, onCreateReportModal } from '@/pages/portscan/CreateReport'
 import moment from 'moment'
-import { apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
+import { apiOpenSSAProject, apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
 const { ipcRenderer } = window.require('electron')
 interface CodeScanTaskListForwardedRefProps {
   onRemove: () => void
@@ -513,6 +513,9 @@ export const CodeScanTaskList: React.FC<CodeScanTaskListProps> = React.memo(
         if (res.Data.length > 0) {
           projectId = res.Data[0].SSAProjectID
           projectName = res.Data[0].Name
+        }
+        if (projectId > 0) {
+          await apiOpenSSAProject(projectId)
         }
         // 重试new 都是新建页面
         if (!!current && codeScanMode !== 'new') {

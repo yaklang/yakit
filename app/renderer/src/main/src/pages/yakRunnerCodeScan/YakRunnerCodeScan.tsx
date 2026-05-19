@@ -106,7 +106,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { ChevronDownIcon, ChevronUpIcon, FolderOpenIcon } from '@/assets/newIcon'
 import { SSAProjectResponse } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
 import { QuerySSAProgramRequest } from '../yakRunnerScanHistory/YakRunnerScanHistory'
-import { apiQuerySSAPrograms } from '../yakRunnerScanHistory/utils'
+import { apiOpenSSAProject, apiQuerySSAPrograms } from '../yakRunnerScanHistory/utils'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { AfreshAuditModal } from '../yakRunnerAuditCode/AuditCode/AuditCode'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
@@ -1437,6 +1437,9 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
     useEffect(() => {
       const { projectId, historyName, codeScanMode, runtimeId } = pageInfo
       if (projectId) {
+        apiOpenSSAProject(projectId).catch((e) => {
+          failed('打开项目数据库失败：' + e)
+        })
         setExecuteType('old')
         form.setFieldsValue({
           project: projectId,

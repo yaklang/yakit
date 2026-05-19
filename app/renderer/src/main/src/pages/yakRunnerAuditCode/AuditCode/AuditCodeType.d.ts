@@ -225,6 +225,17 @@ export interface SSAProjectResponse {
   RiskNumber: number
   // 编译次数
   CompileTimes: number
+  // 绑定的 SSA IR 数据库路径
+  DatabasePath?: string
+  URL?: string
+}
+
+export interface OpenSSAProjectRequest {
+  ID: number
+}
+
+export interface OpenSSAProjectResponse {
+  Project: SSAProjectResponse
 }
 
 export interface UpdateSSAProjectRequest {

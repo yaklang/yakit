@@ -51,7 +51,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import moment from 'moment'
-import { apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
+import { apiOpenSSAProject, apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { warn } from '@/utils/notification'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
@@ -277,18 +277,22 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
             return
           }
 
-          emiter.emit(
-            'openPage',
-            JSON.stringify({
-              route: YakitRoute.YakRunner_Code_Scan,
-              params: {
-                // 此处由接口查出来
-                projectName: compileProjectName,
-                projectId,
-                historyName: [projectName],
-              },
-            }),
-          )
+          apiOpenSSAProject(projectId)
+            .then(() => {
+              emiter.emit(
+                'openPage',
+                JSON.stringify({
+                  route: YakitRoute.YakRunner_Code_Scan,
+                  params: {
+                    // 此处由接口查出来
+                    projectName: compileProjectName,
+                    projectId,
+                    historyName: [projectName],
+                  },
+                }),
+              )
+            })
+            .catch((e) => warn(t('RunnerFileTree.openProjectFailed', { error: String(e) })))
         })
 
         break

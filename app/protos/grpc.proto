@@ -852,6 +852,7 @@ service Yak {
   rpc UpdateSSAProject(UpdateSSAProjectRequest) returns (UpdateSSAProjectResponse);
   rpc DeleteSSAProject(DeleteSSAProjectRequest) returns (DeleteSSAProjectResponse);
   rpc QuerySSAProject(QuerySSAProjectRequest) returns (QuerySSAProjectResponse);
+  rpc OpenSSAProject(OpenSSAProjectRequest) returns (OpenSSAProjectResponse);
   rpc MigrateSSAProject(MigrateSSAProjectRequest) returns (stream MigrateSSAProjectResponse);
 
   rpc GetAllPluginEnv(Empty) returns (PluginEnvData);
@@ -9032,6 +9033,8 @@ message SSAProject {
   int64 CompileTimes = 14;
   // 本地路径或者远程代码仓库路径
   string URL = 15;
+  // 绑定的 SSA IR 数据库文件路径
+  string DatabasePath = 16;
 }
 
 message SSAProjectCompileConfig{
@@ -9102,6 +9105,14 @@ message QuerySSAProjectResponse {
   repeated SSAProject Projects = 1;
   Paging Pagination = 2;
   int64 Total = 3;
+}
+
+message OpenSSAProjectRequest {
+  int64 ID = 1;
+}
+
+message OpenSSAProjectResponse {
+  SSAProject Project = 1;
 }
 
 message MigrateSSAProjectRequest{}
