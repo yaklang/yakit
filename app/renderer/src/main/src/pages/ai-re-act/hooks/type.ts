@@ -193,12 +193,6 @@ export interface AIQuestionQueues {
   data: AIAgentGrpcApi.QuestionQueueItem[]
 }
 
-/** 自由对话-loading状态信息 */
-export interface CasualLoadingStatus {
-  loading: boolean
-  title: string
-}
-
 /** 任务规划-loading状态信息 */
 export interface PlanLoadingStatus {
   loading: boolean
@@ -223,14 +217,18 @@ export interface UseChatIPCState {
   grpcFolders: AIFileSystemPin[]
   /** 问题队列信息 */
   questionQueue: AIQuestionQueues
-  /** 自由对话的loading状态信息 */
-  casualStatus: CasualLoadingStatus
   /** 时间线 */
   reActTimelines: AIAgentGrpcApi.TimelineItem[]
   /** 记忆列表 */
   memoryList: AIAgentGrpcApi.MemoryEntryList
+
   /** 任务规划的loading状态信息 */
   taskStatus: PlanLoadingStatus
+  /** 自由对话的loading 显示的文案 */
+  casualTitle: string
+  /** 自由对话的是否进行中 */
+  casualLoading: boolean
+
   /** 系统流信息(isSystem=true&type=stream) */
   systemStream: string
   /** 专注模式状态(仅供自由对话[reAct])使用 */

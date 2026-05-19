@@ -159,7 +159,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     onGetHttpFlowFuzzStatus,
   })
 
-  const { execute, casualStatus } = chatIPCData
+  const { execute, casualLoading } = chatIPCData
 
   useEffect(() => {
     if (!httpFuzzTabPageId) {
@@ -168,14 +168,14 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       return
     }
 
-    if (!casualLoadingRef.current && casualStatus.loading) {
+    if (!casualLoadingRef.current && casualLoading) {
       initialRequestInCasualRef.current = getWebFuzzerPageRequestString(httpFuzzTabPageId) ?? ''
-    } else if (casualLoadingRef.current && !casualStatus.loading) {
+    } else if (casualLoadingRef.current && !casualLoading) {
       initialRequestInCasualRef.current = null
     }
 
-    casualLoadingRef.current = casualStatus.loading
-  }, [casualStatus.loading, httpFuzzTabPageId])
+    casualLoadingRef.current = casualLoading
+  }, [casualLoading, httpFuzzTabPageId])
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID
