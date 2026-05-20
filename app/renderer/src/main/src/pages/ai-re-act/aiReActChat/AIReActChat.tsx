@@ -126,6 +126,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             request,
             SessionID: session,
             TitleInitialized: false,
+            isCreate: true,
           }
 
           setActiveChat && setActiveChat(newChat)

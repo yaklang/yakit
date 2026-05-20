@@ -29,7 +29,6 @@ import {
   DefaultToolResultSummary,
 } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import { v4 as uuidv4 } from 'uuid'
 
 // #region Common Utils
 /** grpc流数据转换成错误信息输出到日志中 */
@@ -229,7 +228,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
   const chatData: AIChatQSData = {
-    id: uuidv4(),
+    id: data.react_task_id,
     chatType: 'reAct',
     type: AIChatQSDataTypeEnum.QUESTION,
     Timestamp: res.Timestamp,

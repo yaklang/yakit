@@ -124,6 +124,9 @@ function useChatIPC(params?: UseChatIPCParams) {
     aiRequest.current = undefined
   })
 
+  /** 建立grpc连接的初次问题数据 */
+  const firstQS = useRef<AIInputEvent>()
+
   /** 获取全部聊天数据 */
   const getChatDataStore: UseHookBaseParams['getChatDataStore'] = useMemoizedFn(() => {
     if (!chatID.current) return
@@ -463,7 +466,7 @@ function useChatIPC(params?: UseChatIPCParams) {
   /** review 界面选项触发事件 */
   const onSend = useMemoizedFn(({ token, type, params, optionValue, extraValue }: AIChatSendParams) => {
     try {
-      if (!execute) {
+      if (!getExecute()) {
         yakitNotify('warning', 'AI 未执行任务，无法发送选项')
         return
       }
@@ -635,12 +638,10 @@ function useChatIPC(params?: UseChatIPCParams) {
     }
   })
 
-  /** 建立grpc流后, 延迟50ms定时执行一次的方法, 如果快速切换会话时, 执行取消上次定时器 */
-  const startTimeout = useRef<NodeJS.Timeout | null>(null)
   const onStart = useMemoizedFn(async (args: AIChatIPCStartParams, cb?: () => void) => {
     const { token, params } = args
 
-    if (execute) {
+    if (getExecute()) {
       yakitNotify('warning', 'useChatIPC AI任务正在执行中，请稍后再试！')
       return
     }
@@ -665,6 +666,21 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     ipcRenderer.on(`${token}-data`, (e, res: AIOutputEvent) => {
       try {
+        if (res.Type === 'pong') {
+          // pong类型消息是用来检测grpc连接是否成功的，不需要展示在界面上
+          // 以及把需要在grpc连接后的操作进行触发的地方
+          if (firstQS.current) {
+            sendRequest(firstQS.current)
+            firstQS.current = undefined
+          } else {
+            requestEvents.handleLoadInit(token, nextID)
+          }
+          handleSyncDataAfterConnect()
+          handleStartSyncDataInterval()
+          cb?.()
+          return
+        }
+
         if (res.SyncID) {
           onSyncIDChange?.(res.SyncID)
         }
@@ -1048,21 +1064,26 @@ function useChatIPC(params?: UseChatIPCParams) {
     // })
     // console.log('start-ai-re-act', token, params)
 
-    ipcRenderer.invoke('start-ai-re-act', token, params)
-    if (startTimeout.current) {
-      clearTimeout(startTimeout.current)
-      startTimeout.current = null
+    if (params.Params?.UserQuery) {
+      // 判断建立grpc连接时是否附带问题
+      // 如有，需要剥离出来，在grpc建立成功后再执行
+      firstQS.current = {
+        IsFreeInput: true,
+        FreeInput: params.Params.UserQuery,
+        AttachedResourceInfo: params.AttachedResourceInfo,
+        FocusModeLoop: params.FocusModeLoop,
+      }
     }
-    startTimeout.current = setTimeout(() => {
-      handleSyncDataAfterConnect()
-      handleStartSyncDataInterval()
-      cb?.()
-      if (!params.Params?.UserQuery) requestEvents.handleLoadInit(token, nextID)
-    }, 50)
+    ipcRenderer.invoke('start-ai-re-act', token, params)
   })
 
-  /** 切换session会话的数据 */
-  const handleSwitchSessionData = useMemoizedFn((session: string) => {
+  /**
+   * 切换session会话的数据
+   * @param isCreate
+   * 该参数主要识别，切换是欢迎页切换到历史会话，还是欢迎页直接新建会话的情况
+   * 新建会话不触发自动连接逻辑，否则UI条用的连接逻辑直接被拦截失效
+   */
+  const handleSwitchSessionData = useMemoizedFn((session: string, isCreate?: boolean) => {
     if (!session) {
       setTimeout(() => {
         setSwitchLoading(false)
@@ -1083,6 +1104,8 @@ function useChatIPC(params?: UseChatIPCParams) {
 
     const chatData = cacheDataStore?.get(session)
     if (chatData) {
+      // 后续只有当前会话的数据存放在类实例中
+      // 切换会话时，会自动把类实例的数据clear掉，所以这个判断下面代码不可能执行
       chatID.current = session
       setGrpcFolders(chatData.grpcFolders || [])
       setHttpRunTimeIDs(chatData.httpRunTimeIDs || [])
@@ -1095,24 +1118,23 @@ function useChatIPC(params?: UseChatIPCParams) {
       cacheDataStore?.clear()
     }
     endAfterSession.current = ''
-    setTimeout(() => {
-      setSwitchLoading(false)
-      if (autoConnect && getSetting && !getExecute()) {
-        onStart({
-          token: session,
-          params: {
-            IsStart: true,
-            Params: {
-              ...formatAIAgentSetting(getSetting()),
-              UserQuery: '',
-              TimelineSessionID: session,
-              CoordinatorId: '',
-              Sequence: 1,
-            },
+    setSwitchLoading(false)
+    if (autoConnect && getSetting && !getExecute()) {
+      if (isCreate) return
+      onStart({
+        token: session,
+        params: {
+          IsStart: true,
+          Params: {
+            ...formatAIAgentSetting(getSetting()),
+            UserQuery: '',
+            TimelineSessionID: session,
+            CoordinatorId: '',
+            Sequence: 1,
           },
-        })
-      }
-    }, 40)
+        },
+      })
+    }
   })
 
   const [switchLoading, setSwitchLoading] = useState(false)
@@ -1122,8 +1144,8 @@ function useChatIPC(params?: UseChatIPCParams) {
    * @return session 代表清空数据并设置新session对应的数据
    */
   const endAfterSession = useRef('')
-  const onSwitchChat = useMemoizedFn((session?: string) => {
-    if (!chatID.current && execute) {
+  const onSwitchChat: UseChatIPCEvents['onSwitchChat'] = useMemoizedFn((session, isCreate) => {
+    if (!chatID.current && getExecute()) {
       yakitNotify('warning', 'AI异常, 未记录session却处于执行状态, 请关闭AI页面重试!')
       return
     }
@@ -1131,16 +1153,14 @@ function useChatIPC(params?: UseChatIPCParams) {
     if (session && chatID.current && chatID.current === session) return
 
     setSwitchLoading(true)
-    if (execute) {
+    if (getExecute()) {
       endAfterSession.current = session || 'clear'
       // 这里使用chatID是因为session是替换chatID的新值，所以需要先取消旧session的会话
-      setTimeout(() => {
-        onClose(chatID.current)
-      }, 50)
+      onClose(chatID.current)
     } else {
       endAfterSession.current = ''
       // 直接切换数据逻辑
-      handleSwitchSessionData(session || 'clear')
+      handleSwitchSessionData(session || 'clear', isCreate)
     }
   })
 

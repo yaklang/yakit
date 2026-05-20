@@ -83,4 +83,6 @@ export interface AISession {
   SessionID: string
   /** 历史流量表和风险表 run_time_id */
   RelatedRuntimeIDs?: string[]
+  /** 前端逻辑使用-欢迎页对话不触发切换会话的流建立逻辑 */
+  isCreate?: boolean
 }
