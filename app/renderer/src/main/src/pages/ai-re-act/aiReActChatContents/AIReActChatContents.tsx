@@ -148,33 +148,26 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     [],
   )
 
-  const { displayValue, mode } = useAISystemStream({
-    value: casualTitle,
-    systemStream,
-    enabled: casualLoading,
-  })
-  const Footer = useCallback(
-    () =>
-      execute ? (
-        <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
-          {!!casualTitle ? (
-            <Loading
-              size={14}
-              style={{
-                marginTop: 8,
-              }}
-            >
-              <div className="text-ellipsis" style={{ fontWeight: 400, display: 'flex', alignItems: 'center' }}>
-                {mode === 'value' ? displayValue : <ScrollText text={displayValue as string} />}
-              </div>
-            </Loading>
-          ) : (
-            <div className={styles['end']}>当前会话已结束</div>
-          )}
-        </div>
-      ) : null,
-    [casualTitle, mode, displayValue, execute],
-  )
+  const Footer = useCallback(() => {
+    return execute ? (
+      <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
+        {!!casualTitle ? (
+          <Loading
+            size={14}
+            style={{
+              marginTop: 8,
+            }}
+          >
+            <div className="text-ellipsis" style={{ fontWeight: 400, display: 'flex', alignItems: 'center' }}>
+              <ScrollText text={casualTitle as string} />
+            </div>
+          </Loading>
+        ) : (
+          <div className={styles['end']}>当前会话已结束</div>
+        )}
+      </div>
+    ) : null
+  }, [casualTitle, execute])
   const Header = useCallback(
     () =>
       casualLoadMoreLoading ? (

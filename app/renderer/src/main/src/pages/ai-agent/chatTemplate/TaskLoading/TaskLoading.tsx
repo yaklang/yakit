@@ -33,7 +33,8 @@ export const ScrollText: FC<{ text?: string }> = ({ text = '' }) => {
           animationDuration: `${animationDuration}s`,
         }}
       >
-        {text}&nbsp;&nbsp;&nbsp;{text}
+        {text}
+        {animationDuration > 0 && <>&nbsp;&nbsp;&nbsp;{text}</>}
       </div>
     </div>
   )
