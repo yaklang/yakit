@@ -328,6 +328,7 @@ jobs:
   ci-pr-summary:
     name: PR 汇总评论
     runs-on: ubuntu-latest
+    continue-on-error: true
     needs:
       - prepare
       - ci-i18n
@@ -338,16 +339,17 @@ jobs:
       - ci-media
       - ci-vitest
       - ci-prettier
-    if: always() && github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      always() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.fork == false
     permissions:
       contents: read
+      issues: write
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - uses: actions/download-artifact@v4
