@@ -42,6 +42,8 @@ const useAIMessageData = ({
   const cursorsRef = useRef<PaginationCursors>({})
   // 记录后端的id
   const grpcIdRef = useRef<number>(0)
+  // 是否是新会话
+  const isCreateSession = useRef(false)
 
   const isInitGrpc = useRef(false)
 
@@ -49,7 +51,7 @@ const useAIMessageData = ({
     setInitLoading(true)
     // 重置分页状态
     handleReset()
-
+    isCreateSession.current = true
     try {
       await aiChatMessageStore.open()
       const [casualSettled, taskSettled, metaSettled] = await Promise.allSettled([
@@ -106,7 +108,7 @@ const useAIMessageData = ({
   const handleLoadMore: UseAIMessageDataEvents['handleLoadMore'] = useMemoizedFn(async (sessionId, chatType) => {
     switch (chatType) {
       case 'timelines':
-        handleHistoryTimelines(sessionId)
+        if (isCreateSession.current) handleHistoryTimelines(sessionId)
         break
       case 'reAct':
       case 'task':
@@ -217,6 +219,8 @@ const useAIMessageData = ({
     setTimelinesLoading(false)
 
     isInitGrpc.current = false
+
+    isCreateSession.current = false
   })
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(
