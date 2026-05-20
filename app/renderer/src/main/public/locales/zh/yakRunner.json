@@ -124,7 +124,6 @@
     "jumpCodeScanFailed": "跳转代码扫描页失败：{{error}}",
     "compileTime": "时间",
     "scanCount": "扫描次数",
-    "viewMoreCompileHistory": "更多",
     "noCompileHistory": "暂无编译历史"
   },
   "RunnerFileTree": {

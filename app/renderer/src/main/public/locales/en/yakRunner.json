@@ -124,7 +124,6 @@
     "jumpCodeScanFailed": "Failed to jump to code scan page: {{error}}",
     "compileTime": "Time",
     "scanCount": "Scan count",
-    "viewMoreCompileHistory": "More",
     "noCompileHistory": "No compile history"
   },
   "RunnerFileTree": {

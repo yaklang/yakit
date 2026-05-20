@@ -387,7 +387,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
       </div>
       <div className={styles['YakRunnerScanHistory-main']}>
         <YakitResizeBox
-          firstMinSize={'360px'}
+          firstMinSize={'380px'}
           firstNode={<CompileHistoryList pageInfo={pageInfo} clickItem={clickItem} setClickItem={setClickItem} />}
           secondNode={
             <TableVirtualResize<SyntaxFlowScanTask>
