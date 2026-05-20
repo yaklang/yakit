@@ -328,8 +328,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   /** 用户主动关闭当前问题的loading状态(自由对话) */
   const [cancelCasualLoading, setCancelCasualLoading] = useState(false)
-  /** 自由对话状态变换的计数 */
-  const casualChatID = useRef(0)
+
   /** 自由对话(ReAct)的loading状态 */
   /** 自由对话loading状态中的显示文案 */
   const [casualTitle, setCasualTitle] = useState<string>('')
@@ -337,7 +336,6 @@ function useChatIPC(params?: UseChatIPCParams) {
   const [casualLoading, setCasualLoading] = useState<boolean>(false)
   const handleUpdateCasualStatus = useMemoizedFn((type: 'add' | 'remove' | 'reset') => {
     if (type === 'reset') {
-      casualChatID.current = 0
       setCasualLoading(false)
       setCasualTitle('')
       return
@@ -528,7 +526,7 @@ function useChatIPC(params?: UseChatIPCParams) {
   const handleResetGrpcStatus = useMemoizedFn(() => {
     taskChatEvent.handleCloseGrpc()
     setExecute(false)
-    handleUpdateCasualStatus('reset')
+    setCasualLoading(false)
     handleResetTaskStatus()
   })
 
@@ -1055,6 +1053,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       }
       onEnd && onEnd()
 
+      setCasualTitle('会话已停止')
       ipcRenderer.invoke('cancel-ai-re-act', token).catch(() => {})
       ipcRenderer.removeAllListeners(`${token}-data`)
       ipcRenderer.removeAllListeners(`${token}-end`)
