@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import aiChatMessageStore from '../../ai-agent/store/aiChatMessageStore'
 import type { GetDialoguesData, StoreName } from '../../ai-agent/store/type'
-import { useMemoizedFn } from 'ahooks'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { getTreeDataIds, indexedDBDataToReActChatRenderItem, toDialogueData } from './utils'
 import type {
   AIFileSystemPin,
@@ -41,11 +41,11 @@ const useAIMessageData = ({
   // 分页id
   const cursorsRef = useRef<PaginationCursors>({})
   // 记录后端的id
-  const grpcIdRef = useRef<number>(-1)
+  const grpcIdRef = useRef<number>(0)
 
   const isInitGrpc = useRef(false)
 
-  const handleLoadInit: UseAIMessageDataEvents['handleLoadInit'] = async (sessionId, offset) => {
+  const handleLoadInit: UseAIMessageDataEvents['handleLoadInit'] = useMemoizedFn(async (sessionId, offset) => {
     setInitLoading(true)
     // 重置分页状态
     handleReset()
@@ -100,10 +100,10 @@ const useAIMessageData = ({
       if (isInitGrpc.current) return
       setInitLoading(false)
     }
-  }
+  })
 
   // ─── 加载更多：按 chatType 分别翻页 ─────────────────────────────────
-  const handleLoadMore: UseAIMessageDataEvents['handleLoadMore'] = async (sessionId, chatType) => {
+  const handleLoadMore: UseAIMessageDataEvents['handleLoadMore'] = useMemoizedFn(async (sessionId, chatType) => {
     switch (chatType) {
       case 'timelines':
         handleHistoryTimelines(sessionId)
@@ -115,7 +115,7 @@ const useAIMessageData = ({
       default:
         break
     }
-  }
+  })
 
   const handleLoadMoreChatData = useMemoizedFn(async (sessionId, chatType) => {
     const isCasual = chatType === 'reAct'
@@ -167,49 +167,48 @@ const useAIMessageData = ({
     }
   })
 
-  const handleSave: UseAIMessageDataEvents['handleSave'] = async (
-    sessionId,
-    { casualElements, taskElements, casualContentMap, taskContentMap },
-  ) => {
-    if (casualElements.length === 0) return
-    setSaveLoading(true)
+  const handleSave: UseAIMessageDataEvents['handleSave'] = useMemoizedFn(
+    async (sessionId, { casualElements, taskElements, casualContentMap, taskContentMap }) => {
+      if (casualElements.length === 0) return
+      setSaveLoading(true)
 
-    const sessionMetadataPromise = aiChatMessageStore.setSessionMetadata({
-      sessionId,
-      offset: grpcIdRef.current || 0,
-    })
-    const casualDialoguesPromise = aiChatMessageStore.setDialogues({
-      storeName: `${type}CasualDB`,
-      data: toDialogueData(casualElements, sessionId),
-    })
-    const taskDialoguesPromise = aiChatMessageStore.setDialogues({
-      storeName: `${type}TaskDB`,
-      data: toDialogueData(taskElements, sessionId),
-    })
-    const allContents = [...casualContentMap.values(), ...taskContentMap.values()]
-
-    const dialogueContentPromise = aiChatMessageStore.setDialogueContent({
-      data: allContents.map((content) => ({
-        token: content.id,
+      const sessionMetadataPromise = aiChatMessageStore.setSessionMetadata({
         sessionId,
-        content: JSON.stringify(content),
-        pToken: content.id,
-      })),
-    })
-    await Promise.all([sessionMetadataPromise, casualDialoguesPromise, taskDialoguesPromise, dialogueContentPromise])
-      .catch(() => {
-        yakitNotify('error', '保存聊天数据失败')
+        offset: grpcIdRef.current || 0,
       })
-      .finally(() => {
-        setSaveLoading(false)
+      const casualDialoguesPromise = aiChatMessageStore.setDialogues({
+        storeName: `${type}CasualDB`,
+        data: toDialogueData(casualElements, sessionId),
       })
-  }
+      const taskDialoguesPromise = aiChatMessageStore.setDialogues({
+        storeName: `${type}TaskDB`,
+        data: toDialogueData(taskElements, sessionId),
+      })
+      const allContents = [...casualContentMap.values(), ...taskContentMap.values()]
+
+      const dialogueContentPromise = aiChatMessageStore.setDialogueContent({
+        data: allContents.map((content) => ({
+          token: content.id,
+          sessionId,
+          content: JSON.stringify(content),
+          pToken: content.id,
+        })),
+      })
+      await Promise.all([sessionMetadataPromise, casualDialoguesPromise, taskDialoguesPromise, dialogueContentPromise])
+        .catch(() => {
+          yakitNotify('error', '保存聊天数据失败')
+        })
+        .finally(() => {
+          setSaveLoading(false)
+        })
+    },
+  )
 
   // ─── 重置 ────────────────────────────────────────────────────────────
-  const handleReset: UseAIMessageDataEvents['handleReset'] = () => {
+  const handleReset: UseAIMessageDataEvents['handleReset'] = useMemoizedFn(() => {
     hasMoreRef.current = { casual: true, task: true, grpc: true }
     cursorsRef.current = {}
-    grpcIdRef.current = -1
+    grpcIdRef.current = 0
 
     setCasualLoadMoreLoading(false)
     setTaskLoadMoreLoading(false)
@@ -218,7 +217,7 @@ const useAIMessageData = ({
     setTimelinesLoading(false)
 
     isInitGrpc.current = false
-  }
+  })
 
   const handleGrpcLoadMore: UseAIMessageDataEvents['handleGrpcLoadMore'] = useMemoizedFn(
     async ({ has_more, next_start_id }) => {
@@ -238,13 +237,13 @@ const useAIMessageData = ({
     },
   )
 
-  const handleHasMore: UseAIMessageDataEvents['handleHasMore'] = (chatType) => {
+  const handleHasMore: UseAIMessageDataEvents['handleHasMore'] = useMemoizedFn((chatType) => {
     if (chatType === 'timelines') return hasMoreTimeline.current
     if (chatType === 'task') return hasMoreRef.current.task
     return hasMoreRef.current.casual || hasMoreRef.current.grpc
-  }
+  })
 
-  const handleDeleteSession: UseAIMessageDataEvents['handleDeleteSession'] = async (sessions) => {
+  const handleDeleteSession: UseAIMessageDataEvents['handleDeleteSession'] = useMemoizedFn(async (sessions) => {
     setSaveLoading(true)
     try {
       await aiChatMessageStore.deleteSession({ domain: type, sessions })
@@ -255,7 +254,7 @@ const useAIMessageData = ({
     } finally {
       setSaveLoading(false)
     }
-  }
+  })
 
   // 更新当前session的历史数据请求基线(beforeID)
   const updateBeforeID = useMemoizedFn((type: loadMoreType, chatID: number) => {
@@ -341,8 +340,8 @@ const useAIMessageData = ({
   })
   // #endregion
 
-  return [
-    {
+  const state: UseAIMessageDataState = useCreation(() => {
+    return {
       /** 初始化加载中 */
       initLoading,
       /** 加载更多加载中 */
@@ -351,8 +350,11 @@ const useAIMessageData = ({
       saveLoading,
       /** 时间线加载中 */
       timelinesLoading,
-    },
-    {
+    }
+  }, [initLoading, casualLoadMoreLoading, taskLoadMoreLoading, saveLoading, timelinesLoading])
+
+  const events: UseAIMessageDataEvents = useCreation(() => {
+    return {
       handleLoadInit,
       handleLoadMore,
       handleReset,
@@ -360,8 +362,10 @@ const useAIMessageData = ({
       handleGrpcLoadMore,
       handleHasMore,
       handleDeleteSession,
-    },
-  ]
+    }
+  }, [])
+
+  return [state, events]
 }
 
 export default useAIMessageData

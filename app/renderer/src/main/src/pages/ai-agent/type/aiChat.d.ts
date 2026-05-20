@@ -88,6 +88,8 @@ export interface AISession {
   Source: AISource
   /** AI 启动参数 */
   StartParams?: AIStartParams
+  /** 前端逻辑使用-欢迎页对话不触发切换会话的流建立逻辑 */
+  isCreate?: boolean
 }
 
 export interface GrpcPageResponse<T = unknown> {

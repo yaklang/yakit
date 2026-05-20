@@ -131,6 +131,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             TitleInitialized: false,
             Source: request.Source ?? 'ai',
             LastUsedAt: new Date().getTime(),
+            isCreate: true,
           }
 
           setActiveChat && setActiveChat(newChat)

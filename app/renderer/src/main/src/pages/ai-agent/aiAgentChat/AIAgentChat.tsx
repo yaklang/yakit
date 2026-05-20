@@ -313,7 +313,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   useUpdateEffect(() => {
     onHistoryAfter()
-    events.onSwitchChat(activeChat?.SessionID)
+    events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
   }, [activeChat])
 
   /**切换历史后的处理逻辑 */
