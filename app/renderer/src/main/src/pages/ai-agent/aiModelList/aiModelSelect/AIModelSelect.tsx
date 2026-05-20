@@ -658,7 +658,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
       <AIModelEditContentItem
         filed="EnableThinkingOpt"
         options={EnableThinkingOptions}
-        title="Enable Thiking"
+        title="Enable Thinking"
         value={enableThinkingOpt}
         onChange={(v) => onEditChange(v, 'EnableThinkingOpt')}
       />
@@ -703,7 +703,7 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props
 
   const value = useCreation(() => {
-    return item?.ModelName
+    return item?.ModelName?.replace(/^memfit-/, '')
   }, [item?.ModelName])
   const aiService = useCreation(() => {
     return item.Provider?.Type
@@ -719,7 +719,6 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
         : 'close'
       : 'no-set'
   }, [item])
-
   return (
     <div
       className={classNames(styles['select-option-wrapper'], {
