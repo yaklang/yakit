@@ -2891,11 +2891,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
               {t('YakitButton.cancel')}
             </YakitButton>
             <div className={styles['btn-group-wrapper']}>
-              <YakitButton size="max" danger onClick={onDeleteHistoryOnly}>
-                {t('AuditCode.clearCompileHistoryOnly')}
+              <YakitButton size="max" type="outline2" onClick={onDeleteHistoryOnly}>
+                {t('YakitButton.keep')}
               </YakitButton>
-              <YakitButton size="max" danger onClick={onDeleteAll}>
-                {t('AuditCode.clearCompileHistoryAndProject')}
+              <YakitButton size="max" type="primary" onClick={onDeleteAll}>
+                {t('YakitButton.delete')}
               </YakitButton>
             </div>
           </div>
