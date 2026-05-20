@@ -22,7 +22,7 @@ on:
       - '!README_LEGACY.md'
       - '!LICENSE.md'
       - '!docs/**'
-      - '!.github/**'
+      # - '!.github/**'
       - '!**/*.md'
       - '!**/*.txt'
       - '!.vscode/**'
@@ -326,8 +326,9 @@ jobs:
           fi
 
   ci-pr-summary:
-    name: PR 汇总评论
+    name: PR 汇总（生成评论 body）
     runs-on: ubuntu-latest
+    continue-on-error: true
     needs:
       - prepare
       - ci-i18n
@@ -338,16 +339,10 @@ jobs:
       - ci-media
       - ci-vitest
       - ci-prettier
-    if: always() && github.event.pull_request.head.repo.full_name == github.repository
-    permissions:
-      contents: read
-      pull-requests: write
+    if: always()
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - uses: actions/download-artifact@v4
@@ -369,8 +364,7 @@ jobs:
             echo "outcome=$r" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Render PR CI summary (body for maintain-one-comment)
-        id: pr_comment
+      - name: Render PR CI summary body
         env:
           OUTCOME_I18N: ${{ needs.ci-i18n.result }}
           OUTCOME_ESLINT: ${{ needs.ci-eslint-renderer.result }}
@@ -382,10 +376,9 @@ jobs:
           OUTCOME_FORMAT: ${{ needs.ci-prettier.result }}
         run: node scripts/ci-render-pr-summary.js
 
-      - name: Maintain one PR comment
-        if: steps.pr_comment.outcome == 'success'
-        uses: actions-cool/maintain-one-comment@v3
+      - name: Upload PR summary for comment workflow
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          body-include: '<!-- pr-ci-one-comment -->'
-          body: ${{ steps.pr_comment.outputs.body }}
+          name: ci-pr-summary-body
+          path: pr-comment.md
+          if-no-files-found: error
