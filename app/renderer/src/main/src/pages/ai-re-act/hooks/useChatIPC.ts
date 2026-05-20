@@ -673,7 +673,9 @@ function useChatIPC(params?: UseChatIPCParams) {
             sendRequest(firstQS.current)
             firstQS.current = undefined
           } else {
-            requestEvents.handleLoadInit(token, nextID)
+            // 如果建立流时，已经初始化过，则不在进行历史初始化
+            // 场景: 删除记忆库，会断开流，如果用户在当前会话继续问问题，就会建立新的流，这时候就不需要再进行一次历史数据的初始化了
+            if (isInit) requestEvents.handleLoadInit(token, nextID)
           }
           handleSyncDataAfterConnect()
           handleStartSyncDataInterval()
