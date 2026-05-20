@@ -283,7 +283,7 @@ export interface UseChatIPCEvents {
   /** 获取当前外界传入的数据类实例 */
   fetchChatDataStore: () => UseChatIPCParams['cacheDataStore']
   /** 切换历史会话展示 */
-  onSwitchChat: (session?: string) => void
+  onSwitchChat: (session?: string, isCreate?: boolean) => void
   /** 开始执行接口流 */
   onStart: (params: AIChatIPCStartParams, cb?: () => void) => void
   /** 向执行中的接口流主动输入信息 */

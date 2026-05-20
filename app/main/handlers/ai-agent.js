@@ -60,21 +60,17 @@ module.exports = (win, getClient) => {
     handlerHelper.registerHandler(win, stream, aiReActTaskPool, token)
     try {
       writeChain = writeChain.then(() => safeWrite(stream, params, token))
-      const qs = params?.Params?.UserQuery
-      if (!!qs) {
-        writeChain = writeChain.then(() =>
-          safeWrite(
-            stream,
-            {
-              IsFreeInput: true,
-              FreeInput: qs,
-              AttachedResourceInfo: params?.AttachedResourceInfo,
-              FocusModeLoop: params?.FocusModeLoop,
-            },
-            token,
-          ),
-        )
-      }
+      // 发送ping消息进行grpc连接检测，是否连接成功
+      writeChain = writeChain.then(() =>
+        safeWrite(
+          stream,
+          {
+            IsSyncMessage: true,
+            SyncType: 'ping',
+          },
+          token,
+        ),
+      )
       aiWriteChainMap.set(token, writeChain)
     } catch (error) {
       throw new Error(error)
