@@ -275,6 +275,15 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     })
   }, [])
 
+  const updateDisableSystemProxy = useMemoizedFn((disabled: boolean) => {
+    setDisableSystemProxy(disabled)
+    updateAdvancedConfig({ DisableSystemProxy: disabled })
+    grpcMITMSetDisableSystemProxy({
+      version: mitmVersion,
+      setDisableSystemProxy: disabled,
+    })
+  })
+
   useEffect(() => {
     grpcMITMGetFilter(true)
       .then((res) => {
@@ -403,7 +412,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     color="green"
                     closable={true}
                     onClose={() => {
-                      emiter.emit('onCloseSystemProxy')
+                      updateDisableSystemProxy(true)
                     }}
                   >
                     {'系统代理'}
@@ -476,13 +485,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     size="large"
                     checked={disableSystemProxy}
                     onChange={(checked) => {
-                      setDisableSystemProxy(checked)
-                      updateAdvancedConfig({ DisableSystemProxy: checked })
-                      // 调用grpc设置禁用系统代理
-                      grpcMITMSetDisableSystemProxy({
-                        version: mitmVersion,
-                        setDisableSystemProxy: checked,
-                      })
+                      updateDisableSystemProxy(checked)
                     }}
                   />
                 </div>

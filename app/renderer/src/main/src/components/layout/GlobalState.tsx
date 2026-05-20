@@ -276,12 +276,6 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         yakitFailed(t('ConfigSystemProxy.setSystemProxyFailed', { error: String(err) }))
       })
   })
-  useEffect(() => {
-    emiter.on('onCloseSystemProxy', onCloseSystemProxy)
-    return () => {
-      emiter.off('onCloseSystemProxy', onCloseSystemProxy)
-    }
-  }, [])
 
   const [showChromeWarn, setShowChromeWarn] = useState<boolean>(false)
   /** 获取Chrome启动路径 */

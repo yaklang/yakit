@@ -3326,7 +3326,10 @@ export const FuzzerExtraShow: React.FC<FuzzerExtraShowProps> = React.memo((props
           color="green"
           closable={true}
           onClose={() => {
-            emiter.emit('onCloseSystemProxy')
+            setAdvancedConfigValue({
+              ...advancedConfigValue,
+              noSystemProxy: true,
+            })
           }}
         >
           {t('FuzzerExtraShow.systemProxy')}
