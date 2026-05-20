@@ -184,7 +184,11 @@ const HistoryChatList: FC<{
     // if (!info.request) {
     //     yakitNotify("warning", "当前对话无请求参数信息，无法使用重新执行功能")
     // }
-    setSetting?.((old) => ({ ...old, SyncPerceptionTrigger: false, EnablePlan: false }))
+    setSetting?.((old) => ({
+      ...old,
+      SyncPerceptionTrigger: info?.StartParams?.SyncPerceptionTrigger ?? false,
+      EnablePlan: info?.StartParams?.EnablePlan ?? false,
+    }))
     setActiveChat && setActiveChat(info)
   })
 
