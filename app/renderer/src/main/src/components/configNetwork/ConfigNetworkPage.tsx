@@ -1438,8 +1438,8 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
             </YakitButton>
           </div>
           <YakitCollapse defaultActiveKey={['高质模型', '轻量模型', '视觉模式']}>
-            <YakitCollapse.YakitPanel key="高质模型" header={t('AiAgengt.intelligentModels')}>
-              {!!aiGlobalConfig?.IntelligentModels.length && (
+            {!!aiGlobalConfig?.IntelligentModels.length && (
+              <YakitCollapse.YakitPanel key="高质模型" header={t('AiAgengt.intelligentModels')}>
                 <AIOnlineModel
                   list={aiGlobalConfig?.IntelligentModels || []}
                   onEdit={(index) =>
@@ -1462,8 +1462,8 @@ const AIModelGlobalConfig: React.FC<AIModelGlobalConfigProps> = React.memo((prop
                   }
                   modelType={AIModelTypeEnum.TierIntelligent}
                 />
-              )}
-            </YakitCollapse.YakitPanel>
+              </YakitCollapse.YakitPanel>
+            )}
             {!!aiGlobalConfig?.LightweightModels.length && (
               <YakitCollapse.YakitPanel key="轻量模型" header={t('AiAgengt.lightweightModels')}>
                 <AIOnlineModel

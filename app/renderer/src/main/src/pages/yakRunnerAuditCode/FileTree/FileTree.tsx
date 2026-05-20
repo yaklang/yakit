@@ -244,11 +244,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
           style={{ paddingLeft: (info.depth - 1) * 16 + 8 }}
           onClick={handleClick}
         >
-          {!info.isLeaf && (
-            <div className={classNames(styles['node-switcher'], { [styles['expanded']]: isExpanded })}>
-              <OutlineChevronrightIcon />
-            </div>
-          )}
+          <div
+            className={classNames(styles['node-switcher'], {
+              [styles['expanded']]: isExpanded,
+              [styles['hidden']]: info.isLeaf,
+            })}
+          >
+            <OutlineChevronrightIcon />
+          </div>
 
           <div className={styles['node-loading']}>
             <LoadingOutlined />
