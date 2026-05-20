@@ -789,11 +789,14 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
         }, 200)
       })
   })
+  const modelName = useCreation(() => {
+    return item.ModelName?.replace(/^memfit-/, '')
+  }, [item.ModelName])
   return (
     <div className={styles['ai-online-model-list-item']}>
       <div className={styles['ai-online-model-list-item-header']}>
         {AIOnlineModelIconMap[config.Type] || <OutlineAtomIconByStatus />}
-        <div className={styles['ai-online-model-list-item-type']}>{item.ModelName}</div>
+        <div className={styles['ai-online-model-list-item-type']}>{modelName}</div>
 
         <div className={styles['ai-online-model-list-item-model']}>
           <OutlineAtomIcon className={styles['atom-icon']} />
@@ -805,7 +808,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
           <YakitButton type="text2" icon={<OutlineEngineIcon />} onClick={onCheckModel} loading={testLoading} />
           <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEditClick} />
           <YakitPopconfirm
-            title={`确定要删除厂商${config.Type},模型名称为${item.ModelName} 吗？`}
+            title={`确定要删除厂商${config.Type},模型名称为${modelName} 吗？`}
             onConfirm={onRemoveClick}
             onCancel={(e) => {
               e?.stopPropagation()
