@@ -187,13 +187,14 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
   const renderContent = useMemoizedFn(() => {
     switch (aiType) {
       case 'online':
+        const modelName = selectIntelligentItem?.ModelName?.replace(/^memfit-/, '')
         return (
           <>
             <YakitSelect.Option
               value="select"
               label={
                 <div className={styles['select-option']}>
-                  {selectList.length > 1 ? (
+                  {/* {selectList.length > 1 ? (
                     <Avatar.Group>
                       {selectList.map((item, index) => (
                         <Tooltip key={index} title={`${modelType(t)[index]}:${item.ModelName}`}>
@@ -212,7 +213,13 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         {selectList[0]?.ModelName}
                       </span>
                     </>
-                  )}
+                  )} */}
+                  <>
+                    {getIconByAI(selectIntelligentItem?.Provider.Type)}
+                    <span className={styles['select-option-text']} title={`${modelName}`}>
+                      {modelName}
+                    </span>
+                  </>
                 </div>
               }
             >
@@ -248,17 +255,20 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     return aiModelOptions?.onlineModels?.RoutingPolicy as AIModelPolicyEnum
   }, [aiModelOptions?.onlineModels?.RoutingPolicy])
 
-  const selectList = useCreation(() => {
+  const selectIntelligentItem = useCreation(() => {
     const intelligentItem = intelligentModels[0]
+    return intelligentItem
+  }, [intelligentModels])
+  const selectList = useCreation(() => {
     const lightweightItem = lightweightModels[0]
     const visionItem = visionModels[0]
     const list: AIModelConfig[] = []
     // 顺序按照高质、轻量、视觉的优先级展示
-    intelligentItem && list.push(intelligentItem)
+    selectIntelligentItem && list.push(selectIntelligentItem)
     lightweightItem && list.push(lightweightItem)
     visionItem && list.push(visionItem)
     return list
-  }, [intelligentModels, lightweightModels, visionModels])
+  }, [selectIntelligentItem, lightweightModels, visionModels])
   const execute = useCreation(() => {
     return chatIPCData.execute
   }, [chatIPCData.execute])
@@ -366,7 +376,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                 <div className={styles['select-title']}>
                   <div className={styles['select-title-left']}>
                     <span>{t('AIModelSelect.selectModel')}</span>
-                    {!execute && (
+                    {/* {!execute && (
                       <YakitSelect
                         size="small"
                         disabled={execute}
@@ -381,7 +391,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           e.stopPropagation()
                         }}
                       />
-                    )}
+                    )} */}
                     <Tooltip title={getTipByType(policy, t)}>
                       <OutlineInformationcircleIcon className={styles['icon-info']} />
                     </Tooltip>
@@ -403,7 +413,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                     )}
                   </div>
                 </div>
-                <div className={styles['select-content']}>
+                <div className={styles['select-content']} onClick={(e) => e.stopPropagation()}>
                   {!!intelligentModels.length && (
                     <AIModelSelectList
                       type={AIModelTypeEnum.TierIntelligent}
@@ -425,7 +435,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                       dropdownRenderRectRef={dropdownRenderRectRef.current}
                     />
                   )}
-                  {!execute && !!lightweightModels.length && (
+                  {/* {!execute && !!lightweightModels.length && (
                     <AIModelSelectList
                       type={AIModelTypeEnum.TierLightweight}
                       title={t('AiAgengt.lightweightModels')}
@@ -454,7 +464,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                       }
                       onEdit={() => {}}
                     />
-                  )}
+                  )} */}
                 </div>
                 <YakitButton type="secondary2" onClick={onAddModel} className={styles['add-model-btn']}>
                   {t('AIModelList.addModel')}
