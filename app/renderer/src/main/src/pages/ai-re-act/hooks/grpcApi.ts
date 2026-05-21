@@ -131,6 +131,9 @@ export interface AIStartParams {
 export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AllowRequireForUserInteract = 'AllowRequireForUserInteract',
   HotPatchType_AgreePolicy = 'AgreePolicy',
+  HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
+  HotPatchType_EnablePlan = 'EnablePlan',
+
   /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',
   HotPatchType_RiskControlScore = 'RiskControlScore',

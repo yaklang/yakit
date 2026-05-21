@@ -67,6 +67,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
+import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -106,6 +108,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { chatIPCData } = useChatIPCStore()
+    const { handleSendConfigHotpatch } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
 
     const [manualAdditionVisible, setManualAdditionVisible] = useState<boolean>(false)
@@ -146,8 +149,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       ]
     }, [props.footerLeftTypes, isOpen])
 
-    const { setting } = useAIAgentStore()
-    const { setSetting } = useAIAgentDispatcher()
+    const { setting, activeChat } = useAIAgentStore()
+    const { setSetting, setChats } = useAIAgentDispatcher()
     const [disabled, setDisabled] = useState<boolean>(false)
 
     const { isHovering, dropRef } = useAIChatDrop({
@@ -342,10 +345,31 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [setting?.EnablePlan])
     const onSetPlan = useDebounceFn(
       useMemoizedFn((checked) => {
+        handleSendConfigHotpatch({
+          hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnablePlan,
+          params: {
+            EnablePlan: checked,
+          },
+        })
         setSetting?.((v) => ({
           ...v,
           EnablePlan: checked,
         }))
+        setChats?.((chats) => {
+          const newChats = chats.map((chat) => {
+            if (chat.SessionID === activeChat?.SessionID) {
+              return {
+                ...chat,
+                StartParams: {
+                  ...chat.StartParams,
+                  EnablePlan: checked,
+                },
+              }
+            }
+            return chat
+          })
+          return newChats
+        })
       }),
       { wait: 200, leading: true },
     ).run

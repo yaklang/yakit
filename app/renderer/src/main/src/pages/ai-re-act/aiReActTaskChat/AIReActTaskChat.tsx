@@ -35,7 +35,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { AIChatQSData, AIChatQSDataTypeEnum, AIReviewType } from '../hooks/aiRender'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import { AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
+import { AIInputEventHotPatchTypeEnum, AIInputEventSyncTypeEnum, AITaskStatus } from '../hooks/grpcApi'
 import { Form, Tooltip } from 'antd'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import emiter from '@/utils/eventBus/eventBus'
@@ -53,6 +53,7 @@ import moment from 'moment'
 import AIReActTaskEmpty from './AIReActTaskEmpty'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
+import { has } from 'lodash'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
@@ -326,9 +327,9 @@ export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = R
 export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React.memo((props) => {
   const { children } = props
 
-  const { setting } = useAIAgentStore()
-  const { setSetting } = useAIAgentDispatcher()
-
+  const { setting, activeChat } = useAIAgentStore()
+  const { setSetting, setChats } = useAIAgentDispatcher()
+  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
   const [visible, setVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
     valuePropName: 'visible',
@@ -336,7 +337,33 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   })
   const [form] = Form.useForm<AIInputSettingFormProps>()
 
+  const onHotSyncPerceptionTrigger = useMemoizedFn((value: boolean) => {
+    handleSendConfigHotpatch({
+      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_SyncPerceptionTrigger,
+      params: {
+        SyncPerceptionTrigger: value,
+      },
+    })
+    setChats?.((chats) => {
+      const newChats = chats.map((chat) => {
+        if (chat.SessionID === activeChat?.SessionID) {
+          return {
+            ...chat,
+            StartParams: {
+              ...chat.StartParams,
+              SyncPerceptionTrigger: value,
+            },
+          }
+        }
+        return chat
+      })
+      return newChats
+    })
+  })
   const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
+    if (has(changedValues, 'SyncPerceptionTrigger')) {
+      onHotSyncPerceptionTrigger(!!changedValues.SyncPerceptionTrigger)
+    }
     setSetting?.((v) => ({
       ...v,
       ...changedValues,
