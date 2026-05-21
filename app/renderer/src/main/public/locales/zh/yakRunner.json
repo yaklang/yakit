@@ -122,7 +122,7 @@
     "verifying": "正在校验",
     "addProject": "添加项目",
     "jumpCodeScanFailed": "跳转代码扫描页失败：{{error}}",
-    "compileTime": "时间",
+    "compileTime": "历史编辑记录",
     "scanCount": "扫描次数",
     "noCompileHistory": "暂无编译历史"
   },

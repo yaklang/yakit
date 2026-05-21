@@ -24,10 +24,10 @@ export interface YakitVirtualListProps<T> {
 }
 
 interface ExpandableConfig<T> {
-  /** 展开行内容渲染函数 */
-  expandedRowRender?: (record: T) => React.ReactNode
-  /** 当前展开行的 key 数组 */
-  expandedRowKeys?: React.Key[]
+  expandedRowRender: (record: T) => React.ReactNode
+  expandedRowKeys: React.Key[]
+  onExpend: (record: T) => void
+  setExpandedKeys: React.Dispatch<React.SetStateAction<React.Key[]>>
 }
 
 export interface VirtualListColumns<T> {

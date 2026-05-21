@@ -53,7 +53,6 @@ import { loadAuditFromYakURLRaw } from '../utils'
 import {
   OutlineArrowcirclerightIcon,
   OutlineBugIcon,
-  OutlineChevrondownIcon,
   OutlineChevronrightIcon,
   OutlineClockIcon,
   OutlineDeprecatedIcon,
@@ -73,6 +72,7 @@ import { StringToUint8Array } from '@/utils/str'
 import { clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail } from './AuditTree/AuditMap'
 import { clearMapAuditChildDetail, getMapAuditChildDetail, setMapAuditChildDetail } from './AuditTree/ChildMap'
 import {
+  SolidDotsverticalIcon,
   SolidExclamationIcon,
   SolidInformationcircleIcon,
   SolidPluscircleIcon,
@@ -2619,32 +2619,15 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     )
   })
 
-  const onDeleteCompileHistory = useMemoizedFn(async (projectId: number, programId: number) => {
+  const onDeleteCompileHistory = useMemoizedFn(async (record: SSAProjectResponse, programId: number) => {
     try {
       await ipcRenderer.invoke('DeleteSSAPrograms', {
         Filter: {
           Ids: [programId],
         },
       })
-      setData((prev) =>
-        prev.map((item) => {
-          if (item.ID === projectId && item.detailData) {
-            const newItems = item.detailData.items.filter((program) => program.Id !== programId)
-            const newScanTotals = { ...item.detailData.scanTotals }
-            delete newScanTotals[programId]
-            return {
-              ...item,
-              detailData: {
-                ...item.detailData,
-                items: newItems,
-                scanTotals: newScanTotals,
-                total: item.detailData.total - 1 < 0 ? 0 : item.detailData.total - 1,
-              },
-            }
-          }
-          return item
-        }),
-      )
+      detailCacheRef.current.delete(record.ID)
+      loadDetail(record)
       success(t('AuditCode.deleteSuccess'))
     } catch (error) {
       failed(t('YakitNotification.deleteFailed', { error: String(error) }))
@@ -2792,25 +2775,25 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
       {
         title: t('YakitTable.action'),
         dataIndex: 'action',
-        width: pageType === 'projectManager' ? 250 : 200,
+        width: 180,
         render: (text, record, index) => {
           return (
             <div className={styles['audit-opt']} onClick={(e) => e.stopPropagation()}>
               <Tooltip title={t('YakitButton.compile')}>
-                <YakitButton
-                  type="text"
-                  icon={<OutlineReloadScanIcon />}
+                <div
+                  className={styles['extra-icon']}
                   onClick={(e) => {
                     e.stopPropagation()
                     setJSONStringConfig(record.JSONStringConfig)
                   }}
-                />
+                >
+                  <OutlineReloadScanIcon />
+                </div>
               </Tooltip>
-
+              <Divider type="vertical" />
               <Tooltip title={t('AuditCode.codeScan')}>
-                <YakitButton
-                  type="text"
-                  icon={<OutlineScanIcon />}
+                <div
+                  className={styles['extra-icon']}
                   onClick={async (e) => {
                     e.stopPropagation()
                     try {
@@ -2834,81 +2817,95 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                       failed(t('AuditCode.jumpCodeScanFailed', { error: String(error) }))
                     }
                   }}
-                />
+                >
+                  <OutlineScanIcon />
+                </div>
               </Tooltip>
+              <Divider type="vertical" />
               <Tooltip title={t('AuditCode.projectHistory')}>
-                <YakitButton
-                  type="text"
-                  icon={<OutlineClockIcon />}
+                <div
+                  className={styles['extra-icon']}
                   onClick={(e) => {
                     e.stopPropagation()
                     onOpenProjectHistory(record)
                   }}
-                />
+                >
+                  <OutlineClockIcon />
+                </div>
               </Tooltip>
-              <Tooltip title={t('YakitButton.edit')}>
-                <YakitButton
-                  type="text"
-                  icon={<OutlinePencilaltIcon />}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    const m = showYakitModal({
-                      title: (modalT) => modalT('AuditCode.editProject'),
-                      width: 600,
-                      type: 'white',
-                      footer: null,
-                      centered: true,
-                      content: (
-                        <ProjectManagerEditForm
-                          record={record}
-                          setData={setData}
-                          onClose={() => m.destroy()}
-                          schema={schema}
-                        />
+              <Divider type="vertical" />
+              <YakitDropdownMenu
+                menu={{
+                  data: [
+                    {
+                      key: 'edit',
+                      label: (
+                        <div className={styles['extra-menu']}>
+                          <OutlinePencilaltIcon />
+                          <div className={styles['menu-name']}>{t('YakitButton.edit')}</div>
+                        </div>
                       ),
-                    })
-                  }}
-                />
-              </Tooltip>
-              <YakitButton
-                type="text"
-                danger
-                icon={<OutlineTrashIcon />}
-                onClick={(e) => {
-                  e?.stopPropagation()
-                  setDeleteParams({
-                    titile: `确认删除${record.ProjectName}？`,
-                    params: {
-                      Filter: {
-                        IDs: [parseInt(record.ID + '')],
-                      },
                     },
-                  })
-                }}
-              />
-              {pageType === 'projectManager' && (
-                <YakitButton
-                  type="text"
-                  icon={expandedKeys.includes(record.ID) ? <OutlineChevrondownIcon /> : <OutlineChevronrightIcon />}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    const isExpanded = expandedKeys.includes(record.ID)
-                    if (!isExpanded) {
-                      loadDetail(record)
+                    {
+                      key: 'delete',
+                      label: (
+                        <div className={classNames(styles['extra-menu'], styles['extra-menu-delete'])}>
+                          <OutlineTrashIcon />
+                          <div className={styles['menu-name']}>{t('YakitButton.delete')}</div>
+                        </div>
+                      ),
+                      type: 'danger',
+                    },
+                  ],
+                  onClick: ({ key }) => {
+                    switch (key) {
+                      case 'edit':
+                        const m = showYakitModal({
+                          title: (modalT) => modalT('AuditCode.editProject'),
+                          width: 600,
+                          type: 'white',
+                          footer: null,
+                          centered: true,
+                          content: (
+                            <ProjectManagerEditForm
+                              record={record}
+                              setData={setData}
+                              onClose={() => m.destroy()}
+                              schema={schema}
+                            />
+                          ),
+                        })
+                        break
+                      case 'delete':
+                        setDeleteParams({
+                          titile: `确认删除${record.ProjectName}？`,
+                          params: {
+                            Filter: {
+                              IDs: [parseInt(record.ID + '')],
+                            },
+                          },
+                        })
+                        break
+                      default:
+                        break
                     }
-                    const newKeys = isExpanded
-                      ? expandedKeys.filter((k) => k !== record.ID)
-                      : [...expandedKeys, record.ID]
-                    setExpandedKeys(newKeys)
-                  }}
-                />
-              )}
+                  },
+                }}
+                dropdown={{
+                  trigger: ['click'],
+                  placement: 'bottomRight',
+                }}
+              >
+                <div className={styles['extra-icon']}>
+                  <SolidDotsverticalIcon />
+                </div>
+              </YakitDropdownMenu>
             </div>
           )
         },
       },
     ]
-  }, [pageType, schema, expandedKeys, i18n.language])
+  }, [pageType, schema, i18n.language])
 
   const loadMoreData = useMemoizedFn(() => {
     if (data.length > 0) {
@@ -2926,16 +2923,12 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   })
 
   const onClickRow = useMemoizedFn((record: SSAProjectResponse) => {
-    emiter.emit(
-      'openPage',
-      JSON.stringify({
-        route: YakitRoute.YakRunner_ScanHistory,
-        params: {
-          Programs: [record.ProjectName],
-          ProjectIds: [record.ID],
-        },
-      }),
-    )
+    const isExpanded = expandedKeys.includes(record.ID)
+    if (!isExpanded) {
+      loadDetail(record)
+    }
+    const newKeys = isExpanded ? expandedKeys.filter((k) => k !== record.ID) : [...expandedKeys, record.ID]
+    setExpandedKeys?.(newKeys)
   })
 
   return (
@@ -3046,6 +3039,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             pageType === 'projectManager'
               ? {
                   expandedRowKeys: expandedKeys,
+                  setExpandedKeys: setExpandedKeys,
                   expandedRowRender: (record) => (
                     <ProjectManagerDetail
                       record={record}
@@ -3053,6 +3047,9 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
                       onDeleteCompileHistory={onDeleteCompileHistory}
                     />
                   ),
+                  onExpend: (record) => {
+                    loadDetail(record)
+                  },
                 }
               : undefined
           }
@@ -3097,13 +3094,13 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
 interface ProjectManagerDetailProps {
   record: SSAProjectResponse
   onOpenProjectHistory: (record: SSAProjectResponse, program?: SSAProgram) => void
-  onDeleteCompileHistory: (projectId: number, programId: number) => Promise<void>
+  onDeleteCompileHistory: (record: SSAProjectResponse, programId: number) => Promise<void>
 }
 const ProjectManagerDetail: React.FC<ProjectManagerDetailProps> = memo((props) => {
   const { record, onOpenProjectHistory, onDeleteCompileHistory } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const detailData = record?.detailData
-  const hasPreviewItems = !!detailData?.items?.length
+  const hasPreviewItems = !!detailData?.total
 
   const onOpenCompileCodeScan = useMemoizedFn(async (record: SSAProjectResponse, program: SSAProgram) => {
     try {
@@ -3149,8 +3146,8 @@ const ProjectManagerDetail: React.FC<ProjectManagerDetailProps> = memo((props) =
         <>
           <div className={styles['project-compile-preview-header']}>
             <div className={styles['project-compile-preview-cell']}>{t('AuditCode.compileTime')}</div>
-            <div className={styles['project-compile-preview-cell']}>{t('AuditCode.scanCount')}</div>
             <div className={styles['project-compile-preview-cell']}>{t('AuditCode.riskCount')}</div>
+            <div className={styles['project-compile-preview-cell']}>{t('AuditCode.scanCount')}</div>
             <div
               className={classNames(styles['project-compile-preview-cell'], styles['project-compile-preview-action'])}
             >
@@ -3172,10 +3169,10 @@ const ProjectManagerDetail: React.FC<ProjectManagerDetailProps> = memo((props) =
                 <div className={styles['project-compile-preview-cell']} title={formatTimestamp(program.UpdateAt)}>
                   {program.UpdateAt ? formatTimestamp(program.UpdateAt) : '-'}
                 </div>
-                <div className={styles['project-compile-preview-cell']}>{scanTotal}</div>
                 <div className={styles['project-compile-preview-cell']}>
-                  {riskTotal > 0 ? <YakitTag color="info">{riskTotal}</YakitTag> : '-'}
+                  <YakitTag color={riskTotal === 0 ? undefined : 'yellow'}>{riskTotal}</YakitTag>
                 </div>
+                <div className={styles['project-compile-preview-cell']}>{scanTotal}</div>
                 <div
                   className={classNames(
                     styles['project-compile-preview-cell'],
@@ -3183,36 +3180,47 @@ const ProjectManagerDetail: React.FC<ProjectManagerDetailProps> = memo((props) =
                   )}
                 >
                   <Tooltip title={t('AuditCode.codeScan')}>
-                    <YakitButton
-                      type="text"
-                      icon={<OutlineScanIcon />}
+                    <div
+                      className={styles['extra-icon']}
                       onClick={(e) => {
                         e.stopPropagation()
                         onOpenCompileCodeScan(record, program)
                       }}
-                    />
+                    >
+                      <OutlineScanIcon />
+                    </div>
                   </Tooltip>
+                  <Divider type="vertical" />
                   <Tooltip title={t('YakRunnerScanHistory.openProject')}>
-                    <YakitButton
-                      type="text"
-                      icon={<OutlineArrowcirclerightIcon />}
+                    <div
+                      className={styles['extra-icon']}
                       onClick={(e) => {
                         e.stopPropagation()
                         onOpenCompileAuditCode(program)
                       }}
-                    />
+                    >
+                      <OutlineArrowcirclerightIcon />
+                    </div>
                   </Tooltip>
+                  <Divider type="vertical" />
                   <YakitPopconfirm
                     title={t('YakitCheckbox.confirmDeleteSelected')}
                     onConfirm={(e) => {
                       e?.stopPropagation()
-                      onDeleteCompileHistory(record.ID, program.Id)
+                      onDeleteCompileHistory(record, program.Id)
                     }}
                     onCancel={(e) => {
                       e?.stopPropagation()
                     }}
                   >
-                    <YakitButton type="text" danger icon={<OutlineTrashIcon />} onClick={(e) => e.stopPropagation()} />
+                    <div
+                      className={classNames(styles['extra-icon'], styles['extra-icon-delete'])}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                      }}
+                    >
+                      <OutlineTrashIcon />
+                    </div>
                   </YakitPopconfirm>
                 </div>
               </div>

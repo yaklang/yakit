@@ -21,7 +21,7 @@ import React from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { AuthorImg } from '@/pages/plugins/funcTemplate'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { OutlineChevrondownIcon, OutlineChevronrightIcon, OutlineSearchIcon } from '@/assets/icon/outline'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -55,7 +55,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
   const wrapperRef = useRef<HTMLDivElement>(null)
   // 动态行高缓存
   const [rowHeights, setRowHeights] = useState<Map<number, number>>(new Map())
-  const { expandedRowRender, expandedRowKeys = [] } = expandable || {}
+  const { expandedRowRender, expandedRowKeys = [], onExpend, setExpandedKeys } = expandable || {}
 
   // 当 data 变化时，重置高度缓存（避免使用错误的高度）
   useEffect(() => {
@@ -239,7 +239,13 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                 const rowKey = ele.data[renderKey]
                 const isExpanded = expandedRowKeys.includes(rowKey)
                 return (
-                  <div key={ele.data[renderKey]} ref={(el) => measureAndUpdateHeight(ele.index, el)}>
+                  <div
+                    key={ele.data[renderKey]}
+                    ref={(el) => measureAndUpdateHeight(ele.index, el)}
+                    className={classNames({
+                      [styles['virtual-list-item-expanded-bg']]: isExpanded,
+                    })}
+                  >
                     <div
                       className={classNames(styles['virtual-list-item-row'], {
                         [styles['virtual-list-item-row-click']]: !!onClickRow,
@@ -255,6 +261,23 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                               [styles['virtual-list-cell-flex']]: !item.width,
                             })}
                           >
+                            {index === 0 && expandable && (
+                              <YakitButton
+                                type="text"
+                                icon={isExpanded ? <OutlineChevrondownIcon /> : <OutlineChevronrightIcon />}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  const isExpanded = expandedRowKeys.includes(rowKey)
+                                  if (!isExpanded) {
+                                    onExpend?.(ele.data)
+                                  }
+                                  const newKeys = isExpanded
+                                    ? expandedRowKeys.filter((k) => k !== rowKey)
+                                    : [...expandedRowKeys, rowKey]
+                                  setExpandedKeys?.(newKeys)
+                                }}
+                              />
+                            )}
                             {index === 0 && rowSelection && (
                               <YakitProtoCheckbox
                                 onClick={(e) => e.stopPropagation()}

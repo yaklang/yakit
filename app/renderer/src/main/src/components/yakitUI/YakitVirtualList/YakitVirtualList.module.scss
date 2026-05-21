@@ -67,6 +67,10 @@
     }
 
     .virtual-list-wrapper {
+      .virtual-list-item-expanded-bg {
+        background: var(--Colors-Use-Neutral-Bg);
+      }
+
       .virtual-list-item-row {
         @extend %display-flex-space-between;
         padding-left: 8px;
@@ -107,6 +111,10 @@
 
       .virtual-list-item-row:hover + .virtual-list-item-row {
         border-top-color: transparent;
+      }
+
+      .virtual-list-item-expanded {
+        padding: 16px;
       }
     }
   }
