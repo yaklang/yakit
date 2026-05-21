@@ -3573,7 +3573,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
               try {
                 rowContextmenu.forEach((item) => {
                   if (item.key === menuName && Array.isArray(item.children)) {
-                    item.children.forEach((itemIn) => {
+                    item.children.forEach((itemIn: any) => {
                       if (itemIn.key === menuItemName) {
                         // 由于为保持key值唯一 添加了特定字符 现在移除掉
                         if (menuName === 'AI插件' && menuItemName.startsWith('aiplugin-')) {
@@ -3926,7 +3926,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         try {
           batchContextMenu.forEach((item) => {
             if (item.key === menuName && Array.isArray(item.children)) {
-              item.children.forEach((itemIn) => {
+              item.children.forEach((itemIn: any) => {
                 if (itemIn.key === menuItemName) {
                   // 由于为保持key值唯一 添加了特定字符 现在移除掉
                   if (menuName === 'AI插件' && menuItemName.startsWith('aiplugin-')) {
