@@ -275,9 +275,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const renderFooterLeftTypes = useMemoizedFn((types: FooterLeftTypesComponentProps[]) => {
       let node: ReactNode[] = []
       types?.forEach((item, index) => {
-        if (index > 0 && index < types.length) {
-          node.push(<div className={styles['divider-style']} key={`divider-${index}`} />)
-        }
         switch (item.type) {
           case AIInputInnerFeatureEnum.AIReviewRuleSelect:
             node.push(
@@ -289,6 +286,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 />
               ),
             )
+            node.push(<div className={styles['divider-style']} key={`divider-${index}`} />)
             break
           case AIInputInnerFeatureEnum.AIModelSelect:
             node.push(
