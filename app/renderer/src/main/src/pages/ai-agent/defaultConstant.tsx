@@ -116,6 +116,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   DisableToolIntervalReview: false,
   SyncPerceptionTrigger: false,
   EnablePlan: false,
+  PlanExecTaskConcurrency: 1,
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -133,6 +134,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
     index: '',
     name: '',
     goal: '',
+    semantic_identifier: '',
     progress: AITaskStatus.created,
     isRemove: false,
     tools: [],

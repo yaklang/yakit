@@ -148,6 +148,12 @@ export interface AIStartParams {
    *
    */
   Source?: AISource
+
+  /**
+   * 任务规划里并发任务的数量
+   * 默认：1
+   */
+  PlanExecTaskConcurrency?: number
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
@@ -411,6 +417,10 @@ export declare namespace AIAgentGrpcApi {
     name: string
     /** 正文 */
     goal: string
+    /** -- */
+    semantic_identifier: string
+    /** 关联任务名 */
+    depends_on?: string[]
     progress?: AITaskStatusType
     subtasks?: AITaskInfoProps[]
     /**评阅时树节点是否被删 */

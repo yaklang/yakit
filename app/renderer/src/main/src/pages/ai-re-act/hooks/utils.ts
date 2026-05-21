@@ -75,6 +75,17 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
   const execTasks: AITaskInfoProps[] = []
   genExecTask({ task: taskTree, level: 1, tasks: execTasks })
   execTasks.shift()
+  // 将任务关联的任务名转换成task_index
+  for (let item of execTasks) {
+    if (item.depends_on && item.depends_on.length > 0) {
+      item.depends_on = item.depends_on
+        .map((depend) => {
+          const dependTask = execTasks.find((t) => t.semantic_identifier === depend)
+          return dependTask ? dependTask.index : ''
+        })
+        .filter(Boolean)
+    }
+  }
   return execTasks
 }
 // #endregion

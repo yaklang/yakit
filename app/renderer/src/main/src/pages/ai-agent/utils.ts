@@ -105,6 +105,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
 
     data.SyncPerceptionTrigger = setting.SyncPerceptionTrigger ?? AIAgentSettingDefault.SyncPerceptionTrigger
     data.EnablePlan = setting.EnablePlan ?? AIAgentSettingDefault.EnablePlan
+    data.PlanExecTaskConcurrency = setting.PlanExecTaskConcurrency ?? AIAgentSettingDefault.PlanExecTaskConcurrency
 
     if (setting?.AllowPlanUserInteract) {
       if (!isNil(setting?.PlanUserInteractMaxCount)) {
