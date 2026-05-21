@@ -19,7 +19,8 @@ textarea.qs-input-textarea {
   flex-direction: column;
   gap: 2px;
 
-  background: var(--Colors-Use-Neutral-Bg-Hover);
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  background: var(--Colors-Use-Neutral-Bg);
   padding: 2px;
   border-radius: 8px;
   position: relative;
