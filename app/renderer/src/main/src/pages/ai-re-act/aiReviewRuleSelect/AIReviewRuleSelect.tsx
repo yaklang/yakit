@@ -167,7 +167,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 export default AIReviewRuleSelect
 
 export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
-  const { getList, dropdownRender, children, setOpen: defSetOpen, closestClassName, ...rest } = props
+  const { getList, dropdownRender, children, setOpen: defSetOpen, closestClassName, disabled, ...rest } = props
   const [open, setOpen] = useControllableValue(props, {
     defaultValue: false,
     valuePropName: 'open',
@@ -191,6 +191,7 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
   )
 
   const onSelectWrapperClick = useMemoizedFn((e) => {
+    if (disabled) return
     if (open) {
       setOpen(false)
     } else {
@@ -208,8 +209,8 @@ export const AIChatSelect: React.FC<AIChatSelectProps> = React.memo((props) => {
         dropdownMatchSelectWidth={false}
         size="small"
         dropdownRender={onDropdownRender}
-        bordered={false}
         open={open}
+        disabled={disabled}
         {...rest}
       >
         {children}

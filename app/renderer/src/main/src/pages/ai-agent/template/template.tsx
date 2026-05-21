@@ -365,7 +365,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
         <AIGlobalCommandPopover childrenClass={styles['code-btn-wrapper']}>
           <YakitSpin spinning={updateLoading} size="small">
-            <YakitTag color="purple" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
+            <YakitTag size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
               <OutlineCodeIcon className={styles['code-icon']} />
               <span className="content-ellipsis">{aiGlobalConfig.AIPresetPrompt || '自定义AI全局指令'}</span>
             </YakitTag>

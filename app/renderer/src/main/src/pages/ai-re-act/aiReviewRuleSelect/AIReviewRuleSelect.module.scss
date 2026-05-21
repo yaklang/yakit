@@ -10,7 +10,6 @@
   :global {
     .ant-select {
       border-radius: 20px;
-      background-color: transparent;
     }
     .ant-select-selection-search {
       display: none;
@@ -26,9 +25,10 @@
       line-height: 16px;
     }
     .ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
-      padding: 4px;
+      padding: 4px 6px;
       display: flex;
       align-items: center;
+      border-radius: 6px;
     }
     .ant-select .ant-select-arrow {
       right: 0;
