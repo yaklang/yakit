@@ -166,7 +166,9 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           <div className={styles['end']}>当前会话已结束</div>
         )}
       </div>
-    ) : null
+    ) : (
+      <div className={styles['end']}>当前会话已停止</div>
+    )
   }, [casualTitle, execute])
   const Header = useCallback(
     () =>
