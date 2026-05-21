@@ -2,6 +2,7 @@ import { UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentGrpcApi, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 import { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {
@@ -83,4 +84,10 @@ export interface AISession {
   SessionID: string
   /** 历史流量表和风险表 run_time_id */
   RelatedRuntimeIDs?: string[]
+  /** 最后使用时间 */
+  LastUsedAt: number
+  /** 会话来源 */
+  Source: AISource
+  /** AI 启动参数 */
+  AIStartParams?: AIStartParams
 }

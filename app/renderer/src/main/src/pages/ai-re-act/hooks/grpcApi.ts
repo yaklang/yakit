@@ -18,6 +18,23 @@ export interface McpConfig {
   Url: string
 }
 
+export enum AISourceEnum {
+  /** AI 来源 */
+  aiAgent = 'ai',
+  /** history 来源 */
+  history = 'history',
+  /** knowledgeBase 来源 */
+  knowledgeBase = 'knowledgeBase',
+  /** webFuzzer 来源 */
+  webFuzzer = 'webFuzzer',
+  /** flow 来源 */
+  flow = 'flow',
+  /** 兼容老数据 */
+  other = '',
+}
+
+export type AISource = `${AISourceEnum}`
+
 export interface AIStartParams {
   CoordinatorId?: string
   Sequence?: number
@@ -121,6 +138,14 @@ export interface AIStartParams {
    *  tip:点击新建会话和切换历史的时候，值设置为false
    */
   EnablePlan?: boolean
+  /**
+   * 为 true 时，StartAIReAct 会优先读取同 session_id 已缓存的配置；
+   */
+  PreferSessionCachedConfig?: boolean
+  /**
+   *
+   */
+  Source?: AISource
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
