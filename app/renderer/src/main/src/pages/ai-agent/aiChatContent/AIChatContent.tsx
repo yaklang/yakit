@@ -42,13 +42,22 @@ import AIContextToken from './AIContextToken/AIContextToken'
 import OperationLog from '../components/aiFileSystemList/OperationLog/OperationLog'
 import AIGlobalLoading from '../aiGlobalLoading/AIGlobalLoading'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import AICapabilityInventory from '../components/AICapabilityInventory/AICapabilityInventory'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { onChat, onChatFromHistory } = props
     const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
-    const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, requestHistoryState } =
-      useChatIPCStore().chatIPCData
+    const {
+      httpRunTimeIDs,
+      riskRunTimeIDs,
+      yakExecResult,
+      taskChat,
+      grpcFolders,
+      capabilityInventory,
+      execute,
+      requestHistoryState,
+    } = useChatIPCStore().chatIPCData
     const { activeChat } = useAIAgentStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
@@ -161,7 +170,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       setIsExpand(!isExpand)
     })
     const yakitTabs = useCreation(() => {
-      let tab: YakitSideTabProps['yakitTabs'] = [AITabs[AITabsEnum.Task_Content], AITabs[AITabsEnum.File_System]]
+      let tab: YakitSideTabProps['yakitTabs'] = [
+        AITabs[AITabsEnum.Task_Content],
+        AITabs[AITabsEnum.File_System],
+        AITabs[AITabsEnum.Capability_Inventory],
+      ]
 
       if ((httpRunTimeIDs.length || RelatedRuntimeIDs.length) > 0) {
         tab.push(AITabs[AITabsEnum.HTTP])
@@ -173,7 +186,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         tab.push(AITabs[AITabsEnum.Operation_Log])
       }
       return tab
-    }, [httpRunTimeIDs, riskRunTimeIDs, yakExecResult.execFileRecord, taskChat?.elements?.length])
+    }, [httpRunTimeIDs, riskRunTimeIDs, yakExecResult.execFileRecord, taskChat?.elements?.length, capabilityInventory])
 
     const [showHot, setShowHot] = useState(false)
     const prevRef = useRef<{
@@ -235,6 +248,8 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
           return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
         case AITabsEnum.File_System:
           return <AIFileSystemList />
+        case AITabsEnum.Capability_Inventory:
+          return <AICapabilityInventory />
         case AITabsEnum.Risk:
           return !!riskRunTimeIds.length ? (
             <VulnerabilitiesRisksTable filterTagDom={filterTagDom} runTimeIDs={riskRunTimeIds} />

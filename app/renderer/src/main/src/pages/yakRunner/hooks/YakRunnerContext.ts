@@ -8,6 +8,7 @@ export interface YakRunnerContextStore {
   areaInfo: AreaInfoProps[]
   activeFile: FileDetailInfo | undefined
   runnerTabsId: string | undefined
+  pageId?: string
 }
 
 export interface YakRunnerContextDispatcher {
@@ -16,6 +17,8 @@ export interface YakRunnerContextDispatcher {
   setAreaInfo?: Dispatch<SetStateAction<AreaInfoProps[]>>
   setActiveFile?: Dispatch<SetStateAction<FileDetailInfo | undefined>>
   setRunnerTabsId?: Dispatch<SetStateAction<string | undefined>>
+  addFileTab?: (params?: { name?: string; code: string; language?: string }) => void
+  applyContentToActiveFile?: (content: string) => void
 }
 
 export interface YakRunnerContextValue {
@@ -29,6 +32,7 @@ export default createContext<YakRunnerContextValue>({
     areaInfo: [],
     activeFile: undefined,
     runnerTabsId: undefined,
+    pageId: undefined,
   },
   dispatcher: {
     setFileTree: undefined,
@@ -36,5 +40,7 @@ export default createContext<YakRunnerContextValue>({
     setAreaInfo: undefined,
     setActiveFile: undefined,
     setRunnerTabsId: undefined,
+    addFileTab: undefined,
+    applyContentToActiveFile: undefined,
   },
 })

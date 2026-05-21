@@ -7,6 +7,7 @@ import {
   aiChatDataStore,
   knowledgeBaseDataStore,
   WebFuzzerAiStore,
+  yakRunnerAiStore,
 } from '@/pages/ai-agent/store/ChatDataStore'
 
 function useGetChatDataStoreKey() {
@@ -22,6 +23,8 @@ function useGetChatDataStoreKey() {
         return 'aiChatDataStore'
       case knowledgeBaseDataStore:
         return 'knowledgeBaseDataStore'
+      case yakRunnerAiStore:
+        return 'yakRunnerAiStore'
       default:
         if (store instanceof WebFuzzerAiStore) return 'WebFuzzerAiStore'
         return 'unknown'

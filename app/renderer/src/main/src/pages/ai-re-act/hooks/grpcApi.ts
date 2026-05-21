@@ -22,6 +22,8 @@ export interface AIStartParams {
   CoordinatorId?: string
   Sequence?: number
 
+  PreferSessionCachedConfig?: boolean
+
   McpServers?: McpConfig[]
 
   /** 问题 */
@@ -169,6 +171,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_USER_INTERVENTION = 'user_intervention',
   /** 获取历史会话数据 */
   SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
+  /** 获取当前 AI 上下文中的能力清单 */
+  SYNC_TYPE_CAPABILITY_INVENTORY = 'capability_inventory_sync',
 }
 
 export interface AIInputEvent {
@@ -246,6 +250,35 @@ export interface AIOutputEvent {
   AIService: string
   /** 如果是 AI 服务相关的事件，那么这里是 AI 模型的名称 */
   AIModelName: string
+}
+
+export namespace AIAgentGrpcApi {
+  export interface CapabilityInventoryToolItem {
+    name: string
+    verbose_name?: string
+    description?: string
+    category: string
+    keywords?: string[]
+  }
+
+  export interface CapabilityInventoryNamedItem {
+    name: string
+    verbose_name?: string
+    description?: string
+    category?: string
+  }
+
+  export interface CapabilityInventorySection {
+    tools?: CapabilityInventoryToolItem[]
+    skills?: CapabilityInventoryNamedItem[]
+    forges?: CapabilityInventoryNamedItem[]
+    mcp_servers?: CapabilityInventoryNamedItem[]
+  }
+
+  export interface CapabilityInventoryPayload {
+    fixed: CapabilityInventorySection
+    dynamic: CapabilityInventorySection
+  }
 }
 // #endregion
 

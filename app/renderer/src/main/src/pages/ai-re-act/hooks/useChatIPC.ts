@@ -187,6 +187,10 @@ function useChatIPC(params?: UseChatIPCParams) {
   // #region 时间线相关逻辑
   // 实时时间线
   const [reActTimelines, setReActTimelines] = useThrottleState<AIAgentGrpcApi.TimelineItem[]>([], { wait: 100 })
+  const [capabilityInventory, setCapabilityInventory] = useState<AIAgentGrpcApi.CapabilityInventoryPayload>({
+    fixed: {},
+    dynamic: {},
+  })
 
   const handleResetReActTimelines = useMemoizedFn(() => {
     setReActTimelines(() => [])
@@ -885,6 +889,12 @@ function useChatIPC(params?: UseChatIPCParams) {
           return
         }
 
+        if (res.Type === 'structured' && res.NodeId === 'capability_inventory') {
+          const data = JSON.parse(ipcContent) as AIAgentGrpcApi.CapabilityInventoryPayload
+          setCapabilityInventory(data)
+          return
+        }
+
         if (res.Type === 'structured') {
           const obj = JSON.parse(ipcContent) || ''
 
@@ -1200,6 +1210,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       casualChat,
       taskChat,
       grpcFolders,
+      capabilityInventory,
       questionQueue,
       casualStatus,
       reActTimelines,
@@ -1231,6 +1242,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     focusMode,
     switchLoading,
     planHistoryList,
+    capabilityInventory,
     cancelCasualLoading,
     cancelTaskLoading,
     notifyMessage,

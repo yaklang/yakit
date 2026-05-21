@@ -6,4 +6,4 @@ export interface LeftSideBarProps {
   setActive: (v: LeftSideType) => void
 }
 
-export type LeftSideType = 'file-tree' | 'help-doc'
+export type LeftSideType = 'file-tree' | 'help-doc' | 'ai'

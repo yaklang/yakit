@@ -22,6 +22,7 @@ import {
   getYakRunnerLastFolderExpanded,
   grpcFetchCreateFile,
   grpcFetchFileTree,
+  grpcFetchSaveFile,
   judgeAreaExistFilePath,
   judgeAreaExistFileUnSave,
   MAX_FILE_SIZE_BYTES,
@@ -72,6 +73,13 @@ import { WatchFolderID } from './FileTreeMap/watchFolderID'
 import { randomString } from '@/utils/randomUtil'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { OutlineBotIcon } from '@/assets/icon/outline'
+import {
+  registerYakRunnerApplyToActiveFile,
+  registerYakRunnerCreateFile,
+  registerYakRunnerGetActiveFile,
+} from './yakRunnerAiCodeApplyBridge'
+import { YAK_RUNNER_AI_PAGE_ID } from './YakRunnerAI'
 const { ipcRenderer } = window.require('electron')
 
 // 模拟tabs分块及对应文件
@@ -92,6 +100,11 @@ export const YakRunnerTab: YakitTabsProps[] = [
   {
     label: 'YakRunner.resourceExplorer',
     value: 'file-tree',
+  },
+  {
+    label: 'YakRunner.ai',
+    value: 'ai',
+    icon: <OutlineBotIcon />,
   },
   {
     label: 'YakRunner.helpDocumentation',
@@ -592,43 +605,26 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     { wait: 300 },
   )
 
-  const store: YakRunnerContextStore = useMemo(() => {
-    return {
-      fileTree: fileTree,
-      areaInfo: areaInfo,
-      activeFile: activeFile,
-      runnerTabsId: runnerTabsId,
-    }
-  }, [fileTree, areaInfo, activeFile, runnerTabsId])
-
-  const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
-    return {
-      setFileTree: setFileTree,
-      handleFileLoadData: handleFileLoadData,
-      setAreaInfo: setAreaInfo,
-      setActiveFile: setActiveFile,
-      setRunnerTabsId: setRunnerTabsId,
-    }
-  }, [])
-
   const shortcutRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(shortcutRef)
   const unTitleCountRef = useRef<number>(1)
 
   const addFileTab = useThrottleFn(
-    (e?: any, params?: { name: string; code: string }) => {
+    (e?: any, params?: { name?: string; code: string; language?: string }) => {
       // 新建临时文件
+      const nextName = params?.name || `Untitle-${unTitleCountRef.current}.yak`
+      const suffix = nextName.includes('.') ? nextName.split('.').pop() || 'yak' : 'yak'
       const scratchFile: FileDetailInfo = {
-        name: `Untitle-${unTitleCountRef.current}.yak`,
+        name: nextName,
         code: params?.code || '# input your yak code\nprintln(`Hello Yak World!`)',
-        icon: '_f_yak',
+        icon: FileSuffix[suffix] || '_f_yak',
         isActive: true,
         openTimestamp: moment().unix(),
         isPlainText: true,
         // 此处赋值 path 用于拖拽 分割布局等UI标识符操作
-        path: `${uuidv4()}-Untitle-${unTitleCountRef.current}.yak`,
+        path: `${uuidv4()}-${nextName}`,
         parent: null,
-        language: 'yak',
+        language: params?.language || monacaLanguageType(suffix),
         isUnSave: true,
       }
       unTitleCountRef.current += 1
@@ -641,6 +637,27 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
   ).run
 
   const [codePath, setCodePath] = useState<string>('')
+  const applyContentToActiveFile = useMemoizedFn(async (content: string) => {
+    if (!activeFile) {
+      failed('当前没有可写入的活动文件')
+      return
+    }
+    const updatedFile: FileDetailInfo = {
+      ...activeFile,
+      code: content,
+    }
+    const newAreaInfo = updateAreaFileInfo(areaInfo, updatedFile, activeFile.path)
+    setAreaInfo(newAreaInfo)
+    setActiveFile(updatedFile)
+    if (!activeFile.isUnSave) {
+      try {
+        await grpcFetchSaveFile(activeFile.path, content)
+      } catch (error) {
+        failed(t('YakRunner.saveFailed', { name: activeFile.name || '' }))
+      }
+    }
+  })
+
   // 默认保存路径
   useEffect(() => {
     ipcRenderer.invoke('fetch-code-path').then((path: string) => {
@@ -1005,6 +1022,43 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
       ipcRenderer.removeAllListeners('fetch-send-to-yak-running')
     }
   }, [])
+
+  useEffect(() => {
+    const unregisterGet = registerYakRunnerGetActiveFile(YAK_RUNNER_AI_PAGE_ID, () => activeFile)
+    const unregisterApply = registerYakRunnerApplyToActiveFile(YAK_RUNNER_AI_PAGE_ID, (content) => {
+      applyContentToActiveFile(content)
+    })
+    const unregisterCreate = registerYakRunnerCreateFile(YAK_RUNNER_AI_PAGE_ID, ({ content, name, language }) => {
+      addFileTab(undefined, { code: content, name, language })
+    })
+    return () => {
+      unregisterGet()
+      unregisterApply()
+      unregisterCreate()
+    }
+  }, [activeFile, applyContentToActiveFile, addFileTab])
+
+  const store: YakRunnerContextStore = useMemo(() => {
+    return {
+      fileTree: fileTree,
+      areaInfo: areaInfo,
+      activeFile: activeFile,
+      runnerTabsId: runnerTabsId,
+      pageId: YAK_RUNNER_AI_PAGE_ID,
+    }
+  }, [fileTree, areaInfo, activeFile, runnerTabsId])
+
+  const dispatcher: YakRunnerContextDispatcher = useMemo(() => {
+    return {
+      setFileTree: setFileTree,
+      handleFileLoadData: handleFileLoadData,
+      setAreaInfo: setAreaInfo,
+      setActiveFile: setActiveFile,
+      setRunnerTabsId: setRunnerTabsId,
+      addFileTab: (params) => addFileTab(undefined, params),
+      applyContentToActiveFile: applyContentToActiveFile,
+    }
+  }, [addFileTab, applyContentToActiveFile, handleFileLoadData])
 
   return (
     <YakRunnerContext.Provider value={{ store, dispatcher }}>

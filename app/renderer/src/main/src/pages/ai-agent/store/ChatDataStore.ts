@@ -196,6 +196,7 @@ export const aiChatDataStore = new ChatDataStore()
 export const knowledgeBaseDataStore = new ChatDataStore()
 export const histroyAiStore = new ChatDataStore()
 export const FlowAiStore = new ChatDataStore()
+export const yakRunnerAiStore = new ChatDataStore()
 
 /** Web Fuzzer 每页 `new WebFuzzerAiStore(pageId)`；与上方单例区分需用 `instanceof` */
 export class WebFuzzerAiStore extends ChatDataStore {
@@ -211,5 +212,6 @@ export type ChatDataStoreKey =
   | 'knowledgeBaseDataStore'
   | 'histroyAiStore'
   | 'FlowAiStore'
+  | 'yakRunnerAiStore'
   | 'WebFuzzerAiStore'
   | 'unknown'

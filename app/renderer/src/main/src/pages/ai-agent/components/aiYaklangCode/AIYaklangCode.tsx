@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { WebFuzzerAiStoreCardRightHeader } from '@/pages/ai-agent/components/WebFuzzerAiStoreCardRightHeader'
+import { YakRunnerAiStoreCardRightHeader } from '@/pages/ai-agent/components/YakRunnerAiStoreCardRightHeader'
 import { AIYaklangCodeProps } from './type'
 import ChatCard from '../ChatCard'
 import { OutlinCompileTwoIcon } from '@/assets/icon/outline'
@@ -55,6 +56,9 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
   const isWebFuzzerAiStore = useMemo(() => {
     return chatDataStoreKey === 'WebFuzzerAiStore'
   }, [chatDataStoreKey])
+  const isYakRunnerAiStore = useMemo(() => {
+    return chatDataStoreKey === 'yakRunnerAiStore'
+  }, [chatDataStoreKey])
 
   const titleExtra = useMemo(() => {
     if (!modalInfo) return null
@@ -64,11 +68,17 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
         trailing={
           isWebFuzzerAiStore && webFuzzerAiStoreFuzzerPageId ? (
             <WebFuzzerAiStoreCardRightHeader content={content} fuzzerPageId={webFuzzerAiStoreFuzzerPageId} />
+          ) : isYakRunnerAiStore ? (
+            <YakRunnerAiStoreCardRightHeader
+              content={content}
+              yakRunnerPageId="yakrunner-ai"
+              contentType={contentType}
+            />
           ) : undefined
         }
       />
     )
-  }, [modalInfo, isWebFuzzerAiStore, content, webFuzzerAiStoreFuzzerPageId])
+  }, [modalInfo, isWebFuzzerAiStore, isYakRunnerAiStore, content, webFuzzerAiStoreFuzzerPageId, contentType])
 
   return (
     <div className={styles['ai-yaklang-code-hover-wrap']}>
