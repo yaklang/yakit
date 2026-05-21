@@ -951,6 +951,8 @@ service Yak {
   rpc UpdateAITool(UpdateAIToolRequest) returns(DbOperateMessage);
   rpc ToggleAIToolFavorite(ToggleAIToolFavoriteRequest) returns(ToggleAIToolFavoriteResponse);
   rpc AIToolGenerateMetadata(AIToolGenerateMetadataRequest) returns(AIToolGenerateMetadataResponse);
+  rpc ExportAITool(ExportAIToolRequest) returns (stream GeneralProgress);
+  rpc ImportAITool(ImportAIToolRequest) returns (stream GeneralProgress);
 
   // Local Model Management
   rpc IsLlamaServerReady(Empty) returns (IsLlamaServerReadyResponse);
@@ -1755,6 +1757,30 @@ message GetAIToolListRequest {
   Paging Pagination = 3;
   bool OnlyFavorites = 4;
 }
+
+message AIToolFilter {
+  string ToolName = 1;
+  repeated string ToolNames = 2;
+  string Keyword = 3;
+  bool OnlyFavorites = 4;
+  int64 ID = 5;
+}
+
+message ExportAIToolRequest {
+  repeated string ToolNames = 1;
+  string TargetPath = 2;
+  string Password = 3;
+  string OutputName = 4;
+  AIToolFilter Filter = 5;
+}
+
+message ImportAIToolRequest {
+  string InputPath = 1;
+  bool Overwrite = 2;
+  string NewToolName = 3;
+  string Password = 4;
+}
+
 message AIOutputEvent {
   int64 ID = 24;
   string CoordinatorId = 1;
@@ -1944,6 +1970,12 @@ message AIStartParams {
   // 为 true 时允许 request_plan_and_execution（PE）与 require_ai_blueprint（蓝图）两类动作；
   // 默认 false 时禁用上述能力。该开关在 StartAIReAct 参数转换中晚于 DisableAISearchForge 应用，优先级更高。
   bool EnablePlan = 38;
+
+  // 为 true 时优先使用 session 缓存的配置；默认 false
+  bool PreferSessionCachedConfig = 39;
+
+  // 用户自定义 plan 提示词，注入 plan loop 的「规划补充说明」区块
+  string UserPlanPrompt = 40;
 }
 
 message AITaskFilter {
@@ -8666,6 +8698,7 @@ message AIGlobalConfig {
   repeated AIModelConfig LightweightModels = 7;
   repeated AIModelConfig VisionModels = 8;
   string AIPresetPrompt = 9;
+  string AIPlanPrompt = 10;
 }
 
 // Local Model Messages

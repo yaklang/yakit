@@ -154,7 +154,12 @@
   },
   "AIReActTaskChatContent": {
     "humanIntervention": "人工介入",
-    "globalDirective": "全局指令"
+    "globalDirective": "全局指令",
+    "globalDirectiveDefault": "自定义AI全局指令",
+    "globalDirectivePlaceholder": "全局命令将对所有会话生效...",
+    "planPrompt": "Plan 提示词",
+    "planPromptDefault": "自定义Plan提示词",
+    "planPromptPlaceholder": "Plan 提示词将在任务规划阶段生效，用于补充规划说明..."
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI模型配置",
@@ -197,7 +202,14 @@
   "AIToolList": {
     "all": "全部",
     "collect": "收藏",
-    "templateIdError": "该模板 ID('{{id}}') 异常, 无法编辑"
+    "templateIdError": "该模板 ID('{{id}}') 异常, 无法编辑",
+    "exportTool": "导出工具",
+    "importTool": "导入工具",
+    "selectAll": "全选",
+    "fileName": "文件名",
+    "password": "密码",
+    "localPath": "本地路径",
+    "enterLocalPath": "请输入本地路径"
   },
   "KnowledgeSidebarList": {
     "manual": "手动添加",

@@ -50,6 +50,7 @@ import { ColorsAIIcon } from '@/assets/icon/colors'
 import { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
 import { cloneDeep } from 'lodash'
 import { ExportAIForgeRequest } from './forgeName/type'
+import { ExportAIToolRequest } from './type/aiTool'
 
 /** AI-Agent 页面的唯一 id */
 export const YakitAIAgentPageID = 'yakit-ai-agent'
@@ -393,6 +394,7 @@ export const defaultAIGlobalConfig: AIGlobalConfig = {
   LightweightModels: [],
   VisionModels: [],
   AIPresetPrompt: '',
+  AIPlanPrompt: '',
 }
 
 export const defaultExportAIForgeRequest: ExportAIForgeRequest = {
@@ -400,6 +402,14 @@ export const defaultExportAIForgeRequest: ExportAIForgeRequest = {
   TargetPath: '',
   OutputName: '',
   ToolNames: [],
+  Password: '',
+  Filter: {},
+}
+
+export const defaultExportAIToolRequest: ExportAIToolRequest = {
+  ToolNames: [],
+  TargetPath: '',
+  OutputName: '',
   Password: '',
   Filter: {},
 }

@@ -33,6 +33,15 @@
         height: 16px;
       }
     }
+    .select-all {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      font-size: 12px;
+      line-height: 16px;
+    }
   }
   .ai-tool-list {
     .tool-icon {

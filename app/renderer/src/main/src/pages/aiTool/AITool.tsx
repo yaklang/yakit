@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { AIToolPageItemProps, AIToolProps } from './AIToolType'
-import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useDebounceFn, useInViewport, useMemoizedFn, useSelections } from 'ahooks'
 
 import { HubGridList, HubGridOpt } from '../pluginHub/pluginHubList/funcTemplate'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -10,6 +10,8 @@ import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineDotsverticalIcon,
+  OutlineExportIcon,
+  OutlineImportIcon,
   OutlinePencilaltIcon,
   OutlinePlusIcon,
   OutlineRefreshIcon,
@@ -20,7 +22,13 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { Divider } from 'antd'
-import { GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest } from '../ai-agent/type/aiTool'
+import {
+  GetAIToolListRequest,
+  GetAIToolListResponse,
+  ToggleAIToolFavoriteRequest,
+  ExportAIToolRequest,
+  AITool,
+} from '../ai-agent/type/aiTool'
 import { genDefaultPagination } from '../invoker/schema'
 import { grpcDeleteAITool, grpcGetAIToolList, grpcToggleAIToolFavorite } from '../ai-agent/aiToolList/utils'
 import { ToolQueryType } from '../ai-agent/aiToolList/AIToolListType'
@@ -32,6 +40,13 @@ import { setClipboardText } from '@/utils/clipboard'
 import { yakitNotify } from '@/utils/notification'
 import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import {
+  BatchExportAITool,
+  BatchExportAIToolRef,
+  ImportAIToolModal,
+  ImportAIToolRef,
+} from '../ai-agent/aiToolList/AIToolImportExport'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 
 const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
@@ -52,6 +67,8 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
   // 是否为获取列表第一页的加载状态
   const isInitLoading = useRef<boolean>(false)
   const hasMore = useRef<boolean>(true)
+  const batchExportRef = useRef<BatchExportAIToolRef>(null)
+  const importRef = useRef<ImportAIToolRef>(null)
 
   const toolRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(toolRef)
@@ -132,6 +149,39 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
   const listLength = useCreation(() => {
     return Number(response.Total) || 0
   }, [response.Total])
+  const { selected, allSelected, isSelected, toggle, toggleAll, partiallySelected } = useSelections(response.Tools)
+  const selectedLength = useCreation(() => {
+    return selected.length
+  }, [selected.length])
+  const onBatchExport = useMemoizedFn(() => {
+    const query: ExportAIToolRequest = {
+      ToolNames: [],
+      OutputName: '',
+      Filter: {
+        Keyword: '',
+      },
+    }
+    if (allSelected) {
+      query.Filter = {
+        Keyword: keyWord,
+      }
+    } else {
+      query.ToolNames = selected.map((item) => item.Name)
+    }
+    batchExportRef.current?.open(query)
+  })
+  const onExport = useMemoizedFn((data: AITool) => {
+    batchExportRef.current?.open({
+      ToolNames: [data.Name],
+      OutputName: data.VerboseName || data.Name || '',
+    })
+  })
+  const onImport = useMemoizedFn(() => {
+    importRef.current?.open()
+  })
+  const optCheck = useMemoizedFn((data: AITool) => {
+    toggle(data)
+  })
   const onToolQueryTypeChange = useMemoizedFn((e) => {
     setToolQueryType(e.target.value as ToolQueryType)
     setKeyWord('')
@@ -184,7 +234,18 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
             onSearch={handleRefreshList}
           />
           <Divider type="vertical" className={styles['diver-style']} />
-
+          <YakitButton
+            disabled={!selectedLength}
+            type="outline2"
+            size="large"
+            icon={<OutlineExportIcon />}
+            onClick={onBatchExport}
+          >
+            批量导出
+          </YakitButton>
+          <YakitButton type="outline2" size="large" icon={<OutlineImportIcon />} onClick={onImport}>
+            导入
+          </YakitButton>
           <YakitButton size="large" icon={<OutlinePlusIcon />} onClick={onNewTool}>
             新建工具
           </YakitButton>
@@ -193,13 +254,19 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
 
       <div className={styles['ai-tool-content']}>
         <div className={styles['hub-list-subTitle']}>
-          <YakitRadioButtons
-            buttonStyle="solid"
-            value={toolQueryType}
-            options={toolTypeOptions(t)}
-            onChange={onToolQueryTypeChange}
-          />
-          <TableTotalAndSelectNumber total={listLength} />
+          <div className={styles['hub-list-subTitle-left']}>
+            <YakitRadioButtons
+              buttonStyle="solid"
+              value={toolQueryType}
+              options={toolTypeOptions(t)}
+              onChange={onToolQueryTypeChange}
+            />
+            <TableTotalAndSelectNumber total={listLength} />
+          </div>
+          <div className={styles['select-all']}>
+            <YakitCheckbox checked={allSelected} onChange={() => toggleAll()} indeterminate={partiallySelected} />
+            <span>全选</span>
+          </div>
         </div>
         <div className={styles['hub-list-wrapper']}>
           <YakitSpin spinning={loading && isInitLoading.current}>
@@ -212,11 +279,15 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
                 updateList={onUpdateList}
                 gridNode={(info) => {
                   const { index, data } = info
+                  const check = isSelected(data)
                   return (
                     <AIToolPageItem
                       key={data.ID}
                       index={index}
                       data={data}
+                      checked={check}
+                      onCheck={optCheck}
+                      onExport={onExport}
                       onFavorite={onFavorite}
                       onRemove={onRemove}
                     />
@@ -246,6 +317,8 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
           </YakitSpin>
         </div>
       </div>
+      <BatchExportAITool ref={batchExportRef} />
+      <ImportAIToolModal ref={importRef} onSuccess={() => fetchData(true)} />
     </div>
   )
 })
@@ -253,7 +326,7 @@ const AIToolPage: React.FC<AIToolProps> = React.memo((props) => {
 export default AIToolPage
 
 const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
-  const { index, data, onFavorite, onRemove } = props
+  const { index, data, checked, onCheck, onExport, onFavorite, onRemove } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const [favoriteLoading, setFavoriteLoading] = useState<boolean>(false)
   const [visible, setVisible] = useState<boolean>(false)
@@ -300,8 +373,8 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
     <HubGridOpt
       order={index}
       info={data}
-      checked={false}
-      onCheck={() => {}}
+      checked={!!checked}
+      onCheck={() => onCheck?.(data)}
       title={data.VerboseName || data.Name}
       type={''}
       tags={data?.Keywords?.join(',')}
@@ -311,9 +384,19 @@ const AIToolPageItem: React.FC<AIToolPageItemProps> = React.memo((props) => {
       time={data?.UpdatedAt || 0}
       isCorePlugin={isBuiltin}
       official={isBuiltin}
-      isShowCheck={false}
+      isShowCheck={true}
       extraFooter={() => (
         <div className={styles['extra-footer']}>
+          <YakitButton
+            key="export"
+            onClick={(e) => {
+              e.stopPropagation()
+              onExport?.(data)
+            }}
+            type="text2"
+            icon={<OutlineExportIcon />}
+          />
+          <div className={styles['diver-style']} />
           <YakitButton
             type="text2"
             loading={favoriteLoading}

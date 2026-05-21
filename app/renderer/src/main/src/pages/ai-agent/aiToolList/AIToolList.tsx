@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
-import { AIToolListItemProps, AIToolListProps, ToolQueryType } from './AIToolListType'
+import { AIToolListItemProps, AIToolListProps, AIToolListRef, ToolQueryType } from './AIToolListType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn, useSelections } from 'ahooks'
 import { grpcDeleteAITool, grpcGetAIToolList, grpcToggleAIToolFavorite } from './utils'
 import { genDefaultPagination } from '@/pages/invoker/schema'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -12,6 +12,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineClipboardcopyIcon,
   OutlineDotsverticalIcon,
+  OutlineExportIcon,
   OutlinePencilaltIcon,
   OutlineSearchIcon,
   OutlineStarIcon,
@@ -21,7 +22,13 @@ import styles from './AIToolList.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { AITool, GetAIToolListRequest, GetAIToolListResponse, ToggleAIToolFavoriteRequest } from '../type/aiTool'
+import {
+  AITool,
+  ExportAIToolRequest,
+  GetAIToolListRequest,
+  GetAIToolListResponse,
+  ToggleAIToolFavoriteRequest,
+} from '../type/aiTool'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { setClipboardText } from '@/utils/clipboard'
@@ -33,6 +40,10 @@ import { yakitNotify } from '@/utils/notification'
 import { AIToolEditorPageInfoProps } from '@/store/pageInfo'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { YakitProtoCheckbox } from '@/components/TableVirtualResize/YakitProtoCheckbox/YakitProtoCheckbox'
+import { Tooltip } from 'antd'
+import { BatchExportAITool, ImportAIToolModal } from './AIToolImportExport'
 const tOriginal = i18n.getFixedT(null, 'aiAgent')
 
 /**
@@ -112,121 +123,166 @@ export const handleAddAITool = (source?: YakitRoute) => {
     }),
   )
 }
-const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [toolQueryType, setToolQueryType] = useState<ToolQueryType>('all')
-  const [keyWord, setKeyWord] = useState<string>('')
-  const [loading, setLoading] = useState<boolean>(false)
-  const [spinning, setSpinning] = useState<boolean>(false)
-  const [hasMore, setHasMore] = useState<boolean>(false)
-  const [isRef, setIsRef] = useState<boolean>(false)
-  const [recalculation, setRecalculation] = useState<boolean>(false)
-  const [response, setResponse] = useState<GetAIToolListResponse>({
-    Tools: [],
-    Pagination: genDefaultPagination(20),
-    Total: 0,
-  })
+const AIToolList = React.memo(
+  forwardRef<AIToolListRef, AIToolListProps>((props, ref) => {
+    const { onSelectChange } = props
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+    const [toolQueryType, setToolQueryType] = useState<ToolQueryType>('all')
+    const [keyWord, setKeyWord] = useState<string>('')
+    const [loading, setLoading] = useState<boolean>(false)
+    const [spinning, setSpinning] = useState<boolean>(false)
+    const [hasMore, setHasMore] = useState<boolean>(false)
+    const [isRef, setIsRef] = useState<boolean>(false)
+    const [recalculation, setRecalculation] = useState<boolean>(false)
+    const [response, setResponse] = useState<GetAIToolListResponse>({
+      Tools: [],
+      Pagination: genDefaultPagination(20),
+      Total: 0,
+    })
 
-  const toolListRef = useRef<HTMLDivElement>(null)
-  const [inViewPort = true] = useInViewport(toolListRef)
+    const batchExportRef = useRef<{ open: (params: Partial<ExportAIToolRequest>) => void }>(null)
+    const importRef = useRef<{ open: () => void }>(null)
+    const { selected, allSelected, isSelected, toggle, toggleAll, partiallySelected } = useSelections(response.Tools)
 
-  useEffect(() => {
-    if (inViewPort) getList()
-  }, [inViewPort])
-  const getList = useMemoizedFn(async (page?: number) => {
-    setLoading(true)
-    const newQuery: GetAIToolListRequest = {
-      Query: keyWord,
-      ToolName: '',
-      Pagination: {
-        ...genDefaultPagination(20),
-        Page: page || 1,
-      },
-      OnlyFavorites: toolQueryType === 'collect',
-    }
-    if (newQuery.Pagination.Page === 1) {
-      setSpinning(true)
-    }
-    try {
-      const res = await grpcGetAIToolList(newQuery)
-      if (!res.Tools) res.Tools = []
-      const newPage = +res.Pagination.Page
-      const length = newPage === 1 ? res.Tools.length : res.Tools.length + response.Tools.length
-      setHasMore(length < +res.Total)
-      let newRes: GetAIToolListResponse = {
-        Tools: newPage === 1 ? res?.Tools : [...response.Tools, ...(res?.Tools || [])],
-        Pagination: res?.Pagination || {
+    useEffect(() => {
+      onSelectChange?.(selected.length > 0)
+    }, [selected.length, onSelectChange])
+
+    const toolListRef = useRef<HTMLDivElement>(null)
+    const [inViewPort = true] = useInViewport(toolListRef)
+
+    useEffect(() => {
+      if (inViewPort) getList()
+    }, [inViewPort])
+    const getList = useMemoizedFn(async (page?: number) => {
+      setLoading(true)
+      const newQuery: GetAIToolListRequest = {
+        Query: keyWord,
+        ToolName: '',
+        Pagination: {
           ...genDefaultPagination(20),
+          Page: page || 1,
         },
-        Total: res.Total,
+        OnlyFavorites: toolQueryType === 'collect',
       }
-      setResponse(newRes)
-      if (newPage === 1) {
-        setIsRef(!isRef)
+      if (newQuery.Pagination.Page === 1) {
+        setSpinning(true)
       }
-    } catch (error) {}
-    setTimeout(() => {
-      setLoading(false)
-      setSpinning(false)
-    }, 300)
-  })
-  const onSearch = useMemoizedFn((value) => {
-    setKeyWord(value)
-    setTimeout(() => {
-      getList()
-    }, 200)
-  })
-  // const onPressEnter = useMemoizedFn((e) => {
-  //     onSearch(e.target.value)
-  // })
-  const loadMoreData = useMemoizedFn(() => {
-    getList(+response.Pagination.Page + 1)
-  })
-  const onToolQueryTypeChange = useMemoizedFn((e) => {
-    setToolQueryType(e.target.value as ToolQueryType)
-    setKeyWord('')
-    setTimeout(() => {
-      getList()
-    }, 200)
-  })
-  const onSetData = useMemoizedFn((item: AITool) => {
-    setResponse((preV) => ({
-      ...preV,
-      Tools: preV.Tools.map((ele) => {
-        if (ele.Name === item.Name) {
-          return { ...ele, IsFavorite: item.IsFavorite }
+      try {
+        const res = await grpcGetAIToolList(newQuery)
+        if (!res.Tools) res.Tools = []
+        const newPage = +res.Pagination.Page
+        const length = newPage === 1 ? res.Tools.length : res.Tools.length + response.Tools.length
+        setHasMore(length < +res.Total)
+        let newRes: GetAIToolListResponse = {
+          Tools: newPage === 1 ? res?.Tools : [...response.Tools, ...(res?.Tools || [])],
+          Pagination: res?.Pagination || {
+            ...genDefaultPagination(20),
+          },
+          Total: res.Total,
         }
-        return { ...ele }
+        setResponse(newRes)
+        if (newPage === 1) {
+          setIsRef(!isRef)
+        }
+      } catch (error) {}
+      setTimeout(() => {
+        setLoading(false)
+        setSpinning(false)
+      }, 300)
+    })
+    const onSearch = useMemoizedFn((value) => {
+      setKeyWord(value)
+      setTimeout(() => {
+        getList()
+      }, 200)
+    })
+    // const onPressEnter = useMemoizedFn((e) => {
+    //     onSearch(e.target.value)
+    // })
+    const loadMoreData = useMemoizedFn(() => {
+      getList(+response.Pagination.Page + 1)
+    })
+    const onToolQueryTypeChange = useMemoizedFn((e) => {
+      setToolQueryType(e.target.value as ToolQueryType)
+      setKeyWord('')
+      setTimeout(() => {
+        getList()
+      }, 200)
+    })
+    const onSetData = useMemoizedFn((item: AITool) => {
+      setResponse((preV) => ({
+        ...preV,
+        Tools: preV.Tools.map((ele) => {
+          if (ele.Name === item.Name) {
+            return { ...ele, IsFavorite: item.IsFavorite }
+          }
+          return { ...ele }
+        }),
+      }))
+      setRecalculation((v) => !v)
+    })
+    const onSelect = useMemoizedFn((record) => {
+      emiter.emit(
+        'onReActChatEvent',
+        JSON.stringify({
+          type: ReActChatEventEnum.USE_AI_TOOL,
+          params: { value: record },
+        }),
+      )
+    })
+
+    const onBatchExport = useMemoizedFn(() => {
+      const query: ExportAIToolRequest = {
+        ToolNames: [],
+        OutputName: '',
+        Filter: {
+          Keyword: '',
+        },
+      }
+      if (allSelected) {
+        query.Filter = {
+          Keyword: keyWord,
+        }
+      } else {
+        query.ToolNames = selected.map((item) => item.Name)
+      }
+      batchExportRef.current?.open(query)
+    })
+
+    const onExport = useMemoizedFn((item: AITool) => {
+      batchExportRef.current?.open({
+        ToolNames: [item.Name],
+        OutputName: item.VerboseName || item.Name || '',
+      })
+    })
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        openImport: () => importRef.current?.open(),
+        onBatchExport: () => onBatchExport(),
       }),
-    }))
-    setRecalculation((v) => !v)
-  })
-  const onSelect = useMemoizedFn((record) => {
-    emiter.emit(
-      'onReActChatEvent',
-      JSON.stringify({
-        type: ReActChatEventEnum.USE_AI_TOOL,
-        params: { value: record },
-      }),
+      [onBatchExport],
     )
-  })
-  return (
-    <div className={styles['ai-tool-list-wrapper']} ref={toolListRef}>
-      <div className={styles['ai-tool-list-header']}>
-        <div className={styles['ai-tool-list-header-left']}>
-          <YakitRadioButtons
-            size="small"
-            buttonStyle="solid"
-            value={toolQueryType}
-            options={toolTypeOptions(t)}
-            onChange={onToolQueryTypeChange}
-          />
-          <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
+
+    return (
+      <div className={styles['ai-tool-list-wrapper']} ref={toolListRef}>
+        <div className={styles['ai-tool-list-header']}>
+          <div className={styles['ai-tool-list-header-left']}>
+            <YakitRadioButtons
+              size="small"
+              buttonStyle="solid"
+              value={toolQueryType}
+              options={toolTypeOptions(t)}
+              onChange={onToolQueryTypeChange}
+            />
+            <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
+          </div>
+          {/* <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAITool} /> */}
         </div>
-        {/* <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAITool} /> */}
-      </div>
-      <div className={styles['ai-tool-list-search']}>
-        {/* <YakitInput.Search
+        <div className={styles['ai-tool-list-search']}>
+          {/* <YakitInput.Search
                 value={keyWord}
                 onChange={(e) => setKeyWord(e.target.value)}
                 onSearch={onSearch}
@@ -234,46 +290,61 @@ const AIToolList: React.FC<AIToolListProps> = React.memo((props) => {
                 wrapperStyle={{margin: "0 12px"}}
                 allowClear
             /> */}
-        <YakitInput
-          prefix={<OutlineSearchIcon className={styles['search-icon']} />}
-          allowClear
-          placeholder={t('YakitInput.searchKeyWordPlaceholder')}
-          value={keyWord}
-          onChange={(e) => onSearch(e.target.value)}
-        />
-      </div>
-      <div style={{ flex: 1, height: 0 }}>
-        <YakitSpin spinning={spinning}>
-          <RollingLoadList<AITool>
-            data={response.Tools}
-            loadMoreData={loadMoreData}
-            renderRow={(rowData: AITool, index: number) => {
-              return (
-                <React.Fragment key={rowData.Name}>
-                  <AIToolListItem item={rowData} onSetData={onSetData} onRefresh={getList} onSelect={onSelect} />
-                </React.Fragment>
-              )
-            }}
-            classNameRow={styles['ai-tool-list-item']}
-            classNameList={styles['ai-tool-list']}
-            page={+response.Pagination.Page}
-            hasMore={hasMore}
-            loading={loading}
-            defItemHeight={120}
-            rowKey="Name"
-            isRef={isRef}
-            recalculation={recalculation}
+          <YakitInput
+            prefix={<OutlineSearchIcon className={styles['search-icon']} />}
+            allowClear
+            placeholder={t('YakitInput.searchKeyWordPlaceholder')}
+            value={keyWord}
+            onChange={(e) => onSearch(e.target.value)}
           />
-        </YakitSpin>
+          <div className={styles['select-all']}>
+            <YakitCheckbox checked={allSelected} onChange={() => toggleAll()} indeterminate={partiallySelected} />
+            <span>{t('AIToolList.selectAll')}</span>
+          </div>
+        </div>
+        <div style={{ flex: 1, height: 0 }}>
+          <YakitSpin spinning={spinning}>
+            <RollingLoadList<AITool>
+              data={response.Tools}
+              loadMoreData={loadMoreData}
+              renderRow={(rowData: AITool, index: number) => {
+                return (
+                  <React.Fragment key={rowData.Name}>
+                    <AIToolListItem
+                      item={rowData}
+                      checked={isSelected(rowData)}
+                      onCheck={toggle}
+                      onSetData={onSetData}
+                      onRefresh={getList}
+                      onSelect={onSelect}
+                      onExport={onExport}
+                    />
+                  </React.Fragment>
+                )
+              }}
+              classNameRow={styles['ai-tool-list-item']}
+              classNameList={styles['ai-tool-list']}
+              page={+response.Pagination.Page}
+              hasMore={hasMore}
+              loading={loading}
+              defItemHeight={120}
+              rowKey="Name"
+              isRef={isRef}
+              recalculation={recalculation}
+            />
+          </YakitSpin>
+        </div>
+        <BatchExportAITool ref={batchExportRef} />
+        <ImportAIToolModal ref={importRef} onSuccess={getList} />
       </div>
-    </div>
-  )
-})
+    )
+  }),
+)
 export default AIToolList
 
 const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
-  const { item, onSetData, onRefresh, onSelect } = props
-  const { t } = useI18nNamespaces(['yakitUi'])
+  const { item, checked, onCheck, onSetData, onRefresh, onSelect, onExport } = props
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [visible, setVisible] = useState<boolean>(false)
   const onFavorite = useMemoizedFn((e) => {
     e.stopPropagation()
@@ -343,6 +414,11 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
         <div className={styles['ai-tool-list-item-content']} onClick={onToolClick}>
           <div className={styles['ai-tool-list-item-heard']}>
             <div className={styles['ai-tool-list-item-heard-name']}>
+              <YakitProtoCheckbox
+                checked={!!checked}
+                onChange={() => onCheck?.(item)}
+                onClick={(e) => e.stopPropagation()}
+              />
               <SolidToolIcon className={styles['tool-icon']} />
               <span className={styles['ai-tool-list-item-heard-name-text']}>{item.VerboseName || item.Name}</span>
             </div>
@@ -365,6 +441,16 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                   onClick={onFavorite}
                 />
               )}
+              <Tooltip title={t('AIToolList.exportTool')}>
+                <YakitButton
+                  type="text2"
+                  icon={<OutlineExportIcon />}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onExport?.(item)
+                  }}
+                />
+              </Tooltip>
               <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEdit} />
               <YakitDropdownMenu
                 menu={{

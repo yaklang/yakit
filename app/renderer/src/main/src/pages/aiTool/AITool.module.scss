@@ -49,7 +49,22 @@
     gap: 12px;
     .hub-list-subTitle {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 8px;
+      .hub-list-subTitle-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .select-all {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 12px;
+        font-weight: 400;
+      }
     }
     .hub-list-wrapper {
       flex: 1;

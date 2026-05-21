@@ -64,3 +64,42 @@ export interface AIToolGenerateMetadataResponse {
   Description: string
   Keywords: string[]
 }
+
+export interface AIToolFilter {
+  ToolName?: string
+  ToolNames?: string[]
+  Keyword?: string
+  OnlyFavorites?: boolean
+  ID?: number
+}
+
+export interface ExportAIToolFormValues {
+  OutputName: string
+  Password?: string
+}
+
+export interface ImportAIToolFormValues {
+  InputPath: string
+  Password?: string
+}
+
+export interface ExportAIToolRequest {
+  ToolNames: string[]
+  TargetPath?: string
+  Password?: string
+  OutputName: string
+  Filter?: AIToolFilter
+}
+
+export interface ImportAIToolRequest {
+  InputPath: string
+  Overwrite: boolean
+  NewToolName?: string
+  Password?: string
+}
+
+export interface ExportImportAIToolProgress {
+  Percent: number
+  Message: string
+  MessageType: string
+}

@@ -42,6 +42,7 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import Tabs from './Tabs/Tabs'
 import ForgeName, { ForgeNameRef } from '../forgeName/ForgeName'
 import AIToolList, { handleAddAITool } from '../aiToolList/AIToolList'
+import { AIToolListRef } from '../aiToolList/AIToolListType'
 import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
 import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
@@ -172,8 +173,10 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     }, [randomAIMaterials])
 
     const [isSelectForgeName, setIsSelectForgeName] = useState<boolean>(false)
+    const [isSelectAITool, setIsSelectAITool] = useState<boolean>(false)
     const knowledgeSidebarListRef = useRef<KnowledgeModalRef>(null)
     const forgeNameRef = useRef<ForgeNameRef>(null)
+    const aiToolListRef = useRef<AIToolListRef>(null)
     const { installPlug, refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync } = useCheckKnowledgePlugin()
 
     const items = useMemo(() => {
@@ -247,8 +250,25 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
         {
           label: t('AIChatWelcome.toolBase'),
           key: AIChatWelcomeTabKeyEnum.Tools,
-          children: <AIToolList />,
+          children: <AIToolList ref={aiToolListRef} onSelectChange={setIsSelectAITool} />,
           extra: [
+            <YakitButton
+              key="batch-export"
+              onClick={() => {
+                aiToolListRef.current?.onBatchExport()
+              }}
+              type="text2"
+              icon={<OutlineExportIcon />}
+              disabled={!isSelectAITool}
+            />,
+            <YakitButton
+              key="import"
+              onClick={() => {
+                aiToolListRef.current?.openImport()
+              }}
+              type="text2"
+              icon={<OutlineImportIcon />}
+            />,
             <YakitButton
               key="add"
               onClick={() => {
@@ -260,7 +280,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           ],
         },
       ]
-    }, [api, streams, installPlug, i18n.language, isSelectForgeName])
+    }, [api, streams, installPlug, i18n.language, isSelectForgeName, isSelectAITool])
 
     return (
       <div className={styles['ai-chat-welcome-wrapper']} ref={welcomeRef}>

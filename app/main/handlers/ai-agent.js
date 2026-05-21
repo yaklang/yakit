@@ -387,6 +387,25 @@ module.exports = (win, getClient) => {
   ipcMain.handle('AIToolGenerateMetadata', async (e, param) => {
     return await asyncAIToolGenerateMetadata(param)
   })
+
+  const exportAIToolMap = new Map()
+  ipcMain.handle('cancel-ExportAITool', handlerHelper.cancelHandler(exportAIToolMap))
+  ipcMain.handle('ExportAITool', (_, params, token) => {
+    if (!fs.existsSync(yakProjects)) {
+      try {
+        fs.mkdirSync(yakProjects, { recursive: true })
+      } catch (error) {}
+    }
+    let stream = getClient().ExportAITool(params)
+    handlerHelper.registerHandler(win, stream, exportAIToolMap, token)
+  })
+
+  const importAIToolMap = new Map()
+  ipcMain.handle('cancel-ImportAITool', handlerHelper.cancelHandler(importAIToolMap))
+  ipcMain.handle('ImportAITool', (_, params, token) => {
+    let stream = getClient().ImportAITool(params)
+    handlerHelper.registerHandler(win, stream, importAIToolMap, token)
+  })
   //#endregion
 
   //#region ai 首页
