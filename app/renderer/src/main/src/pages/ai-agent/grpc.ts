@@ -9,7 +9,7 @@ import {
   GetRandomAIMaterialsRequest,
   GetRandomAIMaterialsResponse,
 } from '../ai-re-act/hooks/grpcApi'
-import {
+import type {
   AIForge,
   AIForgeFilter,
   DeleteAISessionRequest,
@@ -18,6 +18,7 @@ import {
   QueryAIFocusResponse,
   QueryAIForgeRequest,
   QueryAIForgeResponse,
+  QueryAISessionRequest,
   QueryAISessionResponse,
 } from './type/forge'
 import { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
@@ -264,7 +265,7 @@ export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocus
   })
 }
 
-export const grpcQueryAISession: APIFunc<QueryAIForgeRequest, QueryAISessionResponse> = (param, hiddenError) => {
+export const grpcQueryAISession: APIFunc<QueryAISessionRequest, QueryAISessionResponse> = (param, hiddenError) => {
   return new Promise(async (resolve, reject) => {
     ipcRenderer
       .invoke('QueryAISession', param)

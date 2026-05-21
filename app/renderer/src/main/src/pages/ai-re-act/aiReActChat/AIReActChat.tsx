@@ -23,7 +23,7 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
-import useGetChatDataStoreKey from '../hooks/useGetChatDataStoreKey'
+import useGetChatDataStoreKey, { getAISourceFromChatDataStoreKey } from '../hooks/useGetChatDataStoreKey'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -36,8 +36,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       externalParameters,
     } = props
-    const { setChats, setActiveChat } = useAIAgentDispatcher()
+    const { setChats, setActiveChat, loadHistoryData } = useAIAgentDispatcher()
 
+    const { chatDataStoreKey } = useGetChatDataStoreKey()
     const { chatIPCData } = useChatIPCStore()
     const { chatIPCEvents, handleStop, handleSendSyncMessage } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
@@ -98,6 +99,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         CoordinatorId: '',
         Sequence: 1,
         PreferSessionCachedConfig: true,
+        Source: getAISourceFromChatDataStoreKey(chatDataStoreKey),
       }
 
       const session = getSession(sessionId)
@@ -126,6 +128,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             StartParams: request,
             SessionID: session,
             TitleInitialized: false,
+            Source: request.Source ?? 'ai',
+            LastUsedAt: new Date().getTime(),
+            AIStartParams: request,
           }
 
           setActiveChat && setActiveChat(newChat)
@@ -184,6 +189,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             },
             extraValue: extra,
           })
+          loadHistoryData?.(activeChat.SessionID)
         }
         if (!!sendRequest) {
           sendRequest?.({ params: chatMessage })
@@ -222,7 +228,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const onSetQuestion = useMemoizedFn((value: string) => {
       aiChatTextareaRef?.current?.setValue(value ?? '')
     })
-    const { chatDataStoreKey } = useGetChatDataStoreKey()
     return (
       <>
         <div

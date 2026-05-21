@@ -169,7 +169,7 @@ const HistoryChatList: FC<{
     }
 
     try {
-      grpcDeleteAISession({ Filter: { SessionID: [SessionID] } }, true)
+      grpcDeleteAISession({ Filter: { SessionID: [SessionID], Source: ['ai', ''] } }, true)
       emiter.emit('onDelChats', JSON.stringify([SessionID]))
     } catch (error) {
       yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))

@@ -1,5 +1,6 @@
 import { PaginationSchema } from '@/pages/invoker/schema'
 import { AISession } from './aiChat'
+import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface GrpcPageResponse<T = unknown> {
   Pagination: PaginationSchema
@@ -108,6 +109,10 @@ export interface DeleteAISessionFilter {
    * 删除该时间戳之前的数据（毫秒时间戳）
    */
   BeforeTimestamp?: number
+  /**
+   * 删除来源于该来源的数据
+   */
+  Source?: AISource[]
 }
 
 export interface DeleteAISessionRequest {
@@ -120,4 +125,13 @@ export interface DeleteAISessionRequest {
    * 是否删除全部
    */
   DeleteAll?: boolean
+}
+
+export interface QueryAISessionRequest {
+  Pagination: PaginationSchema
+  Filter?: {
+    SessionID?: string[]
+    Keyword?: string
+    Source?: AISource[]
+  }
 }
