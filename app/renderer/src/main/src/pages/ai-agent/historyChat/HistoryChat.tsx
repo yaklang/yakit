@@ -56,7 +56,7 @@ const HistoryChat = memo(() => {
 
     setClearLoading(true)
     try {
-      await grpcDeleteAISession({ DeleteAll: true, Filter: { Source: ['ai', ''] } }, true)
+      await grpcDeleteAISession({ Filter: { Source: ['ai', ''] } }, true)
       clearLocalChats(chats)
       onNewChat()
       setActiveChat?.(undefined)
