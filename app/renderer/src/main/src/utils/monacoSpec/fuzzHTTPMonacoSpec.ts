@@ -454,42 +454,45 @@ monaco.languages.setMonarchTokensProvider(fuzzHTTPMonacoSpec, {
       [/"/, 'json.value', '@pop'],
     ],
     body: [
-      [/(\{)("|\d|\n)/, ['json.start', { token: 'json.key', next: '@body_json', goBack: 1 }]],
-      // [/(\d+)(:)/, [{ token: "number", next: "@body_json" }, "delimiter"]],
-      // [/(\d+\.\d*)(:)/, [{ token: "number", next: "@body_json" }, "delimiter"]],
-      // [/"/, 'string', '@string_double'],
+      [/(\{)/, { token: 'json.start', next: '@body_json_object' }], // JSON 对象根节点
+      [/(\[)/, { token: 'json.array.start', next: '@body_json_array' }], // JSON 数组根节点
       [/{{/, 'fuzz.tag.inner', '@fuzz_tag'],
       [/-{2,}.*/, 'body.boundary', '@body_form'],
       [/%[0-9ABCDEFabcdef]{2}/, 'http.urlencoded'],
       [/./, 'http.query.params', '@http_query_params'],
     ],
-    body_json: [
-      ['}', { token: 'json.end', next: '@pop' }],
-      [/(\{)("|\d|\n)/, ['json.start.value', { token: 'json.key', next: '@body_json', goBack: 1 }]],
-      [/{{/, 'fuzz.tag.inner', '@fuzz_tag'],
-      [/(:\s*)/, { token: 'delimiter', next: '@body_json_value' }],
-      [/(\d+\.\d*)/, 'json.key'],
-      [/(\d+)/, 'json.key'],
-      [/"/, 'json.key', '@string_double'],
-      [/true|false|null/, 'json.key'],
+    // 通用 JSON 对象内部（用于根对象和嵌套对象）
+    body_json_object: [
+      [/\s+/, 'whitespace'], // 跳过空白/缩进/换行
+      [/}/, { token: 'json.end', next: '@pop' }], // 对象结束
+      [/"/, 'json.key', '@string_double'], // 字符串键
+      [/(\d+\.?\d*)/, 'json.key'], // 数字键
+      [/true|false|null/, 'json.key'], // 字面量键（非标准但容错）
+      [/{/, { token: 'json.start', next: '@body_json_object' }], // 嵌套对象
+      [/\[/, { token: 'json.array.start', next: '@body_json_array' }], // 嵌套数组
+      [/(:)/, { token: 'delimiter', next: '@body_json_value' }], // 键值分隔符
     ],
+    // JSON 值部分（对象内部）
     body_json_value: [
-      ['}|,', { token: 'json.end.value', next: '@pop', goBack: 1 }],
-      [/(\{)("|\d|\n)/, ['json.start.value', { token: 'json.key', next: '@body_json', goBack: 1 }]],
-      [/{{/, 'fuzz.tag.inner', '@fuzz_tag'],
-      [/(\d+\.\d*)/, 'json.value'],
-      [/(\d+)/, 'json.value'],
-      [/"/, 'json.value', '@string_double_value'],
-      [/\[/, 'json.array.start', '@body_json_array_value'],
-      [/true|false|null/, 'json.value'],
+      [/\s+/, 'whitespace'], // 跳过空白
+      [/,/, { token: 'delimiter', next: '@pop' }], // 值结束，返回对象状态处理下一个键
+      [/}/, { token: 'json.end', next: '@pop', goBack: 1 }], // 对象直接结束（兼容无逗号）
+      [/"/, 'json.value', '@string_double_value'], // 字符串值
+      [/(\d+\.?\d*)/, 'json.value'], // 数值
+      [/true|false|null/, 'json.value'], // 布尔/null
+      [/{/, { token: 'json.start', next: '@body_json_object' }], // 对象值
+      [/\[/, { token: 'json.array.start', next: '@body_json_array' }], // 数组值
     ],
-    body_json_array_value: [
-      [/\]/, 'json.array.end', '@pop'],
-      [/(\{)("|\d|\n)/, ['json.start.value', { token: 'json.key', next: '@body_json', goBack: 1 }]],
-      [/{{/, 'fuzz.tag.inner', '@fuzz_tag'],
-      [/(\d+\.\d*)/, 'json.value'],
-      [/(\d+)/, 'json.value'],
-      [/"/, 'json.value', '@string_double_value'],
+    // JSON 数组（支持顶层数组及嵌套数组）
+    body_json_array: [
+      [/\s+/, 'whitespace'], // 跳过空白
+      [/\]/, { token: 'json.array.end', next: '@pop' }], // 数组结束
+      [/,/, 'delimiter'], // 元素分隔符
+      [/"/, 'json.value', '@string_double_value'], // 字符串元素
+      [/(\d+\.?\d*)/, 'json.value'], // 数值元素
+      [/true|false|null/, 'json.value'], // 布尔/null元素
+      [/{/, { token: 'json.start', next: '@body_json_object' }], // 对象元素
+      [/\[/, { token: 'json.array.start', next: '@body_json_array' }], // 嵌套数组
     ],
     body_form: [
       [/{{/, 'fuzz.tag.inner', '@fuzz_tag'],
