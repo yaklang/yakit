@@ -189,6 +189,14 @@ function useTaskChat(params: UseTaskChatParams) {
       } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
         funcKey = res.Type
       }
+      if (
+        ['stream', 'stream_start', 'stream-finished'].includes(funcKey) &&
+        (res.TaskIndex || '').length > 0 &&
+        res.TaskIndex.includes('-')
+      ) {
+        console.log('handleSetData---', res)
+      }
+
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
       if (handleFunc) {
         handleFunc({

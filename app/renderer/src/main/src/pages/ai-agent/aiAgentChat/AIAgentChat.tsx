@@ -189,6 +189,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   })
   const { execute } = chatIPCData
 
+  useEffect(() => {
+    console.log('chatIPCData.taskChat---', chatIPCData.taskChat)
+  }, [chatIPCData.taskChat])
+
   const handleStart = useMemoizedFn((value: HandleStartParams) => {
     setTimeout(() => {
       aiReActChatRef.current?.handleStart(value) // 等自由对话渲染出来再发送
