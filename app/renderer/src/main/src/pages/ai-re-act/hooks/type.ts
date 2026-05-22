@@ -369,6 +369,8 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
     /** 将 review 数据处理成需要展示的UI数据 */
     handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
   }
+  /** 获取当前活跃 TaskIndex 集合组的 token（仅 task 模式） */
+  getActiveTaskIndexGroupKey?: (taskIndex?: string) => string | undefined
 }
 export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #endregion

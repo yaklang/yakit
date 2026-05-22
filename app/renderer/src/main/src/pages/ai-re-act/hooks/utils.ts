@@ -6,11 +6,30 @@ import { generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
 import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AITaskInfoProps, AIChatQSDataType, ReActChatRenderItem } from './aiRender'
+import {
+  AITaskInfoProps,
+  AIChatQSDataType,
+  ReActChatGroupElement,
+  ReActChatRenderItem,
+  ReActChatTaskIndexGroupElement,
+} from './aiRender'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIChatLogData, AIChatLogToInfo } from './type'
 import { DialogueRecord } from '@/pages/ai-agent/store/type'
 import { JSONParseLog } from '@/utils/tool'
+
+/** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
+export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/
+
+/** 校验 TaskIndex 是否符合任务子索引格式 */
+export const isValidTaskIndex = (taskIndex?: string): taskIndex is string =>
+  !!taskIndex && TASK_INDEX_PATTERN.test(taskIndex)
+
+export const isTaskIndexGroupElement = (item: ReActChatRenderItem): item is ReActChatTaskIndexGroupElement =>
+  'isTaskGroup' in item && !!item.isTaskGroup
+
+export const isStreamGroupElement = (item: ReActChatRenderItem): item is ReActChatGroupElement =>
+  'isGroup' in item && !!item.isGroup
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -186,8 +205,10 @@ export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: strin
   elements.map((item, index) => ({
     token: item.token,
     type: item.type,
-    isGroup: item.isGroup || false,
-    children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
+    isGroup: isStreamGroupElement(item) || isTaskIndexGroupElement(item),
+    children: JSON.stringify(
+      isStreamGroupElement(item) || isTaskIndexGroupElement(item) ? item.children : [],
+    ),
     sessionId,
     cacheOrder: index,
   }))

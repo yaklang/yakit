@@ -202,6 +202,8 @@ export enum AIChatQSDataTypeEnum {
   Reference_Material = 'reference_material',
   /** stream数据集合组 */
   STREAM_GROUP = 'stream_group',
+  /** 同一 TaskIndex 下的 stream 集合组 */
+  TASK_INDEX_GROUP = 'task_index_group',
   /** 用户手动介入上下文 */
   USER_MANUAL_INTERVENTION = 'user_manual_intervention',
   /** HTTP 流 fuzz 执行状态卡片（http_flow_fuzz_status） */
@@ -234,7 +236,21 @@ export interface ReActChatGroupElement extends ReActChatBaseInfo {
   children: ReActChatElement[]
 }
 
-export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement
+/**
+ * 同一 TaskIndex 下的消息集合
+ * elements 结构：task_index_group → children(stream | stream_group | tool_result | ...)
+ */
+export interface ReActChatTaskIndexGroupElement extends ReActChatBaseInfo {
+  /** 标记是 TaskIndex 组 */
+  isTaskGroup: true
+  /** 任务子索引，如 1-1、1-2 */
+  taskIndex: string
+  children: ReActChatRenderItem[]
+  name: string
+  goal: string
+}
+
+export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement | ReActChatTaskIndexGroupElement
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 export interface AIChatQSDataBase<T extends string, U> {
@@ -251,6 +267,8 @@ export interface AIChatQSDataBase<T extends string, U> {
   reference?: ChatReferenceMaterialPayload
   /** 父集合组的key(如果被收集到集合组中, 则存在该字段) */
   parentGroupKey?: string
+  /** 父 TaskIndex 集合组的 key */
+  parentTaskIndexGroupKey?: string
 }
 
 type ChatQuestion = AIChatQSDataBase<AIChatQSDataTypeEnum.QUESTION, { qs: string; setting: AIInputEvent }>
