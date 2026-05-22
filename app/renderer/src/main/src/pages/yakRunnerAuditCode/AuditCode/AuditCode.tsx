@@ -2534,22 +2534,23 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   })
 
   const onDelete = useMemoizedFn(async (params: DeleteSSAProjectRequest) => {
+    setLoading(true)
     try {
-      setLoading(true)
-      ipcRenderer
-        .invoke('DeleteSSAProject', {
-          ...params,
-        })
-        .then(() => {
-          update(true)
-          setIsAllSelect(false)
-          setSelectedRowKeys([])
-          setDeleteParams(undefined)
-          success(t('AuditCode.deleteSuccess'))
-        })
+      const resp = await ipcRenderer.invoke('DeleteSSAProject', { ...params })
+      const effectRows = resp?.Message?.EffectRows ?? resp?.message?.EffectRows ?? 0
+      if (effectRows <= 0) {
+        failed(t('YakitNotification.deleteFailed', { error: 'no project affected' }))
+        return
+      }
+      update(true)
+      setIsAllSelect(false)
+      setSelectedRowKeys([])
+      setDeleteParams(undefined)
+      success(t('AuditCode.deleteSuccess'))
     } catch (error) {
-      setLoading(false)
       failed(t('YakitNotification.deleteFailed', { error: String(error) }))
+    } finally {
+      setLoading(false)
     }
   })
 
@@ -2890,11 +2891,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
               {t('YakitButton.cancel')}
             </YakitButton>
             <div className={styles['btn-group-wrapper']}>
-              <YakitButton size="max" danger onClick={onDeleteHistoryOnly}>
-                {t('AuditCode.clearCompileHistoryOnly')}
+              <YakitButton size="max" type="outline2" onClick={onDeleteHistoryOnly}>
+                {t('YakitButton.keep')}
               </YakitButton>
-              <YakitButton size="max" danger onClick={onDeleteAll}>
-                {t('AuditCode.clearCompileHistoryAndProject')}
+              <YakitButton size="max" type="primary" onClick={onDeleteAll}>
+                {t('YakitButton.delete')}
               </YakitButton>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { QuerySSAProgramRequest, QuerySSAProgramResponse } from './YakRunnerScan
 
 const { ipcRenderer } = window.require('electron')
 
-/** 获取QuerySSAPrograms */
+/** 获取QuerySSAPrograms（后端根据 Filter.ProjectIds / ProgramNames 自动切换 SSA 库） */
 export const apiQuerySSAPrograms: APIOptionalFunc<QuerySSAProgramRequest, QuerySSAProgramResponse> = (params) => {
   return new Promise((resolve, reject) => {
     ipcRenderer

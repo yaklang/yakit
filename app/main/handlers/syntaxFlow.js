@@ -324,6 +324,22 @@ module.exports = (win, getClient) => {
     return await asyncQuerySSAProject(params)
   })
 
+  const asyncOpenSSAProject = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().OpenSSAProject(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  // 打开 SSA 分析项目：切换绑定的 SSA 数据库连接
+  ipcMain.handle('OpenSSAProject', async (e, params) => {
+    return await asyncOpenSSAProject(params)
+  })
+
   const asyncDeleteSSAProject = (params) => {
     return new Promise((resolve, reject) => {
       getClient().DeleteSSAProject(params, (err, data) => {

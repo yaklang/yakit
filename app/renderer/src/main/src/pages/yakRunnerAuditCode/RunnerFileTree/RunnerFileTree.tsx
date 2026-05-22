@@ -282,7 +282,6 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
             JSON.stringify({
               route: YakitRoute.YakRunner_Code_Scan,
               params: {
-                // 此处由接口查出来
                 projectName: compileProjectName,
                 projectId,
                 historyName: [projectName],
