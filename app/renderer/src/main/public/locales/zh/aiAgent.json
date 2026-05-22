@@ -5,7 +5,7 @@
     "visionModels": "视觉模式",
     "callingMode": "调用模式",
     "aiModel": "AI模型",
-    "focusMode": "专注模式"
+    "focusMode": "场景"
   },
   "AIAgentChat": {
     "templateDataError": "准备使用的模板数据异常，请稍后再试",
@@ -475,7 +475,7 @@
   },
   "AITaskQuery": {
     "taskQueue": "任务队列",
-    "focusMode": "专注模式: {{mode}}"
+    "focusMode": "场景: {{mode}}"
   },
   "ForgeName": {
     "exportForge": "导出技能",

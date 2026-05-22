@@ -218,7 +218,7 @@ function useChatIPC(params?: UseChatIPCParams) {
   })
   // #endregion
 
-  // #region 专注模式状态相关逻辑
+  // #region 场景状态相关逻辑
   const focusOfTaskID = useRef('')
   const [focusMode, setFocusMode] = useState<string>('')
   const handleFocusModeChange = useMemoizedFn((id: string, mode: string) => {
@@ -522,7 +522,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   /** 流接口开始前需要重置的一些状态 */
   const handleResetBeforeStart = useMemoizedFn(() => {
-    // 清空专注模式
+    // 清空场景
     handleResetFocusMode()
     // 清空任务规划相关ID
     handleResetTaskChatID()
@@ -821,10 +821,10 @@ function useChatIPC(params?: UseChatIPCParams) {
             handleTriggerQuestionQueueRequest()
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
             if (data.focus_mode) {
-              // 记录专注模式状态
+              // 记录场景状态
               handleFocusModeChange(data.react_task_id, data.focus_mode)
             } else {
-              // 非专注模式状态
+              // 非场景状态
               handleResetFocusMode()
             }
           }

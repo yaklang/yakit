@@ -197,7 +197,7 @@ export interface AIInputEvent {
   AttachedFilePath?: string[]
   /** 附加资源信息 */
   AttachedResourceInfo?: AttachedResourceInfo[]
-  /** 专注模式 */
+  /** 场景 */
   FocusModeLoop?: string
 }
 export interface AttachedResourceInfo {
@@ -592,7 +592,7 @@ export declare namespace AIAgentGrpcApi {
 
   /** 问题队列状态变化 */
   export interface QuestionQueueStatusChange {
-    /** 专注模式 */
+    /** 场景 */
     focus_mode: string
     /** 问题ID */
     react_task_id: string
