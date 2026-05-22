@@ -231,7 +231,7 @@ export interface UseChatIPCState {
 
   /** 系统流信息(isSystem=true&type=stream) */
   systemStream: string
-  /** 专注模式状态(仅供自由对话[reAct])使用 */
+  /** 场景状态(仅供自由对话[reAct])使用 */
   focusMode: string
   /** 切换session时的loading状态 */
   switchLoading: boolean

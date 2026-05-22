@@ -474,7 +474,7 @@ module.exports = (win, getClient) => {
   })
   // #endregion
 
-  // #region AI-Focus 专注模式
+  // #region AI-Focus 场景
   const asyncQueryAIFocus = (params) => {
     return new Promise((resolve, reject) => {
       getClient().QueryAIFocus(params, (err, data) => {
@@ -486,7 +486,7 @@ module.exports = (win, getClient) => {
       })
     })
   }
-  // 查询 AI-Focus 专注模式
+  // 查询 AI-Focus 场景
   ipcMain.handle('QueryAIFocus', async (e, params) => {
     return await asyncQueryAIFocus(params)
   })

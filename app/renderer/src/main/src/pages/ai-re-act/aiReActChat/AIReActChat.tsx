@@ -266,7 +266,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 <div className={styles['chat-header-title']}>
                   <ColorsChatIcon />
                   {title}
-                  {focusMode && <YakitTag fullRadius={true}>专注模式:{focusMode}</YakitTag>}
+                  {focusMode && <YakitTag fullRadius={true}>场景:{focusMode}</YakitTag>}
                 </div>
                 <div className={styles['chat-header-extra']}>
                   {isShowRetract &&

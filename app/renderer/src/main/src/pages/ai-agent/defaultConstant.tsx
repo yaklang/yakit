@@ -80,7 +80,7 @@ export enum AIMentionTabsEnum {
   KnowledgeBase = 'knowledgeBase',
   /** 文件系统 */
   File_System = 'fileSystem',
-  /** 专注模式 */
+  /** 场景 */
   FocusMode = 'focusMode',
 }
 export const AIMentionTabs: YakitSideTabProps['yakitTabs'] = [
