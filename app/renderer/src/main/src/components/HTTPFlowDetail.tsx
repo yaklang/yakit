@@ -1521,8 +1521,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   })
 
   // 编辑器美化缓存
-  const [reqTypeOptionVal, setReqTypeOptionVal] = useState<RenderTypeOptionVal>()
-  const [resTypeOptionVal, setResTypeOptionVal] = useState<RenderTypeOptionVal>()
+  const [reqTypeOptionVal, setReqTypeOptionVal, getReqTypeOptionVal] = useGetSetState<RenderTypeOptionVal>()
+  const [resTypeOptionVal, setResTypeOptionVal, getResTypeOptionVal] = useGetSetState<RenderTypeOptionVal>()
   // 编辑器编码
   const [codeKey, setCodeKey] = useState<string>('utf-8')
   const [codeLoading, setCodeLoading] = useState<boolean>(false)
@@ -1535,7 +1535,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
       setReqTypeOptionVal(undefined)
       setRemoteValue(RemoteGV.HistoryRequestEditorBeautify, '')
     } else {
-      if (!reqTypeOptionVal) {
+      if (!getReqTypeOptionVal()) {
         getRemoteValue(RemoteGV.HistoryRequestEditorBeautify).then((res) => {
           if (!!res) {
             setReqTypeOptionVal(res)
@@ -1550,7 +1550,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
       setResTypeOptionVal(undefined)
       setRemoteValue(RemoteGV.HistoryResponseEditorBeautify, '')
     } else {
-      if (!resTypeOptionVal) {
+      if (!getResTypeOptionVal()) {
         getRemoteValue(RemoteGV.HistoryResponseEditorBeautify).then((res) => {
           if (!!res) {
             setResTypeOptionVal(res)
