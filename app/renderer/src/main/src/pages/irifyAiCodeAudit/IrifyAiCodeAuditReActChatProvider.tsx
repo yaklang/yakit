@@ -11,7 +11,7 @@ import React, {
 import { useCreation, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
 import { cloneDeep } from 'lodash'
 
-import { HistroryAIReActChat } from '@/components/AIReActChat'
+import { HistroryAIReActChat } from '@/components/historyAIReActChat'
 import AIAgentContext, {
   AIAgentContextDispatcher,
   AIAgentContextStore,

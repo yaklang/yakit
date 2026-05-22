@@ -149,6 +149,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   )
 
   const Footer = useCallback(() => {
+    const hasSessionContext = !!activeChat?.SessionID || chats.elements.length > 0
+    if (!hasSessionContext) {
+      return null
+    }
     return execute ? (
       <div style={{ height: '40px', maxWidth: '784px', margin: '0 auto' }}>
         {!!casualTitle ? (
@@ -169,7 +173,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
     ) : (
       <div className={styles['end']}>当前会话已停止</div>
     )
-  }, [casualTitle, execute])
+  }, [activeChat?.SessionID, casualTitle, chats.elements.length, execute])
   const Header = useCallback(
     () =>
       casualLoadMoreLoading ? (

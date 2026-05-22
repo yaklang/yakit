@@ -48,6 +48,7 @@ export interface HistoryAIReActChatBridge {
   onStop: () => void
   onChatFromHistory: (session: string) => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
+  aiReActChatRef: React.RefObject<AIReActChatRefProps>
 }
 
 export interface HistoryAIReActChatSlotOptions {
@@ -106,6 +107,8 @@ export interface HistoryAIReActChatProviderProps {
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
   httpFuzzTabPageId?: string
+  /** 在 onStartRequest / onSendRequest 发往引擎前对 AIInputEvent 做附加处理 */
+  enrichAIInputEvent?: (event: AIInputEvent) => AIInputEvent
 }
 
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
@@ -113,6 +116,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   focusModeLoop,
   children,
   httpFuzzTabPageId,
+  enrichAIInputEvent,
 }: HistoryAIReActChatProviderProps) {
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
@@ -212,6 +216,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
           params = prependWebFuzzerHttpRequestToSendFields(params, raw)
         }
       }
+      if (enrichAIInputEvent) {
+        params = enrichAIInputEvent(params)
+      }
       resolve({
         params,
         extraParams: newChat,
@@ -241,6 +248,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       if (raw != null) {
         params = prependWebFuzzerHttpRequestToSendFields(params, raw)
       }
+    }
+    if (enrichAIInputEvent) {
+      params = enrichAIInputEvent(params)
     }
 
     return new Promise<AISendResProps>((resolve) => {
@@ -322,6 +332,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onStop,
       onChatFromHistory,
       setActiveChat,
+      aiReActChatRef,
     }),
     [activeID, events, onStop, onChatFromHistory, setActiveChat],
   )
