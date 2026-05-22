@@ -1,5 +1,5 @@
-import {ReactNode} from "react"
-import {YakRunnerStoreRefs} from "../hooks/useYakRunnerStoreRefs"
+import { ReactNode } from 'react'
+import { YakRunnerStoreRefs } from '../hooks/useYakRunnerStoreRefs'
 
 // 文件树的结构只需要path 其详细内容则被存入Map中
 export interface FileTreeListProps {
@@ -55,32 +55,32 @@ export interface FileNodeProps {
 }
 
 export interface FileTreeProps {
-    // 根文件夹路径
-    folderPath: string
-    data: FileNodeProps[]
-    onLoadData: (node: FileNodeProps) => Promise<any>
-    /** 由父级 useYakRunnerStoreRefs 提供，避免树节点订阅全局 store */
-    storeRefs: YakRunnerStoreRefs
-    foucsedKey: string
-    setFoucsedKey: (v:string) => void
-    expandedKeys: string[]
-    setExpandedKeys: (v:string[]) => void
-    onSelect?: (
-        selectedKeys: string[],
-        e: {selected: boolean; selectedNodes: FileNodeProps[]; node: FileNodeProps}
-    ) => any
-    onExpand?: (expandedKeys: string[], e: {expanded: boolean; node: FileNodeProps}) => any
+  // 根文件夹路径
+  folderPath: string
+  data: FileNodeProps[]
+  onLoadData: (node: FileNodeProps) => Promise<any>
+  /** 由父级 useYakRunnerStoreRefs 提供，避免树节点订阅全局 store */
+  storeRefs: YakRunnerStoreRefs
+  foucsedKey: string
+  setFoucsedKey: (v: string) => void
+  expandedKeys: string[]
+  setExpandedKeys: (v: string[]) => void
+  onSelect?: (
+    selectedKeys: string[],
+    e: { selected: boolean; selectedNodes: FileNodeProps[]; node: FileNodeProps },
+  ) => any
+  onExpand?: (expandedKeys: string[], e: { expanded: boolean; node: FileNodeProps }) => any
 }
 
 export interface FileTreeNodeProps {
-    isDownCtrlCmd: boolean
-    info: FileNodeProps
-    folderPath: string
-    storeRefs: YakRunnerStoreRefs
+  isDownCtrlCmd: boolean
+  info: FileNodeProps
+  folderPath: string
+  storeRefs: YakRunnerStoreRefs
 
-    isFoucsed: boolean
-    isSelected: boolean
-    isExpanded: boolean
+  isFoucsed: boolean
+  isSelected: boolean
+  isExpanded: boolean
 
   onSelected: (selected: boolean, node: FileNodeProps) => any
   onExpanded: (expanded: boolean, node: FileNodeProps) => void
