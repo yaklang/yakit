@@ -1179,15 +1179,14 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             const item = {
               ...JSON.parse(Data[0].Config).pageParams,
             }
-            setAdvancedConfigValue({
-              ...defaultAdvancedConfigValue,
-              resNumlimit: advancedConfigValue.resNumlimit,
+            setAdvancedConfigValue((currentValue) => ({
+              ...currentValue,
               actualHost: item.actualHost,
               params: item.params,
               extractors: item.extractors,
               matchers: item.matchers,
               ...history,
-            })
+            }))
           }
         } catch (error) {
           setAdvancedConfigValue((v) => ({ ...v, ...history }))
