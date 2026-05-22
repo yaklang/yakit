@@ -476,6 +476,9 @@ function useChatIPC(params?: UseChatIPCParams) {
       if (params.IsConfigHotpatch) {
         aiRequest.current = { ...(aiRequest.current || {}), ...(params.Params || {}) }
       }
+      if (params.IsFreeInput) {
+        setCasualTitle('等待回复中...')
+      }
 
       switch (type) {
         case 'casual':
@@ -655,7 +658,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     chatID.current = token
 
     /** 先设置等待文案再设置为执行中 */
-    setCasualTitle('等待回复中....')
+    setCasualTitle('发送问题，开启会话...')
     setExecute(true)
 
     aiRequest.current = params.Params
@@ -670,6 +673,7 @@ function useChatIPC(params?: UseChatIPCParams) {
           if (firstQS.current) {
             sendRequest(firstQS.current)
             firstQS.current = undefined
+            setCasualTitle('等待回复中...')
           } else {
             // 如果建立流时，已经初始化过，则不在进行历史初始化
             // 场景: 删除记忆库，会断开流，如果用户在当前会话继续问问题，就会建立新的流，这时候就不需要再进行一次历史数据的初始化了
@@ -1048,12 +1052,12 @@ function useChatIPC(params?: UseChatIPCParams) {
       // console.log("end", res)
       handleResetGrpcStatus()
       saveStateDataOfEnd(token)
+      setCasualTitle('会话已停止')
+      onEnd && onEnd()
       if (endAfterSession.current) {
         handleSwitchSessionData(endAfterSession.current)
       }
-      onEnd && onEnd()
 
-      setCasualTitle('会话已停止')
       ipcRenderer.invoke('cancel-ai-re-act', token).catch(() => {})
       ipcRenderer.removeAllListeners(`${token}-data`)
       ipcRenderer.removeAllListeners(`${token}-end`)
