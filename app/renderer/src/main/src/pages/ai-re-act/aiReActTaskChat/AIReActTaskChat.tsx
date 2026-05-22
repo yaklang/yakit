@@ -350,7 +350,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           return {
             ...chat,
             StartParams: {
-              ...chat.StartParams,
+              ...(chat.StartParams || {}),
               SyncPerceptionTrigger: value,
             },
           }

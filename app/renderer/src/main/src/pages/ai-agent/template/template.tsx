@@ -361,7 +361,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
               return {
                 ...chat,
                 StartParams: {
-                  ...chat.StartParams,
+                  ...(chat.StartParams || {}),
                   EnablePlan: checked,
                 },
               }
