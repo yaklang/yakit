@@ -125,7 +125,6 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
   const [searchQueryTick, setSearchQueryTick] = useState(0)
   const [isRefresh, setIsRefresh] = useState(false)
   const [ruleNameOptions, setRuleNameOptions] = useState<string[]>([])
-  const httpFlowTableDataLengthRef = useRef(httpFlowTableDataLength)
 
   const flowFilterForRuleList = useMemo(() => {
     const parsedQuery =
@@ -224,10 +223,6 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
   const prevCheckedFilterRowsKeyRef = useRef(checkedFilterRowsKey)
 
   useEffect(() => {
-    httpFlowTableDataLengthRef.current = httpFlowTableDataLength
-  }, [httpFlowTableDataLength])
-
-  useEffect(() => {
     if (checkedFilterRowsKey === prevCheckedFilterRowsKeyRef.current) return
     prevCheckedFilterRowsKeyRef.current = checkedFilterRowsKey
     onSetFilterRows(checkedFilterRows)
@@ -281,12 +276,16 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
     }
   })
 
+  const updateRuleData = useMemoizedFn(() => {
+    if (!httpFlowTableDataLength) return
+    refreshRuleData(page)
+  })
+
   // 分页/搜索/onSearch 变化时查询；外部条件变化(queryKey)时自动重置并查询
   const prevQueryKeyRef = useRef('')
   useDebounceEffect(
     () => {
-      if (!inViewport || !httpFlowTableDataLengthRef.current) return
-
+      if (!inViewport) return
       if (queryKey !== prevQueryKeyRef.current) {
         prevQueryKeyRef.current = queryKey
         resetTableState()
@@ -296,9 +295,9 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
           return
         }
       }
-      refreshRuleData(page)
+      updateRuleData()
     },
-    [inViewport, page, queryKey, refreshRuleData, resetRuleNameOptions, resetTableState, searchQueryTick],
+    [inViewport, page, queryKey, searchQueryTick],
     { wait: QUERY_DEBOUNCE_WAIT },
   )
 
