@@ -29,6 +29,8 @@ export enum AISourceEnum {
   webFuzzer = 'webFuzzer',
   /** flow 来源 */
   flow = 'flow',
+  /** irify 来源 */
+  irify = 'irify',
   /** 兼容老数据 */
   other = '',
 }

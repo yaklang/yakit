@@ -46,6 +46,8 @@ export const getAISourceFromChatDataStoreKey = (key: ChatDataStoreKey): AISource
       return 'knowledgeBase'
     case 'WebFuzzerAiStore':
       return 'webFuzzer'
+    case 'irifyAiCodeAuditPageAiStore':
+      return 'irify'
     default:
       return undefined
   }
