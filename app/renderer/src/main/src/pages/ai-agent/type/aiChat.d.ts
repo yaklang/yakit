@@ -2,6 +2,7 @@ import { UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentGrpcApi, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 import { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {
@@ -81,6 +82,59 @@ export interface AISession {
   SessionID: string
   /** 历史流量表和风险表 run_time_id */
   RelatedRuntimeIDs?: string[]
-  /** 会话中的设置/请求参数 */
-  StartParams: AIStartParams
+  /** 最后使用时间 */
+  LastUsedAt: number
+  /** 会话来源 */
+  Source: AISource
+  /** AI 启动参数 */
+  StartParams?: AIStartParams
+}
+
+export interface GrpcPageResponse<T = unknown> {
+  Pagination: PaginationSchema
+  Data: T
+  Total: number
+}
+export type QueryAISessionResponse = GrpcPageResponse<AISession[]>
+
+export interface DeleteAISessionFilter {
+  /**
+   * 会话ID列表
+   */
+  SessionID?: string[]
+
+  /**
+   * 删除该时间戳之后的数据（毫秒时间戳）
+   */
+  AfterTimestamp?: number
+
+  /**
+   * 删除该时间戳之前的数据（毫秒时间戳）
+   */
+  BeforeTimestamp?: number
+  /**
+   * 删除来源于该来源的数据
+   */
+  Source?: AISource[]
+}
+
+export interface DeleteAISessionRequest {
+  /**
+   * 删除过滤条件
+   */
+  Filter?: DeleteAISessionFilter
+
+  /**
+   * 是否删除全部
+   */
+  DeleteAll?: boolean
+}
+
+export interface QueryAISessionRequest {
+  Pagination: PaginationSchema
+  Filter?: {
+    SessionID?: string[]
+    Keyword?: string
+    Source?: AISource[]
+  }
 }

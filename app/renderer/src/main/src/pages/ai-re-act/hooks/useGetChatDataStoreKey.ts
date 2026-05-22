@@ -8,6 +8,7 @@ import {
   knowledgeBaseDataStore,
   WebFuzzerAiStore,
 } from '@/pages/ai-agent/store/ChatDataStore'
+import type { AISource } from './grpcApi'
 
 function useGetChatDataStoreKey() {
   const { chatIPCEvents } = useChatIPCDispatcher()
@@ -28,6 +29,23 @@ function useGetChatDataStoreKey() {
     }
   }, [chatIPCEvents])
   return { chatDataStoreKey } as const
+}
+
+export const getAISourceFromChatDataStoreKey = (key: ChatDataStoreKey): AISource | undefined => {
+  switch (key) {
+    case 'histroyAiStore':
+      return 'history'
+    case 'FlowAiStore':
+      return 'flow'
+    case 'aiChatDataStore':
+      return 'ai'
+    case 'knowledgeBaseDataStore':
+      return 'knowledgeBase'
+    case 'WebFuzzerAiStore':
+      return 'webFuzzer'
+    default:
+      return undefined
+  }
 }
 
 export default useGetChatDataStoreKey

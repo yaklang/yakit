@@ -9,16 +9,14 @@ import {
   GetRandomAIMaterialsRequest,
   GetRandomAIMaterialsResponse,
 } from '../ai-re-act/hooks/grpcApi'
-import {
+import type {
   AIForge,
   AIForgeFilter,
-  DeleteAISessionRequest,
   GetAIForgeRequest,
   QueryAIFocusRequest,
   QueryAIFocusResponse,
   QueryAIForgeRequest,
   QueryAIForgeResponse,
-  QueryAISessionResponse,
 } from './type/forge'
 import { YakQueryHTTPFlowResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
@@ -27,6 +25,7 @@ import { genBaseAIChatData, isToolExecStream } from '../ai-re-act/hooks/utils'
 import { Uint8ArrayToString } from '@/utils/str'
 import { convertNodeIdToVerbose } from '../ai-re-act/hooks/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
+import type { DeleteAISessionRequest, QueryAISessionRequest, QueryAISessionResponse } from './type/aiChat'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -264,7 +263,7 @@ export const grpcQueryAIFocus: APIOptionalFunc<QueryAIFocusRequest, QueryAIFocus
   })
 }
 
-export const grpcQueryAISession: APIFunc<QueryAIForgeRequest, QueryAISessionResponse> = (param, hiddenError) => {
+export const grpcQueryAISession: APIFunc<QueryAISessionRequest, QueryAISessionResponse> = (param, hiddenError) => {
   return new Promise(async (resolve, reject) => {
     ipcRenderer
       .invoke('QueryAISession', param)

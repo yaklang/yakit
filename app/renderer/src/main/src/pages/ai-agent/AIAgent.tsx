@@ -6,16 +6,7 @@ import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useGetSetState from '../pluginHub/hooks/useGetSetState'
 import { AISession } from './type/aiChat'
-import {
-  useCreation,
-  useDebounceFn,
-  useInViewport,
-  useMemoizedFn,
-  useRequest,
-  useSize,
-  useThrottleEffect,
-  useUpdateEffect,
-} from 'ahooks'
+import { useDebounceFn, useInViewport, useMemoizedFn, useRequest, useSize, useUpdateEffect } from 'ahooks'
 import { AIAgentSettingDefault, SwitchAIAgentTabEventEnum, YakitAIAgentPageID } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { AIAgentChat } from './aiAgentChat/AIAgentChat'
@@ -45,8 +36,8 @@ export const AIAgentCacheClearValue = '20260113'
 const initialHistoryPagination = {
   Page: 1,
   Limit: 10,
-  OrderBy: '',
-  Order: '',
+  OrderBy: 'last_used_at',
+  Order: 'desc',
   total: 0,
 }
 
@@ -102,7 +93,15 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     try {
       if (isDelCache) {
         // 删除数据库历史记录
-        await grpcDeleteAISession({ DeleteAll: true }, true)
+        await grpcDeleteAISession(
+          {
+            // DeleteAll: true,
+            Filter: {
+              Source: ['ai', ''],
+            },
+          },
+          true,
+        )
       }
       setDelCacheVisible(false)
     } catch {
@@ -118,33 +117,57 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
   }, [setting])
 
-  const loadHistoryData = useMemoizedFn(async (): Promise<number> => {
-    if (historyLoadingRef.current) {
-      return getPagination().total || 0
-    }
+  const loadHistoryData = useMemoizedFn(async (sessionData?: string): Promise<number> => {
+    if (sessionData) {
+      // 本来就在第一个，不需要重复请求
+      if (getChats().at(0)?.SessionID === sessionData) return 0
+      try {
+        const { Data } = await grpcQueryAISession({
+          Pagination: initialHistoryPagination,
+          Filter: {
+            Source: ['ai', ''],
+            SessionID: [sessionData],
+          },
+        })
+        setChats((prev) => {
+          const filterData = prev.filter((item) => item.SessionID !== sessionData)
+          return [...Data, ...filterData]
+        })
+        return 0
+      } catch {
+        return 0
+      }
+    } else {
+      if (historyLoadingRef.current) {
+        return getPagination().total || 0
+      }
 
-    const currentPagination = getPagination()
-    const currentChats = getChats()
-    if (currentPagination.total > 0 && currentChats.length >= currentPagination.total) {
-      return currentPagination.total
-    }
+      const currentPagination = getPagination()
+      const currentChats = getChats()
+      if (currentPagination.total > 0 && currentChats.length >= currentPagination.total) {
+        return currentPagination.total
+      }
 
-    historyLoadingRef.current = true
-    try {
-      const { Data, Total } = await grpcQueryAISession({
-        Pagination: currentPagination,
-      })
-      setChats((prev) => mergeUniqueChats(prev, Data))
-      setPagination({
-        ...currentPagination,
-        Page: currentPagination.Page + 1,
-        total: Total,
-      })
-      return Total
-    } catch {
-      return currentPagination.total || 0
-    } finally {
-      historyLoadingRef.current = false
+      historyLoadingRef.current = true
+      try {
+        const { Data, Total } = await grpcQueryAISession({
+          Pagination: currentPagination,
+          Filter: {
+            Source: ['ai', ''],
+          },
+        })
+        setChats((prev) => mergeUniqueChats(prev, Data))
+        setPagination({
+          ...currentPagination,
+          Page: currentPagination.Page + 1,
+          total: Total,
+        })
+        return Total
+      } catch {
+        return currentPagination.total || 0
+      } finally {
+        historyLoadingRef.current = false
+      }
     }
   })
 
