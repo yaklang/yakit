@@ -2355,8 +2355,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         )
         const d = isInit ? dataHasClassName : mergeHTTPFlowsById(data, dataHasClassName)
         setData(d)
-        setTotal(onlyFavorite && tagsFilter.length > 0 ? d.length : res.Total)
-        onDataChange?.(res.Total)
+        const currentTotal = onlyFavorite && tagsFilter.length > 0 ? d.length : res.Total
+        setTotal(currentTotal)
+        onDataChange?.(currentTotal)
 
         const page = { ...res.Pagination }
         delete page['AfterId']
