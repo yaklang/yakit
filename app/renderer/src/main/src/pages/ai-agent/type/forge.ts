@@ -1,6 +1,6 @@
 import { PaginationSchema } from '@/pages/invoker/schema'
 import { AISession } from './aiChat'
-import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export interface GrpcPageResponse<T = unknown> {
   Pagination: PaginationSchema

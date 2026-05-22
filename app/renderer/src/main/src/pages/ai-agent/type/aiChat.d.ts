@@ -87,5 +87,5 @@ export interface AISession {
   /** 会话来源 */
   Source: AISource
   /** AI 启动参数 */
-  AIStartParams?: AIStartParams
+  StartParams?: AIStartParams
 }
