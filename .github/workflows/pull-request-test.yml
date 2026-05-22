@@ -326,9 +326,8 @@ jobs:
           fi
 
   ci-pr-summary:
-    name: PR 汇总（生成评论 body）
+    name: PR 汇总评论
     runs-on: ubuntu-latest
-    continue-on-error: true
     needs:
       - prepare
       - ci-i18n
@@ -339,10 +338,17 @@ jobs:
       - ci-media
       - ci-vitest
       - ci-prettier
-    if: always()
+    if: always() && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - uses: actions/download-artifact@v4
@@ -364,7 +370,8 @@ jobs:
             echo "outcome=$r" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Render PR CI summary body
+      - name: Render PR CI summary (body for maintain-one-comment)
+        id: pr_comment
         env:
           OUTCOME_I18N: ${{ needs.ci-i18n.result }}
           OUTCOME_ESLINT: ${{ needs.ci-eslint-renderer.result }}
@@ -376,9 +383,39 @@ jobs:
           OUTCOME_FORMAT: ${{ needs.ci-prettier.result }}
         run: node scripts/ci-render-pr-summary.js
 
-      - name: Upload PR summary for comment workflow
-        uses: actions/upload-artifact@v4
-        with:
-          name: ci-pr-summary-body
-          path: pr-comment.md
-          if-no-files-found: error
+      # actions-cool/maintain-one-comment 仓库已被 GitHub 官方禁用（terms of service 违规）。
+      # 此处用 gh CLI 内联模拟其「按标记找已有评论：有则更新 / 没有则新建」的行为，零外部 action 依赖。
+      # 评论 body 直接读 scripts/ci-render-pr-summary.js 已写入的 pr-comment.md（含 marker）。
+      - name: Maintain one PR comment
+        if: steps.pr_comment.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MARKER: '<!-- pr-ci-one-comment -->'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -s pr-comment.md ]; then
+            echo 'pr-comment.md missing or empty; skip commenting.'
+            exit 0
+          fi
+
+          existing_id=$(
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+              --jq '.[] | select(.body | contains(env.MARKER)) | .id' \
+            | head -n1
+          )
+
+          if [ -n "${existing_id}" ]; then
+            echo "Updating existing PR comment #${existing_id}"
+            gh api --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${existing_id}" \
+              -F body=@pr-comment.md >/dev/null
+          else
+            echo "Creating new PR comment on PR #${PR_NUMBER}"
+            gh api --method POST \
+              "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+              -F body=@pr-comment.md >/dev/null
+          fi
