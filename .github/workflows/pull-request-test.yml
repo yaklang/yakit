@@ -6,7 +6,7 @@ concurrency:
 
 on:
   pull_request:
-    branches: [master]
+    branches: [ci/test]
     # 用 paths 正选 + ! 排除：paths-ignore 下只要 PR 里存在任一「未忽略」文件就会跑 CI（易误以为只改了 version）。
     # 此处先 ** 再 !，使「仅清单/锁/文档/.github 等」的 PR 不触发；vendor 等其它 package.json 仍会触发。
     paths:

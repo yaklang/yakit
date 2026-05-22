@@ -10,9 +10,7 @@ on:
 
 permissions:
   actions: read
-  contents: read
-  issues: write
-  pull-requests: write
+  contents: write
 
 jobs:
   post-pr-summary-comment:
@@ -23,6 +21,12 @@ jobs:
       github.event.workflow_run.conclusion != 'cancelled' &&
       github.event.workflow_run.pull_requests[0] != null &&
       github.event.workflow_run.head_repository.fork == false
+    permissions:
+      actions: read
+      contents: write
+      issues: write
+      pull-requests: write
+
     steps:
       - name: Download PR summary body
         id: download_summary
