@@ -263,7 +263,7 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
                           >
                             {index === 0 && expandable && (
                               <YakitButton
-                                type="text"
+                                type={isExpanded ? 'text' : 'text2'}
                                 icon={isExpanded ? <OutlineChevrondownIcon /> : <OutlineChevronrightIcon />}
                                 onClick={(e) => {
                                   e.stopPropagation()

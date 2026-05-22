@@ -2923,12 +2923,25 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   })
 
   const onClickRow = useMemoizedFn((record: SSAProjectResponse) => {
-    const isExpanded = expandedKeys.includes(record.ID)
-    if (!isExpanded) {
-      loadDetail(record)
+    if (pageType === 'projectManager') {
+      const isExpanded = expandedKeys.includes(record.ID)
+      if (!isExpanded) {
+        loadDetail(record)
+      }
+      const newKeys = isExpanded ? expandedKeys.filter((k) => k !== record.ID) : [...expandedKeys, record.ID]
+      setExpandedKeys?.(newKeys)
+    } else {
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.YakRunner_ScanHistory,
+          params: {
+            Programs: [record.ProjectName],
+            ProjectIds: [record.ID],
+          },
+        }),
+      )
     }
-    const newKeys = isExpanded ? expandedKeys.filter((k) => k !== record.ID) : [...expandedKeys, record.ID]
-    setExpandedKeys?.(newKeys)
   })
 
   return (
