@@ -842,7 +842,7 @@ const marks: (t: TFunction) => SliderMarks = (t) => {
 }
 const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.memo((props) => {
   const { disabled, inViewport, form, refreshGroup, inputType, setInputType } = props
-  const { t } = useI18nNamespaces(['simpleDetect'])
+  const { t } = useI18nNamespaces(['simpleDetect', 'yakitUi'])
   const [groupOptions, setGroupOptions] = useState<string[]>([])
   const scanType = Form.useWatch('scanType', form)
   useEffect(() => {
