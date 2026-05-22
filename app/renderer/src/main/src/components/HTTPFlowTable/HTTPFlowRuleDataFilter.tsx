@@ -48,6 +48,7 @@ interface HTTPFlowRuleDataFilterProps {
   queryparamsStr: string
   onSetFilterRows: (rows: MitmExtractAggregateFlowFilterRow[]) => void
   resetTableAndEditorShow?: (table: boolean, editor: boolean) => void
+  httpFlowTableDataLength?: number
 }
 
 const uniqStrings = (list: string[]) => Array.from(new Set(list.filter(Boolean)))
@@ -102,7 +103,7 @@ const buildScopeFilterFromRows = (rows: RuleSummaryItem[], keyword?: string) => 
 })
 
 export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = React.memo((props) => {
-  const { baseParams, queryparamsStr, onSetFilterRows, resetTableAndEditorShow } = props
+  const { baseParams, queryparamsStr, onSetFilterRows, resetTableAndEditorShow, httpFlowTableDataLength } = props
   const { t } = useI18nNamespaces(['history', 'yakitUi'])
   const wrapperRef = useRef<HTMLDivElement>(null)
   const tableContainerRef = useRef<HTMLDivElement>(null)
@@ -275,19 +276,16 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
     }
   })
 
+  const updateRuleData = useMemoizedFn(() => {
+    if (!httpFlowTableDataLength) return
+    refreshRuleData(page)
+  })
+
   // 分页/搜索/onSearch 变化时查询；外部条件变化(queryKey)时自动重置并查询
   const prevQueryKeyRef = useRef('')
-  const skipFirstQueryRef = useRef(true)
   useDebounceEffect(
     () => {
       if (!inViewport) return
-
-      if (skipFirstQueryRef.current) {
-        skipFirstQueryRef.current = false
-        prevQueryKeyRef.current = queryKey
-        return
-      }
-
       if (queryKey !== prevQueryKeyRef.current) {
         prevQueryKeyRef.current = queryKey
         resetTableState()
@@ -297,9 +295,9 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
           return
         }
       }
-      refreshRuleData(page)
+      updateRuleData()
     },
-    [inViewport, page, queryKey, refreshRuleData, resetRuleNameOptions, resetTableState, searchQueryTick],
+    [inViewport, page, queryKey, searchQueryTick],
     { wait: QUERY_DEBOUNCE_WAIT },
   )
 

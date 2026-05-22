@@ -797,11 +797,14 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = (props) => {
           onClick={handleClick}
           onContextMenu={handleContextMenu}
         >
-          {!info.isLeaf && (
-            <div className={classNames(styles['node-switcher'], { [styles['expanded']]: isExpanded })}>
-              <OutlineChevronrightIcon />
-            </div>
-          )}
+          <div
+            className={classNames(styles['node-switcher'], {
+              [styles['expanded']]: isExpanded,
+              [styles['hidden']]: info.isLeaf,
+            })}
+          >
+            <OutlineChevronrightIcon />
+          </div>
 
           <div className={styles['node-loading']}>
             <LoadingOutlined />

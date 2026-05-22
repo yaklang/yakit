@@ -53,9 +53,9 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
             className={step === 0 ? 'chaos-maker-rule-step-active' : 'chaos-maker-rule-step'}
             stepIndex={0}
             key={0}
-            title={'参数'}
+            title={<span className={'chaos-maker-step-title'}>参数</span>}
             description={
-              <div>
+              <div className={'chaos-maker-step-desc'}>
                 设置额外参数 <br />
                 准备观察过程
               </div>
@@ -71,9 +71,9 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
             }
             stepIndex={1}
             key={1}
-            title={'进行模拟攻击'}
+            title={<span className={'chaos-maker-step-title'}>进行模拟攻击</span>}
             description={
-              <>
+              <div className={'chaos-maker-step-desc'}>
                 {step === 1 && (
                   <YakitPopconfirm
                     title={'确定要停止当前进程？'}
@@ -86,7 +86,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
                     </YakitButton>
                   </YakitPopconfirm>
                 )}
-              </>
+              </div>
             }
           />
           <Steps.Step
@@ -99,7 +99,8 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
             }
             stepIndex={2}
             key={2}
-            title={'模拟攻击报告'}
+            title={<span className={'chaos-maker-step-title'}>模拟攻击报告</span>}
+            description={<div className={'chaos-maker-step-desc'}>查看本次模拟攻击结果</div>}
           />
         </Steps>
       )}

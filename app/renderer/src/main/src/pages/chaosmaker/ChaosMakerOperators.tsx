@@ -255,7 +255,7 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                 width: 200,
                 borderRadius: '6px',
                 border: '1px solid var(--Colors-Use-Main-Border)',
-                backgroundColor: '#F28B44',
+                backgroundColor: 'var(--Colors-Use-Main-Primary)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
