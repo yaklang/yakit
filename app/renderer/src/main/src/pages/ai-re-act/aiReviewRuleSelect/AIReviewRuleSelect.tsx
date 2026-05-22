@@ -26,6 +26,7 @@ import { Tooltip } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isNil } from 'lodash'
 
 const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
@@ -103,7 +104,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     if (
       !v &&
       chatIPCData.execute &&
-      selectAIReviewRiskControlScore &&
+      !isNil(selectAIReviewRiskControlScore) &&
       !isEqual(selectAIReviewRiskControlScore, aiReviewRiskControlScore)
     ) {
       handHotpatchAIReviewRiskControlScore(selectAIReviewRiskControlScore)
