@@ -13,7 +13,7 @@ import { HTTPFlowForWebsocketViewer, WebSocketEditor } from '@/pages/websocket/H
 import { WebsocketFrameHistory } from '@/pages/websocket/WebsocketFrameHistory'
 
 import styles from './hTTPFlowDetail.module.scss'
-import { useControllableValue, useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
   ExtractedDataFilter,
   HTTPFlowExtractedData,

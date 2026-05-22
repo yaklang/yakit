@@ -940,6 +940,8 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
         setRenderHTML(undefined)
         setHexValue(originalPackage ? originalPackage : StringToUint8Array(originValue))
       }
+    } else {
+      setShowValue('')
     }
   }, [type, originValue])
 
