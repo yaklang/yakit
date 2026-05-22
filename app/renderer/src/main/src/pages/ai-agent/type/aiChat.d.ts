@@ -77,10 +77,10 @@ export interface AISession {
   UpdatedAt: number
   /** 是否已初始化标题 */
   TitleInitialized: boolean
-  /** 请求参数 */
-  request?: AIStartParams
   /** 会话 session */
   SessionID: string
   /** 历史流量表和风险表 run_time_id */
   RelatedRuntimeIDs?: string[]
+  /** 会话中的设置/请求参数 */
+  StartParams: AIStartParams
 }

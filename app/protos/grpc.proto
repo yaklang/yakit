@@ -1945,6 +1945,10 @@ message AIStartParams {
   // 为 true 时允许 request_plan_and_execution（PE）与 require_ai_blueprint（蓝图）两类动作；
   // 默认 false 时禁用上述能力。该开关在 StartAIReAct 参数转换中晚于 DisableAISearchForge 应用，优先级更高。
   bool EnablePlan = 38;
+
+  // 为 true 时，StartAIReAct 会优先读取同 session_id 已缓存的配置；
+  // 如果命中则优先使用表中的配置，再用本次请求补齐运行时字段。
+  bool PreferSessionCachedConfig = 39;
 }
 
 message AITaskFilter {
@@ -2032,6 +2036,8 @@ message AISession {
   int64 CreatedAt = 5;
   int64 UpdatedAt = 6;
   repeated string RelatedRuntimeIDs = 7;
+  AIStartParams StartParams = 8;
+  int64 LastUsedAt = 9;
 }
 
 message QueryAISessionRequest {

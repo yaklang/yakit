@@ -658,7 +658,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
       <AIModelEditContentItem
         filed="EnableThinkingOpt"
         options={EnableThinkingOptions}
-        title="Enable Thiking"
+        title="Enable Thinking"
         value={enableThinkingOpt}
         onChange={(v) => onEditChange(v, 'EnableThinkingOpt')}
       />

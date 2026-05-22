@@ -97,6 +97,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         UserQuery: qs,
         CoordinatorId: '',
         Sequence: 1,
+        PreferSessionCachedConfig: true,
       }
 
       const session = getSession(sessionId)
@@ -122,7 +123,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             question: qs,
             CreatedAt: new Date().getTime(),
             UpdatedAt: new Date().getTime(),
-            request,
+            StartParams: request,
             SessionID: session,
             TitleInitialized: false,
           }

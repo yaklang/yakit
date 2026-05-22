@@ -114,19 +114,26 @@ export interface AIStartParams {
   /**
    * 为 true 时，MaybeTriggerPerceptionAfterAction / MaybeTriggerPerceptionAfterVerification /
    * TriggerPerceptionOnSpin 内直接同步调用 TriggerPerception；默认 false 时为异步 goroutine 调用
-   * tip:点击新建会话和切换历史的时候，值设置为false
+   * tip:点击新建会话和切换历史的时候，从历史会话中获取值
    */
   SyncPerceptionTrigger?: boolean
   /** 是否进入任务规划
-   *  tip:点击新建会话和切换历史的时候，值设置为false
+   *  tip:点击新建会话和切换历史的时候，从历史会话中获取值
    */
   EnablePlan?: boolean
+  /**
+   * 为 true 时，StartAIReAct 会优先读取同 session_id 已缓存的配置；
+   */
+  PreferSessionCachedConfig?: boolean
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
 export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AllowRequireForUserInteract = 'AllowRequireForUserInteract',
   HotPatchType_AgreePolicy = 'AgreePolicy',
+  HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
+  HotPatchType_EnablePlan = 'EnablePlan',
+
   /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',
   HotPatchType_RiskControlScore = 'RiskControlScore',
