@@ -248,8 +248,11 @@
     "readWriteLog": "Read/Write Log"
   },
   "AIReviewRuleOptions": {
+    "manualLabel": "manual",
     "manualDesc": "All reviews are handled manually by the user",
+    "yoloLabel": "Escrow YOLO",
     "yoloDesc": "All reviews are executed by default without prompting",
+    "aiLabel": "Collaborative AI",
     "aiDesc": "AI judges review risk, low risk runs by default, high risk is handled by the user"
   },
   "AIModelPolicyOptions": {

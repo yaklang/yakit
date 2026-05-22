@@ -248,8 +248,11 @@
     "readWriteLog": "读写日志"
   },
   "AIReviewRuleOptions": {
+    "manualLabel": "人工",
     "manualDesc": "所有审阅都由用户自己操作",
+    "yoloLabel": "托管 YOLO",
     "yoloDesc": "所有审阅默认执行，不进行询问",
+    "aiLabel": "协同 AI",
     "aiDesc": "由AI判断审阅风险，低风险默认执行，高风险由用户操作"
   },
   "AIModelPolicyOptions": {

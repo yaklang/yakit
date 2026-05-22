@@ -20,15 +20,12 @@ import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/use
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { AIInputEventHotPatchTypeEnum, AIStartParams } from '../hooks/grpcApi'
 import isEqual from 'lodash/isEqual'
-import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import { Tooltip } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['aiAgent'])
+  const { t } = useI18nNamespaces(['aiAgent'])
   const { setting } = useAIAgentStore()
   const { setSetting } = useAIAgentDispatcher()
 
@@ -36,8 +33,14 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
   const { handleSendConfigHotpatch } = useChatIPCDispatcher()
 
   const [visible, setVisible] = useState<boolean>(false)
+  const [open, setOpen] = useState<boolean>(false)
   const [selectAIReviewRiskControlScore, setAIReviewRiskControlScore] =
     useState<AIStartParams['AIReviewRiskControlScore']>()
+
+  const modelValue = useCreation(() => {
+    return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
+  }, [setting?.ReviewPolicy, chatIPCData.execute])
+  const [selectReviewPolicy, setSelectReviewPolicy] = useState<AIStartParams['ReviewPolicy']>()
 
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
@@ -49,10 +52,6 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
       emiter.off('onRefreshAIReviewRuleSelect', onRefreshAIReviewRuleSelect)
     }
   }, [inViewport])
-
-  const modelValue = useCreation(() => {
-    return setting?.ReviewPolicy || AIAgentSettingDefault.ReviewPolicy
-  }, [setting?.ReviewPolicy, chatIPCData.execute])
 
   const aiReviewRiskControlScore = useCreation(() => {
     return setting?.AIReviewRiskControlScore || AIAgentSettingDefault.AIReviewRiskControlScore
@@ -89,9 +88,6 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
 
   const onSelectModel = useMemoizedFn((value: AIStartParams['ReviewPolicy']) => {
     setSetting && setSetting((old) => ({ ...old, ReviewPolicy: value }))
-    if (chatIPCData.execute && modelValue) {
-      handHotpatchReviewPolicy(value)
-    }
   })
 
   const onSetAIReviewRiskControlScore = useMemoizedFn((value?: number) => {
@@ -107,32 +103,99 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
       !isEqual(selectAIReviewRiskControlScore, aiReviewRiskControlScore)
     ) {
       handHotpatchAIReviewRiskControlScore(selectAIReviewRiskControlScore)
+    }
+    if (v) {
+      setAIReviewRiskControlScore(aiReviewRiskControlScore)
+    } else {
       onSetAIReviewRiskControlScore(selectAIReviewRiskControlScore)
     }
-    if (v) setAIReviewRiskControlScore(aiReviewRiskControlScore)
   })
   const getIcon = useMemoizedFn((value: AIReviewRuleOptionsType) => {
-    if (modelValue === value) {
-      return AIReviewRuleIconMap[value]?.activeIcon
-    }
     return AIReviewRuleIconMap[value]?.icon
+  })
+  const getActiveIcon = useMemoizedFn((value: AIReviewRuleOptionsType) => {
+    return AIReviewRuleIconMap[value]?.activeIcon
+  })
+  const onSetOpen = useMemoizedFn((v: boolean) => {
+    setOpen(v)
+    if (!v && chatIPCData.execute && !isEqual(selectReviewPolicy, modelValue)) {
+      handHotpatchReviewPolicy(selectReviewPolicy)
+    }
+    if (v) {
+      setSelectReviewPolicy(modelValue)
+    } else {
+      onSelectModel(selectReviewPolicy)
+    }
+  })
+  const renderContent = useMemoizedFn(() => {
+    const currentSelect = AIReviewRuleOptions.find((item) => item.value === (selectReviewPolicy || modelValue))
+    return (
+      <>
+        <YakitSelect.Option
+          value="select"
+          label={
+            <div className={styles['select-option']}>
+              {currentSelect ? (
+                <>
+                  <div
+                    className={classNames(styles['select-icon-wrapper'], {
+                      [styles['select-ai-icon-wrapper']]: currentSelect?.value === 'ai',
+                      [styles['select-yolo-icon-wrapper']]: currentSelect?.value === 'yolo',
+                      [styles['select-manual-icon-wrapper']]: currentSelect?.value === 'manual',
+                    })}
+                  >
+                    {getActiveIcon(currentSelect?.value)}
+                  </div>
+                  <span className={styles['select-option-text']}>{t(currentSelect?.label)}</span>
+                </>
+              ) : (
+                <span className={styles['select-option-text']}>暂无选择</span>
+              )}
+            </div>
+          }
+        >
+          回答模式
+        </YakitSelect.Option>
+      </>
+    )
   })
   return (
     <div className={classNames(styles['review-rule-select-wrapper'], props.className)} ref={refRef}>
-      <YakitSegmented
-        value={modelValue}
-        onChange={(v) => {
-          const showType = v as AIAgentSetting['ReviewPolicy']
-          onSelectModel(showType)
+      <AIChatSelect
+        dropdownRender={(menu) => {
+          return (
+            <div className={styles['drop-select-wrapper']}>
+              <div className={styles['select-title']}>
+                {/* <OutlineCodepenIcon /> */}
+                回答模式
+              </div>
+              <div className={styles['select-content']} onClick={(e) => e.stopPropagation()}>
+                {AIReviewRuleOptions.map((item) => (
+                  <div
+                    key={item.value}
+                    className={classNames(styles['option-wrapper'], styles['select-option-wrapper'], {
+                      [styles['select-option-active-wrapper']]: item.value === (selectReviewPolicy || modelValue),
+                    })}
+                    onClick={() => setSelectReviewPolicy(item.value)}
+                  >
+                    <div className={styles['icon-wrapper']}>{getIcon(item.value)}</div>
+                    <div className={styles['text-wrapper']}>
+                      <div className={styles['text']}>{t(item.label)}</div>
+                      <div className={styles['describe']}> {t(item.describe)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
         }}
-        options={AIReviewRuleOptions.map((item) => ({
-          icon: <Tooltip title={t(item.describe)}>{getIcon(item.value)}</Tooltip>,
-          value: item.value,
-        }))}
-        size="small"
-        wrapClassName={styles['yakit-segmented-wrapper']}
-        className={styles['segmented']}
-      />
+        value="select"
+        optionLabelProp="label"
+        open={open}
+        setOpen={onSetOpen}
+      >
+        {renderContent()}
+      </AIChatSelect>
       {modelValue === 'ai' && (
         <YakitPopover
           content={
