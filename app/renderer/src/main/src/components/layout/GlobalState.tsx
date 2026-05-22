@@ -261,6 +261,22 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
         .catch((e) => reject(`error-system-proxy ${e}`))
     })
   })
+  const onCloseSystemProxy = useMemoizedFn(() => {
+    setShow(false)
+    yakitHost
+      .setSystemProxy({
+        HttpProxy: systemProxy.CurrentProxy,
+        Enable: false,
+      })
+      .then(() => {
+        info(t('ConfigSystemProxy.setSystemProxySuccess'))
+        emiter.emit('onRefConfigSystemProxy', '')
+      })
+      .catch((err) => {
+        yakitFailed(t('ConfigSystemProxy.setSystemProxyFailed', { error: String(err) }))
+      })
+  })
+
   const [showChromeWarn, setShowChromeWarn] = useState<boolean>(false)
   /** 获取Chrome启动路径 */
   const updateChromePath = useMemoizedFn((): Promise<string> => {
@@ -1009,21 +1025,7 @@ export const GlobalState: React.FC<GlobalReverseStateProp> = React.memo((props) 
                         type="text"
                         colors="danger"
                         className={styles['btn-style']}
-                        onClick={() => {
-                          setShow(false)
-                          yakitHost
-                            .setSystemProxy({
-                              HttpProxy: systemProxy.CurrentProxy,
-                              Enable: false,
-                            })
-                            .then(() => {
-                              info(t('ConfigSystemProxy.setSystemProxySuccess'))
-                              emiter.emit('onRefConfigSystemProxy', '')
-                            })
-                            .catch((err) => {
-                              yakitFailed(t('GlobalState.setSystemProxyFailed', { error: String(err) }))
-                            })
-                        }}
+                        onClick={onCloseSystemProxy}
                       >
                         {' '}
                         {t('GlobalState.disable')}

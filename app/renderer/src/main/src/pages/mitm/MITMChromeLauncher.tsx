@@ -37,6 +37,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { loadAdvancedConfig } from './MITMAdvancedConfig'
 import { Trans } from 'react-i18next'
+import { defHost, defPort } from './MITMServerStartForm/MITMServerStartForm'
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -64,8 +65,8 @@ const { Text } = Typography
 const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   const { t } = useI18nNamespaces(['mitm'])
   const [params, setParams] = useState<{ host: string; port: number }>({
-    host: props.host ? props.host : '127.0.0.1',
-    port: props.port ? props.port : 8083,
+    host: props.host ? props.host : defHost,
+    port: props.port ? props.port : +defPort,
   })
   const userDataDirRef: React.MutableRefObject<YakitAutoCompleteRefProps> = useRef<YakitAutoCompleteRefProps>({
     ...defYakitAutoCompleteRef,

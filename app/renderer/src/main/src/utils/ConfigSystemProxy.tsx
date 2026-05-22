@@ -17,6 +17,7 @@ import { JSONParseLog } from './tool'
 import { yakitHost } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
+import { defHost, defPort } from '@/pages/mitm/MITMServerStartForm/MITMServerStartForm'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 
@@ -45,7 +46,7 @@ export const apiGetSystemProxy: APINoRequestFunc<GetSystemProxyResult> = (hidden
 export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
   const { defaultProxy, onClose } = props
   const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
-  const [proxy, setProxy] = useState(defaultProxy ? defaultProxy : '127.0.0.1:8083')
+  const [proxy, setProxy] = useState(defaultProxy ? defaultProxy : `${defHost}:${defPort}`)
   const [loading, setLoading] = useState(false)
   const [current, setCurrent] = useState<{
     Enable: boolean
@@ -63,7 +64,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
     apiGetSystemProxy()
       .then((req: { CurrentProxy: string; Enable: boolean }) => {
         setCurrent(req)
-        setProxy(req.CurrentProxy ? req.CurrentProxy : '127.0.0.1:8083')
+        setProxy(req.CurrentProxy ? req.CurrentProxy : `${defHost}:${defPort}`)
       })
       .catch((e) => {
         // failed(`获取代理失败: ${e}`)
@@ -119,7 +120,7 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
               onChange={(e) => {
                 setProxy(e.target.value)
               }}
-              placeholder={'127.0.0.1:8083'}
+              placeholder={`${defHost}:${defPort}`}
               size="large"
             />
           </Form.Item>

@@ -70,8 +70,8 @@ export interface ClientCertificate {
   CaCertificates: Uint8Array[]
 }
 
-const defHost = '127.0.0.1'
-const defPort = '8083'
+export const defHost = '127.0.0.1'
+export const defPort = '8083'
 // 隐藏代理URL中的密码部分
 export const maskProxyPassword = (proxyUrl: string) => {
   // console.log("maskProxyPassword input:", proxyUrl, "type:", typeof proxyUrl)
