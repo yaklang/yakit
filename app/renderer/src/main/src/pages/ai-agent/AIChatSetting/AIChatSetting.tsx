@@ -17,10 +17,9 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 // import classNames from "classnames"
 import styles from './AIChatSetting.module.scss'
 import emiter from '@/utils/eventBus/eventBus'
-
 const ReviewPolicyOptions: YakitRadioButtonsProps['options'] = AIReviewRuleOptions.map((item) => ({
   value: item.value,
-  label: item.label,
+  label: item.value,
 }))
 const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
   const { setting } = useAIAgentStore()

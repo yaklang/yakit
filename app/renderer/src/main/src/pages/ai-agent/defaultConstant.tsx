@@ -226,17 +226,17 @@ export enum AILocalModelTypeEnum {
 export const AIReviewRuleOptions = [
   {
     value: 'manual',
-    label: 'Manual',
+    label: 'AIReviewRuleOptions.manualLabel',
     describe: 'AIReviewRuleOptions.manualDesc',
   },
   {
     value: 'yolo',
-    label: 'Yolo',
+    label: 'AIReviewRuleOptions.yoloLabel',
     describe: 'AIReviewRuleOptions.yoloDesc',
   },
   {
     value: 'ai',
-    label: 'AI',
+    label: 'AIReviewRuleOptions.aiLabel',
     describe: 'AIReviewRuleOptions.aiDesc',
   },
 ] as const
@@ -244,7 +244,7 @@ export type AIReviewRuleOptionsType = (typeof AIReviewRuleOptions)[number]['valu
 export const AIReviewRuleIconMap: Record<AIReviewRuleOptionsType, { icon: ReactNode; activeIcon: ReactNode }> = {
   manual: {
     icon: <OutlinePointerIcon />,
-    activeIcon: <OutlinePointerIcon style={{ color: 'var(--Colors-Use-Neutral-Text-2-Primary)' }} />,
+    activeIcon: <OutlinePointerIcon style={{ color: 'var(--Colors-Use-Purple-Primary)' }} />,
   },
   yolo: {
     icon: <OutlineEarOffIcon />,

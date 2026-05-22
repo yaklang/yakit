@@ -17,6 +17,7 @@
     .ant-select-single:hover {
       background-color: var(--Colors-Use-Basic-Shadow);
     }
+
     .ant-select-single .ant-select-selector .ant-select-selection-item {
       font-size: 11px;
       display: flex;
@@ -63,6 +64,21 @@
       @extend %icon;
     }
   }
+  .select-content {
+    display: flex;
+    flex-direction: column;
+    .option-wrapper {
+      padding: 6px 8px;
+      border-radius: 4px;
+
+      &:hover {
+        background: var(--Colors-Use-Neutral-Bg);
+        .text-wrapper {
+          color: var(--Colors-Use-Main-Primary);
+        }
+      }
+    }
+  }
 }
 
 .select-option-wrapper {
@@ -73,6 +89,7 @@
     width: 16px;
     height: 16px;
     display: flex;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
     svg {
       @extend %icon;
     }
@@ -93,6 +110,7 @@
   }
 }
 .select-option-active-wrapper {
+  background: var(--Colors-Use-Main-Bg);
   .text {
     color: var(--Colors-Use-Main-Primary);
   }
@@ -124,6 +142,27 @@
     svg {
       @extend %icon;
     }
+  }
+  .select-icon-wrapper {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+  .select-ai-icon-wrapper {
+    background: var(--Colors-Use-Success-Bg-Hover);
+  }
+  .select-yolo-icon-wrapper {
+    background: var(--Colors-Use-Error-Bg-Hover);
+  }
+  .select-manual-icon-wrapper {
+    background: var(--Colors-Use-Purple-Bg-Hover);
   }
 }
 

@@ -353,7 +353,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           styles['ai-chat-textarea'],
           {
             [styles['dragging-from-tree']]: isHovering,
-            [styles['ai-review-chat']]: setting.ReviewPolicy === 'ai',
           },
           className,
         )}
