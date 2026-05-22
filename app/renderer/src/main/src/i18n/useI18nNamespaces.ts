@@ -16,7 +16,9 @@ export function useI18nNamespaces(namespaces: string[]) {
     const handlerLanguageChanged = async (lng: string) => {
       const toLoad = namespaces.filter((ns) => !i18n.hasResourceBundle(lng, ns))
       if (toLoad.length > 0) {
-        await i18n.loadNamespaces(toLoad)
+        try {
+          await i18n.loadNamespaces(toLoad)
+        } catch (error) {}
       }
       setTick((prev) => prev + 1)
     }
