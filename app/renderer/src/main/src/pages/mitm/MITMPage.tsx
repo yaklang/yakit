@@ -342,18 +342,17 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
 
       const parts: TipPart[] = []
       if (downstreamProxyRuleId || downstreamProxy) {
-        const proxyStr = downstreamProxyRuleId
-          ? `规则组：${Routes.find(({ Id }) => Id === downstreamProxyRuleId)?.Name}`
-          : `${maskProxyPassword(downstreamProxy)}`
-
-        parts.push({
-          key: 'downstreamProxy',
-          value: proxyStr,
-        })
-
+        let proxyPartStr = ''
         if (downstreamProxyRuleId) {
+          const name = Routes.find(({ Id }) => Id === downstreamProxyRuleId)?.Name
+          if (name) {
+            proxyPartStr = `规则组：${name}`
+          }
+
           setDownstreamProxyStr(downstreamProxyRuleId)
-        } else {
+        } else if (downstreamProxy) {
+          proxyPartStr = `${maskProxyPassword(downstreamProxy)}`
+
           const proxyStr = downstreamProxy
             .split(',')
             .filter((i) => !!i)
@@ -365,6 +364,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
             })
             .join(',')
           setDownstreamProxyStr(proxyStr)
+        }
+
+        if (proxyPartStr) {
+          parts.push({
+            key: 'downstreamProxy',
+            value: proxyPartStr,
+          })
         }
       }
 
