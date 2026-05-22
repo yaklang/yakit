@@ -674,6 +674,21 @@ const getRunTimeIdObj = (runTimeId?: string) => {
     RuntimeId: runTimeId && runTimeId.indexOf(',') === -1 ? runTimeId : undefined,
   }
 }
+interface HistoryMenuData {
+  key: string
+  label: React.ReactNode
+  keybindings?: string[]
+  number?: number
+  webSocket?: boolean
+  default?: boolean
+  all?: boolean
+  children?: HistoryMenuData[]
+  onClickSingle?: (flow: HTTPFlow) => void
+  onClick?: (flow: HTTPFlow) => void
+  onClickBatch?: (flows: HTTPFlow[], n?: number) => void
+  params?: YakParamProps[]
+  isAiPlugin?: boolean
+}
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const {
@@ -3122,7 +3137,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const codecSingleHistoryPluginCom = useCampare(codecSingleHistoryPlugin)
   const selectedRowKeysCom = useCampare(selectedRowKeys)
   const menuData = useMemo(() => {
-    let menu = [
+    let menu: HistoryMenuData[] = [
       {
         key: '发送到 Web Fuzzer',
         label: t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
@@ -3170,7 +3185,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         webSocket: true,
         number: 20,
         onClickSingle: (v) => toggleHTTPFlowFavorite(v, !isHTTPFlowFavorite(v), setData, onlyFavorite),
-        onClickBatch: (list, n) => toggleHTTPFlowFavoriteBatch(list, n, true),
+        onClickBatch: (list, n) => toggleHTTPFlowFavoriteBatch(list, n!, true),
       },
       {
         key: 'cancelFavorite',
@@ -3178,7 +3193,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         default: false,
         webSocket: false,
         number: 20,
-        onClickBatch: (list, n) => toggleHTTPFlowFavoriteBatch(list, n, false),
+        onClickBatch: (list, n) => toggleHTTPFlowFavoriteBatch(list, n!, false),
       },
       {
         key: '数据包扫描',
@@ -3229,7 +3244,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
             return
           }
-          if (v.length < number) {
+          if (v.length < number!) {
             setClipboardText(v.map((ele) => `${ele.Url}`).join('\r\n'))
             setSelectedRowKeys([])
             setSelectedRows([])
@@ -3313,7 +3328,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             key: i.title,
             label: i.render(t),
             onClick: (v) => CalloutColor(v, i, data, setData),
-            onClickBatch: (list, n) => CalloutColorBatch(list, n, i),
+            onClickBatch: (list, n) => CalloutColorBatch(list, n!, i),
           }
         }),
       },
@@ -3324,7 +3339,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         webSocket: false,
         number: 20,
         onClickSingle: (v) => onRemoveCalloutColor(v, data, setData),
-        onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n),
+        onClickBatch: (list, n) => onRemoveCalloutColorBatch(list, n!),
       },
       {
         key: '发送到对比器',
@@ -3417,10 +3432,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         number: 30,
         default: true,
         webSocket: false,
-        onClickSingle: (v) => onShareData([v.Id], 50),
+        onClickSingle: (v) => onShareData([v.Id + ''], 50),
         onClickBatch: (list, n) => {
-          const ids: string[] = list.map((ele) => ele.Id)
-          onShareData(ids, n)
+          const ids: string[] = list.map((ele) => ele.Id + '')
+          onShareData(ids, n!)
         },
       },
       {
@@ -3473,9 +3488,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         number: 30,
         default: true,
         webSocket: false,
-        onClickSingle: (v) => onUploadData([v.Id]),
+        onClickSingle: (v) => onUploadData([v.Id + '']),
         onClickBatch: (list) => {
-          const ids: string[] = list.map((ele) => ele.Id)
+          const ids: string[] = list.map((ele) => ele.Id + '')
           onUploadData(ids)
         },
       })
@@ -3573,7 +3588,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
               try {
                 rowContextmenu.forEach((item) => {
                   if (item.key === menuName && Array.isArray(item.children)) {
-                    item.children.forEach((itemIn) => {
+                    item.children.forEach((itemIn: HistoryMenuData) => {
                       if (itemIn.key === menuItemName) {
                         // 由于为保持key值唯一 添加了特定字符 现在移除掉
                         if (menuName === 'AI插件' && menuItemName.startsWith('aiplugin-')) {
@@ -3926,7 +3941,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         try {
           batchContextMenu.forEach((item) => {
             if (item.key === menuName && Array.isArray(item.children)) {
-              item.children.forEach((itemIn) => {
+              item.children.forEach((itemIn: HistoryMenuData) => {
                 if (itemIn.key === menuItemName) {
                   // 由于为保持key值唯一 添加了特定字符 现在移除掉
                   if (menuName === 'AI插件' && menuItemName.startsWith('aiplugin-')) {
