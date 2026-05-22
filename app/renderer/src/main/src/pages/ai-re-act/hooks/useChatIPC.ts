@@ -838,7 +838,7 @@ function useChatIPC(params?: UseChatIPCParams) {
           return
         }
 
-        if (res.Type === 'notify' && res.NodeId === 'notify') {
+        if (res.Type === 'notify') {
           const data = JSON.parse(ipcContent) as AIAgentGrpcApi.Notify
           handleSetNotifyMessage(data, res.NodeIdVerbose)
           return
