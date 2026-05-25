@@ -214,6 +214,7 @@ const useAIMessageData = ({
 
     setCasualLoadMoreLoading(false)
     setTaskLoadMoreLoading(false)
+    setInitLoading(false)
 
     hasMoreTimeline.current = true
     setTimelinesLoading(false)
