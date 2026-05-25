@@ -331,10 +331,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         ) !== -1
 
       if (haveIntelligent) {
-        yakitNotify('warning', {
-          message: '不建议将高质模型同时设置为轻量模型,轻量模型适合使用响应快速得模型',
-          duration: 1000,
-        })
+        yakitNotify('warning', '不建议将高质模型同时设置为轻量模型,轻量模型适合使用响应快速得模型')
       }
 
       const newItem: AIModelConfig = {
