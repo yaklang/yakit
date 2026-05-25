@@ -465,7 +465,7 @@ const defaultAIFormItemsOfAI: (t: TFunction) => ThirdPartyAppConfigItemTemplate[
       Verbose: t('ConfigNetworkPage.APItype'),
     },
     {
-      DefaultValue: 'memfit-light-free',
+      DefaultValue: '',
       Desc: '',
       Extra: '',
       Name: 'model',
