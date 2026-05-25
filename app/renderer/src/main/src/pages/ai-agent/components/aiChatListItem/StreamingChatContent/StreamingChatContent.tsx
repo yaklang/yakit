@@ -1,11 +1,5 @@
 import { AIStreamNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
-import {
-  AIChatQSDataTypeEnum,
-  ReActChatGroupElement,
-  ReActChatTaskIndexGroupElement,
-  type ReActChatElement,
-  type ReActChatRenderItem,
-} from '@/pages/ai-re-act/hooks/aiRender'
+import { type ReActChatElement, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { memo, type FC } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
 import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
@@ -27,16 +21,6 @@ type SingleStreamProps = {
   listItemIndex?: number
 }
 
-const isStreamGroupItem = (
-  props: StreamingChatContentProps,
-): props is StreamingChatContentProps & ReActChatGroupElement =>
-  props.type === AIChatQSDataTypeEnum.STREAM_GROUP && (props as ReActChatGroupElement).isGroup === true
-
-const isTaskIndexGroupItem = (
-  props: StreamingChatContentProps,
-): props is StreamingChatContentProps & ReActChatTaskIndexGroupElement =>
-  (props as ReActChatTaskIndexGroupElement).isTaskGroup === true
-
 const AIStreamCard: FC<SingleStreamProps> = ({ chatType, token, streamClassName, session, listItemIndex }) => {
   const { stream } = useTypedStream({ chatType, token, session })
   if (!stream) return null
@@ -48,10 +32,10 @@ const AIStreamCard: FC<SingleStreamProps> = ({ chatType, token, streamClassName,
 
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
   const { streamClassName, chatType, token, hasNext, session, itemIndex: listItemIndex } = props
-  if (isTaskIndexGroupItem(props)) {
+  if (props.kind === 'task') {
     return <>{/* 此处等待ui组件支持taskIndexGroup */}</>
   }
-  if (isStreamGroupItem(props)) {
+  if (props.kind === 'group') {
     return <AIGroupStreamCard session={session} elements={props.children} hasNext={hasNext} />
   }
   return (

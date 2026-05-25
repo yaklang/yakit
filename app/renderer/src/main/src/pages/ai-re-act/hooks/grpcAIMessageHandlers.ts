@@ -10,8 +10,10 @@ import type {
   ReportFinishCardData,
   ReActChatBaseInfo,
   ReActChatGroupElement,
+  ReActChatElement,
   ReActChatRenderItem,
-  ReActChatTaskIndexGroupElement,
+  ReActChatTaskElement,
+  ReActChatTaskElementSub,
 } from './aiRender'
 
 import { Uint8ArrayToString } from '@/utils/str'
@@ -125,8 +127,10 @@ const appendRenderItem = (
     const groupIndex = old.findIndex((item) => item.kind === 'task' && item.token === taskIndexGroupKey)
     if (groupIndex >= 0) {
       const list = [...old]
-      const group = list[groupIndex] as ReActChatTaskIndexGroupElement
-      const children = isHistory ? [element, ...group.children] : [...group.children, element]
+      const group = list[groupIndex] as ReActChatTaskElement
+      const children = (
+        isHistory ? [element, ...group.children] : [...group.children, element]
+      ) as ReActChatTaskElementSub[]
       list[groupIndex] = { ...group, children, renderNum: group.renderNum + 1 }
       const content = options?.getContentMap?.(element.token)
       if (content) content.parentTaskIndexGroupKey = taskIndexGroupKey
@@ -155,6 +159,7 @@ const handleUpdateUISingleState: (
         chatType: info.chatType,
         token: info.mapKey,
         type: info.type,
+        kind: 'item',
         renderNum: 1,
       }
       return appendRenderItem(old, element, !!isHistory, options)
@@ -186,7 +191,7 @@ const handleUpdateUIGroupState: (
       const scope: ReActChatRenderItem[] = parentTaskIndexGroupKey
         ? (
             old.find((item) => item.kind === 'task' && item.token === parentTaskIndexGroupKey) as
-              | ReActChatTaskIndexGroupElement
+              | ReActChatTaskElement
               | undefined
           )?.children || []
         : old
@@ -198,7 +203,7 @@ const handleUpdateUIGroupState: (
         find.renderNum += 1
         if (parentTaskIndexGroupKey) {
           const taskGroup = old.find((item) => item.kind === 'task' && item.token === parentTaskIndexGroupKey) as
-            | ReActChatTaskIndexGroupElement
+            | ReActChatTaskElement
             | undefined
           if (taskGroup) taskGroup.renderNum += 1
         }
@@ -598,6 +603,17 @@ const handleStreamStart: AIMessageHandler = (request) => {
   })
 }
 
+/** 将 task 容器内 children 写回顶层 list */
+const writeBackTaskGroupChildren = (
+  list: ReActChatRenderItem[],
+  taskGroupIndex: number,
+  children: ReActChatTaskElementSub[],
+): ReActChatRenderItem[] => {
+  const taskGroup = list[taskGroupIndex] as ReActChatTaskElement
+  list[taskGroupIndex] = { ...taskGroup, children, renderNum: taskGroup.renderNum + 1 }
+  return list
+}
+
 /** stream数据初始化到UI上的逻辑处理 */
 const handleIsGroupDisplayForStream: (
   /** grpc流数据 */
@@ -612,28 +628,31 @@ const handleIsGroupDisplayForStream: (
   taskIndexGroupKey?: string,
 ) => ReActChatRenderItem[] = (res, streamDetail, data, getContentMap, taskIndexGroupKey) => {
   const list = [...data]
-  let targetList: ReActChatRenderItem[]
   let taskGroupIndex = -1
+  /** task 容器内操作的列表；未命中时为顶层 list */
+  let targetList: ReActChatTaskElementSub[] | ReActChatRenderItem[] = list
 
   if (taskIndexGroupKey) {
     taskGroupIndex = list.findIndex((item) => item.kind === 'task' && item.token === taskIndexGroupKey)
     if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
+      const taskGroup = list[taskGroupIndex] as ReActChatTaskElement
       targetList = [...taskGroup.children]
       streamDetail.parentTaskIndexGroupKey = taskIndexGroupKey
-    } else {
-      targetList = list
     }
-  } else {
-    targetList = list
   }
 
   const { ContentType, IsSync } = res
-  const element: ReActChatRenderItem = {
+  const element: ReActChatElement = {
     chatType: streamDetail.chatType,
     token: streamDetail.id,
     type: streamDetail.type,
+    kind: 'item',
     renderNum: 1,
+  }
+
+  const commitIfInTaskGroup = (): ReActChatRenderItem[] | null => {
+    if (taskGroupIndex < 0) return null
+    return writeBackTaskGroupChildren(list, taskGroupIndex, targetList as ReActChatTaskElementSub[])
   }
 
   // 以下 判断stream数据已经渲染在UI上的逻辑处理
@@ -645,12 +664,7 @@ const handleIsGroupDisplayForStream: (
       if (subFind) subFind.renderNum += 1
     }
     find.renderNum += 1
-    if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
-      list[taskGroupIndex] = { ...taskGroup, children: targetList, renderNum: taskGroup.renderNum + 1 }
-      return list
-    }
-    return targetList
+    return commitIfInTaskGroup() ?? [...targetList]
   }
   if (streamDetail && streamDetail.parentGroupKey) {
     // 已经渲染到UI上, 但是是组内数据, 找到组信息，并触发渲染更新
@@ -662,24 +676,14 @@ const handleIsGroupDisplayForStream: (
       if (subFind) subFind.renderNum += 1
       group.renderNum += 1
     }
-    if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
-      list[taskGroupIndex] = { ...taskGroup, children: targetList, renderNum: taskGroup.renderNum + 1 }
-      return list
-    }
-    return targetList
+    return commitIfInTaskGroup() ?? [...targetList]
   }
 
   // 以下 stream数据没有渲染在UI上的逻辑处理
   if (ContentType !== AIStreamContentType.DEFAULT || !targetList.length) {
     // 新增不可成组类型数据
     IsSync ? targetList.unshift(element) : targetList.push(element)
-    if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
-      list[taskGroupIndex] = { ...taskGroup, children: targetList, renderNum: taskGroup.renderNum + 1 }
-      return list
-    }
-    return targetList
+    return commitIfInTaskGroup() ?? [...targetList]
   }
 
   const active = IsSync ? targetList[0] : targetList[targetList.length - 1]
@@ -687,12 +691,7 @@ const handleIsGroupDisplayForStream: (
   if (!activeDetail || activeDetail.type !== AIChatQSDataTypeEnum.STREAM) {
     // UI详细数据没有或不是可成组类型，新增数据到UI上
     IsSync ? targetList.unshift(element) : targetList.push(element)
-    if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
-      list[taskGroupIndex] = { ...taskGroup, children: targetList, renderNum: taskGroup.renderNum + 1 }
-      return list
-    }
-    return targetList
+    return commitIfInTaskGroup() ?? [...targetList]
   }
 
   if (active.type === AIChatQSDataTypeEnum.STREAM && active.kind !== 'group') {
@@ -703,10 +702,12 @@ const handleIsGroupDisplayForStream: (
         token: active.token,
         type: AIChatQSDataTypeEnum.STREAM_GROUP,
         renderNum: 1,
-        isGroup: true,
+        kind: 'group',
         children: [],
       }
-      groupInfo.children = IsSync ? [element, cloneDeep(active)] : [cloneDeep(active), element]
+      groupInfo.children = IsSync
+        ? [element, cloneDeep(active) as ReActChatElement]
+        : [cloneDeep(active) as ReActChatElement, element]
       const arr = groupInfo.children.map((item) => item.token)
       for (let el of arr) {
         const info = getContentMap(el)
@@ -717,12 +718,7 @@ const handleIsGroupDisplayForStream: (
     } else {
       IsSync ? targetList.unshift(element) : targetList.push(element)
     }
-    if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
-      list[taskGroupIndex] = { ...taskGroup, children: targetList, renderNum: taskGroup.renderNum + 1 }
-      return list
-    }
-    return targetList
+    return commitIfInTaskGroup() ?? [...targetList]
   } else if (active.type === AIChatQSDataTypeEnum.STREAM_GROUP && active.kind === 'group') {
     if (activeDetail.data.NodeId === streamDetail.data.NodeId) {
       // 命中组内数据，追加到组内
@@ -732,20 +728,10 @@ const handleIsGroupDisplayForStream: (
     } else {
       IsSync ? targetList.unshift(element) : targetList.push(element)
     }
-    if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
-      list[taskGroupIndex] = { ...taskGroup, children: targetList, renderNum: taskGroup.renderNum + 1 }
-      return list
-    }
-    return targetList
+    return commitIfInTaskGroup() ?? [...targetList]
   } else {
     IsSync ? targetList.unshift(element) : targetList.push(element)
-    if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
-      list[taskGroupIndex] = { ...taskGroup, children: targetList, renderNum: taskGroup.renderNum + 1 }
-      return list
-    }
-    return targetList
+    return commitIfInTaskGroup() ?? [...targetList]
   }
 }
 

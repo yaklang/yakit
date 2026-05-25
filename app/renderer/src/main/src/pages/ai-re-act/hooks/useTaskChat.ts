@@ -67,16 +67,17 @@ function useTaskChat(params: UseTaskChatParams) {
   const handleTaskNode = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     try {
       const taskKey = `task-node-${info.task.index}`
-      let chatData = getContentMap(taskKey)
-      if (chatData && chatData.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+      const existing = getContentMap(taskKey)
+      if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         handleGrpcDataPushLog({
           info: res,
           pushLog: handlePushLog,
         })
         return
       }
-      if (!chatData) {
-        chatData = {
+      const chatData: AIChatQSData =
+        existing ??
+        ({
           ...genBaseAIChatData(res),
           id: taskKey,
           chatType: 'task',
@@ -87,19 +88,27 @@ function useTaskChat(params: UseTaskChatParams) {
             goal: info.task.goal,
             status: info.task.task_status || AITaskStatus.inProgress,
           },
-        }
-      }
+        } as AIChatQSData)
 
       setContentMap(chatData.id, chatData)
       if (info.type === 'push_task') {
+        activeTaskIndexGroups.current.set(info.task.index, chatData.id)
         activeLeafTasks.current.add(chatData.id)
-        setElements((old) => [
-          ...old,
-          { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
-        ])
+        setElements((old) => {
+          const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
+          if (exists) return old
+          return [
+            ...old,
+            { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
+          ]
+        })
       } else if (info.type === 'pop_task') {
+        activeTaskIndexGroups.current.delete(info.task.index)
         // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
         activeLeafTasks.current.delete(chatData.id)
+        if (chatData.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+          chatData.data.status = info.task.task_status
+        }
         setElements((old) => {
           return old.map((item) => {
             if (item.token === chatData.id && item.type === chatData.type) {

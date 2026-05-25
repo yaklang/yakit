@@ -44,39 +44,39 @@ function useCasualChat(params: UseCasualChatParams) {
    * 历史数据里 先给pop_task，后给push_task，所以pop_task是生成数据的主要依据
    * 自由对话里该类型只有历史数据
    */
-  const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      let ipcContent = Uint8ArrayToString(res.Content) || ''
-      const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-      if (!info.task.task_uuid || info.task.index === '1') return
-      if (!res.IsSync) return
+  // const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
+  //   try {
+  //     let ipcContent = Uint8ArrayToString(res.Content) || ''
+  //     const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
+  //     if (!info.task.task_uuid || info.task.index === '1') return
+  //     if (!res.IsSync) return
 
-      let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
-      if (!taskNodeInfo) {
-        taskNodeInfo = {
-          ...genBaseAIChatData(res),
-          id: info.task.task_uuid,
-          chatType: 'reAct',
-          type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
-          data: {
-            taskIndex: info.task.index,
-            taskName: info.task.name,
-            goal: info.task.goal,
-            status: info.task.task_status || AITaskStatus.error,
-          },
-        }
-        setContentMap(taskNodeInfo.id, taskNodeInfo)
-      }
+  //     let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
+  //     if (!taskNodeInfo) {
+  //       taskNodeInfo = {
+  //         ...genBaseAIChatData(res),
+  //         id: info.task.task_uuid,
+  //         chatType: 'reAct',
+  //         type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
+  //         data: {
+  //           taskIndex: info.task.index,
+  //           taskName: info.task.name,
+  //           goal: info.task.goal,
+  //           status: info.task.task_status || AITaskStatus.error,
+  //         },
+  //       }
+  //       setContentMap(taskNodeInfo.id, taskNodeInfo)
+  //     }
 
-      if (info.type === 'push_task') {
-        if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
-        setElements((old) => [
-          { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'reAct' },
-          ...old,
-        ])
-      }
-    } catch {}
-  })
+  //     if (info.type === 'push_task') {
+  //       if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
+  //       setElements((old) => [
+  //         { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'reAct' },
+  //         ...old,
+  //       ])
+  //     }
+  //   } catch {}
+  // })
 
   // #region review数据-hook缓存数据
   const review = useRef<AIChatQSData>()
@@ -124,14 +124,14 @@ function useCasualChat(params: UseCasualChatParams) {
         return
       }
 
-      if (res.Type === 'structured' && res.NodeId === 'system') {
-        const ipcContent = Uint8ArrayToString(res.Content) || ''
-        const data = JSON.parse(ipcContent) || ''
-        if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
-          handleTaskNode(res)
-        }
-        return
-      }
+      // if (res.Type === 'structured' && res.NodeId === 'system') {
+      //   const ipcContent = Uint8ArrayToString(res.Content) || ''
+      //   const data = JSON.parse(ipcContent) || ''
+      //   if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
+      //     handleTaskNode(res)
+      //   }
+      //   return
+      // }
 
       // 未识别类型全部归档到日志处理
       handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })
@@ -181,7 +181,10 @@ function useCasualChat(params: UseCasualChatParams) {
   const handleUserManualIntervention = useMemoizedFn((chatInfo: AIChatQSData) => {
     try {
       setContentMap(chatInfo.id, cloneDeep(chatInfo))
-      setElements((old) => [...old, { token: chatInfo.id, type: chatInfo.type, renderNum: 1, chatType: 'reAct' }])
+      setElements((old) => [
+        ...old,
+        { token: chatInfo.id, type: chatInfo.type, renderNum: 1, chatType: 'reAct', kind: 'item' },
+      ])
     } catch (error) {
       yakitNotify('error', `用户手动干预操作失败: ${error}`)
     }

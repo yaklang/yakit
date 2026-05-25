@@ -161,6 +161,7 @@ export const indexedDBDataToReActChatRenderItem = (
         children: JSONParseLog(item.children || '[]'),
         renderNum: 0,
         isCached: true,
+        kind: 'group',
       }
     }
     return {
@@ -171,6 +172,7 @@ export const indexedDBDataToReActChatRenderItem = (
       renderNum: 0,
       children: JSONParseLog(item.children || '[]'),
       isCached: true,
+      kind: 'item',
     }
   })
 
