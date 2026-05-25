@@ -24,15 +24,15 @@
         background: linear-gradient(
           180deg,
           var(--Colors-Use-Neutral-Bg) 0%,
-          rgba(248, 249, 250, 0.6) 30.21%,
-          rgba(248, 249, 250, 0) 80%
+          color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 60%, transparent) 30.21%,
+          transparent 80%
         );
       }
       &:not(.noMask)::after {
         background: linear-gradient(
           180deg,
-          rgba(248, 249, 250, 0) 20%,
-          rgba(248, 249, 250, 0.6) 69.79%,
+          transparent 20%,
+          color-mix(in srgb, var(--Colors-Use-Neutral-Bg) 60%, transparent) 69.79%,
           var(--Colors-Use-Neutral-Bg) 100%
         );
       }
