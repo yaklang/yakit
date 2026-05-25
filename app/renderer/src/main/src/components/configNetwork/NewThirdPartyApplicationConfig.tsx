@@ -16,14 +16,17 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import styles from './ConfigNetworkPage.module.scss'
 import { isMemfit } from '@/utils/envfile'
 import { FormInstance, FormLayout } from 'antd/lib/form/Form'
-import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
+import { AIModelTypeEnum, AIOnlineModelIconMap } from '@/pages/ai-agent/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
 import { AIConfigAPIKeyFormItem } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import {
   AI_API_TYPE_OPTIONS,
   DEFAULT_AI_API_TYPE,
+  getModelName,
   grpcGetAIThirdPartyAppConfigTemplate,
+  isFreeEnd,
+  isMemfitStart,
   normalizeAIAPIType,
 } from '@/pages/ai-agent/aiModelList/utils'
 import { cloneDeep } from 'lodash'
@@ -37,6 +40,7 @@ import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 import { EnableThinkingOptions } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
+import { AIModelFreeTag } from '@/pages/ai-agent/aiModelList/AIModelList'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -784,6 +788,27 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       { wait: 500 },
     )
 
+    /**
+     * @description 展示模型名称选项，memfit开头的展示aibalance图标，free结尾的展示免费标签
+     * TODO - 先保留，等后续反馈，看是否需要更换为下面展示UI
+     */
+    const showModelNameAllOptions = useCreation(() => {
+      return modelNameAllOptions.map((item) => {
+        const isMemfit = isMemfitStart(item.value)
+        const isFree = isFreeEnd(item.value)
+        return {
+          label: (
+            <div className={styles['option-label-wrapper']}>
+              {isMemfit && <div className={styles['option-icon-wrapper']}>{AIOnlineModelIconMap['aibalance']}</div>}
+              {getModelName(item.value)}
+              {isFree && <AIModelFreeTag />}
+            </div>
+          ),
+          value: item.value,
+        }
+      })
+    }, [modelNameAllOptions])
+
     const newDefaultAIFormItemsOfAI = useCreation(() => {
       let newAIFormItemsOfAI = cloneDeep(defaultAIFormItemsOfAI(t))
       const { isRequired, data } = isShowRequiredApiKey(typeVal)
@@ -900,6 +925,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 }
               >
                 <YakitAutoComGroupSearchWithAll
+                  // options={showModelNameAllOptions}
                   options={modelNameAllOptions}
                   groupSearchWithAll={true}
                   onFocus={() => {
@@ -912,12 +938,6 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                         <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>
                       </>
                     )
-                  }}
-                  filterOption={(inputValue, option) => {
-                    if (option?.value && typeof option?.value === 'string') {
-                      return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                    }
-                    return false
                   }}
                 />
               </Form.Item>

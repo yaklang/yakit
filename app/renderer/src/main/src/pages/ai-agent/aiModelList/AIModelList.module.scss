@@ -335,3 +335,18 @@
     }
   }
 }
+
+.ai-model-free-tag {
+  display: flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 0 4px;
+  border-radius: 2px;
+  background: var(--Colors-Use-Neutral-Bg);
+
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 14px; /* 140% */
+  letter-spacing: 0.5px;
+}

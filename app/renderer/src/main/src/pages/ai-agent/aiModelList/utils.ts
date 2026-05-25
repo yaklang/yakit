@@ -37,6 +37,27 @@ export const normalizeAIAPIType = (value?: string): AIAPIType => {
   return AI_API_TYPE_OPTIONS.includes(value as AIAPIType) ? (value as AIAPIType) : DEFAULT_AI_API_TYPE
 }
 
+/**
+ * 处理模型名称
+ */
+export const getModelName = (name: string) => {
+  return name?.replace(/^memfit-|-free$/g, '')
+}
+
+/**
+ * 模型名称是否是memfit开头
+ */
+export const isMemfitStart = (name: string) => {
+  return name?.startsWith('memfit-')
+}
+
+/**
+ * 模型名称是否为 -free 结尾
+ */
+export const isFreeEnd = (name: string) => {
+  return name?.endsWith('-free')
+}
+
 export const grpcGetSupportedLocalModels: APINoRequestFunc<LocalModelConfig[]> = (hiddenError) => {
   return new Promise((resolve, reject) => {
     ipcRenderer

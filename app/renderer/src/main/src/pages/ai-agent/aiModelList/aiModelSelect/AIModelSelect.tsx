@@ -9,7 +9,7 @@ import {
 } from './AIModelSelectType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { useCreation, useDebounceFn, useInViewport, useMemoizedFn } from 'ahooks'
-import { AIGlobalConfig, AIModelConfig, AIModelTypeFileName, isForcedSetAIModal } from '../utils'
+import { AIGlobalConfig, AIModelConfig, AIModelTypeFileName, getModelName, isForcedSetAIModal } from '../utils'
 import styles from './AIModelSelect.module.scss'
 import classNames from 'classnames'
 import { GetAIModelAvailableTotalResponse } from '../../type/aiModel'
@@ -187,7 +187,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
   const renderContent = useMemoizedFn(() => {
     switch (aiType) {
       case 'online':
-        const modelName = selectIntelligentItem?.ModelName?.replace(/^memfit-/, '')
+        const modelName = getModelName(selectIntelligentItem?.ModelName)
         return (
           <>
             <YakitSelect.Option
@@ -713,7 +713,7 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props
 
   const value = useCreation(() => {
-    return item?.ModelName?.replace(/^memfit-/, '')
+    return getModelName(item?.ModelName)
   }, [item?.ModelName])
   const aiService = useCreation(() => {
     return item.Provider?.Type

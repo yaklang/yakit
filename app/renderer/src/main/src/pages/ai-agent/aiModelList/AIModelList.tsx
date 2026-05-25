@@ -6,6 +6,7 @@ import {
   AILocalModelListRefProps,
   AILocalModelListWrapperProps,
   AIModelActionProps,
+  AIModelFreeTagProps,
   AIModelListProps,
   AIModelType,
   AIOnlineModelListItemProps,
@@ -23,6 +24,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
   AIGlobalConfig,
   AIModelConfig,
+  getModelName,
   grpcAIConfigHealthCheck,
   grpcCancelStartLocalModel,
   grpcClearAllModels,
@@ -790,7 +792,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
       })
   })
   const modelName = useCreation(() => {
-    return item.ModelName?.replace(/^memfit-/, '')
+    return getModelName(item.ModelName)
   }, [item.ModelName])
   return (
     <div className={styles['ai-online-model-list-item']}>
@@ -1367,4 +1369,8 @@ const AILocalModelListItemPromptHint: React.FC<AILocalModelListItemPromptHintPro
       }
     />
   )
+})
+
+export const AIModelFreeTag: React.FC<AIModelFreeTagProps> = React.memo((props) => {
+  return <div className={styles['ai-model-free-tag']}>Free</div>
 })
