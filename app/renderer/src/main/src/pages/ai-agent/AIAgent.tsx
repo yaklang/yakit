@@ -21,7 +21,6 @@ import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import emiter from '@/utils/eventBus/eventBus'
 import classNames from 'classnames'
 import styles from './AIAgent.module.scss'
-import { grpcDeleteAISession, grpcQueryAISession } from './grpc'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { AIBottomSideBar } from './aiBottomSideBar/AIBottomSideBar'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
@@ -33,22 +32,6 @@ import { omit } from 'lodash'
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = '20260113'
 
-const initialHistoryPagination = {
-  Page: 1,
-  Limit: 10,
-  OrderBy: 'last_used_at',
-  Order: 'desc',
-  total: 0,
-}
-
-const mergeUniqueChats = (prev: AISession[], next: AISession[]) => {
-  if (!next.length) return prev
-
-  const sessionIds = new Set(prev.map((item) => item.SessionID))
-  const uniqueNext = next.filter((item) => !sessionIds.has(item.SessionID))
-  return uniqueNext.length ? [...prev, ...uniqueNext] : prev
-}
-
 const { ipcRenderer } = window.require('electron')
 
 export const AIAgent: React.FC<AIAgentProps> = (props) => {
@@ -56,11 +39,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
   // #region ai-agent页面全局缓存
   // ai-agent-chat 全局配置
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
-
-  // 历史对话
-  const [_, setPagination, getPagination] = useGetSetState(cloneDeep(initialHistoryPagination))
-  const [chats, setChats, getChats] = useGetSetState<AISession[]>([])
-  const historyLoadingRef = useRef(false)
   // 当前展示对话
   const [activeChat, setActiveChat] = useState<AISession>()
 
@@ -92,16 +70,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
     try {
       if (isDelCache) {
-        // 删除数据库历史记录
-        await grpcDeleteAISession(
-          {
-            // DeleteAll: true,
-            Filter: {
-              Source: ['ai', ''],
-            },
-          },
-          true,
-        )
+        emiter.emit('sessionData', JSON.stringify({ type: 'clear' }))
       }
       setDelCacheVisible(false)
     } catch {
@@ -117,77 +86,17 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
   }, [setting])
 
-  const loadHistoryData = useMemoizedFn(async (sessionData?: string): Promise<number> => {
-    if (sessionData) {
-      // 本来就在第一个，不需要重复请求
-      if (getChats().at(0)?.SessionID === sessionData) return 0
-      try {
-        const { Data } = await grpcQueryAISession({
-          Pagination: initialHistoryPagination,
-          Filter: {
-            Source: ['ai', ''],
-            SessionID: [sessionData],
-          },
-        })
-        setChats((prev) => {
-          const filterData = prev.filter((item) => item.SessionID !== sessionData)
-          return [...Data, ...filterData]
-        })
-        return 0
-      } catch {
-        return 0
-      }
-    } else {
-      if (historyLoadingRef.current) {
-        return getPagination().total || 0
-      }
-
-      const currentPagination = getPagination()
-      const currentChats = getChats()
-      if (currentPagination.total > 0 && currentChats.length >= currentPagination.total) {
-        return currentPagination.total
-      }
-
-      historyLoadingRef.current = true
-      try {
-        const { Data, Total } = await grpcQueryAISession({
-          Pagination: currentPagination,
-          Filter: {
-            Source: ['ai', ''],
-          },
-        })
-        setChats((prev) => mergeUniqueChats(prev, Data))
-        setPagination({
-          ...currentPagination,
-          Page: currentPagination.Page + 1,
-          total: Total,
-        })
-        return Total
-      } catch {
-        return currentPagination.total || 0
-      } finally {
-        historyLoadingRef.current = false
-      }
-    }
-  })
-
   const store: AIAgentContextStore = useMemo(() => {
     return {
       setting: setting,
-      chats: chats,
       activeChat: activeChat,
     }
-  }, [setting, chats, activeChat])
+  }, [setting, activeChat])
   const dispatcher: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,
       setSetting: setSetting,
-      setChats: setChats,
-      getChats: getChats,
       setActiveChat: setActiveChat,
-      loadHistoryData: loadHistoryData,
-
-      // getChatData: aiChatDataStore.get
     }
   }, [])
 

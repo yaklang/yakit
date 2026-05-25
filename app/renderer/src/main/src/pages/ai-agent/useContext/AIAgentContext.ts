@@ -6,7 +6,7 @@ export interface AIAgentContextStore {
   /** 全局配置 */
   setting: AIAgentSetting
   /** 历史对话 */
-  chats: AISession[]
+  // chats: AISession[]
   /** 当前展示对话 */
   activeChat?: AISession
 }
@@ -14,11 +14,7 @@ export interface AIAgentContextStore {
 export interface AIAgentContextDispatcher {
   setSetting?: Dispatch<SetStateAction<AIAgentSetting>>
   getSetting?: () => AIAgentSetting
-  setChats?: Dispatch<SetStateAction<AISession[]>>
-  getChats?: () => AISession[]
   setActiveChat?: Dispatch<SetStateAction<AISession | undefined>>
-  loadHistoryData?: (session?: string) => Promise<number>
-  // getChatData?: (session: string) => AIChatData | undefined
 }
 
 export interface AIAgentContextValue {
@@ -29,15 +25,12 @@ export interface AIAgentContextValue {
 export default createContext<AIAgentContextValue>({
   store: {
     setting: {},
-    chats: [],
     activeChat: undefined,
   },
   dispatcher: {
     setSetting: undefined,
     getSetting: undefined,
 
-    setChats: undefined,
-    getChats: undefined,
     setActiveChat: undefined,
   },
 })

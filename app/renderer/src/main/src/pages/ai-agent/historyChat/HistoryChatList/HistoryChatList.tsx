@@ -17,6 +17,7 @@ import { yakitNotify } from '@/utils/notification'
 import { onNewChat } from '../HistoryChat'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import type { SessionListDispatcher } from './hook/useSessionList'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -72,10 +73,14 @@ const updateChatTitle = (list: AISession[], info: AISession) => {
 
 const HistoryChatList: FC<{
   search: string
-}> = ({ search }) => {
+  sessionList: AISession[]
+  getSessions?: SessionListDispatcher['getSessions']
+  setSessions?: SessionListDispatcher['setSessions']
+  loadHistoryData?: SessionListDispatcher['loadHistoryData']
+}> = ({ search, sessionList, getSessions, setSessions, loadHistoryData }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { chats, activeChat } = useAIAgentStore()
-  const { setChats, setActiveChat, loadHistoryData, getChats, setSetting } = useAIAgentDispatcher()
+  const { activeChat } = useAIAgentStore()
+  const { setActiveChat, setSetting } = useAIAgentDispatcher()
   const listRef = useRef<HTMLDivElement | null>(null)
   const chatTotalRef = useRef(0)
   const editInfo = useRef<AISession>()
@@ -94,7 +99,7 @@ const HistoryChatList: FC<{
     },
     {
       target: listRef,
-      isNoMore: () => (getChats?.().length || 0) >= chatTotalRef.current,
+      isNoMore: () => (getSessions?.().length || 0) >= chatTotalRef.current,
       threshold: 100,
     },
   )
@@ -106,9 +111,9 @@ const HistoryChatList: FC<{
   })
 
   const showHistory = useMemo(() => {
-    if (!search) return chats
-    return chats.filter((item) => item.Title.toLowerCase().includes(search.toLowerCase()))
-  }, [chats, search])
+    if (!search) return sessionList
+    return sessionList.filter((item) => item.Title.toLowerCase().includes(search.toLowerCase()))
+  }, [sessionList, search])
 
   const groupedHistory = useMemo(() => {
     const groupMap = CHAT_GROUPS.reduce<Record<ChatGroupKey, AISession[]>>(
@@ -134,7 +139,7 @@ const HistoryChatList: FC<{
     if (result && info) {
       try {
         await grpcUpdateAISessionTitle({ SessionID: info.SessionID, Title: info.Title })
-        setChats?.((old) => updateChatTitle(old, info))
+        setSessions?.((old) => updateChatTitle(old, info))
       } catch (error) {
         yakitNotify('error', t('HistoryChatList.updateTitleFailed', { error: String(error) }))
       }
@@ -147,22 +152,22 @@ const HistoryChatList: FC<{
     const { SessionID } = info
     const isLoading = delLoading.includes(SessionID)
     if (isLoading) return
-    const findIndex = chats.findIndex((item) => item.SessionID === SessionID)
+    const findIndex = sessionList.findIndex((item) => item.SessionID === SessionID)
     if (findIndex === -1) {
       yakitNotify('error', t('HistoryChatList.chatNotFound'))
       return
     }
     setDelLoading((old) => [...old, SessionID])
 
-    const newChats = chats.filter((item) => item.SessionID !== SessionID)
+    const newChats = sessionList.filter((item) => item.SessionID !== SessionID)
     let active: AISession | undefined
     if (newChats.length === 0) {
       onNewChat()
     } else {
-      active = getNextActiveChat(chats, findIndex)
+      active = getNextActiveChat(sessionList, findIndex)
     }
 
-    setChats && setChats(newChats)
+    setSessions && setSessions(newChats)
 
     if (activeSessionId === SessionID && active) {
       handleSetActiveChat(active)

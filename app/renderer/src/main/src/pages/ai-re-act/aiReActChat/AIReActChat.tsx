@@ -25,6 +25,7 @@ import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
 import useGetChatDataStoreKey, { getAISourceFromChatDataStoreKey } from '../hooks/useGetChatDataStoreKey'
 import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
+import emiter from '@/utils/eventBus/eventBus'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -37,7 +38,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       externalParameters,
     } = props
-    const { setChats, setActiveChat, loadHistoryData } = useAIAgentDispatcher()
+    const { setActiveChat } = useAIAgentDispatcher()
 
     const { chatDataStoreKey } = useGetChatDataStoreKey()
     const { chatIPCData } = useChatIPCStore()
@@ -135,7 +136,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           }
 
           setActiveChat && setActiveChat(newChat)
-          setChats && setChats((old) => [newChat, ...old])
+          emiter.emit('sessionData', JSON.stringify({ type: 'update', payload: newChat }))
+          // setChats && setChats((old) => [newChat, ...old])
           // 新建的额外操作
           onChat?.()
         } else {
@@ -190,7 +192,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             },
             extraValue: extra,
           })
-          loadHistoryData?.(activeChat.SessionID)
+          emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
         }
         if (!!sendRequest) {
           sendRequest?.({ params: chatMessage })

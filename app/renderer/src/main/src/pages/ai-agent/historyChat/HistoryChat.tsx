@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { useDebounce, useMemoizedFn } from 'ahooks'
@@ -19,6 +19,10 @@ import { AISession } from '../type/aiChat'
 import { SideSettingButton } from '../aiChatWelcome/AIChatWelcome'
 import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/HistoryChatList'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import useSessionList from './HistoryChatList/hook/useSessionList'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+
+const AISOURCE: AISource[] = ['ai', '']
 
 const clearLocalChats = (sessions: AISession[]) =>
   emiter.emit('onDelChats', JSON.stringify(sessions.map((item) => item.SessionID)))
@@ -33,6 +37,13 @@ const renderClearConfirm = (label: string, title: string, onConfirm: () => void)
   )
 }
 
+interface SessionDataPayload {
+  type: 'refresh' | 'clear' | 'update' | 'updateSession'
+  payload?: AISession
+  updates?: Partial<AISession>
+  sessionId?: string
+}
+
 /** 向对话框组件进行事件触发的通信 */
 export const onNewChat = () => {
   const info: AIAgentTriggerEventInfo = { type: ReActChatEventEnum.NEW_CHAT }
@@ -40,8 +51,13 @@ export const onNewChat = () => {
 }
 const HistoryChat = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { chats, activeChat } = useAIAgentStore()
-  const { setChats, setActiveChat } = useAIAgentDispatcher()
+  const [{ sessions }, dispatcher] = useSessionList()
+  const { activeChat } = useAIAgentStore()
+  const { setActiveChat } = useAIAgentDispatcher()
+  const activeChatRef = useRef(activeChat)
+  useEffect(() => {
+    activeChatRef.current = activeChat
+  }, [activeChat])
 
   const [search, setSearch] = useState('')
   const searchDebounce = useDebounce(search, { wait: 500 })
@@ -49,18 +65,19 @@ const HistoryChat = memo(() => {
   const [clearLoading, setClearLoading] = useState(false)
   const handleClearAllChat = useMemoizedFn(async () => {
     if (clearLoading) return
-    if (chats.length === 0) {
+    if (sessions.length === 0) {
       yakitNotify('info', t('HistoryChat.noChatsToClear'))
       return
     }
 
     setClearLoading(true)
     try {
-      await grpcDeleteAISession({ Filter: { Source: ['ai', ''] } }, true)
-      clearLocalChats(chats)
+      await grpcDeleteAISession({ Filter: { Source: AISOURCE } }, true)
+      clearLocalChats(sessions)
       onNewChat()
       setActiveChat?.(undefined)
-      setChats?.([])
+      dispatcher.setSessions?.([])
+      dispatcher.resetPagination?.()
       setSearch('')
       yakitNotify('success', t('HistoryChat.allChatsCleared'))
     } catch (e) {
@@ -74,7 +91,7 @@ const HistoryChat = memo(() => {
     if (clearLoading) return
 
     const beforeTimestamp = Date.now() - days * DAY_MS
-    const deletedChats = chats.filter((item) => getChatTimestamp(item) <= beforeTimestamp)
+    const deletedChats = sessions.filter((item) => getChatTimestamp(item) <= beforeTimestamp)
 
     if (deletedChats.length === 0) {
       yakitNotify('info', t('HistoryChat.noChatsBeforeDays', { days }))
@@ -83,11 +100,11 @@ const HistoryChat = memo(() => {
 
     setClearLoading(true)
     try {
-      await grpcDeleteAISession({ Filter: { BeforeTimestamp: beforeTimestamp, Source: ['ai', ''] } }, true)
+      await grpcDeleteAISession({ Filter: { BeforeTimestamp: beforeTimestamp, Source: AISOURCE } }, true)
 
       clearLocalChats(deletedChats)
 
-      const nextChats = chats.filter((item) => getChatTimestamp(item) > beforeTimestamp)
+      const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
       const activeDeleted = !!activeChat && deletedChats.some((item) => item.SessionID === activeChat.SessionID)
 
       if (nextChats.length === 0) {
@@ -98,7 +115,8 @@ const HistoryChat = memo(() => {
         setActiveChat?.(nextChats[0])
       }
 
-      setChats?.(nextChats)
+      dispatcher.setSessions?.(nextChats)
+      dispatcher.resetPagination?.()
       yakitNotify('success', t('HistoryChat.clearedBeforeDays', { days }))
     } catch (e) {
       yakitNotify('error', t('HistoryChat.clearFailed', { error: String(e) }))
@@ -107,13 +125,50 @@ const HistoryChat = memo(() => {
     }
   })
 
+  useEffect(() => {
+    const handleSessionData = async (data: string) => {
+      const payload = JSON.parse(data) as SessionDataPayload
+      switch (payload.type) {
+        case 'refresh':
+          await dispatcher.loadHistoryData?.(activeChatRef.current?.SessionID)
+          break
+        case 'clear':
+          await grpcDeleteAISession(
+            {
+              Filter: {
+                Source: AISOURCE,
+              },
+            },
+            true,
+          )
+          break
+        case 'update':
+          if (payload.payload) dispatcher.setSessions((prev) => [payload.payload!, ...prev])
+          break
+        case 'updateSession':
+          if (payload.sessionId && payload.updates) {
+            dispatcher.setSessions((prev) =>
+              prev.map((item) => (item.SessionID === payload.sessionId ? { ...item, ...payload.updates } : item)),
+            )
+          }
+          break
+        default:
+          break
+      }
+    }
+    emiter.on('sessionData', handleSessionData)
+    return () => {
+      emiter.off('sessionData', handleSessionData)
+    }
+  }, [dispatcher])
+
   return (
     <div className={styles['history-chat']}>
       <div className={styles['header-wrapper']}>
         <div className={styles['haeder-first']}>
           <div className={styles['first-title']}>
             {t('HistoryChat.title')}
-            <YakitRoundCornerTag>{chats.length}</YakitRoundCornerTag>
+            <YakitRoundCornerTag>{sessions.length}</YakitRoundCornerTag>
           </div>
           <div className={styles['header-actions']}>
             <YakitDropdownMenu
@@ -157,12 +212,12 @@ const HistoryChat = memo(() => {
               dropdown={{
                 trigger: ['click'],
                 placement: 'bottomRight',
-                disabled: clearLoading || chats.length === 0,
+                disabled: clearLoading || sessions.length === 0,
               }}
             >
               <Tooltip title={t('HistoryChat.clearChats')} placement="topRight">
                 <YakitButton
-                  disabled={clearLoading || chats.length === 0}
+                  disabled={clearLoading || sessions.length === 0}
                   colors="danger"
                   type="outline1"
                   loading={clearLoading}
@@ -172,7 +227,7 @@ const HistoryChat = memo(() => {
               </Tooltip>
             </YakitDropdownMenu>
             <Tooltip title={t('HistoryChat.newChat')} placement="topRight">
-              <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={() => onNewChat()} />
+              <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
             </Tooltip>
             <SideSettingButton />
           </div>
@@ -190,7 +245,13 @@ const HistoryChat = memo(() => {
       </div>
 
       <div className={styles['content']}>
-        <HistoryChatList search={searchDebounce} />
+        <HistoryChatList
+          search={searchDebounce}
+          sessionList={sessions}
+          setSessions={dispatcher.setSessions}
+          loadHistoryData={dispatcher.loadHistoryData}
+          getSessions={dispatcher.getSessions}
+        />
       </div>
     </div>
   )

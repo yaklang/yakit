@@ -328,7 +328,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   const { children } = props
 
   const { setting, activeChat } = useAIAgentStore()
-  const { setSetting, setChats } = useAIAgentDispatcher()
+  const { setSetting } = useAIAgentDispatcher()
   const { handleSendConfigHotpatch } = useChatIPCDispatcher()
   const [visible, setVisible] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -344,21 +344,21 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
         SyncPerceptionTrigger: value,
       },
     })
-    setChats?.((chats) => {
-      const newChats = chats.map((chat) => {
-        if (chat.SessionID === activeChat?.SessionID) {
-          return {
-            ...chat,
+    if (activeChat?.SessionID) {
+      emiter.emit(
+        'sessionData',
+        JSON.stringify({
+          type: 'updateSession',
+          sessionId: activeChat.SessionID,
+          updates: {
             StartParams: {
-              ...(chat.StartParams || {}),
+              ...(activeChat.StartParams || {}),
               SyncPerceptionTrigger: value,
             },
-          }
-        }
-        return chat
-      })
-      return newChats
-    })
+          },
+        }),
+      )
+    }
   })
   const onValuesChange = useMemoizedFn((changedValues: AIInputSettingFormProps) => {
     if (has(changedValues, 'SyncPerceptionTrigger')) {
