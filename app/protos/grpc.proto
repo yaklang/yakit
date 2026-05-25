@@ -951,6 +951,8 @@ service Yak {
   rpc UpdateAITool(UpdateAIToolRequest) returns(DbOperateMessage);
   rpc ToggleAIToolFavorite(ToggleAIToolFavoriteRequest) returns(ToggleAIToolFavoriteResponse);
   rpc AIToolGenerateMetadata(AIToolGenerateMetadataRequest) returns(AIToolGenerateMetadataResponse);
+  rpc ExportAITool(ExportAIToolRequest) returns (stream GeneralProgress);
+  rpc ImportAITool(ImportAIToolRequest) returns (stream GeneralProgress);
 
   // Local Model Management
   rpc IsLlamaServerReady(Empty) returns (IsLlamaServerReadyResponse);
@@ -1727,6 +1729,14 @@ message ToggleAIToolFavoriteResponse {
   string Message = 2;
 }
 
+message AIToolFilter {
+  string ToolName = 1;
+  repeated string ToolNames = 2;
+  string Keyword = 3;
+  bool OnlyFavorites = 4;
+  int64 ID = 5;
+}
+
 message AITool {
   string Name = 1;
   string Description = 2;
@@ -1755,6 +1765,22 @@ message GetAIToolListRequest {
   Paging Pagination = 3;
   bool OnlyFavorites = 4;
 }
+
+message ExportAIToolRequest {
+  repeated string ToolNames = 1;
+  string TargetPath = 2;
+  string Password = 3;
+  string OutputName = 4;
+  AIToolFilter Filter = 5;
+}
+
+message ImportAIToolRequest {
+  string InputPath = 1;
+  bool Overwrite = 2;
+  string NewToolName = 3;
+  string Password = 4;
+}
+
 message AIOutputEvent {
   int64 ID = 24;
   string CoordinatorId = 1;
@@ -1949,8 +1975,12 @@ message AIStartParams {
   // 如果命中则优先使用表中的配置，再用本次请求补齐运行时字段。
   bool PreferSessionCachedConfig = 39;
 
+  // 非空时作为规划阶段（Plan loop）的补充说明注入，对应 aicommon.WithPlanPrompt；
+  // 会出现在计划探索提示词的「规划补充说明」区块，覆盖同会话内其它来源写入的 PlanPrompt（若有）。
+  string UserPlanPrompt = 40;
+
   // 会话来源（如 ide / cli / yak），写入项目库 ai_sessions_v1.source
-  string Source = 40;
+  string Source = 41;
 }
 
 message AITaskFilter {
@@ -8681,6 +8711,7 @@ message AIGlobalConfig {
   repeated AIModelConfig LightweightModels = 7;
   repeated AIModelConfig VisionModels = 8;
   string AIPresetPrompt = 9;
+  string AIPlanPrompt = 10;
 }
 
 // Local Model Messages
