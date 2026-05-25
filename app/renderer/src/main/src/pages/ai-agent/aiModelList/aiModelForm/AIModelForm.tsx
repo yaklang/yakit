@@ -314,6 +314,28 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         yakitNotify('error', 'AI全局配置获取失败，请稍后再试')
         return
       }
+      const type = res?.Type // 厂商
+      const modelName = res?.model // 模型名称
+      const modelType = res?.model_type // 模型类型
+      const haveStandardOfLightweight =
+        modelName === 'memfit-standard-free' && type === 'aibalance' && modelType === 'lightweight'
+      if (haveStandardOfLightweight) {
+        yakitNotify('error', 'memfit-standard-free 是高质模型,不可设置为轻量模型')
+        return
+      }
+
+      /** 当轻量模型设置与高质模型选择一样的时候 */
+      const haveIntelligent =
+        aiGlobalConfigData?.aiGlobalConfigRef.current.IntelligentModels.findIndex(
+          (ele) => ele.Provider.Type === type && ele.ModelName === modelName,
+        ) !== -1
+
+      if (haveIntelligent) {
+        yakitNotify('warning', {
+          message: '不建议将高质模型同时设置为轻量模型,轻量模型适合使用响应快速得模型',
+          duration: 1000,
+        })
+      }
 
       const newItem: AIModelConfig = {
         ProviderId: res.api_key_id,
