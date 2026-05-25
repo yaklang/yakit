@@ -6,20 +6,14 @@ import type {
   UseTaskChatParams,
   UseTaskChatState,
 } from './type'
-import type {
-  AIChatQSData,
-  AIReviewType,
-  ReActChatRenderItem,
-  ReActChatTaskIndexGroupElement,
-  AITaskInfoProps,
-} from './aiRender'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem, ReActChatTaskElement, AITaskInfoProps } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, isTaskIndexGroupElement, isValidTaskIndex } from './utils'
+import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, isValidTaskIndex } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -70,76 +64,23 @@ function useTaskChat(params: UseTaskChatParams) {
     return activeTaskIndexGroups.current.get(taskIndex)
   })
 
-  /** push_task 时创建 TaskIndex 集合组，后续同 index 的 stream 归入该组 */
-  const handleStartTaskIndexGroup = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
-    const taskIndex = info.task.index
-    if (activeTaskIndexGroups.current.has(taskIndex)) return
-    const groupToken = `task-index-group-${taskIndex}`
-    activeTaskIndexGroups.current.set(taskIndex, groupToken)
-    const groupData: AIChatQSData = {
-      ...genBaseAIChatData(res),
-      id: groupToken,
-      chatType: 'task',
-      type: AIChatQSDataTypeEnum.TASK_INDEX_GROUP,
-      data: {
-        taskIndex,
-        taskName: info.task.name,
-        goal: info.task.goal,
-        status: info.task.task_status || AITaskStatus.inProgress,
-      },
-    }
-    setContentMap(groupToken, groupData)
-    const groupElement: ReActChatTaskIndexGroupElement = {
-      chatType: 'task',
-      token: groupToken,
-      type: AIChatQSDataTypeEnum.TASK_INDEX_GROUP,
-      renderNum: 1,
-      isTaskGroup: true,
-      taskIndex,
-      children: [],
-    }
-    setElements((old) => [...old, groupElement])
-  })
-
-  /** pop_task 时结束 TaskIndex 集合组（组保留在 elements 中，不再接收新数据） */
-  const handleEndTaskIndexGroup = useMemoizedFn((info: AIAgentGrpcApi.ChangeTask) => {
-    const taskIndex = info.task.index
-    const groupToken = activeTaskIndexGroups.current.get(taskIndex)
-    activeTaskIndexGroups.current.delete(taskIndex)
-    if (!groupToken) return
-    const groupInfo = getContentMap(groupToken)
-    if (groupInfo?.type === AIChatQSDataTypeEnum.TASK_INDEX_GROUP) {
-      groupInfo.data.status = info.task.task_status
-    }
-    setElements((old) =>
-      old.map((item) => {
-        if (isTaskIndexGroupElement(item) && item.token === groupToken) {
-          return { ...item, renderNum: item.renderNum + 1 }
-        }
-        return item
-      }),
-    )
-  })
-
-  /**
-   * 任务节点开始执行, 生成UI展示的信息
-   * 实时数据里 先给push_task，后给pop_task，所以push_task是生成数据的主要依据
-   * 任务规划里该类型只有实时数据
-   */
-  const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
+  const handleTaskNode = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     try {
-      let ipcContent = Uint8ArrayToString(res.Content) || ''
-      const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-      if (!info.task.task_uuid || info.task.index === '1') return
-      if (res.IsSync) return
-
-      let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
-      if (!taskNodeInfo) {
-        taskNodeInfo = {
+      const taskKey = `task-node-${info.task.index}`
+      let chatData = getContentMap(taskKey)
+      if (chatData && chatData.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+        handleGrpcDataPushLog({
+          info: res,
+          pushLog: handlePushLog,
+        })
+        return
+      }
+      if (!chatData) {
+        chatData = {
           ...genBaseAIChatData(res),
-          id: info.task.task_uuid,
+          id: taskKey,
           chatType: 'task',
-          type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
+          type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
           data: {
             taskIndex: info.task.index,
             taskName: info.task.name,
@@ -147,30 +88,33 @@ function useTaskChat(params: UseTaskChatParams) {
             status: info.task.task_status || AITaskStatus.inProgress,
           },
         }
-        setContentMap(taskNodeInfo.id, taskNodeInfo)
       }
 
+      setContentMap(chatData.id, chatData)
       if (info.type === 'push_task') {
-        activeLeafTasks.current.add(taskNodeInfo.id)
+        activeLeafTasks.current.add(chatData.id)
         setElements((old) => [
           ...old,
-          { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'task' },
+          { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
         ])
       } else if (info.type === 'pop_task') {
         // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
-        activeLeafTasks.current.delete(info.task.task_uuid)
-        if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
-        taskNodeInfo.data.status = info.task.task_status
+        activeLeafTasks.current.delete(chatData.id)
         setElements((old) => {
           return old.map((item) => {
-            if (item.token === taskNodeInfo!.id && item.type === taskNodeInfo!.type) {
+            if (item.token === chatData.id && item.type === chatData.type) {
               return { ...item, renderNum: item.renderNum + 1 }
             }
             return item
           })
         })
       }
-    } catch {}
+    } catch {
+      handleGrpcDataPushLog({
+        info: res,
+        pushLog: handlePushLog,
+      })
+    }
   })
 
   /** 更新任务树指定任务节点的状态 */
@@ -191,7 +135,7 @@ function useTaskChat(params: UseTaskChatParams) {
     const leafTasks = activeLeafTasks.current
     for (let mapKey of leafTasks) {
       const taskNodeInfo = getContentMap(mapKey)
-      if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
+      if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         continue
       }
       taskNodeInfo.data.status = AITaskStatus.error
@@ -288,21 +232,17 @@ function useTaskChat(params: UseTaskChatParams) {
 
         if (data && typeof data === 'object' && data?.type === 'push_task') {
           const info = data as AIAgentGrpcApi.ChangeTask
-
-          handleTaskNode(res)
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
           if (isValidTaskIndex(info.task.index)) {
-            handleStartTaskIndexGroup(res, info)
+            handleTaskNode(res, info)
           }
         }
 
         if (data && typeof data === 'object' && data?.type === 'pop_task') {
           // 结束任务 & 请求更新任务树最新状态数据
           const info = data as AIAgentGrpcApi.ChangeTask
-
-          handleTaskNode(res)
           if (isValidTaskIndex(info.task.index)) {
-            handleEndTaskIndexGroup(info)
+            handleTaskNode(res, info)
           }
           sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
         }
@@ -352,7 +292,9 @@ function useTaskChat(params: UseTaskChatParams) {
       handleResetReview()
       handleReviewDataToUI(chatData)
       setContentMap(chatData.id, chatData)
-      setElements((old) => old.concat({ token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }))
+      setElements((old) =>
+        old.concat({ token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'item' }),
+      )
 
       cb && cb()
     } catch (error) {}
@@ -373,14 +315,20 @@ function useTaskChat(params: UseTaskChatParams) {
       data: '',
     }
     setContentMap(chatData.id, chatData)
-    setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }])
+    setElements((old) => [
+      ...old,
+      { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'item' },
+    ])
   })
 
   /** 用户手动介入逻辑 */
   const handleUserManualIntervention = useMemoizedFn((chatInfo: AIChatQSData) => {
     try {
       setContentMap(chatInfo.id, cloneDeep(chatInfo))
-      setElements((old) => [...old, { token: chatInfo.id, type: chatInfo.type, renderNum: 1, chatType: 'task' }])
+      setElements((old) => [
+        ...old,
+        { token: chatInfo.id, type: chatInfo.type, renderNum: 1, chatType: 'task', kind: 'item' },
+      ])
     } catch (error) {
       yakitNotify('error', `用户手动干预操作失败: ${error}`)
     }

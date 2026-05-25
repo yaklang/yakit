@@ -19,8 +19,6 @@ import {
   genBaseAIChatData,
   genErrorLogData,
   isAutoExecuteReviewContinue,
-  isStreamGroupElement,
-  isTaskIndexGroupElement,
   isToolStderrStream,
   isToolStdoutStream,
 } from './utils'
@@ -47,24 +45,20 @@ const handleErrorGRPCToLog: (
 }
 
 /** 在 elements 树中查找并更新指定渲染项（含 TaskIndex 组 / stream 组嵌套） */
-const bumpRenderItem = (
-  list: ReActChatRenderItem[],
-  mapKey: string,
-  type: AIChatQSDataType,
-): boolean => {
+const bumpRenderItem = (list: ReActChatRenderItem[], mapKey: string, type: AIChatQSDataType): boolean => {
   for (const item of list) {
     if (item.token === mapKey && item.type === type) {
       item.renderNum += 1
       return true
     }
-    if (isTaskIndexGroupElement(item)) {
+    if (item.kind === 'task') {
       for (const child of item.children) {
         if (child.token === mapKey && child.type === type) {
           child.renderNum += 1
           item.renderNum += 1
           return true
         }
-        if (isStreamGroupElement(child)) {
+        if (child.kind === 'group') {
           const sub = child.children.find((c) => c.token === mapKey && c.type === type)
           if (sub) {
             sub.renderNum += 1
@@ -75,7 +69,7 @@ const bumpRenderItem = (
         }
       }
     }
-    if (isStreamGroupElement(item)) {
+    if (item.kind === 'group') {
       const sub = item.children.find((c) => c.token === mapKey && c.type === type)
       if (sub) {
         sub.renderNum += 1
@@ -128,9 +122,7 @@ const appendRenderItem = (
 ): ReActChatRenderItem[] => {
   const taskIndexGroupKey = options?.getActiveTaskIndexGroupKey?.(options?.taskIndex)
   if (taskIndexGroupKey) {
-    const groupIndex = old.findIndex(
-      (item) => isTaskIndexGroupElement(item) && item.token === taskIndexGroupKey,
-    )
+    const groupIndex = old.findIndex((item) => item.kind === 'task' && item.token === taskIndexGroupKey)
     if (groupIndex >= 0) {
       const list = [...old]
       const group = list[groupIndex] as ReActChatTaskIndexGroupElement
@@ -176,12 +168,7 @@ const handleUpdateUISingleStateFromRequest = (
   isHistory: AIMessageHandlerParams['res']['IsSync'],
   info: { mapKey: string; type: AIChatQSDataType } & { chatType: ReActChatBaseInfo['chatType'] },
 ) => {
-  handleUpdateUISingleState(
-    isHistory,
-    info,
-    request.setElements,
-    getUISingleStateOptions(request, info.mapKey),
-  )
+  handleUpdateUISingleState(isHistory, info, request.setElements, getUISingleStateOptions(request, info.mapKey))
 }
 
 /** 更新UI-State变量数据(组数据) */
@@ -198,21 +185,21 @@ const handleUpdateUIGroupState: (
     setElement((old) => {
       const scope: ReActChatRenderItem[] = parentTaskIndexGroupKey
         ? (
-            old.find(
-              (item) => isTaskIndexGroupElement(item) && item.token === parentTaskIndexGroupKey,
-            ) as ReActChatTaskIndexGroupElement | undefined
+            old.find((item) => item.kind === 'task' && item.token === parentTaskIndexGroupKey) as
+              | ReActChatTaskIndexGroupElement
+              | undefined
           )?.children || []
         : old
 
       const find = scope.find((item) => item.token === group.mapKey && item.type === group.type)
-      if (find && isStreamGroupElement(find)) {
+      if (find && find.kind === 'group') {
         const subFind = find.children.find((item) => item.token === sub.mapKey && item.type === sub.type)
         if (subFind) subFind.renderNum += 1
         find.renderNum += 1
         if (parentTaskIndexGroupKey) {
-          const taskGroup = old.find(
-            (item) => isTaskIndexGroupElement(item) && item.token === parentTaskIndexGroupKey,
-          ) as ReActChatTaskIndexGroupElement | undefined
+          const taskGroup = old.find((item) => item.kind === 'task' && item.token === parentTaskIndexGroupKey) as
+            | ReActChatTaskIndexGroupElement
+            | undefined
           if (taskGroup) taskGroup.renderNum += 1
         }
         return [...old]
@@ -629,9 +616,7 @@ const handleIsGroupDisplayForStream: (
   let taskGroupIndex = -1
 
   if (taskIndexGroupKey) {
-    taskGroupIndex = list.findIndex(
-      (item) => isTaskIndexGroupElement(item) && item.token === taskIndexGroupKey,
-    )
+    taskGroupIndex = list.findIndex((item) => item.kind === 'task' && item.token === taskIndexGroupKey)
     if (taskGroupIndex >= 0) {
       const taskGroup = list[taskGroupIndex] as ReActChatTaskIndexGroupElement
       targetList = [...taskGroup.children]
@@ -655,7 +640,7 @@ const handleIsGroupDisplayForStream: (
   const find = targetList.find((item) => item.token === element.token)
   if (find) {
     // 已经渲染到UI上, 再次触发渲染更新
-    if (isStreamGroupElement(find)) {
+    if (find.kind === 'group') {
       const subFind = find.children.find((item) => item.token === element.token && item.type === element.type)
       if (subFind) subFind.renderNum += 1
     }
@@ -672,7 +657,7 @@ const handleIsGroupDisplayForStream: (
     const group = targetList.find(
       (item) => item.token === streamDetail.parentGroupKey && item.type === AIChatQSDataTypeEnum.STREAM_GROUP,
     )
-    if (group && isStreamGroupElement(group)) {
+    if (group && group.kind === 'group') {
       const subFind = group.children.find((item) => item.token === element.token && item.type === element.type)
       if (subFind) subFind.renderNum += 1
       group.renderNum += 1
@@ -710,7 +695,7 @@ const handleIsGroupDisplayForStream: (
     return targetList
   }
 
-  if (active.type === AIChatQSDataTypeEnum.STREAM && !isStreamGroupElement(active)) {
+  if (active.type === AIChatQSDataTypeEnum.STREAM && active.kind !== 'group') {
     if (activeDetail.data.NodeId === streamDetail.data.NodeId) {
       // 命中单项，准备整合成组数据，将原有单项的token当成组token
       const groupInfo: ReActChatGroupElement = {
@@ -738,7 +723,7 @@ const handleIsGroupDisplayForStream: (
       return list
     }
     return targetList
-  } else if (active.type === AIChatQSDataTypeEnum.STREAM_GROUP && isStreamGroupElement(active)) {
+  } else if (active.type === AIChatQSDataTypeEnum.STREAM_GROUP && active.kind === 'group') {
     if (activeDetail.data.NodeId === streamDetail.data.NodeId) {
       // 命中组内数据，追加到组内
       streamDetail.parentGroupKey = active.token

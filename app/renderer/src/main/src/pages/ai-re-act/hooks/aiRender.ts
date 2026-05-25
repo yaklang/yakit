@@ -70,7 +70,7 @@ export interface AIToolResult {
   riskFlowDataCount: number
 }
 
-/** 任务开始节点的信息 */
+/** 任务节点的信息 */
 export interface AITaskStartInfo {
   taskIndex: string
   taskName: string
@@ -186,8 +186,6 @@ export enum AIChatQSDataTypeEnum {
   REQUIRE_USER_INTERACTIVE = 'require_user_interactive',
   /**智能体/forge审阅 */
   EXEC_AIFORGE_REVIEW_REQUIRE = 'exec_aiforge_review_require',
-  /**Divider Card */
-  TASK_INDEX_NODE = 'task_index_node',
   /**工具决策 */
   TOOL_CALL_DECISION = 'tool_call_decision',
   /**当前任务规划结束标志 */
@@ -203,7 +201,7 @@ export enum AIChatQSDataTypeEnum {
   /** stream数据集合组 */
   STREAM_GROUP = 'stream_group',
   /** 同一 TaskIndex 下的 stream 集合组 */
-  TASK_INDEX_GROUP = 'task_index_group',
+  TASK_NODE_GROUP = 'task_node_group',
   /** 用户手动介入上下文 */
   USER_MANUAL_INTERVENTION = 'user_manual_intervention',
   /** HTTP 流 fuzz 执行状态卡片（http_flow_fuzz_status） */
@@ -226,29 +224,26 @@ export interface ReActChatBaseInfo {
   /** 缓存数据里的顺序 */
   cacheOrder?: number
 }
+
+/** 独立 UI 节点 */
 export interface ReActChatElement extends ReActChatBaseInfo {
-  /** 标记不是组 */
-  isGroup?: false
+  kind: 'item'
 }
+/** stream合成组group的节点 */
 export interface ReActChatGroupElement extends ReActChatBaseInfo {
-  /** 标记是组 */
-  isGroup: true
+  kind: 'group'
   children: ReActChatElement[]
 }
 
-/**
- * 同一 TaskIndex 下的消息集合
- * elements 结构：task_index_group → children(stream | stream_group | tool_result | ...)
- */
-export interface ReActChatTaskIndexGroupElement extends ReActChatBaseInfo {
-  /** 标记是 TaskIndex 组 */
-  isTaskGroup: true
-  /** 任务子索引，如 1-1、1-2 */
-  taskIndex: string
-  children: ReActChatRenderItem[]
+/** 进入 task 容器内部的子节点类型集合 */
+export type ReActChatTaskElementSub = ReActChatElement | ReActChatGroupElement
+/** 任务内的所有节点 */
+export interface ReActChatTaskElement extends ReActChatBaseInfo {
+  kind: 'task'
+  children: ReActChatTaskElementSub[]
 }
 
-export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement | ReActChatTaskIndexGroupElement
+export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement | ReActChatTaskElement
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 export interface AIChatQSDataBase<T extends string, U> {
@@ -289,8 +284,7 @@ type ChatRequireUserInteractive = AIChatQSDataBase<
   UIRequireUserInteractive
 >
 type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
-type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
-type ChatTaskIndexGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_GROUP, AITaskStartInfo>
+type ChatTaskIndexGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_NODE_GROUP, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
 type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
@@ -320,7 +314,6 @@ export type AIChatQSData =
   | ChatToolUseReviewRequire
   | ChatRequireUserInteractive
   | ChatExecAIForgeReview
-  | ChatTaskIndexNode
   | ChatTaskIndexGroup
   | ChatToolCallDecision
   | ChatPlanExecEnd

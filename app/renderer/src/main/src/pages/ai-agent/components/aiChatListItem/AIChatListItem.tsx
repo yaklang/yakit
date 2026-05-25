@@ -162,15 +162,16 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         }
       case AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION:
         return <AIManualIntervention info={itemData} timestamp={Timestamp} />
-      case AIChatQSDataTypeEnum.TASK_INDEX_NODE:
-        const dividerCardProps = {
-          status: data?.status as AITaskStatus,
-          desc: data?.goal,
-          name: data?.taskName,
-          success: 0,
-          error: 0,
-        }
-        return <DividerCard {...dividerCardProps} />
+      /** 该UI已无效，可以删除 */
+      // case AIChatQSDataTypeEnum.TASK_INDEX_NODE:
+      //   const dividerCardProps = {
+      //     status: data?.status as AITaskStatus,
+      //     desc: data?.goal,
+      //     name: data?.taskName,
+      //     success: 0,
+      //     error: 0,
+      //   }
+      //   return <DividerCard {...dividerCardProps} />
 
       case AIChatQSDataTypeEnum.TOOL_CALL_DECISION:
         return <AIToolDecision item={itemData} />
