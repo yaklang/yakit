@@ -56,7 +56,9 @@ export const getCssVar = (name: string) => getComputedStyle(document.documentEle
 export interface JSONParseLogOption {
   page?: string
   fun?: string
-  reviver?: (key: string, value: any) => any
+  reviver?: Parameters<typeof JSON.parse>[1]
+  /** 解析失败时是否抛出错误，默认 true */
+  throwOnError?: boolean
 }
 /**JSON.parse安全记录 */
 export function JSONParseLog(text: string, option?: JSONParseLogOption) {
@@ -70,6 +72,6 @@ export function JSONParseLog(text: string, option?: JSONParseLogOption) {
       title: text,
       content: err,
     })
-    throw err
+    if (option?.throwOnError !== false) throw err
   }
 }

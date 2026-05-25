@@ -21,6 +21,7 @@ import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/His
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { JSONParseLog } from '@/utils/tool'
 
 const AISOURCE: AISource[] = ['ai', '']
 
@@ -54,10 +55,6 @@ const HistoryChat = memo(() => {
   const [{ sessions }, dispatcher] = useSessionList()
   const { activeChat } = useAIAgentStore()
   const { setActiveChat } = useAIAgentDispatcher()
-  const activeChatRef = useRef(activeChat)
-  useEffect(() => {
-    activeChatRef.current = activeChat
-  }, [activeChat])
 
   const [search, setSearch] = useState('')
   const searchDebounce = useDebounce(search, { wait: 500 })
@@ -127,10 +124,10 @@ const HistoryChat = memo(() => {
 
   useEffect(() => {
     const handleSessionData = async (data: string) => {
-      const payload = JSON.parse(data) as SessionDataPayload
+      const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload
       switch (payload.type) {
         case 'refresh':
-          await dispatcher.loadHistoryData?.(activeChatRef.current?.SessionID)
+          await dispatcher.loadHistoryData?.(payload!.sessionId)
           break
         case 'clear':
           await grpcDeleteAISession(

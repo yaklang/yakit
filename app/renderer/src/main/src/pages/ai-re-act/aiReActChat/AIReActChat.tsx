@@ -192,7 +192,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             },
             extraValue: extra,
           })
-          emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
+          emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: activeChat.SessionID }))
         }
         if (!!sendRequest) {
           sendRequest?.({ params: chatMessage })

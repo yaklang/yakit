@@ -40,7 +40,7 @@ export type AIAgentEventProps = {
   onDelChats: string
   /**
    * 会话数据管理
-   * @name type "refresh" | "clear" | "update"
+   * @name type "refresh" | "clear" | "update" | "updateSession"
    * @name payload
    */
   sessionData: string

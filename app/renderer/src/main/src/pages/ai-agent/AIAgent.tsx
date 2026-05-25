@@ -28,6 +28,7 @@ import { AIBottomDetails } from './aiBottomDetails/AIBottomDetails'
 
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { omit } from 'lodash'
+import { grpcDeleteAISession } from './grpc'
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = '20260113'
@@ -70,7 +71,17 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
 
     try {
       if (isDelCache) {
-        emiter.emit('sessionData', JSON.stringify({ type: 'clear' }))
+        // 删除数据库历史记录
+        await grpcDeleteAISession(
+          {
+            // DeleteAll: true,
+            Filter: {
+              Source: ['ai', ''],
+            },
+          },
+          true,
+        )
+        emiter.emit('sessionData', JSON.stringify({ type: 'refresh' }))
       }
       setDelCacheVisible(false)
     } catch {
