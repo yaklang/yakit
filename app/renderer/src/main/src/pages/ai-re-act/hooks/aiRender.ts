@@ -246,8 +246,6 @@ export interface ReActChatTaskIndexGroupElement extends ReActChatBaseInfo {
   /** 任务子索引，如 1-1、1-2 */
   taskIndex: string
   children: ReActChatRenderItem[]
-  name: string
-  goal: string
 }
 
 export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement | ReActChatTaskIndexGroupElement
@@ -292,6 +290,7 @@ type ChatRequireUserInteractive = AIChatQSDataBase<
 >
 type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
 type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
+type ChatTaskIndexGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_GROUP, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
 type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
@@ -322,6 +321,7 @@ export type AIChatQSData =
   | ChatRequireUserInteractive
   | ChatExecAIForgeReview
   | ChatTaskIndexNode
+  | ChatTaskIndexGroup
   | ChatToolCallDecision
   | ChatPlanExecEnd
   | ChatFailPlanAndExecution

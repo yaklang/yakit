@@ -19,7 +19,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, isValidTaskIndex } from './utils'
+import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, isTaskIndexGroupElement, isValidTaskIndex } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -71,11 +71,24 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   /** push_task 时创建 TaskIndex 集合组，后续同 index 的 stream 归入该组 */
-  const handleStartTaskIndexGroup = useMemoizedFn((info: AIAgentGrpcApi.ChangeTask) => {
+  const handleStartTaskIndexGroup = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     const taskIndex = info.task.index
     if (activeTaskIndexGroups.current.has(taskIndex)) return
     const groupToken = `task-index-group-${taskIndex}`
     activeTaskIndexGroups.current.set(taskIndex, groupToken)
+    const groupData: AIChatQSData = {
+      ...genBaseAIChatData(res),
+      id: groupToken,
+      chatType: 'task',
+      type: AIChatQSDataTypeEnum.TASK_INDEX_GROUP,
+      data: {
+        taskIndex,
+        taskName: info.task.name,
+        goal: info.task.goal,
+        status: info.task.task_status || AITaskStatus.inProgress,
+      },
+    }
+    setContentMap(groupToken, groupData)
     const groupElement: ReActChatTaskIndexGroupElement = {
       chatType: 'task',
       token: groupToken,
@@ -84,15 +97,28 @@ function useTaskChat(params: UseTaskChatParams) {
       isTaskGroup: true,
       taskIndex,
       children: [],
-      name: info.task.name,
-      goal: info.task.goal,
     }
     setElements((old) => [...old, groupElement])
   })
 
   /** pop_task 时结束 TaskIndex 集合组（组保留在 elements 中，不再接收新数据） */
-  const handleEndTaskIndexGroup = useMemoizedFn((taskIndex: string) => {
+  const handleEndTaskIndexGroup = useMemoizedFn((info: AIAgentGrpcApi.ChangeTask) => {
+    const taskIndex = info.task.index
+    const groupToken = activeTaskIndexGroups.current.get(taskIndex)
     activeTaskIndexGroups.current.delete(taskIndex)
+    if (!groupToken) return
+    const groupInfo = getContentMap(groupToken)
+    if (groupInfo?.type === AIChatQSDataTypeEnum.TASK_INDEX_GROUP) {
+      groupInfo.data.status = info.task.task_status
+    }
+    setElements((old) =>
+      old.map((item) => {
+        if (isTaskIndexGroupElement(item) && item.token === groupToken) {
+          return { ...item, renderNum: item.renderNum + 1 }
+        }
+        return item
+      }),
+    )
   })
 
   /**
@@ -266,7 +292,7 @@ function useTaskChat(params: UseTaskChatParams) {
           handleTaskNode(res)
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
           if (isValidTaskIndex(info.task.index)) {
-            handleStartTaskIndexGroup(info)
+            handleStartTaskIndexGroup(res, info)
           }
         }
 
@@ -276,7 +302,7 @@ function useTaskChat(params: UseTaskChatParams) {
 
           handleTaskNode(res)
           if (isValidTaskIndex(info.task.index)) {
-            handleEndTaskIndexGroup(info.task.index)
+            handleEndTaskIndexGroup(info)
           }
           sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
         }
