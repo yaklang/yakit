@@ -174,19 +174,48 @@ export const grpcFetchRiskOrRuleTree: (
   })
 }
 
+/** 按 SSA 项目名解析 profile 中的项目 ID（用于扫描历史/任务查询） */
+export const resolveSSAProjectIdByName = (projectName: string): Promise<number> => {
+  return new Promise(async (resolve, reject) => {
+    const name = (projectName || '').trim()
+    if (!name) {
+      resolve(0)
+      return
+    }
+    try {
+      const res = await ipcRenderer.invoke('QuerySSAProject', {
+        Filter: { ProjectNames: [name] },
+        Pagination: genDefaultPagination(1, 1),
+      })
+      const id = res?.Projects?.[0]?.ID ?? res?.projects?.[0]?.ID
+      resolve(id ? parseInt(String(id)) : 0)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
 /**
  * @name 漏洞文件/规则汇树筛选列表获取
+ * @param projectHint SSA 项目名或程序名；有 projectId 时按项目查扫描任务
  */
-export const grpcFetchAuditCodeRiskOrRuleList: (Programs: string) => Promise<QuerySyntaxFlowScanTaskResponse> = (
-  Programs,
-) => {
+export const grpcFetchAuditCodeRiskOrRuleList: (
+  projectHint: string,
+  projectId?: number,
+) => Promise<QuerySyntaxFlowScanTaskResponse> = (projectHint, projectId) => {
   return new Promise(async (resolve, reject) => {
+    const filter: QuerySyntaxFlowScanTaskRequest['Filter'] = {
+      HaveRisk: true,
+      Kind: ['scan'],
+    }
+    if (projectId && projectId > 0) {
+      filter.ProjectIds = [projectId]
+    } else if (projectHint) {
+      filter.Programs = [projectHint]
+    }
     const params: QuerySyntaxFlowScanTaskRequest = {
       Pagination: genDefaultPagination(100, 1),
-      Filter: {
-        Programs: [Programs],
-        HaveRisk: true,
-      },
+      Filter: filter,
     }
     try {
       const res: QuerySyntaxFlowScanTaskResponse = await ipcRenderer.invoke('QuerySyntaxFlowScanTask', params)

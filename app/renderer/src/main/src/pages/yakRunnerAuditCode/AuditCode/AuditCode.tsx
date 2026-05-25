@@ -2394,6 +2394,18 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
   )
 })
 
+const normalizeSSAProjectResponse = (raw: Record<string, any>): SSAProjectResponse => {
+  const p = raw || {}
+  return {
+    ...p,
+    CreateAt: p.CreateAt ?? p.CreatedAt ?? 0,
+    UpdateAt: p.UpdateAt ?? p.UpdatedAt ?? 0,
+    RiskNumber: p.RiskNumber ?? 0,
+    CompileTimes: p.CompileTimes ?? 0,
+    URL: p.URL ?? '',
+  } as SSAProjectResponse
+}
+
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
   const { pageType, onClose, onExecuteAudit, warrpId } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
@@ -2493,7 +2505,8 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
         Pagination: { ...paginationProps, AfterId: reload ? undefined : parseInt(afterId.current + '') },
       })
       .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
-        item.Data = (item as any).Projects
+        const projects = ((item as any).Projects || []).map(normalizeSSAProjectResponse)
+        item.Data = projects
         const newData = reload ? item.Data : data.concat(item.Data)
         const isMore = item.Data.length < item.Pagination.Limit || newData.length === total
         setHasMore(!isMore)

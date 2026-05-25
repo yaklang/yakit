@@ -96,6 +96,7 @@ interface SyntaxFlowScanTaskFilter {
   FromId?: number
   UntilId?: number
   Kind?: string[]
+  ProjectIds?: number[]
   HaveRisk?: boolean
 }
 

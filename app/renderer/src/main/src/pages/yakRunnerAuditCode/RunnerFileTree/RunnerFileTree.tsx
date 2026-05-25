@@ -20,6 +20,7 @@ import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import {
   grpcFetchAuditTree,
   grpcFetchAuditCodeRiskOrRuleList,
+  resolveSSAProjectIdByName,
   grpcFetchRiskOrRuleTree,
   removeAuditCodeAreaFileInfo,
   setAuditCodeAreaFileActive,
@@ -260,35 +261,41 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   const menuSelect = useMemoizedFn((key, keyPath: string[]) => {
     switch (key) {
       case 'codeScan':
-        apiQuerySSAPrograms({
-          Filter: {
-            ProgramNames: projectName ? [projectName] : [],
-          },
-          Pagination: { ...genDefaultPagination() },
-        }).then((res) => {
-          let projectId = 0
-          let compileProjectName = ''
-          if (res.Data.length > 0) {
-            projectId = res.Data[0].SSAProjectID
-            compileProjectName = res.Data[0].Name
-          }
-          if (parseInt(String(projectId)) === 0) {
-            warn(t('RunnerFileTree.projectConfigMissing'))
-            return
-          }
+        resolveSSAProjectIdByName(projectName || '')
+          .then((ssaProjectId) => {
+            const filter =
+              ssaProjectId > 0 ? { ProjectIds: [ssaProjectId] } : { ProgramNames: projectName ? [projectName] : [] }
+            return apiQuerySSAPrograms({
+              Filter: filter,
+              Pagination: { ...genDefaultPagination() },
+            }).then((res) => ({ res, ssaProjectId }))
+          })
+          .then(({ res, ssaProjectId }) => {
+            let projectId = ssaProjectId
+            let compileProjectName = ''
+            if (res.Data.length > 0) {
+              if (!projectId) {
+                projectId = res.Data[0].SSAProjectID
+              }
+              compileProjectName = res.Data[0].Name
+            }
+            if (parseInt(String(projectId)) === 0) {
+              warn(t('RunnerFileTree.projectConfigMissing'))
+              return
+            }
 
-          emiter.emit(
-            'openPage',
-            JSON.stringify({
-              route: YakitRoute.YakRunner_Code_Scan,
-              params: {
-                projectName: compileProjectName,
-                projectId,
-                historyName: [projectName],
-              },
-            }),
-          )
-        })
+            emiter.emit(
+              'openPage',
+              JSON.stringify({
+                route: YakitRoute.YakRunner_Code_Scan,
+                params: {
+                  projectName: compileProjectName,
+                  projectId,
+                  historyName: [projectName],
+                },
+              }),
+            )
+          })
 
         break
       case 'auditCode':
@@ -376,8 +383,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     useMemoizedFn(async () => {
       try {
         if (projectName) {
+          const ssaProjectId = await resolveSSAProjectIdByName(projectName)
           // 经与后端协商 由于跳转后需选中此Select 因此不采用分页，更改为一次性拉取100条
-          const res = await grpcFetchAuditCodeRiskOrRuleList(projectName)
+          const res = await grpcFetchAuditCodeRiskOrRuleList(projectName, ssaProjectId || undefined)
           const newOptions = res.Data.map((item) => {
             return {
               label: (

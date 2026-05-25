@@ -73,6 +73,18 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
   })
   const [pageInfo, setPageInfo] = useState<YakRunnerScanHistoryPageInfoProps>(initPageInfo())
 
+  useEffect(() => {
+    if (!pageInfo.ProjectIds?.length) return
+    setQuery((prev) => ({
+      ...prev,
+      Filter: {
+        ...prev.Filter,
+        ProjectIds: pageInfo.ProjectIds,
+        Programs: [],
+      },
+    }))
+  }, [pageInfo.ProjectIds])
+
   const isInitRequestRef = useRef<boolean>(true)
   const yakRunnerScanHistoryRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(yakRunnerScanHistoryRef)
@@ -89,8 +101,8 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
         ...prev,
         Filter: {
           ...prev.Filter,
-          Programs: data.Programs,
           ProjectIds: data.ProjectIds,
+          Programs: [],
         },
       }))
       setPageInfo(data)
@@ -119,6 +131,7 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
     Filter: {
       Kind: ['scan'],
       Programs: [],
+      ProjectIds: [],
     },
     ShowDiffRisk: true,
   })
@@ -142,9 +155,10 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
       Filter: {
         ...prev.Filter,
         Programs: [clickItem.Name],
+        ProjectIds: pageInfo.ProjectIds?.length ? pageInfo.ProjectIds : prev.Filter?.ProjectIds,
       },
     }))
-  }, [clickItem])
+  }, [clickItem, pageInfo.ProjectIds])
 
   const queyChangeUpdateData = useDebounceFn(
     () => {
@@ -167,7 +181,9 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
     }
     isInitRequestRef.current = false
     const isInit = page === 1
-    if ((params?.Filter?.Programs || []).length === 0) return
+    const projectIds = params?.Filter?.ProjectIds || []
+    const programs = params?.Filter?.Programs || []
+    if (projectIds.length === 0 && programs.length === 0) return
     if (isInit) {
       setLoading(true)
     }

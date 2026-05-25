@@ -206,6 +206,9 @@ export interface SSAProjectResponse {
   ID: number
   CreateAt: number
   UpdateAt: number
+  /** gRPC may return CreatedAt/UpdatedAt */
+  CreatedAt?: number
+  UpdatedAt?: number
   // 项目基础信息
   ProjectName: string
   Language: string
@@ -225,6 +228,8 @@ export interface SSAProjectResponse {
   RiskNumber: number
   // 编译次数
   CompileTimes: number
+  // 本地路径或者远程代码仓库路径
+  URL?: string
 }
 
 export interface UpdateSSAProjectRequest {

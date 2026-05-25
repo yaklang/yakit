@@ -317,6 +317,7 @@ export interface ModifyNotepadPageInfoProps {
 }
 
 export interface YakRunnerScanHistoryPageInfoProps {
+  /** 仅用于页面标题展示（SSA 项目名），不要写入 QuerySyntaxFlowScanTask.Filter.Programs */
   Programs: string[]
   ProjectIds: number[]
 }
