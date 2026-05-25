@@ -528,17 +528,14 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
   const stores: AIAgentContextStore = useMemo(() => {
     return {
       setting: setting,
-      chats: chats,
       activeChat: activeChat,
     }
-  }, [setting, chats, activeChat])
+  }, [setting, activeChat])
 
   const dispatchers: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,
       setSetting: setSetting,
-      setChats: setChats,
-      getChats: getChats,
       setActiveChat: setActiveChat,
     }
   }, [])
