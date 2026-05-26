@@ -15,9 +15,9 @@ import rehypeSlug from 'rehype-slug'
 import { yakitNotify } from '@/utils/notification'
 
 // Allow data URIs for raster image formats only (excludes SVG to prevent script injection).
-// The bare "src" string entry in defaultSchema.attributes.img grants unconditional allowance, so it must be
-// replaced entirely with explicit allowlists: one tuple for http/https URLs, one for base64 raster data URIs.
-// The two tuples have OR semantics — a src value passes if it matches either entry.
+// findDefinition() returns the FIRST matching entry for a given attribute name, so both allowed patterns
+// must be placed in a single tuple — multiple tuples for the same key are NOT OR'd together.
+// The bare "src" string in defaultSchema.attributes.img grants unconditional allowance and must be replaced.
 const sanitizeSchemaWithDataImage = {
   ...defaultSchema,
   attributes: {
@@ -25,10 +25,8 @@ const sanitizeSchemaWithDataImage = {
     img: [
       // Preserve all non-src attributes from the default schema (ariaDescribedBy, ariaLabel, etc.)
       ...(defaultSchema.attributes?.img || []).filter((entry) => entry !== 'src'),
-      // Allow http/https image URLs (mirrors the original "src" allowance scoped to safe protocols)
-      ['src', /^https?:\/\//i],
-      // Allow base64-encoded raster images via data URI; SVG excluded to prevent embedded script execution
-      ['src', /^data:image\/(png|jpeg|jpg|gif|webp|bmp);base64,/i],
+      // Single tuple: src must match either http/https OR a base64-encoded raster data URI (SVG excluded)
+      ['src', /^https?:\/\//i, /^data:image\/(png|jpeg|jpg|gif|webp|bmp);base64,/i],
     ],
   },
   protocols: {
