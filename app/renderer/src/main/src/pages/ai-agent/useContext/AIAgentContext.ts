@@ -1,12 +1,10 @@
 import { Dispatch, SetStateAction, createContext } from 'react'
 import { AIAgentSetting } from '../aiAgentType'
-import { AIChatData, AISession } from '../type/aiChat'
+import { AISession } from '../type/aiChat'
 
 export interface AIAgentContextStore {
   /** 全局配置 */
   setting: AIAgentSetting
-  /** 历史对话 */
-  // chats: AISession[]
   /** 当前展示对话 */
   activeChat?: AISession
 }

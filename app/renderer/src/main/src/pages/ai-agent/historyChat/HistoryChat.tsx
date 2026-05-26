@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import useAIAgentStore from '../useContext/useStore'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { useDebounce, useMemoizedFn } from 'ahooks'
@@ -129,8 +129,8 @@ const HistoryChat = memo(() => {
 
   useEffect(() => {
     const handleSessionData = async (data: string) => {
-      const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload
-      switch (payload.type) {
+      const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload | undefined
+      switch (payload?.type) {
         case 'refresh':
           if (payload.sessionId) {
             await dispatcher.refreshSession?.(payload.sessionId)
