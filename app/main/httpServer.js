@@ -149,7 +149,6 @@ service.interceptors.response.use(
     return Promise.reject(error)
   },
 )
-let cancelTokenSource = null
 /**
  * @param {Object} argParams - 额外参数
  * @param {Boolean} argParams.cancelInterrupt - 是否取消主动中断操作
@@ -165,13 +164,6 @@ function httpApi({ method, url, params, data, headers, timeout = DefaultTimeOut,
 
   let attempt = 0
   const doRequest = () => {
-    // 如果有当前的请求，取消它
-    if (cancelTokenSource) {
-      cancelTokenSource.cancel('Operation canceled due to new request.')
-    }
-    // 创建一个新的CancelToken
-    cancelTokenSource = axios.CancelToken.source()
-    let newCancelToken = cancelToken ?? cancelTokenSource.token
     return service({
       url,
       method,
@@ -179,10 +171,7 @@ function httpApi({ method, url, params, data, headers, timeout = DefaultTimeOut,
       params,
       data,
       timeout,
-      cancelToken: cancelInterrupt ? undefined : newCancelToken,
-    }).finally(() => {
-      // 请求完成后清理cancelTokenSource
-      cancelTokenSource = null
+      cancelToken: cancelInterrupt ? undefined : cancelToken,
     })
   }
   const requestWithRetry = () => {
