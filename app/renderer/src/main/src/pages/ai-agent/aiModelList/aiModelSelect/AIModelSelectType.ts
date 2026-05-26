@@ -28,6 +28,8 @@ export interface AIModelSelectListProps {
   onSelect: (v: AIModelConfig, i: number) => void
   onEdit: (v: AIModelConfig, i: number) => void
   dropdownRenderRectRef?: DOMRect
+  /** 下拉框是否展开 */
+  open?: boolean
 }
 
 export interface AIModelThinkingOptSelectProps {}

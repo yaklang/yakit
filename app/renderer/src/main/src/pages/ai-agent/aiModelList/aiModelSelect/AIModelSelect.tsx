@@ -444,6 +444,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                         })
                       }
                       dropdownRenderRectRef={dropdownRenderRectRef.current}
+                      open={open}
                     />
                   )}
                   {/* {!execute && !!lightweightModels.length && (
@@ -499,7 +500,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 })
 
 const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) => {
-  const { title, subTitle, list, onSelect, type, onEdit, dropdownRenderRectRef } = props
+  const { title, subTitle, list, onSelect, type, onEdit, dropdownRenderRectRef, open } = props
   const [currentSelectIndex, setCurrentSelectIndex] = useState<number>()
   const [currentItem, setCurrentItem] = useState<AIModelConfig>()
   const [loading, setLoading] = useState<boolean>(false)
@@ -516,6 +517,12 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
       clearHideTimer()
     }
   }, [])
+  useEffect(() => {
+    if (!open) {
+      /** 关闭下拉框的时候,清空缓存 */
+      modelNameListMapRef.current.clear()
+    }
+  }, [open])
   /** 缓存中有就取缓存中的数据，反之调用接口获取数据 */
   const getModelNameList = useMemoizedFn((item: AIModelConfig, index: number) => {
     if (!item?.Provider || isNil(index)) return
@@ -538,38 +545,41 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
     onRefreshModelNameList(item, index)
   })
   /** 强制刷新 */
-  const onRefreshModelNameList = useMemoizedFn((item: AIModelConfig, index: number) => {
-    let params = {
-      Type: item?.Provider.Type,
-      api_key: item?.Provider.APIKey,
-      domain: item?.Provider.Domain,
-      no_https: item?.Provider.NoHttps,
-      proxy: item?.Provider.Proxy,
-    }
+  const onRefreshModelNameList = useDebounceFn(
+    useMemoizedFn((item: AIModelConfig, index: number) => {
+      let params = {
+        Type: item?.Provider.Type,
+        api_key: item?.Provider.APIKey,
+        domain: item?.Provider.Domain,
+        no_https: item?.Provider.NoHttps,
+        proxy: item?.Provider.Proxy,
+      }
 
-    let modelNames: string[] = []
-    const data = modelNameListMapRef.current.get(index)
-    if (!loading) {
-      modelNameListMapRef.current.set(index, {
-        loading: true,
-        list: index === currentSelectIndex ? data?.list || [] : [],
-      })
-      setLoading(true)
-    }
-    grpcListAiModel({ Config: JSON.stringify(params) })
-      .then(({ ModelName }) => {
-        modelNames = ModelName
-      })
-      .finally(() => {
-        setTimeout(() => {
-          modelNameListMapRef.current.set(index, {
-            loading: false,
-            list: modelNames,
-          })
-          setLoading(false)
-        }, 200)
-      })
-  })
+      let modelNames: string[] = []
+      const data = modelNameListMapRef.current.get(index)
+      if (!loading) {
+        modelNameListMapRef.current.set(index, {
+          loading: true,
+          list: index === currentSelectIndex ? data?.list || [] : [],
+        })
+        setLoading(true)
+      }
+      grpcListAiModel({ Config: JSON.stringify(params) })
+        .then(({ ModelName }) => {
+          modelNames = ModelName
+        })
+        .finally(() => {
+          setTimeout(() => {
+            modelNameListMapRef.current.set(index, {
+              loading: false,
+              list: modelNames,
+            })
+            setLoading(false)
+          }, 200)
+        })
+    }),
+    { wait: 200, leading: true },
+  ).run
   const onSelectItem = useMemoizedFn((e, item: AIModelConfig, index: number) => {
     onSelect(item, index)
     setCurrentSelectIndex(undefined)
@@ -611,10 +621,9 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
 
     // 判断下方屏幕剩余高度是否足够居中显示的一半高度
     const spaceOnBottom = window.innerHeight - e.clientY
-    const halfHeight = rightContextHeight / 2
     let toTop = 0
 
-    if (spaceOnBottom >= halfHeight) {
+    if (spaceOnBottom >= rightContextHeight) {
       // 下方空间足够
       toTop = e.clientY - 24
     } else {
@@ -648,12 +657,7 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
   })
   const onEditContentChange = useMemoizedFn((v: AIModelConfig) => {
     if (isNil(currentSelectIndex)) return
-    setCurrentItem(() => ({
-      ...v,
-      Provider: {
-        ...v.Provider,
-      },
-    }))
+    setCurrentItem(cloneDeep(v))
     onEdit(v, currentSelectIndex)
   })
   return (
