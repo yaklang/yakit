@@ -135,6 +135,7 @@ const HistoryChat = memo(() => {
           if (payload.sessionId) {
             await dispatcher.refreshSession?.(payload.sessionId)
           } else {
+            handleResetSessions()
             await dispatcher.loadHistoryData?.(true)
           }
           break
