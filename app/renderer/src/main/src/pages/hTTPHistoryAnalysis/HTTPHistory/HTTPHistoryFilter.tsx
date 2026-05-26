@@ -388,11 +388,18 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
 
 HTTPHistoryFilterInner.displayName = 'HTTPHistoryFilterInner'
 
-export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = (props) => (
-  <HistoryAIReActChatProvider cacheDataStore={FlowAiStore} focusModeLoop="http_flow_analyze">
-    <HTTPHistoryFilterInner {...props} />
-  </HistoryAIReActChatProvider>
-)
+export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = (props) => {
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+  return (
+    <HistoryAIReActChatProvider
+      cacheDataStore={FlowAiStore}
+      focusModeLoop="http_flow_analyze"
+      defaultTimelineSessionID={currentRouteKey}
+    >
+      <HTTPHistoryFilterInner {...props} />
+    </HistoryAIReActChatProvider>
+  )
+}
 
 export const defalutColumnsOrder = [
   'Method',
