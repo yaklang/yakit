@@ -1,0 +1,10 @@
+{
+  "UserTable": {
+    "userName": "使用者名稱",
+    "nickName": "暱稱",
+    "lastLoginTime": "最近一次登入時間",
+    "usageDurationHours": "使用時長（h）",
+    "organization": "所屬組織",
+    "ipColumn": "ip"
+  }
+}

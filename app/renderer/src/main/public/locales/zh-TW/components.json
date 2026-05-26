@@ -1,0 +1,512 @@
+{
+  "ExportExcel": {
+    "dataExport": "資料匯出",
+    "pageNumber": "第{{page}}頁",
+    "totalItems": "共 {{total}} 條",
+    "xlsxTooLarge": "XLSX 過大：{{error}}"
+  },
+  "MilkdownEditor": {
+    "menu": {
+      "text": {
+        "label": "文字",
+        "description": "文字"
+      },
+      "heading1": {
+        "label": "一級標題",
+        "description": "一級標題: #空格"
+      },
+      "heading2": {
+        "label": "二級標題",
+        "description": "二級標題: ##空格"
+      },
+      "heading3": {
+        "label": "三級標題",
+        "description": "三級標題: ###空格"
+      },
+      "orderedList": {
+        "label": "有序列表",
+        "description": "有序列表: 1.空格"
+      },
+      "unorderedList": {
+        "label": "無序列表",
+        "description": "無序列表: -空格或*空格"
+      },
+      "task": {
+        "label": "任務",
+        "description": "任務"
+      },
+      "codeBlock": {
+        "label": "程式碼塊",
+        "description": "程式碼塊:```空格"
+      },
+      "quote": {
+        "label": "引用",
+        "description": "引用: >空格"
+      },
+      "highLight": {
+        "label": "高亮",
+        "description": "高亮: :::success空格"
+      },
+      "file": {
+        "label": "上傳檔案",
+        "description": "上傳檔案"
+      },
+      "divider": {
+        "label": "分割線",
+        "description": "分割線: ***"
+      }
+    },
+    "highlight": {
+      "remove": "清除高亮",
+      "note": "灰色:  :::note空格",
+      "success": "綠色:  :::success空格",
+      "danger": "紅色:  :::danger空格",
+      "warning": "黃色:  :::warning空格"
+    },
+    "tooltip": {
+      "bold": "粗體:**文字**空格",
+      "strikethrough": "刪除線:~文字~空格",
+      "italic": "斜體:*文字*空格",
+      "underline": "下劃線: :u[文字]",
+      "codeBlock": "程式碼塊:```空格"
+    },
+    "slash": {
+      "base": "基礎",
+      "common": "常用"
+    },
+    "mention": {
+      "selectUser": "請選擇使用者",
+      "searchUserHint": "請搜尋後選擇@使用者",
+      "sendNotification": "同時傳送通知",
+      "apiNotepadEitFailed": "apiNotepadEit 失敗：{{error}}"
+    },
+    "customMention": {
+      "userIdMissing": "使用者id不存在",
+      "sendMentionPrompt": "傳送提及通知？",
+      "notify": "通知"
+    },
+    "utils": {
+      "selectFile": "請選擇檔案",
+      "fileTooLarge": "檔案大小不能超過1G",
+      "imageTooLarge": "圖片大小不能超過1M",
+      "uploadImageFailed": "上傳圖片失敗：{{error}}",
+      "convertSelectionFailed": "[{{nodeType}}]convertSelectionByNode執行失敗：{{error}}"
+    },
+    "initEditor": {
+      "imageTooLarge": "圖片大小不能超過1M",
+      "collabRouteRequired": "當enableCollab為true,routeInfo必傳",
+      "documentMissing": "文件不存在/已經被刪除",
+      "errorReason": "錯誤原因:",
+      "saveCurrentDocument": "儲存當前文件",
+      "closePage": "關閉頁面",
+      "exception": "異常"
+    },
+    "onlineError": {
+      "exception": "異常",
+      "errorReason": "錯誤原因:",
+      "closePage": "關閉頁面"
+    },
+    "collab": {
+      "getWSUrlError": "getWSUrl錯誤：{{error}}",
+      "wsUrlInvalid": "wsUrl資料錯誤"
+    },
+    "customFile": {
+      "unknownName": "未知命名",
+      "uploadFailedRetry": "上傳失敗，點選重新上傳",
+      "downloadFile": "下載檔案",
+      "copyLink": "複製連結",
+      "refreshFileInfo": "重新獲取檔案資訊",
+      "loadingFile": "檔案載入中...",
+      "downloadingFile": "{{fileName}}下載中...",
+      "downloading": "下載中",
+      "getFileInfoErrorTitle": "獲取檔案資訊錯誤",
+      "getLinkInfoError": "獲取連結資訊錯誤：{{error}}",
+      "getFileInfoError": "獲取檔案資訊失敗：{{error}}",
+      "getLocalFileNameFailed": "getLocalFileName 失敗：{{error}}"
+    }
+  },
+  "ImportExportModal": {
+    "exportDone": "匯出完成",
+    "exporting": "匯出中...",
+    "importDone": "匯入完成",
+    "importing": "匯入中...",
+    "exportHint": "遠端模式下匯出後請開啟~Yakit\\yakit-projects\\projects路徑檢視匯出檔案，檔名無需填寫字尾",
+    "importHint": "匯入外部資源存在潛在風險，可能會被植入惡意程式碼或Payload，造成資料洩露、系統被入侵等嚴重後果。請務必謹慎考慮引入外部資源的必要性，並確保資源來源可信、內容安全。如果確實需要使用外部資源，建議優先選擇官方釋出的安全版本，或自行編寫可控的資料來源。同時，請保持系統和軟體的最新版本，及時修復已知漏洞，做好日常安全防護。"
+  },
+  "ConfigPrivateDomain": {
+    "enterpriseLoginSuccess": "企業登入成功",
+    "enterpriseLoginFailed": "企業登入失敗：{{error}}",
+    "privateDomainSetSuccess": "私有域設定成功",
+    "privateDomainSetFailed": "設定私有域失敗：{{error}}",
+    "passwordRules": "密碼為8-20位，且必須包含大小寫字母、數字及特殊字元",
+    "privateDomainHasSpace": "私有域地址存在空格",
+    "enterValidPrivateDomain": "請輸入符合要求的私有域地址",
+    "enterpriseLogin": "企業登入",
+    "privateDomainAddress": "私有域地址",
+    "enterPrivateDomain": "請輸入你的私有域地址",
+    "setProxy": "設定代理",
+    "proxyHelp": "特殊情況無法訪問外掛商店時，可設定代理進行訪問",
+    "username": "使用者名稱",
+    "enterUsername": "請輸入你的使用者名稱",
+    "password": "密碼",
+    "enterPassword": "請輸入你的密碼"
+  },
+  "MessageCenter": {
+    "applyModify": "申請修改",
+    "approved": "稽覈透過",
+    "rejected": "稽覈不透過",
+    "comment": "評論",
+    "mergeApproved": "透過合併",
+    "mergeRejected": "拒絕合併",
+    "replied": "回覆了",
+    "deleted": "刪除了",
+    "yourPlugin": "了您的外掛：{{scriptName}}",
+    "yourPluginReview": "了你的外掛：{{scriptName}}，請在日誌中稽覈",
+    "yourComment": "您的評論",
+    "yourCommentWithText": "您的評論：{{text}}",
+    "imageCount": "[圖片] * {{count}}",
+    "atYou": "{{user}}在{{title}}文件@你",
+    "newTask": "收到新任務",
+    "taskName": "任務名稱：{{taskName}}",
+    "issueTime": "下發時間：{{time}}",
+    "taskDescription": "任務描述：{{description}}",
+    "endTask": "結束任務",
+    "endTime": "結束時間：{{time}}",
+    "taskCanceled": "任務取消",
+    "canceledHint": "已取消，可以自行刪除對應專案",
+    "admin": "管理員",
+    "auditor": "稽覈員",
+    "trusted": "信任使用者",
+    "noMessages": "暫無訊息",
+    "loginToView": "登入後才可檢視訊息",
+    "title": "訊息中心",
+    "markAllRead": "全部已讀",
+    "unread": "未讀",
+    "all": "全部",
+    "duplicateProjectTitle": "存在重名專案：",
+    "duplicateProjectHint": "可覆蓋專案，將刪除本地專案後重建專案；或自行修改本地專案名稱後，點選訊息中心對應任務通知重新建立任務",
+    "receivedNewTasks": "收到新任務（將自動建立任務專案）：",
+    "endTasks": "結束任務：",
+    "taskNotification": "任務通知",
+    "ok": "好的",
+    "createTaskError": "建立任務專案異常",
+    "coverProject": "覆蓋專案",
+    "later": "稍後處理",
+    "notepadNotFound": "未找到筆記本資訊",
+    "judgeRepeatError": "校驗任務重名錯誤：{{error}}",
+    "getTaskNotificationError": "獲取任務通知錯誤：{{error}}",
+    "createTaskProjectSuccess": "建立任務專案成功：{{successInfo}}",
+    "createTaskProjectFailed": "建立任務專案失敗：{{failedInfo}}"
+  },
+  "JsonFormWrapper": {
+    "EditTable": {
+      "field": "該欄位",
+      "enterField": "請輸入 {{field}}",
+      "fillField": "請填寫 {{field}}",
+      "parseTableFailed": "解析表格失敗：{{error}}",
+      "currentRowInvalid": "當前行校驗未透過",
+      "maxItemsReached": "已達最大數量{{maxItems}}",
+      "addRow": "新增一行資料"
+    }
+  },
+  "ShowInBrowser": {
+    "buildParamsFailed": "展示 Response 失敗，構建引數失敗，確保傳入 HTTPFlow 或 HTTPResponse Uint8Array",
+    "confirmOpenTitle": "確認在瀏覽器中開啟",
+    "infoMessage": "本操作會啟用本地架設的高位埠的伺服器，設定 Response 來檢視頁面渲染效果，無需設定代理；",
+    "confirmOpen": "確認開啟",
+    "showResponseFailed": "展示 Response 失敗，{{error}}"
+  },
+  "playground": {
+    "ThirdPartyBinaryManager": {
+      "title": "第三方二進位制檔案管理",
+      "notInstalled": "未安裝",
+      "checking": "檢查中...",
+      "ready": "就緒",
+      "abnormal": "異常",
+      "fetchListFailed": "獲取二進位制檔案列表失敗：{{error}}",
+      "installStarting": "開始安裝 {{name}}",
+      "uninstallSuccess": "解除安裝 {{name}} 成功",
+      "startSuccess": "啟動 {{name}} 成功",
+      "name": "名稱",
+      "description": "描述",
+      "installPath": "安裝路徑",
+      "status": "狀態",
+      "installNewTool": "安裝新工具",
+      "installModalTitle": "安裝第三方工具",
+      "cancelInstall": "取消安裝",
+      "installing": "安裝中...",
+      "startInstall": "開始安裝",
+      "toolName": "工具名稱",
+      "enterToolName": "請輸入工具名稱",
+      "enterToolNamePlaceholder": "請輸入要安裝的工具名稱",
+      "proxySettings": "代理設定",
+      "proxyPlaceholder": "可選：http://proxy:port",
+      "forceReinstall": "強制重新安裝",
+      "startModalTitle": "啟動 {{name}}",
+      "commandLineArgs": "命令列引數",
+      "commandLineArgsPlaceholder": "可選：輸入命令列引數，空格分隔"
+    },
+    "KnowledgeEntryTable": {
+      "searchFailed": "搜尋知識條目失敗：{{error}}",
+      "createSuccess": "建立知識條目成功",
+      "createFailed": "建立知識條目失敗：{{error}}",
+      "updateSuccess": "更新知識條目成功",
+      "updateFailed": "更新知識條目失敗：{{error}}",
+      "deleteSuccess": "刪除知識條目成功",
+      "deleteFailed": "刪除知識條目失敗：{{error}}",
+      "createIndexSuccess": "為知識條目 \"{{title}}\" 建立索引成功",
+      "createIndexFailed": "為知識條目建立索引失敗：{{error}}",
+      "title": "標題",
+      "type": "型別",
+      "importance": "重要度",
+      "keywords": "關鍵詞",
+      "summary": "摘要",
+      "sourcePage": "源頁碼",
+      "indexing": "索引中...",
+      "createIndexForEntry": "為此條目建立向量索引",
+      "index": "索引",
+      "deleteConfirm": "確認刪除此知識條目嗎？",
+      "selectKnowledgeBaseFirst": "請先選擇一個知識庫",
+      "titleWithBase": "知識條目 - {{name}}",
+      "searchPlaceholder": "搜尋知識條目...",
+      "addEntry": "新增條目",
+      "editEntry": "編輯知識條目",
+      "knowledgeTitle": "知識標題",
+      "enterKnowledgeTitle": "請輸入知識標題",
+      "knowledgeType": "知識型別",
+      "enterKnowledgeType": "請輸入知識型別",
+      "importanceScore": "重要度評分",
+      "enterImportanceScore": "請輸入重要度評分",
+      "addKeyword": "新增關鍵詞",
+      "knowledgeDetails": "知識詳情",
+      "enterKnowledgeDetails": "請輸入知識詳情",
+      "enterSummary": "請輸入摘要",
+      "potentialQuestions": "潛在問題",
+      "enterPotentialQuestion": "請輸入潛在問題",
+      "addQuestion": "新增問題"
+    },
+    "KnowledgeBaseList": {
+      "fetchFailed": "獲取知識庫列表失敗：{{error}}",
+      "indexingInProgress": "正在為知識庫建立索引...",
+      "indexBuildSuccess": "知識庫索引建立完成",
+      "indexBuildFailed": "建立索引失敗：{{error}}",
+      "indexBuildCancelled": "已取消索引建立狀態顯示",
+      "createSuccess": "建立知識庫成功",
+      "createFailed": "建立知識庫失敗：{{error}}",
+      "updateSuccess": "更新知識庫成功",
+      "updateFailed": "更新知識庫失敗：{{error}}",
+      "deleteSuccess": "刪除知識庫成功",
+      "deleteFailed": "刪除知識庫失敗：{{error}}",
+      "title": "知識庫列表",
+      "searchPlaceholder": "搜尋知識庫",
+      "addKnowledgeBase": "新增知識庫",
+      "empty": "暫無知識庫",
+      "type": "型別",
+      "buildIndex": "建立索引",
+      "aiQa": "AI問答",
+      "deleteConfirm": "刪除後無法恢復，確認刪除此知識庫嗎？",
+      "totalRecords": "共 {{count}} 條記錄",
+      "editKnowledgeBase": "編輯知識庫",
+      "knowledgeBaseName": "知識庫名稱",
+      "enterKnowledgeBaseName": "請輸入知識庫名稱",
+      "knowledgeBaseDescription": "知識庫描述",
+      "enterKnowledgeBaseDescription": "請輸入知識庫描述",
+      "knowledgeBaseType": "知識庫型別",
+      "enterKnowledgeBaseType": "請輸入知識庫型別"
+    },
+    "KnowledgeBaseQA": {
+      "enterQuestion": "請輸入問題",
+      "selectKnowledgeBase": "並選擇知識庫",
+      "thinking": "正在思考中...",
+      "queryFailed": "查詢失敗：{{error}}",
+      "queryStopped": "查詢已停止",
+      "stopQueryFailed": "停止查詢失敗",
+      "relatedKnowledge": "相關知識 ({{count}}條)",
+      "importance": "重要性:",
+      "summary": "摘要",
+      "details": "詳情",
+      "keywords": "關鍵詞",
+      "sourcePage": "來源頁碼",
+      "clearChat": "清空對話",
+      "selectKnowledgeBaseFirst": "請先選擇一個知識庫",
+      "startChat": "開始與 {{name}} 對話吧！",
+      "allCollections": "所有集合",
+      "hypotheticalAnswer": "hypothetical_answer：假設回答",
+      "generalizeQuery": "generalize_query：泛化回答",
+      "splitQuery": "split_query：多次查詢",
+      "hypotheticalAnswerWithSplit": "hypothetical_answer_with_split：假設並多次查詢",
+      "questionPlaceholder": "請輸入您的問題...",
+      "parseResultDataFailed": "結果資料解析失敗：{{data}}",
+      "error": "錯誤",
+      "viewDetails": "檢視詳細資訊",
+      "hideDetails": "隱藏詳細資訊",
+      "hide": "隱藏",
+      "relatedKnowledgeToggle": "相關知識"
+    },
+    "KnowledgeBaseManager": {
+      "title": "知識庫管理",
+      "aiQa": "AI問答",
+      "qaTitle": "AI問答 - {{name}}",
+      "knowledgeBase": "知識庫"
+    },
+    "KnowledgeBaseGraphDemo": {
+      "techDocs": "yakit 技術文件"
+    },
+    "RagEntryTable": {
+      "fetchFailed": "獲取向量儲存條目失敗：{{error}}",
+      "fetchDocumentFailed": "獲取文件內容失敗：{{error}}",
+      "contentPreview": "內容預覽",
+      "metadata": "後設資料",
+      "noMetadata": "無後設資料",
+      "vectorDimension": "向量維度",
+      "createdAt": "建立時間",
+      "title": "RAG 向量條目",
+      "selectCollectionFirst": "請先選擇一個向量儲存集合",
+      "titleWithCollection": "RAG 向量條目 - {{name}}",
+      "searchPlaceholder": "搜尋條目內容...",
+      "totalCount": "共 {{count}} 條",
+      "detailTitle": "向量儲存條目詳情",
+      "basicInfo": "基本資訊",
+      "entryId": "條目ID",
+      "collectionId": "集合ID",
+      "contentLength": "內容長度",
+      "metadataLength": "後設資料長度",
+      "characters": "字元",
+      "relatedKnowledgeEntry": "關聯知識庫條目",
+      "titleLabel": "標題",
+      "typeLabel": "型別",
+      "summaryLabel": "摘要",
+      "detailsLabel": "詳細內容",
+      "keywordsLabel": "關鍵詞",
+      "importanceLabel": "重要度",
+      "sourcePageLabel": "源頁碼",
+      "potentialQuestionsLabel": "潛在問題",
+      "vectorDataFirst20": "向量資料 (前20維)",
+      "moreDimensions": "... 還有 {{count}} 維",
+      "none": "無"
+    },
+    "RagCollectionList": {
+      "fetchFailed": "獲取向量儲存集合失敗：{{error}}",
+      "title": "RAG 向量儲存集合",
+      "searchPlaceholder": "搜尋集合名稱",
+      "empty": "暫無向量儲存集合",
+      "count": "{{count}} 條",
+      "model": "模型",
+      "unspecified": "未指定",
+      "dimension": "維度",
+      "unknown": "未知",
+      "distanceFunc": "距離函式",
+      "collectionId": "集合ID",
+      "detailTitle": "向量儲存集合詳情",
+      "basicInfo": "基本資訊",
+      "collectionName": "集合名稱",
+      "vectorCount": "向量數量",
+      "embeddingModel": "嵌入模型",
+      "vectorDimension": "向量維度",
+      "distanceMeasure": "距離度量",
+      "mParameter": "M引數",
+      "mlParameter": "Ml引數",
+      "efSearch": "EfSearch",
+      "efConstruct": "EfConstruct",
+      "notSet": "未設定",
+      "description": "描述資訊",
+      "totalRecords": "共 {{count}} 條記錄"
+    },
+    "SpaceEngineOperator": {
+      "engine": "引擎",
+      "zone": "零零測繪",
+      "unset": "不設定",
+      "setEngineFirst": "請先設定空間引擎",
+      "usedQuota": "已用額度: {{count}}",
+      "remainingQuota": "剩餘額度: {{count}}",
+      "searchCondition": "搜尋條件",
+      "scan": "掃描",
+      "maxPage": "最大頁數",
+      "maxRecord": "最大記錄數",
+      "randomDelay": "隨機延遲(秒)",
+      "retryTimes": "重試次數"
+    },
+    "HybridScanDemo": {
+      "configure": "設定引數",
+      "startSuccess": "啟動成功，任務ID: {{token}}",
+      "sendTargetsSuccess": "傳送掃描目標與外掛成功",
+      "defaultInput": "預設INPUT:",
+      "pluginsEnabled": "外掛啟用：",
+      "results": "執行結果",
+      "totalTargets": "總目標",
+      "finishedTargets": "已完成目標",
+      "activeTargets": "正在執行的目標",
+      "totalTasks": "總任務量",
+      "activeTasks": "正在執行的任務",
+      "finishedTasks": "已經完成的任務",
+      "target": "執行目標"
+    },
+    "HybridScanTaskTable": {
+      "taskId": "任務ID",
+      "taskTitle": "任務：{{taskId}}",
+      "status": "當前狀態",
+      "startTask": "啟動任務",
+      "stopTask": "停止任務",
+      "totalTargets": "總目標",
+      "finishedTargets": "已完成目標",
+      "activeTargets": "正在執行的目標",
+      "totalTasks": "總任務量",
+      "activeTasks": "正在執行的任務",
+      "finishedTasks": "已經完成的任務",
+      "target": "執行目標",
+      "selectTask": "請選擇一個任務"
+    },
+    "PcapXDemo": {
+      "configure": "設定引數",
+      "stopSniffing": "停止嗅探",
+      "startSniffing": "開始嗅探",
+      "netInterface": "網絡卡",
+      "defaultInterface": "預設網絡卡:",
+      "viewTable": "檢視表格",
+      "rawPacket": "原始資料包",
+      "tcpData": "TCP資料",
+      "activeSession": "活躍會話",
+      "sessionProtocol": "會話協議",
+      "linkLayerProtocol": "鏈路層協議",
+      "networkLayerProtocol": "網路層協議",
+      "transportLayerProtocol": "傳輸層協議"
+    },
+    "DemoPacketTable": {
+      "source": "來源",
+      "destination": "目標",
+      "protocol": "協議",
+      "length": "長度",
+      "info": "資訊"
+    },
+    "DemoTCPReassembled": {
+      "source": "來源",
+      "destination": "目標",
+      "protocol": "協議",
+      "length": "長度"
+    },
+    "DemoTrafficSessionTable": {
+      "type": "型別",
+      "deviceType": "裝置型別",
+      "source": "來源",
+      "destination": "目標",
+      "protocol": "協議"
+    },
+    "PacketListDemo": {
+      "packet": "資料包",
+      "tcpReassembled": "TCP資料幀",
+      "realtime": "實時"
+    },
+    "RagManager": {
+      "title": "RAG 向量儲存管理"
+    },
+    "RiskTableDemo": {
+      "name": "漏洞名稱"
+    },
+    "ChaosMakerRulesDemo": {
+      "rule": "規則",
+      "type": "型別",
+      "cve": "CVE",
+      "protocol": "協議"
+    }
+  }
+}

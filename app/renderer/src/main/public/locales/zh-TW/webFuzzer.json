@@ -1,0 +1,715 @@
+{
+  "WebFuzzer": {
+    "ShareImport": {
+      "shareNeedPassword": "該分享需要輸入密碼!",
+      "passwordVerifyFailed": "密碼驗證失敗：",
+      "getShareDataFailed": "獲取分享資料失敗：",
+      "openWebFuzzerFailed": "開啟 Web Fuzzer 失敗：",
+      "saveHttpHistoryShareFailed": "儲存 HttpHistory 分享資料失敗：",
+      "shareId": "分享id",
+      "pleaseEnterShareId": "請輸入分享id",
+      "password": "密碼",
+      "pleaseEnterPassword": "請輸入密碼",
+      "thisFieldIsRequired": "該項為必填"
+    }
+  },
+  "WebFuzzerPage": {
+    "config": "配置",
+    "rule": "規則",
+    "sequence": "序列",
+    "concurrency": "組併發",
+    "AI": "AI"
+  },
+  "WebFuzzerAiRequestCompare": {
+    "title": "請求對比",
+    "leftTitle": "當前 Web Fuzzer 請求",
+    "rightTitle": "AI 內容"
+  },
+  "PacketScanButton": {
+    "packetScan": "掃描"
+  },
+  "WebFuzzerResponseExtractor": {
+    "cannotGenerateExtractionRule": "無法生成資料提取規則：",
+    "autoGenerateExtractionRule": "自動生成提取規則",
+    "regexExtractWithPrefixSuffix": "前字尾正則提取",
+    "singleRegexExtract": "單正則提取",
+    "responseCount": "共{{responses}}個響應",
+    "extractData": "提取資料",
+    "prefixRegex": "字首（正則）：",
+    "suffixRegex": "字尾（正則）：",
+    "noExtractionRuleSelected": "未選中提取規則",
+    "autoExtractRegex": "自動提取正則：",
+    "extractedTotal": "已提/總量：",
+    "confirmClearExtractedData": "確定要清除已提取資料？",
+    "downloadFile": "下載檔案",
+    "displayInTable": "在表中展示",
+    "dataSentSuccessfully": "資料傳送成功",
+    "dataSendFailed": "資料傳送失敗："
+  },
+  "GeneralExporterForm": {
+    "generateExportFile": "生成匯出檔案",
+    "exportFields": "匯出欄位",
+    "exportJson": "匯出 JSON",
+    "exportCsv": "匯出 CSV",
+    "outputToDirectory": "輸出到目錄",
+    "optionalDefaultYakitTempDir": "可為空，預設為 {{edition}} 臨時目錄",
+    "fileName": "檔名",
+    "asteriskAsRandom": "'*' 可作為隨機字串填空，不需要填寫字尾",
+    "generateDataToLocalFile": "生成資料到本地檔案",
+    "requestPacket": "請求包",
+    "responsePacket": "響應包"
+  },
+  "GeneralExporter": {
+    "exportFinished": "匯出結束",
+    "sendGeneratedFileConfigSuccess": "傳送生成檔案配置成功...",
+    "getGeneratedFileClickToOpen": "獲取生成的檔案（點選開啟檔案位置）"
+  },
+  "HTTPFuzzerPage": {
+    "closeMenuPrompt": "關閉一級選單會關閉一級選單下的所有二級選單？",
+    "clearOldDataFailed": "清空老資料失敗：",
+    "wfHistoryDataRestoreFailed": "WF歷史資料恢復失敗：",
+    "fuzzTestRequestFailed": "提交模糊測試請求失敗：",
+    "hotReload": "熱載入",
+    "buildRequest": "構造請求",
+    "syncConfig": "同步配置",
+    "allTraffic": "全部流量",
+    "response_overflow": "響應數量超過{{maxData}}，為避免前端渲染壓力過大，這裡將丟棄部分資料包進行展示，請點選",
+    "view_all_suffix": "檢視所有資料",
+    "advanced_filter_suggestion": "需要進行高階篩選，多條件組合查詢或其他複雜操作時，建議點選跳轉到",
+    "performAction": "進行操作",
+    "webFuzzerDemo": "WebFuzzer 爆破動畫演示",
+    "bruteForceExample": "爆破示例",
+    "AI_new_conversation": "新建對話",
+    "followRedirects": "跟隨重定向",
+    "generatePathTemplate": "生成為 Path 模板",
+    "generateRawTemplate": "生成為 Raw 模板",
+    "generateYamlTemplate": "生成 Yaml 模板",
+    "editAndSendRequest": "請在左邊編輯併傳送一個 HTTP 請求/模糊測試",
+    "fuzzTestResultsInfo": "本欄結果針對模糊測試的多個 HTTP請求結果展示做了最佳化，可以自動識別單個/多個請求的展示。",
+    "responseLimitExceeded": "響應數量超過前端限制請確認開啟",
+    "saveHttpTrafficSettings": "儲存HTTP流量設定",
+    "matchingInProgress": "匹配中",
+    "waitCurrentTaskFinish": "當前請求尚未結束，請稍候",
+    "retryNoFailedTask": "當前沒有需要重試的請求",
+    "run_function_start": "執行函式-開始：",
+    "run_function_end": "執行函式-結束：",
+    "send_complete": "傳送完成",
+    "success_and_failure_length": "成功與失敗的長度",
+    "success_failure_count": "成功：{{success}}——失敗：{{failed}}",
+    "send_request": "傳送請求",
+    "parameter": "引數",
+    "trafficAnalysisMode": "流量分析模式",
+    "trafficAnalysis": "流量分析",
+    "aiCasualRejectAll": "全部放棄",
+    "aiCasualAcceptAll": "全部應用",
+
+    "aiCasualAcceptAllMetaTitle": "即將應用的配置",
+    "responseTabManual": "手動發包",
+    "responseTabAi": "AI發包",
+    "aiTabTitle": "發包記錄"
+  },
+  "FuzzerExtraShow": {
+    "responsesDiscarded": "已丟棄[{{droppedCount}}]個響應",
+    "proxy": "代理：",
+    "systemProxy": "系統代理：",
+    "realHost": "真實Host：",
+    "matchSuccess": "匹配成功",
+    "matchFailed": "匹配失敗",
+    "enableChunkedTransfer": "開啟分塊傳輸"
+  },
+  "SecondNodeExtra": {
+    "enterTargetResponse": "請輸入定位響應",
+    "viewExtractionResults": "檢視提取結果",
+    "viewHeader": "檢視Header",
+    "viewBody": "檢視Body",
+    "targetFileNotExist": "目標檔案已不存在!",
+    "fullResponse": "完整響應",
+    "hideResponseInfo": "隱藏響應資訊",
+    "showResponseInfo": "顯示響應資訊",
+    "highlightColor": "標註顏色",
+    "statusCode": "狀態碼",
+    "responseSize": "響應大小",
+    "latency": "延遲",
+    "extractData": "提取資料",
+    "matchOnly": "僅匹配",
+    "matchOnlyConfirm": "操作僅匹配會結束暫停狀態，是否確定操作？",
+    "noWebFuzzerResponse": "無 Web Fuzzer Response 以供提取資訊",
+    "extractResponseData": "提取響應資料",
+    "exportData": "匯出資料",
+    "exportAll": "匯出所有",
+    "exportPayloadOnly": "僅匯出 Payload",
+    "extractFromResponsePacket": "提取響應資料包中內容",
+    "exportExtractedData": "匯出提取資料",
+    "matchAndExtract": "匹配/提取",
+    "exportPayload": "匯出 Payload"
+  },
+  "SecondNodeTitle": {
+    "oversizedResponse": "超大響應",
+    "contentTypeModified": "Content-Type被修改，修改前的內容展示在對應欄位旁",
+    "success": "成功[{{count}}]",
+    "failure": "失敗[{{count}}]",
+    "concurrencyLoad": "併發/負載"
+  },
+  "EditorOverlayWidget": {
+    "dnsTime": "DNS耗時：",
+    "remoteAddress": "遠端地址：",
+    "proxy": "代理：",
+    "responseTime": "響應時間：",
+    "totalTime": "總耗時："
+  },
+  "ResponseViewer": {
+    "hideResponseInfo": "隱藏響應資訊",
+    "showResponseInfo": "顯示響應資訊",
+    "matcher": "匹配器",
+    "extractor": "提取器",
+    "copyUrlFailed": "複製 URL 失敗：包含 Fuzz 標籤可能會導致 URL 不完整",
+    "requestFailedOrServerError": "請求失敗或服務端（代理）異常",
+    "networkTimeout": "網路超時（請檢查目標主機是否線上？）",
+    "dnsOrHostError": "DNS 錯誤或主機錯誤 (請檢查域名是否可以被正常解析？)",
+    "cannotSetProxy": "無法設定代理（請檢查代理是否可用）",
+    "serverNoResponse": "服務端沒有任何返回資料",
+    "detailedReason": "詳細原因：",
+    "xContentTypeOptionsNotice": "返回包中設定了X-Content-Type-Options欄位，content-type是否應該被修復請關注此欄位",
+    "unknownReason": "未知原因"
+  },
+  "ResponseViewerSecondNode": {
+    "extractContent": "提取內容",
+    "none": "暫無"
+  },
+  "BlastingAnimationAemonstration": {
+    "bruteForceId": "爆破 ID",
+    "bruteForcePassword": "爆破密碼",
+    "bruteForceAccount": "爆破賬號"
+  },
+  "InsertFileFuzzTag": {
+    "selectedFilenameEmpty": "選中的檔名為空",
+    "fileContent": "檔案內容",
+    "readFileByLine": "按行讀取檔案",
+    "allInFolder": "資料夾內所有",
+    "selectPath": "選擇路徑",
+    "confirmSelection": "確定所選內容"
+  },
+  "InsertTextToFuzzTag": {
+    "generateTempDictionaryFile": "生成臨時字典檔案：",
+    "generateTempDictionaryFailed": "生成臨時字典失敗：",
+    "fileContent": "檔案內容",
+    "readFileByLine": "按行讀取檔案",
+    "text": "文字",
+    "confirmInsertTag": "確定插入標籤"
+  },
+  "HTTPFuzzerHotPatch": {
+    "enableModifiedHotReload": "是否啟用修改的熱載入程式碼和配置",
+    "updateTemplateSuccess": "更新模板 {{tempName}} 成功",
+    "updateTemplateFailed": "更新模板 {{tempName}} 失敗：",
+    "debugInsertHotReload": "除錯 / 插入熱載入程式碼",
+    "resultDisplay": "結果展示",
+    "copyFuzzResult": "複製 Fuzz 結果",
+    "copyFuzzTag": "複製 Fuzz 標籤",
+    "templateContent": "模版內容",
+    "clickToCopy": "點選複製",
+    "insertAtEditorPosition": "插入編輯器位置",
+    "hotReloadCode": "熱載入程式碼",
+    "resetHotReloadWarning": "點選該按鈕將會重置熱載入程式碼，程式碼可能會丟失，請謹慎操作",
+    "expandEditor": "擴大編輯器",
+    "sharedHotReloadCode": "共用熱載入程式碼",
+    "webFuzzerHotReloadNotice": "開啟以後webfuzzer標籤將共用當前熱載入程式碼，但只對新建標籤頁生效",
+    "updateAndSaveTemplate": "更新當前模板並儲存",
+    "saveTemplate": "儲存模板",
+    "enableSuccess": "啟用成功",
+    "debugNotice": "除錯須知: 除錯執行將會僅最多執行20秒 或 渲染 Payload 最多 300 條",
+    "debugCancelled": "除錯已取消",
+    "debugFailed": "除錯失敗",
+    "engineConsole": "引擎Console",
+    "response_decrypt_aes_cbc_hex": "響應解密（AES-CBC/Hex）",
+    "bruteforce_aes_cbc": "爆破 AES-CBC",
+    "bruteforce_rsa_oaep": "爆破 RSA-OAEP",
+    "bruteforce_csrf_with_token": "爆破 CSRF（帶有保護用 token）",
+    "crack_signature": "破解 Signature",
+    "third_party_captcha_bypass": "第三方驗證碼繞過",
+    "source": "原始碼",
+    "executionResult": "執行結果",
+    "webFuzzerHotReloadOpenTips": "啟用後,每次傳送請求將執行當前最新熱載入內容"
+  },
+  "HTTPFuzzerHistorySelector": {
+    "confirmDeletePackets": "將會刪除資料包與快取資料，確定刪除嗎？",
+    "quickSearch": "快速搜尋：",
+    "totalFlows": "共{{HTTPFlowTotal}}個",
+    "successCount": "成功：{{HTTPFlowSuccessCount}}個"
+  },
+  "HTTPFuzzerClickEditorMenu": {
+    "insertTag": "插入標籤",
+    "aiTool": "AI工具",
+    "commonTags": "常用標籤",
+    "save_codec_flow": "呼叫codec模組儲存的codec flow",
+    "reverse_regex_single": "反向正則（單個）",
+    "reverse_regex_all": "反向正則（全部）",
+    "timestamp_seconds": "時間戳（秒）",
+    "captcha": "驗證碼",
+    "random_number": "隨機數",
+    "random_string": "隨機字串",
+    "integer_range": "整數範圍",
+    "insert_dictionary": "插入字典",
+    "insert_temp_dictionary": "插入臨時字典",
+    "insert_file": "插入檔案"
+  },
+  "AIPluginComponent": {
+    "getPlugin": "獲取外掛"
+  },
+  "EncodeComponent": {
+    "md5Encode": "Md5 編碼",
+    "base64Encode": "Base64 編碼",
+    "base64ThenUrlEncode": "先 Base64 後 URL 編碼",
+    "hexEncode": "HEX 編碼（十六進位制編碼）",
+    "htmlEncode": "HTML 編碼",
+    "urlEncode": "URL 編碼",
+    "urlEncodeSpecial": "URL 編碼（只編碼特殊字元）"
+  },
+  "DecodeLableComponent": {
+    "base64Decode": "Base64解碼",
+    "doubleUrlDecode": "雙重URL解碼",
+    "hexDecode": "十六進位制解碼",
+    "htmlDecode": "HTML解碼",
+    "urlForceDecode": "URL強制解碼",
+    "unicodeChineseDecode": "Unicode中文解碼"
+  },
+  "HTTPFuzzerRangeEditorMenu": {
+    "encode": "編碼",
+    "decode": "解碼",
+    "smartDecode": "智慧解碼"
+  },
+  "FuzzerResponseTableEx": {
+    "request": "請求",
+    "responseSize": "響應大小",
+    "responseSimilarity": "響應相似度",
+    "httpHeaderSimilarity": "HTTP頭相似度",
+    "latencyMs": "延遲(ms)",
+    "failureReason": "失敗原因",
+    "failureContentNotice": "如果請求失敗才會有內容~"
+  },
+  "WebFuzzerNewEditor": {
+    "insertTagOrDictionary": "插入標籤/字典",
+    "insertEmptyByteTag": "插入空位元組標籤：{{hexd(00)}}",
+    "insertTempDictionary": "插入臨時字典",
+    "insertFuzzDictionaryTag": "插入模糊測試字典標籤",
+    "insertHotReloadTag": "插入熱載入標籤",
+    "insertFileTag": "插入檔案標籤",
+    "copyUrlFailed": "複製 URL 失敗：包含 Fuzz 標籤可能會導致 URL 不完整"
+  },
+  "EncodeTag": {
+    "encodeTagIntro": "編碼標籤介紹"
+  },
+  "FuzzerPageSetting": {
+    "getSequenceConfigKeyFailed": "獲取序列配置摺疊面板的啟用key失敗："
+  },
+  "RpsAndCpsLineChart": {
+    "currentPacketCount": "當前發包數：",
+    "currentConnectionCount": "當前連線數："
+  },
+  "RequestDelayStackedAreaChart": {
+    "tlsHandshake": "TLS握手",
+    "tcpConnection": "TCP連線",
+    "totalDuration": "總時長",
+    "requestLatency": "請求時延"
+  },
+  "FuzzerConcurrentLoad": {
+    "packetsPerSecond5min": "每秒發包數（5min）",
+    "connectionsPerSecond5min": "每秒連線數（5min）",
+    "responseLatency": "響應時延"
+  },
+  "WebFuzzerSynSetting": {
+    "wfPageDataEmpty": "WF頁面資料為空",
+    "syncDataPageNotFound": "同步資料頁面未找到",
+    "dataSourcePageTagName": "資料來源頁面標籤名：",
+    "syncContent": "同步內容",
+    "pleaseSelectSyncContent": "請選中同步的內容",
+    "syncScope": "同步範圍",
+    "pleaseSelectPageToSync": "請選擇需要同步的頁面",
+    "sync": "同步",
+    "config": "配置",
+    "rule": "規則",
+    "allPages": "所有頁面",
+    "customPage": "自定義頁面"
+  },
+  "ShareImportExportData": {
+    "sharePacketId": "分享資料包 ID",
+    "exportAsPathTemplate": "匯出為 Path 模板",
+    "exportAsRawTemplate": "匯出為 Raw 模板",
+    "exportYamlSuccess": "匯出Yaml成功",
+    "importPacketId": "匯入資料包 ID",
+    "importYamlFile": "匯入Yaml檔案",
+    "uploadOrPasteCode": "上傳，也支援直接貼上程式碼",
+    "pleaseSelectOrPasteFile": "請選擇或貼上要匯入的檔案",
+    "getPathFailed": "獲取路徑失敗"
+  },
+  "MultimodeImportYaml": {
+    "uploadFileFormatError": "上傳檔案格式錯誤，請重新上傳"
+  },
+  "ShareModal": {
+    "pleaseLoginToShare": "請登入後分享",
+    "shareDataConversionFailed": "分享資料轉換失敗：",
+    "setExpiration": "設定有效期：",
+    "fiveMinutes": "5分鐘",
+    "fifteenMinutes": "15分鐘",
+    "oneHour": "1小時",
+    "oneDay": "1天",
+    "password": "密碼：",
+    "limitShareCount": "限制分享次數：",
+    "timesValue": "{{value}}次",
+    "shareId": "分享id：",
+    "generateShareToken": "生成分享密令",
+    "copiedToClipboard": "已複製到貼上板",
+    "copyShare": "複製分享"
+  },
+  "PluginDebugDrawer": {
+    "noBaseInfoParsed": "未解析到相關基礎資訊",
+    "pluginDebug": "外掛除錯",
+    "saveAsPlugin": "存為外掛"
+  },
+  "HTTPFuzzerPageTable": {
+    "request": "請求",
+    "status": "狀態",
+    "responseSize": "響應大小",
+    "latencyMs": "延遲(ms)",
+    "extractData": "提取資料",
+    "responseSimilarity": "響應相似度",
+    "httpHeaderSimilarity": "HTTP頭相似度",
+    "debug": "除錯",
+    "failureReason": "失敗原因",
+    "extractionResult": "提取結果",
+    "hideResponseInfo": "隱藏響應資訊",
+    "showResponseInfo": "顯示響應資訊",
+    "copyUrlFailed": "複製 URL 失敗：包含 Fuzz 標籤可能會導致 URL 不完整",
+    "quickPreview": "快速預覽",
+    "response": "響應",
+    "oversizedResponse": "超大響應",
+    "viewHeader": "檢視Header",
+    "viewBody": "檢視Body",
+    "targetFileNotExist": "目標檔案已不存在!",
+    "fullResponse": "完整響應",
+    "noEmpty": "不為空",
+    "includes": "包含",
+    "notIncludes": "不包含"
+  },
+  "HttpQueryAdvancedConfig": {
+    "force_https": "強制 HTTPS",
+    "tls_config": "TLS配置",
+    "guomi_tls": "國密TLS",
+    "random_tls": "隨機TLS",
+    "real_host": "真實Host",
+    "host_collision_tip": "如需Host碰撞，請配置真實Host",
+    "set_proxy": "設定代理",
+    "multi_proxy_tip": "設定多個代理時，會智慧選擇能用的代理進行發包",
+    "proxy_auth_config": "配置代理認證",
+    "disable_system_proxy": "禁用系統代理",
+    "frontend_render_count": "前端渲染數量",
+    "frontend_render_tip": "不影響發包數量，隻影響前端渲染展示數量，超出的數量可透過點選表格的檢視全部進行檢視",
+    "response_body_limit": "響應體長度限制",
+    "sni_config": "SNI 配置",
+    "force_sni": "強制SNI",
+    "request_config": "請求包配置",
+    "fuzztag_helper": "Fuzztag 輔助",
+    "insert_yak_fuzz": "插入 yak.fuzz 語法",
+    "render_fuzz": "渲染 Fuzz",
+    "compat_mode_tip": "相容模式支援巢狀使用時內層大括號省略 {{base64(url(www.example.com))}}，但標準模式不可省略，關閉後Fuzztag將失效。",
+    "render_mode": "渲染模式",
+    "disable_hot_reload": "禁用熱載入",
+    "no_fix_length": "不修復長度",
+    "timeout_duration": "超時時長",
+    "connection": "連線",
+    "response": "響應",
+    "batch_target": "批次目標",
+    "configured": "已配置",
+    "configure_batch_target": "配置批次目標",
+    "random_chunk_transfer": "隨機分塊傳輸",
+    "chunk_length": "分塊長度",
+    "random_delay": "隨機延時",
+    "concurrency_config": "併發配置",
+    "disable_connection_pool": "禁用連線池",
+    "disable_Advanced_set": "禁用組配置",
+    "disable_Advanced_set_tip": "禁用後將使用標籤頁配置項",
+    "repeat_send": "重複發包",
+    "concurrency_test_tip": "一般用來測試條件競爭或者大併發的情況",
+    "concurrent_threads": "併發執行緒",
+    "random_delay2": "隨機延遲",
+    "retry_config": "重試配置",
+    "retry_count": "重試次數",
+    "retry_conditions": "重試條件",
+    "status_code": "狀態碼",
+    "no_retry_conditions": "不重試條件",
+    "redirect_config": "重定向配置",
+    "disable_redirect": "禁用重定向",
+    "redirect_count": "重定向次數",
+    "js_redirect": "JS重定向",
+    "dns_config": "DNS配置",
+    "dns_server": "DNS伺服器",
+    "specify_dns_server": "指定DNS伺服器",
+    "hosts_config": "Hosts配置",
+    "add_hosts_mapping": "新增 Hosts 對映",
+    "get_params": "GET 引數",
+    "post_params": "POST 引數",
+    "collapse_active_key_error": "獲取摺疊面板的啟用key失敗：",
+    "open_matcher_extraction_error": "openMatcherAndExtraction 解析資料失敗",
+    "auto": "自動",
+    "force": "強制",
+    "clear": "清空",
+    "cross_product": "交叉乘積",
+    "fork_sync": "草叉/同步",
+    "close": "關閉",
+    "standard": "標準",
+    "compatibility": "相容"
+  },
+  "BatchTargetModal": {
+    "configure_batch_target": "配置批次目標",
+    "scan_target": "掃描目標",
+    "please_enter_scan_target": "請輸入掃描目標，多個目標用“英文逗號”或換行分隔"
+  },
+  "StringFuzzer": {
+    "fuzz_template_empty": "Fuzz模版為空",
+    "payload_test_result": "字典管理測試結果",
+    "total": "總量：",
+    "tag_add_success": "標籤新增成功",
+    "description": "描述: ",
+    "example": "示例：",
+    "parameter_type_info": "引數型別資訊：",
+    "parameter_name": "引數名",
+    "default_value": "預設值",
+    "optional_parameter": "可選引數",
+    "array_parameter": "陣列引數",
+    "delimiter": "分隔符",
+    "nesting": "巢狀",
+    "insert": "插入",
+    "viewGeneratedPayload": "檢視生成後的字典管理",
+    "insertTagPosition": "插入標籤所在位置",
+    "confirmResetDictionary": "確認要重置你的字典管理嗎？",
+    "addToFavoriteTags": "新增到常用標籤",
+    "tag": "標籤",
+    "cancel": "取消"
+  },
+  "HTTPFuzzerHostInput": {
+    "domainRequired": "域名不能為空",
+    "domain": "域名",
+    "domainExample": "例如：oa.com",
+    "ipExample": "例如：10.0.0.1"
+  },
+  "MatchersPanel": {
+    "matcher": "匹配器",
+    "add_debug": "除錯"
+  },
+  "MatchersAndExtractorsListItemOperate": {
+    "debug": "除錯"
+  },
+  "SetVariableItem": {
+    "variableName": "變數名",
+    "variableValue": "變數值"
+  },
+  "ExtractorsPanel": {
+    "dataExtractor": "資料提取器",
+    "add_debug": "除錯"
+  },
+  "VariablePanel": {
+    "renderedVariableContent": "渲染後變數內容",
+    "previewFailed": "預覽失敗：",
+    "setVariable": "設定變數"
+  },
+  "VariableList": {
+    "variable": "變數"
+  },
+  "DecodeComponent": {
+    "smartDecode": "智慧解碼",
+    "noDecodeInfo": "無解碼資訊"
+  },
+  "HTTPFuzzerRangeReadOnlyEditorMenu": {
+    "decode": "解碼"
+  },
+  "HotCodeTemplate": {
+    "fetch_online_template_list_failed": "線上模板列表獲取失敗：",
+    "online_delete_success": "線上刪除成功",
+    "online_delete_failed": "線上刪除失敗：",
+    "overwrite_same_name_prompt": "同名覆蓋提示",
+    "online_same_name_template_prompt": "線上有同名模板，上傳會覆蓋，確定上傳嗎？",
+    "online_template_exists_same_name": "線上存在同名模板",
+    "check_hot_reload_template_online_failed": "查詢熱載入模板名線上是否存在失敗：",
+    "local_same_name_template_prompt": "本地有同名模板，下載會覆蓋，確定下載嗎？",
+    "local_template_exists_same_name": "本地存在同名模板",
+    "local_template": "本地模板",
+    "online_template": "線上模板",
+    "confirm_overwrite_hot_reload_code": "是否確認覆蓋當前熱載入程式碼",
+    "code_template": "程式碼模板",
+    "save_disable_tip": "預設模板不支援修改，建議另存為新模板"
+  },
+  "AddHotCodeTemplate": {
+    "hot_reload_template_name_empty": "熱載入模板名為空",
+    "hot_reload_template_name_exists": "熱載入模板名已存在",
+    "enter_hot_reload_template_name": "請為熱載入模板取個名字...",
+    "save_hot_reload_template": "儲存熱載入模板",
+    "MITM_hot_template": "MITM",
+    "WebFuzzer_hot_template": "Web Fuzzer",
+    "add_template": "新建模板",
+    "template_empty_message": "模板名稱不能為空",
+    "template_repeat_message": "模板名稱已存在",
+    "add_template_success": "新建模板成功",
+    "template_list": "模板列表"
+  },
+  "GlobalHotPatch": {
+    "Global_hot_template": "全域性熱載入",
+    "Global_hot_template_tip": "啟用全域性熱載入後，會對全域性所有流量統一處理",
+    "started": "(已啟動)",
+    "MITM_hot_patch": "MITM熱載入"
+  },
+  "MatcherAndExtraction": {
+    "apply_changes_prompt": "是否應用修改的內容",
+    "empty_matcher_exists": "已有空匹配器條件",
+    "no_valid_extractor": "沒有有效提取器（都為空）",
+    "no_valid_match_found": "匹配不到有效結果",
+    "data_extraction_error": "資料提取報錯：",
+    "duplicate_name_error": "【{{namesElement}}】名稱重複，請修改後再應用",
+    "matcher": "匹配器",
+    "extractor": "提取器",
+    "addMatcher": "新增匹配器",
+    "addCondition": "新增條件",
+    "debugExecute": "除錯執行",
+    "matching_extraction_tip": "已新增 <count>{{num}}</count> 條",
+    "extractionResult": "提取結果",
+    "save_changes_prompt": "是否儲存修改的內容",
+    "useInstructions": "使用說明",
+    "matchersAndExtractorsUseInstructions": "Web Fuzzer 匹配器和提取器使用說明",
+    "understand": "我知道了"
+  },
+  "MatcherCollapse": {
+    "emptyMatcherConditionExists": "該匹配器已有空匹配器條件",
+    "addMatcherConditionFailed": "新增匹配器條件失敗：",
+    "allMatcherConditionsEmpty": "所有匹配條件均為空，請先設定條件",
+    "matchSuccess": "匹配成功",
+    "matchFailed": "匹配失敗",
+    "matchError": "匹配報錯：",
+    "onRemoveSubMatcherFailed": "onRemoveSubMatcher 失敗：",
+    "multipleMatchersExplanation": "多個匹配器是為了同時達到多個功能效果，比如染不同顏色或丟包的同時染色，如需要轉成yaml只能配置一個匹配器",
+    "matcherApplicationFlow": "應用匹配器後，流量先經過匹配器條件過濾後，再根據規則/熱載入配置進一步處理",
+    "filter_mode": "過濾器模式",
+    "condition_relation": "條件關係",
+    "addCondition": "新增條件",
+    "debugExecute": "除錯執行",
+    "no_condition_set": "暫未設定條件",
+    "keyword": "關鍵字",
+    "regex": "正規表示式",
+    "status_code": "狀態碼",
+    "hex": "十六進位制",
+    "expression": "表示式",
+    "discard": "丟棄",
+    "match": "保留",
+    "onlyMatch": "僅匹配"
+  },
+  "MatcherItem": {
+    "match_type": "匹配型別",
+    "match_range": "匹配範圍",
+    "match_position": "匹配位置",
+    "status_code": "狀態碼",
+    "response_header": "響應頭",
+    "response_body": "響應體",
+    "all_responses": "全部響應",
+    "condition_relation": "條件關係",
+    "no_match_invert": "不匹配（取反）",
+    "complete_conditions_before_adding": "請將已新增條件配置完成後再新增",
+    "more": "更多",
+    "request_header": "請求頭",
+    "request_body": "請求體",
+    "all_requests": "Raw",
+    "request_url": "URL"
+  },
+  "MatcherAndExtractionValueList": {
+    "add_match_content": "新增匹配內容"
+  },
+  "ExtractorCollapse": {
+    "max_length_20": "字元長度不超過20",
+    "edit_name": "修改名稱",
+    "no_condition_set": "暫未設定條件",
+    "ruleName": "規則名",
+    "ruleContent": "規則內容",
+    "multiValueHintWithComma": "，支援逗號、分號或換行分隔多個",
+    "multiValueHintWithoutComma": "，支援分號或換行分隔多個"
+  },
+  "ExtractorItem": {
+    "match_regex_group": "匹配正則分組",
+    "xpath_parameters": "XPath 引數",
+    "extraction_type": "提取型別",
+    "extraction_scope": "提取範圍",
+    "response_header": "響應頭",
+    "response_body": "響應體",
+    "complete_conditions_before_adding": "請將已新增條件配置完成後再新增",
+    "regex": "正規表示式",
+    "keyValuePair": "鍵值對",
+    "expression": "表示式"
+  },
+  "ColorSelect": {
+    "hit_color": "命中顏色"
+  },
+  "FuzzerSequence": {
+    "fuzz_request_fail": "提交模糊測試請求失敗：",
+    "execute_after_sequence": "請配置序列後再執行",
+    "configure_before_adding": "已有空節點，請配置後再新增",
+    "application_success": "應用成功",
+    "select_after_configuring_sequence": "請配置序列後再選中",
+    "please_select_page": "請選擇頁面",
+    "allTraffic": "全部流量",
+    "webfuzzer_sequence_demo": "WebFuzzer 序列動畫演示",
+    "official_documentation": "官方幫助檔案",
+    "sequence_configuration": "序列配置",
+    "add_node": "新增節點",
+    "force_stop": "強制停止",
+    "config": "配置",
+    "select_webfuzzer_with_sequence_tip": "請選擇 Web Fuzzer（如需使用序列，請將其他標籤頁拖入該分組）",
+    "pleaseSendMultipleRequestsBeforeApply": "請傳送多個請求包後再應用"
+  },
+  "FuzzerConcurrency": {
+    "add_node": "新增",
+    "select_after_configuring_concurrency": "請配置併發後再選中",
+    "execute_after_concurrency": "請配置併發後再執行",
+    "select_webfuzzer_with_concurrency_tip": "請選擇 Web Fuzzer（如需使用併發，請將其他標籤頁拖入該分組）"
+  },
+  "SequenceItem": {
+    "variable": "變數",
+    "edit_name": "修改名稱",
+    "name_cannot_be_empty": "名稱不能為空",
+    "max_20_characters": "不超過20個字元",
+    "node_configuration": "節點配置",
+    "apply_to_other_nodes": "應用到其他節點",
+    "inherit_variables": "繼承變數",
+    "inherit_cookie": "繼承 Cookie",
+    "go_to_fuzzer_configuration": "前往Fuzzer配置",
+    "please_select_page": "請選擇頁面"
+  },
+  "SequenceResponseHeard": {
+    "generatePathTemplate": "生成為 Path 模板",
+    "generateRawTemplate": "生成為 Raw 模板",
+    "generateYamlTemplate": "生成 Yaml 模板",
+    "show_all_responses": "展示全部響應"
+  },
+  "SequenceResponse": {
+    "matcher_extractor_validation_failed": "匹配器和提取器驗證失敗：",
+    "hotReload": "熱載入",
+    "view_after_executing_sequence": "請執行序列後進行檢視"
+  },
+  "ConcurrencyResponse": {
+    "view_after_executing_concurrency": "請執行併發後進行檢視"
+  },
+  "ConcurrencyAllRes": {
+    "get_config_key_failed": "獲取併發配置摺疊面板的啟用key失敗："
+  },
+  "WebsocketFuzzer": {
+    "clear_send_data": "清空傳送資料"
+  },
+  "HTTPFuzzerHosts": {
+    "modalTitle": "新增 DNS Hosts 配置",
+    "inputConfig": "輸入配置",
+    "uploadFile": "上傳檔案",
+    "hostsConfig": "hosts 配置",
+    "example": "示例模板",
+    "fileRequired": "請先選擇一個 hosts 配置檔案",
+    "unsupportedFileType": "僅支援匯入以下文字檔案：{{accept}}",
+    "fileReadFailed": "檔案讀取失敗：{{error}}",
+    "emptyOrUnreadableFile": "檔案內容為空或讀取失敗，請重新選擇可解析的文字檔案",
+    "parseFailed": "解析失敗，未識別到有效的 hosts 配置",
+    "parseSuccess": "解析成功，已匯入 {{count}} 條 hosts 配置",
+    "uploadPlaceholder": "路徑支援手動輸入,支援格式:txt/hosts"
+  }
+}
