@@ -88,7 +88,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
   const mitmParamsRequiredParamsRef = useRef<YakParamProps[]>([])
   const mitmParamsGroupParamsRef = useRef<YakExtraParamProps[]>([])
   const [drawerWidth, setDrawerWidth] = useState<number>(45) // 默认45vw
-  const handleMitmHasParams = () => {
+  const handleMitmHasParams = (forceOpenDrawer = false) => {
     const requiredParams = i.Params.filter((item) => item.Required)
     const norequiredParams = i.Params.filter((item) => !item.Required)
     const groupParams: YakExtraParamProps[] = ParamsToGroupByGroupName(norequiredParams)
@@ -111,6 +111,12 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
               initFormValue[item.Key] = item.Value
             }
           })
+          if (!forceOpenDrawer) {
+            clearMITMPluginCache(mitmVersion)
+            onSubmitYakScriptId(i.Id, arr)
+            setTempShowPluginHistory?.(i.ScriptName)
+            return
+          }
         } catch (error) {}
         mitmParamsModal(initFormValue, requiredParams, groupParams)
       } else {
@@ -368,7 +374,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
           <OutlinePencilaltIcon
             className={style['mitm-params-edit-icon']}
             onClick={() => {
-              handleMitmHasParams()
+              handleMitmHasParams(true)
             }}
           />
         )}
