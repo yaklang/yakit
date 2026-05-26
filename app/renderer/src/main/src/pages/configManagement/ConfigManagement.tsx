@@ -44,6 +44,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import {
   DEFAULT_GLOBAL_TEMPLATE_CONTENT,
   DEFAULT_GLOBAL_TEMPLATE_NAME,
+  DEFAULT_GLOBAL_TEMPLATES,
   useGlobalHotPatch,
   useGlobalHotPatchTag,
 } from '@/store/globalHotPatch'
@@ -317,15 +318,21 @@ export const HotPatchManagement: React.FC = () => {
       .invoke('QueryHotPatchTemplateList', { Type: 'global' })
       .then(async (res: QueryHotPatchTemplateListResponse) => {
         const nameArr = res.Name || []
-        let allNames = [...nameArr]
-        if (!nameArr.includes(DEFAULT_GLOBAL_TEMPLATE_NAME)) {
-          await ipcRenderer.invoke('CreateHotPatchTemplate', {
-            Type: 'global',
-            Content: DEFAULT_GLOBAL_TEMPLATE_CONTENT,
-            Name: DEFAULT_GLOBAL_TEMPLATE_NAME,
-          })
-          allNames = [DEFAULT_GLOBAL_TEMPLATE_NAME, ...allNames]
+        const seededNames: string[] = []
+        for (const tpl of DEFAULT_GLOBAL_TEMPLATES) {
+          if (nameArr.includes(tpl.name)) continue
+          try {
+            await ipcRenderer.invoke('CreateHotPatchTemplate', {
+              Type: 'global',
+              Content: tpl.content,
+              Name: tpl.name,
+            })
+            seededNames.push(tpl.name)
+          } catch (error) {
+            yakitFailed(error + '')
+          }
         }
+        const allNames = [...seededNames, ...nameArr]
         const newList = allNames.map((name) => ({
           name,
           temp: '',
