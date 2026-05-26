@@ -6,7 +6,8 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
-import { useIrifyAiCodeAuditReActChat } from './IrifyAiCodeAuditReActChatProvider'
+import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { IrifyAiCodeAuditSeedDraftFlush } from './irifyAiCodeAuditSeedDraft'
 import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
@@ -36,8 +37,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
   sideTabs: YakitTabsProps[]
 }> = ({ placement, children, rootClassName, sideTabs }) => {
   const { t, i18n } = useI18nNamespaces(['history'])
-  const { renderIrifyAiReActChat, setShowFreeChat, irifyAiReActChatBridge, focusModeLoop } =
-    useIrifyAiCodeAuditReActChat()
+  const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
 
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -65,46 +65,49 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
   }, [openTabsFlag, placement])
 
   const aiChat =
-    activeKey === 'ai' &&
-    renderIrifyAiReActChat({
-      className: styles.aiChatWrap,
-      externalParameters: {
-        isOpen: false,
-        rightIcon: (
-          <>
-            <Tooltip title="新建对话">
-              <YakitButton
-                type="text2"
-                icon={<OutlinePlusIcon />}
-                onClick={() => {
-                  const { activeID, events, onStop, onChatFromHistory, setActiveChat } = irifyAiReActChatBridge
-                  if (activeID) {
-                    onStop()
-                    events.onReset()
-                    onChatFromHistory(activeID)
-                    setActiveChat(undefined)
-                  }
-                }}
-              />
-            </Tooltip>
-            <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-          </>
-        ),
-        footerLeftTypes: [
-          AIInputInnerFeatureEnum.AIReviewRuleSelect,
-          AIInputInnerFeatureEnum.AIModelSelect,
-          {
-            type: AIInputInnerFeatureEnum.AIFocusMode,
-            props: {
-              value: focusModeLoop,
-              onChange: () => {},
-              disabled: true,
-            },
+    activeKey === 'ai' && (
+      <IrifyAiCodeAuditSeedDraftFlush>
+        {renderHistoryAIReActChat({
+          className: styles.aiChatWrap,
+          externalParameters: {
+            isOpen: false,
+            rightIcon: (
+              <>
+                <Tooltip title="新建对话">
+                  <YakitButton
+                    type="text2"
+                    icon={<OutlinePlusIcon />}
+                    onClick={() => {
+                      const { activeID, events, onStop, onChatFromHistory, setActiveChat } = historyAIReActChatBridge
+                      if (activeID) {
+                        onStop()
+                        events.onReset()
+                        onChatFromHistory(activeID)
+                        setActiveChat(undefined)
+                      }
+                    }}
+                  />
+                </Tooltip>
+                <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
+              </>
+            ),
+            footerLeftTypes: [
+              AIInputInnerFeatureEnum.AIReviewRuleSelect,
+              AIInputInnerFeatureEnum.AIModelSelect,
+              {
+                type: AIInputInnerFeatureEnum.AIFocusMode,
+                props: {
+                  value: focusModeLoop,
+                  onChange: () => {},
+                  disabled: true,
+                },
+              },
+            ],
+            filterMentionType: ['focusMode'],
           },
-        ],
-        filterMentionType: ['focusMode'],
-      },
-    })
+        })}
+      </IrifyAiCodeAuditSeedDraftFlush>
+    )
 
   const rail = (
     <div className={placement === 'left' ? styles.railLeft : styles.railRight}>

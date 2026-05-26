@@ -48,6 +48,13 @@ export interface HistoryAIReActChatBridge {
   onStop: () => void
   onChatFromHistory: (session: string) => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
+  /**
+   * 向当前 AI 对话输入框写入文本（不触发发送）。
+   * 提供给 Provider 外部业务（Irify「开始代码审计」预填等）以事件/业务驱动方式控制输入框内容，
+   * 避免把 `aiReActChatRef` 整个 ref 暴露出去。
+   * @returns 输入框 ref 已就绪且写入调用成功时为 `true`
+   */
+  setChatInputValue: (text: string) => boolean
 }
 
 export interface HistoryAIReActChatSlotOptions {
@@ -106,6 +113,20 @@ export interface HistoryAIReActChatProviderProps {
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
   httpFuzzTabPageId?: string
+  /**
+   * 新建会话使用的默认 SessionID（写入 `setting.TimelineSessionID`）。
+   * `useSessionId` 优先级：`activeChat.SessionID` > `setting.TimelineSessionID` > 入参 > 随机 UUID。
+   * - 不传则保持原有随机 UUID 生成逻辑
+   * - Irify「代码审计」传入 `usePageInfo.getCurrentPageTabRouteKey()` 返回的 `currentRouteKey`
+   */
+  defaultTimelineSessionID?: string
+  /**
+   * 在发往引擎前对 `AIInputEvent` 做最后一次业务转换，由调用方自定义。
+   * - 在 `onStartRequest` / `onSendRequest` 内置（WebFuzzer 请求拼接）处理之后执行
+   * - Irify「代码审计」用它把工程根路径附件追加到 `AttachedResourceInfo`
+   * - 建议用 `useMemoizedFn` 包装以保持引用稳定
+   */
+  transformInputEvent?: (event: AIInputEvent) => AIInputEvent
 }
 
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
@@ -113,6 +134,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   focusModeLoop,
   children,
   httpFuzzTabPageId,
+  defaultTimelineSessionID,
+  transformInputEvent,
 }: HistoryAIReActChatProviderProps) {
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
@@ -120,7 +143,23 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const [inViewport = true] = useInViewport(refRef)
 
-  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => {
+    const initial = cloneDeep(AIAgentSettingDefault)
+    if (defaultTimelineSessionID) {
+      initial.TimelineSessionID = defaultTimelineSessionID
+    }
+    return initial
+  })
+
+  // 外部传入的 `defaultTimelineSessionID` 变化时同步进 `setting`，保证 `useSessionId` 优先级链命中
+  useEffect(() => {
+    if (!defaultTimelineSessionID) return
+    setSetting((prev) => {
+      if (prev.TimelineSessionID === defaultTimelineSessionID) return prev
+      return { ...prev, TimelineSessionID: defaultTimelineSessionID }
+    })
+  }, [defaultTimelineSessionID, setSetting])
+  const [chats, setChats, getChats] = useGetSetState<AISession[]>([])
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)
@@ -211,6 +250,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
           params = prependWebFuzzerHttpRequestToSendFields(params, raw)
         }
       }
+      if (transformInputEvent) {
+        params = transformInputEvent(params)
+      }
       resolve({
         params,
         extraParams: newChat,
@@ -240,6 +282,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       if (raw != null) {
         params = prependWebFuzzerHttpRequestToSendFields(params, raw)
       }
+    }
+    if (transformInputEvent) {
+      params = transformInputEvent(params)
     }
 
     return new Promise<AISendResProps>((resolve) => {
@@ -310,6 +355,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }
   }, [])
 
+  const setChatInputValue = useMemoizedFn((text: string): boolean => {
+    const ref = aiReActChatRef.current
+    if (!ref?.setValue) return false
+    ref.setValue(text)
+    // 公共层 `getValue` 类型为 void，运行时实际返回 markdown 字符串（见 AIChatTextarea useImperativeHandle）
+    const readValue = ref.getValue as unknown as (() => string) | undefined
+    const current = String(readValue?.() ?? '').trim()
+    return current === text.trim()
+  })
+
   const historyAIReActChatBridge: HistoryAIReActChatBridge = useMemo(
     () => ({
       activeID,
@@ -317,8 +372,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onStop,
       onChatFromHistory,
       setActiveChat,
+      setChatInputValue,
     }),
-    [activeID, events, onStop, onChatFromHistory, setActiveChat],
+    [activeID, events, onStop, onChatFromHistory, setActiveChat, setChatInputValue],
   )
 
   const renderHistoryAIReActChat = useCallback(
