@@ -16,17 +16,14 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import styles from './ConfigNetworkPage.module.scss'
 import { isMemfit } from '@/utils/envfile'
 import { FormInstance, FormLayout } from 'antd/lib/form/Form'
-import { AIModelTypeEnum, AIOnlineModelIconMap } from '@/pages/ai-agent/defaultConstant'
+import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { JSONParseLog } from '@/utils/tool'
 import { YakitSelectProps } from '../yakitUI/YakitSelect/YakitSelectType'
 import { AIConfigAPIKeyFormItem } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import {
   AI_API_TYPE_OPTIONS,
   DEFAULT_AI_API_TYPE,
-  getModelName,
   grpcGetAIThirdPartyAppConfigTemplate,
-  isFreeEnd,
-  isMemfitStart,
   normalizeAIAPIType,
 } from '@/pages/ai-agent/aiModelList/utils'
 import { cloneDeep } from 'lodash'
@@ -39,8 +36,7 @@ import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
-import { EnableThinkingOptions } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
-import { AIModelFreeTag } from '@/pages/ai-agent/aiModelList/AIModelList'
+import { EnableThinkingOptions, ModelNameOptionLabel } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -794,16 +790,8 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
      */
     const showModelNameAllOptions = useCreation(() => {
       return modelNameAllOptions.map((item) => {
-        const isMemfit = isMemfitStart(item.value)
-        const isFree = isFreeEnd(item.value)
         return {
-          label: (
-            <div className={styles['option-label-wrapper']}>
-              {isMemfit && <div className={styles['option-icon-wrapper']}>{AIOnlineModelIconMap['aibalance']}</div>}
-              {getModelName(item.value)}
-              {isFree && <AIModelFreeTag />}
-            </div>
-          ),
+          label: <ModelNameOptionLabel name={item.value} />,
           value: item.value,
         }
       })

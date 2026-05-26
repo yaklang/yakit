@@ -33,17 +33,29 @@ export interface AIModelSelectListProps {
 export interface AIModelThinkingOptSelectProps {}
 
 export interface AIModelEditContentProps {
-  item?: AIModelConfig
+  item: AIModelConfig
+  index: number
   onEdit?: (v: AIModelConfig) => void
+  isRefreshModelNameList: boolean
+  onRefreshModelNameList: (item: AIModelConfig, index: number) => void
+  modelNameListMapRef: Map<number, ModelNameListRef>
 }
 
+export interface ModelNameOptionLabelProps {
+  name: string
+}
 export interface AIModelEditContentItemProps {
   options: {
-    label: string
+    label: ReactNode
     value: string
   }[]
-  title: string
-  filed: keyof AIModelConfig['Provider']
+  title: ReactNode
+  filed: keyof AIModelConfig['Provider'] | keyof AIModelConfig
   value: string
   onChange: (v: string) => void
+}
+
+export interface ModelNameListRef {
+  loading: boolean
+  list: string[]
 }
