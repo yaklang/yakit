@@ -153,4 +153,10 @@ textarea.qs-input-textarea {
     max-width: 200px;
   }
 }
+.preset-prompt-tags {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
 // #endregion

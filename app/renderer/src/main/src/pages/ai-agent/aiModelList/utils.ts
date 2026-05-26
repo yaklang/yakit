@@ -338,6 +338,8 @@ export interface AIGlobalConfig {
   VisionModels: AIModelConfig[]
   /**ai 全局命令 */
   AIPresetPrompt: string
+  /** 自定义 plan 提示词 */
+  AIPlanPrompt: string
 }
 export type AIModelTypeFileName = keyof Pick<AIGlobalConfig, 'IntelligentModels' | 'LightweightModels' | 'VisionModels'>
 export interface AIModelConfig {

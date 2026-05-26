@@ -394,6 +394,7 @@ export const defaultAIGlobalConfig: AIGlobalConfig = {
   LightweightModels: [],
   VisionModels: [],
   AIPresetPrompt: '',
+  AIPlanPrompt: '',
 }
 
 export const defaultExportAIForgeRequest: ExportAIForgeRequest = {

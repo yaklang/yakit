@@ -154,7 +154,12 @@
   },
   "AIReActTaskChatContent": {
     "humanIntervention": "Human intervention",
-    "globalDirective": "Global directive"
+    "globalDirective": "Global directive",
+    "globalDirectiveDefault": "Custom global AI directive",
+    "globalDirectivePlaceholder": "Global directives apply to all sessions...",
+    "planPrompt": "Plan prompt",
+    "planPromptDefault": "Custom plan prompt",
+    "planPromptPlaceholder": "Plan prompt applies during task planning as supplementary guidance..."
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI model configuration",
