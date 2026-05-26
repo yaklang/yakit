@@ -39,7 +39,7 @@ const renderClearConfirm = (label: string, title: string, onConfirm: () => void)
 }
 
 interface SessionDataPayload {
-  type: 'refresh' | 'clear' | 'update' | 'updateSession'
+  type: 'refresh' | 'loadNextPage' | 'clear' | 'prependSession' | 'updateSession'
   payload?: AISession
   updates?: Partial<AISession>
   sessionId?: string
@@ -127,7 +127,11 @@ const HistoryChat = memo(() => {
       const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload
       switch (payload.type) {
         case 'refresh':
+          dispatcher.resetPagination?.()
           await dispatcher.loadHistoryData?.(payload!.sessionId)
+          break
+        case 'loadNextPage':
+          await dispatcher.loadHistoryData?.()
           break
         case 'clear':
           await grpcDeleteAISession(
@@ -138,8 +142,10 @@ const HistoryChat = memo(() => {
             },
             true,
           )
+          dispatcher.setSessions?.([])
+          dispatcher.resetPagination?.()
           break
-        case 'update':
+        case 'prependSession':
           if (payload.payload) dispatcher.setSessions((prev) => [payload.payload!, ...prev])
           break
         case 'updateSession':
