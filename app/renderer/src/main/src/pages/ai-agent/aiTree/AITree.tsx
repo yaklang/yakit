@@ -251,11 +251,13 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, i
           content={
             <div className={styles['depends-on-content']}>
               <div className={styles['depends-on-title']}>高亮的为该任务的关联任务</div>
-              {dependsOnTasks.map((task) => (
+              <div className={styles['depends-on-list']}>
+                {dependsOnTasks.map((task) => (
                 <div key={task.index} className={styles['depends-on-item']}>
                   {task.name}
                 </div>
               ))}
+              </div>
             </div>
           }
         >

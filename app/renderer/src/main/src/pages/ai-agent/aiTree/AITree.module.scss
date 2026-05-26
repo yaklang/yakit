@@ -331,9 +331,13 @@
   .depends-on-content {
     display: flex;
     flex-direction: column;
-    gap: 6px;
     min-width: 160px;
     max-width: 280px;
+  }
+  .depends-on-list {
+    max-height: 260px;
+    overflow-y: auto;
+    padding-top: 6px;
   }
   .depends-on-title {
     color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -347,6 +351,7 @@
     color: var(--Colors-Use-Neutral-Text-2-Primary);
     font-size: 13px;
     line-height: 20px;
+    height: 20px;
     @include mixin.text-ellipsis;
     &::before {
       content: '• ';
