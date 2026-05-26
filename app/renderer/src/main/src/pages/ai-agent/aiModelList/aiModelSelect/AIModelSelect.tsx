@@ -591,47 +591,49 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
     }
   })
 
-  const editContent = useRef<HTMLDivElement>(null)
-  const onMouseEnterEdit = useDebounceFn(
-    useMemoizedFn((e: React.MouseEvent, item: AIModelConfig, index: number) => {
-      clearHideTimer()
-      if (!dropdownRenderRectRef) return
-      if (isEqual(currentSelectIndex, index)) return
-      const { left = 0, right = 0, width } = dropdownRenderRectRef || {}
-      const rect = editContent.current?.getBoundingClientRect()
-      const rightContextWidth = rect?.width || 200
-      const rightContextHeight = rect?.height || 500 // 最大高度是500，暂时按最大高度算
-      // 判断右侧屏幕剩余空间是否满足：如果不满足，则在 dropdownRenderRectRef 的左方展示
-      const spaceOnRight = window.innerWidth - right
-      let toLeft = spaceOnRight < rightContextWidth ? left - rightContextWidth - 6 : right + 6
+  const onMouseEnterEdit = useMemoizedFn((e: React.MouseEvent, item: AIModelConfig, index: number) => {
+    clearHideTimer()
+    if (!dropdownRenderRectRef) return
 
-      // 判断下方屏幕剩余高度是否足够居中显示的一半高度
-      const spaceOnBottom = window.innerHeight - e.clientY
-      const halfHeight = rightContextHeight / 2
-      let toTop = 0
+    const { left = 0, right = 0, width } = dropdownRenderRectRef || {}
+    if (isEqual(currentSelectIndex, index)) return
 
-      if (spaceOnBottom >= halfHeight) {
-        // 下方空间足够
-        toTop = e.clientY - 24
-      } else {
-        // 下方空间不足，元素完整显示在鼠标位置的上方
-        toTop = e.clientY - rightContextHeight + 24
-      }
+    const rightContextWidth = 200
+    /**
+     * NOTE - 高度需要根据内容调整，目前是固定值
+     * LINK #ai-model-edit-content
+     * 链接所在位置为对应内容得div
+     */
+    const rightContextHeight = 338
+    // 判断右侧屏幕剩余空间是否满足：如果不满足，则在 dropdownRenderRectRef 的左方展示
+    const spaceOnRight = window.innerWidth - right
+    let toLeft = spaceOnRight < rightContextWidth ? left - rightContextWidth - 6 : right + 6
 
-      // 屏幕左/上边界安全防御
-      if (toLeft < 0) toLeft = width
-      if (toTop < 0) toTop = 0
-      setCurrentItem(item)
-      setCurrentSelectIndex(index)
-      setEditStyle({
-        transform: `translate(${toLeft}px, ${toTop}px)`,
-        width: rightContextWidth,
-        // height: rightContextHeight,
-      })
-      getModelNameList(item, index)
-    }),
-    { wait: 200, leading: true },
-  ).run
+    // 判断下方屏幕剩余高度是否足够居中显示的一半高度
+    const spaceOnBottom = window.innerHeight - e.clientY
+    const halfHeight = rightContextHeight / 2
+    let toTop = 0
+
+    if (spaceOnBottom >= halfHeight) {
+      // 下方空间足够
+      toTop = e.clientY - 24
+    } else {
+      // 下方空间不足，元素完整显示在鼠标位置的上方
+      toTop = e.clientY - rightContextHeight + 24
+    }
+
+    // 屏幕左/上边界安全防御
+    if (toLeft < 0) toLeft = width
+    if (toTop < 0) toTop = 0
+    setCurrentItem(item)
+    setCurrentSelectIndex(index)
+    setEditStyle({
+      transform: `translate(${toLeft}px, ${toTop}px)`,
+      width: rightContextWidth,
+      // height: rightContextHeight,
+    })
+    getModelNameList(item, index)
+  })
   const onMouseLeaveList = useMemoizedFn(() => {
     hideEditContent()
   })
@@ -695,16 +697,14 @@ const AIModelSelectList: React.FC<AIModelSelectListProps> = React.memo((props) =
           onMouseLeave={onMouseLeaveEditContent}
         >
           {!isNil(currentSelectIndex) && !!currentItem && (
-            <div ref={editContent}>
-              <AIModelEditContent
-                isRefreshModelNameList={loading}
-                modelNameListMapRef={modelNameListMapRef.current}
-                item={currentItem}
-                index={currentSelectIndex}
-                onEdit={onEditContentChange}
-                onRefreshModelNameList={onRefreshModelNameList}
-              />
-            </div>
+            <AIModelEditContent
+              isRefreshModelNameList={loading}
+              modelNameListMapRef={modelNameListMapRef.current}
+              item={currentItem}
+              index={currentSelectIndex}
+              onEdit={onEditContentChange}
+              onRefreshModelNameList={onRefreshModelNameList}
+            />
           )}
         </div>,
         document.body,
@@ -788,6 +788,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
     { wait: 200, leading: true },
   ).run
   return (
+    //  ANCHOR[id=ai-model-edit-content] edit-content-wrapper
     <div className={styles['edit-content-wrapper']}>
       <AIModelEditContentItem
         filed="EnableThinkingOpt"
@@ -796,6 +797,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
         value={enableThinkingOpt}
         onChange={(v) => onEditChangeProvider(v, 'EnableThinkingOpt')}
       />
+      <div className={styles['divider-style']} />
       <YakitSpin size="small" spinning={modelNameData.loading}>
         <AIModelEditContentItem
           filed="ModelName"
@@ -808,6 +810,7 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
           }
           value={modelName}
           onChange={(v) => onEditChange(v, 'ModelName')}
+          listClassName={styles['model-name-list']}
         />
       </YakitSpin>
     </div>
@@ -832,14 +835,14 @@ export const ModelNameOptionLabel: React.FC<ModelNameOptionLabelProps> = React.m
 })
 
 const AIModelEditContentItem: React.FC<AIModelEditContentItemProps> = React.memo((props) => {
-  const { title, options, onChange, value } = props
+  const { title, options, onChange, value, listClassName = '' } = props
   const onSelect = useMemoizedFn((v: string) => {
     onChange(v)
   })
   return (
     <div className={styles['edit-content-item']}>
       <div className={styles['edit-content-title']}>{title}</div>
-      <div className={styles['edit-content-options']}>
+      <div className={classNames(styles['edit-content-options'], listClassName)}>
         {options.map((option) => (
           <div
             key={option.value}

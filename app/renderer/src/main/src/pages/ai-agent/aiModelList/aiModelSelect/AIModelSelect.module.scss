@@ -248,8 +248,13 @@
   border-radius: 4px;
   border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   padding: 6px 2px;
-  max-height: 500px;
-  overflow-y: auto;
+  height: 338px;
+  overflow: hidden;
+  .divider-style {
+    width: 100%;
+    height: 1px;
+    background-color: var(--Colors-Use-Neutral-Border);
+  }
   .edit-content-item {
     display: flex;
     flex-direction: column;
@@ -277,7 +282,7 @@
         padding: 0 4px;
         flex: 1;
         width: 100%;
-        overflow: hidden;
+        height: 22px;
         &:hover {
           background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
@@ -295,6 +300,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+  .model-name-list {
+    height: 194px;
+    overflow-y: auto;
   }
 }
 

@@ -53,6 +53,7 @@ export interface AIModelEditContentItemProps {
   filed: keyof AIModelConfig['Provider'] | keyof AIModelConfig
   value: string
   onChange: (v: string) => void
+  listClassName?: string
 }
 
 export interface ModelNameListRef {
