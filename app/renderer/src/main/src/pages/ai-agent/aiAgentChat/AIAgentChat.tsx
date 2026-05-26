@@ -65,7 +65,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat } = useAIAgentStore()
-  const { setChats, setActiveChat, getSetting, setSetting } = useAIAgentDispatcher()
+  const { setActiveChat, getSetting, setSetting } = useAIAgentDispatcher()
 
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
@@ -154,13 +154,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       if (prev.SessionID !== session) return prev
       return { ...prev, Title: name }
     })
-    setChats?.((prev) => {
-      const chatIndex = prev.findIndex((item) => item.SessionID === session)
-      if (chatIndex === -1) return prev
-      const newChats = [...prev]
-      newChats[chatIndex] = { ...newChats[chatIndex], Title: name }
-      return newChats
-    })
+    emiter.emit(
+      'sessionData',
+      JSON.stringify({
+        type: 'updateSession',
+        sessionId: session,
+        updates: { Title: name },
+      }),
+    )
   }
 
   const [syncIdInfoMap, { set: setSyncIdInfoMap, get: getSyncIdInfoMap, remove: removeSyncIdInfoMap }] = useMap<

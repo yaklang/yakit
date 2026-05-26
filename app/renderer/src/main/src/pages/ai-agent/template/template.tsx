@@ -150,7 +150,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     }, [props.footerLeftTypes, isOpen])
 
     const { setting, activeChat } = useAIAgentStore()
-    const { setSetting, setChats } = useAIAgentDispatcher()
+    const { setSetting } = useAIAgentDispatcher()
     const [disabled, setDisabled] = useState<boolean>(false)
 
     const { isHovering, dropRef } = useAIChatDrop({
@@ -353,21 +353,21 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           ...v,
           EnablePlan: checked,
         }))
-        setChats?.((chats) => {
-          const newChats = chats.map((chat) => {
-            if (chat.SessionID === activeChat?.SessionID) {
-              return {
-                ...chat,
+        if (activeChat?.SessionID) {
+          emiter.emit(
+            'sessionData',
+            JSON.stringify({
+              type: 'updateSession',
+              sessionId: activeChat.SessionID,
+              updates: {
                 StartParams: {
-                  ...(chat.StartParams || {}),
+                  ...(activeChat.StartParams || {}),
                   EnablePlan: checked,
                 },
-              }
-            }
-            return chat
-          })
-          return newChats
-        })
+              },
+            }),
+          )
+        }
       }),
       { wait: 200, leading: true },
     ).run

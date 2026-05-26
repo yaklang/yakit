@@ -121,7 +121,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const [inViewport = true] = useInViewport(refRef)
 
   const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
-  const [chats, setChats, getChats] = useGetSetState<AISession[]>([])
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)
@@ -299,19 +298,15 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const stores: AIAgentContextStore = useMemo(() => {
     return {
       setting: setting,
-      chats: chats,
       activeChat: activeChat,
     }
-  }, [setting, chats, activeChat])
+  }, [setting, activeChat])
 
   const dispatchers: AIAgentContextDispatcher = useMemo(() => {
     return {
       getSetting: getSetting,
       setSetting: setSetting,
-      setChats: setChats,
-      getChats: getChats,
       setActiveChat: setActiveChat,
-      getChatData: cacheDataStore.get,
     }
   }, [])
 
