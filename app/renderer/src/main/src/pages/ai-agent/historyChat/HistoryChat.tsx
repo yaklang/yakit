@@ -52,7 +52,7 @@ export const onNewChat = () => {
 }
 const HistoryChat = memo(() => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [{ sessions }, dispatcher] = useSessionList()
+  const [{ sessions }, dispatcher] = useSessionList(AISOURCE)
   const { activeChat } = useAIAgentStore()
   const { setActiveChat } = useAIAgentDispatcher()
 
@@ -132,8 +132,11 @@ const HistoryChat = memo(() => {
       const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload
       switch (payload.type) {
         case 'refresh':
-          handleResetSessions()
-          await dispatcher.loadHistoryData?.(payload!.sessionId)
+          if (payload.sessionId) {
+            await dispatcher.refreshSession?.(payload.sessionId)
+          } else {
+            await dispatcher.loadHistoryData?.(true)
+          }
           break
         case 'loadNextPage':
           await dispatcher.loadHistoryData?.()

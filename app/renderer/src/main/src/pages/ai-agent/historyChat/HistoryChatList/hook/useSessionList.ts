@@ -1,5 +1,6 @@
 import { grpcQueryAISession } from '@/pages/ai-agent/grpc'
 import type { AISession } from '@/pages/ai-agent/type/aiChat'
+import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { cloneDeep } from 'lodash'
@@ -12,7 +13,8 @@ interface SessionListState {
 export interface SessionListDispatcher {
   getSessions?: () => AISession[]
   setSessions: (sessions: AISession[] | ((prev: AISession[]) => AISession[])) => void
-  loadHistoryData: (sessionData?: string) => Promise<number>
+  refreshSession: (sessionId: string) => Promise<void>
+  loadHistoryData: (isRefresh?: boolean) => Promise<number>
   resetPagination: () => void
 }
 
@@ -32,61 +34,67 @@ const mergeUniqueChats = (prev: AISession[], next: AISession[]) => {
   return uniqueNext.length ? [...prev, ...uniqueNext] : prev
 }
 
-const useSessionList = () => {
+const useSessionList = (aiSource: AISource[]) => {
   const [_, setPagination, getPagination] = useGetSetState(cloneDeep(initialHistoryPagination))
   const [sessions, setSessions, getSessions] = useGetSetState<AISession[]>([])
   const historyLoadingRef = useRef(false)
-  const loadHistoryData = useMemoizedFn(async (sessionData?: string): Promise<number> => {
-    if (sessionData) {
-      // 本来就在第一个，不需要重复请求
-      if (getSessions().at(0)?.SessionID === sessionData) return 0
-      try {
-        const { Data } = await grpcQueryAISession({
-          Pagination: initialHistoryPagination,
-          Filter: {
-            Source: ['ai', ''],
-            SessionID: [sessionData],
-          },
-        })
-        setSessions((prev) => {
-          const filterData = prev.filter((item) => item.SessionID !== sessionData)
-          return [...Data, ...filterData]
-        })
-        return 0
-      } catch {
-        return 0
-      }
-    } else {
-      if (historyLoadingRef.current) {
-        return getPagination().total || 0
-      }
 
-      const currentPagination = getPagination()
+  const refreshSession = useMemoizedFn(async (sessionId: string) => {
+    // 本来就在第一个，不需要重复请求
+    if (getSessions().at(0)?.SessionID === sessionId) return
+    try {
+      const { Data } = await grpcQueryAISession({
+        Pagination: initialHistoryPagination,
+        Filter: {
+          Source: aiSource,
+          SessionID: [sessionId],
+        },
+      })
+      setSessions((prev) => {
+        const filterData = prev.filter((item) => item.SessionID !== sessionId)
+        return [...Data, ...filterData]
+      })
+    } catch {}
+  })
+
+  const loadHistoryData = useMemoizedFn(async (isRefresh?: boolean): Promise<number> => {
+    if (historyLoadingRef.current) {
+      return getPagination().total || 0
+    }
+
+    const currentPagination = isRefresh ? { ...initialHistoryPagination } : getPagination()
+
+    if (!isRefresh) {
       const currentChats = getSessions()
       if (currentPagination.total > 0 && currentChats.length >= currentPagination.total) {
         return currentPagination.total
       }
+    }
 
-      historyLoadingRef.current = true
-      try {
-        const { Data, Total } = await grpcQueryAISession({
-          Pagination: currentPagination,
-          Filter: {
-            Source: ['ai', ''],
-          },
-        })
+    historyLoadingRef.current = true
+    try {
+      const { Data, Total } = await grpcQueryAISession({
+        Pagination: currentPagination,
+        Filter: {
+          Source: aiSource,
+        },
+      })
+      if (isRefresh) {
+        setSessions(Data)
+        setPagination({ ...initialHistoryPagination, Page: 2, total: Total })
+      } else {
         setSessions((prev) => mergeUniqueChats(prev, Data))
         setPagination({
           ...currentPagination,
           Page: currentPagination.Page + 1,
           total: Total,
         })
-        return Total
-      } catch {
-        return currentPagination.total || 0
-      } finally {
-        historyLoadingRef.current = false
       }
+      return Total
+    } catch {
+      return currentPagination.total || 0
+    } finally {
+      historyLoadingRef.current = false
     }
   })
 
@@ -104,6 +112,7 @@ const useSessionList = () => {
     return {
       getSessions,
       setSessions,
+      refreshSession,
       loadHistoryData,
       resetPagination,
     }
