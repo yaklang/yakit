@@ -122,12 +122,17 @@ const HistoryChat = memo(() => {
     }
   })
 
+  const handleResetSessions = useMemoizedFn(() => {
+    dispatcher.setSessions?.([])
+    dispatcher.resetPagination?.()
+  })
+
   useEffect(() => {
     const handleSessionData = async (data: string) => {
       const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload
       switch (payload.type) {
         case 'refresh':
-          dispatcher.resetPagination?.()
+          handleResetSessions()
           await dispatcher.loadHistoryData?.(payload!.sessionId)
           break
         case 'loadNextPage':
@@ -142,8 +147,7 @@ const HistoryChat = memo(() => {
             },
             true,
           )
-          dispatcher.setSessions?.([])
-          dispatcher.resetPagination?.()
+          handleResetSessions()
           break
         case 'prependSession':
           if (payload.payload) dispatcher.setSessions((prev) => [payload.payload!, ...prev])
