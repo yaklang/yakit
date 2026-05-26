@@ -1,0 +1,149 @@
+{
+  "PluginDebugBody": {
+    "plugin_info_missing_close_debug_try_again": "未獲取外掛資訊，請關閉除錯窗後再次嘗試",
+    "extra_parameters_optional": "額外引數 (非必填)",
+    "debug_task_started_with_id": "除錯任務啟動成功，執行時 ID：",
+    "parameter_list": "引數列表",
+    "auto_detection": "自動檢測",
+    "get_parameters": "獲取引數",
+    "source_code": "原始碼",
+    "execution_result": "執行結果",
+    "click_execute_to_start": "點選【執行】以開始"
+  },
+  "FormContentItemByType": {
+    "parameter_config_data_error": "獲取引數配置資料錯誤，請重新開啟該頁面",
+    "enter_content_comma_separated": "請輸入內容，多條內容用“英文逗號”分隔"
+  },
+  "PluginFixFormParams": {
+    "data_packet": "資料包",
+    "original_request": "原始請求",
+    "request_configuration": "請求配置",
+    "request_id": "請求ID",
+    "request_type": "請求型別",
+    "scan_target": "掃描目標",
+    "please_enter_scan_target": "請輸入掃描目標，多個目標用“英文逗號”或換行分隔",
+    "enter_request_id_comma_separated": "請輸入請求ID,多個請求Id用“英文逗號”分隔",
+    "simulation_response": "模擬響應"
+  },
+  "FixExtraParamsNode": {
+    "http_method": "HTTP方法",
+    "request_path": "請求路徑",
+    "get_parameters": "GET 引數",
+    "post_parameters": "POST 引數"
+  },
+  "CodeScoreModal": {
+    "plugin_basic_detection": "外掛基礎檢測"
+  },
+  "CodeScoreModule": {
+    "plugin_basic_test_failed": "外掛基礎測試失敗：",
+    "detection_items_include": "檢測項包含：",
+    "basic_compile_test_description": "基礎編譯測試，判斷語法是否符合規範，是否存在不正確語法；",
+    "use_basic_false_positive_server": "把基礎防誤報伺服器作為測試基準，防止條件過於寬鬆導致的誤報；",
+    "check_plugin_crash": "檢查外掛執行過程是否會發生崩潰。",
+    "detecting_please_wait": "檢測中，請耐心等待...",
+    "check_error_try_again": "檢查錯誤，請關閉後再次嘗試!",
+    "score": "分",
+    "uploading_plugin_good_performance": "（表現良好，開始上傳外掛中...）",
+    "unable_to_judge_manual_review": "（無法判斷，是否需要轉人工稽覈）",
+    "upload_failed_fix_and_retry": "（上傳失敗，請修復後再上傳）",
+    "manual_review": "轉人工稽覈",
+    "detection_expected_duration": "一般來說，檢測將會在 <duration>10-20s</duration> 內結束"
+  },
+  "PluginExecuteLog": {
+    "plugin_log": "外掛日誌",
+    "statistical_chart": "統計圖表",
+    "output_text": "輸出文字",
+    "log_query_result": "日誌查詢結果"
+  },
+  "LocalPluginLog": {
+    "no_log_information": "暫無日誌資訊"
+  },
+  "PluginExecutePortTable": {
+    "portAssetManagement": "埠資產管理"
+  },
+  "PluginExecuteHttpFlow": {
+    "httpSearchPlaceholder": "請輸入域名進行搜尋,例baidu.com"
+  },
+  "PluginExecuteCustomTable": {
+    "logicCrashRetry": "彈框內邏輯性崩潰，請關閉重試！",
+    "outputTable": "輸出表",
+    "exportAll": "匯出全部"
+  },
+  "PluginTabName": {
+    "allPlugin": "線上外掛",
+    "officialPlugin": "官方外掛",
+    "localPlugin": "本地外掛"
+  },
+  "PluginHasParamsDrawer": {
+    "parameter_Settings": "引數設定: ",
+    "jsonSchemaValidateFailed": "jsonSchema校驗失敗"
+  },
+  "PluginEditor": {
+    "newPlugin": "新建外掛",
+    "helpDoc": "幫助文件",
+    "copyToCloud": "複製至雲端",
+    "submitAndSave": "提交併儲存",
+    "syncToCloud": "同步至雲端",
+    "saveAndExit": "儲存並退出",
+    "loadingPluginDetail": "獲取外掛詳情中...",
+    "oldDataMigrationTitle": "舊資料遷移提示",
+    "oldDataMigrationContent": "由於引數設計升級，檢測到資料庫儲存引數與外掛原始碼裡引數不同，使用會有問題，請點選“複製程式碼”將引數複製到外掛原始碼中。",
+    "copyCode": "複製程式碼",
+    "fetchOldDataFailed": "查詢舊資料遷移失敗: ",
+    "fetchPluginDetailEmpty": "獲取外掛詳情異常，請求為空",
+    "fetchPluginNameEmpty": "獲取外掛詳情異常，請求外掛名為空",
+    "copyToCloudDesc": "複製外掛並同步到自己的私密外掛，無需作者同意，即可儲存修改內容至雲端",
+    "pluginName": "外掛名稱",
+    "enterCopyName": "請輸入複製外掛的名稱",
+    "pluginNameMaxLength": "外掛名最長100位"
+  },
+  "EditorInfo": {
+    "basicInfo": "基礎資訊",
+    "collapseBasicInfo": "收起基礎資訊",
+    "functionError": "功能異常，請重試",
+    "templateExamples": "模板案例",
+    "faq": "常見問題",
+    "scriptType": "指令碼型別",
+    "scriptTypeRequired": "指令碼型別必填",
+    "pluginName": "外掛名稱",
+    "pluginNameRequired": "外掛名稱必填",
+    "nameMaxLength": "名稱最長100位",
+    "descriptionLabel": "描述 :",
+    "descriptionRequired": "外掛描述必填",
+    "tagsRequired": "Tags必填",
+    "pluginConfig": "外掛配置 :",
+    "enablePluginSelectorUI": "啟用外掛聯動 UI",
+    "invalidItem": "異常項",
+    "linkedPluginType": "聯動外掛型別",
+    "linkedPluginTypeRequired": "聯動外掛型別必填",
+    "switchScriptType": "切換指令碼型別",
+    "switchScriptTypeContent": "切換指令碼型別會清空原始碼內容，確定切換嗎？"
+  },
+  "TempExampleHelp": {
+    "fileRead": "檔案讀取(普通特徵字串匹配)",
+    "codeExecution": "程式碼執行(匹配二次處理後的結果)",
+    "binaryData": "二進位制資料發包",
+    "noEchoByDelay": "無回顯檢測(透過延時判斷)",
+    "noEchoByDnslog": "無回顯檢測(透過DNSLOG判斷)"
+  },
+  "FuncTemplate": {
+    "author": "作者",
+    "applicant": "申請人",
+    "expandFilter": "展開篩選",
+    "switchToGrid": "切換至宮格檢視",
+    "switchToList": "切換至列表檢視",
+    "loginRequiredDelete": "登入才可以進行刪除",
+    "loginRequiredRestore": "登入才可以進行還原",
+    "restore": "還原",
+    "resetSearch": "重置搜尋",
+    "sourceCode": "原始碼",
+    "sourceCodeDesc": "可在此定義外掛輸入原理，並編寫輸出 UI",
+    "escFullScreen": "按 Esc 即可退出全屏",
+    "anonymous": "匿名",
+    "filterCondition": "篩選條件"
+  },
+  "PluginExecResultDefaultTabs": {
+    "HTTPtraffic": "HTTP 流量",
+    "log": "日誌"
+  }
+}

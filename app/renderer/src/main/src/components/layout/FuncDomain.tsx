@@ -1027,6 +1027,10 @@ const GetUIOpSettingMenu = () => {
             key: 'en',
             label: '英文',
           },
+          {
+            key: 'zh-TW',
+            label: '繁中',
+          },
         ],
       },
       { type: 'divider' },
@@ -1119,6 +1123,10 @@ const GetUIOpSettingMenu = () => {
         {
           key: 'en',
           label: '英文',
+        },
+        {
+          key: 'zh-TW',
+          label: '繁中',
         },
       ],
     },
@@ -1373,6 +1381,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'zh':
       case 'en':
+      case 'zh-TW':
         i18n.changeLanguage(type)
         setLocalValue(getRemoteI18nGV(), type)
         return

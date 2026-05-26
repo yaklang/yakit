@@ -8,6 +8,7 @@ i18n
   .init({
     lng: 'zh',
     fallbackLng: 'en',
+    supportedLngs: ['zh', 'en', 'zh-TW'],
     ns: [
       'yakitUi',
       'yakitRoute',
