@@ -740,7 +740,14 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 </Form.Item>
 
                 <Form.Item
-                  label={t('HttpQueryAdvancedConfig.no_fix_length')}
+                  label={
+                    <span className={styles['advanced-config-form-label']}>
+                      {t('HttpQueryAdvancedConfig.no_fix_length')}
+                      <Tooltip title={t('HttpQueryAdvancedConfig.no_fix_length_tip')} overlayStyle={{ width: 220 }}>
+                        <InformationCircleIcon className={styles['info-icon']} />
+                      </Tooltip>
+                    </span>
+                  }
                   name="noFixContentLength"
                   valuePropName="checked"
                 >
