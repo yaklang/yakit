@@ -215,6 +215,8 @@ export interface UseChatIPCState {
   taskChat: UseTaskChatState
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
+  /** 当前会话能力清单 */
+  capabilityInventory: AIAgentGrpcApi.CapabilityInventoryPayload
   /** 问题队列信息 */
   questionQueue: AIQuestionQueues
   /** 时间线 */

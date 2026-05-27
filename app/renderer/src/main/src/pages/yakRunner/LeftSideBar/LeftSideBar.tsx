@@ -1,18 +1,15 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { OutlinCompileTwoIcon, OutlineDocumenttextIcon, OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
 import { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
 import { RunnerFileTree } from '../RunnerFileTree/RunnerFileTree'
 import { YakHelpDoc } from '../YakHelpDoc/YakHelpDoc'
+import { YakRunnerAI } from '../YakRunnerAI'
 
 import classNames from 'classnames'
 import styles from './LeftSideBar.module.scss'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { YakRunnerTab } from '../YakRunner'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
-
 export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
   const { addFileTab, isUnShow, active, setActive, setIsUnShow } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner'])
@@ -62,6 +59,15 @@ export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
             })}
           >
             <YakHelpDoc />
+          </div>
+        )}
+        {rendered.current.has('ai') && (
+          <div
+            className={classNames(styles['content-wrapper'], {
+              [styles['hidden-content']]: active !== 'ai' || isUnShow,
+            })}
+          >
+            <YakRunnerAI onClose={() => setIsUnShow(true)} />
           </div>
         )}
       </div>

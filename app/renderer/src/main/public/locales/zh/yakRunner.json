@@ -45,6 +45,7 @@
   },
   "YakRunner": {
     "resourceExplorer": "资源管理器",
+    "ai": "AI",
     "helpDocumentation": "帮助文档",
     "fileTooLargeWarning": "文件警告",
     "fileTooLargeContent": "文件过大，无法使用YakRunner进行操作",

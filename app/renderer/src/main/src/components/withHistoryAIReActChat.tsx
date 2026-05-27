@@ -106,6 +106,7 @@ export interface HistoryAIReActChatProviderProps {
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
   httpFuzzTabPageId?: string
+  transformInputEvent?: (event: AIInputEvent) => AIInputEvent
 }
 
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
@@ -113,6 +114,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   focusModeLoop,
   children,
   httpFuzzTabPageId,
+  transformInputEvent,
 }: HistoryAIReActChatProviderProps) {
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
@@ -211,6 +213,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
           params = prependWebFuzzerHttpRequestToSendFields(params, raw)
         }
       }
+      if (transformInputEvent) {
+        params = transformInputEvent(params)
+      }
       resolve({
         params,
         extraParams: newChat,
@@ -240,6 +245,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       if (raw != null) {
         params = prependWebFuzzerHttpRequestToSendFields(params, raw)
       }
+    }
+    if (transformInputEvent) {
+      params = transformInputEvent(params)
     }
 
     return new Promise<AISendResProps>((resolve) => {

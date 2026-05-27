@@ -45,6 +45,7 @@
   },
   "YakRunner": {
     "resourceExplorer": "Resource Explorer",
+    "ai": "AI",
     "helpDocumentation": "Help Documentation",
     "fileTooLargeWarning": "File Warning",
     "fileTooLargeContent": "File is too large to operate with YakRunner",

@@ -168,6 +168,7 @@ export enum SwitchAIAgentTabEventEnum {
 export enum AITabsEnum {
   Task_Content = 'task-content',
   File_System = 'file-system',
+  Capability_Inventory = 'capability-inventory',
   HTTP = 'http',
   Risk = 'risk',
   Operation_Log = 'operation-log',
@@ -176,6 +177,7 @@ export enum AITabsEnum {
 export const AITabs = {
   'task-content': { label: 'AITabs.taskContent', value: AITabsEnum.Task_Content },
   'file-system': { label: 'AITabs.fileSystem', value: AITabsEnum.File_System },
+  'capability-inventory': { label: '能力清单', value: AITabsEnum.Capability_Inventory },
   http: { label: 'AITabs.httpTraffic', value: AITabsEnum.HTTP },
   risk: { label: 'YakitRoute.vulnerabilityAndrisk', value: AITabsEnum.Risk },
   'operation-log': { label: 'AITabs.readWriteLog', value: AITabsEnum.Operation_Log },
@@ -278,6 +280,10 @@ export const defaultChatIPCData: UseChatIPCState = {
     elements: [],
   },
   grpcFolders: [],
+  capabilityInventory: {
+    fixed: {},
+    dynamic: {},
+  },
   questionQueue: {
     total: 0,
     data: [],
