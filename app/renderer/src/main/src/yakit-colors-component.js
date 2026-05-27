@@ -14,7 +14,7 @@ export function generateNeutralSemanticColors(mode = 'light') {
     }
   } else if (mode === 'dark') {
     return {
-      [`${prefix}Bg`]: 'var(--yakit-colors-Neutral-0)', // 极暗背景色
+      [`${prefix}Bg`]: 'var(--yakit-colors-Neutral-10)', // 极暗背景色
       [`${prefix}Bg-Hover`]: 'var(--yakit-colors-Neutral-20)',
       [`${prefix}Border`]: 'var(--yakit-colors-Neutral-30)',
       [`${prefix}Disable`]: 'var(--yakit-colors-Neutral-40)',
@@ -44,7 +44,7 @@ export function generateBasicSemanticColors(mode = 'light') {
       [`${prefix}Black`]: '#171717',
       [`${prefix}Shadow`]: 'rgba(0,0,0, 0.8)',
       [`${prefix}Modal-bg`]: 'rgba(0,0,0, 0.7)',
-      [`${prefix}Background`]: 'var(--yakit-colors-Neutral-10)', // 极暗背景色
+      [`${prefix}Background`]: 'var(--yakit-colors-Neutral-0)', // 极暗背景色
     }
   }
   return {}
