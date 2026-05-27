@@ -1,14 +1,15 @@
-import { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { KVPair } from '@/models/kv'
-import { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
-import { AITaskInfoProps } from './aiRender'
-import { AITool } from '@/pages/ai-agent/type/aiTool'
-import { AIForge } from '@/pages/ai-agent/type/forge'
-import { KnowledgeBaseEntry } from '@/components/playground/knowlegeBase/types'
+import type { KnowledgeBaseEntry } from '@/components/playground/knowlegeBase'
+import type { StreamResult, HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { KVPair } from '@/models/kv'
+import type { AITool } from '@/pages/ai-agent/type/aiTool'
+import type { AIForge } from '@/pages/ai-agent/type/forge'
+import type { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
+import type { AITaskInfoProps } from './aiRender'
+
 import {
-  AIModelTypeEnumType,
   AttachedResourceKeyEnum,
   AttachedResourceTypeEnum,
+  type AIModelTypeEnumType,
 } from '@/pages/ai-agent/defaultConstant'
 
 // #region 双工接口请求和响应结构

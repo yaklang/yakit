@@ -6,14 +6,14 @@ import type {
   UseTaskChatParams,
   UseTaskChatState,
 } from './type'
-import type { AIChatQSData, AIReviewType, ReActChatRenderItem, ReActChatTaskElement, AITaskInfoProps } from './aiRender'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { useRef, useState } from 'react'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useEffect, useRef, useState } from 'react'
+import { useCreation, useMemoizedFn, useThrottleFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, isValidTaskIndex } from './utils'
+import { genBaseAIChatData, generateTaskId, genExecTasks, handleGrpcDataPushLog, isValidTaskIndex } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -24,7 +24,16 @@ import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
 function useTaskChat(params: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params: UseTaskChatParams) {
-  const { pushLog, getChatDataStore, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest } = params || {}
+  const {
+    pushLog,
+    getChatDataStore,
+    getRequest,
+    getCurrentTaskPlanID,
+    onReview,
+    onReviewExtra,
+    onReviewRelease,
+    sendRequest,
+  } = params || {}
 
   const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
     pushLog && pushLog(logInfo)
@@ -48,26 +57,19 @@ function useTaskChat(params: UseTaskChatParams) {
     setPlan(cloneDeep(DefaultCurrentExecTaskTree))
   })
 
-  /** 正在执行中的叶子任务的mapKey集合(已结束的叶子任务会被移除) */
+  /**
+   * 正在执行中的叶子任务的mapKey集合(已结束的叶子任务会被移除)
+   * 主要为了在任务中断时，手动设置为error状态使用
+   */
   const activeLeafTasks = useRef<Set<string>>(new Set())
-  /** 正在执行中的 TaskIndex 集合组：taskIndex → groupToken */
-  const activeTaskIndexGroups = useRef<Map<string, string>>(new Map())
   const handleResetActiveLeafTasks = useMemoizedFn(() => {
     activeLeafTasks.current.clear()
-  })
-  const handleResetActiveTaskIndexGroups = useMemoizedFn(() => {
-    activeTaskIndexGroups.current.clear()
-  })
-
-  const getActiveTaskIndexGroupKey = useMemoizedFn((taskIndex?: string): string | undefined => {
-    if (!isValidTaskIndex(taskIndex)) return undefined
-    return activeTaskIndexGroups.current.get(taskIndex)
   })
 
   const handleTaskNode = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     try {
-      const taskKey = `task-node-${info.task.index}`
-      const existing = getContentMap(taskKey)
+      const taskKey = generateTaskId(getCurrentTaskPlanID()?.taskID, info.task.index)
+      const existing = getContentMap(taskKey || '')
       if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         handleGrpcDataPushLog({
           info: res,
@@ -92,7 +94,6 @@ function useTaskChat(params: UseTaskChatParams) {
 
       setContentMap(chatData.id, chatData)
       if (info.type === 'push_task') {
-        activeTaskIndexGroups.current.set(info.task.index, chatData.id)
         activeLeafTasks.current.add(chatData.id)
         setElements((old) => {
           const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
@@ -103,7 +104,6 @@ function useTaskChat(params: UseTaskChatParams) {
           ]
         })
       } else if (info.type === 'pop_task') {
-        activeTaskIndexGroups.current.delete(info.task.index)
         // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
         activeLeafTasks.current.delete(chatData.id)
         if (chatData.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
@@ -215,13 +215,13 @@ function useTaskChat(params: UseTaskChatParams) {
         handleFunc({
           res,
           info: { chatType: 'task' },
+          getCurrentTaskPlanID,
           getRequest,
           setElements,
           getElements,
           setContentMap,
           getContentMap,
           pushLog: handlePushLog,
-          getActiveTaskIndexGroupKey,
           review: {
             handleGetReview,
             handleSetReview,
@@ -240,19 +240,16 @@ function useTaskChat(params: UseTaskChatParams) {
         const data = JSON.parse(ipcContent) || ''
 
         if (data && typeof data === 'object' && data?.type === 'push_task') {
+          // 开始任务的执行
           const info = data as AIAgentGrpcApi.ChangeTask
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
-          if (isValidTaskIndex(info.task.index)) {
-            handleTaskNode(res, info)
-          }
+          if (isValidTaskIndex(info.task.index)) handleTaskNode(res, info)
         }
 
         if (data && typeof data === 'object' && data?.type === 'pop_task') {
           // 结束任务 & 请求更新任务树最新状态数据
           const info = data as AIAgentGrpcApi.ChangeTask
-          if (isValidTaskIndex(info.task.index)) {
-            handleTaskNode(res, info)
-          }
+          if (isValidTaskIndex(info.task.index)) handleTaskNode(res, info)
           sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
         }
         return
@@ -281,7 +278,6 @@ function useTaskChat(params: UseTaskChatParams) {
   const handleResetData = useMemoizedFn(() => {
     handleResetPlanTree()
     handleResetActiveLeafTasks()
-    handleResetActiveTaskIndexGroups()
     setElements([])
   })
 

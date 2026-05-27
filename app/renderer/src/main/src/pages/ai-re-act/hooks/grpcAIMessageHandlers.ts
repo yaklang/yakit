@@ -1,4 +1,4 @@
-import type { AIMessageHandler, AIMessageHandlerParams } from './type'
+import type { AIMessageHandler, AIMessageHandlerParams, UpdateRenderDataParams } from './type'
 import type { AIAgentGrpcApi } from './grpcApi'
 import type {
   AIChatQSData,
@@ -19,6 +19,7 @@ import type {
 import { Uint8ArrayToString } from '@/utils/str'
 import {
   genBaseAIChatData,
+  generateTaskId,
   genErrorLogData,
   isAutoExecuteReviewContinue,
   isToolStderrStream,
@@ -46,22 +47,25 @@ const handleErrorGRPCToLog: (
   pushLog(error)
 }
 
-/** 在 elements 树中查找并更新指定渲染项（含 TaskIndex 组 / stream 组嵌套） */
-const bumpRenderItem = (list: ReActChatRenderItem[], mapKey: string, type: AIChatQSDataType): boolean => {
+/**
+ * 在 elements 树中查找并更新指定渲染项（含 Task 组 / stream 组嵌套）
+ * 只是更新renderNum，不包含新建逻辑
+ */
+const bumpRenderItem = (list: ReActChatRenderItem[], info: UpdateRenderDataParams): boolean => {
   for (const item of list) {
-    if (item.token === mapKey && item.type === type) {
+    if (item.token === info.mapKey && item.type === info.type) {
       item.renderNum += 1
       return true
     }
     if (item.kind === 'task') {
       for (const child of item.children) {
-        if (child.token === mapKey && child.type === type) {
+        if (child.token === info.mapKey && child.type === info.type) {
           child.renderNum += 1
           item.renderNum += 1
           return true
         }
         if (child.kind === 'group') {
-          const sub = child.children.find((c) => c.token === mapKey && c.type === type)
+          const sub = child.children.find((c) => c.token === info.mapKey && c.type === info.type)
           if (sub) {
             sub.renderNum += 1
             child.renderNum += 1
@@ -72,7 +76,7 @@ const bumpRenderItem = (list: ReActChatRenderItem[], mapKey: string, type: AICha
       }
     }
     if (item.kind === 'group') {
-      const sub = item.children.find((c) => c.token === mapKey && c.type === type)
+      const sub = item.children.find((c) => c.token === info.mapKey && c.type === info.type)
       if (sub) {
         sub.renderNum += 1
         item.renderNum += 1
@@ -83,47 +87,18 @@ const bumpRenderItem = (list: ReActChatRenderItem[], mapKey: string, type: AICha
   return false
 }
 
-type UISingleStateOptions = {
-  taskIndex?: string
-  getActiveTaskIndexGroupKey?: AIMessageHandlerParams['getActiveTaskIndexGroupKey']
-  getContentMap?: AIMessageHandlerParams['getContentMap']
-}
-
-/** 从 grpc 事件或 contentMap 解析 TaskIndex */
-const resolveTaskIndexForUI = (
-  request: Pick<AIMessageHandlerParams, 'res' | 'getContentMap'>,
-  mapKey?: string,
-): string | undefined => {
-  if (request.res.TaskIndex) return request.res.TaskIndex
-  if (!mapKey) return undefined
-  const content = request.getContentMap?.(mapKey)
-  if (content?.type === AIChatQSDataTypeEnum.TOOL_RESULT) {
-    return content.data.TaskIndex
-  }
-  if (content?.type === AIChatQSDataTypeEnum.STREAM) {
-    return content.data.TaskIndex
-  }
-  return undefined
-}
-
-const getUISingleStateOptions = (
-  request: Pick<AIMessageHandlerParams, 'res' | 'getActiveTaskIndexGroupKey' | 'getContentMap'>,
-  mapKey?: string,
-): UISingleStateOptions => ({
-  taskIndex: resolveTaskIndexForUI(request, mapKey),
-  getActiveTaskIndexGroupKey: request.getActiveTaskIndexGroupKey,
-  getContentMap: request.getContentMap,
-})
-
-/** 将新渲染项追加到 elements（优先写入活跃 TaskIndex 组） */
+/**
+ * 将新渲染项追加到 elements（只包含普通节点 和 Task 任务组，单节点不会出现在 Stream 组内）
+ * 只是新建逻辑，不包含更新renderNum
+ */
 const appendRenderItem = (
   old: ReActChatRenderItem[],
   element: ReActChatRenderItem,
   isHistory: boolean,
-  options?: UISingleStateOptions,
+  options?: { taskIndex: AIChatQSData['taskIndex']; getContentMap: AIMessageHandlerParams['getContentMap'] },
 ): ReActChatRenderItem[] => {
-  const taskIndexGroupKey = options?.getActiveTaskIndexGroupKey?.(options?.taskIndex)
-  if (taskIndexGroupKey) {
+  if (options?.taskIndex) {
+    const taskIndexGroupKey = options?.taskIndex
     const groupIndex = old.findIndex((item) => item.kind === 'task' && item.token === taskIndexGroupKey)
     if (groupIndex >= 0) {
       const list = [...old]
@@ -132,8 +107,6 @@ const appendRenderItem = (
         isHistory ? [element, ...group.children] : [...group.children, element]
       ) as ReActChatTaskElementSub[]
       list[groupIndex] = { ...group, children, renderNum: group.renderNum + 1 }
-      const content = options?.getContentMap?.(element.token)
-      if (content) content.parentTaskIndexGroupKey = taskIndexGroupKey
       return list
     }
   }
@@ -141,17 +114,15 @@ const appendRenderItem = (
 }
 
 /** 更新UI-State变量数据(独立单条数据) */
-const handleUpdateUISingleState: (
-  /** 该条grpc流数据是历史数据 */
+const handleUpdateUISingleState = (
+  setElements: AIMessageHandlerParams['setElements'],
+  getContentMap: AIMessageHandlerParams['getContentMap'],
   isHistory: AIMessageHandlerParams['res']['IsSync'],
-  /** UI-State数据 */
-  info: { mapKey: string; type: AIChatQSDataType } & { chatType: ReActChatBaseInfo['chatType'] },
-  setElement: AIMessageHandlerParams['setElements'],
-  options?: UISingleStateOptions,
-) => void = (isHistory, info, setElement, options) => {
+  info: UpdateRenderDataParams & { chatType: ReActChatBaseInfo['chatType'] },
+) => {
   try {
-    setElement((old) => {
-      if (bumpRenderItem(old, info.mapKey, info.type)) {
+    setElements((old) => {
+      if (bumpRenderItem(old, info)) {
         return [...old]
       }
 
@@ -162,18 +133,14 @@ const handleUpdateUISingleState: (
         kind: 'item',
         renderNum: 1,
       }
-      return appendRenderItem(old, element, !!isHistory, options)
+      const chatDetail = getContentMap(info.mapKey)
+      if (!chatDetail || chatDetail.id !== info.mapKey) return old
+      return appendRenderItem(old, element, isHistory, {
+        taskIndex: chatDetail?.taskIndex,
+        getContentMap,
+      })
     })
   } catch {}
-}
-
-/** 从 request 解析 TaskIndex 并更新 UI-State */
-const handleUpdateUISingleStateFromRequest = (
-  request: AIMessageHandlerParams,
-  isHistory: AIMessageHandlerParams['res']['IsSync'],
-  info: { mapKey: string; type: AIChatQSDataType } & { chatType: ReActChatBaseInfo['chatType'] },
-) => {
-  handleUpdateUISingleState(isHistory, info, request.setElements, getUISingleStateOptions(request, info.mapKey))
 }
 
 /** 更新UI-State变量数据(组数据) */
@@ -184,16 +151,13 @@ const handleUpdateUIGroupState: (
   sub: { mapKey: string; type: AIChatQSDataType },
   setElement: AIMessageHandlerParams['setElements'],
   /** 父 TaskIndex 集合组 token */
-  parentTaskIndexGroupKey?: string,
-) => void = (group, sub, setElement, parentTaskIndexGroupKey) => {
+  taskNodeKey?: string,
+) => void = (group, sub, setElement, taskNodeKey) => {
   try {
     setElement((old) => {
-      const scope: ReActChatRenderItem[] = parentTaskIndexGroupKey
-        ? (
-            old.find((item) => item.kind === 'task' && item.token === parentTaskIndexGroupKey) as
-              | ReActChatTaskElement
-              | undefined
-          )?.children || []
+      const scope: ReActChatRenderItem[] = taskNodeKey
+        ? (old.find((item) => item.kind === 'task' && item.token === taskNodeKey) as ReActChatTaskElement | undefined)
+            ?.children || []
         : old
 
       const find = scope.find((item) => item.token === group.mapKey && item.type === group.type)
@@ -201,8 +165,8 @@ const handleUpdateUIGroupState: (
         const subFind = find.children.find((item) => item.token === sub.mapKey && item.type === sub.type)
         if (subFind) subFind.renderNum += 1
         find.renderNum += 1
-        if (parentTaskIndexGroupKey) {
-          const taskGroup = old.find((item) => item.kind === 'task' && item.token === parentTaskIndexGroupKey) as
+        if (taskNodeKey) {
+          const taskGroup = old.find((item) => item.kind === 'task' && item.token === taskNodeKey) as
             | ReActChatTaskElement
             | undefined
           if (taskGroup) taskGroup.renderNum += 1
@@ -229,9 +193,10 @@ const handleThought: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.THOUGHT,
     data: thought || '',
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   setContentMap(chatData.id, chatData)
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
     chatType: chatData.chatType,
@@ -252,9 +217,10 @@ const handleResult: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.THOUGHT,
     data: result || '',
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   setContentMap(chatData.id, chatData)
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
     chatType: chatData.chatType,
@@ -276,9 +242,10 @@ const handleFailReactTask: AIMessageHandler = (request) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   setContentMap(chatData.id, chatData)
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
     chatType: chatData.chatType,
@@ -304,9 +271,10 @@ const handleToolCallDecision: AIMessageHandler = (request) => {
         En: i18n.en,
       },
     },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   setContentMap(chatData.id, chatData)
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
     chatType: chatData.chatType,
@@ -328,9 +296,10 @@ const handleFailPlanAndExecution: AIMessageHandler = (request) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   setContentMap(chatData.id, chatData)
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
     chatType: chatData.chatType,
@@ -356,9 +325,10 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
     AIModelName: '',
     // showQS为了UI渲染方便，重新构建的字段
     extraValue: { showQS: data.react_task_input || '' },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   setContentMap(chatData.id, chatData)
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
     chatType: chatData.chatType,
@@ -379,9 +349,10 @@ const handleApiRequestFailed: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
     data,
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   setContentMap(chatData.id, chatData)
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
     chatType: chatData.chatType,
@@ -428,11 +399,12 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
       chatType: info.chatType,
       type: cardType,
       data: nextData,
+      taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
     }
     setContentMap(fuzz_id, chatData)
   }
 
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: fuzz_id,
     type: cardType,
     chatType: info.chatType,
@@ -539,13 +511,13 @@ const handleStreamStart: AIMessageHandler = (request) => {
       data: {
         NodeId,
         NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(NodeId),
-        TaskIndex: res.TaskIndex || undefined,
         CallToolID,
         EventUUID: event_writer_id,
         status: 'start',
         content: '',
         ContentType: res.ContentType,
       },
+      taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
     })
     return
   }
@@ -593,17 +565,17 @@ const handleStreamStart: AIMessageHandler = (request) => {
     data: {
       NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(NodeId),
-      TaskIndex: res.TaskIndex || undefined,
       CallToolID,
       EventUUID: event_writer_id,
       status: 'start',
       content: '',
       ContentType: res.ContentType,
     },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   })
 }
 
-/** 将 task 容器内 children 写回顶层 list */
+/** 将 task 容器内 children 写回顶层 list，并给renderNum加一 */
 const writeBackTaskGroupChildren = (
   list: ReActChatRenderItem[],
   taskGroupIndex: number,
@@ -624,20 +596,19 @@ const handleIsGroupDisplayForStream: (
   data: ReActChatRenderItem[],
   /** 获取详情数据映射的函数 */
   getContentMap: AIMessageHandlerParams['getContentMap'],
-  /** 父 TaskIndex 集合组 token */
-  taskIndexGroupKey?: string,
-) => ReActChatRenderItem[] = (res, streamDetail, data, getContentMap, taskIndexGroupKey) => {
+) => ReActChatRenderItem[] = (res, streamDetail, data, getContentMap) => {
+  const taskNodeKey = streamDetail.taskIndex
   const list = [...data]
-  let taskGroupIndex = -1
+  /** 任务节点的索引 */
+  let taskNodeIndex = -1
   /** task 容器内操作的列表；未命中时为顶层 list */
   let targetList: ReActChatTaskElementSub[] | ReActChatRenderItem[] = list
 
-  if (taskIndexGroupKey) {
-    taskGroupIndex = list.findIndex((item) => item.kind === 'task' && item.token === taskIndexGroupKey)
-    if (taskGroupIndex >= 0) {
-      const taskGroup = list[taskGroupIndex] as ReActChatTaskElement
+  if (taskNodeKey) {
+    taskNodeIndex = list.findIndex((item) => item.kind === 'task' && item.token === taskNodeKey)
+    if (taskNodeIndex >= 0) {
+      const taskGroup = list[taskNodeIndex] as ReActChatTaskElement
       targetList = [...taskGroup.children]
-      streamDetail.parentTaskIndexGroupKey = taskIndexGroupKey
     }
   }
 
@@ -651,14 +622,14 @@ const handleIsGroupDisplayForStream: (
   }
 
   const commitIfInTaskGroup = (): ReActChatRenderItem[] | null => {
-    if (taskGroupIndex < 0) return null
-    return writeBackTaskGroupChildren(list, taskGroupIndex, targetList as ReActChatTaskElementSub[])
+    if (taskNodeIndex < 0) return null
+    return writeBackTaskGroupChildren(list, taskNodeIndex, targetList as ReActChatTaskElementSub[])
   }
 
   // 以下 判断stream数据已经渲染在UI上的逻辑处理
   const find = targetList.find((item) => item.token === element.token)
   if (find) {
-    // 已经渲染到UI上, 再次触发渲染更新
+    // 已经渲染到UI上, 是单个节点，或者是task节点下的单个节点/组数据的节点key命中
     if (find.kind === 'group') {
       const subFind = find.children.find((item) => item.token === element.token && item.type === element.type)
       if (subFind) subFind.renderNum += 1
@@ -667,7 +638,7 @@ const handleIsGroupDisplayForStream: (
     return commitIfInTaskGroup() ?? [...targetList]
   }
   if (streamDetail && streamDetail.parentGroupKey) {
-    // 已经渲染到UI上, 但是是组内数据, 找到组信息，并触发渲染更新
+    // 已经渲染到UI上, 不是组数据的key, 但是是组内数据, 找到组信息，并触发渲染更新
     const group = targetList.find(
       (item) => item.token === streamDetail.parentGroupKey && item.type === AIChatQSDataTypeEnum.STREAM_GROUP,
     )
@@ -737,7 +708,7 @@ const handleIsGroupDisplayForStream: (
 
 /** Type='stream' stream数据 */
 const handleStream: AIMessageHandler = (request) => {
-  const { res, setElements, getContentMap, pushLog, getActiveTaskIndexGroupKey } = request
+  const { res, setElements, getContentMap, pushLog } = request
   if (res.Type !== 'stream') return
   // 属于日志数据的不进入UI展示
   if (res.IsSystem || res.IsReason) return
@@ -796,12 +767,11 @@ const handleStream: AIMessageHandler = (request) => {
     // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
     toolForStreamData.data.content += content
     if (isRender) {
-      handleUpdateUISingleState(
-        res.IsSync,
-        { mapKey: toolResult.id, type: toolResult.type, chatType: toolResult.chatType },
-        setElements,
-        getUISingleStateOptions(request, toolResult.id),
-      )
+      handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+        mapKey: toolResult.id,
+        type: toolResult.type,
+        chatType: toolResult.chatType,
+      })
     }
     return
   }
@@ -825,10 +795,9 @@ const handleStream: AIMessageHandler = (request) => {
   streamData.data.content += content
 
   if (isRender) {
-    const taskIndexGroupKey = getActiveTaskIndexGroupKey?.(res.TaskIndex)
     // 判断是否成为组UI数据展示
     setElements((old) => {
-      const list = handleIsGroupDisplayForStream(res, streamData, old, getContentMap, taskIndexGroupKey)
+      const list = handleIsGroupDisplayForStream(res, streamData, old, getContentMap)
       return list
     })
   }
@@ -876,12 +845,11 @@ const handleStreamFinished: AIMessageHandler = (request) => {
       // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
       toolResult.data.tool.execError = toolErrorResult.content
       if (showUI) {
-        handleUpdateUISingleState(
-          res.IsSync,
-          { mapKey: toolResult.id, type: toolResult.type, chatType: toolResult.chatType },
-          setElements,
-          getUISingleStateOptions(request, toolResult.id),
-        )
+        handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+          mapKey: toolResult.id,
+          type: toolResult.type,
+          chatType: toolResult.chatType,
+        })
       }
       ToolResultForStreamError.delete(CallToolID)
     }
@@ -913,12 +881,11 @@ const handleStreamFinished: AIMessageHandler = (request) => {
       ? '...' + toolForStreamData.data.content.slice(-25600) + '...'
       : toolForStreamData.data.content
     toolResult.data.tool.toolStdoutContent = { content: displayContent, isShowAll }
-    handleUpdateUISingleState(
-      res.IsSync,
-      { mapKey: toolResult.id, type: toolResult.type, chatType: toolResult.chatType },
-      setElements,
-      getUISingleStateOptions(request, toolResult.id),
-    )
+    handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+      mapKey: toolResult.id,
+      type: toolResult.type,
+      chatType: toolResult.chatType,
+    })
     return
   }
 
@@ -934,15 +901,14 @@ const handleStreamFinished: AIMessageHandler = (request) => {
       { mapKey: streamData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP },
       { mapKey: event_writer_id, type: AIChatQSDataTypeEnum.STREAM },
       setElements,
-      streamData.parentTaskIndexGroupKey,
+      streamData.taskIndex,
     )
   } else {
-    handleUpdateUISingleState(
-      res.IsSync,
-      { mapKey: streamData.id, type: streamData.type, chatType: streamData.chatType },
-      setElements,
-      getUISingleStateOptions(request, streamData.id),
-    )
+    handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+      mapKey: streamData.id,
+      type: streamData.type,
+      chatType: streamData.chatType,
+    })
   }
 }
 
@@ -964,17 +930,16 @@ const handleReferenceMaterial: AIMessageHandler = (request) => {
         { mapKey: chatData.parentGroupKey, type: AIChatQSDataTypeEnum.STREAM_GROUP },
         { mapKey: chatData.id, type: chatData.type },
         setElements,
-        chatData.parentTaskIndexGroupKey,
+        chatData.taskIndex,
       )
     } else if (chatData.type === AIChatQSDataTypeEnum.STREAM) {
       if (toolResult && isToolStdoutStream(chatData.data.NodeId)) {
         // 特殊情况，更新stdout流对应的工具执行结果卡片UI
-        handleUpdateUISingleState(
-          res.IsSync,
-          { mapKey: toolResult.id, type: toolResult.type, chatType: toolResult.chatType },
-          setElements,
-          getUISingleStateOptions(request, toolResult.id),
-        )
+        handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+          mapKey: toolResult.id,
+          type: toolResult.type,
+          chatType: toolResult.chatType,
+        })
       } else {
         setElements((old) => {
           const list = handleIsGroupDisplayForStream(
@@ -988,12 +953,11 @@ const handleReferenceMaterial: AIMessageHandler = (request) => {
       }
       return
     } else {
-      handleUpdateUISingleState(
-        res.IsSync,
-        { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
-        setElements,
-        getUISingleStateOptions(request, chatData.id),
-      )
+      handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+        mapKey: chatData.id,
+        type: chatData.type,
+        chatType: chatData.chatType,
+      })
     }
   } else if (
     toolResult &&
@@ -1001,12 +965,11 @@ const handleReferenceMaterial: AIMessageHandler = (request) => {
     toolResult.data.stream.EventUUID === data.event_uuid
   ) {
     toolResult.reference = (toolResult.reference || []).concat([data])
-    handleUpdateUISingleState(
-      res.IsSync,
-      { mapKey: toolResult.id, type: toolResult.type, chatType: toolResult.chatType },
-      setElements,
-      getUISingleStateOptions(request, toolResult.id),
-    )
+    handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+      mapKey: toolResult.id,
+      type: toolResult.type,
+      chatType: toolResult.chatType,
+    })
   } else {
     const chatData: AIChatQSData = {
       ...genBaseAIChatData(res),
@@ -1018,14 +981,14 @@ const handleReferenceMaterial: AIMessageHandler = (request) => {
         NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
       },
       reference: [data],
+      taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
     }
     setContentMap(chatData.id, chatData)
-    handleUpdateUISingleState(
-      res.IsSync,
-      { mapKey: chatData.id, type: chatData.type, chatType: chatData.chatType },
-      setElements,
-      getUISingleStateOptions(request, chatData.id),
-    )
+    handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+      mapKey: chatData.id,
+      type: chatData.type,
+      chatType: chatData.chatType,
+    })
   }
 }
 // #endregion
@@ -1045,7 +1008,6 @@ const handleToolCallStart: AIMessageHandler = (request) => {
 
   const toolResult: AIToolResult = {
     ...cloneDeep(DefaultAIToolResult),
-    TaskIndex: res.TaskIndex || undefined,
     callToolId: call_tool_id,
     toolName: tool?.name || '-',
     toolDescription: tool?.description || '',
@@ -1059,6 +1021,7 @@ const handleToolCallStart: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.TOOL_RESULT,
     data: toolResult,
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   })
 }
 
@@ -1090,7 +1053,7 @@ const handleToolCallParam: AIMessageHandler = (request) => {
   toolResult.data.tool.reviewParams = cloneDeep(params)
 
   if (toolResult.data.type === 'result') {
-    handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: toolResult.id,
       type: toolResult.type,
       chatType: toolResult.chatType,
@@ -1148,7 +1111,7 @@ const handleToolCallWatcher: AIMessageHandler = (request) => {
   if (toolResult.data.type === 'stream') {
     // 历史数据-该类型不出发渲染更新
     if (res.IsSync) return
-    handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: toolResult.id,
       type: toolResult.type,
       chatType: toolResult.chatType,
@@ -1192,7 +1155,7 @@ const handleToolCallLogDir: AIMessageHandler = (request) => {
   // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
   toolResult.data.tool.dirPath = dir_path || ''
   if (toolResult.data.tool.status !== 'default') {
-    handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: toolResult.id,
       type: toolResult.type,
       chatType: toolResult.chatType,
@@ -1249,7 +1212,7 @@ const handleToolCallResult: (
     ToolResultForStreamError.delete(call_tool_id)
   }
 
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: toolResult.id,
     type: toolResult.type,
     chatType: toolResult.chatType,
@@ -1316,7 +1279,7 @@ const handleToolCallSummary: AIMessageHandler = (request) => {
     ToolResultForStreamError.delete(call_tool_id)
   }
   if (statusInfo !== 'default') {
-    handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: toolResult.id,
       type: toolResult.type,
       chatType: toolResult.chatType,
@@ -1365,7 +1328,7 @@ const handleTrafficCount: AIMessageHandler = (request) => {
       break
   }
   if (!update) return
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: toolResult.id,
     type: toolResult.type,
     chatType: toolResult.chatType,
@@ -1419,6 +1382,7 @@ const handlePlanReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
@@ -1429,7 +1393,7 @@ const handlePlanReview: AIMessageHandler = (request) => {
     }
     setContentMap(chatData.id, cloneDeep(chatData))
     if (target) {
-      handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
         mapKey: chatData.id,
         type: chatData.type,
         chatType: chatData.chatType,
@@ -1450,7 +1414,7 @@ const handlePlanReview: AIMessageHandler = (request) => {
     // 该类型的实时数据只有任务规划才有
     if (isAuto) {
       setContentMap(chatData.id, cloneDeep(chatData))
-      handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
         mapKey: chatData.id,
         type: chatData.type,
         chatType: chatData.chatType,
@@ -1536,6 +1500,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
@@ -1546,7 +1511,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
     }
     setContentMap(chatData.id, cloneDeep(chatData))
     if (target) {
-      handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
         mapKey: chatData.id,
         type: chatData.type,
         chatType: chatData.chatType,
@@ -1566,7 +1531,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
   if (info.chatType === 'task') {
     if (isAuto) {
       setContentMap(chatData.id, cloneDeep(chatData))
-      handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
         mapKey: chatData.id,
         type: chatData.type,
         chatType: chatData.chatType,
@@ -1576,7 +1541,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
     }
   } else if (info.chatType === 'reAct') {
     setContentMap(chatData.id, cloneDeep(chatData))
-    handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: chatData.id,
       type: chatData.type,
       chatType: chatData.chatType,
@@ -1609,6 +1574,7 @@ const handleToolReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
@@ -1619,7 +1585,7 @@ const handleToolReview: AIMessageHandler = (request) => {
     }
     setContentMap(chatData.id, cloneDeep(chatData))
     if (target) {
-      handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
         mapKey: chatData.id,
         type: chatData.type,
         chatType: chatData.chatType,
@@ -1639,7 +1605,7 @@ const handleToolReview: AIMessageHandler = (request) => {
   if (info.chatType === 'task') {
     if (isAuto) {
       setContentMap(chatData.id, cloneDeep(chatData))
-      handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
         mapKey: chatData.id,
         type: chatData.type,
         chatType: chatData.chatType,
@@ -1649,7 +1615,7 @@ const handleToolReview: AIMessageHandler = (request) => {
     }
   } else if (info.chatType === 'reAct') {
     setContentMap(chatData.id, cloneDeep(chatData))
-    handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: chatData.id,
       type: chatData.type,
       chatType: chatData.chatType,
@@ -1679,6 +1645,7 @@ const handleUserInteractive: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
     data: cloneDeep(data),
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
@@ -1689,7 +1656,7 @@ const handleUserInteractive: AIMessageHandler = (request) => {
     }
     setContentMap(chatData.id, cloneDeep(chatData))
     if (target) {
-      handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
         mapKey: chatData.id,
         type: chatData.type,
         chatType: chatData.chatType,
@@ -1704,7 +1671,7 @@ const handleUserInteractive: AIMessageHandler = (request) => {
     review?.onReview && review.onReview(cloneDeep(chatData))
   } else if (info.chatType === 'reAct') {
     setContentMap(chatData.id, cloneDeep(chatData))
-    handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: chatData.id,
       type: chatData.type,
       chatType: chatData.chatType,
@@ -1739,6 +1706,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
+    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
@@ -1749,7 +1717,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
     }
     setContentMap(chatData.id, cloneDeep(chatData))
     if (target) {
-      handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
         mapKey: chatData.id,
         type: chatData.type,
         chatType: chatData.chatType,
@@ -1767,7 +1735,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
   // 将数据存入hook里的缓存变量中
   review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
   setContentMap(chatData.id, cloneDeep(chatData))
-  handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
     mapKey: chatData.id,
     type: chatData.type,
     chatType: chatData.chatType,
@@ -1844,7 +1812,7 @@ const handleAIReviewJudgement: AIMessageHandler = (request) => {
 
     const chatData = getContentMap(interactive_id)
     if (
-      !!chatData &&
+      chatData &&
       (chatData.type === AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE ||
         chatData.type === AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE)
     ) {
@@ -1854,7 +1822,7 @@ const handleAIReviewJudgement: AIMessageHandler = (request) => {
       ) {
         // aiReview 没有或者 aiReview 的 seconds 为空时可以赋值
         chatData.data.aiReview = cloneDeep(score)
-        handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+        handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
           mapKey: chatData.id,
           type: chatData.type,
           chatType: chatData.chatType,
@@ -1917,7 +1885,7 @@ const handleReviewRelease: AIMessageHandler = (request) => {
       case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
         reviewDetail.data.selected = JSON.stringify(data.params)
         reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
-        handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+        handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
           mapKey: reviewDetail.id,
           type: reviewDetail.type,
           chatType: reviewDetail.chatType,
@@ -1950,10 +1918,11 @@ const handleReviewRelease: AIMessageHandler = (request) => {
     review?.handleSetReview && review.handleSetReview(undefined)
     if (info.chatType === 'task') {
       currentPlanReviewId = ''
+      // review自动释放后，还需进行的额外逻辑处理
       review?.handleReviewDataToUI && review.handleReviewDataToUI(cloneDeep(chatData))
     }
     setContentMap(chatData.id, cloneDeep(chatData))
-    handleUpdateUISingleStateFromRequest(request, res.IsSync, {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: chatData.id,
       type: chatData.type,
       chatType: chatData.chatType,

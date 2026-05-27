@@ -1,16 +1,22 @@
 /**
  * chat 对话数据相关处理工具
  */
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { DialogueRecord } from '@/pages/ai-agent/store/type'
+import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType } from './aiRender'
+import type { AIChatLogToInfo, AIChatLogData } from './type'
+import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 
+import { JSONParseLog } from '@/utils/tool'
 import { generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
-import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AITaskInfoProps, AIChatQSDataType, ReActChatRenderItem } from './aiRender'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import { AIChatLogData, AIChatLogToInfo } from './type'
-import { DialogueRecord } from '@/pages/ai-agent/store/type'
-import { JSONParseLog } from '@/utils/tool'
+
+/** 生成任务的唯一标识 */
+export const generateTaskId = (reActTaskID: string | undefined, task_index: string) => {
+  if (!reActTaskID) return undefined
+  return `${reActTaskID}-${task_index}`
+}
 
 /** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
 export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/

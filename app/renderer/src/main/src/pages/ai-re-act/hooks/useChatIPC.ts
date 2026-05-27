@@ -378,6 +378,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     pushLog: logEvents.pushLog,
     getChatDataStore,
     getRequest: fetchAIRequest,
+    getCurrentTaskPlanID: fetchCurrentTaskPlanID,
     onReview: onTaskReview,
     onReviewExtra: onTaskReviewExtra,
     onReviewRelease: handleTaskReviewRelease,
@@ -1006,7 +1007,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (res.Type === 'stream') {
           if (res.IsSystem || res.IsReason) {
-            const { CallToolID, TaskIndex, NodeId, NodeIdVerbose, EventUUID, StreamDelta, ContentType } = res
+            const { CallToolID, NodeId, NodeIdVerbose, EventUUID, StreamDelta, ContentType } = res
             if (!NodeId || !EventUUID) return
             let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ''
             const content = ipcContent + ipcStreamDelta
@@ -1014,7 +1015,6 @@ function useChatIPC(params?: UseChatIPCParams) {
               type: 'stream',
               Timestamp: res.Timestamp,
               data: {
-                TaskIndex,
                 CallToolID,
                 NodeId,
                 NodeIdVerbose: NodeIdVerbose || convertNodeIdToVerbose(NodeId),

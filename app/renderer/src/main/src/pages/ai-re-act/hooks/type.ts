@@ -99,6 +99,8 @@ export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc
 export interface UseTaskChatParams extends UseHookBaseParams {
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
   /** review 触发回调事件 */
   onReview?: (data: AIChatQSData) => void
   /** plan_review 补充数据 */
@@ -350,6 +352,8 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
   info: {
     chatType: ReActChatRenderItem['chatType']
   }
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
   /** 将数据推送到日志集合中 */
@@ -369,8 +373,6 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
     /** 将 review 数据处理成需要展示的UI数据 */
     handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
   }
-  /** 获取当前活跃 TaskIndex 集合组的 token（仅 task 模式） */
-  getActiveTaskIndexGroupKey?: (taskIndex?: string) => string | undefined
 }
 export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #endregion
