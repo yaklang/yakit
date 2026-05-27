@@ -124,7 +124,10 @@ const aiModelTypeOptions: (t: TFunction) => SelectOptionsProps[] = (t) => {
     },
   ]
 }
-const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({ label: item, value: item }))
+const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({
+  label: item.label,
+  value: item.value,
+}))
 const aiModelTypeItem: (t: TFunction) => ThirdPartyAppConfigItemTemplate = (t) => {
   return {
     Name: 'model_type',
