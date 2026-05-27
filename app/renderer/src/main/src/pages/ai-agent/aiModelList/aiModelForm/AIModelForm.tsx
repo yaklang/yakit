@@ -324,16 +324,6 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         return
       }
 
-      /** 当轻量模型设置与高质模型选择一样的时候 */
-      const haveIntelligent =
-        aiGlobalConfigData?.aiGlobalConfigRef.current.IntelligentModels.findIndex(
-          (ele) => ele.Provider.Type === type && ele.ModelName === modelName,
-        ) !== -1
-
-      if (haveIntelligent) {
-        yakitNotify('warning', '不建议将高质模型同时设置为轻量模型,轻量模型适合使用响应快速得模型')
-      }
-
       const newItem: AIModelConfig = {
         ProviderId: res.api_key_id,
         Provider: {

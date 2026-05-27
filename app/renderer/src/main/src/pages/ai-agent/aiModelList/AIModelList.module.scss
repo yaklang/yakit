@@ -37,7 +37,7 @@
 .ai-online-model-wrapper {
   @extend %display-column;
   gap: 8px;
-  padding: 8px;
+  padding: 0 8px 8px;
 }
 .ai-online-model {
   @extend %display-column;

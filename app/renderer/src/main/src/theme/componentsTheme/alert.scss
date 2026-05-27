@@ -1,36 +1,52 @@
+%base {
+  border-radius: 4px;
+  padding: 12px;
+  .ant-alert-message {
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 20px; /* 142.857% */
+    letter-spacing: 0.1px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    margin-bottom: 8px;
+  }
+  .ant-alert-description {
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 0.5px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+}
+.ant-alert-with-description.ant-alert-no-icon {
+  padding: 12px;
+}
+.ant-alert-with-description.ant-alert-no-icon:not(:has(.ant-alert-content .ant-alert-message)) {
+  padding: 8px 12px;
+}
+.ant-alert-content:not(:has(.ant-alert-description)) .ant-alert-message {
+  margin-bottom: 0;
+}
 .ant-alert-success {
   background-color: var(--Colors-Use-Success-Bg);
   border: 1px solid var(--Colors-Use-Success-Border);
-  .ant-alert-content {
-    .ant-alert-message {
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-    }
-  }
+  @extend %base;
 }
 .ant-alert-error {
   background-color: var(--Colors-Use-Error-Bg);
   border: 1px solid var(--Colors-Use-Error-Border);
-  .ant-alert-content {
-    .ant-alert-message {
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-    }
-  }
+  @extend %base;
 }
 .ant-alert-warning {
   background-color: var(--Colors-Use-Warning-Bg-Hover);
   border: 1px solid var(--Colors-Use-Warning-Border);
-  .ant-alert-content {
-    .ant-alert-message {
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-    }
-  }
+  @extend %base;
 }
 .ant-alert-info {
   background-color: var(--Colors-Use-Blue-Bg);
   border: 1px solid var(--Colors-Use-Blue-Border);
-  .ant-alert-content {
-    .ant-alert-message {
-      color: var(--Colors-Use-Neutral-Text-1-Title);
-    }
-  }
+  @extend %base;
+}
+.ant-alert-close-icon {
 }
