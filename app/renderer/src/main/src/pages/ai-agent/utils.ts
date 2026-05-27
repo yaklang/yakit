@@ -173,6 +173,12 @@ const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedReso
           Value: mention.mentionName,
         }
       }
+    case 'httpFlow':
+      return {
+        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_HTTP_FLOW_ID,
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_ID,
+        Value: mention.mentionId,
+      }
 
     default:
       return null

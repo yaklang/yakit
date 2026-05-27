@@ -62,6 +62,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
+      syncHttpFlowMention: () => {},
       setValue: () => {},
       getValue: () => {},
     })
@@ -89,6 +90,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         handleStart(value)
       }
       onSetQuestion('')
+      externalParameters?.onAfterInputClear?.()
     })
 
     const handleStart = useMemoizedFn((value: HandleStartParams) => {

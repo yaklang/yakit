@@ -332,6 +332,9 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
   onSetTableTotal?: (t: number) => void
   onSetTableSelectNum?: (s: number) => void
   onSetHasNewData?: (f: boolean) => void
+  onSelectedRowsChange?: (rows: HTTPFlow[]) => void
+  /** 递增时清空表格勾选（如 AI 输入框移除 httpFlow mention） */
+  clearSelectedRowsSignal?: number
   /**
    * 作为 `excludeColumnsKey` 的初值并跳过远程缓存读取，
    */
@@ -717,6 +720,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onSetTableTotal,
     onSetTableSelectNum,
     onSetHasNewData,
+    onSelectedRowsChange,
+    clearSelectedRowsSignal,
     showHistoryAnalysisBtn = false,
     onHistoryAnalysisClick,
     defaultExcludeColumnsKey,
@@ -1803,6 +1808,26 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       setSelectedRows(newSelectedRows)
     }
   })
+
+  useDebounceEffect(
+    () => {
+      if (!onSelectedRowsChange) return
+      if (isAllSelect) {
+        onSelectedRowsChange([])
+        return
+      }
+      onSelectedRowsChange(selectedRows)
+    },
+    [selectedRows, isAllSelect, onSelectedRowsChange],
+    { wait: 200 },
+  )
+
+  useUpdateEffect(() => {
+    if (!clearSelectedRowsSignal) return
+    setIsAllSelect(false)
+    setSelectedRowKeys([])
+    setSelectedRows([])
+  }, [clearSelectedRowsSignal])
   const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
     if (rowDate) {
       setSelected(rowDate)

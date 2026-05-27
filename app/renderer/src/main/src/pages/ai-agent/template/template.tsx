@@ -42,7 +42,7 @@ import {
 } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import emiter from '@/utils/eventBus/eventBus'
 import { AIAgentTriggerEventInfo } from '../aiAgentType'
-import { extractDataWithMilkdown, setEditorValue } from '../components/aiMilkdownInput/utils'
+import { extractDataWithMilkdown, removeMentionsByType, setEditorValue } from '../components/aiMilkdownInput/utils'
 import { editorViewCtx } from '@milkdown/kit/core'
 import { convertKeyEventToKeyCombination } from '@/utils/globalShortcutKey/utils'
 import { YakitKeyBoard } from '@/utils/globalShortcutKey/keyboard'
@@ -162,6 +162,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     useImperativeHandle(ref, () => {
       return {
         setMention: (v) => onSetMention(v),
+        syncHttpFlowMention: (v) => onSyncHttpFlowMention(v),
         setValue: (v) => onSetValue(v),
         getValue: () => getMarkdownValue(),
         editorMilkdown: editorMilkdown.current,
@@ -242,6 +243,14 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         default:
           editorMilkdown.current?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
           break
+      }
+    })
+    /**同步 History 页勾选的 HTTP 流量 mention（单 tag，最多 10 条） */
+    const onSyncHttpFlowMention = useMemoizedFn((params: AIMentionCommandParams | null) => {
+      if (!editorMilkdown.current) return
+      removeMentionsByType(editorMilkdown.current, 'httpFlow')
+      if (params) {
+        onSetMention(params)
       }
     })
     /**设置编辑器值 */

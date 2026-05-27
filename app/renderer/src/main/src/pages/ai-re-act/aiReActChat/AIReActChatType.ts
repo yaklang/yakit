@@ -41,6 +41,8 @@ export interface AIReActChatProps {
     isOpen?: boolean
     filterMentionType?: AIChatTextareaProps['filterMentionType']
     footerLeftTypes?: AIChatTextareaProps['footerLeftTypes']
+    /** 输入框清空后回调，用于恢复 History 页仍勾选的 httpFlow mention */
+    onAfterInputClear?: () => void
   }
 }
 

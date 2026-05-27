@@ -34,6 +34,26 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
   return { mentions, plainText, imageList }
 }
 
+export const removeMentionsByType = (editor: EditorMilkdownProps, mentionType: string) => {
+  editor?.action?.((ctx) => {
+    const view = ctx.get(editorViewCtx)
+    const state = view.state
+    let tr = state.tr
+    const ranges: { from: number; to: number }[] = []
+    state.doc.descendants((node, pos) => {
+      if (node?.type?.name === aiMentionCustomId && node.attrs?.mentionType === mentionType) {
+        ranges.push({ from: pos, to: pos + node.nodeSize })
+      }
+    })
+    for (let i = ranges.length - 1; i >= 0; i--) {
+      tr = tr.delete(ranges[i].from, ranges[i].to)
+    }
+    if (ranges.length > 0) {
+      view.dispatch(tr)
+    }
+  })
+}
+
 type Mention = {
   text: string
   mentionId: string

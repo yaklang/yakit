@@ -15,6 +15,7 @@ import { removeAIOffsetCommand } from '../customPlugin'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { YakitTagColor } from '@/components/yakitUI/YakitTag/YakitTagType'
 import i18n from '@/i18n/i18n'
+import emiter from '@/utils/eventBus/eventBus'
 
 export const aiMentionFactory = slashFactory('ai-mention-commands')
 
@@ -129,7 +130,7 @@ interface AICustomMentionProps {
   sessionId?: string
 }
 export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
-  const { node, selected, view, contentRef } = useNodeViewContext()
+  const { node, selected, view, contentRef, getPos } = useNodeViewContext()
   const locked = useCreation(() => {
     return node?.attrs?.lock ?? false
   }, [node?.attrs?.lock])
@@ -142,14 +143,19 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
   const onRemove = useMemoizedFn(() => {
     if (locked) return
     const { state, dispatch } = view
+    const pos = getPos?.()
+    if (typeof pos === 'number') {
+      dispatch?.(state.tr.delete(pos, pos + node.nodeSize))
+      if (mentionType === 'httpFlow') {
+        emiter.emit('httpFlowMentionRemoved')
+      }
+      return
+    }
     const { from, to } = state.selection
     if (from !== to) {
-      // 创建一个事务来删除选中的范围
-      const tr = state.tr.delete(from, to)
-
-      // 提交事务
-      if (dispatch) {
-        dispatch(tr)
+      dispatch?.(state.tr.delete(from, to))
+      if (mentionType === 'httpFlow') {
+        emiter.emit('httpFlowMentionRemoved')
       }
     }
   })
@@ -168,6 +174,9 @@ export const AICustomMention: React.FC<AICustomMentionProps> = (props) => {
         break
       case 'tool':
         c = 'lakeBlue'
+        break
+      case 'httpFlow':
+        c = 'green'
         break
       default:
         break

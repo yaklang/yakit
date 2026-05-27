@@ -24,6 +24,7 @@ export interface AIChatTextareaSubmit {
 }
 export interface AIChatTextareaRefProps {
   setMention: (v: AIMentionCommandParams) => void
+  syncHttpFlowMention?: (v: AIMentionCommandParams | null) => void
   setValue: (v: string) => void
   getValue: () => void
   editorMilkdown?: EditorMilkdownProps

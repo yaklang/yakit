@@ -37,6 +37,7 @@ import {
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 
 import { HistroryAIReActChat } from './AIReActChat'
 
@@ -48,6 +49,7 @@ export interface HistoryAIReActChatBridge {
   onStop: () => void
   onChatFromHistory: (session: string) => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
+  syncHttpFlowMention: (params: AIMentionCommandParams | null) => void
 }
 
 export interface HistoryAIReActChatSlotOptions {
@@ -115,6 +117,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   httpFuzzTabPageId,
 }: HistoryAIReActChatProviderProps) {
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
+  const lastHttpFlowMentionRef = useRef<AIMentionCommandParams | null>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
   const refRef = useRef<HTMLDivElement>(null)
 
@@ -310,6 +313,12 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }
   }, [])
 
+  const restoreHttpFlowMentionAfterSend = useMemoizedFn(() => {
+    const mention = lastHttpFlowMentionRef.current
+    if (!mention) return
+    aiReActChatRef.current?.syncHttpFlowMention?.(mention)
+  })
+
   const historyAIReActChatBridge: HistoryAIReActChatBridge = useMemo(
     () => ({
       activeID,
@@ -317,6 +326,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onStop,
       onChatFromHistory,
       setActiveChat,
+      syncHttpFlowMention: (params) => {
+        lastHttpFlowMentionRef.current = params
+        aiReActChatRef.current?.syncHttpFlowMention?.(params)
+      },
     }),
     [activeID, events, onStop, onChatFromHistory, setActiveChat],
   )
@@ -333,10 +346,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         onSendRequest={onSendRequest}
         inViewport={inViewport}
         setSetting={setSetting}
-        externalParameters={externalParameters}
+        externalParameters={{
+          ...externalParameters,
+          onAfterInputClear: restoreHttpFlowMentionAfterSend,
+        }}
       />
     ),
-    [inViewport, onSendRequest, onStartRequest, showFreeChat],
+    [inViewport, onSendRequest, onStartRequest, showFreeChat, restoreHttpFlowMentionAfterSend],
   )
 
   const contextValue = useMemo(

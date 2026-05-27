@@ -8,4 +8,6 @@ export type HistoryEventProps = {
   onRefreshImportHistoryTable?: string
   onGetAdvancedSearchDataEvent: string
   onGetOtherPageAdvancedSearchDataEvent: string
+  /** AI 输入框移除 httpFlow mention 时，History 页同步取消表格勾选 */
+  httpFlowMentionRemoved?: string
 }

@@ -85,6 +85,7 @@ import { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
 import { JSONParseLog } from '@/utils/tool'
 import { histroyAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from './historyAIReActChat'
+import { buildHttpFlowMentionFromFlows } from '@/pages/ai-agent/httpFlowMention'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
@@ -206,6 +207,22 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
   const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
+  const [httpFlowSelectionClearSignal, setHttpFlowSelectionClearSignal] = useState(0)
+
+  useEffect(() => {
+    const onHttpFlowMentionRemoved = () => {
+      setHttpFlowSelectionClearSignal((v) => v + 1)
+    }
+    emiter.on('httpFlowMentionRemoved', onHttpFlowMentionRemoved)
+    return () => {
+      emiter.off('httpFlowMentionRemoved', onHttpFlowMentionRemoved)
+    }
+  }, [])
+
+  const onSelectedHttpFlowsChange = useMemoizedFn((flows: HTTPFlow[]) => {
+    if (pageType !== 'History') return
+    historyAIReActChatBridge.syncHttpFlowMention(buildHttpFlowMentionFromFlows(flows))
+  })
 
   const mitmContent = useContext(MITMContext)
 
@@ -388,6 +405,8 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
               onSetTableTotal={setHttpFlowTableDataLength}
               setOnlyShowFirstNode={setOnlyShowFirstNode}
               setSecondNodeVisible={setSecondNodeVisible}
+              onSelectedHttpFlowsChange={onSelectedHttpFlowsChange}
+              clearSelectedRowsSignal={clearSelectedRowsSignal}
               showHistoryAnalysisBtn
               {...historyProps}
             />
@@ -428,6 +447,8 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
   onSetTableTotal?: (t: number) => void
   onSetTableSelectNum?: (s: number) => void
   onSetHasNewData?: (f: boolean) => void
+  onSelectedHttpFlowsChange?: (flows: HTTPFlow[]) => void
+  clearSelectedRowsSignal?: number
   setOnlyShowFirstNode?: (only: boolean) => void
   setSecondNodeVisible?: (show: boolean) => void
   /** 预设排除列，透传至 `HTTPFlowTable.defaultExcludeColumnsKey` */
@@ -455,6 +476,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     onSetTableTotal,
     onSetTableSelectNum,
     onSetHasNewData,
+    onSelectedHttpFlowsChange,
+    clearSelectedRowsSignal,
     noTableTitle = false,
     showSourceType = true,
     showAdvancedSearch = true,
@@ -609,6 +632,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
               onSetTableTotal={onSetTableTotal}
               onSetTableSelectNum={onSetTableSelectNum}
               onSetHasNewData={onSetHasNewData}
+              onSelectedRowsChange={onSelectedHttpFlowsChange}
+              clearSelectedRowsSignal={httpFlowSelectionClearSignal}
               httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
               titleHeight={titleHeight}
               showHistoryAnalysisBtn={showHistoryAnalysisBtn}

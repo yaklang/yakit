@@ -11,6 +11,7 @@ import {
   OutlineBotIcon,
   OutlineDocumenttextIcon,
   OutlineFolderopenIcon,
+  OutlineLog2Icon,
   OutlinePointerIcon,
   OutlineEarOffIcon,
   OutlineAIIcon,
@@ -329,6 +330,7 @@ export const iconMap = {
   tool: <OutlineWrenchIcon />,
   knowledgeBase: <OutlineBookOpenTextIcon />,
   focusMode: <OutlineBookOpenTextIcon />,
+  httpFlow: <OutlineLog2Icon />,
 }
 
 export enum AttachedResourceTypeEnum {
@@ -336,6 +338,7 @@ export enum AttachedResourceTypeEnum {
   CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE = 'knowledge_base',
   CONTEXT_PROVIDER_TYPE_AITOOL = 'aitool',
   CONTEXT_PROVIDER_TYPE_AIFORGE = 'aiforge',
+  CONTEXT_PROVIDER_TYPE_HTTP_FLOW_ID = 'http_flow_id',
 }
 
 export enum AttachedResourceKeyEnum {
@@ -343,6 +346,7 @@ export enum AttachedResourceKeyEnum {
   CONTEXT_PROVIDER_KEY_FILE_CONTENT = 'file_content',
   CONTEXT_PROVIDER_KEY_NAME = 'name',
   CONTEXT_PROVIDER_KEY_SYSTEM_FLAG = 'system_flag',
+  CONTEXT_PROVIDER_KEY_ID = 'id',
 }
 
 export enum AIModelPolicyEnum {
