@@ -63,6 +63,21 @@ export interface AIGlobalCommandProps {
   onCancel: () => void
 }
 
+export interface AIPlanPromptPopoverProps {
+  children?: ReactNode
+  childrenClass?: string
+}
+
+export interface AIPlanPromptRefProps {
+  value: string
+}
+
+export interface AIPlanPromptProps {
+  ref?: React.ForwardedRef<AIPlanPromptRefProps>
+  onSave: (v: string) => void
+  onCancel: () => void
+}
+
 export interface AIManualAdditionProps {
   chatType: ReActChatBaseInfo['chatType']
   onCancel: () => void
