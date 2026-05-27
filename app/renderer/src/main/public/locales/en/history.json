@@ -232,7 +232,9 @@
     "response": "Response",
     "rawResponse": "Raw Response",
     "oversizedResponse": "Oversized response",
-    "editTag": "Edit tag"
+    "editTag": "Edit tag",
+    "clickToScrollToList": "Click to locate the data in the list.",
+    "jumpToWebTree": "Click to filter in the site tree."
   },
   "NewHTTPPacketEditor": {
     "render": "Render",
