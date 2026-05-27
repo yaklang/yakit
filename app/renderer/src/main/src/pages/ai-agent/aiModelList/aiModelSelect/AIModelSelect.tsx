@@ -93,7 +93,7 @@ const modelType = (t: TFunction) => [
 ]
 export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { isOpen = true, mountContainer } = props
+  const { isOpen = true, mountContainer, className } = props
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   //#region AI model
@@ -378,7 +378,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     )
   })
   return (
-    <div ref={refRef}>
+    <div ref={refRef} className={className}>
       {isHaveData ? (
         <AIChatSelect
           dropdownRender={(menu) => {

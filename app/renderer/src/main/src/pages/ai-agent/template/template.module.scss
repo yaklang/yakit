@@ -44,12 +44,12 @@ textarea.qs-input-textarea {
     }
     .model-self-adaptive {
       @extend %self-adaptive;
-      flex-shrink: 1;
+      flex-shrink: 2;
       min-width: 46px;
     }
     .focus-mode-self-adaptive {
       @extend %self-adaptive;
-      flex-shrink: 9;
+      flex-shrink: 3;
       min-width: 68px;
     }
   }
