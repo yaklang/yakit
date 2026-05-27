@@ -1743,12 +1743,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 )
               }
               titleEle.push(
-                <Tooltip title={t("HTTPFlowDetailRequestAndResponse.clickToScrollToList")} key="reqId">
-                  <YakitTag
-                    color={'info'}
-                    style={{ marginLeft: 8, cursor: 'pointer' }}
-                    onClick={onScrollTo}
-                  >
+                <Tooltip title={t('HTTPFlowDetailRequestAndResponse.clickToScrollToList')} key="reqId">
+                  <YakitTag color={'info'} style={{ marginLeft: 8, cursor: 'pointer' }} onClick={onScrollTo}>
                     id：{scrollID || id}
                   </YakitTag>
                 </Tooltip>,
@@ -1756,11 +1752,8 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
               // history页面
               if (['History'].includes(pageType || '') && showJumpTree) {
                 titleEle.push(
-                  <Tooltip title={t("HTTPFlowDetailRequestAndResponse.jumpToWebTree")} key="jump-web-tree">
-                    <OutlineLog2Icon
-                      className={styles['jump-web-tree']}
-                      onClick={handleJumpWebTree}
-                    />
+                  <Tooltip title={t('HTTPFlowDetailRequestAndResponse.jumpToWebTree')} key="jump-web-tree">
+                    <OutlineLog2Icon className={styles['jump-web-tree']} onClick={handleJumpWebTree} />
                   </Tooltip>,
                 )
               }
