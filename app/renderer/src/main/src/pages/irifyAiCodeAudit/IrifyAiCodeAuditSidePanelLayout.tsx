@@ -64,50 +64,49 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
       : { firstRatio: 'calc(100% - 24px)', secondRatio: '24px' }
   }, [openTabsFlag, placement])
 
-  const aiChat =
-    activeKey === 'ai' && (
-      <IrifyAiCodeAuditSeedDraftFlush>
-        {renderHistoryAIReActChat({
-          className: styles.aiChatWrap,
-          externalParameters: {
-            isOpen: false,
-            rightIcon: (
-              <>
-                <Tooltip title="新建对话">
-                  <YakitButton
-                    type="text2"
-                    icon={<OutlinePlusIcon />}
-                    onClick={() => {
-                      const { activeID, events, onStop, onChatFromHistory, setActiveChat } = historyAIReActChatBridge
-                      if (activeID) {
-                        onStop()
-                        events.onReset()
-                        onChatFromHistory(activeID)
-                        setActiveChat(undefined)
-                      }
-                    }}
-                  />
-                </Tooltip>
-                <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-              </>
-            ),
-            footerLeftTypes: [
-              AIInputInnerFeatureEnum.AIReviewRuleSelect,
-              AIInputInnerFeatureEnum.AIModelSelect,
-              {
-                type: AIInputInnerFeatureEnum.AIFocusMode,
-                props: {
-                  value: focusModeLoop,
-                  onChange: () => {},
-                  disabled: true,
-                },
+  const aiChat = activeKey === 'ai' && (
+    <IrifyAiCodeAuditSeedDraftFlush>
+      {renderHistoryAIReActChat({
+        className: styles.aiChatWrap,
+        externalParameters: {
+          isOpen: false,
+          rightIcon: (
+            <>
+              <Tooltip title="新建对话">
+                <YakitButton
+                  type="text2"
+                  icon={<OutlinePlusIcon />}
+                  onClick={() => {
+                    const { activeID, events, onStop, onChatFromHistory, setActiveChat } = historyAIReActChatBridge
+                    if (activeID) {
+                      onStop()
+                      events.onReset()
+                      onChatFromHistory(activeID)
+                      setActiveChat(undefined)
+                    }
+                  }}
+                />
+              </Tooltip>
+              <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
+            </>
+          ),
+          footerLeftTypes: [
+            AIInputInnerFeatureEnum.AIReviewRuleSelect,
+            AIInputInnerFeatureEnum.AIModelSelect,
+            {
+              type: AIInputInnerFeatureEnum.AIFocusMode,
+              props: {
+                value: focusModeLoop,
+                onChange: () => {},
+                disabled: true,
               },
-            ],
-            filterMentionType: ['focusMode'],
-          },
-        })}
-      </IrifyAiCodeAuditSeedDraftFlush>
-    )
+            },
+          ],
+          filterMentionType: ['focusMode'],
+        },
+      })}
+    </IrifyAiCodeAuditSeedDraftFlush>
+  )
 
   const rail = (
     <div className={placement === 'left' ? styles.railLeft : styles.railRight}>
