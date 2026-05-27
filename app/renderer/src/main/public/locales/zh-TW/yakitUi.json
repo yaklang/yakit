@@ -125,7 +125,8 @@
     "copyPath": "複製路徑",
     "showInFolder": "在資料夾中顯示",
     "viewFile": "檢視檔案",
-    "submitted": "提交"
+    "submitted": "提交",
+    "undo": "撤銷"
   },
   "YakitNotification": {
     "unknown_error": "未知錯誤",
@@ -188,7 +189,13 @@
     "createSuccess": "建立成功",
     "createFailedNoError": "建立失敗",
     "renameSuccess": "重新命名成功",
-    "renameFailedNoError": "重新命名失敗"
+    "renameFailedNoError": "重新命名失敗",
+    "queryFailed": "查詢失敗：{{error}}",
+    "settingFailed": "設置失敗：{{error}}",
+    "feedbackFailed": "反饋失敗：{{error}}",
+    "readFailed": "已讀失敗：{{error}}",
+    "getFailed": "獲取失敗：{{error}}",
+    "sentSuccessfully": "傳送成功"
   },
   "YakitFormDragger": {
     "filePath": "檔案路徑",

@@ -65,6 +65,9 @@
     "noDisposalData": "暫無漏洞處置資訊",
     "disposalStatusLabel": "處置狀態：",
     "disposalPlaceholder": "請留下對處置的說明...",
-    "publishDisposal": "釋出處置"
+    "publishDisposal": "釋出處置",
+    "noForgeNameMatchesFound": "暫無 ForgeName 相符項目",
+    "noParamsUIConfigConfigFound": "暫無 ParamsUIConfig 配置項",
+    "forgeNameMatchingError": "比對 ForgeName 異常："
   }
 }

@@ -46,7 +46,10 @@
     "RowContextMenu": {
       "delete_duplicate_title_data": "刪除重複標題資料",
       "openInNewWindow": "新視窗開啟"
-    }
+    },
+    "queryRisksTotalFailed": "apiQueryRisksTotalByRuntimeId 獲取總數失敗：",
+    "queryRiskTagsFailed": "查詢QueryRiskTags失敗：",
+    "queryAvailableRiskTypeFailed": "查詢QueryAvailableRiskType失敗："
   },
   "YakitRiskSelectTag": {
     "false_positive": "誤報",

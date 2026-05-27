@@ -80,7 +80,7 @@ import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { ExportSelect } from '@/components/DataExport/DataExport'
 import { RemoteGV } from '@/yakitGV'
-import { getHtmlEnTemplate, getHtmlTemplate } from './htmlTemplate'
+import { getHtmlEnTemplate, getHtmlTemplate, getHtmlZhTWTemplate } from './htmlTemplate'
 import { yakitNotify } from '@/utils/notification'
 import moment from 'moment'
 import { FieldName } from '../RiskTable'
@@ -987,7 +987,8 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       RequestString: Buffer.from(ele.Request || new Uint8Array()).toString('utf8'),
       ResponseString: Buffer.from(ele.Response || new Uint8Array()).toString('utf8'),
     }))
-    const htmlContent = i18n.language === 'zh' ? getHtmlTemplate() : getHtmlEnTemplate()
+    const htmlContent =
+      i18n.language === 'zh' ? getHtmlTemplate() : i18n.language === 'zh-TW' ? getHtmlZhTWTemplate() : getHtmlEnTemplate()
     const params: ExportHtmlProps = {
       htmlContent,
       fileName: `riskTable-${moment().valueOf()}`,

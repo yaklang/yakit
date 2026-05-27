@@ -65,6 +65,9 @@
     "noDisposalData": "No vulnerability disposal information",
     "disposalStatusLabel": "Disposal Status:",
     "disposalPlaceholder": "Please leave a disposal note...",
-    "publishDisposal": "Publish Disposal"
+    "publishDisposal": "Publish Disposal",
+    "noForgeNameMatchesFound": "No ForgeName matches found",
+    "noParamsUIConfigConfigFound": "No ParamsUIConfig configuration found",
+    "forgeNameMatchingError": "ForgeName matching error: "
   }
 }

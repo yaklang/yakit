@@ -195,7 +195,7 @@ import { MITMConsts } from '../mitm/MITMConsts'
 import { RemoteGV } from '@/yakitGV'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { useChunkAutoScrollToBottom } from './hooks/useAutoScrollToBottom'
-
+const tOriginal = i18n.getFixedT(null, ['yakitUi', 'webFuzzer'])
 const PluginDebugDrawer = React.lazy(() => import('./components/PluginDebugDrawer/PluginDebugDrawer'))
 const WebFuzzerSynSetting = React.lazy(() => import('./components/WebFuzzerSynSetting/WebFuzzerSynSetting'))
 const HTTPHistoryAnalysis = React.lazy(() =>
@@ -214,7 +214,7 @@ const httpFuzzerLog = ({ name, title, content, status }: Partial<LoggerData>) =>
   return {
     name: name || 'HTTPFuzzerPage',
     title: title || 'sendRequest',
-    content: content || (i18n.language === 'zh' ? '发送请求' : 'Send Request'),
+    content: content || tOriginal('HTTPFuzzerPage.sendRequest'),
     status,
     time: formatTimeYMD(Date.now()),
   }
@@ -430,11 +430,7 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
     .invoke('GetAllPayloadGroup')
     .then((res: { Nodes: PayloadGroupNodeProps[] }) => {
       if (res.Nodes.length === 0) {
-        warn(
-          i18n.language === 'zh'
-            ? '暂无字典，请先添加后再使用'
-            : 'No dictionary available, please add one before using',
-        )
+        warn(tOriginal('HTTPFuzzerPage.noDictionaryAvailable'))
       } else {
         const y = showYakitModal({
           title: null,
@@ -459,7 +455,7 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
       }
     })
     .catch((e: any) => {
-      failed(`${i18n.language === 'zh' ? '获取字典列表失败：' : 'Failed to get dictionary list:'}${e}`)
+      failed(`${tOriginal('HTTPFuzzerPage.getDictionaryListFailed')}${e}`)
     })
     .finally()
 }
@@ -489,12 +485,8 @@ export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }, mode: CopyUr
       const text = mode === 'withoutQuery' ? data.UrlWithoutQuery || stripUrlQueryFallback(data.Url) : data.Url
       setClipboardText(text)
     })
-    .catch(() => {
-      failed(
-        i18n.language === 'zh'
-          ? '复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整'
-          : 'Failed to copy URL: including Fuzz tags may result in an incomplete URL',
-      )
+    .catch((e) => {
+      failed(tOriginal('HTTPFuzzerPage.copyUrlFailed'))
     })
 }
 
@@ -670,7 +662,7 @@ export const newWebFuzzerTab = async (params: {
       data: { ...params },
     })
     .then(() => {
-      params.openFlag && info(i18n.language === 'zh' ? '发送成功' : 'Sent Successfully')
+      params.openFlag && info(tOriginal('YakitNotification.sendSuccess'))
     })
 }
 
@@ -679,7 +671,7 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
   const stringFuzzerRef = createRef<StringFuzzerRef>()
 
   const m = showYakitModal({
-    title: i18n.language === 'zh' ? 'Fuzzer Tag 调试工具' : 'Fuzzer Tag Debug Tool',
+    title: tOriginal('HTTPFuzzerPage.fuzzerTagDebugTool'),
     width: '70%',
     footer: null,
     maskClosable: false,
@@ -688,26 +680,20 @@ export const onInsertYakFuzzer = (reqEditor: IMonacoEditor) => {
       //关闭弹窗取消任务
       stringFuzzerRef.current?.handleCancel()
     },
-    subTitle:
-      i18n.language === 'zh'
-        ? '调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag'
-        : 'Debug mode is suitable for generating or modifying payloads. Nesting defaults to the outermost level, but you can select a position to nest. "Insert" simply inserts the fuzztag at the cursor position.',
+    subTitle: tOriginal('HTTPFuzzerPage.fuzzerTagDebugToolSubTitle'),
     content: (
       <StringFuzzer
         ref={stringFuzzerRef}
         insertCallback={(template: string) => {
           if (!template) {
-            yakitNotify(
-              'warning',
-              i18n.language === 'zh' ? 'Payload 为空 / Fuzz 模版为空' : 'Payload is empty / Fuzz template is empty',
-            )
+            yakitNotify('warning', tOriginal('HTTPFuzzerPage.payloadNotify'))
           } else {
             if (reqEditor && template) {
               reqEditor.trigger('keyboard', 'type', {
                 text: template,
               })
             } else {
-              yakitNotify('error', i18n.language === 'zh' ? 'BUG: 编辑器失效' : 'BUG: Editor not working')
+              yakitNotify('error', tOriginal('HTTPFuzzerPage.editorBug'))
             }
             m.destroy()
           }
@@ -2356,7 +2342,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     () => advancedConfigShowType === 'ai' && advancedConfigVisible,
     [advancedConfigShowType, advancedConfigVisible],
   )
-  const defaultTopPanelFirstRatio = useMemo(() => (i18n.language === 'zh' ? '300px' : '460px'), [i18n.language])
+  const defaultTopPanelFirstRatio = useMemo(() => (i18n.language.startsWith('zh') ? '300px' : '460px'), [i18n.language])
   const [hotPatchTopPanelFirstRatio, setHotPatchTopPanelFirstRatio] = useState<string>(defaultTopPanelFirstRatio)
   const topPanelFirstRatio = useCreation(() => {
     if (!advancedConfigVisible) {

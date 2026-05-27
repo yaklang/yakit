@@ -360,7 +360,7 @@ const AIEchartsDetails: React.FC<AIEchartsDetailsProps> = memo((props) => {
     )
   }, [costEcharts.data])
   return (
-    <div className={styles['echarts-details-wrapper']} ref={ref} style={{ width: i18n.language === 'zh' ? 480 : 550 }}>
+    <div className={styles['echarts-details-wrapper']} ref={ref} style={{ width: i18n.language.startsWith('zh') ? 480 : 550 }}>
       <div className={styles['echarts-details-heard']}>
         <div className={styles['echarts-details-title']}>
           <OutlinePresentationchartlineIcon />

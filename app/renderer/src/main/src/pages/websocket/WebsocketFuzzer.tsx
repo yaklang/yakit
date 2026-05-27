@@ -30,6 +30,7 @@ import i18n from '@/i18n/i18n'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { OutlineCogIcon } from '@/assets/icon/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+const tOriginal = i18n.getFixedT(null, ['yakitUi'])
 const { ipcRenderer } = window.require('electron')
 
 interface WebsocketFuzzerProp {
@@ -621,6 +622,6 @@ export const newWebsocketFuzzerTab = (
       data: { tls: isHttps, request: request, openFlag, toServer },
     })
     .then(() => {
-      openFlag === false && yakitNotify('info', i18n.language === 'zh' ? '发送成功' : 'Sent Successfully')
+      openFlag === false && yakitNotify('info', tOriginal('YakitNotification.sentSuccessfully'))
     })
 }

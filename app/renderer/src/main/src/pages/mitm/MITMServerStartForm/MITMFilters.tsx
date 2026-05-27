@@ -304,7 +304,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
     >
       <div className={styles['filter-operation']}>
         <YakitCombinationSearch
-          beforeOptionWidth={i18n.language === 'zh' ? 96 : 120}
+          beforeOptionWidth={i18n.language.startsWith('zh') ? 96 : 120}
           valueBeforeOption={searchType}
           addonBeforeOption={[
             { label: t('ExtractorCollapse.ruleName'), value: 'ruleName' },

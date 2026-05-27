@@ -11,6 +11,8 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, ['webFuzzer'])
 
 const layout = {
   labelCol: { span: 5 },
@@ -31,9 +33,9 @@ interface pwdRequestProps {
   token: string
 }
 
-export function onImportShare(i18n) {
+export function onImportShare() {
   const m = showYakitModal({
-    title: i18n.language === 'en' ? 'Import Packet ID' : '导入数据包 ID',
+    title: tOriginal("WebFuzzer.ShareImport.importPacketData"),
     content: <ShareImport onClose={() => m.destroy()} />,
     footer: null,
   })

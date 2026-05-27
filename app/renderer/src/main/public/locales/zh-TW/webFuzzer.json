@@ -10,7 +10,8 @@
       "pleaseEnterShareId": "請輸入分享id",
       "password": "密碼",
       "pleaseEnterPassword": "請輸入密碼",
-      "thisFieldIsRequired": "該項為必填"
+      "thisFieldIsRequired": "該項為必填",
+      "importPacketData": "導入數據包 ID"
     }
   },
   "WebFuzzerPage": {
@@ -102,11 +103,18 @@
     "trafficAnalysis": "流量分析",
     "aiCasualRejectAll": "全部放棄",
     "aiCasualAcceptAll": "全部應用",
-
     "aiCasualAcceptAllMetaTitle": "即將應用的配置",
     "responseTabManual": "手動發包",
     "responseTabAi": "AI發包",
-    "aiTabTitle": "發包記錄"
+    "aiTabTitle": "發包記錄",
+    "sendRequest": "發送請求",
+    "noDictionaryAvailable": "暫無字典，請先添加後再使用",
+    "getDictionaryListFailed": "獲取字典列表失敗：",
+    "copyUrlFailed": "複製 URL 失敗：包含 Fuzz 標籤可能會導致 URL 不完整",
+    "fuzzerTagDebugTool": "Fuzzer Tag 調試工具",
+    "fuzzerTagDebugToolSubTitle": "偵錯模式適合生成或修改 Payload，巢狀預設巢狀在最外層，可以選取位置進行巢狀，插入則單純在游標位置插入 fuzztag",
+    "payloadNotify": "Payload 為空 / Fuzz 模板為空",
+    "editorBug": "BUG: 編輯器失效"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丟棄[{{droppedCount}}]個響應",
@@ -195,7 +203,9 @@
     "fileContent": "檔案內容",
     "readFileByLine": "按行讀取檔案",
     "text": "文字",
-    "confirmInsertTag": "確定插入標籤"
+    "confirmInsertTag": "確定插入標籤",
+    "selectFileInsert": "選擇文件並插入",
+    "copyYouWantDictionary": "複製你想要作為字典的文本"
   },
   "HTTPFuzzerHotPatch": {
     "enableModifiedHotReload": "是否啟用修改的熱載入程式碼和配置",
@@ -710,6 +720,7 @@
     "emptyOrUnreadableFile": "檔案內容為空或讀取失敗，請重新選擇可解析的文字檔案",
     "parseFailed": "解析失敗，未識別到有效的 hosts 配置",
     "parseSuccess": "解析成功，已匯入 {{count}} 條 hosts 配置",
-    "uploadPlaceholder": "路徑支援手動輸入,支援格式:txt/hosts"
+    "uploadPlaceholder": "路徑支援手動輸入,支援格式:txt/hosts",
+    "enterDNSTitle": "輸入 DNS Hosts 配置"
   }
 }

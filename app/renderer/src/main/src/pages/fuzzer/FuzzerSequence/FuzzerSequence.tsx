@@ -1852,8 +1852,8 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         style={{ display: showAllResponse ? 'none' : '' }}
         ref={fuzzerSequenceRef}
       >
-        <div className={styles['fuzzer-sequence-left']} style={{ width: i18n.language === 'zh' ? 300 : 400 }}>
-          <div className={styles['fuzzer-sequence-left-heard']} style={{ width: i18n.language === 'zh' ? 300 : 400 }}>
+        <div className={styles['fuzzer-sequence-left']} style={{ width: i18n.language.startsWith('zh') ? 300 : 400 }}>
+          <div className={styles['fuzzer-sequence-left-heard']} style={{ width: i18n.language.startsWith('zh') ? 300 : 400 }}>
             <span
               className={styles['fuzzer-sequence-left-heard-text']}
               onClick={() => {

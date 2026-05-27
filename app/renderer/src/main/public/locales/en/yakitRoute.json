@@ -12,13 +12,16 @@
     "viewAndManageAllHistoricalTrafficFromMITMPluginsAndFuzzing": "View and Manage All Historical Traffic from MITM, Plugins, and Fuzzing",
     "MITM": "MITM",
     "MITM Interactive Hijacking": "MITM Interactive Hijacking",
+    "openMITM": "Open MITM",
     "mitmSslHijack": "Install SSL/TLS certificates to intercept all browser traffic requests and response packets, providing both manual hijacking and passive scanning modes.",
     "WebFuzzer": "WebFuzzer",
     "fuzzer": "Fuzzer",
+    "newWebFuzzer": "New WebFuzzer",
     "fuzzBurpIntegration": "By leveraging the core fuzzing tag syntax, seamless integration with Burp Suite’s Repeater and Intruder is achieved.",
     "Yso-Java Hack": "Yso-Java Hack",
     "fuzzPayLoadDeserialization": "Configure serialized payloads or malicious classes to test deserialization, class loading, JNDI exploitation, and related vulnerabilities.",
     "Vulinbox": "Vulinbox",
+    "range": "Vulinbox",
     "Websocket Fuzzer": "Websocket Fuzzer",
     "fuzzTestingForWebSocketPackets": "Fuzz Testing for WebSocket Packets",
     "ICMP-SizeLog": "ICMP-SizeLog",
@@ -124,6 +127,10 @@
     "penetrationRecordDescription": "Records any content generated during the penetration testing process, making it easy to review and track.",
     "ai-memory": "Memory Base",
     "ai-tool": "Tool",
-    "ai-forge": "Forge"
+    "ai-forge": "Forge",
+    "notepadManage": "{{name}} Manage",
+    "addNotepad": "Add {{name}}",
+    "cloudDocs": "Cloud Docs",
+    "notepad": "Notepad"
   }
 }

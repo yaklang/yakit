@@ -181,7 +181,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     if (!visible) {
       return { display: 'none' }
     }
-    const minW = i18n.language === 'zh' ? 300 : 460
+    const minW = i18n.language.startsWith('zh') ? 300 : 460
     if (showFormContentType === 'ai') {
       return {
         width: '100%',

@@ -12,7 +12,7 @@ import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplet
 import { defYakitAutoCompleteRef } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
-
+const tOriginal = i18n.getFixedT(null, ['webFuzzer'])
 interface InsertFileFuzzTagProp {
   onFinished: (i: string) => any
   defaultMode?: ModeProps
@@ -188,7 +188,7 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
 
 export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: ModeProps) => {
   let m = showYakitModal({
-    title: i18n.language === 'zh' ? '选择文件并插入' : 'Select File and Insert',
+    title: tOriginal("InsertTextToFuzzTag.selectFileInsert"),
     width: '800px',
     content: (
       <>
@@ -207,7 +207,7 @@ export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: Mo
 
 export const insertTemporaryFileFuzzTag = (onInsert: (i: string) => any) => {
   let m = showYakitModal({
-    title: i18n.language === 'zh' ? '复制你想要作为字典的文本' : 'Copy the text you want to use as a dictionary',
+    title: tOriginal("InsertTextToFuzzTag.copyYouWantDictionary"),
     width: '40%',
     content: (
       <>

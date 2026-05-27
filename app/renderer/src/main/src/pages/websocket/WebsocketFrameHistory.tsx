@@ -193,13 +193,13 @@ export const WebsocketFrameHistory: React.FC<WebsocketFrameHistoryProp> = (props
       <div className={styles['websocket-frame-history']}>
         <div className={styles['table-header']}>
           <div
-            style={{ width: i18n.language === 'zh' ? 50 : 80 }}
+            style={{ width: i18n.language.startsWith('zh') ? 50 : 80 }}
             className={classNames(styles['header-cell'], styles['base-cell'])}
           >
             {t('YakitTable.order')}
           </div>
           <div
-            style={{ width: i18n.language === 'zh' ? 100 : 150 }}
+            style={{ width: i18n.language.startsWith('zh') ? 100 : 150 }}
             className={classNames(styles['header-cell'], styles['base-cell'])}
           >
             {t('WebsocketFrameHistory.data_direction')}

@@ -93,7 +93,10 @@
       "securityProduct": "Security Product",
       "remoteCodeExecutionScan": "Remote Code Execution (Scan)",
       "sQLInjection": "SQL Injection"
-    }
+    },
+    "setColorSuccess": "Set HTTPFlow color successfully",
+    "removeColorSuccess": "Clear HTTPFlow color successfully",
+    "sendLimitData": "You can only send a maximum of {{maxLength}} data entries at a time"
   },
   "ImportExportProgress": {
     "exportHARData": "Export HAR traffic data"

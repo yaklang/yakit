@@ -308,14 +308,14 @@ const Home: React.FC<HomeProp> = (props) => {
         onClick: () => onMenu({ route: YakitRoute.DB_Domain }),
       },
       {
-        label: t('Home.notepadManage', { name: getNotepadNameByEdition() }),
+        label: t('YakitRoute.notepadManage', { name: getNotepadNameByEdition() }),
         icon: <PublicNotepadIcon />,
         desc: t('YakitRoute.penetrationRecordDescription'),
         rightIcon: <OutlineArrowrightIcon />,
         onClick: () => onMenu({ route: YakitRoute.Notepad_Manage }),
       },
       {
-        label: t('Home.addNotepad', { name: getNotepadNameByEdition() }),
+        label: t('YakitRoute.addNotepad', { name: getNotepadNameByEdition() }),
         icon: <PublicNotepadIcon />,
         desc: t('YakitRoute.penetrationRecordDescription'),
         rightIcon: <OutlineArrowrightIcon />,
@@ -1469,7 +1469,7 @@ const Home: React.FC<HomeProp> = (props) => {
                         <PublicNotepadManagerIcon className={styles['small-tools-item-icon']} />
                         <div className={styles['small-tools-item-cont-right']}>
                           <div className={styles['small-tools-cont-title']}>
-                            {t('Home.notepadManage', { name: getNotepadNameByEdition() })}
+                            {t('YakitRoute.notepadManage', { name: getNotepadNameByEdition() })}
                           </div>
                           <div className={styles['small-tools-cont-desc']}>
                             {t('YakitRoute.penetrationRecordDescription')}

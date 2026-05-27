@@ -201,6 +201,8 @@ const ConfigManagement = React.lazy(() => import('@/pages/configManagement/Confi
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
 const AIForge = React.lazy(() => import('@/pages/aiForge/AIForge'))
 
+const tOriginal = i18n.getFixedT(null, ['yakitRoute'])
+
 /**
  * @description 页面路由对应的页面信息
  * * label-页面名称
@@ -384,11 +386,11 @@ export const YakitRouteToPageInfo: Record<
     describeUi: 'YakitRoute.customAuditRules',
   },
   'notepad-manage': {
-    label: i18n.language === 'en' ? `${getNotepadNameByEdition()} Manage` : `${getNotepadNameByEdition()}管理`,
+    label: tOriginal('YakitRoute.notepadManage', { name: getNotepadNameByEdition() }),
     describeUi: 'YakitRoute.penetrationRecordDescription',
   },
   'modify-notepad': {
-    label: i18n.language === 'en' ? getNotepadNameByEdition() : getNotepadNameByEdition(),
+    label: getNotepadNameByEdition(),
   },
   'yakrunner-audit-hole': { label: '审计漏洞', labelUi: 'YakitRoute.auditVulnerability' },
   'system-config': { label: '系统配置', labelUi: 'YakitRoute.systemConfig' },
@@ -1489,7 +1491,7 @@ export type ExtraMenuItem = ExtraMenuLeaf | ExtraMenuGroup
 const getVulinboxMenuItem = (hideIcon = false): ExtraMenuItem => ({
   page: YakitRoute.Beta_VulinboxManager,
   i18n: false,
-  label: i18n.language === 'en' ? 'Range' : '靶场',
+  label: tOriginal('YakitRoute.range'),
   ...(hideIcon ? {} : { icon: <PublicToolVulinboxIcon /> }),
 })
 
@@ -1499,12 +1501,12 @@ export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
     {
       page: YakitRoute.MITMHacker,
       i18n: false,
-      label: i18n.language === 'en' ? 'Open MITM' : '开启 MITM',
+      label: tOriginal('YakitRoute.openMITM'),
     },
     {
       page: YakitRoute.HTTPFuzzer,
       i18n: false,
-      label: i18n.language === 'en' ? 'New WebFuzzer' : '新建 WebFuzzer',
+      label: tOriginal('YakitRoute.newWebFuzzer'),
     },
     {
       page: YakitRoute.Codec,
@@ -1559,12 +1561,12 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
           {
             page: YakitRoute.Notepad_Manage,
             i18n: false,
-            label: i18n.language === 'en' ? `${getNotepadNameByEdition()} Manage` : `${getNotepadNameByEdition()}管理`,
+            label: tOriginal('YakitRoute.notepadManage', { name: getNotepadNameByEdition() }),
           },
           {
             page: YakitRoute.Modify_Notepad,
             i18n: false,
-            label: i18n.language === 'en' ? `Add ${getNotepadNameByEdition()}` : `新建${getNotepadNameByEdition()}`,
+            label: tOriginal('YakitRoute.addNotepad', { name: getNotepadNameByEdition() }),
           },
         ],
       },
@@ -1594,13 +1596,12 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
             {
               page: YakitRoute.Notepad_Manage,
               i18n: false,
-              label:
-                i18n.language === 'en' ? `${getNotepadNameByEdition()} Manage` : `${getNotepadNameByEdition()}管理`,
+              label: tOriginal('YakitRoute.notepadManage', { name: getNotepadNameByEdition() }),
             },
             {
               page: YakitRoute.Modify_Notepad,
               i18n: false,
-              label: i18n.language === 'en' ? `Add ${getNotepadNameByEdition()}` : `新建${getNotepadNameByEdition()}`,
+              label: tOriginal('YakitRoute.addNotepad', { name: getNotepadNameByEdition() }),
             },
           ],
         },

@@ -1035,7 +1035,7 @@ const SystemFunctionList: React.FC<SystemFunctionListProps> = React.memo((props)
   // 搜索功能
   useEffect(() => {
     const newList = SystemRouteMenuData.filter((item) => {
-      return item.labelUi && i18n.language === 'en' ? t(item.labelUi).includes(keyword) : item.label.includes(keyword)
+      return item.labelUi && i18n.language !== 'zh' ? t(item.labelUi).includes(keyword) : item.label.includes(keyword)
     })
     setSystemRouteMenuData(newList)
   }, [props.isSearch, i18n.language])

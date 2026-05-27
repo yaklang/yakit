@@ -184,7 +184,7 @@ export const ShareImportExportData: React.FC<ShareDataProps> = ({
         onClick: ({ key }) => {
           switch (key) {
             case 'dataPacketId':
-              onImportShare(i18n)
+              onImportShare()
               break
             case 'yamlDocument':
               onOpenImportYamlPop()

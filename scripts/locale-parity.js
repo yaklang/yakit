@@ -21,42 +21,101 @@ function flatten(obj, prefix = '') {
   return out
 }
 
+const localesPath = 'app/renderer/src/main/public/locales'
 const root = process.cwd()
-const enDir = path.join(root, 'app/renderer/src/main/public/locales/en')
-const zhDir = path.join(root, 'app/renderer/src/main/public/locales/zh')
+const enDir = path.join(root, localesPath, 'en')
+const targetLangs = ['zh', 'zh-TW']
+const allLangs = ['en', ...targetLangs]
 
-function listJson(dir) {
-  return fs.readdirSync(dir).filter((f) => f.endsWith('.json'))
+// 收集所有语言目录中的 JSON 文件集合
+const langFilesMap = new Map()
+for (const lang of allLangs) {
+  const langDir = path.join(root, localesPath, lang)
+  if (!fs.existsSync(langDir)) {
+    console.error(`目录不存在: ${langDir}`)
+    process.exit(1)
+  }
+  const files = fs.readdirSync(langDir).filter((f) => f.endsWith('.json'))
+  langFilesMap.set(lang, new Set(files))
 }
 
-let hasDiff = false
-const files = listJson(enDir).filter((f) => fs.existsSync(path.join(zhDir, f)))
+// 找出所有语言中出现过的所有文件名的并集
+const allFileNames = new Set()
+for (const filesSet of langFilesMap.values()) {
+  filesSet.forEach((f) => allFileNames.add(f))
+}
 
-for (const f of files) {
+// 收集缺失文件信息
+const missingFiles = []
+
+for (const f of allFileNames) {
+  const missingLangs = []
+  for (const lang of allLangs) {
+    const filesSet = langFilesMap.get(lang)
+    if (!filesSet.has(f)) {
+      missingLangs.push(lang)
+    }
+  }
+  if (missingLangs.length > 0) {
+    missingFiles.push({ filename: f, missingLangs })
+  }
+}
+
+if (missingFiles.length > 0) {
+  console.error('Missing files:')
+  for (const { filename, missingLangs } of missingFiles) {
+    console.error(`  [${filename}] Missing in: ${missingLangs.join(', ')}`)
+  }
+  process.exit(1)
+}
+
+// 至此，所有语言的文件集合完全一致，继续检查 key 一致性
+let hasDiff = false
+const enFiles = Array.from(langFilesMap.get('en')).sort()
+
+for (const f of enFiles) {
+  const langData = {}
+  let allKeysSet = new Set()
+
+  // 读取英文
   const enPath = path.join(enDir, f)
-  const zhPath = path.join(zhDir, f)
-  const en = readJSON(enPath)
-  const zh = readJSON(zhPath)
-  const enKeys = Array.from(new Set(flatten(en))).sort()
-  const zhKeys = Array.from(new Set(flatten(zh))).sort()
-  const missingInEn = zhKeys.filter((k) => !enKeys.includes(k))
-  const missingInZh = enKeys.filter((k) => !zhKeys.includes(k))
-  if (missingInEn.length || missingInZh.length) {
-    hasDiff = true
-    console.log(`\n[${f}]`)
-    if (missingInEn.length) {
-      console.log('  Missing in EN:')
-      missingInEn.forEach((k) => console.log(`   - ${k}`))
+  const enJSON = readJSON(enPath)
+  const enKeys = Array.from(new Set(flatten(enJSON))).sort()
+  langData['en'] = { keys: enKeys }
+  enKeys.forEach((k) => allKeysSet.add(k))
+
+  // 读取目标语言
+  for (const lang of targetLangs) {
+    const langDir = path.join(root, localesPath, lang)
+    const langPath = path.join(langDir, f)
+    const langJSON = readJSON(langPath)
+    const langKeys = Array.from(new Set(flatten(langJSON))).sort()
+    langData[lang] = { keys: langKeys }
+    langKeys.forEach((k) => allKeysSet.add(k))
+  }
+
+  const allKeys = Array.from(allKeysSet).sort()
+  const missingPerLang = []
+  for (const lang of allLangs) {
+    const keys = langData[lang].keys
+    const missing = allKeys.filter((k) => !keys.includes(k))
+    if (missing.length) {
+      missingPerLang.push({ lang, missing })
     }
-    if (missingInZh.length) {
-      console.log('  Missing in ZH:')
-      missingInZh.forEach((k) => console.log(`   - ${k}`))
-    }
+  }
+
+  if (missingPerLang.length === 0) continue
+
+  hasDiff = true
+  console.log(`\n[${f}]`)
+  for (const { lang, missing } of missingPerLang) {
+    console.log(`  Missing in ${lang}:`)
+    missing.forEach((k) => console.log(`   - ${k}`))
   }
 }
 
 if (!hasDiff) {
-  console.log('Locale parity check passed: EN and ZH keys match for all files.')
+  console.log('Locale parity check passed: EN, zh, zh-TW keys are consistent across all files.')
 } else {
   process.exitCode = 1
 }
