@@ -31,9 +31,12 @@ export interface AIChatTextareaRefProps {
 export enum AIInputInnerFeatureEnum {
   AIReviewRuleSelect = 'AIReviewRuleSelect',
   AIModelSelect = 'AIModelSelect',
+}
+export enum AIInputFooterRightEnum {
   AIFocusMode = 'AIFocusMode',
 }
 export type AIInputInnerFeature = `${AIInputInnerFeatureEnum}`
+export type AIInputFooterRight = `${AIInputFooterRightEnum}`
 interface FooterLeftTypesBase<T extends string, U> {
   type: T
   props?: U
@@ -41,8 +44,9 @@ interface FooterLeftTypesBase<T extends string, U> {
 }
 type AIReviewRuleSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIReviewRuleSelect, AIReviewRuleSelectProps>
 type AIModelSelectType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIModelSelect, AIModelSelectProps>
-type AIFocusModeType = FooterLeftTypesBase<AIInputInnerFeatureEnum.AIFocusMode, AIFocusModeProps>
-export type FooterLeftTypesComponentProps = AIReviewRuleSelectType | AIModelSelectType | AIFocusModeType
+type AIFocusModeType = FooterLeftTypesBase<'AIFocusMode', AIFocusModeProps>
+export type FooterLeftTypesComponentProps = AIReviewRuleSelectType | AIModelSelectType
+export type FooterRightTypesComponentProps = AIFocusModeType
 export interface AIChatTextareaProps {
   ref?: React.ForwardedRef<AIChatTextareaRefProps>
   /** 提交按钮的 loading 状态 */
@@ -61,6 +65,7 @@ export interface AIChatTextareaProps {
   isOpen?: boolean
   filterMentionType?: AIChatMentionProps['filterMode']
   footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
+  footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]
   chatDataStoreKey: ChatDataStoreKey
 }
 

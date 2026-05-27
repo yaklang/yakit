@@ -116,7 +116,7 @@ import {
   type WebFuzzerCasualReplaceReviewPayload,
 } from './webFuzzerAiRequestApplyBridge'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
+import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { shallow } from 'zustand/shallow'
 import { usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, getFuzzerProcessedCacheData } from '@/store/pageInfo'
@@ -2658,10 +2658,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         />
                       </>
                     ),
-                    footerLeftTypes: [
-                      AIInputInnerFeatureEnum.AIModelSelect,
+                    footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
+                    footerRightTypes: [
                       {
-                        type: AIInputInnerFeatureEnum.AIFocusMode,
+                        type: AIInputFooterRightEnum.AIFocusMode,
                         props: {
                           value: focusModeLoop,
                           onChange: () => {},
