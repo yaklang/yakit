@@ -5358,7 +5358,7 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
       },
     })
     .then(() => {
-      openFlag === false && info(tOriginal("YakitNotification.sendSuccess"))
+      openFlag === false && info(tOriginal('YakitNotification.sendSuccess'))
     })
 }
 
@@ -5376,7 +5376,7 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
       Tags: existedTags,
     })
     .then(() => {
-      yakitNotify('success', tOriginal("HTTPFlowTable.setColorSuccess"))
+      yakitNotify('success', tOriginal('HTTPFlowTable.setColorSuccess'))
       let newData: HTTPFlow[] = []
       const l = data.length
       for (let index = 0; index < l; index++) {
@@ -5405,7 +5405,7 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
       Tags: existedTags,
     })
     .then(() => {
-      yakitNotify('success', tOriginal("HTTPFlowTable.removeColorSuccess"))
+      yakitNotify('success', tOriginal('HTTPFlowTable.removeColorSuccess'))
       let newData: HTTPFlow[] = []
       const l = data.length
       for (let index = 0; index < l; index++) {
@@ -5453,10 +5453,7 @@ const onBatchExecPacketScan = (params: {
 }) => {
   const { httpFlowIds, maxLength, currentPacketScan } = params
   if (httpFlowIds.length > maxLength) {
-    yakitNotify(
-      'warning',
-      tOriginal('HTTPFlowTable.sendLimitData', { length: maxLength }),
-    )
+    yakitNotify('warning', tOriginal('HTTPFlowTable.sendLimitData', { length: maxLength }))
     return
   }
   execPacketScanWithNewTab({

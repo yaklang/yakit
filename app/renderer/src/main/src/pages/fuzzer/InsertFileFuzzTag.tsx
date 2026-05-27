@@ -188,7 +188,7 @@ const InsertTextToFuzzTag: React.FC<InsertFileFuzzTagProp> = (props) => {
 
 export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: ModeProps) => {
   let m = showYakitModal({
-    title: tOriginal("InsertTextToFuzzTag.selectFileInsert"),
+    title: tOriginal('InsertTextToFuzzTag.selectFileInsert'),
     width: '800px',
     content: (
       <>
@@ -207,7 +207,7 @@ export const insertFileFuzzTag = (onInsert: (i: string) => any, defaultMode?: Mo
 
 export const insertTemporaryFileFuzzTag = (onInsert: (i: string) => any) => {
   let m = showYakitModal({
-    title: tOriginal("InsertTextToFuzzTag.copyYouWantDictionary"),
+    title: tOriginal('InsertTextToFuzzTag.copyYouWantDictionary'),
     width: '40%',
     content: (
       <>

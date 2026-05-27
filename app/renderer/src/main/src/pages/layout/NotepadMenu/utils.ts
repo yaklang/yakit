@@ -5,8 +5,8 @@ const tOriginal = i18n.getFixedT(null, ['yakitRoute'])
 export const getNotepadNameByEdition = () => {
   /**只要是企业版就显示云文档，不区分其他 */
   if (isEnpriTrace()) {
-    return tOriginal("YakitRoute.cloudDocs")
+    return tOriginal('YakitRoute.cloudDocs')
   } else {
-    return tOriginal("YakitRoute.notepad")
+    return tOriginal('YakitRoute.notepad')
   }
 }

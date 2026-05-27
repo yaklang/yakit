@@ -35,7 +35,7 @@ interface pwdRequestProps {
 
 export function onImportShare() {
   const m = showYakitModal({
-    title: tOriginal("WebFuzzer.ShareImport.importPacketData"),
+    title: tOriginal('WebFuzzer.ShareImport.importPacketData'),
     content: <ShareImport onClose={() => m.destroy()} />,
     footer: null,
   })

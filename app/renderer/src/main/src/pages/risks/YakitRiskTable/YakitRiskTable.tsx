@@ -988,7 +988,11 @@ export const YakitRiskTable: React.FC<YakitRiskTableProps> = React.memo((props) 
       ResponseString: Buffer.from(ele.Response || new Uint8Array()).toString('utf8'),
     }))
     const htmlContent =
-      i18n.language === 'zh' ? getHtmlTemplate() : i18n.language === 'zh-TW' ? getHtmlZhTWTemplate() : getHtmlEnTemplate()
+      i18n.language === 'zh'
+        ? getHtmlTemplate()
+        : i18n.language === 'zh-TW'
+          ? getHtmlZhTWTemplate()
+          : getHtmlEnTemplate()
     const params: ExportHtmlProps = {
       htmlContent,
       fileName: `riskTable-${moment().valueOf()}`,

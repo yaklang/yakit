@@ -39,8 +39,8 @@ function pickLabels(): {
 } {
   return {
     nav: (current, total) => `${current} / ${total}`,
-    keep: tOriginal("YakitButton.keep"),
-    undo: tOriginal("YakitButton.undo"),
+    keep: tOriginal('YakitButton.keep'),
+    undo: tOriginal('YakitButton.undo'),
   }
 }
 
