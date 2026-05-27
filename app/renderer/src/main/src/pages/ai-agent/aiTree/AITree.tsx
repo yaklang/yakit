@@ -243,29 +243,29 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, i
           </div>
         )
       })}
-      {dependsOnTasks && dependsOnTasks.length > 0 ? (
-        <YakitPopover
-          overlayClassName={styles['depends-on-popover']}
-          placement='right'
-          visible={isHovered}
-          content={
-            <div className={styles['depends-on-content']}>
-              <div className={styles['depends-on-title']}>高亮的为该任务的关联任务</div>
+      <YakitPopover
+        overlayClassName={styles['depends-on-popover']}
+        placement='right'
+        visible={isHovered}
+        content={
+          <div className={styles['depends-on-content']}>
+            <div className={styles['depends-on-title']}>高亮的为该任务的关联任务</div>
+            {dependsOnTasks && dependsOnTasks.length > 0 ? (
               <div className={styles['depends-on-list']}>
                 {dependsOnTasks.map((task) => (
-                <div key={task.index} className={styles['depends-on-item']}>
-                  {task.name}
-                </div>
-              ))}
+                  <div key={task.index} className={styles['depends-on-item']}>
+                    {task.name}
+                  </div>
+                ))}
               </div>
-            </div>
-          }
-        >
-          {Card}
-        </YakitPopover>
-      ) : (
-        Card
-      )}
+            ) : (
+              <div className={styles['depends-on-empty']}>暂无其他关联任务</div>
+            )}
+          </div>
+        }
+      >
+        {Card}
+      </YakitPopover>
     </div>
   )
 },

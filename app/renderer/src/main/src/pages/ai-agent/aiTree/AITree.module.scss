@@ -357,6 +357,12 @@
       content: '• ';
     }
   }
+  .depends-on-empty {
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    font-size: 13px;
+    line-height: 20px;
+    padding-top: 6px;
+  }
 
   :global {
     .ant-popover-inner {
