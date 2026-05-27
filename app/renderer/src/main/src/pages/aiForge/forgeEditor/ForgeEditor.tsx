@@ -1245,71 +1245,13 @@ const AIForgeMilkdownBase: React.FC<AIForgeMilkdownBaseProps> = memo((props) => 
     [readonly, defaultValue],
   )
 
-  const editorRef = useRef<Editor | null>(null)
   useEffect(() => {
     if (loading) return
     const editor = get()
     if (!editor) return
 
-    editorRef.current = editor
     onUpdateEditor?.(editor)
-
-    let cleanup: (() => void) | undefined
-
-    editor.action((ctx) => {
-      const dom = ctx.get(editorViewCtx).dom
-
-      const handler = (e: MouseEvent) => {
-        e.preventDefault()
-        onEditorContextMenu(e)
-      }
-
-      dom.addEventListener('contextmenu', handler)
-
-      cleanup = () => {
-        dom.removeEventListener('contextmenu', handler)
-      }
-    })
-
-    return () => {
-      cleanup?.()
-    }
   }, [loading, get])
-
-  const onEditorContextMenu = (event: React.MouseEvent | MouseEvent) => {
-    showByRightContext(
-      {
-        data: [{ label: '转为纯文本后按 Markdown 解析', key: 'pasteMarkdown' }],
-        onClick: ({ key }) => {
-          if (key === 'pasteMarkdown') {
-            handlePasteMarkdown()
-          }
-        },
-      },
-      event.clientX,
-      event.clientY,
-    )
-  }
-
-  const handlePasteMarkdown = useMemoizedFn(async () => {
-    const editor = editorRef.current
-    if (!editor) return
-
-    let text = ''
-    try {
-      text = await navigator.clipboard.readText()
-    } catch (e) {
-      yakitNotify('error', '读取剪贴板失败')
-      return
-    }
-
-    editor.action((ctx) => {
-      const view = ctx.get(editorViewCtx)
-      const parser = ctx.get(parserCtx)
-      const doc = parser(text)
-      view.dispatch(view.state.tr.replaceSelectionWith(doc))
-    })
-  })
 
   useEffect(() => {
     return () => {
