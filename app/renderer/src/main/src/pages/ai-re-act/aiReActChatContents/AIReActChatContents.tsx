@@ -118,26 +118,27 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 
   const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
 
+  const chatLength = useCreation(() => chats.elements.length, [chats.elements.length])
   // 向上滚动加载
   const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
     loading: casualLoadMoreLoading,
-    dataLength: chats.elements.length,
+    dataLength: chatLength,
     SessionID: activeChat?.SessionID || '',
     fetchHasMore: () => handleHasMoreHistory(TYPE),
     loadMore: () => handleLoadMoreHistory(TYPE),
   })
   const { virtuosoRef, setScrollerRef, setIsAtBottomRef, handleTotalListHeightChanged } = useVirtuosoAutoScroll({
-    total: chats.elements.length,
+    total: chatLength,
     isPrependingRef,
   })
   const renderItem = useCallback(
     (index: number, item?: ReActChatRenderItem) => {
       if (!item?.token) return null
       const arrayIndex = index - firstItemIndex
-      const hasNext = chats.elements.length - arrayIndex > 1
+      const hasNext = chatLength - arrayIndex > 1
       return <AIChatListItem key={item.token} hasNext={hasNext} itemIndex={arrayIndex} item={item} type="re-act" />
     },
-    [chats.elements.length, firstItemIndex],
+    [chatLength, firstItemIndex],
   )
   const Item = useCallback(
     ({ children, style, 'data-index': dataIndex }) => (
@@ -166,10 +167,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
           <div className={styles['end']}>当前会话已结束</div>
         )}
       </div>
-    ) : (
+    ) : chatLength ? (
       <div className={styles['end']}>当前会话已停止</div>
-    )
-  }, [casualTitle, execute])
+    ) : null
+  }, [casualTitle, execute, chatLength])
   const Header = useCallback(
     () =>
       casualLoadMoreLoading ? (
