@@ -40,6 +40,10 @@
       }
     }
   }
+  .ai-mcp-list-header-right {
+    @extend %display-flex-center;
+    gap: 4px;
+  }
 
   .ai-mcp-list {
     &-row {

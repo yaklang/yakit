@@ -32,6 +32,7 @@ import {
   OutlineRefreshIcon,
   OutlineReplyIcon,
   OutlineTrashIcon,
+  OutlineWrenchIcon,
 } from '@/assets/icon/outline'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -51,9 +52,10 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { SolidToolIcon } from '@/assets/icon/solid'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AIMCPToolManager } from './AIMCPToolManager'
 
 const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
-  const [listType, setListType] = useState<'mcp' | 'mcp-tool'>('mcp')
+  const [listType, setListType] = useState<'mcp' | 'mcp-tool' | 'tool-manager'>('mcp')
   const [currentMCP, setCurrentMCP] = useState<MCPServer>()
   const onSetCurrentMCP = useMemoizedFn((item: MCPServer) => {
     setCurrentMCP(item)
@@ -63,14 +65,20 @@ const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
     setCurrentMCP(undefined)
     setListType('mcp')
   })
+  const onOpenToolManager = useMemoizedFn(() => {
+    setListType('tool-manager')
+  })
   const renderListContent = useMemoizedFn(() => {
     let content: ReactNode = <></>
     switch (listType) {
       case 'mcp':
-        content = <AIMCPList setCurrentMCP={onSetCurrentMCP} />
+        content = <AIMCPList setCurrentMCP={onSetCurrentMCP} onOpenToolManager={onOpenToolManager} />
         break
       case 'mcp-tool':
         content = <AIMCPToolList item={currentMCP!} onBack={onBack} />
+        break
+      case 'tool-manager':
+        content = <AIMCPToolManager onBack={onBack} />
         break
       default:
         break
@@ -235,7 +243,7 @@ const AIMCPToolItemPopoverContent: React.FC<AIMCPToolItemPopoverContentProps> = 
 })
 
 const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
-  const { setCurrentMCP } = props
+  const { setCurrentMCP, onOpenToolManager } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   const [keyWord, setKeyWord] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
@@ -340,7 +348,12 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
           </Tooltip>
           <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
         </div>
-        <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIMCP} />
+        <div className={styles['ai-mcp-list-header-right']}>
+          <Tooltip title={t('AIMCPToolManager.title')}>
+            <YakitButton type="text2" icon={<OutlineWrenchIcon />} onClick={onOpenToolManager} />
+          </Tooltip>
+          <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIMCP} />
+        </div>
       </div>
       <YakitInput.Search
         value={keyWord}

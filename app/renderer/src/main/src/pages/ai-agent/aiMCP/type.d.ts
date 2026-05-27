@@ -3,6 +3,7 @@ import { MCPServer, MCPServerTool } from '../type/aiMCP'
 export interface AIMCPProps {}
 export interface AIMCPListProps {
   setCurrentMCP: (item: MCPServer) => void
+  onOpenToolManager: () => void
 }
 export interface AIMCPToolListProps {
   item: MCPServer

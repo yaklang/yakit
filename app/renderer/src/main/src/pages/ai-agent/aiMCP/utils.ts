@@ -5,7 +5,12 @@ import {
   DeleteMCPServerRequest,
   GetAllMCPServersRequest,
   GetAllMCPServersResponse,
+  GetMCPToolDetailRequest,
+  GetMCPToolListRequest,
+  GetMCPToolListResponse,
   MCPServer,
+  MCPToolConfig,
+  SetMCPToolEnabledRequest,
   UpdateMCPServerRequest,
 } from '../type/aiMCP'
 import { GeneralResponse } from '../type/aiModel'
@@ -82,6 +87,42 @@ export const grpcUpdateMCPServer: APIFunc<UpdateMCPServerRequest, GeneralRespons
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcUpdateMCPServer 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcGetMCPToolList: APIFunc<GetMCPToolListRequest, GetMCPToolListResponse> = (params, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('GetMCPToolList', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcGetMCPToolList 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcGetMCPToolDetail: APIFunc<GetMCPToolDetailRequest, MCPToolConfig> = (params, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('GetMCPToolDetail', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcGetMCPToolDetail 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcSetMCPToolEnabled: APIFunc<SetMCPToolEnabledRequest, GeneralResponse> = (params, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('SetMCPToolEnabled', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcSetMCPToolEnabled 失败:' + err)
         reject(err)
       })
   })

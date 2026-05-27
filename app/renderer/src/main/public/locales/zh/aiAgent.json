@@ -505,5 +505,13 @@
     "deleteFailed": "删除会话失败：{{error}}",
     "editTitle": "编辑对话标题",
     "deleteConfirm": "是否确认删除该历史对话，删除后将无法恢复"
+  },
+  "AIMCPToolManager": {
+    "title": "工具管理",
+    "tooltipInfo": "管理所有 MCP 工具的启用/禁用状态，包含内置工具和外部服务器工具",
+    "searchPlaceholder": "搜索工具名称或描述",
+    "sourceAll": "全部来源",
+    "sourceBuiltin": "内置",
+    "sourceBridge": "外部服务器"
   }
 }

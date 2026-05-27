@@ -505,5 +505,13 @@
     "deleteFailed": "Failed to delete session: {{error}}",
     "editTitle": "Edit session title",
     "deleteConfirm": "Are you sure you want to delete this session? This cannot be recovered"
+  },
+  "AIMCPToolManager": {
+    "title": "Tool Management",
+    "tooltipInfo": "Manage the enable/disable state of all MCP tools, including built-in and bridge server tools",
+    "searchPlaceholder": "Search by tool name or description",
+    "sourceAll": "All Sources",
+    "sourceBuiltin": "Built-in",
+    "sourceBridge": "Bridge"
   }
 }

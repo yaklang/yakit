@@ -127,7 +127,7 @@ service Yak {
   // echo 通常用于测试服务是否通畅
   rpc Echo(EchoRequest) returns(EchoResposne);
 
-  // 握手 用于检查前端是否可以连接当前引擎
+  // 握手 用于检查前端是否可以连接当前引擎 
   rpc Handshake(HandshakeRequest) returns (HandshakeResponse);
 
   rpc VerifySystemCertificate(Empty) returns (VerifySystemCertificateResponse);
@@ -621,13 +621,13 @@ service Yak {
   rpc NewProject(NewProjectRequest) returns (NewProjectResponse);
   rpc UpdateProject(NewProjectRequest) returns(NewProjectResponse);
   rpc IsProjectNameValid(IsProjectNameValidRequest) returns (Empty);
-  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement
+  rpc RemoveProject(RemoveProjectRequest) returns (Empty); // no implement 
 
   rpc DeleteProject(DeleteProjectRequest) returns (Empty);
-  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetDefaultProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetDefaultProjectEx(GetDefaultProjectExRequest) returns (ProjectDescription);
   rpc QueryProjectDetail(QueryProjectDetailRequest) returns (ProjectDescription);
-  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated
+  rpc GetTemporaryProject(Empty) returns (ProjectDescription); // deprecated 
   rpc GetTemporaryProjectEx(GetTemporaryProjectExRequest) returns (ProjectDescription);
 
   // 导入导出项目，带密码，带进度
@@ -642,7 +642,7 @@ service Yak {
   rpc QueryMITMExtractedAggregate(QueryMITMExtractedAggregateRequest) returns (QueryMITMExtractedAggregateResponse);
   rpc ExportMITMRuleExtractedData(ExportMITMRuleExtractedDataRequest) returns (stream ExportMITMRuleExtractedDataResponse);
   rpc DeleteMITMRuleExtractedData(DeleteMITMRuleExtractedDataRequest) returns (Empty);
-  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse);
+  rpc DeduplicateMITMRuleExtractedData(DeduplicateMITMRuleExtractedDataRequest) returns (DeduplicateMITMRuleExtractedDataResponse); 
   /*
     ChaosMakerRule: Bas
   */
@@ -1032,6 +1032,11 @@ service Yak {
   rpc UpdateMCPServer(UpdateMCPServerRequest) returns (GeneralResponse);
   rpc GetAllMCPServers(GetAllMCPServersRequest) returns (GetAllMCPServersResponse);
 
+  // MCP tool-level enable/disable management
+  rpc GetMCPToolList(GetMCPToolListRequest) returns (GetMCPToolListResponse);
+  rpc GetMCPToolDetail(GetMCPToolDetailRequest) returns (MCPToolConfig);
+  rpc SetMCPToolEnabled(SetMCPToolEnabledRequest) returns (GeneralResponse);
+
   // RAG Collection Search
   rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
 
@@ -1163,6 +1168,55 @@ message GetAllMCPServersResponse {
   repeated MCPServer MCPServers = 1;
   Paging Pagination = 2;
   int64 Total = 3;
+}
+
+// MCPToolConfig represents the per-tool enable/disable configuration stored in the DB.
+message MCPToolConfig {
+  int64 ID = 1;
+  // ToolName is the canonical MCP tool name (e.g. "port_scan" or "mcp_IDA-MCP_decompile").
+  string ToolName = 2;
+  // Source is either "builtin" (registered in Go code) or "bridge" (from external MCPServer).
+  string Source = 3;
+  // ServerName is non-empty only for bridge tools.
+  string ServerName = 4;
+  bool Enable = 5;
+  // Description comes from the tool definition, not the DB row.
+  string Description = 6;
+  // Params mirrors MCPServerTool.Params for tool detail display.
+  repeated MCPServerToolParamInfo Params = 7;
+}
+
+message GetMCPToolListRequest {
+  // Keyword filters by tool name or description (fuzzy).
+  string Keyword = 1;
+  // Source filters by "builtin" or "bridge"; empty means all.
+  string Source = 2;
+  // ServerName filters bridge tools by their origin server name.
+  string ServerName = 3;
+  // OnlyEnabled when true returns only enabled tools.
+  bool OnlyEnabled = 4;
+  Paging Pagination = 5;
+  // ForceSync when true triggers a full reconcile against all enabled external
+  // MCP servers: new tools are added, removed tools are deleted from the DB.
+  // Without this flag, the sync is skipped for servers that already have all
+  // tools with descriptions, avoiding unnecessary network round-trips.
+  bool ForceSync = 6;
+}
+
+message GetMCPToolListResponse {
+  repeated MCPToolConfig Tools = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message SetMCPToolEnabledRequest {
+  // ToolName uniquely identifies the tool to update.
+  string ToolName = 1;
+  bool Enable = 2;
+}
+
+message GetMCPToolDetailRequest {
+  string ToolName = 1;
 }
 
 message EntityRepository {
@@ -3493,7 +3547,7 @@ message GetProjectsRequest {
   int64 ChildFolderId = 5;
   // this type is filter ""(all) | "project"(yakit) | file(only-folder) | "ssa_project"(irify)
   string Type = 6;
-  // this type effect response.ProjectTotal, this type mark kind of frontend
+  // this type effect response.ProjectTotal, this type mark kind of frontend 
   // "project"(yakit) | "ssa_project"(irify)
   string FrontendType = 7;
   int64 AfterUpdatedAt = 8;
@@ -6710,7 +6764,7 @@ message QueryHTTPFlowRequest {
 
   string PayloadKeyword = 47;
   string ExcludeStatusCode = 48; // 排除状态码
-
+  
   // 高级配置的hostname过滤（模糊匹配）
   repeated string HostnameFilter = 49;
   repeated MITMExtractAggregateFlowFilterRow MitmExtractAggregateFilterRows = 50;
@@ -7318,7 +7372,7 @@ message EchoResposne {
   string result = 1;
 }
 
-// handshake
+// handshake 
 message HandshakeRequest {
   string Name = 1;
 }
@@ -7983,7 +8037,7 @@ message SyntaxFlowScanRequest{
   // 并发，默认5
   uint32  Concurrency = 7;
 
-  // compile data only in memory
+  // compile data only in memory 
   bool Memory = 8;
   // 根据项目扫描
   uint64 SSAProjectId = 9;
@@ -8070,11 +8124,11 @@ message SyntaxFlowScanResponse{
 }
 
 message SyntaxFlowScanActiveTask {
-  // index
+  // index 
   string RuleName = 3;
-  string ProgramName = 4;
-  // progress
-  double Progress = 5;
+  string ProgramName = 4; 
+  // progress 
+  double Progress = 5; 
 
   int64 RunningTime = 6;
   string Info = 7;
@@ -8134,7 +8188,7 @@ message SyntaxFlowResult {
 
   string RuleContent = 12;
   string Kind = 13; // "query" | "debug" | "scan"
-  string SaveKind = 14; // "memory" | "database"
+  string SaveKind = 14; // "memory" | "database"  
 }
 
 message DeleteSyntaxFlowResultRequest{
@@ -8286,9 +8340,9 @@ message QueryNewSSARisksRequest{
 }
 
 message QueryNewSSARisksResponse{
-  repeated SSARisk Data = 1; // new ssa-risk unread data
+  repeated SSARisk Data = 1; // new ssa-risk unread data 
   int64 NewRiskTotal = 2; // new ssa-risk unread count
-  int64 Total = 3; // total ssa-risk count
+  int64 Total = 3; // total ssa-risk count 
   int64 Unread = 4;// total unread ssa-risk count
 }
 

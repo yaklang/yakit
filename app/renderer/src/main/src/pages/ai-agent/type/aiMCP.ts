@@ -72,3 +72,45 @@ export interface DeleteMCPServerRequest {
 }
 
 export type MCPServerType = `${AIMCPServerTypeEnum}`
+
+// ---- MCP Tool-level enable/disable management ----
+
+export interface MCPToolConfig {
+  ID: number
+  /** Canonical tool name, e.g. "port_scan" or "mcp_IDA-MCP_decompile" */
+  ToolName: string
+  /** "builtin" | "bridge" */
+  Source: string
+  /** Non-empty only for bridge tools */
+  ServerName: string
+  Enable: boolean
+  Description: string
+  Params: MCPServerToolParamInfo[]
+}
+
+export interface GetMCPToolListRequest {
+  /** Fuzzy filter by tool name or description */
+  Keyword: string
+  /** "builtin" | "bridge" | "" (all) */
+  Source: string
+  /** Filter bridge tools by origin server name */
+  ServerName: string
+  /** When true, return only enabled tools */
+  OnlyEnabled: boolean
+  Pagination: PaginationSchema
+}
+
+export interface GetMCPToolListResponse {
+  Tools: MCPToolConfig[]
+  Pagination: PaginationSchema
+  Total: number
+}
+
+export interface SetMCPToolEnabledRequest {
+  ToolName: string
+  Enable: boolean
+}
+
+export interface GetMCPToolDetailRequest {
+  ToolName: string
+}
