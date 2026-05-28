@@ -14,7 +14,7 @@ import { AITabsEnum } from '../defaultConstant'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useMemoizedFn } from 'ahooks'
 import { usePageInfo } from '@/store/pageInfo'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface FileListItem {

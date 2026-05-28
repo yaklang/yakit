@@ -25,6 +25,7 @@ import { AIManualIntervention } from '../aiManualIntervention/AIManualInterventi
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIModelErrorPrompt } from './aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIHttpFlowFuzzStatusCard } from '../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'
+import { AIReportFinishCard } from '../aiReportFinishCard/AIReportFinishCard'
 
 const chatContentExtraProps = {
   contentClassName: styles['content-wrapper'],
@@ -176,6 +177,9 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
 
       case AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS:
         return <AIHttpFlowFuzzStatusCard item={itemData} />
+
+      case AIChatQSDataTypeEnum.REPORT_FINISH:
+        return <AIReportFinishCard item={itemData} />
 
       case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
         return (

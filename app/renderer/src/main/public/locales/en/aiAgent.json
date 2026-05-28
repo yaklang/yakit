@@ -302,6 +302,9 @@
     "taskEnd": "Task End",
     "taskEndDesc": "The current task has ended, below is the new task data"
   },
+  "AIReportFinishCard": {
+    "openInAICodeAudit": "Open in AI code audit"
+  },
   "AIHttpFlowFuzzStatusCard": {
     "title": "Packet statistics",
     "badgeStarting": "Starting",

@@ -10,7 +10,7 @@ import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { usePageInfo } from '@/store/pageInfo'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface OperationCardFooterProps {

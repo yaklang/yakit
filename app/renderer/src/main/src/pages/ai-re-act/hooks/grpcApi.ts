@@ -906,6 +906,12 @@ export declare namespace AIAgentGrpcApi {
     requested_start_id: number
     session_id: string
   }
+
+  export interface ReportFinishPayload {
+    report_path: string
+    title: string
+    summary_markdown: string
+  }
 }
 
 // #region AI相关普通接口的请求和定义结构

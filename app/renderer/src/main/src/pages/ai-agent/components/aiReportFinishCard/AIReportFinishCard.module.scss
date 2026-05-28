@@ -1,0 +1,39 @@
+.report-finish-card {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background-color: var(--Colors-Use-Basic-Background);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.header-list-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.file-name {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.card-desc {
+  margin-bottom: 10px;
+}

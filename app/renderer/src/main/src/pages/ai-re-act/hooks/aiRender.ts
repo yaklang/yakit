@@ -142,6 +142,13 @@ export interface UserManualInterventionContext {
   content: string
 }
 
+/** UI：报告生成完成卡片数据（由 report_finish 事件驱动） */
+export interface ReportFinishCardData {
+  reportPath: string
+  title: string
+  content: string
+}
+
 /** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */
 export interface HttpFlowFuzzStatusCardData {
   fuzz_id: string
@@ -199,6 +206,8 @@ export enum AIChatQSDataTypeEnum {
   USER_MANUAL_INTERVENTION = 'user_manual_intervention',
   /** HTTP 流 fuzz 执行状态卡片（http_flow_fuzz_status） */
   HTTP_FLOW_FUZZ_STATUS = 'http_flow_fuzz_status',
+  /** 报告生成完成（report_finish） */
+  REPORT_FINISH = 'report_finish',
 }
 
 export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
@@ -281,6 +290,7 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
 >
 
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
+type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
 
 export type AIChatQSData =
   | ChatQuestion
@@ -305,4 +315,5 @@ export type AIChatQSData =
   | ChatToolCallParams
   | ChatApiRequestFailed
   | ChatHttpFlowFuzzStatus
+  | ChatReportFinish
 // #endregion

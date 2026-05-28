@@ -629,17 +629,17 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   })
 
   const onDownloadReport = useMemoizedFn(async () => {
-    let code = activeFile?.code
-    if (!code && activeFile?.path) {
-      code = await getCodeByPath(activeFile?.path)
-    }
-    if (!code?.trim()) {
-      yakitNotify('error', '报告内容为空，无法导出')
-      return
-    }
-    const baseName = (activeFile?.name || 'report').replace(/\.(md|markdown)$/i, '') || 'report'
-    setDownloadLoading(true)
     try {
+      let code = activeFile?.code
+      if (!code && activeFile?.path) {
+        code = await getCodeByPath(activeFile?.path)
+      }
+      if (!code?.trim()) {
+        yakitNotify('error', '报告内容为空，无法导出')
+        return
+      }
+      const baseName = (activeFile?.name || 'report').replace(/\.(md|markdown)$/i, '') || 'report'
+      setDownloadLoading(true)
       await new Promise((resolve) => setTimeout(resolve, 0))
       const saveRes = await yakitDialog.showSaveDialog(`${baseName}.pdf`)
       if (saveRes.canceled || !saveRes.filePath) return

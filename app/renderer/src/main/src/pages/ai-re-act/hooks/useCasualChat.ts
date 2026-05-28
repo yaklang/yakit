@@ -92,6 +92,9 @@ function useCasualChat(params: UseCasualChatParams) {
   const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
     try {
       let funcKey = res.Type
+      if (res.Type === 'report_finish' && res.NodeId === 'report-finish') {
+        funcKey = res.NodeId
+      }
       if (res.Type === 'structured' && res.NodeId === 'stream-finished') {
         // stream数据结束标识
         funcKey = res.NodeId

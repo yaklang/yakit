@@ -7,6 +7,7 @@ import type {
   AIToolResult,
   ChatStream,
   HttpFlowFuzzStatusCardData,
+  ReportFinishCardData,
   ReActChatBaseInfo,
   ReActChatGroupElement,
   ReActChatRenderItem,
@@ -318,6 +319,43 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
     { mapKey: fuzz_id, type: cardType, chatType: info.chatType },
     request.setElements,
   )
+}
+
+/** Type='report_finish' NodeId='report-finish' 报告生成完成：展示报告路径 */
+const handleReportFinish: AIMessageHandler = (request) => {
+  const { res, info, setContentMap, pushLog } = request
+  if (res.Type !== 'report_finish' || res.NodeId !== 'report-finish') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+
+  let report_path = ''
+  let title = ''
+  let content = ''
+  try {
+    const parsed = JSON.parse(ipcContent) as AIAgentGrpcApi.ReportFinishPayload
+    report_path = parsed?.report_path || ''
+    title = parsed?.title || ''
+    content = parsed?.summary_markdown || ''
+  } catch {}
+
+  if (!report_path) {
+    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type} 数据缺少 report_path`))
+    return
+  }
+
+  const mapKey = res.EventUUID || report_path
+  const cardType = AIChatQSDataTypeEnum.REPORT_FINISH
+  const nextData: ReportFinishCardData = { reportPath: report_path, title, content }
+
+  const chatData: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    id: mapKey,
+    chatType: info.chatType,
+    type: cardType,
+    data: nextData,
+  }
+  setContentMap(mapKey, chatData)
+  handleUpdateUISingleState(res.IsSync, { mapKey, type: cardType, chatType: info.chatType }, request.setElements)
 }
 // #endregion
 
@@ -1812,4 +1850,5 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   react_task_dequeue: handleReactTaskDequeue,
   api_request_failed: handleApiRequestFailed,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
+  'report-finish': handleReportFinish,
 }

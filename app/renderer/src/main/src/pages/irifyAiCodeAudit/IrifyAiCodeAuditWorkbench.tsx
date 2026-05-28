@@ -476,9 +476,10 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
     }
   })
 
-  const onOpenTemporaryFileFun = useMemoizedFn((data: any) => {
+  const onOpenTemporaryFileFun = useMemoizedFn(async (data: any) => {
     try {
-      const { name, code, icon, language, aiReport } = JSON.parse(data)
+      const { name, path, icon, language, aiReport } = JSON.parse(data)
+      const code = await getCodeByPath(path)
       addFileTab({ name, code, icon, language, aiReport })
     } catch (error) {
       failed(`error: ${error}`)

@@ -302,6 +302,9 @@
     "taskEnd": "任务结束标志",
     "taskEndDesc": "当前任务已经结束，下面为新的任务数据"
   },
+  "AIReportFinishCard": {
+    "openInAICodeAudit": "AI代码审计中打开"
+  },
   "AIHttpFlowFuzzStatusCard": {
     "title": "发包统计",
     "badgeStarting": "准备中",
