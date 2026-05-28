@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
 
 /** 代码审计 AI 输入框默认草稿（不自动发送） */
-export const IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED = '开始请求'
+export const IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED = '开始审计'
 
 /** 待写入 AI 输入框的草稿；输入框未挂载时先暂存，挂载后再 flush */
 export const pendingIrifySeedDraftRef: { current: string | null } = { current: null }
