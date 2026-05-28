@@ -1492,8 +1492,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       if (flag) {
         setTemporaryProjectNoPromptFlag(flag === 'true')
       }
-      // INFO 开发环境\memfit\IRify默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
-      if (SystemInfo.isDev || isMemfit() || isIRify()) {
+      // INFO 开发环境\memfit默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
+      if (SystemInfo.isDev || isMemfit()) {
         const res = await yakitProject.getDefaultProjectEx({
           Type: getEnvTypeByProjects(),
         })
