@@ -74,6 +74,7 @@ export interface GetAIForgeRequest {
 export interface AIFocus {
   Name: string
   Description: string
+  DescriptionZh: string
   OutputExamplePrompt: string
   UsagePrompt: string
   VerboseName: string
