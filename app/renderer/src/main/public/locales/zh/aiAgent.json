@@ -505,5 +505,11 @@
     "deleteFailed": "删除会话失败：{{error}}",
     "editTitle": "编辑对话标题",
     "deleteConfirm": "是否确认删除该历史对话，删除后将无法恢复"
+  },
+  "AIChatSetting": {
+    "permissionsAndSecurity": "基础权限与安全",
+    "planningAndExecution": "任务规划与执行",
+    "automation": "自动化配置",
+    "resourcesLimits": "资源与上下文阈值"
   }
 }

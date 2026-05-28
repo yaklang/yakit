@@ -9,7 +9,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--Colors-Use-Neutral-Border, #e6e8ed);
     .header-title {
       color: var(--Colors-Use-Neutral-Text-1-Title);
       font-size: 12px;
@@ -20,7 +19,6 @@
 
   .setting-form {
     flex: 1;
-    padding: 12px 12px 20px 12px;
     overflow: hidden auto;
     :global {
       .ant-row.ant-form-item {
@@ -35,6 +33,9 @@
           }
         }
       }
+      .ant-collapse-item .ant-collapse-content > .ant-collapse-content-box {
+        padding: 4px 16px 4px;
+      }
     }
 
     .info-icon {
@@ -43,7 +44,7 @@
       svg {
         width: 16px;
         height: 16px;
-        color: #868c97;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
       }
     }
 
@@ -51,6 +52,9 @@
       input {
         text-align: center;
       }
+    }
+    .btn-padding-right-0 {
+      padding-right: 0;
     }
   }
 }
