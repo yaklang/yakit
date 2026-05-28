@@ -40,6 +40,7 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 
 import { HistroryAIReActChat } from './AIReActChat'
 
+
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
 export interface HistoryAIReActChatBridge {
@@ -48,6 +49,11 @@ export interface HistoryAIReActChatBridge {
   onStop: () => void
   onChatFromHistory: (session: string) => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
+  syncSelectedHttpFlowIds: (ids: string[]) => void
+  registerClearTableSelection: (fn: () => void) => void
+  clearTableSelection: () => void
+  registerDeselectHttpFlowId: (fn: (id: string) => void) => void
+  deselectHttpFlowId: (id: string) => void
 }
 
 export interface HistoryAIReActChatSlotOptions {
@@ -155,6 +161,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)
+  const clearTableSelectionRef = useRef<(() => void) | null>(null)
+  const deselectHttpFlowIdRef = useRef<((id: string) => void) | null>(null)
 
   const onHttpFuzzRequestChange = useMemoizedFn((data: AIAgentGrpcApi.HttpFuzzRequestChange) => {
     if (!httpFuzzTabPageId) return
@@ -354,6 +362,21 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onStop,
       onChatFromHistory,
       setActiveChat,
+      syncSelectedHttpFlowIds: (ids: string[]) => {
+        aiReActChatRef.current?.setHttpFlow?.(ids)
+      },
+      registerClearTableSelection: (fn: () => void) => {
+        clearTableSelectionRef.current = fn
+      },
+      clearTableSelection: () => {
+        clearTableSelectionRef.current?.()
+      },
+      registerDeselectHttpFlowId: (fn: (id: string) => void) => {
+        deselectHttpFlowIdRef.current = fn
+      },
+      deselectHttpFlowId: (id: string) => {
+        deselectHttpFlowIdRef.current?.(id)
+      },
     }),
     [activeID, events, onStop, onChatFromHistory, setActiveChat],
   )

@@ -64,6 +64,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
       setValue: () => {},
+      setHttpFlow: () => {},
       getValue: () => {},
     })
     useImperativeHandle(ref, () => {
@@ -90,6 +91,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         handleStart(value)
       }
       onSetQuestion('')
+      externalParameters?.onAfterSubmit?.()
     })
 
     const handleStart = useMemoizedFn((value: HandleStartParams) => {
@@ -305,6 +307,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                           )}
                         </div>
                       }
+                      footerLeftTypes={externalParameters?.footerLeftTypes}
+                      onHttpFlowRemove={externalParameters?.onHttpFlowRemove}
                       chatDataStoreKey={chatDataStoreKey}
                       {...omit(externalParameters, 'rightIcon')}
                     />

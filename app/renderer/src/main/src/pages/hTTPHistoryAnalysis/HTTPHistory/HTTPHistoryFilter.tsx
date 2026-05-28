@@ -155,6 +155,37 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     closable,
   } = props
   const { t, i18n } = useI18nNamespaces(['history'])
+  const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+
+  const clearHttpFlowSelection = useMemoizedFn(() => {
+    historyAIReActChatBridge.clearTableSelection()
+  })
+
+  const handleSetSelectedHttpFlowIds = useMemoizedFn((ids: string[]) => {
+    setSelectedHttpFlowIds(ids)
+    onSetSelectedHttpFlowIds(ids)
+  })
+
+  const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
+  useDebounceEffect(
+    () => {
+      historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
+    },
+    [compareSelectedHttpFlowIds],
+    { wait: 300 },
+  )
+
+  const onRegisterTableSelectApi = useMemoizedFn(
+    (api: { reset: () => void; deselectId: (id: string) => void }) => {
+      historyAIReActChatBridge.registerClearTableSelection(() => {
+        api.reset()
+      })
+      historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
+        api.deselectId(id)
+      })
+    },
+  )
+
   // #region 左侧tab
   const [activeKey, setActiveKey] = useState<string>('web-tree')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -342,6 +373,8 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                       },
                     ],
                     filterMentionType: ['focusMode'],
+                    onHttpFlowRemove: clearHttpFlowSelection,
+                    onAfterSubmit: clearHttpFlowSelection,
                   },
                 })}
               </div>
@@ -358,7 +391,8 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
               includeInUrl={includeInUrl}
               ProcessName={curProcess}
               TagsFilter={curTags}
-              onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+              onSetSelectedHttpFlowIds={handleSetSelectedHttpFlowIds}
+              onRegisterTableSelectApi={onRegisterTableSelectApi}
               onSetClickedHttpFlow={onSetClickedHttpFlow}
               onSetFirstHttpFlow={onSetFirstHttpFlow}
               refresh={refreshHttpTable}
@@ -438,6 +472,7 @@ interface HTTPFlowTableProps {
   closable?: boolean
   mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
   onDataChange?: (dataLength: number) => void
+  onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
   const {
@@ -459,6 +494,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     closable = true,
     mitmAggregateFilterRows = [],
     onDataChange,
+    onRegisterTableSelectApi,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'history', 'yakitRoute'])
   const { currentPageTabRouteKey, queryPagesDataById } = usePageInfo(
@@ -744,6 +780,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     setSelectedRowKeys([])
     setSelectedRows([])
   }
+  const deselectHttpFlowId = useMemoizedFn((id: string) => {
+    setIsAllSelect(false)
+    setSelectedRowKeys((prev) => prev.filter((ele) => ele !== id))
+    setSelectedRows((prev) => prev.filter((ele) => String(ele.Id) !== id))
+  })
+  useEffect(() => {
+    onRegisterTableSelectApi?.({
+      reset: resetSelected,
+      deselectId: deselectHttpFlowId,
+    })
+  }, [onRegisterTableSelectApi, deselectHttpFlowId])
   // #endregion
 
   // #region 表头上的筛选相关

@@ -43,6 +43,9 @@ export interface AIReActChatProps {
     footerLeftTypes?: AIChatTextareaProps['footerLeftTypes']
     footerRightTypes?: AIChatTextareaProps['footerRightTypes']
     defaultValue?: string
+    onHttpFlowRemove?: AIChatTextareaProps['onHttpFlowRemove']
+    /** 发送问题后回调（如清空 history 表勾选） */
+    onAfterSubmit?: () => void
   }
 }
 

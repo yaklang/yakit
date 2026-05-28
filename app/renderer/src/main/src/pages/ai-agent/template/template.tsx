@@ -108,6 +108,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       isOpen,
       filterMentionType,
       chatDataStoreKey,
+      onHttpFlowRemove,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { chatIPCData } = useChatIPCStore()
@@ -186,6 +187,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return {
         setMention: (v) => onSetMention(v),
         setValue: (v) => onSetValue(v),
+        setHttpFlow: (ids) => onSetHttpFlow(ids),
         getValue: () => getMarkdownValue(),
         editorMilkdown: editorMilkdown.current,
       }
@@ -220,11 +222,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const handleSubmit = useMemoizedFn(() => {
       const qs = getMarkdownValue()
       if (!qs.trim() || !editorMilkdown.current) return
-      const { mentions, imageList, plainText } = extractDataWithMilkdown(editorMilkdown.current)
+      const { mentions, imageList, httpFlowList, plainText } = extractDataWithMilkdown(editorMilkdown.current)
       const value: AIChatTextareaSubmit = {
         qs,
         mentionList: mentions,
         imageList,
+        httpFlowList,
         showQS: qs,
         focusMode,
         sessionId: aiMilkdownInputRef.current?.getSessionId(),
@@ -266,6 +269,9 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           editorMilkdown.current?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
           break
       }
+    })
+    const onSetHttpFlow = useMemoizedFn((ids: string[]) => {
+      aiMilkdownInputRef.current?.setHttpFlow(ids)
     })
     /**设置编辑器值 */
     const onSetValue = useMemoizedFn((value: string) => {
@@ -447,6 +453,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             onUpdateEditor={onUpdateEditor}
             onUpdateContent={onUpdateContent}
             onMemfitExtra={onMemfitExtra}
+            onHttpFlowRemove={onHttpFlowRemove}
             filterMode={filterMentionType}
             chatDataStoreKey={chatDataStoreKey}
           />

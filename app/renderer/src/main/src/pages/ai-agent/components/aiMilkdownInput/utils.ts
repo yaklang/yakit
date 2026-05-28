@@ -1,12 +1,14 @@
 import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
 import { AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
+import { AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 
 /**md编辑器中匹配出提及相关数据/纯文本 */
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
   const mentions: AIMentionCommandParams[] = []
+  const httpFlowList: AIHttpFlowCommandParams[] = []
   const imageList: string[] = []
   let plainText = ''
   editor?.action &&
@@ -22,6 +24,11 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
             ...(node.attrs as AIMentionCommandParams),
           })
         }
+        if (node?.type?.name === aiHttpFlowCustomId) {
+          httpFlowList.push({
+            ...(node.attrs as AIHttpFlowCommandParams),
+          })
+        }
         if (node?.type?.name === state?.schema?.nodes?.image?.name) {
           const src = node.attrs.src
           if (src) {
@@ -31,7 +38,7 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
       })
       plainText = doc.textBetween(0, doc?.content?.size, '\n\n')
     })
-  return { mentions, plainText, imageList }
+  return { mentions, plainText, imageList, httpFlowList }
 }
 
 type Mention = {
