@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
 import { useCreation, useDebounceFn, useInViewport, useMap, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
@@ -678,9 +678,11 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     { leading: true },
   ).run
 
+  const chatIPCContextValue = useMemo(() => ({ store, dispatcher }), [store, dispatcher])
+
   return (
     <div ref={wrapperRef} className={styles['ai-agent-chat']}>
-      <ChatIPCContent.Provider value={{ store, dispatcher }}>
+      <ChatIPCContent.Provider value={chatIPCContextValue}>
         <div className={styles['chat-wrapper']}>
           {mode === 'welcome' ? (
             <React.Suspense fallback={<div>loading...</div>}>

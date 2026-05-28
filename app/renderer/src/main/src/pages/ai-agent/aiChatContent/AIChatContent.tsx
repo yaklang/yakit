@@ -47,8 +47,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
     const { onChat, onChatFromHistory } = props
     const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
+    const chatIPCStore = useChatIPCStore()
     const { httpRunTimeIDs, riskRunTimeIDs, yakExecResult, taskChat, grpcFolders, execute, requestHistoryState } =
-      useChatIPCStore().chatIPCData
+      chatIPCStore.chatIPCData
     const { activeChat } = useAIAgentStore()
     const [isExpand, setIsExpand] = useState<boolean>(true)
     const [activeKey, setActiveKey] = useState<AITabsEnumType | undefined>(AITabsEnum.Task_Content)
@@ -227,10 +228,11 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         .sort((a, b) => b.order - a.order)
     }, [yakExecResult.execFileRecord])
 
-    const renderTabContent = useMemoizedFn((key: AITabsEnumType) => {
+    const tabContent = useMemo(() => {
+      if (!activeKey) return null
       const runTimeIds = [...new Set(!!runTimeId ? [runTimeId] : httpRunTimeIDs.concat(RelatedRuntimeIDs))]
       const riskRunTimeIds = [...new Set(!!runTimeId ? [runTimeId] : riskRunTimeIDs.concat(RelatedRuntimeIDs))]
-      switch (key) {
+      switch (activeKey) {
         case AITabsEnum.Task_Content:
           return <AIReActTaskChat setTimeLine={setTimeLine} setShowFreeChat={setShowFreeChat} />
         case AITabsEnum.File_System:
@@ -254,9 +256,9 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
         case AITabsEnum.Operation_Log:
           return <OperationLog loading={false} list={OperationLogList} />
         default:
-          return <></>
+          return null
       }
-    })
+    }, [activeKey, runTimeId, httpRunTimeIDs, riskRunTimeIDs, RelatedRuntimeIDs, filterTagDom, OperationLogList])
 
     const { onOpenLogWindow } = useAiChatLog()
 
@@ -370,7 +372,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
                           [styles['tab-content-right']]: !showFreeChat,
                         })}
                       >
-                        {renderTabContent(activeKey)}
+                        {tabContent}
                       </div>
                     )
                   }
