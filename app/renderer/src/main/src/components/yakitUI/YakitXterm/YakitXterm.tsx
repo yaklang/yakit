@@ -122,7 +122,7 @@ interface IProps {
   customKeyEventHandler?(event: KeyboardEvent): boolean
 }
 export const defaultTerminalOptions = {
-  fontFamily: '"Courier New", Courier, monospace',
+  fontFamily: 'Consolas, "Lucida Console", "Courier New", monospace',
   convertEol: true,
 }
 

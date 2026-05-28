@@ -92,7 +92,7 @@ export const useXTermOptions = (params: UseXTermOptionsParams) => {
   const terminalOptions = useCreation(() => {
     const option = {
       ...{
-        fontFamily: '"Courier New", Courier, monospace',
+        fontFamily: 'Consolas, "Lucida Console", "Courier New", monospace',
         convertEol: true,
       },
       theme: { ...getXtermTheme() },
