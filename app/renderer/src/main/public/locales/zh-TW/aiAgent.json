@@ -154,7 +154,12 @@
   },
   "AIReActTaskChatContent": {
     "humanIntervention": "人工介入",
-    "globalDirective": "全域性指令"
+    "globalDirective": "全域性指令",
+    "globalDirectiveDefault": "自訂AI全域指令",
+    "globalDirectivePlaceholder": "全域命令將對所有會話生效...",
+    "planPrompt": "Plan 提示詞",
+    "planPromptDefault": "自訂Plan提示詞",
+    "planPromptPlaceholder": "Plan 提示詞將在任務規劃階段生效，用於補充規劃說明..."
   },
   "AIModelGlobalConfig": {
     "aiModelConfig": "AI模型配置",

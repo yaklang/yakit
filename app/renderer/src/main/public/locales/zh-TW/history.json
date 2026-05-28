@@ -235,7 +235,9 @@
     "response": "響應",
     "rawResponse": "原始響應",
     "oversizedResponse": "超大響應",
-    "editTag": "編輯tag"
+    "editTag": "編輯tag",
+    "clickToScrollToList": "點擊可在列表中定位該資料",
+    "jumpToWebTree": "點擊可在網站樹篩選"
   },
   "NewHTTPPacketEditor": {
     "render": "渲染",
