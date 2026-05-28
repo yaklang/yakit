@@ -120,7 +120,7 @@ const PluginBatchExecuteExtraParams: React.FC<PluginBatchExecuteExtraParamsProps
             </YakitButton>
           }
         >
-          <FixExtraParamsNode form={form} pathRef={pathRef} onReset={onReset} />
+          {/* <FixExtraParamsNode form={form} pathRef={pathRef} onReset={onReset} /> */}
         </YakitPanel>
       )}
       <YakitPanel

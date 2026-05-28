@@ -872,7 +872,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
               </div>
               <YakitCollapse
                 activeKey={getActiveKey(number)}
-                onChange={(key) => setActiveKey(number, key as string)}
+                // onChange={(key) => setActiveKey(number, key as string)}
                 accordion
                 className={styles['matcher-extraction-collapse']}
               >
@@ -1147,7 +1147,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
     >
       <YakitCollapse
         activeKey={activeKey}
-        onChange={(key) => setActiveKey(key as string)}
+        // onChange={(key) => setActiveKey(key as string)}
         accordion
         className={styles['matcher-extraction-collapse']}
         style={{ minWidth: i18n.language === 'en' ? 500 : undefined }}

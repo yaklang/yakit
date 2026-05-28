@@ -173,26 +173,27 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
       props
     const uiStyle = uiSchema?.['ui:component_style'] || {}
     if (schema.type === 'number') {
-      return (
-        <YakitInputNumber
-          style={{ width: '100%', ...uiStyle }}
-          id={id}
-          {...options}
-          autoFocus={autofocus}
-          required={required}
-          disabled={disabled || readonly}
-          value={value}
-          onChange={(value) => {
-            onChange(value)
-          }}
-          onBlur={(value) => {
-            onBlur(id, value)
-          }}
-          onFocus={(value) => {
-            onFocus(id, value)
-          }}
-        />
-      )
+      return <></>
+      // return (
+      //   <YakitInputNumber
+      //     style={{ width: '100%', ...uiStyle }}
+      //     id={id}
+      //     {...options}
+      //     autoFocus={autofocus}
+      //     required={required}
+      //     disabled={disabled || readonly}
+      //     value={value}
+      //     onChange={(value) => {
+      //       onChange(value)
+      //     }}
+      //     onBlur={(value) => {
+      //       onBlur(id, value)
+      //     }}
+      //     onFocus={(value) => {
+      //       onFocus(id, value)
+      //     }}
+      //   />
+      // )
     } else if (schema.yakit_type === 'file') {
       return getFileWidget(props)
     } else if (schema.yakit_type === 'files') {
@@ -200,27 +201,27 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     } else if (schema.yakit_type === 'folder') {
       return getFolderWidget(props)
     }
-
-    return (
-      <YakitInput
-        {...options}
-        style={{ width: '100%', ...uiStyle }}
-        type="text"
-        autoFocus={autofocus}
-        required={required}
-        disabled={disabled || readonly}
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value === '' ? options.emptyValue : event.target.value)
-        }}
-        onBlur={(event) => {
-          onBlur(id, event.target.value)
-        }}
-        onFocus={(event) => {
-          onFocus(id, event.target.value)
-        }}
-      />
-    )
+    return <></>
+    // return (
+    //   <YakitInput
+    //     {...options}
+    //     style={{ width: '100%', ...uiStyle }}
+    //     type="text"
+    //     autoFocus={autofocus}
+    //     required={required}
+    //     disabled={disabled || readonly}
+    //     value={value}
+    //     onChange={(event) => {
+    //       onChange(event.target.value === '' ? options.emptyValue : event.target.value)
+    //     }}
+    //     onBlur={(event) => {
+    //       onBlur(id, event.target.value)
+    //     }}
+    //     onFocus={(event) => {
+    //       onFocus(id, event.target.value)
+    //     }}
+    //   />
+    // )
   })
 
   const getTextareaWidget = useMemoizedFn((props: WidgetProps) => {
@@ -403,20 +404,21 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     if (typeof schema.maximum !== 'undefined') {
       options.max = schema.maximum
     }
-    return (
-      <YakitInputNumber
-        id={id}
-        {...options}
-        autoFocus={autofocus}
-        required={required}
-        disabled={disabled || readonly}
-        value={value}
-        onChange={(value) => onChange(value)}
-        onBlur={(value) => onBlur(id, value)}
-        onFocus={(value) => onFocus(id, value)}
-        style={uiStyle}
-      />
-    )
+    return <></>
+    // return (
+    //   <YakitInputNumber
+    //     id={id}
+    //     {...options}
+    //     autoFocus={autofocus}
+    //     required={required}
+    //     disabled={disabled || readonly}
+    //     value={value}
+    //     onChange={(value) => onChange(value)}
+    //     onBlur={(value) => onBlur(id, value)}
+    //     onFocus={(value) => onFocus(id, value)}
+    //     style={uiStyle}
+    //   />
+    // )
   })
 
   const getFileWidget = useMemoizedFn((props: WidgetProps) => {

@@ -781,14 +781,14 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
 
   const [detailHackValue, setDetailHackValue] = useState<RangeValue>(null)
   const [detailDates, setDetailDates] = useState<RangeValue>(null)
-  const disabledDetailDate: RangePickerProps['disabledDate'] = (current) => {
-    if (detailDates) {
-      const tooLate = (detailDates[0] && current.diff(detailDates[0], 'days') > 30) || false
-      const tooEarly = (detailDates[1] && detailDates[1].diff(current, 'days') > 30) || false
-      return current && (current < beginDate || current >= moment().endOf('day') || tooLate || tooEarly)
-    }
-    return current && (current < beginDate || current >= moment().endOf('day'))
-  }
+  // const disabledDetailDate: RangePickerProps['disabledDate'] = (current) => {
+  //   if (detailDates) {
+  //     const tooLate = (detailDates[0] && current.diff(detailDates[0], 'days') > 30) || false
+  //     const tooEarly = (detailDates[1] && detailDates[1].diff(current, 'days') > 30) || false
+  //     return current && (current < beginDate || current >= moment().endOf('day') || tooLate || tooEarly)
+  //   }
+  //   return current && (current < beginDate || current >= moment().endOf('day'))
+  // }
 
   const onExportFun = useMemoizedFn((exportParams) => {
     setDownloadLoading(true)
@@ -870,7 +870,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
       }
     })
     if (rangeObj.length === 0) {
-      message.warn('没有数据可以导出')
+      // message.warn('没有数据可以导出')
       return
     }
     if (rangeObj.length === 1) {
@@ -996,69 +996,69 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
   const [activeDates, setActiveDates] = useState<RangeValue>(null)
   const [activeHackValue, setActiveHackValue] = useState<RangeValue>(null)
 
-  const disabledRiseLineDate: RangePickerProps['disabledDate'] = (current) => {
-    if (riseLineParams.showType === 'day') {
-      if (riseDates) {
-        const tooLate = (riseDates[0] && current.diff(riseDates[0], 'days') > 60) || false
-        const tooEarly = (riseDates[1] && riseDates[1].diff(current, 'days') > 60) || false
-        return current && (current < beginDate || current >= moment().endOf('day') || tooLate || tooEarly)
-      }
-      return current && (current < beginDate || current >= moment().endOf('day'))
-    } else if (riseLineParams.showType === 'week') {
-      if (riseDates) {
-        const tooLate = (riseDates[0] && current.diff(riseDates[0], 'weeks') > 60) || false
-        const tooEarly = (riseDates[1] && riseDates[1].diff(current, 'weeks') > 60) || false
-        return current && (current < beginDate || current >= moment().endOf('week') || tooLate || tooEarly)
-      }
-      return current && (current < beginDate || current >= moment().endOf('week'))
-    } else if (riseLineParams.showType === 'month') {
-      if (riseDates) {
-        const tooLate = (riseDates[0] && current.diff(riseDates[0], 'months') > 60) || false
-        const tooEarly = (riseDates[1] && riseDates[1].diff(current, 'months') > 60) || false
-        return current && (current < moment('2023-12') || current >= moment().endOf('month') || tooLate || tooEarly)
-      }
-      return current && (current < moment('2023-12') || current >= moment().endOf('month'))
-    } else {
-      if (riseDates) {
-        const tooLate = (riseDates[0] && current.diff(riseDates[0], 'years') > 60) || false
-        const tooEarly = (riseDates[1] && riseDates[1].diff(current, 'years') > 60) || false
-        return current && (current < moment('2023') || current >= moment().endOf('year') || tooLate || tooEarly)
-      }
-      return current && (current < moment('2023') || current >= moment().endOf('year'))
-    }
-  }
+  // const disabledRiseLineDate: RangePickerProps['disabledDate'] = (current) => {
+  //   if (riseLineParams.showType === 'day') {
+  //     if (riseDates) {
+  //       const tooLate = (riseDates[0] && current.diff(riseDates[0], 'days') > 60) || false
+  //       const tooEarly = (riseDates[1] && riseDates[1].diff(current, 'days') > 60) || false
+  //       return current && (current < beginDate || current >= moment().endOf('day') || tooLate || tooEarly)
+  //     }
+  //     return current && (current < beginDate || current >= moment().endOf('day'))
+  //   } else if (riseLineParams.showType === 'week') {
+  //     if (riseDates) {
+  //       const tooLate = (riseDates[0] && current.diff(riseDates[0], 'weeks') > 60) || false
+  //       const tooEarly = (riseDates[1] && riseDates[1].diff(current, 'weeks') > 60) || false
+  //       return current && (current < beginDate || current >= moment().endOf('week') || tooLate || tooEarly)
+  //     }
+  //     return current && (current < beginDate || current >= moment().endOf('week'))
+  //   } else if (riseLineParams.showType === 'month') {
+  //     if (riseDates) {
+  //       const tooLate = (riseDates[0] && current.diff(riseDates[0], 'months') > 60) || false
+  //       const tooEarly = (riseDates[1] && riseDates[1].diff(current, 'months') > 60) || false
+  //       return current && (current < moment('2023-12') || current >= moment().endOf('month') || tooLate || tooEarly)
+  //     }
+  //     return current && (current < moment('2023-12') || current >= moment().endOf('month'))
+  //   } else {
+  //     if (riseDates) {
+  //       const tooLate = (riseDates[0] && current.diff(riseDates[0], 'years') > 60) || false
+  //       const tooEarly = (riseDates[1] && riseDates[1].diff(current, 'years') > 60) || false
+  //       return current && (current < moment('2023') || current >= moment().endOf('year') || tooLate || tooEarly)
+  //     }
+  //     return current && (current < moment('2023') || current >= moment().endOf('year'))
+  //   }
+  // }
 
-  const disabledActiveLineDate: RangePickerProps['disabledDate'] = (current) => {
-    if (activeLineParams.showType === 'day') {
-      if (activeDates) {
-        const tooLate = (activeDates[0] && current.diff(activeDates[0], 'days') > 60) || false
-        const tooEarly = (activeDates[1] && activeDates[1].diff(current, 'days') > 60) || false
-        return current && (current < beginDate || current >= moment().endOf('day') || tooLate || tooEarly)
-      }
-      return current && (current < beginDate || current >= moment().endOf('day'))
-    } else if (activeLineParams.showType === 'week') {
-      if (activeDates) {
-        const tooLate = (activeDates[0] && current.diff(activeDates[0], 'weeks') > 60) || false
-        const tooEarly = (activeDates[1] && activeDates[1].diff(current, 'weeks') > 60) || false
-        return current && (current < beginDate || current >= moment().endOf('week') || tooLate || tooEarly)
-      }
-      return current && (current < beginDate || current >= moment().endOf('week'))
-    } else if (activeLineParams.showType === 'month') {
-      if (activeDates) {
-        const tooLate = (activeDates[0] && current.diff(activeDates[0], 'months') > 60) || false
-        const tooEarly = (activeDates[1] && activeDates[1].diff(current, 'months') > 60) || false
-        return current && (current < moment('2023-12') || current >= moment().endOf('month') || tooLate || tooEarly)
-      }
-      return current && (current < moment('2023-12') || current >= moment().endOf('month'))
-    } else {
-      if (activeDates) {
-        const tooLate = (activeDates[0] && current.diff(activeDates[0], 'years') > 60) || false
-        const tooEarly = (activeDates[1] && activeDates[1].diff(current, 'years') > 60) || false
-        return current && (current < moment('2023') || current >= moment().endOf('year') || tooLate || tooEarly)
-      }
-      return current && (current < moment('2023') || current >= moment().endOf('year'))
-    }
-  }
+  // const disabledActiveLineDate: RangePickerProps['disabledDate'] = (current) => {
+  //   if (activeLineParams.showType === 'day') {
+  //     if (activeDates) {
+  //       const tooLate = (activeDates[0] && current.diff(activeDates[0], 'days') > 60) || false
+  //       const tooEarly = (activeDates[1] && activeDates[1].diff(current, 'days') > 60) || false
+  //       return current && (current < beginDate || current >= moment().endOf('day') || tooLate || tooEarly)
+  //     }
+  //     return current && (current < beginDate || current >= moment().endOf('day'))
+  //   } else if (activeLineParams.showType === 'week') {
+  //     if (activeDates) {
+  //       const tooLate = (activeDates[0] && current.diff(activeDates[0], 'weeks') > 60) || false
+  //       const tooEarly = (activeDates[1] && activeDates[1].diff(current, 'weeks') > 60) || false
+  //       return current && (current < beginDate || current >= moment().endOf('week') || tooLate || tooEarly)
+  //     }
+  //     return current && (current < beginDate || current >= moment().endOf('week'))
+  //   } else if (activeLineParams.showType === 'month') {
+  //     if (activeDates) {
+  //       const tooLate = (activeDates[0] && current.diff(activeDates[0], 'months') > 60) || false
+  //       const tooEarly = (activeDates[1] && activeDates[1].diff(current, 'months') > 60) || false
+  //       return current && (current < moment('2023-12') || current >= moment().endOf('month') || tooLate || tooEarly)
+  //     }
+  //     return current && (current < moment('2023-12') || current >= moment().endOf('month'))
+  //   } else {
+  //     if (activeDates) {
+  //       const tooLate = (activeDates[0] && current.diff(activeDates[0], 'years') > 60) || false
+  //       const tooEarly = (activeDates[1] && activeDates[1].diff(current, 'years') > 60) || false
+  //       return current && (current < moment('2023') || current >= moment().endOf('year') || tooLate || tooEarly)
+  //     }
+  //     return current && (current < moment('2023') || current >= moment().endOf('year'))
+  //   }
+  // }
 
   const getDateFormat = (v: showTypeValue) => {
     if (v === 'day') {
@@ -1190,7 +1190,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                         }
                         format={getDateFormat('day')}
                         allowClear={false}
-                        disabledDate={disabledDetailDate}
+                        // disabledDate={disabledDetailDate}
                         onOpenChange={(open: boolean) => {
                           if (open) {
                             setDetailHackValue([null, null])
@@ -1315,7 +1315,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                   value={riseHackValue || [moment.unix(riseLineParams.startTime), moment.unix(riseLineParams.endTime)]}
                   format={getDateFormat(riseLineParams.showType)}
                   allowClear={false}
-                  disabledDate={disabledRiseLineDate}
+                  // disabledDate={disabledRiseLineDate}
                   onOpenChange={(open: boolean) => {
                     if (open) {
                       setRiseHackValue([null, null])
@@ -1412,7 +1412,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                 }
                 format={getDateFormat(activeLineParams.showType)}
                 allowClear={false}
-                disabledDate={disabledActiveLineDate}
+                // disabledDate={disabledActiveLineDate}
                 onOpenChange={(open: boolean) => {
                   if (open) {
                     setActiveHackValue([null, null])
