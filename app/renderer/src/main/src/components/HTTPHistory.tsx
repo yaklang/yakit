@@ -406,7 +406,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
               setOnlyShowFirstNode={setOnlyShowFirstNode}
               setSecondNodeVisible={setSecondNodeVisible}
               onSelectedHttpFlowsChange={onSelectedHttpFlowsChange}
-              clearSelectedRowsSignal={clearSelectedRowsSignal}
+              clearSelectedRowsSignal={httpFlowSelectionClearSignal}
               showHistoryAnalysisBtn
               {...historyProps}
             />
@@ -633,7 +633,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
               onSetTableSelectNum={onSetTableSelectNum}
               onSetHasNewData={onSetHasNewData}
               onSelectedRowsChange={onSelectedHttpFlowsChange}
-              clearSelectedRowsSignal={httpFlowSelectionClearSignal}
+              clearSelectedRowsSignal={clearSelectedRowsSignal}
               httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
               titleHeight={titleHeight}
               showHistoryAnalysisBtn={showHistoryAnalysisBtn}
