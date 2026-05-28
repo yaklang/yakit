@@ -13,7 +13,9 @@ import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useMemoizedFn } from 'ahooks'
-import { isIRify } from '@/utils/envfile'
+import { usePageInfo } from '@/store/pageInfo'
+import shallow from 'zustand/shallow'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface FileListItem {
   name: string
@@ -48,12 +50,13 @@ const getFileName = (path: string, isDir: boolean): string => {
 }
 
 const FileList: FC<FileListProps> = ({ title, fileList }) => {
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const switchAIActTab = () => {
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log }))
   }
   const onOpenFileByPath = useMemoizedFn((path: string, isDir: boolean) => {
-    if (!isDir && isIRify()) {
+    if (!isDir && currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
       const name = getFileName(path, isDir)
       emiter.emit('onOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
     }

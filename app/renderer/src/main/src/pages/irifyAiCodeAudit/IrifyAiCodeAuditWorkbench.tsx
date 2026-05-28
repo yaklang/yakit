@@ -336,8 +336,11 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   const onOpenFileByPathFun = useMemoizedFn(async (data) => {
     try {
       const { params, isHistory } = JSON.parse(data) as OpenFileByPathProps
-      const { path, name, parent, highLightRange } = params
-
+      const { path, name: newName, parent, highLightRange } = params
+      let name = newName
+      if (!name) {
+        name = (await getNameByPath(path)) || ''
+      }
       // 校验是否已存在 如若存在则不创建只定位
       const file = await judgeAreaExistFilePath(areaInfo, path)
       if (file) {

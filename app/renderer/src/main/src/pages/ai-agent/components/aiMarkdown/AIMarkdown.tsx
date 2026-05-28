@@ -23,9 +23,6 @@ import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { isIRify } from '@/utils/envfile'
-import { FileSuffix } from '@/pages/yakRunner/FileTree/icon'
-import emiter from '@/utils/eventBus/eventBus'
 
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
   const { content, nodeLabel, className, modalInfo, referenceNode } = props
@@ -83,29 +80,12 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
     }
     goAddNotepad(params)
   })
-  const onOpenFile = useMemoizedFn(() => {
-    emiter.emit(
-      'onOpenTemporaryFile',
-      JSON.stringify({
-        name: '审计报告.md',
-        code: item.content,
-        icon: FileSuffix['md'],
-        language: 'markdown',
-        aiReport: true,
-      }),
-    )
-  })
   return (
     <ChatCard
       titleText={nodeLabel}
       titleExtra={<ModalInfo {...modalInfo} />}
       titleMore={
         <div className={styles['header-extra']}>
-          {isIRify() && (
-            <Tooltip title="AI代码审计中打开">
-              <YakitButton size="small" type="text" icon={<OutlineDocumentIcon />} onClick={onOpenFile} />
-            </Tooltip>
-          )}
           <Tooltip title={t('AIMarkdown.openFromNotepad')}>
             <YakitButton size="small" type="text" icon={<OutlineNotebookIcon />} onClick={onGoToNote} />
           </Tooltip>
