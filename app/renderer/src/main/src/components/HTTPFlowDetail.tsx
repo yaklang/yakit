@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef, ReactNode, ReactElement, useCallback, FC } from 'react'
-import { Button, Card, Col, Descriptions, PageHeader, Row, Space, Tooltip } from 'antd'
+import { Button, Card, Col, Descriptions, Row, Space, Tooltip } from 'antd'
 import { LeftOutlined, RightOutlined } from '@ant-design/icons'
 import { HTTPFlow } from './HTTPFlowTable/HTTPFlowTable'
 import { IMonacoEditor, NewHTTPCard, NewHTTPPacketEditor, RenderTypeOptionVal } from '../utils/editors'
@@ -293,7 +293,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     >
       {flow ? (
         <>
-          {props.noHeader ? undefined : (
+          {/* {props.noHeader ? undefined : (
             <PageHeader
               title={t('HTTPFlowDetail.requestDetails')}
               subTitle={`${props.id}${
@@ -329,7 +329,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 )
               }
             />
-          )}
+          )} */}
           <Space direction={'vertical'} style={{ width: '100%' }}>
             <Descriptions
               column={4}

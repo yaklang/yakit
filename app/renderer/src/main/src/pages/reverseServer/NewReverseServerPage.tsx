@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Form, Divider, PageHeader, Typography, Row, Col } from 'antd'
+import { Form, Divider, Typography, Row, Col } from 'antd'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { randomString } from '../../utils/randomUtil'
 import { failed, warn, info } from '../../utils/notification'
@@ -81,7 +81,7 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
 
   return (
     <div className="reverse-server-page-wrapper">
-      {status === 'setting' && (
+      {/* {status === 'setting' && (
         <PageHeader
           className="reverse-server-page-head"
           backIcon={false}
@@ -97,7 +97,7 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
             }}
           />
         </PageHeader>
-      )}
+      )} */}
       {status === 'start' && addrParams && (
         <StartReverseServer
           token={getToken()}
@@ -434,7 +434,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
 
       <div className={`reverse-${codeExtra ? 'hidden-' : ''}wrapper`}>
         <div className="reverse-body">
-          <PageHeader
+          {/* <PageHeader
             className="reverse-server-pagehead"
             backIcon={false}
             title={t('NewReverseServerPage.reverseServer')}
@@ -491,7 +491,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                 </div>
               </Col>
             </Row>
-          </PageHeader>
+          </PageHeader> */}
           <div className="reverse-server-data">
             <ReverseTable total={totalRef.current} data={data} clearData={clearData} />
           </div>

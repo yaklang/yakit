@@ -21,7 +21,7 @@ import { yakitInfo } from '@/utils/notification'
 import { apiGetGlobalNetworkConfig, apiGetPcapMetadata, apiSetGlobalNetworkConfig } from '@/pages/spaceEngine/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import { OutlineRefreshIcon } from '@/assets/icon/outline'
-import { CheckboxValueType } from 'antd/lib/checkbox/Group'
+// import { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { isEnpriTraceAgent } from '@/utils/envfile'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
@@ -341,7 +341,7 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
   const form = Form.useFormInstance()
 
   /**选择预设端口设置Ports值 */
-  const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
+  const onCheckPresetPort = useMemoizedFn((checkedValue: any[]) => {
     let res: string = (checkedValue || [])
       .map((i) => {
         return PresetPorts[i as string] || ''
@@ -355,6 +355,20 @@ export const FingerprintSettingsPanel: React.FC<FingerprintSettingsPanelProps> =
       form.setFieldsValue({ Ports: res })
     }
   })
+  // const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
+  //   let res: string = (checkedValue || [])
+  //     .map((i) => {
+  //       return PresetPorts[i as string] || ''
+  //     })
+  //     .join(',')
+  //   if (checkedValue.includes('all')) {
+  //     res = PresetPorts['all'] || ''
+  //   }
+
+  //   if (!!res) {
+  //     form.setFieldsValue({ Ports: res })
+  //   }
+  // })
   const onReset = useMemoizedFn(() => {
     const value = defaultExtraParamsFormValue['指纹扫描配置']
     if (isSimpleDetect) {

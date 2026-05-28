@@ -43,7 +43,7 @@ import { defaultSearch } from '@/pages/plugins/builtInData'
 import { defaultLinkPluginConfig } from '@/pages/plugins/utils'
 import { getLinkPluginConfig } from '@/pages/plugins/singlePluginExecution/SinglePluginExecution'
 import { RecordPortScanRequest, apiCancelPortScan, apiCancelSimpleDetect, apiPortScan, apiSimpleDetect } from './utils'
-import { CheckboxValueType } from 'antd/es/checkbox/Group'
+// import { CheckboxValueType } from 'antd/es/checkbox/Group'
 import { PresetPorts } from '@/pages/portscan/schema'
 import { yakitNotify } from '@/utils/notification'
 import { CreateReportContentProps, onCreateReportModal } from '@/pages/portscan/CreateReport'
@@ -668,7 +668,20 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
     })
   })
   /**选择预设端口设置Ports值 */
-  const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
+  // const onCheckPresetPort = useMemoizedFn((checkedValue: CheckboxValueType[]) => {
+  //   let res: string = (checkedValue || [])
+  //     .map((i) => {
+  //       if (typeof i === 'string' && portTemplates[i]) {
+  //         return portTemplates[i]
+  //       }
+  //       return PresetPorts[i as string] || ''
+  //     })
+  //     .join(',')
+  //   if (!!res) {
+  //     form.setFieldsValue({ Ports: res })
+  //   }
+  // })
+  const onCheckPresetPort = useMemoizedFn((checkedValue: any[]) => {
     let res: string = (checkedValue || [])
       .map((i) => {
         if (typeof i === 'string' && portTemplates[i]) {

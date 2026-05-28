@@ -32,7 +32,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
-import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
+// import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitCard } from '@/components/yakitUI/YakitCard/YakitCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
@@ -933,30 +933,31 @@ export const PayloadForm: React.FC<PayloadFormProp> = React.memo((props) => {
             name={useGadget ? '[Gadget,Class]' : 'Class'}
           >
             {useGadget ? (
-              <YakitCascader
-                fieldNames={{ label: 'NameVerbose', value: 'Name', children: 'children' }}
-                loadData={loadClassOptions}
-                options={options}
-                value={!params.Gadget ? [] : [params.Gadget, params.Class]}
-                placeholder="请选择利用链"
-                onChange={(value: any[]) => {
-                  if (!value || value.length === 0) cleatParams()
-                  else {
-                    setParamsValue([
-                      { key: 'Gadget', value: value[0] },
-                      { key: 'Class', value: value[1] },
-                    ])
-                    // 防止此操作干扰上面的赋值操作
-                    setTimeout(() => loadGeneraterFormList(value), 200)
-                  }
-                }}
-                displayRender={(label, selectedOptions) => {
-                  if ((selectedOptions || []).filter((item: any) => !!item && item.Label).length !== 2) return ''
-                  const diplay = (selectedOptions || []).map((item: any) => item.Label).join(' / ')
-                  return <>{diplay}</>
-                }}
-              />
+              <></>
             ) : (
+              // <YakitCascader
+              //   fieldNames={{ label: 'NameVerbose', value: 'Name', children: 'children' }}
+              //   loadData={loadClassOptions}
+              //   options={options}
+              //   value={!params.Gadget ? [] : [params.Gadget, params.Class]}
+              //   placeholder="请选择利用链"
+              //   onChange={(value: any[]) => {
+              //     if (!value || value.length === 0) cleatParams()
+              //     else {
+              //       setParamsValue([
+              //         { key: 'Gadget', value: value[0] },
+              //         { key: 'Class', value: value[1] },
+              //       ])
+              //       // 防止此操作干扰上面的赋值操作
+              //       setTimeout(() => loadGeneraterFormList(value), 200)
+              //     }
+              //   }}
+              //   displayRender={(label, selectedOptions) => {
+              //     if ((selectedOptions || []).filter((item: any) => !!item && item.Label).length !== 2) return ''
+              //     const diplay = (selectedOptions || []).map((item: any) => item.Label).join(' / ')
+              //     return <>{diplay}</>
+              //   }}
+              // />
               <YakitSelect
                 allowClear
                 placeholder="请选择恶意类"
