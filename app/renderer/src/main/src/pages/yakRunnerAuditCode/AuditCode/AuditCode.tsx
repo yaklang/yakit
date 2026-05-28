@@ -35,6 +35,7 @@ import {
   useDebounceFn,
   useGetState,
   useInterval,
+  useInViewport,
   useMemoizedFn,
   useSafeState,
   useSize,
@@ -2442,6 +2443,8 @@ const COMPILE_PREVIEW_LIMIT = 3
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
   const { pageType, onClose, onExecuteAudit, warrpId } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const auditHistoryTableRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(auditHistoryTableRef)
   const [JSONStringConfig, setJSONStringConfig] = useState<string>()
   const [refresh, setRefresh] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -2522,6 +2525,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   useEffect(() => {
     update(true)
   }, [refresh])
+  useEffect(() => {
+    if (inViewport) {
+      setRefresh((pre) => !pre)
+    }
+  }, [inViewport])
 
   const update = useMemoizedFn(async (reload?: boolean, page?: number, limit?: number) => {
     if (isGrpcRef.current) return
@@ -2949,6 +2957,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
       className={styles['audit-history-table']}
       id="audit-history-table"
       onKeyDown={(event) => event.stopPropagation()}
+      ref={auditHistoryTableRef}
     >
       <div className={styles['header']}>
         <div className={styles['main']}>

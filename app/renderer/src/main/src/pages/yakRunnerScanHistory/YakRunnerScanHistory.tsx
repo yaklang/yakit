@@ -1,5 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useControllableValue, useCreation, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import {
+  useControllableValue,
+  useCreation,
+  useDebounceFn,
+  useInViewport,
+  useLatest,
+  useMemoizedFn,
+  useUpdateEffect,
+} from 'ahooks'
 import { failed, success, yakitNotify } from '@/utils/notification'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -136,14 +144,23 @@ const YakRunnerScanHistory: React.FC<YakRunnerScanHistoryProp> = (props) => {
   const [clickItem, setClickItem] = useState<SSAProgram>()
 
   useEffect(() => {
-    if (!clickItem) return
-    setQuery((prev) => ({
-      ...prev,
-      Filter: {
-        ...prev.Filter,
-        Programs: [clickItem.Name],
-      },
-    }))
+    if (!clickItem) {
+      setQuery((prev) => ({
+        ...prev,
+        Filter: {
+          Kind: ['scan'],
+          Programs: [],
+        },
+      }))
+    } else {
+      setQuery((prev) => ({
+        ...prev,
+        Filter: {
+          ...prev.Filter,
+          Programs: [clickItem.Name],
+        },
+      }))
+    }
   }, [clickItem])
 
   const queyChangeUpdateData = useDebounceFn(
@@ -555,7 +572,7 @@ export function buildCompileHistoryDisplayList(programs: SSAProgram[]): CompileH
 interface CompileHistoryListProps {
   pageInfo: YakRunnerScanHistoryPageInfoProps
   clickItem: SSAProgram | undefined
-  setClickItem: (item: SSAProgram) => void
+  setClickItem: (item?: SSAProgram) => void
 }
 
 // 编译历史列表
@@ -567,11 +584,12 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [checkedList, setCheckedList] = useState<number[]>([])
-  const [clickItem, setClickItem] = useControllableValue<SSAProgram>(props, {
+  const [clickItem, setClickItem] = useControllableValue<SSAProgram | undefined>(props, {
     defaultValue: undefined,
     valuePropName: 'clickItem',
     trigger: 'setClickItem',
   })
+  const latestClickItemRef = useLatest(clickItem)
   const [query, setQuery] = useState<QuerySSAProgramRequest>({
     Pagination: {
       Page: 1,
@@ -722,7 +740,14 @@ const CompileHistoryList: React.FC<CompileHistoryListProps> = (props) => {
 
   const displayList = useMemo(() => {
     const full = buildCompileHistoryDisplayList(response.Data)
-    return full.filter((item) => !item.isGroupChild || !(item.groupId && collapsedGroups.has(item.groupId)))
+    const arr = full.filter((item) => !item.isGroupChild || !(item.groupId && collapsedGroups.has(item.groupId)))
+    if (
+      !arr.length ||
+      (latestClickItemRef.current && !arr.some((item) => item.program.Id === latestClickItemRef.current?.Id))
+    ) {
+      setClickItem(undefined)
+    }
+    return arr
   }, [response.Data, collapsedGroups])
 
   const renderProgramRow = useMemoizedFn((rowData: CompileHistoryDisplayItem) => {
