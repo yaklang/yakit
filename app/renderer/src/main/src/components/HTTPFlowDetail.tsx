@@ -1743,18 +1743,18 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                 )
               }
               titleEle.push(
-                <YakitTag color={'info'} style={{ marginLeft: 8, cursor: 'pointer' }} onClick={onScrollTo} key="reqId">
-                  id：{scrollID || id}
-                </YakitTag>,
+                <Tooltip title={t('HTTPFlowDetailRequestAndResponse.clickToScrollToList')} key="reqId">
+                  <YakitTag color={'info'} style={{ marginLeft: 8, cursor: 'pointer' }} onClick={onScrollTo}>
+                    id：{scrollID || id}
+                  </YakitTag>
+                </Tooltip>,
               )
               // history页面
               if (['History'].includes(pageType || '') && showJumpTree) {
                 titleEle.push(
-                  <OutlineLog2Icon
-                    className={styles['jump-web-tree']}
-                    onClick={handleJumpWebTree}
-                    key="jump-web-tree"
-                  />,
+                  <Tooltip title={t('HTTPFlowDetailRequestAndResponse.jumpToWebTree')} key="jump-web-tree">
+                    <OutlineLog2Icon className={styles['jump-web-tree']} onClick={handleJumpWebTree} />
+                  </Tooltip>,
                 )
               }
               titleEle.push(<ResByteCountTag editor={reqEditor} pageType={pageType} showJumpTree={showJumpTree} />)

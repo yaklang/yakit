@@ -232,7 +232,9 @@
     "response": "响应",
     "rawResponse": "原始响应",
     "oversizedResponse": "超大响应",
-    "editTag": "编辑tag"
+    "editTag": "编辑tag",
+    "clickToScrollToList": "点击可在列表中定位该数据",
+    "jumpToWebTree": "点击可在网站树筛选"
   },
   "NewHTTPPacketEditor": {
     "render": "渲染",
