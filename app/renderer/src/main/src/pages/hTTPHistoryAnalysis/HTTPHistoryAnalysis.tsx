@@ -31,11 +31,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { AddHotCodeTemplate, HotCodeTemplate, HotPatchTempItem } from '../fuzzer/HTTPFuzzerHotPatch'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import {
-  defaultHTTPHistoryAnalysisPageInfo,
-  footerTabs,
-  HotPatchDefaultContent,
-} from '@/defaultConstants/hTTPHistoryAnalysis'
+import { footerTabs, HotPatchDefaultContent } from '@/defaultConstants/hTTPHistoryAnalysis'
 import { AnalyzeHotPatchTempDefault } from '@/defaultConstants/mitm'
 import { MITMContentReplacerRule, MITMRulePropRef } from '../mitm/MITMRule/MITMRuleType'
 import { yakitNotify } from '@/utils/notification'
@@ -47,7 +43,6 @@ import { HorizontalScrollCard } from '../plugins/operator/horizontalScrollCard/H
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { MITMConsts } from '../mitm/MITMConsts'
-import { HTTPFlowDetailProp } from '@/components/HTTPFlowDetail'
 import { HTTPFlow, ImportExportProgress } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { randomString } from '@/utils/randomUtil'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
@@ -71,6 +66,18 @@ import { prettifyPacketCode } from '@/utils/prettifyPacket'
 import { Uint8ArrayToString } from '@/utils/str'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { HTTPHistoryFilter } from './HTTPHistory/HTTPHistoryFilter'
+import {
+  buildHTTPHistoryAnalysisResizeBoxProps,
+  buildHTTPFlowRuleDetailMiniProps,
+  filterHTTPFlowRuleTableData,
+  getSafeHTTPRequest,
+  hasHTTPFlowRuleTableFilter,
+  type HTTPFlowRuleData,
+  type QueryAnalyzedHTTPFlowRuleFilter,
+  resolveHTTPHistoryAnalysisPageInfo,
+  shouldUpdateHTTPFlowRuleSelection,
+  toHTTPFlowIds,
+} from './HTTPHistoryAnalysis.utils'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import classNames from 'classnames'
 import { cloneDeep } from 'lodash'
@@ -118,14 +125,8 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
     shallow,
   )
   const initPageInfo = useMemoizedFn(() => {
-    if (params) {
-      return { ...defaultHTTPHistoryAnalysisPageInfo, ...params }
-    }
     const currentItem: PageNodeItemProps | undefined = queryPagesDataById(YakitRoute.DB_HTTPHistoryAnalysis, pageId)
-    if (currentItem && currentItem.pageParamsInfo.hTTPHistoryAnalysisPageInfo) {
-      return { ...currentItem.pageParamsInfo.hTTPHistoryAnalysisPageInfo }
-    }
-    return { ...defaultHTTPHistoryAnalysisPageInfo }
+    return resolveHTTPHistoryAnalysisPageInfo(params, currentItem)
   })
   const [pageInfo, setPageInfo] = useState<HTTPHistoryAnalysisPageInfo>(initPageInfo())
 
@@ -141,9 +142,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
       setHTTPFlowFilter(filter)
     } catch (error) {}
   })
-  const httpFlowIds = useCreation(() => {
-    return selectedHttpFlowIds?.map((id) => Number(id)) || []
-  }, [selectedHttpFlowIds])
+  const httpFlowIds = useCreation(() => toHTTPFlowIds(selectedHttpFlowIds), [selectedHttpFlowIds])
   const memoClickedHttpFlow = useCreation(() => clickedHttpFlow, [clickedHttpFlow?.Id])
   const memoFirstHttpFlow = useCreation(() => firstHttpFlow, [firstHttpFlow?.Id])
 
@@ -189,24 +188,7 @@ export const HTTPHistoryAnalysis: React.FC<HTTPHistoryAnalysisProps> = React.mem
   })
 
   const ResizeBoxProps = useCreation(() => {
-    let p = cloneDeep(lastRatio)
-
-    if (!openBottomTabsFlag) {
-      p.firstRatio = '100%'
-      p.secondRatio = '0%'
-    }
-    return {
-      ...p,
-      style: {
-        height: 'calc(100% - 24px)',
-      },
-      secondNodeStyle: {
-        padding: 0,
-        display: openBottomTabsFlag ? 'block' : 'none',
-        minHeight: openBottomTabsFlag ? '400px' : '0',
-      },
-      lineStyle: { display: '' },
-    }
+    return buildHTTPHistoryAnalysisResizeBoxProps(lastRatio, openBottomTabsFlag)
   }, [openBottomTabsFlag, lastRatio])
 
   const onClickFooterTabItem = (key: TabKeys) => {
@@ -533,9 +515,6 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
     [clickHttpFlow?.Id, firstHttpFlow?.Id],
     { wait: 500 },
   )
-  const getSafeHTTPRequest = (flow: HTTPFlow) => {
-    return (flow.InvalidForUTF8Request ? flow.SafeHTTPRequest! : flow.RequestString) || ''
-  }
   const getHttpFlowById = (flow: HTTPFlow) => {
     // 是否获取Request
     let isGetRequest: boolean = true
@@ -1381,31 +1360,17 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
   const { tableData, currentSelectItem, onSetCurrentSelectItem, isRefreshTable, executeStatus } = props
   const [scrollToIndex, setScrollToIndex] = useState<string>()
 
-  // #region 规则数据包打开新窗口
-  const HTTPFlowDetailMiniProps = (v: HTTPFlowRuleData) => {
-    return {
-      noHeader: true,
-      id: v?.HTTPFlowId || 0,
-      analyzedIds: v?.Id ? [v.Id] : undefined,
-      sendToWebFuzzer: true,
-      scrollID: v?.Id,
-      showEditTag: false,
-      showJumpTree: false,
-    } satisfies HTTPFlowDetailProp
-  }
-
   // 双击表格行打开新窗口数据包
   const onHttpRuleTableRowDoubleClick = useMemoizedFn((r) => {
     openPacketNewWindow({
       showParentPacketCom: {
         components: 'HTTPFlowDetailMini',
         props: {
-          ...HTTPFlowDetailMiniProps(r),
+          ...buildHTTPFlowRuleDetailMiniProps(r),
         },
       },
     })
   })
-  // #endregion
 
   const onSelect = useMemoizedFn((i) => {
     if (!i) {
@@ -1419,7 +1384,7 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
         showParentPacketCom: {
           components: 'HTTPFlowDetailMini',
           props: {
-            ...HTTPFlowDetailMiniProps(i),
+            ...buildHTTPFlowRuleDetailMiniProps(i),
           },
         },
       },
@@ -1441,25 +1406,6 @@ const HttpRule: React.FC<HttpRuleProps> = React.memo((props) => {
     </div>
   )
 })
-
-interface QueryAnalyzedHTTPFlowRuleFilter {
-  Methods: string[]
-  SearchURL: string
-  StatusCode: string
-  RuleVerboseName: string
-  ExtractedContent: string
-}
-export interface HTTPFlowRuleData {
-  Id: number
-  HTTPFlowId: number
-  Method: string
-  StatusCode: string
-  Url: string
-  IPAddress: string
-  RuleVerboseName: string
-  Rule: string
-  ExtractedContent: string
-}
 interface HttpRuleTableProps {
   tableData: HTTPFlowRuleData[]
   currentSelectItem?: HTTPFlowRuleData
@@ -1545,84 +1491,16 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
   const queryUpdateData = useDebounceFn(
     () => {
       try {
-        if (
-          tableQuery.Methods.length > 0 ||
-          tableQuery.StatusCode ||
-          tableQuery.SearchURL ||
-          tableQuery.RuleVerboseName ||
-          tableQuery.ExtractedContent
-        ) {
-          const newDataTable = sorterFunction(tableData, getSorterTable()) || []
-          const l = newDataTable.length
-          const searchList: HTTPFlowRuleData[] = []
-          for (let index = 0; index < l; index++) {
-            const record = newDataTable[index]
+        const sortedTableData = (sorterFunction(tableData, getSorterTable()) || []) as HTTPFlowRuleData[]
+        const nextShowList = hasHTTPFlowRuleTableFilter(tableQuery)
+          ? filterHTTPFlowRuleTableData(sortedTableData, tableQuery, parseStatusCodes(tableQuery.StatusCode))
+          : [...sortedTableData]
 
-            let methodsIsPush = true
-            let statusCodeIsPush = true
-            let searchURLIsPush = true
-
-            let ruleVerboseNameIsPush = true
-            let extractedContentIsPush = true
-
-            if (tableQuery.Methods.length) {
-              methodsIsPush = tableQuery.Methods.includes(record.Method)
-            }
-
-            if (tableQuery.StatusCode) {
-              const statusCodes = parseStatusCodes(tableQuery.StatusCode)
-              const codeIsPushArr: boolean[] = []
-              for (let index = 0; index < statusCodes.length; index++) {
-                const element = statusCodes[index]
-                if (record.StatusCode == element) {
-                  codeIsPushArr.push(true)
-                } else {
-                  codeIsPushArr.push(false)
-                }
-              }
-              statusCodeIsPush = codeIsPushArr.includes(true)
-            }
-
-            if (tableQuery.SearchURL) {
-              searchURLIsPush = record.Url.includes(tableQuery.SearchURL)
-            }
-
-            if (tableQuery.RuleVerboseName) {
-              ruleVerboseNameIsPush = record.RuleVerboseName.toLocaleLowerCase().includes(
-                tableQuery.RuleVerboseName.toLocaleLowerCase(),
-              )
-            }
-
-            if (tableQuery.ExtractedContent) {
-              extractedContentIsPush = record.ExtractedContent.toLocaleLowerCase().includes(
-                tableQuery.ExtractedContent.toLocaleLowerCase(),
-              )
-            }
-
-            if (
-              methodsIsPush &&
-              statusCodeIsPush &&
-              searchURLIsPush &&
-              ruleVerboseNameIsPush &&
-              extractedContentIsPush
-            ) {
-              searchList.push(record)
-            }
-          }
-          setShowList([...searchList])
-          if (searchList.length) {
-            scrollUpdate(searchList.length)
-          } else {
-            onSetScrollToIndex('0')
-          }
+        setShowList(nextShowList)
+        if (nextShowList.length) {
+          scrollUpdate(nextShowList.length)
         } else {
-          const newData = sorterFunction(tableData, getSorterTable()) || []
-          setShowList([...newData])
-          if (newData.length) {
-            scrollUpdate(newData.length)
-          } else {
-            onSetScrollToIndex('0')
-          }
+          onSetScrollToIndex('0')
         }
       } catch (error) {
         yakitNotify('error', t('YakitNotification.search_failed', { error: error + '' }))
@@ -1680,11 +1558,7 @@ const HttpRuleTable: React.FC<HttpRuleTableProps> = React.memo((props) => {
   })
 
   const onSetCurrentRow = useMemoizedFn((val?: HTTPFlowRuleData) => {
-    if (!val) {
-      onSelect(undefined)
-      return
-    }
-    if (val?.Id !== currentSelectItem?.Id) {
+    if (shouldUpdateHTTPFlowRuleSelection(currentSelectItem, val)) {
       onSelect(val)
     }
   })

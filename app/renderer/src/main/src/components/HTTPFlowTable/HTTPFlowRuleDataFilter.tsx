@@ -14,12 +14,24 @@ import { openABSFileLocated } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
 import {
   MitmExtractAggregateFlowFilterRow,
-  MitmExtractedAggregateRowNormalized,
   YakQueryHTTPFlowRequest,
   normalizeQueryMITMExtractedAggregateResponse,
-  stripMitmAggregateHttpFlowLiveWindow,
-  stripMitmAggregateTableFeedback,
 } from '@/utils/yakQueryHTTPFlow'
+import {
+  buildCheckedFilterRows,
+  buildNextCheckedRuleRows,
+  buildRuleDataFilterQuery,
+  buildRuleNameOptions,
+  buildRuleNameTagOptions,
+  buildRuleScopeFilter,
+  buildRuleSummaryList,
+  getRuleDataColumnWidth,
+  hasHTTPFlowFilterCriteria,
+  mergeRuleSummaryItems,
+  toggleCheckedRuleRow,
+  uniqStrings,
+  type RuleSummaryItem,
+} from './HTTPFlowTable.utils'
 import styles from './HTTPFlowRuleDataFilter.module.scss'
 import { Tooltip } from 'antd'
 
@@ -35,14 +47,6 @@ const QUERY_DEBOUNCE_WAIT = 300
 const RULE_NAME_SELECT_MAX_HEIGHT = '40vh'
 const RULE_NAME_OPTIONS_LIMIT = 999999
 
-interface RuleSummaryItem {
-  RowKey: string
-  RuleName: string
-  SampleData: string
-  TraceCount: number
-  SampleTraceIds: string[]
-}
-
 interface HTTPFlowRuleDataFilterProps {
   baseParams?: YakQueryHTTPFlowRequest
   queryparamsStr: string
@@ -50,57 +54,6 @@ interface HTTPFlowRuleDataFilterProps {
   resetTableAndEditorShow?: (table: boolean, editor: boolean) => void
   httpFlowTableDataLength?: number
 }
-
-const uniqStrings = (list: string[]) => Array.from(new Set(list.filter(Boolean)))
-
-const hasHTTPFlowFilterCriteria = (query: YakQueryHTTPFlowRequest | undefined): boolean => {
-  if (!query) return false
-  for (const [key, value] of Object.entries(query)) {
-    if (value === undefined || value === null || value === '') continue
-    if (Array.isArray(value) && value.length === 0) continue
-    if (typeof value === 'boolean' && value === false) continue
-    if (key === 'SourceType' || key === 'Full' || key === 'WithPayload') continue
-    return true
-  }
-  return false
-}
-
-const buildRuleSummaryList = (rows: MitmExtractedAggregateRowNormalized[]): RuleSummaryItem[] => {
-  const rowMap = new Map<string, RuleSummaryItem>()
-
-  rows.forEach((row) => {
-    const ruleName = row.RuleVerbose || ''
-    if (!ruleName) return
-
-    const sampleData = row.DisplayData || ''
-    const rowKey = `${ruleName}\0${sampleData}`
-    const existing = rowMap.get(rowKey)
-
-    if (existing) {
-      existing.TraceCount += Number(row.HitCount || 0)
-      if (row.SampleTraceIds?.length) {
-        existing.SampleTraceIds = uniqStrings([...existing.SampleTraceIds, ...row.SampleTraceIds])
-      }
-      return
-    }
-
-    rowMap.set(rowKey, {
-      RowKey: rowKey,
-      RuleName: ruleName,
-      SampleData: sampleData,
-      TraceCount: Number(row.HitCount || 0),
-      SampleTraceIds: Array.isArray(row.SampleTraceIds) ? [...row.SampleTraceIds] : [],
-    })
-  })
-
-  return Array.from(rowMap.values())
-}
-
-const buildScopeFilterFromRows = (rows: RuleSummaryItem[], keyword?: string) => ({
-  TraceID: uniqStrings(rows.flatMap((item) => item.SampleTraceIds)),
-  RuleVerbose: uniqStrings(rows.map((item) => item.RuleName)),
-  Keyword: keyword || undefined,
-})
 
 export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = React.memo((props) => {
   const { baseParams, queryparamsStr, onSetFilterRows, resetTableAndEditorShow, httpFlowTableDataLength } = props
@@ -134,13 +87,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
           fun: 'buildHTTPFlowQuery',
         }) as YakQueryHTTPFlowRequest)) ||
       {}
-    const nextQuery = { ...(baseParams || {}), ...parsedQuery } as Record<string, unknown>
-    delete nextQuery.Pagination
-    delete nextQuery.AfterId
-    delete nextQuery.BeforeId
-    delete nextQuery.AnalyzedIds
-    const tableOnlyQuery = stripMitmAggregateTableFeedback(nextQuery as YakQueryHTTPFlowRequest)
-    return stripMitmAggregateHttpFlowLiveWindow((tableOnlyQuery || {}) as YakQueryHTTPFlowRequest)
+    return buildRuleDataFilterQuery(baseParams, parsedQuery)
   }, [queryparamsStr, baseParams])
 
   const queryKey = useMemo(() => JSON.stringify(flowFilterForRuleList), [flowFilterForRuleList])
@@ -148,11 +95,10 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
   const activeKeyword = searchValue.trim() || keywordFilter.trim()
   const tableWrapWidth = Math.max(0, Math.floor(Number(tableContainerSize?.width || 0)) - TABLE_HORIZONTAL_PADDING)
   const tableInitReady = tableWrapWidth > 0
-  const sampleDataColumnWidth = useMemo<number | undefined>(() => {
-    if (!tableWrapWidth) return undefined
-    const width = tableWrapWidth - RULE_DATA_RESERVED_WIDTH
-    return width > 0 ? width : undefined
-  }, [tableWrapWidth])
+  const sampleDataColumnWidth = useMemo<number | undefined>(
+    () => getRuleDataColumnWidth(tableWrapWidth, RULE_DATA_RESERVED_WIDTH),
+    [tableWrapWidth],
+  )
   const sampleDataColumnDataKey = useMemo(
     () => `SampleData_${sampleDataColumnWidth ?? 'auto'}`,
     [sampleDataColumnWidth],
@@ -199,12 +145,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
   })
 
   const ruleNameTags = useMemo<FiltersItemProps[]>(() => {
-    return uniqStrings([...ruleNameOptions, ...ruleList.map((item) => item.RuleName), ...ruleVerboseFilter]).map(
-      (name) => ({
-        label: name,
-        value: name,
-      }),
-    )
+    return buildRuleNameTagOptions(ruleNameOptions, ruleList, ruleVerboseFilter)
   }, [ruleNameOptions, ruleList, ruleVerboseFilter])
 
   const checkedRowKeySet = useMemo(() => new Set(checkedRows.map((item) => item.RowKey)), [checkedRows])
@@ -216,7 +157,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
   )
 
   const checkedFilterRows: MitmExtractAggregateFlowFilterRow[] = useMemo(
-    () => checkedRows.map((item) => ({ RuleVerbose: item.RuleName, DisplayData: item.SampleData })),
+    () => buildCheckedFilterRows(checkedRows),
     [checkedRows],
   )
   const checkedFilterRowsKey = useMemo(() => JSON.stringify(checkedFilterRows), [checkedFilterRows])
@@ -255,16 +196,11 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
 
       if (nextPage === 1) {
         setRuleList(nextRuleList)
-        setRuleNameOptions(uniqStrings([...nextRuleList.map((item) => item.RuleName), ...ruleVerboseFilter]))
+        setRuleNameOptions(buildRuleNameOptions([], nextRuleList, ruleVerboseFilter))
         return
       }
 
-      setRuleList((prev) => {
-        const mergedMap = new Map<string, RuleSummaryItem>()
-        prev.forEach((item) => mergedMap.set(item.RowKey, item))
-        nextRuleList.forEach((item) => mergedMap.set(item.RowKey, item))
-        return Array.from(mergedMap.values())
-      })
+      setRuleList((prev) => mergeRuleSummaryItems(prev, nextRuleList))
     } catch (error) {
       if (requestId === requestIdRef.current) {
         yakitNotify('error', `${error}`)
@@ -317,15 +253,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
   const onChangeRuleSelection = useMemoizedFn((checked: boolean, rowKey: string) => {
     const row = ruleList.find((item) => item.RowKey === rowKey)
     if (!row) return
-    setCheckedRows((prev) => {
-      if (checked) {
-        const exists = prev.some((item) => item.RowKey === rowKey)
-        if (exists) return prev
-        return [...prev, row]
-      } else {
-        return prev.filter((item) => item.RowKey !== rowKey)
-      }
-    })
+    setCheckedRows((prev) => buildNextCheckedRuleRows(prev, row, checked))
     resetTableAndEditorShow?.(true, false)
   })
 
@@ -339,11 +267,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
   })
 
   const onRowClickToggle = useMemoizedFn((row: RuleSummaryItem) => {
-    setCheckedRows((prev) => {
-      const exists = prev.some((item) => item.RowKey === row.RowKey)
-      if (exists) return prev.filter((item) => item.RowKey !== row.RowKey)
-      return [...prev, row]
-    })
+    setCheckedRows((prev) => toggleCheckedRuleRow(prev, row))
     resetTableAndEditorShow?.(true, false)
   })
 
@@ -359,14 +283,7 @@ export const HTTPFlowRuleDataFilter: React.FC<HTTPFlowRuleDataFilterProps> = Rea
   })
 
   const buildScopeFilter = useMemoizedFn(() => {
-    if (checkedRows.length > 0) {
-      return buildScopeFilterFromRows(checkedRows, activeKeyword)
-    }
-
-    const filter: { RuleVerbose?: string[]; Keyword?: string } = {}
-    if (ruleVerboseFilter.length > 0) filter.RuleVerbose = ruleVerboseFilter
-    if (activeKeyword) filter.Keyword = activeKeyword
-    return filter
+    return buildRuleScopeFilter(checkedRows, ruleVerboseFilter, activeKeyword)
   })
 
   const onExportRuleData = useMemoizedFn(async () => {

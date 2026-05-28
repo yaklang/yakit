@@ -1,6 +1,6 @@
 import { HybridScanActiveTask } from '@/models/HybridScan'
 import { Risk as RiskProps } from '@/pages/risks/schema'
-import { HTTPFlowRuleData } from '@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis'
+import { HTTPFlowRuleData } from '@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis.utils'
 
 /** @name hooks逻辑数据 */
 export declare namespace HoldGRPCStreamProps {
