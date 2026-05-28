@@ -650,7 +650,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                       width: '50%',
                       onOk: () => {
                         m.destroy()
-                      }
+                      },
                     })
                   }}
                 >

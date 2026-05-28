@@ -111,7 +111,7 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
 }
 
 export const showConfigEngineProxyForm = () => {
-  const m =showYakitModal({
+  const m = showYakitModal({
     title: (modalT) => modalT('ConfigEngineProxy.modalTitle'),
     width: 800,
     content: (
@@ -121,6 +121,6 @@ export const showConfigEngineProxyForm = () => {
     ),
     onOk: () => {
       m.destroy()
-    }
+    },
   })
 }

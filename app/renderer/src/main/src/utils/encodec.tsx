@@ -276,7 +276,7 @@ export const execAutoDecode = async (text: string) => {
         content: <AutoDecode data={e.Results}></AutoDecode>,
         onOk: () => {
           m.destroy()
-        }
+        },
       })
     })
     .catch((e) => {
@@ -331,7 +331,7 @@ export const execCodec = async (
           ),
           onOk: () => {
             m.destroy()
-          }
+          },
         })
       }
 
@@ -350,7 +350,7 @@ export const execCodec = async (
           ),
           onOk: () => {
             m.destroy()
-          }
+          },
         })
       }
       return result?.Result || ''

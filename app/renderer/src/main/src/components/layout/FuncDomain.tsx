@@ -2849,7 +2849,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
           ),
           onOk: () => {
             m.destroy()
-          }
+          },
         })
       })
       .catch(() => {})
