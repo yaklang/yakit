@@ -142,7 +142,10 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
     }, [i18n.language])
 
     const copyUrl = useMemoizedFn(() => {
-      copyAsUrl({ Request: newRequest, IsHTTPS: isHttps })
+      copyAsUrl({ Request: newRequest, IsHTTPS: isHttps }, 'withQuery')
+    })
+    const copyUrlWithoutQuery = useMemoizedFn(() => {
+      copyAsUrl({ Request: newRequest, IsHTTPS: isHttps }, 'withoutQuery')
     })
     const onClickOpenBrowserMenu = useMemoizedFn(() => {
       ipcRenderer
@@ -185,6 +188,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
         }
         extraEnd={firstNodeExtra && firstNodeExtra()}
         onClickUrlMenu={copyUrl}
+        onClickUrlWithoutQueryMenu={copyUrlWithoutQuery}
         onClickOpenBrowserMenu={onClickOpenBrowserMenu}
         onClickOpenPacketNewWindowMenu={useMemoizedFn(() => {
           openPacketNewWindow({

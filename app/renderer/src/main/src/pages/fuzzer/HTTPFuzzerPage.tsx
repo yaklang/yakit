@@ -464,13 +464,32 @@ export const showDictsAndSelect = (fun: (i: string) => any) => {
     .finally()
 }
 
-export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }) {
+export type CopyUrlMode = 'withQuery' | 'withoutQuery'
+
+export interface ExtractedUrlResult {
+  Url: string
+  UrlWithoutQuery?: string
+}
+
+const stripUrlQueryFallback = (fullUrl: string) => {
+  try {
+    const u = new URL(fullUrl)
+    u.search = ''
+    u.hash = ''
+    return u.toString()
+  } catch {
+    return fullUrl.split('?')[0].split('#')[0]
+  }
+}
+
+export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }, mode: CopyUrlMode = 'withQuery') {
   ipcRenderer
     .invoke('ExtractUrl', f)
-    .then((data: { Url: string }) => {
-      setClipboardText(data.Url)
+    .then((data: ExtractedUrlResult) => {
+      const text = mode === 'withoutQuery' ? data.UrlWithoutQuery || stripUrlQueryFallback(data.Url) : data.Url
+      setClipboardText(text)
     })
-    .catch((e) => {
+    .catch(() => {
       failed(
         i18n.language === 'zh'
           ? '复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整'
@@ -4497,7 +4516,10 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
     }, [isStreamingResponse, responseHeaderString, assembledResponsePackage])
 
     const copyUrl = useMemoizedFn(() => {
-      copyAsUrl({ Request: request, IsHTTPS: !!isHttps })
+      copyAsUrl({ Request: request, IsHTTPS: !!isHttps }, 'withQuery')
+    })
+    const copyUrlWithoutQuery = useMemoizedFn(() => {
+      copyAsUrl({ Request: request, IsHTTPS: !!isHttps }, 'withoutQuery')
     })
     const onClickOpenBrowserMenu = useMemoizedFn(() => {
       ipcRenderer
@@ -4625,6 +4647,7 @@ export const ResponseViewer: React.FC<ResponseViewerProps> = React.memo(
                 }
               }}
               onClickUrlMenu={copyUrl}
+              onClickUrlWithoutQueryMenu={copyUrlWithoutQuery}
               onClickOpenBrowserMenu={onClickOpenBrowserMenu}
               downbodyParams={editorDownBodyParams}
               onEditor={handleEditorMount}

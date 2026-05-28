@@ -360,6 +360,8 @@
       "packetEmpty": "数据包为空",
       "copyToClipboard": "复制到剪贴板",
       "copyUrl": "复制 URL",
+      "copyUrlWithQuery": "复制 URL（含参数）",
+      "copyUrlWithoutQuery": "复制 URL（不含参数）",
       "copyAsCsrfPoc": "复制为 CSRF PoC",
       "copyAsCsrfPocBasic": "复制基础 POC",
       "copyAsCsrfPocAutoSubmit": "复制自动提交 POC",
