@@ -40,7 +40,6 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 
 import { HistroryAIReActChat } from './AIReActChat'
 
-
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
 export interface HistoryAIReActChatBridge {

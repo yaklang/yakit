@@ -335,10 +335,7 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
   /** 勾选流量 id 同步到 AI 输入框 */
   onSetSelectedHttpFlowIds?: (ids: string[]) => void
   /** 注册表格勾选操作方法（供 AI 标签移除时回写） */
-  onRegisterTableSelectApi?: (api: {
-    reset: () => void
-    deselectId: (id: string) => void
-  }) => void
+  onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
   /**
    * 作为 `excludeColumnsKey` 的初值并跳过远程缓存读取，
    */

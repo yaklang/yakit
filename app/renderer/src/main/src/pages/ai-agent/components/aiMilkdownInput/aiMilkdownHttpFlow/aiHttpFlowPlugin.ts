@@ -212,5 +212,11 @@ export const aiHttpFlowCommand = $command<AIHttpFlowCommandParams, string>(
 )
 
 export const aiHttpFlowCustomPlugin = () => {
-  return [aiHttpFlowCustomAttr, aiHttpFlowCustomSchema.node, aiHttpFlowCustomSchema.ctx, aiHttpFlowCommand, setHttpFlowListCommand]
+  return [
+    aiHttpFlowCustomAttr,
+    aiHttpFlowCustomSchema.node,
+    aiHttpFlowCustomSchema.ctx,
+    aiHttpFlowCommand,
+    setHttpFlowListCommand,
+  ]
 }

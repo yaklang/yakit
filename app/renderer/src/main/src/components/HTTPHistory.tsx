@@ -8,7 +8,14 @@ import {
   HTTPFlowTable,
 } from './HTTPFlowTable/HTTPFlowTable'
 import { HTTPFlowDetailMini } from './HTTPFlowDetail'
-import { useControllableValue, useCreation, useDebounceEffect, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import {
+  useControllableValue,
+  useCreation,
+  useDebounceEffect,
+  useInViewport,
+  useMemoizedFn,
+  useUpdateEffect,
+} from 'ahooks'
 import { useStore } from '@/store/mitmState'
 import { MitmExtractAggregateFlowFilterRow, YakQueryHTTPFlowRequest } from '@/utils/yakQueryHTTPFlow'
 import { YakitResizeBox } from './yakitUI/YakitResizeBox/YakitResizeBox'
@@ -221,16 +228,14 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
     setSelectedHttpFlowIds(ids)
   })
 
-  const onRegisterTableSelectApi = useMemoizedFn(
-    (api: { reset: () => void; deselectId: (id: string) => void }) => {
-      historyAIReActChatBridge.registerClearTableSelection(() => {
-        api.reset()
-      })
-      historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
-        api.deselectId(id)
-      })
-    },
-  )
+  const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
+    historyAIReActChatBridge.registerClearTableSelection(() => {
+      api.reset()
+    })
+    historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
+      api.deselectId(id)
+    })
+  })
 
   const mitmContent = useContext(MITMContext)
 

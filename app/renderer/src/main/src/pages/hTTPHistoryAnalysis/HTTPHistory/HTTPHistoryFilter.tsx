@@ -175,16 +175,14 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     { wait: 300 },
   )
 
-  const onRegisterTableSelectApi = useMemoizedFn(
-    (api: { reset: () => void; deselectId: (id: string) => void }) => {
-      historyAIReActChatBridge.registerClearTableSelection(() => {
-        api.reset()
-      })
-      historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
-        api.deselectId(id)
-      })
-    },
-  )
+  const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
+    historyAIReActChatBridge.registerClearTableSelection(() => {
+      api.reset()
+    })
+    historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
+      api.deselectId(id)
+    })
+  })
 
   // #region 左侧tab
   const [activeKey, setActiveKey] = useState<string>('web-tree')
