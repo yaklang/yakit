@@ -62,6 +62,7 @@ import {
   AIGlobalCommandPopover,
   AIInputSettingPopover,
   AIManualAdditionPopover,
+  AIPlanPromptPopover,
 } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
@@ -384,14 +385,28 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         ref={dropRef}
       >
         {isHovering && <div className={styles['drag-hint']}>{t('AIChatTextarea.dropToAddToChat')}</div>}
-        <AIGlobalCommandPopover childrenClass={styles['code-btn-wrapper']}>
-          <YakitSpin spinning={updateLoading} size="small">
-            <YakitTag size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
-              <OutlineCodeIcon className={styles['code-icon']} />
-              <span className="content-ellipsis">{aiGlobalConfig.AIPresetPrompt || '自定义AI全局指令'}</span>
-            </YakitTag>
-          </YakitSpin>
-        </AIGlobalCommandPopover>
+        <div className={styles['preset-prompt-tags']}>
+          <AIGlobalCommandPopover childrenClass={styles['code-btn-wrapper']}>
+            <YakitSpin spinning={updateLoading} size="small">
+              <YakitTag color="purple" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
+                <OutlineCodeIcon className={styles['code-icon']} />
+                <span className="content-ellipsis">
+                  {aiGlobalConfig.AIPresetPrompt || t('AIReActTaskChatContent.globalDirectiveDefault')}
+                </span>
+              </YakitTag>
+            </YakitSpin>
+          </AIGlobalCommandPopover>
+          <AIPlanPromptPopover childrenClass={styles['code-btn-wrapper']}>
+            <YakitSpin spinning={updateLoading} size="small">
+              <YakitTag color="blue" size="small" border={false} fullRadius className={styles['preset-prompt-tag']}>
+                <OutlineBrainCircuitIcon className={styles['code-icon']} />
+                <span className="content-ellipsis">
+                  {aiGlobalConfig.AIPlanPrompt || t('AIReActTaskChatContent.planPromptDefault')}
+                </span>
+              </YakitTag>
+            </YakitSpin>
+          </AIPlanPromptPopover>
+        </div>
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
           <AIMilkdownInput
             ref={aiMilkdownInputRef}

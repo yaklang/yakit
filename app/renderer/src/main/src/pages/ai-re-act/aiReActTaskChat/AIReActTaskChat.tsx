@@ -7,6 +7,9 @@ import {
   AIInputSettingPopoverProps,
   AIManualAdditionPopoverProps,
   AIManualAdditionProps,
+  AIPlanPromptPopoverProps,
+  AIPlanPromptProps,
+  AIPlanPromptRefProps,
   AIReActTaskChatContentProps,
   AIReActTaskChatLeftSideProps,
   AIReActTaskChatProps,
@@ -597,6 +600,80 @@ const AIGlobalCommand: React.FC<AIGlobalCommandProps> = React.memo(
           onPressEnter={() => onSave(prompt)}
           placeholder="全局命令将对所有会话生效..."
           maxLength={500}
+          showCount
+        />
+        <div className={styles['ai-global-command-footer']}>
+          <YakitButton type="outline2" onClick={onCancel}>
+            {t('YakitButton.cancel')}
+          </YakitButton>
+          <YakitButton
+            onClick={() => {
+              onSave(prompt)
+            }}
+          >
+            {t('YakitButton.save')}
+          </YakitButton>
+        </div>
+      </div>
+    )
+  }),
+)
+export const AIPlanPromptPopover: React.FC<AIPlanPromptPopoverProps> = React.memo((props) => {
+  const { children, childrenClass } = props
+  const [visible, setVisible] = useState<boolean>(false)
+  const [_, event] = useAIGlobalConfig()
+
+  const onSave = useMemoizedFn((prompt: string) => {
+    setVisible(false)
+    event.setAIGlobalConfig({ AIPlanPrompt: prompt })
+  })
+  const aiPlanPromptRef = useRef<AIPlanPromptRefProps>({ value: '' })
+  const onPlanPromptVisibleChange = useMemoizedFn((visible: boolean) => {
+    if (!visible) {
+      onSave(aiPlanPromptRef.current?.value || '')
+    } else {
+      setVisible(true)
+    }
+  })
+  return (
+    <YakitPopover
+      visible={visible}
+      content={<AIPlanPrompt ref={aiPlanPromptRef} onCancel={() => setVisible(false)} onSave={onSave} />}
+      destroyTooltipOnHide={true}
+      onVisibleChange={onPlanPromptVisibleChange}
+      trigger={'click'}
+    >
+      <div
+        onClick={(e) => {
+          e.stopPropagation()
+          setVisible(true)
+        }}
+        className={classNames(childrenClass)}
+      >
+        {children}
+      </div>
+    </YakitPopover>
+  )
+})
+const AIPlanPrompt: React.FC<AIPlanPromptProps> = React.memo(
+  forwardRef((props, ref) => {
+    const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+    const { onCancel, onSave } = props
+    const [aiGlobalConfigData] = useAIGlobalConfig()
+    const [prompt, setPrompt] = useState<string>(aiGlobalConfigData?.aiGlobalConfig.AIPlanPrompt || '')
+    useImperativeHandle(ref, () => ({ value: prompt }), [prompt])
+
+    return (
+      <div className={styles['ai-global-command']} onClick={(e) => e.stopPropagation()}>
+        <div className={styles['ai-global-command-heard']}>{t('AIReActTaskChatContent.planPrompt')}</div>
+        <YakitInput.TextArea
+          rows={5}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          isShowResize={false}
+          onPressEnter={() => onSave(prompt)}
+          placeholder={t('AIReActTaskChatContent.planPromptPlaceholder')}
+          maxLength={2000}
           showCount
         />
         <div className={styles['ai-global-command-footer']}>
