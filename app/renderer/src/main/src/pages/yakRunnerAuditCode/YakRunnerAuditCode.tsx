@@ -60,6 +60,13 @@ import { ShortcutKeyPage } from '@/utils/globalShortcutKey/events/pageMaps'
 import { getStorageAuditCodeShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/yakRunnerAuditCode'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { getCodeByPath, getCodeSizeByPath, getNameByPath, monacaLanguageType } from '../yakRunner/utils'
+import {
+  activateSSAProjectDatabase,
+  isDedicatedAuditPage,
+  resolveAuditCodePageLocation,
+  resolveProgramLocationForProject,
+} from './ssaProjectDatabase'
+import { useIrifyCurrentSSAProjectStore } from '@/store/irifyCurrentSSAProject'
 import { openAIForge } from '../yakRunnerAuditHole/YakitAuditHoleTable/utils'
 const { ipcRenderer } = window.require('electron')
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
@@ -82,6 +89,69 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
   const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
 
   const [isShowModal, setShowModal] = useState<boolean>(false)
+  const initAuditTreeForLocation = useMemoizedFn((location: string) => {
+    const rootPath = `/${location}`
+    setProjectName(location)
+    onInitTreeFun(rootPath)
+    emiter.emit('onCodeAuditDefaultExpanded', JSON.stringify([rootPath]))
+  })
+
+  const bootstrapAuditTree = useMemoizedFn(async (info?: AuditCodePageInfoProps) => {
+    const dedicated = isDedicatedAuditPage(info)
+    const storeProject = dedicated ? useIrifyCurrentSSAProjectStore.getState().current : undefined
+    const ssaProjectId = info?.ssaProjectId ?? (dedicated ? storeProject?.id : undefined)
+    const projectManageName = info?.projectManageName || (dedicated ? storeProject?.projectName : info?.Location)
+
+    try {
+      if (dedicated && ssaProjectId && ssaProjectId > 0) {
+        await activateSSAProjectDatabase(ssaProjectId)
+      } else {
+        await activateSSAProjectDatabase(0)
+        if (ssaProjectId && ssaProjectId > 0) {
+          await activateSSAProjectDatabase(ssaProjectId)
+        }
+      }
+    } catch (error) {
+      throw error
+    }
+
+    const location = info
+      ? await resolveAuditCodePageLocation({
+          Location: info.Location,
+          ssaProjectId,
+          projectManageName,
+        })
+      : dedicated && storeProject?.id
+        ? await resolveAuditCodePageLocation({
+            Location: '',
+            ssaProjectId: storeProject.id,
+            projectManageName: storeProject.projectName,
+          })
+        : undefined
+
+    if (!location) {
+      if (info) {
+        setPageInfo(info)
+        if (projectManageName) {
+          setProjectName(projectManageName)
+        }
+      }
+      return
+    }
+
+    if (info) {
+      setPageInfo({
+        ...info,
+        Location: location,
+        ssaProjectId: ssaProjectId || info.ssaProjectId,
+        projectManageName: projectManageName || info.projectManageName,
+      })
+    }
+    setAuditRule('')
+    initAuditTreeForLocation(location)
+    emiter.emit('onCodeAuditHistoryExpanded', false)
+  })
+
   const setAuditCodePageInfo = useMemoizedFn((auditCodePageInfo: string) => {
     try {
       if (auditExecuting) {
@@ -89,18 +159,15 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
         return
       }
       const newPageInfo: AuditCodePageInfoProps = JSON.parse(auditCodePageInfo)
-      setPageInfo(newPageInfo)
-      setAuditRule('')
-      const { Location } = newPageInfo
-      setProjectName(Location)
-      onInitTreeFun(`/${Location}`)
-      emiter.emit('onCodeAuditHistoryExpanded', false)
+      bootstrapAuditTree(newPageInfo).catch((error) => {
+        yakitNotify('error', `切换 SSA 数据库失败: ${error}`)
+      })
     } catch (error) {}
   })
   useEffect(() => {
-    if (pageInfo) {
-      onInitTreeFun(`/${pageInfo.Location}`)
-    }
+    bootstrapAuditTree(auditCodePageInfo).catch((error) => {
+      yakitNotify('error', `切换 SSA 数据库失败: ${error}`)
+    })
     emiter.on('onAuditCodePageInfo', setAuditCodePageInfo)
     return () => {
       emiter.off('onAuditCodePageInfo', setAuditCodePageInfo)
@@ -313,9 +380,18 @@ export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => 
 
   // 加载审计树(初次加载)
   const onOpenAuditTreeFun = useMemoizedFn(async (name: string) => {
+    let programName = name
+    const pid = pageInfo?.ssaProjectId
+    if (pid && pid > 0) {
+      const resolved = await resolveProgramLocationForProject(pid, name, pageInfo?.projectManageName || name)
+      if (!resolved) {
+        yakitNotify('warning', '该项目尚无编译产物，请先编译项目')
+        return
+      }
+      programName = resolved
+    }
     setPageInfo(undefined)
-    setProjectName(name)
-    onInitTreeFun(`/${name}`)
+    initAuditTreeForLocation(programName)
   })
 
   // 刷新审计树

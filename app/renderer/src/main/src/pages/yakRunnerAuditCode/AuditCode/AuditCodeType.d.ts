@@ -141,7 +141,10 @@ export interface AuditModalFormProps {
   isVerifyForm: boolean
   activeKey: string | string[] | undefined
   setActiveKey: (v: string | string[] | undefined) => void
+  databaseBindMode?: SSAProjectDatabaseBindModeUI
 }
+
+export type SSAProjectDatabaseBindModeUI = 'auto' | 'shared' | 'dedicated'
 
 export interface AuditModalFormModalProps {
   onCancel: () => void
@@ -153,6 +156,8 @@ export interface AuditModalFormModalProps {
   warrpId?: HTMLElement | null
   // 默认值
   initForm?: { [key: string]: any }
+  /** CreateSSAProject bind mode; default auto (infer from current profile). */
+  databaseBindMode?: SSAProjectDatabaseBindModeUI
 }
 
 export interface AfreshAuditModalProps {
@@ -166,11 +171,16 @@ export interface AfreshAuditModalProps {
   type?: 'compile' | 'afresh_compile'
 }
 
+/** Matches ypb.SSAProjectListPool */
+export type SSAProjectListPool = 0 | 1 | 2
+
 export interface SSAProjectFilter {
   IDs?: number[]
   ProjectNames?: string[]
   SearchKeyword?: string
   Languages?: string[]
+  DisableActiveDatabaseScope?: boolean
+  ListPool?: SSAProjectListPool
 }
 
 export interface DeleteSSAProjectRequest {
@@ -230,6 +240,10 @@ export interface SSAProjectResponse {
   CompileTimes: number
   // 本地路径或者远程代码仓库路径
   URL?: string
+  // profile 中存储的独立库路径（legacy 为空）
+  DatabasePath?: string
+  ResolvedDatabasePath?: string
+  DefaultDatabasePath?: string
 }
 
 export interface UpdateSSAProjectRequest {

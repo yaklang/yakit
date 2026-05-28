@@ -26,6 +26,7 @@ import {
   setAuditCodeAreaFileActive,
   updateAuditCodeAreaFileInfo,
 } from '../utils'
+import { fetchRecentCompileProgramsForProject } from '../ssaProjectDatabase'
 import { Selection } from '../RunnerTabs/RunnerTabsType'
 import emiter from '@/utils/eventBus/eventBus'
 import { getMapFail, getMapFileDetail } from '../FileTreeMap/FileMap'
@@ -59,6 +60,8 @@ import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { JSONParseLog } from '@/utils/tool'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isIRify } from '@/utils/envfile'
+import { IRifySSAProjectDatabaseBanner } from '../IRifySSAProjectDatabaseBanner'
 
 const GlobalFilterFunction = React.lazy(() => import('../GlobalFilterFunction/GlobalFilterFunction'))
 const RunnerFileTreeTab: YakitTabsProps[] = [
@@ -174,6 +177,15 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
   const getAduitList = useMemoizedFn(async () => {
     try {
+      let ssaProjectId = pageInfo?.ssaProjectId ? parseInt(String(pageInfo.ssaProjectId)) : 0
+      if (!ssaProjectId && projectName) {
+        ssaProjectId = await resolveSSAProjectIdByName(projectName)
+      }
+      if (ssaProjectId > 0) {
+        const arr = await fetchRecentCompileProgramsForProject(ssaProjectId)
+        setAduitList(arr)
+        return
+      }
       const { res } = await grpcFetchAuditTree('/')
       const arr = res.Resources.map(({ Path, ResourceName }) => ({
         path: Path,
@@ -197,7 +209,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
       emiter.off('onCodeAuditRefreshAduitHistory', getAduitList)
       emiter.off('onOpenSearchModal', onOpenSearchModalFun)
     }
-  }, [])
+  }, [projectName, pageInfo?.ssaProjectId])
 
   const onLoadData = useMemoizedFn((node: FileNodeProps) => {
     // 删除最外层文件夹时无需加载
@@ -261,7 +273,11 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
   const menuSelect = useMemoizedFn((key, keyPath: string[]) => {
     switch (key) {
       case 'codeScan':
-        resolveSSAProjectIdByName(projectName || '')
+        Promise.resolve(
+          pageInfo?.ssaProjectId
+            ? parseInt(String(pageInfo.ssaProjectId))
+            : resolveSSAProjectIdByName(projectName || ''),
+        )
           .then((ssaProjectId) => {
             const filter =
               ssaProjectId > 0 ? { ProjectIds: [ssaProjectId] } : { ProgramNames: projectName ? [projectName] : [] }
@@ -383,7 +399,10 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     useMemoizedFn(async () => {
       try {
         if (projectName) {
-          const ssaProjectId = await resolveSSAProjectIdByName(projectName)
+          let ssaProjectId = pageInfo?.ssaProjectId ? parseInt(String(pageInfo.ssaProjectId)) : 0
+          if (!ssaProjectId) {
+            ssaProjectId = await resolveSSAProjectIdByName(projectName)
+          }
           // 经与后端协商 由于跳转后需选中此Select 因此不采用分页，更改为一次性拉取100条
           const res = await grpcFetchAuditCodeRiskOrRuleList(projectName, ssaProjectId || undefined)
           const newOptions = res.Data.map((item) => {
@@ -477,6 +496,13 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         t={t}
       />
       <div className={styles['container']}>
+        {isIRify() && (pageInfo?.databasePath || pageInfo?.projectManageName || projectName) && (
+          <IRifySSAProjectDatabaseBanner
+            projectName={pageInfo?.projectManageName || projectName}
+            databasePath={pageInfo?.databasePath}
+            databaseBindMode={pageInfo?.databaseBindMode}
+          />
+        )}
         <div className={styles['file-tree']}>
           <div className={styles['file-tree-container']}>
             <div className={styles['file-tree-header']}>

@@ -9078,6 +9078,12 @@ message SSAProject {
   int64 CompileTimes = 14;
   // 本地路径或者远程代码仓库路径
   string URL = 15;
+  // 绑定的 SSA IR 数据库文件路径（profile 中存储的原始值，legacy 项目为空）
+  string DatabasePath = 16;
+  // 实际生效的 SSA IR 数据库路径（legacy 项目为 default-yakssa.db）
+  string ResolvedDatabasePath = 17;
+  // 进程默认 SSA IR 数据库路径
+  string DefaultDatabasePath = 18;
 }
 
 message SSAProjectCompileConfig{
@@ -9099,16 +9105,32 @@ message SSAProjectScanRuleConfig{
   SyntaxFlowRuleFilter RuleFilter = 1;
 }
 
+enum SSAProjectListPool {
+  SSA_PROJECT_LIST_AUTO = 0; // infer from current profile (default)
+  SSA_PROJECT_LIST_SHARED = 1; // internal: default/temporary shared pool
+  SSA_PROJECT_LIST_DEDICATED = 2; // external: per-project dedicated sqlite
+}
+
 message SSAProjectFilter {
   repeated int64 IDs = 1;
   repeated string ProjectNames = 2;
   string SearchKeyword = 3;
   repeated string Languages = 4;
+  // When true, QuerySSAProject skips active-database scoping (default/临时 vs 独立库).
+  bool DisableActiveDatabaseScope = 5;
+  SSAProjectListPool ListPool = 6;
+}
+
+enum SSAProjectDatabaseBindMode {
+  SSA_PROJECT_BIND_AUTO = 0; // infer from current profile (default)
+  SSA_PROJECT_BIND_SHARED = 1; // force shared default/temporary IR
+  SSA_PROJECT_BIND_DEDICATED = 2; // force per-project dedicated sqlite
 }
 
 message CreateSSAProjectRequest {
   SSAProject Project = 1;
   string JSONStringConfig = 2;
+  SSAProjectDatabaseBindMode DatabaseBindMode = 3;
 }
 
 message CreateSSAProjectResponse {

@@ -1,0 +1,61 @@
+.ssa-project-manage-block {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.ssa-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+}
+
+.ssa-section-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.ssa-section-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Disable);
+
+  .ssa-section-meta-num {
+    color: var(--Colors-Use-Main-Primary);
+  }
+}
+
+.ssa-table-section {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.db-path-empty {
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+}
+
+.db-path-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.db-path-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}

@@ -121,6 +121,8 @@
     "riskCount": "风险个数",
     "verifying": "正在校验",
     "addProject": "添加项目",
+    "addDedicatedProject": "添加项目",
+    "sharedPoolAddProjectHint": "建议使用外部的独立项目编译，默认数据库只做兼容处理。",
     "jumpCodeScanFailed": "跳转代码扫描页失败：{{error}}"
   },
   "RunnerFileTree": {
@@ -181,5 +183,8 @@
     "jumpToScanFailed": "跳转代码扫描页失败：{{error}}",
     "openProject": "打开项目",
     "compileHistory": "编译历史"
+  },
+  "IRifySSAProjectDatabaseBanner": {
+    "dedicatedDbOfProject": "{{name}} 独立数据库"
   }
 }

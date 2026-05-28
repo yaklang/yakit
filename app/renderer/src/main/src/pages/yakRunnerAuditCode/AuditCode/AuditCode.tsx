@@ -130,6 +130,11 @@ import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUt
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
+import {
+  normalizeSSAProjectResponse,
+  toSSAProjectDatabaseBindModeGRPC,
+  getAuditModalLabels,
+} from '@/pages/softwareSettings/ssaProjectTableShared'
 const { YakitPanel } = YakitCollapse
 
 const { ipcRenderer } = window.require('electron')
@@ -1488,7 +1493,16 @@ export const AuditHistoryList: React.FC<AuditHistoryListProps> = React.memo(
 )
 
 export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
-  const { onCancel, isExecuting, onStartAudit, form, isVerifyForm, activeKey, setActiveKey } = props
+  const {
+    onCancel,
+    isExecuting,
+    onStartAudit,
+    form,
+    isVerifyForm,
+    activeKey,
+    setActiveKey,
+    databaseBindMode = 'auto',
+  } = props
   const { t, i18n } = useI18nNamespaces(['mitm', 'yakRunner', 'yakitUi'])
   const [loading, setLoading] = useState<boolean>(true)
   const [plugin, setPlugin] = useState<YakScript>()
@@ -1623,6 +1637,10 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
               Value: JSON.stringify(item.value),
             })
           })
+          requestParams.ExecParams.push({
+            Key: 'database_bind_mode',
+            Value: String(toSSAProjectDatabaseBindModeGRPC(databaseBindMode)),
+          })
           onStartAudit(requestParams)
         })
         .catch(() => {})
@@ -1656,6 +1674,13 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
         }}
         className={styles['audit-modal-form']}
       >
+        {databaseBindMode === 'shared' && (
+          <div className={styles['audit-modal-shared-hint']}>
+            {t('AuditCode.sharedPoolAddProjectHint', {
+              defaultValue: '建议使用外部的独立项目编译，默认数据库只做兼容处理。',
+            })}
+          </div>
+        )}
         <Form.Item
           name="target"
           label={t('AuditCode.projectPath')}
@@ -1783,7 +1808,7 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
           {t('YakitButton.cancel')}
         </YakitButton>
         <YakitButton onClick={onStartExecute} loading={isVerifyForm}>
-          {isVerifyForm ? t('AuditCode.verifying') : t('AuditCode.addProject')}
+          {isVerifyForm ? t('AuditCode.verifying') : getAuditModalLabels(databaseBindMode, t).submit}
         </YakitButton>
       </div>
       <ProxyRulesConfig hideRules visible={agentConfigModalVisible} onClose={() => setAgentConfigModalVisible(false)} />
@@ -1793,8 +1818,9 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
 
 // 公共封装组件用于编译项目
 export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) => {
-  const { onCancel, onSuccee, onRefresh, title, warrpId, initForm } = props
+  const { onCancel, onSuccee, onRefresh, title, warrpId, initForm, databaseBindMode = 'auto' } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner'])
+  const modalLabels = getAuditModalLabels(databaseBindMode, t)
   const [isShowCompileModal, setShowCompileModal] = useState<boolean>(true)
   const tokenRef = useRef<string>(randomString(40))
   const [isShowRunAuditModal, setShowRunAuditModal] = useState<boolean>(false)
@@ -1921,6 +1947,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
       ipcRenderer
         .invoke('CreateSSAProject', {
           JSONStringConfig,
+          DatabaseBindMode: toSSAProjectDatabaseBindModeGRPC(databaseBindMode),
         })
         .then((res: CreateSSAProjectResponse) => {
           onRefresh?.()
@@ -2020,6 +2047,8 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
               }
               if (!isCompileImmediatelyRef.current) {
                 success(t('AuditCode.createProjectSuccessManualCompile'))
+                onRefresh?.()
+                emiter.emit('onRefreshSSAProjectList')
                 setShowCompileModal(false)
                 onCancel()
                 return
@@ -2054,7 +2083,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
         getContainer={warrpId || document.getElementById('audit-code') || document.body}
         visible={isShowCompileModal}
         bodyStyle={{ padding: 0 }}
-        title={title || t('AuditCode.addProject')}
+        title={title || modalLabels.title}
         footer={null}
         onCancel={onCancel}
         maskClosable={false}
@@ -2068,6 +2097,7 @@ export const AuditModalFormModal: React.FC<AuditModalFormModalProps> = (props) =
           isVerifyForm={isVerifyForm}
           activeKey={activeKey}
           setActiveKey={setActiveKey}
+          databaseBindMode={databaseBindMode}
         />
       </YakitModal>
       {/* 编译项目进度条弹窗 */}
@@ -2393,18 +2423,6 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
     </div>
   )
 })
-
-const normalizeSSAProjectResponse = (raw: Record<string, any>): SSAProjectResponse => {
-  const p = raw || {}
-  return {
-    ...p,
-    CreateAt: p.CreateAt ?? p.CreatedAt ?? 0,
-    UpdateAt: p.UpdateAt ?? p.UpdatedAt ?? 0,
-    RiskNumber: p.RiskNumber ?? 0,
-    CompileTimes: p.CompileTimes ?? 0,
-    URL: p.URL ?? '',
-  } as SSAProjectResponse
-}
 
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
   const { pageType, onClose, onExecuteAudit, warrpId } = props

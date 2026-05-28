@@ -1,3 +1,19 @@
+.irify-project-manager-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 12px 16px;
+}
+
+.irify-project-manager-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .yakrunner-project-manager {
   height: 100%;
   overflow: hidden;

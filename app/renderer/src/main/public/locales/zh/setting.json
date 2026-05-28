@@ -12,6 +12,9 @@
   },
   "SoftwareSettings": {
     "projectManagement": "项目管理",
-    "remoteMode": "远程模式"
+    "remoteMode": "远程模式",
+    "addSSAProject": "新建项目",
+    "codeScan": "代码扫描",
+    "ruleManagement": "规则管理"
   }
 }

@@ -283,6 +283,14 @@ export interface AuditCodePageInfoProps {
   // 只看新增
   isShowCompare?: boolean
   refreshRiskOrRuleList?: boolean
+  /** IRify：SSA 审计项目 ID，用于切换 IR 数据库 */
+  ssaProjectId?: number
+  /** IRify：当前项目绑定的 sqlite 路径（展示用） */
+  databasePath?: string
+  /** IRify：shared=默认/内部共享 IR 库，dedicated=独立 sqlite */
+  databaseBindMode?: 'shared' | 'dedicated'
+  /** IRify：项目管理名（与 IR program 名区分） */
+  projectManageName?: string
 }
 
 export interface CodeScanPageInfoProps {

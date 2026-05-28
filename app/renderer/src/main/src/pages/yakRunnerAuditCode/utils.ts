@@ -184,7 +184,7 @@ export const resolveSSAProjectIdByName = (projectName: string): Promise<number> 
     }
     try {
       const res = await ipcRenderer.invoke('QuerySSAProject', {
-        Filter: { ProjectNames: [name] },
+        Filter: { ProjectNames: [name], DisableActiveDatabaseScope: true },
         Pagination: genDefaultPagination(1, 1),
       })
       const id = res?.Projects?.[0]?.ID ?? res?.projects?.[0]?.ID

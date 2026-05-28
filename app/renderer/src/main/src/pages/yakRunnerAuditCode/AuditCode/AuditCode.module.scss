@@ -464,6 +464,16 @@
 }
 
 .audit-modal-form {
+  .audit-modal-shared-hint {
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    background-color: var(--Colors-Use-Primary-Bg-Highlight);
+    border: 1px solid var(--Colors-Use-Primary-Border);
+  }
   .custom-params-wrapper {
     padding-right: 16px;
   }

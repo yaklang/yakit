@@ -12,6 +12,53 @@
     flex-direction: column;
   }
 
+  .ssa-db-banner {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
+    min-height: 32px;
+    font-size: 12px;
+    line-height: 16px;
+
+    .ssa-db-banner-label {
+      flex-shrink: 0;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-weight: 500;
+    }
+
+    .ssa-db-banner-path {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--Colors-Use-Main-Primary);
+      cursor: pointer;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .ssa-db-banner-copy {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+      &:hover {
+        color: var(--Colors-Use-Main-Primary);
+      }
+    }
+  }
+
   .open-file {
     min-height: 32px;
     padding: 4px 0;

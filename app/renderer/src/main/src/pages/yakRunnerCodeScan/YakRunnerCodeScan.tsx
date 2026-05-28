@@ -118,6 +118,9 @@ import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { getJsonSchemaListResult } from '@/components/JsonFormWrapper/JsonFormWrapper'
 import { JSONParseLog } from '@/utils/tool'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { useIrifyCurrentSSAProjectStore } from '@/store/irifyCurrentSSAProject'
+import { toSSAProjectListPoolGRPC } from '@/pages/softwareSettings/ssaProjectTableShared'
+import { applyCodeScanRuleGroupsByLanguage } from './codeScanProjectUtils'
 const { YakitPanel } = YakitCollapse
 const { ipcRenderer } = window.require('electron')
 
@@ -1078,42 +1081,88 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
     codeScanExecuteContentRef.current?.onStopAuditExecute()
   })
 
+  const dedicatedSSAProject = useIrifyCurrentSSAProjectStore((s) => s.current)
   const [auditCodeList, setAuditCodeList] = useState<
     { label: string; value: number; Language: string; JSONStringConfig: string }[]
   >([])
   const [selectProjectId, setSelectProjectId] = useState<number[]>([])
   const getAduitList = useMemoizedFn(async () => {
     try {
-      // QuerySSAProject
-      ipcRenderer
-        .invoke('QuerySSAProject', {
-          Pagination: {
-            ...genDefaultPagination(500),
-            Order: 'asc',
-            OrderBy: 'created_at',
-          },
-        })
-        .then((item: QueryGeneralResponse<SSAProjectResponse>) => {
-          item.Data = (item as any)?.Projects || []
-          if (item.Data.length > 0) {
-            let projectId: number[] = []
-            const list = item.Data.map((item) => {
-              const { ProjectName, ID, Language, JSONStringConfig } = item
-              if (pageInfo.projectId === ID) {
+      const dedicated = useIrifyCurrentSSAProjectStore.getState().current
+      const pagination = {
+        ...genDefaultPagination(500),
+        Order: 'asc',
+        OrderBy: 'created_at',
+      }
+      const queryPayload = dedicated?.id
+        ? {
+            Filter: { IDs: [dedicated.id], ListPool: toSSAProjectListPoolGRPC('dedicated') },
+            Pagination: pagination,
+          }
+        : {
+            Filter: { ListPool: toSSAProjectListPoolGRPC('shared') },
+            Pagination: pagination,
+          }
+      ipcRenderer.invoke('QuerySSAProject', queryPayload).then((item: QueryGeneralResponse<SSAProjectResponse>) => {
+        item.Data = (item as any)?.Projects || []
+        if (item.Data.length > 0) {
+          let projectId: number[] = []
+          const list = item.Data.map((item) => {
+            const { ProjectName, ID, Language, JSONStringConfig } = item
+            if (dedicated?.id) {
+              if (ID === dedicated.id) {
                 projectId.push(ID)
               }
-              return { label: ProjectName, value: ID, Language, JSONStringConfig }
-            })
-            setAuditCodeList(list)
-            setSelectProjectId(projectId)
-          }
-        })
+            } else if (pageInfo.projectId === ID) {
+              projectId.push(ID)
+            }
+            return { label: ProjectName, value: ID, Language, JSONStringConfig }
+          })
+          setAuditCodeList(list)
+          setSelectProjectId(projectId.length > 0 ? projectId : dedicated?.id ? [dedicated.id] : [])
+        } else if (dedicated?.id) {
+          setAuditCodeList([
+            {
+              label: dedicated.projectName,
+              value: dedicated.id,
+              Language: dedicated.language || '',
+              JSONStringConfig: '',
+            },
+          ])
+          setSelectProjectId([dedicated.id])
+        } else {
+          setAuditCodeList([])
+          setSelectProjectId([])
+        }
+      })
     } catch (error) {}
   })
 
   useEffect(() => {
     getAduitList()
-  }, [])
+  }, [dedicatedSSAProject?.id])
+
+  useEffect(() => {
+    if (dedicatedSSAProject?.id) {
+      setExecuteType('old')
+    }
+  }, [dedicatedSSAProject?.id])
+
+  const applyDedicatedProjectRuleGroups = useMemoizedFn(async () => {
+    if (!dedicatedSSAProject?.id) {
+      return
+    }
+    const fromList = auditCodeList.find((i) => i.value === dedicatedSSAProject.id)
+    const language = fromList?.Language || dedicatedSSAProject.language
+    if (!language) {
+      return
+    }
+    await applyCodeScanRuleGroupsByLanguage(language, pageInfo, setPageInfo)
+  })
+
+  useUpdateEffect(() => {
+    applyDedicatedProjectRuleGroups()
+  }, [dedicatedSSAProject?.id, auditCodeList])
 
   const [selectProject, setsSelectProject] = useState<string[]>([])
   const [openProject, setOpenProject] = useState<string>()
@@ -1323,6 +1372,7 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
             CodeScanByExecuteLastDataRef={CodeScanByExecuteLastDataRef}
             selectProjectId={selectProjectId}
             setSelectProjectId={setSelectProjectId}
+            dedicatedSSAProject={dedicatedSSAProject}
           />
         </div>
       </div>
@@ -1404,6 +1454,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
       extraParamsValue,
       setActiveTask,
       CodeScanByExecuteLastDataRef,
+      dedicatedSSAProject,
     } = props
 
     const { queryPagesDataById, updatePagesDataCacheById } = usePageInfo(
@@ -1436,7 +1487,14 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
     useEffect(() => {
       const { projectId, historyName, codeScanMode, runtimeId } = pageInfo
-      if (projectId) {
+      if (dedicatedSSAProject?.id) {
+        setExecuteType('old')
+        form.setFieldsValue({
+          project: dedicatedSSAProject.id,
+        })
+        setSelectProjectId([dedicatedSSAProject.id])
+        isSelectProjectRef.current = true
+      } else if (projectId) {
         setExecuteType('old')
         form.setFieldsValue({
           project: projectId,
@@ -1446,7 +1504,17 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
       if (codeScanMode && runtimeId) {
         onMultipleTask(runtimeId, codeScanMode)
       }
-    }, [])
+    }, [dedicatedSSAProject?.id])
+
+    useUpdateEffect(() => {
+      if (!dedicatedSSAProject?.id) {
+        return
+      }
+      setExecuteType('old')
+      form.setFieldsValue({ project: dedicatedSSAProject.id })
+      setSelectProjectId([dedicatedSSAProject.id])
+      isSelectProjectRef.current = true
+    }, [dedicatedSSAProject?.id])
 
     const codeScanFormRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(codeScanFormRef)
@@ -2052,22 +2120,8 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
 
     const onSelectProject = useMemoizedFn(async (item: number) => {
       try {
-        let selectGroup = pageInfo.GroupNames ? [...pageInfo.GroupNames] : []
-
-        let language = auditCodeList.find((itemIn) => itemIn.value === item)?.Language
-        if (language) {
-          selectGroup.push(language)
-          selectGroup.push('general')
-        }
-
-        const newSelectGroup = filter(selectGroup)
-        const selectTotal = await getGroupNamesTotal({ GroupNames: newSelectGroup, Purpose: pageInfo.Purpose })
-        setPageInfo({
-          ...pageInfo,
-          ...clearRuleByPageInfo,
-          GroupNames: newSelectGroup,
-          selectTotal,
-        })
+        const project = auditCodeList.find((itemIn) => itemIn.value === item)
+        await applyCodeScanRuleGroupsByLanguage(project?.Language, pageInfo, setPageInfo)
         isSelectProjectRef.current = true
         setSelectProjectId(item ? [item] : [])
         emiter.emit('onResetCodeScanProject')
@@ -2082,30 +2136,32 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
           })}
           ref={codeScanFormRef}
         >
-          <Row style={{ marginBottom: 16 }}>
-            <Col span={6}></Col>
-            <Col span={12}>
-              <YakitRadioButtons
-                disabled={isExecuting}
-                value={executeType}
-                onChange={(e) => {
-                  setExecuteType(e.target.value)
-                }}
-                buttonStyle="solid"
-                options={[
-                  {
-                    value: 'new',
-                    label: '新项目',
-                  },
-                  {
-                    value: 'old',
-                    label: '项目列表',
-                  },
-                ]}
-              />
-            </Col>
-          </Row>
-          {executeType === 'new' ? (
+          {!dedicatedSSAProject && (
+            <Row style={{ marginBottom: 16 }}>
+              <Col span={6}></Col>
+              <Col span={12}>
+                <YakitRadioButtons
+                  disabled={isExecuting}
+                  value={executeType}
+                  onChange={(e) => {
+                    setExecuteType(e.target.value)
+                  }}
+                  buttonStyle="solid"
+                  options={[
+                    {
+                      value: 'new',
+                      label: '新项目',
+                    },
+                    {
+                      value: 'old',
+                      label: '项目列表',
+                    },
+                  ]}
+                />
+              </Col>
+            </Row>
+          )}
+          {executeType === 'new' && !dedicatedSSAProject ? (
             <CodeScanAuditExecuteForm
               ref={codeScanAuditExecuteRef}
               plugin={plugin}
@@ -2134,15 +2190,26 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
               }}
               labelWrap={true}
             >
-              <Form.Item label="项目名称" name="project" rules={[{ required: true, message: '请选择项目名称' }]}>
-                <YakitSelect
-                  allowClear
-                  showSearch
-                  placeholder="请选择项目名称"
-                  options={auditCodeList}
-                  onChange={onSelectProject}
-                />
-              </Form.Item>
+              {dedicatedSSAProject ? (
+                <>
+                  <Form.Item label="项目名称">
+                    <YakitInput disabled value={dedicatedSSAProject.projectName} />
+                  </Form.Item>
+                  <Form.Item name="project" hidden rules={[{ required: true, message: '请选择项目名称' }]}>
+                    <input type="hidden" />
+                  </Form.Item>
+                </>
+              ) : (
+                <Form.Item label="项目名称" name="project" rules={[{ required: true, message: '请选择项目名称' }]}>
+                  <YakitSelect
+                    allowClear
+                    showSearch
+                    placeholder="请选择项目名称"
+                    options={auditCodeList}
+                    onChange={onSelectProject}
+                  />
+                </Form.Item>
+              )}
 
               <Form.Item label="编译历史" name="history">
                 <YakitSelect

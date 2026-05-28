@@ -9,14 +9,23 @@ import { failed } from '@/utils/notification'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Progress } from 'antd'
-import { SolidDocumentdownloadIcon } from '@/assets/icon/solid'
+import { SolidDocumentdownloadIcon, SolidPluscircleIcon } from '@/assets/icon/solid'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isIRify } from '@/utils/envfile'
+import { SSAProjectDatabaseBindModeUI } from '@/pages/softwareSettings/ssaProjectTableShared'
+import { useIRifySharedProfile } from '@/pages/softwareSettings/useIRifySharedProfile'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
+
 const { ipcRenderer } = window.require('electron')
 
 export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (props) => {
   const [isShowCompileModal, setShowCompileModal] = useState<boolean>(false)
+  const [createDatabaseBindMode, setCreateDatabaseBindMode] = useState<SSAProjectDatabaseBindModeUI>('shared')
   const [refresh, setRefresh] = useState<boolean>(false)
+  const { t } = useI18nNamespaces(['yakRunner', 'projectManage'])
+  const { loading: profileLoading, canShowInternalProjectManage, dedicatedSSAActive } = useIRifySharedProfile()
 
   const onCloseCompileModal = useMemoizedFn(() => {
     setShowCompileModal(false)
@@ -24,10 +33,12 @@ export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (
 
   const onRefresh = () => {
     setRefresh(!refresh)
+    emiter.emit('onRefreshSSAProjectList')
   }
 
   const onRefreshProjectManagerFun = useMemoizedFn(() => {
     setRefresh(!refresh)
+    emiter.emit('onRefreshSSAProjectList')
   })
 
   useEffect(() => {
@@ -36,6 +47,58 @@ export const YakRunnerProjectManager: React.FC<YakRunnerProjectManagerProps> = (
       emiter.off('onRefreshProjectManager', onRefreshProjectManagerFun)
     }
   }, [])
+
+  if (isIRify() && !canShowInternalProjectManage) {
+    return (
+      <div className={styles['yakrunner-project-manager']} id="yakrunner-project-manager">
+        <YakitSpin spinning={profileLoading}>
+          {!profileLoading && (
+            <YakitEmpty
+              description={
+                dedicatedSSAActive
+                  ? t('ProjectManage.dedicatedSSAActiveNoProjectManage', {
+                      defaultValue:
+                        '当前已打开独立数据库审计项目。项目历史请使用侧栏「项目历史」；外部项目请在「设置 → 项目管理 → 外部审计项目」中管理。',
+                    })
+                  : t('ProjectManage.dedicatedProfileNoProjectManage', {
+                      defaultValue:
+                        '当前为独立数据库 Profile。项目历史请使用侧栏「项目历史」；外部项目请在「设置 → 项目管理 → 外部审计项目」中管理。',
+                    })
+              }
+            />
+          )}
+        </YakitSpin>
+      </div>
+    )
+  }
+
+  if (isIRify() && canShowInternalProjectManage) {
+    return (
+      <div className={styles['yakrunner-project-manager']} id="yakrunner-project-manager">
+        <YakitSpin spinning={profileLoading}>
+          {!profileLoading && (
+            <AuditHistoryTable
+              pageType="projectManager"
+              onExecuteAudit={() => {
+                setShowCompileModal(true)
+              }}
+              refresh={refresh}
+              setRefresh={setRefresh}
+            />
+          )}
+        </YakitSpin>
+        {isShowCompileModal && (
+          <AuditModalFormModal
+            databaseBindMode={createDatabaseBindMode}
+            onCancel={onCloseCompileModal}
+            onSuccee={onCloseCompileModal}
+            warrpId={document.getElementById('yakrunner-project-manager')}
+            onRefresh={onRefresh}
+          />
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className={styles['yakrunner-project-manager']} id="yakrunner-project-manager">
@@ -72,7 +135,6 @@ export interface MigrateSSAProjectResponse {
 export const IRifyUpdateProjectManagerModal: React.FC<IRifyUpdateProjectManagerModalProps> = (props) => {
   const { visible, onClose } = props
   const { t } = useI18nNamespaces(['yakRunner', 'yakitUi'])
-  // 全部添加进度
   const [percent, setPercent] = useState<number>(0)
   const [token, setTaskToken] = useState(randomString(40))
   const logInfoRef = useRef<string[]>([])

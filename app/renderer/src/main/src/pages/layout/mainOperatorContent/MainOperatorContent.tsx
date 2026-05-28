@@ -41,6 +41,7 @@ import {
   isCommunityYakit,
   isEnpriTrace,
 } from '@/utils/envfile'
+import { useIRifySharedProfile } from '@/pages/softwareSettings/useIRifySharedProfile'
 import {
   useCreation,
   useDebounceFn,
@@ -735,6 +736,8 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     }
   }, [softMode])
 
+  useIRifySharedProfile({ closeProjectManagerOnDedicated: isIRify() })
+
   // tab数据
   const [pageCache, setPageCache, getPageCache] = useGetState<PageCache[]>(
     _.cloneDeepWith(getInitPageCache(softMode)) || [],
@@ -955,6 +958,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
     const isExist = pageCache.filter((item) => item.route === YakitRoute.YakRunner_Project_Manager).length
     if (isExist) {
       emiter.emit('onRefreshProjectManager')
+      emiter.emit('onRefreshSSAProjectList')
     }
     openMenuPage({ route: YakitRoute.YakRunner_Project_Manager })
   })

@@ -26,6 +26,7 @@ import {
   isCommunityYakit,
   isEnpriTraceAgent,
   isEnterpriseEdition,
+  isIRify,
   isMemfit,
 } from '@/utils/envfile'
 import { AllKillEngineConfirm } from './AllKillEngineConfirm'
@@ -91,6 +92,7 @@ import styles from './uiLayout.module.scss'
 import { JSONParseLog } from '@/utils/tool'
 import { LocalGVS } from '@/enums/localGlobal'
 import { useSoftMode } from '@/store/softMode'
+import { useIrifyCurrentSSAProjectStore } from '@/store/irifyCurrentSSAProject'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useMcpStream from './hooks/useMcp/useMcp'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
@@ -1083,16 +1085,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // 当前使用的项目
   const [currentProject, setCurrentProject] = useState<ProjectDescription>()
+  const irifySSAProject = useIrifyCurrentSSAProjectStore((s) => s.current)
   const [projectModalLoading, setProjectModalLoading] = useState<boolean>(false)
   // 项目名字
   const projectName = useMemo(() => {
     if (showProjectManage) return ''
+    if (isIRify() && irifySSAProject?.projectName) {
+      const label = `${irifySSAProject.projectName} 独立数据库`
+      if (label.length > 18) return `${label.slice(0, 18)}...`
+      return label
+    }
     if (!!currentProject?.ProjectName) {
       if (currentProject.ProjectName.length > 10) return `${currentProject.ProjectName.slice(0, 10)}...`
       else return currentProject.ProjectName
     }
     return ''
-  }, [currentProject, showProjectManage])
+  }, [currentProject, showProjectManage, irifySSAProject])
   // 项目加密导出
   const [projectModalInfo, setProjectModalInfo] = useState<{
     visible: boolean
@@ -1132,6 +1140,22 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     }
     setProjectTransferShow({ visible: false })
   }
+
+  useEffect(() => {
+    const syncCurrentProject = () => {
+      yakitProject
+        .getCurrentProjectEx({ Type: getEnvTypeByProjects() })
+        .then((rsp: ProjectDescription) => {
+          setCurrentProject(rsp || undefined)
+          setNowProjectDescription(rsp || undefined)
+        })
+        .catch(() => {})
+    }
+    emiter.on('onGetProjectInfo', syncCurrentProject)
+    return () => {
+      emiter.off('onGetProjectInfo', syncCurrentProject)
+    }
+  }, [])
   // #endregion
 
   /** @name 软件顶部Title */
@@ -1176,6 +1200,20 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     emiter.on('onSwitchEngine', onOkEnterProjectMag)
     return () => {
       emiter.off('onSwitchEngine', onOkEnterProjectMag)
+    }
+  }, [])
+
+  const onOpenIRifyProjectManage = useMemoizedFn(() => {
+    useIrifyCurrentSSAProjectStore.getState().clearCurrent()
+    setShowProjectManage(true)
+    setYakitMode('soft')
+    emiter.emit('onRefreshProjectList')
+  })
+
+  useEffect(() => {
+    emiter.on('onOpenIRifyProjectManage', onOpenIRifyProjectManage)
+    return () => {
+      emiter.off('onOpenIRifyProjectManage', onOpenIRifyProjectManage)
     }
   }, [])
   /** ---------- 切换引擎时的逻辑 End ---------- */
@@ -1494,8 +1532,13 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       /**
        * INFO 开发环境默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
        * INFO memfit 项目同样遵循该规则，启动后自动进入默认项目
+       * INFO IRify 启动后进入项目管理，由用户选择 SSA 审计项目（顶部标题读前端 state）
        */
-      if (SystemInfo.isDev || isMemfit()) {
+      if (isIRify()) {
+        useIrifyCurrentSSAProjectStore.getState().clearCurrent()
+        setShowProjectManage(true)
+        setYakitMode('soft')
+      } else if (SystemInfo.isDev || isMemfit()) {
         const res = await yakitProject.getDefaultProjectEx({
           Type: getEnvTypeByProjects(),
         })

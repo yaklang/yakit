@@ -18,6 +18,7 @@ import { useDebounceEffect, useInViewport } from 'ahooks'
 import classNames from 'classnames'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
+import { openIRifyRuleManagement } from '@/pages/softwareSettings/ssaProjectTableShared'
 import { FieldName, Fields } from '../risks/RiskTable'
 import { QueryGeneralResponse } from '../invoker/schema'
 import { SSAProjectResponse } from '../yakRunnerAuditCode/AuditCode/AuditCodeType'
@@ -150,12 +151,9 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
             <YakitButton
               icon={<OutlineDocumentsearchIcon />}
               size="max"
-              onClick={() =>
-                onMenuParams({
-                  route: YakitRoute.Rule_Management,
-                  params: {},
-                })
-              }
+              onClick={() => {
+                openIRifyRuleManagement({ fromExternal: true })
+              }}
             >
               {t('IRifyHome.viewRules')}
             </YakitButton>

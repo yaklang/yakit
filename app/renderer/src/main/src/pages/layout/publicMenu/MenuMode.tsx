@@ -42,6 +42,13 @@ import { YakitRouteToPageInfo, ResidentPluginName } from '@/routes/newRoute'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { isIRify } from '@/utils/envfile'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useIRifySharedProfile } from '@/pages/softwareSettings/useIRifySharedProfile'
+import {
+  openIRifyAuditCodeForDedicated,
+  openIRifyRuleManagement,
+  openIRifyScanHistory,
+} from '@/pages/softwareSettings/ssaProjectTableShared'
+import { OutlineClockIcon } from '@/assets/icon/outline'
 
 import classNames from 'classnames'
 import styles from './MenuMode.module.scss'
@@ -57,9 +64,24 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
   const { mode, pluginToId, onMenuSelect } = props
   const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout'])
   const { resetCompareData } = useHttpFlowStore()
+  const { canShowInternalProjectManage, loading: profileLoading } = useIRifySharedProfile()
+  const showCodeAuditProjectManage = !isIRify() || (!profileLoading && canShowInternalProjectManage)
+  const showCodeAuditProjectHistory = isIRify() && !profileLoading && !canShowInternalProjectManage
   /** 转换成菜单组件统一处理的数据格式，插件是否下载的验证由菜单组件处理，这里不处理 */
-  const onMenu = useMemoizedFn((page: YakitRoute, pluginId?: number, pluginName?: string) => {
+  const onMenu = useMemoizedFn(async (page: YakitRoute, pluginId?: number, pluginName?: string) => {
     if (!page) return
+
+    if (page === YakitRoute.YakRunner_Audit_Code && isIRify()) {
+      const opened = await openIRifyAuditCodeForDedicated()
+      if (opened) {
+        return
+      }
+    }
+
+    if (page === YakitRoute.Rule_Management && isIRify()) {
+      await openIRifyRuleManagement()
+      return
+    }
 
     if (page === YakitRoute.Plugin_OP) {
       onMenuSelect({
@@ -349,15 +371,38 @@ export const MenuMode: React.FC<MenuModeProps> = React.memo((props) => {
       )}
       {mode === '代码审计' && (
         <>
-          <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.YakRunner_Project_Manager)}>
-            <div className={styles['menu-icon-wrapper']}>
-              <div className={styles['icon-wrapper']}>
-                <PublicProjectManagerIcon />
+          {showCodeAuditProjectManage && (
+            <>
+              <div
+                className={styles['vertical-menu-wrapper']}
+                onClick={() => onMenu(YakitRoute.YakRunner_Project_Manager)}
+              >
+                <div className={styles['menu-icon-wrapper']}>
+                  <div className={styles['icon-wrapper']}>
+                    <PublicProjectManagerIcon />
+                  </div>
+                </div>
+                <div className={styles['title-style']}>{t('YakitRoute.projectManagement')}</div>
               </div>
-            </div>
-            <div className={styles['title-style']}>{t('YakitRoute.projectManagement')}</div>
-          </div>
-          <div className={styles['divider-style']}></div>
+              <div className={styles['divider-style']}></div>
+            </>
+          )}
+          {showCodeAuditProjectHistory && (
+            <>
+              <div
+                className={styles['vertical-menu-wrapper']}
+                onClick={() => void openIRifyScanHistory({ scopedToCurrentDedicatedProject: true })}
+              >
+                <div className={styles['menu-icon-wrapper']}>
+                  <div className={styles['icon-wrapper']}>
+                    <OutlineClockIcon />
+                  </div>
+                </div>
+                <div className={styles['title-style']}>{t('YakitRoute.projectHistory')}</div>
+              </div>
+              <div className={styles['divider-style']}></div>
+            </>
+          )}
           <div className={styles['vertical-menu-wrapper']} onClick={() => onMenu(YakitRoute.YakRunner_Audit_Code)}>
             <div className={styles['menu-icon-wrapper']}>
               <div className={styles['icon-wrapper']}>

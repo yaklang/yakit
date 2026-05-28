@@ -56,12 +56,26 @@ import emiter from '@/utils/eventBus/eventBus'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { AutoTextarea } from '../fuzzer/components/AutoTextarea/AutoTextarea'
 import { isCommunityEdition, isEnpriTrace, isIRify } from '@/utils/envfile'
+import { IRifySSAProjectProvider } from './IRifySSAProjectContext'
+import { SSAProjectPageToolbar } from './SSAProjectPageToolbar'
+import { SSAProjectManageBlock } from './SSAProjectManageBlock'
+import {
+  IRIFY_DEFAULT_PROJECT_NAME,
+  IRIFY_TEMPORARY_PROJECT_NAME,
+  isIRifySharedSchemaProject,
+  openIRifyRuleManagement,
+} from './ssaProjectTableShared'
+import { AuditModalFormModal } from '@/pages/yakRunnerAuditCode/AuditCode/AuditCode'
+import { PublicRuleManagementIcon } from '@/routes/publicIcon'
+import { activateSSAProjectDatabase } from '@/pages/yakRunnerAuditCode/ssaProjectDatabase'
+import { useIrifyCurrentSSAProjectStore } from '@/store/irifyCurrentSSAProject'
 import { setClipboardText } from '@/utils/clipboard'
 import { useEeSystemConfig, useStore } from '@/store'
 import { API } from '@/services/swagger/resposeType'
 import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -204,7 +218,7 @@ const DefaultProjectInfo: ProjectDescription = {
 }
 
 const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
-  const { t, i18n } = useI18nNamespaces(['projectManage', 'yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['projectManage', 'yakitUi', 'setting'])
 
   const { engineMode, onFinish } = props
 
@@ -221,6 +235,19 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     ProjectToTal: 0,
   })
 
+  const displayDbProjects = useMemo(() => {
+    const projects = [...getData().Projects]
+    if (!isIRify()) {
+      return projects
+    }
+    const rank = (name: string) => {
+      if (name === IRIFY_DEFAULT_PROJECT_NAME) return 2
+      if (name === IRIFY_TEMPORARY_PROJECT_NAME) return 1
+      return 0
+    }
+    return projects.sort((a, b) => rank(a.ProjectName) - rank(b.ProjectName))
+  }, [__data.Projects])
+
   const [files, setFiles] = useState<ProjectDescription[]>([])
   const [search, setSearch] = useState<{ name: string; total: number }>({ name: '', total: 0 })
 
@@ -229,7 +256,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   const [vlistHeigth, setVListHeight] = useState(600)
   const containerRef = useRef<any>(null)
   const wrapperRef = useRef<any>(null)
-  const [list] = useVirtualList(getData().Projects, {
+  const [list] = useVirtualList(displayDbProjects, {
     containerTarget: containerRef,
     wrapperTarget: wrapperRef,
     itemHeight: 48 + 1,
@@ -778,10 +805,32 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           failed(t('ProjectManage.connectFailed'))
           return
         }
+        if (loading) {
+          return
+        }
         setLoading(true)
         ipcRenderer
           .invoke('SetCurrentProject', { Id: data.Id, Type: getEnvTypeByProjects() })
-          .then((e) => {
+          .then(async () => {
+            if (isIRify() && isIRifySharedSchemaProject(data.ProjectName)) {
+              useIrifyCurrentSSAProjectStore.getState().clearCurrent()
+              try {
+                await activateSSAProjectDatabase(0)
+              } catch (error) {
+                failed(`切换 SSA 数据库失败: ${error}`)
+                return
+              }
+              emiter.emit('onRefreshSSAProjectList')
+              info(t('ProjectManage.switchDatabaseSuccess'))
+              onFinish()
+              emiter.emit(
+                'openPage',
+                JSON.stringify({
+                  route: YakitRoute.YakRunner_Project_Manager,
+                }),
+              )
+              return
+            }
             info(t('ProjectManage.switchDatabaseSuccess'))
             onFinish()
           })
@@ -835,6 +884,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
   const { isExportTemporaryProjectFlag, setTemporaryProjectId, delTemporaryProject } = useTemporaryProjectStore()
 
   const [detectionTemporaryProjectVisible, setDetectionTemporaryProjectVisible] = useState<boolean>(false)
+  const [showAddSSAProjectModal, setShowAddSSAProjectModal] = useState<boolean>(false)
 
   const getTemporaryProjectId = async () => {
     let id = ''
@@ -1134,44 +1184,53 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
     }
   }, [])
 
-  return (
-    <div className={styles['project-manage-wrapper']}>
-      <div className={styles['project-manage-container']}>
-        <div className={styles['project-header']}>
-          <div className={styles['header-title']}>
-            <div className={styles['title-style']}>{t('ProjectManage.title')}</div>
-            <div className={styles['total-style']}>
-              Total <span className={styles['total-number']}>{__data.ProjectToTal}</span>
-            </div>
+  const projectManageBody = (
+    <div
+      className={classNames(styles['project-manage-container'], {
+        [styles['project-manage-container-irify']]: isIRify(),
+      })}
+    >
+      <div className={styles['project-header']}>
+        <div className={styles['header-title']}>
+          <div className={styles['title-style']}>{t('ProjectManage.title')}</div>
+          <div className={styles['total-style']}>
+            Total <span className={styles['total-number']}>{__data.ProjectToTal}</span>
           </div>
-          <YakitInput.Search
-            size="large"
-            placeholder={t('ProjectManage.inputProjectName')}
-            value={params.ProjectName}
-            onChange={(e) =>
-              setParams({
-                Type: 'all',
-                Pagination: { ...params.Pagination, Page: 1 },
-                ProjectName: e.target.value,
-              })
-            }
-            style={{ width: 288 }}
-            onSearch={() => {
-              if (getParams().ProjectName) {
-                setFiles([])
+        </div>
+        <div className={styles['header-actions']}>
+          {!isIRify() && (
+            <YakitInput.Search
+              size="large"
+              placeholder={t('ProjectManage.inputProjectName')}
+              value={params.ProjectName}
+              onChange={(e) =>
                 setParams({
                   Type: 'all',
-                  Pagination: { ...getParams().Pagination, Page: 1 },
-                  ProjectName: getParams().ProjectName,
+                  Pagination: { ...params.Pagination, Page: 1 },
+                  ProjectName: e.target.value,
                 })
               }
+              style={{ width: 288 }}
+              onSearch={() => {
+                if (getParams().ProjectName) {
+                  setFiles([])
+                  setParams({
+                    Type: 'all',
+                    Pagination: { ...getParams().Pagination, Page: 1 },
+                    ProjectName: getParams().ProjectName,
+                  })
+                }
 
-              setTimeout(() => update(1), 300)
-            }}
-          />
+                setTimeout(() => update(1), 300)
+              }}
+            />
+          )}
+          {isIRify() && <SSAProjectPageToolbar />}
         </div>
+      </div>
 
-        <div className={styles['project-operate']}>
+      <div className={styles['project-operate']}>
+        {!isIRify() && (
           <div
             className={classNames(styles['open-recent-wrapper'], {
               [styles['open-recent-focus-wrapper']]: headerShow,
@@ -1254,276 +1313,345 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               {/* )} */}
             </div>
           </div>
+        )}
 
+        {isIRify() && (
+          <>
+            <div
+              className={classNames(styles['btn-wrapper'], styles['new-project-wrapper'])}
+              onClick={() => setShowAddSSAProjectModal(true)}
+            >
+              <div className={styles['btn-body']}>
+                <div className={styles['body-title']}>
+                  <DocumentAddSvgIcon />
+                  {t('SoftwareSettings.addSSAProject', { defaultValue: '新建项目' })}
+                </div>
+                <div className={styles['icon-style']}>
+                  <PlusBoldSvgIcon />
+                </div>
+              </div>
+            </div>
+
+            <div
+              className={classNames(styles['btn-wrapper'], styles['irify-rule-management-wrapper'])}
+              onClick={() => openIRifyRuleManagement({ fromExternal: true }).finally(() => onFinish())}
+            >
+              <div className={styles['btn-body']}>
+                <div className={styles['body-title']}>
+                  <PublicRuleManagementIcon />
+                  {t('SoftwareSettings.ruleManagement', { defaultValue: '规则管理' })}
+                </div>
+                <div className={styles['icon-style']}>
+                  <PlusBoldSvgIcon />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        <div
+          className={classNames(styles['btn-wrapper'], styles['new-temporary-project-wrapper'])}
+          onClick={async () => {
+            if (await getTemporaryProjectId()) {
+              setDetectionTemporaryProjectVisible(true)
+            } else {
+              await creatTemporaryProject()
+            }
+          }}
+        >
+          <div className={styles['btn-body']}>
+            <div className={styles['body-title']}>
+              <TemporaryProjectSvgIcon className={styles['temporary-project-icon']} />
+              {t('ProjectManage.temporaryProject')}
+            </div>
+            <div className={styles['icon-style']}>
+              <PlusBoldSvgIcon />
+            </div>
+          </div>
+        </div>
+
+        {!isIRify() && (
+          <>
+            <div
+              className={classNames(styles['btn-wrapper'], styles['new-project-wrapper'])}
+              onClick={() => operateFunc('newProject')}
+            >
+              <div className={styles['btn-body']}>
+                <div className={styles['body-title']}>
+                  <DocumentAddSvgIcon />
+                  {t('ProjectManage.newProject')}
+                </div>
+                <div className={styles['icon-style']}>
+                  <PlusBoldSvgIcon />
+                </div>
+              </div>
+            </div>
+
+            <div
+              className={classNames(styles['btn-wrapper'], styles['new-folder-wrapper'])}
+              onClick={() => operateFunc('newFolder')}
+            >
+              <div className={styles['btn-body']}>
+                <div className={styles['body-title']}>
+                  <FolderOpenSvgIcon />
+                  {t('YakitButton.newFolder')}
+                </div>
+                <div className={styles['icon-style']}>
+                  <PlusBoldSvgIcon />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* { engineMode !== "remote" && ( */}
+        <div
+          className={classNames(styles['btn-wrapper'], styles['import-wrapper'])}
+          onClick={() => operateFunc('import')}
+        >
+          <div className={styles['btn-body']}>
+            <div className={styles['body-title']}>
+              <DocumentDownloadSvgIcon />
+              {t('YakitButton.import')}
+            </div>
+            <div className={styles['icon-style']}>
+              <ImportSvgIcon />
+            </div>
+          </div>
+        </div>
+        {/* )} */}
+      </div>
+
+      {search.name && (
+        <div className={styles['project-search']}>
+          <Trans
+            i18nKey="ProjectManage.searchResult"
+            ns="projectManage"
+            components={{
+              code: <span className={styles['total-style']}></span>,
+            }}
+            values={{ name: search.name }}
+          />
+        </div>
+      )}
+
+      {files.length > 0 && (
+        <div className={styles['project-path-wrapper']}>
           <div
-            className={classNames(styles['btn-wrapper'], styles['new-temporary-project-wrapper'])}
-            onClick={async () => {
-              if (await getTemporaryProjectId()) {
-                setDetectionTemporaryProjectVisible(true)
-              } else {
-                await creatTemporaryProject()
+            className={styles['path-style']}
+            onClick={() => {
+              setParams({
+                Type: 'all',
+                Pagination: { Page: 1, Limit: 20, Order: 'desc', OrderBy: 'updated_at' },
+              })
+
+              setTimeout(() => {
+                setFiles([])
+                update()
+              }, 500)
+            }}
+          >
+            {t('ProjectManage.localFiles')}
+          </div>
+          <ChevronRightIcon className={styles['icon-style']} />
+          <div
+            className={styles['path-style']}
+            onClick={() => {
+              if (files.length > 1) {
+                setLoading(true)
+                setParams({
+                  Type: params.Type,
+                  Pagination: { ...params.Pagination, Page: 1 },
+                  FolderId: +files[0].Id,
+                })
+                setTimeout(() => {
+                  setFiles([files[0]])
+                  update()
+                }, 500)
               }
             }}
           >
-            <div className={styles['btn-body']}>
-              <div className={styles['body-title']}>
-                <TemporaryProjectSvgIcon className={styles['temporary-project-icon']} />
-                {t('ProjectManage.temporaryProject')}
-              </div>
-              <div className={styles['icon-style']}>
-                <PlusBoldSvgIcon />
-              </div>
-            </div>
+            {files[0].ProjectName}
           </div>
-
-          <div
-            className={classNames(styles['btn-wrapper'], styles['new-project-wrapper'])}
-            onClick={() => operateFunc('newProject')}
-          >
-            <div className={styles['btn-body']}>
-              <div className={styles['body-title']}>
-                <DocumentAddSvgIcon />
-                {t('ProjectManage.newProject')}
-              </div>
-              <div className={styles['icon-style']}>
-                <PlusBoldSvgIcon />
-              </div>
-            </div>
-          </div>
-
-          <div
-            className={classNames(styles['btn-wrapper'], styles['new-folder-wrapper'])}
-            onClick={() => operateFunc('newFolder')}
-          >
-            <div className={styles['btn-body']}>
-              <div className={styles['body-title']}>
-                <FolderOpenSvgIcon />
-                {t('YakitButton.newFolder')}
-              </div>
-              <div className={styles['icon-style']}>
-                <PlusBoldSvgIcon />
-              </div>
-            </div>
-          </div>
-
-          {/* { engineMode !== "remote" && ( */}
-          <div
-            className={classNames(styles['btn-wrapper'], styles['import-wrapper'])}
-            onClick={() => operateFunc('import')}
-          >
-            <div className={styles['btn-body']}>
-              <div className={styles['body-title']}>
-                <DocumentDownloadSvgIcon />
-                {t('YakitButton.import')}
-              </div>
-              <div className={styles['icon-style']}>
-                <ImportSvgIcon />
-              </div>
-            </div>
-          </div>
-          {/* )} */}
+          {files.length > 1 && (
+            <>
+              <ChevronRightIcon className={styles['icon-style']} />
+              <div className={styles['path-style']}>{files[1].ProjectName}</div>
+            </>
+          )}
         </div>
+      )}
 
-        {search.name && (
-          <div className={styles['project-search']}>
-            <Trans
-              i18nKey="ProjectManage.searchResult"
-              ns="projectManage"
-              components={{
-                code: <span className={styles['total-style']}></span>,
-              }}
-              values={{ name: search.name }}
-            />
-          </div>
-        )}
+      {isIRify() && (
+        <div className={styles['ssa-project-section-wrapper']}>
+          <SSAProjectManageBlock titleKey="externalAuditProjects" showAddProject addProjectBindMode="dedicated" />
+        </div>
+      )}
 
-        {files.length > 0 && (
-          <div className={styles['project-path-wrapper']}>
-            <div
-              className={styles['path-style']}
-              onClick={() => {
-                setParams({
-                  Type: 'all',
-                  Pagination: { Page: 1, Limit: 20, Order: 'desc', OrderBy: 'updated_at' },
-                })
+      {(isIRify() || displayDbProjects.length > 0 || files.length > 0 || !!params.ProjectName) && (
+        <>
+          {isIRify() && <div className={styles['db-section-header']}>{t('ProjectManage.databaseFilesSection')}</div>}
 
-                setTimeout(() => {
-                  setFiles([])
-                  update()
-                }, 500)
-              }}
-            >
-              {t('ProjectManage.localFiles')}
-            </div>
-            <ChevronRightIcon className={styles['icon-style']} />
-            <div
-              className={styles['path-style']}
-              onClick={() => {
-                if (files.length > 1) {
-                  setLoading(true)
-                  setParams({
-                    Type: params.Type,
-                    Pagination: { ...params.Pagination, Page: 1 },
-                    FolderId: +files[0].Id,
-                  })
-                  setTimeout(() => {
-                    setFiles([files[0]])
-                    update()
-                  }, 500)
-                }
-              }}
-            >
-              {files[0].ProjectName}
-            </div>
-            {files.length > 1 && (
-              <>
-                <ChevronRightIcon className={styles['icon-style']} />
-                <div className={styles['path-style']}>{files[1].ProjectName}</div>
-              </>
-            )}
-          </div>
-        )}
-
-        <div className={styles['project-table-wrapper']}>
-          <YakitSpin tip="Loading..." spinning={loading}>
-            <div className={styles['project-table-body']}>
-              <div className={styles['table-header-wrapper']}>
-                <div className={styles['header-titles']}>
-                  <div className={styles['titls-body']}>
-                    {projectHeader.map((item, index) => {
-                      return (
-                        <div key={item.key} style={{ ...item.style }} className={styles['title-opt']}>
-                          <div>{item.headerRender ? item.headerRender(index) : item.name}</div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-                {/* { engineMode !== "remote" &&  */}
-                <div style={{ width: 120 }}>{t('YakitTable.action')}</div>
-                {/* } */}
-              </div>
-
-              <div className={styles['table-content-wrapper']}>
-                <ReactResizeDetector
-                  onResize={(width, height) => {
-                    if (!width || !height) {
-                      return
-                    }
-                    setVListHeight(height)
-                  }}
-                  handleWidth={true}
-                  handleHeight={true}
-                  refreshMode={'debounce'}
-                  refreshRate={50}
-                />
-                <div
-                  ref={containerRef as any}
-                  style={{ height: vlistHeigth, overflow: 'auto overlay', overflowAnchor: 'none' }}
-                >
-                  <div ref={wrapperRef as any}>
-                    {__data.Projects.length === 0 ? (
-                      <>
-                        {files.length > 0 && (
-                          <div className={styles['table-empty-wrapper']}>
-                            <YakitEmpty
-                              descriptionReactNode={
-                                <>
-                                  <div className={styles['title-style']}>
-                                    <span className={styles['file-style']}>{files[files.length - 1].ProjectName}</span>{' '}
-                                    {t('ProjectManage.noProjectContent')}
-                                  </div>
-                                  <div className={styles['operate-btn']}>
-                                    <YakitButton
-                                      size="max"
-                                      onClick={() => operateFunc('newProject', files[files.length - 1])}
-                                    >
-                                      {t('ProjectManage.newProject')}
-                                    </YakitButton>
-                                    <YakitButton
-                                      size="max"
-                                      type="outline2"
-                                      onClick={() => operateFunc('import', files[files.length - 1])}
-                                    >
-                                      {t('ProjectManage.importProject')}
-                                    </YakitButton>
-                                  </div>
-                                </>
-                              }
-                            />
-                          </div>
-                        )}
-                        {params.ProjectName && (
-                          <div className={styles['table-empty-wrapper']}>
-                            <YakitEmpty
-                              descriptionReactNode={
-                                <div className={styles['title-style']}>{t('YakitEmpty.searchEmpty')}</div>
-                              }
-                            />
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      list.map((i) => {
+          <div className={styles['project-table-wrapper']}>
+            <YakitSpin tip="Loading..." spinning={loading}>
+              <div className={styles['project-table-body']}>
+                <div className={styles['table-header-wrapper']}>
+                  <div className={styles['header-titles']}>
+                    <div className={styles['titls-body']}>
+                      {projectHeader.map((item, index) => {
                         return (
-                          <div
-                            key={i.index}
-                            style={{ height: 48 + 1 }}
-                            className={classNames(styles['table-opt'], {
-                              [styles['table-opt-selected']]: operateShow >= 0 && operateShow === +i.data.Id,
-                            })}
-                            onClick={(e) => {
-                              if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
-                                operateFunc('setCurrent', i.data)
-                              }
-                              if (i.data.Type === 'file') {
-                                operateFunc('openFile', i.data)
-                              }
-                            }}
-                            onContextMenu={() => {
-                              if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
-                                projectContextMenu(i.data)
-                              }
-                            }}
-                          >
-                            <div className={styles['opt-content']}>
-                              <div className={styles['content-body']}>
-                                {projectHeader.map((item) => {
-                                  return (
-                                    <div
-                                      key={`${i.index}-${item.key}`}
-                                      style={{ ...item.style }}
-                                      className={styles['content-opt']}
-                                    >
-                                      {item.render ? (
-                                        item.render(i.data, i.index)
-                                      ) : (
-                                        <div className={styles['content-style']} title={i.data[item.key] || ''}>
-                                          {i.data[item.key] || '-'}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            </div>
-                            {/* { engineMode !== "remote" && ( */}
-                            <div style={{ width: 120 }} className={styles['opt-operate']}>
-                              {projectOperate(i.data)}
-                            </div>
-                            {/* )} */}
+                          <div key={item.key} style={{ ...item.style }} className={styles['title-opt']}>
+                            <div>{item.headerRender ? item.headerRender(index) : item.name}</div>
                           </div>
                         )
-                      })
-                    )}
-                    {loadMore && <div className={styles['table-loading-more']}>{t('ProjectManage.loading')}</div>}
+                      })}
+                    </div>
+                  </div>
+                  {/* { engineMode !== "remote" &&  */}
+                  <div style={{ width: 120 }}>{t('YakitTable.action')}</div>
+                  {/* } */}
+                </div>
+
+                <div className={styles['table-content-wrapper']}>
+                  <ReactResizeDetector
+                    onResize={(width, height) => {
+                      if (!width || !height) {
+                        return
+                      }
+                      setVListHeight(height)
+                    }}
+                    handleWidth={true}
+                    handleHeight={true}
+                    refreshMode={'debounce'}
+                    refreshRate={50}
+                  />
+                  <div
+                    ref={containerRef as any}
+                    style={{ height: vlistHeigth, overflow: 'auto overlay', overflowAnchor: 'none' }}
+                  >
+                    <div ref={wrapperRef as any}>
+                      {displayDbProjects.length === 0 ? (
+                        <>
+                          {files.length > 0 && (
+                            <div className={styles['table-empty-wrapper']}>
+                              <YakitEmpty
+                                descriptionReactNode={
+                                  <>
+                                    <div className={styles['title-style']}>
+                                      <span className={styles['file-style']}>
+                                        {files[files.length - 1].ProjectName}
+                                      </span>{' '}
+                                      {t('ProjectManage.noProjectContent')}
+                                    </div>
+                                    <div className={styles['operate-btn']}>
+                                      <YakitButton
+                                        size="max"
+                                        onClick={() => operateFunc('newProject', files[files.length - 1])}
+                                      >
+                                        {t('ProjectManage.newProject')}
+                                      </YakitButton>
+                                      <YakitButton
+                                        size="max"
+                                        type="outline2"
+                                        onClick={() => operateFunc('import', files[files.length - 1])}
+                                      >
+                                        {t('ProjectManage.importProject')}
+                                      </YakitButton>
+                                    </div>
+                                  </>
+                                }
+                              />
+                            </div>
+                          )}
+                          {params.ProjectName && (
+                            <div className={styles['table-empty-wrapper']}>
+                              <YakitEmpty
+                                descriptionReactNode={
+                                  <div className={styles['title-style']}>{t('YakitEmpty.searchEmpty')}</div>
+                                }
+                              />
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        list.map((i) => {
+                          return (
+                            <div
+                              key={i.index}
+                              style={{ height: 48 + 1 }}
+                              className={classNames(styles['table-opt'], {
+                                [styles['table-opt-selected']]:
+                                  (operateShow >= 0 && operateShow === +i.data.Id) ||
+                                  (isIRify() &&
+                                    latestProject?.Id &&
+                                    +latestProject.Id === +i.data.Id &&
+                                    (!i.data.Type || i.data.Type === getEnvTypeByProjects())),
+                              })}
+                              onClick={(e) => {
+                                if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
+                                  operateFunc('setCurrent', i.data)
+                                }
+                                if (i.data.Type === 'file') {
+                                  operateFunc('openFile', i.data)
+                                }
+                              }}
+                              onContextMenu={() => {
+                                if (!i.data.Type || i.data.Type === getEnvTypeByProjects()) {
+                                  projectContextMenu(i.data)
+                                }
+                              }}
+                            >
+                              <div className={styles['opt-content']}>
+                                <div className={styles['content-body']}>
+                                  {projectHeader.map((item) => {
+                                    return (
+                                      <div
+                                        key={`${i.index}-${item.key}`}
+                                        style={{ ...item.style }}
+                                        className={styles['content-opt']}
+                                      >
+                                        {item.render ? (
+                                          item.render(i.data, i.index)
+                                        ) : (
+                                          <div className={styles['content-style']} title={i.data[item.key] || ''}>
+                                            {i.data[item.key] || '-'}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                              {/* { engineMode !== "remote" && ( */}
+                              <div style={{ width: 120 }} className={styles['opt-operate']}>
+                                {projectOperate(i.data)}
+                              </div>
+                              {/* )} */}
+                            </div>
+                          )
+                        })
+                      )}
+                      {loadMore && <div className={styles['table-loading-more']}>{t('ProjectManage.loading')}</div>}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </YakitSpin>
-        </div>
-      </div>
+            </YakitSpin>
+          </div>
+        </>
+      )}
+    </div>
+  )
+
+  return (
+    <div className={styles['project-manage-wrapper']}>
+      {isIRify() ? (
+        <IRifySSAProjectProvider onFinish={onFinish} tableOptions={{ projectPool: 'dedicated' }}>
+          {projectManageBody}
+        </IRifySSAProjectProvider>
+      ) : (
+        projectManageBody
+      )}
 
       <NewProjectAndFolder
         {...modalInfo}
@@ -1606,6 +1734,19 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
           setDetectionTemporaryProjectVisible(false)
         }}
       />
+
+      {showAddSSAProjectModal && (
+        <AuditModalFormModal
+          databaseBindMode="dedicated"
+          onCancel={() => setShowAddSSAProjectModal(false)}
+          onSuccee={() => {
+            setShowAddSSAProjectModal(false)
+            emiter.emit('onRefreshProjectList')
+            emiter.emit('onRefreshSSAProjectList')
+          }}
+          warrpId={document.getElementById('ssa-project-manage-block')}
+        />
+      )}
     </div>
   )
 })

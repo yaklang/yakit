@@ -32,6 +32,7 @@ interface SettingsMenuProp {
   key: string
   name: string
   icon: ReactNode
+  action?: 'page' | 'modal' | 'route'
 }
 const ProjectLogo = (showMini: boolean) => {
   if (isIRify()) {
@@ -51,6 +52,7 @@ const getSettingsMenu = (t: TFunction): SettingsMenuProp[] => [
     key: 'project',
     name: t('SoftwareSettings.projectManagement'),
     icon: <DesktopComputerSvgIcon />,
+    action: 'page',
   },
 ]
 
@@ -75,14 +77,19 @@ export interface SoftwareSettingsProp {
 }
 
 export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => {
-  const { onEngineModeChange } = props
-  const { t } = useI18nNamespaces(['setting'])
+  const { onEngineModeChange, onFinish } = props
+  const { t } = useI18nNamespaces(['setting', 'yakRunner'])
 
   const [hostName, setHostName] = useState<string>('')
   const [currentKey, setCurrentKey] = useState<string>('project')
-
   const [showMini, setShowMini] = useState<boolean>(false)
   const SettingsMenu = getSettingsMenu(t)
+
+  const onSettingsMenuClick = useMemoizedFn((item: SettingsMenuProp) => {
+    if (currentKey !== item.key) {
+      setCurrentKey(item.key)
+    }
+  })
 
   const wrapperResize = useMemoizedFn((e: UIEvent) => {
     const win: Window = e.target as any
@@ -130,14 +137,14 @@ export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => 
                     key={item.key}
                     className={classNames(
                       styles['list-opt-body'],
-                      currentKey === item.key ? styles['list-opt-selected'] : styles['list-opt'],
+                      currentKey === item.key && item.action === 'page'
+                        ? styles['list-opt-selected']
+                        : styles['list-opt'],
                     )}
-                    onClick={() => {
-                      if (currentKey !== item.key) setCurrentKey(item.key)
-                    }}
+                    onClick={() => onSettingsMenuClick(item)}
                   >
                     <div className={styles['opt-title']}>
-                      {item.icon}
+                      <span className={styles['opt-icon']}>{item.icon}</span>
                       {showMini ? <></> : <span style={{ whiteSpace: 'nowrap' }}>{item.name}</span>}
                     </div>
                     {!showMini && (

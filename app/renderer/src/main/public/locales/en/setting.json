@@ -12,6 +12,9 @@
   },
   "SoftwareSettings": {
     "projectManagement": "Project Management",
-    "remoteMode": "Remote Mode"
+    "remoteMode": "Remote Mode",
+    "addSSAProject": "New Project",
+    "codeScan": "Code Scan",
+    "ruleManagement": "Rule Management"
   }
 }

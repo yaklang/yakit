@@ -60,6 +60,18 @@
               align-items: center;
               gap: 4px;
               font-size: 14px;
+              .opt-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+                svg {
+                  width: 16px;
+                  height: 16px;
+                }
+              }
             }
             .opt-notes {
               width: 139px;

@@ -121,6 +121,8 @@
     "riskCount": "Risk count",
     "verifying": "Verifying...",
     "addProject": "Add Project",
+    "addDedicatedProject": "Add Dedicated Project",
+    "sharedPoolAddProjectHint": "We recommend compiling in external dedicated projects. The default database is kept only for legacy compatibility.",
     "jumpCodeScanFailed": "Failed to jump to code scan page: {{error}}"
   },
   "RunnerFileTree": {
@@ -181,5 +183,8 @@
     "jumpToScanFailed": "Failed to jump to code scan page: {{error}}",
     "openProject": "Open Project",
     "compileHistory": "Compile History"
+  },
+  "IRifySSAProjectDatabaseBanner": {
+    "dedicatedDbOfProject": "{{name}} dedicated database"
   }
 }

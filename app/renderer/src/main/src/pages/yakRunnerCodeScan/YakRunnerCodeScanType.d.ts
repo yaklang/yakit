@@ -10,6 +10,7 @@ import {
   SyntaxFlowRuleInput,
 } from '../ruleManagement/RuleManagementType'
 import { CodeScanExtraParam } from './CodeScanExtraParamsDrawer/CodeScanExtraParamsDrawer'
+import { IrifyCurrentSSAProject } from '@/store/irifyCurrentSSAProject'
 
 export interface YakRunnerCodeScanProps {
   pageId: string
@@ -108,6 +109,8 @@ export interface CodeScaMainExecuteContentProps {
   CodeScanByExecuteLastDataRef: React.MutableRefObject<SyntaxFlowScanActiveTaskShow[] | null>
   selectProjectId: number[]
   setSelectProjectId: (v: number[]) => void
+  /** 独立数据库模式：锁定为当前已打开的 SSA 项目 */
+  dedicatedSSAProject?: IrifyCurrentSSAProject
 }
 
 export interface FlowRuleDetailsListItemProps {
@@ -293,6 +296,10 @@ export interface SSAProject {
   CompileTimes: number
   // 本地路径或者远程代码仓库路径
   URL: string
+  // 实际生效的 SSA IR 数据库路径（legacy 项目为 default-yakssa.db）
+  ResolvedDatabasePath?: string
+  // 进程默认 SSA IR 数据库路径
+  DefaultDatabasePath?: string
 }
 
 export interface CreateSSAProjectResponse {
