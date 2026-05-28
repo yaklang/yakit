@@ -55,7 +55,7 @@ import {
   NewCodecSelectUI,
   NewCodecTextAreaUI,
 } from './NewCodecUIStore'
-import { CheckboxValueType } from 'antd/lib/checkbox/Group'
+// import { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { EnterOutlined } from '@ant-design/icons'
@@ -706,12 +706,20 @@ export const NewCodecMiddleTypeItem: React.FC<NewCodecMiddleTypeItemProps> = (pr
         )
       case 'checkbox':
         // 多选框模块
+        // return (
+        //   <NewCodecCheckUI
+        //     disabled={itemStatus === 'shield' || item.disabled}
+        //     options={item.checkArr}
+        //     value={item.value}
+        //     onChange={(checkedValues: CheckboxValueType[]) => setValueByUI({ ...params, val: checkedValues })}
+        //   />
+        // )
         return (
           <NewCodecCheckUI
             disabled={itemStatus === 'shield' || item.disabled}
             options={item.checkArr}
             value={item.value}
-            onChange={(checkedValues: CheckboxValueType[]) => setValueByUI({ ...params, val: checkedValues })}
+            onChange={(checkedValues: any[]) => setValueByUI({ ...params, val: checkedValues })}
           />
         )
       case 'select':

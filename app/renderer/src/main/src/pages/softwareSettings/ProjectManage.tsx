@@ -2124,7 +2124,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                 }
               >
                 <Cascader
-                  defaultValue={cascaderValue}
+                  // defaultValue={cascaderValue}
                   options={data}
                   fieldNames={{ label: 'ProjectName', value: 'Id', children: 'children' }}
                   changeOnSelect={true}

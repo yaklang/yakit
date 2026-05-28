@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { List, PageHeader, Spin, Table, Tooltip } from 'antd'
+import { List, Spin, Table, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AutoCard } from '@/components/AutoCard'
 import { ResizeBox } from '@/components/ResizeBox'
@@ -112,7 +112,7 @@ export const ChaosMakerPage: React.FC<ChaosMakerPageProp> = (props) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
-      <PageHeader
+      {/* <PageHeader
         style={{ width: '100%' }}
         title={'Breach & Attack Simulator Playbook'}
         subTitle={'入侵与攻击模拟剧本管理'}
@@ -132,7 +132,7 @@ export const ChaosMakerPage: React.FC<ChaosMakerPageProp> = (props) => {
             </YakitButton>
           </div>
         }
-      />
+      /> */}
       <div style={{ flex: 1, backgroundColor: 'var(--Colors-Use-Basic-Background)' }}>
         <ResizeBox
           firstMinSize={'400px'}

@@ -126,7 +126,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
         openKeys={openKeys}
         {...restMenu}
         className={classNames(styles['yakit-menu-wrapper'], className || '')}
-        items={data && data.length > 0 ? items : restMenu.items}
+        // items={data && data.length > 0 ? items : restMenu.items}
         onOpenChange={(openKey) => {
           setOpenKeys(openKey.filter((key, index) => index === openKey.length - 1))
           if (props.onOpenChange) {

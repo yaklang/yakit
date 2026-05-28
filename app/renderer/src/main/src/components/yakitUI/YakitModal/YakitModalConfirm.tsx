@@ -210,7 +210,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           <YakitButton
             type="outline2"
             onClick={(e) => {
-              if (props.onCancel) props.onCancel(e)
+              // if (props.onCancel) props.onCancel(e)
               setVisible(false)
             }}
             {...props.cancelButtonProps}
@@ -223,7 +223,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
                 setLoading(true)
               }
               if (props.onOk) {
-                props.onOk(e)
+                // props.onOk(e)
               }
             }}
             loading={loading}
@@ -241,9 +241,9 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           onClick={(e) => {
             e.stopPropagation()
             if (props.onCloseX) {
-              props.onCloseX(e)
+              // props.onCloseX(e)
             } else {
-              props.onCancel?.(e)
+              // props.onCancel?.(e)
             }
             setVisible(false)
           }}
