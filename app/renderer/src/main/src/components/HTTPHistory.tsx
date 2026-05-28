@@ -70,7 +70,7 @@ import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 import { RefreshIcon } from '@/assets/newIcon'
 import { Tooltip } from 'antd'
-import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
+import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { YakitCheckbox } from './yakitUI/YakitCheckbox/YakitCheckbox'
 import ReactResizeDetector from 'react-resize-detector'
 import { RemoteHistoryGV } from '@/enums/history'
@@ -356,10 +356,10 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
                       </>
                     ),
-                    footerLeftTypes: [
-                      AIInputInnerFeatureEnum.AIModelSelect,
+                    footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
+                    footerRightTypes: [
                       {
-                        type: AIInputInnerFeatureEnum.AIFocusMode,
+                        type: AIInputFooterRightEnum.AIFocusMode,
                         props: {
                           value: focusModeLoop,
                           onChange: () => {},

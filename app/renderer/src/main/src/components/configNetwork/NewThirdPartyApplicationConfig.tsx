@@ -36,7 +36,7 @@ import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OutlineClipboardcopyIcon } from '@/assets/icon/outline'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
-import { EnableThinkingOptions } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
+import { EnableThinkingOptions, ModelNameOptionLabel } from '@/pages/ai-agent/aiModelList/aiModelSelect/AIModelSelect'
 const { ipcRenderer } = window.require('electron')
 
 export interface ThirdPartyAppConfigItemTemplate {
@@ -124,7 +124,10 @@ const aiModelTypeOptions: (t: TFunction) => SelectOptionsProps[] = (t) => {
     },
   ]
 }
-const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({ label: item, value: item }))
+const aiAPITypeOptions: SelectOptionsProps[] = AI_API_TYPE_OPTIONS.map((item) => ({
+  label: item.label,
+  value: item.value,
+}))
 const aiModelTypeItem: (t: TFunction) => ThirdPartyAppConfigItemTemplate = (t) => {
   return {
     Name: 'model_type',
@@ -784,6 +787,19 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
       { wait: 500 },
     )
 
+    /**
+     * @description 展示模型名称选项，memfit开头的展示aibalance图标，free结尾的展示免费标签
+     * TODO - 先保留，等后续反馈，看是否需要更换为下面展示UI
+     */
+    const showModelNameAllOptions = useCreation(() => {
+      return modelNameAllOptions.map((item) => {
+        return {
+          label: <ModelNameOptionLabel name={item.value} />,
+          value: item.value,
+        }
+      })
+    }, [modelNameAllOptions])
+
     const newDefaultAIFormItemsOfAI = useCreation(() => {
       let newAIFormItemsOfAI = cloneDeep(defaultAIFormItemsOfAI(t))
       const { isRequired, data } = isShowRequiredApiKey(typeVal)
@@ -900,6 +916,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 }
               >
                 <YakitAutoComGroupSearchWithAll
+                  // options={showModelNameAllOptions}
                   options={modelNameAllOptions}
                   groupSearchWithAll={true}
                   onFocus={() => {
@@ -912,12 +929,6 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                         <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>
                       </>
                     )
-                  }}
-                  filterOption={(inputValue, option) => {
-                    if (option?.value && typeof option?.value === 'string') {
-                      return option?.value?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
-                    }
-                    return false
                   }}
                 />
               </Form.Item>

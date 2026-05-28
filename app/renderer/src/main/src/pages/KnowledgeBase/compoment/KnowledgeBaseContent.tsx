@@ -94,7 +94,7 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { OutlineXIcon } from '@/assets/icon/outline'
 import { OutlinePlusIcon } from '@/assets/newIcon'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
+import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { InstallPluginModal } from './InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -808,7 +808,8 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                           <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setShowFreeChat(false)} />
                         </React.Fragment>
                       ),
-                      footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect, AIInputInnerFeatureEnum.AIFocusMode],
+                      footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
+                      footerRightTypes: [AIInputFooterRightEnum.AIFocusMode],
                     }}
                   />
                 </div>

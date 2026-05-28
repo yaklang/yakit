@@ -30,11 +30,42 @@ import { TFunction } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
 
-export const AI_API_TYPE_OPTIONS = ['chat_completions', 'responses'] as const
-export type AIAPIType = (typeof AI_API_TYPE_OPTIONS)[number]
+export const AI_API_TYPE_OPTIONS = [
+  {
+    label: 'OpenAI(兼容性好 chat/completions )',
+    value: 'chat_completions',
+  },
+  {
+    label: 'OpenAI Responses(新格式)',
+    value: 'responses',
+  },
+] as const
+
+export type AIAPIType = (typeof AI_API_TYPE_OPTIONS)[number]['value']
 export const DEFAULT_AI_API_TYPE: AIAPIType = 'chat_completions'
 export const normalizeAIAPIType = (value?: string): AIAPIType => {
-  return AI_API_TYPE_OPTIONS.includes(value as AIAPIType) ? (value as AIAPIType) : DEFAULT_AI_API_TYPE
+  return AI_API_TYPE_OPTIONS.findIndex((ele) => ele.value === value) !== -1 ? (value as AIAPIType) : DEFAULT_AI_API_TYPE
+}
+
+/**
+ * 处理模型名称
+ */
+export const getModelName = (name: string) => {
+  return name?.replace(/^memfit-|-free$/g, '') || ''
+}
+
+/**
+ * 模型名称是否是memfit开头
+ */
+export const isMemfitStart = (name: string) => {
+  return name?.startsWith('memfit-')
+}
+
+/**
+ * 模型名称是否为 -free 结尾
+ */
+export const isFreeEnd = (name: string) => {
+  return name?.endsWith('-free')
 }
 
 export const grpcGetSupportedLocalModels: APINoRequestFunc<LocalModelConfig[]> = (hiddenError) => {

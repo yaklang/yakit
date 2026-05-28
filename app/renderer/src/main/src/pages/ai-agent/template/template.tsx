@@ -12,9 +12,11 @@ import React, {
 import {
   AIChatTextareaProps,
   AIChatTextareaSubmit,
+  AIInputFooterRightEnum,
   AIInputInnerFeatureEnum,
   FileToChatQuestionList,
   FooterLeftTypesComponentProps,
+  FooterRightTypesComponentProps,
   QSInputTextareaProps,
 } from './type'
 import { Input, Tooltip } from 'antd'
@@ -129,9 +131,6 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
                 case AIInputInnerFeatureEnum.AIModelSelect:
                   node = { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } }
                   break
-                case AIInputInnerFeatureEnum.AIFocusMode:
-                  node = { type: AIInputInnerFeatureEnum.AIFocusMode }
-                  break
                 default:
                   break
               }
@@ -146,9 +145,31 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       return [
         { type: AIInputInnerFeatureEnum.AIReviewRuleSelect },
         { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } },
-        { type: AIInputInnerFeatureEnum.AIFocusMode },
       ]
     }, [props.footerLeftTypes, isOpen])
+    const footerRightTypes: FooterRightTypesComponentProps[] = useCreation(() => {
+      if (!!props.footerRightTypes?.length) {
+        const list = props.footerRightTypes
+          .map((item) => {
+            let node: FooterRightTypesComponentProps = {} as FooterRightTypesComponentProps
+            if (isString(item)) {
+              switch (item) {
+                case AIInputFooterRightEnum.AIFocusMode:
+                  node = { type: AIInputFooterRightEnum.AIFocusMode }
+                  break
+                default:
+                  break
+              }
+            } else {
+              node = item
+            }
+            return node
+          })
+          .filter((ele) => !!ele?.type)
+        return list
+      }
+      return [{ type: AIInputFooterRightEnum.AIFocusMode }]
+    }, [props.footerRightTypes, isOpen])
 
     const { setting, activeChat } = useAIAgentStore()
     const { setSetting } = useAIAgentDispatcher()
@@ -300,7 +321,18 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
               ),
             )
             break
-          case AIInputInnerFeatureEnum.AIFocusMode:
+
+          default:
+            break
+        }
+      })
+      return node
+    })
+    const renderFooterRightTypes = useMemoizedFn((types: FooterRightTypesComponentProps[]) => {
+      let node: ReactNode[] = []
+      types?.forEach((item, index) => {
+        switch (item.type) {
+          case AIInputFooterRightEnum.AIFocusMode:
             node.push(
               item.component || (
                 <AIFocusMode
@@ -485,7 +517,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
           </div>
         </div>
         <div className={styles['ai-chat-textarea-footer']}>
-          {footer ?? <>{renderFooterLeftTypes(footerLeftTypes)}</>}
+          {footer ?? (
+            <>
+              <div className={styles['footer-left']}>{renderFooterLeftTypes(footerLeftTypes)}</div>
+              <div className={styles['footer-right']}>{renderFooterRightTypes(footerRightTypes)}</div>
+            </>
+          )}
         </div>
         {children}
       </div>

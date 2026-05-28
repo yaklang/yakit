@@ -19,4 +19,6 @@ export enum RemoteAIAgentGV {
   AIMemoryRemove = 'ai-memory-remove',
   /** @name AIModel检测结果中的编辑器的美化 */
   AIModelCheckResultEditorBeautify = 'ai-model-check-result-editor-beautify',
+  /** @name ai配置的展开项 */
+  AISettingActiveKey = 'ai-setting-activeKey',
 }

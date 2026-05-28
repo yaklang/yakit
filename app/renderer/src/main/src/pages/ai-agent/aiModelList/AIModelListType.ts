@@ -77,3 +77,5 @@ export interface AIModelActionProps {
   fileName: AIModelTypeFileName
   index: number
 }
+
+export interface AIModelFreeTagProps {}

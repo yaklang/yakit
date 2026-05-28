@@ -33,6 +33,7 @@ textarea.qs-input-textarea {
     gap: 4px;
     height: 24px;
     overflow: hidden;
+    justify-content: space-between;
 
     %self-adaptive {
       display: flex;
@@ -44,13 +45,21 @@ textarea.qs-input-textarea {
     }
     .model-self-adaptive {
       @extend %self-adaptive;
-      flex-shrink: 1;
-      min-width: 46px;
     }
     .focus-mode-self-adaptive {
       @extend %self-adaptive;
-      flex-shrink: 9;
-      min-width: 68px;
+    }
+    .footer-left {
+      @extend %self-adaptive;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 1;
+    }
+    .footer-right {
+      @extend %self-adaptive;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 2;
     }
   }
 

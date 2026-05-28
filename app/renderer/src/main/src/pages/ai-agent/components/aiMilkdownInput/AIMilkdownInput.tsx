@@ -3,7 +3,7 @@ import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react'
 import { ProsemirrorAdapterProvider } from '@prosemirror-adapter/react'
 import { $remark, callCommand, getMarkdown } from '@milkdown/kit/utils'
 import { AIMilkdownInputBaseProps, AIMilkdownInputProps } from './type'
-import { defaultValueCtx, Editor, editorViewOptionsCtx, rootCtx } from '@milkdown/kit/core'
+import { defaultValueCtx, Editor, editorViewCtx, editorViewOptionsCtx, parserCtx, rootCtx } from '@milkdown/kit/core'
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { useNodeViewFactory, usePluginViewFactory } from '@prosemirror-adapter/react'
 import { $view } from '@milkdown/kit/utils'
@@ -37,6 +37,7 @@ import useSessionId from '@/pages/ai-re-act/hooks/useSessionId'
 import { AICustomCode } from './aiCustomCode/AICustomCode'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { getAIImageSuffix } from './utils'
+import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
 
@@ -238,8 +239,42 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
         }
       })
     })
+    const onContextMenu = useMemoizedFn((e) => {
+      e.stopPropagation()
+      showByRightContext(
+        {
+          data: [{ label: '转为纯文本后按 Markdown 解析', key: 'pasteMarkdown' }],
+          onClick: ({ key }) => {
+            if (key === 'pasteMarkdown') {
+              handlePasteMarkdown()
+            }
+          },
+        },
+        e.clientX,
+        e.clientY,
+      )
+    })
+    const handlePasteMarkdown = useMemoizedFn(async () => {
+      const editor = get()
+      if (!editor) return
+
+      let text = ''
+      try {
+        text = await navigator.clipboard.readText()
+      } catch (e) {
+        yakitNotify('error', '读取剪贴板失败')
+        return
+      }
+
+      editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx)
+        const parser = ctx.get(parserCtx)
+        const doc = parser(text)
+        view.dispatch(view.state.tr.replaceSelectionWith(doc))
+      })
+    })
     return (
-      <div className={classNames(styles['ai-milkdown-input'], classNameWrapper)}>
+      <div className={classNames(styles['ai-milkdown-input'], classNameWrapper)} onContextMenu={onContextMenu}>
         <Milkdown />
       </div>
     )

@@ -28,22 +28,38 @@ export interface AIModelSelectListProps {
   onSelect: (v: AIModelConfig, i: number) => void
   onEdit: (v: AIModelConfig, i: number) => void
   dropdownRenderRectRef?: DOMRect
+  /** 下拉框是否展开 */
+  open?: boolean
 }
 
 export interface AIModelThinkingOptSelectProps {}
 
 export interface AIModelEditContentProps {
-  item?: AIModelConfig
+  item: AIModelConfig
+  index: number
   onEdit?: (v: AIModelConfig) => void
+  isRefreshModelNameList: boolean
+  onRefreshModelNameList: (item: AIModelConfig, index: number) => void
+  modelNameListMapRef: Map<number, ModelNameListRef>
 }
 
+export interface ModelNameOptionLabelProps {
+  name: string
+}
 export interface AIModelEditContentItemProps {
   options: {
-    label: string
+    label: ReactNode
     value: string
   }[]
-  title: string
-  filed: keyof AIModelConfig['Provider']
+  title: ReactNode
+  filed: keyof AIModelConfig['Provider'] | keyof AIModelConfig
   value: string
   onChange: (v: string) => void
+  listClassName?: string
+  emptyTips?: ReactNode
+}
+
+export interface ModelNameListRef {
+  loading: boolean
+  list: string[]
 }

@@ -6,6 +6,7 @@ import {
   AILocalModelListRefProps,
   AILocalModelListWrapperProps,
   AIModelActionProps,
+  AIModelFreeTagProps,
   AIModelListProps,
   AIModelType,
   AIOnlineModelListItemProps,
@@ -23,6 +24,7 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
   AIGlobalConfig,
   AIModelConfig,
+  getModelName,
   grpcAIConfigHealthCheck,
   grpcCancelStartLocalModel,
   grpcClearAllModels,
@@ -100,6 +102,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 export const setAIModal = (params: {
   modelType?: AIModelFormProps['aiModelType']
@@ -507,6 +510,8 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
     const { onAdd, mountContainer } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
+    const [isShowAlert, setIsShowAlert] = useState<boolean>(false)
+
     const onlineListRef = useRef<HTMLDivElement>(null)
     const [inViewport = true] = useInViewport(onlineListRef)
 
@@ -523,6 +528,9 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
       if (inViewport) event.onRefresh()
     }, [inViewport])
     const aiGlobalConfig = useCreation(() => aiGlobalConfigData.aiGlobalConfig, [aiGlobalConfigData.aiGlobalConfig])
+    useEffect(() => {
+      setIsShowAlert(isSelectEqual(aiGlobalConfig))
+    }, [aiGlobalConfig])
     const onRemoveAll = useMemoizedFn(() => {})
     const isHaveData = useCreation(() => {
       return !!(
@@ -577,10 +585,28 @@ const AIOnlineModelList: React.FC<AIOnlineModelListProps> = React.memo(
         },
       })
     })
+    /**
+     * 高质模型和轻量模型的厂商和模型名称是否一样
+     */
+    const isSelectEqual = useMemoizedFn((config: AIGlobalConfig) => {
+      const intelligentSelect = config?.IntelligentModels?.[0]
+      const lightweightSelect = config?.LightweightModels?.[0]
+      const isEqualName = intelligentSelect?.ModelName === lightweightSelect?.ModelName
+      const isEqualType = intelligentSelect?.Provider?.Type === lightweightSelect?.Provider?.Type
+      return isEqualName && isEqualType
+    })
     return (
       <YakitSpin spinning={aiGlobalConfigData.queryLoading}>
         {isHaveData ? (
           <div className={styles['ai-online-model-wrapper']} ref={onlineListRef}>
+            {isShowAlert && (
+              <YakitAlert
+                type={'warning'}
+                description={'不建议轻量和高质使用同一个模型，轻量适合使用响应快速的模型'}
+                closable={true}
+                onClose={() => setIsShowAlert(false)}
+              />
+            )}
             {!!aiGlobalConfig?.IntelligentModels.length && (
               <AIOnlineModel
                 title={t('AiAgengt.intelligentModels')}
@@ -790,7 +816,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
       })
   })
   const modelName = useCreation(() => {
-    return item.ModelName?.replace(/^memfit-/, '')
+    return getModelName(item.ModelName)
   }, [item.ModelName])
   return (
     <div className={styles['ai-online-model-list-item']}>
@@ -1367,4 +1393,8 @@ const AILocalModelListItemPromptHint: React.FC<AILocalModelListItemPromptHintPro
       }
     />
   )
+})
+
+export const AIModelFreeTag: React.FC<AIModelFreeTagProps> = React.memo((props) => {
+  return <div className={styles['ai-model-free-tag']}>Free</div>
 })

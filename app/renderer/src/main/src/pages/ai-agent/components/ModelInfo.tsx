@@ -5,6 +5,7 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { useCreation } from 'ahooks'
 import { OutlineAtomIconByStatus } from '../aiModelList/AIModelList'
 import { AISystemOutputIcon } from '../aiModelList/icon'
+import { getModelName } from '../aiModelList/utils'
 
 export interface ModalInfoProps {
   icon?: string
@@ -36,7 +37,7 @@ const ModalInfo: FC<ModalInfoProps> = ({ icon, title, time, trailing }) => {
     <div className={styles['modal-info']}>
       <div className={styles['modal-info-title']}>
         {iconSvg}
-        <span className={styles['modal-info-title-text']}>{title || '系统输出'}</span>
+        <span className={styles['modal-info-title-text']}>{title ? getModelName(title) : '系统输出'}</span>
         {time != null && time > 0 ? (
           <span
             className={trailing != null ? styles['modal-info-title-time-squeeze'] : styles['modal-info-title-time']}

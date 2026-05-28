@@ -41,6 +41,7 @@ export interface AIReActChatProps {
     isOpen?: boolean
     filterMentionType?: AIChatTextareaProps['filterMentionType']
     footerLeftTypes?: AIChatTextareaProps['footerLeftTypes']
+    footerRightTypes?: AIChatTextareaProps['footerRightTypes']
   }
 }
 

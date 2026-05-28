@@ -510,5 +510,11 @@
     "deleteFailed": "Failed to delete session: {{error}}",
     "editTitle": "Edit session title",
     "deleteConfirm": "Are you sure you want to delete this session? This cannot be recovered"
+  },
+  "AIChatSetting": {
+    "permissionsAndSecurity": "Permissions & Security",
+    "planningAndExecution": "Planning & Execution",
+    "automation": "Automation",
+    "resourcesLimits": "Resources & Limits"
   }
 }
