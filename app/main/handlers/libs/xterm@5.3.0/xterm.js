@@ -10711,7 +10711,7 @@
             drawBoldTextInBrightColors: !0,
             fastScrollModifier: 'alt',
             fastScrollSensitivity: 5,
-            fontFamily: 'courier-new, courier, monospace',
+            fontFamily: 'Consolas, "Lucida Console", "Courier New", monospace',
             fontSize: 15,
             fontWeight: 'normal',
             fontWeightBold: 'bold',
