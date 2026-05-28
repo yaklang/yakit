@@ -27,6 +27,7 @@ const ReviewPolicyOptions: YakitRadioButtonsProps['options'] = AIReviewRuleOptio
   value: item.value,
   label: item.value,
 }))
+const defaultActiveKey = ['permissionsAndSecurity', 'planningAndExecution', 'resourcesLimits']
 const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
   const { setting } = useAIAgentStore()
   const { setSetting } = useAIAgentDispatcher()
@@ -57,12 +58,12 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
   // AI主动问用户问题相关逻辑
   const AllowPlanUserInteractValue = Form.useWatch('AllowPlanUserInteract', form)
 
-  const [activeKey, setActiveKey] = useState<string[]>(['permissionsAndSecurity'])
+  const [activeKey, setActiveKey] = useState<string[]>([...defaultActiveKey])
   const { t } = useI18nNamespaces(['yakitUi', 'aiAgent'])
   useEffect(() => {
     getRemoteValue(RemoteAIAgentGV.AISettingActiveKey).then((data) => {
       try {
-        setActiveKey(data ? JSON.parse(data) : ['permissionsAndSecurity'])
+        setActiveKey(data ? JSON.parse(data) : [...defaultActiveKey])
       } catch (error) {
         yakitFailed('AISettingActiveKey获取报错:' + error)
       }

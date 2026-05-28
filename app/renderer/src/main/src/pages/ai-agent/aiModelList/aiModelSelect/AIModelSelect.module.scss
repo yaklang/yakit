@@ -287,6 +287,12 @@
           background-color: var(--Colors-Use-Neutral-Bg-Hover);
         }
       }
+      .edit-content-options-empty {
+        text-align: center;
+        padding: 30px 8px 20px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 12px;
+      }
       .edit-content-check {
         color: var(--Colors-Use-Main-Primary);
         svg {

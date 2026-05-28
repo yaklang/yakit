@@ -815,6 +815,15 @@ const AIModelEditContent: React.FC<AIModelEditContentProps> = React.memo((props)
           value={modelName}
           onChange={(v) => onEditChange(v, 'ModelName')}
           listClassName={styles['model-name-list']}
+          emptyTips={
+            <>
+              未获取到数据，可点击
+              <YakitButton size="small" onClick={onRefresh} type="text">
+                刷新
+              </YakitButton>
+              重新获取
+            </>
+          }
         />
       </YakitSpin>
     </div>
@@ -839,7 +848,7 @@ export const ModelNameOptionLabel: React.FC<ModelNameOptionLabelProps> = React.m
 })
 
 const AIModelEditContentItem: React.FC<AIModelEditContentItemProps> = React.memo((props) => {
-  const { title, options, onChange, value, listClassName = '' } = props
+  const { title, options, onChange, value, listClassName = '', emptyTips } = props
   const onSelect = useMemoizedFn((v: string) => {
     onChange(v)
   })
@@ -857,6 +866,7 @@ const AIModelEditContentItem: React.FC<AIModelEditContentItemProps> = React.memo
             {value === option.value && <OutlineCheckIcon className={styles['edit-content-check']} />}
           </div>
         ))}
+        {!options?.length && !!emptyTips && <div className={styles['edit-content-options-empty']}>{emptyTips}</div>}
       </div>
     </div>
   )

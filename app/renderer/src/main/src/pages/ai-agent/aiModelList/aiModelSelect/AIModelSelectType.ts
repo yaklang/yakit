@@ -56,6 +56,7 @@ export interface AIModelEditContentItemProps {
   value: string
   onChange: (v: string) => void
   listClassName?: string
+  emptyTips?: ReactNode
 }
 
 export interface ModelNameListRef {
