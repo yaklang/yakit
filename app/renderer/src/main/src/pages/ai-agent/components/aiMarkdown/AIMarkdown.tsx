@@ -86,7 +86,13 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
   const onOpenFile = useMemoizedFn(() => {
     emiter.emit(
       'onOpenTemporaryFile',
-      JSON.stringify({ name: '审计报告.md', code: item.content, icon: FileSuffix['md'], language: 'markdown' }),
+      JSON.stringify({
+        name: '审计报告.md',
+        code: item.content,
+        icon: FileSuffix['md'],
+        language: 'markdown',
+        aiReport: true,
+      }),
     )
   })
   return (

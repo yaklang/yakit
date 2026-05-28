@@ -475,8 +475,8 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
 
   const onOpenTemporaryFileFun = useMemoizedFn((data: any) => {
     try {
-      const { name, code, icon, language } = JSON.parse(data)
-      addFileTab({ name, code, icon, language })
+      const { name, code, icon, language, aiReport } = JSON.parse(data)
+      addFileTab({ name, code, icon, language, aiReport })
     } catch (error) {
       failed(`error: ${error}`)
     }
@@ -657,7 +657,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   const unTitleCountRef = useRef<number>(1)
 
   const addFileTab = useThrottleFn(
-    (params?: { name?: string; code?: string; icon?: string; language?: string }) => {
+    (params?: { name?: string; code?: string; icon?: string; language?: string; aiReport?: boolean }) => {
       // 新建临时文件
       const scratchFile: FileDetailInfo = {
         name: params?.name || `Untitle-${unTitleCountRef.current}.yak`,
@@ -671,6 +671,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
         parent: null,
         language: params?.language || 'yak',
         isUnSave: true,
+        aiReport: params?.aiReport,
       }
       unTitleCountRef.current += 1
       const { newAreaInfo, newActiveFile } = addAreaFileInfo(areaInfo, scratchFile, activeFile)

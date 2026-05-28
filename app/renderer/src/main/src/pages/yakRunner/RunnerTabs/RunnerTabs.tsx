@@ -73,9 +73,9 @@ import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { FileNodeMapProps } from '../FileTree/FileTreeType'
 import { openFolder } from '../RunnerFileTree/RunnerFileTree'
 import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
-import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isIRify } from '@/utils/envfile'
+import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -123,7 +123,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       if (item.isActive && item.language === 'yak') {
         val = true
       }
-      if (isIRify() && item.isActive && item.language === 'markdown') {
+      if (isIRify() && item.isActive && item.aiReport) {
         val = true
       }
       return item.isActive
@@ -666,7 +666,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
           {splitDirection.length > 0 && isShowExtra && <Divider type={'vertical'} style={{ margin: '4px 0px 0px' }} />}
         </>
         {isShowExtra &&
-          (activeFile?.language === 'markdown' ? (
+          (activeFile?.aiReport ? (
             <YakitButton
               onClick={onDownloadReport}
               loading={downloadLoading}
@@ -1261,16 +1261,24 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           />
         </div>
       ) : (
-        <YakitEditor
-          editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
-          editorDidMount={setReqEditorFun}
-          // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
-          type={editorInfo?.language}
-          value={editorInfo?.code || ''}
-          setValue={setYakitEditorValue}
-          highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
-          highLightClass="hight-light-yak-runner-color"
-        />
+        <>
+          {isIRify() && editorInfo?.aiReport ? (
+            <div className={styles['mark-down-wrapper']}>
+              <StreamMarkdown content={editorInfo?.code || ''} />
+            </div>
+          ) : (
+            <YakitEditor
+              editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
+              editorDidMount={setReqEditorFun}
+              // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
+              type={editorInfo?.language}
+              value={editorInfo?.code || ''}
+              setValue={setYakitEditorValue}
+              highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
+              highLightClass="hight-light-yak-runner-color"
+            />
+          )}
+        </>
       )}
     </div>
   )
