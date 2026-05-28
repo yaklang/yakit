@@ -44,14 +44,14 @@ export const AI_API_TYPE_OPTIONS = [
 export type AIAPIType = (typeof AI_API_TYPE_OPTIONS)[number]['value']
 export const DEFAULT_AI_API_TYPE: AIAPIType = 'chat_completions'
 export const normalizeAIAPIType = (value?: string): AIAPIType => {
-  return AI_API_TYPE_OPTIONS.findIndex((ele) => ele.value === value) ? (value as AIAPIType) : DEFAULT_AI_API_TYPE
+  return AI_API_TYPE_OPTIONS.findIndex((ele) => ele.value === value) !== -1 ? (value as AIAPIType) : DEFAULT_AI_API_TYPE
 }
 
 /**
  * 处理模型名称
  */
 export const getModelName = (name: string) => {
-  return name?.replace(/^memfit-|-free$/g, '')
+  return name?.replace(/^memfit-|-free$/g, '') || ''
 }
 
 /**
