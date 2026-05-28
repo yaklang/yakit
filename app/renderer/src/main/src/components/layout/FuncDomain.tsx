@@ -2835,7 +2835,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
       .query({ Id: info.Id })
       .then((res: Risk) => {
         if (!res) return
-        showYakitModal({
+        const m = showYakitModal({
           width: '80%',
           title: '详情',
           content: (
@@ -2847,6 +2847,9 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
               )}
             </div>
           ),
+          onOk: () => {
+            m.destroy()
+          }
         })
       })
       .catch(() => {})

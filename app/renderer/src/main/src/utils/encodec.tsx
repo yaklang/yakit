@@ -270,10 +270,13 @@ export const execAutoDecode = async (text: string) => {
   return yakitCodec
     .autoDecode({ Data: text })
     .then((e: { Results: AutoDecodeResult[] }) => {
-      showYakitModal({
+      const m = showYakitModal({
         title: (modalT) => modalT('Encodec.autoDecodeSmart'),
         width: '60%',
         content: <AutoDecode data={e.Results}></AutoDecode>,
+        onOk: () => {
+          m.destroy()
+        }
       })
     })
     .catch((e) => {
@@ -326,11 +329,14 @@ export const execCodec = async (
               </div>
             </AutoCard>
           ),
+          onOk: () => {
+            m.destroy()
+          }
         })
       }
 
       if (noPrompt) {
-        showYakitModal({
+        const m = showYakitModal({
           title: (modalT) => modalT('Encodec.codeResult'),
           width: '50%',
           content: (
@@ -342,6 +348,9 @@ export const execCodec = async (
               </Space>
             </div>
           ),
+          onOk: () => {
+            m.destroy()
+          }
         })
       }
       return result?.Result || ''
