@@ -83,6 +83,6 @@ export const yakitNotify = (
     icon: getIcon(notifyType),
     placement: 'bottomLeft',
     className: `yakit-notification-${notifyType}`,
-    bottom: 8,
+    // bottom: 8,
   })
 }

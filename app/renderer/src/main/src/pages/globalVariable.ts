@@ -1,4 +1,3 @@
-import { Route } from 'antd/lib/breadcrumb/Breadcrumb'
 import { ProjectDescription } from './softwareSettings/ProjectManage'
 
 export interface coordinateProps {

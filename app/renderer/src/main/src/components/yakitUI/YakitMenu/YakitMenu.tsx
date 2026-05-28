@@ -170,7 +170,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
         {...restMenu}
         onClick={onClick}
         className={classNames(styles['yakit-menu-wrapper'], className || '')}
-        items={data && data.length > 0 ? items : restMenu.items}
+        // items={data && data.length > 0 ? items : restMenu.items}
       />
     </div>
   )

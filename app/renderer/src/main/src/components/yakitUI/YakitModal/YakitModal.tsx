@@ -121,7 +121,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
           {children}
         </div>
 
-        {footer === null ? null : (
+        {/* {footer === null ? null : (
           <div style={footerStyle || undefined} className={styles['footer-body']}>
             {!!footer ? (
               footer
@@ -150,7 +150,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
               </>
             )}
           </div>
-        )}
+        )} */}
       </div>
     </Modal>
   )

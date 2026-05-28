@@ -7,7 +7,7 @@ import { genDefaultPagination, PaginationSchema, QueryGeneralResponse } from '..
 import { useMemoizedFn } from 'ahooks'
 import { YakitButton, YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
-import { CheckboxValueType } from 'antd/lib/checkbox/Group'
+// import { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import styles from './DataExport.module.scss'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
@@ -349,7 +349,8 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
     onHarExport,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
-  const [checkValue, setCheckValue] = useState<CheckboxValueType[]>([])
+  // const [checkValue, setCheckValue] = useState<CheckboxValueType[]>([])
+  const [checkValue, setCheckValue] = useState<any[]>([])
 
   const handleExportVal = useMemoizedFn((arr?: ExportValue[]) => {
     return arr
@@ -375,7 +376,7 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
       }
     })
   }, [])
-  const onChange = (checkedValues: CheckboxValueType[]) => {
+  const onChange = (checkedValues: any[]) => {
     const orderCheckedValues = exportValue.filter((item) =>
       checkedValues.includes(typeof item === 'string' ? item : item.key),
     )
@@ -383,6 +384,14 @@ export const ExportSelect: React.FC<ExportSelectProps> = (props) => {
     setCheckValue(handleExportVal(orderCheckedValues))
     setRemoteValue(exportKey, JSON.stringify({ checkedValues: handleExportVal(orderCheckedValues) }))
   }
+  // const onChange = (checkedValues: CheckboxValueType[]) => {
+  //   const orderCheckedValues = exportValue.filter((item) =>
+  //     checkedValues.includes(typeof item === 'string' ? item : item.key),
+  //   )
+  //   setExportTitle(handleExportVal(orderCheckedValues))
+  //   setCheckValue(handleExportVal(orderCheckedValues))
+  //   setRemoteValue(exportKey, JSON.stringify({ checkedValues: handleExportVal(orderCheckedValues) }))
+  // }
   return (
     <div className={styles['export-select']}>
       <Checkbox.Group style={{ width: '100%', padding: 24 }} value={checkValue} onChange={onChange}>

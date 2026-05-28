@@ -49,7 +49,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
         accordion
         bordered={false}
         activeKey={activeKey}
-        onChange={(k) => setActiveKey(k as string)}
+        // onChange={(k) => setActiveKey(k as string)}
         style={{ marginBottom: 8, height: '100%' }}
       >
         {currentTaskItem.task_tree.length > 0 && (
