@@ -7,7 +7,7 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
+import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
@@ -38,6 +38,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
 }> = ({ placement, children, rootClassName, sideTabs }) => {
   const { t, i18n } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  console.log(focusModeLoop, 'focusModeLoop')
 
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -91,11 +92,9 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
             <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
           </>
         ),
-        footerLeftTypes: [
-          AIInputInnerFeatureEnum.AIReviewRuleSelect,
-          AIInputInnerFeatureEnum.AIModelSelect,
+        footerRightTypes: [
           {
-            type: AIInputInnerFeatureEnum.AIFocusMode,
+            type: AIInputFooterRightEnum.AIFocusMode,
             props: {
               value: focusModeLoop,
               onChange: () => {},
@@ -103,6 +102,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
             },
           },
         ],
+
         filterMentionType: ['focusMode'],
       },
     })
