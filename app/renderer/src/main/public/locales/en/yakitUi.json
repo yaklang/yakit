@@ -126,7 +126,8 @@
     "showInFolder": "Show in folder",
     "viewFile": "View file",
     "submitted": "Submitted",
-    "downloadReport": "Download report"
+    "downloadReport": "Download report",
+    "undo": "Undo"
   },
   "YakitNotification": {
     "unknown_error": "Unknown Error",

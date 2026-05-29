@@ -55,6 +55,8 @@
     "penTest": "滲透測試",
     "codeAudit": "程式碼審計",
     "auditRuleCodeAnalysis": "透過編寫審計規則對程式碼行為進行分析，發現程式碼中的風險片段，支援Java、PHP、Yaklang、Golang等多種語言",
+    "irifyAiCodeAudit": "AI代碼審計",
+    "irifyAiCodeAuditDescribe": "本機目錄開啟專案，使用 ReAct AI 輔助代碼審計",
     "database": "資料庫",
     "securityTools": "安全工具",
     "bruteForceAndUnauthorizedCheck": "爆破與未授權檢測",

@@ -448,6 +448,7 @@
     "render_mode": "渲染模式",
     "disable_hot_reload": "禁用熱載入",
     "no_fix_length": "不修復長度",
+    "no_fix_length_tip": "開啟後保留服務端原始響應，不自動修復 Content-Type、Content-Length，也不做 charset 轉碼等處理。",
     "timeout_duration": "超時時長",
     "connection": "連線",
     "response": "響應",

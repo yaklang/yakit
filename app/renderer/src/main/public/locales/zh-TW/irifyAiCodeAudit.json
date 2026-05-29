@@ -1,0 +1,8 @@
+{
+  "welcomeTitle": "IRify AI 代碼審計",
+  "welcomeHint": "使用右側與 AI 協作，進行安全審查與代碼問答。打開本地文件夾即可開始。",
+  "quickStart": "快速開始",
+  "openLocalFolder": "打開本地文件夾",
+  "recentlyOpened": "最近打開",
+  "newChat": "新建會話"
+}

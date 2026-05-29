@@ -302,6 +302,13 @@
     "taskEnd": "任務結束標誌",
     "taskEndDesc": "當前任務已經結束，下面為新的任務資料"
   },
+  "AIReportFinishCard": {
+    "openInAICodeAudit": "AI代碼審計中打開",
+    "openInAICodeAuditError": "當前頁面無法打開AI代碼審計",
+    "reportContentEmpty": "報告內容為空，無法導出",
+    "pdfExportSuccess": "PDF 匯出成功",
+    "pdfExportFailed": "PDF 匯出失敗: {{error}}"
+  },
   "AIHttpFlowFuzzStatusCard": {
     "title": "發包統計",
     "badgeStarting": "準備中",
