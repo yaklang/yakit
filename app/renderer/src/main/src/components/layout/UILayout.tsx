@@ -49,7 +49,7 @@ import { useScreenRecorder } from '@/store/screenRecorder'
 import { ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicControl'
 import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
-import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
+import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { RemoteEngine } from './RemoteEngine/RemoteEngine'
 import { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
@@ -77,7 +77,6 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { handleFetchArchitecture, handleFetchIsDev, SystemInfo } from '@/constants/hardware'
 import {
   apiSplitUpload,
-  apiSystemConfig,
   ExportProjectRequest,
   grpcExportProject,
   grpcGetProjects,
@@ -117,12 +116,6 @@ import {
 import { getValueByType, ParamsToGroupByGroupName } from '@/pages/plugins/editDetails/utils'
 import { YakExecutorParam } from '@/pages/invoker/YakExecutorParams'
 import { RemotePluginGV } from '@/enums/plugin'
-import {
-  AIGlobalConfig,
-  grpcGetAIGlobalConfig,
-  grpcSetAIGlobalConfig,
-  ServerAIGlobalConfig,
-} from '@/pages/ai-agent/aiModelList/utils'
 const PluginHasParamsDrawer = React.lazy(() => import('../pluginHasParamsDrawer/PluginHasParamsDrawer'))
 
 const DefaultCredential: YaklangEngineWatchDogCredential = {
@@ -196,6 +189,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   // 模式 目前只有yakit社区版有
   const { setSoftMode } = useSoftMode()
   /** ---------- 软件状态相关属性 End ---------- */
+
+  const [_, aiGlobalConfigEvent] = useAIGlobalConfig()
 
   // #region 新窗口引擎已经启动好，只需要看门狗检查是否ready，此处默认初始化一些变量
   const [showLoadingPage, setShowLoadingPage] = useState<boolean>(false)
@@ -273,34 +268,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     { wait: 300 },
   )
 
-  const syncAIGlobalConfigAfterLogin = async () => {
-    if (!isEnpriTrace()) return
-
-    const currentConfig = await grpcGetAIGlobalConfig(true)
-    const nextConfig: AIGlobalConfig = { ...currentConfig }
-    const AI_MODEL_CONFIG_KEYS = ['IntelligentModels', 'LightweightModels', 'VisionModels']
-
-    const data = (await apiSystemConfig(true)).data || []
-    const aiConfig = data.find((item) => item.configName === 'AI')
-    if (!aiConfig?.content) return
-
-    let serverConfig: ServerAIGlobalConfig = {}
-    try {
-      serverConfig = JSON.parse(aiConfig.content)
-    } catch (error) {}
-
-    AI_MODEL_CONFIG_KEYS.forEach((key) => {
-      const localModels = (currentConfig[key] || []).filter((model) => !model.IsOnline)
-      const serverModels = (serverConfig[key] || []).map((model) => ({
-        ...model,
-        IsOnline: true,
-      }))
-
-      nextConfig[key] = [...localModels, ...serverModels]
-    })
-    await grpcSetAIGlobalConfig(nextConfig, true)
-  }
-
   // #region 企业版登录成功后根据配置信息看是否需要自动上传项目
   const projectListRef = useRef<ProjectDescription[]>([])
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
@@ -311,8 +278,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
 
     // 登录获取服务端AI配置
-    if (userInfo.isLogin) {
-      syncAIGlobalConfigAfterLogin()
+    if (userInfo.isLogin && isEnpriTrace()) {
+      aiGlobalConfigEvent.getAIGlobalConfigAfterLogin()
     }
   }, [userInfo.isLogin])
 
