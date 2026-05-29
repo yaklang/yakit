@@ -177,6 +177,10 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
       case AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS:
         return <AIHttpFlowFuzzStatusCard item={itemData} />
 
+      case AIChatQSDataTypeEnum.TODO_LIST_UPDATE:
+        // 待办清单卡片组件预留
+        return null
+
       case AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION:
         return (
           <DividerCard
