@@ -683,6 +683,7 @@ interface NewAIThirdPartyApplicationConfigBaseProps {
   formValues?: AIThirdPartyApplicationConfig
   // 禁止类型改变
   disabledType?: boolean
+  IsOnline?: boolean
   // 是否可新增类型
   canAddType?: boolean
   FormProps?: {
@@ -700,6 +701,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     const {
       formValues = defautFormValues as AIThirdPartyApplicationConfig,
       disabledType = false,
+      IsOnline = false,
       canAddType = true,
       FormProps,
       footer,
@@ -742,14 +744,14 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
     }, [])
 
     useUpdateEffect(() => {
-      if (readOnly) return
+      if (readOnly || IsOnline) return
       if (apiKeyWatch) {
         execModelNameOption.current = true
         getModelNameOption()
       } else {
         handleDefaultModalNameOption()
       }
-    }, [apiKeyWatch, readOnly])
+    }, [apiKeyWatch, IsOnline, readOnly])
 
     const { run: getModelNameOption, cancel: cancelModelNameOption } = useDebounceFn(
       useMemoizedFn(() => {
@@ -935,6 +937,13 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             )
           }
           if (item.Name === 'api_key') {
+            if (IsOnline) {
+              return (
+                <Form.Item {...formProps} hidden preserve>
+                  <YakitInput disabled />
+                </Form.Item>
+              )
+            }
             return <AIConfigAPIKeyFormItem aiType={typeVal} formProps={formProps} />
           } else {
             let selectProps: YakitSelectProps = {}

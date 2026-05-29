@@ -331,6 +331,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
         },
         ModelName: res.model,
         ExtraParams: [],
+        ...(item?.IsOnline ? { IsOnline: true } : {}),
       }
       const setConfigOptions = {
         modelType: res.model_type,
@@ -476,6 +477,7 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       ref={formRef}
       {...props.thirdPartyApplicationConfig}
       formValues={formValues}
+      IsOnline={item?.IsOnline}
       footer={
         <>
           <div ref={footerRef} />

@@ -378,6 +378,13 @@ export interface AIModelConfig {
   Provider: ThirdPartyApplicationConfig
   ModelName: string
   ExtraParams: KVPair[]
+  IsOnline?: boolean
+}
+
+export interface ServerAIGlobalConfig {
+  IntelligentModels?: AIModelConfig[]
+  LightweightModels?: AIModelConfig[]
+  VisionModels?: AIModelConfig[]
 }
 
 /**获取ai 全局配置 */
