@@ -549,6 +549,7 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   onlyBasicMenu?: boolean
   showDownBodyMenu?: boolean
   onClickUrlMenu?: () => void
+  onClickUrlWithoutQueryMenu?: () => void
   onClickOpenBrowserMenu?: () => void
   onClickOpenPacketNewWindowMenu?: () => void
 
@@ -1153,6 +1154,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                   showDownBodyMenu={props.showDownBodyMenu}
                   noSendToComparer={props.noSendToComparer}
                   onClickUrlMenu={props.onClickUrlMenu}
+                  onClickUrlWithoutQueryMenu={props.onClickUrlWithoutQueryMenu}
                   onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
                   onClickOpenPacketNewWindowMenu={props.onClickOpenPacketNewWindowMenu}
                   fixContentType={props.fixContentType}

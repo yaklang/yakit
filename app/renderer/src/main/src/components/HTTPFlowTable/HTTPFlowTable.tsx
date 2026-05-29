@@ -3136,6 +3136,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const codecMultipleHistoryPluginCom = useCampare(codecMultipleHistoryPlugin)
   const codecSingleHistoryPluginCom = useCampare(codecSingleHistoryPlugin)
   const selectedRowKeysCom = useCampare(selectedRowKeys)
+  const getUrlWithoutQuery = useMemoizedFn((url?: string) => {
+    if (!url) return ''
+
+    try {
+      const u = new URL(url)
+      u.search = ''
+      u.hash = ''
+      return u.toString()
+    } catch {
+      return url.split('?')[0].split('#')[0]
+    }
+  })
   const menuData = useMemo(() => {
     let menu: HistoryMenuData[] = [
       {
@@ -3233,12 +3245,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         children: getCodecAIPlugin(),
       },
       {
-        key: '复制 URL',
-        label: t('HTTPFlowTable.RowContextMenu.copyURL'),
+        key: 'copyUrlWithQuery',
+        label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
         number: 30,
         webSocket: true,
         default: true,
-        onClickSingle: (v) => setClipboardText(v.Url),
+        onClickSingle: (v) => setClipboardText(v.Url || ''),
         onClickBatch: (v, number) => {
           if (v.length === 0) {
             yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
@@ -3246,6 +3258,39 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           }
           if (v.length < number!) {
             setClipboardText(v.map((ele) => `${ele.Url}`).join('\r\n'))
+            setSelectedRowKeys([])
+            setSelectedRows([])
+          } else {
+            yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number }))
+          }
+        },
+      },
+      {
+        key: 'copyUrlWithoutQuery',
+        label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
+        number: 30,
+        webSocket: true,
+        default: true,
+        onClickSingle: (v) => {
+          const nextUrl = getUrlWithoutQuery(v.Url)
+          if (!nextUrl) {
+            yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+            return
+          }
+          setClipboardText(nextUrl)
+        },
+        onClickBatch: (v, number) => {
+          if (v.length === 0) {
+            yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+            return
+          }
+          if (v.length < number!) {
+            const urls = v.map((ele) => getUrlWithoutQuery(ele.Url)).filter((url) => !!url)
+            if (!urls.length) {
+              yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+              return
+            }
+            setClipboardText(urls.join('\r\n'))
             setSelectedRowKeys([])
             setSelectedRows([])
           } else {
@@ -3504,6 +3549,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     selectedRowKeysCom,
     selected?.Id,
     onlyFavorite,
+    getUrlWithoutQuery,
   ])
 
   /** 菜单自定义快捷键渲染处理事件 */

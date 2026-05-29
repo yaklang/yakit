@@ -989,10 +989,24 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
 
     const copyUrl = useMemoizedFn(() => {
       if (currentSelectItem?.RequestRaw) {
-        copyAsUrl({
-          Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
-          IsHTTPS: !!currentSelectItem?.IsHTTPS,
-        })
+        copyAsUrl(
+          {
+            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+            IsHTTPS: !!currentSelectItem?.IsHTTPS,
+          },
+          'withQuery',
+        )
+      }
+    })
+    const copyUrlWithoutQuery = useMemoizedFn(() => {
+      if (currentSelectItem?.RequestRaw) {
+        copyAsUrl(
+          {
+            Request: Uint8ArrayToString(currentSelectItem?.RequestRaw),
+            IsHTTPS: !!currentSelectItem?.IsHTTPS,
+          },
+          'withoutQuery',
+        )
       }
     })
     const onClickOpenBrowserMenu = useMemoizedFn(() => {
@@ -1226,6 +1240,7 @@ export const HTTPFuzzerPageTable: React.FC<HTTPFuzzerPageTableProps> = React.mem
                   }
                 }}
                 onClickUrlMenu={copyUrl}
+                onClickUrlWithoutQueryMenu={copyUrlWithoutQuery}
                 onClickOpenBrowserMenu={onClickOpenBrowserMenu}
                 downbodyParams={{
                   RuntimeId: currentSelectItem?.RuntimeID,

@@ -481,6 +481,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   })
   const [color, setColor] = useState<string[]>([])
   const [isShowColor, setIsShowColor] = useState<boolean>(false)
+  const [batchVisible, setBatchVisible] = useState<boolean>(false)
   const [suffixList, setSuffixList] = useState<FiltersItemProps[]>([])
   const comSuffixList = useCampare(suffixList)
 
@@ -1425,6 +1426,18 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
 
   // #region 表格右键操作
   const { compareState, setCompareLeft, setCompareRight } = useHttpFlowStore()
+  const getUrlWithoutQuery = useMemoizedFn((url?: string) => {
+    if (!url) return ''
+
+    try {
+      const u = new URL(url)
+      u.search = ''
+      u.hash = ''
+      return u.toString()
+    } catch {
+      return url.split('?')[0].split('#')[0]
+    }
+  })
   const menuData = useCreation(() => {
     return [
       {
@@ -1484,8 +1497,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         onClickBatch: (list, n) => toggleHTTPFlowFavoriteBatch(list, n, false),
       },
       {
-        key: '复制 URL',
-        label: t('HTTPFlowTable.RowContextMenu.copyURL'),
+        key: 'copyUrlWithQuery',
+        label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
         number: 30,
         default: true,
         webSocket: true,
@@ -1497,6 +1510,38 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           }
           if (v.length < number) {
             setClipboardText(v.map((ele) => `${ele.Url}`).join('\r\n'))
+            resetSelected()
+          } else {
+            yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number }))
+          }
+        },
+      },
+      {
+        key: 'copyUrlWithoutQuery',
+        label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
+        number: 30,
+        default: true,
+        webSocket: true,
+        onClickSingle: (v) => {
+          const nextUrl = getUrlWithoutQuery(v.Url)
+          if (!nextUrl) {
+            yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+            return
+          }
+          setClipboardText(nextUrl)
+        },
+        onClickBatch: (v, number) => {
+          if (v.length === 0) {
+            yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
+            return
+          }
+          if (v.length < number) {
+            const urls = v.map((ele) => getUrlWithoutQuery(ele.Url)).filter((url) => !!url)
+            if (!urls.length) {
+              yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+              return
+            }
+            setClipboardText(urls.join('\r\n'))
             resetSelected()
           } else {
             yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number }))
@@ -1838,6 +1883,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         if (currentItem.onClickBatch) currentItem.onClickBatch(selectedRows, currentItem.number)
         break
     }
+    setBatchVisible(false)
   })
   const onBatch = useMemoizedFn((f: Function, number: number, all?: boolean) => {
     const length = selectedRowKeys.length
@@ -2634,6 +2680,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                   }
                   trigger="click"
                   placement="bottomLeft"
+                  onVisibleChange={setBatchVisible}
+                  visible={batchVisible}
                 >
                   <YakitButton type="outline2" disabled={selectedRowKeys.length === 0}>
                     {t('YakitButton.batchOperation')}

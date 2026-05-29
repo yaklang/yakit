@@ -58,6 +58,7 @@ interface HTTPPacketYakitEditor extends Omit<YakitEditorProps, 'menuType'> {
   showDownBodyMenu?: boolean
   noSendToComparer?: boolean // 是否隐藏内置的发送到对比器菜单 默认false
   onClickUrlMenu?: () => void
+  onClickUrlWithoutQueryMenu?: () => void
   onClickOpenBrowserMenu?: () => void
   onClickOpenPacketNewWindowMenu?: () => void
   fromMITM?: boolean // 是否来自 MITM 页面
@@ -85,6 +86,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     showDownBodyMenu = true,
     noSendToComparer = false,
     onClickUrlMenu,
+    onClickUrlWithoutQueryMenu,
     onClickOpenBrowserMenu,
     onClickOpenPacketNewWindowMenu,
     onlyBasicMenu = false,
@@ -234,18 +236,42 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           }
         },
       },
-      copyUrl: {
+      copyUrlWithQuery: {
         menu: [
           {
-            key: 'copyUrl',
-            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrl'),
+            key: 'copyUrlWithQuery',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
           },
         ],
-        onRun: (editor: YakitIMonacoEditor, key: string) => {
+        onRun: () => {
           if (onClickUrlMenu) {
             onClickUrlMenu()
           } else {
             setClipboardText(url || '')
+          }
+        },
+      },
+      copyUrlWithoutQuery: {
+        menu: [
+          {
+            key: 'copyUrlWithoutQuery',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
+          },
+        ],
+        onRun: () => {
+          if (onClickUrlWithoutQueryMenu) {
+            onClickUrlWithoutQueryMenu()
+          } else if (url) {
+            try {
+              const u = new URL(url)
+              u.search = ''
+              u.hash = ''
+              setClipboardText(u.toString())
+            } catch {
+              setClipboardText(url.split('?')[0].split('#')[0])
+            }
+          } else {
+            yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
           }
         },
       },
@@ -647,6 +673,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     disableUnicodeDecode,
     JSON.stringify(downbodyParams),
     onClickUrlMenu,
+    onClickUrlWithoutQueryMenu,
     onClickOpenBrowserMenu,
     noOpenPacketNewWindow,
     userInfo.isLogin,

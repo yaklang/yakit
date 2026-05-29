@@ -6512,6 +6512,8 @@ message RedirectRequestParams {
 
 message ExtractedUrl {
   string Url = 1;
+  // 不含 query 与 fragment 的完整 URL（scheme + host + path）
+  string UrlWithoutQuery = 2;
 }
 
 message FuzzerSequenceResponse {
