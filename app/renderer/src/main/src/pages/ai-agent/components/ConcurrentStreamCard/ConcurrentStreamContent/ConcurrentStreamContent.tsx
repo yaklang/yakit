@@ -2,7 +2,7 @@ import type { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { type FC, useLayoutEffect, useRef, useState } from 'react'
 import { useLatest, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
-import useClickFocus from '../../hooks/useClickFocus'
+import useClickFocus from '../../../../ai-re-act/hooks/useClickFocus'
 import styles from './ConcurrentStreamContent.module.scss'
 import { AIChatListItem } from '../../aiChatListItem/AIChatListItem'
 

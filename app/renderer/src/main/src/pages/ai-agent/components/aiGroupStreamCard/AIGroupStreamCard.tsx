@@ -9,7 +9,7 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import useClickFocus from '../hooks/useClickFocus'
+import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
 import { Tooltip } from 'antd'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
