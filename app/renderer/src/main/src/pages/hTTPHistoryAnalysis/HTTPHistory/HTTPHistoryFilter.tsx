@@ -167,13 +167,9 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
   })
 
   const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
-  useDebounceEffect(
-    () => {
-      historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
-    },
-    [compareSelectedHttpFlowIds],
-    { wait: 300 },
-  )
+  useDebounceEffect(() => {
+    historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
+  }, [compareSelectedHttpFlowIds])
 
   const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
     historyAIReActChatBridge.registerClearTableSelection(() => {
@@ -784,10 +780,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     setSelectedRows((prev) => prev.filter((ele) => String(ele.Id) !== id))
   })
   useEffect(() => {
-    onRegisterTableSelectApi?.({
+    if (!onRegisterTableSelectApi) return
+    onRegisterTableSelectApi({
       reset: resetSelected,
       deselectId: deselectHttpFlowId,
     })
+    return () => {
+      onRegisterTableSelectApi({
+        reset: () => {},
+        deselectId: () => {},
+      })
+    }
   }, [onRegisterTableSelectApi, deselectHttpFlowId])
   // #endregion
 

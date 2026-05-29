@@ -1820,10 +1820,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setSelectedRows((prev) => prev.filter((ele) => String(ele.Id) !== id))
   })
   useEffect(() => {
-    onRegisterTableSelectApi?.({
+    if (!onRegisterTableSelectApi) return
+    onRegisterTableSelectApi({
       reset: resetSelected,
       deselectId: deselectHttpFlowId,
     })
+    return () => {
+      onRegisterTableSelectApi({
+        reset: () => {},
+        deselectId: () => {},
+      })
+    }
   }, [onRegisterTableSelectApi, resetSelected, deselectHttpFlowId])
   const compareSelectedRowKeys = useCampare(selectedRowKeys)
   useDebounceEffect(

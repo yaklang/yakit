@@ -216,13 +216,9 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   })
 
   const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
-  useDebounceEffect(
-    () => {
-      historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
-    },
-    [compareSelectedHttpFlowIds],
-    { wait: 300 },
-  )
+  useDebounceEffect(() => {
+    historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
+  }, [compareSelectedHttpFlowIds])
 
   const onSetSelectedHttpFlowIds = useMemoizedFn((ids: string[]) => {
     setSelectedHttpFlowIds(ids)

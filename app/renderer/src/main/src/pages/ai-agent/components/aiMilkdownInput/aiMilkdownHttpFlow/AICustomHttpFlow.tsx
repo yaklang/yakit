@@ -13,7 +13,7 @@ interface AICustomHttpFlowProps {
 
 export const AICustomHttpFlow: React.FC<AICustomHttpFlowProps> = (props) => {
   const { onHttpFlowRemove } = props
-  const { node, selected, view, contentRef } = useNodeViewContext()
+  const { node, selected, view, contentRef, getPos } = useNodeViewContext()
 
   const readonly = useCreation(() => {
     return !view.editable
@@ -35,24 +35,9 @@ export const AICustomHttpFlow: React.FC<AICustomHttpFlowProps> = (props) => {
     }
 
     const { state, dispatch } = view
-    let nodePos = -1
-    state.doc.descendants((currentNode, pos) => {
-      if (
-        currentNode.type.name === node.type.name &&
-        currentNode.attrs.flowId === node.attrs.flowId &&
-        currentNode.attrs.flowIds === node.attrs.flowIds &&
-        currentNode.attrs.displayText === node.attrs.displayText &&
-        currentNode.attrs.isSummary === node.attrs.isSummary
-      ) {
-        nodePos = pos
-        return false
-      }
-    })
-    if (nodePos >= 0) {
-      const targetNode = state.doc.nodeAt(nodePos)
-      if (targetNode) {
-        dispatch?.(state.tr.delete(nodePos, nodePos + targetNode.nodeSize))
-      }
+    const nodePos = getPos?.()
+    if (nodePos !== undefined) {
+      dispatch?.(state.tr.delete(nodePos, nodePos + node.nodeSize))
     }
 
     if (locked) {
