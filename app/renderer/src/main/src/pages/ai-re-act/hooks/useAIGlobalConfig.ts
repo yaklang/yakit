@@ -131,9 +131,7 @@ function useAIGlobalConfig(params) {
       if (!aiConfig?.content) return
 
       let serverConfig: ServerAIGlobalConfig = {}
-      try {
-        serverConfig = JSON.parse(aiConfig.content)
-      } catch (error) {}
+      serverConfig = JSON.parse(aiConfig.content)
 
       Object.values(AIModelTypeEnum).forEach((type) => {
         const key = getFileNameByModelType(type)
