@@ -2658,7 +2658,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         />
                       </>
                     ),
-                    footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,
@@ -3187,11 +3186,18 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 /** 每个 Web Fuzzer 页签独立 WebFuzzerAiStore，避免多开时共用内存缓存导致会话数据互相覆盖 */
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
   const fuzzerAiChatDataStore = useCreation(() => new WebFuzzerAiStore(props.id), [props.id])
+  // // `props.id` 是页签的 pageId（如 `httpFuzzer-[ZAunr7]-...`）。
+  // // 这里取对应 `PageNodeItemProps.id`（如 `62xKGvDE-1`）作为新建会话的 SessionID，
+  // // 保证同一 Fuzzer 页签内的会话共用稳定 ID。
+  // const pageNodeId = usePageInfo((state) => {
+  //   return state.queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)?.id
+  // }, shallow)
   return (
     <HistoryAIReActChatProvider
       cacheDataStore={fuzzerAiChatDataStore}
       focusModeLoop="http_fuzztest"
       httpFuzzTabPageId={props.id}
+      defaultTimelineSessionID={props.id}
     >
       <HTTPFuzzerPageCore {...props} />
     </HistoryAIReActChatProvider>

@@ -26,6 +26,7 @@ import useSessionId from '../hooks/useSessionId'
 import useGetChatDataStoreKey, { getAISourceFromChatDataStoreKey } from '../hooks/useGetChatDataStoreKey'
 import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import emiter from '@/utils/eventBus/eventBus'
+import { omit } from 'lodash'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -248,6 +249,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
       handleSendSyncMessage(params)
     })
+
     return (
       <>
         <div
@@ -303,8 +305,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                           )}
                         </div>
                       }
-                      footerLeftTypes={externalParameters?.footerLeftTypes}
                       chatDataStoreKey={chatDataStoreKey}
+                      {...omit(externalParameters, 'rightIcon')}
                     />
                   </div>
                 </div>

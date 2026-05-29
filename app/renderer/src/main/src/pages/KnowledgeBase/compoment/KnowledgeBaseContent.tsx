@@ -41,7 +41,6 @@ import { randomString } from '@/utils/randomUtil'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
-import { BinaryInfo } from './AllInstallPluginsProps'
 import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import { CreateKnowledgeBaseData } from '../TKnowledgeBase'
 
@@ -399,7 +398,13 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
   // #region 问题相关逻辑
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
 
-  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(cloneDeep(AIAgentSettingDefault))
+  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => {
+    const initial = cloneDeep(AIAgentSettingDefault)
+    if (knowledgeBaseID) {
+      initial.TimelineSessionID = knowledgeBaseID
+    }
+    return initial
+  })
 
   // 历史对话
   const [chats, setChats, getChats] = useGetSetState<AISession[]>([])
@@ -421,13 +426,24 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
           try {
             const cache = JSON.parse(res) as AIAgentSetting
             if (typeof cache !== 'object') return
-            setSetting(cache)
+            // 知识库始终以 `knowledgeBaseID` 作为 SessionID，沿用当前 `setting.TimelineSessionID`
+            // 避免被全局缓存覆盖。下方 `knowledgeBaseID` 变更 effect 会持续兜底同步
+            setSetting((prev) => ({ ...cache, TimelineSessionID: prev.TimelineSessionID }))
           } catch (error) {}
         })
         .catch(() => {})
     }
     return () => {}
   }, [inViewport])
+
+  // `knowledgeBaseID` 变更时同步 `setting.TimelineSessionID`，保证 `useSessionId` 的优先级链命中
+  useEffect(() => {
+    if (!knowledgeBaseID) return
+    setSetting((prev) => {
+      if (prev.TimelineSessionID === knowledgeBaseID) return prev
+      return { ...prev, TimelineSessionID: knowledgeBaseID }
+    })
+  }, [knowledgeBaseID, setSetting])
 
   /** 当前对话唯一ID */
   const activeID = useCreation(() => {
@@ -808,8 +824,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                           <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setShowFreeChat(false)} />
                         </React.Fragment>
                       ),
-                      footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
-                      footerRightTypes: [AIInputFooterRightEnum.AIFocusMode],
                     }}
                   />
                 </div>

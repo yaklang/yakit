@@ -152,7 +152,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       return { ...prev, TimelineSessionID: defaultTimelineSessionID }
     })
   }, [defaultTimelineSessionID, setSetting])
-  const [chats, setChats, getChats] = useGetSetState<AISession[]>([])
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)

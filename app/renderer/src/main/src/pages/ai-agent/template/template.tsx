@@ -147,6 +147,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         { type: AIInputInnerFeatureEnum.AIModelSelect, props: { isOpen } },
       ]
     }, [props.footerLeftTypes, isOpen])
+
     const footerRightTypes: FooterRightTypesComponentProps[] = useCreation(() => {
       if (!!props.footerRightTypes?.length) {
         const list = props.footerRightTypes
