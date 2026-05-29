@@ -127,7 +127,7 @@ import {
 import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import { DebouncedFunc, isEqual, toArray } from 'lodash'
+import { DebouncedFunc, isEqual } from 'lodash'
 import { defalutColumnsOrder } from '@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter'
 import { getReleaseEditionName, isEnpriTrace } from '@/utils/envfile'
 import { HTTPFlowsToOnlineRequest } from '@/utils/login'
@@ -146,6 +146,13 @@ import {
   HTTPFlowTableFormConfiguration,
   HTTPFlowTableFormConsts,
 } from './HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
+import {
+  buildHTTPFlowTableAdvancedQuery,
+  buildLegacyHTTPFlowTableFilterConfig,
+  hasActiveHTTPFlowTableFilterConfig,
+  safeParseHTTPFlowTableCache,
+  splitHTTPFlowTableShieldData,
+} from './HTTPFlowTable.utils'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { SystemInfo } from '@/constants/hardware'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
@@ -896,17 +903,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return ['History', 'MITM'].includes(pageType || '') || showAdvancedSearch
   }, [pageType, showAdvancedSearch])
   const [filterConfig, setFilterConfig] = useState<FilterConfig>(cloneDeep(defFilterConfig))
-  const safeParse = (val?: string) => {
-    if (!val) return undefined
-    try {
-      return JSONParseLog(val, {
-        page: 'HTTPFlowTable',
-        fun: 'safeParse',
-      })
-    } catch {
-      return undefined
-    }
-  }
   const loadLegacyFilterConfig = useMemoizedFn(async () => {
     let config = filterConfig
     try {
@@ -938,33 +934,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         const excludeKeywords = excludeKeywordsRes.status === 'fulfilled' ? excludeKeywordsRes.value : []
         const statusCode = statusCodeRes.status === 'fulfilled' ? statusCodeRes.value : ''
 
-        if (filterMode === 'shield') {
-          config = {
-            filterMode: filterMode,
-            shield: {
-              hostName: toArray(safeParse(hostName)),
-              urlPath: toArray(safeParse(urlPath)),
-              fileSuffix: toArray(safeParse(fileSuffix)),
-              searchContentType: searchContentType ? searchContentType.split(',') : [],
-              excludeKeywords: toArray(safeParse(excludeKeywords)),
-              statusCode: statusCode,
-            },
-            show: config.show,
-          }
-        } else {
-          config = {
-            filterMode: filterMode,
-            shield: config.shield,
-            show: {
-              hostName: toArray(safeParse(hostName)),
-              urlPath: toArray(safeParse(urlPath)),
-              fileSuffix: toArray(safeParse(fileSuffix)),
-              searchContentType: searchContentType ? searchContentType.split(',') : [],
-            },
-          }
-        }
+        config = buildLegacyHTTPFlowTableFilterConfig(config, {
+          filterMode,
+          hostName,
+          urlPath,
+          fileSuffix,
+          searchContentType,
+          excludeKeywords,
+          statusCode,
+        })
       } else {
-        config = safeParse(res)
+        config = safeParseHTTPFlowTableCache<FilterConfig>(res) || config
       }
     } catch (error) {}
     setRemoteValue(RemoteHistoryGV.HTTPFlowTableFormConfiguration, JSON.stringify(config))
@@ -981,33 +961,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       }
       fetchConfig()
     }
-  }, [updateAdvancedSearch])
+  }, [loadLegacyFilterConfig, updateAdvancedSearch])
 
   const comFilterConfig = useCampare(filterConfig)
   useDebounceEffect(
     useMemoizedFn(() => {
       if (updateAdvancedSearch) {
+        const { shieldHosts } = splitHTTPFlowTableShieldData(getShieldData().data)
         let newParams = { ...getParams() }
-
-        let urlArr: string[] = []
-        getShieldData().data.map((item) => {
-          if (typeof item === 'string') {
-            urlArr = [...urlArr, item]
-          }
-        })
-        urlArr.push(...filterConfig.shield.hostName)
         newParams = {
           ...newParams,
-          SearchContentType: filterConfig.show.searchContentType.join(','),
-          ExcludeContentType: filterConfig.shield.searchContentType,
-          HostnameFilter: filterConfig.show.hostName,
-          ExcludeInUrl: [...new Set(urlArr)],
-          IncludePath: filterConfig.show.urlPath,
-          ExcludePath: filterConfig.shield.urlPath,
-          IncludeSuffix: filterConfig.show.fileSuffix,
-          ExcludeSuffix: filterConfig.shield.fileSuffix,
-          ExcludeKeywords: filterConfig.shield.excludeKeywords,
-          ExcludeStatusCode: filterConfig.shield.statusCode,
+          ...buildHTTPFlowTableAdvancedQuery(filterConfig, shieldHosts),
         }
         refreshTabsContRef.current = true
         setParams(newParams)
@@ -1017,14 +981,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     [updateAdvancedSearch, comFilterConfig],
     { wait: 500 },
   )
-  const isFilter: boolean = useMemo(() => {
-    const checkObj = (obj: Record<string, any>) =>
-      Object.values(obj).some((val) => {
-        if (Array.isArray(val)) return val.length > 0
-        return val !== ''
-      })
-    return checkObj(filterConfig.shield) || checkObj(filterConfig.show)
-  }, [filterConfig])
+  const isFilter: boolean = useMemo(() => hasActiveHTTPFlowTableFilterConfig(filterConfig), [filterConfig])
   const onGetOtherPageAdvancedSearchData = useMemoizedFn((str: string) => {
     try {
       const value = JSONParseLog(str, { page: 'HTTPFlowTable', fun: 'onGetOtherPageAdvancedSearchData' })
@@ -1040,29 +997,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         emiter.off('onGetOtherPageAdvancedSearchDataEvent', onGetOtherPageAdvancedSearchData)
       }
     }
-  }, [updateAdvancedSearch])
+  }, [onGetOtherPageAdvancedSearchData, updateAdvancedSearch])
   const handleShieldDataUpdate = useMemoizedFn(() => {
     setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
-    let idArr: number[] = []
-    let urlArr: string[] = []
-    shieldData.data.map((item) => {
-      if (typeof item === 'string') {
-        urlArr = [...urlArr, item]
-      } else {
-        idArr = [...idArr, item]
-      }
-    })
+    const { shieldIds, shieldHosts } = splitHTTPFlowTableShieldData(shieldData.data)
 
     setParams((prev) => {
       // 高级筛选 屏蔽hostName
-      const hostName = filterConfig.shield.hostName
-      if (hostName.length) {
-        urlArr.push(...hostName)
-      }
+      const excludedHosts = [...shieldHosts, ...filterConfig.shield.hostName]
       return {
         ...prev,
-        ExcludeId: idArr,
-        ExcludeInUrl: [...new Set(urlArr)],
+        ExcludeId: shieldIds,
+        ExcludeInUrl: [...new Set(excludedHosts)],
       }
     })
   })
@@ -1076,7 +1022,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     } else {
       handleShieldDataUpdate()
     }
-  }, [shieldData])
+  }, [handleShieldDataUpdate, mitmVersion, pageType, shieldData])
   useEffect(() => {
     getShieldList()
   }, [inViewport])
