@@ -1417,6 +1417,29 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     return (flow && (flow.InvalidForUTF8Request ? flow.SafeHTTPRequest! : flow.RequestString)) || ''
   })
 
+  const syncBarePacketFromFlowTags = useMemoizedFn(() => {
+    if (id !== flow?.Id) {
+      return
+    }
+    const existedTags = flow?.Tags ? flow.Tags.split('|').filter((i) => !!i && !i.startsWith('YAKIT_COLOR_')) : []
+    const showManualModifyBare =
+      existedTags.includes('[手动修改]') || existedTags.includes('[响应被丢弃]') || existedTags.includes('[规则修改]')
+    const showAutoFixBare = existedTags.includes('[自动修复]')
+    if (showManualModifyBare || showAutoFixBare) {
+      setShowBeforeData(true)
+      if (showManualModifyBare) {
+        handleGetHTTPFlowBare('request')
+      } else {
+        setBeforeResValue('')
+      }
+      handleGetHTTPFlowBare('response')
+      return
+    }
+    setShowBeforeData(false)
+    setBeforeResValue('')
+    setBeforeRspValue('')
+  })
+
   useEffect(() => {
     // 复原数据
     setResType('current')
@@ -1427,21 +1450,9 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
     // 编辑器滚轮回到顶部
     reqEditor?.setScrollTop(0)
     resEditor?.setScrollTop(0)
-    const existedTags = flow?.Tags ? flow?.Tags.split('|').filter((i) => !!i && !i.startsWith('YAKIT_COLOR_')) : []
-    if (
-      existedTags.includes('[手动修改]') ||
-      existedTags.includes('[响应被丢弃]') ||
-      existedTags.includes('[规则修改]')
-    ) {
-      setShowBeforeData(true)
-      handleGetHTTPFlowBare('request')
-      handleGetHTTPFlowBare('response')
-    } else {
-      setShowBeforeData(false)
-      setBeforeResValue('')
-      setBeforeRspValue('')
-    }
-  }, [id])
+    syncBarePacketFromFlowTags()
+    // flow.Tags 往往在 GetHTTPFlowById 之后才到，不能只依赖 id
+  }, [id, flow?.Id, flow?.Tags])
 
   useEffect(() => {
     if (resType === 'request') {

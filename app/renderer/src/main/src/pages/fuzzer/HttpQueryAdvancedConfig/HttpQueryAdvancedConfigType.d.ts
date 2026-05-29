@@ -14,7 +14,7 @@ export interface AdvancedConfigValueProps {
   isHttps: boolean
   isGmTLS: boolean
   randomJA3: boolean
-  /**@name 不修复长度 */
+  /**@name 不修复数据包（NoFixContentLength：保留 wire 响应，不自动修复 Content-Type/Length 等） */
   noFixContentLength: boolean
   noSystemProxy: boolean
   disableHotPatch: boolean
