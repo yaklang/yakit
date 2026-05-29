@@ -289,6 +289,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       ref={aiChatTextareaRef}
                       loading={false}
                       onSubmit={handleSubmit}
+                      defaultValue={externalParameters?.defaultValue}
                       filterMentionType={externalParameters?.filterMentionType}
                       isOpen={externalParameters?.isOpen}
                       inputFooterRight={

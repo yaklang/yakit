@@ -1,21 +1,25 @@
 import React, { memo, useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { OpenedFileProps, OpenFolderDraggerProps, RunnerFileTreeProps } from './RunnerFileTreeType'
+import {
+  OpenedFileProps,
+  OpenFolderDraggerProps,
+  RunnerFileTreeProps,
+} from '@/pages/yakRunner/RunnerFileTree/RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { CollapseList } from '../CollapseList/CollapseList'
-import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
-import { FileDefault, FileSuffix, KeyToIcon } from '../FileTree/icon'
-import useStore from '../hooks/useStore'
-import useDispatcher from '../hooks/useDispatcher'
-import useYakRunnerStoreRefs from '../hooks/useYakRunnerStoreRefs'
-import { FileTree } from '../FileTree/FileTree'
+import { OutlinCompileIcon, OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
+import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import useStore from '@/pages/yakRunner/hooks/useStore'
+import useDispatcher from '@/pages/yakRunner/hooks/useDispatcher'
+import useYakRunnerStoreRefs from '@/pages/yakRunner/hooks/useYakRunnerStoreRefs'
+import { FileTree } from '@/pages/yakRunner/FileTree/FileTree'
 
 import classNames from 'classnames'
-import styles from './RunnerFileTree.module.scss'
+import styles from '@/pages/yakRunner/RunnerFileTree/RunnerFileTree.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
+import { FileDetailInfo } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
 import {
   getDefaultActiveFile,
   getNameByPath,
@@ -32,8 +36,8 @@ import {
   setAreaFileActive,
   updateAreaFileInfo,
   updateAreaFileInfoToDelete,
-} from '../utils'
-import { OpenFileByPathProps, YakRunnerHistoryProps } from '../YakRunnerType'
+} from '@/pages/yakRunner/utils'
+import { OpenFileByPathProps, YakRunnerHistoryProps } from '@/pages/yakRunner/YakRunnerType'
 import emiter from '@/utils/eventBus/eventBus'
 import {
   clearMapFileDetail,
@@ -41,7 +45,7 @@ import {
   getMapFileDetail,
   removeMapFileDetail,
   setMapFileDetail,
-} from '../FileTreeMap/FileMap'
+} from '@/pages/yakRunner/FileTreeMap/FileMap'
 import {
   clearMapFolderDetail,
   getMapAllFolderKey,
@@ -49,7 +53,7 @@ import {
   hasMapFolderDetail,
   removeMapFolderDetail,
   setMapFolderDetail,
-} from '../FileTreeMap/ChildMap'
+} from '@/pages/yakRunner/FileTreeMap/ChildMap'
 import { v4 as uuidv4 } from 'uuid'
 import cloneDeep from 'lodash/cloneDeep'
 import { failed, success, warn } from '@/utils/notification'
@@ -59,7 +63,7 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { SystemInfo } from '@/constants/hardware'
-import { WatchFolderID } from '../FileTreeMap/watchFolderID'
+import { WatchFolderID } from '@/pages/yakRunner/FileTreeMap/watchFolderID'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 
@@ -92,7 +96,7 @@ export const openFolder = () => {
   if (SystemInfo.mode === 'remote') {
     let absolutePath = ''
     const m = showYakitModal({
-      title: (modalT) => modalT('RunnerFileTree.enterFolderPath'),
+      title: tOriginal('RunnerFileTree.enterFolderPath'),
       width: 400,
       type: 'white',
       closable: false,
@@ -106,7 +110,7 @@ export const openFolder = () => {
           warn(tOriginal('RunnerFileTree.enterFolderPath'))
           return
         }
-        emiter.emit('onOpenFileTree', absolutePath)
+        emiter.emit('onIrifyAiCodeAuditOpenFileTree', absolutePath)
         m.destroy()
       },
     })
@@ -115,14 +119,14 @@ export const openFolder = () => {
       (data) => {
         if (data.filePaths.length) {
           let absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
-          emiter.emit('onOpenFileTree', absolutePath)
+          emiter.emit('onIrifyAiCodeAuditOpenFileTree', absolutePath)
         }
       },
     )
   }
 }
 
-export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
+export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const { addFileTab } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { fileTree, areaInfo, activeFile } = useStore()
@@ -244,17 +248,17 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
       },
       {
         key: 'openFile',
-        label: '打开文件',
+        label: t('YakitButton.openFile'),
       },
       {
         key: 'openFolder',
-        label: '打开文件夹',
+        label: t('YakitButton.openFolder'),
       },
     ]
     if (historyList.length > 0) {
       newMenu.push({
         key: 'history',
-        label: '最近打开',
+        label: t('YakitButton.recentOpen'),
         children: [
           ...historyList.map((item) => {
             return { key: item.path, label: item.name }
@@ -562,7 +566,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
     try {
       // 未打开文件夹时 创建临时文件
       if (fileTree.length === 0) {
-        addFileTab()
+        return
       } else {
         // 如若未选择则默认最顶层
         const newFoucsedKey = foucsedKey || fileTree[0].path
@@ -643,7 +647,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
       }
       // 打开文件夹
       else {
-        emiter.emit('onOpenFileTree', item.path)
+        emiter.emit('onIrifyAiCodeAuditOpenFileTree', item.path)
       }
     }
   })

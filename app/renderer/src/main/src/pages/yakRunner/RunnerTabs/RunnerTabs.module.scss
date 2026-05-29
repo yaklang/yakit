@@ -378,6 +378,12 @@
     align-items: center;
     justify-content: center;
   }
+  .mark-down-wrapper {
+    padding: 8px 12px;
+    background-color: var(--Colors-Use-Neutral-Bg-Hover);
+    height: 100%;
+    overflow: auto;
+  }
 }
 
 /* ---------- YakRunnerWelcomePage ----------*/

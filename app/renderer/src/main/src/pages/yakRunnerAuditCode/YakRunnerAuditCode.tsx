@@ -61,6 +61,8 @@ import { getStorageAuditCodeShortcutKeyEvents } from '@/utils/globalShortcutKey/
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { getCodeByPath, getCodeSizeByPath, getNameByPath, monacaLanguageType } from '../yakRunner/utils'
 import { openAIForge } from '../yakRunnerAuditHole/YakitAuditHoleTable/utils'
+import { isIRify } from '@/utils/envfile'
+import { YakitRoute } from '@/enums/yakitRoute'
 const { ipcRenderer } = window.require('electron')
 export const YakRunnerAuditCode: React.FC<YakRunnerAuditCodeProps> = (props) => {
   const { auditCodePageInfo } = props
@@ -846,6 +848,21 @@ export const AuditCodeStatusInfo: React.FC<AuditCodeStatusInfoProps> = (props) =
     e.stopPropagation()
     if (!path) {
       yakitNotify('error', '未找到项目路径，无法进行AI审计')
+      return
+    }
+    if (isIRify()) {
+      const auditParams: AuditCodePageInfoProps = {
+        Schema: 'syntaxflow',
+        Location: path,
+        Path: '/',
+      }
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.Irify_AI_Code_Audit,
+          params: auditParams,
+        }),
+      )
       return
     }
     const params = {

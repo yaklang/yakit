@@ -85,6 +85,8 @@ export enum YakitRoute {
   YakRunner_Code_Scan = 'yakrunner-code-scan',
   // YakRunner代码审计
   YakRunner_Audit_Code = 'yakrunner-audit-code',
+  /** Irify：AI 代码审计 */
+  Irify_AI_Code_Audit = 'irify-ai-code-audit',
   // YakRunner项目管理
   YakRunner_Project_Manager = 'yakrunner-project-manager',
   // YakRunner扫描历史

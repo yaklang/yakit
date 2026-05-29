@@ -302,6 +302,13 @@
     "taskEnd": "Task End",
     "taskEndDesc": "The current task has ended, below is the new task data"
   },
+  "AIReportFinishCard": {
+    "openInAICodeAudit": "Open in AI code audit",
+    "openInAICodeAuditError": "Current page cannot open AI code audit",
+    "reportContentEmpty": "Report content is empty, cannot export",
+    "pdfExportSuccess": "PDF export successfully",
+    "pdfExportFailed": "PDF export failed: {{error}}"
+  },
   "AIHttpFlowFuzzStatusCard": {
     "title": "Packet statistics",
     "badgeStarting": "Starting",

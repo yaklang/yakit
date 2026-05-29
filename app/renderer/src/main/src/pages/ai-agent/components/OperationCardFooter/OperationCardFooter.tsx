@@ -9,6 +9,9 @@ import { AITabsEnum } from '../../defaultConstant'
 import { Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface OperationCardFooterProps {
   copyStr?: string
@@ -17,6 +20,7 @@ export interface OperationCardFooterProps {
 }
 
 export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copyStr, callToolId, aiFilePath }) => {
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   const { t } = useI18nNamespaces(['yakitUi'])
   const handleDetails = useMemoizedFn(() => {
     if (!callToolId) return
@@ -32,7 +36,9 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
   // 跳转并查看文件
   const handleViewFile = useMemoizedFn(() => {
     if (!aiFilePath) return
-
+    if (currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
+      emiter.emit('onOpenFileByPath', JSON.stringify({ params: { path: aiFilePath }, isHistory: false }))
+    }
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_System }))
     setTimeout(() => {
       emiter.emit('fileSystemDefaultExpand', aiFilePath)

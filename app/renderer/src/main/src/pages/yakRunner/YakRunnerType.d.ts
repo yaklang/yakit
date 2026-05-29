@@ -50,6 +50,7 @@ export interface OpenFileByPathProps {
     name: string
     parent?: string | null
     highLightRange?: Selection
+    aiReport?: boolean
   }
   // 是否记录历史
   isHistory?: boolean

@@ -11,8 +11,11 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import emiter from '@/utils/eventBus/eventBus'
 import { AITabsEnum } from '../defaultConstant'
-import { TabKey } from './aiFileSystemList/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useMemoizedFn } from 'ahooks'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { YakitRoute } from '@/enums/yakitRoute'
 
 export interface FileListItem {
   name: string
@@ -47,10 +50,19 @@ const getFileName = (path: string, isDir: boolean): string => {
 }
 
 const FileList: FC<FileListProps> = ({ title, fileList }) => {
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const switchAIActTab = () => {
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log }))
   }
+  const onOpenFileByPath = useMemoizedFn((e: React.MouseEvent<HTMLDivElement>, path: string, isDir: boolean) => {
+    e.stopPropagation()
+    if (!isDir && currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
+      const name = getFileName(path, isDir)
+      emiter.emit('onOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
+    }
+  })
+
   return (
     <div className={styles['file-list']}>
       <div className={styles['file-list-title']}>
@@ -78,8 +90,18 @@ const FileList: FC<FileListProps> = ({ title, fileList }) => {
                   >
                     {action}
                   </YakitTag>
-                  <div className={styles['file-list-item-icon']}>{Icon}</div>
-                  <div className={styles['file-list-item-name']}>{dangerFile}</div>
+                  <div
+                    className={styles['file-list-item-icon']}
+                    onClick={(e) => onOpenFileByPath(e, data.path, data.is_dir)}
+                  >
+                    {Icon}
+                  </div>
+                  <div
+                    className={styles['file-list-item-name']}
+                    onClick={(e) => onOpenFileByPath(e, data.path, data.is_dir)}
+                  >
+                    {dangerFile}
+                  </div>
                   <div className={styles['file-list-item-desc']}>{message}</div>
                 </div>
                 <div className={styles['file-list-item-actions']}>

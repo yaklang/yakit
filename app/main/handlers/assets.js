@@ -1,4 +1,5 @@
 const { ipcMain, BrowserWindow } = require('electron')
+const isDev = require('electron-is-dev')
 const { htmlTemplateDir } = require('../filePath')
 const compressing = require('compressing')
 const fs = require('fs')
@@ -901,5 +902,152 @@ td {
   }
   ipcMain.handle('PrintReportPdfFromTemplate', async (e, params) => {
     return await asyncPrintReportPdfFromTemplate(params)
+  })
+
+  /** markdown PDF：printId -> { code, theme } */
+  const markdownPdfPrintPayloadMap = new Map()
+  const markdownPdfPrintReadyResolvers = new Map()
+
+  ipcMain.handle('GetMarkdownPdfPrintPayload', async (e, printId) => {
+    return markdownPdfPrintPayloadMap.get(printId) || null
+  })
+
+  ipcMain.handle('MarkdownPdfPrintReady', async (e, printId) => {
+    const resolve = markdownPdfPrintReadyResolvers.get(printId)
+    if (resolve) {
+      markdownPdfPrintReadyResolvers.delete(printId)
+      resolve()
+    }
+    return { ok: true }
+  })
+
+  const patchMarkdownPdfPrintLayout = async (printWin) => {
+    await printWin.webContents.insertCSS(`
+      @page { margin: 0; size: A4; }
+      html, body, #root {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        background: var(--Colors-Use-Neutral-Bg-Hover, #f0f1f3) !important;
+      }
+      [class*="markdown-pdf-print"] {
+        box-sizing: border-box !important;
+        padding: 20px !important;
+        background: var(--Colors-Use-Neutral-Bg-Hover, #f0f1f3) !important;
+      }
+      .stream-markdown .container,
+      .stream-markdown .\\!container {
+        width: 100% !important;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+      }
+    `)
+  }
+
+  const waitMarkdownPrintPageResources = async (printWin) => {
+    await printWin.webContents.executeJavaScript(`
+      new Promise((resolve) => {
+        const done = () => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => resolve(true))
+          })
+        }
+        const waitFonts = (document.fonts && document.fonts.ready)
+          ? document.fonts.ready.catch(() => {})
+          : Promise.resolve()
+        const imgs = Array.from(document.images || [])
+        const waitImages = Promise.all(
+          imgs.map((img) => {
+            if (img.complete) return Promise.resolve()
+            return new Promise((r) => {
+              img.addEventListener('load', r, { once: true })
+              img.addEventListener('error', r, { once: true })
+            })
+          })
+        )
+        Promise.all([waitFonts, waitImages]).then(() => {
+          setTimeout(done, 500)
+        })
+      });
+    `)
+    await printWin.webContents.executeJavaScript(`
+      new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))));
+    `)
+  }
+
+  /**
+   * Markdown 导出 PDF：隐藏窗口加载 StreamMarkdown 页面（与 YakRunner 预览一致）
+   */
+  const asyncPrintMarkdownPdfFromTemplate = async (params) => {
+    const { outputPath, code, theme = 'light' } = params || {}
+    if (!outputPath || typeof outputPath !== 'string') {
+      throw new Error('PrintMarkdownPdfFromTemplate: outputPath required')
+    }
+    if (code === undefined || code === null) {
+      throw new Error('PrintMarkdownPdfFromTemplate: code required')
+    }
+
+    const printId = `md-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    markdownPdfPrintPayloadMap.set(printId, { code: String(code), theme: theme || 'light' })
+
+    let printWin = null
+    try {
+      const readyPromise = new Promise((resolve, reject) => {
+        markdownPdfPrintReadyResolvers.set(printId, resolve)
+        setTimeout(() => {
+          if (markdownPdfPrintReadyResolvers.has(printId)) {
+            markdownPdfPrintReadyResolvers.delete(printId)
+            reject(new Error('PrintMarkdownPdfFromTemplate: render timeout'))
+          }
+        }, 120000)
+      })
+
+      // A4 可打印宽度约 794px（96dpi），与 PDF 页宽对齐，避免两侧白边
+      printWin = new BrowserWindow({
+        show: false,
+        width: 794,
+        height: 1800,
+        webPreferences: {
+          preload: path.join(__dirname, '../preload.js'),
+          nodeIntegration: true,
+          contextIsolation: false,
+          sandbox: true,
+        },
+      })
+
+      const search = `window=markdown-pdf-print&printId=${encodeURIComponent(printId)}`
+      if (isDev) {
+        await printWin.loadURL(`http://127.0.0.1:3000/?${search}`)
+      } else {
+        await printWin.loadFile(path.resolve(__dirname, '../../renderer/pages/main/index.html'), { search })
+      }
+
+      await readyPromise
+      await patchMarkdownPdfPrintLayout(printWin)
+      await waitMarkdownPrintPageResources(printWin)
+
+      const pdfBuffer = await printWin.webContents.printToPDF({
+        printBackground: true,
+        margins: {
+          marginType: 'none',
+        },
+        pageSize: 'A4',
+        preferCSSPageSize: true,
+        landscape: false,
+      })
+      fs.writeFileSync(outputPath, pdfBuffer)
+      return { ok: true }
+    } finally {
+      markdownPdfPrintPayloadMap.delete(printId)
+      markdownPdfPrintReadyResolvers.delete(printId)
+      if (printWin && !printWin.isDestroyed()) {
+        printWin.destroy()
+      }
+    }
+  }
+
+  ipcMain.handle('PrintMarkdownPdfFromTemplate', async (e, params) => {
+    return await asyncPrintMarkdownPdfFromTemplate(params)
   })
 }

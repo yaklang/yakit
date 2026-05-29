@@ -167,7 +167,20 @@
 }
 
 .tab-wrap-vertical-right {
+  flex-direction: row;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  // 先渲染的子节点为侧栏内容，yakit-side-tab 在 DOM 后序，贴屏幕/面板最右侧
+  > :first-child {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
   .yakit-side-tab {
+    flex-shrink: 0;
     @include tab() {
       height: unset;
       padding-top: 12px;

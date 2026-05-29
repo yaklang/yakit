@@ -29,6 +29,8 @@ export enum AISourceEnum {
   webFuzzer = 'webFuzzer',
   /** flow 来源 */
   flow = 'flow',
+  /** irify 来源 */
+  irify = 'irify',
   /** 兼容老数据 */
   other = '',
 }
@@ -903,6 +905,12 @@ export declare namespace AIAgentGrpcApi {
     next_start_id: number
     requested_start_id: number
     session_id: string
+  }
+
+  export interface ReportFinishPayload {
+    report_path: string
+    title: string
+    summary_markdown: string
   }
 }
 
