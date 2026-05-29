@@ -510,5 +510,11 @@
     "deleteFailed": "刪除會話失敗：{{error}}",
     "editTitle": "編輯對話標題",
     "deleteConfirm": "是否確認刪除該歷史對話，刪除後將無法恢復"
+  },
+  "AIChatSetting": {
+    "permissionsAndSecurity": "基礎權限與安全",
+    "planningAndExecution": "任務規劃與執行",
+    "automation": "自動化配置",
+    "resourcesLimits": "資源與上下文閾值"
   }
 }
