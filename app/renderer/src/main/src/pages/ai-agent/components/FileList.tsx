@@ -55,7 +55,8 @@ const FileList: FC<FileListProps> = ({ title, fileList }) => {
   const switchAIActTab = () => {
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.Operation_Log }))
   }
-  const onOpenFileByPath = useMemoizedFn((path: string, isDir: boolean) => {
+  const onOpenFileByPath = useMemoizedFn((e: React.MouseEvent<HTMLDivElement>, path: string, isDir: boolean) => {
+    e.stopPropagation()
     if (!isDir && currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
       const name = getFileName(path, isDir)
       emiter.emit('onOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
@@ -91,13 +92,13 @@ const FileList: FC<FileListProps> = ({ title, fileList }) => {
                   </YakitTag>
                   <div
                     className={styles['file-list-item-icon']}
-                    onClick={() => onOpenFileByPath(data.path, data.is_dir)}
+                    onClick={(e) => onOpenFileByPath(e, data.path, data.is_dir)}
                   >
                     {Icon}
                   </div>
                   <div
                     className={styles['file-list-item-name']}
-                    onClick={() => onOpenFileByPath(data.path, data.is_dir)}
+                    onClick={(e) => onOpenFileByPath(e, data.path, data.is_dir)}
                   >
                     {dangerFile}
                   </div>

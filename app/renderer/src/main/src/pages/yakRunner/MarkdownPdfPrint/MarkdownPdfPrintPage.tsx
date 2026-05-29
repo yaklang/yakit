@@ -7,7 +7,7 @@ const { ipcRenderer } = window.require('electron')
 
 const getPrintId = () => new URLSearchParams(window.location.search).get('printId') || ''
 
-/** 隐藏打印窗口：用 StreamMarkdown 渲染，与 YakRunner 预览一�?*/
+/** 隐藏打印窗口：用 StreamMarkdown 渲染，与 Yakit 预览一致*/
 const MarkdownPdfPrintPage: React.FC = () => {
   const { theme } = useTheme()
   const [content, setContent] = useState<string | null>(null)

@@ -249,17 +249,17 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
       },
       {
         key: 'openFile',
-        label: '打开文件',
+        label: t('YakitButton.openFile'),
       },
       {
         key: 'openFolder',
-        label: '打开文件夹',
+        label: t('YakitButton.openFolder'),
       },
     ]
     if (historyList.length > 0) {
       newMenu.push({
         key: 'history',
-        label: '最近打开',
+        label: t('YakitButton.recentOpen'),
         children: [
           ...historyList.map((item) => {
             return { key: item.path, label: item.name }

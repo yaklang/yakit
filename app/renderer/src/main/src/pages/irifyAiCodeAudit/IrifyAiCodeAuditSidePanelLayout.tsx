@@ -36,7 +36,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
   children: React.ReactNode
   sideTabs: YakitTabsProps[]
 }> = ({ placement, children, rootClassName, sideTabs }) => {
-  const { t, i18n } = useI18nNamespaces(['history'])
+  const { t, i18n } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
 
   const [activeKey, setActiveKey] = useState<string>('ai')
@@ -72,7 +72,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
           isOpen: false,
           rightIcon: (
             <>
-              <Tooltip title="新建对话">
+              <Tooltip title={t('newChat')}>
                 <YakitButton
                   type="text2"
                   icon={<OutlinePlusIcon />}

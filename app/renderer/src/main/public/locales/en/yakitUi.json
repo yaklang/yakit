@@ -125,7 +125,8 @@
     "copyPath": "Copy path",
     "showInFolder": "Show in folder",
     "viewFile": "View file",
-    "submitted": "Submitted"
+    "submitted": "Submitted",
+    "downloadReport": "Download report"
   },
   "YakitNotification": {
     "unknown_error": "Unknown Error",

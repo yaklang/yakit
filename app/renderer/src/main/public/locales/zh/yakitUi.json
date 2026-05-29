@@ -125,7 +125,8 @@
     "copyPath": "复制路径",
     "showInFolder": "在文件夹中显示",
     "viewFile": "查看文件",
-    "submitted": "提交"
+    "submitted": "提交",
+    "downloadReport": "下载报告"
   },
   "YakitNotification": {
     "unknown_error": "未知错误",

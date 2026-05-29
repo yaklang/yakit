@@ -303,7 +303,11 @@
     "taskEndDesc": "当前任务已经结束，下面为新的任务数据"
   },
   "AIReportFinishCard": {
-    "openInAICodeAudit": "AI代码审计中打开"
+    "openInAICodeAudit": "AI代码审计中打开",
+    "openInAICodeAuditError": "当前页面无法打开AI代码审计",
+    "reportContentEmpty": "报告内容为空，无法导出",
+    "pdfExportSuccess": "PDF 导出成功",
+    "pdfExportFailed": "PDF 导出失败: {{error}}"
   },
   "AIHttpFlowFuzzStatusCard": {
     "title": "发包统计",

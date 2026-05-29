@@ -81,7 +81,7 @@ const { ipcRenderer } = window.require('electron')
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   const { tabsId, wrapperClassName } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t } = useI18nNamespaces(['yakRunner', 'yakitUi', 'aiAgent'])
   const { areaInfo, activeFile, runnerTabsId } = useStore()
   const { setActiveFile, setAreaInfo, setRunnerTabsId } = useDispatcher()
   const [tabsList, setTabsList] = useState<FileDetailInfo[]>([])
@@ -635,7 +635,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         code = await getCodeByPath(activeFile?.path)
       }
       if (!code?.trim()) {
-        yakitNotify('error', '报告内容为空，无法导出')
+        yakitNotify('error', t('AIReportFinishCard.reportContentEmpty'))
         return
       }
       const baseName = (activeFile?.name || 'report').replace(/\.(md|markdown)$/i, '') || 'report'
@@ -650,9 +650,9 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         name: activeFile?.name,
         theme,
       })
-      success('PDF 导出成功')
+      success(t('AIReportFinishCard.pdfExportSuccess'))
     } catch (e) {
-      failed(`PDF 导出失败: ${e}`)
+      failed(t('AIReportFinishCard.pdfExportFailed', { error: String(e) }))
     } finally {
       setDownloadLoading(false)
     }
@@ -673,7 +673,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
               disabled={downloadLoading}
               icon={<OutlineDownloadIcon />}
             >
-              下载报告
+              {t('YakitButton.downloadReport')}
             </YakitButton>
           ) : (
             <>

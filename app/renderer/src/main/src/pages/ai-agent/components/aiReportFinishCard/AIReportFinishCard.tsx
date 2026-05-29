@@ -43,6 +43,8 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
           aiReport: true,
         }),
       )
+    } else {
+      yakitNotify('error', t('AIReportFinishCard.openInAICodeAuditError'))
     }
   })
 
@@ -52,7 +54,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
       if (!reportPath) return
       let code = await getCodeByPath(reportPath)
       if (!code) {
-        yakitNotify('error', '报告内容为空，无法导出')
+        yakitNotify('error', t('AIReportFinishCard.reportContentEmpty'))
         return
       }
       const baseName = (title || 'report').replace(/\.(md|markdown)$/i, '') || 'report'
@@ -67,9 +69,9 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
         name: title,
         theme,
       })
-      success('PDF 导出成功')
+      success(t('AIReportFinishCard.pdfExportSuccess'))
     } catch (e) {
-      failed(`PDF 导出失败: ${e}`)
+      failed(t('AIReportFinishCard.pdfExportFailed', { error: String(e) }))
     } finally {
       setDownloadLoading(false)
     }
