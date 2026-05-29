@@ -49,6 +49,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Tooltip } from 'antd'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { yakitNotify } from '@/utils/notification'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { usePageInfo } from '@/store/pageInfo'
@@ -883,6 +884,7 @@ export const EnableThinkingOptions = [
 
 const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
   const { type, item, checked, isSelected, onMouseEnterEdit, onMouseLeaveEdit } = props
+  const { t } = useI18nNamespaces(['projectManage'])
 
   const value = useCreation(() => {
     return getModelName(item?.ModelName)
@@ -913,6 +915,11 @@ const AIModelItem: React.FC<AIModelItemProps> = React.memo((props) => {
         <div className={styles['option-text']} title={value}>
           {value}
         </div>
+        {item?.IsOnline ? (
+          <YakitTag size="small" color="warning" fullRadius>
+            {t('ProjectManage.server')}
+          </YakitTag>
+        ) : null}
         {type === AIModelTypeEnum.TierIntelligent && enableThinkingOpt === 'open' && (
           <OutlineBrainIcon className={styles['brain-icon']} />
         )}
