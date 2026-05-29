@@ -15,13 +15,31 @@ interface ConcurrentStreamContentProps {
 const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements }) => {
   const { ref: scrollRef, isFocus, onClick: onFocus } = useClickFocus<HTMLDivElement>()
 
-  /** 当前渲染起始下标，从末尾 PAGE_SIZE 开始 */
+  /** 当前渲染起始下标，初始从末尾 PAGE_SIZE 处开始，新增元素始终可见 */
   const [startIndex, setStartIndex] = useState(() => Math.max(0, elements.length - PAGE_SIZE))
   /** 加载更多时保存旧滚动高度，用于恢复位置 */
   const prevScrollHeightRef = useRef<number>(0)
   const loadingMoreRef = useRef<boolean>(false)
   const startIndexLatest = useLatest(startIndex)
+  /** 用户是否在底部附近，用于决定新元素到来时是否跟随滚动 */
+  const isAtBottomRef = useRef<boolean>(true)
 
+  /** 挂载后滚到底部 */
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [])
+
+  /** 新元素到来时，若在底部则自动跟随 */
+  useLayoutEffect(() => {
+    if (!isAtBottomRef.current) return
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [elements.length])
+
+  /** 加载旧数据后保持滚动位置不跳动 */
   useLayoutEffect(() => {
     if (!loadingMoreRef.current) return
     const el = scrollRef.current
@@ -33,6 +51,7 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements })
   const handleScroll = useMemoizedFn(() => {
     const el = scrollRef.current
     if (!el) return
+    isAtBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 50
     // 滚动到顶部附近时加载更多旧数据
     if (el.scrollTop <= 50 && startIndexLatest.current > 0 && !loadingMoreRef.current) {
       prevScrollHeightRef.current = el.scrollHeight

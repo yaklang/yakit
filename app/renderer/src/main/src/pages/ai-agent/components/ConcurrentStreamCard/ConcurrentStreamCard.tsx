@@ -1,4 +1,4 @@
-import { useMemo, type FC } from 'react'
+import { useEffect, useMemo, type FC } from 'react'
 import ChatCard from '../ChatCard'
 import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from '../../aiTree/icon'
 import ModalInfo from '../ModelInfo'
@@ -35,7 +35,8 @@ const ConcurrentStreamCard: FC<{
   chatType: ReActChatElement['chatType']
 }> = ({ session, elements, chatType, token, hasNext }) => {
   // 展开收起
-  const [expand, { toggle: expandToggle }] = useBoolean(true)
+  const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
+
   // 全屏
   const [fullScreen, { toggle: fullScreenToggle }] = useBoolean(false)
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
@@ -48,7 +49,11 @@ const ConcurrentStreamCard: FC<{
   const modalInfo = useMemo(() => {
     return { time: raw?.Timestamp, title: raw?.AIModelName, icon: raw?.AIService }
   }, [raw?.AIModelName, raw?.AIService, raw?.Timestamp])
-  console.log('elements:', { elements, raw })
+
+  useEffect(() => {
+    if (hasNext) collapseExpand()
+  }, [collapseExpand, hasNext])
+
   return (
     <ChatCard
       className="concurrent-stream-card"
@@ -81,7 +86,7 @@ const ConcurrentStreamCard: FC<{
       {expand && (
         <div>
           <div className={styles['goal']}>{raw?.data.goal}</div>
-          <div className={styles['content']}>
+          <div className={styles['content']} hidden={elements.length === 0}>
             <ConcurrentStreamContent elements={elements} />
           </div>
         </div>
