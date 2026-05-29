@@ -141,7 +141,7 @@ const useAIMessageData = ({
 
         const contents = await aiChatMessageStore.getDialogueContentsByPid({
           sessionId,
-          pTokens: result.items.map((item) => item.token),
+          pTokens: getTreeDataIds(result.items),
         })
         contents.forEach((item) => {
           setContentMap(chatType, item.token, JSON.parse(item.content))

@@ -96,7 +96,7 @@ const AIGroupStreamCard: FC<{
   session: string
 }> = ({ elements, hasNext, session }) => {
   const lastElement = elements[elements.length - 1]
-  const { stream } = useTypedStream({ chatType: lastElement.chatType, token: lastElement.token, session })
+  const { stream } = useTypedStream({ chatType: lastElement?.chatType, token: lastElement?.token ?? '', session })
   const { nodeLabel } = useAINodeLabel(stream?.data.NodeIdVerbose)
   const [expand, setExpand] = useState(true)
   const content = stream?.data.content || ''

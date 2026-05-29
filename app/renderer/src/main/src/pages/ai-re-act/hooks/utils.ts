@@ -167,7 +167,7 @@ export const indexedDBDataToReActChatRenderItem = (
         children: JSONParseLog(item.children || '[]'),
         renderNum: 0,
         isCached: true,
-        kind: 'group',
+        kind: item.kind,
       }
     }
     return {
@@ -201,6 +201,7 @@ export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: strin
   elements.map((item, index) => ({
     token: item.token,
     type: item.type,
+    kind: item.kind,
     isGroup: item.kind === 'group' || item.kind === 'task',
     children: JSON.stringify(item.kind === 'group' || item.kind === 'task' ? item.children : []),
     sessionId,

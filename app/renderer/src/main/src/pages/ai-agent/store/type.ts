@@ -1,3 +1,4 @@
+import type { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import type { Domain, StoreName } from './constants'
 
 export type { StoreName }
@@ -11,6 +12,7 @@ export interface DialogueRecord {
   children?: string
   sessionId: string
   isCached?: boolean
+  kind: ReActChatRenderItem['kind']
 }
 
 export interface DialogueContentRecord {
