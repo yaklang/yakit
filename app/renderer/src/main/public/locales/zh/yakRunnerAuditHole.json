@@ -65,6 +65,9 @@
     "noDisposalData": "暂无漏洞处置信息",
     "disposalStatusLabel": "处置状态：",
     "disposalPlaceholder": "请留下对处置的说明...",
-    "publishDisposal": "发布处置"
+    "publishDisposal": "发布处置",
+    "noForgeNameMatchesFound": "暂无ForgeName匹配项",
+    "noParamsUIConfigConfigFound": "暂无ParamsUIConfig配置项",
+    "forgeNameMatchingError": "匹配ForgeName异常："
   }
 }

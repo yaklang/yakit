@@ -413,8 +413,12 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         <Form
           form={form}
           layout={'horizontal'}
-          labelCol={{ span: isEndpoints ? (i18n.language === 'zh' ? 4 : 5) : i18n.language === 'zh' ? 5 : 8 }}
-          wrapperCol={{ span: isEndpoints ? (i18n.language === 'zh' ? 20 : 19) : i18n.language === 'zh' ? 19 : 16 }}
+          labelCol={{
+            span: isEndpoints ? (i18n.language.startsWith('zh') ? 4 : 5) : i18n.language.startsWith('zh') ? 5 : 8,
+          }}
+          wrapperCol={{
+            span: isEndpoints ? (i18n.language.startsWith('zh') ? 20 : 19) : i18n.language.startsWith('zh') ? 19 : 16,
+          }}
         >
           {isEndpoints ? (
             <>

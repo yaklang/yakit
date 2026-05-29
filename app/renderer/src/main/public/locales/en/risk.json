@@ -46,7 +46,10 @@
     "RowContextMenu": {
       "delete_duplicate_title_data": "Delete Duplicate Title Data",
       "openInNewWindow": "Open in New Window"
-    }
+    },
+    "queryRisksTotalFailed": "Failed to get total count in apiQueryRisksTotalByRuntimeId: ",
+    "queryRiskTagsFailed": "Query QueryRiskTags failed: ",
+    "queryAvailableRiskTypeFailed": "Query QueryAvailableRiskType failed: "
   },
   "YakitRiskSelectTag": {
     "false_positive": "False Positive",

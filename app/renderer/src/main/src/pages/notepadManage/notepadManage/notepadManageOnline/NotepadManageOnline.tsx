@@ -37,7 +37,7 @@ import {
 import styles from './NotepadManageOnline.module.scss'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { useGoEditNotepad } from '../../hook/useGoEditNotepad'
-import { getNotepadNameByEdition } from '@/pages/layout/NotepadMenu/utils'
+import { getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { failed } from '@/utils/notification'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -321,7 +321,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
     }
   }, [isAllSelect, selectedRowKeys.length, response.pagemeta.total])
   const name = useCreation(() => {
-    return getNotepadNameByEdition()
+    return getNotepadNameByEditionMulLang()
   }, [])
   return (
     <YakitSpin spinning={pageLoading}>

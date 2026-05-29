@@ -157,7 +157,7 @@ import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { SystemInfo } from '@/constants/hardware'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
 const { ipcRenderer } = window.require('electron')
-
+const tOriginal = i18n.getFixedT(null, ['yakitUi', 'history'])
 export interface codecHistoryPluginProps {
   key: string
   label: string
@@ -4798,7 +4798,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
         >
           <div
             className={style['http-history-table-left-shield']}
-            style={{ width: i18n.language === 'zh' ? 115 : 150 }}
+            style={{ width: i18n.language.startsWith('zh') ? 115 : 150 }}
           >
             <span className="content-ellipsis">{t('HTTPFlowShield.conditionBlocked')}</span>
             <span className={style['http-history-table-left-number']}>{shieldData?.data.length}</span>
@@ -5304,7 +5304,7 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
       },
     })
     .then(() => {
-      openFlag === false && info(i18n.language === 'zh' ? '发送成功' : 'Sent Successfully')
+      openFlag === false && info(tOriginal('YakitNotification.sendSuccess'))
     })
 }
 
@@ -5322,7 +5322,7 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
       Tags: existedTags,
     })
     .then(() => {
-      yakitNotify('success', i18n.language === 'zh' ? `设置 HTTPFlow 颜色成功` : 'Set HTTPFlow color successfully')
+      yakitNotify('success', tOriginal('HTTPFlowTable.setColorSuccess'))
       let newData: HTTPFlow[] = []
       const l = data.length
       for (let index = 0; index < l; index++) {
@@ -5351,7 +5351,7 @@ export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) 
       Tags: existedTags,
     })
     .then(() => {
-      yakitNotify('success', i18n.language === 'zh' ? `清除 HTTPFlow 颜色成功` : 'Clear HTTPFlow color successfully')
+      yakitNotify('success', tOriginal('HTTPFlowTable.removeColorSuccess'))
       let newData: HTTPFlow[] = []
       const l = data.length
       for (let index = 0; index < l; index++) {
@@ -5399,12 +5399,7 @@ const onBatchExecPacketScan = (params: {
 }) => {
   const { httpFlowIds, maxLength, currentPacketScan } = params
   if (httpFlowIds.length > maxLength) {
-    yakitNotify(
-      'warning',
-      i18n.language === 'zh'
-        ? `最多同时只能发送${maxLength}条数据`
-        : `You can only send a maximum of ${maxLength} data entries at a time`,
-    )
+    yakitNotify('warning', tOriginal('HTTPFlowTable.sendLimitData', { length: maxLength }))
     return
   }
   execPacketScanWithNewTab({

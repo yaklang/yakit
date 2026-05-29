@@ -1,12 +1,60 @@
 import { isEnpriTrace } from '@/utils/envfile'
-import i18n from '@/i18n/i18n' // 你的 i18n 初始化文件路径
+import i18n from '@/i18n/i18n'
 
-export const getNotepadNameByEdition = () => {
-  const lang = i18n.language || 'zh'
-  /**只要是企业版就显示云文档，不区分其他 */
-  if (isEnpriTrace()) {
-    return lang === 'zh' ? '云文档' : 'Cloud Docs'
-  } else {
-    return lang === 'zh' ? '记事本' : 'Notepad'
+export const getNotepadNameByEditionMulLang = () => {
+  const isEnterprise = isEnpriTrace()
+  const baseKey = isEnterprise ? 'cloudDocs' : 'notepad'
+  const lang = i18n.language
+  switch (baseKey) {
+    case 'cloudDocs':
+      switch (lang) {
+        case 'en':
+          return 'Cloud Docs'
+        case 'zh-TW':
+          return '雲文檔'
+        default:
+          return '云文档'
+      }
+    case 'notepad':
+      switch (lang) {
+        case 'en':
+          return 'Notepad'
+        case 'zh-TW':
+          return '記事本'
+        default:
+          return '记事本'
+      }
+    default:
+      return ''
   }
+}
+
+export const getNotepadManage = () => {
+  const baseName = getNotepadNameByEditionMulLang()
+  let result: string = ''
+  const lang = i18n.language
+  switch (lang) {
+    case 'en':
+      result = `${baseName} Manage`
+      break
+    default:
+      result = `${baseName}管理`
+      break
+  }
+  return result
+}
+
+export const getNotepadAdd = () => {
+  const baseName = getNotepadNameByEditionMulLang()
+  let result: string = ''
+  const lang = i18n.language
+  switch (lang) {
+    case 'en':
+      result = `Add ${baseName}`
+      break
+    default:
+      result = `新建${baseName}`
+      break
+  }
+  return result
 }

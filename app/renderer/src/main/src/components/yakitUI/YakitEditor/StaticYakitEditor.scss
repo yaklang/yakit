@@ -20,6 +20,15 @@
     border-radius: 4px;
   }
 
+  .content-length:hover.lang-zh-TW::after {
+    content: '發包時自動修復，一般無需指定';
+    background-color: var(--yakit-colors-Neutral-40);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    padding: 5px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+  }
+
   .content-length:hover.lang-en::after {
     content: 'Automatically fixed when sending packets, usually no need to specify';
     background-color: var(--yakit-colors-Neutral-40);
@@ -42,6 +51,15 @@
 
   .host:hover.lang-zh::after {
     content: '如需手动指定目标地址或 Host 碰撞，请在"左侧边栏-配置-真实Host"配置';
+    background-color: var(--yakit-colors-Neutral-40);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    padding: 5px;
+    border: 1px solid var(--Colors-Use-Neutral-Border);
+    border-radius: 4px;
+  }
+
+  .host:hover.lang-zh-TW::after {
+    content: '如需手動指定目標地址或 Host 碰撞，請在「左側邊欄-配置-真實Host」配置';
     background-color: var(--yakit-colors-Neutral-40);
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     padding: 5px;
@@ -74,6 +92,9 @@
     }
     &.lang-zh::after {
       content: '隐私模式';
+    }
+    &.lang-zh-TW::after {
+      content: '隱私模式';
     }
     &.lang-en::after {
       content: 'Privacy Mode';

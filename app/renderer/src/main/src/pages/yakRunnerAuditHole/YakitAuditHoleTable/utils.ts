@@ -18,6 +18,8 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { ReActChatEventEnum } from '@/pages/ai-agent/defaultConstant'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
 import i18n from '@/i18n/i18n'
+const tOriginal = i18n.getFixedT(null, ['yakitUi', 'yakRunnerAuditHole'])
+
 const { ipcRenderer } = window.require('electron')
 /** QuerySSARisks */
 export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySSARisksResponse> = (query) => {
@@ -26,7 +28,7 @@ export const apiQuerySSARisks: (query?: QuerySSARisksRequest) => Promise<QuerySS
       .invoke('QuerySSARisks', query)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '查询失败：' : 'Query failed:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.queryFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -39,7 +41,7 @@ export const apiDeleteSSARisks: (query?: DeleteSSARisksRequest) => Promise<null>
       .invoke('DeleteSSARisks', query)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '删除失败：' : 'Deletion failed:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.deleteFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -57,7 +59,7 @@ export const apiCreateSSARiskDisposals: (params: CreateSSARiskDisposalsRequest) 
       .invoke('CreateSSARiskDisposals', params)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '设置失败：' : 'Setting failed:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.settingFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -86,7 +88,7 @@ export const apiGetSSARiskDisposal: (params: {
       .invoke('GetSSARiskDisposal', params)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '获取失败：' : 'Failed to get:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.getFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -115,7 +117,7 @@ export const apiDeleteSSARiskDisposals: (
       .invoke('DeleteSSARiskDisposals', params)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '删除失败：' : 'Deletion failed:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.deleteFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -139,7 +141,7 @@ export const apiGetSSARiskFieldGroupEx: (
       .invoke('GetSSARiskFieldGroupEx', params)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '查询失败：' : 'Query failed:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.queryFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -151,7 +153,7 @@ export const apiNewRiskRead: (query?: SSARisksFilter) => Promise<null> = (query)
       .invoke('NewSSARiskRead', { Filter: query })
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '已读失败：' : 'Failed to read message:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.readFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -173,7 +175,7 @@ export const apiGroupTableColumn: (query: GroupTableColumnRequest) => Promise<Gr
       .invoke('GroupTableColumn', query)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '已读失败：' : 'Failed to mark as read:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.readFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -190,7 +192,7 @@ export const apiSSARiskFeedbackToOnline: (params: SSARiskFeedbackToOnlineRequest
       .invoke('SSARiskFeedbackToOnline', params)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '反馈失败：' : 'Feedback failed:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.feedbackFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -203,7 +205,7 @@ export const apiQueryNewSSARisks: (query?: QueryNewSSARisksRequest) => Promise<Q
       .invoke('QueryNewSSARisks', query)
       .then(resolve)
       .catch((e) => {
-        yakitNotify('error', i18n.language === 'zh' ? '查询失败：' : 'Query failed:' + `${e}`)
+        yakitNotify('error', tOriginal('YakitNotification.queryFailed', { error: e + '' }))
         reject(e)
       })
   })
@@ -264,14 +266,11 @@ export const openAIForge = (params: {
   grpcGetAIForge(query, true)
     .then((res) => {
       if (!res) {
-        yakitNotify('warning', i18n.language === 'zh' ? '暂无ForgeName匹配项' : 'No ForgeName matches found')
+        yakitNotify('warning', tOriginal('YakitAuditHoleTable.noForgeNameMatchesFound'))
         return
       }
       if (!res.ParamsUIConfig) {
-        yakitNotify(
-          'warning',
-          i18n.language === 'zh' ? '暂无ParamsUIConfig配置项' : 'No ParamsUIConfig configuration found',
-        )
+        yakitNotify('warning', tOriginal('YakitAuditHoleTable.noParamsUIConfigConfigFound'))
         return
       }
       let paramsUIConfig: YakParamProps = JSONParseLog(res.ParamsUIConfig, jsonParseLogParams)
@@ -290,6 +289,6 @@ export const openAIForge = (params: {
       }, 100)
     })
     .catch((e) => {
-      yakitNotify('error', i18n.language === 'zh' ? '匹配ForgeName异常：' : 'ForgeName matching error: ' + `${e}`)
+      yakitNotify('error', tOriginal('YakitAuditHoleTable.forgeNameMatchingError') + `${e}`)
     })
 }

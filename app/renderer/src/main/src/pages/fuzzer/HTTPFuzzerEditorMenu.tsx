@@ -285,7 +285,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
         <div className={styles['show-box']}>
           <div
             className={styles['insert-box']}
-            style={{ width: right - left < 550 ? undefined : i18n.language === 'zh' ? 104 : 120 }}
+            style={{ width: right - left < 550 ? undefined : i18n.language.startsWith('zh') ? 104 : 120 }}
             onClick={() => {
               if (segmentedType === 'insert-tag') {
                 setSegmentedType(undefined)
@@ -511,7 +511,7 @@ export const HTTPFuzzerClickEditorMenu: React.FC<HTTPFuzzerClickEditorMenuProps>
             left: ['left'].includes(editorInfo?.direction.x || '')
               ? right - left < 550
                 ? 50
-                : i18n.language === 'zh'
+                : i18n.language.startsWith('zh')
                   ? 104
                   : 120
               : undefined,
@@ -1022,7 +1022,7 @@ export const HTTPFuzzerRangeEditorMenu: React.FC<HTTPFuzzerRangeEditorMenuProps>
             <div className={styles['line']}></div>
             <div
               className={styles['decode-box']}
-              style={{ width: right - left > 550 ? (i18n.language === 'zh' ? 100 : 120) : undefined }}
+              style={{ width: right - left > 550 ? (i18n.language.startsWith('zh') ? 100 : 120) : undefined }}
               onClick={() => {
                 if (segmentedType === 'decode') {
                   setSegmentedType(undefined)
@@ -1115,7 +1115,7 @@ export const HTTPFuzzerRangeReadOnlyEditorMenu: React.FC<HTTPFuzzerRangeReadOnly
       className={classNames(styles['http-fuzzer-read-editor'], {
         [styles['box-hidden']]: boxHidden,
       })}
-      style={{ width: i18n.language === 'zh' ? 68 : 85 }}
+      style={{ width: i18n.language.startsWith('zh') ? 68 : 85 }}
       onMouseEnter={() => {
         fizzRangeTimeoutId.current && clearTimeout(fizzRangeTimeoutId.current)
       }}

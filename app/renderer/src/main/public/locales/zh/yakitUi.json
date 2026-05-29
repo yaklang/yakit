@@ -126,7 +126,8 @@
     "showInFolder": "在文件夹中显示",
     "viewFile": "查看文件",
     "submitted": "提交",
-    "downloadReport": "下载报告"
+    "downloadReport": "下载报告",
+    "undo": "撤销"
   },
   "YakitNotification": {
     "unknown_error": "未知错误",
@@ -189,7 +190,13 @@
     "createSuccess": "创建成功",
     "createFailedNoError": "创建失败",
     "renameSuccess": "重命名成功",
-    "renameFailedNoError": "重命名失败"
+    "renameFailedNoError": "重命名失败",
+    "queryFailed": "查询失败：{{error}}",
+    "settingFailed": "设置失败：{{error}}",
+    "feedbackFailed": "反馈失败：{{error}}",
+    "readFailed": "已读失败：{{error}}",
+    "getFailed": "获取失败：{{error}}",
+    "sentSuccessfully": "发送成功"
   },
   "YakitFormDragger": {
     "filePath": "文件路径",

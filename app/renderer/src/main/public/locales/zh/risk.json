@@ -46,7 +46,10 @@
     "RowContextMenu": {
       "delete_duplicate_title_data": "删除重复标题数据",
       "openInNewWindow": "新窗口打开"
-    }
+    },
+    "queryRisksTotalFailed": "apiQueryRisksTotalByRuntimeId 获取总数失败：",
+    "queryRiskTagsFailed": "查询QueryRiskTags失败：",
+    "queryAvailableRiskTypeFailed": "查询QueryAvailableRiskType失败："
   },
   "YakitRiskSelectTag": {
     "false_positive": "误报",

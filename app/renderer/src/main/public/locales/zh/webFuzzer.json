@@ -10,7 +10,8 @@
       "pleaseEnterShareId": "请输入分享id",
       "password": "密码",
       "pleaseEnterPassword": "请输入密码",
-      "thisFieldIsRequired": "该项为必填"
+      "thisFieldIsRequired": "该项为必填",
+      "importPacketData": "导入数据包 ID"
     }
   },
   "WebFuzzerPage": {
@@ -102,11 +103,18 @@
     "trafficAnalysis": "流量分析",
     "aiCasualRejectAll": "全部放弃",
     "aiCasualAcceptAll": "全部应用",
-
     "aiCasualAcceptAllMetaTitle": "即将应用的配置",
     "responseTabManual": "手动发包",
     "responseTabAi": "AI发包",
-    "aiTabTitle": "发包记录"
+    "aiTabTitle": "发包记录",
+    "sendRequest": "发送请求",
+    "noDictionaryAvailable": "暂无字典，请先添加后再使用",
+    "getDictionaryListFailed": "获取字典列表失败：",
+    "copyUrlFailed": "复制 URL 失败：包含 Fuzz 标签可能会导致 URL 不完整",
+    "fuzzerTagDebugTool": "Fuzzer Tag 调试工具",
+    "fuzzerTagDebugToolSubTitle": "调试模式适合生成或者修改 Payload，嵌套默认嵌套在最外层，可以选中位置进行嵌套，插入则单纯在光标位置插入fuzztag",
+    "payloadNotify": "Payload 为空 / Fuzz 模版为空",
+    "editorBug": "BUG: 编辑器失效"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "已丢弃[{{droppedCount}}]个响应",
@@ -195,7 +203,9 @@
     "fileContent": "文件内容",
     "readFileByLine": "按行读取文件",
     "text": "文本",
-    "confirmInsertTag": "确定插入标签"
+    "confirmInsertTag": "确定插入标签",
+    "selectFileInsert": "选择文件并插入",
+    "copyYouWantDictionary": "复制你想要作为字典的文本"
   },
   "HTTPFuzzerHotPatch": {
     "enableModifiedHotReload": "是否启用修改的热加载代码和配置",
@@ -741,6 +751,7 @@
     "emptyOrUnreadableFile": "文件内容为空或读取失败，请重新选择可解析的文本文件",
     "parseFailed": "解析失败，未识别到有效的 hosts 配置",
     "parseSuccess": "解析成功，已导入 {{count}} 条 hosts 配置",
-    "uploadPlaceholder": "路径支持手动输入,支持格式:txt/hosts"
+    "uploadPlaceholder": "路径支持手动输入,支持格式:txt/hosts",
+    "enterDNSTitle": "输入 DNS Hosts 配置"
   }
 }

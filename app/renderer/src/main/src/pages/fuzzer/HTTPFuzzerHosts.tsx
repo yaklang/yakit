@@ -11,6 +11,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { hostsExampleTemplate } from '@/defaultConstants/HTTPFuzzerHosts'
 import styles from './HTTPFuzzerHistory.module.scss'
+const tOriginal = i18n.getFixedT(null, ['webFuzzer'])
 const { ipcRenderer } = window.require('electron')
 
 interface HTTPFuzzerHostInputProp {
@@ -24,7 +25,7 @@ export const inputHTTPFuzzerHostConfigItem = (
   batchHandler?: (items: { Key: string; Value: string }[]) => void,
 ) => {
   const m = showYakitModal({
-    title: i18n.language === 'zh' ? '输入 DNS Hosts 配置' : 'Enter DNS Hosts Configuration',
+    title: tOriginal('HTTPFuzzerHosts.enterDNSTitle'),
     width: '500px',
     footer: null,
     content: (

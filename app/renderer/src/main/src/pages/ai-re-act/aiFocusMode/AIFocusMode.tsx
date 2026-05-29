@@ -37,17 +37,29 @@ export const AIFocusMode: React.FC<AIFocusModeProps> = React.memo((props) => {
 
   useEffect(() => {
     const list = focusModeRaw.map((item) => {
-      const description = item.Description.length ? item.Description : t('YakitEmpty.noDescription')
+      const descriptionZh = item.DescriptionZh.length
+        ? item.DescriptionZh
+        : item.Description || t('YakitEmpty.noDescription')
       const resultVerboseNameZh = item?.VerboseNameZh?.length ? item.VerboseNameZh : item.Name
       return {
-        label: lang === 'zh' ? resultVerboseNameZh : item.Name,
+        label: isShowZh(lang) ? resultVerboseNameZh : item.Name,
         value: item.Name,
-        description,
+        description: isShowZh(lang) ? descriptionZh : item.Description,
       }
     })
 
     setFocusModeList(list)
   }, [focusModeRaw, lang])
+
+  const isShowZh = useMemoizedFn((lang) => {
+    switch (lang) {
+      case 'zh':
+      case 'zh-TW':
+        return true
+      default:
+        return false
+    }
+  })
 
   const getFocusMode = useMemoizedFn(() => {
     grpcQueryAIFocus().then((res) => {

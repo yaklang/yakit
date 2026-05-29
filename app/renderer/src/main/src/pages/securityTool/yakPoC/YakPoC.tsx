@@ -1033,7 +1033,7 @@ const YakPoCExecuteContent: React.FC<YakPoCExecuteContentProps> = React.memo((pr
   return (
     <>
       {isShowPluginAndLog && (
-        <div className={styles['midden-wrapper']} style={{ width: i18n.language === 'zh' ? 300 : 350 }}>
+        <div className={styles['midden-wrapper']} style={{ width: i18n.language.startsWith('zh') ? 300 : 350 }}>
           <div className={styles['midden-heard']}>
             <YakitRadioButtons
               size="small"

@@ -22,7 +22,7 @@ interface AIMilkdownMentionProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   filterMode?: AIChatMentionProps['filterMode']
 }
-export const mentionWidth = () => (i18n.language === 'zh' ? 300 : 342)
+export const mentionWidth = () => (i18n.language.startsWith('zh') ? 300 : 342)
 const mentionTarget = '@'
 
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {

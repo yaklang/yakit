@@ -821,7 +821,7 @@ export const HotPatchManagement: React.FC = () => {
 
   const renderMenu = useMemoizedFn(() => {
     return (
-      <div className={styles['type-panel']} style={{ width: i18n.language === 'zh' ? 300 : 330 }}>
+      <div className={styles['type-panel']} style={{ width: i18n.language.startsWith('zh') ? 300 : 330 }}>
         <YakitResizeBox
           isVer={true}
           lineDirection="bottom"

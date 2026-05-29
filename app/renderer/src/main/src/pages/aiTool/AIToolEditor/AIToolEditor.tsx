@@ -546,7 +546,7 @@ const AIToolEditor: React.FC<AIToolEditorProps> = React.memo((props) => {
                 </div>
                 <div
                   className={styles['editor-params-preview-wrapper']}
-                  style={{ width: i18n.language === 'zh' ? 301 : 400 }}
+                  style={{ width: i18n.language.startsWith('zh') ? 301 : 400 }}
                 >
                   <div className={styles['params-preview-header']}>
                     <div className={styles['header-title']}>{t('AIToolEditor.paramPreview')}</div>

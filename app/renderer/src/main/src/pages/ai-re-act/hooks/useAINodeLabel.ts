@@ -12,10 +12,10 @@ function useAINodeLabel(params?: AIOutputI18n) {
     }
   }, [i18n.language])
   const nodeLabel = useCreation(() => {
-    return params ? params[language] : ''
+    return params ? params[language] || params['Zh'] : ''
   }, [language, params])
   const getLabelByParams = useMemoizedFn((value: AIOutputI18n) => {
-    return value[language] || ''
+    return value[language] || value['Zh'] || ''
   })
   return { nodeLabel, getLabelByParams }
 }

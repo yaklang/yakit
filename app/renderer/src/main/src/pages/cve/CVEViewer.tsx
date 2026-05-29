@@ -104,7 +104,7 @@ const CVEQuery: React.FC<CVEQueryProp> = (props) => {
   }, [params])
 
   return (
-    <div className={styles['cve-query']} style={{ minWidth: i18n.language === 'zh' ? 300 : 450 }}>
+    <div className={styles['cve-query']} style={{ minWidth: i18n.language.startsWith('zh') ? 300 : 450 }}>
       <div className={styles['cve-query-heard']}>
         <span>{t('CVEQuery.advancedQuery')}</span>
         <YakitSwitch checked={advancedQuery} onChange={setAdvancedQuery} />

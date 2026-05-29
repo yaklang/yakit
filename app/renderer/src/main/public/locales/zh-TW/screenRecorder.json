@@ -1,0 +1,45 @@
+{
+  "ScreenRecorderPage": {
+    "notInstalled": "未安裝錄屏",
+    "installRecorder": "安裝錄屏",
+    "installing": "錄屏工具安裝中...",
+    "installFailed": "IsScrecorderReady失敗：{{error}}",
+    "installHint": "點選“安裝錄屏”，錄屏工具安裝成功後即可開始錄屏",
+    "timeout": "連線超時",
+    "downloaded": "已下載"
+  },
+  "ScrecorderModal": {
+    "recommended": "推薦",
+    "speed": "倍速",
+    "screenRecorderDesc": "本錄屏在 Windows 下，會同時錄製所有螢幕，合併在一個檔案中；在 MacOS 下多屏會生成多個檔案",
+    "framerate": "幀率",
+    "framerateHelp": "滲透測試過程記錄推薦使用低幀率（5fps 以下）以免 CPU 佔用過高",
+    "framerateTooltip": "幀率即每秒截圖次數",
+    "speedHelp": "直接錄製倍速影片，免影片後期處理",
+    "mouseCapture": "滑鼠捕捉",
+    "startRecording": "開始錄屏"
+  },
+  "ScreenRecorderList": {
+    "getListFailed": "獲取列表資料失敗：{{error}}",
+    "loginRequired": "請先登入，登入後方可使用",
+    "screenRecorder": "錄屏管理",
+    "stopRecording": "停止錄屏",
+    "deleteTitle": "刪除錄屏",
+    "deleteDesc": "刪除錄屏的同時會清除本地影片檔案"
+  },
+  "ScreenRecorderListItem": {
+    "fileNotFound": "目標檔案已不存在!",
+    "playFailed": "播放失敗：{{error}}",
+    "editVideoInfo": "編輯影片資訊",
+    "updateFailed": "修改失敗：{{error}}",
+    "video": "影片",
+    "videoName": "影片名稱",
+    "notes": "備註",
+    "noImage": "暫無圖片",
+    "openDirectory": "點選開啟影片所在目錄",
+    "deletePopconfirm": "刪除錄屏的同時會刪除本地錄屏檔案"
+  },
+  "ReactPlayerVideo": {
+    "fileNotPlayable": "該影片檔案不可播放"
+  }
+}

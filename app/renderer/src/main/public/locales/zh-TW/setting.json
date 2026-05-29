@@ -1,0 +1,17 @@
+{
+  "SystemConfig": {
+    "systemSettings": "系統設定",
+    "watermark": "浮水印",
+    "on": "開",
+    "off": "關",
+    "watermarkContent": "浮水印內容",
+    "enterCustomWatermark": "請輸入自定義水印內容",
+    "watermarkPlaceholder": "不超過 15 個字",
+    "default": "預設",
+    "custom": "自定義"
+  },
+  "SoftwareSettings": {
+    "projectManagement": "專案管理",
+    "remoteMode": "遠端模式"
+  }
+}

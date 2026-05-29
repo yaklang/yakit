@@ -10,7 +10,8 @@
       "pleaseEnterShareId": "Please enter the share ID",
       "password": "Password",
       "pleaseEnterPassword": "Please enter the password",
-      "thisFieldIsRequired": "This field is required"
+      "thisFieldIsRequired": "This field is required",
+      "importPacketData": "Import Packet ID"
     }
   },
   "WebFuzzerPage": {
@@ -102,11 +103,18 @@
     "trafficAnalysis": "TrafficAnalysis",
     "aiCasualRejectAll": "Reject all",
     "aiCasualAcceptAll": "Accept all",
-
     "aiCasualAcceptAllMetaTitle": "Setting to apply",
     "responseTabManual": "Manual fuzz",
     "responseTabAi": "AI fuzz",
-    "aiTabTitle": "Fuzz records"
+    "aiTabTitle": "Fuzz records",
+    "sendRequest": "Send Request",
+    "noDictionaryAvailable": "No dictionary available, please add one before using",
+    "getDictionaryListFailed": "Failed to get dictionary list: ",
+    "copyUrlFailed": "Failed to copy URL: including Fuzz tags may result in an incomplete URL",
+    "fuzzerTagDebugTool": "Fuzzer Tag Debug Tool",
+    "fuzzerTagDebugToolSubTitle": "Debug mode is suitable for generating or modifying payloads. Nesting defaults to the outermost level, but you can select a position to nest. \"Insert\" simply inserts the fuzztag at the cursor position.",
+    "payloadNotify": "Payload is empty / Fuzz template is empty",
+    "editorBug": "BUG: Editor not working"
   },
   "FuzzerExtraShow": {
     "responsesDiscarded": "Discarded [{{droppedCount}}] responses",
@@ -195,7 +203,9 @@
     "fileContent": "File Content",
     "readFileByLine": "Read file by line",
     "text": "Text",
-    "confirmInsertTag": "Confirm Insert Tag"
+    "confirmInsertTag": "Confirm Insert Tag",
+    "selectFileInsert": "Select File and Insert",
+    "copyYouWantDictionary": "Copy the text you want to use as a dictionary"
   },
   "HTTPFuzzerHotPatch": {
     "enableModifiedHotReload": "Enable modified hot reload code and configuration?",
@@ -741,6 +751,7 @@
     "emptyOrUnreadableFile": "The file is empty or could not be read. Please select a supported text file",
     "parseFailed": "Parse failed. No valid hosts entries were found",
     "parseSuccess": "Parse succeeded. Imported {{count}} hosts entries",
-    "uploadPlaceholder": "The path can be entered manually, and the supported format is txt/hosts"
+    "uploadPlaceholder": "The path can be entered manually, and the supported format is txt/hosts",
+    "enterDNSTitle": "Enter DNS Hosts Configuration"
   }
 }

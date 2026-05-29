@@ -1021,11 +1021,15 @@ const GetUIOpSettingMenu = () => {
         children: [
           {
             key: 'zh',
-            label: '中文',
+            label: '简体中文',
           },
           {
             key: 'en',
             label: '英文',
+          },
+          {
+            key: 'zh-TW',
+            label: '繁体中文',
           },
         ],
       },
@@ -1114,11 +1118,15 @@ const GetUIOpSettingMenu = () => {
       children: [
         {
           key: 'zh',
-          label: '中文',
+          label: '简体中文',
         },
         {
           key: 'en',
           label: '英文',
+        },
+        {
+          key: 'zh-TW',
+          label: '繁体中文',
         },
       ],
     },
@@ -1230,7 +1238,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
           type: 'white',
           footer: null,
           maskClosable: false,
-          width: i18n.language === 'zh' ? 500 : 650,
+          width: i18n.language.startsWith('zh') ? 500 : 650,
           // onCancel: () => m.destroy(),
           content: <ConfigPrivateDomain onClose={() => m.destroy()} />,
         })
@@ -1373,6 +1381,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
         return
       case 'zh':
       case 'en':
+      case 'zh-TW':
         i18n.changeLanguage(type)
         setLocalValue(getRemoteI18nGV(), type)
         return

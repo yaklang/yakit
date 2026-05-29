@@ -495,7 +495,7 @@ export const MatcherAndExtraction: React.FC<MatcherAndExtractionProps> = React.m
     })
     const isSmallMode: boolean = useMemo(() => {
       if (width) {
-        return i18n.language === 'zh' ? width < 550 : width < 650
+        return i18n.language.startsWith('zh') ? width < 550 : width < 650
       } else {
         return false
       }
@@ -1358,7 +1358,7 @@ export const LabelNodeItem: React.FC<labelNodeItemProps> = React.memo((props) =>
     >
       <span
         className={classNames(styles['label'], props.labelClassName)}
-        style={{ width: i18n.language === 'zh' ? 104 : 130 }}
+        style={{ width: i18n.language.startsWith('zh') ? 104 : 130 }}
       >
         {props.label}
       </span>

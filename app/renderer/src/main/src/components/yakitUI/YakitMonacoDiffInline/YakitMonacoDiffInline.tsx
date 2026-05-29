@@ -4,8 +4,10 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 
 import { useEditorFontSize } from '@/store/editorFontSize'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
+import i18n from '@/i18n/i18n'
 import styles from './YakitMonacoDiffInline.module.scss'
+
+const tOriginal = i18n.getFixedT(null, ['yakitUi'])
 
 export type YakitMonacoDiffInlineDecision = 'accept' | 'reject' | null
 
@@ -30,17 +32,15 @@ export interface YakitMonacoDiffInlineProps {
   language?: string
 }
 
-/** 根据 i18n.language 选取浮条文案；不走 i18n keys，避免依赖业务命名空间 */
-function pickLabels(lng: string): {
+function pickLabels(): {
   nav: (current: number, total: number) => string
   keep: string
   undo: string
 } {
-  const isEn = (lng || '').toLowerCase().startsWith('en')
   return {
     nav: (current, total) => `${current} / ${total}`,
-    keep: isEn ? 'Keep' : '保留',
-    undo: isEn ? 'Undo' : '撤销',
+    keep: tOriginal('YakitButton.keep'),
+    undo: tOriginal('YakitButton.undo'),
   }
 }
 
@@ -222,7 +222,7 @@ export const YakitMonacoDiffInline = memo(function YakitMonacoDiffInlineInner(pr
 
       const stackByLine = new Map<number, number>()
       const modMax = modifiedModel.getLineCount()
-      const labels = pickLabels(lng)
+      const labels = pickLabels()
 
       const scrollToHunkIndex = (targetIdx: number) => {
         if (targetIdx < 0 || targetIdx >= items.length) return

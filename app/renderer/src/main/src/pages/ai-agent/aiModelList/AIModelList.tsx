@@ -434,7 +434,7 @@ export const getTipByType = (routingPolicy: AIModelPolicyEnum, t: TFunction) => 
 const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((props) => {
   const { onRefresh } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
-  const zhLang = i18n.language === 'zh'
+  const zhLang = i18n.language.startsWith('zh')
   const [visible, setVisible] = useState<boolean>(false)
   const [form] = Form.useForm()
   const routingPolicy = Form.useWatch('RoutingPolicy', form)

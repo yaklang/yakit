@@ -98,7 +98,7 @@ jobs:
           if-no-files-found: error
 
   ci-i18n:
-    name: i18n（zh/en）
+    name: i18n（zh/zh-TW/en）
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -112,7 +112,7 @@ jobs:
         with:
           node-version: 22.22.1
 
-      - name: Check i18n parity (zh/en)
+      - name: Check i18n parity (zh/zh-TW/en)
         shell: bash
         run: |
           set -o pipefail

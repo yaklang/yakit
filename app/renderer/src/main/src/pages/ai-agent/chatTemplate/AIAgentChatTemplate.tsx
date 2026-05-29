@@ -424,7 +424,7 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
                 const { NodeIdVerbose, CallToolID, content, NodeId } = data
                 const fileList = execFileRecord.get(CallToolID)
                 const language = i18n.language.charAt(0).toUpperCase() + i18n.language.slice(1)
-                const nodeLabel = NodeIdVerbose[language]
+                const nodeLabel = NodeIdVerbose[language] || NodeIdVerbose['Zh']
                 return (
                   <StreamCard
                     key={id}

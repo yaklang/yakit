@@ -93,7 +93,10 @@
       "securityProduct": "安全产品",
       "remoteCodeExecutionScan": "远程代码执行（扫描）",
       "sQLInjection": "SQL注入"
-    }
+    },
+    "setColorSuccess": "设置 HTTPFlow 颜色成功",
+    "removeColorSuccess": "清除 HTTPFlow 颜色成功",
+    "sendLimitData": "最多同时只能发送{{maxLength}}条数据"
   },
   "ImportExportProgress": {
     "exportHARData": "导出HAR流量数据"

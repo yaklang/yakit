@@ -50,7 +50,7 @@ export const ExtraMenu: React.FC<ExtraMenuProps> = React.memo((props) => {
         setImportMenuShow(false)
         return
       case 'import-share':
-        onImportShare(i18n)
+        onImportShare()
         setImportMenuShow(false)
         return
       case 'import-history-har':
