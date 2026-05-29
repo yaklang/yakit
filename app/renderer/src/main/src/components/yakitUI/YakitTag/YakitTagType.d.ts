@@ -15,6 +15,7 @@ import type { YakitSizeType } from '../YakitInputNumber/YakitInputNumberType'
  */
 
 export type YakitTagColor =
+  | 'main'
   | 'danger'
   | 'info'
   | 'success'
