@@ -368,6 +368,8 @@
       "packetEmpty": "資料包為空",
       "copyToClipboard": "複製到剪貼簿",
       "copyUrl": "複製 URL",
+      "copyUrlWithQuery": "複製 URL（含參數）",
+      "copyUrlWithoutQuery": "複製 URL（不含參數）",
       "copyAsCsrfPoc": "複製為 CSRF PoC",
       "copyAsCsrfPocBasic": "複製基礎 POC",
       "copyAsCsrfPocAutoSubmit": "複製自動提交 POC",
