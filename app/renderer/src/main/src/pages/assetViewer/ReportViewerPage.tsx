@@ -640,7 +640,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                 <YakitButton
                   size="small"
                   onClick={() => {
-                    showYakitModal({
+                    const m = showYakitModal({
                       title: 'RAW DATA',
                       content: (
                         <div style={{ height: 300 }}>
@@ -648,6 +648,9 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
                         </div>
                       ),
                       width: '50%',
+                      onOk: () => {
+                        m.destroy()
+                      },
                     })
                   }}
                 >
