@@ -89,7 +89,11 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
   }, [type])
 
   const isStream = useCreation(() => {
-    return item.type === AIChatQSDataTypeEnum.STREAM || item.type === AIChatQSDataTypeEnum.STREAM_GROUP
+    return (
+      item.type === AIChatQSDataTypeEnum.STREAM ||
+      item.type === AIChatQSDataTypeEnum.STREAM_GROUP ||
+      item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+    )
   }, [item.type])
 
   const ChatItemRenderer = useMemoizedFn((itemData: AIChatQSData) => {

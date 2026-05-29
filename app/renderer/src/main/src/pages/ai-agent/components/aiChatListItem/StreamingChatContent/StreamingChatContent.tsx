@@ -3,6 +3,7 @@ import { type ReActChatElement, type ReActChatRenderItem } from '@/pages/ai-re-a
 import { memo, type FC } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
 import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
+import ConcurrentStreamCard from '../../ConcurrentStreamCard/ConcurrentStreamCard'
 
 type StreamCls = { className: string } | { aiMarkdownProps?: { className: string } }
 
@@ -33,7 +34,15 @@ const AIStreamCard: FC<SingleStreamProps> = ({ chatType, token, streamClassName,
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
   const { streamClassName, chatType, token, hasNext, session, itemIndex: listItemIndex } = props
   if (props.kind === 'task') {
-    return <>{/* 此处等待ui组件支持taskIndexGroup */}</>
+    return (
+      <ConcurrentStreamCard
+        token={token}
+        session={session}
+        elements={props.children}
+        hasNext={hasNext}
+        chatType={chatType}
+      />
+    )
   }
   if (props.kind === 'group') {
     return <AIGroupStreamCard session={session} elements={props.children} hasNext={hasNext} />

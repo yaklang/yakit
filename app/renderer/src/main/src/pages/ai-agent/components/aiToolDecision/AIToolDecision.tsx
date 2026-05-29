@@ -1,7 +1,7 @@
 import React from 'react'
 import { AIToolDecisionProps } from './type'
 import { AISingHaveColorText } from '../aiReviewResult/AIReviewResult'
-import { SolidCursorclickIcon } from '@/assets/icon/solid'
+// import { SolidCursorclickIcon } from '@/assets/icon/solid'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -12,7 +12,7 @@ export const AIToolDecision: React.FC<AIToolDecisionProps> = React.memo((props) 
   return (
     <>
       <AISingHaveColorText
-        titleIcon={<SolidCursorclickIcon />}
+        // titleIcon={<SolidCursorclickIcon />}
         title={t('AIToolDecision.decision')}
         subTitle={nodeLabel}
         tip={item.data?.summary}

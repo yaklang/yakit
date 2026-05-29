@@ -285,7 +285,7 @@ type ChatRequireUserInteractive = AIChatQSDataBase<
   UIRequireUserInteractive
 >
 type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
-type ChatTaskNodeGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_NODE_GROUP, AITaskStartInfo>
+export type ChatTaskNodeGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_NODE_GROUP, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
 type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>

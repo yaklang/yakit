@@ -128,7 +128,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   return (
     <ChatCard
       titleText={titleText}
-      titleIcon={<SolidToolIcon />}
+      // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           {selectors?.selectors && (
@@ -298,7 +298,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   return (
     <ChatCard
       titleText={titleText}
-      titleIcon={<SolidToolIcon />}
+      // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           <div className={styles['tool-invoker-card-extra-time']}>

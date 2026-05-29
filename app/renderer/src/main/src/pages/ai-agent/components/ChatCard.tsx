@@ -11,12 +11,12 @@ export interface ChatCardProps {
   footer?: ReactNode
   className?: string
 }
-const ChatCard: FC<ChatCardProps> = ({ titleText, titleExtra, titleMore, children, footer, className }) => {
+const ChatCard: FC<ChatCardProps> = ({ titleIcon, titleText, titleExtra, titleMore, children, footer, className }) => {
   return (
     <div className={classNames(styles['chat-card'], className)}>
       <div className={styles['chat-card-title']}>
         <div className={styles['chat-card-title-left']}>
-          {/* {titleIcon && <div className={styles["chat-card-title-icon"]}>{titleIcon}</div>} */}
+          {titleIcon && <div className={styles['chat-card-title-icon']}>{titleIcon}</div>}
           <div className={styles['chat-card-title-text']}>{titleText}</div>
           <div className={styles['chat-card-title-extra']}>{titleExtra}</div>
         </div>
