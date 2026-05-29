@@ -885,13 +885,13 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
         case 'string':
           return (
             <Form.Item {...formProps}>
-              <YakitInput placeholder={item.Placeholder} />
+              <YakitInput placeholder={item.Placeholder} disabled={IsOnline} />
             </Form.Item>
           )
         case 'bool':
           return (
             <Form.Item {...formProps} valuePropName="checked">
-              <YakitSwitch />
+              <YakitSwitch disabled={IsOnline} />
             </Form.Item>
           )
         case 'list':
@@ -905,6 +905,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                     如无法自动获取，请
                     <YakitButton
                       type="text"
+                      disabled={IsOnline}
                       onClick={() => {
                         execModelNameOption.current = true
                         getModelNameOption()
@@ -921,6 +922,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                   // options={showModelNameAllOptions}
                   options={modelNameAllOptions}
                   groupSearchWithAll={true}
+                  disabled={IsOnline}
                   onFocus={() => {
                     execModelNameOption.current = true
                     getModelNameOption()
@@ -952,7 +954,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
             } catch (error) {}
             return (
               <Form.Item {...formProps}>
-                <YakitSelect {...selectProps} />
+                <YakitSelect {...selectProps} disabled={IsOnline} />
               </Form.Item>
             )
           }
@@ -1042,7 +1044,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               <YakitAutoComGroupSearchWithAll
                 options={options}
                 groupSearchWithAll={true}
-                disabled={disabledType}
+                disabled={disabledType || IsOnline}
                 filterOption={(inputValue, option) => {
                   if (option?.label && typeof option?.label === 'string') {
                     return option?.label?.toUpperCase().indexOf(inputValue.toUpperCase()) !== -1
@@ -1052,7 +1054,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
               />
             ) : (
               <YakitSelect
-                disabled={disabledType}
+                disabled={disabledType || IsOnline}
                 options={options}
                 filterOption={(inputValue, option) => {
                   if (option?.label && typeof option?.label === 'string') {
@@ -1079,6 +1081,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                     <YakitTag
                       key={index}
                       onClick={() => {
+                        if (IsOnline) return
                         headerItemRef.current = {
                           Header: i.Key,
                           Value: i.Value,
@@ -1086,7 +1089,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                         headerItemIndexRef.current = index
                         setVisibleHTTPHeader(true)
                       }}
-                      closable
+                      closable={!IsOnline}
                       onClose={() => {
                         onRemoveHeaders(index)
                       }}
@@ -1097,6 +1100,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                 })}
                 <YakitButton
                   type={'outline1'}
+                  disabled={IsOnline}
                   onClick={() => {
                     headerItemRef.current = undefined
                     headerItemIndexRef.current = undefined
