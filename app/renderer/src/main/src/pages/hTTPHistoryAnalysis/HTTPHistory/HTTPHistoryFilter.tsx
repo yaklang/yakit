@@ -331,7 +331,6 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
                       </>
                     ),
-                    footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,

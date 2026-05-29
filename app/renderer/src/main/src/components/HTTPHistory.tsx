@@ -358,7 +358,6 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
                       </>
                     ),
-                    footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,

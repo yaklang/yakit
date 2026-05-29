@@ -2658,7 +2658,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         />
                       </>
                     ),
-                    footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,

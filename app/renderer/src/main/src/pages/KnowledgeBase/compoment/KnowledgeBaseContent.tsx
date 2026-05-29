@@ -824,8 +824,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
                           <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setShowFreeChat(false)} />
                         </React.Fragment>
                       ),
-                      footerLeftTypes: [AIInputInnerFeatureEnum.AIModelSelect],
-                      footerRightTypes: [AIInputFooterRightEnum.AIFocusMode],
                     }}
                   />
                 </div>

@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react'
 
 import styles from './AIReActChat.module.scss'
 import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
@@ -26,6 +26,7 @@ import useSessionId from '../hooks/useSessionId'
 import useGetChatDataStoreKey, { getAISourceFromChatDataStoreKey } from '../hooks/useGetChatDataStoreKey'
 import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import emiter from '@/utils/eventBus/eventBus'
+import { omit } from 'lodash'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -248,6 +249,20 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
       handleSendSyncMessage(params)
     })
+
+    const result_externalParameters = useMemo(() => {
+      if (externalParameters) {
+        const keys = Object.keys(externalParameters)
+        if (keys && keys.includes('rightIcon')) {
+          return { ...omit(externalParameters, 'rightIcon') }
+        } else {
+          return {}
+        }
+      } else {
+        return {}
+      }
+    }, [externalParameters])
+
     return (
       <>
         <div
@@ -303,8 +318,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                           )}
                         </div>
                       }
-                      footerLeftTypes={externalParameters?.footerLeftTypes}
                       chatDataStoreKey={chatDataStoreKey}
+                      {...result_externalParameters}
                     />
                   </div>
                 </div>
