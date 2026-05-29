@@ -5,10 +5,10 @@
     "autoWordwrap": "自動換行",
     "noAutoWordwrap": "不自動換行",
     "largeInput": "超大輸入",
-    "replaceOutputToInput": "將Output替換至Input",
-    "largeOutputTip": "超大輸出，請點選儲存下載檔案檢視",
+    "replaceOutputToInput": "將 Output 替換至 Input",
+    "largeOutputTip": "超大輸出，請點擊儲存下載檔案檢視",
     "dataDistortion": "資料失真",
-    "hexRawText": "hex原文"
+    "hexRawText": "hex 原文"
   },
   "NewCodecMiddleTypeItem": {
     "enableBreakpoint": "開啟斷點",
@@ -20,21 +20,21 @@
   },
   "NewCodecMiddleRunList": {
     "dragHint": "請從左側列表拖入要使用的 Codec 工具",
-    "pleaseEnterName": "請輸入名字",
+    "pleaseEnterName": "請輸入名稱",
     "nameAlreadyExists": "已存在同名歷史記錄，請修改名稱",
-    "regexCheckFailed": "{{title}}-{{regex}}:校驗不透過",
-    "expandCodecCategory": "展開Codec分類",
+    "regexCheckFailed": "{{title}}-{{regex}}:校驗不通過",
+    "expandCodecCategory": "展開 Codec 分類",
     "codecOrder": "編解碼順序",
     "saveCodecOrder": "儲存編解碼順序",
-    "codecOrderNamePlaceholder": "請為編解碼順序取個名字..."
+    "codecOrderNamePlaceholder": "請為編解碼順序取個名稱..."
   },
   "NewCodecLeftDragList": {
     "codecCategory": "Codec 分類",
-    "collapseCodecCategory": "收起Codec分類",
+    "collapseCodecCategory": "收起 Codec 分類",
     "myFavoriteTools": "我收藏的工具"
   },
   "NewCodec": {
-    "saveUpdateConfirm": "是否儲存更新當前模板",
+    "saveUpdateConfirm": "是否儲存更新目前模板",
     "unrecognizedData": "未識別資料"
   }
 }

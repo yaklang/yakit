@@ -1,12 +1,12 @@
 {
   "ShortcutKey": {
-    "global": "全域性",
+    "global": "全域",
     "multiple": "多頁面",
     "editor": "編輯器",
     "hotPatchManagement": "熱載入管理",
     "loadFailed": "獲取快捷鍵失敗",
     "restoreDefault": "恢復預設設定",
     "editShortcut": "編輯快捷鍵",
-    "hint": "先按所需的組合鍵, 再按 Enter 鍵, 按 Esc 鍵取消"
+    "hint": "先按所需的組合鍵，再按 Enter 鍵，按 Esc 鍵取消"
   }
 }

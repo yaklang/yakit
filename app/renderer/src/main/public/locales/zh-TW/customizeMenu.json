@@ -1,7 +1,7 @@
 {
   "CustomizeMenu": {
     "getMenuFailed": "獲取選單失敗：",
-    "max_limit": "最多隻能設定{{UpperLimit}}個",
+    "max_limit": "最多只能設定{{UpperLimit}}個",
     "selectLeftMenuFirst": "請先選擇左邊一級選單",
     "primaryMenuNameCannotBeEmpty": "一級選單名稱不能為空",
     "menuNameDuplicate": "【{{repeatMenu}}】名稱重複，請修改",
@@ -12,21 +12,21 @@
     "editExpertMode": "編輯專家模式",
     "editScanMode": "編輯掃描模式",
     "editMenuName": "修改選單名稱",
-    "emptyMenuDetected": "檢測到有空選單",
+    "emptyMenuDetected": "偵測到有空選單",
     "emptyMenuWarning": "有{{emptyMenuLength}}個選單功能為空，空選單不會{{tip}}，是否仍要繼續{{tip}}？",
     "unnamedMenuPrefix": "未命名",
     "SecondMenu": {
-      "unnamedMenu1": "未命名1（選單名建議 4-16 個英文字元內最佳）",
+      "unnamedMenu1": "未命名1（選單名稱建議 4-16 個英文字元內最佳）",
       "deleteMenuConfirm": "是否要刪除該選單",
       "featureAdded": "已新增功能",
-      "noFeatureAdded": "暫未未新增功能",
-      "addFeatureHint": "可透過拖拽或點選新增按鈕，將功能新增至此處"
+      "noFeatureAdded": "暫未新增功能",
+      "addFeatureHint": "可透過拖曳或點擊新增按鈕，將功能新增至此處"
     },
     "FeaturesAndPlugin": {
       "pluginStore": "外掛商店",
       "systemFunctions": "系統功能",
       "plugin": "外掛",
-      "addFunctionTip": "可透過拖拽或點選新增按鈕，將功能新增至左側選單內"
+      "addFunctionTip": "可透過拖曳或點擊新增按鈕，將功能新增至左側選單內"
     },
     "PluginLocalInfoIcon": {
       "officialPlugin": "官方外掛",

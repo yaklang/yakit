@@ -1,22 +1,22 @@
 {
   "apiUtilsHttp": {
-    "parameterError": "引數錯誤",
-    "notepadFiledHashRequired": "type為notepad,filedHash必傳",
-    "uploadImgFailed": "上傳圖片失敗: {{error}}",
-    "uploadFileFailed": "上傳檔案失敗: {{error}}",
-    "deleteOSSFailed": "刪除OSS資源失敗: {{error}}"
+    "parameterError": "參數錯誤",
+    "notepadFiledHashRequired": "type為notepad，filedHash必傳",
+    "uploadImgFailed": "上傳圖片失敗：{{error}}",
+    "uploadFileFailed": "上傳檔案失敗：{{error}}",
+    "deleteOSSFailed": "刪除OSS資源失敗：{{error}}"
   },
   "grpc": {
-    "fetchLatestYakitVersionFailed": "獲取最新軟體版本失敗: {{error}}",
-    "fetchIntranetYakitVersionFailed": "獲取內網最新軟體版本失敗: {{error}}",
-    "fetchLatestYakVersionFailed": "獲取最新引擎版本失敗: {{error}}",
-    "fetchLocalYakitVersionFailed": "獲取本地軟體版本失敗: {{error}}",
-    "fetchLocalYakVersionFailed": "獲取本地引擎版本失敗: {{error}}",
-    "fetchYakInstallResultFailed": "獲取本地是否存在引擎結果失敗: {{error}}",
-    "fetchBuildInYakVersionFailed": "獲取內建引擎版本失敗: {{error}}",
-    "fetchSpecifiedYakVersionHashFailed": "獲取最新軟體版本失敗: {{error}}",
-    "fetchLocalYakVersionHashFailed": "獲取本地引擎 hash 失敗: {{error}}",
-    "fetchAvailablePortFailed": "獲取可用埠失敗: {{error}}",
-    "determineAdaptedVersionEngineFailed": "判斷已執行引擎的適配版本失敗: {{error}}"
+    "fetchLatestYakitVersionFailed": "獲取最新軟體版本失敗：{{error}}",
+    "fetchIntranetYakitVersionFailed": "獲取內網最新軟體版本失敗：{{error}}",
+    "fetchLatestYakVersionFailed": "獲取最新引擎版本失敗：{{error}}",
+    "fetchLocalYakitVersionFailed": "獲取本地軟體版本失敗：{{error}}",
+    "fetchLocalYakVersionFailed": "獲取本地引擎版本失敗：{{error}}",
+    "fetchYakInstallResultFailed": "獲取本地是否存在引擎結果失敗：{{error}}",
+    "fetchBuildInYakVersionFailed": "獲取內建引擎版本失敗：{{error}}",
+    "fetchSpecifiedYakVersionHashFailed": "獲取最新軟體版本失敗：{{error}}",
+    "fetchLocalYakVersionHashFailed": "獲取本地引擎 hash 失敗：{{error}}",
+    "fetchAvailablePortFailed": "獲取可用埠失敗：{{error}}",
+    "determineAdaptedVersionEngineFailed": "判斷已運行引擎的適配版本失敗：{{error}}"
   }
 }

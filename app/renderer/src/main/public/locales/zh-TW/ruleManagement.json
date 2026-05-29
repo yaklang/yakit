@@ -8,13 +8,13 @@
     "renameFailed": "修改本地規則組名稱錯誤"
   },
   "EditRuleDrawer": {
-    "formMissing": "未獲取到表單資訊，請關閉彈框重試!",
+    "formMissing": "未獲取到表單資訊，請關閉彈框重試！",
     "saveAndCloseConfirm": "請問是否要儲存規則並關閉彈框？",
     "formRequired": "請填寫完整規則必須資訊",
     "logTab": "日誌",
-    "auditResultTab": "審計結果",
+    "auditResultTab": "稽核結果",
     "rule": "規則",
-    "auditDetail": "審計詳情",
+    "auditDetail": "稽核詳情",
     "relatedHoles": "相關漏洞",
     "ruleContent": "規則內容",
     "executionResult": "執行結果",
@@ -34,10 +34,10 @@
     "projectName": "專案名稱",
     "selectProjectToDebug": "請選擇專案後除錯",
     "syntaxflowCheck": "SyntaxFlow規則檢測",
-    "scoreHint1": "基礎編譯測試,判斷SyntaxFlow規則的語法是否符合規範,是否存在不正確語法導致編譯不透過",
+    "scoreHint1": "基礎編譯測試，判斷SyntaxFlow規則的語法是否符合規範，是否存在不正確語法導致編譯不通過",
     "scoreHint2": "檢查規則中的描述部分是否包含desc和solution欄位",
-    "scoreHint3": "檢查規則中是否包含alert, 規則應該包含alert語句產生檢測結果",
-    "scoreHint4": "檢查規則中的測試用例是否能透過規則檢測,SyntaxFlow規則中應該包含正反測試用例,對於正向漏洞程式碼SyntaxFlow規則應該能正常產生alert,而對於反向測試不應該產生alert(誤報)"
+    "scoreHint3": "檢查規則中是否包含alert，規則應該包含alert語句產生檢測結果",
+    "scoreHint4": "檢查規則中的測試用例是否能通過規則檢測，SyntaxFlow規則中應該包含正反測試用例，對於正向漏洞程式碼SyntaxFlow規則應該能正常產生alert，而對於反向測試不應該產生alert（誤報）"
   },
   "UpdateRuleToGroup": {
     "groupCount": "規則組{{count}}",
@@ -51,7 +51,7 @@
     "selectLeft": "請選擇左邊內容"
   },
   "RuleDebugAuditList": {
-    "title": "審計結果列表"
+    "title": "稽核結果列表"
   },
   "RuleUploadAndDownloadModal": {
     "streamError": "錯誤：{{error}}",
@@ -60,7 +60,7 @@
     "progress": "進度 {{percent}}%"
   },
   "OnlineRuleGroupList": {
-    "noPermissionTitle": "暫無檢視許可權",
+    "noPermissionTitle": "暫無檢視權限",
     "noPermissionDesc": "登入後即可檢視",
     "loginNow": "立即登入",
     "searchPlaceholder": "請輸入組名",
@@ -68,7 +68,7 @@
     "downloadContent": "如果規則id相同則會直接覆蓋，是否確認下載"
   },
   "RelatedHoleList": {
-    "type": "型別",
+    "type": "類型",
     "description": "漏洞描述",
     "solution": "修復建議"
   }

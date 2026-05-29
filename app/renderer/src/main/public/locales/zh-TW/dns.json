@@ -1,19 +1,19 @@
 {
   "DNSLogPage": {
-    "generateAvailableDomainFirst": "請先生成可用域名",
+    "generateAvailableDomainFirst": "請先產生可用網域名稱",
     "title": "DNSLog",
     "subtitle": "使用 {{edition}} 自帶的 DNSLog 反連服務",
     "builtIn": "內建",
-    "custom": "自定義",
+    "custom": "自訂",
     "builtInDnsLog": "內建DNSLog",
     "useLocal": "使用本地",
-    "generateDomain": "生成一個可用域名",
+    "generateDomain": "產生一個可用網域名稱",
     "dnslogPlugin": "DNSLog外掛",
-    "activeDomain": "當前啟用域名為：",
+    "activeDomain": "目前啟用的網域名稱為：",
     "onlyARecord": "只看A記錄",
     "autoRefreshRecords": "自動重新整理記錄",
-    "domain": "域名",
-    "type": "型別",
+    "domain": "網域名稱",
+    "type": "類型",
     "remoteIP": "遠端IP"
   }
 }

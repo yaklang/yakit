@@ -1,6 +1,6 @@
 {
   "RiskQuery": {
-    "advanced_query": "高階查詢"
+    "advanced_query": "進階查詢"
   },
   "IPList": {
     "ipStatistics": "IP 統計"
@@ -9,24 +9,24 @@
     "vulnerabilityLevel": "漏洞等級"
   },
   "VulnerabilityType": {
-    "top10VulnerabilityTypes": "漏洞型別 Top 10",
-    "resetTipAfterManualSelection": "手動選擇所有漏洞型別後，點選重置即可檢視所有資料"
+    "top10VulnerabilityTypes": "漏洞類型 Top 10",
+    "resetTipAfterManualSelection": "手動選擇所有漏洞類型後，點擊重置即可查看所有資料"
   },
   "YakitRiskTable": {
     "title": "標題",
-    "type": "型別",
+    "type": "類型",
     "level": "等級",
     "disposal_status": "處置狀態",
     "discovery_time": "發現時間",
-    "port_colon": "port",
+    "port_colon": "連接埠",
     "vulnerability_description": "漏洞描述",
     "solution": "解決方案",
     "source": "來源",
     "reverse_token": "反連Token",
-    "parameter": "引數",
+    "parameter": "參數",
     "retest": "複測",
     "false_positive_feedback": "誤報反饋",
-    "please_login_first": "請先登入賬號",
+    "please_login_first": "請先登入帳號",
     "feedback_success": "反饋成功",
     "vulnerability_not_scanned_by_plugin": "該漏洞未經外掛掃描",
     "select_export_fields": "選擇匯出欄位",
@@ -36,10 +36,10 @@
     "unread": "未讀",
     "mark_all_as_read": "全部已讀",
     "export_as": "匯出為...",
-    "confirm_delete_all_risks": "確定刪除所有漏洞與風險嗎? 不可恢復",
-    "confirm_delete_selected_risks": "確定刪除選擇的漏洞與風險嗎?不可恢復",
+    "confirm_delete_all_risks": "確定刪除所有漏洞與風險嗎？不可復原",
+    "confirm_delete_selected_risks": "確定刪除選擇的漏洞與風險嗎？不可復原",
     "false_positive_feedback_reminder": "誤報反饋提醒",
-    "confirm_feedback_prompt": "確認反饋後，整條漏洞資訊將會被上傳至後臺，開發人員將獲取漏洞資訊進行誤報修復。是否確認反饋？",
+    "confirm_feedback_prompt": "確認反饋後，整條漏洞資訊將會被上傳至後台，開發人員將獲取漏洞資訊進行誤報修復。是否確認反饋？",
     "export_csv": "匯出 CSV",
     "export_html": "匯出 html",
     "vulnerability_detection": "漏洞檢測",
@@ -59,12 +59,12 @@
   },
   "YakitRiskDetails": {
     "vulnerability_details": "漏洞詳情",
-    "data_packet": "資料包",
-    "port_colon": "port：",
+    "data_packet": "封包",
+    "port_colon": "連接埠：",
     "discovery_time_colon": "發現時間：",
-    "no_data_packet": "無資料包",
+    "no_data_packet": "無封包",
     "retest": "複測",
-    "type": "型別",
+    "type": "類型",
     "source": "來源",
     "vulnerability_detection": "漏洞檢測",
     "reverse_token": "反連Token",
@@ -83,12 +83,12 @@
   "YakitCodeScanRiskDetails": {
     "project": "所屬專案：",
     "discovery_time_colon": "發現時間：",
-    "open_in_code_audit": "在程式碼審計中開啟",
+    "open_in_code_audit": "在程式碼稽核中開啟",
     "related_data_deleted": "相關資料已被刪除"
   },
   "AuditResultDescribe": {
     "vulnerability_detection": "漏洞檢測",
-    "type": "型別",
+    "type": "類型",
     "scan_rules": "掃描規則",
     "vulnerability_description": "漏洞描述",
     "solution": "解決方案"
@@ -99,12 +99,12 @@
   },
   "RightBugAuditResult": {
     "vulnerability_detection": "漏洞檢測",
-    "type": "型別",
+    "type": "類型",
     "scan_rules": "掃描規則",
     "vulnerability_description": "漏洞描述",
     "solution": "解決方案"
   },
   "AuditResultCollapse": {
-    "open_in_code_audit": "在程式碼審計中開啟"
+    "open_in_code_audit": "在程式碼稽核中開啟"
   }
 }

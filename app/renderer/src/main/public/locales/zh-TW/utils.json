@@ -8,33 +8,33 @@
       "executeError": "執行 {{verbose}} 遇到問題："
     },
     "ConfigGlobalReverse": {
-      "dnslogSuccess": "全域性 DNSLog 配置成功",
-      "dnslogFailed": "配置全域性 DNSLog 失敗：{{error}}",
+      "dnslogSuccess": "全域 DNSLog 配置成功",
+      "dnslogFailed": "配置全域 DNSLog 失敗：{{error}}",
       "localReverseIP": "本地反連 IP",
       "updateYakEngineLocalIP": "更新 Yak 引擎本地 IP",
       "publicReverseConfig": "公網反連配置",
       "runOnPublicServer": "在公網伺服器上執行",
       "or": "或",
       "configured": "已配置",
-      "yakBridgeAddress": "Yak Bridge 地址",
+      "yakBridgeAddress": "Yak Bridge 位址",
       "yakBridgeAddressHelp": "格式 host:port，例如 cybertunnel.run:64333",
       "yakBridgePassword": "Yak Bridge 密碼",
-      "yakBridgePasswordHelp": "yak bridge 命令的 --secret 引數值",
-      "globalDNSLogConfig": "全域性 DNSLog 配置",
+      "yakBridgePasswordHelp": "yak bridge 指令的 --secret 參數值",
+      "globalDNSLogConfig": "全域 DNSLog 配置",
       "reuseYakBridgeConfig": "複用 Yak Bridge 配置",
       "dnslogConfig": "DNSLog 配置",
-      "dnslogAddressHelp": "配置好 Yak Bridge 的 DNSLog 系統的地址：[ip]:[port]",
+      "dnslogAddressHelp": "配置好 Yak Bridge 的 DNSLog 系統的位址：[ip]:[port]",
       "dnslogPassword": "DNSLog 密碼",
       "configureReverseConnection": "配置反連"
     }
   },
   "ConfigYaklangEnvironment": {
-    "variableName": "變數名",
+    "variableName": "變數名稱",
     "variableValue": "變數值",
     "setEnvironmentVariable": "設定環境變數",
     "environmentVariableList": "環境變數列表",
     "setNewVariable": "設定新變數",
-    "environmentVariableName": "環境變數名",
+    "environmentVariableName": "環境變數名稱",
     "expiredTime": "失效時間",
     "deleteThisEnvironmentVariable": "刪除本環境變數",
     "configYaklangSystemEnvironmentVariable": "配置 Yaklang 系統環境變數",
@@ -42,14 +42,14 @@
     "editVariableTitle": "修改變數"
   },
   "ConfigSystemProxy": {
-    "getSystemProxyFailed": "獲取系統代理失敗：{{error}}",
+    "getSystemProxyFailed": "取得系統代理失敗：{{error}}",
     "setSystemProxySuccess": "設定系統代理成功",
     "setSystemProxyFailed": "設定系統代理失敗：{{error}}",
     "configSystemProxy": "配置系統代理",
-    "currentSystemProxyStatus": "當前系統代理狀態：",
+    "currentSystemProxyStatus": "目前系統代理狀態：",
     "systemProxy": "系統代理",
     "oneClickConfig": "一鍵配置系統代理",
-    "proxyHint": "由於作業系統與 Yak 核心限制，無法使用原生 MacOS OC/Swift 介面實現設定代理。 Yak 引擎將彈出 osascript 授權頁以改動系統代理，MacOS 使用者認證即可。",
+    "proxyHint": "由於作業系統與 Yak 核心限制，無法使用原生 MacOS OC/Swift 介面實現設定代理。Yak 引擎將彈出 osascript 授權頁以改動系統代理，MacOS 使用者認證即可。",
     "chromeStartPath": "Chrome 啟動路徑",
     "chromeStartPathHint": "如無法啟動 Chrome，請配置 Chrome 啟動路徑",
     "startPath": "啟動路徑",
@@ -57,21 +57,21 @@
     "setChromeStartPathSuccess": "設定 Chrome 啟動路徑成功"
   },
   "ConfigPcapPermission": {
-    "unavailable": "無法獲取 PCAP 支援資訊",
-    "fetchStatusFailed": "獲取 Pcap 許可權狀態失敗：{{error}}",
-    "fetchPlatformFailed": "獲取 {name} 作業系統失敗：{{error}}",
-    "promoteFailed": "提升 Pcap 使用者許可權失敗：{{error}}",
-    "tooltip": "原理：MacOS 透過設定 /dev/bpf* 許可權組，可參考 Wireshark ChmodBPF 相關配置，Linux 可透過 setcap 命令設定 pcap 許可權，Windows 推薦直接以 UAC 提升管理員許可權啟動",
-    "windowsHint": "Windows 可用管理員許可權啟動 {{name}} 以獲取對 Pcap 的使用許可權",
-    "unixHint": "Linux 與 MacOS 可透過設定許可權與組為使用者態賦予網絡卡完全許可權",
+    "unavailable": "無法取得 PCAP 支援資訊",
+    "fetchStatusFailed": "取得 Pcap 權限狀態失敗：{{error}}",
+    "fetchPlatformFailed": "取得 {name} 作業系統失敗：{{error}}",
+    "promoteFailed": "提升 Pcap 使用者權限失敗：{{error}}",
+    "tooltip": "原理：MacOS 透過設定 /dev/bpf* 權限群組，可參考 Wireshark ChmodBPF 相關配置，Linux 可透過 setcap 指令設定 pcap 權限，Windows 推薦直接以 UAC 提升管理員權限啟動",
+    "windowsHint": "Windows 可用管理員權限啟動 {{name}} 以取得對 Pcap 的使用權限",
+    "unixHint": "Linux 與 MacOS 可透過設定權限與群組為使用者態賦予網卡完全權限",
     "privilegedHint": "您可以正常試用 SYN 掃描等功能，無需修復",
-    "notPrivilegedHint": "當前引擎不具有網絡卡操作許可權",
-    "enablePcap": "開啟 PCAP 許可權",
-    "modalTitle": "修復 Pcap 許可權"
+    "notPrivilegedHint": "目前引擎不具有網卡操作權限",
+    "enablePcap": "開啟 PCAP 權限",
+    "modalTitle": "修復 Pcap 權限"
   },
   "ConfigEngineProxy": {
     "saveSuccess": "設定引擎代理成功",
-    "currentProxy": "當前引擎代理為：",
+    "currentProxy": "目前引擎代理為：",
     "hint": "本配置將會對絕大部分 Yak 外掛自動生效，如果在掃描模組中配置代理，一般來說，配置的代理將會自動覆蓋這個配置。",
     "proxyLabel": "代理",
     "proxyHelp": "例如 http://127.0.0.1:7890 或 socks://127.0.0.1:7890 等配置均可",
@@ -79,14 +79,14 @@
     "modalTitle": "配置引擎掃描代理"
   },
   "ConfigSystemMcp": {
-    "currentStatus": "當前狀態：",
+    "currentStatus": "目前狀態：",
     "disabled": "未啟用",
-    "startAddress": "啟動地址：",
-    "startAddressHelp": "yak以SSE方式啟動mcp，在需要使用mcp的地方填入啟動地址即可"
+    "startAddress": "啟動位址：",
+    "startAddressHelp": "yak以SSE方式啟動mcp，在需要使用mcp的地方填入啟動位址即可"
   },
   "servicesFetch": {
-    "requestTimeout": "請求超時，請重試",
-    "loginExpired": "401,登入過期/未登入，請重新登入"
+    "requestTimeout": "請求逾時，請重試",
+    "loginExpired": "401，登入過期/未登入，請重新登入"
   },
   "envfile": {
     "setReleaseEditionSuccess": "設定 {{edition}} 發行版成功"
@@ -94,16 +94,16 @@
   "InputUtil": {
     "rawString": "RawString",
     "keyValue": "KeyValue",
-    "parameterIndex": "引數[{{index}}]",
-    "splitArrayHint": "引數使用 | 分割陣列",
+    "parameterIndex": "參數[{{index}}]",
+    "splitArrayHint": "參數使用 | 分割陣列",
     "addKeyValuePair": "新增 Key-Value Pair",
     "enterAbsolutePath": "請輸入絕對路徑",
     "deleteTag": "刪除 Tag",
     "operations": "Operations"
   },
   "SelectItem": {
-    "fetchListFailed": "獲取字典列表失敗！",
-    "fetchContentFailed": "獲取字典內容失敗：{{error}}"
+    "fetchListFailed": "取得字典列表失敗！",
+    "fetchContentFailed": "取得字典內容失敗：{{error}}"
   },
   "OpenWebsite": {
     "openingNewWindow": "新視窗開啟中..."
@@ -112,17 +112,17 @@
     "exportData": "匯出資料"
   },
   "InvalidCacheAndUserData": {
-    "title": "重置使用者資料與快取",
-    "resetHint": "如果你的 {{name}} 出現異常，可使用此功能刪除所有本地快取和使用者資料，重連重啟。",
-    "warning": "注意，本操作將永久刪除快取資料，難以恢復，請謹慎操作",
+    "title": "重設使用者資料與快取",
+    "resetHint": "如果你的 {{name}} 出現異常，可使用此功能刪除所有本地快取和使用者資料，重新連線重啟。",
+    "warning": "注意，本操作將永久刪除快取資料，難以復原，請謹慎操作",
     "syncDeleteDatabase": "同步刪除所有資料庫內的資料",
     "confirmDelete": "我確認此風險，立即刪除",
-    "resetSuccess": "執行重置使用者資料成功"
+    "resetSuccess": "執行重設使用者資料成功"
   },
   "TimeRange": {
     "setTimePoint": "設定時間點",
-    "setStartTime": "點選這裡設定開始時間",
-    "setEndTime": "點選這裡設定結束時間"
+    "setStartTime": "點擊這裡設定開始時間",
+    "setEndTime": "點擊這裡設定結束時間"
   },
   "TimeUtil": {
     "secondsAgo": "秒前",
@@ -148,13 +148,13 @@
   "ShortcutKey": {
     "editorConflict": "編輯器衝突：{{name}} - 此快捷鍵設定將會在編輯器中被覆蓋",
     "screenshot": "截圖",
-    "closeCurrentPage": "關閉當前頁面",
+    "closeCurrentPage": "關閉目前頁面",
     "addSubPage": "新增二級頁面",
     "sendAndJump": "傳送並跳轉",
     "sendOnly": "僅傳送",
     "tableVirtualUp": "Table表格向上選",
     "tableVirtualDown": "Table表格向下選",
-    "undo": "撤銷",
+    "undo": "復原",
     "redo": "重做",
     "cut": "剪下",
     "copy": "複製",
@@ -163,23 +163,23 @@
     "openCommandPalette": "開啟命令面板",
     "jumpToLine": "跳轉到行",
     "quickOpenFile": "快速開啟檔案",
-    "find": "查詢",
-    "findNext": "查詢下一個",
-    "findPrev": "查詢上一個",
+    "find": "尋找",
+    "findNext": "尋找下一個",
+    "findPrev": "尋找上一個",
     "selectNextMatch": "選擇下一個匹配項",
     "selectAllMatches": "選擇所有匹配項",
-    "selectAllWords": "選擇所有匹配的單詞",
-    "expandSelection": "擴充套件選擇",
+    "selectAllWords": "選擇所有匹配的單字",
+    "expandSelection": "擴展選擇",
     "shrinkSelection": "縮小選擇",
     "matchBracket": "跳轉到匹配的括號",
     "addCursorUp": "向上新增游標",
     "addCursorDown": "向下新增游標",
-    "selectCurrentLine": "選擇當前行",
-    "undoLastCursor": "撤銷上一個游標操作",
+    "selectCurrentLine": "選擇目前行",
+    "undoLastCursor": "復原上一個游標操作",
     "selectUp": "向上選中",
     "selectDown": "向下選中",
-    "replace": "替換",
-    "commentToggle": "註釋/取消註釋",
+    "replace": "取代",
+    "commentToggle": "註解/取消註解",
     "indent": "縮排",
     "outdent": "取消縮排",
     "deleteLine": "刪除行",
@@ -187,17 +187,17 @@
     "moveLineDown": "向下移動行",
     "copyLineUp": "向上複製行",
     "copyLineDown": "向下複製行",
-    "replaceAll": "替換所有匹配項",
+    "replaceAll": "取代所有匹配項",
     "goToDefinition": "跳轉到定義",
     "triggerAutoHijacked": "切換為自動劫持模式",
     "forwardResponse": "放行該 HTTP Response",
-    "hijackResponse": "劫持響應",
+    "hijackResponse": "劫持回應",
     "dropData": "丟棄",
     "submitData": "放行",
-    "newTemporaryFile": "新建臨時檔案",
+    "newTemporaryFile": "新建暫存檔案",
     "saveFile": "儲存檔案",
     "closeOpenedFile": "關閉已開啟檔案",
-    "openTerminal": "開啟終端",
+    "openTerminal": "開啟終端機",
     "renameFile": "檔案重新命名",
     "deleteFile": "檔案刪除",
     "copyFile": "檔案複製",
@@ -208,22 +208,22 @@
     "chatCSNewLine": "提問區域換行",
     "chatCSSubmit": "問題提問",
     "newPlugin": "新建外掛",
-    "openSearchDoubleClick": "撥出搜尋（雙擊）",
-    "switchSearchBar": "搜尋欄切換",
+    "openSearchDoubleClick": "呼出搜尋（雙擊）",
+    "switchSearchBar": "搜尋列切換",
     "searchListUp": "搜尋列表上切換",
     "searchListDown": "搜尋列表下切換",
     "closeSearch": "關閉搜尋",
     "searchJump": "搜尋跳轉",
-    "startAudit": "開始審計",
+    "startAudit": "開始稽核",
     "savePlugin": "外掛儲存"
   },
   "YakEditor": {
     "yakFormat": "Yak 程式碼格式化"
   },
   "PrettifyPacket": {
-    "lossyBeautifyWarning": "原始資料可能存在問題，美化丟失了部分內容"
+    "lossyBeautifyWarning": "原始資料可能存在問題，美化遺失了部分內容"
   },
   "Duplex": {
-    "databaseTooLarge": "檢測到寫入資料慢，當前專案資料庫偏大。可刪除HTTPFlow History流量後點選頂部設定回收資料庫空間。"
+    "databaseTooLarge": "偵測到寫入資料慢，目前專案資料庫偏大。可刪除HTTPFlow History流量後點擊頂部設定回收資料庫空間。"
   }
 }

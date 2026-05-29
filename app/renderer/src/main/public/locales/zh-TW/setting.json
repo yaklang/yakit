@@ -5,10 +5,10 @@
     "on": "開",
     "off": "關",
     "watermarkContent": "浮水印內容",
-    "enterCustomWatermark": "請輸入自定義水印內容",
+    "enterCustomWatermark": "請輸入自訂浮水印內容",
     "watermarkPlaceholder": "不超過 15 個字",
     "default": "預設",
-    "custom": "自定義"
+    "custom": "自訂"
   },
   "SoftwareSettings": {
     "projectManagement": "專案管理",
