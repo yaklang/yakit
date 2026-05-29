@@ -1,6 +1,10 @@
 import { ReactNode } from 'react'
 import { TextAreaProps } from 'antd/lib/input'
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import {
+  AIHttpFlowCommandParams,
+  AIHttpFlowRemovePayload,
+} from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { AIChatMentionProps } from '../components/aiChatMention/type'
 import { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
@@ -18,6 +22,8 @@ export interface AIChatTextareaSubmit {
   mentionList?: AIMentionCommandParams[]
   /**图片 */
   imageList?: string[]
+  /** history 勾选的流量 */
+  httpFlowList?: AIHttpFlowCommandParams[]
   focusMode?: string
   /** 新建会话得 默认sessionId */
   sessionId?: string
@@ -25,6 +31,7 @@ export interface AIChatTextareaSubmit {
 export interface AIChatTextareaRefProps {
   setMention: (v: AIMentionCommandParams) => void
   setValue: (v: string) => void
+  setHttpFlow: (ids: string[]) => void
   getValue: () => void
   editorMilkdown?: EditorMilkdownProps
 }
@@ -67,6 +74,7 @@ export interface AIChatTextareaProps {
   footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
   footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]
   chatDataStoreKey: ChatDataStoreKey
+  onHttpFlowRemove?: (payload: AIHttpFlowRemovePayload) => void
 }
 
 export interface FileToChatQuestionList {

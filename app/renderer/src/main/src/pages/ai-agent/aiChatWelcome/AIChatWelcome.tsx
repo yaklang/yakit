@@ -88,6 +88,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
       setValue: () => {},
+      setHttpFlow: () => {},
       getValue: () => {},
     })
 

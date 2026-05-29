@@ -336,6 +336,7 @@ export enum AttachedResourceTypeEnum {
   CONTEXT_PROVIDER_TYPE_KNOWLEDGE_BASE = 'knowledge_base',
   CONTEXT_PROVIDER_TYPE_AITOOL = 'aitool',
   CONTEXT_PROVIDER_TYPE_AIFORGE = 'aiforge',
+  CONTEXT_PROVIDER_TYPE_HTTP_FLOW = 'http_flow',
 }
 
 export enum AttachedResourceKeyEnum {
@@ -343,6 +344,7 @@ export enum AttachedResourceKeyEnum {
   CONTEXT_PROVIDER_KEY_FILE_CONTENT = 'file_content',
   CONTEXT_PROVIDER_KEY_NAME = 'name',
   CONTEXT_PROVIDER_KEY_SYSTEM_FLAG = 'system_flag',
+  CONTEXT_PROVIDER_KEY_HTTP_FLOW_ID = 'id',
 }
 
 export enum AIModelPolicyEnum {

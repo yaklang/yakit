@@ -483,7 +483,8 @@
     "switchToSource": "Switch to source mode"
   },
   "AIMilkdownInput": {
-    "placeholder": "Tell me what you want to do... (shift + enter for a new line)"
+    "placeholder": "Tell me what you want to do... (shift + enter for a new line)",
+    "selectedHttpFlowSummary": "Selected {{count}} HTTP flows"
   },
   "AITaskQuery": {
     "taskQueue": "Task Queue",

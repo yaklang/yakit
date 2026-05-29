@@ -122,10 +122,11 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
     if (!editorMilkdown.current || !activeChat) return
     const qs = getMarkdownValue()
     if (!qs) return
-    const { mentions } = extractDataWithMilkdown(editorMilkdown.current)
+    const { mentions, httpFlowList } = extractDataWithMilkdown(editorMilkdown.current)
     const value: AIChatTextareaSubmit = {
       qs,
       mentionList: mentions,
+      httpFlowList,
       showQS: qs,
       focusMode: '',
     }

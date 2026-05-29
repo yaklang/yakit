@@ -1,0 +1,63 @@
+.http-flow-custom {
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+  max-width: 220px;
+  margin-right: 4px;
+
+  &:not(.http-flow-custom-no-effect):hover {
+    background-color: var(--Colors-Use-Neutral-Border);
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
+    svg {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+
+    :global {
+      .ant-tag-close-icon {
+        svg {
+          color: var(--Colors-Use-Main-Primary);
+        }
+      }
+    }
+
+    .http-flow-icon-wrapper {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+  }
+
+  span {
+    overflow: hidden;
+  }
+}
+
+.http-flow-custom-selected {
+  outline: 1px solid var(--Colors-Use-Main-Primary);
+}
+
+.http-flow-custom-readonly {
+  cursor: default;
+}
+
+.http-flow-custom-no-effect {
+  cursor: default;
+}
+
+.http-flow-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--Colors-Use-Success-Primary);
+  span {
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+}
+
+.http-flow-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

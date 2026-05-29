@@ -92,6 +92,7 @@ import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
 import { FiltersItemProps } from './TableVirtualResize/TableVirtualResizeType'
 import { HTTPFlowRuleDataFilter } from './HTTPFlowTable/HTTPFlowRuleDataFilter'
+import { useCampare } from '@/hook/useCompare/useCompare'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -208,6 +209,29 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
   const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
+  const [selectedHttpFlowIds, setSelectedHttpFlowIds] = useState<string[]>([])
+
+  const clearHttpFlowSelection = useMemoizedFn(() => {
+    historyAIReActChatBridge.clearTableSelection()
+  })
+
+  const compareSelectedHttpFlowIds = useCampare(selectedHttpFlowIds)
+  useDebounceEffect(() => {
+    historyAIReActChatBridge.syncSelectedHttpFlowIds(selectedHttpFlowIds)
+  }, [compareSelectedHttpFlowIds])
+
+  const onSetSelectedHttpFlowIds = useMemoizedFn((ids: string[]) => {
+    setSelectedHttpFlowIds(ids)
+  })
+
+  const onRegisterTableSelectApi = useMemoizedFn((api: { reset: () => void; deselectId: (id: string) => void }) => {
+    historyAIReActChatBridge.registerClearTableSelection(() => {
+      api.reset()
+    })
+    historyAIReActChatBridge.registerDeselectHttpFlowId((id) => {
+      api.deselectId(id)
+    })
+  })
 
   const mitmContent = useContext(MITMContext)
 
@@ -369,6 +393,8 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                       },
                     ],
                     filterMentionType: ['focusMode'],
+                    onHttpFlowRemove: clearHttpFlowSelection,
+                    onAfterSubmit: clearHttpFlowSelection,
                   },
                 })}
             </div>
@@ -387,6 +413,8 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
               mitmAggregateFilterRows={mitmAggregateFilterRows}
               onQueryParams={onQueryParams}
               onSetTableTotal={setHttpFlowTableDataLength}
+              onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+              onRegisterTableSelectApi={onRegisterTableSelectApi}
               setOnlyShowFirstNode={setOnlyShowFirstNode}
               setSecondNodeVisible={setSecondNodeVisible}
               showHistoryAnalysisBtn
@@ -436,6 +464,8 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
   onSetTableTotal?: (t: number) => void
   onSetTableSelectNum?: (s: number) => void
   onSetHasNewData?: (f: boolean) => void
+  onSetSelectedHttpFlowIds?: (ids: string[]) => void
+  onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
   setOnlyShowFirstNode?: (only: boolean) => void
   setSecondNodeVisible?: (show: boolean) => void
   /** 预设排除列，透传至 `HTTPFlowTable.defaultExcludeColumnsKey` */
@@ -463,6 +493,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     onSetTableTotal,
     onSetTableSelectNum,
     onSetHasNewData,
+    onSetSelectedHttpFlowIds,
+    onRegisterTableSelectApi,
     noTableTitle = false,
     showSourceType = true,
     showAdvancedSearch = true,
@@ -617,6 +649,8 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
               onSetTableTotal={onSetTableTotal}
               onSetTableSelectNum={onSetTableSelectNum}
               onSetHasNewData={onSetHasNewData}
+              onSetSelectedHttpFlowIds={onSetSelectedHttpFlowIds}
+              onRegisterTableSelectApi={onRegisterTableSelectApi}
               httpHistoryTableTitleStyle={httpHistoryTableTitleStyle}
               titleHeight={titleHeight}
               showHistoryAnalysisBtn={showHistoryAnalysisBtn}

@@ -38,6 +38,12 @@ import { AICustomCode } from './aiCustomCode/AICustomCode'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { getAIImageSuffix } from './utils'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
+import { AICustomHttpFlow } from './aiMilkdownHttpFlow/AICustomHttpFlow'
+import {
+  aiHttpFlowCustomPlugin,
+  aiHttpFlowCustomSchema,
+  setHttpFlowListCommand,
+} from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
 
@@ -52,6 +58,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
       onMemfitExtra,
       filterMode,
       chatDataStoreKey,
+      onHttpFlowRemove,
     } = props
     const { t, i18n } = useI18nNamespaces(['aiAgent'])
     const nodeViewFactory = useNodeViewFactory()
@@ -69,6 +76,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
         },
         setImage: () => {
           onSetImage()
+        },
+        setHttpFlow: (ids: string[]) => {
+          onSetHttpFlow(ids)
         },
         getSessionId: () => sessionIdRef.current,
       }),
@@ -137,6 +147,14 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             })
           },
         ].flat()
+        const httpFlowPlugin = [
+          ...aiHttpFlowCustomPlugin(),
+          $view(aiHttpFlowCustomSchema.node, () =>
+            nodeViewFactory({
+              component: () => <AICustomHttpFlow onHttpFlowRemove={onHttpFlowRemove} />,
+            }),
+          ),
+        ].flat()
         const codePlugin = [
           $view(codeBlockSchema.node, () => {
             return nodeViewFactory({
@@ -191,6 +209,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(listener)
             // mention 提及@
             .use(mentionPlugin)
+            // http flow 流量标签
+            .use(httpFlowPlugin)
             // ```codePlugin```
             .use(codePlugin)
             // 自定义
@@ -215,6 +235,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
 
     const onSetMention = useMemoizedFn((params: AIMentionCommandParams) => {
       get()?.action(callCommand<AIMentionCommandParams>(aiMentionCommand.key, params))
+    })
+    const onSetHttpFlow = useMemoizedFn((ids: string[]) => {
+      get()?.action(callCommand<string[]>(setHttpFlowListCommand.key, ids))
     })
     const onSetImage = useMemoizedFn(() => {
       handleOpenFileSystemDialog({

@@ -332,6 +332,10 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
   onSetTableTotal?: (t: number) => void
   onSetTableSelectNum?: (s: number) => void
   onSetHasNewData?: (f: boolean) => void
+  /** 勾选流量 id 同步到 AI 输入框 */
+  onSetSelectedHttpFlowIds?: (ids: string[]) => void
+  /** 注册表格勾选操作方法（供 AI 标签移除时回写） */
+  onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
   /**
    * 作为 `excludeColumnsKey` 的初值并跳过远程缓存读取，
    */
@@ -717,6 +721,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onSetTableTotal,
     onSetTableSelectNum,
     onSetHasNewData,
+    onSetSelectedHttpFlowIds,
+    onRegisterTableSelectApi,
     showHistoryAnalysisBtn = false,
     onHistoryAnalysisClick,
     defaultExcludeColumnsKey,
@@ -1803,6 +1809,33 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       setSelectedRows(newSelectedRows)
     }
   })
+  const resetSelected = useMemoizedFn(() => {
+    setIsAllSelect(false)
+    setSelectedRowKeys([])
+    setSelectedRows([])
+  })
+  const deselectHttpFlowId = useMemoizedFn((id: string) => {
+    setIsAllSelect(false)
+    setSelectedRowKeys((prev) => prev.filter((ele) => ele !== id))
+    setSelectedRows((prev) => prev.filter((ele) => String(ele.Id) !== id))
+  })
+  useEffect(() => {
+    if (!onRegisterTableSelectApi) return
+    onRegisterTableSelectApi({
+      reset: resetSelected,
+      deselectId: deselectHttpFlowId,
+    })
+    return () => {
+      onRegisterTableSelectApi({
+        reset: () => {},
+        deselectId: () => {},
+      })
+    }
+  }, [onRegisterTableSelectApi, resetSelected, deselectHttpFlowId])
+  const compareSelectedRowKeys = useCampare(selectedRowKeys)
+  useDebounceEffect(() => {
+    onSetSelectedHttpFlowIds?.(isAllSelect ? [] : selectedRowKeys)
+  }, [isAllSelect, compareSelectedRowKeys])
   const onRowClick = useMemoizedFn((rowDate?: HTTPFlow) => {
     if (rowDate) {
       setSelected(rowDate)

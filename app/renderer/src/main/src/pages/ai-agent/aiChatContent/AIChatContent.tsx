@@ -69,6 +69,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       handleStart: () => {},
       setMention: () => {},
       setValue: () => {},
+      setHttpFlow: () => {},
       getValue: () => {},
     })
 
