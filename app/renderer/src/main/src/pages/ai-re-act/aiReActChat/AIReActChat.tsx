@@ -26,6 +26,7 @@ import useSessionId from '../hooks/useSessionId'
 import useGetChatDataStoreKey, { getAISourceFromChatDataStoreKey } from '../hooks/useGetChatDataStoreKey'
 import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import emiter from '@/utils/eventBus/eventBus'
+import { AIToDoList } from './aiToDoList/AIToDoList'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -275,6 +276,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
                     ))}
                 </div>
+              </div>
+              <div className={styles['todoList-wrapper']}>
+                <AIToDoList />
               </div>
               <AIReActChatContents chats={chatIPCData.casualChat} />
             </div>
