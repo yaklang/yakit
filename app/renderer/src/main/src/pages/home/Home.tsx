@@ -1468,9 +1468,7 @@ const Home: React.FC<HomeProp> = (props) => {
                       <div className={styles['small-tools-item-cont']}>
                         <PublicNotepadManagerIcon className={styles['small-tools-item-icon']} />
                         <div className={styles['small-tools-item-cont-right']}>
-                          <div className={styles['small-tools-cont-title']}>
-                            {getNotepadManage()}
-                          </div>
+                          <div className={styles['small-tools-cont-title']}>{getNotepadManage()}</div>
                           <div className={styles['small-tools-cont-desc']}>
                             {t('YakitRoute.penetrationRecordDescription')}
                           </div>
