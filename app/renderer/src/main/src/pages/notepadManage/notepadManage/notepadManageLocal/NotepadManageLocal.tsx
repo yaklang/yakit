@@ -42,7 +42,7 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useGoEditNotepad } from '../../hook/useGoEditNotepad'
-import { getNotepadNameByEdition } from '@/pages/layout/NotepadMenu/utils'
+import { getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -333,7 +333,7 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
     setImportVisible(true)
   })
   const name = useCreation(() => {
-    return getNotepadNameByEdition()
+    return getNotepadNameByEditionMulLang()
   }, [])
   return (
     <YakitSpin spinning={pageLoading}>

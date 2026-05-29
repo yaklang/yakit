@@ -27,7 +27,7 @@ import { HTTPFlowBodyByIdRequest } from '@/components/HTTPHistory'
 import { setClipboardText } from '@/utils/clipboard'
 import { FuzzerRemoteGV } from '@/enums/fuzzer'
 import { GetReleaseEdition, PRODUCT_RELEASE_EDITION } from '@/utils/envfile'
-import { getNotepadNameByEdition } from '@/pages/layout/NotepadMenu/utils'
+import { getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -166,7 +166,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
                 : []),
               {
                 key: 'copy-to-notepad',
-                label: `${t('YakitEditor.HTTPPacketYakitEditor.copyTo')}${getNotepadNameByEdition()}${
+                label: `${t('YakitEditor.HTTPPacketYakitEditor.copyTo')}${getNotepadNameByEditionMulLang()}${
                   !userInfo.isLogin && GetReleaseEdition() === PRODUCT_RELEASE_EDITION.EnpriTrace
                     ? t('YakitEditor.HTTPPacketYakitEditor.pleaseLogin')
                     : ''

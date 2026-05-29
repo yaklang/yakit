@@ -174,7 +174,7 @@ import { Misstatement } from '@/pages/misstatement/Misstatement'
 import { SystemConfig } from '@/pages/systemConfig/SystemConfig'
 import { HTTPHistoryAnalysis } from '@/pages/hTTPHistoryAnalysis/HTTPHistoryAnalysis'
 import { ShortcutKeyPageName } from '@/utils/globalShortcutKey/events/pageMaps'
-import { getNotepadNameByEdition } from '@/pages/layout/NotepadMenu/utils'
+import { getNotepadAdd, getNotepadManage, getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils'
 import { ShortcutKeyList } from '@/pages/shortcutKey/ShortcutKey'
 import { AIAgent } from '@/pages/ai-agent/AIAgent'
 import { SolidClipboardlistIcon, SolidCodecIcon, SolidTerminalIcon } from '@/assets/icon/solid'
@@ -200,8 +200,6 @@ const MemoryBase = React.lazy(() => import('@/pages/memoryBase/MemoryBase'))
 const ConfigManagement = React.lazy(() => import('@/pages/configManagement/ConfigManagement'))
 const AITool = React.lazy(() => import('@/pages/aiTool/AITool'))
 const AIForge = React.lazy(() => import('@/pages/aiForge/AIForge'))
-
-const tOriginal = i18n.getFixedT(null, ['yakitRoute'])
 
 /**
  * @description 页面路由对应的页面信息
@@ -386,11 +384,11 @@ export const YakitRouteToPageInfo: Record<
     describeUi: 'YakitRoute.customAuditRules',
   },
   'notepad-manage': {
-    label: tOriginal('YakitRoute.notepadManage', { name: getNotepadNameByEdition() }),
+    label: getNotepadManage(),
     describeUi: 'YakitRoute.penetrationRecordDescription',
   },
   'modify-notepad': {
-    label: getNotepadNameByEdition(),
+    label: getNotepadNameByEditionMulLang(),
   },
   'yakrunner-audit-hole': { label: '审计漏洞', labelUi: 'YakitRoute.auditVulnerability' },
   'system-config': { label: '系统配置', labelUi: 'YakitRoute.systemConfig' },
@@ -1490,8 +1488,7 @@ export type ExtraMenuItem = ExtraMenuLeaf | ExtraMenuGroup
 /** @name 靶场菜单项 */
 const getVulinboxMenuItem = (hideIcon = false): ExtraMenuItem => ({
   page: YakitRoute.Beta_VulinboxManager,
-  i18n: false,
-  label: tOriginal('YakitRoute.range'),
+  labelUi: 'YakitRoute.range',
   ...(hideIcon ? {} : { icon: <PublicToolVulinboxIcon /> }),
 })
 
@@ -1500,13 +1497,11 @@ export const getSecurityExpertLeftMenu: () => ExtraMenuItem[] = () => {
   return [
     {
       page: YakitRoute.MITMHacker,
-      i18n: false,
-      label: tOriginal('YakitRoute.openMITM'),
+      labelUi: 'YakitRoute.openMITM',
     },
     {
       page: YakitRoute.HTTPFuzzer,
-      i18n: false,
-      label: tOriginal('YakitRoute.newWebFuzzer'),
+      labelUi: 'YakitRoute.newWebFuzzer',
     },
     {
       page: YakitRoute.Codec,
@@ -1529,7 +1524,7 @@ export const getSecurityExpertNotepadMenu: () => ExtraMenuItem[] = () => {
     {
       page: YakitRoute.Modify_Notepad,
       i18n: false,
-      label: getNotepadNameByEdition(),
+      label: getNotepadNameByEditionMulLang(),
     },
   ]
 }
@@ -1556,17 +1551,17 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
         page: undefined,
         icon: <SolidClipboardlistIcon />,
         i18n: false,
-        label: getNotepadNameByEdition(),
+        label: getNotepadNameByEditionMulLang(),
         children: [
           {
             page: YakitRoute.Notepad_Manage,
             i18n: false,
-            label: tOriginal('YakitRoute.notepadManage', { name: getNotepadNameByEdition() }),
+            label: getNotepadManage(),
           },
           {
             page: YakitRoute.Modify_Notepad,
             i18n: false,
-            label: tOriginal('YakitRoute.addNotepad', { name: getNotepadNameByEdition() }),
+            label: getNotepadAdd(),
           },
         ],
       },
@@ -1591,17 +1586,17 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
           page: undefined,
           icon: <SolidClipboardlistIcon />,
           i18n: false,
-          label: getNotepadNameByEdition(),
+          label: getNotepadNameByEditionMulLang(),
           children: [
             {
               page: YakitRoute.Notepad_Manage,
               i18n: false,
-              label: tOriginal('YakitRoute.notepadManage', { name: getNotepadNameByEdition() }),
+              label: getNotepadManage(),
             },
             {
               page: YakitRoute.Modify_Notepad,
               i18n: false,
-              label: tOriginal('YakitRoute.addNotepad', { name: getNotepadNameByEdition() }),
+              label: getNotepadAdd(),
             },
           ],
         },
@@ -1626,7 +1621,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
             page: YakitRoute.Modify_Notepad,
             icon: <SolidClipboardlistIcon />,
             i18n: false,
-            label: getNotepadNameByEdition(),
+            label: getNotepadNameByEditionMulLang(),
           },
         ]
       }
@@ -1800,7 +1795,7 @@ export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) 
               {
                 page: YakitRoute.Modify_Notepad,
                 i18n: false,
-                label: getNotepadNameByEdition(),
+                label: getNotepadNameByEditionMulLang(),
               },
             ],
           },

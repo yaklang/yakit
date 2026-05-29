@@ -127,10 +127,6 @@
     "penetrationRecordDescription": "Records any content generated during the penetration testing process, making it easy to review and track.",
     "ai-memory": "Memory Base",
     "ai-tool": "Tool",
-    "ai-forge": "Forge",
-    "notepadManage": "{{name}} Manage",
-    "addNotepad": "Add {{name}}",
-    "cloudDocs": "Cloud Docs",
-    "notepad": "Notepad"
+    "ai-forge": "Forge"
   }
 }

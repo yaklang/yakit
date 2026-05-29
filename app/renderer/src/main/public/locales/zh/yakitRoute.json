@@ -127,10 +127,6 @@
     "penetrationRecordDescription": "可记录渗透过程中的任何内容，便于记录查看",
     "ai-memory": "记忆库",
     "ai-tool": "工具库",
-    "ai-forge": "技能库",
-    "notepadManage": "{{name}}管理",
-    "addNotepad": "新建{{name}}",
-    "cloudDocs": "云文档",
-    "notepad": "记事本"
+    "ai-forge": "技能库"
   }
 }

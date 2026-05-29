@@ -125,10 +125,6 @@
     "penetrationRecordDescription": "可記錄滲透過程中的任何內容，便於記錄檢視",
     "ai-memory": "記憶庫",
     "ai-tool": "工具庫",
-    "ai-forge": "技能庫",
-    "notepadManage": "{{name}}管理",
-    "addNotepad": "新建{{name}}",
-    "cloudDocs": "雲文檔",
-    "notepad": "記事本"
+    "ai-forge": "技能庫"
   }
 }

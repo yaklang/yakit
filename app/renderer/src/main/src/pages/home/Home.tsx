@@ -102,7 +102,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { toMITMHacker } from '../hacker/httpHacker'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useSoftMode, YakitModeEnum } from '@/store/softMode'
-import { getNotepadNameByEdition } from '../layout/NotepadMenu/utils'
+import { getNotepadAdd, getNotepadManage } from '../layout/NotepadMenu/utils'
 import styles from './home.module.scss'
 import { SystemInfo } from '@/constants/hardware'
 import { defHost, defPort } from '../mitm/MITMServerStartForm/MITMServerStartForm'
@@ -308,14 +308,14 @@ const Home: React.FC<HomeProp> = (props) => {
         onClick: () => onMenu({ route: YakitRoute.DB_Domain }),
       },
       {
-        label: t('YakitRoute.notepadManage', { name: getNotepadNameByEdition() }),
+        label: getNotepadManage(),
         icon: <PublicNotepadIcon />,
         desc: t('YakitRoute.penetrationRecordDescription'),
         rightIcon: <OutlineArrowrightIcon />,
         onClick: () => onMenu({ route: YakitRoute.Notepad_Manage }),
       },
       {
-        label: t('YakitRoute.addNotepad', { name: getNotepadNameByEdition() }),
+        label: getNotepadAdd(),
         icon: <PublicNotepadIcon />,
         desc: t('YakitRoute.penetrationRecordDescription'),
         rightIcon: <OutlineArrowrightIcon />,
@@ -1469,7 +1469,7 @@ const Home: React.FC<HomeProp> = (props) => {
                         <PublicNotepadManagerIcon className={styles['small-tools-item-icon']} />
                         <div className={styles['small-tools-item-cont-right']}>
                           <div className={styles['small-tools-cont-title']}>
-                            {t('YakitRoute.notepadManage', { name: getNotepadNameByEdition() })}
+                            {getNotepadManage()}
                           </div>
                           <div className={styles['small-tools-cont-desc']}>
                             {t('YakitRoute.penetrationRecordDescription')}
