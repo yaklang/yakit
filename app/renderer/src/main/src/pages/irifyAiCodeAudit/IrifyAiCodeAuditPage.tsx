@@ -6,7 +6,7 @@ import { AuditCodePageInfoProps, usePageInfo } from '@/store/pageInfo'
 import { irifyAiCodeAuditPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/irifyFocusMode'
 import { isIRify } from '@/utils/envfile'
-import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
 import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { YakRunner } from '@/pages/yakRunner/YakRunner'
 import { IrifyAiCodeAuditSidePanelLayout } from './IrifyAiCodeAuditSidePanelLayout'
@@ -17,10 +17,9 @@ import {
   IrifyWorkbenchAiAttachRef,
   useIrifyWorkbenchAiAttachRef,
 } from './IrifyWorkbenchAiAttachContext'
-import { IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED, queueIrifySeedDraft } from './irifyAiCodeAuditSeedDraft'
 import styles from './IrifyAiCodeAuditPage.module.scss'
 
-/** 从路由参数 / onAuditCodePageInfo 打开工程目录并预填侧栏输入（不自动发送） */
+/** 从路由参数 / onAuditCodePageInfo 打开工程目录 */
 const IrifyAiCodeAuditEntryBootstrap: React.FC<{ auditCodePageInfo?: AuditCodePageInfoProps }> = ({
   auditCodePageInfo,
 }) => {
@@ -28,9 +27,6 @@ const IrifyAiCodeAuditEntryBootstrap: React.FC<{ auditCodePageInfo?: AuditCodePa
     const root = info?.Location?.trim()
     if (!root) return
     emiter.emit('onIrifyAiCodeAuditOpenFileTree', root)
-    window.setTimeout(() => {
-      emiter.emit('onIrifyAiCodeAuditSeedChatDraft', IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED)
-    }, 0)
   })
 
   useEffect(() => {
@@ -52,33 +48,6 @@ const IrifyAiCodeAuditEntryBootstrap: React.FC<{ auditCodePageInfo?: AuditCodePa
     }
   }, [applyEntry])
 
-  return null
-}
-
-/**
- * 监听 `onIrifyAiCodeAuditSeedChatDraft` 事件，暂存草稿并在输入框就绪时写入（不触发发送）。
- * 实际 flush 时机由 `IrifyAiCodeAuditSeedDraftFlush` 在 AI 聊天挂载后触发。
- */
-const IrifyAiCodeAuditSeedDraftListener: React.FC = () => {
-  const { historyAIReActChatBridge } = useHistoryAIReActChat()
-  // `setChatInputValue` 来自 `useMemoizedFn`，引用稳定；不能直接依赖 bridge 整体对象，
-  // 否则 activeID 变化时（如发送后新建会话）会 re-run 把「开始请求」重新写回输入框。
-  const { setChatInputValue } = historyAIReActChatBridge
-
-  // 仅在 Listener 首次挂载时预填一次默认草稿，后续由用户主导
-  useEffect(() => {
-    queueIrifySeedDraft(IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED, setChatInputValue)
-  }, [setChatInputValue])
-
-  useEffect(() => {
-    const onSeed = (text: string) => {
-      queueIrifySeedDraft(text, setChatInputValue)
-    }
-    emiter.on('onIrifyAiCodeAuditSeedChatDraft', onSeed)
-    return () => {
-      emiter.off('onIrifyAiCodeAuditSeedChatDraft', onSeed)
-    }
-  }, [setChatInputValue])
   return null
 }
 
@@ -107,7 +76,6 @@ const IrifyAiCodeAuditPageInner: React.FC<IrifyAiCodeAuditPageProps> = ({ auditC
       transformInputEvent={transformInputEvent}
     >
       <IrifyAiCodeAuditEntryBootstrap auditCodePageInfo={auditCodePageInfo} />
-      <IrifyAiCodeAuditSeedDraftListener />
       <IrifyAiCodeAuditSidePanelLayout placement="right" rootClassName={styles.pageRoot}>
         <IrifyAiCodeAuditWorkbench />
       </IrifyAiCodeAuditSidePanelLayout>

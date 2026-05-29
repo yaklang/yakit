@@ -48,13 +48,6 @@ export interface HistoryAIReActChatBridge {
   onStop: () => void
   onChatFromHistory: (session: string) => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
-  /**
-   * 向当前 AI 对话输入框写入文本（不触发发送）。
-   * 提供给 Provider 外部业务（Irify「开始代码审计」预填等）以事件/业务驱动方式控制输入框内容，
-   * 避免把 `aiReActChatRef` 整个 ref 暴露出去。
-   * @returns 输入框 ref 已就绪且写入调用成功时为 `true`
-   */
-  setChatInputValue: (text: string) => boolean
 }
 
 export interface HistoryAIReActChatSlotOptions {
@@ -355,16 +348,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }
   }, [])
 
-  const setChatInputValue = useMemoizedFn((text: string): boolean => {
-    const ref = aiReActChatRef.current
-    if (!ref?.setValue) return false
-    ref.setValue(text)
-    // 公共层 `getValue` 类型为 void，运行时实际返回 markdown 字符串（见 AIChatTextarea useImperativeHandle）
-    const readValue = ref.getValue as unknown as (() => string) | undefined
-    const current = String(readValue?.() ?? '').trim()
-    return current === text.trim()
-  })
-
   const historyAIReActChatBridge: HistoryAIReActChatBridge = useMemo(
     () => ({
       activeID,
@@ -372,9 +355,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       onStop,
       onChatFromHistory,
       setActiveChat,
-      setChatInputValue,
     }),
-    [activeID, events, onStop, onChatFromHistory, setActiveChat, setChatInputValue],
+    [activeID, events, onStop, onChatFromHistory, setActiveChat],
   )
 
   const renderHistoryAIReActChat = useCallback(
