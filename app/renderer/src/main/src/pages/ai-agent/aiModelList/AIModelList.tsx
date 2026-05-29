@@ -722,13 +722,14 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
     onRemove(item)
   })
 
-  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { t } = useI18nNamespaces(['aiAgent', 'yakitUi', 'projectManage'])
   const onApplyRecommendConfig = useMemoizedFn((config: ThirdPartyApplicationConfig) => {
     const newItem: AIModelConfig = {
       ProviderId: item.ProviderId,
       Provider: config,
       ModelName: item.ModelName,
       ExtraParams: item.ExtraParams,
+      ...(item.IsOnline ? { IsOnline: true } : {}),
     }
     setAIModal({
       item: newItem,
@@ -802,6 +803,11 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
           <OutlineAtomIcon className={styles['atom-icon']} />
           <span className={styles['ai-online-model-list-item-model-text']}>{config.Type}</span>
         </div>
+        {item?.IsOnline ? (
+          <YakitTag size="small" color="warning" fullRadius className={styles['ai-online-model-list-item-info']}>
+            {t('ProjectManage.server')}
+          </YakitTag>
+        ) : null}
       </div>
       <div className={styles['ai-online-model-list-item-extra']}>
         <div className={styles['ai-online-model-list-item-extra-edit']}>
