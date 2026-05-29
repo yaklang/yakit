@@ -1,9 +1,8 @@
 import React, { memo, useState } from 'react'
-import classNames from 'classnames'
 import { useMemoizedFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineClipboardlistIcon, OutlineDocumentIcon, OutlineDownloadIcon } from '@/assets/icon/outline'
+import { OutlineDocumentIcon, OutlineDownloadIcon } from '@/assets/icon/outline'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -16,6 +15,7 @@ import { getCodeByPath } from '@/pages/yakRunner/utils'
 import { yakitDialog } from '@/services/electronBridge'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import { Tooltip } from 'antd'
+import ChatCard from '../ChatCard'
 const { ipcRenderer } = window.require('electron')
 
 export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props) => {
@@ -29,7 +29,6 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
   const title = data.title
   const content = data.content
 
-  // 打开报告
   const handleOpenReport = useMemoizedFn(() => {
     if (!reportPath) return
     if (currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
@@ -48,7 +47,6 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
     }
   })
 
-  // 下载报告
   const handleDownloadReport = useMemoizedFn(async () => {
     try {
       if (!reportPath) return
@@ -76,30 +74,26 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
       setDownloadLoading(false)
     }
   })
-  return (
-    <div className={styles['report-finish-card']}>
-      <div className={styles['card-header']}>
-        <div className={styles['card-header-left']}>
-          <OutlineClipboardlistIcon className={styles['header-list-icon']} />
-          <span className={classNames(styles['file-name'], 'yakit-single-line-ellipsis')}>{title}</span>
-        </div>
-        <Tooltip title={t('AIReportFinishCard.openInAICodeAudit')}>
-          <YakitButton size="small" type="text" icon={<OutlineDocumentIcon />} onClick={handleOpenReport} />
-        </Tooltip>
-        <YakitButton
-          size="small"
-          type="text"
-          icon={<OutlineDownloadIcon />}
-          onClick={handleDownloadReport}
-          loading={downloadLoading}
-        />
-      </div>
 
-      {content && (
-        <div className={styles['card-desc']}>
-          <StreamMarkdown content={content || ''} />
+  return (
+    <ChatCard
+      titleText={title}
+      titleMore={
+        <div className={styles['header-extra']}>
+          <Tooltip title={t('AIReportFinishCard.openInAICodeAudit')}>
+            <YakitButton size="small" type="text" icon={<OutlineDocumentIcon />} onClick={handleOpenReport} />
+          </Tooltip>
+          <YakitButton
+            size="small"
+            type="text"
+            icon={<OutlineDownloadIcon />}
+            onClick={handleDownloadReport}
+            loading={downloadLoading}
+          />
         </div>
-      )}
-    </div>
+      }
+    >
+      {content && <StreamMarkdown content={content || ''} />}
+    </ChatCard>
   )
 })

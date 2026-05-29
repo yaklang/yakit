@@ -8,7 +8,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineChevronsDownUpIcon,
   OutlineChevronsUpDownIcon,
-  OutlineDocumentIcon,
   OutlineDownloadIcon,
   OutlineNotebookIcon,
 } from '@/assets/icon/outline'

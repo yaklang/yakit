@@ -326,36 +326,33 @@ const handleReportFinish: AIMessageHandler = (request) => {
   const { res, info, setContentMap, pushLog } = request
   if (res.Type !== 'report_finish' || res.NodeId !== 'report-finish') return
 
-  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const ipcContent = Uint8ArrayToString(res.Content) || '{}'
 
-  let report_path = ''
-  let title = ''
-  let content = ''
-  try {
-    const parsed = JSON.parse(ipcContent) as AIAgentGrpcApi.ReportFinishPayload
-    report_path = parsed?.report_path || ''
-    title = parsed?.title || ''
-    content = parsed?.summary_markdown || ''
-  } catch {}
+  const parsed = JSON.parse(ipcContent) as AIAgentGrpcApi.ReportFinishPayload
+  let report_path = parsed?.report_path ?? ''
+  let title = parsed?.title ?? ''
+  let content = parsed?.summary_markdown ?? ''
 
   if (!report_path) {
     handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type} 数据缺少 report_path`))
     return
   }
 
-  const mapKey = res.EventUUID || report_path
   const cardType = AIChatQSDataTypeEnum.REPORT_FINISH
   const nextData: ReportFinishCardData = { reportPath: report_path, title, content }
 
   const chatData: AIChatQSData = {
     ...genBaseAIChatData(res),
-    id: mapKey,
     chatType: info.chatType,
     type: cardType,
     data: nextData,
   }
-  setContentMap(mapKey, chatData)
-  handleUpdateUISingleState(res.IsSync, { mapKey, type: cardType, chatType: info.chatType }, request.setElements)
+  setContentMap(chatData.id, chatData)
+  handleUpdateUISingleState(
+    res.IsSync,
+    { mapKey: chatData.id, type: cardType, chatType: info.chatType },
+    request.setElements,
+  )
 }
 // #endregion
 

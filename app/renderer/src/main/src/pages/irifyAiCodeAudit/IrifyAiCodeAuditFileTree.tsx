@@ -1,5 +1,5 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
-import { useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
+import React, { memo, useEffect, useMemo, useState } from 'react'
+import { useMemoizedFn } from 'ahooks'
 import {
   OpenedFileProps,
   OpenFolderDraggerProps,
@@ -18,7 +18,7 @@ import { FileTree } from '@/pages/yakRunner/FileTree/FileTree'
 import classNames from 'classnames'
 import styles from '@/pages/yakRunner/RunnerFileTree/RunnerFileTree.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
-import { YakitMenuItemProps, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { FileDetailInfo } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
 import {
   getDefaultActiveFile,
@@ -34,7 +34,6 @@ import {
   removeYakRunnerAreaFileInfo,
   removeAreaFilesInfo,
   setAreaFileActive,
-  setYakRunnerHistory,
   updateAreaFileInfo,
   updateAreaFileInfoToDelete,
 } from '@/pages/yakRunner/utils'
