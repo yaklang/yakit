@@ -2,10 +2,10 @@
   "Login": {
     "loginError": "登入錯誤: {{error}}",
     "dataSync": "資料同步",
-    "syncDataConfirm": "是否選擇將遠端的資料同步至本地",
+    "syncDataConfirm": "是否選擇將遠端的資料同步本地",
     "login": "登入",
-    "loginWithGithub": "使用 GitHub 帳號登入",
-    "loginWithWechat": "使用微信帳號登入"
+    "loginWithGithub": "使用 GitHub 賬號登入",
+    "loginWithWechat": "使用微信賬號登入"
   },
   "EnterpriseJudgeLogin": {
     "reActivateNotice": "請重新啟用License",
@@ -19,12 +19,12 @@
     "licenseRequestCode": "License 申請碼",
     "requestCodeHelp": "在申請 license 時，請把這一串申請碼給銷售人員以便生成您專屬的 License",
     "copyRequestCode": "點此複製該 License 請求碼",
-    "yourLicense": "您的授權許可",
+    "yourLicense": "您的許可證",
     "activateProduct": "點此使用 License 啟用您的產品"
   },
   "SetPassword": {
     "passwordMismatch": "新密碼兩次輸入內容不匹配，請檢查重試",
-    "updateSuccess": "密碼修改成功，請重新登入",
+    "updateSuccess": "密碼修改成功,請重新登入",
     "updateFailed": "密碼修改失敗：{{error}}",
     "passwordRule": "密碼為8-20位，且必須包含大小寫字母、數字及特殊字元",
     "oldPassword": "舊密碼",

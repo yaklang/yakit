@@ -1,39 +1,39 @@
 {
   "DomainAssetPage": {
-    "domain": "網域名稱",
-    "sendToVulnDetection": "傳送到弱點檢測",
+    "domain": "域名",
+    "sendToVulnDetection": "傳送到漏洞檢測",
     "sendToBruteForce": "傳送到爆破",
     "sendTo": "傳送到...",
     "deleteSelectedConfirm": "確定刪除勾選資料嗎？",
-    "clearListConfirm": "確定清空列表資料嗎？",
+    "clearListConfirm": "確定清空列表資料嗎?",
     "exportFailed": "資料匯出失敗：{{error}}",
     "batchNotSupportSelectAll": "該批次操作不支援全選",
-    "exportName": "網域名稱資產"
+    "exportName": "域名資產"
   },
   "PortAssetTable": {
-    "title": "連接埠資產",
-    "searchPlaceholder": "搜尋連接埠 / 主機 / 標題",
+    "title": "Port資產",
+    "searchPlaceholder": "搜尋Port / 主機 / 標題",
     "confirmDeleteSelected": "確定刪除勾選資料嗎？",
-    "confirmClearList": "確定清空列表資料嗎？"
+    "confirmClearList": "確定清空列表資料嗎?"
   },
   "PortAssetQuery": {
     "noFingerprint": "暫無指紋資訊"
   },
   "PortAssetDescription": {
-    "detailTitle": "連接埠資產詳情",
+    "detailTitle": "port資產詳情",
     "state": "狀態",
     "application": "應用",
     "failureReason": "失敗原因",
     "fingerprintInfo": "指紋資訊",
-    "advancedQuery": "資產進階查詢"
+    "advancedQuery": "資產高階查詢"
   },
   "ReportViewerPage": {
     "reportList": "報告列表",
-    "clickToInspect": "點擊列表中的報告檢查內容",
-    "deleteSelectedConfirm": "確定刪除選擇的報告嗎？不可復原",
-    "deleteAllConfirm": "確定刪除所有報告嗎？不可復原",
-    "generateReport": "產生報告",
-    "selectToDelete": "點擊選中後，可刪除",
+    "clickToInspect": "點選列表中的報告檢查內容",
+    "deleteSelectedConfirm": "確定刪除選擇的報告嗎？不可恢復",
+    "deleteAllConfirm": "確定刪除所有報告嗎? 不可恢復",
+    "generateReport": "生成報告",
+    "selectToDelete": "點選選中後，可刪除",
     "owner": "發起人",
     "source": "來源",
     "selectReport": "選擇報告以在此檢視內容",

@@ -1,12 +1,12 @@
 {
   "CVEQuery": {
-    "advancedQuery": "進階查詢",
+    "advancedQuery": "高階查詢",
     "cveQueryConditions": "CVE 查詢條件",
     "exploitPath": "利用路徑",
     "exploitDifficulty": "利用難度",
     "vulnerabilityLevel": "漏洞級別",
     "network": "網路",
-    "adjacentNetwork": "區域網路",
+    "adjacentNetwork": "區域網",
     "local": "本地",
     "physical": "物理",
     "difficult": "困難",

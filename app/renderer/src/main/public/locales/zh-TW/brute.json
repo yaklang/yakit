@@ -1,20 +1,20 @@
 {
   "BruteTypeTreeList": {
-    "availableBruteTypes": "可用爆破類型"
+    "availableBruteTypes": "可用爆破型別"
   },
   "BruteExecute": {
-    "bruteForceDetection": "弱密碼檢測",
-    "types": "個類型"
+    "bruteForceDetection": "弱口令檢測",
+    "types": "個型別"
   },
   "BruteExecuteContent": {
     "logs": "日誌",
     "inputTarget": "輸入目標",
-    "targetPlaceholder": "內容規則 網域名稱(:連接埠)/IP(:連接埠)/IP段，如需批次輸入請在此框以逗號分割",
-    "targetConcurrentLabel": "目標並發：",
+    "targetPlaceholder": "內容規則 域名(:Port)/IP(:Port)/IP段，如需批次輸入請在此框以逗號分割",
+    "targetConcurrentLabel": "目標併發:",
     "stopOnSuccess": "爆破成功即停止",
     "continueOnSuccess": "爆破成功後仍繼續",
-    "randomPause": "隨機暫停：",
-    "extraParams": "額外參數"
+    "randomPause": "隨機暫停:",
+    "extraParams": "額外引數"
   },
   "BruteSettings": {
     "bruteUserDict": "爆破使用者字典",
@@ -25,9 +25,9 @@
     "brutePassword": "爆破密碼",
     "brutePasswordPlaceholder": "請輸入爆破密碼，多個爆破密碼換行分隔",
     "useDefaultPasswordDict": "同時使用預設密碼字典",
-    "targetConcurrent": "目標並發",
+    "targetConcurrent": "目標併發",
     "targetConcurrentHelp": "同時爆破 n 個目標",
-    "innerTargetConcurrent": "目標內並發",
+    "innerTargetConcurrent": "目標內併發",
     "innerTargetConcurrentHelp": "每個目標同時執行多少爆破任務",
     "autoStop": "自動停止",
     "autoStopHelp": "遇到第一個爆破結果時終止任務",
@@ -35,6 +35,6 @@
     "maxDelay": "最大延遲"
   },
   "SelectPayload": {
-    "fetchDictFailed": "取得字典列表失敗"
+    "fetchDictFailed": "獲取字典列表失敗"
   }
 }

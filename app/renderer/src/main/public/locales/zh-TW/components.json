@@ -13,62 +13,62 @@
       },
       "heading1": {
         "label": "一級標題",
-        "description": "一級標題：#空格"
+        "description": "一級標題: #空格"
       },
       "heading2": {
         "label": "二級標題",
-        "description": "二級標題：##空格"
+        "description": "二級標題: ##空格"
       },
       "heading3": {
         "label": "三級標題",
-        "description": "三級標題：###空格"
+        "description": "三級標題: ###空格"
       },
       "orderedList": {
         "label": "有序列表",
-        "description": "有序列表：1.空格"
+        "description": "有序列表: 1.空格"
       },
       "unorderedList": {
         "label": "無序列表",
-        "description": "無序列表：-空格或*空格"
+        "description": "無序列表: -空格或*空格"
       },
       "task": {
         "label": "任務",
         "description": "任務"
       },
       "codeBlock": {
-        "label": "程式碼區塊",
-        "description": "程式碼區塊：```空格"
+        "label": "程式碼塊",
+        "description": "程式碼塊:```空格"
       },
       "quote": {
         "label": "引用",
-        "description": "引用：>空格"
+        "description": "引用: >空格"
       },
       "highLight": {
         "label": "高亮",
-        "description": "高亮：:::success空格"
+        "description": "高亮: :::success空格"
       },
       "file": {
         "label": "上傳檔案",
         "description": "上傳檔案"
       },
       "divider": {
-        "label": "分隔線",
-        "description": "分隔線：***"
+        "label": "分割線",
+        "description": "分割線: ***"
       }
     },
     "highlight": {
       "remove": "清除高亮",
-      "note": "灰色：:::note空格",
-      "success": "綠色：:::success空格",
-      "danger": "紅色：:::danger空格",
-      "warning": "黃色：:::warning空格"
+      "note": "灰色:  :::note空格",
+      "success": "綠色:  :::success空格",
+      "danger": "紅色:  :::danger空格",
+      "warning": "黃色:  :::warning空格"
     },
     "tooltip": {
-      "bold": "粗體：**文字**空格",
-      "strikethrough": "刪除線：~文字~空格",
-      "italic": "斜體：*文字*空格",
-      "underline": "底線：:u[文字]",
-      "codeBlock": "程式碼區塊：```空格"
+      "bold": "粗體:**文字**空格",
+      "strikethrough": "刪除線:~文字~空格",
+      "italic": "斜體:*文字*空格",
+      "underline": "下劃線: :u[文字]",
+      "codeBlock": "程式碼塊:```空格"
     },
     "slash": {
       "base": "基礎",
@@ -94,16 +94,16 @@
     },
     "initEditor": {
       "imageTooLarge": "圖片大小不能超過1M",
-      "collabRouteRequired": "當enableCollab為true，routeInfo必傳",
+      "collabRouteRequired": "當enableCollab為true,routeInfo必傳",
       "documentMissing": "文件不存在/已經被刪除",
-      "errorReason": "錯誤原因：",
-      "saveCurrentDocument": "儲存目前文件",
+      "errorReason": "錯誤原因:",
+      "saveCurrentDocument": "儲存當前文件",
       "closePage": "關閉頁面",
       "exception": "異常"
     },
     "onlineError": {
       "exception": "異常",
-      "errorReason": "錯誤原因：",
+      "errorReason": "錯誤原因:",
       "closePage": "關閉頁面"
     },
     "collab": {
@@ -112,16 +112,16 @@
     },
     "customFile": {
       "unknownName": "未知命名",
-      "uploadFailedRetry": "上傳失敗，點擊重新上傳",
+      "uploadFailedRetry": "上傳失敗，點選重新上傳",
       "downloadFile": "下載檔案",
       "copyLink": "複製連結",
-      "refreshFileInfo": "重新取得檔案資訊",
+      "refreshFileInfo": "重新獲取檔案資訊",
       "loadingFile": "檔案載入中...",
       "downloadingFile": "{{fileName}}下載中...",
       "downloading": "下載中",
-      "getFileInfoErrorTitle": "取得檔案資訊錯誤",
-      "getLinkInfoError": "取得連結資訊錯誤：{{error}}",
-      "getFileInfoError": "取得檔案資訊失敗：{{error}}",
+      "getFileInfoErrorTitle": "獲取檔案資訊錯誤",
+      "getLinkInfoError": "獲取連結資訊錯誤：{{error}}",
+      "getFileInfoError": "獲取檔案資訊失敗：{{error}}",
       "getLocalFileNameFailed": "getLocalFileName 失敗：{{error}}"
     }
   },
@@ -130,22 +130,22 @@
     "exporting": "匯出中...",
     "importDone": "匯入完成",
     "importing": "匯入中...",
-    "exportHint": "遠端模式下匯出後請開啟~Yakit\\yakit-projects\\projects路徑檢視匯出檔案，檔名無需填寫副檔名",
-    "importHint": "匯入外部資源存在潛在風險，可能會被植入惡意程式碼或Payload，造成資料洩露、系統被入侵等嚴重後果。請務必謹慎考慮引入外部資源的必要性，並確保資源來源可信、內容安全。如果確實需要使用外部資源，建議優先選擇官方發佈的安全版本，或自行編寫可控的資料來源。同時，請保持系統和軟體的最新版本，及時修補已知漏洞，做好日常安全防護。"
+    "exportHint": "遠端模式下匯出後請開啟~Yakit\\yakit-projects\\projects路徑檢視匯出檔案，檔名無需填寫字尾",
+    "importHint": "匯入外部資源存在潛在風險，可能會被植入惡意程式碼或Payload，造成資料洩露、系統被入侵等嚴重後果。請務必謹慎考慮引入外部資源的必要性，並確保資源來源可信、內容安全。如果確實需要使用外部資源，建議優先選擇官方釋出的安全版本，或自行編寫可控的資料來源。同時，請保持系統和軟體的最新版本，及時修復已知漏洞，做好日常安全防護。"
   },
   "ConfigPrivateDomain": {
     "enterpriseLoginSuccess": "企業登入成功",
     "enterpriseLoginFailed": "企業登入失敗：{{error}}",
-    "privateDomainSetSuccess": "私有網域設定成功",
-    "privateDomainSetFailed": "設定私有網域失敗：{{error}}",
+    "privateDomainSetSuccess": "私有域設定成功",
+    "privateDomainSetFailed": "設定私有域失敗：{{error}}",
     "passwordRules": "密碼為8-20位，且必須包含大小寫字母、數字及特殊字元",
-    "privateDomainHasSpace": "私有網域位址存在空格",
-    "enterValidPrivateDomain": "請輸入符合要求的私有網域位址",
+    "privateDomainHasSpace": "私有域地址存在空格",
+    "enterValidPrivateDomain": "請輸入符合要求的私有域地址",
     "enterpriseLogin": "企業登入",
-    "privateDomainAddress": "私有網域位址",
-    "enterPrivateDomain": "請輸入你的私有網域位址",
+    "privateDomainAddress": "私有域地址",
+    "enterPrivateDomain": "請輸入你的私有域地址",
     "setProxy": "設定代理",
-    "proxyHelp": "特殊情況無法存取外掛商店時，可設定代理進行存取",
+    "proxyHelp": "特殊情況無法訪問外掛商店時，可設定代理進行訪問",
     "username": "使用者名稱",
     "enterUsername": "請輸入你的使用者名稱",
     "password": "密碼",
@@ -153,15 +153,15 @@
   },
   "MessageCenter": {
     "applyModify": "申請修改",
-    "approved": "審核通過",
-    "rejected": "審核不通過",
+    "approved": "稽覈透過",
+    "rejected": "稽覈不透過",
     "comment": "評論",
-    "mergeApproved": "通過合併",
+    "mergeApproved": "透過合併",
     "mergeRejected": "拒絕合併",
     "replied": "回覆了",
     "deleted": "刪除了",
     "yourPlugin": "了您的外掛：{{scriptName}}",
-    "yourPluginReview": "了你的外掛：{{scriptName}}，請在日誌中審核",
+    "yourPluginReview": "了你的外掛：{{scriptName}}，請在日誌中稽覈",
     "yourComment": "您的評論",
     "yourCommentWithText": "您的評論：{{text}}",
     "imageCount": "[圖片] * {{count}}",
@@ -175,7 +175,7 @@
     "taskCanceled": "任務取消",
     "canceledHint": "已取消，可以自行刪除對應專案",
     "admin": "管理員",
-    "auditor": "審核員",
+    "auditor": "稽覈員",
     "trusted": "信任使用者",
     "noMessages": "暫無訊息",
     "loginToView": "登入後才可檢視訊息",
@@ -183,8 +183,8 @@
     "markAllRead": "全部已讀",
     "unread": "未讀",
     "all": "全部",
-    "duplicateProjectTitle": "存在同名專案：",
-    "duplicateProjectHint": "可覆蓋專案，將刪除本地專案後重建專案；或自行修改本地專案名稱後，點擊訊息中心對應任務通知重新建立任務",
+    "duplicateProjectTitle": "存在重名專案：",
+    "duplicateProjectHint": "可覆蓋專案，將刪除本地專案後重建專案；或自行修改本地專案名稱後，點選訊息中心對應任務通知重新建立任務",
     "receivedNewTasks": "收到新任務（將自動建立任務專案）：",
     "endTasks": "結束任務：",
     "taskNotification": "任務通知",
@@ -193,8 +193,8 @@
     "coverProject": "覆蓋專案",
     "later": "稍後處理",
     "notepadNotFound": "未找到筆記本資訊",
-    "judgeRepeatError": "驗證任務重名錯誤：{{error}}",
-    "getTaskNotificationError": "取得任務通知錯誤：{{error}}",
+    "judgeRepeatError": "校驗任務重名錯誤：{{error}}",
+    "getTaskNotificationError": "獲取任務通知錯誤：{{error}}",
     "createTaskProjectSuccess": "建立任務專案成功：{{successInfo}}",
     "createTaskProjectFailed": "建立任務專案失敗：{{failedInfo}}"
   },
@@ -204,26 +204,26 @@
       "enterField": "請輸入 {{field}}",
       "fillField": "請填寫 {{field}}",
       "parseTableFailed": "解析表格失敗：{{error}}",
-      "currentRowInvalid": "目前列驗證未通過",
+      "currentRowInvalid": "當前行校驗未透過",
       "maxItemsReached": "已達最大數量{{maxItems}}",
       "addRow": "新增一行資料"
     }
   },
   "ShowInBrowser": {
-    "buildParamsFailed": "展示 Response 失敗，建構參數失敗，確保傳入 HTTPFlow 或 HTTPResponse Uint8Array",
+    "buildParamsFailed": "展示 Response 失敗，構建引數失敗，確保傳入 HTTPFlow 或 HTTPResponse Uint8Array",
     "confirmOpenTitle": "確認在瀏覽器中開啟",
-    "infoMessage": "本操作會啟用本地架設的高位元埠的伺服器，設定 Response 來檢視頁面渲染效果，無需設定代理；",
+    "infoMessage": "本操作會啟用本地架設的高位埠的伺服器，設定 Response 來檢視頁面渲染效果，無需設定代理；",
     "confirmOpen": "確認開啟",
     "showResponseFailed": "展示 Response 失敗，{{error}}"
   },
   "playground": {
     "ThirdPartyBinaryManager": {
-      "title": "第三方二進位檔案管理",
+      "title": "第三方二進位制檔案管理",
       "notInstalled": "未安裝",
       "checking": "檢查中...",
       "ready": "就緒",
       "abnormal": "異常",
-      "fetchListFailed": "取得二進位檔案列表失敗：{{error}}",
+      "fetchListFailed": "獲取二進位制檔案列表失敗：{{error}}",
       "installStarting": "開始安裝 {{name}}",
       "uninstallSuccess": "解除安裝 {{name}} 成功",
       "startSuccess": "啟動 {{name}} 成功",
@@ -240,11 +240,11 @@
       "enterToolName": "請輸入工具名稱",
       "enterToolNamePlaceholder": "請輸入要安裝的工具名稱",
       "proxySettings": "代理設定",
-      "proxyPlaceholder": "選填：http://proxy:port",
+      "proxyPlaceholder": "可選：http://proxy:port",
       "forceReinstall": "強制重新安裝",
       "startModalTitle": "啟動 {{name}}",
-      "commandLineArgs": "命令列參數",
-      "commandLineArgsPlaceholder": "選填：輸入命令列參數，以空格分隔"
+      "commandLineArgs": "命令列引數",
+      "commandLineArgsPlaceholder": "可選：輸入命令列引數，空格分隔"
     },
     "KnowledgeEntryTable": {
       "searchFailed": "搜尋知識條目失敗：{{error}}",
@@ -257,11 +257,11 @@
       "createIndexSuccess": "為知識條目 \"{{title}}\" 建立索引成功",
       "createIndexFailed": "為知識條目建立索引失敗：{{error}}",
       "title": "標題",
-      "type": "類型",
+      "type": "型別",
       "importance": "重要度",
       "keywords": "關鍵詞",
       "summary": "摘要",
-      "sourcePage": "來源頁碼",
+      "sourcePage": "源頁碼",
       "indexing": "索引中...",
       "createIndexForEntry": "為此條目建立向量索引",
       "index": "索引",
@@ -273,8 +273,8 @@
       "editEntry": "編輯知識條目",
       "knowledgeTitle": "知識標題",
       "enterKnowledgeTitle": "請輸入知識標題",
-      "knowledgeType": "知識類型",
-      "enterKnowledgeType": "請輸入知識類型",
+      "knowledgeType": "知識型別",
+      "enterKnowledgeType": "請輸入知識型別",
       "importanceScore": "重要度評分",
       "enterImportanceScore": "請輸入重要度評分",
       "addKeyword": "新增關鍵詞",
@@ -286,7 +286,7 @@
       "addQuestion": "新增問題"
     },
     "KnowledgeBaseList": {
-      "fetchFailed": "取得知識庫列表失敗：{{error}}",
+      "fetchFailed": "獲取知識庫列表失敗：{{error}}",
       "indexingInProgress": "正在為知識庫建立索引...",
       "indexBuildSuccess": "知識庫索引建立完成",
       "indexBuildFailed": "建立索引失敗：{{error}}",
@@ -301,18 +301,18 @@
       "searchPlaceholder": "搜尋知識庫",
       "addKnowledgeBase": "新增知識庫",
       "empty": "暫無知識庫",
-      "type": "類型",
+      "type": "型別",
       "buildIndex": "建立索引",
       "aiQa": "AI問答",
-      "deleteConfirm": "刪除後無法復原，確認刪除此知識庫嗎？",
+      "deleteConfirm": "刪除後無法恢復，確認刪除此知識庫嗎？",
       "totalRecords": "共 {{count}} 條記錄",
       "editKnowledgeBase": "編輯知識庫",
       "knowledgeBaseName": "知識庫名稱",
       "enterKnowledgeBaseName": "請輸入知識庫名稱",
       "knowledgeBaseDescription": "知識庫描述",
       "enterKnowledgeBaseDescription": "請輸入知識庫描述",
-      "knowledgeBaseType": "知識庫類型",
-      "enterKnowledgeBaseType": "請輸入知識庫類型"
+      "knowledgeBaseType": "知識庫型別",
+      "enterKnowledgeBaseType": "請輸入知識庫型別"
     },
     "KnowledgeBaseQA": {
       "enterQuestion": "請輸入問題",
@@ -322,7 +322,7 @@
       "queryStopped": "查詢已停止",
       "stopQueryFailed": "停止查詢失敗",
       "relatedKnowledge": "相關知識 ({{count}}條)",
-      "importance": "重要性：",
+      "importance": "重要性:",
       "summary": "摘要",
       "details": "詳情",
       "keywords": "關鍵詞",
@@ -353,11 +353,11 @@
       "techDocs": "yakit 技術文件"
     },
     "RagEntryTable": {
-      "fetchFailed": "取得向量儲存條目失敗：{{error}}",
-      "fetchDocumentFailed": "取得文件內容失敗：{{error}}",
+      "fetchFailed": "獲取向量儲存條目失敗：{{error}}",
+      "fetchDocumentFailed": "獲取文件內容失敗：{{error}}",
       "contentPreview": "內容預覽",
-      "metadata": "元資料",
-      "noMetadata": "無元資料",
+      "metadata": "後設資料",
+      "noMetadata": "無後設資料",
       "vectorDimension": "向量維度",
       "createdAt": "建立時間",
       "title": "RAG 向量條目",
@@ -370,23 +370,23 @@
       "entryId": "條目ID",
       "collectionId": "集合ID",
       "contentLength": "內容長度",
-      "metadataLength": "元資料長度",
+      "metadataLength": "後設資料長度",
       "characters": "字元",
       "relatedKnowledgeEntry": "關聯知識庫條目",
       "titleLabel": "標題",
-      "typeLabel": "類型",
+      "typeLabel": "型別",
       "summaryLabel": "摘要",
       "detailsLabel": "詳細內容",
       "keywordsLabel": "關鍵詞",
       "importanceLabel": "重要度",
-      "sourcePageLabel": "來源頁碼",
+      "sourcePageLabel": "源頁碼",
       "potentialQuestionsLabel": "潛在問題",
       "vectorDataFirst20": "向量資料 (前20維)",
       "moreDimensions": "... 還有 {{count}} 維",
       "none": "無"
     },
     "RagCollectionList": {
-      "fetchFailed": "取得向量儲存集合失敗：{{error}}",
+      "fetchFailed": "獲取向量儲存集合失敗：{{error}}",
       "title": "RAG 向量儲存集合",
       "searchPlaceholder": "搜尋集合名稱",
       "empty": "暫無向量儲存集合",
@@ -395,7 +395,7 @@
       "unspecified": "未指定",
       "dimension": "維度",
       "unknown": "未知",
-      "distanceFunc": "距離函數",
+      "distanceFunc": "距離函式",
       "collectionId": "集合ID",
       "detailTitle": "向量儲存集合詳情",
       "basicInfo": "基本資訊",
@@ -404,8 +404,8 @@
       "embeddingModel": "嵌入模型",
       "vectorDimension": "向量維度",
       "distanceMeasure": "距離度量",
-      "mParameter": "M參數",
-      "mlParameter": "Ml參數",
+      "mParameter": "M引數",
+      "mlParameter": "Ml引數",
       "efSearch": "EfSearch",
       "efConstruct": "EfConstruct",
       "notSet": "未設定",
@@ -417,8 +417,8 @@
       "zone": "零零測繪",
       "unset": "不設定",
       "setEngineFirst": "請先設定空間引擎",
-      "usedQuota": "已用額度：{{count}}",
-      "remainingQuota": "剩餘額度：{{count}}",
+      "usedQuota": "已用額度: {{count}}",
+      "remainingQuota": "剩餘額度: {{count}}",
       "searchCondition": "搜尋條件",
       "scan": "掃描",
       "maxPage": "最大頁數",
@@ -427,10 +427,10 @@
       "retryTimes": "重試次數"
     },
     "HybridScanDemo": {
-      "configure": "設定參數",
-      "startSuccess": "啟動成功，任務ID：{{token}}",
+      "configure": "設定引數",
+      "startSuccess": "啟動成功，任務ID: {{token}}",
       "sendTargetsSuccess": "傳送掃描目標與外掛成功",
-      "defaultInput": "預設INPUT：",
+      "defaultInput": "預設INPUT:",
       "pluginsEnabled": "外掛啟用：",
       "results": "執行結果",
       "totalTargets": "總目標",
@@ -444,7 +444,7 @@
     "HybridScanTaskTable": {
       "taskId": "任務ID",
       "taskTitle": "任務：{{taskId}}",
-      "status": "目前狀態",
+      "status": "當前狀態",
       "startTask": "啟動任務",
       "stopTask": "停止任務",
       "totalTargets": "總目標",
@@ -457,44 +457,44 @@
       "selectTask": "請選擇一個任務"
     },
     "PcapXDemo": {
-      "configure": "設定參數",
+      "configure": "設定引數",
       "stopSniffing": "停止嗅探",
       "startSniffing": "開始嗅探",
-      "netInterface": "網卡",
-      "defaultInterface": "預設網卡：",
+      "netInterface": "網絡卡",
+      "defaultInterface": "預設網絡卡:",
       "viewTable": "檢視表格",
-      "rawPacket": "原始封包",
+      "rawPacket": "原始資料包",
       "tcpData": "TCP資料",
       "activeSession": "活躍會話",
-      "sessionProtocol": "會話協定",
-      "linkLayerProtocol": "鏈路層協定",
-      "networkLayerProtocol": "網路層協定",
-      "transportLayerProtocol": "傳輸層協定"
+      "sessionProtocol": "會話協議",
+      "linkLayerProtocol": "鏈路層協議",
+      "networkLayerProtocol": "網路層協議",
+      "transportLayerProtocol": "傳輸層協議"
     },
     "DemoPacketTable": {
       "source": "來源",
       "destination": "目標",
-      "protocol": "協定",
+      "protocol": "協議",
       "length": "長度",
       "info": "資訊"
     },
     "DemoTCPReassembled": {
       "source": "來源",
       "destination": "目標",
-      "protocol": "協定",
+      "protocol": "協議",
       "length": "長度"
     },
     "DemoTrafficSessionTable": {
-      "type": "類型",
-      "deviceType": "裝置類型",
+      "type": "型別",
+      "deviceType": "裝置型別",
       "source": "來源",
       "destination": "目標",
-      "protocol": "協定"
+      "protocol": "協議"
     },
     "PacketListDemo": {
-      "packet": "封包",
+      "packet": "資料包",
       "tcpReassembled": "TCP資料幀",
-      "realtime": "即時"
+      "realtime": "實時"
     },
     "RagManager": {
       "title": "RAG 向量儲存管理"
@@ -504,9 +504,9 @@
     },
     "ChaosMakerRulesDemo": {
       "rule": "規則",
-      "type": "類型",
+      "type": "型別",
       "cve": "CVE",
-      "protocol": "協定"
+      "protocol": "協議"
     }
   }
 }

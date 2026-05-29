@@ -1,19 +1,19 @@
 {
   "YakPoC": {
-    "byKeyword": "按關鍵字",
+    "byKeyword": "按關鍵詞",
     "byGroup": "按組選",
     "selectPlugin": "選擇外掛"
   },
   "PluginListByGroup": {
-    "selectPrompt": "請選擇關鍵字或外掛組進行掃描"
+    "selectPrompt": "請選擇關鍵詞或外掛組進行掃描"
   },
   "PluginGroupByKeyWord": {
-    "noDataDesc": "可一鍵獲取預設關鍵字與外掛，下載後請重新啟動 {{edition}} 獲取預設關鍵字"
+    "noDataDesc": "可一鍵獲取預設關鍵詞與外掛,下載後請重啟 {{edition}} 獲取預設關鍵詞"
   },
   "PluginGroupGrid": {
     "searchGroupNamePlaceholder": "請輸入組名搜尋",
     "manage": "管理",
-    "noGroupDataDesc": "可一鍵獲取預設分組與外掛，或點擊管理手動新建"
+    "noGroupDataDesc": "可一鍵獲取預設分組與外掛,或點選管理手動新建"
   },
   "PluginGroupByKeyWordItem": {
     "plugins": "個外掛"
@@ -27,6 +27,6 @@
   "PluginExecuteLog": {
     "target": "執行目標",
     "timeConsuming": "耗時",
-    "timeout": "逾時"
+    "timeout": "超時"
   }
 }

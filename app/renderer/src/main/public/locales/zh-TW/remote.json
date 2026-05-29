@@ -3,24 +3,24 @@
     "remoteMode": "遠端模式",
     "connectionHistory": "連線歷史",
     "selectPlaceholder": "請選擇...",
-    "hostLabel": "Yak gRPC 主機位址：",
-    "portLabel": "Yak gRPC 連接埠：",
-    "tlsLabel": "啟用通訊加密認證 TLS：",
-    "pemLabel": "gRPC Root-CA 憑證(PEM)",
+    "hostLabel": "Yak gRPC 主機地址:",
+    "portLabel": "Yak gRPC 埠:",
+    "tlsLabel": "啟用通訊加密認證 TLS:",
+    "pemLabel": "gRPC Root-CA 證書(PEM)",
     "passwordLabel": "密碼",
     "saveHistoryLabel": "儲存為歷史連線",
-    "connectionNameLabel": "連線名稱：",
-    "connectionNameHelp": "填寫後，本次記錄會儲存到連線歷史中，之後可以快速呼叫",
+    "connectionNameLabel": "連線名:",
+    "connectionNameHelp": "填寫後，本次記錄會儲存到連線歷史中，之後可以快捷呼叫",
     "connectButton": "啟動連線"
   },
   "PEMExample": {
-    "pemTitle": "需要 PEM 格式的憑證",
+    "pemTitle": "需要 PEM 格式的證書",
     "pemContent": "在透過 <code>yak grpc --tls</code> 啟動核心伺服器的時候，會把 RootCA 列印到螢幕上，複製到該輸入框即可：",
     "pemExample": "例如如下內容："
   },
   "PEMHint": {
     "saveHistoryNote": "注意：{{appName}} 並不會把歷史記錄上傳到網際網路",
-    "saveHistoryLocation": "你可以在你的本地目錄（用戶端目錄）下找到遠端登入資訊",
+    "saveHistoryLocation": "你可以在你的本地目錄（客戶端目錄）下找到遠端登入資訊",
     "openLocation": "開啟遠端資訊儲存位置"
   }
 }

@@ -1,12 +1,12 @@
 {
   "ICMPSizeLoggerPage": {
-    "description": "使用 ping 攜帶特定長度封包判定 ICMP 反連",
-    "setPingSize": "設定 Ping 封包大小：",
-    "randomLength": "隨機產生可用長度",
+    "description": "使用 ping 攜帶特定長度資料包判定 ICMP 反連",
+    "setPingSize": "設定 Ping 包大小：",
+    "randomLength": "隨機生成可用長度",
     "pingLength": "ICMP/Ping 長度",
     "remoteIp": "遠端IP",
     "triggerTime": "觸發時間",
-    "summary": "ICMP Size Logger 是一個透過 Ping 封包大小來判斷 ICMP 反連的 ICMP 記錄器：",
+    "summary": "ICMP Size Logger 是一個透過 Ping 包大小來判斷 ICMP 反連的 ICMP 記錄器：",
     "windowsCommand": "在 Windows 系統中，使用",
     "macCommand": "在 MacOS/Linux/*nix 系統中，使用",
     "command": "命令"

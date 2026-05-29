@@ -5,13 +5,13 @@
     "confirmDelete": "確定要刪掉該文件嗎"
   },
   "NotepadManageOnline": {
-    "fileName": "檔案名稱",
+    "fileName": "檔名稱",
     "author": "作者",
-    "collaborator": "協作者",
+    "collaborator": "協作人",
     "updatedAt": "最近更新時間",
     "createdAt": "最近建立時間",
     "confirmBatchDelete": "確定要批次刪除所選筆記嗎？",
-    "noData": "請點擊右上角【新建】按鈕新增資料"
+    "noData": "請點選右上角【新建】按鈕新增資料"
   },
   "NotepadManageLocal": {
     "fullTextSearch": "全文搜尋"
@@ -20,8 +20,8 @@
     "title": "標題",
     "updatedAt": "最近更新時間",
     "createdAt": "最近建立時間",
-    "confirmDeleteSelected": "確定要刪除勾選文件嗎？",
-    "confirmDeleteAll": "確定要刪除所有文件嗎？"
+    "confirmDeleteSelected": "確定要刪除勾選文件嗎?",
+    "confirmDeleteAll": "確定要刪除所有文件嗎?"
   },
   "NotepadLocalList": {
     "title": "標題",
@@ -32,12 +32,12 @@
     "catalogue": "目錄",
     "unnamedDocument": "未命名文件",
     "dataErrorMissingDeleted": "資料異常/文件不存在/已經被刪除",
-    "errorReason": "錯誤原因：{{message}}",
-    "saveCurrentDocument": "儲存目前文件",
+    "errorReason": "錯誤原因: {{message}}",
+    "saveCurrentDocument": "儲存當前文件",
     "noteIdMissing": "NoteId不存在",
     "titleTooLong": "標題不超過50個字元",
     "enterTitle": "請輸入標題",
-    "noPermissionMessage": "沒有閱讀和編輯權限，請聯絡作者 {{userName}}",
+    "noPermissionMessage": "沒有閱讀和編輯許可權,請聯絡作者 {{userName}}",
     "online": "線上",
     "savedToCloud": "已經儲存到雲端",
     "saving": "儲存中...",
