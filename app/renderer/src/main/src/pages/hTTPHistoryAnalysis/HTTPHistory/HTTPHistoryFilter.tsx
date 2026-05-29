@@ -95,7 +95,6 @@ import {
 } from '@/pages/invoker/fromPacketToYakCode'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import emiter from '@/utils/eventBus/eventBus'
-import { HTTPFlowDetailProp } from '@/components/HTTPFlowDetail'
 import { YakitMenu } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
@@ -108,6 +107,16 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SolidStarIcon } from '@/assets/icon/solid'
 
 import styles from './HTTPHistoryFilter.module.scss'
+import {
+  buildHistoryFilterLinkedQueries,
+  buildHistoryFilterSideResizeBoxProps,
+  buildHTTPFlowPacketWindowData,
+  buildHTTPFlowQueryRequestParams,
+  buildHTTPHistoryFilterQueryFromConfig,
+  buildLegacyHTTPHistoryFilterConfig,
+  getHTTPFlowExportPageSize,
+  mergeHTTPFlowsById,
+} from './HTTPHistoryFilter.utils'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
@@ -121,6 +130,7 @@ import { FlowAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
+import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
 const { ipcRenderer } = window.require('electron')
 
 interface HTTPHistoryFilterProps {
@@ -199,19 +209,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
   )
 
   const ResizeBoxProps = useCreation(() => {
-    let p = {
-      firstRatio: '20%',
-      secondRatio: '80%',
-    }
-
-    if (activeKey === 'rules' && openTabsFlag) {
-      p.firstRatio = '470px'
-    } else if (openTabsFlag) {
-      p.firstRatio = '20%'
-    } else {
-      p.firstRatio = '24px'
-    }
-    return p
+    return buildHistoryFilterSideResizeBoxProps(activeKey, openTabsFlag)
   }, [openTabsFlag, activeKey])
   // #endregion
 
@@ -230,18 +228,13 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
   // 表格参数改变
   const onQueryParams = useMemoizedFn((queryParams, execFlag) => {
     onSetHTTPFlowFilter(queryParams)
-    try {
-      const treeQuery = JSONParseLog(queryParams, { page: 'HTTPHistoryFilter', fun: 'treeQuery' }) || {}
-      delete treeQuery.IncludeInUrl
-      setTreeQueryparams(JSON.stringify(treeQuery))
-      setRefreshFlag(!!execFlag)
+    const linkedQueries = buildHistoryFilterLinkedQueries(queryParams)
+    if (!linkedQueries) return
 
-      const processQuery = JSONParseLog(queryParams, { page: 'HTTPHistoryFilter', fun: 'processQuery' }) || {}
-      delete processQuery.ProcessName
-      delete processQuery.Tags
-      setProcessQueryparams(JSON.stringify(processQuery))
-      setRulesQueryparams(queryParams || '')
-    } catch (error) {}
+    setTreeQueryparams(linkedQueries.treeQueryparams)
+    setRefreshFlag(!!execFlag)
+    setProcessQueryparams(linkedQueries.processQueryparams)
+    setRulesQueryparams(linkedQueries.rulesQueryparams)
   })
   // #endregion
 
@@ -553,17 +546,6 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     }
     fetchConfig()
   }, [])
-  const safeParse = (val?: string) => {
-    if (!val) return undefined
-    try {
-      return JSONParseLog(val, {
-        page: 'HTTPFlowFilterTable',
-        fun: 'safeParse',
-      })
-    } catch {
-      return undefined
-    }
-  }
   const getDefautAdvancedSearch = useMemoizedFn(async () => {
     let config = filterConfig
     try {
@@ -595,33 +577,20 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         const excludeKeywords = excludeKeywordsRes.status === 'fulfilled' ? excludeKeywordsRes.value : []
         const statusCode = statusCodeRes.status === 'fulfilled' ? statusCodeRes.value : ''
 
-        if (filterMode === 'shield') {
-          config = {
-            filterMode: filterMode,
-            shield: {
-              hostName: toArray(safeParse(hostName)),
-              urlPath: toArray(safeParse(urlPath)),
-              fileSuffix: toArray(safeParse(fileSuffix)),
-              searchContentType: searchContentType ? searchContentType.split(',') : [],
-              excludeKeywords: toArray(safeParse(excludeKeywords)),
-              statusCode: statusCode,
-            },
-            show: config.show,
-          }
-        } else {
-          config = {
-            filterMode: filterMode,
-            shield: config.shield,
-            show: {
-              hostName: toArray(safeParse(hostName)),
-              urlPath: toArray(safeParse(urlPath)),
-              fileSuffix: toArray(safeParse(fileSuffix)),
-              searchContentType: searchContentType ? searchContentType.split(',') : [],
-            },
-          }
-        }
+        config = buildLegacyHTTPHistoryFilterConfig(config, {
+          filterMode,
+          hostName,
+          urlPath,
+          fileSuffix,
+          searchContentType,
+          excludeKeywords,
+          statusCode,
+        })
       } else {
-        config = safeParse(res)
+        const parsedConfig = safeParse<FilterConfig>(res)
+        if (parsedConfig) {
+          config = parsedConfig
+        }
       }
     } catch (error) {}
     setRemoteValue(RemoteHistoryGV.HTTPFlowTableAnalysisFormConfiguration, JSON.stringify(config))
@@ -634,30 +603,17 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
       setQuery((prev) => {
         return {
           ...prev,
-          SearchContentType: filterConfig.show.searchContentType.join(','),
-          ExcludeContentType: filterConfig.shield.searchContentType,
-          HostnameFilter: filterConfig.show.hostName,
-          ExcludeInUrl: filterConfig.shield.hostName,
-          IncludePath: filterConfig.show.urlPath,
-          ExcludePath: filterConfig.shield.urlPath,
-          IncludeSuffix: filterConfig.show.fileSuffix,
-          ExcludeSuffix: filterConfig.shield.fileSuffix,
-          ExcludeKeywords: filterConfig.shield.excludeKeywords,
-          ExcludeStatusCode: filterConfig.shield.statusCode,
+          ...buildHTTPHistoryFilterQueryFromConfig(filterConfig),
         }
       })
     },
     [comFilterConfig],
     { wait: 500 },
   )
-  const isFilter: boolean = useCreation(() => {
-    const checkObj = (obj: Record<string, any>) =>
-      Object.values(obj).some((val) => {
-        if (Array.isArray(val)) return val.length > 0
-        return val !== ''
-      })
-    return checkObj(filterConfig.shield) || checkObj(filterConfig.show)
-  }, [filterConfig])
+  const isFilter: boolean = useCreation(
+    () => isFilterSectionActive(filterConfig.shield) || isFilterSectionActive(filterConfig.show),
+    [filterConfig],
+  )
   // #endregion
 
   // #region 表格勾选，表格行选中相关
@@ -680,19 +636,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
   ).run
 
   const getPacketNewWindow = useMemoizedFn((r) => {
-    return {
-      showParentPacketCom: {
-        components: 'HTTPFlowDetailMini',
-        props: {
-          noHeader: true,
-          id: r?.Id || 0,
-          sendToWebFuzzer: true,
-          selectedFlow: getHTTPFlowReqAndResToString(r),
-          showEditTag: false,
-          showJumpTree: false,
-        } satisfies HTTPFlowDetailProp,
-      },
-    }
+    return buildHTTPFlowPacketWindowData(r ? getHTTPFlowReqAndResToString(r) : undefined)
   })
   const onHTTPFlowFilterTableRowDoubleClick = useMemoizedFn((r) => {
     openPacketNewWindow(getPacketNewWindow(r))
@@ -2074,13 +2018,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     )
   }
   const getPageSize = useCreation(() => {
-    if (total > 5000) {
-      return 500
-    } else if (total < 1000) {
-      return 100
-    } else {
-      return Math.round(total / 1000) * 100
-    }
+    return getHTTPFlowExportPageSize(total)
   }, [total])
 
   // 导出字段映射配置
@@ -2295,55 +2233,24 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     { wait: 500 },
   )
 
-  const mergeHTTPFlowsById = useMemoizedFn((prev: HTTPFlow[], next: HTTPFlow[]) => {
-    if (!prev.length) return next
-    if (!next.length) return prev
-
-    const existedIds = new Set(prev.map((item) => item.Id))
-    const merged = prev.slice()
-    next.forEach((item) => {
-      if (existedIds.has(item.Id)) return
-      existedIds.add(item.Id)
-      merged.push(item)
-    })
-    return merged
-  })
-
   const update = useMemoizedFn((page: number) => {
     const isInit = page === 1
     if (isInit) {
       setLoading(true)
     }
 
-    const currentOrder = sorterTableRef.current?.order || 'desc'
-    const currentOrderBy = sorterTableRef.current?.orderBy || 'Id'
     const currentLastId = data[data.length - 1]?.Id
-    const useOffsetPagination = !isInit && currentOrderBy === 'Id' && !!currentLastId
+    const { requestParams, tabQueryParams } = buildHTTPFlowQueryRequestParams(
+      query,
+      pagination,
+      page,
+      sorterTableRef.current,
+      currentLastId,
+    )
 
-    const params = {
-      ...query,
-      Methods: Array.isArray(query.Methods) ? query.Methods.join(',') : '',
-      OffsetId: useOffsetPagination ? currentLastId : undefined,
-      Pagination: {
-        ...pagination,
-        Page: page,
-        Order: currentOrder,
-        OrderBy: currentOrderBy,
-      },
-    }
-    // 以下删除的是前端需要的字段
-    delete params['UpdatedAt']
-    delete params['UpdatedAt-time']
-    delete params['ContentType']
-    delete params['bodyLength']
-
-    const copyParams = cloneDeep(params)
-    // @ts-ignore
-    delete copyParams.Pagination
-    delete copyParams.OffsetId
-    setQueryParams(JSON.stringify(copyParams))
+    setQueryParams(tabQueryParams)
     ipcRenderer
-      .invoke('QueryHTTPFlows', params)
+      .invoke('QueryHTTPFlows', requestParams)
       .then((res: YakQueryHTTPFlowResponse) => {
         const resData = res?.Data || []
         const dataHasClassName: HTTPFlow[] = filterHTTPFlowsByFavoriteAndTags(
