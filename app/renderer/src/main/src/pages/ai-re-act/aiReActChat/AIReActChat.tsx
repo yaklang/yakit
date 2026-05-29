@@ -250,19 +250,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       handleSendSyncMessage(params)
     })
 
-    const result_externalParameters = useMemo(() => {
-      if (externalParameters) {
-        const keys = Object.keys(externalParameters)
-        if (keys && keys.includes('rightIcon')) {
-          return { ...omit(externalParameters, 'rightIcon') }
-        } else {
-          return {}
-        }
-      } else {
-        return {}
-      }
-    }, [externalParameters])
-
     return (
       <>
         <div
@@ -319,7 +306,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         </div>
                       }
                       chatDataStoreKey={chatDataStoreKey}
-                      {...result_externalParameters}
+                      {...omit(externalParameters, 'rightIcon')}
                     />
                   </div>
                 </div>
