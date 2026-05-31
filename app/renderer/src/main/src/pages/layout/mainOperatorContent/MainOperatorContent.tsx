@@ -100,6 +100,7 @@ import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPa
 import { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
 import emiter from '@/utils/eventBus/eventBus'
+import { isArkiumEdition } from '@/config/brand/featureFlags'
 import { shallow } from 'zustand/shallow'
 import { RemoteGV } from '@/yakitGV'
 import {
@@ -452,6 +453,22 @@ const getColor = (subPage) => {
 }
 // 软件初始化时的默认打开页面数据
 const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) => {
+  // Arkium 模式：默认落到复用 NewHome 路由位的轻量 Arkium Welcome 引导页，
+  // 不新增 route key、不新增业务页面（实际渲染见 RouteToPage 中 NewHome 的 Arkium 分支）。
+  if (isArkiumEdition()) {
+    return [
+      {
+        routeKey: routeConvertKey(YakitRoute.NewHome, ''),
+        verbose: 'Welcome',
+        verboseKey: 'YakitRoute.home',
+        menuName: YakitRouteToPageInfo[YakitRoute.NewHome].label,
+        route: YakitRoute.NewHome,
+        singleNode: true,
+        multipleNode: [],
+      },
+    ]
+  }
+
   if (isIRify()) {
     return [
       {
@@ -600,6 +617,11 @@ const getInitPageCache: (softMode: SoftMode) => PageCache[] = (softMode) => {
 
 // 软件初始化时的默认当前打开页面的key
 const getInitActiveTabKey = (softMode: SoftMode) => {
+  // Arkium 模式：默认激活 Arkium Welcome（复用 NewHome 路由位）
+  if (isArkiumEdition()) {
+    return YakitRoute.NewHome
+  }
+
   if (isMemfit()) {
     return YakitRoute.AI_Agent
   }

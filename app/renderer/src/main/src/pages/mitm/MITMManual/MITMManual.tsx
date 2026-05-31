@@ -84,6 +84,8 @@ import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableT
 import { YakitKeyBoard, YakitKeyMod } from '@/utils/globalShortcutKey/keyboard'
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getArkiumActionLabel } from '@/config/brand/arkiumCopy'
+import { isArkiumEdition } from '@/config/brand/featureFlags'
 import { getMitmShortcutKeyEvents, MitmShortcutKey } from '@/utils/globalShortcutKey/events/page/mitm'
 import { JSONParseLog } from '@/utils/tool'
 
@@ -99,7 +101,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       hijackFilterFlag,
       setAutoForward,
     } = props
-    const { t, i18n } = useI18nNamespaces(['history'])
+    const { t, i18n } = useI18nNamespaces(['history', 'product'])
     const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] = useGetState<SingleManualHijackInfoMessage>()
@@ -361,14 +363,30 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         },
         {
           key: 'send-webFuzzer',
-          label: '发送到 Web Fuzzer',
+          label: isArkiumEdition()
+            ? getArkiumActionLabel(
+                t,
+                'HTTPFlowTable.RowContextMenu.sendToWebFuzzer',
+                'Actions.sendToRepeater',
+                'history',
+              )
+            : '发送到 Web Fuzzer',
           children: [
             // SystemInfo
             {
               key: 'send-and-jump-to-webFuzzer',
               label: (
                 <div className={styles['context-menu-keybind-wrapper']}>
-                  <div className={styles['content-style']}>发送并跳转</div>
+                  <div className={styles['content-style']}>
+                    {isArkiumEdition()
+                      ? getArkiumActionLabel(
+                          t,
+                          'HTTPFlowTable.RowContextMenu.sendAndRedirect',
+                          'Actions.sendAndGoToRepeater',
+                          'history',
+                        )
+                      : '发送并跳转'}
+                  </div>
                   <div className={classNames(styles['keybind-style'], 'keys-style')}>
                     {convertKeyboardToUIKey(
                       getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys,
@@ -381,7 +399,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
               key: 'send-to-webFuzzer',
               label: (
                 <div className={styles['context-menu-keybind-wrapper']}>
-                  <div className={styles['content-style']}>仅发送</div>
+                  <div className={styles['content-style']}>
+                    {isArkiumEdition() ? t('HTTPFlowTable.RowContextMenu.sendOnly') : '仅发送'}
+                  </div>
                   <div className={classNames(styles['keybind-style'], 'keys-style')}>
                     {convertKeyboardToUIKey(getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys)}
                   </div>

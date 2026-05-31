@@ -134,6 +134,7 @@ import { HTTPFlowsToOnlineRequest } from '@/utils/login'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getArkiumActionLabel } from '@/config/brand/arkiumCopy'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
 import i18n from '@/i18n/i18n'
 import { OptionProps, YakitCombinationSearchProps } from '../YakitCombinationSearch/YakitCombinationSearchType'
@@ -3131,14 +3132,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     let menu: HistoryMenuData[] = [
       {
         key: '发送到 Web Fuzzer',
-        label: t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
+        label: getArkiumActionLabel(
+          t,
+          'HTTPFlowTable.RowContextMenu.sendToWebFuzzer',
+          'Actions.sendToRepeater',
+          'history',
+        ),
         number: 10,
         default: true,
         webSocket: false,
         children: [
           {
             key: 'sendAndJumpToWebFuzzer',
-            label: t('HTTPFlowTable.RowContextMenu.sendAndRedirect'),
+            label: getArkiumActionLabel(
+              t,
+              'HTTPFlowTable.RowContextMenu.sendAndRedirect',
+              'Actions.sendAndGoToRepeater',
+              'history',
+            ),
             keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys,
           },
           {

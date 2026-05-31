@@ -31,6 +31,7 @@ import {
   isIRify,
   isMemfit,
 } from '@/utils/envfile'
+import { isArkiumEdition } from '@/config/brand/featureFlags'
 import HeardMenu from './layout/HeardMenu/HeardMenu'
 import { CodeGV } from '@/yakitGV'
 import { EnterpriseLoginInfoIcon } from '@/assets/icons'
@@ -665,7 +666,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
                 height: '100%',
               }}
             >
-              {isCommunityEdition() ? (
+              {isCommunityEdition() && !isArkiumEdition() ? (
                 <>
                   <PublicMenu
                     defaultExpand={defaultExpand}

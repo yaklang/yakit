@@ -104,6 +104,7 @@ import {
   ShortcutKeyFocusType,
 } from '@/utils/globalShortcutKey/events/global'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getArkiumActionLabel } from '@/config/brand/arkiumCopy'
 import { SolidStarIcon } from '@/assets/icon/solid'
 
 import styles from './HTTPHistoryFilter.module.scss'
@@ -1434,13 +1435,23 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     return [
       {
         key: '发送到 Web Fuzzer',
-        label: t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
+        label: getArkiumActionLabel(
+          t,
+          'HTTPFlowTable.RowContextMenu.sendToWebFuzzer',
+          'Actions.sendToRepeater',
+          'history',
+        ),
         number: 10,
         default: true,
         children: [
           {
             key: 'sendAndJumpToWebFuzzer',
-            label: t('HTTPFlowTable.RowContextMenu.sendAndRedirect'),
+            label: getArkiumActionLabel(
+              t,
+              'HTTPFlowTable.RowContextMenu.sendAndRedirect',
+              'Actions.sendAndGoToRepeater',
+              'history',
+            ),
             keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendAndJumpToWebFuzzer].keys,
           },
           {

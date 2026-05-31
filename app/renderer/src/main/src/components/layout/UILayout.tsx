@@ -30,6 +30,7 @@ import {
   isIRify,
   isMemfit,
 } from '@/utils/envfile'
+import { isArkiumEdition } from '@/config/brand/featureFlags'
 import { AllKillEngineConfirm } from './AllKillEngineConfirm'
 import { SoftwareSettings } from '@/pages/softwareSettings/SoftwareSettings'
 import { StopIcon } from '@/assets/newIcon'
@@ -1501,8 +1502,8 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       if (flag) {
         setTemporaryProjectNoPromptFlag(flag === 'true')
       }
-      // INFO 开发环境\memfit默认每次进入项目都是默认项目 避免每次都进项目管理页面去选项目
-      if (SystemInfo.isDev || isMemfit()) {
+      // INFO 开发环境\memfit\Arkium 默认每次进入项目都是默认项目，避免每次都进项目管理页面去选项目
+      if (SystemInfo.isDev || isMemfit() || isArkiumEdition()) {
         const res = await yakitProject.getDefaultProjectEx({
           Type: getEnvTypeByProjects(),
         })
@@ -1512,6 +1513,10 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           setNowProjectDescription(res)
           setShowProjectManage(false)
           setYakitMode('')
+        } else if (isArkiumEdition()) {
+          // Arkium：获取默认项目失败时回退到项目管理页，避免无项目状态下进入主界面
+          setShowProjectManage(true)
+          setYakitMode('soft')
         }
       } else {
         setShowProjectManage(true)

@@ -36,6 +36,7 @@ import { YakScript } from '@/pages/invoker/schema'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useStore } from '@/store'
 import { isEnpriTrace, isEnpriTraceAgent, isIRify } from '@/utils/envfile'
+import { isArkiumEdition } from '@/config/brand/featureFlags'
 import { CodeGV, RemoteGV } from '@/yakitGV'
 import {
   DatabaseFirstMenuProps,
@@ -47,6 +48,7 @@ import {
   PrivateSimpleRouteMenu,
   ResidentPluginName,
   databaseConvertData,
+  getArkiumPrivateMenu,
 } from '@/routes/newRoute'
 import { RouteToPageProps } from '../publicMenu/PublicMenu'
 import {
@@ -73,8 +75,12 @@ const { ipcRenderer } = window.require('electron')
 
 const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
   const { defaultExpand, onRouteMenuSelect, setRouteToLabel } = props
-  const { t, i18n } = useI18nNamespaces(['layout', 'yakitRoute', 'yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['layout', 'yakitRoute', 'yakitUi', 'product'])
   const { setNewPluginToId, pluginToId } = usePluginToId()
+  // Arkium 模式核心导航菜单（仅在 isArkiumEdition() 时使用）
+  const ArkiumMenus = useMemo(() => {
+    return privateExchangeProps(getArkiumPrivateMenu())
+  }, [])
   // 专家模式菜单数据
   const ExpertMenus = useMemo(() => {
     return privateExchangeProps(PrivateExpertRouteMenu)
@@ -141,6 +147,17 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
     setRouteMenu([...DefaultMenu])
     setSubMenuData(DefaultMenu[0].children || [])
     setMenuId(DefaultMenu[0].label)
+
+    // Arkium 模式：使用固定的核心导航白名单，不走数据库合并逻辑，
+    // 也不允许用户自定义/导入菜单，保证只显示 Arkium v1 核心功能。
+    if (isArkiumEdition()) {
+      const arkiumMenuList = [...ArkiumMenus]
+      setRouteMenu(arkiumMenuList)
+      setSubMenuData(arkiumMenuList[0]?.children || [])
+      setMenuId(arkiumMenuList[0]?.label || '')
+      setLoading(false)
+      return
+    }
 
     if (isEnpriTraceAgent()) {
       let currentMenuList: EnhancedPrivateRouteMenuProps[] = [...SimpleMenus]
@@ -735,8 +752,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
         <div className={classNames(style['heard-menu-right'])}>
           {!isEnpriTraceAgent() ? (
             <>
-              <ExtraMenu onMenuSelect={onRouteMenuSelect} />
-              {!isIRify() && (
+              {!isArkiumEdition() && <ExtraMenu onMenuSelect={onRouteMenuSelect} />}
+              {!isIRify() && !isArkiumEdition() && (
                 <>
                   <Dropdown
                     overlayClassName={style['customize-drop-menu']}
@@ -923,7 +940,7 @@ export default HeardMenu
 /** 展开状态下的一级菜单项 和 收起状态下的菜单鼠标悬浮二级菜单的一级菜单项 */
 const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) => {
   const { menuItem, isShow, isExpand, onSelect, setSubMenuData, activeMenuId } = props
-  const { t, i18n } = useI18nNamespaces(['yakitRoute'])
+  const { t, i18n } = useI18nNamespaces(['yakitRoute', 'product'])
 
   const [visible, setVisible] = useState<boolean>(false)
   const onOpenSecondMenu = useMemoizedFn(() => {
@@ -967,7 +984,7 @@ const RouteMenuDataItem: React.FC<RouteMenuDataItemProps> = React.memo((props) =
 /** 收起状态下鼠标悬浮展示的二级菜单项(带icon和hovericon) */
 const SubMenu: React.FC<SubMenuProps> = (props) => {
   const { subMenuData, onSelect } = props
-  const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout'])
+  const { t, i18n } = useI18nNamespaces(['yakitRoute', 'layout', 'product'])
 
   return (
     <div className={style['heard-sub-menu']}>

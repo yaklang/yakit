@@ -1,0 +1,54 @@
+{
+  "productName": "Arkium",
+  "companyName": "Arkium Tech LLC",
+  "Welcome": {
+    "title": "Welcome to {{productName}}",
+    "subtitle": "A modern Web & API security testing toolkit for intercepting traffic, replaying requests, scanning vulnerabilities, and extending workflows.",
+    "footer": "Built on Yaklang Engine.",
+    "cards": {
+      "proxy": {
+        "title": "Proxy",
+        "desc": "Intercept and inspect HTTP/WebSocket traffic."
+      },
+      "repeater": {
+        "title": "Repeater",
+        "desc": "Replay, modify, and iterate on requests."
+      },
+      "scanner": {
+        "title": "Scanner",
+        "desc": "Discover vulnerabilities with automated and guided testing."
+      },
+      "extensions": {
+        "title": "Extensions",
+        "desc": "Extend Arkium with plugins and custom workflows."
+      },
+      "projects": {
+        "title": "Projects",
+        "desc": "Organize sessions, findings, and assessments."
+      },
+      "history": {
+        "title": "History",
+        "desc": "Review captured requests and responses."
+      }
+    }
+  },
+  "Nav": {
+    "proxy": "Proxy",
+    "repeater": "Repeater",
+    "scanner": "Scanner",
+    "extensions": "Extensions",
+    "projects": "Projects",
+    "history": "History"
+  },
+  "Actions": {
+    "sendToRepeater": "Send to Repeater",
+    "sendAndGoToRepeater": "Send and Go to Repeater"
+  },
+  "Setting": {
+    "language": "Language",
+    "languageZh": "Chinese (Simplified)",
+    "languageEn": "English",
+    "brand": "Brand",
+    "edition": "Edition"
+  }
+}

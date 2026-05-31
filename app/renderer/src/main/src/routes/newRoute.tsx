@@ -121,6 +121,8 @@ import {
   isEnpriTrace,
   isCommunityYakit,
 } from '@/utils/envfile'
+import { getArkiumNavItems } from '@/config/brand/arkiumNav'
+import { isArkiumEdition } from '@/config/brand/featureFlags'
 import { NewPayload } from '@/pages/payloadManager/newPayload'
 import { NewCodec } from '@/pages/codec/NewCodec'
 import { DataStatistics } from '@/pages/dataStatistics/DataStatistics'
@@ -185,6 +187,9 @@ const HTTPHacker = React.lazy(() => import('../pages/hacker/httpHacker'))
 const MITMHacker = React.lazy(() => import('@/pages/mitm/MITMHacker/MITMHacker'))
 const Home = React.lazy(() => import('@/pages/home/Home'))
 const IRifyHome = React.lazy(() => import('@/pages/home/IRifyHome'))
+const ArkiumWelcome = React.lazy(() =>
+  import('@/pages/arkiumWelcome/ArkiumWelcome').then((m) => ({ default: m.ArkiumWelcome })),
+)
 const WebFuzzerPage = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage'))
 const PluginHub = React.lazy(() => import('@/pages/pluginHub/pluginHub/PluginHub'))
 const ModifyNotepad = React.lazy(() => import('@/pages/notepadManage/modifyNotepad/ModifyNotepad'))
@@ -788,6 +793,13 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
   const { routeKey, yakScriptId, params } = props
   switch (routeKey) {
     case YakitRoute.NewHome:
+      if (isArkiumEdition()) {
+        return (
+          <Suspense fallback={<PageLoading />}>
+            <ArkiumWelcome />
+          </Suspense>
+        )
+      }
       return <>{isIRify() ? <IRifyHome /> : <Home />}</>
     case YakitRoute.HTTPHacker:
       return (
@@ -1530,6 +1542,10 @@ export const getSecurityExpertNotepadMenu: () => ExtraMenuItem[] = () => {
 }
 /** @name 右侧额外菜单 */
 export const getExtraMenu: (softMode: SoftMode) => ExtraMenuItem[] = (softMode) => {
+  if (isArkiumEdition()) {
+    return []
+  }
+
   if (isIRify()) {
     return [
       {
@@ -2065,6 +2081,49 @@ const routeToChildren: (route: (YakitRoute | ResidentPluginName)[]) => PrivateRo
   for (let name of route) {
     if (PrivateAllMenus[name]) menus.push(PrivateAllMenus[name])
   }
+  return menus
+}
+
+/**
+ * @name 生成 Arkium 模式下的核心导航菜单
+ * @description
+ * - 仅做导航层映射：以 arkiumNav.ts 中 getArkiumNavItems() 为白名单与排序依据，
+ *   将每个核心功能映射为一个顶部一级菜单（labelUi 使用 product 命名空间的英文文案），
+ *   其唯一子项指向现有业务路由（复用 PrivateAllMenus，不改任何业务组件/页面）。
+ * - 校验：若某个导航项映射的 route 在 PrivateAllMenus 中不存在或缺少 page，
+ *   不静默失败，使用 console.warn 提示并跳过该项。
+ */
+export const getArkiumPrivateMenu = (): PrivateRouteMenuProps[] => {
+  const navItems = getArkiumNavItems()
+  const menus: PrivateRouteMenuProps[] = []
+  for (const navItem of navItems) {
+    const target = PrivateAllMenus[navItem.route]
+    if (!target || !target.page) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[ArkiumNav] 导航项 "${navItem.key}" 映射的 route "${navItem.route}" 在 PrivateAllMenus 中不存在或缺少 page，已跳过。请检查 arkiumNav.ts 与 YakitRoute 的对应关系。`,
+      )
+      continue
+    }
+    menus.push({
+      page: undefined,
+      label: navItem.fallbackLabel,
+      labelUi: navItem.i18nKey,
+      children: [
+        {
+          ...target,
+          // 子项复用现有业务路由与图标，仅在导航层覆盖为 Arkium 英文命名
+          label: navItem.fallbackLabel,
+          labelUi: navItem.i18nKey,
+        },
+      ],
+    })
+  }
+  // eslint-disable-next-line no-console
+  console.info(
+    '[ArkiumNav] 最终导航 items:',
+    menus.map((m) => ({ label: m.label, route: m.children?.[0]?.page })),
+  )
   return menus
 }
 /**

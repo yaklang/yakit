@@ -1,0 +1,54 @@
+{
+  "productName": "Yakit",
+  "companyName": "Yaklang",
+  "Welcome": {
+    "title": "欢迎使用 {{productName}}",
+    "subtitle": "现代化的 Web 与 API 安全测试工具集：拦截流量、重放请求、扫描漏洞并扩展工作流。",
+    "footer": "Built on Yaklang Engine.",
+    "cards": {
+      "proxy": {
+        "title": "Proxy",
+        "desc": "拦截并查看 HTTP/WebSocket 流量。"
+      },
+      "repeater": {
+        "title": "Repeater",
+        "desc": "重放、修改并迭代请求。"
+      },
+      "scanner": {
+        "title": "Scanner",
+        "desc": "通过自动化与引导式测试发现漏洞。"
+      },
+      "extensions": {
+        "title": "Extensions",
+        "desc": "通过插件与自定义工作流扩展 Arkium。"
+      },
+      "projects": {
+        "title": "Projects",
+        "desc": "组织会话、发现项与评估。"
+      },
+      "history": {
+        "title": "History",
+        "desc": "查看已捕获的请求与响应。"
+      }
+    }
+  },
+  "Nav": {
+    "proxy": "代理劫持",
+    "repeater": "Repeater",
+    "scanner": "扫描器",
+    "extensions": "插件扩展",
+    "projects": "项目管理",
+    "history": "历史记录"
+  },
+  "Actions": {
+    "sendToRepeater": "发送到 Repeater",
+    "sendAndGoToRepeater": "发送并跳转到 Repeater"
+  },
+  "Setting": {
+    "language": "语言",
+    "languageZh": "简体中文",
+    "languageEn": "English",
+    "brand": "品牌",
+    "edition": "发行版"
+  }
+}

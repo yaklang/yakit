@@ -48,7 +48,9 @@ import {
   isEnpriTraceIRify,
   isIRify,
   isMemfit,
+  isArkiumBrand,
 } from '@/utils/envfile'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { RemoteEngine } from './components/RemoteEngine/RemoteEngine'
 import { RemoteLinkInfo } from './components/RemoteEngine/RemoteEngineType'
 import { StringToUint8Array } from '@/utils/str'
@@ -63,6 +65,9 @@ import yakitSELogo from '@/assets/yakitSELogo.png'
 import yakitSEDarkLogo from '@/assets/yakitSEDarkLogo.png'
 import irifyRight from '@/assets/irify-right.png'
 import yakitRight from '@/assets/yakit-right.png'
+import arkiumLogo from '@/assets/Arkiumlogo.png'
+import arkiumLogoDark from '@/assets/ArkiumLogoDark.png'
+import arkiumRight from '@/assets/Arkium-right.png'
 import memfitRight from '@/assets/memfit-right.webm'
 import memfitRightDark from '@/assets/memfit-right-dark.webm'
 import { SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon } from '@/assets/colors'
@@ -82,12 +87,13 @@ const DefaultCredential: YaklangEngineWatchDogCredential = {
 }
 
 export const StartupPage: React.FC = () => {
+  const { t } = useI18nNamespaces(['startup'])
   /** 是否置顶 */
   const [isTop, setIsTop] = useState<ModalIsTop>(0)
   /** 操作系统 */
   const [system, setSystem] = useState<System>('Darwin')
   /** 本地引擎自检输出日志 */
-  const [checkLog, setCheckLog] = useState<string[]>(['正在进行环境检查...'])
+  const [checkLog, setCheckLog] = useState<string[]>([t('Startup.initialCheck')])
   /** 引擎是否安装 */
   const isEngineInstalled = useRef<boolean>(false)
   /** 内置引擎版本号 */
@@ -1016,6 +1022,16 @@ export const StartupPage: React.FC = () => {
   })
 
   const startupLogo = useMemo(() => {
+    // Arkium 品牌：使用 PNG 字标（800x234，页面显示约 140x41）
+    if (isArkiumBrand()) {
+      return {
+        type: 'img' as const,
+        src: theme === 'light' ? arkiumLogo : arkiumLogoDark,
+        width: 140,
+        height: 41,
+      }
+    }
+
     // ce
     if (isCommunityEdition()) {
       if (isCommunityIRify()) {
@@ -1047,6 +1063,9 @@ export const StartupPage: React.FC = () => {
   }, [theme])
 
   const startupRightImg = useMemo(() => {
+    if (isArkiumBrand()) {
+      return <img src={arkiumRight} alt={t('Startup.noImage')} />
+    }
     if (isIRify()) {
       return <img src={irifyRight} alt="暂无图片" />
     }
@@ -1064,12 +1083,17 @@ export const StartupPage: React.FC = () => {
         <div className={styles['startup-title']}>
           <div className={styles['startup-logo']}>
             {startupLogo.type === 'img' ? (
-              <img src={startupLogo.src} alt="暂无图片" width={startupLogo.width} height={startupLogo.height} />
+              <img
+                src={startupLogo.src}
+                alt={t('Startup.noImage')}
+                width={startupLogo.width}
+                height={startupLogo.height}
+              />
             ) : (
               <startupLogo.component style={{ height: startupLogo.height, width: startupLogo.width }} />
             )}
           </div>
-          <div className={styles['startup-desc']}>为网络安全而生</div>
+          <div className={styles['startup-desc']}>{t('Startup.tagline')}</div>
         </div>
         <YaklangEngineWatchDog
           credential={credential}

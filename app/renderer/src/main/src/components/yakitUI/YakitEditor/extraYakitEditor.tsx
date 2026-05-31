@@ -31,6 +31,7 @@ import { getNotepadNameByEditionMulLang } from '@/pages/layout/NotepadMenu/utils
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getArkiumActionLabel } from '@/config/brand/arkiumCopy'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { JSONParseLog } from '@/utils/tool'
 import { fetchCursorContent } from './editorUtils'
@@ -525,11 +526,21 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
         menu: [
           {
             key: 'new-web-fuzzer-tab',
-            label: t('YakitEditor.HTTPPacketYakitEditor.sendToWebFuzzer'),
+            label: getArkiumActionLabel(
+              t,
+              'YakitEditor.HTTPPacketYakitEditor.sendToWebFuzzer',
+              'Actions.sendToRepeater',
+              'yakitUi',
+            ),
             children: [
               {
                 key: 'send-and-redirect',
-                label: t('YakitEditor.HTTPPacketYakitEditor.sendAndRedirect'),
+                label: getArkiumActionLabel(
+                  t,
+                  'YakitEditor.HTTPPacketYakitEditor.sendAndRedirect',
+                  'Actions.sendAndGoToRepeater',
+                  'yakitUi',
+                ),
                 keybindings: YakEditorOptionShortcutKey.CommonSendAndJumpToWebFuzzer,
               },
               {

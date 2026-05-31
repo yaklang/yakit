@@ -6,7 +6,8 @@ import { ReportBug, FeatureRequest, LocalInfoProps } from '@/utils/template/issu
 import { useMemoizedFn } from 'ahooks'
 import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
 import { grpcFetchLocalYakitVersion, grpcFetchLocalYakVersion } from '@/apiUtils/grpc'
-import { WebsiteGV } from '@/enums/website'
+import { WebsiteGV, getBrandOfficialWebsite, getBrandGithubAddress } from '@/enums/website'
+import { isArkiumBrand } from '@/config/brand/brandConfig'
 import { SystemInfo } from '@/constants/hardware'
 import { yakitShell } from '@/services/electronBridge'
 
@@ -51,16 +52,25 @@ export const HelpDoc: React.FC<HelpDocProps> = React.memo((props) => {
     if (show) setShow(false)
     switch (type) {
       case 'report_bug':
-        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`)
+        // Arkium 暂无独立 issue 模板，统一打开品牌 GitHub
+        yakitShell.openExternal(
+          isArkiumBrand()
+            ? getBrandGithubAddress()
+            : `https://github.com/yaklang/yakit/issues/new?template=bug_report.yml`,
+        )
         return
       case 'feature_request':
-        yakitShell.openExternal(`https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`)
+        yakitShell.openExternal(
+          isArkiumBrand()
+            ? getBrandGithubAddress()
+            : `https://github.com/yaklang/yakit/issues/new?template=feature_request.yml`,
+        )
         return
       case 'official_website':
-        yakitShell.openExternal(WebsiteGV.YakHelpDocAddress)
+        yakitShell.openExternal(getBrandOfficialWebsite(WebsiteGV.YakHelpDocAddress))
         return
       case 'aboutUs':
-        yakitShell.openExternal(WebsiteGV.AboutUsWebsite)
+        yakitShell.openExternal(getBrandOfficialWebsite(WebsiteGV.AboutUsWebsite))
         return
       default:
         return

@@ -17,10 +17,12 @@ import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import yakitSE from '@/assets/yakitSE.png'
 import yakitEE from '@/assets/yakitEE.png'
 import yakitCE from '@/assets/yakit.jpg'
+import arkiumLogo from '@/assets/arkiumLogo.png'
 import styles from './newYakitLoading.module.scss'
 import classNames from 'classnames'
 import { SolidIrifyMiniLogoIcon, SolidMemfitMiniLogoIcon } from '@/assets/icon/colors'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isArkiumBrand } from '@/config/brand/brandConfig'
 
 import IRifyPrimaryBg from '../../assets/uiLayout/IRifyPrimaryBg.png'
 import MemfitAIPrimaryBg from '@/assets/uiLayout/MemfitAIPrimaryBg.png'
@@ -123,6 +125,17 @@ export const NewYakitLoading: React.FC<NewYakitLoadingProp> = (props) => {
   )
 
   const startLogo = useMemo(() => {
+    /* Arkium 社区版 */
+    if (isArkiumBrand()) {
+      return (
+        <div className={styles['yakit-loading-icon-wrapper']}>
+          <div className={styles['white-icon']}>
+            <img src={arkiumLogo} alt={t('YakitEmpty.noImage')} />
+          </div>
+        </div>
+      )
+    }
+
     /* 社区版 */
     if (isCommunityEdition()) {
       if (isIRify()) {

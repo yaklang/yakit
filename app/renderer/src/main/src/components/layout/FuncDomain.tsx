@@ -101,8 +101,10 @@ import {
   grpcFetchLocalYakVersion,
 } from '@/apiUtils/grpc'
 import { WebsiteGV } from '@/enums/website'
+import { isArkiumBrand } from '@/config/brand/brandConfig'
 
 import YakitLogo from '@/assets/yakitLogo.png'
+import arkiumLogo from '@/assets/arkiumLogo.png'
 import yakitImg from '../../assets/yakit.jpg'
 import classNames from 'classnames'
 import styles from './funcDomain.module.scss'
@@ -1739,7 +1741,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
       <div className={styles['update-header-wrapper']}>
         <div className={styles['header-info']}>
           <div className={styles['update-icon']}>
-            <img src={YakitLogo} width={30} />
+            <img src={isArkiumBrand() ? arkiumLogo : YakitLogo} width={30} />
           </div>
           <div
             style={{

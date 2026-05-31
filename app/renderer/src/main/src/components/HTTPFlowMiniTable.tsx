@@ -10,6 +10,7 @@ import { showDrawer } from '../utils/showModal'
 import ReactResizeDetector from 'react-resize-detector'
 import { useDebounceFn, useInViewport, useThrottleFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getArkiumActionLabel } from '@/config/brand/arkiumCopy'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -206,7 +207,12 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                             }
                           }}
                         >
-                          {t('HTTPFlowMiniTable.sendToWebFuzzer')}
+                          {getArkiumActionLabel(
+                            t,
+                            'HTTPFlowMiniTable.sendToWebFuzzer',
+                            'Actions.sendToRepeater',
+                            'history',
+                          )}
                         </Button>
                       )}
                       <Button

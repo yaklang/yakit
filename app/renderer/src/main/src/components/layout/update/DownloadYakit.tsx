@@ -20,7 +20,7 @@ import { OutlineQuestionmarkcircleIcon } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import { safeFormatDownloadProcessState } from '../utils'
 import { grpcFetchIntranetYakitVersion, grpcFetchLatestYakitVersion } from '@/apiUtils/grpc'
-import { WebsiteGV } from '@/enums/website'
+import { WebsiteGV, getBrandOfficialWebsite } from '@/enums/website'
 
 import classNames from 'classnames'
 import styles from './DownloadYakit.module.scss'
@@ -395,8 +395,8 @@ const YakitQuestionModal: React.FC<AgrAndQSModalProps> = React.memo((props) => {
               <div className={styles['yakit-update-link']}>
                 {t('DownloadYakit.website')}
                 <div className={styles['link-wrapper']}>
-                  {WebsiteGV.OfficialWebsite}
-                  <CopyComponents className={styles['copy-icon']} copyText={WebsiteGV.OfficialWebsite} />
+                  {getBrandOfficialWebsite()}
+                  <CopyComponents className={styles['copy-icon']} copyText={getBrandOfficialWebsite()} />
                 </div>
               </div>
             </div>

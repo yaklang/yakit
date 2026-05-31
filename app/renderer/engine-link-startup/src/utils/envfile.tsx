@@ -2,6 +2,34 @@ import { Theme } from '@/hooks/useTheme'
 
 export const __PLATFORM__ = import.meta.env.VITE_PLATFORM
 
+/** 品牌标识（用于启动页/引擎连接窗的产品名展示），默认 yakit */
+export const __BRAND__ = import.meta.env.VITE_BRAND || 'yakit'
+
+/** 是否 Arkium 品牌（Logo / 发行版逻辑分支，文案走 i18n lng 不在这里判断） */
+export const isArkiumBrand = (): boolean => __BRAND__ === 'arkium'
+
+/**
+ * 引擎连接窗 i18n 默认语言（与主工程一致：资源 key 为 zh / en / zh-TW）。
+ * 优先级：VITE_LANG > brand 默认（arkium -> en，yakit -> zh）。
+ */
+export const getDefaultI18nLng = (): 'zh' | 'en' | 'zh-TW' => {
+  const envLang = (import.meta.env.VITE_LANG || '').toLowerCase()
+  if (envLang.startsWith('en')) return 'en'
+  if (envLang === 'zh-tw' || envLang.startsWith('zh-tw')) return 'zh-TW'
+  if (envLang.startsWith('zh')) return 'zh'
+  return __BRAND__ === 'arkium' ? 'en' : 'zh'
+}
+
+/** 当前品牌产品名：arkium -> 'Arkium'，其余默认 'Yakit'（行为不变） */
+export const getBrandProductName = () => {
+  switch (__BRAND__) {
+    case 'arkium':
+      return 'Arkium'
+    default:
+      return 'Yakit'
+  }
+}
+
 export enum PRODUCT_RELEASE_EDITION {
   Yakit = 0,
   /**@name 企业版 */
@@ -29,7 +57,8 @@ export const getReleaseEditionName = () => {
     case PRODUCT_RELEASE_EDITION.MEMFIT:
       return 'Memfit AI'
     default:
-      return 'Yakit'
+      // 默认 Yakit 发行版下，产品名由 brand 决定：yakit -> 'Yakit'，arkium -> 'Arkium'
+      return getBrandProductName()
   }
 }
 

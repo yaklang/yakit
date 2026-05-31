@@ -10,11 +10,11 @@ import { AgreementContentModal } from '../AgreementContentModal'
 import { LocalGVS } from '@/enums/yakitGV'
 import { grpcOpenYaklangPath } from '../../grpc'
 import { openABSFileLocated } from '@/utils/openWebsite'
-import { EngineModeVerbose } from '../../utils'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { SoftwareBasics, SoftwareBasicsProps } from '../SoftwareBasics'
 import { yakitApp } from '@/utils/electronBridge'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 import classNames from 'classnames'
 import styles from './YakitLoading.module.scss'
@@ -78,6 +78,8 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     setSoftLang,
   } = props
 
+  const { t, i18n } = useI18nNamespaces(['startup'])
+
   const [form] = Form.useForm()
   /** 用户协议勾选状态 */
   const [agrCheck, setAgrCheck] = useState<boolean>(false)
@@ -101,7 +103,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     [agrCheck],
     { wait: 500 },
   )
-  const agreement = useMemoizedFn(() => {
+  const agreement = useMemo(() => {
     return (
       <div
         className={classNames(styles['hint-right-agreement'], {
@@ -119,7 +121,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
           onChange={(e) => setAgrCheck(e.target.checked)}
         ></Checkbox>
         <span>
-          勾选同意{' '}
+          {t('StartupLoading.agreePrefix')}{' '}
           <span
             className={styles['agreement-style']}
             onClick={(e) => {
@@ -128,13 +130,13 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
               setIsTop(1)
             }}
           >
-            《用户协议》
-          </span>
-          以继续使用
+            {t('StartupLoading.termsOfService')}
+          </span>{' '}
+          {t('StartupLoading.agreeSuffix')}
         </span>
       </div>
     )
-  })
+  }, [agrCheck, isShake, checkStatus, t])
 
   const judgmentAgreement = useMemoizedFn(() => {
     setCheckStatus(true)
@@ -157,7 +159,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => judgmentAgreement() && btnClickCallback('install')}
           >
-            初始化引擎
+            {t('StartupLoading.initEngine')}
           </YakitButton>
 
           <YakitButton
@@ -167,7 +169,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => judgmentAgreement() && btnClickCallback('remote')}
           >
-            远程连接
+            {t('StartupLoading.remoteConnection')}
           </YakitButton>
         </>
       )
@@ -182,7 +184,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => judgmentAgreement() && btnClickCallback('installNetWork')}
           >
-            下载引擎
+            {t('StartupLoading.downloadEngine')}
           </YakitButton>
 
           <YakitButton
@@ -192,7 +194,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => judgmentAgreement() && btnClickCallback('remote')}
           >
-            远程连接
+            {t('StartupLoading.remoteConnection')}
           </YakitButton>
         </>
       )
@@ -207,7 +209,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('check_timeout')}
           >
-            重新执行
+            {t('StartupLoading.retry')}
           </YakitButton>
         </>
       )
@@ -223,7 +225,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
               loading={restartLoading}
               onClick={() => btnClickCallback('install')}
             >
-              重置引擎版本
+              {t('StartupLoading.resetEngineVersion')}
             </YakitButton>
           ) : (
             <YakitButton
@@ -232,7 +234,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
               loading={restartLoading}
               onClick={() => btnClickCallback('installNetWork')}
             >
-              下载引擎
+              {t('StartupLoading.downloadEngine')}
             </YakitButton>
           )}
         </>
@@ -248,7 +250,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('port_occupied_prev', { killCurProcess: true })}
           >
-            重新连接
+            {t('StartupLoading.reconnect')}
           </YakitButton>
           <YakitButton
             className={styles['btn-style']}
@@ -257,7 +259,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             type="secondary2"
             onClick={() => btnClickCallback('port_occupied_prev')}
           >
-            切换端口
+            {t('StartupLoading.switchPort')}
           </YakitButton>
         </>
       )
@@ -276,7 +278,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
               })
             }}
           >
-            连接
+            {t('StartupLoading.connect')}
           </YakitButton>
         </>
       )
@@ -291,7 +293,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('install')}
           >
-            重置引擎版本
+            {t('StartupLoading.resetEngineVersion')}
           </YakitButton>
         </>
       )
@@ -306,7 +308,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('start_timeout')}
           >
-            重新执行
+            {t('StartupLoading.retry')}
           </YakitButton>
         </>
       )
@@ -321,7 +323,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('install')}
           >
-            重置引擎版本
+            {t('StartupLoading.resetEngineVersion')}
           </YakitButton>
         </>
       )
@@ -336,7 +338,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('installNetWork')}
           >
-            下载引擎
+            {t('StartupLoading.downloadEngine')}
           </YakitButton>
         </>
       )
@@ -351,7 +353,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('database_error')}
           >
-            修复数据库
+            {t('StartupLoading.fixDatabase')}
           </YakitButton>
         </>
       )
@@ -367,7 +369,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             }}
           >
             {dbPath.join(',')}
-            <Tooltip title={`打开文件夹后，需自行修复数据库`}>
+            <Tooltip title={t('StartupLoading.fixDatabaseFolderTip')}>
               <OutlineQuestionmarkcircleIcon />
             </Tooltip>
           </div>
@@ -384,7 +386,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('fix_database_timeout')}
           >
-            重新执行
+            {t('StartupLoading.retry')}
           </YakitButton>
         </>
       )
@@ -399,14 +401,14 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('update_yakit', { downYakit: true })}
           >
-            下载更新
+            {t('StartupLoading.downloadUpdate')}
           </YakitButton>
 
           <YakitDropdownMenu
             menu={{
               data: [
-                { key: 'ignoreThisTime', label: '忽略本次' },
-                { key: 'ignoreUpdates', label: '不再提示' },
+                { key: 'ignoreThisTime', label: t('StartupLoading.ignoreThisTime') },
+                { key: 'ignoreUpdates', label: t('StartupLoading.ignoreUpdates') },
               ],
               onClick: ({ key }) => {
                 switch (key) {
@@ -429,7 +431,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             }}
           >
             <YakitButton className={styles['btn-style']} size="large" type="secondary2" loading={restartLoading}>
-              忽略
+              {t('StartupLoading.ignore')}
             </YakitButton>
           </YakitDropdownMenu>
         </>
@@ -445,7 +447,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('update_yak', { downYak: true })}
           >
-            安装
+            {t('StartupLoading.install')}
           </YakitButton>
 
           <YakitButton
@@ -455,7 +457,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('update_yak')}
           >
-            忽略
+            {t('StartupLoading.ignore')}
           </YakitButton>
         </>
       )
@@ -470,7 +472,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('check_yak_version_error')}
           >
-            手动连接引擎
+            {t('StartupLoading.manualConnectEngine')}
           </YakitButton>
         </>
       )
@@ -485,7 +487,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('softwareBasics')}
           >
-            手动连接引擎
+            {t('StartupLoading.manualConnectEngine')}
           </YakitButton>
         </>
       )
@@ -500,7 +502,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('break', { linkAgain: true })}
           >
-            手动连接引擎
+            {t('StartupLoading.manualConnectEngine')}
           </YakitButton>
         </>
       )
@@ -515,7 +517,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('reclaimDatabaseSpace_success')}
           >
-            手动连接引擎
+            {t('StartupLoading.manualConnectEngine')}
           </YakitButton>
         </>
       )
@@ -530,7 +532,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('reclaimDatabaseSpace_error')}
           >
-            手动连接引擎
+            {t('StartupLoading.manualConnectEngine')}
           </YakitButton>
         </>
       )
@@ -545,7 +547,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             loading={restartLoading}
             onClick={() => btnClickCallback('error')}
           >
-            手动连接引擎
+            {t('StartupLoading.manualConnectEngine')}
           </YakitButton>
         </>
       )
@@ -560,7 +562,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             type="primary"
             onClick={() => btnClickCallback('link_countdown', { enterNow: true })}
           >
-            立即进入 ({countdown}s)
+            {t('StartupLoading.enterNow', { countdown })}
           </YakitButton>
           <YakitButton
             className={styles['btn-style']}
@@ -568,14 +570,24 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             type="secondary2"
             onClick={() => btnClickCallback('link_countdown')}
           >
-            取消连接
+            {t('StartupLoading.cancelConnection')}
           </YakitButton>
         </>
       )
     }
 
     return null
-  }, [yakitStatus, restartLoading, engineMode, checkStatus, buildInEngineVersion, JSON.stringify(dbPath), countdown])
+  }, [
+    yakitStatus,
+    restartLoading,
+    engineMode,
+    checkStatus,
+    buildInEngineVersion,
+    JSON.stringify(dbPath),
+    countdown,
+    t,
+    i18n.language,
+  ])
 
   const logError = useMemo(() => {
     if (!yakitStatus) {
@@ -650,9 +662,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
           >
             <div className={styles['log-body']}>
               {yakitStatus === 'link_countdown' ? (
-                <div className={styles['log-item']}>引擎连接成功！{countdown} 秒后自动进入...</div>
+                <div className={styles['log-item']}>
+                  {t('StartupLoading.connectionSuccessCountdown', { countdown })}
+                </div>
               ) : yakitStatus === 'break' ? (
-                <div className={styles['log-item']}>已主动断开, 请点击手动连接引擎</div>
+                <div className={styles['log-item']}>{t('StartupLoading.disconnectedManualConnect')}</div>
               ) : (
                 checkLog.map((item, index, arr) => {
                   return (
@@ -678,15 +692,15 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
             <Form.Item
               label={''}
               rules={[
-                { required: true, message: `请输入端口号` },
+                { required: true, message: t('StartupLoading.portRequired') },
                 {
                   pattern: /^(?:[1-9]\d{0,3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
-                  message: '请输入正确的端口号',
+                  message: t('StartupLoading.portInvalid'),
                 },
               ]}
               name={'newLinkport'}
             >
-              <YakitInput placeholder="切换端口..." disabled={restartLoading} />
+              <YakitInput placeholder={t('StartupLoading.switchPortPlaceholder')} disabled={restartLoading} />
             </Form.Item>
           </Form>
           {btns}
@@ -694,12 +708,12 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
         <div className={styles['footer-wrapper']}>
           <span className={styles['exit-btn']} onClick={() => yakitApp.closeWindow()}>
             <OutlineExitIcon className={styles['exit-icon']} />
-            退出
+            {t('StartupLoading.exit')}
           </span>
           {showAgreement ? (
             <>
               <Divider type="vertical"></Divider>
-              {agreement()}
+              {agreement}
             </>
           ) : (
             <div className={styles['footer-btn']}>
@@ -708,7 +722,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                 <>
                   <Divider type="vertical"></Divider>
                   <span className={styles['secondary-btn']} onClick={() => grpcOpenYaklangPath()}>
-                    打开引擎文件
+                    {t('StartupLoading.openEngineFiles')}
                   </span>
                   {/* 中断连接按钮：在空状态或连接状态成功 时显示 */}
                   {showBreakBtn && (
@@ -720,7 +734,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                           btnClickCallback('break')
                         }}
                       >
-                        中断连接
+                        {t('StartupLoading.breakConnection')}
                       </span>
                     </>
                   )}
@@ -739,7 +753,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                           btnClickCallback('remote')
                         }}
                       >
-                        {EngineModeVerbose('remote')}{' '}
+                        {t('StartupLoading.remoteConnection')}{' '}
                         <OutlineArrowcirclerightIcon className={styles['arrow-circle-right-icon']} />
                       </span>
                     </>

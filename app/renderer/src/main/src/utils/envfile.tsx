@@ -5,6 +5,7 @@ import { RemotePrivateDomainGV } from '@/enums/privateDomain'
 import { RemoteI18nGV } from '@/enums/i18n'
 import { Theme } from '@/hook/useTheme'
 import { yakitRelease } from '@/services/electronBridge'
+import { getBrandProductName } from '@/config/brand/brandConfig'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'utils')
 
@@ -41,7 +42,9 @@ export const getReleaseEditionName = () => {
     case PRODUCT_RELEASE_EDITION.MEMFIT:
       return 'Memfit AI'
     default:
-      return 'Yakit'
+      // 默认 Yakit 发行版下，产品名由 brand 决定：
+      // yakit brand -> 'Yakit'（行为不变），arkium brand -> 'Arkium'。
+      return getBrandProductName()
   }
 }
 /**只有yakit 社区版和企业版有WF缓存 */
