@@ -376,6 +376,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     pushLog: logEvents.pushLog,
     getChatDataStore,
     getRequest: fetchAIRequest,
+    getCurrentTaskPlanID: fetchCurrentTaskPlanID,
     onReview: onTaskReview,
     onReviewExtra: onTaskReviewExtra,
     onReviewRelease: handleTaskReviewRelease,
@@ -780,6 +781,8 @@ function useChatIPC(params?: UseChatIPCParams) {
             handleResetTaskStatus()
             taskChatEvent.handleCloseGrpc()
           }
+          // 清空任务规划的待办清单卡片数据
+          getChatDataStore?.()?.taskChat?.toolListMap.clear()
           return
         }
 

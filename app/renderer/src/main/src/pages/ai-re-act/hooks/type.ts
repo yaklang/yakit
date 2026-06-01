@@ -98,6 +98,8 @@ export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc
 export interface UseTaskChatParams extends UseHookBaseParams {
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
   /** review 触发回调事件 */
   onReview?: (data: AIChatQSData) => void
   /** plan_review 补充数据 */

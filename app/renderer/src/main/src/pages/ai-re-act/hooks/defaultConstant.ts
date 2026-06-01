@@ -1,4 +1,4 @@
-import { AIToolResult } from './aiRender'
+import { AIToolResult, TodoListCardData } from './aiRender'
 import { AIAgentGrpcApi, AIOutputI18n } from './grpcApi'
 import { AIQuestionQueues, CurrentExecTaskTree, PlanLoadingStatus } from './type'
 
@@ -141,4 +141,16 @@ export const DefaultPlanHistoryList: AIAgentGrpcApi.PlanHistoryList = {
 export const DefaultCurrentExecTaskTree: CurrentExecTaskTree = {
   task_tree: [],
   root_task_name: '',
+}
+
+/** 待办清单卡片数据-默认值 */
+export const DefaultTodoListCardData: TodoListCardData = {
+  items: [],
+  stats: {
+    deleted: 0,
+    doing: 0,
+    done: 0,
+    pending: 0,
+    skipped: 0,
+  },
 }
