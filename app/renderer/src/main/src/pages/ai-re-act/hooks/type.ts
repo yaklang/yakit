@@ -45,6 +45,8 @@ interface UseHookStateFunc {
   setContentMap: (token: string, content: AIChatQSData) => void
   setElements: Dispatch<SetStateAction<ReActChatRenderItem[]>>
   getElements: () => ReActChatRenderItem[]
+  setTodoListElements: Dispatch<SetStateAction<ReActChatRenderItem[]>>
+  getTodoListElements: () => ReActChatRenderItem[]
 }
 
 /** 用于更新渲染数据的参数定义 */
@@ -86,6 +88,7 @@ export interface UseCasualChatParams extends UseHookBaseParams {
 
 export interface UseCasualChatState {
   elements: ReActChatRenderItem[]
+  todoList: ReActChatRenderItem[]
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleSend: handleSendFunc
@@ -118,6 +121,7 @@ export interface UseTaskChatState {
   /** 正在执行的任务列表 */
   plan: CurrentExecTaskTree
   elements: ReActChatRenderItem[]
+  todoList: ReActChatRenderItem[]
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleSend: handleSendFunc

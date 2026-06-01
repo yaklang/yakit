@@ -385,6 +385,39 @@ export declare namespace AIAgentGrpcApi {
     liteforge_action: string
   }
 
+  /**
+   * todo_list_update + NodeId todo_list 时 Content(JSON) 结构
+   */
+  export interface TodoListUpdate {
+    applied_ops: TodoListUpdateAppliedOps[]
+    items: TodoListUpdateItem[]
+    iteration_index: number
+    satisfied: boolean
+    stats: TodoListUpdateStats
+    task_id: string
+  }
+  export interface TodoListUpdateAppliedOps {
+    content: string
+    id: string
+    op: string
+  }
+
+  export interface TodoListUpdateItem {
+    content: string
+    created_at: number
+    id: string
+    status: string
+    updated_at: number
+  }
+
+  export interface TodoListUpdateStats {
+    deleted: number
+    doing: number
+    done: number
+    pending: number
+    skipped: number
+  }
+
   /** review_release 释放消息 */
   export interface ReviewRelease {
     /** review对应的id */

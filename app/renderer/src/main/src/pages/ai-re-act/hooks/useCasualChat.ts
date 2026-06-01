@@ -28,6 +28,7 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
+  const [todoListElements, setTodoListElements, getTodoListElements] = useGetSetState<ReActChatRenderItem[]>([])
 
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.casualChat?.contents
@@ -37,6 +38,16 @@ function useCasualChat(params: UseCasualChatParams) {
   const setContentMap = useMemoizedFn((mapKey: string, value: AIChatQSData) => {
     const contentMap = getChatDataStore?.()?.casualChat?.contents
     contentMap && contentMap.set(mapKey, value)
+  })
+
+  const handleClearTodoListContents = useMemoizedFn(() => {
+    const contents = getChatDataStore?.()?.casualChat?.contents
+    if (!contents) return
+    for (const [key, value] of contents.entries()) {
+      if (value.type === AIChatQSDataTypeEnum.TODO_LIST_UPDATE) {
+        contents.delete(key)
+      }
+    }
   })
 
   /**
@@ -111,6 +122,8 @@ function useCasualChat(params: UseCasualChatParams) {
           getElements,
           setContentMap,
           getContentMap,
+          setTodoListElements,
+          getTodoListElements,
           pushLog: handlePushLog,
           review: {
             handleGetReview,
@@ -172,6 +185,8 @@ function useCasualChat(params: UseCasualChatParams) {
   const handleResetData = useMemoizedFn(() => {
     review.current = undefined
     setElements([])
+    setTodoListElements([])
+    handleClearTodoListContents()
   })
 
   /** 用户手动介入逻辑 */
@@ -185,8 +200,8 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const state: UseCasualChatState = useCreation(() => {
-    return { elements }
-  }, [elements])
+    return { elements, todoList: todoListElements }
+  }, [elements, todoListElements])
 
   const events: UseCasualChatEvents = useCreation(() => {
     return {
@@ -197,6 +212,8 @@ function useCasualChat(params: UseCasualChatParams) {
       setContentMap,
       setElements: setElements,
       getElements: getElements,
+      setTodoListElements,
+      getTodoListElements,
       handleUserManualIntervention,
     }
   }, [])

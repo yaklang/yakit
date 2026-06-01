@@ -7,6 +7,7 @@ import type {
   AIToolResult,
   ChatStream,
   HttpFlowFuzzStatusCardData,
+  TodoListCardData,
   ReActChatBaseInfo,
   ReActChatGroupElement,
   ReActChatRenderItem,
@@ -317,6 +318,58 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
     res.IsSync,
     { mapKey: fuzz_id, type: cardType, chatType: info.chatType },
     request.setElements,
+  )
+}
+
+/** Type='todo_list_update' 待办清单卡片：按 task_id 维护，数据存入 contents，renderNum 写入 todoList */
+const handleTodoListUpdate: AIMessageHandler = (request) => {
+  const { res, info, setContentMap, getContentMap, setTodoListElements, pushLog } = request
+  if (res.Type !== 'todo_list_update' || res.NodeId !== 'todo_list') return
+
+  let payload: AIAgentGrpcApi.TodoListUpdate
+  try {
+    const ipcContent = Uint8ArrayToString(res.Content) || ''
+    payload = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
+  } catch {
+    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type} Content JSON 解析失败`))
+    return
+  }
+
+  const { items, stats, task_id } = payload
+  if (Array.isArray(items) && items.length === 0) return
+
+  if (!task_id) {
+    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type} 数据缺少 task_id`))
+    return
+  }
+
+  const cardType = AIChatQSDataTypeEnum.TODO_LIST_UPDATE
+  const existing = getContentMap(task_id)
+  const isExistingCard = existing?.type === cardType
+
+  const nextData: TodoListCardData = {
+    task_id,
+    items: items ?? [],
+    stats,
+  }
+
+  if (isExistingCard) {
+    Object.assign(existing!.data, nextData)
+  } else {
+    const chatData: AIChatQSData = {
+      ...genBaseAIChatData(res),
+      id: task_id,
+      chatType: info.chatType,
+      type: cardType,
+      data: nextData,
+    }
+    setContentMap(task_id, chatData)
+  }
+
+  handleUpdateUISingleState(
+    res.IsSync,
+    { mapKey: task_id, type: cardType, chatType: info.chatType },
+    setTodoListElements,
   )
 }
 // #endregion
@@ -1812,4 +1865,5 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   react_task_dequeue: handleReactTaskDequeue,
   api_request_failed: handleApiRequestFailed,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
+  todo_list_update: handleTodoListUpdate,
 }

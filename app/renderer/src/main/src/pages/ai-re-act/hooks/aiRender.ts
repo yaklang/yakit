@@ -142,6 +142,13 @@ export interface UserManualInterventionContext {
   content: string
 }
 
+/** UI：待办清单卡片数据（由 todo_list_update 事件驱动） */
+export interface TodoListCardData {
+  task_id: string
+  items: AIAgentGrpcApi.TodoListUpdateItem[]
+  stats: AIAgentGrpcApi.TodoListUpdateStats
+}
+
 /** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */
 export interface HttpFlowFuzzStatusCardData {
   fuzz_id: string
@@ -199,6 +206,8 @@ export enum AIChatQSDataTypeEnum {
   USER_MANUAL_INTERVENTION = 'user_manual_intervention',
   /** HTTP 流 fuzz 执行状态卡片（http_flow_fuzz_status） */
   HTTP_FLOW_FUZZ_STATUS = 'http_flow_fuzz_status',
+  /** 待办列表卡片（todo_list_update） */
+  TODO_LIST_UPDATE = 'todo_list_update',
 }
 
 export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
@@ -281,6 +290,7 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
 >
 
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
+type ChatTodoListUpdate = AIChatQSDataBase<AIChatQSDataTypeEnum.TODO_LIST_UPDATE, TodoListCardData>
 
 export type AIChatQSData =
   | ChatQuestion
@@ -305,4 +315,5 @@ export type AIChatQSData =
   | ChatToolCallParams
   | ChatApiRequestFailed
   | ChatHttpFlowFuzzStatus
+  | ChatTodoListUpdate
 // #endregion

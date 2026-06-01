@@ -31,6 +31,7 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
+  const [todoListElements, setTodoListElements, getTodoListElements] = useGetSetState<ReActChatRenderItem[]>([])
 
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.taskChat?.contents
@@ -40,6 +41,16 @@ function useTaskChat(params: UseTaskChatParams) {
   const setContentMap = useMemoizedFn((mapKey: string, value: AIChatQSData) => {
     const contentMap = getChatDataStore?.()?.taskChat?.contents
     contentMap && contentMap.set(mapKey, value)
+  })
+
+  const handleClearTodoListContents = useMemoizedFn(() => {
+    const contents = getChatDataStore?.()?.taskChat?.contents
+    if (!contents) return
+    for (const [key, value] of contents.entries()) {
+      if (value.type === AIChatQSDataTypeEnum.TODO_LIST_UPDATE) {
+        contents.delete(key)
+      }
+    }
   })
 
   // #region 任务树相关逻辑
@@ -199,6 +210,8 @@ function useTaskChat(params: UseTaskChatParams) {
           getElements,
           setContentMap,
           getContentMap,
+          setTodoListElements,
+          getTodoListElements,
           pushLog: handlePushLog,
           review: {
             handleGetReview,
@@ -254,6 +267,8 @@ function useTaskChat(params: UseTaskChatParams) {
     handleResetPlanTree()
     handleResetActiveLeafTasks()
     setElements([])
+    setTodoListElements([])
+    handleClearTodoListContents()
   })
 
   /** review 界面选项触发事件 */
@@ -307,8 +322,8 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   const state: UseTaskChatState = useCreation(() => {
-    return { plan, elements }
-  }, [plan, elements])
+    return { plan, elements, todoList: todoListElements }
+  }, [plan, elements, todoListElements])
 
   const events: UseTaskChatEvents = useCreation(() => {
     return {
@@ -321,6 +336,8 @@ function useTaskChat(params: UseTaskChatParams) {
       setContentMap,
       setElements: setElements,
       getElements: getElements,
+      setTodoListElements,
+      getTodoListElements,
       handleUserManualIntervention,
       handleResetPlanTree,
     }
