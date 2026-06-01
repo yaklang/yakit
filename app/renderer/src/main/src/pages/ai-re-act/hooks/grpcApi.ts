@@ -7,6 +7,7 @@ import { AIForge } from '@/pages/ai-agent/type/forge'
 import { KnowledgeBaseEntry } from '@/components/playground/knowlegeBase/types'
 import {
   AIModelTypeEnumType,
+  AIToDoListStatusEnumType,
   AttachedResourceKeyEnum,
   AttachedResourceTypeEnum,
 } from '@/pages/ai-agent/defaultConstant'
@@ -405,7 +406,7 @@ export declare namespace AIAgentGrpcApi {
     content: string
     created_at: number
     id: string
-    status: string
+    status: AIToDoListStatusEnumType
     updated_at: number
   }
 

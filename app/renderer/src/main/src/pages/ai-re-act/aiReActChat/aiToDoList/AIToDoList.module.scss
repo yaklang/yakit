@@ -11,8 +11,7 @@ $radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 4px;
-  margin-right: 12px;
+
   &::before {
     content: '';
     position: absolute;
@@ -74,9 +73,7 @@ $radius: 8px;
             height: 12px;
           }
         }
-        .loading {
-          color: var(--Colors-Use-Main-Primary);
-        }
+
         .title {
           flex-shrink: 0;
         }
@@ -85,6 +82,11 @@ $radius: 8px;
           text-overflow: ellipsis;
           overflow: hidden;
           word-break: break-all;
+        }
+        .pending-tag {
+          overflow: hidden;
+          display: inline-flex;
+          gap: 4px;
         }
       }
       .card-heard-extra {
@@ -97,6 +99,13 @@ $radius: 8px;
         line-height: 16px; /* 133.333% */
         letter-spacing: 0.5px;
         flex: 1;
+        .progress-bar {
+          :global {
+            .ant-progress-inner {
+              border: 1px solid var(--Colors-Use-Neutral-Border);
+            }
+          }
+        }
         .tip {
           color: var(--Colors-Use-Neutral-Text-4-Help-text);
           flex-shrink: 0;
@@ -126,6 +135,30 @@ $radius: 8px;
           align-items: center;
           gap: 4px;
         }
+        .card-list-item-pending {
+          .item-text {
+            font-size: 12px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 16px; /* 133.333% */
+            letter-spacing: 0.5px;
+
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            word-break: break-all;
+          }
+          .main {
+            color: var(--Colors-Use-Main-Primary);
+          }
+          .help-text {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+          }
+          .skip-text {
+            color: var(--Colors-Use-Neutral-Text-4-Help-text);
+            text-decoration-line: line-through;
+          }
+        }
       }
       .card-list-inner-hidden {
         // height: 0;
@@ -143,9 +176,12 @@ $radius: 8px;
   }
 
   .card:has(.card-list-hidden) {
-    .card-title {
+    .card-heard {
       border-radius: $radius;
     }
+  }
+  .loading {
+    color: var(--Colors-Use-Main-Primary);
   }
 }
 

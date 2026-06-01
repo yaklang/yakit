@@ -278,7 +278,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 </div>
               </div>
               <div className={styles['todoList-wrapper']}>
-                <AIToDoList />
+                <AIToDoList className={styles['to-do-list']} />
               </div>
               <AIReActChatContents chats={chatIPCData.casualChat} />
             </div>

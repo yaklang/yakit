@@ -1,7 +1,7 @@
 import React, { memo, useMemo, useRef } from 'react'
 import { AITreeNodeProps, AITreeProps } from './type'
 import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from './icon'
-import { OutlineExitIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { OutlineExitIcon, OutlineInformationcircleIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useMemoizedFn } from 'ahooks'
 
@@ -12,11 +12,12 @@ import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
-import { AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AIToDoList } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -96,6 +97,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
     })
   })
   const [Icon, Card] = useMemo(() => {
+    const unFinish = data.progress === AITaskStatus.created || data.progress === AITaskStatus.inProgress
     const titleNode = (
       <div className={styles['node-title']}>
         <p>{data.name}</p>
@@ -103,7 +105,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
           <YakitPopover
             overlayClassName={styles['task-detail-popover']}
             overlayStyle={{ paddingLeft: 4 }}
-            placement="rightTop"
+            placement="top"
             content={
               <div className={styles['detail-wrapper']}>
                 <div className={styles['detail-title']}>{data.name}</div>
@@ -115,7 +117,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
           >
             <OutlineInformationcircleIcon className={styles['info-icon']} />
           </YakitPopover>
-          {data.isLeaf && data.progress === 'processing' && (
+          {data.isLeaf && data.progress === AITaskStatus.inProgress && (
             <YakitPopconfirm title={t('AITree.cancelSubtaskConfirm')} onConfirm={() => onCancelTask()}>
               <YakitButton
                 size="small"
@@ -124,6 +126,26 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
                 loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
               />
             </YakitPopconfirm>
+          )}
+          {data.isLeaf && unFinish && (
+            <YakitPopover
+              placement="top"
+              content={
+                <AIToDoList
+                  className={classNames({
+                    [styles['no-animation']]: data.progress === AITaskStatus.created,
+                  })}
+                />
+              }
+              overlayClassName={styles['to-do-list-popover']}
+            >
+              <YakitButton
+                size="small"
+                icon={<OutlineListTodoIcon />}
+                type="text2"
+                className={styles['list-to-do-icon']}
+              />
+            </YakitPopover>
           )}
           {aiTreeTitleExtraNode && <div className={styles['ai-tree-extra-node']}>{aiTreeTitleExtraNode?.(data)}</div>}
         </div>
