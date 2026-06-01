@@ -6,7 +6,7 @@ import type {
   UseTaskChatParams,
   UseTaskChatState,
 } from './type'
-import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps, TodoListCardData } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { useEffect, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn, useThrottleFn } from 'ahooks'
@@ -40,6 +40,8 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
+
+  const toolListMap = useRef<Map<string, TodoListCardData>>(new Map())
 
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.taskChat?.contents
@@ -270,7 +272,7 @@ function useTaskChat(params: UseTaskChatParams) {
         if (!task_id || !task_index) return
         if (Array.isArray(items) && items.length === 0) return
         if (task_id !== getCurrentTaskPlanID()?.taskID) return
-        getChatDataStore?.()?.taskChat?.toolListMap.set(task_index, { items, stats })
+        toolListMap.current.set(task_index, { items, stats })
       }
 
       // 未识别类型全部归档到日志处理
@@ -348,8 +350,8 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   const state: UseTaskChatState = useCreation(() => {
-    return { plan, elements }
-  }, [plan, elements])
+    return { plan, elements, toolListMap: toolListMap.current }
+  }, [plan, elements, toolListMap])
 
   const events: UseTaskChatEvents = useCreation(() => {
     return {
