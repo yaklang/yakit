@@ -16,7 +16,7 @@ import {
   TrashIcon,
 } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { Button, Space, Tooltip } from 'antd'
+import { Space, Tooltip } from 'antd'
 import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -172,7 +172,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
           <>
             {i.Proxy.length > 0 ? (
               <Space>
-                <Button size={'small'} type="link" icon={<RocketIcon />} />
+                <YakitButton size={'small'} type="text" icon={<RocketIcon />} />
                 {i.Url}{' '}
               </Space>
             ) : (
@@ -471,9 +471,9 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                   <div className={cveStyles['cve-list-title']}>网站管理</div>
                   <Space>
                     <Tooltip title="刷新会重置所有查询条件">
-                      <Button
+                      <YakitButton
                         size={'small'}
-                        type={'link'}
+                        type={'text'}
                         onClick={() => {
                           refList()
                         }}

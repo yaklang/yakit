@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Button } from 'antd'
 import { YakScript } from '../invoker/schema'
 import MDEditor from '@uiw/react-md-editor'
 import { success } from '../../utils/notification'
@@ -21,7 +20,7 @@ export const DocumentEditor: React.FC<DocumentEditorProp> = (props) => {
         title={'编辑/添加模块文档'}
         subTitle={props.yakScript.ScriptName + `[${props.yakScript.Id}]`}
         extra={[
-          <Button
+          <YakitButton
             type={'primary'}
             onClick={(e) => {
               ipcRenderer
@@ -40,7 +39,7 @@ export const DocumentEditor: React.FC<DocumentEditorProp> = (props) => {
             }}
           >
             保存 / 创建文档
-          </Button>,
+          </YakitButton>,
         ]}
       /> */}
       <MDEditor value={markdown} onChange={(e) => setMarkdown(e || '')} maxHeight={1000} height={700}></MDEditor>

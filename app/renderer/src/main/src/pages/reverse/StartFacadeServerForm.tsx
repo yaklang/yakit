@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Form } from 'antd'
+import { Form } from 'antd'
 import { InputInteger, InputItem, SwitchItem } from '../../utils/inputUtil'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export interface GetTunnelServerExternalIPParams {
   Addr: string
@@ -102,10 +103,10 @@ export const StartFacadeServerForm: React.FC<StartFacadeServerFormProp> = (props
           </>
         )}
         <Form.Item colon={false} label={' '}>
-          <Button type="primary" htmlType="submit">
+          <YakitButton type="primary" htmlType="submit">
             {' '}
             启动反连服务器{' '}
-          </Button>
+          </YakitButton>
         </Form.Item>
       </Form>
     </div>

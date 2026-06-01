@@ -2,14 +2,14 @@ import React, { useEffect, useRef, useState } from 'react'
 import { YakQueryHTTPFlowRequest } from '../utils/yakQueryHTTPFlow'
 import { genDefaultPagination, QueryGeneralResponse } from '../pages/invoker/schema'
 import { HTTPFlow, onExpandHTTPFlow, StatusCodeToColor } from './HTTPFlowTable/HTTPFlowTable'
-// import * as antd from "antd";
-import { Button, Space, Tag, Tooltip } from 'antd'
+import { Space, Tag, Tooltip } from 'antd'
 import { BaseTable, features, useTablePipeline } from '../alibaba/ali-react-table-dist'
 import { CopyableField } from '../utils/inputUtil'
 import { showDrawer } from '../utils/showModal'
 import ReactResizeDetector from 'react-resize-detector'
 import { useDebounceFn, useInViewport, useThrottleFn } from 'ahooks'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitButton } from './yakitUI/YakitButton/YakitButton'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -124,8 +124,8 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                 return (
                   <>
                     <Space>
-                      <Button
-                        type={'link'}
+                      <YakitButton
+                        type={'text'}
                         size={'small'}
                         onClick={() => {
                           let m = showDrawer({
@@ -140,7 +140,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                         }}
                       >
                         {t('HTTPFlowMiniTable.details')}
-                      </Button>
+                      </YakitButton>
                     </Space>
                   </>
                 )
@@ -190,8 +190,8 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                   <>
                     <Space>
                       {props.onSendToWebFuzzer && (
-                        <Button
-                          type={'link'}
+                        <YakitButton
+                          type={'text'}
                           size={'small'}
                           onClick={() => {
                             const req = findHTTPFlowById(i)
@@ -207,10 +207,10 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                           }}
                         >
                           {t('HTTPFlowMiniTable.sendToWebFuzzer')}
-                        </Button>
+                        </YakitButton>
                       )}
-                      <Button
-                        type={'link'}
+                      <YakitButton
+                        type={'text'}
                         size={'small'}
                         onClick={() => {
                           let m = showDrawer({
@@ -225,7 +225,7 @@ export const HTTPFlowMiniTable: React.FC<HTTPFlowMiniTableProp> = React.memo((pr
                         }}
                       >
                         {t('HTTPFlowMiniTable.details')}
-                      </Button>
+                      </YakitButton>
                     </Space>
                   </>
                 )

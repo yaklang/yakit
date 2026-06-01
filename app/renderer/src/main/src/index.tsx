@@ -22,6 +22,7 @@ import { applyYakitThemeColors } from './utils/applyYakitThemeColors'
 import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 import { setupConcurrentStreamMainBridge } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge'
 import { debugToPrintLogs } from './utils/logCollection'
+import { ConfigProvider } from 'antd'
 
 const MONACO_WORKER_BASE = 'static/js/monaco'
 
@@ -105,7 +106,9 @@ const App = () => {
   if (windowType === 'markdown-pdf-print') {
     return <MarkdownPdfPrintPage />
   }
-  return windowType === 'child' ? <ChildNewApp /> : <NewApp />
+  return (
+    <ConfigProvider wave={{ disabled: true }}>{windowType === 'child' ? <ChildNewApp /> : <NewApp />}</ConfigProvider>
+  )
 }
 
 // 只在子窗口移除 loading

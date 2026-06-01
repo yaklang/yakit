@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Col, Row, Table, Tag, Tooltip, Checkbox } from 'antd'
+import { Col, Row, Table, Tag, Tooltip, Checkbox } from 'antd'
 import { YakitPort } from '../../components/yakitLogSchema'
 import { CopyableField, InputItem, OneLine } from '../../utils/inputUtil'
 import { formatTimestamp } from '../../utils/timeUtil'
@@ -11,6 +11,7 @@ import { useMemoizedFn } from 'ahooks'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import { setClipboardText } from '@/utils/clipboard'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 export interface PortTableProp {
   data: YakitPort[]
   isSimple?: boolean
@@ -157,7 +158,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                         }
                       }}
                     >
-                      <Button type="link" style={{ height: 16 }} icon={<LineMenunIcon />}></Button>
+                      <YakitButton type="text" style={{ height: 16 }} icon={<LineMenunIcon />}></YakitButton>
                     </DropdownMenu>
                   </>
                 )}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { showModal } from '@/utils/showModal'
-import { Alert, Button, Form, Space, Spin, Table, Tag, Tooltip } from 'antd'
+import { Alert, Form, Space, Spin, Table, Tag, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { CopyableField, InputItem } from '@/utils/inputUtil'
 import { PlusOutlined, QuestionOutlined, ReloadOutlined } from '@ant-design/icons'
@@ -131,7 +131,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
             >
               {t('ConfigYaklangEnvironment.setNewVariable')}
             </YakitButton>
-            <Button size={'small'} type={'link'} icon={<ReloadOutlined />} onClick={updateKeys} />
+            <YakitButton size={'small'} type={'text'} icon={<ReloadOutlined />} onClick={updateKeys} />
           </Space>
         )
       }}
@@ -145,7 +145,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
               <Tag color={'geekblue'}>{e.Key}</Tag>
               {e.Verbose && (
                 <Tooltip title={e.Verbose}>
-                  <Button type={'link'} size={'small'} icon={<QuestionOutlined />} />
+                  <YakitButton type={'text'} size={'small'} icon={<QuestionOutlined />} />
                 </Tooltip>
               )}
             </Space>

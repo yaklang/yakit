@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useState } from 'react'
-import { Button, Input, Radio, Avatar, Spin } from 'antd'
+import { Input, Radio, Avatar } from 'antd'
 import locale from 'antd/es/date-picker/locale/zh_CN'
 import { API } from '@/services/swagger/resposeType'
 import { useDebounceFn, useGetState } from 'ahooks'
@@ -103,7 +103,7 @@ export const ControlMyself: React.FC<ControlMyselfProps> = (props) => {
   }
 
   const run = () => {
-    /* 
+    /*
             受控端步骤
             1.通过/remote/tunnel获取ip与password
         */
@@ -390,9 +390,9 @@ const ShowUserInfo: React.FC<ShowUserInfoProps> = (props) => {
         密码：<span>{password}</span>
       </div>
       <div style={{ textAlign: 'center', paddingTop: 10 }}>
-        <Button type="primary" onClick={() => copyUserInfo()}>
+        <YakitButton type="primary" onClick={() => copyUserInfo()}>
           复制
-        </Button>
+        </YakitButton>
       </div>
     </div>
   )
