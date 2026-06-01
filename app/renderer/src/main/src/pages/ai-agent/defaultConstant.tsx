@@ -267,7 +267,6 @@ export const defaultChatIPCData: UseChatIPCState = {
   riskRunTimeIDs: [],
   casualChat: {
     elements: [],
-    todoList: [],
   },
   yakExecResult: {
     card: [],
@@ -277,7 +276,6 @@ export const defaultChatIPCData: UseChatIPCState = {
   taskChat: {
     plan: cloneDeep(DefaultCurrentExecTaskTree),
     elements: [],
-    todoList: [],
   },
   grpcFolders: [],
   questionQueue: {

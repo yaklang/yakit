@@ -1118,9 +1118,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       setReActTimelines(() => chatData.reActTimelines || [])
       yakExecResultEvent.handleSetYakResult(chatData.yakExecResult || {})
       casualChatEvent.setElements(chatData.casualChat?.elements || [])
-      casualChatEvent.setTodoListElements(chatData.casualChat?.todoList || [])
       taskChatEvent.setElements(chatData.taskChat?.elements || [])
-      taskChatEvent.setTodoListElements(chatData.taskChat?.todoList || [])
     } else {
       cacheDataStore?.clear()
     }

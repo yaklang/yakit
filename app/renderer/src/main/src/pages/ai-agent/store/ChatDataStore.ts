@@ -90,13 +90,11 @@ export class ChatDataStore {
       casualChat: {
         elements: [],
         contents: new Map(),
-        todoList: [],
       },
       taskChat: {
         plan: cloneDeep(DefaultCurrentExecTaskTree),
         elements: [],
         contents: new Map(),
-        todoList: [],
       },
       grpcFolders: [],
       reActTimelines: [],
