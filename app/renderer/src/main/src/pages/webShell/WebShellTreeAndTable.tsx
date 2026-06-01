@@ -10,7 +10,7 @@ import { ColumnsTypeProps, SortProps } from '@/components/TableVirtualResize/Tab
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { genDefaultPagination, PaginationSchema } from '@/pages/invoker/schema'
-import { Button, Divider, Form, Space, Tooltip } from 'antd'
+import { Divider, Form, Space, Tooltip } from 'antd'
 import { FileOutlined, FolderOpenOutlined } from '@ant-design/icons'
 import { InputItem } from '@/utils/inputUtil'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -402,7 +402,7 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                   <div className={cveStyles['cve-list-title']}>文件列表</div>
                   <Space>
                     <Tooltip title="刷新会重置所有查询条件">
-                      <Button size={'middle'} type={'link'} onClick={() => {}} icon={<RefreshIcon />} />
+                      <YakitButton size={'middle'} type={'text'} onClick={() => {}} icon={<RefreshIcon />} />
                     </Tooltip>
                   </Space>
                   <div className={cveStyles['cve-list-total']}>
@@ -411,9 +411,9 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
                   </div>
                 </div>
                 <div className={cveStyles['cve-list-title-extra']} style={{ width: '70%' }}>
-                  <Button
+                  <YakitButton
                     size={'small'}
-                    type={'link'}
+                    type={'text'}
                     onClick={() => {
                       // console.log("goBackTree ", selected.data!.Url)
                       // goBack(selected.data!.Url, setLoading, setGoBackTree)

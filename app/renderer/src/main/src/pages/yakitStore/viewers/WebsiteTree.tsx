@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Button, Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popover, Checkbox } from 'antd'
+import { Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popover, Checkbox } from 'antd'
 import { AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest } from '../../../components/WebsiteTree'
 import { HTTPFlowMiniTable } from '../../../components/HTTPFlowMiniTable'
 import { genDefaultPagination, QueryGeneralResponse } from '../../invoker/schema'
@@ -16,6 +16,7 @@ import './WebsiteTreeStyle.css'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export interface WebsiteTreeViewerProp {
   pageMode?: boolean
@@ -216,8 +217,8 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Space>
                         业务结构
-                        <Button
-                          type={'link'}
+                        <YakitButton
+                          type={'text'}
                           size={'small'}
                           icon={<ReloadOutlined />}
                           onClick={() => {
@@ -257,9 +258,9 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                       >
                         <InputItem label={'URL关键字'} value={searchTarget} setValue={setSearchTarget} />
                         <Form.Item style={{ marginLeft: 0, marginRight: 0 }}>
-                          <Button
+                          <YakitButton
                             size={'small'}
-                            type="link"
+                            type="text"
                             htmlType="submit"
                             icon={<SearchOutlined />}
                             style={{ marginLeft: 0, marginRight: 0 }}
@@ -282,7 +283,8 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         全选
                       </Checkbox>
                       {delUrlArr.length === 0 ? (
-                        <Button
+                        <YakitButton
+                          type="outline2"
                           size="small"
                           disabled={true}
                           onClick={(e) => {
@@ -291,7 +293,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         >
                           批量操作
                           <ChevronDownIcon style={{ color: '#85899E' }} />
-                        </Button>
+                        </YakitButton>
                       ) : (
                         <Popover
                           overlayClassName={style['http-history-table-drop-down-popover']}
@@ -321,15 +323,16 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                           trigger="click"
                           placement="bottomLeft"
                         >
-                          <Button
+                          <YakitButton
                             size="small"
+                            type="outline2"
                             onClick={(e) => {
                               e.stopPropagation()
                             }}
                           >
                             批量操作
                             <ChevronDownIcon style={{ color: '#85899E' }} />
-                          </Button>
+                          </YakitButton>
                         </Popover>
                       )}
                     </div>

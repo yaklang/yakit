@@ -1,5 +1,5 @@
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Space, Table, Tag, Form, Typography, Descriptions, Tooltip, Menu } from 'antd'
+import { Space, Table, Tag, Form, Typography, Descriptions, Tooltip, Menu } from 'antd'
 import { Risk } from './schema'
 import { genDefaultPagination, QueryGeneralRequest, QueryGeneralResponse } from '../invoker/schema'
 import { useGetState, useMemoizedFn } from 'ahooks'
@@ -25,6 +25,7 @@ import './RiskTable.css'
 import { Uint8ArrayToString } from '@/utils/str'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { yakitRisk } from '@/services/electronBridge'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export interface RiskTableProp {
   severity?: string
@@ -439,9 +440,9 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
       render: (_, i: Risk) => {
         return (
           <Space>
-            <Button
+            <YakitButton
               size="small"
-              type={'link'}
+              type={'text'}
               onClick={() => {
                 let m = showModal({
                   width: '80%',
@@ -455,10 +456,10 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
               }}
             >
               详情
-            </Button>
-            <Button size="small" type={'link'} danger onClick={() => delRisk(i.Hash)}>
+            </YakitButton>
+            <YakitButton size="small" type={'text'} danger onClick={() => delRisk(i.Hash)}>
               删除
-            </Button>
+            </YakitButton>
           </Space>
         )
       },
@@ -538,9 +539,9 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                   <Space>
                     漏洞与风险
                     <Tooltip title="刷新会重置所有查询条件">
-                      <Button
+                      <YakitButton
                         size={'small'}
-                        type={'link'}
+                        type={'text'}
                         onClick={() => {
                           refList()
                         }}
@@ -558,9 +559,9 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
                       }
                       onConfirm={onRemove}
                     >
-                      <Button size="small" danger={true}>
+                      <YakitButton size="small" danger={true} type="outline2">
                         删除数据
-                      </Button>
+                      </YakitButton>
                     </YakitPopconfirm>
                   </Space>
                 </div>
@@ -742,10 +743,11 @@ export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (pr
 
         <Form.Item style={{ marginBottom: 0, marginTop: 0 }} colon={false} label={' '}>
           <Space>
-            <Button type="primary" htmlType="submit">
+            <YakitButton type="primary" htmlType="submit">
               搜索
-            </Button>
-            <Button
+            </YakitButton>
+            <YakitButton
+              type="outline2"
               onClick={() => {
                 setSelectedKeys && setSelectedKeys([])
                 if (params && setParams) {
@@ -760,7 +762,7 @@ export const TableFilterDropdownString: React.FC<FilterDropdownStringProp> = (pr
               }}
             >
               重置搜索
-            </Button>
+            </YakitButton>
           </Space>
         </Form.Item>
       </Form>
@@ -919,15 +921,15 @@ export const RiskDetails: React.FC<RiskDetailsProp> = React.memo((props: RiskDet
             <div className="header-name text-ellipsis" title={info?.TitleVerbose || info.Title}>
               <Space>
                 {info?.TitleVerbose || info.Title}
-                <Button
-                  type={'link'}
+                <YakitButton
+                  type={'text'}
                   size={'small'}
                   onClick={() => {
                     setShrink(!shrink)
                   }}
                 >
                   {shrink ? `展开详情` : `折叠详情`}
-                </Button>
+                </YakitButton>
               </Space>
             </div>
 

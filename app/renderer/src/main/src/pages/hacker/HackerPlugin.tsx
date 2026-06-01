@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Button, Checkbox, Form, Popover, Space, Tag, Tooltip, Typography } from 'antd'
+import { Checkbox, Form, Popover, Space, Tag, Tooltip, Typography } from 'antd'
 import {
   CaretRightOutlined,
   PoweroffOutlined,
@@ -22,6 +22,7 @@ import ReactResizeDetector from 'react-resize-detector'
 import './HackerPlugin.scss'
 import { showModal } from '../../utils/showModal'
 import { xtermClear } from '../../utils/xtermUtils'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
@@ -152,9 +153,9 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
               {info.ScriptName}
             </Text>
             {info.Help && (
-              <Button
+              <YakitButton
                 size={'small'}
-                type={'link'}
+                type={'text'}
                 onClick={() => {
                   showModal({
                     width: '40%',
@@ -170,7 +171,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
         <div style={{ flex: 1, textAlign: 'right' }}>
           {info.Author && (
             <Tooltip title={info.Author}>
-              <Button size={'small'} type={'link'} icon={<UserOutlined />} />
+              <YakitButton size={'small'} type={'text'} icon={<UserOutlined />} />
             </Tooltip>
           )}
         </div>
@@ -221,15 +222,15 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                         formItemStyle={{ marginBottom: 4 }}
                       />
                       <Form.Item colon={false} label={''} style={{ marginBottom: 10 }}>
-                        <Button type="primary" htmlType="submit">
+                        <YakitButton type="primary" htmlType="submit">
                           刷新
-                        </Button>
+                        </YakitButton>
                       </Form.Item>
                     </Form>
                   </div>
                 }
               >
-                <Button size={'small'} icon={<SettingOutlined />} type={'link'} />
+                <YakitButton size={'small'} icon={<SettingOutlined />} type={'text'} />
               </Popover>
               <Popover
                 title={'搜索插件关键字'}
@@ -250,27 +251,27 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                         setValue={setKeyword}
                       />
                       <Form.Item colon={false} label={''} style={{ marginBottom: 10 }}>
-                        <Button type="primary" htmlType="submit">
+                        <YakitButton type="primary" htmlType="submit">
                           搜索
-                        </Button>
+                        </YakitButton>
                       </Form.Item>
                     </Form>
                   </div>
                 }
               >
-                <Button size={'small'} type={!!keyword ? 'primary' : 'link'} icon={<SearchOutlined />} />
+                <YakitButton size={'small'} type={!!keyword ? 'primary' : 'text'} icon={<SearchOutlined />} />
               </Popover>
               {execting ? (
-                <Button
-                  type="link"
+                <YakitButton
+                  type="text"
                   danger
                   style={{ padding: '4px 0' }}
                   icon={<PoweroffOutlined />}
                   onClick={cancelScript}
                 />
               ) : (
-                <Button
-                  type="link"
+                <YakitButton
+                  type="text"
                   style={{ padding: '4px 0' }}
                   icon={<CaretRightOutlined />}
                   onClick={() => {

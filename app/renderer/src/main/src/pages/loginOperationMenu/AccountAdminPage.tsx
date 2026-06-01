@@ -29,7 +29,6 @@ import moment from 'moment'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { unReadable } from '../dynamicControl/DynamicControl'
-// import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { DefaultOptionType } from 'antd/lib/cascader'
 import styles from './AccountAdminPage.module.scss'
@@ -1517,7 +1516,6 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
         <YakitInput placeholder="请输入昵称" allowClear />
       </Form.Item>
       <Form.Item name="department" label="组织架构" rules={[{ required: true, message: '该项为必填' }]}>
-        {/* <YakitCascader options={depData} loadData={loadData} placeholder='请选择组织架构' changeOnSelect /> */}
         <YakitSelect showSearch placeholder="请选择组织架构" filterOption={filterOption}>
           {depData.map((item) => (
             <YakitSelect.Option key={item.value} value={item.value}>

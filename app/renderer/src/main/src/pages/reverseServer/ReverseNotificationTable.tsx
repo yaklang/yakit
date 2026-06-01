@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Form, Space, Table, Tag, Button, Alert } from 'antd'
+import { Form, Space, Table, Tag } from 'antd'
 import { CopyableField, ManyMultiSelectForString, SwitchItem } from '../../utils/inputUtil'
 import { AutoSpin } from '../../components/AutoSpin'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export interface ReverseNotification {
   uuid: string
@@ -71,13 +72,14 @@ export const ReverseNotificationTable = React.memo<ReverseNotificationTableProps
                     ]}
                   />
                   <Form.Item name="clear">
-                    <Button
+                    <YakitButton
+                      type="outline2"
                       onClick={() => {
                         props.clearHandle()
                       }}
                     >
                       清空
-                    </Button>
+                    </YakitButton>
                   </Form.Item>
                 </Form>
               </div>

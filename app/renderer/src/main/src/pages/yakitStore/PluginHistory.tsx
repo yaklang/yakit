@@ -13,6 +13,7 @@ import { CopyableField } from '../../utils/inputUtil'
 import { showModal } from '../../utils/showModal'
 import { YakEditor } from '../../utils/editors'
 import { ReloadOutlined } from '@ant-design/icons'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export interface PluginHistoryTableProp {
   trigger?: any
@@ -138,8 +139,9 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
             title: '操作',
             render: (r: ExecHistoryRecord) => (
               <Space>
-                <Button
+                <YakitButton
                   size={'small'}
+                  type="outline2"
                   onClick={() => {
                     showModal({
                       title: '插件源码',
@@ -155,7 +157,7 @@ export const PluginHistoryTable: React.FC<PluginHistoryTableProp> = (props) => {
                   }}
                 >
                   插件源码
-                </Button>
+                </YakitButton>
               </Space>
             ),
           },
