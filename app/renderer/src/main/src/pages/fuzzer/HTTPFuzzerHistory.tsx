@@ -173,7 +173,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     setValue={setKeyword}
                 />
                 <Form.Item style={{marginBottom: 0}}>
-                    <Button type='primary' htmlType='submit' icon={<SearchOutlined />} />
+                    <YakitButton type='primary' htmlType='submit' icon={<SearchOutlined />} />
                 </Form.Item>
             </Form> */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

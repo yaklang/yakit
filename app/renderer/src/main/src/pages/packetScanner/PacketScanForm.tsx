@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Form } from 'antd'
+import { Form } from 'antd'
 import { InputInteger, InputItem } from '@/utils/inputUtil'
 import { failed, info } from '@/utils/notification'
 import { ExecResult } from '@/pages/invoker/schema'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export interface PacketScanFormProp {
   token: string
@@ -93,7 +94,7 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
     >
       <Form.Item style={{ marginBottom: 4 }}>
         {loading && (
-          <Button
+          <YakitButton
             type={'primary'}
             danger={true}
             onClick={() => {
@@ -101,13 +102,13 @@ export const PacketScanForm: React.FC<PacketScanFormProp> = (props) => {
             }}
           >
             停止任务
-          </Button>
+          </YakitButton>
         )}
         {!loading && (
-          <Button type="primary" htmlType="submit">
+          <YakitButton type="primary" htmlType="submit">
             {' '}
             开始扫描{' '}
-          </Button>
+          </YakitButton>
         )}
       </Form.Item>
       {/*<InputInteger*/}

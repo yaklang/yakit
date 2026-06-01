@@ -455,7 +455,7 @@
   }
 }
 
-.yakit-button-primary {
+.yakit-button.yakit-button-primary.yakit-button-primary {
   @include generatePrimary('primary');
   &.yakit-button-success {
     @include generatePrimary('success');
@@ -467,7 +467,7 @@
     @include generatePrimary('infoBlue');
   }
 }
-.yakit-button-secondary2 {
+.yakit-button.yakit-button-secondary2.yakit-button-secondary2 {
   @include generateSecondary2('primary');
   &.yakit-button-success {
     @include generateSecondary2('success');
@@ -479,7 +479,7 @@
     @include generateSecondary2('infoBlue');
   }
 }
-.yakit-button-outline1 {
+.yakit-button.yakit-button-outline1.yakit-button-outline1 {
   @include generateOutline1('primary');
   &.yakit-button-success {
     @include generateOutline1('success');
@@ -491,10 +491,10 @@
     @include generateOutline1('infoBlue');
   }
 }
-.yakit-button-outline2 {
+.yakit-button.yakit-button-outline2.yakit-button-outline2 {
   @include generateOutline2('primary');
 }
-.yakit-button-text {
+.yakit-button.yakit-button-text.yakit-button-text {
   @include generateText('primary');
   &.yakit-button-success {
     @include generateText('success');
@@ -506,7 +506,7 @@
     @include generateText('infoBlue');
   }
 }
-.yakit-button-text2 {
+.yakit-button.yakit-button-text2.yakit-button-text2 {
   @include generateText2('primary');
 }
 

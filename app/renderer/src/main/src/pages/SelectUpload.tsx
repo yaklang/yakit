@@ -7,7 +7,7 @@ import { FileProjectInfoProps, ProjectIOProgress, ProjectsResponse } from './sof
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-// import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
+import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 import { OutlineChevrondownIcon } from '@/assets/icon/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -231,7 +231,7 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
         label={t('SelectUpload.project')}
         rules={[{ required: true, message: t('YakitForm.requiredField') }]}
       >
-        {/* <YakitCascader
+        <YakitCascader
           disabled={loading}
           options={data}
           placeholder={t('SelectUpload.selectProject')}
@@ -241,11 +241,11 @@ const SelectUpload: React.FC<SelectUploadProps> = (props) => {
           onChange={(value, selectedOptions) => {
             if (selectedOptions.length > 0 && selectedOptions[selectedOptions.length - 1].Type === 'project') {
               const item = selectedOptions[selectedOptions.length - 1]
-              // setCascaderValue({ Id: item.Id, DatabasePath: item.DatabasePath })
+              setCascaderValue({ Id: item.Id, DatabasePath: item.DatabasePath })
             }
           }}
           suffixIcon={<OutlineChevrondownIcon style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />}
-        /> */}
+        />
       </Form.Item>
       {percent > 0 && (
         <div style={{ width: 276, margin: '0 auto', paddingBottom: 14 }}>
