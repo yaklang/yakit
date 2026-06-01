@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useImperativeHandle, useLayoutEffect, useMemo } from 'react'
-import { Button, Space } from 'antd'
+import { Space } from 'antd'
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import { AutoCard } from '../../components/AutoCard'
 import { LineConversionIcon } from '../../assets/icons'
@@ -44,9 +44,9 @@ export const DataCompare: React.FC<DataCompareProps> = (props) => {
       bordered={false}
       extra={
         <Space>
-          <Button
+          <YakitButton
             size={'small'}
-            type={!noWrap ? 'primary' : 'link'}
+            type={!noWrap ? 'primary' : 'text'}
             icon={<LineConversionIcon />}
             onClick={() => {
               codeComparisonRef.current?.onChangeLineConversion()

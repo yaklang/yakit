@@ -19,6 +19,7 @@ import i18n from '@/i18n/i18n'
 import { useTheme } from './hook/useTheme'
 import { generateAllThemeColors } from './yakit-colors-generator'
 import { debugToPrintLogs } from './utils/logCollection'
+import { ConfigProvider } from 'antd'
 
 window.MonacoEnvironment = {
   getWorkerUrl: function (moduleId, label) {
@@ -112,7 +113,9 @@ const App = () => {
   if (windowType === 'markdown-pdf-print') {
     return <MarkdownPdfPrintPage />
   }
-  return windowType === 'child' ? <ChildNewApp /> : <NewApp />
+  return (
+    <ConfigProvider wave={{ disabled: true }}>{windowType === 'child' ? <ChildNewApp /> : <NewApp />}</ConfigProvider>
+  )
 }
 
 // 只在子窗口移除 loading

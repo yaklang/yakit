@@ -39,6 +39,7 @@ import { showByContextMenu } from '../../functionTemplate/showByContext'
 import styles from './EntityRepository.module.scss'
 import { instance } from '@viz-js/viz'
 import { a } from '@/alibaba/ali-react-table-dist/dist/chunks/ali-react-table-pipeline-2201dfe0.esm'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 const { ipcRenderer } = window.require('electron')
 const { Paragraph, Title } = Typography
@@ -442,7 +443,7 @@ export const EntityRepositoryPage: React.FC = () => {
       width: 120,
       render: (_, record: EntityRepository) => (
         <Space>
-          <Button
+          <YakitButton
             type="primary"
             size="small"
             onClick={() => {
@@ -451,7 +452,7 @@ export const EntityRepositoryPage: React.FC = () => {
             }}
           >
             View Entities
-          </Button>
+          </YakitButton>
         </Space>
       ),
     },
@@ -507,9 +508,9 @@ export const EntityRepositoryPage: React.FC = () => {
       width: 120,
       render: (_, record: Entity) => (
         <Space>
-          <Button type="primary" size="small" onClick={() => handleEntitySelectForERM(record.ID)}>
+          <YakitButton type="primary" size="small" onClick={() => handleEntitySelectForERM(record.ID)}>
             Generate ERM
-          </Button>
+          </YakitButton>
         </Space>
       ),
     },
@@ -596,9 +597,9 @@ export const EntityRepositoryPage: React.FC = () => {
             <Card className={styles.card}>
               <div className={styles.actionButtons}>
                 <Space>
-                  <Button type="primary" icon={<ReloadOutlined />} onClick={loadRepositories} loading={loading}>
+                  <YakitButton type="primary" icon={<ReloadOutlined />} onClick={loadRepositories} loading={loading}>
                     Refresh
-                  </Button>
+                  </YakitButton>
                 </Space>
               </div>
 
@@ -643,12 +644,17 @@ export const EntityRepositoryPage: React.FC = () => {
 
               <div className={styles.actionButtons}>
                 <Space>
-                  <Button type="primary" icon={<ReloadOutlined />} onClick={() => loadEntities()} loading={loading}>
+                  <YakitButton
+                    type="primary"
+                    icon={<ReloadOutlined />}
+                    onClick={() => loadEntities()}
+                    loading={loading}
+                  >
                     Refresh
-                  </Button>
+                  </YakitButton>
                   {selectedEntityIds.length > 0 && (
-                    <Button
-                      type="default"
+                    <YakitButton
+                      type="outline2"
                       onClick={() => {
                         setActiveTab('erm')
                         setTimeout(() => {
@@ -657,7 +663,7 @@ export const EntityRepositoryPage: React.FC = () => {
                       }}
                     >
                       Generate ERM for Selected ({selectedEntityIds.length})
-                    </Button>
+                    </YakitButton>
                   )}
                 </Space>
               </div>
@@ -679,10 +685,12 @@ export const EntityRepositoryPage: React.FC = () => {
                   </Form.Item>
                   <Form.Item>
                     <Space>
-                      <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                      <YakitButton type="primary" htmlType="submit" icon={<SearchOutlined />}>
                         Search
-                      </Button>
-                      <Button onClick={clearEntityFilters}>Clear</Button>
+                      </YakitButton>
+                      <YakitButton onClick={clearEntityFilters} type="outline2">
+                        Clear
+                      </YakitButton>
                     </Space>
                   </Form.Item>
                 </Form>
@@ -744,14 +752,14 @@ export const EntityRepositoryPage: React.FC = () => {
 
               <div className={styles.actionButtons}>
                 <Space>
-                  <Button
+                  <YakitButton
                     type="primary"
                     icon={<ReloadOutlined />}
                     onClick={() => loadRelationships()}
                     loading={loading}
                   >
                     Refresh
-                  </Button>
+                  </YakitButton>
                 </Space>
               </div>
 
@@ -775,10 +783,12 @@ export const EntityRepositoryPage: React.FC = () => {
                   </Form.Item>
                   <Form.Item>
                     <Space>
-                      <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                      <YakitButton type="primary" htmlType="submit" icon={<SearchOutlined />}>
                         Search
-                      </Button>
-                      <Button onClick={clearRelationshipFilters}>Clear</Button>
+                      </YakitButton>
+                      <YakitButton onClick={clearRelationshipFilters} type="outline2">
+                        Clear
+                      </YakitButton>
                     </Space>
                   </Form.Item>
                 </Form>
@@ -880,7 +890,7 @@ export const EntityRepositoryPage: React.FC = () => {
                     </div>
                   )}
                   <Space>
-                    <Button
+                    <YakitButton
                       type="primary"
                       icon={<ReloadOutlined />}
                       onClick={() =>
@@ -889,15 +899,16 @@ export const EntityRepositoryPage: React.FC = () => {
                       loading={loading}
                     >
                       Generate ERM Diagram
-                    </Button>
-                    <Button
+                    </YakitButton>
+                    <YakitButton
+                      type="outline2"
                       onClick={() => {
                         setSelectedEntityIds([])
                         setErmDepth(2)
                       }}
                     >
                       Clear Selection
-                    </Button>
+                    </YakitButton>
                   </Space>
                 </Space>
               </Card>
@@ -906,20 +917,20 @@ export const EntityRepositoryPage: React.FC = () => {
               {ermDot && (
                 <div className={styles.viewModeToggle}>
                   <Space>
-                    <Button
-                      type={ermViewMode === 'svg' ? 'primary' : 'default'}
+                    <YakitButton
+                      type={ermViewMode === 'svg' ? 'primary' : 'outline2'}
                       icon={<EyeOutlined />}
                       onClick={() => setErmViewMode('svg')}
                     >
                       SVG View
-                    </Button>
-                    <Button
-                      type={ermViewMode === 'dot' ? 'primary' : 'default'}
+                    </YakitButton>
+                    <YakitButton
+                      type={ermViewMode === 'dot' ? 'primary' : 'outline2'}
                       icon={<CodeOutlined />}
                       onClick={() => setErmViewMode('dot')}
                     >
                       DOT Code
-                    </Button>
+                    </YakitButton>
                   </Space>
                 </div>
               )}

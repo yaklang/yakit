@@ -1,6 +1,5 @@
 const {
   override,
-  fixBabelImports,
   addWebpackResolve,
   addWebpackExternals,
   addWebpackPlugin,
@@ -87,11 +86,6 @@ module.exports = {
         ],
       },
     ),
-    fixBabelImports('import', {
-      libraryName: 'antd',
-      libraryDirectory: 'es',
-      style: 'css',
-    }),
     addWebpackExternals({ './cptable': 'var cptable' }),
     removeModuleScopePlugin(),
     (config) => {

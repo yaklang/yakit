@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Button } from 'antd'
+import { Form } from 'antd'
 import { InputInteger, InputItem, SwitchItem, InputStringOrJsonItem } from '../../utils/inputUtil'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from '../../utils/kv'
 import { NetInterface } from '@/models/Traffic'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 const { ipcRenderer } = window.require('electron')
 export const BRIDGE_ADDR = 'yak-bridge-addr'
 export const BRIDGE_SECRET = 'yak-bridge-secret'
@@ -122,10 +123,10 @@ export const FacadeOptions: React.FC<FacadeOptionsProp> = (props) => {
           </>
         )}
         <Form.Item wrapperCol={{ offset: 8 }}>
-          <Button type="primary" htmlType="submit">
+          <YakitButton type="primary" htmlType="submit">
             {' '}
             启动FacadeServer{' '}
-          </Button>
+          </YakitButton>
         </Form.Item>
       </Form>
     </>
