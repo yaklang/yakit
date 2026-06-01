@@ -45,6 +45,7 @@ import {
   DefaultCurrentExecTaskTree,
   DefaultMemoryList,
   DefaultPlanHistoryList,
+  DefaultTodoListCardData,
 } from '../ai-re-act/hooks/defaultConstant'
 import { ColorsAIIcon } from '@/assets/icon/colors'
 import { AIGlobalConfig, AIModelTypeFileName } from './aiModelList/utils'
@@ -267,6 +268,8 @@ export const defaultChatIPCData: UseChatIPCState = {
   riskRunTimeIDs: [],
   casualChat: {
     elements: [],
+    toolList: cloneDeep(DefaultTodoListCardData),
+    toolListRenderNumber: 0,
   },
   yakExecResult: {
     card: [],
@@ -276,6 +279,7 @@ export const defaultChatIPCData: UseChatIPCState = {
   taskChat: {
     plan: cloneDeep(DefaultCurrentExecTaskTree),
     elements: [],
+    toolListMap: new Map(),
   },
   grpcFolders: [],
   questionQueue: {
