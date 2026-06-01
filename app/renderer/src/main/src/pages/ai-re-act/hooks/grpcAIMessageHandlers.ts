@@ -438,11 +438,11 @@ const handleReportFinish: AIMessageHandler = (request) => {
     data: nextData,
   }
   setContentMap(chatData.id, chatData)
-  handleUpdateUISingleState(
-    res.IsSync,
-    { mapKey: chatData.id, type: cardType, chatType: info.chatType },
-    request.setElements,
-  )
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+    mapKey: chatData.id,
+    type: cardType,
+    chatType: info.chatType,
+  })
 }
 // #endregion
 
