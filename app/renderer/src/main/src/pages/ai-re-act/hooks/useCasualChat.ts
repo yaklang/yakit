@@ -5,10 +5,10 @@ import type {
   UseCasualChatParams,
   UseCasualChatState,
 } from './type'
-import type { AIChatQSData, AIReviewType, ReActChatRenderItem } from './aiRender'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem, TodoListCardData } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { AITaskStatus } from './grpcApi'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
 import { genBaseAIChatData, handleGrpcDataPushLog } from './utils'
@@ -17,6 +17,7 @@ import { AIChatQSDataTypeEnum } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
 import { Uint8ArrayToString } from '@/utils/str'
+import { DefaultTodoListCardData } from './defaultConstant'
 
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -28,7 +29,8 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
-
+  const toolList = useRef<TodoListCardData>(cloneDeep(DefaultTodoListCardData))
+  const [toolListRenderNumber, setToolListRenderNumber] = useState(0)
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.casualChat?.contents
     if (!contentMap) return undefined
@@ -124,14 +126,26 @@ function useCasualChat(params: UseCasualChatParams) {
         return
       }
 
-      // if (res.Type === 'structured' && res.NodeId === 'system') {
-      //   const ipcContent = Uint8ArrayToString(res.Content) || ''
-      //   const data = JSON.parse(ipcContent) || ''
-      //   if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
-      //     handleTaskNode(res)
-      //   }
-      //   return
-      // }
+      const ipcContent = Uint8ArrayToString(res.Content) || ''
+
+      if (res.Type === 'structured' && res.NodeId === 'system') {
+        const data = JSON.parse(ipcContent) || ''
+        if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
+          // handleTaskNode(res)
+        }
+        return
+      } else if (res.Type === 'todo_list_update' && res.NodeId === 'todo_list') {
+        // 更新待办清单卡片数据
+        const info = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
+        const { items, stats, task_id } = info
+        if (!task_id) return
+        if (Array.isArray(items) && items.length === 0) return
+        toolList.current = {
+          items,
+          stats,
+        }
+        setToolListRenderNumber((old) => old + 1)
+      }
 
       // 未识别类型全部归档到日志处理
       handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })
@@ -191,8 +205,8 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const state: UseCasualChatState = useCreation(() => {
-    return { elements }
-  }, [elements])
+    return { elements, toolList: toolList.current, toolListRenderNumber }
+  }, [elements, toolList.current, toolListRenderNumber])
 
   const events: UseCasualChatEvents = useCreation(() => {
     return {

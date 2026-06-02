@@ -404,6 +404,7 @@ export declare namespace AIAgentGrpcApi {
     satisfied: boolean
     stats: TodoListUpdateStats
     task_id: string
+    task_index: string
   }
   export interface TodoListUpdateAppliedOps {
     content: string

@@ -263,6 +263,14 @@ function useTaskChat(params: UseTaskChatParams) {
           setPlan(cloneDeep(DefaultCurrentExecTaskTree))
         }
         return
+      } else if (res.Type === 'todo_list_update' && res.NodeId === 'todo_list') {
+        // 更新待办清单卡片数据
+        const info = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
+        const { items, stats, task_id, task_index } = info
+        if (!task_id || !task_index) return
+        if (Array.isArray(items) && items.length === 0) return
+        if (task_id !== getCurrentTaskPlanID()?.taskID) return
+        getChatDataStore?.()?.taskChat?.toolListMap.set(task_index, { items, stats })
       }
 
       // 未识别类型全部归档到日志处理
