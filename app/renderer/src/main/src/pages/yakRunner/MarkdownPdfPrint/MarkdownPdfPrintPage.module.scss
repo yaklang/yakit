@@ -1,6 +1,6 @@
-:global(html),
-:global(body),
-:global(#root) {
+:global(html.markdown-pdf-print-page-root),
+:global(body.markdown-pdf-print-page-root),
+:global(#root.markdown-pdf-print-page-root) {
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
@@ -33,9 +33,9 @@
 }
 
 @media print {
-  :global(html),
-  :global(body),
-  :global(#root),
+  :global(html.markdown-pdf-print-page-root),
+  :global(body.markdown-pdf-print-page-root),
+  :global(#root.markdown-pdf-print-page-root),
   .markdown-pdf-print {
     margin: 0 !important;
     padding: 8px 12px;
