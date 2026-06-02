@@ -310,3 +310,59 @@
     transform: translateX(-50%);
   }
 }
+
+.history-chat-tooltip {
+  max-width: none;
+
+  &:global(.ant-tooltip-placement-top),
+  &:global(.ant-tooltip-placement-topLeft),
+  &:global(.ant-tooltip-placement-topRight) {
+    padding-bottom: 4px;
+
+    :global(.ant-tooltip-arrow) {
+      bottom: 1px;
+    }
+  }
+
+  &:global(.ant-tooltip-placement-bottom),
+  &:global(.ant-tooltip-placement-bottomLeft),
+  &:global(.ant-tooltip-placement-bottomRight) {
+    padding-top: 4px;
+
+    :global(.ant-tooltip-arrow) {
+      top: 1px;
+    }
+  }
+
+  :global {
+    .ant-tooltip-inner {
+      padding: 0;
+      display: block;
+      min-height: unset;
+      background: var(--Colors-Use-Basic-Background);
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      color: inherit;
+      box-shadow: 0 4px 16px var(--Colors-Use-Basic-Shadow);
+      overflow: hidden;
+    }
+
+    .ant-tooltip-arrow-content {
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      background-color: var(--Colors-Use-Basic-Background);
+      box-shadow: 0 4px 16px var(--Colors-Use-Basic-Shadow);
+    }
+
+    .ant-tooltip-arrow-content::before {
+      opacity: 0;
+    }
+  }
+}
+
+.history-chat-tooltip-content {
+  width: 280px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}

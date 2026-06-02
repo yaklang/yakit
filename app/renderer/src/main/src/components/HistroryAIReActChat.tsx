@@ -33,6 +33,9 @@ interface HistoryAIReActChatProps {
   setSetting: React.Dispatch<React.SetStateAction<AIAgentSetting>>
   inViewport: boolean
   className?: string
+  title?: React.ReactNode
+  mergeRemoteAIAgentSetting?: (cache: AIAgentSetting, prev: AIAgentSetting) => AIAgentSetting
+  onChatReady?: () => void
   externalParameters: NonNullable<AIReActChatProps['externalParameters']>
 }
 
@@ -47,6 +50,9 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     inViewport,
     setSetting,
     className,
+    title = 'AI',
+    mergeRemoteAIAgentSetting,
+    onChatReady,
     externalParameters,
   } = props
 
@@ -95,13 +101,18 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
           try {
             const cache = JSON.parse(res) as AIAgentSetting
             if (typeof cache !== 'object') return
-            setSetting(cache)
+            setSetting((prev) => (mergeRemoteAIAgentSetting ? mergeRemoteAIAgentSetting(cache, prev) : cache))
           } catch (error) {}
         })
         .catch(() => {})
     }
     return () => {}
   }, [inViewport])
+
+  useEffect(() => {
+    if (!inViewport || loading || data === undefined || data) return
+    onChatReady?.()
+  }, [data, inViewport, loading, onChatReady])
 
   const resultRender = useMemo(() => {
     if (loading && data === undefined) return null
@@ -145,7 +156,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
         mode={'task'}
         showFreeChat={showFreeChat}
         setShowFreeChat={setShowFreeChat}
-        title="AI"
+        title={title}
         ref={aiReActChatRef}
         startRequest={onStartRequest}
         sendRequest={onSendRequest}
@@ -159,11 +170,13 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     data,
     externalParameters,
     loading,
+    mergeRemoteAIAgentSetting,
     onSendRequest,
     onStartRequest,
     run,
     setShowFreeChat,
     showFreeChat,
+    title,
   ])
 
   return (

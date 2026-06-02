@@ -17,6 +17,7 @@ import {
   OutlineChevrondownIcon,
   OutlineCogIcon,
   OutlineFilterIcon,
+  OutlineMessageCirclePlusIcon,
   OutlinePlusIcon,
   OutlineRefreshIcon,
   OutlineReplyIcon,
@@ -328,12 +329,13 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                   className: styles['ai-wrapper'],
                   externalParameters: {
                     isOpen: false,
-                    rightIcon: (
-                      <>
-                        <Tooltip title="新建对话">
+                    rightIcon: {
+                      history: true,
+                      add: (
+                        <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
-                            icon={<OutlinePlusIcon />}
+                            icon={<OutlineMessageCirclePlusIcon />}
                             onClick={() => {
                               const { activeID, events, onStop, onChatFromHistory, setActiveChat } =
                                 historyAIReActChatBridge
@@ -346,9 +348,11 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                             }}
                           />
                         </Tooltip>
+                      ),
+                      close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-                      </>
-                    ),
+                      ),
+                    },
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,

@@ -37,6 +37,7 @@ export interface AIAgentSideListProps {
 // 编辑对话名字
 export interface EditChatNameModalProps {
   getContainer?: HTMLElement
+  zIndex?: number
   info: AISession
   visible: boolean
   onCallback: (result: boolean, info?: AISession) => void

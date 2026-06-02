@@ -26,6 +26,18 @@ export interface AISendParams {
 export interface AISendResProps {
   params: AIInputEvent
 }
+
+enum RightIconType {
+  history = 'history',
+  close = 'close',
+  add = 'add',
+}
+
+type ExternalParametersRightIcon = Partial<{
+  [RightIconType.history]: boolean
+  [RightIconType.close]: React.ReactElement
+  [RightIconType.add]: React.ReactElement
+}>
 export interface AIReActChatProps {
   mode: AIAgentChatMode
   chatContainerClassName?: string
@@ -37,7 +49,7 @@ export interface AIReActChatProps {
   startRequest: (v: AIHandleStartParams) => Promise<AIHandleStartResProps>
   sendRequest?: (v: AISendParams) => Promise<AISendResProps>
   externalParameters?: {
-    rightIcon?: string | React.ReactNode
+    rightIcon?: ExternalParametersRightIcon
     isOpen?: boolean
     filterMentionType?: AIChatTextareaProps['filterMentionType']
     footerLeftTypes?: AIChatTextareaProps['footerLeftTypes']

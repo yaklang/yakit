@@ -22,15 +22,31 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { JSONParseLog } from '@/utils/tool'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
 
 const AISOURCE: AISource[] = ['ai', '']
 
 const clearLocalChats = (sessions: AISession[]) =>
   emiter.emit('onDelChats', JSON.stringify(sessions.map((item) => item.SessionID)))
 
-const renderClearConfirm = (label: string, title: string, onConfirm: () => void) => {
+const renderClearConfirm = (
+  label: string,
+  title: string,
+  onConfirm: () => void,
+  overlayOptions?: {
+    getPopupContainer?: () => HTMLElement
+    overlayClassName?: string
+  },
+) => {
   return (
-    <YakitPopconfirm placement="bottomRight" title={title} onConfirm={onConfirm}>
+    <YakitPopconfirm
+      placement="bottomRight"
+      title={title}
+      onConfirm={onConfirm}
+      getPopupContainer={overlayOptions?.getPopupContainer}
+      overlayClassName={overlayOptions?.overlayClassName}
+    >
       <div className={styles['clear-confirm-trigger']} onClick={(e) => e.stopPropagation()}>
         {label}
       </div>
@@ -50,11 +66,31 @@ export const onNewChat = () => {
   const info: AIAgentTriggerEventInfo = { type: ReActChatEventEnum.NEW_CHAT }
   emiter.emit('onReActChatEvent', JSON.stringify(info))
 }
-const HistoryChat = memo(() => {
+
+interface HistoryChatProps {
+  /** 嵌入 Tooltip 等浮层场景：隐藏新建/固定按钮，弹层挂载到当前页面容器 */
+  embedded?: boolean
+}
+
+const HistoryChat = memo(({ embedded }: HistoryChatProps) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [{ sessions }, dispatcher] = useSessionList(AISOURCE)
   const { activeChat } = useAIAgentStore()
   const { setActiveChat } = useAIAgentDispatcher()
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+
+  const getPopupContainer = useMemoizedFn(
+    () => document.getElementById(`main-operator-page-body-${currentRouteKey}`) || document.body,
+  )
+  const popupContainer = embedded ? getPopupContainer : undefined
+  const embeddedOverlayClass = styles['history-chat-embedded-overlay']
+  const embeddedPopconfirmClass = styles['history-chat-embedded-popconfirm']
+  const embeddedOverlayOptions = embedded
+    ? {
+        getPopupContainer: popupContainer,
+        overlayClassName: embeddedPopconfirmClass,
+      }
+    : undefined
 
   const [search, setSearch] = useState('')
   const searchDebounce = useDebounce(search, { wait: 500 })
@@ -191,6 +227,7 @@ const HistoryChat = memo(() => {
                       t('HistoryChat.oneDay'),
                       t('HistoryChat.clearConfirm', { days: t('HistoryChat.oneDay') }),
                       () => handleClearChatByDays(1),
+                      embeddedOverlayOptions,
                     ),
                   },
                   {
@@ -199,6 +236,7 @@ const HistoryChat = memo(() => {
                       t('HistoryChat.oneWeek'),
                       t('HistoryChat.clearConfirm', { days: t('HistoryChat.oneWeek') }),
                       () => handleClearChatByDays(7),
+                      embeddedOverlayOptions,
                     ),
                   },
                   {
@@ -207,6 +245,7 @@ const HistoryChat = memo(() => {
                       t('HistoryChat.thirtyDays'),
                       t('HistoryChat.clearConfirm', { days: t('HistoryChat.thirtyDays') }),
                       () => handleClearChatByDays(30),
+                      embeddedOverlayOptions,
                     ),
                   },
                   { type: 'divider' },
@@ -216,6 +255,7 @@ const HistoryChat = memo(() => {
                       t('HistoryChat.clearAll'),
                       t('HistoryChat.clearAllConfirm'),
                       handleClearAllChat,
+                      embeddedOverlayOptions,
                     ),
                   },
                 ],
@@ -224,9 +264,16 @@ const HistoryChat = memo(() => {
                 trigger: ['click'],
                 placement: 'bottomRight',
                 disabled: clearLoading || sessions.length === 0,
+                getPopupContainer: popupContainer,
+                overlayClassName: embedded ? embeddedOverlayClass : undefined,
               }}
             >
-              <Tooltip title={t('HistoryChat.clearChats')} placement="topRight">
+              <Tooltip
+                title={t('HistoryChat.clearChats')}
+                placement="topRight"
+                getPopupContainer={popupContainer}
+                overlayClassName={embedded ? embeddedOverlayClass : undefined}
+              >
                 <YakitButton
                   disabled={clearLoading || sessions.length === 0}
                   colors="danger"
@@ -237,10 +284,14 @@ const HistoryChat = memo(() => {
                 </YakitButton>
               </Tooltip>
             </YakitDropdownMenu>
-            <Tooltip title={t('HistoryChat.newChat')} placement="topRight">
-              <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
-            </Tooltip>
-            <SideSettingButton />
+            {!embedded && (
+              <>
+                <Tooltip title={t('HistoryChat.newChat')} placement="topRight">
+                  <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
+                </Tooltip>
+                <SideSettingButton />
+              </>
+            )}
           </div>
         </div>
 
@@ -262,6 +313,9 @@ const HistoryChat = memo(() => {
           setSessions={dispatcher.setSessions}
           loadHistoryData={dispatcher.loadHistoryData}
           getSessions={dispatcher.getSessions}
+          getPopupContainer={popupContainer}
+          overlayClassName={embedded ? embeddedPopconfirmClass : undefined}
+          embedded={embedded}
         />
       </div>
     </div>

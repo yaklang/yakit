@@ -2638,8 +2638,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                 fuzzerAiSlot={renderHistoryAIReActChat({
                   externalParameters: {
                     isOpen: false,
-                    rightIcon: (
-                      <>
+                    rightIcon: {
+                      history: true,
+                      add: (
                         <Tooltip title={t('HTTPFuzzerPage.AI_new_conversation')}>
                           <YakitButton
                             type="text2"
@@ -2656,13 +2657,15 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                             }}
                           />
                         </Tooltip>
+                      ),
+                      close: (
                         <YakitButton
                           type="text2"
                           icon={<OutlineXIcon />}
                           onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
                         />
-                      </>
-                    ),
+                      ),
+                    },
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,

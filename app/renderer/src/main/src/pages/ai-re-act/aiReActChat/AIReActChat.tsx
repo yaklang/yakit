@@ -13,6 +13,10 @@ import classNames from 'classnames'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { ChevrondownButton, ChevronleftButton, RoundedStopButton } from './AIReActComponent'
+import { Tooltip } from 'antd'
+import { ClockIcon } from '@/assets/newIcon'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
 import { AIInputEvent, AIInputEventSyncTypeEnum, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
@@ -275,7 +279,25 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                 </div>
                 <div className={styles['chat-header-extra']}>
                   {isShowRetract &&
-                    (externalParameters?.rightIcon ?? (
+                    (externalParameters?.rightIcon ? (
+                      <>
+                        {externalParameters.rightIcon.history && (
+                          <Tooltip
+                            trigger={['click']}
+                            overlayClassName={styles['history-chat-tooltip']}
+                            title={
+                              <div className={styles['history-chat-tooltip-content']}>
+                                <HistoryChat embedded />
+                              </div>
+                            }
+                          >
+                            <YakitButton type="text2" icon={<ClockIcon />} title="" />
+                          </Tooltip>
+                        )}
+                        {externalParameters.rightIcon.add}
+                        {externalParameters.rightIcon.close}
+                      </>
+                    ) : (
                       <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
                     ))}
                 </div>
@@ -293,9 +315,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       ref={aiChatTextareaRef}
                       loading={false}
                       onSubmit={handleSubmit}
-                      defaultValue={externalParameters?.defaultValue}
-                      filterMentionType={externalParameters?.filterMentionType}
-                      isOpen={externalParameters?.isOpen}
                       inputFooterRight={
                         <div className={styles['extra-footer-right']}>
                           {casualLoading && (
@@ -307,8 +326,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                           )}
                         </div>
                       }
-                      footerLeftTypes={externalParameters?.footerLeftTypes}
-                      onHttpFlowRemove={externalParameters?.onHttpFlowRemove}
                       chatDataStoreKey={chatDataStoreKey}
                       {...omit(externalParameters, 'rightIcon')}
                     />

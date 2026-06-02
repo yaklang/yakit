@@ -15,6 +15,7 @@ import ChatIPCContent, {
   defaultDispatcherOfChatIPC,
 } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
@@ -38,7 +39,7 @@ import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 
-import { HistroryAIReActChat } from './AIReActChat'
+import { HistroryAIReActChat } from './HistroryAIReActChat'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
@@ -53,11 +54,14 @@ export interface HistoryAIReActChatBridge {
   clearTableSelection: () => void
   registerDeselectHttpFlowId: (fn: (id: string) => void) => void
   deselectHttpFlowId: (id: string) => void
+  setMention: (v: AIMentionCommandParams) => void
+  setValue: (v: string) => void
 }
 
 export interface HistoryAIReActChatSlotOptions {
   externalParameters: HistoryAIReActChatExternalParameters
   className?: string
+  title?: React.ReactNode
 }
 
 export type HistoryAIReActChatSlotRender = (options: HistoryAIReActChatSlotOptions) => React.ReactNode
@@ -66,6 +70,7 @@ export type HistoryAIReActFocusModeLoop = NonNullable<AIInputEvent['FocusModeLoo
 
 export interface HistoryAIReActChatContextValue {
   renderHistoryAIReActChat: HistoryAIReActChatSlotRender
+  showFreeChat: boolean
   setShowFreeChat: React.Dispatch<React.SetStateAction<boolean>>
   historyAIReActChatBridge: HistoryAIReActChatBridge
   focusModeLoop: HistoryAIReActFocusModeLoop
@@ -125,6 +130,10 @@ export interface HistoryAIReActChatProviderProps {
    * - 建议用 `useMemoizedFn` 包装以保持引用稳定
    */
   transformInputEvent?: (event: AIInputEvent) => AIInputEvent
+  /** 自定义 start 请求的 extraParams，如知识库固定 chatId */
+  resolveStartExtraParams?: (data: AIHandleStartParams) => AIHandleStartExtraProps
+  /** 远程 setting 写入前合并，如知识库保留 TimelineSessionID */
+  mergeRemoteAIAgentSetting?: (cache: AIAgentSetting, prev: AIAgentSetting) => AIAgentSetting
 }
 
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
@@ -134,7 +143,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   httpFuzzTabPageId,
   defaultTimelineSessionID,
   transformInputEvent,
+  resolveStartExtraParams,
+  mergeRemoteAIAgentSetting,
 }: HistoryAIReActChatProviderProps) {
+  console.log('HistoryAIReActChatProvider render', defaultTimelineSessionID, httpFuzzTabPageId)
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
   const refRef = useRef<HTMLDivElement>(null)
@@ -162,6 +174,24 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const initialRequestInCasualRef = useRef<string | null>(null)
   const clearTableSelectionRef = useRef<(() => void) | null>(null)
   const deselectHttpFlowIdRef = useRef<((id: string) => void) | null>(null)
+  const pendingMentionRef = useRef<AIMentionCommandParams | null>(null)
+  const chatReadyRef = useRef(false)
+
+  useEffect(() => {
+    if (!showFreeChat) {
+      chatReadyRef.current = false
+    }
+  }, [showFreeChat])
+
+  const flushPendingMention = useMemoizedFn(() => {
+    chatReadyRef.current = true
+    requestAnimationFrame(() => {
+      const pending = pendingMentionRef.current
+      if (!pending) return
+      aiReActChatRef.current?.setMention(pending)
+      pendingMentionRef.current = null
+    })
+  })
 
   const onHttpFuzzRequestChange = useMemoizedFn((data: AIAgentGrpcApi.HttpFuzzRequestChange) => {
     if (!httpFuzzTabPageId) return
@@ -237,7 +267,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const onStartRequest = useMemoizedFn((data: AIHandleStartParams) => {
-    const newChat: AIHandleStartExtraProps = {
+    const newChat: AIHandleStartExtraProps = resolveStartExtraParams?.(data) ?? {
       chatId: activeChat?.SessionID,
     }
 
@@ -376,14 +406,26 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       deselectHttpFlowId: (id: string) => {
         deselectHttpFlowIdRef.current?.(id)
       },
+      setMention: (v) => {
+        if (chatReadyRef.current) {
+          aiReActChatRef.current?.setMention(v)
+          pendingMentionRef.current = null
+          return
+        }
+        pendingMentionRef.current = v
+      },
+      setValue: (v) => {
+        aiReActChatRef.current?.setValue(v)
+      },
     }),
     [activeID, events, onStop, onChatFromHistory, setActiveChat],
   )
 
   const renderHistoryAIReActChat = useCallback(
-    ({ className, externalParameters }: HistoryAIReActChatSlotOptions) => (
+    ({ className, externalParameters, title }: HistoryAIReActChatSlotOptions) => (
       <HistroryAIReActChat
         className={className}
+        title={title}
         refRef={refRef}
         showFreeChat={showFreeChat}
         setShowFreeChat={setShowFreeChat}
@@ -392,20 +434,23 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         onSendRequest={onSendRequest}
         inViewport={inViewport}
         setSetting={setSetting}
+        mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}
+        onChatReady={flushPendingMention}
         externalParameters={externalParameters}
       />
     ),
-    [inViewport, onSendRequest, onStartRequest, showFreeChat],
+    [inViewport, flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat],
   )
 
   const contextValue = useMemo(
     (): HistoryAIReActChatContextValue => ({
       renderHistoryAIReActChat,
+      showFreeChat,
       setShowFreeChat,
       historyAIReActChatBridge,
       focusModeLoop,
     }),
-    [renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop],
+    [renderHistoryAIReActChat, showFreeChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop],
   )
 
   return (

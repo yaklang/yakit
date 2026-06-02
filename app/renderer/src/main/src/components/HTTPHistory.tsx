@@ -29,6 +29,7 @@ import {
   OutlineFileSlidersIcon,
   OutlineFilterIcon,
   OutlineLog2Icon,
+  OutlineMessageCirclePlusIcon,
   OutlinePlusIcon,
   OutlineSearchIcon,
   OutlineXIcon,
@@ -68,7 +69,7 @@ import {
 } from '@/assets/commonProcessIcons'
 import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
-import { RefreshIcon } from '@/assets/newIcon'
+import { ClockIcon, RefreshIcon } from '@/assets/newIcon'
 import { Tooltip } from 'antd'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { YakitCheckbox } from './yakitUI/YakitCheckbox/YakitCheckbox'
@@ -361,12 +362,13 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                 renderHistoryAIReActChat({
                   externalParameters: {
                     isOpen: false,
-                    rightIcon: (
-                      <>
-                        <Tooltip title="新建对话">
+                    rightIcon: {
+                      history: true,
+                      add: (
+                        <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
-                            icon={<OutlinePlusIcon />}
+                            icon={<OutlineMessageCirclePlusIcon />}
                             onClick={() => {
                               const { activeID, events, onStop, onChatFromHistory, setActiveChat } =
                                 historyAIReActChatBridge
@@ -379,9 +381,11 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                             }}
                           />
                         </Tooltip>
+                      ),
+                      close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-                      </>
-                    ),
+                      ),
+                    },
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,
