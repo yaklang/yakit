@@ -115,19 +115,11 @@ export interface HistoryAIReActChatProviderProps {
   cacheDataStore: ChatDataStore
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
+  /** Web Fuzzer 页签 id：AI 改包回写、请求拼接、fuzz 状态推送等桥接用，与 SessionID 无关 */
   httpFuzzTabPageId?: string
   /**
-   * 新建会话使用的默认 SessionID（写入 `setting.TimelineSessionID`）。
-   * `useSessionId` 优先级：`activeChat.SessionID` > `setting.TimelineSessionID` > 入参 > 随机 UUID。
-   * - 不传则保持原有随机 UUID 生成逻辑
-   * - Irify「代码审计」传入 `usePageInfo.getCurrentPageTabRouteKey()` 返回的 `currentRouteKey`
-   */
-  defaultTimelineSessionID?: string
-  /**
-   * 在发往引擎前对 `AIInputEvent` 做最后一次业务转换，由调用方自定义。
    * - 在 `onStartRequest` / `onSendRequest` 内置（WebFuzzer 请求拼接）处理之后执行
    * - Irify「代码审计」用它把工程根路径附件追加到 `AttachedResourceInfo`
-   * - 建议用 `useMemoizedFn` 包装以保持引用稳定
    */
   transformInputEvent?: (event: AIInputEvent) => AIInputEvent
   /** 自定义 start 请求的 extraParams，如知识库固定 chatId */
@@ -141,34 +133,17 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   focusModeLoop,
   children,
   httpFuzzTabPageId,
-  defaultTimelineSessionID,
   transformInputEvent,
   resolveStartExtraParams,
   mergeRemoteAIAgentSetting,
 }: HistoryAIReActChatProviderProps) {
-  console.log('HistoryAIReActChatProvider render', defaultTimelineSessionID, httpFuzzTabPageId)
   const aiReActChatRef = useRef<AIReActChatRefProps>(null)
   const [showFreeChat, setShowFreeChat] = useSafeState(false)
   const refRef = useRef<HTMLDivElement>(null)
 
   const [inViewport = true] = useInViewport(refRef)
 
-  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => {
-    const initial = cloneDeep(AIAgentSettingDefault)
-    if (defaultTimelineSessionID) {
-      initial.TimelineSessionID = defaultTimelineSessionID
-    }
-    return initial
-  })
-
-  // 外部传入的 `defaultTimelineSessionID` 变化时同步进 `setting`，保证 `useSessionId` 优先级链命中
-  useEffect(() => {
-    if (!defaultTimelineSessionID) return
-    setSetting((prev) => {
-      if (prev.TimelineSessionID === defaultTimelineSessionID) return prev
-      return { ...prev, TimelineSessionID: defaultTimelineSessionID }
-    })
-  }, [defaultTimelineSessionID, setSetting])
+  const [setting, setSetting, getSetting] = useGetSetState<AIAgentSetting>(() => cloneDeep(AIAgentSettingDefault))
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)

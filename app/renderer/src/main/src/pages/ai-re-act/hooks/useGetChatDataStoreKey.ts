@@ -53,4 +53,13 @@ export const getAISourceFromChatDataStoreKey = (key: ChatDataStoreKey): AISource
   }
 }
 
+/** AI Agent 侧栏历史会话：包含 ai 与兼容老数据的空 source */
+export const AI_AGENT_HISTORY_AI_SOURCES: AISource[] = ['ai', '']
+
+/** 各业务页嵌入历史会话：仅查询对应单一 source */
+export const getAISourceListFromChatDataStoreKey = (key: ChatDataStoreKey): AISource[] => {
+  const source = getAISourceFromChatDataStoreKey(key)
+  return source ? [source] : []
+}
+
 export default useGetChatDataStoreKey

@@ -18,6 +18,7 @@ import { onNewChat } from '../HistoryChat'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -74,6 +75,7 @@ const updateChatTitle = (list: AISession[], info: AISession) => {
 const HistoryChatList: FC<{
   search: string
   sessionList: AISession[]
+  aiSource: AISource[]
   getSessions?: SessionListDispatcher['getSessions']
   setSessions?: SessionListDispatcher['setSessions']
   loadHistoryData?: SessionListDispatcher['loadHistoryData']
@@ -83,6 +85,7 @@ const HistoryChatList: FC<{
 }> = ({
   search,
   sessionList,
+  aiSource,
   getSessions,
   setSessions,
   loadHistoryData,
@@ -113,6 +116,7 @@ const HistoryChatList: FC<{
       target: listRef,
       isNoMore: () => (getSessions?.().length || 0) >= chatTotalRef.current,
       threshold: 100,
+      manual: embedded,
     },
   )
 
@@ -186,9 +190,13 @@ const HistoryChatList: FC<{
     }
 
     try {
-      grpcDeleteAISession({ Filter: { SessionID: [SessionID], Source: ['ai', ''] } }, true)
+      await grpcDeleteAISession({ Filter: { SessionID: [SessionID], Source: aiSource } }, true)
       emiter.emit('onDelChats', JSON.stringify([SessionID]))
     } catch (error) {
+      setSessions?.(sessionList)
+      if (activeSessionId === SessionID) {
+        handleSetActiveChat(info)
+      }
       yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
     } finally {
       setDelLoading((old) => old.filter((el) => el !== SessionID))

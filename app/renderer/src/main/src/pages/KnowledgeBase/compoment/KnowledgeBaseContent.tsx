@@ -696,7 +696,6 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
     <HistoryAIReActChatProvider
       cacheDataStore={knowledgeBaseDataStore}
       focusModeLoop=""
-      defaultTimelineSessionID={props.knowledgeBaseID}
       resolveStartExtraParams={resolveStartExtraParams}
       mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}
     >

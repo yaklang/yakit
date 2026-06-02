@@ -27,7 +27,10 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
-import useGetChatDataStoreKey, { getAISourceFromChatDataStoreKey } from '../hooks/useGetChatDataStoreKey'
+import useGetChatDataStoreKey, {
+  getAISourceFromChatDataStoreKey,
+  getAISourceListFromChatDataStoreKey,
+} from '../hooks/useGetChatDataStoreKey'
 import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import emiter from '@/utils/eventBus/eventBus'
 import { omit } from 'lodash'
@@ -46,6 +49,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const { setActiveChat } = useAIAgentDispatcher()
 
     const { chatDataStoreKey } = useGetChatDataStoreKey()
+    const historyChatAISource = useCreation(
+      () => getAISourceListFromChatDataStoreKey(chatDataStoreKey),
+      [chatDataStoreKey],
+    )
     const { chatIPCData } = useChatIPCStore()
     const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
@@ -284,10 +291,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         {externalParameters.rightIcon.history && (
                           <Tooltip
                             trigger={['click']}
+                            destroyTooltipOnHide
                             overlayClassName={styles['history-chat-tooltip']}
                             title={
                               <div className={styles['history-chat-tooltip-content']}>
-                                <HistoryChat embedded />
+                                <HistoryChat embedded aiSource={historyChatAISource} />
                               </div>
                             }
                           >
