@@ -10,8 +10,17 @@ import {
 import i18n from '@/i18n/i18n'
 import { Risk } from '@/pages/risks/schema'
 import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { AIChatQSData, ReActChatElement, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
 import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
 const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])
+
+export interface OpenAIConcurrentStreamPayload {
+  session: string
+  token: string
+  chatType: ReActChatElement['chatType']
+  elements: ReActChatTaskElementSub[]
+  contentEntries: Array<[string, AIChatQSData]>
+}
 
 const toWritableText = (data?: Uint8Array | string) => {
   if (typeof data === 'string') {
@@ -61,6 +70,18 @@ export const openSSARiskNewWindow = (data?: SSARisk) => {
     yakitWindow.openChildWindow({
       type: 'openSSARiskNewWindow',
       data: data,
+    })
+  }
+}
+
+export const openAIConcurrentStream = (data: OpenAIConcurrentStreamPayload) => {
+  if (childWindowHash) {
+    minWinSendToChildWin({ type: 'openAIConcurrentStream', data })
+  } else {
+    yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
+    yakitWindow.openChildWindow({
+      type: 'openAIConcurrentStream',
+      data,
     })
   }
 }

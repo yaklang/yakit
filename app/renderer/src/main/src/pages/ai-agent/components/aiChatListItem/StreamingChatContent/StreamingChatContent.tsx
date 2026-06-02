@@ -34,15 +34,7 @@ const AIStreamCard: FC<SingleStreamProps> = ({ chatType, token, streamClassName,
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
   const { streamClassName, chatType, token, hasNext, session, itemIndex: listItemIndex } = props
   if (props.kind === 'task') {
-    return (
-      <ConcurrentStreamCard
-        token={token}
-        session={session}
-        elements={props.children}
-        hasNext={hasNext}
-        chatType={chatType}
-      />
-    )
+    return <ConcurrentStreamCard token={token} session={session} elements={props.children} chatType={chatType} />
   }
   if (props.kind === 'group') {
     return <AIGroupStreamCard session={session} elements={props.children} hasNext={hasNext} />

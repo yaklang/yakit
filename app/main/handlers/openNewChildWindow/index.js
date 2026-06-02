@@ -6,9 +6,11 @@ const crypto = require('crypto')
 module.exports = {
   register: (win, getClient) => {
     let childWindow = null
+    let childWindowData = null
 
     // 主窗口发送数据到子窗口
     ipcMain.on('minWin-send-to-childWin', async (e, params) => {
+      childWindowData = params
       if (childWindow && !childWindow.isDestroyed()) {
         childWindow.webContents.send('get-parent-window-data', params)
       }
@@ -80,6 +82,7 @@ module.exports = {
     })
 
     ipcMain.on('open-new-child-window', (event, data) => {
+      childWindowData = data
       const windowHash = crypto.randomUUID()
       childWindow = new BrowserWindow({
         width: 1200,
@@ -120,8 +123,13 @@ module.exports = {
       })
 
       // 监听子窗口加载完毕主动获取数据
-      ipcMain.once('request-parent-data', (event) => {
-        event.sender.send('get-parent-window-data', data)
+      ipcMain.on('request-parent-data', (event) => {
+        if (!childWindowData) return
+        event.sender.send('get-parent-window-data', childWindowData)
+      })
+
+      ipcMain.on('request-ai-concurrent-stream-refresh', (event, params) => {
+        win.webContents.send('refresh-ai-concurrent-stream', params)
       })
 
       childWindow.webContents.once('did-finish-load', () => {
@@ -140,6 +148,7 @@ module.exports = {
       })
       childWindow.on('closed', () => {
         childWindow = null
+        childWindowData = null
         win.send('child-window-hash', { hash: '' })
       })
     })

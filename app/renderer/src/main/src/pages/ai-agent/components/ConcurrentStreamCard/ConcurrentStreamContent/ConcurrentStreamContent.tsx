@@ -9,10 +9,12 @@ import { AIChatListItem } from '../../aiChatListItem/AIChatListItem'
 const PAGE_SIZE = 20
 
 interface ConcurrentStreamContentProps {
+  session: string
   elements: ReActChatRenderItem[]
+  isChildWindow?: boolean
 }
 
-const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements }) => {
+const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements, session, isChildWindow }) => {
   const { ref: scrollRef, isFocus, onClick: onFocus } = useClickFocus<HTMLDivElement>()
 
   /** 当前渲染起始下标，初始从末尾 PAGE_SIZE 处开始，新增元素始终可见 */
@@ -68,6 +70,7 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements })
       className={classNames(styles['concurrent-stream-content'], { [styles.focused]: isFocus })}
       onClick={onFocus}
       onScroll={handleScroll}
+      style={isChildWindow ? { maxHeight: 'inherit', height: '100%', overflowY: 'auto' } : undefined}
     >
       {visibleElements.map((item, index) => (
         <div className={styles['concurrent-stream-content-item']} key={item.token}>
@@ -75,6 +78,7 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements })
             hasNext={startIndex + index < elements.length - 1}
             itemIndex={startIndex + index}
             item={item}
+            session={session}
             type="re-act"
           />
         </div>

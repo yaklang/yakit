@@ -68,12 +68,13 @@ const isExtraShow = (extraValue: HandleStartParams['extraValue']) => {
   )
 }
 export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) => {
-  const { item, type, hasNext, itemIndex } = props
+  const { item, type, hasNext, itemIndex, session: sessionProp } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const { handleSendCasual } = useChatIPCDispatcher()
   const { taskChat, yakExecResult } = useChatIPCStore().chatIPCData
   const { activeChat } = useAIAgentStore()
+  const session = sessionProp || activeChat?.SessionID
   const aiStreamNodeProps = useCreation(() => {
     switch (type) {
       case 're-act':
@@ -207,24 +208,18 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
   })
 
   const renderContent = useMemoizedFn(() => {
-    if (activeChat?.SessionID === undefined) return null
+    if (session === undefined) return null
     if (isStream)
       return (
         <StreamingChatContent
           {...item}
           itemIndex={itemIndex}
-          session={activeChat?.SessionID}
+          session={session}
           hasNext={hasNext}
           streamClassName={aiStreamNodeProps}
         />
       )
-    return (
-      <StaticChatContent
-        {...item}
-        session={activeChat?.SessionID}
-        render={(contentItem) => ChatItemRenderer(contentItem)}
-      />
-    )
+    return <StaticChatContent {...item} session={session} render={(contentItem) => ChatItemRenderer(contentItem)} />
   })
   return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
 })

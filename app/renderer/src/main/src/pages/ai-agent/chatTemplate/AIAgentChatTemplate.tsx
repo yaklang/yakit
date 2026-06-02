@@ -335,8 +335,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
   const onScrollToIndex = useMemoizedFn((id) => {
     const index = streams.findIndex((item) => {
-      /** 该UI已无效，可以删除 */
-      if (!item.type /* === AIChatQSDataTypeEnum.TASK_INDEX_NODE */) {
+      if (item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         const chatItem = fetchChatDataStore()?.getContentMap({
           session,
           chatType: item.chatType,
@@ -348,6 +347,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
       }
       return false
     })
+    console.log('index:', index)
     if (index !== -1) {
       scrollToIndex(index, 'auto')
       waitAndHighlight(index)
