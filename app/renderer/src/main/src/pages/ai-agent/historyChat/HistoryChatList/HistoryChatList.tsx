@@ -80,7 +80,16 @@ const HistoryChatList: FC<{
   getPopupContainer?: () => HTMLElement
   overlayClassName?: string
   embedded?: boolean
-}> = ({ search, sessionList, getSessions, setSessions, loadHistoryData, getPopupContainer, overlayClassName, embedded }) => {
+}> = ({
+  search,
+  sessionList,
+  getSessions,
+  setSessions,
+  loadHistoryData,
+  getPopupContainer,
+  overlayClassName,
+  embedded,
+}) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { activeChat } = useAIAgentStore()
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
