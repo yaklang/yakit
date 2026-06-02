@@ -411,7 +411,7 @@ export enum AIToDoListStatusEnum {
   /** 待执行 */
   Pending = 'PENDING',
   /** 进行中 */
-  Doing = 'DING',
+  Doing = 'DOING',
   /** 已完成*/
   Done = 'DONE',
   /** 已删除 */
