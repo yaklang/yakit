@@ -786,7 +786,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             taskChatEvent.handleCloseGrpc()
           }
           // 清空任务规划的待办清单卡片数据
-          taskChatEvent.getTaskToolListMap()?.clear()
+          getChatDataStore()?.taskChat.todoListMap.clear()
           return
         }
 
