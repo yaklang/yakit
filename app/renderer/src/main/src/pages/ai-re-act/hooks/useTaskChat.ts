@@ -41,7 +41,9 @@ function useTaskChat(params: UseTaskChatParams) {
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
 
-  const toolListMap = useRef<Map<string, TodoListCardData>>(new Map())
+  const getTodoList = useMemoizedFn(() => {
+    return getChatDataStore?.()?.taskChat?.todoListMap
+  })
 
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.taskChat?.contents
@@ -256,7 +258,9 @@ function useTaskChat(params: UseTaskChatParams) {
         if (!task_id || !task_index) return
         if (Array.isArray(items) && items.length === 0) return
         if (task_id !== getCurrentTaskPlanID()?.taskID) return
-        toolListMap.current.set(task_index, { items, stats })
+        const todoListMap = getTodoList()
+        if (!todoListMap) return
+        todoListMap.set(task_index, { items, stats })
       }
 
       // 未识别类型全部归档到日志处理
@@ -269,15 +273,10 @@ function useTaskChat(params: UseTaskChatParams) {
     }
   })
 
-  const getTaskToolListMap = useMemoizedFn(() => {
-    return toolListMap.current
-  })
-
   const handleResetData = useMemoizedFn(() => {
     handleResetPlanTree()
     handleResetActiveLeafTasks()
     setElements([])
-    toolListMap.current.clear()
   })
 
   /** review 界面选项触发事件 */
@@ -347,7 +346,6 @@ function useTaskChat(params: UseTaskChatParams) {
       getElements: getElements,
       handleUserManualIntervention,
       handleResetPlanTree,
-      getTaskToolListMap,
     }
   }, [])
 

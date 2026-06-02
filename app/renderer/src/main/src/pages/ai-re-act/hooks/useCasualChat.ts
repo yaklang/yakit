@@ -17,7 +17,6 @@ import { AIChatQSDataTypeEnum } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
 import { Uint8ArrayToString } from '@/utils/str'
-import { DefaultTodoListCardData } from './defaultConstant'
 
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -29,7 +28,9 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
-  const toolList = useRef<TodoListCardData>(cloneDeep(DefaultTodoListCardData))
+  const getCasualChat = useMemoizedFn(() => {
+    return getChatDataStore?.()?.casualChat
+  })
   const [toolListRenderNumber, setToolListRenderNumber] = useState(0)
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.casualChat?.contents
@@ -137,7 +138,9 @@ function useCasualChat(params: UseCasualChatParams) {
         const { items, stats, task_id } = info
         if (!task_id) return
         if (Array.isArray(items) && items.length === 0) return
-        toolList.current = {
+        const chatDetail = getCasualChat()
+        if (!chatDetail) return
+        chatDetail.todoList = {
           items,
           stats,
         }
@@ -183,14 +186,9 @@ function useCasualChat(params: UseCasualChatParams) {
     } catch (error) {}
   })
 
-  const getCasualToolList = useMemoizedFn(() => {
-    return toolList.current
-  })
-
   const handleResetData = useMemoizedFn(() => {
     review.current = undefined
     setElements([])
-    toolList.current = cloneDeep(DefaultTodoListCardData)
     setToolListRenderNumber(0)
   })
 
@@ -218,7 +216,6 @@ function useCasualChat(params: UseCasualChatParams) {
       setElements: setElements,
       getElements: getElements,
       handleUserManualIntervention,
-      getCasualToolList,
     }
   }, [])
 

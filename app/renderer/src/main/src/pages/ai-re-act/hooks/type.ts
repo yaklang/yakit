@@ -93,8 +93,6 @@ export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc
   handleSend: handleSendFunc
   /** 用户手动介入逻辑 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
-  /** 获取待办清单卡片数据 */
-  getCasualToolList: () => TodoListCardData
 }
 // #endregion
 
@@ -135,8 +133,6 @@ export interface UseTaskChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
   /** 清空当前任务树 */
   handleResetPlanTree: () => void
-  /** 获取待办清单卡片map */
-  getTaskToolListMap: () => Map<string, TodoListCardData>
 }
 // #endregion
 
