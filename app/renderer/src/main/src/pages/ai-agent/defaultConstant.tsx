@@ -409,3 +409,19 @@ export const defaultExportAIForgeRequest: ExportAIForgeRequest = {
   Password: '',
   Filter: {},
 }
+
+/**ai to do list 状态 */
+export enum AIToDoListStatusEnum {
+  /** 待执行 */
+  Pending = 'PENDING',
+  /** 进行中 */
+  Doing = 'DING',
+  /** 已完成*/
+  Done = 'DONE',
+  /** 已删除 */
+  Deleted = 'DELETED',
+  /** 已跳过 */
+  Skipped = 'SKIPPED',
+}
+
+export type AIToDoListStatusEnumType = `${AIToDoListStatusEnum}`
