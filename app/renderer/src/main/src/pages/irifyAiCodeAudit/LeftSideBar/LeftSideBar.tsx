@@ -1,18 +1,19 @@
 import React, { useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { LeftSideBarProps, LeftSideType } from '@/pages/yakRunner/LeftSideBar/LeftSideBarType'
-import { IrifyAiCodeAuditFileTree } from './IrifyAiCodeAuditFileTree'
-import { YakHelpDoc } from '@/pages/yakRunner/YakHelpDoc/YakHelpDoc'
-import classNames from 'classnames'
-import styles from '@/pages/yakRunner/LeftSideBar/LeftSideBar.module.scss'
-import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
+import { LeftSideBarProps, LeftSideType } from './LeftSideBarType'
+import { RunnerFileTree } from '../RunnerFileTree/RunnerFileTree'
 
-export const IrifyLeftSideBar: React.FC<LeftSideBarProps & { fileTreeOnlyTabs: YakitTabsProps[] }> = (props) => {
-  const { addFileTab, isUnShow, active, setActive, setIsUnShow, fileTreeOnlyTabs } = props
+import classNames from 'classnames'
+import styles from './LeftSideBar.module.scss'
+import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
+import { YakRunnerIrifyAiCodeAuditTab } from '../YakRunnerIrifyAiCodeAudit'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+export const LeftSideBar: React.FC<LeftSideBarProps> = (props) => {
+  const { addFileTab, isUnShow, active, setActive, setIsUnShow } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner'])
 
+  // 控制初始渲染的变量，存在该变量里的类型则代表组件已经被渲染
   const rendered = useRef<Set<string>>(new Set(['file-tree']))
 
   const onSetActive = useMemoizedFn((type: string) => {
@@ -28,9 +29,10 @@ export const IrifyLeftSideBar: React.FC<LeftSideBarProps & { fileTreeOnlyTabs: Y
         [styles['folded']]: !active,
       })}
     >
+      {/* 左侧边栏 */}
       <YakitSideTab
         key={i18n.language}
-        yakitTabs={fileTreeOnlyTabs}
+        yakitTabs={YakRunnerIrifyAiCodeAuditTab}
         activeKey={active}
         onActiveKey={onSetActive}
         show={!isUnShow}
@@ -38,6 +40,7 @@ export const IrifyLeftSideBar: React.FC<LeftSideBarProps & { fileTreeOnlyTabs: Y
         t={t}
       />
 
+      {/* 侧边栏对应展示内容 */}
       <div className={styles['left-side-bar-content']}>
         {rendered.current.has('file-tree') && (
           <div
@@ -45,16 +48,7 @@ export const IrifyLeftSideBar: React.FC<LeftSideBarProps & { fileTreeOnlyTabs: Y
               [styles['hidden-content']]: active !== 'file-tree' || isUnShow,
             })}
           >
-            <IrifyAiCodeAuditFileTree addFileTab={addFileTab} />
-          </div>
-        )}
-        {rendered.current.has('help-doc') && (
-          <div
-            className={classNames(styles['content-wrapper'], {
-              [styles['hidden-content']]: active !== 'help-doc' || isUnShow,
-            })}
-          >
-            <YakHelpDoc />
+            <RunnerFileTree addFileTab={addFileTab} />
           </div>
         )}
       </div>

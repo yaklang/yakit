@@ -60,6 +60,12 @@ import {
   resetHotPatchManagementShortcutKeyEvents,
   setStorageHotPatchManagementShortcutKeyEvents,
 } from './page/hotPatchManagement'
+import {
+  getStorageYakRunnerAiCodeAuditShortcutKeyEvents,
+  getYakRunnerAiCodeAuditShortcutKeyEvents,
+  resetYakRunnerAiCodeAuditShortcutKeyEvents,
+  setStorageYakRunnerAiCodeAuditShortcutKeyEvents,
+} from './page/yakRunnerAiCodeAudit'
 
 export interface ShortcutKeyEventInfo {
   name: string
@@ -96,6 +102,8 @@ export enum ShortcutKeyPage {
   YakRunner_Audit_Code = YakitRoute.YakRunner_Audit_Code,
   // YakRunner
   YakRunner = YakitRoute.YakScript,
+  // YakRunner AI Code Audit
+  YakRunnerAiCodeAudit = YakitRoute.Irify_AI_Code_Audit,
   // MITM
   Mitm = YakitRoute.MITMHacker,
   // 热加载管理
@@ -179,5 +187,12 @@ export const pageEventMaps: Record<`${ShortcutKeyPage}`, PageToEventInfo> = {
     resetEvents: resetHotPatchManagementShortcutKeyEvents,
     getStorage: getStorageHotPatchManagementShortcutKeyEvents,
     setStorage: setStorageHotPatchManagementShortcutKeyEvents,
+  },
+  'irify-ai-code-audit': {
+    getEvents: getYakRunnerAiCodeAuditShortcutKeyEvents,
+    resetEvents: resetYakRunnerAiCodeAuditShortcutKeyEvents,
+    getStorage: getStorageYakRunnerAiCodeAuditShortcutKeyEvents,
+    setStorage: setStorageYakRunnerAiCodeAuditShortcutKeyEvents,
+    scopeShow: [IRify],
   },
 }

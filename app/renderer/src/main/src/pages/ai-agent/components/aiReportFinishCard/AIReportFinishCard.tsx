@@ -33,7 +33,7 @@ export const AIReportFinishCard: React.FC<AIReportFinishCardProps> = memo((props
     if (!reportPath) return
     if (currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
       emiter.emit(
-        'onOpenTemporaryFile',
+        'onAiCodeAuditOpenTemporaryFile',
         JSON.stringify({
           name: '审计报告.md',
           path: reportPath,

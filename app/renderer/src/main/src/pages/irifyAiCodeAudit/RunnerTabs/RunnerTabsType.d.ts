@@ -48,6 +48,8 @@ export interface FileDetailInfo {
   syntaxCheck?: IMonacoEditorMarker[]
   /** 帮助信息（代码坐标获取时执行） */
   helpInfo?: any
+  /** 仅在临时文件中使用 用于标识文件是否为AI报告 避免与文件树中的文件混淆*/
+  aiReport?: boolean
 
   // 由于输出和终端直接显示所有的 因此不再绑定在单个文件上
   /** 输出（执行时注入） */
@@ -90,9 +92,7 @@ export interface RunnerTabPaneProps {
   tabsId: string
 }
 
-export interface YakRunnerWelcomePageProps {
-  addFileTab: () => void
-}
+export interface YakRunnerWelcomePageProps {}
 
 export interface YakitRunnerSaveModalProps {
   info: FileDetailInfo

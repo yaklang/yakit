@@ -38,8 +38,6 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
 }> = ({ placement, children, rootClassName, sideTabs }) => {
   const { t, i18n } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
-  console.log(focusModeLoop, 'focusModeLoop')
-
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
