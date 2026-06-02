@@ -35,6 +35,7 @@ import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCCont
 import emiter from '@/utils/eventBus/eventBus'
 import { omit } from 'lodash'
 import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
+import { AIToDoList } from './aiToDoList/AIToDoList'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -330,6 +331,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
                     ))}
                 </div>
+              </div>
+              <div className={styles['todoList-wrapper']}>
+                <AIToDoList />
               </div>
               <AIReActChatContents chats={chatIPCData.casualChat} />
             </div>
