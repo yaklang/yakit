@@ -1,5 +1,5 @@
 import React, { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
-import { useCreation, useInViewport, useMemoizedFn, useSafeState } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
 import { cloneDeep } from 'lodash'
 
 import AIAgentContext, {
@@ -196,7 +196,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   })
 
   const [chatIPCData, events] = useChatIPC({
+    autoConnect: true,
     cacheDataStore,
+    getSetting,
     onHttpFuzzRequestChange,
     onGetHttpFlowFuzzStatus,
   })
@@ -221,6 +223,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID
+  }, [activeChat])
+
+  useUpdateEffect(() => {
+    events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
   }, [activeChat])
 
   const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
