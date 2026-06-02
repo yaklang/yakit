@@ -246,6 +246,22 @@ export enum YakEditorOptionShortcutKey {
   DropDataMitm = 'dropData*common',
   /** 放行 */
   SubmitDataMitm = 'submitData*common',
+  /** 复制URL（带参数） */
+  CopyUrlWithQuery = 'copyUrlWithQuery*editor',
+  /** 复制URL（不带参数） */
+  CopyUrlWithoutQuery = 'copyUrlWithoutQuery*editor',
+  /** 浏览器中打开URL */
+  OpenUrlInBrowser = 'openUrlInBrowser*editor',
+  /** 浏览器中查看响应 */
+  ViewResponseInBrowser = 'viewResponseInBrowser*editor',
+  /** 复制curl命令 */
+  CopyAsCurl = 'copy-as-curl*editor',
+  /** 复制Body(Base64) */
+  CopyBodyBase64 = 'copyBodyBase64*editor',
+  /** 复制基础CSRF PoC */
+  CopyAsCsrfPocBasic = 'csrfpoc*editor',
+  /** 复制自动提交CSRF PoC */
+  CopyAsCsrfPocAutoSubmit = 'auto-submit-csrf-poc*editor',
 }
 
 type EventsType = Record<`${YakEditorBaseShortcutKey | YakEditorOptionShortcutKey}`, ShortcutKeyEventInfo>
@@ -282,6 +298,38 @@ const YakEditorShortcutKeyEvents: EventsType = {
   'submitData*common': {
     name: 'ShortcutKey.submitData',
     keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.RightArrow],
+  },
+  'copyUrlWithQuery*editor': {
+    name: 'YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_B],
+  },
+  'copyUrlWithoutQuery*editor': {
+    name: 'YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_E],
+  },
+  'openUrlInBrowser*editor': {
+    name: 'YakitEditor.HTTPPacketYakitEditor.openUrlInBrowser',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_O],
+  },
+  'viewResponseInBrowser*editor': {
+    name: 'YakitEditor.HTTPPacketYakitEditor.viewResponseInBrowser',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_I],
+  },
+  'copy-as-curl*editor': {
+    name: 'YakitEditor.HTTPPacketYakitEditor.copyCurlCommand',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_J],
+  },
+  'copyBodyBase64*editor': {
+    name: 'YakitEditor.HTTPPacketYakitEditor.copyBodyBase64',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_K],
+  },
+  'csrfpoc*editor': {
+    name: 'YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_N],
+  },
+  'auto-submit-csrf-poc*editor': {
+    name: 'YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit',
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_N],
   },
 }
 

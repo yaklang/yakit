@@ -124,6 +124,10 @@ import {
   GlobalShortcutKey,
   ShortcutKeyFocusType,
 } from '@/utils/globalShortcutKey/events/global'
+import {
+  getYakitMultipleShortcutKeyEvents,
+  YakitMultipleShortcutKey,
+} from '@/utils/globalShortcutKey/events/multiple/yakitMultiple'
 import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
@@ -863,6 +867,83 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           : onSendToTab(selected, false, downstreamProxyStr, fromMITM)
       }
     }
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    setClipboardText(selected.Url || '')
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    const nextUrl = getUrlWithoutQuery(selected.Url)
+    if (!nextUrl) {
+      yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+      return
+    }
+    setClipboardText(nextUrl)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    selected.Url && openExternalWebsite(selected.Url)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    showResponseViaHTTPFlowID(selected)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockRecord, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    onShieldRecord(selected)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockURL, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    onShieldURL(selected)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockDomain, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    onShieldDomain(selected)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteRecord, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    onRemoveHttpHistory({ Id: [selected.Id] })
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteURL, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    onRemoveHttpHistory({ URLPrefix: selected.Url })
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteDomain, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    onRemoveHttpHistory({ URLPrefix: selected?.HostPort?.split(':')[0] })
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), false)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, () => {
+    const selected = getSelected()
+    if (!inViewport || !selected) return
+    generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), true)
   })
 
   const size = useSize(ref)
@@ -3229,6 +3310,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         number: 30,
         webSocket: true,
         default: true,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
         onClickSingle: (v) => setClipboardText(v.Url || ''),
         onClickBatch: (v, number) => {
           if (v.length === 0) {
@@ -3250,6 +3332,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         number: 30,
         webSocket: true,
         default: true,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
         onClickSingle: (v) => {
           const nextUrl = getUrlWithoutQuery(v.Url)
           if (!nextUrl) {
@@ -3293,6 +3376,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
         default: true,
         webSocket: false,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
         onClickSingle: (v) => {
           v.Url && openExternalWebsite(v.Url)
         },
@@ -3302,6 +3386,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
         default: true,
         webSocket: false,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
         onClickSingle: (v) => {
           showResponseViaHTTPFlowID(v)
         },
@@ -3315,10 +3400,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: 'csrfpoc',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic].keys,
           },
           {
             key: 'auto-submit-csrf-poc',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit'),
+            keybindings:
+              getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit].keys,
           },
         ],
       },
@@ -3394,14 +3482,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: '屏蔽该记录',
             label: t('HTTPFlowTable.RowContextMenu.blockRecord'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockRecord].keys,
           },
           {
             key: '屏蔽URL',
             label: t('HTTPFlowTable.RowContextMenu.blockURL'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockURL].keys,
           },
           {
             key: '屏蔽域名',
             label: t('HTTPFlowTable.RowContextMenu.blockDomain'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockDomain].keys,
           },
         ],
       },
@@ -3417,6 +3508,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: '删除记录',
             label: t('HTTPFlowTable.RowContextMenu.deleteRecord'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteRecord].keys,
             onClick: (v) => onRemoveHttpHistory({ Id: [v.Id] }),
             onClickBatch: (list) => {
               onRemoveHttpHistory({ Id: list.map((ele) => ele.Id) })
@@ -3425,6 +3517,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: '删除URL',
             label: t('HTTPFlowTable.RowContextMenu.deleteURL'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteURL].keys,
             onClick: (v) => onRemoveHttpHistory({ URLPrefix: v.Url }),
             onClickBatch: (list) => {
               const urls = list.map((ele) => ele.Url)
@@ -3438,6 +3531,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: '删除域名',
             label: t('HTTPFlowTable.RowContextMenu.deleteDomain'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteDomain].keys,
             onClick: (v) => onRemoveHttpHistory({ URLPrefix: v?.HostPort?.split(':')[0] }),
             onClickBatch: (list) => {
               const hosts = list.map((ele) => ele.HostPort?.split(':')[0])
