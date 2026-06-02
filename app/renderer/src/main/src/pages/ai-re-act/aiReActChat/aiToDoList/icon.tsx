@@ -7,7 +7,7 @@ interface IconProps extends CustomIconComponentProps {
   onClick: (e: React.MouseEvent) => void
 }
 
-const AIToDoListDoing = () => (
+const AIToDoListPending = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle
       cx="8"
@@ -20,10 +20,10 @@ const AIToDoListDoing = () => (
   </svg>
 )
 /**
- * @description 进行中
+ * @description 等待中
  */
-export const AIToDoListDoingIcon = (props: Partial<IconProps>) => {
-  return <Icon component={AIToDoListDoing} {...props} />
+export const AIToDoListPendingIcon = (props: Partial<IconProps>) => {
+  return <Icon component={AIToDoListPending} {...props} />
 }
 
 const AIToDoListDone = () => (

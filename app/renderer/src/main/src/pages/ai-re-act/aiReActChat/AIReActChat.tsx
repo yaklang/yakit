@@ -36,6 +36,9 @@ import emiter from '@/utils/eventBus/eventBus'
 import { omit } from 'lodash'
 import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
 import { AIToDoList } from './aiToDoList/AIToDoList'
+import { cloneDeep } from 'lodash'
+import { DefaultTodoListCardData } from '../hooks/defaultConstant'
+import { TodoListCardData } from '../hooks/aiRender'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -268,7 +271,17 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
       handleSendSyncMessage(params)
     })
-
+    const todoData: TodoListCardData = useCreation(() => {
+      if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
+      try {
+        return (
+          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat.todoList ||
+          cloneDeep(DefaultTodoListCardData)
+        )
+      } catch (error) {
+        return cloneDeep(DefaultTodoListCardData)
+      }
+    }, [chatIPCData.casualChat.toolListRenderNumber, activeChat?.SessionID])
     return (
       <>
         <div
@@ -332,9 +345,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                     ))}
                 </div>
               </div>
-              <div className={styles['todoList-wrapper']}>
-                <AIToDoList className={styles['to-do-list']} />
-              </div>
+              {todoData?.items?.length > 0 && (
+                <div className={styles['todoList-wrapper']}>
+                  <AIToDoList className={styles['to-do-list']} todoData={todoData} />
+                </div>
+              )}
               <AIReActChatContents chats={chatIPCData.casualChat} />
             </div>
             <div className={classNames(styles['chat-footer'])}>
