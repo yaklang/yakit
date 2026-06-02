@@ -1,7 +1,7 @@
 import { UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentGrpcApi, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 import { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
-import { AIChatQSData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 /** 上下文字节统计 */
@@ -58,12 +58,10 @@ export interface AIChatData {
   casualChat: UseChatIPCState['casualChat'] & {
     /** 会话内每条信息的详情 */
     contents: Map<string, AIChatQSData>
-    toolList: TodoListCardData
     toolListRenderNumber: number
   }
   taskChat: UseChatIPCState['taskChat'] & {
     contents: Map<string, AIChatQSData>
-    toolListMap: Map<string, TodoListCardData>
   }
   grpcFolders: UseChatIPCState['grpcFolders']
   reActTimelines: UseChatIPCState['reActTimelines']

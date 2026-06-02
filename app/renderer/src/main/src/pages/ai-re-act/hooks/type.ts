@@ -87,13 +87,14 @@ export interface UseCasualChatParams extends UseHookBaseParams {
 
 export interface UseCasualChatState {
   elements: ReActChatRenderItem[]
-  toolList: TodoListCardData
   toolListRenderNumber: number
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleSend: handleSendFunc
   /** 用户手动介入逻辑 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 获取待办清单卡片数据 */
+  getCasualToolList: () => TodoListCardData
 }
 // #endregion
 
@@ -123,7 +124,6 @@ export interface UseTaskChatState {
   /** 正在执行的任务列表 */
   plan: CurrentExecTaskTree
   elements: ReActChatRenderItem[]
-  toolListMap: Map<string, TodoListCardData>
 }
 export interface UseTaskChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleSend: handleSendFunc
@@ -135,6 +135,8 @@ export interface UseTaskChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
   /** 清空当前任务树 */
   handleResetPlanTree: () => void
+  /** 获取待办清单卡片map */
+  getTaskToolListMap: () => Map<string, TodoListCardData>
 }
 // #endregion
 

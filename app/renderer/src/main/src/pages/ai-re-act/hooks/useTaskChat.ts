@@ -269,10 +269,15 @@ function useTaskChat(params: UseTaskChatParams) {
     }
   })
 
+  const getTaskToolListMap = useMemoizedFn(() => {
+    return toolListMap.current
+  })
+
   const handleResetData = useMemoizedFn(() => {
     handleResetPlanTree()
     handleResetActiveLeafTasks()
     setElements([])
+    toolListMap.current.clear()
   })
 
   /** review 界面选项触发事件 */
@@ -326,8 +331,8 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   const state: UseTaskChatState = useCreation(() => {
-    return { plan, elements, toolListMap: toolListMap.current }
-  }, [plan, elements, toolListMap])
+    return { plan, elements }
+  }, [plan, elements])
 
   const events: UseTaskChatEvents = useCreation(() => {
     return {
@@ -342,6 +347,7 @@ function useTaskChat(params: UseTaskChatParams) {
       getElements: getElements,
       handleUserManualIntervention,
       handleResetPlanTree,
+      getTaskToolListMap,
     }
   }, [])
 

@@ -183,9 +183,15 @@ function useCasualChat(params: UseCasualChatParams) {
     } catch (error) {}
   })
 
+  const getCasualToolList = useMemoizedFn(() => {
+    return toolList.current
+  })
+
   const handleResetData = useMemoizedFn(() => {
     review.current = undefined
     setElements([])
+    toolList.current = cloneDeep(DefaultTodoListCardData)
+    setToolListRenderNumber(0)
   })
 
   /** 用户手动介入逻辑 */
@@ -199,8 +205,8 @@ function useCasualChat(params: UseCasualChatParams) {
   })
 
   const state: UseCasualChatState = useCreation(() => {
-    return { elements, toolList: toolList.current, toolListRenderNumber }
-  }, [elements, toolList.current, toolListRenderNumber])
+    return { elements, toolListRenderNumber }
+  }, [elements, toolListRenderNumber])
 
   const events: UseCasualChatEvents = useCreation(() => {
     return {
@@ -212,6 +218,7 @@ function useCasualChat(params: UseCasualChatParams) {
       setElements: setElements,
       getElements: getElements,
       handleUserManualIntervention,
+      getCasualToolList,
     }
   }, [])
 
