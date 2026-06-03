@@ -364,6 +364,9 @@ function useChatIPC(params?: UseChatIPCParams) {
   const fetchCurrentTaskPlanID = useMemoizedFn(() => {
     return currentTaskPlanID.current
   })
+  const resetCurrentTaskPlanID = useMemoizedFn(() => {
+    currentTaskPlanID.current = undefined
+  })
 
   /** 用户主动(关闭/恢复)当前问题的loading状态(任务规划) */
   const [cancelTaskLoading, setCancelTaskLoading] = useState(false)
@@ -543,7 +546,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 清空自由对话相关的ID
     currentCasualTaskID.current = ''
     // 清空任务规划相关的ID
-    currentTaskPlanID.current = undefined
+    resetCurrentTaskPlanID()
     taskChatEvent.handleResetPlanTree()
   })
 
@@ -563,7 +566,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     handleResetPlanHistoryList()
     currentCasualTaskID.current = ''
     handleUpdateCasualStatus('reset')
-    currentTaskPlanID.current = undefined
+    resetCurrentTaskPlanID()
     handleResetTaskStatus()
 
     setCancelCasualLoading(false)
@@ -1293,6 +1296,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleUserManualIntervention,
       handleLoadMoreHistory: handleLoadMore,
       handleHasMoreHistory: handleHasMore,
+      resetCurrentTaskPlanID,
     }
   }, [])
 

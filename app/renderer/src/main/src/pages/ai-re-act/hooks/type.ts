@@ -317,6 +317,8 @@ export interface UseChatIPCEvents {
   handleLoadMoreHistory: (chatType: HistoryChatType) => void
   /** 是否还有更多历史数据 */
   handleHasMoreHistory: (type: HistoryChatType) => boolean
+  /** 清除当前任务规划的ID信息 */
+  resetCurrentTaskPlanID: () => void
 }
 // #endregion
 
