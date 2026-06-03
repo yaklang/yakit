@@ -287,13 +287,29 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               <div className={classNames(styles['chat-header'], chatContainerHeaderClassName)}>
                 <div className={styles['chat-header-title']}>
                   <ColorsChatIcon />
-                  {title}
-                  {focusMode && <YakitTag fullRadius={true}>场景:{focusMode}</YakitTag>}
+                  <span className={styles['chat-header-title-text']}>{title}</span>
+                  {focusMode && (
+                    <YakitTag fullRadius={true} className={styles['chat-header-focus-mode']}>
+                      场景:{focusMode}
+                    </YakitTag>
+                  )}
                 </div>
                 <div className={styles['chat-header-extra']}>
                   {isShowRetract &&
                     (externalParameters?.rightIcon ? (
                       <>
+                        {externalParameters.rightIcon.dataDetails && (
+                          <AIContextToken
+                            iconOnly
+                            execute={execute}
+                            session={contextTokenSession}
+                            buttonProps={
+                              externalParameters.rightIcon.dataDetails === true
+                                ? undefined
+                                : externalParameters.rightIcon.dataDetails
+                            }
+                          />
+                        )}
                         {externalParameters.rightIcon.history && (
                           <Tooltip
                             trigger={['click']}
@@ -307,18 +323,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                           >
                             <YakitButton type="text2" icon={<ClockIcon />} title="" />
                           </Tooltip>
-                        )}
-                        {externalParameters.rightIcon.dataDetails && (
-                          <AIContextToken
-                            iconOnly
-                            execute={execute}
-                            session={contextTokenSession}
-                            buttonProps={
-                              externalParameters.rightIcon.dataDetails === true
-                                ? undefined
-                                : externalParameters.rightIcon.dataDetails
-                            }
-                          />
                         )}
                         {externalParameters.rightIcon.add}
                         {externalParameters.rightIcon.close}

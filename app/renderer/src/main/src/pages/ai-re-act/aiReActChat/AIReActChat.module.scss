@@ -103,6 +103,8 @@
   @extend %display-column-center;
   .chat-header {
     @extend %display-flex-center;
+    position: relative;
+    min-width: 0;
     gap: 12px;
     padding: 12px 8px;
     height: 48px;
@@ -115,12 +117,37 @@
       @extend %display-flex-center;
       gap: 4px;
       flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      .chat-header-title-text {
+        flex-shrink: 0;
+      }
+      .chat-header-focus-mode {
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex-shrink: 1;
+      }
     }
     .chat-header-extra {
       @extend %display-flex-center;
       justify-content: flex-end;
       gap: 8px;
       flex-shrink: 0;
+      position: absolute;
+      right: 8px;
+      top: 0;
+      bottom: 0;
+      z-index: 2;
+      padding-left: 12px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        var(--Colors-Use-Basic-Background) 12px,
+        var(--Colors-Use-Basic-Background)
+      );
       .info-token {
         display: flex;
         align-items: center;
