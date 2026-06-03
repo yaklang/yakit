@@ -160,6 +160,7 @@ import {
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { SystemInfo } from '@/constants/hardware'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
+import { YakitPopconfirm } from '../yakitUI/YakitPopconfirm/YakitPopconfirm'
 const { ipcRenderer } = window.require('electron')
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'history'])
 export interface codecHistoryPluginProps {
@@ -4870,7 +4871,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
       {shieldData?.data.length > 0 && (
         <YakitPopover
           placement="bottomLeft"
-          trigger="hover"
+          trigger="click"
           content={
             <div className={style['title-header']}>
               {shieldData?.data.map((item: number | string) => (
@@ -4883,9 +4884,15 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
                   </div>
                 </div>
               ))}
-              <YakitButton type="text" className={style['shield-reset']} onClick={() => cancleAllFilter(mitmVersion)}>
-                {t('YakitButton.reset')}
-              </YakitButton>
+              <YakitPopconfirm
+                title={t('HTTPFlowTable.resetConfirm')}
+                placement="top"
+                onConfirm={() => cancleAllFilter(mitmVersion)}
+              >
+                <YakitButton type="text" className={style['shield-reset']}>
+                  {t('YakitButton.reset')}
+                </YakitButton>
+              </YakitPopconfirm>
             </div>
           }
           overlayClassName={style['http-history-table-shield-popover']}

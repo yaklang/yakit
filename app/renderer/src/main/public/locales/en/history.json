@@ -96,7 +96,8 @@
     },
     "setColorSuccess": "Set HTTPFlow color successfully",
     "removeColorSuccess": "Clear HTTPFlow color successfully",
-    "sendLimitData": "You can only send a maximum of {{maxLength}} data entries at a time"
+    "sendLimitData": "You can only send a maximum of {{maxLength}} data entries at a time",
+    "resetConfirm": "Confirm Reset？"
   },
   "ImportExportProgress": {
     "exportHARData": "Export HAR traffic data"

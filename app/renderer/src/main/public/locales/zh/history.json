@@ -96,7 +96,8 @@
     },
     "setColorSuccess": "设置 HTTPFlow 颜色成功",
     "removeColorSuccess": "清除 HTTPFlow 颜色成功",
-    "sendLimitData": "最多同时只能发送{{maxLength}}条数据"
+    "sendLimitData": "最多同时只能发送{{maxLength}}条数据",
+    "resetConfirm": "确认重置？"
   },
   "ImportExportProgress": {
     "exportHARData": "导出HAR流量数据"
