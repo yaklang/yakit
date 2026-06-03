@@ -44,10 +44,7 @@ import useDeleteAIImageByNode from '@/pages/ai-agent/components/aiMilkdownInput/
 import emiter from '@/utils/eventBus/eventBus'
 
 import { HistroryAIReActChat } from './HistroryAIReActChat'
-import {
-  loadHistoryAIEmbeddedReviewPolicy,
-  setHistoryAIReviewPolicy,
-} from './historyAIReActChatStorage'
+import { loadHistoryAIEmbeddedReviewPolicy, setHistoryAIReviewPolicy } from './historyAIReActChatStorage'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 

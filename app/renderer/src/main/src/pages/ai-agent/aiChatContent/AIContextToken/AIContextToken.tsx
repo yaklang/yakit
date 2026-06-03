@@ -212,12 +212,7 @@ const AIContextToken: FC<{
         onVisibleChange={setVisible}
       >
         <Tooltip title={t('YakitButton.viewDetail')}>
-          <YakitButton
-            isHover={visible}
-            icon={<OutlinePresentationchartlineIcon />}
-            type="outline2"
-            {...buttonProps}
-          />
+          <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type="outline2" {...buttonProps} />
         </Tooltip>
       </YakitPopover>
       {!iconOnly && <div className={styles['divider-style']}></div>}
