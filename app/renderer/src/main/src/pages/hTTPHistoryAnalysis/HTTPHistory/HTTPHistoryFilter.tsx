@@ -1922,13 +1922,15 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     }
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, () => {
-    if (!inViewport || !clickRow) return
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
     setClipboardText(clickRow.Url || '')
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, () => {
-    if (!inViewport || !clickRow) return
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
     const nextUrl = getUrlWithoutQuery(clickRow.Url)
     if (!nextUrl) {
       yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
@@ -1937,23 +1939,27 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     setClipboardText(nextUrl)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, () => {
-    if (!inViewport || !clickRow) return
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
     clickRow.Url && openExternalWebsite(clickRow.Url)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, () => {
-    if (!inViewport || !clickRow) return
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
     showResponseViaHTTPFlowID(clickRow)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, () => {
-    if (!inViewport || !clickRow) return
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
     generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), false)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, () => {
-    if (!inViewport || !clickRow) return
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
     generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), true)
   })
 

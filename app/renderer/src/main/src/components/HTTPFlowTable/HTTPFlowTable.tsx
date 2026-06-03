@@ -870,15 +870,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     setClipboardText(selected.Url || '')
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     const nextUrl = getUrlWithoutQuery(selected.Url)
     if (!nextUrl) {
       yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
@@ -887,63 +889,73 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setClipboardText(nextUrl)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     selected.Url && openExternalWebsite(selected.Url)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     showResponseViaHTTPFlowID(selected)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockRecord, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockRecord, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     onShieldRecord(selected)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockURL, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockURL, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     onShieldURL(selected)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockDomain, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockDomain, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     onShieldDomain(selected)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteRecord, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteRecord, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     onRemoveHttpHistory({ Id: [selected.Id] })
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteURL, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteURL, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     onRemoveHttpHistory({ URLPrefix: selected.Url })
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteDomain, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteDomain, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     onRemoveHttpHistory({ URLPrefix: selected?.HostPort?.split(':')[0] })
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), false)
   })
 
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, () => {
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
     const selected = getSelected()
-    if (!inViewport || !selected) return
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
     generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), true)
   })
 
