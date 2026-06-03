@@ -65,19 +65,3 @@ export const TaskInProgressIcon: React.FC<{}> = React.memo((props) => {
     </div>
   )
 })
-
-export const TaskCancelIcon = (props: Partial<IconProps>) => {
-  return <Icon component={TaskCancel} {...props} />
-}
-const TaskCancel = () => {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M8.9998 16.2008C12.9763 16.2008 16.1998 12.9772 16.1998 9.00078C16.1998 5.02433 12.9763 1.80078 8.9998 1.80078C5.02335 1.80078 1.7998 5.02433 1.7998 9.00078C1.7998 12.9772 5.02335 16.2008 8.9998 16.2008ZM6.2998 8.10078C5.80275 8.10078 5.3998 8.50372 5.3998 9.00078C5.3998 9.49784 5.80275 9.90078 6.2998 9.90078H11.6998C12.1969 9.90078 12.5998 9.49784 12.5998 9.00078C12.5998 8.50373 12.1969 8.10078 11.6998 8.10078H6.2998Z"
-        fill="white"
-      />
-    </svg>
-  )
-}

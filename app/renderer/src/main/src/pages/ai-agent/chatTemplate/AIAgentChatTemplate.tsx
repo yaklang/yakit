@@ -347,7 +347,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
       }
       return false
     })
-    console.log('index:', index)
     if (index !== -1) {
       scrollToIndex(index, 'auto')
       waitAndHighlight(index)

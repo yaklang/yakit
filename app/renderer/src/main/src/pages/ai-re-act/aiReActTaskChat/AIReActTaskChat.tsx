@@ -214,6 +214,11 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         break
     }
   })
+
+  const taskStatus = useCreation(() => {
+    return chatIPCData.taskStatus
+  }, [chatIPCData.taskStatus])
+
   const onRecover = useMemoizedFn(() => {
     const info = getTaskInfo()
     const coordinatorId = info?.coordinatorId
@@ -232,6 +237,7 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
         SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
       })
+      chatIPCEvents.resetCurrentTaskPlanID()
     }, 200)
     if (!!reviewInfo) {
       chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
@@ -698,12 +704,10 @@ const AIPlanPrompt: React.FC<AIPlanPromptProps> = React.memo(
   }),
 )
 const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.memo((props) => {
-  const { onExtraAction, btnProps, subTaskBtnProps, children } = props
+  const { onExtraAction, btnProps, children } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   const { chatIPCEvents } = useChatIPCDispatcher()
-  const { chatIPCData, syncIdInfoMap } = useChatIPCStore()
-
-  const syncIdOfStopSubTask = useRef<string>('')
+  const { chatIPCData } = useChatIPCStore()
 
   const taskChat = useCreation(() => {
     return chatIPCData.taskChat
@@ -777,13 +781,10 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
         return null
     }
   })
-  const isSubTaskInProgress = useMemoizedFn(() => {
-    return taskChat?.plan?.task_tree?.length > 0 && !taskChat?.plan?.task_tree?.every((task) => !task.progress)
-  })
 
   return (
     <>
-      {getTaskInfo()?.status === AITaskStatus.inProgress && isSubTaskInProgress() && (
+      {/* {getTaskInfo()?.status === AITaskStatus.inProgress && isSubTaskInProgress() && (
         <YakitPopconfirm
           onConfirm={() => {
             syncIdOfStopSubTask.current = randomString(8)
@@ -805,7 +806,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
             {t('AIRenderTaskFooterExtra.skipSubtask')}
           </YakitButton>
         </YakitPopconfirm>
-      )}
+      )} */}
       {children}
       {renderBtn()}
     </>

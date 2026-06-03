@@ -1,7 +1,7 @@
-import React, { memo, useCallback, useMemo, useRef, useState } from 'react'
+import React, { memo, useCallback, useMemo, useState } from 'react'
 import { AITreeNodeProps, AITreeProps } from './type'
 import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from './icon'
-import { OutlineExitIcon, OutlineInformationcircleIcon } from '@/assets/icon/outline'
+import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { useMemoizedFn } from 'ahooks'
 
@@ -10,13 +10,8 @@ import styles from './AITree.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import emiter from '@/utils/eventBus/eventBus'
-import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
-import { AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { randomString } from '@/utils/randomUtil'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { AIHistorySkipTask } from '../chatTemplate/historyTaskTree/HistoryTaskTree'
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -103,10 +98,6 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
 /** @name 树节点 */
 // prettier-ignore
 const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, isDimmed, isHovered, dependsOnTasks, onNodeHover, onNodeHoverEnd, aiTreeTitleExtraNode }) => {
-  const { t } = useI18nNamespaces(['aiAgent'])
-  const syncIdOfStopSubTask = useRef<string>('')
-
-  const { handleSendSyncMessage } = useChatIPCDispatcher()
   const { syncIdInfoMap } = useChatIPCStore()
   const lineNum = useMemo(() => {
     return data.level - START_LEVEL
@@ -120,15 +111,6 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, i
     } else {
       return info
     }
-  })
-  const onCancelTask = useMemoizedFn(() => {
-    syncIdOfStopSubTask.current = randomString(8)
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
-      //    SyncJsonInput: JSON.stringify({reason: "用户认为这个任务不需要执行", subtask_index: data.index})
-      SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', skip_current_task: true }),
-      syncID: syncIdOfStopSubTask.current,
-    })
   })
 
   const handleMouseEnter = useMemoizedFn(() => onNodeHover?.(data.index))
@@ -153,14 +135,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, i
             <OutlineInformationcircleIcon className={styles['info-icon']} />
           </YakitPopover>
           {data.isLeaf && data.progress === 'processing' && (
-            <YakitPopconfirm title={t('AITree.cancelSubtaskConfirm')} onConfirm={() => onCancelTask()}>
-              <YakitButton
-                size="small"
-                icon={<OutlineExitIcon />}
-                type="text2"
-                loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
-              />
-            </YakitPopconfirm>
+            <AIHistorySkipTask taskIndex={data.index} />
           )}
           {aiTreeTitleExtraNode && <div className={styles['ai-tree-extra-node']}>{aiTreeTitleExtraNode?.(data)}</div>}
         </div>
@@ -204,7 +179,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, i
           getWrapper(styles['node-wrapper-default']),
         ]
     }
-  }, [data, infoShow, isParentLast, onClick, onCancelTask, syncIdInfoMap, aiTreeTitleExtraNode])
+  }, [data, infoShow, isParentLast, onClick, syncIdInfoMap, aiTreeTitleExtraNode])
 
   if (data === null) return null
 

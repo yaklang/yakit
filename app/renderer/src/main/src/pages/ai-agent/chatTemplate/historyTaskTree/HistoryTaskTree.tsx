@@ -14,7 +14,7 @@ import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { OutlineLoadingIcon, OutlinePlay2Icon } from '@/assets/icon/outline'
+import { OutlineLoadingIcon, OutlinePlay2Icon, RedoDotIcon } from '@/assets/icon/outline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { Tooltip } from 'antd'
@@ -23,6 +23,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useAIAgentStore from '../../useContext/useStore'
 import { formatAIAgentSetting } from '../../utils'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import { randomString } from '@/utils/randomUtil'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const { data, currentTaskItem } = props
@@ -99,7 +100,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   )
 })
 
-const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((props) => {
+export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((props) => {
   const { coordinatorId, taskIndex } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   const { chatIPCData } = useChatIPCStore()
@@ -166,6 +167,7 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
       syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
       SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId, start_task_index: taskIndex }),
     })
+    chatIPCEvents.resetCurrentTaskPlanID()
     sendRecoverParamsRef.current = undefined
   })
   const onRecover = useMemoizedFn(() => {
@@ -242,6 +244,44 @@ const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((
       </Tooltip>
     </YakitPopconfirm>
   ) : null
+})
+// 跳过任务
+export const AIHistorySkipTask: React.FC<{ taskIndex: string }> = React.memo(({ taskIndex }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+  const syncIdOfStopSubTask = useRef<string>('')
+  const { syncIdInfoMap } = useChatIPCStore()
+  const { handleSendSyncMessage } = useChatIPCDispatcher()
+
+  const onCancelTask = useMemoizedFn(() => {
+    syncIdOfStopSubTask.current = randomString(8)
+    handleSendSyncMessage({
+      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
+      SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', subtask_index: taskIndex }),
+      syncID: syncIdOfStopSubTask.current,
+    })
+  })
+  return (
+    <YakitPopconfirm
+      title={t('AITree.cancelSubtaskConfirm')}
+      onConfirm={(e) => {
+        e?.stopPropagation()
+        onCancelTask()
+      }}
+      onCancel={(e) => {
+        e?.stopPropagation()
+      }}
+    >
+      <YakitButton
+        size="small"
+        icon={<RedoDotIcon />}
+        type="text"
+        loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+      />
+    </YakitPopconfirm>
+  )
 })
 
 /**任务历史的单个树节点 */
