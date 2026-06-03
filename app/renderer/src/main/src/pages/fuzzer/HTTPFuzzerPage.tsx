@@ -3517,6 +3517,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
   //         content: <ExtractionResultsContent list={rsp.ExtractedResults} />
   //     })
   // })
+  const showSearchIcon = useMemo(() => +(secondNodeSize?.width || 0) <= 730, [secondNodeSize])
 
   if (onlyOneResponse) {
     const searchNode = (
@@ -3540,8 +3541,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
       <div className={styles['fuzzer-secondNode-extra']}>
         {!rsp.IsTooLargeResponse ? (
           <>
-            {+(secondNodeSize?.width || 0) >= 650 && searchNode}
-            {+(secondNodeSize?.width || 0) < 650 && (
+            {!showSearchIcon && searchNode}
+            {showSearchIcon && (
               <YakitPopover content={searchNode}>
                 <YakitButton icon={<SearchIcon />} size={size} type="outline2" />
               </YakitPopover>

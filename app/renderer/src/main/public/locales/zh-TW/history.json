@@ -127,7 +127,10 @@
     "keepRefreshingTrafficData": "勾選後不在當前頁面也會重新整理流量資料",
     "listDisplayFieldsAndOrder": "列表展示欄位和順序",
     "listDisplayConfigTips": "點選禁用則不在列表展示，列表欄位展示順序為從上到下的順序，可拖拽調整，該配置對外掛執行流量表、流量分析表全部生效",
-    "advancedConfigToolTips": "高階配置優先順序高於單個標籤頁配置項"
+    "advancedConfigToolTips": "高階配置優先順序高於單個標籤頁配置項",
+    "dragSelectConfig": "框選配置",
+    "dragSelectMultiData": "選取多條數據",
+    "dragSelectMultiDataTip": "勾選後,框選時支援選取多個資料包"
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "請問是否要儲存高階配置並關閉彈框？",

@@ -176,6 +176,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     onRowDoubleClick,
     lineHighlight,
     disableDeselect,
+    enableDragSelection = true,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const defItemHeight = useCreation(() => {
@@ -975,6 +976,8 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   })
 
   const onMouseDownDragSelection = useMemoizedFn((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!enableDragSelection) return
+
     shortcutFocusRef.current?.focus()
     if (!canStartDragSelection(event)) return
 

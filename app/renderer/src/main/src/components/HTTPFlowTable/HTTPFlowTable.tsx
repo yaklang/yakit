@@ -1723,6 +1723,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   /** ---------- 后台刷新 Start ---------- */
   const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
+  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(true)
   const isBackgroundRefresh = useMemo(() => {
     return backgroundRefresh && pageType !== 'MITM'
   }, [backgroundRefresh, pageType])
@@ -4780,6 +4781,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           }}
           loading={loading}
           enableDrag={true}
+          enableDragSelection={dragSelectEnabled}
           columns={columns}
           // onRowClick={(v)=>{
           // 此处onRowClick会调用onSetCurrentRow导致重复响应
@@ -4832,15 +4834,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       )}
       {advancedSetVisible && (
         <AdvancedSet
+          dragSelectEnabled={dragSelectEnabled}
           columnsAllStr={JSON.stringify(configColumnRef.current.filter((item) => !specialCustoms(item.dataKey)))}
           onCancel={() => {
             setAdvancedSetVisible(false)
           }}
           onSave={(setting) => {
             setAdvancedSetVisible(false)
-            const { backgroundRefresh: newBackgroundRefresh, configColumnsAll } = setting
+            const {
+              backgroundRefresh: newBackgroundRefresh,
+              dragSelectEnabled: newDragSelectEnabled,
+              configColumnsAll,
+            } = setting
             // 后台刷新
             if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
+            // 框选配置
+            if (newDragSelectEnabled !== dragSelectEnabled) setDragSelectEnabled(newDragSelectEnabled)
             // 自定义列
             const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
             const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
@@ -5762,17 +5771,26 @@ export interface ColumnAllInfoItem {
 }
 interface AdvancedSetSaveItem {
   backgroundRefresh: boolean
+  dragSelectEnabled: boolean
   configColumnsAll: ColumnAllInfoItem[]
 }
 interface AdvancedSetProps {
   showBackgroundRefresh?: boolean
+  dragSelectEnabled?: boolean
   columnsAllStr: string
   onCancel: () => void
   onSave: (setting: AdvancedSetSaveItem) => void
   defalutColumnsOrder: string[]
 }
 export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
-  const { showBackgroundRefresh = true, columnsAllStr, onCancel, onSave, defalutColumnsOrder } = props
+  const {
+    showBackgroundRefresh = true,
+    dragSelectEnabled: propDragSelectEnabled = true,
+    columnsAllStr,
+    onCancel,
+    onSave,
+    defalutColumnsOrder,
+  } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'history'])
   /** ---------- 后台刷新 Start ---------- */
   const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
@@ -5784,6 +5802,10 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     })
   }, [])
   /** ---------- 后台刷新 End ---------- */
+
+  /** ---------- 框选配置 Start ---------- */
+  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(propDragSelectEnabled)
+  /** ---------- 框选配置 End ---------- */
 
   /** ---------- 自定义列 Start ---------- */
   const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
@@ -5819,7 +5841,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     if (oldBackgroundRefresh.current !== backgroundRefresh) {
       setRemoteValue(RemoteHistoryGV.BackgroundRefresh, backgroundRefresh ? 'true' : '')
     }
-    onSave({ backgroundRefresh, configColumnsAll: curColumnsAll })
+    onSave({ backgroundRefresh, dragSelectEnabled, configColumnsAll: curColumnsAll })
   })
 
   // 判断是否有修改
@@ -5827,7 +5849,11 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     try {
       // 是否有修改
       let isModify: boolean = false
-      if (oldBackgroundRefresh.current !== backgroundRefresh || columnsAllStr !== JSON.stringify(curColumnsAll)) {
+      if (
+        oldBackgroundRefresh.current !== backgroundRefresh ||
+        propDragSelectEnabled !== dragSelectEnabled ||
+        columnsAllStr !== JSON.stringify(curColumnsAll)
+      ) {
         isModify = true
       }
       return isModify
@@ -5910,6 +5936,23 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
             </div>
           </div>
         )}
+        <div className={style['history-advanced-set-item']}>
+          <div className={style['history-advanced-set-item-title']}>{t('AdvancedSet.dragSelectConfig')}</div>
+          <div className={style['history-advanced-set-item-cont']}>
+            <div className={style['backgroundRefresh']}>
+              <YakitCheckbox
+                checked={dragSelectEnabled}
+                onChange={(e) => {
+                  setDragSelectEnabled(e.target.checked)
+                }}
+              />
+              <span className={style['title-style']}>{t('AdvancedSet.dragSelectMultiData')}</span>
+              <Tooltip title={t('AdvancedSet.dragSelectMultiDataTip')}>
+                <OutlineInformationcircleIcon className={style['hint-style']} />
+              </Tooltip>
+            </div>
+          </div>
+        </div>
         <div className={style['history-advanced-set-item']}>
           <div className={style['history-advanced-set-item-title']}>
             {t('AdvancedSet.listDisplayFieldsAndOrder')}

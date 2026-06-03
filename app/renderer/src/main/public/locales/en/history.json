@@ -127,7 +127,10 @@
     "keepRefreshingTrafficData": "Check this to keep traffic data refreshing even when not on the current page",
     "listDisplayFieldsAndOrder": "List display fields and order",
     "listDisplayConfigTips": "Click to disable a field from being displayed in the list. The display order of the fields is from top to bottom and can be adjusted by dragging. This configuration applies to all traffic tables and traffic analysis tables executed by plugins",
-    "advancedConfigToolTips": "Advanced configuration takes precedence over individual tab configuration items"
+    "advancedConfigToolTips": "Advanced configuration takes precedence over individual tab configuration items",
+    "dragSelectConfig": "Frame selection configuration",
+    "dragSelectMultiData": "Select multiple data entries",
+    "dragSelectMultiDataTip": "When checked, multiple data packets can be selected when using a selection box"
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",
