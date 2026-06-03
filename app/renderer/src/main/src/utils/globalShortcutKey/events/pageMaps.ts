@@ -153,7 +153,7 @@ export const pageEventMaps: Record<`${ShortcutKeyPage}`, PageToEventInfo> = {
     resetEvents: resetYakRunnerShortcutKeyEvents,
     getStorage: getStorageYakRunnerShortcutKeyEvents,
     setStorage: setStorageYakRunnerShortcutKeyEvents,
-    // scopeShow: [IRify]
+    scopeShow: [Yakit, EnpriTrace],
   },
   'mitm-hijack': {
     getEvents: getMitmShortcutKeyEvents,

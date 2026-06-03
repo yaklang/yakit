@@ -64,12 +64,12 @@ import { LeftSideType } from './LeftSideBar/LeftSideBarType'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ShortcutKeyPage } from '@/utils/globalShortcutKey/events/pageMaps'
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from '@/utils/globalShortcutKey/utils'
-import { getStorageYakRunnerShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/yakRunner'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { randomString } from '@/utils/randomUtil'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
+import { getStorageYakRunnerAiCodeAuditShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/yakRunnerAiCodeAudit'
 const { ipcRenderer } = window.require('electron')
 
 /**
@@ -769,10 +769,10 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
 
   useEffect(() => {
     if (inViewport) {
-      registerShortcutKeyHandle(ShortcutKeyPage.YakRunner)
-      getStorageYakRunnerShortcutKeyEvents()
+      registerShortcutKeyHandle(ShortcutKeyPage.YakRunnerAiCodeAudit)
+      getStorageYakRunnerAiCodeAuditShortcutKeyEvents()
       return () => {
-        unregisterShortcutKeyHandle(ShortcutKeyPage.YakRunner)
+        unregisterShortcutKeyHandle(ShortcutKeyPage.YakRunnerAiCodeAudit)
       }
     }
   }, [inViewport])
