@@ -136,7 +136,7 @@ const ConcurrentStreamCard: FC<{
       titleIcon={icon}
       titleText={<div className={styles['task-name']}>{raw?.data?.taskName}</div>}
       titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
-      style={isChildWindow ? childWindowStyle : { background: bgColor, padding: 8 }}
+      style={isChildWindow ? childWindowStyle : { background: bgColor, padding: '10px 8px' }}
       childStyle={isChildWindow ? childContentWindowStyle : undefined}
       titleMore={
         isChildWindow ? (

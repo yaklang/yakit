@@ -61,18 +61,30 @@ interface ToolStatusCardProps {
   title: ReactNode
   children?: ReactNode
 }
-interface ToolStdoutCardProps extends ToolInvokerCardProps {}
-interface ToolResultCardProps extends ToolInvokerCardProps {}
+interface ToolStdoutCardProps extends ToolInvokerCardProps {
+  isChildWindow: boolean
+}
+interface ToolResultCardProps extends ToolInvokerCardProps {
+  isChildWindow: boolean
+}
 
 const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
   const { data } = props
 
+  // 判断路由，子窗口有些功能不展示
+  const isChildWindow = useRef(new URLSearchParams(window.location.search).get('window') === 'child')
+
   const renderContent = useMemoizedFn(() => {
+    // 过滤掉打开文件
+    const operationInfo = {
+      ...props.operationInfo,
+      aiFilePath: isChildWindow.current ? undefined : props.operationInfo.aiFilePath,
+    }
     switch (data.type) {
       case 'stream':
-        return <ToolStdoutCard {...props} />
+        return <ToolStdoutCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
       case 'result':
-        return <ToolResultCard {...props} />
+        return <ToolResultCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
       default:
         return null
     }
@@ -169,7 +181,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
-  const { titleText, modalInfo, operationInfo, fileList, data, chatType, token } = props
+  const { titleText, modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
@@ -335,9 +347,11 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
               {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
             </label>
           )}
-          <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
-            <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
-          </Tooltip>
+          {isChildWindow || (
+            <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
+              <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
+            </Tooltip>
+          )}
         </div>
       }
       titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
