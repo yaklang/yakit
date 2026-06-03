@@ -148,6 +148,10 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
   const { activeChat } = useAIAgentStore()
   const { taskChat } = chatIPCData
 
+  const taskStatus = useCreation(() => {
+    return chatIPCData.taskStatus
+  }, [chatIPCData.taskStatus])
+
   const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
 
   const streams = useCreation(() => {
@@ -216,11 +220,12 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     const taskId = info?.taskID
     if (!coordinatorId) return
     // 选停止当前任务，再发送恢复的数据
-    !!taskId &&
+    if (taskStatus.loading && taskId) {
       handleSendSyncMessage({
         syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
         SyncJsonInput: JSON.stringify({ task_id: taskId }),
       })
+    }
 
     setTimeout(() => {
       handleSendSyncMessage({
