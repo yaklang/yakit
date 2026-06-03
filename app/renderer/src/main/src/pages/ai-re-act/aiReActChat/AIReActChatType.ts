@@ -4,6 +4,9 @@ import { AIInputEvent } from '../hooks/grpcApi'
 import React from 'react'
 import { AIChatTextareaProps, AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
 import { UseChatIPCState } from '../hooks/type'
+import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+
+export type DataDetailsButtonProps = Omit<YakitButtonProp, 'icon' | 'children'>
 
 export interface AIReActChatRefProps extends AIChatTextareaRefProps {
   handleStart: (value: HandleStartParams) => void
@@ -31,12 +34,14 @@ enum RightIconType {
   history = 'history',
   close = 'close',
   add = 'add',
+  dataDetails = 'dataDetails',
 }
 
 type ExternalParametersRightIcon = Partial<{
   [RightIconType.history]: boolean
   [RightIconType.close]: React.ReactElement
   [RightIconType.add]: React.ReactElement
+  [RightIconType.dataDetails]: true | DataDetailsButtonProps
 }>
 export interface AIReActChatProps {
   mode: AIAgentChatMode

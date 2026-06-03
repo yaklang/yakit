@@ -67,6 +67,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
     const { getSession } = useSessionId()
 
     const sessionIdRef = React.useRef<string>('') // 作为当前对话得文件路径
+    const chatDataStoreKeyRef = React.useRef(chatDataStoreKey)
+    chatDataStoreKeyRef.current = chatDataStoreKey
 
     useImperativeHandle(
       ref,
@@ -90,7 +92,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           upload,
           $view(imageSchema.node, () =>
             nodeViewFactory({
-              component: () => <AICustomFile sessionId={sessionIdRef.current} chatDataStoreKey={chatDataStoreKey} />,
+              component: () => (
+                <AICustomFile sessionId={sessionIdRef.current} chatDataStoreKey={chatDataStoreKeyRef.current} />
+              ),
             }),
           ),
           (ctx: Ctx) => () => {

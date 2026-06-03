@@ -18,6 +18,7 @@ import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
+import { createActiveChatSessionId } from '@/pages/ai-agent/utils'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import {
   AIHandleStartExtraProps,
@@ -37,7 +38,10 @@ import {
 } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
+import { getChatDataStoreKey } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import useDeleteAIImageByNode from '@/pages/ai-agent/components/aiMilkdownInput/aiCustomFile/hooks/useDeleteAIImageByNode'
+import emiter from '@/utils/eventBus/eventBus'
 
 import { HistroryAIReActChat } from './HistroryAIReActChat'
 
@@ -47,6 +51,7 @@ export interface HistoryAIReActChatBridge {
   activeID?: string
   events: UseChatIPCEvents
   onStop: () => void
+  onNewChat: () => void
   onChatFromHistory: (session: string) => void
   setActiveChat: React.Dispatch<React.SetStateAction<AISession | undefined>>
   syncSelectedHttpFlowIds: (ids: string[]) => void
@@ -203,6 +208,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     onGetHttpFlowFuzzStatus,
   })
 
+  const imageStoreKey = useCreation(() => getChatDataStoreKey(cacheDataStore), [cacheDataStore])
+  const [, { onClearImage }] = useDeleteAIImageByNode()
+
   const { execute, casualLoading } = chatIPCData
 
   useEffect(() => {
@@ -273,6 +281,42 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const onChatFromHistory = useMemoizedFn((session: string) => {
     events.onDelChats([session])
   })
+
+  /** 新建会话：清空 UI、断开旧连接，并预生成新的 TimelineSessionID */
+  const onNewChat = useMemoizedFn(() => {
+    const currentID = activeChat?.SessionID
+    if (execute && currentID) {
+      events.onClose(currentID)
+    }
+    events.onReset()
+    setActiveChat(undefined)
+    setSetting((prev) => ({
+      ...prev,
+      TimelineSessionID: createActiveChatSessionId(),
+      SyncPerceptionTrigger: false,
+      EnablePlan: false,
+    }))
+    aiReActChatRef.current?.setValue('')
+  })
+
+  const handleDelChats = useMemoizedFn((jsonString: string) => {
+    try {
+      const sessions: string[] = JSON.parse(jsonString)
+      if (!sessions.length || imageStoreKey === 'unknown') return
+      onClearImage({
+        chatDataStoreKey: imageStoreKey,
+        sessionID: sessions,
+      })
+      events.onDelChats(sessions)
+    } catch (error) {}
+  })
+
+  useEffect(() => {
+    emiter.on('onDelChats', handleDelChats)
+    return () => {
+      emiter.off('onDelChats', handleDelChats)
+    }
+  }, [handleDelChats])
 
   const onStop = useMemoizedFn(() => {
     if (execute && activeID) {
@@ -370,6 +414,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       activeID,
       events,
       onStop,
+      onNewChat,
       onChatFromHistory,
       setActiveChat,
       syncSelectedHttpFlowIds: (ids: string[]) => {
@@ -399,7 +444,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         aiReActChatRef.current?.setValue(v)
       },
     }),
-    [activeID, events, onStop, onChatFromHistory, setActiveChat],
+    [activeID, events, onStop, onNewChat, onChatFromHistory, setActiveChat],
   )
 
   const renderHistoryAIReActChat = useCallback(

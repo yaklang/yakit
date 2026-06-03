@@ -34,6 +34,7 @@ import useGetChatDataStoreKey, {
 import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import emiter from '@/utils/eventBus/eventBus'
 import { omit } from 'lodash'
+import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -69,6 +70,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const { activeChat, setting } = useAIAgentStore()
     const { getSession } = useSessionId()
+
+    const contextTokenSession = useCreation(() => {
+      return activeChat?.SessionID || setting.TimelineSessionID
+    }, [activeChat?.SessionID, setting.TimelineSessionID])
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
 
@@ -237,7 +242,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const isShowExpand = useCreation(() => {
       return mode === 'task' && !showFreeChat
     }, [mode, showFreeChat])
-    const handleSwitchShowFreeChat = useMemoizedFn((v) => {
+    const handleSwitchShowFreeChat = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>, v) => {
+      e.stopPropagation()
       setShowFreeChat(v)
     })
 
@@ -302,11 +308,23 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                             <YakitButton type="text2" icon={<ClockIcon />} title="" />
                           </Tooltip>
                         )}
+                        {externalParameters.rightIcon.dataDetails && (
+                          <AIContextToken
+                            iconOnly
+                            execute={execute}
+                            session={contextTokenSession}
+                            buttonProps={
+                              externalParameters.rightIcon.dataDetails === true
+                                ? undefined
+                                : externalParameters.rightIcon.dataDetails
+                            }
+                          />
+                        )}
                         {externalParameters.rightIcon.add}
                         {externalParameters.rightIcon.close}
                       </>
                     ) : (
-                      <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
+                      <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(e, false)} />
                     ))}
                 </div>
               </div>
@@ -342,7 +360,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               </div>
             </div>
           </div>
-          <div className={styles['open-wrapper']} onClick={() => handleSwitchShowFreeChat(true)}>
+          <div className={styles['open-wrapper']} onClick={(e) => handleSwitchShowFreeChat(e, false)}>
             <ChevrondownButton />
             <div className={styles['text']}>自由对话</div>
           </div>

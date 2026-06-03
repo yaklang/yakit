@@ -1,6 +1,7 @@
 import { useCreation } from 'ahooks'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import {
+  ChatDataStore,
   ChatDataStoreKey,
   histroyAiStore,
   FlowAiStore,
@@ -11,25 +12,28 @@ import {
 } from '@/pages/ai-agent/store/ChatDataStore'
 import type { AISource } from './grpcApi'
 
+export const getChatDataStoreKey = (store?: ChatDataStore): ChatDataStoreKey => {
+  switch (store) {
+    case histroyAiStore:
+      return 'histroyAiStore'
+    case FlowAiStore:
+      return 'FlowAiStore'
+    case aiChatDataStore:
+      return 'aiChatDataStore'
+    case knowledgeBaseDataStore:
+      return 'knowledgeBaseDataStore'
+    case irifyAiCodeAuditPageAiStore:
+      return 'irifyAiCodeAuditPageAiStore'
+    default:
+      if (store instanceof WebFuzzerAiStore) return 'WebFuzzerAiStore'
+      return 'unknown'
+  }
+}
+
 function useGetChatDataStoreKey() {
   const { chatIPCEvents } = useChatIPCDispatcher()
   const chatDataStoreKey = useCreation((): ChatDataStoreKey => {
-    const store = chatIPCEvents.fetchChatDataStore()
-    switch (store) {
-      case histroyAiStore:
-        return 'histroyAiStore'
-      case FlowAiStore:
-        return 'FlowAiStore'
-      case aiChatDataStore:
-        return 'aiChatDataStore'
-      case knowledgeBaseDataStore:
-        return 'knowledgeBaseDataStore'
-      case irifyAiCodeAuditPageAiStore:
-        return 'irifyAiCodeAuditPageAiStore'
-      default:
-        if (store instanceof WebFuzzerAiStore) return 'WebFuzzerAiStore'
-        return 'unknown'
-    }
+    return getChatDataStoreKey(chatIPCEvents.fetchChatDataStore())
   }, [chatIPCEvents])
   return { chatDataStoreKey } as const
 }

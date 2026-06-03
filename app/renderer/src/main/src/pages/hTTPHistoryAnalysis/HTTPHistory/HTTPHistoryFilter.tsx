@@ -331,21 +331,13 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                     isOpen: false,
                     rightIcon: {
                       history: true,
+                      dataDetails: { type: 'text2' },
                       add: (
                         <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
                             icon={<OutlineMessageCirclePlusIcon />}
-                            onClick={() => {
-                              const { activeID, events, onStop, onChatFromHistory, setActiveChat } =
-                                historyAIReActChatBridge
-                              if (activeID) {
-                                onStop()
-                                events.onReset()
-                                onChatFromHistory(activeID)
-                                setActiveChat(undefined)
-                              }
-                            }}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
                       ),

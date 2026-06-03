@@ -14,6 +14,7 @@ import {
 import styles from '../AIChatContent.module.scss'
 import { FC, memo, useCallback, useEffect, useRef, useState } from 'react'
 import { aiChatDataStore } from '../../store/ChatDataStore'
+import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { formatNumberUnits } from '../../utils'
 import {
   OutlineArrowdownIcon,
@@ -25,7 +26,7 @@ import classNames from 'classnames'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import { cloneDeep, isEmpty } from 'lodash'
 import { getPressuresData, getCostData, getThreshold, getContextStatsData, isPerfDataChanged } from './utils'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitButton, YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { AIModelConfig } from '../../aiModelList/utils'
 import { getIconByAI } from '../../aiModelList/aiModelSelect/AIModelSelect'
@@ -42,13 +43,19 @@ import { QuestionCircleOutlined } from '@ant-design/icons'
 const AIContextToken: FC<{
   session?: string
   execute: boolean
-}> = ({ session, execute }) => {
+  /** 仅展示详情 icon（嵌入 AI 侧栏 header 使用） */
+  iconOnly?: boolean
+  /** 详情 icon 对应 YakitButton 的 props */
+  buttonProps?: Omit<YakitButtonProp, 'icon' | 'children'>
+}> = ({ session, execute, iconOnly, buttonProps }) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
+  const { chatIPCEvents } = useChatIPCDispatcher()
   const [visible, setVisible] = useState<boolean>(false)
   const getPerfData = useCallback(() => {
-    const data = aiChatDataStore.get(session ?? '')?.aiPerfData ?? null
+    const store = chatIPCEvents.fetchChatDataStore?.() ?? aiChatDataStore
+    const data = store?.get(session ?? '')?.aiPerfData ?? null
     return data
-  }, [session])
+  }, [session, chatIPCEvents])
 
   const { renderNumber, aiDataRef } = useRafPolling({
     getData: getPerfData,
@@ -117,7 +124,7 @@ const AIContextToken: FC<{
   }, [currentCostEcharts.maxValue.lightweight])
   return (
     <>
-      {isShowPressure && (
+      {!iconOnly && isShowPressure && (
         <div className={styles['echarts-wrapper']}>
           <div className={styles['title']}>
             <span className={styles['text']}>
@@ -150,7 +157,7 @@ const AIContextToken: FC<{
           <ContextPressureEcharts dataEcharts={currentPressuresEcharts} threshold={pressureThreshold} />
         </div>
       )}
-      {isShowCost && (
+      {!iconOnly && isShowCost && (
         <div className={styles['echarts-wrapper']}>
           <div className={styles['title']}>
             <span className={styles['text']}>
@@ -171,18 +178,20 @@ const AIContextToken: FC<{
           <ResponseSpeedEcharts dataEcharts={currentCostEcharts} />
         </div>
       )}
-      <div className={styles['info-token']}>
-        <div className={styles['token']}>Tokens:</div>
-        <div className={classNames(styles['token-tag'], styles['upload-token'])}>
-          <OutlineArrowupIcon />
-          {token[0]}
+      {!iconOnly && (
+        <div className={styles['info-token']}>
+          <div className={styles['token']}>Tokens:</div>
+          <div className={classNames(styles['token-tag'], styles['upload-token'])}>
+            <OutlineArrowupIcon />
+            {token[0]}
+          </div>
+          <div className={classNames(styles['token-tag'], styles['download-token'])}>
+            <OutlineArrowdownIcon />
+            {token[1]}
+          </div>
+          <div className={classNames(styles['token-tag'], styles['download-token'])}>{token[2]}</div>
         </div>
-        <div className={classNames(styles['token-tag'], styles['download-token'])}>
-          <OutlineArrowdownIcon />
-          {token[1]}
-        </div>
-        <div className={classNames(styles['token-tag'], styles['download-token'])}>{token[2]}</div>
-      </div>
+      )}
       <YakitPopover
         content={
           <AIEchartsDetails
@@ -203,10 +212,15 @@ const AIContextToken: FC<{
         onVisibleChange={setVisible}
       >
         <Tooltip title={t('YakitButton.viewDetail')}>
-          <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type="outline2" />
+          <YakitButton
+            isHover={visible}
+            icon={<OutlinePresentationchartlineIcon />}
+            type="outline2"
+            {...buttonProps}
+          />
         </Tooltip>
       </YakitPopover>
-      <div className={styles['divider-style']}></div>
+      {!iconOnly && <div className={styles['divider-style']}></div>}
     </>
   )
 }

@@ -375,10 +375,7 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
 
     const createNewEvents = useMemoizedFn((id: string) => {
       setKnowledgeBaseID(id)
-      const { onStop, events, setActiveChat } = historyAIReActChatBridge
-      onStop()
-      events.onReset()
-      setActiveChat(undefined)
+      historyAIReActChatBridge.onNewChat()
     })
 
     useEffect(() => {
@@ -581,21 +578,13 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
                     isOpen: false,
                     rightIcon: {
                       history: true,
+                      dataDetails: { type: 'text2' },
                       add: (
                         <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
                             icon={<OutlineMessageCirclePlusIcon />}
-                            onClick={() => {
-                              const { activeID, events, onStop, onChatFromHistory, setActiveChat } =
-                                historyAIReActChatBridge
-                              if (activeID) {
-                                onStop()
-                                events.onReset()
-                                onChatFromHistory(activeID)
-                                setActiveChat(undefined)
-                              }
-                            }}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
                       ),
