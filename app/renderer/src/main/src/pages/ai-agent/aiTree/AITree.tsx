@@ -118,6 +118,14 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
     [data.progress],
   )
   const todoListRef = useRef<TodoListCardData>(getTodoData())
+  const onVisibleChange = useMemoizedFn((visible: boolean) => {
+    if (visible) {
+      todoListRef.current = getTodoData()
+    } else {
+      todoListRef.current = cloneDeep(DefaultTodoListCardData)
+    }
+    setTodoListVisible(visible)
+  })
   const getTitleNode = useMemoizedFn(() => {
     return (
       <div className={styles['node-title']}>
@@ -149,6 +157,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
             </YakitPopconfirm>
           )}
           {data.isLeaf && unFinish && (
+            // getTodoData()?.items?.length > 0 &&
             <YakitPopover
               placement="top"
               content={
@@ -162,14 +171,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
               overlayClassName={styles['to-do-list-popover']}
               destroyTooltipOnHide={true}
               visible={todoListVisible}
-              onVisibleChange={(visible) => {
-                if (visible) {
-                  todoListRef.current = getTodoData()
-                } else {
-                  todoListRef.current = cloneDeep(DefaultTodoListCardData)
-                }
-                setTodoListVisible(visible)
-              }}
+              onVisibleChange={onVisibleChange}
             >
               <YakitButton
                 size="small"
@@ -226,11 +228,14 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(({ data, position, onClick, a
   })
 
   const [Icon, Card] = node()
-
+  const onMouseLeave = useMemoizedFn((e) => {
+    e.stopPropagation()
+    if (todoListVisible) onVisibleChange(false)
+  })
   if (data === null) return null
 
   return (
-    <div className={styles['ai-tree-node']}>
+    <div className={styles['ai-tree-node']} onMouseLeave={onMouseLeave}>
       {Array.from({ length: lineNum }).map((_, i) => {
         const isLast = i === lineNum - 1
         const backslash = isLast && isStartOfLevel
