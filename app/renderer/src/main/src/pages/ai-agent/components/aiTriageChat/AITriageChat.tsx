@@ -32,11 +32,7 @@ export const AITriageChatContent: React.FC<AITriageChatContentProps> = memo((pro
     if (!!extraValue?.showQS) {
       return (
         <>
-          <AIMilkdownInput
-            defaultValue={`${extraValue?.showQS}`}
-            readonly={true}
-            parentPathOfFileSave={chatDataStoreKey}
-          />
+          <AIMilkdownInput defaultValue={`${extraValue?.showQS}`} readonly={true} chatDataStoreKey={chatDataStoreKey} />
         </>
       )
     }
@@ -179,7 +175,7 @@ const AITriageChatContentEdit: React.FC<AITriageChatContentEditProps> = React.me
           defaultValue={defaultValue}
           onUpdateEditor={onUpdateEditor}
           onUpdateContent={onUpdateContent}
-          parentPathOfFileSave={chatDataStoreKey}
+          chatDataStoreKey={chatDataStoreKey}
         />
       </div>
       <div className={styles['edit-footer']}>
