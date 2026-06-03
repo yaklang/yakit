@@ -44,6 +44,10 @@ import useDeleteAIImageByNode from '@/pages/ai-agent/components/aiMilkdownInput/
 import emiter from '@/utils/eventBus/eventBus'
 
 import { HistroryAIReActChat } from './HistroryAIReActChat'
+import {
+  loadHistoryAIEmbeddedReviewPolicy,
+  setHistoryAIReviewPolicy,
+} from './historyAIReActChatStorage'
 
 export type HistoryAIReActChatExternalParameters = NonNullable<AIReActChatProps['externalParameters']>
 
@@ -156,6 +160,55 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const deselectHttpFlowIdRef = useRef<((id: string) => void) | null>(null)
   const pendingMentionRef = useRef<AIMentionCommandParams | null>(null)
   const chatReadyRef = useRef(false)
+  const embeddedSettingCacheReadyRef = useRef(false)
+  const lastPersistedEmbeddedSettingRef = useRef<{
+    ReviewPolicy?: AIAgentSetting['ReviewPolicy']
+  }>({})
+
+  const applyHistoryAIEmbeddedReviewPolicy = useMemoizedFn(async () => {
+    const reviewPolicy = await loadHistoryAIEmbeddedReviewPolicy()
+    lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: reviewPolicy }
+    setSetting((prev) => ({
+      ...prev,
+      ReviewPolicy: reviewPolicy,
+    }))
+  })
+
+  useEffect(() => {
+    applyHistoryAIEmbeddedReviewPolicy().finally(() => {
+      embeddedSettingCacheReadyRef.current = true
+    })
+  }, [applyHistoryAIEmbeddedReviewPolicy])
+
+  useUpdateEffect(() => {
+    if (!showFreeChat) return
+    applyHistoryAIEmbeddedReviewPolicy()
+  }, [showFreeChat, applyHistoryAIEmbeddedReviewPolicy])
+
+  useUpdateEffect(() => {
+    if (!inViewport) return
+    applyHistoryAIEmbeddedReviewPolicy()
+  }, [inViewport, applyHistoryAIEmbeddedReviewPolicy])
+
+  useEffect(() => {
+    const onRefreshEmbeddedSetting = () => {
+      applyHistoryAIEmbeddedReviewPolicy()
+    }
+    emiter.on('onRefreshHistoryAIEmbeddedSetting', onRefreshEmbeddedSetting)
+    return () => {
+      emiter.off('onRefreshHistoryAIEmbeddedSetting', onRefreshEmbeddedSetting)
+    }
+  }, [applyHistoryAIEmbeddedReviewPolicy])
+
+  useUpdateEffect(() => {
+    if (!embeddedSettingCacheReadyRef.current) return
+    const policy = setting.ReviewPolicy ?? AIAgentSettingDefault.ReviewPolicy ?? 'manual'
+    if (lastPersistedEmbeddedSettingRef.current.ReviewPolicy === policy) return
+    setHistoryAIReviewPolicy(policy).then(() => {
+      lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: policy }
+      emiter.emit('onRefreshHistoryAIEmbeddedSetting', '')
+    })
+  }, [setting.ReviewPolicy])
 
   useEffect(() => {
     if (!showFreeChat) {

@@ -101,7 +101,16 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
           try {
             const cache = JSON.parse(res) as AIAgentSetting
             if (typeof cache !== 'object') return
-            setSetting((prev) => (mergeRemoteAIAgentSetting ? mergeRemoteAIAgentSetting(cache, prev) : cache))
+            const { ReviewPolicy: _ignoredPolicy, ...cacheWithoutReviewPolicy } = cache
+            setSetting((prev) => {
+              const next = mergeRemoteAIAgentSetting
+                ? mergeRemoteAIAgentSetting(cacheWithoutReviewPolicy as AIAgentSetting, prev)
+                : { ...prev, ...cacheWithoutReviewPolicy }
+              return {
+                ...next,
+                ReviewPolicy: prev.ReviewPolicy,
+              }
+            })
           } catch (error) {}
         })
         .catch(() => {})

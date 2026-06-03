@@ -21,4 +21,6 @@ export enum RemoteAIAgentGV {
   AIModelCheckResultEditorBeautify = 'ai-model-check-result-editor-beautify',
   /** @name ai配置的展开项 */
   AISettingActiveKey = 'ai-setting-activeKey',
+  /** @name 嵌入侧栏（HistoryAIReActChat）统一缓存的回答模式，与 AI Agent 全局配置隔离 */
+  HistoryAIReviewPolicy = 'history-ai-review-policy',
 }
