@@ -64,7 +64,7 @@ const AIReActTaskEmpty: React.FC<AIReActTaskEmptyProps> = React.memo((props) => 
       <div className={styles['re-act-task-empty-wrapper']} ref={taskEmptyRef}>
         <div className={styles['heard']}>
           <div className={styles['title']}>扩展资源</div>
-          <div className={styles['sub-title']}>专注于安全编码与漏洞分析的智能助手</div>
+          <div className={styles['sub-title']}>守卫经济安全的智能助手</div>
         </div>
         <div className={styles['list-wrapper']}>
           {Object.keys(randomAIMaterialsData).map((key) => {

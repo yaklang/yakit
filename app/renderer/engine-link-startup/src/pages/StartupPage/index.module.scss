@@ -26,6 +26,15 @@
         svg {
           height: 100%;
         }
+        .startup-text-logo {
+          height: 41px;
+          display: flex;
+          align-items: center;
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+          font-size: 34px;
+          font-weight: 600;
+          line-height: 41px;
+        }
       }
 
       .startup-desc {

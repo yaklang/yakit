@@ -42,6 +42,7 @@ import AIContextToken from './AIContextToken/AIContextToken'
 import OperationLog from '../components/aiFileSystemList/OperationLog/OperationLog'
 import AIGlobalLoading from '../aiGlobalLoading/AIGlobalLoading'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isMemfit } from '@/utils/envfile'
 
 export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
   forwardRef((props, ref) => {
@@ -283,6 +284,7 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
       timeLine,
       taskChat,
     })
+    const isMemfitVersion = isMemfit()
 
     // useMount(() => {
     //     const onFilePreviewReady = () => {
@@ -365,32 +367,57 @@ export const AIChatContent: React.FC<AIChatContentProps> = React.memo(
               t={t}
             >
               <div className={styles['ai-chat-content']}>
-                <YakitResizeBox
-                  firstNode={
-                    activeKey && (
-                      <div
-                        className={classNames(styles['tab-content'], {
-                          [styles['tab-content-right']]: !showFreeChat,
+                {isMemfitVersion ? (
+                  <YakitResizeBox
+                    firstNode={
+                      <AIReActChat
+                        chatContainerHeaderClassName={classNames({
+                          [styles['re-act-chat-container-header']]: !activeKey,
                         })}
-                      >
-                        {tabContent}
-                      </div>
-                    )
-                  }
-                  secondNode={
-                    <AIReActChat
-                      chatContainerHeaderClassName={classNames({
-                        [styles['re-act-chat-container-header']]: !activeKey,
-                      })}
-                      mode={!!activeKey ? 'task' : 'welcome'}
-                      showFreeChat={showFreeChat}
-                      setShowFreeChat={setShowFreeChat}
-                      startRequest={startRequest}
-                      ref={aiReActChatRef}
-                    />
-                  }
-                  {...resizeBoxProps}
-                />
+                        mode="welcome"
+                        showFreeChat={showFreeChat}
+                        setShowFreeChat={setShowFreeChat}
+                        startRequest={startRequest}
+                        ref={aiReActChatRef}
+                      />
+                    }
+                    secondNode={
+                      activeKey && (
+                        <div className={classNames(styles['tab-content'], styles['tab-content-resource-side'])}>
+                          {tabContent}
+                        </div>
+                      )
+                    }
+                    {...resizeBoxProps}
+                  />
+                ) : (
+                  <YakitResizeBox
+                    firstNode={
+                      activeKey && (
+                        <div
+                          className={classNames(styles['tab-content'], {
+                            [styles['tab-content-right']]: !showFreeChat,
+                          })}
+                        >
+                          {tabContent}
+                        </div>
+                      )
+                    }
+                    secondNode={
+                      <AIReActChat
+                        chatContainerHeaderClassName={classNames({
+                          [styles['re-act-chat-container-header']]: !activeKey,
+                        })}
+                        mode={!!activeKey ? 'task' : 'welcome'}
+                        showFreeChat={showFreeChat}
+                        setShowFreeChat={setShowFreeChat}
+                        startRequest={startRequest}
+                        ref={aiReActChatRef}
+                      />
+                    }
+                    {...resizeBoxProps}
+                  />
+                )}
               </div>
             </YakitSideTab>
           </div>

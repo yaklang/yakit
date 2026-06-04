@@ -57,6 +57,7 @@ import AIReActTaskEmpty from './AIReActTaskEmpty'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { has } from 'lodash'
+import { isMemfit } from '@/utils/envfile'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
@@ -65,6 +66,8 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { taskChat } = useChatIPCStore().chatIPCData
   const [leftExpand, setLeftExpand] = useState(true)
   const [expand, setExpand] = useState(false)
+  const hasTaskContent = !!taskChat?.elements?.length
+  const shouldOnlyShowTimeline = isMemfit() && !hasTaskContent
 
   const onIsExpand = useMemoizedFn(() => {
     setLeftExpand(expand)
@@ -92,50 +95,56 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   })
   return (
     <div className={styles['ai-re-act-task-chat']}>
-      <YakitResizeBox
-        firstRatio={'30%'}
-        lineDirection="right"
-        firstMinSize={leftExpand ? 300 : 30}
-        lineStyle={{ width: leftExpand ? 4 : 0 }}
-        freeze={leftExpand}
-        firstNodeStyle={{
-          width: '30%',
-          overflow: 'hidden',
-          maxWidth: leftExpand ? '' : '30px',
-          borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
-        }}
-        secondNodeStyle={{ width: leftExpand ? '100%' : 'calc(100% - 30px)', overflow: 'auto hidden' }}
-        firstNode={<AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />}
-        secondNode={
-          <>
-            {!!taskChat?.elements?.length ? (
-              <div className={styles['chat-content-wrapper']}>
-                <div className={styles['header']}>
-                  <div className={styles['title']}>
-                    <ColorsBrainCircuitIcon />
-                    深度规划
+      {shouldOnlyShowTimeline ? (
+        <div className={styles['timeline-only-wrapper']}>
+          <AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />
+        </div>
+      ) : (
+        <YakitResizeBox
+          firstRatio={'30%'}
+          lineDirection="right"
+          firstMinSize={leftExpand ? 300 : 30}
+          lineStyle={{ width: leftExpand ? 4 : 0 }}
+          freeze={leftExpand}
+          firstNodeStyle={{
+            width: '30%',
+            overflow: 'hidden',
+            maxWidth: leftExpand ? '' : '30px',
+            borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
+          }}
+          secondNodeStyle={{ width: leftExpand ? '100%' : 'calc(100% - 30px)', overflow: 'auto hidden' }}
+          firstNode={<AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />}
+          secondNode={
+            <>
+              {hasTaskContent ? (
+                <div className={styles['chat-content-wrapper']}>
+                  <div className={styles['header']}>
+                    <div className={styles['title']}>
+                      <ColorsBrainCircuitIcon />
+                      深度规划
+                    </div>
+                    <div className={styles['extra']}>
+                      <YakitButton
+                        type="text2"
+                        icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                        onClick={onIsExpand}
+                      />
+                    </div>
                   </div>
-                  <div className={styles['extra']}>
-                    <YakitButton
-                      type="text2"
-                      icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                      onClick={onIsExpand}
-                    />
-                  </div>
+                  <AIReActTaskChatContent />
                 </div>
-                <AIReActTaskChatContent />
-              </div>
-            ) : (
-              <AIReActTaskEmpty
-                loadingAIMaterials={loadingAIMaterials}
-                randomAIMaterialsData={randomAIMaterialsData}
-                onRefresh={onRefresh}
-                onClickItem={onClickItem}
-              />
-            )}
-          </>
-        }
-      />
+              ) : (
+                <AIReActTaskEmpty
+                  loadingAIMaterials={loadingAIMaterials}
+                  randomAIMaterialsData={randomAIMaterialsData}
+                  onRefresh={onRefresh}
+                  onClickItem={onClickItem}
+                />
+              )}
+            </>
+          }
+        />
+      )}
     </div>
   )
 })

@@ -176,6 +176,11 @@
     .tab-content-right {
       border-right: 1px solid var(--Colors-Use-Neutral-Border);
     }
+    .tab-content-resource-side {
+      border-left: 1px solid var(--Colors-Use-Neutral-Border);
+      background: var(--Colors-Use-Basic-Background);
+      min-width: 360px;
+    }
   }
 }
 .token-tag {

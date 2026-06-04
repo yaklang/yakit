@@ -46,7 +46,7 @@
     "skillBase": "技能庫",
     "toolBase": "工具庫",
     "expandResources": "擴充套件資源",
-    "WelcomeHomeSubTitle": "你的智慧安全助手",
+    "WelcomeHomeSubTitle": "守衛經濟安全",
     "maybeYouWantToAsk": "你可能想問:",
     "refresh": "換一換",
     "homeRecommend": "首頁推薦"
@@ -135,7 +135,7 @@
   "AIAgent": {
     "getKnowledgeBaseFailed": "獲取知識庫列表失敗: {{error}}",
     "tip": "提示",
-    "memfitUpdateNotice": "Memfit會話資料升級，會刪除系統內的所有歷史會話記錄",
+    "memfitUpdateNotice": "海生會話資料升級，會刪除系統內的所有歷史會話記錄",
     "clearHistoryConfirm": "是否清除資料庫歷史記錄"
   },
   "AIModelTestResult": {

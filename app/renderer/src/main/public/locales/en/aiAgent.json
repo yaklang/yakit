@@ -46,7 +46,7 @@
     "skillBase": "Skill",
     "toolBase": "Tool",
     "expandResources": "Expand Resources",
-    "WelcomeHomeSubTitle": "Your intelligent security assistant",
+    "WelcomeHomeSubTitle": "Guarding economic security",
     "maybeYouWantToAsk": "Maybe you want to ask:",
     "refresh": "Refresh",
     "homeRecommend": "Home Recommendation"
@@ -135,7 +135,7 @@
   "AIAgent": {
     "getKnowledgeBaseFailed": "Failed to get knowledge base list: {{error}}",
     "tip": "Tip",
-    "memfitUpdateNotice": "Memfit session data upgraded, all historical session records in the system will be deleted.",
+    "memfitUpdateNotice": "Haisheng session data upgraded, all historical session records in the system will be deleted.",
     "clearHistoryConfirm": "Whether to clear database history records"
   },
   "AIModelTestResult": {

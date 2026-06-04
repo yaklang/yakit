@@ -36,6 +36,11 @@
       }
     }
   }
+  .timeline-only-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
   .chat-content-wrapper {
     @extend %display-column-center;
     flex: 1;

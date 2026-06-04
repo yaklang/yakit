@@ -50,18 +50,18 @@
 
   .content {
     @extend %display-flex-center;
-    width: 784px;
+    width: min(1080px, calc(100vw - 220px));
     position: relative;
     flex: 1;
     .content-absolute {
       @extend %display-flex-center;
       padding: 24px;
       justify-content: center;
-      gap: 64px;
+      gap: 72px;
       flex: 1 0 0;
       position: absolute;
       width: 100%;
-      top: 20%;
+      top: 18%;
       left: 0;
     }
   }
@@ -70,10 +70,12 @@
     @extend %display-column-center;
     align-items: flex-start;
     gap: 24px;
-    flex: 1 0 0;
+    flex: 1 1 0;
     height: 460px;
-    padding-top: 10%;
-    width: 0;
+    padding-top: 8%;
+    min-width: 520px;
+    max-width: 620px;
+    width: 100%;
     .input-heard {
       @extend %display-column-center;
       align-items: flex-start;
@@ -122,6 +124,7 @@
     }
     .input-body {
       position: relative;
+      min-height: 168px;
       &::after {
         content: '';
         position: absolute;
@@ -138,6 +141,11 @@
         right: -12px;
         width: 1px;
         height: 1px;
+      }
+      :global {
+        .milkdown {
+          min-height: 58px;
+        }
       }
     }
   }

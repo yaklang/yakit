@@ -65,7 +65,7 @@ import irifyRight from '@/assets/irify-right.png'
 import yakitRight from '@/assets/yakit-right.png'
 import memfitRight from '@/assets/memfit-right.webm'
 import memfitRightDark from '@/assets/memfit-right-dark.webm'
-import { SolidIrifyFontLogoIcon, SolidMemfitFontLogoIcon, SolidYakitFontLogoIcon } from '@/assets/colors'
+import { SolidIrifyFontLogoIcon, SolidYakitFontLogoIcon } from '@/assets/colors'
 import { Theme, useTheme } from '@/hooks/useTheme'
 import { Lange, YakitSoftMode } from './components/SoftwareBasics'
 import { yakitApp, yakitEngine } from '@/utils/electronBridge'
@@ -1021,7 +1021,7 @@ export const StartupPage: React.FC = () => {
       if (isCommunityIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isCommunityMemfit()) {
-        return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
+        return { type: 'text', text: '海生', width: 112, height: 41 }
       } else {
         return { type: 'svg', component: SolidYakitFontLogoIcon, width: 112, height: 41 }
       }
@@ -1032,7 +1032,7 @@ export const StartupPage: React.FC = () => {
       if (isEnpriTraceIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isMemfit()) {
-        return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
+        return { type: 'text', text: '海生', width: 112, height: 41 }
       } else {
         return { type: 'img', src: theme === 'light' ? yakitEELogo : yakitEEDarkLogo, width: 137, height: 40 }
       }
@@ -1065,11 +1065,13 @@ export const StartupPage: React.FC = () => {
           <div className={styles['startup-logo']}>
             {startupLogo.type === 'img' ? (
               <img src={startupLogo.src} alt="暂无图片" width={startupLogo.width} height={startupLogo.height} />
+            ) : startupLogo.type === 'text' ? (
+              <div className={styles['startup-text-logo']}>{startupLogo.text}</div>
             ) : (
               <startupLogo.component style={{ height: startupLogo.height, width: startupLogo.width }} />
             )}
           </div>
-          <div className={styles['startup-desc']}>为网络安全而生</div>
+          <div className={styles['startup-desc']}>{isMemfit() ? '守卫经济安全' : '为网络安全而生'}</div>
         </div>
         <YaklangEngineWatchDog
           credential={credential}

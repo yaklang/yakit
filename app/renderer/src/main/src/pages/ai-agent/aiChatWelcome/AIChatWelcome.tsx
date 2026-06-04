@@ -47,6 +47,7 @@ import { InstallPluginModal } from '@/pages/KnowledgeBase/compoment/InstallPlugi
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/KnowledgeBase/hooks/useCheckKnowledgePlugin'
 import useGetAIMaterialsData, { getAIRecommendIconByType } from '@/pages/ai-re-act/hooks/useGetAIMaterialsData'
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import { isMemfit } from '@/utils/envfile'
 
 // const sideberRadioOptions = [
 //     {
@@ -104,7 +105,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
     const [lineStartDOMRect, setLineStartDOMRect] = useState<DOMRect>()
     // 控制下拉菜单
-    const [openDrawer, setOpenDrawer] = useState<boolean>(true)
+    const [openDrawer, setOpenDrawer] = useState<boolean>(() => !isMemfit())
     const [tabActiveKey, setTabActiveKey] = useState<AIChatWelcomeTabKeyEnum>(AIChatWelcomeTabKeyEnum.Knowledge)
 
     const lineStartRef = useRef<HTMLDivElement>(null)
@@ -300,7 +301,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
           <div className={styles['content-absolute']}>
             <div className={styles['input-wrapper']}>
               <div className={styles['input-heard']}>
-                <div className={styles['title']}>Memfit AI Agent</div>
+                <div className={styles['title']}>海生</div>
                 <div className={styles['subtitle']}>{t('AIChatWelcome.WelcomeHomeSubTitle')}</div>
               </div>
               <div className={classNames(styles['input-body-wrapper'])}>
