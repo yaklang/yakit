@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useRef, useState } from 'react'
-import styles from './HistoryTaskTree.module.scss' // 假设你有对应的样式文件
+import styles from './HistoryTaskTree.module.scss'
 import {
   AIHistoryContinueTaskProps,
   HistoryTaskTreeItemProps,
