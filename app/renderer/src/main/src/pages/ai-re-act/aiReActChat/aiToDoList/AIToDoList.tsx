@@ -11,8 +11,8 @@ import { AIToDoListDeletedIcon, AIToDoListPendingIcon, AIToDoListDoneIcon, AIToD
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
 
 export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
-  const { className, todoData } = props
-  const [hidden, setHidden] = useState(true)
+  const { className, todoData, bannedExpand } = props
+  const [hidden, setHidden] = useState(!bannedExpand)
   const finishedCount = useCreation(() => {
     return todoData.stats.deleted + todoData.stats.done + todoData.stats.skipped
   }, [todoData.stats])
@@ -21,18 +21,28 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
     return todoData.items.find((item) => item.status === AIToDoListStatusEnum.Doing)
   }, [todoData.items])
 
+  const handleHiddenChange = useMemoizedFn((e) => {
+    e.stopPropagation()
+    if (bannedExpand) return
+    setHidden((v) => !v)
+  })
   return (
     <div className={classNames(styles['ai-to-do-list-wrapper'], className)}>
       <div className={styles['card']}>
         {!!total ? (
           <>
-            <div className={styles['card-heard']} onClick={() => setHidden((v) => !v)}>
+            <div className={styles['card-heard']} onClick={handleHiddenChange}>
               <div className={styles['card-heard-title']}>
-                {hidden ? (
-                  <OutlineChevronrightIcon className={styles['chevron-icon']} />
-                ) : (
-                  <OutlineChevronleftIcon className={styles['chevron-icon']} />
+                {!bannedExpand && (
+                  <>
+                    {hidden ? (
+                      <OutlineChevronrightIcon className={styles['chevron-icon']} />
+                    ) : (
+                      <OutlineChevronleftIcon className={styles['chevron-icon']} />
+                    )}
+                  </>
                 )}
+
                 <span className={styles['title']}>待办清单</span>
                 {!!doingItem && (
                   <YakitTag fullRadius color="main" size="small" className={styles['pending-tag']}>

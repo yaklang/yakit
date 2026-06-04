@@ -104,6 +104,7 @@ $radius: 8px;
         line-height: 16px; /* 133.333% */
         letter-spacing: 0.5px;
         flex: 1;
+        min-width: 100px;
         .progress-bar {
           :global {
             .ant-progress-inner {
@@ -134,6 +135,7 @@ $radius: 8px;
         display: flex;
         flex-direction: column;
         gap: 12px;
+        // overflow: hidden;
 
         .card-list-item {
           display: flex;
