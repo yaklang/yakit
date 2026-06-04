@@ -116,7 +116,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   DisableToolIntervalReview: false,
   SyncPerceptionTrigger: false,
   EnablePlan: false,
-  PlanExecTaskConcurrency: 3,
+  PlanExecTaskConcurrency: 2,
 }
 
 /** mcp 自定义服务器配置类型选项 */

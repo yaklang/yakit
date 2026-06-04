@@ -152,7 +152,7 @@ export interface AIStartParams {
 
   /**
    * 任务规划里并发任务的数量
-   * 默认：1
+   * 默认：2
    */
   PlanExecTaskConcurrency?: number
 }
