@@ -215,10 +215,6 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
     }
   })
 
-  const taskStatus = useCreation(() => {
-    return chatIPCData.taskStatus
-  }, [chatIPCData.taskStatus])
-
   const onRecover = useMemoizedFn(() => {
     const info = getTaskInfo()
     const coordinatorId = info?.coordinatorId

@@ -10,7 +10,7 @@ import {
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
 import { openAIConcurrentStream } from '@/utils/openWebsite'
 import type { ConcurrentStreamChildWindowPayload } from '../hooks/useConcurrentStreamPayload'
-import styles from './ConcurrentStreamCard.module.scss'
+import styles from '../ConcurrentStreamCard.module.scss'
 
 /** 卡片标题栏右侧操作区 */
 interface ConcurrentStreamCardActionsProps {
