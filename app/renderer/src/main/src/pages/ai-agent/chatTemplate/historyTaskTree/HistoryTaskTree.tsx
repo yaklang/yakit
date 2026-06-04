@@ -271,15 +271,17 @@ export const AIHistorySkipTask: React.FC<{ taskIndex: string }> = React.memo(({ 
         e?.stopPropagation()
       }}
     >
-      <YakitButton
-        size="small"
-        icon={<RedoDotIcon />}
-        type="text"
-        loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
-        onClick={(e) => {
-          e.stopPropagation()
-        }}
-      />
+      <Tooltip title="跳过当前任务" destroyTooltipOnHide={true}>
+        <YakitButton
+          size="small"
+          icon={<RedoDotIcon />}
+          type="text"
+          loading={!!syncIdInfoMap?.get(syncIdOfStopSubTask.current)}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        />
+      </Tooltip>
     </YakitPopconfirm>
   )
 })

@@ -20,7 +20,12 @@ import { AITabsEnum } from '../defaultConstant'
 import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
 import { AIAgentGrpcApi, AIEventQueryRequest } from '@/pages/ai-re-act/hooks/grpcApi'
 import { isToolStdoutStream } from '@/pages/ai-re-act/hooks/utils'
-import { OutlineArrownarrowrightIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import {
+  OutlineArrownarrowrightIcon,
+  OutlineChevronsDownUpIcon,
+  OutlineChevronsUpDownIcon,
+  OutlineRefreshIcon,
+} from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Divider, Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -189,6 +194,11 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const [loading, setLoading] = useState<boolean>(false)
   const [type, setType] = useState<'outInput' | 'params'>('outInput')
 
+  const [expand, setExpand] = useState<boolean>(false)
+  const expandToggle = useMemoizedFn(() => {
+    setExpand((v) => !v)
+  })
+
   const httpFlowDataCount = useCreation(() => {
     return data.httpFlowDataCount
   }, [data.httpFlowDataCount])
@@ -352,47 +362,59 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
               <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
             </Tooltip>
           )}
+
+          <Tooltip title={expand ? '收起' : '展开'}>
+            <YakitButton
+              size="small"
+              type="text"
+              icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+              onClick={expandToggle}
+              className={styles['expand-btn']}
+            />
+          </Tooltip>
         </div>
       }
       titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
-      footer={<OperationCardFooter {...operationInfo} />}
+      footer={expand && <OperationCardFooter {...operationInfo} />}
     >
-      <ToolStatusCard
-        status={status}
-        title={
-          <div className={styles['tool-title']}>
-            <div className={styles['tool-title-left']}>
-              <div className={styles['tool-name']}>{data.toolName}</div>
-              <YakitTag size="small" fullRadius color={statusColor as YakitTagColor}>
-                {statusText}
-              </YakitTag>
+      {expand && (
+        <ToolStatusCard
+          status={status}
+          title={
+            <div className={styles['tool-title']}>
+              <div className={styles['tool-title-left']}>
+                <div className={styles['tool-name']}>{data.toolName}</div>
+                <YakitTag size="small" fullRadius color={statusColor as YakitTagColor}>
+                  {statusText}
+                </YakitTag>
+              </div>
+              <YakitRadioButtons
+                size="small"
+                buttonStyle="solid"
+                options={[
+                  {
+                    label: '输出',
+                    value: 'outInput',
+                  },
+                  {
+                    label: '参数',
+                    value: 'params',
+                  },
+                ]}
+                value={type}
+                onChange={(e) => {
+                  setType(e.target.value)
+                }}
+              />
             </div>
-            <YakitRadioButtons
-              size="small"
-              buttonStyle="solid"
-              options={[
-                {
-                  label: '输出',
-                  value: 'outInput',
-                },
-                {
-                  label: '参数',
-                  value: 'params',
-                },
-              ]}
-              value={type}
-              onChange={(e) => {
-                setType(e.target.value)
-              }}
-            />
-          </div>
-        }
-      >
-        <YakitSpin spinning={loading}>
-          <div className={styles['file-system-content']}>{renderContent()}</div>
-        </YakitSpin>
-      </ToolStatusCard>
-      {!!fileList?.length && <FileList fileList={fileList} />}
+          }
+        >
+          <YakitSpin spinning={loading}>
+            <div className={styles['file-system-content']}>{renderContent()}</div>
+          </YakitSpin>
+        </ToolStatusCard>
+      )}
+      {expand && !!fileList?.length && <FileList fileList={fileList} />}
     </ChatCard>
   )
 })
