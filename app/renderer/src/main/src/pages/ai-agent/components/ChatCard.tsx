@@ -13,6 +13,7 @@ export interface ChatCardProps {
   style?: React.CSSProperties
   childClassName?: string
   childStyle?: React.CSSProperties
+  onClickTitle?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
 }
 const ChatCard: FC<ChatCardProps> = ({
   titleIcon,
@@ -25,10 +26,11 @@ const ChatCard: FC<ChatCardProps> = ({
   style,
   childClassName,
   childStyle,
+  onClickTitle,
 }) => {
   return (
     <div className={classNames(styles['chat-card'], className)} style={style}>
-      <div className={styles['chat-card-title']}>
+      <div className={styles['chat-card-title']} onClick={onClickTitle}>
         <div className={styles['chat-card-title-left']}>
           {titleIcon && <div className={styles['chat-card-title-icon']}>{titleIcon}</div>}
           <div className={styles['chat-card-title-text']}>{titleText}</div>

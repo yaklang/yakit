@@ -61,7 +61,10 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
           size="small"
           type="text"
           icon={<OutlineListOneIcon />}
-          onClick={() => openAIConcurrentStream(childWindowPayload)}
+          onClick={(e) => {
+            e.stopPropagation()
+            openAIConcurrentStream(childWindowPayload)
+          }}
           className={styles['expand-btn']}
         />
       </Tooltip>
@@ -70,7 +73,10 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
           size="small"
           type="text"
           icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
-          onClick={onExpandToggle}
+          onClick={(e) => {
+            e.stopPropagation()
+            onExpandToggle()
+          }}
           className={styles['expand-btn']}
         />
       </Tooltip>

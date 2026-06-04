@@ -102,7 +102,7 @@ const AIGroupStreamCard: FC<{
   const content = stream?.data.content || ''
   const shouldShowMask = useMemo(() => content.length > STREAM_MASK_THRESHOLD, [content])
   const contentRef = useRef<HTMLDivElement>(null)
-  const { ref: containerRef, isFocus, onClick: onSetFocus } = useClickFocus<HTMLDivElement>()
+  const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
 
   const [isScroll, setIsScroll] = useState(false)
   const allowAutoScrollRef = useRef<boolean>(true)
@@ -180,7 +180,6 @@ const AIGroupStreamCard: FC<{
         [styles['container-focus']]: isFocus,
       })}
       ref={containerRef}
-      onClick={onSetFocus}
     >
       <div
         className={styles.title}

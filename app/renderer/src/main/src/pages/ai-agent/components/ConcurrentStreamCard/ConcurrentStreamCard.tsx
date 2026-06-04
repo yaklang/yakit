@@ -93,6 +93,7 @@ const ConcurrentStreamCard: FC<{
       titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
       style={cardStyle}
       childStyle={isChildWindow ? CHILD_CONTENT_WINDOW_STYLE : undefined}
+      onClickTitle={expandToggle}
       titleMore={
         <ConcurrentStreamCardActions
           isChildWindow={isChildWindow}

@@ -15,7 +15,7 @@ interface ConcurrentStreamContentProps {
 }
 
 const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements, session, isChildWindow }) => {
-  const { ref: scrollRef, isFocus, onClick: onFocus } = useClickFocus<HTMLDivElement>()
+  const { ref: scrollRef, isFocus } = useClickFocus<HTMLDivElement>()
 
   /** 当前渲染起始下标，初始从末尾 PAGE_SIZE 处开始，新增元素始终可见 */
   const [startIndex, setStartIndex] = useState(() => Math.max(0, elements.length - PAGE_SIZE))
@@ -68,7 +68,6 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements, s
     <div
       ref={scrollRef}
       className={classNames(styles['concurrent-stream-content'], { [styles.focused]: isFocus })}
-      onClick={onFocus}
       onScroll={handleScroll}
       style={isChildWindow ? { maxHeight: 'inherit', height: '100%', overflowY: 'auto' } : undefined}
     >
