@@ -274,7 +274,7 @@ function useTaskChat(params: UseTaskChatParams) {
           setPlan(cloneDeep(DefaultCurrentExecTaskTree))
         }
         return
-      } else if (res.Type === 'todo_list_update' && res.NodeId === 'todo_list') {
+      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
         // 更新待办清单卡片数据
         const info = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
         const todoListMap = getTodoList()
