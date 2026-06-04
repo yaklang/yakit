@@ -5,13 +5,13 @@ import type {
   UseCasualChatParams,
   UseCasualChatState,
 } from './type'
-import type { AIChatQSData, AIReviewType, ReActChatRenderItem, TodoListCardData } from './aiRender'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { AITaskStatus } from './grpcApi'
 import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
-import { genBaseAIChatData, handleGrpcDataPushLog } from './utils'
+import { genBaseAIChatData, handleGrpcDataPushLog, handleTodoListData } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIChatQSDataTypeEnum } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
@@ -138,15 +138,9 @@ function useCasualChat(params: UseCasualChatParams) {
       } else if (res.Type === 'todo_list_update' && res.NodeId === 'todo_list') {
         // 更新待办清单卡片数据
         const info = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
-        const { items, stats, task_id } = info
-        if (!task_id) return
-        if (Array.isArray(items) && items.length === 0) return
         const chatDetail = getCasualChat()
         if (!chatDetail) return
-        chatDetail.todoList = {
-          items,
-          stats,
-        }
+        chatDetail.todoList = handleTodoListData(info.items, info.task_id, info.task_index)
         setToolListRenderNumber((old) => old + 1)
       }
 

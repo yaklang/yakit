@@ -13,7 +13,14 @@ import { useCreation, useMemoizedFn, useThrottleFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, generateTaskId, genExecTasks, handleGrpcDataPushLog, isValidTaskIndex } from './utils'
+import {
+  genBaseAIChatData,
+  generateTaskId,
+  genExecTasks,
+  handleGrpcDataPushLog,
+  handleTodoListData,
+  isValidTaskIndex,
+} from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -270,13 +277,10 @@ function useTaskChat(params: UseTaskChatParams) {
       } else if (res.Type === 'todo_list_update' && res.NodeId === 'todo_list') {
         // 更新待办清单卡片数据
         const info = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
-        const { items, stats, task_id, task_index } = info
-        if (!task_id || !task_index) return
-        if (Array.isArray(items) && items.length === 0) return
-        if (task_id !== getCurrentTaskPlanID()?.taskID) return
         const todoListMap = getTodoList()
         if (!todoListMap) return
-        todoListMap.set(task_index, { items, stats })
+        const newData = handleTodoListData(info.items, info.task_id, info.task_index)
+        todoListMap.set(info.task_index, newData)
       }
 
       // 未识别类型全部归档到日志处理

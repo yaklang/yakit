@@ -418,6 +418,8 @@ export declare namespace AIAgentGrpcApi {
     id: string
     status: AIToDoListStatusEnumType
     updated_at: number
+    scope_task_id?: string
+    scope_task_index?: string
   }
 
   export interface TodoListUpdateStats {
