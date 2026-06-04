@@ -55,7 +55,11 @@ export default function useMcpStream(props: useMcpHooks) {
   const [mcpToken, setMcpToken] = useState<string>(randomString(40))
   const [mcpCurrent, setMcpCurrent] = useState<StartMcpServerResponse | undefined>(undefined)
   const [mcpServerUrl, setMcpServerUrl] = useState<string>('')
-  const [mcpUrl, setMcpUrl] = useState<string>(SystemInfo.mode === 'remote' ? remoteMcpDefalutUrl : localMcpDefalutUrl)
+  const [mcpUrl, setMcpUrl] = useState<string>(localMcpDefalutUrl)
+
+  useEffect(() => {
+    setMcpUrl(SystemInfo.mode === 'remote' ? remoteMcpDefalutUrl : localMcpDefalutUrl)
+  }, [SystemInfo.mode])
 
   useEffect(() => {
     const offData = yakitStream.onData(mcpToken, async (data: StartMcpServerResponse) => {

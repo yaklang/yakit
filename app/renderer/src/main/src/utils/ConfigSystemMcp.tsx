@@ -50,6 +50,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
   } = props
   const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
 
+  // MCP 是否已启用
   const enableMcp = useMemo(() => {
     if (!mcpStreamInfo.mcpCurrent) return false
     if (['stopped', 'error'].includes(mcpStreamInfo.mcpCurrent.Status)) {
@@ -107,7 +108,6 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     }
     return `\`\`\`json\n${JSON.stringify(jsonData, null, 2)}\n\`\`\``
   }, [mcpStreamInfo.mcpServerUrl])
-
   const mcpMarkdownSource = useMemo(() => {
     const mcpUrl = mcpStreamInfo.mcpServerUrl?.replace(/\/sse$/, '/mcp') ?? ''
     const jsonData = {
@@ -120,7 +120,6 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     }
     return `\`\`\`json\n${JSON.stringify(jsonData, null, 2)}\n\`\`\``
   }, [mcpStreamInfo.mcpServerUrl])
-
   const stdioMarkdownSource = useMemo(() => {
     const jsonData = {
       mcpServers: {
