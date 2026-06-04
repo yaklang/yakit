@@ -153,4 +153,5 @@ export const DefaultTodoListCardData: TodoListCardData = {
     pending: 0,
     skipped: 0,
   },
+  uuid: '',
 }

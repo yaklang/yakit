@@ -858,6 +858,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             handleTriggerQuestionQueueRequest()
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
             currentCasualTaskID.current = data.react_task_id
+            casualChatEvent.resetTodoListData()
             if (data.focus_mode) {
               // 记录场景状态
               handleFocusModeChange(data.react_task_id, data.focus_mode)
