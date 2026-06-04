@@ -1982,7 +1982,7 @@ message AIStartParams {
   // 会话来源（如 ide / cli / yak），写入项目库 ai_sessions_v1.source
   string Source = 41;
 
-  int64 PlanExecTaskConcurrency = 42; // 计划执行任务的并发度
+  int64 PlanExecTaskConcurrency = 45; // 计划执行任务的并发度
 }
 
 message AITaskFilter {
