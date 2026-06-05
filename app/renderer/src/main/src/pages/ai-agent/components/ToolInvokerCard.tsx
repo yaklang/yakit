@@ -324,11 +324,11 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           <div className={styles['tool-invoker-card-extra-time']}>
-            {!!startTime && (
+            {/* {!!startTime && (
               <div>
                 {t('ToolInvokerCard.startTime')}:<span>{startTime}</span>
               </div>
-            )}
+            )} */}
             {!!duration && (
               <div>
                 {t('ToolInvokerCard.duration')}:<span>{duration}</span>s

@@ -6,14 +6,21 @@ import type {
   UseTaskChatParams,
   UseTaskChatState,
 } from './type'
-import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps, TodoListCardData } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { useEffect, useRef, useState } from 'react'
 import { useCreation, useMemoizedFn, useThrottleFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, generateTaskId, genExecTasks, handleGrpcDataPushLog, isValidTaskIndex } from './utils'
+import {
+  genBaseAIChatData,
+  generateTaskId,
+  genExecTasks,
+  handleGrpcDataPushLog,
+  handleTodoListData,
+  isValidTaskIndex,
+} from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -40,6 +47,10 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
+
+  const getTodoList = useMemoizedFn(() => {
+    return getChatDataStore?.()?.taskChat?.todoListMap
+  })
 
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.taskChat?.contents
@@ -263,6 +274,13 @@ function useTaskChat(params: UseTaskChatParams) {
           setPlan(cloneDeep(DefaultCurrentExecTaskTree))
         }
         return
+      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
+        // 更新待办清单卡片数据
+        const info = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
+        const todoListMap = getTodoList()
+        if (!todoListMap) return
+        const newData = handleTodoListData(info.items, info.task_id, info.task_index)
+        todoListMap.set(info.task_index, newData)
       }
 
       // 未识别类型全部归档到日志处理

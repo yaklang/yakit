@@ -86,6 +86,16 @@
   }
 }
 
+.yakit-tag-main {
+  background: var(--Colors-Use-Main-Focus);
+  border-color: var(--Colors-Use-Main-Border);
+  color: var(--Colors-Use-Main-Primary);
+
+  svg {
+    color: var(--Colors-Use-Main-Primary);
+  }
+}
+
 .yakit-tag-danger {
   background: var(--Colors-Use-Error-Bg-Hover);
   border-color: var(--Colors-Use-Error-Border);

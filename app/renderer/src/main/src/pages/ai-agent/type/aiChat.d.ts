@@ -55,11 +55,15 @@ export interface AIChatData {
     contextSections: AIContextSectionsDetail
   }
   /** 自由对话(ReAct)会话 */
-  casualChat: UseChatIPCState['casualChat'] & {
+  casualChat: Omit<UseChatIPCState['casualChat'], 'toolListRenderNumber'> & {
     /** 会话内每条信息的详情 */
     contents: Map<string, AIChatQSData>
+    todoList: TodoListCardData
   }
-  taskChat: UseChatIPCState['taskChat'] & { contents: Map<string, AIChatQSData> }
+  taskChat: UseChatIPCState['taskChat'] & {
+    contents: Map<string, AIChatQSData>
+    todoListMap: Map<string, TodoListCardData>
+  }
   grpcFolders: UseChatIPCState['grpcFolders']
   reActTimelines: UseChatIPCState['reActTimelines']
 }

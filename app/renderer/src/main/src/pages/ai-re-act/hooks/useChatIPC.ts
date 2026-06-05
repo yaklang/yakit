@@ -752,6 +752,8 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (res.Type === 'start_plan_and_execution') {
           if (res.IsSync) return
+          // 清空任务规划的待办清单卡片数据
+          getChatDataStore()?.taskChat.todoListMap.clear()
           // 触发任务规划，并传出任务规划流的标识 coordinator_id
           const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
           if (startInfo.coordinator_id && currentTaskPlanID.current?.coordinatorId !== startInfo.coordinator_id) {
@@ -856,6 +858,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             handleTriggerQuestionQueueRequest()
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
             currentCasualTaskID.current = data.react_task_id
+            casualChatEvent.resetTodoListData()
             if (data.focus_mode) {
               // 记录场景状态
               handleFocusModeChange(data.react_task_id, data.focus_mode)
@@ -947,6 +950,7 @@ function useChatIPC(params?: UseChatIPCParams) {
               }
               if (focusOfTaskID.current === react_task_id) handleResetFocusMode()
               handleUpdateCasualStatus('remove')
+              casualChatEvent.resetTodoListData()
               if (currentTaskPlanID.current?.taskID === react_task_id) {
                 currentTaskPlanID.current.status = react_task_now_status as AITaskStatus
                 setCancelTaskLoading(false)

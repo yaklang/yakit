@@ -2,7 +2,7 @@ import { Ctx } from '@milkdown/kit/ctx'
 import { prosePluginsCtx } from '@milkdown/kit/core'
 import { Plugin, PluginKey } from 'prosemirror-state'
 import { TextSelection } from 'prosemirror-state'
-import { $command } from '@milkdown/kit/utils'
+import { $command, $prose } from '@milkdown/kit/utils'
 
 type LockGuardOptions = {
   mentionTypes: string[]
@@ -198,8 +198,37 @@ export const insertAtCurrentPosition = $command<string, string>('command-insertA
     return true // 表示命令成功执行
   }
 })
+/**
+ * @description md编辑器内联组件，末尾输入空格没法跳出当前内联组件，
+ * 目前只处理a标签
+ */
+const stepOutLinkPlugin = $prose(() => {
+  return new Plugin({
+    key: new PluginKey('step-out-link'),
+    props: {
+      handleTextInput(view, from, to, text) {
+        // 当用户刚好输入了一个空格字符
+        if (text === ' ') {
+          const { state } = view
+          const linkMark = state.schema.marks.link
 
+          if (!linkMark) return false
+
+          const currentMarks = state.storedMarks || state.selection.$from.marks()
+          // 检查当前所处的光标位置是否被标记为了链接
+          if (linkMark.isInSet(currentMarks)) {
+            // 接管输入，先移除接下来的链接样式，再向编辑器插入纯净的空格
+            const tr = state.tr.removeStoredMark(linkMark).insertText(' ', from, to)
+            view.dispatch(tr)
+            return true
+          }
+        }
+        return false
+      },
+    },
+  })
+})
 /** 你的自定义插件集合 */
 export const aiCustomPlugin = () => {
-  return [removeAIOffsetCommand, preventDeleteLockedMentionPlugin(), insertAtCurrentPosition]
+  return [removeAIOffsetCommand, preventDeleteLockedMentionPlugin(), insertAtCurrentPosition, stepOutLinkPlugin]
 }

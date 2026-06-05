@@ -151,6 +151,14 @@ export interface ReportFinishCardData {
   content: string
 }
 
+/** UI：待办清单卡片数据*/
+export interface TodoListCardData {
+  items: AIAgentGrpcApi.TodoListUpdateItem[]
+  stats: AIAgentGrpcApi.TodoListUpdateStats
+  /** UI定时刷新数据渲染，用于确定数据是否有更新 */
+  uuid: string
+}
+
 /** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */
 export interface HttpFlowFuzzStatusCardData {
   fuzz_id: string

@@ -7,6 +7,7 @@ import type { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
 import type { AITaskInfoProps } from './aiRender'
 
 import {
+  AIToDoListStatusEnumType,
   AttachedResourceKeyEnum,
   AttachedResourceTypeEnum,
   type AIModelTypeEnumType,
@@ -391,6 +392,42 @@ export declare namespace AIAgentGrpcApi {
     model_name: string
     cause: string
     liteforge_action: string
+  }
+
+  /**
+   * todo_list_update + NodeId todo_list 时 Content(JSON) 结构
+   */
+  export interface TodoListUpdate {
+    applied_ops: TodoListUpdateAppliedOps[]
+    items: TodoListUpdateItem[]
+    iteration_index: number
+    satisfied: boolean
+    stats: TodoListUpdateStats
+    task_id: string
+    task_index: string
+  }
+  export interface TodoListUpdateAppliedOps {
+    content: string
+    id: string
+    op: string
+  }
+
+  export interface TodoListUpdateItem {
+    content: string
+    created_at: number
+    id: string
+    status: AIToDoListStatusEnumType
+    updated_at: number
+    scope_task_id?: string
+    scope_task_index?: string
+  }
+
+  export interface TodoListUpdateStats {
+    deleted: number
+    doing: number
+    done: number
+    pending: number
+    skipped: number
   }
 
   /** review_release 释放消息 */

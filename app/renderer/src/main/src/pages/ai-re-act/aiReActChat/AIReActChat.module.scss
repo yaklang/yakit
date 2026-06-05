@@ -103,8 +103,8 @@
   @extend %display-column-center;
   .chat-header {
     @extend %display-flex-center;
-    position: relative;
-    min-width: 0;
+    // position: relative;
+    // min-width: 0;
     gap: 12px;
     padding: 12px 8px;
     height: 48px;
@@ -136,12 +136,12 @@
       justify-content: flex-end;
       gap: 8px;
       flex-shrink: 0;
-      position: absolute;
-      right: 8px;
-      top: 0;
-      bottom: 0;
-      z-index: 2;
-      padding-left: 12px;
+      // position: absolute;
+      // right: 8px;
+      // top: 0;
+      // bottom: 0;
+      // z-index: 2;
+      // padding-left: 12px;
       background: linear-gradient(
         to right,
         transparent,
@@ -194,6 +194,13 @@
         font-weight: 400;
         line-height: 16px;
       }
+    }
+  }
+  .todoList-wrapper {
+    height: 33px;
+    .to-do-list {
+      margin-left: 4px;
+      margin-right: 12px;
     }
   }
 }

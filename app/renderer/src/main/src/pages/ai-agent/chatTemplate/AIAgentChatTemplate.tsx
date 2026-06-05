@@ -115,11 +115,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
           updated_at_unix: 0,
           root_task_name: taskName,
         }
-        return (
-          <div className={styles['history-task-tree-container']}>
-            <HistoryTaskTree data={planHistoryList} currentTaskItem={currentTaskItem} />
-          </div>
-        )
+        return <HistoryTaskTree data={planHistoryList} currentTaskItem={currentTaskItem} />
       case AIChatLeft.Timeline:
         return <TimelineCard />
       default:

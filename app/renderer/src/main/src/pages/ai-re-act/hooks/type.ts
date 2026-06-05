@@ -6,6 +6,7 @@ import type {
   AIYakExecFileRecord,
   ReActChatBaseInfo,
   ReActChatRenderItem,
+  TodoListCardData,
 } from './aiRender'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '@/pages/ai-agent/store/constants'
@@ -87,11 +88,14 @@ export interface UseCasualChatParams extends UseHookBaseParams {
 
 export interface UseCasualChatState {
   elements: ReActChatRenderItem[]
+  toolListRenderNumber: number
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleSend: handleSendFunc
   /** 用户手动介入逻辑 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 清空todo-list数据 */
+  resetTodoListData: () => void
 }
 // #endregion
 
