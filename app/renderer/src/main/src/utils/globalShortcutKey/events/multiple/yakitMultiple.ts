@@ -46,7 +46,7 @@ const YakitMultipleShortcutKeyEvents: EventsType = {
   },
   'copyUrlWithoutQuery*httpFlowTable': {
     name: 'YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery',
-    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_E],
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_B],
   },
   'openUrlInBrowser*httpFlowTable': {
     name: 'YakitEditor.HTTPPacketYakitEditor.openUrlInBrowser',
@@ -54,7 +54,7 @@ const YakitMultipleShortcutKeyEvents: EventsType = {
   },
   'viewResponseInBrowser*httpFlowTable': {
     name: 'HTTPFlowTable.RowContextMenu.viewResponseInBrowser',
-    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_I],
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_O],
   },
   'blockRecord*httpFlowTable': {
     name: 'HTTPFlowTable.RowContextMenu.blockRecord',

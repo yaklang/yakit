@@ -305,7 +305,7 @@ const YakEditorShortcutKeyEvents: EventsType = {
   },
   'copyUrlWithoutQuery*editor': {
     name: 'YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery',
-    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_E],
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_B],
   },
   'openUrlInBrowser*editor': {
     name: 'YakitEditor.HTTPPacketYakitEditor.openUrlInBrowser',
@@ -313,7 +313,7 @@ const YakEditorShortcutKeyEvents: EventsType = {
   },
   'viewResponseInBrowser*editor': {
     name: 'YakitEditor.HTTPPacketYakitEditor.viewResponseInBrowser',
-    keys: [YakitKeyMod.CtrlCmd, YakitKeyBoard.KEY_I],
+    keys: [YakitKeyMod.CtrlCmd, YakitKeyMod.Shift, YakitKeyBoard.KEY_O],
   },
   'copy-as-curl*editor': {
     name: 'YakitEditor.HTTPPacketYakitEditor.copyCurlCommand',
