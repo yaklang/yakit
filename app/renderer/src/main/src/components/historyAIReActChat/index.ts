@@ -1,4 +1,4 @@
-export { HistroryAIReActChat } from '../AIReActChat'
+export { HistroryAIReActChat } from '../HistroryAIReActChat'
 export {
   HistoryAIReActChatProvider,
   useHistoryAIReActChat,

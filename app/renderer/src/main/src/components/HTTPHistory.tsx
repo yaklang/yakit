@@ -29,6 +29,7 @@ import {
   OutlineFileSlidersIcon,
   OutlineFilterIcon,
   OutlineLog2Icon,
+  OutlineMessageCirclePlusIcon,
   OutlinePlusIcon,
   OutlineSearchIcon,
   OutlineXIcon,
@@ -68,7 +69,7 @@ import {
 } from '@/assets/commonProcessIcons'
 import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
-import { RefreshIcon } from '@/assets/newIcon'
+import { ClockIcon, RefreshIcon } from '@/assets/newIcon'
 import { Tooltip } from 'antd'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
 import { YakitCheckbox } from './yakitUI/YakitCheckbox/YakitCheckbox'
@@ -85,8 +86,6 @@ import { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
 import { JSONParseLog } from '@/utils/tool'
 import { histroyAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from './historyAIReActChat'
-import { usePageInfo } from '@/store/pageInfo'
-import { shallow } from 'zustand/shallow'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
@@ -361,27 +360,22 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                 renderHistoryAIReActChat({
                   externalParameters: {
                     isOpen: false,
-                    rightIcon: (
-                      <>
-                        <Tooltip title="新建对话">
+                    rightIcon: {
+                      history: true,
+                      dataDetails: { type: 'text2' },
+                      add: (
+                        <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
-                            icon={<OutlinePlusIcon />}
-                            onClick={() => {
-                              const { activeID, events, onStop, onChatFromHistory, setActiveChat } =
-                                historyAIReActChatBridge
-                              if (activeID) {
-                                onStop()
-                                events.onReset()
-                                onChatFromHistory(activeID)
-                                setActiveChat(undefined)
-                              }
-                            }}
+                            icon={<OutlineMessageCirclePlusIcon />}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
+                      ),
+                      close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-                      </>
-                    ),
+                      ),
+                    },
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,
@@ -433,13 +427,8 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
 }
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   return (
-    <HistoryAIReActChatProvider
-      cacheDataStore={histroyAiStore}
-      focusModeLoop="http_flow_analyze"
-      defaultTimelineSessionID={currentRouteKey}
-    >
+    <HistoryAIReActChatProvider cacheDataStore={histroyAiStore} focusModeLoop="http_flow_analyze">
       <HTTPHistoryInner {...props} />
     </HistoryAIReActChatProvider>
   )

@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { shallow } from 'zustand/shallow'
 import emiter from '@/utils/eventBus/eventBus'
-import { AuditCodePageInfoProps, usePageInfo } from '@/store/pageInfo'
+import { AuditCodePageInfoProps } from '@/store/pageInfo'
 import { irifyAiCodeAuditPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/irifyFocusMode'
 import { isIRify } from '@/utils/envfile'
@@ -61,7 +60,6 @@ export interface IrifyAiCodeAuditPageProps {
  * 追加到发往引擎的 `AIInputEvent.AttachedResourceInfo`。
  */
 const IrifyAiCodeAuditPageInner: React.FC<IrifyAiCodeAuditPageProps> = ({ auditCodePageInfo }) => {
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   const attachRef = useIrifyWorkbenchAiAttachRef()
 
   const transformInputEvent = useMemoizedFn((event: AIInputEvent) => {
@@ -72,7 +70,6 @@ const IrifyAiCodeAuditPageInner: React.FC<IrifyAiCodeAuditPageProps> = ({ auditC
     <HistoryAIReActChatProvider
       cacheDataStore={irifyAiCodeAuditPageAiStore}
       focusModeLoop={IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT}
-      defaultTimelineSessionID={currentRouteKey}
       transformInputEvent={transformInputEvent}
     >
       <IrifyAiCodeAuditEntryBootstrap auditCodePageInfo={auditCodePageInfo} />

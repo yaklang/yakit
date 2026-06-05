@@ -18,6 +18,7 @@ import { onNewChat } from '../HistoryChat'
 import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
+import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -74,10 +75,24 @@ const updateChatTitle = (list: AISession[], info: AISession) => {
 const HistoryChatList: FC<{
   search: string
   sessionList: AISession[]
+  aiSource: AISource[]
   getSessions?: SessionListDispatcher['getSessions']
   setSessions?: SessionListDispatcher['setSessions']
   loadHistoryData?: SessionListDispatcher['loadHistoryData']
-}> = ({ search, sessionList, getSessions, setSessions, loadHistoryData }) => {
+  getPopupContainer?: () => HTMLElement
+  overlayClassName?: string
+  embedded?: boolean
+}> = ({
+  search,
+  sessionList,
+  aiSource,
+  getSessions,
+  setSessions,
+  loadHistoryData,
+  getPopupContainer,
+  overlayClassName,
+  embedded,
+}) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { activeChat } = useAIAgentStore()
   const { setActiveChat, setSetting } = useAIAgentDispatcher()
@@ -101,6 +116,7 @@ const HistoryChatList: FC<{
       target: listRef,
       isNoMore: () => (getSessions?.().length || 0) >= chatTotalRef.current,
       threshold: 100,
+      manual: embedded,
     },
   )
 
@@ -174,9 +190,13 @@ const HistoryChatList: FC<{
     }
 
     try {
-      grpcDeleteAISession({ Filter: { SessionID: [SessionID], Source: ['ai', ''] } }, true)
+      await grpcDeleteAISession({ Filter: { SessionID: [SessionID], Source: aiSource } }, true)
       emiter.emit('onDelChats', JSON.stringify([SessionID]))
     } catch (error) {
+      setSessions?.(sessionList)
+      if (activeSessionId === SessionID) {
+        handleSetActiveChat(info)
+      }
       yakitNotify('error', t('HistoryChatList.deleteFailed', { error: String(error) }))
     } finally {
       setDelLoading((old) => old.filter((el) => el !== SessionID))
@@ -227,7 +247,8 @@ const HistoryChatList: FC<{
                     <Tooltip
                       title={t('HistoryChatList.editTitle')}
                       placement="topRight"
-                      overlayClassName={styles['history-item-extra-tooltip']}
+                      overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+                      getPopupContainer={getPopupContainer}
                     >
                       <YakitButton
                         type="text2"
@@ -241,6 +262,8 @@ const HistoryChatList: FC<{
                     <YakitPopconfirm
                       title={t('HistoryChatList.deleteConfirm')}
                       placement="bottom"
+                      getPopupContainer={getPopupContainer}
+                      overlayClassName={overlayClassName}
                       onConfirm={(e) => {
                         e?.stopPropagation()
                         handleDeleteChat(item)
@@ -264,7 +287,12 @@ const HistoryChatList: FC<{
 
       {editInfo.current && (
         <EditChatNameModal
-          getContainer={document.getElementById(YakitAIAgentPageID) || undefined}
+          getContainer={
+            embedded && getPopupContainer
+              ? getPopupContainer()
+              : document.getElementById(YakitAIAgentPageID) || undefined
+          }
+          zIndex={embedded ? 1110 : undefined}
           info={editInfo.current}
           visible={editShow}
           onCallback={handleCallbackEditName}

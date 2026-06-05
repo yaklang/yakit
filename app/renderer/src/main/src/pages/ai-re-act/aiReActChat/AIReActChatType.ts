@@ -4,6 +4,9 @@ import { AIInputEvent } from '../hooks/grpcApi'
 import React from 'react'
 import { AIChatTextareaProps, AIChatTextareaRefProps } from '@/pages/ai-agent/template/type'
 import { UseChatIPCState } from '../hooks/type'
+import { YakitButtonProp } from '@/components/yakitUI/YakitButton/YakitButton'
+
+export type DataDetailsButtonProps = Omit<YakitButtonProp, 'icon' | 'children'>
 
 export interface AIReActChatRefProps extends AIChatTextareaRefProps {
   handleStart: (value: HandleStartParams) => void
@@ -26,6 +29,20 @@ export interface AISendParams {
 export interface AISendResProps {
   params: AIInputEvent
 }
+
+enum RightIconType {
+  history = 'history',
+  close = 'close',
+  add = 'add',
+  dataDetails = 'dataDetails',
+}
+
+type ExternalParametersRightIcon = Partial<{
+  [RightIconType.history]: boolean
+  [RightIconType.close]: React.ReactElement
+  [RightIconType.add]: React.ReactElement
+  [RightIconType.dataDetails]: true | DataDetailsButtonProps
+}>
 export interface AIReActChatProps {
   mode: AIAgentChatMode
   chatContainerClassName?: string
@@ -37,7 +54,7 @@ export interface AIReActChatProps {
   startRequest: (v: AIHandleStartParams) => Promise<AIHandleStartResProps>
   sendRequest?: (v: AISendParams) => Promise<AISendResProps>
   externalParameters?: {
-    rightIcon?: string | React.ReactNode
+    rightIcon?: ExternalParametersRightIcon
     isOpen?: boolean
     filterMentionType?: AIChatTextareaProps['filterMentionType']
     footerLeftTypes?: AIChatTextareaProps['footerLeftTypes']

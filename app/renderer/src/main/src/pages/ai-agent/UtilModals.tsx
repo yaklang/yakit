@@ -9,7 +9,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 // import styles from "./AIAgent.module.scss"
 
 export const EditChatNameModal: React.FC<EditChatNameModalProps> = memo((props) => {
-  const { getContainer, info, visible, onCallback } = props
+  const { getContainer, zIndex, info, visible, onCallback } = props
 
   const [form] = Form.useForm()
 
@@ -46,6 +46,7 @@ export const EditChatNameModal: React.FC<EditChatNameModalProps> = memo((props) 
   return (
     <YakitModal
       getContainer={getContainer}
+      zIndex={zIndex}
       type="white"
       title="修改对话标题"
       width={400}

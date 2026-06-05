@@ -1,14 +1,13 @@
 import { APIFunc } from '@/apiUtils/type'
-import { type ChatDataStoreKey } from '@/pages/ai-agent/store/ChatDataStore'
 import { yakitNotify } from '@/utils/notification'
 
 const { ipcRenderer } = window.require('electron')
 
 export interface DeleteAIImageByNodeRequest {
-  /**对话ID */
+  /** 对话 ID 列表 */
   sessionID?: string[]
-  /**缓存的文件夹(一级目录) */
-  chatDataStoreKey: ChatDataStoreKey
+  /** 图片路径前缀，如 histroyAiStore（与 save-ai-image 的 chatDataStoreKey 一致） */
+  chatDataStoreKey: string
   token?: string
 }
 interface DeleteAIImageByNodeResponse {}

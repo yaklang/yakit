@@ -17,6 +17,7 @@ import {
   OutlineChevrondownIcon,
   OutlineCogIcon,
   OutlineFilterIcon,
+  OutlineMessageCirclePlusIcon,
   OutlinePlusIcon,
   OutlineRefreshIcon,
   OutlineReplyIcon,
@@ -328,27 +329,22 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                   className: styles['ai-wrapper'],
                   externalParameters: {
                     isOpen: false,
-                    rightIcon: (
-                      <>
-                        <Tooltip title="新建对话">
+                    rightIcon: {
+                      history: true,
+                      dataDetails: { type: 'text2' },
+                      add: (
+                        <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
-                            icon={<OutlinePlusIcon />}
-                            onClick={() => {
-                              const { activeID, events, onStop, onChatFromHistory, setActiveChat } =
-                                historyAIReActChatBridge
-                              if (activeID) {
-                                onStop()
-                                events.onReset()
-                                onChatFromHistory(activeID)
-                                setActiveChat(undefined)
-                              }
-                            }}
+                            icon={<OutlineMessageCirclePlusIcon />}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
+                      ),
+                      close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-                      </>
-                    ),
+                      ),
+                    },
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,
@@ -409,13 +405,8 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
 HTTPHistoryFilterInner.displayName = 'HTTPHistoryFilterInner'
 
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = (props) => {
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   return (
-    <HistoryAIReActChatProvider
-      cacheDataStore={FlowAiStore}
-      focusModeLoop="http_flow_analyze"
-      defaultTimelineSessionID={currentRouteKey}
-    >
+    <HistoryAIReActChatProvider cacheDataStore={FlowAiStore} focusModeLoop="http_flow_analyze">
       <HTTPHistoryFilterInner {...props} />
     </HistoryAIReActChatProvider>
   )

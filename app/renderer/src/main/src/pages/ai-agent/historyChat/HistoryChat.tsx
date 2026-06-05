@@ -22,15 +22,29 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { JSONParseLog } from '@/utils/tool'
-
-const AISOURCE: AISource[] = ['ai', '']
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
 
 const clearLocalChats = (sessions: AISession[]) =>
   emiter.emit('onDelChats', JSON.stringify(sessions.map((item) => item.SessionID)))
 
-const renderClearConfirm = (label: string, title: string, onConfirm: () => void) => {
+const renderClearConfirm = (
+  label: string,
+  title: string,
+  onConfirm: () => void,
+  overlayOptions?: {
+    getPopupContainer?: () => HTMLElement
+    overlayClassName?: string
+  },
+) => {
   return (
-    <YakitPopconfirm placement="bottomRight" title={title} onConfirm={onConfirm}>
+    <YakitPopconfirm
+      placement="bottomRight"
+      title={title}
+      onConfirm={onConfirm}
+      getPopupContainer={overlayOptions?.getPopupContainer}
+      overlayClassName={overlayOptions?.overlayClassName}
+    >
       <div className={styles['clear-confirm-trigger']} onClick={(e) => e.stopPropagation()}>
         {label}
       </div>
@@ -50,11 +64,38 @@ export const onNewChat = () => {
   const info: AIAgentTriggerEventInfo = { type: ReActChatEventEnum.NEW_CHAT }
   emiter.emit('onReActChatEvent', JSON.stringify(info))
 }
-const HistoryChat = memo(() => {
+
+const isSessionMatchSource = (session: AISession, sources: AISource[]) => {
+  const sessionSource = session.Source ?? ''
+  return sources.some((source) => sessionSource === source)
+}
+
+interface HistoryChatProps {
+  /** 会话来源过滤，AI Agent 侧栏为 ['ai', '']，各业务页为 [source] */
+  aiSource: AISource[]
+  /** 嵌入 Tooltip 等浮层场景：隐藏新建/固定按钮，弹层挂载到当前页面容器 */
+  embedded?: boolean
+}
+
+const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const [{ sessions }, dispatcher] = useSessionList(AISOURCE)
+  const [{ sessions }, dispatcher] = useSessionList(aiSource)
   const { activeChat } = useAIAgentStore()
   const { setActiveChat } = useAIAgentDispatcher()
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
+
+  const getPopupContainer = useMemoizedFn(
+    () => document.getElementById(`main-operator-page-body-${currentRouteKey}`) || document.body,
+  )
+  const popupContainer = embedded ? getPopupContainer : undefined
+  const embeddedOverlayClass = styles['history-chat-embedded-overlay']
+  const embeddedPopconfirmClass = styles['history-chat-embedded-popconfirm']
+  const embeddedOverlayOptions = embedded
+    ? {
+        getPopupContainer: popupContainer,
+        overlayClassName: embeddedPopconfirmClass,
+      }
+    : undefined
 
   const [search, setSearch] = useState('')
   const searchDebounce = useDebounce(search, { wait: 500 })
@@ -69,7 +110,7 @@ const HistoryChat = memo(() => {
 
     setClearLoading(true)
     try {
-      await grpcDeleteAISession({ Filter: { Source: AISOURCE } }, true)
+      await grpcDeleteAISession({ Filter: { Source: aiSource } }, true)
       clearLocalChats(sessions)
       onNewChat()
       setActiveChat?.(undefined)
@@ -97,7 +138,7 @@ const HistoryChat = memo(() => {
 
     setClearLoading(true)
     try {
-      await grpcDeleteAISession({ Filter: { BeforeTimestamp: beforeTimestamp, Source: AISOURCE } }, true)
+      await grpcDeleteAISession({ Filter: { BeforeTimestamp: beforeTimestamp, Source: aiSource } }, true)
 
       clearLocalChats(deletedChats)
 
@@ -127,6 +168,17 @@ const HistoryChat = memo(() => {
     dispatcher.resetPagination?.()
   })
 
+  const refreshSessions = useMemoizedFn(async () => {
+    handleResetSessions()
+    await dispatcher.loadHistoryData?.(true)
+  })
+
+  useEffect(() => {
+    if (!embedded) return
+    setSearch('')
+    refreshSessions()
+  }, [embedded, aiSource, refreshSessions])
+
   useEffect(() => {
     const handleSessionData = async (data: string) => {
       const payload = JSONParseLog(data, { throwOnError: false }) as SessionDataPayload | undefined
@@ -146,7 +198,7 @@ const HistoryChat = memo(() => {
           await grpcDeleteAISession(
             {
               Filter: {
-                Source: AISOURCE,
+                Source: aiSource,
               },
             },
             true,
@@ -154,7 +206,9 @@ const HistoryChat = memo(() => {
           handleResetSessions()
           break
         case 'prependSession':
-          if (payload.payload) dispatcher.setSessions((prev) => [payload.payload!, ...prev])
+          if (payload.payload && isSessionMatchSource(payload.payload, aiSource)) {
+            dispatcher.setSessions((prev) => [payload.payload!, ...prev])
+          }
           break
         case 'updateSession':
           if (payload.sessionId && payload.updates) {
@@ -171,7 +225,7 @@ const HistoryChat = memo(() => {
     return () => {
       emiter.off('sessionData', handleSessionData)
     }
-  }, [dispatcher])
+  }, [aiSource, dispatcher])
 
   return (
     <div className={styles['history-chat']}>
@@ -191,6 +245,7 @@ const HistoryChat = memo(() => {
                       t('HistoryChat.oneDay'),
                       t('HistoryChat.clearConfirm', { days: t('HistoryChat.oneDay') }),
                       () => handleClearChatByDays(1),
+                      embeddedOverlayOptions,
                     ),
                   },
                   {
@@ -199,6 +254,7 @@ const HistoryChat = memo(() => {
                       t('HistoryChat.oneWeek'),
                       t('HistoryChat.clearConfirm', { days: t('HistoryChat.oneWeek') }),
                       () => handleClearChatByDays(7),
+                      embeddedOverlayOptions,
                     ),
                   },
                   {
@@ -207,6 +263,7 @@ const HistoryChat = memo(() => {
                       t('HistoryChat.thirtyDays'),
                       t('HistoryChat.clearConfirm', { days: t('HistoryChat.thirtyDays') }),
                       () => handleClearChatByDays(30),
+                      embeddedOverlayOptions,
                     ),
                   },
                   { type: 'divider' },
@@ -216,6 +273,7 @@ const HistoryChat = memo(() => {
                       t('HistoryChat.clearAll'),
                       t('HistoryChat.clearAllConfirm'),
                       handleClearAllChat,
+                      embeddedOverlayOptions,
                     ),
                   },
                 ],
@@ -224,9 +282,16 @@ const HistoryChat = memo(() => {
                 trigger: ['click'],
                 placement: 'bottomRight',
                 disabled: clearLoading || sessions.length === 0,
+                getPopupContainer: popupContainer,
+                overlayClassName: embedded ? embeddedOverlayClass : undefined,
               }}
             >
-              <Tooltip title={t('HistoryChat.clearChats')} placement="topRight">
+              <Tooltip
+                title={t('HistoryChat.clearChats')}
+                placement="topRight"
+                getPopupContainer={popupContainer}
+                overlayClassName={embedded ? embeddedOverlayClass : undefined}
+              >
                 <YakitButton
                   disabled={clearLoading || sessions.length === 0}
                   colors="danger"
@@ -237,10 +302,14 @@ const HistoryChat = memo(() => {
                 </YakitButton>
               </Tooltip>
             </YakitDropdownMenu>
-            <Tooltip title={t('HistoryChat.newChat')} placement="topRight">
-              <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
-            </Tooltip>
-            <SideSettingButton />
+            {!embedded && (
+              <>
+                <Tooltip title={t('HistoryChat.newChat')} placement="topRight">
+                  <YakitButton icon={<OutlineMessageCirclePlusIcon />} onClick={onNewChat} />
+                </Tooltip>
+                <SideSettingButton />
+              </>
+            )}
           </div>
         </div>
 
@@ -259,9 +328,13 @@ const HistoryChat = memo(() => {
         <HistoryChatList
           search={searchDebounce}
           sessionList={sessions}
+          aiSource={aiSource}
           setSessions={dispatcher.setSessions}
           loadHistoryData={dispatcher.loadHistoryData}
           getSessions={dispatcher.getSessions}
+          getPopupContainer={popupContainer}
+          overlayClassName={embedded ? embeddedPopconfirmClass : undefined}
+          embedded={embedded}
         />
       </div>
     </div>

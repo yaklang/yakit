@@ -14,6 +14,7 @@ import type {
   AIInputEvent,
   AIOutputEvent,
   AIOutputI18n,
+  AISource,
   AIStartParams,
   AITaskStatusType,
 } from './grpcApi'
@@ -147,6 +148,9 @@ export interface AIChatIPCNotifyMessage {
 export interface UseChatIPCParams {
   /** 切换会话时，是否自动建立会话连接(default:false) */
   autoConnect?: boolean
+
+  /** 业务来源，用于映射 IndexedDB 消息存储域 */
+  aiSource?: AISource
 
   /** 文件数据缓存实例类 */
   cacheDataStore?: ChatDataStore

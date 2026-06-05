@@ -72,26 +72,20 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
       externalParameters: {
         defaultValue: IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED,
         isOpen: false,
-        rightIcon: (
-          <>
+        rightIcon: {
+          history: true,
+          dataDetails: { type: 'text2' },
+          add: (
             <Tooltip title={t('newChat')}>
               <YakitButton
                 type="text2"
                 icon={<OutlinePlusIcon />}
-                onClick={() => {
-                  const { activeID, events, onStop, onChatFromHistory, setActiveChat } = historyAIReActChatBridge
-                  if (activeID) {
-                    onStop()
-                    events.onReset()
-                    onChatFromHistory(activeID)
-                    setActiveChat(undefined)
-                  }
-                }}
+                onClick={() => historyAIReActChatBridge.onNewChat()}
               />
             </Tooltip>
-            <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-          </>
-        ),
+          ),
+          close: <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />,
+        },
         footerRightTypes: [
           {
             type: AIInputFooterRightEnum.AIFocusMode,
