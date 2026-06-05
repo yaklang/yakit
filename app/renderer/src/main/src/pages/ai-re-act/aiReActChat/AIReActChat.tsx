@@ -242,8 +242,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const isShowExpand = useCreation(() => {
       return mode === 'task' && !showFreeChat
     }, [mode, showFreeChat])
-    const handleSwitchShowFreeChat = useMemoizedFn((e: React.MouseEvent<HTMLElement, MouseEvent>, v) => {
-      e.stopPropagation()
+    const handleSwitchShowFreeChat = useMemoizedFn((v) => {
       setShowFreeChat(v)
     })
 
@@ -328,7 +327,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         {externalParameters.rightIcon.close}
                       </>
                     ) : (
-                      <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(e, false)} />
+                      <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
                     ))}
                 </div>
               </div>
@@ -364,7 +363,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               </div>
             </div>
           </div>
-          <div className={styles['open-wrapper']} onClick={(e) => handleSwitchShowFreeChat(e, false)}>
+          <div className={styles['open-wrapper']} onClick={(e) => handleSwitchShowFreeChat(true)}>
             <ChevrondownButton />
             <div className={styles['text']}>自由对话</div>
           </div>
