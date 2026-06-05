@@ -1,6 +1,4 @@
-import { FileNodeProps } from './FileTree/FileTreeType'
 import { FileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
-import { AuditYakUrlProps } from './AuditCode/AuditCodeType'
 import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 export interface YakRunnerProps {
   initCode?: YakRunnerCodeProps
@@ -45,13 +43,10 @@ export interface OpenFileByPathProps {
     name: string
     parent?: string | null
     highLightRange?: Selection
+    aiReport?: boolean
   }
   // 是否记录历史
   isHistory?: boolean
-}
-
-export interface AuditEmiterYakUrlProps extends AuditYakUrlProps {
-  Body: string
 }
 
 export interface AuditCodeStreamData {

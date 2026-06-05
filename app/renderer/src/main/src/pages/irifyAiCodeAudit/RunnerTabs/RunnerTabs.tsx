@@ -16,32 +16,34 @@ import { Droppable, Draggable } from '@hello-pangea/dnd'
 
 import classNames from 'classnames'
 import styles from './RunnerTabs.module.scss'
-import { KeyToIcon } from '../FileTree/icon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import {
   OutlineChevrondoubleleftIcon,
   OutlineChevrondoublerightIcon,
+  OutlineDownloadIcon,
   OutlineImportIcon,
   OutlinePauseIcon,
   OutlinePlayIcon,
-  OutlinePlusIcon,
   OutlineSplitScreenIcon,
   OutlineXIcon,
 } from '@/assets/icon/outline'
-import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
-import { YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
+import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
+import { YakRunnerOpenFolderIcon } from '../../yakRunner/icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
-import { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerType'
+import {
+  AreaInfoProps,
+  OpenFileByPathProps,
+  TabFileProps,
+  YakRunnerHistoryProps,
+} from '../YakRunnerIrifyAiCodeAuditType'
 import { IMonacoEditor } from '@/utils/editors'
 import {
   getCodeByPath,
   getDefaultActiveFile,
-  getOpenFileInfo,
   getPathParent,
-  getYakRunnerHistory,
   grpcFetchCreateFile,
   grpcFetchFileTree,
   grpcFetchRenameFileTree,
@@ -50,9 +52,9 @@ import {
   judgeAreaExistFilePath,
   monacaLanguageType,
   removeYakRunnerAreaFileInfo,
-  setYakRunnerHistory,
   updateAreaFileInfo,
-} from '../utils'
+} from '../../yakRunner/utils'
+
 import cloneDeep from 'lodash/cloneDeep'
 import { failed, warn, success, yakitNotify } from '@/utils/notification'
 import { yakitDialog } from '@/services/electronBridge'
@@ -70,10 +72,17 @@ import { getMapFileDetail, removeMapFileDetail, setMapFileDetail } from '../File
 import { getMapFolderDetail, setMapFolderDetail } from '../FileTreeMap/ChildMap'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { FileNodeMapProps } from '../FileTree/FileTreeType'
-import { openFolder } from '../RunnerFileTree/RunnerFileTree'
+import { OpenFolderDragger } from '../RunnerFileTree/RunnerFileTree'
 import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
+import { isIRify } from '@/utils/envfile'
+import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
+import { getIrifyAiCodeAuditHistory, setIrifyAiCodeAuditHistory } from '../utils'
+import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
+import { SystemInfo } from '@/constants/hardware'
+import i18n from '@/i18n/i18n'
+import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
+const tYak = i18n.getFixedT(null, 'yakRunner')
 const { ipcRenderer } = window.require('electron')
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
@@ -120,6 +129,9 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       if (item.isActive && item.language === 'yak') {
         val = true
       }
+      if (isIRify() && item.isActive && item.aiReport) {
+        val = true
+      }
       return item.isActive
     })
     return val
@@ -141,7 +153,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
       setRunnerTabsId && setRunnerTabsId(tabsId)
       setActiveFile(newActiveFile)
       // 打开底部
-      emiter.emit('onOpenBottomDetail', JSON.stringify({ type: 'output' }))
+      emiter.emit('onAiCodeAuditOpenBottomDetail', JSON.stringify({ type: 'output' }))
       let params: RunYakParamsProps = {
         Script: newActiveFile.code || '',
         WorkDir: newActiveFile.parent || '',
@@ -359,9 +371,9 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   })
 
   useEffect(() => {
-    emiter.on('onCloseFile', onCloseFileFun)
+    emiter.on('onAiCodeAuditCloseFile', onCloseFileFun)
     return () => {
-      emiter.off('onCloseFile', onCloseFileFun)
+      emiter.off('onAiCodeAuditCloseFile', onCloseFileFun)
     }
   }, [])
 
@@ -528,7 +540,7 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
             const newActiveFile = isResetActiveFile([info], activeFile)
             setActiveFile && setActiveFile(newActiveFile)
             setAreaInfo && setAreaInfo(newAreaInfo)
-            emiter.emit('onRefreshFileTree')
+            emiter.emit('onAiCodeAuditRefreshFileTree')
           } catch (error) {
             failed(t('YakitNotification.saveFailedNoError'))
           }
@@ -659,24 +671,34 @@ export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
         <>
           {splitDirection.length > 0 && isShowExtra && <Divider type={'vertical'} style={{ margin: '4px 0px 0px' }} />}
         </>
-        {isShowExtra && (
-          <>
-            {runnerTabsId === tabsId ? (
-              <YakitButton colors="danger" icon={<OutlinePauseIcon />} onClick={onStopYak}>
-                {t('YakitButton.stop')}
-              </YakitButton>
-            ) : (
-              <YakitButton
-                icon={<OutlinePlayIcon />}
-                loading={runnerTabsId === tabsId}
-                disabled={!!runnerTabsId && runnerTabsId !== tabsId}
-                onClick={onRunYak}
-              >
-                {t('YakitButton.execute')}
-              </YakitButton>
-            )}
-          </>
-        )}
+        {isShowExtra &&
+          (activeFile?.aiReport ? (
+            <YakitButton
+              onClick={onDownloadReport}
+              loading={downloadLoading}
+              disabled={downloadLoading}
+              icon={<OutlineDownloadIcon />}
+            >
+              {t('YakitButton.downloadReport')}
+            </YakitButton>
+          ) : (
+            <>
+              {runnerTabsId === tabsId ? (
+                <YakitButton colors="danger" icon={<OutlinePauseIcon />} onClick={onStopYak}>
+                  {t('YakitButton.stop')}
+                </YakitButton>
+              ) : (
+                <YakitButton
+                  icon={<OutlinePlayIcon />}
+                  loading={runnerTabsId === tabsId}
+                  disabled={!!runnerTabsId && runnerTabsId !== tabsId}
+                  onClick={onRunYak}
+                >
+                  {t('YakitButton.execute')}
+                </YakitButton>
+              )}
+            </>
+          ))}
       </div>
     )
   })
@@ -896,7 +918,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
         const newActiveFile = await getDefaultActiveFile(info)
         setActiveFile && setActiveFile(newActiveFile)
         if (info.parent) {
-          emiter.emit('onScrollToFileTree', info.path)
+          emiter.emit('onAiCodeAuditScrollToFileTree', info.path)
         }
       }
       setAreaInfo && setAreaInfo(newAreaInfo)
@@ -1188,9 +1210,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   })
 
   useEffect(() => {
-    emiter.on('onJumpEditorDetail', onJumpEditorDetailFun)
+    emiter.on('onAiCodeAuditJumpEditorDetail', onJumpEditorDetailFun)
     return () => {
-      emiter.off('onJumpEditorDetail', onJumpEditorDetailFun)
+      emiter.off('onAiCodeAuditJumpEditorDetail', onJumpEditorDetailFun)
     }
   }, [])
 
@@ -1213,7 +1235,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           parent,
         },
       }
-      emiter.emit('onGetCodeByPathCache', JSON.stringify(OpenFileByPathParams))
+      emiter.emit('onAiCodeAuditGetCodeByPathCache', JSON.stringify(OpenFileByPathParams))
     }
   }, [editorInfo])
 
@@ -1245,31 +1267,38 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           />
         </div>
       ) : (
-        <YakitEditor
-          editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
-          editorDidMount={setReqEditorFun}
-          // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
-          type={editorInfo?.language}
-          value={editorInfo?.code || ''}
-          setValue={setYakitEditorValue}
-          highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
-          highLightClass="hight-light-yak-runner-color"
-        />
+        <>
+          {isIRify() && editorInfo?.aiReport ? (
+            <div className={styles['mark-down-wrapper']}>
+              <StreamMarkdown content={editorInfo?.code || ''} />
+            </div>
+          ) : (
+            <YakitEditor
+              editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
+              editorDidMount={setReqEditorFun}
+              // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
+              type={editorInfo?.language}
+              value={editorInfo?.code || ''}
+              setValue={setYakitEditorValue}
+              highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
+              highLightClass="hight-light-yak-runner-color"
+            />
+          )}
+        </>
       )}
     </div>
   )
 })
 
-export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((props) => {
-  const { addFileTab } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo(() => {
+  const { t } = useI18nNamespaces(['irifyAiCodeAudit'])
   const ref = useRef<HTMLDivElement>(null)
   const size = useSize(ref)
   const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
   const getHistoryList = useMemoizedFn(async () => {
     try {
-      const list = await getYakRunnerHistory()
+      const list = await getIrifyAiCodeAuditHistory()
       setHistoryList(list)
     } catch (error) {}
   })
@@ -1277,54 +1306,61 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
     getHistoryList()
   }, [])
 
-  // 打开文件
-  const openFile = useMemoizedFn(async () => {
-    try {
-      const openFileInfo = await getOpenFileInfo()
-      if (openFileInfo) {
-        const { path, name } = openFileInfo
-        const OpenFileByPathParams: OpenFileByPathProps = {
-          params: {
-            path,
-            name,
-          },
-          isHistory: true,
-        }
-        emiter.emit('onOpenFileByPath', JSON.stringify(OpenFileByPathParams))
-      }
-    } catch (error) {}
+  const openFolder = useMemoizedFn(() => {
+    if (SystemInfo.mode === 'remote') {
+      let absolutePath = ''
+      const m = showYakitModal({
+        title: tYak('RunnerFileTree.enterFolderPath'),
+        width: 400,
+        type: 'white',
+        closable: false,
+        centered: true,
+        content: <OpenFolderDragger setAbsolutePath={(v) => (absolutePath = v)} />,
+        onCancel: () => {
+          m.destroy()
+        },
+        onOk: async () => {
+          if (absolutePath.length === 0) {
+            warn(tYak('RunnerFileTree.enterFolderPath'))
+            return
+          }
+          emiter.emit('onAiCodeAuditOpenFileTree', absolutePath)
+          m.destroy()
+        },
+      })
+    } else {
+      handleOpenFileSystemDialog({ title: tYak('RunnerFileTree.selectFolder'), properties: ['openDirectory'] }).then(
+        (data) => {
+          if (data.filePaths.length) {
+            const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
+            emiter.emit('onAiCodeAuditOpenFileTree', absolutePath)
+          }
+        },
+      )
+    }
   })
 
   return (
     <div className={styles['yak-runner-welcome-page']} ref={ref}>
       <div className={styles['title']}>
         <div className={styles['icon-style']}>
-          <SolidYakCattleNoBackColorIcon />
+          <SolidIrifyMiniLogoIcon />
         </div>
-        <div className={styles['header-style']}>{t('RunnerTabs.welcomeYak')}</div>
+        <div className={styles['header-style']}>{t('welcomeTitle')}</div>
+        <div className={styles['welcome-subtitle']}>{t('welcomeHint')}</div>
       </div>
       <div className={styles['operate-box']} style={size && size.width < 600 ? { padding: '0px 20px' } : {}}>
         <div className={styles['operate']}>
-          <div className={styles['title-style']}>{t('RunnerTabs.quickCreate')}</div>
-          <div className={styles['operate-btn-group']}>
-            <div className={classNames(styles['btn-style'], styles['btn-new-file'])} onClick={addFileTab}>
-              <div className={styles['btn-title']}>
-                <YakRunnerNewFileIcon />
-                {t('YakitButton.newFile')}
-              </div>
-              <OutlinePlusIcon className={styles['icon-style']} />
-            </div>
-            <div className={classNames(styles['btn-style'], styles['btn-open-file'])} onClick={openFile}>
-              <div className={styles['btn-title']}>
-                <YakRunnerOpenFileIcon />
-                打开文件
-              </div>
-              <OutlineImportIcon className={styles['icon-style']} />
-            </div>
+          <div className={styles['title-style']}>{t('quickStart')}</div>
+          <div
+            className={classNames(styles['operate-btn-group'], {
+              [styles['operate-btn-group-irify']]: true,
+            })}
+          >
             <div className={classNames(styles['btn-style'], styles['btn-open-folder'])} onClick={openFolder}>
               <div className={styles['btn-title']}>
                 <YakRunnerOpenFolderIcon />
-                打开文件夹
+                {t('openLocalFolder')}
               </div>
               <OutlineImportIcon className={styles['icon-style']} />
             </div>
@@ -1332,33 +1368,25 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo((p
         </div>
 
         <div className={styles['recent-open']}>
-          <div className={styles['title-style']}>最近打开</div>
+          <div className={styles['title-style']}>{t('recentlyOpened')}</div>
           <div className={styles['recent-list']}>
-            {historyList.slice(0, 3).map((item, index) => {
-              return (
-                <div
-                  key={item.path}
-                  className={styles['list-opt']}
-                  onClick={() => {
-                    if (item.isFile) {
-                      const OpenFileByPathParams: OpenFileByPathProps = {
-                        params: {
-                          path: item.path,
-                          name: item.name,
-                        },
-                        isHistory: true,
-                      }
-                      emiter.emit('onOpenFileByPath', JSON.stringify(OpenFileByPathParams))
-                    } else {
-                      emiter.emit('onOpenFileTree', item.path)
-                    }
-                  }}
-                >
-                  <div className={styles['file-name']}>{item.name}</div>
-                  <div className={classNames(styles['file-path'], 'yakit-single-line-ellipsis')}>{item.path}</div>
-                </div>
-              )
-            })}
+            {historyList
+              .filter((h) => !h.isFile)
+              .slice(0, 3)
+              .map((item) => {
+                return (
+                  <div
+                    key={item.path}
+                    className={styles['list-opt']}
+                    onClick={() => {
+                      emiter.emit('onAiCodeAuditOpenFileTree', item.path)
+                    }}
+                  >
+                    <div className={styles['file-name']}>{item.name}</div>
+                    <div className={classNames(styles['file-path'], 'yakit-single-line-ellipsis')}>{item.path}</div>
+                  </div>
+                )
+              })}
           </div>
         </div>
       </div>
@@ -1377,7 +1405,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
     setWaitRemoveOtherItem,
     setWaitRemoveAll,
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { setActiveFile, setAreaInfo } = useDispatcher()
   const { fileTree, areaInfo } = useStore()
 
@@ -1447,7 +1475,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
               })
               setMapFolderDetail(parentPath, childArr)
             }
-            emiter.emit('onRefreshFileTree', parentPath)
+            emiter.emit('onAiCodeAuditRefreshFileTree', parentPath)
           }
           if (result.length > 0) {
             file.name = result[0].name
@@ -1470,7 +1498,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
               name,
               path,
             }
-            setYakRunnerHistory(history)
+            setIrifyAiCodeAuditHistory(history)
           }
         } else {
           warn(t('RunnerTabs.savePathMissing'))
@@ -1510,7 +1538,7 @@ interface RenameYakitModalBoxProps {
 }
 const RenameYakitModalBox: React.FC<RenameYakitModalBoxProps> = (props) => {
   const { name, setName } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner'])
+  const { t } = useI18nNamespaces(['yakRunner'])
   const inputRef = useRef<any>(null)
   useEffect(() => {
     if (inputRef.current) {

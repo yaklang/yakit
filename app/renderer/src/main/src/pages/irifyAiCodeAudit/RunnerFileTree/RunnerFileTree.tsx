@@ -1,25 +1,21 @@
 import React, { memo, useEffect, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import {
-  OpenedFileProps,
-  OpenFolderDraggerProps,
-  RunnerFileTreeProps,
-} from '@/pages/yakRunner/RunnerFileTree/RunnerFileTreeType'
+import { OpenedFileProps, OpenFolderDraggerProps, RunnerFileTreeProps } from './RunnerFileTreeType'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlinCompileIcon, OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
-import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '@/pages/yakRunner/FileTree/FileTreeType'
-import { FileDefault, FileSuffix, KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
-import useStore from '@/pages/yakRunner/hooks/useStore'
-import useDispatcher from '@/pages/yakRunner/hooks/useDispatcher'
-import useYakRunnerStoreRefs from '@/pages/yakRunner/hooks/useYakRunnerStoreRefs'
-import { FileTree } from '@/pages/yakRunner/FileTree/FileTree'
+import { OutlinePluscircleIcon, OutlineRefreshIcon, OutlineXIcon } from '@/assets/icon/outline'
+
+import { FileNodeMapProps, FileNodeProps, FileTreeListProps } from '../FileTree/FileTreeType'
+import { FileDefault, FileSuffix, KeyToIcon } from '../../yakRunner/FileTree/icon'
+import useStore from '../hooks/useStore'
+import useDispatcher from '../hooks/useDispatcher'
+import useYakRunnerStoreRefs from '../hooks/useYakRunnerStoreRefs'
+import { FileTree } from '../FileTree/FileTree'
 
 import classNames from 'classnames'
-import styles from '@/pages/yakRunner/RunnerFileTree/RunnerFileTree.module.scss'
+import styles from './RunnerFileTree.module.scss'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
-import { FileDetailInfo } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
+import { FileDetailInfo } from '../RunnerTabs/RunnerTabsType'
 import {
   getDefaultActiveFile,
   getNameByPath,
@@ -36,8 +32,8 @@ import {
   setAreaFileActive,
   updateAreaFileInfo,
   updateAreaFileInfoToDelete,
-} from '@/pages/yakRunner/utils'
-import { OpenFileByPathProps, YakRunnerHistoryProps } from '@/pages/yakRunner/YakRunnerType'
+} from '../../yakRunner/utils'
+import { OpenFileByPathProps, YakRunnerHistoryProps } from '../YakRunnerIrifyAiCodeAuditType'
 import emiter from '@/utils/eventBus/eventBus'
 import {
   clearMapFileDetail,
@@ -45,7 +41,7 @@ import {
   getMapFileDetail,
   removeMapFileDetail,
   setMapFileDetail,
-} from '@/pages/yakRunner/FileTreeMap/FileMap'
+} from '../FileTreeMap/FileMap'
 import {
   clearMapFolderDetail,
   getMapAllFolderKey,
@@ -53,7 +49,7 @@ import {
   hasMapFolderDetail,
   removeMapFolderDetail,
   setMapFolderDetail,
-} from '@/pages/yakRunner/FileTreeMap/ChildMap'
+} from '../FileTreeMap/ChildMap'
 import { v4 as uuidv4 } from 'uuid'
 import cloneDeep from 'lodash/cloneDeep'
 import { failed, success, warn } from '@/utils/notification'
@@ -63,15 +59,16 @@ import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfir
 import { YakitDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { SystemInfo } from '@/constants/hardware'
-import { WatchFolderID } from '@/pages/yakRunner/FileTreeMap/watchFolderID'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
+import { CollapseList } from '@/pages/yakRunner/CollapseList/CollapseList'
+import { IrifyAIWatchFolderID } from '../YakRunnerIrifyAiCodeAudit'
 
 const tOriginal = i18n.getFixedT(null, 'yakRunner')
 
 export const OpenFolderDragger: React.FC<OpenFolderDraggerProps> = (props) => {
   const { setAbsolutePath } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner'])
+  const { t } = useI18nNamespaces(['yakRunner'])
   const [value, setValue] = useState<string>('')
   return (
     <div style={{ padding: '20px 24px' }}>
@@ -96,7 +93,7 @@ export const openFolder = () => {
   if (SystemInfo.mode === 'remote') {
     let absolutePath = ''
     const m = showYakitModal({
-      title: tOriginal('RunnerFileTree.enterFolderPath'),
+      title: (modalT) => modalT('RunnerFileTree.enterFolderPath'),
       width: 400,
       type: 'white',
       closable: false,
@@ -110,7 +107,7 @@ export const openFolder = () => {
           warn(tOriginal('RunnerFileTree.enterFolderPath'))
           return
         }
-        emiter.emit('onIrifyAiCodeAuditOpenFileTree', absolutePath)
+        emiter.emit('onAiCodeAuditOpenFileTree', absolutePath)
         m.destroy()
       },
     })
@@ -119,14 +116,14 @@ export const openFolder = () => {
       (data) => {
         if (data.filePaths.length) {
           let absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
-          emiter.emit('onIrifyAiCodeAuditOpenFileTree', absolutePath)
+          emiter.emit('onAiCodeAuditOpenFileTree', absolutePath)
         }
       },
     )
   }
 }
 
-export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) => {
+export const RunnerFileTree: React.FC<RunnerFileTreeProps> = (props) => {
   const { addFileTab } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const { fileTree, areaInfo, activeFile } = useStore()
@@ -167,17 +164,17 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
   })
 
   useEffect(() => {
-    emiter.on('onDefaultExpanded', onDefaultExpanded)
+    emiter.on('onAiCodeAuditDefaultExpanded', onDefaultExpanded)
     return () => {
-      emiter.off('onDefaultExpanded', onDefaultExpanded)
+      emiter.off('onAiCodeAuditDefaultExpanded', onDefaultExpanded)
     }
   }, [])
 
   useEffect(() => {
     // 刷新文件树
-    emiter.on('onRefreshFileTree', onRefreshFileTreeFun)
+    emiter.on('onAiCodeAuditRefreshFileTree', onRefreshFileTreeFun)
     return () => {
-      emiter.off('onRefreshFileTree', onRefreshFileTreeFun)
+      emiter.off('onAiCodeAuditRefreshFileTree', onRefreshFileTreeFun)
     }
   }, [])
 
@@ -213,9 +210,9 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
   useEffect(() => {
     getHistoryList()
     // 通知历史记录发生改变
-    emiter.on('onRefreshRunnerHistory', getHistoryList)
+    emiter.on('onAiCodeAuditRefreshRunnerHistory', getHistoryList)
     return () => {
-      emiter.off('onRefreshRunnerHistory', getHistoryList)
+      emiter.off('onAiCodeAuditRefreshRunnerHistory', getHistoryList)
     }
   }, [])
 
@@ -248,17 +245,17 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
       },
       {
         key: 'openFile',
-        label: t('YakitButton.openFile'),
+        label: '打开文件',
       },
       {
         key: 'openFolder',
-        label: t('YakitButton.openFolder'),
+        label: '打开文件夹',
       },
     ]
     if (historyList.length > 0) {
       newMenu.push({
         key: 'history',
-        label: t('YakitButton.recentOpen'),
+        label: '最近打开',
         children: [
           ...historyList.map((item) => {
             return { key: item.path, label: item.name }
@@ -300,10 +297,8 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
       })
       newFolderDetail.splice(insert, 0, newFileNodeMap.path)
       setMapFolderDetail(path, newFolderDetail)
-      // setFoucsedKey(currentPath)
-      // emiter.emit("onExpandedFileTree", path)
-      emiter.emit('onScrollToFileTree', currentPath)
-      emiter.emit('onRefreshFileTree')
+      emiter.emit('onAiCodeAuditScrollToFileTree', currentPath)
+      emiter.emit('onAiCodeAuditRefreshFileTree')
     } catch (error) {}
   })
 
@@ -330,10 +325,8 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
       }
       setMapFolderDetail(path, [newFileNodeMap.path, ...folderDetail])
 
-      // setFoucsedKey(currentPath)
-      // emiter.emit("onExpandedFileTree", path)
-      emiter.emit('onScrollToFileTree', currentPath)
-      emiter.emit('onRefreshFileTree')
+      emiter.emit('onAiCodeAuditScrollToFileTree', currentPath)
+      emiter.emit('onAiCodeAuditRefreshFileTree')
     } catch (error) {}
   })
 
@@ -392,8 +385,8 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
           setAreaInfo && setAreaInfo(newAreaInfo)
         }
       }
-      emiter.emit('onResetFileTree', JSON.stringify({ path: info.path }))
-      emiter.emit('onRefreshFileTree')
+      emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ path: info.path }))
+      emiter.emit('onAiCodeAuditRefreshFileTree')
       success(t('RunnerFileTree.deleteSuccess', { name: info.name }))
     } catch (error) {
       failed(t('RunnerFileTree.deleteFailed', { name: info.name, error: error + '' }))
@@ -432,8 +425,8 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
             }
             const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
             setAreaInfo && setAreaInfo(newAreaInfo)
-            emiter.emit('onResetFileTree', JSON.stringify({ path: info.path }))
-            emiter.emit('onRefreshFileTree')
+            emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ path: info.path }))
+            emiter.emit('onAiCodeAuditRefreshFileTree')
             break
           case 'create':
             try {
@@ -455,7 +448,7 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
                 setMapFileDetail(parentPath, { ...fileDetail, isLeaf: false })
               }
               setMapFolderDetail(parentPath, [newFileNodeMap.path, ...folderDetail])
-              emiter.emit('onRefreshFileTree')
+              emiter.emit('onAiCodeAuditRefreshFileTree')
             } catch (error) {}
             break
           default:
@@ -478,8 +471,8 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
             removeMapFileDetail(info.path)
             const newAreaInfo = updateAreaFileInfoToDelete(areaInfo, info.path)
             setAreaInfo && setAreaInfo(newAreaInfo)
-            emiter.emit('onResetFileTree', JSON.stringify({ path: info.path }))
-            emiter.emit('onRefreshFileTree')
+            emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ path: info.path }))
+            emiter.emit('onAiCodeAuditRefreshFileTree')
             break
           case 'create':
             try {
@@ -511,7 +504,7 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
               })
               newFolderDetail.splice(insert, 0, newFileNodeMap.path)
               setMapFolderDetail(parentPath, newFolderDetail)
-              emiter.emit('onRefreshFileTree')
+              emiter.emit('onAiCodeAuditRefreshFileTree')
             } catch (error) {}
 
             break
@@ -526,7 +519,7 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
   const onRefreshYakRunnerFileTreeFun = useMemoizedFn((data) => {
     try {
       const event: FileMonitorProps = JSON.parse(data)
-      if (!WatchFolderID.Id || WatchFolderID.Id !== event.Id) return
+      if (!IrifyAIWatchFolderID.Id || IrifyAIWatchFolderID.Id !== event.Id) return
 
       if (event.ChangeEvents) {
         eventOperateFun(event.ChangeEvents)
@@ -542,31 +535,31 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
 
   useEffect(() => {
     // 监听新建文件
-    emiter.on('onNewFileInFileTree', onNewFile)
+    emiter.on('onAiCodeAuditNewFileInFileTree', onNewFile)
     // 监听新建文件夹
-    emiter.on('onNewFolderInFileTree', onNewFolder)
+    emiter.on('onAiCodeAuditNewFolderInFileTree', onNewFolder)
     // 监听删除
-    emiter.on('onDeleteInFileTree', onDeleteFun)
+    emiter.on('onAiCodeAuditDeleteInFileTree', onDeleteFun)
     // 文件树结构监控（监听外部变化）
     emiter.on('onRefreshYakRunnerFileTree', onRefreshYakRunnerFileTreeFun)
     return () => {
-      emiter.off('onNewFileInFileTree', onNewFile)
-      emiter.off('onNewFolderInFileTree', onNewFolder)
-      emiter.off('onDeleteInFileTree', onDeleteFun)
+      emiter.off('onAiCodeAuditNewFileInFileTree', onNewFile)
+      emiter.off('onAiCodeAuditNewFolderInFileTree', onNewFolder)
+      emiter.off('onAiCodeAuditDeleteInFileTree', onDeleteFun)
       emiter.off('onRefreshYakRunnerFileTree', onRefreshYakRunnerFileTreeFun)
     }
   }, [])
 
   const closeFolder = useMemoizedFn(() => {
     setFileTree && setFileTree([])
-    emiter.emit('onResetAuditStatus')
+    emiter.emit('onAiCodeAuditResetAuditStatus')
   })
 
   const createFile = useMemoizedFn(async () => {
     try {
       // 未打开文件夹时 创建临时文件
       if (fileTree.length === 0) {
-        return
+        addFileTab()
       } else {
         // 如若未选择则默认最顶层
         const newFoucsedKey = foucsedKey || fileTree[0].path
@@ -623,7 +616,7 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
           },
           isHistory: true,
         }
-        emiter.emit('onOpenFileByPath', JSON.stringify(OpenFileByPathParams))
+        emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify(OpenFileByPathParams))
       }
     } catch (error) {}
   })
@@ -643,11 +636,11 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
           },
           isHistory: true,
         }
-        emiter.emit('onOpenFileByPath', JSON.stringify(OpenFileByPathParams))
+        emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify(OpenFileByPathParams))
       }
       // 打开文件夹
       else {
-        emiter.emit('onIrifyAiCodeAuditOpenFileTree', item.path)
+        emiter.emit('onAiCodeAuditOpenFileTree', item.path)
       }
     }
   })
@@ -691,7 +684,7 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
               parent,
             },
           }
-          emiter.emit('onOpenFileByPath', JSON.stringify(OpenFileByPathParams))
+          emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify(OpenFileByPathParams))
         }
       }
     },
@@ -713,7 +706,7 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
                     disabled={fileTree.length === 0}
                     icon={<OutlineRefreshIcon />}
                     onClick={() => {
-                      emiter.emit('onRefreshTree')
+                      emiter.emit('onAiCodeAuditRefreshTree')
                     }}
                   />
                 </Tooltip>
@@ -754,9 +747,8 @@ export const IrifyAiCodeAuditFileTree: React.FC<RunnerFileTreeProps> = (props) =
   )
 }
 
-export const OpenedFile: React.FC<OpenedFileProps> = memo((props) => {
-  const {} = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner'])
+export const OpenedFile: React.FC<OpenedFileProps> = memo(() => {
+  const { t } = useI18nNamespaces(['yakRunner'])
   const { areaInfo, activeFile } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
   const titleRender = () => {

@@ -7,11 +7,24 @@ const { ipcRenderer } = window.require('electron')
 
 const getPrintId = () => new URLSearchParams(window.location.search).get('printId') || ''
 
+const ROOT_CLASS = 'markdown-pdf-print-page-root'
+
 /** 隐藏打印窗口：用 StreamMarkdown 渲染，与 Yakit 预览一致*/
 const MarkdownPdfPrintPage: React.FC = () => {
   const { theme } = useTheme()
   const [content, setContent] = useState<string | null>(null)
   const signaledRef = useRef(false)
+
+  useEffect(() => {
+    document.documentElement.classList.add(ROOT_CLASS)
+    document.body.classList.add(ROOT_CLASS)
+    document.getElementById('root')?.classList.add(ROOT_CLASS)
+    return () => {
+      document.documentElement.classList.remove(ROOT_CLASS)
+      document.body.classList.remove(ROOT_CLASS)
+      document.getElementById('root')?.classList.remove(ROOT_CLASS)
+    }
+  }, [])
 
   useEffect(() => {
     const printId = getPrintId()

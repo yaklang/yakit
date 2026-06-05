@@ -1,16 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  useCreation,
-  useDebounceEffect,
-  useGetState,
-  useInViewport,
-  useMemoizedFn,
-  useThrottleFn,
-  useUpdateEffect,
-} from 'ahooks'
-import { IrifyLeftSideBar } from './IrifyLeftSideBar'
-import { BottomSideBar } from '@/pages/yakRunner/BottomSideBar/BottomSideBar'
-import { FileNodeMapProps, FileTreeListProps } from '@/pages/yakRunner/FileTree/FileTreeType'
+import { useDebounceEffect, useGetState, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
+import { LeftSideBar } from './LeftSideBar/LeftSideBar'
+import { BottomSideBar } from './BottomSideBar/BottomSideBar'
+import { FileNodeMapProps, FileTreeListProps } from './FileTree/FileTreeType'
 import {
   addAreaFileInfo,
   excludeAreaInfoCode,
@@ -26,65 +18,67 @@ import {
   monacaLanguageType,
   removeYakRunnerAreaFileInfo,
   setAreaFileActive,
-  setYakRunnerHistory,
   updateAreaFileInfo,
-} from '@/pages/yakRunner/utils'
+} from '../yakRunner/utils'
 import {
   getIrifyAiCodeAuditLastAreaFile,
   getIrifyAiCodeAuditLastFolderExpanded,
+  setIrifyAiCodeAuditHistory,
   setIrifyAiCodeAuditLastAreaFile,
   setIrifyAiCodeAuditLastFolderExpanded,
-} from './irifyAiCodeAuditStorage'
-import { AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps } from '@/pages/yakRunner/YakRunnerType'
+} from './utils'
+import {
+  AreaInfoProps,
+  OpenFileByPathProps,
+  YakRunnerHistoryProps,
+  YakRunnerProps,
+} from './YakRunnerIrifyAiCodeAuditType'
 import { failed, success, yakitNotify } from '@/utils/notification'
-import YakRunnerContext, {
-  YakRunnerContextDispatcher,
-  YakRunnerContextStore,
-} from '@/pages/yakRunner/hooks/YakRunnerContext'
-import { FileDefault, FileSuffix, FolderDefault } from '@/pages/yakRunner/FileTree/icon'
-import { RunnerTabs } from '@/pages/yakRunner/RunnerTabs/RunnerTabs'
-import { IrifyAiCodeAuditWelcomePage } from './IrifyAiCodeAuditWelcomePage'
+import YakRunnerContext, { YakRunnerContextDispatcher, YakRunnerContextStore } from './hooks/YakRunnerContext'
+import { FileDefault, FileSuffix, FolderDefault } from '../yakRunner/FileTree/icon'
+import { RunnerTabs, YakRunnerWelcomePage } from './RunnerTabs/RunnerTabs'
 
 import { DragDropContext, ResponderProvided, DropResult } from '@hello-pangea/dnd'
 
 import classNames from 'classnames'
-import styles from '@/pages/yakRunner/YakRunner.module.scss'
-import { SplitView } from '@/pages/yakRunner/SplitView/SplitView'
-import { BottomEditorDetails } from '@/pages/yakRunner/BottomEditorDetails/BottomEditorDetails'
-import { ShowItemType } from '@/pages/yakRunner/BottomEditorDetails/BottomEditorDetailsType'
-import { FileDetailInfo } from '@/pages/yakRunner/RunnerTabs/RunnerTabsType'
+import styles from './YakRunnerIrifyAiCodeAudit.module.scss'
+import { BottomEditorDetails } from './BottomEditorDetails/BottomEditorDetails'
+import { ShowItemType } from './BottomEditorDetails/BottomEditorDetailsType'
+import { FileDetailInfo } from './RunnerTabs/RunnerTabsType'
 import cloneDeep from 'lodash/cloneDeep'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
 import emiter from '@/utils/eventBus/eventBus'
-import {
-  clearMapFileDetail,
-  getMapAllFileKey,
-  getMapFileDetail,
-  setMapFileDetail,
-} from '@/pages/yakRunner/FileTreeMap/FileMap'
+import { clearMapFileDetail, getMapAllFileKey, getMapFileDetail, setMapFileDetail } from './FileTreeMap/FileMap'
 import {
   clearMapFolderDetail,
   getMapFolderDetail,
   hasMapFolderDetail,
   setMapFolderDetail,
-} from '@/pages/yakRunner/FileTreeMap/ChildMap'
+} from './FileTreeMap/ChildMap'
 import { sendDuplexConn } from '@/utils/duplex/duplex'
 import { StringToUint8Array } from '@/utils/str'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import { LeftSideType } from '@/pages/yakRunner/LeftSideBar/LeftSideBarType'
+import { LeftSideType } from './LeftSideBar/LeftSideBarType'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { ShortcutKeyPage } from '@/utils/globalShortcutKey/events/pageMaps'
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from '@/utils/globalShortcutKey/utils'
-import { getStorageYakRunnerShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/yakRunner'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
-import { WatchFolderID } from '@/pages/yakRunner/FileTreeMap/watchFolderID'
 import { randomString } from '@/utils/randomUtil'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { SplitView } from '../yakRunner/SplitView/SplitView'
+import { getStorageYakRunnerAiCodeAuditShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/yakRunnerAiCodeAudit'
 import { useIrifyWorkbenchAiAttachRef } from './IrifyWorkbenchAiAttachContext'
 const { ipcRenderer } = window.require('electron')
+
+/**
+ * IrifyAICodeAudit页面，打开文件夹注册监听时，绑定监听的唯一ID
+ */
+export const IrifyAIWatchFolderID = {
+  Id: '',
+}
 
 // 模拟tabs分块及对应文件
 // 设想方法1：区域4等分，减少其结构嵌套层数，分别用1、2、3、4标注其展示所处区域 例如全屏展示则为[1、2、3、4]
@@ -100,27 +94,15 @@ const { ipcRenderer } = window.require('electron')
  * ]
 */
 
-export const YakRunnerTab: YakitTabsProps[] = [
-  {
-    label: 'YakRunner.resourceExplorer',
-    value: 'file-tree',
-  },
-  {
-    label: 'YakRunner.helpDocumentation',
-    value: 'help-doc',
-  },
-]
-
-/** 仅资源管理器（无帮助文档侧栏） */
-export const YakRunnerTabFileTreeOnly: YakitTabsProps[] = [
+export const YakRunnerIrifyAiCodeAuditTab: YakitTabsProps[] = [
   {
     label: 'YakRunner.resourceExplorer',
     value: 'file-tree',
   },
 ]
 
-export const IrifyAiCodeAuditWorkbench: React.FC = () => {
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
+  const { t } = useI18nNamespaces(['yakRunner', 'yakitUi'])
 
   /** ---------- 文件树 ---------- */
   const [fileTree, setFileTree] = useState<FileTreeListProps[]>([])
@@ -232,16 +214,16 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
     loadIndexRef.current = 0
     clearMap()
     // FileTree缓存清除
-    isFirst && emiter.emit('onResetFileTree', JSON.stringify({ reset: false }))
+    isFirst && emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ reset: false }))
   })
 
   const startMonitorFolder = useMemoizedFn((absolutePath) => {
-    if (WatchFolderID.Id) {
+    if (IrifyAIWatchFolderID.Id) {
       // 先停止 再启用
       const stopData = StringToUint8Array(
         JSON.stringify({
           operate: 'stop',
-          id: WatchFolderID.Id,
+          id: IrifyAIWatchFolderID.Id,
         }),
       )
       sendDuplexConn({
@@ -251,12 +233,12 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
       })
     }
 
-    WatchFolderID.Id = randomString(16)
+    IrifyAIWatchFolderID.Id = randomString(16)
     const startData = StringToUint8Array(
       JSON.stringify({
         operate: 'new',
         path: absolutePath,
-        id: WatchFolderID.Id,
+        id: IrifyAIWatchFolderID.Id,
       }),
     )
     sendDuplexConn({
@@ -312,7 +294,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
           name: lastFolder,
           path: rootPath,
         }
-        setYakRunnerHistory(history)
+        setIrifyAiCodeAuditHistory(history)
       }
     } catch (error) {}
   })
@@ -336,11 +318,8 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   const onOpenFileByPathFun = useMemoizedFn(async (data) => {
     try {
       const { params, isHistory } = JSON.parse(data) as OpenFileByPathProps
-      const { path, name: newName, parent, highLightRange } = params
-      let name = newName
-      if (!name) {
-        name = (await getNameByPath(path)) || ''
-      }
+      const { path, name, parent, highLightRange } = params
+
       // 校验是否已存在 如若存在则不创建只定位
       const file = await judgeAreaExistFilePath(areaInfo, path)
       if (file) {
@@ -392,7 +371,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
             name,
             path,
           }
-          setYakRunnerHistory(history)
+          setIrifyAiCodeAuditHistory(history)
         }
       }
     } catch (error) {
@@ -458,25 +437,25 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   const onCloseYakRunnerFun = useMemoizedFn(async () => {
     try {
       if (areaInfo.length === 0) {
-        emiter.emit('closePage', JSON.stringify({ route: YakitRoute.YakScript }))
+        emiter.emit('closePage', JSON.stringify({ route: YakitRoute.Irify_AI_Code_Audit }))
         return
       }
       if (activeFile?.isUnSave) {
-        emiter.emit('onCloseFile', activeFile.path)
+        emiter.emit('onAiCodeAuditCloseFile', activeFile.path)
         return
       }
       const unSaveArr = await judgeAreaExistFileUnSave(areaInfo)
       if (unSaveArr.length > 0) {
-        emiter.emit('onCloseFile', unSaveArr[0])
+        emiter.emit('onAiCodeAuditCloseFile', unSaveArr[0])
       } else {
-        emiter.emit('closePage', JSON.stringify({ route: YakitRoute.YakScript }))
+        emiter.emit('closePage', JSON.stringify({ route: YakitRoute.Irify_AI_Code_Audit }))
       }
     } catch (error) {
-      emiter.emit('closePage', JSON.stringify({ route: YakitRoute.YakScript }))
+      emiter.emit('closePage', JSON.stringify({ route: YakitRoute.Irify_AI_Code_Audit }))
     }
   })
 
-  const onOpenTemporaryFileFun = useMemoizedFn(async (data: any) => {
+  const onAiCodeAuditOpenTemporaryFileFun = useMemoizedFn(async (data: any) => {
     try {
       const { name, path, icon, language, aiReport } = JSON.parse(data)
       const code = await getCodeByPath(path)
@@ -488,24 +467,24 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
 
   useEffect(() => {
     // 监听文件树打开
-    emiter.on('onIrifyAiCodeAuditOpenFileTree', onOpenFileTreeFun)
+    emiter.on('onAiCodeAuditOpenFileTree', onOpenFileTreeFun)
     // 刷新树
-    emiter.on('onRefreshTree', onRefreshTreeFun)
+    emiter.on('onAiCodeAuditRefreshTree', onRefreshTreeFun)
     // 通过路径打开文件
-    emiter.on('onOpenFileByPath', onOpenFileByPathFun)
+    emiter.on('onAiCodeAuditOpenFileByPath', onOpenFileByPathFun)
     // 通过缓存文件路径读取文件内容
-    emiter.on('onGetCodeByPathCache', onGetCodeByPathCacheFun)
+    emiter.on('onAiCodeAuditGetCodeByPathCache', onGetCodeByPathCacheFun)
     // 监听一级页面关闭事件
-    emiter.on('onCloseYakRunner', onCloseYakRunnerFun)
+    emiter.on('onAiCodeAuditCloseYakRunner', onCloseYakRunnerFun)
     // 打开临时文件
-    emiter.on('onOpenTemporaryFile', onOpenTemporaryFileFun)
+    emiter.on('onAiCodeAuditOpenTemporaryFile', onAiCodeAuditOpenTemporaryFileFun)
     return () => {
-      emiter.off('onIrifyAiCodeAuditOpenFileTree', onOpenFileTreeFun)
-      emiter.off('onRefreshTree', onRefreshTreeFun)
-      emiter.off('onOpenFileByPath', onOpenFileByPathFun)
-      emiter.off('onGetCodeByPathCache', onGetCodeByPathCacheFun)
-      emiter.off('onCloseYakRunner', onCloseYakRunnerFun)
-      emiter.off('onOpenTemporaryFile', onOpenTemporaryFileFun)
+      emiter.off('onAiCodeAuditOpenFileTree', onOpenFileTreeFun)
+      emiter.off('onAiCodeAuditRefreshTree', onRefreshTreeFun)
+      emiter.off('onAiCodeAuditOpenFileByPath', onOpenFileByPathFun)
+      emiter.off('onAiCodeAuditGetCodeByPathCache', onGetCodeByPathCacheFun)
+      emiter.off('onAiCodeAuditCloseYakRunner', onCloseYakRunnerFun)
+      emiter.off('onAiCodeAuditOpenTemporaryFile', onAiCodeAuditOpenTemporaryFileFun)
     }
   }, [])
 
@@ -515,7 +494,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
       // 校验其子项是否存在
       const childArr = getMapFolderDetail(path)
       if (childArr.length > 0) {
-        emiter.emit('onRefreshFileTree')
+        emiter.emit('onAiCodeAuditRefreshFileTree')
         resolve('')
       } else {
         handleFetchFileList(path, (value) => {
@@ -529,7 +508,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
             })
             setMapFolderDetail(path, childArr)
             setTimeout(() => {
-              emiter.emit('onRefreshFileTree')
+              emiter.emit('onAiCodeAuditRefreshFileTree')
               resolve('')
             }, 300)
           } else {
@@ -554,7 +533,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
         onOpenFileTreeFun(historyData.folderPath)
         setIsUnShow(false)
       }
-      emiter.emit('onDefaultExpanded', JSON.stringify(historyData?.expandedKeys || []))
+      emiter.emit('onAiCodeAuditDefaultExpanded', JSON.stringify(historyData?.expandedKeys || []))
     } catch (error) {}
   })
 
@@ -592,7 +571,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
           expandedKeys: [],
         })
         // FileTree缓存清除
-        emiter.emit('onResetFileTree', JSON.stringify({ reset: true }))
+        emiter.emit('onAiCodeAuditResetFileTree', JSON.stringify({ reset: true }))
       }
     } catch (error) {}
   })
@@ -661,7 +640,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   const unTitleCountRef = useRef<number>(1)
 
   const addFileTab = useThrottleFn(
-    (params?: { name?: string; code?: string; icon?: string; language?: string; aiReport?: boolean }) => {
+    (params?: { name?: string; code: string; icon?: string; language?: string; aiReport?: boolean }) => {
       // 新建临时文件
       const scratchFile: FileDetailInfo = {
         name: params?.name || `Untitle-${unTitleCountRef.current}.yak`,
@@ -738,7 +717,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
                   })
                   setMapFolderDetail(parentPath, childArr)
                 }
-                emiter.emit('onRefreshFileTree', parentPath)
+                emiter.emit('onAiCodeAuditRefreshFileTree', parentPath)
               }
               if (result.length > 0) {
                 file.name = result[0].name
@@ -755,7 +734,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
                   name,
                   path,
                 }
-                setYakRunnerHistory(history)
+                setIrifyAiCodeAuditHistory(history)
               }
             }
           })
@@ -768,88 +747,89 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   // 关闭文件
   const ctrl_w = useMemoizedFn(() => {
     if (activeFile && areaInfo.length > 0) {
-      emiter.emit('onCloseFile', activeFile.path)
+      emiter.emit('onAiCodeAuditCloseFile', activeFile.path)
     } else {
-      emiter.emit('closePage', JSON.stringify({ route: YakitRoute.YakScript }))
+      emiter.emit('closePage', JSON.stringify({ route: YakitRoute.Irify_AI_Code_Audit }))
     }
   })
 
   // 终端
   const onOpenTermina = useMemoizedFn(() => {
-    emiter.emit('onOpenTerminaDetail')
+    emiter.emit('onAiCodeAuditOpenTerminaDetail')
   })
 
   // 文件树重命名（快捷键）
   const onTreeRename = useMemoizedFn(() => {
-    emiter.emit('onOperationFileTree', 'rename')
+    emiter.emit('onAiCodeAuditOperationFileTree', 'rename')
   })
 
   // 文件树删除（快捷键）
   const onTreeDelete = useMemoizedFn(() => {
-    emiter.emit('onOperationFileTree', 'delete')
+    emiter.emit('onAiCodeAuditOperationFileTree', 'delete')
   })
 
   // 文件树复制（快捷键）
   const onTreeCopy = useMemoizedFn(() => {
-    emiter.emit('onOperationFileTree', 'copy')
+    emiter.emit('onAiCodeAuditOperationFileTree', 'copy')
   })
 
   // 文件树粘贴（快捷键）
   const onTreePaste = useMemoizedFn(() => {
-    emiter.emit('onOperationFileTree', 'paste')
+    emiter.emit('onAiCodeAuditOperationFileTree', 'paste')
   })
 
   useEffect(() => {
     if (inViewport) {
-      registerShortcutKeyHandle(ShortcutKeyPage.YakRunner)
-      getStorageYakRunnerShortcutKeyEvents()
+      registerShortcutKeyHandle(ShortcutKeyPage.YakRunnerAiCodeAudit)
+      getStorageYakRunnerAiCodeAuditShortcutKeyEvents()
       return () => {
-        unregisterShortcutKeyHandle(ShortcutKeyPage.YakRunner)
+        unregisterShortcutKeyHandle(ShortcutKeyPage.YakRunnerAiCodeAudit)
       }
     }
   }, [inViewport])
 
-  useShortcutKeyTrigger('create*yakRunner', () => {
-    return
+  useShortcutKeyTrigger('create*yakRunnerAiCodeAudit', () => {
+    // 新建临时文件
+    addFileTab()
   })
 
-  useShortcutKeyTrigger('save*yakRunner', () => {
+  useShortcutKeyTrigger('save*yakRunnerAiCodeAudit', () => {
     // 保存
     ctrl_s()
   })
 
-  useShortcutKeyTrigger('close*yakRunner', () => {
+  useShortcutKeyTrigger('close*yakRunnerAiCodeAudit', () => {
     // 关闭
     ctrl_w()
   })
 
-  useShortcutKeyTrigger('openTermina*yakRunner', () => {
+  useShortcutKeyTrigger('openTermina*yakRunnerAiCodeAudit', () => {
     // 打开终端
     onOpenTermina()
   })
 
-  useShortcutKeyTrigger('rename*yakRunner', () => {
+  useShortcutKeyTrigger('rename*yakRunnerAiCodeAudit', () => {
     // 文件树相关快捷键只在文件树控件展示时生效
     if (getActive() !== 'file-tree') return
     // 文件树重命名
     onTreeRename()
   })
 
-  useShortcutKeyTrigger('delete*yakRunner', () => {
+  useShortcutKeyTrigger('delete*yakRunnerAiCodeAudit', () => {
     // 文件树相关快捷键只在文件树控件展示时生效
     if (getActive() !== 'file-tree') return
     // 文件树删除
     onTreeDelete()
   })
 
-  useShortcutKeyTrigger('copy*yakRunner', () => {
+  useShortcutKeyTrigger('copy*yakRunnerAiCodeAudit', () => {
     // 文件树相关快捷键只在文件树控件展示时生效
     if (getActive() !== 'file-tree') return
     // 文件树复制
     onTreeCopy()
   })
 
-  useShortcutKeyTrigger('paste*yakRunner', () => {
+  useShortcutKeyTrigger('paste*yakRunnerAiCodeAudit', () => {
     // 文件树相关快捷键只在文件树控件展示时生效
     if (getActive() !== 'file-tree') return
     // 文件树粘贴
@@ -989,7 +969,7 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
   // 布局处理
   const onChangeArea = useMemoizedFn(() => {
     if (areaInfo.length === 0) {
-      return <IrifyAiCodeAuditWelcomePage />
+      return <YakRunnerWelcomePage />
     }
     return (
       <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
@@ -1039,6 +1019,18 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
     }
   }, [])
 
+  useEffect(() => {
+    // 调用打开临时文件
+    ipcRenderer.on('fetch-send-to-yak-running', (res: any) => {
+      const { name = '', code = '' } = res || {}
+      if (!name || !code) return
+      addFileTab({ name, code })
+    })
+    return () => {
+      ipcRenderer.removeAllListeners('fetch-send-to-yak-running')
+    }
+  }, [])
+
   return (
     <YakRunnerContext.Provider value={{ store, dispatcher }}>
       <div className={styles['yak-runner']} ref={shortcutRef} tabIndex={0} id="yakit-runnner-main-box-id">
@@ -1052,13 +1044,12 @@ export const IrifyAiCodeAuditWorkbench: React.FC = () => {
             lineStyle={{ width: 4 }}
             secondMinSize={480}
             firstNode={
-              <IrifyLeftSideBar
+              <LeftSideBar
                 addFileTab={addFileTab}
                 isUnShow={isUnShow}
                 setIsUnShow={setIsUnShow}
                 active={active}
                 setActive={onActiveKey}
-                fileTreeOnlyTabs={YakRunnerTabFileTreeOnly}
               />
             }
             secondNodeStyle={
