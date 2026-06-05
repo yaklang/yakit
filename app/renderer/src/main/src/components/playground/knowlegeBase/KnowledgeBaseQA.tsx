@@ -4,9 +4,9 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { Space, Divider, message, Tag, Collapse } from 'antd'
+import { Space, Divider, Tag, Collapse } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { failed } from '@/utils/notification'
+import { failed, yakitNotify } from '@/utils/notification'
 import {
   KnowledgeBaseQAProps,
   QAMessage,
@@ -146,7 +146,8 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
   // 启动问答
   const handleAsk = useMemoizedFn(async () => {
     if ((!knowledgeBase && !queryAllCollections) || !inputValue.trim()) {
-      message.warning(
+      yakitNotify(
+        'warning',
         t('playground.KnowledgeBaseQA.enterQuestion') +
           (queryAllCollections ? '' : t('playground.KnowledgeBaseQA.selectKnowledgeBase')),
       )
