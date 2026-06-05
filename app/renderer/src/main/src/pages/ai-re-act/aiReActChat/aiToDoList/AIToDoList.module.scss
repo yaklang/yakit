@@ -28,6 +28,7 @@ $radius: 8px;
     );
     border-radius: inherit;
     animation: spin 2s linear infinite;
+    z-index: 9999;
   }
   .card {
     width: 100%;
