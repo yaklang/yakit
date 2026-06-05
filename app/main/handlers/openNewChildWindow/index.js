@@ -52,6 +52,20 @@ module.exports = {
       }
     })
 
+    // 子窗口请求父窗口数据 / 触发并发流刷新（全局只注册一次，避免重复打开子窗口时监听器泄漏）
+    ipcMain.on('request-parent-data', (event) => {
+      if (!childWindowData) return
+      if (childWindow && !childWindow.isDestroyed() && event.sender === childWindow.webContents) {
+        event.sender.send('get-parent-window-data', childWindowData)
+      }
+    })
+
+    ipcMain.on('request-ai-concurrent-stream-refresh', (event, params) => {
+      if (childWindow && !childWindow.isDestroyed() && event.sender === childWindow.webContents) {
+        win.webContents.send('refresh-ai-concurrent-stream', params)
+      }
+    })
+
     ipcMain.handle('UIOperate-childWin', (e, params) => {
       switch (params) {
         case 'close':
@@ -120,16 +134,6 @@ module.exports = {
             search: 'window=child',
           })
         }
-      })
-
-      // 监听子窗口加载完毕主动获取数据
-      ipcMain.on('request-parent-data', (event) => {
-        if (!childWindowData) return
-        event.sender.send('get-parent-window-data', childWindowData)
-      })
-
-      ipcMain.on('request-ai-concurrent-stream-refresh', (event, params) => {
-        win.webContents.send('refresh-ai-concurrent-stream', params)
       })
 
       childWindow.webContents.once('did-finish-load', () => {
