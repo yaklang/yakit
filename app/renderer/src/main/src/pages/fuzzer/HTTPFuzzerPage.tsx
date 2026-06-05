@@ -70,6 +70,7 @@ import {
   AdvancedConfigValueProps,
   FuzzTagMode,
   ShowResponseMatcherAndExtractionProps,
+  FilterMode,
 } from './HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
@@ -490,7 +491,7 @@ export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }, mode: CopyUr
     })
 }
 
-export const getAction = (mode) => {
+export const getAction = (mode: FilterMode) => {
   switch (mode) {
     case 'drop':
       return 'discard'

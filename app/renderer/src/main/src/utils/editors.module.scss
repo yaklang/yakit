@@ -113,3 +113,32 @@
     }
   }
 }
+.type-options-popover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 120px;
+  &:not(:last-child) {
+    margin-bottom: 8px;
+  }
+}
+.resize-card-icon {
+  svg {
+    width: 14px;
+    height: 14px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+  }
+  height: 20px;
+  width: 20px;
+  margin: 0 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  &:hover {
+    background-color: var(--Colors-Use-Neutral-Bg);
+  }
+}

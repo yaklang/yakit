@@ -582,7 +582,9 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
                 isInitRef.current = true
               }}
             >
-              <YakitButton type="secondary2">{t('Layout.MenuPlugin.commonPlugins')}</YakitButton>
+              <YakitButton type="secondary2" className={styles['button-border']}>
+                {t('Layout.MenuPlugin.commonPlugins')}
+              </YakitButton>
             </MenuPlugin>
           </div>
         ) : (
