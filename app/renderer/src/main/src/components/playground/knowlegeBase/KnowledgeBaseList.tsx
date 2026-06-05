@@ -6,9 +6,9 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { Form, Space, Divider, message, Pagination } from 'antd'
+import { Form, Space, Pagination } from 'antd'
 import { useMemoizedFn } from 'ahooks'
-import { failed, success } from '@/utils/notification'
+import { failed, success, yakitNotify } from '@/utils/notification'
 import {
   KnowledgeBase,
   KnowledgeBaseListProps,
@@ -142,7 +142,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
       newMap.delete(streamKey)
       return newMap
     })
-    message.info(t('playground.KnowledgeBaseList.indexBuildCancelled'))
+    yakitNotify('info', t('playground.KnowledgeBaseList.indexBuildCancelled'))
   })
 
   // 创建知识库

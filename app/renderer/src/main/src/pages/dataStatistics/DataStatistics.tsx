@@ -22,7 +22,6 @@ import { OutlineRefreshIcon } from '@/assets/icon/outline'
 import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
-import { message } from 'antd'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { defSort } from '@/components/HTTPFlowTable/HTTPFlowTable'
 import { IPTable, UserTable } from './UserTable/UserTable'
@@ -822,7 +821,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
               document.body.removeChild(a)
               yakitNotify('success', '导出成功')
             } else {
-              message.error('下载失败')
+              yakitNotify('error', '下载失败')
             }
           }
         })
@@ -870,7 +869,7 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
       }
     })
     if (rangeObj.length === 0) {
-      // message.warn('没有数据可以导出')
+      // yakitNotify("warning", "没有数据可以导出")
       return
     }
     if (rangeObj.length === 1) {
