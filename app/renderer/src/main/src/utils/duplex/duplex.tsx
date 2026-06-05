@@ -9,6 +9,7 @@ import { yakitDuplex, yakitStream } from '@/services/electronBridge'
 import { setRemoteValue } from '../kv'
 import { GlobalConfigRemoteGV } from '@/enums/globalConfig'
 import i18n from '@/i18n/i18n'
+import { setClipboardText } from '../clipboard'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 let id = randomString(40)
@@ -146,8 +147,22 @@ export const startupDuplexConn = () => {
           if (openPerformanceTips) {
             yakitFailed({
               message: (
-                <div style={{ position: 'relative' }}>
+                <div>
                   {tOriginal('Duplex.databaseTooLarge')}
+                  <YakitButton
+                    type="text"
+                    onClick={() => {
+                      setClipboardText(JSON.stringify(obj))
+                    }}
+                    style={{
+                      position: 'relative',
+                      right: i18n.language.startsWith('zh') ? -110 : -140,
+                      bottom: -2,
+                      fontSize: 14,
+                    }}
+                  >
+                    复制报错信息
+                  </YakitButton>
                   <YakitButton
                     type="text"
                     danger
@@ -156,8 +171,8 @@ export const startupDuplexConn = () => {
                       yakitNotify('success', '已关闭数据写入慢提示')
                     }}
                     style={{
-                      position: 'absolute',
-                      right: i18n.language.startsWith('zh') ? -5 : -25,
+                      position: 'relative',
+                      right: i18n.language.startsWith('zh') ? -100 : -140,
                       bottom: -2,
                       fontSize: 14,
                     }}
