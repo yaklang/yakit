@@ -94,7 +94,9 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       .then((path) => {
         setEnginePath(path)
       })
-      .catch(() => {})
+      .catch(() => {
+        setEnginePath('')
+      })
   }, [])
 
   const sseMarkdownSource = useMemo(() => {
@@ -399,7 +401,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       Total: 0,
     })
     setIsRefresh((prev) => !prev)
-    void getToolList(1, forceSync, tiers, { Source: '' })
+    getToolList(1, forceSync, tiers, { Source: '' })
   })
 
   const onLegacyTierChange = useMemoizedFn((checked: boolean) => {
@@ -578,10 +580,10 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                 />
               ) : (
                 <TableVirtualResize<MCPToolConfig>
-                  loading={loading}
+                  loading={loading || forceSyncLoading}
                   query={query}
                   isRefresh={isRefresh}
-                  titleHeight={22}
+                  titleHeight={30}
                   size="middle"
                   isShowTitle={true}
                   renderTitle={
@@ -596,7 +598,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                       </div>
                       <div className={styles['virtual-table-header-actions']}>
                         <YakitButton
-                          type="text2"
+                          type="text"
                           icon={<OutlineRefreshIcon />}
                           loading={loading}
                           onClick={onRefreshTools}
@@ -604,7 +606,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                           {t('ConfigSystemMcp.refresh_tools')}
                         </YakitButton>
                         <YakitButton
-                          type="text2"
+                          type="text"
                           loading={forceSyncLoading}
                           disabled={!enableBridgeExternalMcp}
                           onClick={onForceSyncTools}

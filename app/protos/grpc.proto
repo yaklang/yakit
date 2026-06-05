@@ -1038,11 +1038,6 @@ service Yak {
   rpc GetMCPToolDetail(GetMCPToolDetailRequest) returns (MCPClientToolConfig);
   rpc SetMCPToolEnabled(SetMCPToolEnabledRequest) returns (GeneralResponse);
 
-  // MCP tool-level enable/disable management
-  rpc GetMCPToolList(GetMCPToolListRequest) returns (GetMCPToolListResponse);
-  rpc GetMCPToolDetail(GetMCPToolDetailRequest) returns (MCPToolConfig);
-  rpc SetMCPToolEnabled(SetMCPToolEnabledRequest) returns (GeneralResponse);
-
   // RAG Collection Search
   rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
 
