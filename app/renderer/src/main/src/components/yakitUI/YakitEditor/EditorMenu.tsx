@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Menu, MenuProps, Tooltip } from 'antd'
-import { ItemType } from 'antd/lib/menu/hooks/useItems'
+import { ItemType } from 'antd/es/menu/interface'
 import { ChevronRightIcon } from '@/assets/newIcon'
 import { MenuDividerType } from 'rc-menu/lib/interface'
 
