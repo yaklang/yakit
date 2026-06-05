@@ -94,18 +94,6 @@ export const resolveMCPToolListSourceFilter = (tiers: MCPTierVisibility): MCPToo
   return ''
 }
 
-export const isMCPToolVisibleForTiers = (
-  tool: Pick<MCPToolConfig, 'Source'>,
-  enableLegacyMcpTools: boolean,
-  enableAIToolFramework: boolean,
-  enableBridgeExternalMcp = false,
-) => {
-  if (tool.Source === 'builtin') return enableLegacyMcpTools
-  if (tool.Source === 'aitool') return enableAIToolFramework
-  if (tool.Source === 'bridge') return enableBridgeExternalMcp
-  return false
-}
-
 // ---- MCP Tool-level enable/disable management ----
 export interface MCPToolConfig {
   ID: number
