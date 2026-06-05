@@ -10,6 +10,7 @@ import {
   WebFuzzerAiStore,
   irifyAiCodeAuditPageAiStore,
 } from '@/pages/ai-agent/store/ChatDataStore'
+import type { Domain } from '@/pages/ai-agent/store/constants'
 import type { AISource } from './grpcApi'
 
 export const getChatDataStoreKey = (store?: ChatDataStore): ChatDataStoreKey => {
@@ -55,6 +56,12 @@ export const getAISourceFromChatDataStoreKey = (key: ChatDataStoreKey): AISource
     default:
       return undefined
   }
+}
+
+/** AISource 映射到 IndexedDB 消息存储域（空 source 兼容老数据，归入 ai 域） */
+export const getDomainFromAISource = (source?: AISource): Domain => {
+  if (!source) return 'ai'
+  return source
 }
 
 /** AI Agent 侧栏历史会话：包含 ai 与兼容老数据的空 source */

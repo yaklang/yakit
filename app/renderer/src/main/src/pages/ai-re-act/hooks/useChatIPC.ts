@@ -53,6 +53,7 @@ import useAINodeLabel from './useAINodeLabel'
 import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
 import { handleResetForNewSession } from './grpcAIMessageHandlers'
 import useAIMessageData from './useAIMessageData'
+import { getDomainFromAISource } from './useGetChatDataStoreKey'
 
 const { ipcRenderer } = window.require('electron')
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
@@ -71,6 +72,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     getSetting,
     onHttpFuzzRequestChange,
     onGetHttpFlowFuzzStatus,
+    aiSource = 'ai',
   } = params || {}
 
   const { getLabelByParams } = useAINodeLabel()
@@ -394,7 +396,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   // #region 历史数据的请求hook
   const [requestState, requestEvents] = useAIMessageData({
-    type: 'ai',
+    type: getDomainFromAISource(aiSource),
     getChatStore: getChatDataStore,
     setContentMap: handleSetContentMap,
     setCasualElements: casualChatEvent.setElements,

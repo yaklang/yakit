@@ -38,7 +38,7 @@ import {
 } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
-import { getChatDataStoreKey } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+import { getAISourceFromChatDataStoreKey, getChatDataStoreKey } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useDeleteAIImageByNode from '@/pages/ai-agent/components/aiMilkdownInput/aiCustomFile/hooks/useDeleteAIImageByNode'
 import emiter from '@/utils/eventBus/eventBus'
@@ -250,8 +250,14 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(httpFuzzTabPageId, runtimeId, { source: 'auto' })
   })
 
+  const aiSource = useCreation(
+    () => getAISourceFromChatDataStoreKey(getChatDataStoreKey(cacheDataStore)) ?? 'ai',
+    [cacheDataStore],
+  )
+
   const [chatIPCData, events] = useChatIPC({
     autoConnect: true,
+    aiSource,
     cacheDataStore,
     getSetting,
     onHttpFuzzRequestChange,
