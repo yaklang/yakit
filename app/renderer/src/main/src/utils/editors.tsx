@@ -13,7 +13,7 @@ import { EnterOutlined, FullscreenOutlined, SettingOutlined, ThunderboltFilled }
 import { HTTPFlowBodyByIdRequest, HTTPPacketFuzzable } from '../components/HTTPHistory'
 import ReactResizeDetector from 'react-resize-detector'
 
-import { useControllableValue, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useControllableValue, useDebounceFn, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { Buffer } from 'buffer'
 import { StringToUint8Array, Uint8ArrayToString } from './str'
 import { getRemoteValue } from '@/utils/kv'
@@ -35,6 +35,8 @@ import { formatPacketRender, prettifyPacketCode, prettifyPacketRender } from './
 import styles from './editors.module.scss'
 import classNames from 'classnames'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
+import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { OutlineDotsverticalIcon } from '@/assets/icon/outline'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { DataCompareModal } from '@/pages/compare/DataCompare'
 import emiter from './eventBus/eventBus'
@@ -599,6 +601,9 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [showLineBreaks, setShowLineBreaks] = useState<boolean>(true)
   const [noWordwrap, setNoWordwrap] = useState(false)
   const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
+  const editorCardRef = useRef<HTMLDivElement>(null)
+  const editorCardSize = useSize(editorCardRef)
+  const isCompactTypeOptions = +(editorCardSize?.width || 0) < 580
 
   const [type, setType] = useControllableValue<RenderTypeOptionVal | undefined>(props, {
     defaultValue: undefined,
@@ -950,238 +955,265 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
     setMonacoEditor(editor)
   })
 
-  return (
-    <NewHTTPCard
-      loading={props.loading}
-      bordered={props.bordered}
-      title={
-        !props.noHeader && (
-          <div style={{ display: 'flex', gap: 2, ...(props.titleStyle || {}) }}>
-            {!props.noTitle &&
-              (!!props.title ? (
-                props.title
-              ) : (
-                <span style={{ fontSize: 12 }}>{isResponse ? 'Response' : 'Request'}</span>
-              ))}
-          </div>
-        )
-      }
-      extra={
-        !props.noHeader && (
-          <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            {props.extra}
-            {isShowBeautifyRender && (
-              <div className={classNames(styles['type-options-checkable-tag'])}>
-                {typeOptions.map((item) => (
-                  <YakitCheckableTag
-                    key={item.value}
+  const onTypeOptionChange = useMemoizedFn((value: RenderTypeOptionVal, checked: boolean) => {
+    setType(checked ? value : undefined)
+  })
+
+  const renderTypeOptions = () => {
+    if (isCompactTypeOptions && !!typeOptions.length) {
+      return (
+        <YakitPopover
+          trigger="click"
+          content={
+            <>
+              {typeOptions.map((item) => (
+                <div key={item.value} className={styles['type-options-popover-item']}>
+                  <span>{item.label}</span>
+                  <YakitSwitch
                     checked={type === item.value}
-                    onChange={(checked) => {
-                      if (checked) {
-                        setType(item.value)
-                      } else {
-                        setType(undefined)
-                      }
-                    }}
-                  >
-                    {item.label}
-                  </YakitCheckableTag>
+                    onChange={(checked) => onTypeOptionChange(item.value, checked)}
+                  />
+                </div>
+              ))}
+            </>
+          }
+        >
+          <OutlineDotsverticalIcon className={styles['resize-card-icon']} />
+        </YakitPopover>
+      )
+    }
+
+    return (
+      <div className={classNames(styles['type-options-checkable-tag'])}>
+        {typeOptions.map((item) => (
+          <YakitCheckableTag
+            key={item.value}
+            checked={type === item.value}
+            onChange={(checked) => onTypeOptionChange(item.value, checked)}
+          >
+            {item.label}
+          </YakitCheckableTag>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div ref={editorCardRef} style={{ height: '100%', width: '100%' }}>
+      <NewHTTPCard
+        loading={props.loading}
+        bordered={props.bordered}
+        title={
+          !props.noHeader && (
+            <div style={{ display: 'flex', gap: 2, ...(props.titleStyle || {}) }}>
+              {!props.noTitle &&
+                (!!props.title ? (
+                  props.title
+                ) : (
+                  <span style={{ fontSize: 12 }}>{isResponse ? 'Response' : 'Request'}</span>
                 ))}
+            </div>
+          )
+        }
+        extra={
+          !props.noHeader && (
+            <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              {props.extra}
+              {isShowBeautifyRender && renderTypeOptions()}
+              {props.AfterBeautifyRenderBtn}
+              {dataCompare && dataCompare.rightCode.length > 0 && (
+                <YakitButton
+                  size={'small'}
+                  type={'primary'}
+                  loading={compareLoading}
+                  onClick={() => {
+                    openCompareModal(dataCompare)
+                  }}
+                >
+                  {t('NewHTTPPacketEditor.compare')}
+                </YakitButton>
+              )}
+              {props.sendToWebFuzzer && (
+                <YakitButton
+                  size={'small'}
+                  type={'primary'}
+                  icon={<ThunderboltFilled />}
+                  onClick={() =>
+                    newWebFuzzerTab({
+                      isHttps: props.defaultHttps || false,
+                      request: props.defaultPacket ? props.defaultPacket : originValue,
+                      downstreamProxyStr,
+                      openFlag: true,
+                      fromMITM: props.fromMITM,
+                    })
+                  }
+                >
+                  FUZZ
+                </YakitButton>
+              )}
+              {showDefaultExtra && (
+                <>
+                  <Tooltip title={t('NewHTTPPacketEditor.noWrap')}>
+                    <YakitButton
+                      size={'small'}
+                      type={noWordwrap ? 'text' : 'primary'}
+                      icon={<EnterOutlined />}
+                      onClick={() => {
+                        setNoWordwrap(!noWordwrap)
+                      }}
+                    />
+                  </Tooltip>
+                  {!props.noSetIngEditor && (
+                    <YakitPopover
+                      title={t('NewHTTPPacketEditor.configureEditor')}
+                      content={
+                        <>
+                          <Form
+                            onSubmitCapture={(e) => {
+                              e.preventDefault()
+                            }}
+                            size={'small'}
+                            layout={'horizontal'}
+                            wrapperCol={{ span: 16 }}
+                            labelCol={{ span: 8 }}
+                          >
+                            {(fontSize || 0) > 0 && (
+                              <Form.Item label={t('NewHTTPPacketEditor.fontSize')}>
+                                <div style={{ display: 'flex', width: 120, gap: 4 }}>
+                                  <YakitSelect
+                                    options={fontSizeOptions.map((val) => ({
+                                      label: val,
+                                      value: val,
+                                    }))}
+                                    value={fontSize}
+                                    onChange={(size) => {
+                                      setFontSize(size)
+                                    }}
+                                  />
+                                  <span style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }}>px</span>
+                                </div>
+                              </Form.Item>
+                            )}
+                            <Form.Item label={t('NewHTTPPacketEditor.fullScreen')} style={{ marginBottom: 4 }}>
+                              <YakitButton
+                                size={'small'}
+                                type={'text'}
+                                icon={<FullscreenOutlined />}
+                                disabled={props.disableFullscreen}
+                                onClick={() => {
+                                  showYakitDrawer({
+                                    title: t('NewHTTPPacketEditor.fullScreen'),
+                                    width: '100%',
+                                    content: (
+                                      <div
+                                        style={{
+                                          height: '100%',
+                                          width: '100%',
+                                        }}
+                                      >
+                                        <NewHTTPPacketEditor {...props} disableFullscreen={true} defaultHeight={670} />
+                                      </div>
+                                    ),
+                                  })
+                                  setPopoverVisible(false)
+                                }}
+                              />
+                            </Form.Item>
+                          </Form>
+                        </>
+                      }
+                      onVisibleChange={(v) => {
+                        setPopoverVisible(v)
+                      }}
+                      overlayInnerStyle={{ width: 350 }}
+                      visible={popoverVisible}
+                    >
+                      <YakitButton icon={<SettingOutlined />} type={'text'} size={'small'} />
+                    </YakitPopover>
+                  )}
+                </>
+              )}
+              {props.extraEnd}
+            </div>
+          )
+        }
+        children={
+          <>
+            {props.children ? (
+              <>{props.children}</>
+            ) : (
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                {empty && props.emptyOr}
+                {props.renderHtml || renderHtml}
+                {type !== 'hex' && noShowHex && !empty && !renderHtml && !props.renderHtml && (
+                  <HTTPPacketYakitEditor
+                    fromMITM={props.fromMITM}
+                    keepSearchName={keepSearchName}
+                    theme={props.theme}
+                    noLineNumber={props.noLineNumber}
+                    lineNumbersMinChars={props.lineNumbersMinChars}
+                    noMiniMap={props.noMinimap}
+                    type={props.language || 'http'}
+                    originValue={showValue}
+                    value={props.readOnly && showValue.length > 0 ? showValue : strValue}
+                    readOnly={props.readOnly}
+                    disabled={props.disabled}
+                    setValue={setStrValue}
+                    noWordWrap={noWordwrap}
+                    fontSize={fontSize}
+                    showLineBreaks={showLineBreaks}
+                    contextMenu={props.contextMenu}
+                    noPacketModifier={props.noPacketModifier}
+                    noOpenPacketNewWindow={props.noOpenPacketNewWindow}
+                    editorDidMount={handleEditorMount}
+                    editorOperationRecord={editorOperationRecord}
+                    defaultHttps={props.defaultHttps}
+                    isWebSocket={props.isWebSocket}
+                    webSocketValue={props.webSocketValue}
+                    webSocketToServer={props.webSocketToServer}
+                    webFuzzerValue={props.webFuzzerValue}
+                    webFuzzerCallBack={props.webFuzzerCallBack}
+                    editorId={editorId}
+                    highLightText={editorHighLightText}
+                    highLightFind={editorHighLightFind}
+                    isPositionHighLightCursor={isPositionHighLightCursor}
+                    highLightFindClass={highLightFindClass}
+                    downstreamProxyStr={downstreamProxyStr}
+                    url={props.url}
+                    downbodyParams={props.downbodyParams}
+                    onlyBasicMenu={props.onlyBasicMenu}
+                    showDownBodyMenu={props.showDownBodyMenu}
+                    noSendToComparer={props.noSendToComparer}
+                    onClickUrlMenu={props.onClickUrlMenu}
+                    onClickUrlWithoutQueryMenu={props.onClickUrlWithoutQueryMenu}
+                    onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
+                    onClickOpenPacketNewWindowMenu={props.onClickOpenPacketNewWindowMenu}
+                    fixContentType={props.fixContentType}
+                    originalContentType={props.originalContentType}
+                    fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
+                    {...props.extraEditorProps}
+                  />
+                )}
+                {(type === 'hex' || !noShowHex) && !empty && !renderHtml && !props.renderHtml && (
+                  <HexEditor
+                    style={{ fontSize: (fontSize || 12) === 12 ? 16 : fontSize === 16 ? 18 : 20 }}
+                    readOnly={true}
+                    asciiWidth={18}
+                    data={hexValue}
+                    overscanCount={0x03}
+                    showAscii={true}
+                    showColumnLabels={false}
+                    showRowLabels={true}
+                    highlightColumn={true}
+                    theme={targetHexTheme}
+                  />
+                )}
               </div>
             )}
-            {props.AfterBeautifyRenderBtn}
-            {dataCompare && dataCompare.rightCode.length > 0 && (
-              <YakitButton
-                size={'small'}
-                type={'primary'}
-                loading={compareLoading}
-                onClick={() => {
-                  openCompareModal(dataCompare)
-                }}
-              >
-                {t('NewHTTPPacketEditor.compare')}
-              </YakitButton>
-            )}
-            {props.sendToWebFuzzer && (
-              <YakitButton
-                size={'small'}
-                type={'primary'}
-                icon={<ThunderboltFilled />}
-                onClick={() =>
-                  newWebFuzzerTab({
-                    isHttps: props.defaultHttps || false,
-                    request: props.defaultPacket ? props.defaultPacket : originValue,
-                    downstreamProxyStr,
-                    openFlag: true,
-                    fromMITM: props.fromMITM,
-                  })
-                }
-              >
-                FUZZ
-              </YakitButton>
-            )}
-            {showDefaultExtra && (
-              <>
-                <Tooltip title={t('NewHTTPPacketEditor.noWrap')}>
-                  <YakitButton
-                    size={'small'}
-                    type={noWordwrap ? 'text' : 'primary'}
-                    icon={<EnterOutlined />}
-                    onClick={() => {
-                      setNoWordwrap(!noWordwrap)
-                    }}
-                  />
-                </Tooltip>
-                {!props.noSetIngEditor && (
-                  <YakitPopover
-                    title={t('NewHTTPPacketEditor.configureEditor')}
-                    content={
-                      <>
-                        <Form
-                          onSubmitCapture={(e) => {
-                            e.preventDefault()
-                          }}
-                          size={'small'}
-                          layout={'horizontal'}
-                          wrapperCol={{ span: 16 }}
-                          labelCol={{ span: 8 }}
-                        >
-                          {(fontSize || 0) > 0 && (
-                            <Form.Item label={t('NewHTTPPacketEditor.fontSize')}>
-                              <div style={{ display: 'flex', width: 120, gap: 4 }}>
-                                <YakitSelect
-                                  options={fontSizeOptions.map((val) => ({
-                                    label: val,
-                                    value: val,
-                                  }))}
-                                  value={fontSize}
-                                  onChange={(size) => {
-                                    setFontSize(size)
-                                  }}
-                                />
-                                <span style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }}>px</span>
-                              </div>
-                            </Form.Item>
-                          )}
-                          <Form.Item label={t('NewHTTPPacketEditor.fullScreen')} style={{ marginBottom: 4 }}>
-                            <YakitButton
-                              size={'small'}
-                              type={'text'}
-                              icon={<FullscreenOutlined />}
-                              disabled={props.disableFullscreen}
-                              onClick={() => {
-                                showYakitDrawer({
-                                  title: t('NewHTTPPacketEditor.fullScreen'),
-                                  width: '100%',
-                                  content: (
-                                    <div
-                                      style={{
-                                        height: '100%',
-                                        width: '100%',
-                                      }}
-                                    >
-                                      <NewHTTPPacketEditor {...props} disableFullscreen={true} defaultHeight={670} />
-                                    </div>
-                                  ),
-                                })
-                                setPopoverVisible(false)
-                              }}
-                            />
-                          </Form.Item>
-                        </Form>
-                      </>
-                    }
-                    onVisibleChange={(v) => {
-                      setPopoverVisible(v)
-                    }}
-                    overlayInnerStyle={{ width: 350 }}
-                    visible={popoverVisible}
-                  >
-                    <YakitButton icon={<SettingOutlined />} type={'text'} size={'small'} />
-                  </YakitPopover>
-                )}
-              </>
-            )}
-            {props.extraEnd}
-          </div>
-        )
-      }
-      children={
-        <>
-          {props.children ? (
-            <>{props.children}</>
-          ) : (
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              {empty && props.emptyOr}
-              {props.renderHtml || renderHtml}
-              {type !== 'hex' && noShowHex && !empty && !renderHtml && !props.renderHtml && (
-                <HTTPPacketYakitEditor
-                  fromMITM={props.fromMITM}
-                  keepSearchName={keepSearchName}
-                  theme={props.theme}
-                  noLineNumber={props.noLineNumber}
-                  lineNumbersMinChars={props.lineNumbersMinChars}
-                  noMiniMap={props.noMinimap}
-                  type={props.language || 'http'}
-                  originValue={showValue}
-                  value={props.readOnly && showValue.length > 0 ? showValue : strValue}
-                  readOnly={props.readOnly}
-                  disabled={props.disabled}
-                  setValue={setStrValue}
-                  noWordWrap={noWordwrap}
-                  fontSize={fontSize}
-                  showLineBreaks={showLineBreaks}
-                  contextMenu={props.contextMenu}
-                  noPacketModifier={props.noPacketModifier}
-                  noOpenPacketNewWindow={props.noOpenPacketNewWindow}
-                  editorDidMount={handleEditorMount}
-                  editorOperationRecord={editorOperationRecord}
-                  defaultHttps={props.defaultHttps}
-                  isWebSocket={props.isWebSocket}
-                  webSocketValue={props.webSocketValue}
-                  webSocketToServer={props.webSocketToServer}
-                  webFuzzerValue={props.webFuzzerValue}
-                  webFuzzerCallBack={props.webFuzzerCallBack}
-                  editorId={editorId}
-                  highLightText={editorHighLightText}
-                  highLightFind={editorHighLightFind}
-                  isPositionHighLightCursor={isPositionHighLightCursor}
-                  highLightFindClass={highLightFindClass}
-                  downstreamProxyStr={downstreamProxyStr}
-                  url={props.url}
-                  downbodyParams={props.downbodyParams}
-                  onlyBasicMenu={props.onlyBasicMenu}
-                  showDownBodyMenu={props.showDownBodyMenu}
-                  noSendToComparer={props.noSendToComparer}
-                  onClickUrlMenu={props.onClickUrlMenu}
-                  onClickUrlWithoutQueryMenu={props.onClickUrlWithoutQueryMenu}
-                  onClickOpenBrowserMenu={props.onClickOpenBrowserMenu}
-                  onClickOpenPacketNewWindowMenu={props.onClickOpenPacketNewWindowMenu}
-                  fixContentType={props.fixContentType}
-                  originalContentType={props.originalContentType}
-                  fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
-                  {...props.extraEditorProps}
-                />
-              )}
-              {(type === 'hex' || !noShowHex) && !empty && !renderHtml && !props.renderHtml && (
-                <HexEditor
-                  style={{ fontSize: (fontSize || 12) === 12 ? 16 : fontSize === 16 ? 18 : 20 }}
-                  readOnly={true}
-                  asciiWidth={18}
-                  data={hexValue}
-                  overscanCount={0x03}
-                  showAscii={true}
-                  showColumnLabels={false}
-                  showRowLabels={true}
-                  highlightColumn={true}
-                  theme={targetHexTheme}
-                />
-              )}
-            </div>
-          )}
-        </>
-      }
-    />
+          </>
+        }
+      />
+    </div>
   )
 })
 

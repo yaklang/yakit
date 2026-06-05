@@ -124,6 +124,10 @@ import {
   GlobalShortcutKey,
   ShortcutKeyFocusType,
 } from '@/utils/globalShortcutKey/events/global'
+import {
+  getYakitMultipleShortcutKeyEvents,
+  YakitMultipleShortcutKey,
+} from '@/utils/globalShortcutKey/events/multiple/yakitMultiple'
 import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
@@ -156,6 +160,7 @@ import {
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import { SystemInfo } from '@/constants/hardware'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
+import { YakitPopconfirm } from '../yakitUI/YakitPopconfirm/YakitPopconfirm'
 const { ipcRenderer } = window.require('electron')
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'history'])
 export interface codecHistoryPluginProps {
@@ -863,6 +868,95 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           : onSendToTab(selected, false, downstreamProxyStr, fromMITM)
       }
     }
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    setClipboardText(selected.Url || '')
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    const nextUrl = getUrlWithoutQuery(selected.Url)
+    if (!nextUrl) {
+      yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+      return
+    }
+    setClipboardText(nextUrl)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    selected.Url && openExternalWebsite(selected.Url)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    showResponseViaHTTPFlowID(selected)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockRecord, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    onShieldRecord(selected)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockURL, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    onShieldURL(selected)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockDomain, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    onShieldDomain(selected)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteRecord, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    onRemoveHttpHistory({ Id: [selected.Id] })
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteURL, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    onRemoveHttpHistory({ URLPrefix: selected.Url })
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteDomain, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    onRemoveHttpHistory({ URLPrefix: selected?.HostPort?.split(':')[0] })
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), false)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
+    const selected = getSelected()
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !selected || item) return
+    generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), true)
   })
 
   const size = useSize(ref)
@@ -1629,6 +1723,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   /** ---------- 后台刷新 Start ---------- */
   const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
+  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(true)
   const isBackgroundRefresh = useMemo(() => {
     return backgroundRefresh && pageType !== 'MITM'
   }, [backgroundRefresh, pageType])
@@ -3229,6 +3324,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         number: 30,
         webSocket: true,
         default: true,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
         onClickSingle: (v) => setClipboardText(v.Url || ''),
         onClickBatch: (v, number) => {
           if (v.length === 0) {
@@ -3250,6 +3346,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         number: 30,
         webSocket: true,
         default: true,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
         onClickSingle: (v) => {
           const nextUrl = getUrlWithoutQuery(v.Url)
           if (!nextUrl) {
@@ -3293,6 +3390,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
         default: true,
         webSocket: false,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
         onClickSingle: (v) => {
           v.Url && openExternalWebsite(v.Url)
         },
@@ -3302,6 +3400,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
         default: true,
         webSocket: false,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
         onClickSingle: (v) => {
           showResponseViaHTTPFlowID(v)
         },
@@ -3315,10 +3414,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: 'csrfpoc',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic].keys,
           },
           {
             key: 'auto-submit-csrf-poc',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit'),
+            keybindings:
+              getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit].keys,
           },
         ],
       },
@@ -3394,14 +3496,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: '屏蔽该记录',
             label: t('HTTPFlowTable.RowContextMenu.blockRecord'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockRecord].keys,
           },
           {
             key: '屏蔽URL',
             label: t('HTTPFlowTable.RowContextMenu.blockURL'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockURL].keys,
           },
           {
             key: '屏蔽域名',
             label: t('HTTPFlowTable.RowContextMenu.blockDomain'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockDomain].keys,
           },
         ],
       },
@@ -3417,6 +3522,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: '删除记录',
             label: t('HTTPFlowTable.RowContextMenu.deleteRecord'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteRecord].keys,
             onClick: (v) => onRemoveHttpHistory({ Id: [v.Id] }),
             onClickBatch: (list) => {
               onRemoveHttpHistory({ Id: list.map((ele) => ele.Id) })
@@ -3425,6 +3531,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: '删除URL',
             label: t('HTTPFlowTable.RowContextMenu.deleteURL'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteURL].keys,
             onClick: (v) => onRemoveHttpHistory({ URLPrefix: v.Url }),
             onClickBatch: (list) => {
               const urls = list.map((ele) => ele.Url)
@@ -3438,6 +3545,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           {
             key: '删除域名',
             label: t('HTTPFlowTable.RowContextMenu.deleteDomain'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteDomain].keys,
             onClick: (v) => onRemoveHttpHistory({ URLPrefix: v?.HostPort?.split(':')[0] }),
             onClickBatch: (list) => {
               const hosts = list.map((ele) => ele.HostPort?.split(':')[0])
@@ -4673,6 +4781,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           }}
           loading={loading}
           enableDrag={true}
+          enableDragSelection={dragSelectEnabled}
           columns={columns}
           // onRowClick={(v)=>{
           // 此处onRowClick会调用onSetCurrentRow导致重复响应
@@ -4725,15 +4834,22 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       )}
       {advancedSetVisible && (
         <AdvancedSet
+          dragSelectEnabled={dragSelectEnabled}
           columnsAllStr={JSON.stringify(configColumnRef.current.filter((item) => !specialCustoms(item.dataKey)))}
           onCancel={() => {
             setAdvancedSetVisible(false)
           }}
           onSave={(setting) => {
             setAdvancedSetVisible(false)
-            const { backgroundRefresh: newBackgroundRefresh, configColumnsAll } = setting
+            const {
+              backgroundRefresh: newBackgroundRefresh,
+              dragSelectEnabled: newDragSelectEnabled,
+              configColumnsAll,
+            } = setting
             // 后台刷新
             if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
+            // 框选配置
+            if (newDragSelectEnabled !== dragSelectEnabled) setDragSelectEnabled(newDragSelectEnabled)
             // 自定义列
             const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
             const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
@@ -4776,7 +4892,7 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
       {shieldData?.data.length > 0 && (
         <YakitPopover
           placement="bottomLeft"
-          trigger="hover"
+          trigger="click"
           content={
             <div className={style['title-header']}>
               {shieldData?.data.map((item: number | string) => (
@@ -4789,9 +4905,15 @@ export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: 
                   </div>
                 </div>
               ))}
-              <YakitButton type="text" className={style['shield-reset']} onClick={() => cancleAllFilter(mitmVersion)}>
-                {t('YakitButton.reset')}
-              </YakitButton>
+              <YakitPopconfirm
+                title={t('HTTPFlowTable.resetConfirm')}
+                placement="top"
+                onConfirm={() => cancleAllFilter(mitmVersion)}
+              >
+                <YakitButton type="text" className={style['shield-reset']}>
+                  {t('YakitButton.reset')}
+                </YakitButton>
+              </YakitPopconfirm>
             </div>
           }
           overlayClassName={style['http-history-table-shield-popover']}
@@ -5649,17 +5771,26 @@ export interface ColumnAllInfoItem {
 }
 interface AdvancedSetSaveItem {
   backgroundRefresh: boolean
+  dragSelectEnabled: boolean
   configColumnsAll: ColumnAllInfoItem[]
 }
 interface AdvancedSetProps {
   showBackgroundRefresh?: boolean
+  dragSelectEnabled?: boolean
   columnsAllStr: string
   onCancel: () => void
   onSave: (setting: AdvancedSetSaveItem) => void
   defalutColumnsOrder: string[]
 }
 export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
-  const { showBackgroundRefresh = true, columnsAllStr, onCancel, onSave, defalutColumnsOrder } = props
+  const {
+    showBackgroundRefresh = true,
+    dragSelectEnabled: propDragSelectEnabled = true,
+    columnsAllStr,
+    onCancel,
+    onSave,
+    defalutColumnsOrder,
+  } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'history'])
   /** ---------- 后台刷新 Start ---------- */
   const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
@@ -5671,6 +5802,10 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     })
   }, [])
   /** ---------- 后台刷新 End ---------- */
+
+  /** ---------- 框选配置 Start ---------- */
+  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(propDragSelectEnabled)
+  /** ---------- 框选配置 End ---------- */
 
   /** ---------- 自定义列 Start ---------- */
   const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
@@ -5706,7 +5841,7 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     if (oldBackgroundRefresh.current !== backgroundRefresh) {
       setRemoteValue(RemoteHistoryGV.BackgroundRefresh, backgroundRefresh ? 'true' : '')
     }
-    onSave({ backgroundRefresh, configColumnsAll: curColumnsAll })
+    onSave({ backgroundRefresh, dragSelectEnabled, configColumnsAll: curColumnsAll })
   })
 
   // 判断是否有修改
@@ -5714,7 +5849,11 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
     try {
       // 是否有修改
       let isModify: boolean = false
-      if (oldBackgroundRefresh.current !== backgroundRefresh || columnsAllStr !== JSON.stringify(curColumnsAll)) {
+      if (
+        oldBackgroundRefresh.current !== backgroundRefresh ||
+        propDragSelectEnabled !== dragSelectEnabled ||
+        columnsAllStr !== JSON.stringify(curColumnsAll)
+      ) {
         isModify = true
       }
       return isModify
@@ -5797,6 +5936,23 @@ export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
             </div>
           </div>
         )}
+        <div className={style['history-advanced-set-item']}>
+          <div className={style['history-advanced-set-item-title']}>{t('AdvancedSet.dragSelectConfig')}</div>
+          <div className={style['history-advanced-set-item-cont']}>
+            <div className={style['backgroundRefresh']}>
+              <YakitCheckbox
+                checked={dragSelectEnabled}
+                onChange={(e) => {
+                  setDragSelectEnabled(e.target.checked)
+                }}
+              />
+              <span className={style['title-style']}>{t('AdvancedSet.dragSelectMultiData')}</span>
+              <Tooltip title={t('AdvancedSet.dragSelectMultiDataTip')}>
+                <OutlineInformationcircleIcon className={style['hint-style']} />
+              </Tooltip>
+            </div>
+          </div>
+        </div>
         <div className={style['history-advanced-set-item']}>
           <div className={style['history-advanced-set-item-title']}>
             {t('AdvancedSet.listDisplayFieldsAndOrder')}

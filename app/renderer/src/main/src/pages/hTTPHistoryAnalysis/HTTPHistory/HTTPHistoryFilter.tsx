@@ -104,6 +104,10 @@ import {
   GlobalShortcutKey,
   ShortcutKeyFocusType,
 } from '@/utils/globalShortcutKey/events/global'
+import {
+  getYakitMultipleShortcutKeyEvents,
+  YakitMultipleShortcutKey,
+} from '@/utils/globalShortcutKey/events/multiple/yakitMultiple'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SolidStarIcon } from '@/assets/icon/solid'
 
@@ -1485,6 +1489,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         number: 30,
         default: true,
         webSocket: true,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
         onClickSingle: (v) => setClipboardText(v.Url),
         onClickBatch: (v, number) => {
           if (v.length === 0) {
@@ -1505,6 +1510,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         number: 30,
         default: true,
         webSocket: true,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
         onClickSingle: (v) => {
           const nextUrl = getUrlWithoutQuery(v.Url)
           if (!nextUrl) {
@@ -1547,6 +1553,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
         default: true,
         webSocket: false,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
         onClickSingle: (v) => {
           v.Url && openExternalWebsite(v.Url)
         },
@@ -1556,6 +1563,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
         default: true,
         webSocket: false,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
         onClickSingle: (v) => {
           showResponseViaHTTPFlowID(v)
         },
@@ -1569,10 +1577,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           {
             key: 'csrfpoc',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic].keys,
           },
           {
             key: 'auto-submit-csrf-poc',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit'),
+            keybindings:
+              getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit].keys,
           },
         ],
       },
@@ -1909,6 +1920,47 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           : onSendToTab(clickRow, false)
       }
     }
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    setClipboardText(clickRow.Url || '')
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    const nextUrl = getUrlWithoutQuery(clickRow.Url)
+    if (!nextUrl) {
+      yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+      return
+    }
+    setClipboardText(nextUrl)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    clickRow.Url && openExternalWebsite(clickRow.Url)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    showResponseViaHTTPFlowID(clickRow)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), false)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), true)
   })
 
   // 数据包 PoC 模版

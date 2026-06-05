@@ -70,6 +70,7 @@ import {
   AdvancedConfigValueProps,
   FuzzTagMode,
   ShowResponseMatcherAndExtractionProps,
+  FilterMode,
 } from './HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
@@ -490,7 +491,7 @@ export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }, mode: CopyUr
     })
 }
 
-export const getAction = (mode) => {
+export const getAction = (mode: FilterMode) => {
   switch (mode) {
     case 'drop':
       return 'discard'
@@ -3517,6 +3518,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
   //         content: <ExtractionResultsContent list={rsp.ExtractedResults} />
   //     })
   // })
+  const showSearchIcon = useMemo(() => +(secondNodeSize?.width || 0) <= 730, [secondNodeSize])
 
   if (onlyOneResponse) {
     const searchNode = (
@@ -3540,8 +3542,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
       <div className={styles['fuzzer-secondNode-extra']}>
         {!rsp.IsTooLargeResponse ? (
           <>
-            {+(secondNodeSize?.width || 0) >= 650 && searchNode}
-            {+(secondNodeSize?.width || 0) < 650 && (
+            {!showSearchIcon && searchNode}
+            {showSearchIcon && (
               <YakitPopover content={searchNode}>
                 <YakitButton icon={<SearchIcon />} size={size} type="outline2" />
               </YakitPopover>

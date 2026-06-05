@@ -155,6 +155,20 @@ export const parseShortcutKeyEvent = (keys: string[]): string | null => {
         }
       }
     }
+
+    if (currentPageHandler !== 'yakit-multiple') {
+      const multipleKeyInfo = pageEventMaps['yakit-multiple']
+      if (multipleKeyInfo) {
+        const multipleEvents = multipleKeyInfo.getEvents()
+        const multipleEventKeys = Object.keys(multipleEvents)
+        for (let item of multipleEventKeys) {
+          const multipleKeys = sortKeysCombination(multipleEvents[item].keys).join('')
+          if (multipleKeys === triggerKeys) {
+            return item
+          }
+        }
+      }
+    }
   } catch (error) {}
 
   return null
