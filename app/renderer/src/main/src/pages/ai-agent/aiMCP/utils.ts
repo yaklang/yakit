@@ -5,12 +5,24 @@ import {
   DeleteMCPServerRequest,
   GetAllMCPServersRequest,
   GetAllMCPServersResponse,
+  GetMCPToolDetailRequest,
+  GetMCPToolListRequest,
+  GetMCPToolListResponse,
   MCPServer,
+  SetMCPToolEnabledRequest,
   UpdateMCPServerRequest,
 } from '../type/aiMCP'
 import { GeneralResponse } from '../type/aiModel'
+import { normalizeGetMCPToolListResponse, normalizeMCPServer } from './mcpToolNormalize'
 
 const { ipcRenderer } = window.require('electron')
+
+export {
+  normalizeGetMCPToolListResponse,
+  normalizeMCPToolConfig,
+  normalizeMCPToolParam,
+  normalizeMCPToolParams,
+} from './mcpToolNormalize'
 
 export const grpcGetAllMCPServers: APIFunc<GetAllMCPServersRequest, GetAllMCPServersResponse> = (
   params,
@@ -43,7 +55,7 @@ export const getMCPServersById: APIFunc<number, MCPServer> = (id, hiddenError) =
     grpcGetAllMCPServers(newQuery, hiddenError)
       .then((res) => {
         if (res.MCPServers && res.MCPServers.length > 0) {
-          resolve(res.MCPServers[0])
+          resolve(normalizeMCPServer(res.MCPServers[0]))
         } else {
           reject('not found')
         }
@@ -82,6 +94,32 @@ export const grpcUpdateMCPServer: APIFunc<UpdateMCPServerRequest, GeneralRespons
       .then(resolve)
       .catch((err) => {
         if (!hiddenError) yakitNotify('error', 'grpcUpdateMCPServer 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcGetMCPToolList: APIFunc<GetMCPToolListRequest, GetMCPToolListResponse> = (params, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('GetMCPToolList', params)
+      .then((res: GetMCPToolListResponse) => {
+        resolve(normalizeGetMCPToolListResponse(res))
+      })
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcGetMCPToolList 失败:' + err)
+        reject(err)
+      })
+  })
+}
+
+export const grpcSetMCPToolEnabled: APIFunc<SetMCPToolEnabledRequest, GeneralResponse> = (params, hiddenError) => {
+  return new Promise((resolve, reject) => {
+    ipcRenderer
+      .invoke('SetMCPToolEnabled', params)
+      .then(resolve)
+      .catch((err) => {
+        if (!hiddenError) yakitNotify('error', 'grpcSetMCPToolEnabled 失败:' + err)
         reject(err)
       })
   })

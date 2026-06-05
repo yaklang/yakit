@@ -1,65 +1,310 @@
 .config-system-proxy {
   :global {
     .ant-form-item-explain ant-form-item-explain-connected {
-      font-weight: 400;
-      font-size: 14px;
       color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      font-size: 14px;
+      font-weight: 400;
     }
   }
+
   .config-system-proxy-heard {
-    padding: 18px 24px 0;
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px 0;
+
     .config-system-proxy-title {
-      font-weight: 600;
-      font-size: 14px;
-      line-height: 20px;
       color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 20px;
     }
+
     .close-icon {
       svg {
         width: 16px;
         height: 16px;
         color: var(--Colors-Use-Neutral-Disable);
+
         &:hover {
           color: var(--Colors-Use-Main-Primary);
         }
+
         &:active {
           color: var(--Colors-Use-Main-Pressed);
         }
       }
     }
   }
+
   .config-system-proxy-status-success {
+    height: 32px;
     margin-top: 8px;
     margin-bottom: 16px;
     padding: 8px 24px;
-    height: 32px;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 16px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
     background-color: var(--Colors-Use-Success-Bg);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+
     span {
       color: var(--Colors-Use-Success-Primary);
     }
   }
+
   .config-system-proxy-status-danger {
     background-color: var(--Colors-Use-Error-Bg-Hover);
+
     span {
       color: var(--Colors-Use-Error-Primary);
     }
   }
+
   .config-system-proxy-btns {
     display: flex;
     justify-content: flex-end;
     flex: 1;
+
     gap: 8px;
   }
+
   .config-select-path {
+    cursor: pointer;
     color: var(--Colors-Use-Main-Primary);
     font-size: 12px;
-    cursor: pointer;
+  }
+}
+
+%display-flex-center {
+  display: flex;
+  align-items: center;
+}
+
+%display-flex-end {
+  display: flex;
+  justify-content: flex-end;
+}
+
+%display-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.config-mcp-wrap {
+  .config-mcp-status-success {
+    height: 32px;
+    padding: 8px 24px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    background-color: var(--Colors-Use-Success-Bg);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+
+    span {
+      color: var(--Colors-Use-Success-Primary);
+    }
+  }
+
+  .config-mcp-transport {
+    padding: 16px;
+
+    :global(.ant-radio-button-wrapper-disabled) {
+      pointer-events: auto;
+      cursor: not-allowed;
+      color: var(--Colors-Use-Neutral-Disable);
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
+    .transport-tab-disabled-label {
+      display: inline-block;
+      color: var(--Colors-Use-Neutral-Disable);
+      cursor: not-allowed;
+    }
+
+    .transport-info {
+      margin-top: 16px;
+
+      &-item {
+        @extend %display-flex-center;
+        margin-bottom: 16px;
+
+        gap: 8px;
+
+        &-label {
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        &-json {
+        }
+      }
+
+      .flex-start {
+        align-items: flex-start;
+      }
+    }
+  }
+
+  .beforeEnableMcp-wrap {
+    .mcp-url-input {
+      @extend %display-flex-center;
+
+      gap: 8px;
+
+      &-label {
+        white-space: nowrap;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+    }
+
+    .mcp-tier-switches {
+      @extend %display-column;
+      margin-top: 16px;
+      gap: 12px;
+    }
+
+    .mcp-ai-tool-framework {
+      @extend %display-flex-center;
+      justify-content: space-between;
+
+      gap: 12px;
+
+      &-label {
+        @extend %display-column;
+        gap: 4px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+      }
+
+      &-desc {
+        color: var(--Colors-Use-Neutral-Disable);
+        font-size: 12px;
+      }
+    }
+
+    .mcp-tier-sub {
+      margin-left: 12px;
+      padding-left: 12px;
+      border-left: 2px solid var(--Colors-Use-Neutral-Line-1);
+    }
+
+    .mcp-tool-list {
+      height: 500px;
+      margin: 16px 0;
+
+      .virtual-table-header-wrap {
+        @extend %display-flex-center;
+        justify-content: space-between;
+        width: 100%;
+
+        gap: 8px;
+
+        .virtual-table-header-left {
+          @extend %display-flex-center;
+          gap: 8px;
+        }
+
+        .virtual-table-header-actions {
+          @extend %display-flex-center;
+          gap: 4px;
+        }
+
+        .virtual-table-heard-label {
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+        }
+
+        .virtual-table-heard-desc {
+          color: var(--Colors-Use-Neutral-Disable);
+          font-size: 12px;
+        }
+      }
+
+      .tool-name-wrap {
+        .tool-name {
+          color: var(--Colors-Use-Neutral-Text-1-Title);
+          font-weight: 500;
+        }
+
+        .tool-description {
+          color: var(--Colors-Use-Neutral-Disable);
+          font-size: 11px;
+        }
+      }
+
+      .filter-icon {
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  .config-mcp-btns {
+    @extend %display-flex-end;
+    flex: 1;
+
+    gap: 8px;
+  }
+}
+
+.mcp-tool-detail-popover {
+  overflow-y: auto;
+  width: 400px;
+  max-height: 50vh;
+
+  @extend %display-column;
+  gap: 8px;
+
+  .detail-title {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .detail-description {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 14px;
+  }
+
+  .param-section {
+    @extend %display-column;
+    gap: 8px;
+
+    .param-section-title {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 14px;
+    }
+
+    .param-list {
+      @extend %display-column;
+      gap: 8px;
+    }
+
+    .param-item {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 14px;
+
+      @extend %display-column;
+      gap: 4px;
+
+      .param-item-header {
+        @extend %display-flex-center;
+        gap: 4px;
+      }
+
+      .param-item-required {
+        &::before {
+          margin-right: 2px;
+          content: '*';
+          color: var(--Colors-Use-Error-Primary);
+          font-size: 14px;
+        }
+      }
+
+      .param-description {
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 12px;
+      }
+    }
   }
 }
