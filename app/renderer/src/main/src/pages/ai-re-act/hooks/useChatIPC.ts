@@ -950,6 +950,7 @@ function useChatIPC(params?: UseChatIPCParams) {
               }
               if (focusOfTaskID.current === react_task_id) handleResetFocusMode()
               handleUpdateCasualStatus('remove')
+              casualChatEvent.resetTodoListData()
               if (currentTaskPlanID.current?.taskID === react_task_id) {
                 currentTaskPlanID.current.status = react_task_now_status as AITaskStatus
                 setCancelTaskLoading(false)
