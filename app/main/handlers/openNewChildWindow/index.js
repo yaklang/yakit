@@ -6,9 +6,11 @@ const crypto = require('crypto')
 module.exports = {
   register: (win, getClient) => {
     let childWindow = null
+    let childWindowData = null
 
     // 主窗口发送数据到子窗口
     ipcMain.on('minWin-send-to-childWin', async (e, params) => {
+      childWindowData = params
       if (childWindow && !childWindow.isDestroyed()) {
         childWindow.webContents.send('get-parent-window-data', params)
       }
@@ -50,6 +52,20 @@ module.exports = {
       }
     })
 
+    // 子窗口请求父窗口数据 / 触发并发流刷新（全局只注册一次，避免重复打开子窗口时监听器泄漏）
+    ipcMain.on('request-parent-data', (event) => {
+      if (!childWindowData) return
+      if (childWindow && !childWindow.isDestroyed() && event.sender === childWindow.webContents) {
+        event.sender.send('get-parent-window-data', childWindowData)
+      }
+    })
+
+    ipcMain.on('request-ai-concurrent-stream-refresh', (event, params) => {
+      if (childWindow && !childWindow.isDestroyed() && event.sender === childWindow.webContents) {
+        win.webContents.send('refresh-ai-concurrent-stream', params)
+      }
+    })
+
     ipcMain.handle('UIOperate-childWin', (e, params) => {
       switch (params) {
         case 'close':
@@ -80,6 +96,7 @@ module.exports = {
     })
 
     ipcMain.on('open-new-child-window', (event, data) => {
+      childWindowData = data
       const windowHash = crypto.randomUUID()
       childWindow = new BrowserWindow({
         width: 1200,
@@ -119,11 +136,6 @@ module.exports = {
         }
       })
 
-      // 监听子窗口加载完毕主动获取数据
-      ipcMain.once('request-parent-data', (event) => {
-        event.sender.send('get-parent-window-data', data)
-      })
-
       childWindow.webContents.once('did-finish-load', () => {
         childWindow.show()
         // childWindow.webContents.openDevTools()
@@ -140,6 +152,7 @@ module.exports = {
       })
       childWindow.on('closed', () => {
         childWindow = null
+        childWindowData = null
         win.send('child-window-hash', { hash: '' })
       })
     })

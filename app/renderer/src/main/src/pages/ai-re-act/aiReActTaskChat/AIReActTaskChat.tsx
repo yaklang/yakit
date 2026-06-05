@@ -148,6 +148,10 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
   const { activeChat } = useAIAgentStore()
   const { taskChat } = chatIPCData
 
+  const taskStatus = useCreation(() => {
+    return chatIPCData.taskStatus
+  }, [chatIPCData.taskStatus])
+
   const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
 
   const streams = useCreation(() => {
@@ -210,23 +214,26 @@ const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo
         break
     }
   })
+
   const onRecover = useMemoizedFn(() => {
     const info = getTaskInfo()
     const coordinatorId = info?.coordinatorId
     const taskId = info?.taskID
     if (!coordinatorId) return
     // 选停止当前任务，再发送恢复的数据
-    !!taskId &&
+    if (taskStatus.loading && taskId) {
       handleSendSyncMessage({
         syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
         SyncJsonInput: JSON.stringify({ task_id: taskId }),
       })
+    }
 
     setTimeout(() => {
       handleSendSyncMessage({
         syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
         SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
       })
+      chatIPCEvents.resetCurrentTaskPlanID()
     }, 200)
     if (!!reviewInfo) {
       chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
@@ -693,12 +700,10 @@ const AIPlanPrompt: React.FC<AIPlanPromptProps> = React.memo(
   }),
 )
 const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.memo((props) => {
-  const { onExtraAction, btnProps, subTaskBtnProps, children } = props
+  const { onExtraAction, btnProps, children } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   const { chatIPCEvents } = useChatIPCDispatcher()
-  const { chatIPCData, syncIdInfoMap } = useChatIPCStore()
-
-  const syncIdOfStopSubTask = useRef<string>('')
+  const { chatIPCData } = useChatIPCStore()
 
   const taskChat = useCreation(() => {
     return chatIPCData.taskChat
@@ -772,13 +777,10 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
         return null
     }
   })
-  const isSubTaskInProgress = useMemoizedFn(() => {
-    return taskChat?.plan?.task_tree?.length > 0 && !taskChat?.plan?.task_tree?.every((task) => !task.progress)
-  })
 
   return (
     <>
-      {getTaskInfo()?.status === AITaskStatus.inProgress && isSubTaskInProgress() && (
+      {/* {getTaskInfo()?.status === AITaskStatus.inProgress && isSubTaskInProgress() && (
         <YakitPopconfirm
           onConfirm={() => {
             syncIdOfStopSubTask.current = randomString(8)
@@ -800,7 +802,7 @@ const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.me
             {t('AIRenderTaskFooterExtra.skipSubtask')}
           </YakitButton>
         </YakitPopconfirm>
-      )}
+      )} */}
       {children}
       {renderBtn()}
     </>

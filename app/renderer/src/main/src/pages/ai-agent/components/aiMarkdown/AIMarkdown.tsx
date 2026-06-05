@@ -1,5 +1,5 @@
 import { AIMarkdownProps } from './type'
-import React, { ReactNode, useState } from 'react'
+import React, { ReactNode, useRef, useState } from 'react'
 import { ReportItem } from '@/pages/assetViewer/reportRenders/schema'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
@@ -79,15 +79,21 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
     }
     goAddNotepad(params)
   })
+
+  // 判断路由，子窗口有些功能不展示
+  const isChildWindow = useRef(new URLSearchParams(window.location.search).get('window') === 'child')
+
   return (
     <ChatCard
       titleText={nodeLabel}
       titleExtra={<ModalInfo {...modalInfo} />}
       titleMore={
         <div className={styles['header-extra']}>
-          <Tooltip title={t('AIMarkdown.openFromNotepad')}>
-            <YakitButton size="small" type="text" icon={<OutlineNotebookIcon />} onClick={onGoToNote} />
-          </Tooltip>
+          {!isChildWindow.current && (
+            <Tooltip title={t('AIMarkdown.openFromNotepad')}>
+              <YakitButton size="small" type="text" icon={<OutlineNotebookIcon />} onClick={onGoToNote} />
+            </Tooltip>
+          )}
           <Tooltip title={t('AIMarkdown.downloadMd')}>
             <YakitButton size="small" type="text" icon={<OutlineDownloadIcon />} onClick={onDown} />
           </Tooltip>

@@ -335,7 +335,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
   const onScrollToIndex = useMemoizedFn((id) => {
     const index = streams.findIndex((item) => {
-      if (item.type === AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
+      if (item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         const chatItem = fetchChatDataStore()?.getContentMap({
           session,
           chatType: item.chatType,

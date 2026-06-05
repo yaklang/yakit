@@ -1,9 +1,9 @@
-import { AIAgentSetting } from './aiAgentType'
+import { AIAgentSetting } from '../aiAgentType'
 import isNil from 'lodash/isNil'
-import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from './defaultConstant'
-import { AIAgentGrpcApi, AIInputEvent, AIStartParams, AttachedResourceInfo } from '../ai-re-act/hooks/grpcApi'
-import { HandleStartParams } from './aiAgentChat/type'
-import { AIMentionCommandParams } from './components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import { AIAgentSettingDefault, AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '../defaultConstant'
+import { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '../../ai-re-act/hooks/grpcApi'
+import { HandleStartParams } from '../aiAgentChat/type'
+import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { omit } from 'lodash'
 import { randomString } from '@/utils/randomUtil'
 
@@ -105,6 +105,7 @@ export const formatAIAgentSetting = (setting: AIAgentSetting): AIAgentSetting =>
 
     data.SyncPerceptionTrigger = setting.SyncPerceptionTrigger ?? AIAgentSettingDefault.SyncPerceptionTrigger
     data.EnablePlan = setting.EnablePlan ?? AIAgentSettingDefault.EnablePlan
+    data.PlanExecTaskConcurrency = setting.PlanExecTaskConcurrency ?? AIAgentSettingDefault.PlanExecTaskConcurrency
 
     if (setting?.AllowPlanUserInteract) {
       if (!isNil(setting?.PlanUserInteractMaxCount)) {

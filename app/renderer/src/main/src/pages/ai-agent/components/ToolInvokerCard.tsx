@@ -20,7 +20,12 @@ import { AITabsEnum } from '../defaultConstant'
 import { useClickAway, useCreation, useMemoizedFn } from 'ahooks'
 import { AIAgentGrpcApi, AIEventQueryRequest } from '@/pages/ai-re-act/hooks/grpcApi'
 import { isToolStdoutStream } from '@/pages/ai-re-act/hooks/utils'
-import { OutlineArrownarrowrightIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
+import {
+  OutlineArrownarrowrightIcon,
+  OutlineChevronsDownUpIcon,
+  OutlineChevronsUpDownIcon,
+  OutlineRefreshIcon,
+} from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { Divider, Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
@@ -61,18 +66,30 @@ interface ToolStatusCardProps {
   title: ReactNode
   children?: ReactNode
 }
-interface ToolStdoutCardProps extends ToolInvokerCardProps {}
-interface ToolResultCardProps extends ToolInvokerCardProps {}
+interface ToolStdoutCardProps extends ToolInvokerCardProps {
+  isChildWindow: boolean
+}
+interface ToolResultCardProps extends ToolInvokerCardProps {
+  isChildWindow: boolean
+}
 
 const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
   const { data } = props
 
+  // 判断路由，子窗口有些功能不展示
+  const isChildWindow = useRef(new URLSearchParams(window.location.search).get('window') === 'child')
+
   const renderContent = useMemoizedFn(() => {
+    // 过滤掉打开文件
+    const operationInfo = {
+      ...props.operationInfo,
+      aiFilePath: isChildWindow.current ? undefined : props.operationInfo.aiFilePath,
+    }
     switch (data.type) {
       case 'stream':
-        return <ToolStdoutCard {...props} />
+        return <ToolStdoutCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
       case 'result':
-        return <ToolResultCard {...props} />
+        return <ToolResultCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
       default:
         return null
     }
@@ -128,7 +145,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   return (
     <ChatCard
       titleText={titleText}
-      titleIcon={<SolidToolIcon />}
+      // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           {selectors?.selectors && (
@@ -169,13 +186,18 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
-  const { titleText, modalInfo, operationInfo, fileList, data, chatType, token } = props
+  const { titleText, modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
 
   const [loading, setLoading] = useState<boolean>(false)
   const [type, setType] = useState<'outInput' | 'params'>('outInput')
+
+  const [expand, setExpand] = useState<boolean>(false)
+  const expandToggle = useMemoizedFn(() => {
+    setExpand((v) => !v)
+  })
 
   const httpFlowDataCount = useCreation(() => {
     return data.httpFlowDataCount
@@ -298,7 +320,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   return (
     <ChatCard
       titleText={titleText}
-      titleIcon={<SolidToolIcon />}
+      // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
           <div className={styles['tool-invoker-card-extra-time']}>
@@ -335,50 +357,64 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
               {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
             </label>
           )}
-          <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
-            <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
+          {isChildWindow || (
+            <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
+              <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
+            </Tooltip>
+          )}
+
+          <Tooltip title={expand ? '收起' : '展开'}>
+            <YakitButton
+              size="small"
+              type="text"
+              icon={expand ? <OutlineChevronsDownUpIcon /> : <OutlineChevronsUpDownIcon />}
+              onClick={expandToggle}
+              className={styles['expand-btn']}
+            />
           </Tooltip>
         </div>
       }
       titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
-      footer={<OperationCardFooter {...operationInfo} />}
+      footer={expand && <OperationCardFooter {...operationInfo} />}
     >
-      <ToolStatusCard
-        status={status}
-        title={
-          <div className={styles['tool-title']}>
-            <div className={styles['tool-title-left']}>
-              <div className={styles['tool-name']}>{data.toolName}</div>
-              <YakitTag size="small" fullRadius color={statusColor as YakitTagColor}>
-                {statusText}
-              </YakitTag>
+      {expand && (
+        <ToolStatusCard
+          status={status}
+          title={
+            <div className={styles['tool-title']}>
+              <div className={styles['tool-title-left']}>
+                <div className={styles['tool-name']}>{data.toolName}</div>
+                <YakitTag size="small" fullRadius color={statusColor as YakitTagColor}>
+                  {statusText}
+                </YakitTag>
+              </div>
+              <YakitRadioButtons
+                size="small"
+                buttonStyle="solid"
+                options={[
+                  {
+                    label: '输出',
+                    value: 'outInput',
+                  },
+                  {
+                    label: '参数',
+                    value: 'params',
+                  },
+                ]}
+                value={type}
+                onChange={(e) => {
+                  setType(e.target.value)
+                }}
+              />
             </div>
-            <YakitRadioButtons
-              size="small"
-              buttonStyle="solid"
-              options={[
-                {
-                  label: '输出',
-                  value: 'outInput',
-                },
-                {
-                  label: '参数',
-                  value: 'params',
-                },
-              ]}
-              value={type}
-              onChange={(e) => {
-                setType(e.target.value)
-              }}
-            />
-          </div>
-        }
-      >
-        <YakitSpin spinning={loading}>
-          <div className={styles['file-system-content']}>{renderContent()}</div>
-        </YakitSpin>
-      </ToolStatusCard>
-      {!!fileList?.length && <FileList fileList={fileList} />}
+          }
+        >
+          <YakitSpin spinning={loading}>
+            <div className={styles['file-system-content']}>{renderContent()}</div>
+          </YakitSpin>
+        </ToolStatusCard>
+      )}
+      {expand && !!fileList?.length && <FileList fileList={fileList} />}
     </ChatCard>
   )
 })

@@ -5,6 +5,25 @@
   padding-top: 10px;
   padding-bottom: 10px;
   overflow: hidden auto;
+  &.ai-tree-hovering {
+    .ai-tree-node:not(.ai-tree-node-dimmed) {
+      .node-icon-line,
+      .node-icon-line-top {
+        opacity: 0.3;
+        transition: opacity 0.2s ease;
+      }
+      .node-icon-backslash::before,
+      .node-icon-slash::after,
+      .node-icon-parent-slash::after {
+        opacity: 0.3;
+        transition: opacity 0.2s ease;
+      }
+    }
+    .ai-tree-node-end div {
+      opacity: 0.3;
+      transition: opacity 0.2s ease;
+    }
+  }
 }
 
 @mixin line($deg: 24deg) {
@@ -23,6 +42,10 @@
   height: max-content;
   max-height: 102px;
   display: flex;
+  transition: opacity 0.2s ease;
+  &.ai-tree-node-dimmed {
+    opacity: 0.3;
+  }
   .node-icon {
     width: 16px;
     position: relative;
@@ -300,6 +323,56 @@
     }
     .ant-popover-arrow {
       top: 0;
+    }
+  }
+}
+
+.depends-on-popover {
+  .depends-on-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
+    max-width: 280px;
+  }
+  .depends-on-list {
+    max-height: 260px;
+    overflow-y: auto;
+    padding-top: 6px;
+  }
+  .depends-on-title {
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 20px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  }
+  .depends-on-item {
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    font-size: 13px;
+    line-height: 20px;
+    height: 20px;
+    @include mixin.text-ellipsis;
+    &::before {
+      content: '• ';
+    }
+  }
+  .depends-on-empty {
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    font-size: 13px;
+    line-height: 20px;
+    padding-top: 6px;
+  }
+
+  :global {
+    .ant-popover-inner {
+      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
+      border-radius: 4px;
+      border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+      background: var(--Colors-Use-Basic-Background);
+      .ant-popover-inner-content {
+        padding: 12px;
+      }
     }
   }
 }

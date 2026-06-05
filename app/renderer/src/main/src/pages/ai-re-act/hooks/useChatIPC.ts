@@ -364,6 +364,9 @@ function useChatIPC(params?: UseChatIPCParams) {
   const fetchCurrentTaskPlanID = useMemoizedFn(() => {
     return currentTaskPlanID.current
   })
+  const resetCurrentTaskPlanID = useMemoizedFn(() => {
+    currentTaskPlanID.current = undefined
+  })
 
   /** 用户主动(关闭/恢复)当前问题的loading状态(任务规划) */
   const [cancelTaskLoading, setCancelTaskLoading] = useState(false)
@@ -378,6 +381,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     pushLog: logEvents.pushLog,
     getChatDataStore,
     getRequest: fetchAIRequest,
+    getCurrentTaskPlanID: fetchCurrentTaskPlanID,
     onReview: onTaskReview,
     onReviewExtra: onTaskReviewExtra,
     onReviewRelease: handleTaskReviewRelease,
@@ -542,7 +546,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 清空自由对话相关的ID
     currentCasualTaskID.current = ''
     // 清空任务规划相关的ID
-    currentTaskPlanID.current = undefined
+    resetCurrentTaskPlanID()
     taskChatEvent.handleResetPlanTree()
   })
 
@@ -562,7 +566,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     handleResetPlanHistoryList()
     currentCasualTaskID.current = ''
     handleUpdateCasualStatus('reset')
-    currentTaskPlanID.current = undefined
+    resetCurrentTaskPlanID()
     handleResetTaskStatus()
 
     setCancelCasualLoading(false)
@@ -692,7 +696,6 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
-        // console.log('onStart-res', res, ipcContent)
 
         if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
           const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
@@ -1007,7 +1010,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (res.Type === 'stream') {
           if (res.IsSystem || res.IsReason) {
-            const { CallToolID, TaskIndex, NodeId, NodeIdVerbose, EventUUID, StreamDelta, ContentType } = res
+            const { CallToolID, NodeId, NodeIdVerbose, EventUUID, StreamDelta, ContentType } = res
             if (!NodeId || !EventUUID) return
             let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ''
             const content = ipcContent + ipcStreamDelta
@@ -1015,7 +1018,6 @@ function useChatIPC(params?: UseChatIPCParams) {
               type: 'stream',
               Timestamp: res.Timestamp,
               data: {
-                TaskIndex,
                 CallToolID,
                 NodeId,
                 NodeIdVerbose: NodeIdVerbose || convertNodeIdToVerbose(NodeId),
@@ -1294,6 +1296,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleUserManualIntervention,
       handleLoadMoreHistory: handleLoadMore,
       handleHasMoreHistory: handleHasMore,
+      resetCurrentTaskPlanID,
     }
   }, [])
 

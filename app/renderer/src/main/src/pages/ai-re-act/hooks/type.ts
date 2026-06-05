@@ -99,6 +99,8 @@ export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc
 export interface UseTaskChatParams extends UseHookBaseParams {
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
   /** review 触发回调事件 */
   onReview?: (data: AIChatQSData) => void
   /** plan_review 补充数据 */
@@ -315,6 +317,8 @@ export interface UseChatIPCEvents {
   handleLoadMoreHistory: (chatType: HistoryChatType) => void
   /** 是否还有更多历史数据 */
   handleHasMoreHistory: (type: HistoryChatType) => boolean
+  /** 清除当前任务规划的ID信息 */
+  resetCurrentTaskPlanID: () => void
 }
 // #endregion
 
@@ -350,6 +354,8 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
   info: {
     chatType: ReActChatRenderItem['chatType']
   }
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
   /** 将数据推送到日志集合中 */

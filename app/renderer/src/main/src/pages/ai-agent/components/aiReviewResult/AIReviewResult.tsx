@@ -27,7 +27,7 @@ export const AIReviewResult: React.FC<AIReviewResultProps> = memo((props) => {
     return info.chatType
   })
 
-  const [expand, setExpand] = useState<boolean>(true)
+  const [expand, setExpand] = useState<boolean>(false)
 
   const taskLength = useCreation(() => {
     return chatIPCData?.taskChat?.elements?.length

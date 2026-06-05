@@ -1,6 +1,6 @@
-import { AIToolResult } from './aiRender'
-import { AIAgentGrpcApi, AIOutputI18n } from './grpcApi'
-import { AIQuestionQueues, CurrentExecTaskTree, PlanLoadingStatus } from './type'
+import type { AIToolResult } from './aiRender'
+import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
+import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from './type'
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {

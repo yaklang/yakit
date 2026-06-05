@@ -1,16 +1,29 @@
 /**
  * chat 对话数据相关处理工具
  */
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { DialogueRecord } from '@/pages/ai-agent/store/type'
+import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType } from './aiRender'
+import type { AIChatLogToInfo, AIChatLogData } from './type'
+import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 
+import { JSONParseLog } from '@/utils/tool'
 import { generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
-import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AITaskInfoProps, AIChatQSDataType, ReActChatRenderItem } from './aiRender'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import { AIChatLogData, AIChatLogToInfo } from './type'
-import { DialogueRecord } from '@/pages/ai-agent/store/type'
-import { JSONParseLog } from '@/utils/tool'
+
+/** 生成任务的唯一标识 */
+export const generateTaskId = (reActTaskID: string | undefined, task_index: string) => {
+  if (!reActTaskID) return undefined
+  return `${reActTaskID}-${task_index}`
+}
+
+/** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
+export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/
+
+/** 校验 TaskIndex 是否符合任务子索引格式 */
+export const isValidTaskIndex = (taskIndex?: string): taskIndex is string =>
+  !!taskIndex && TASK_INDEX_PATTERN.test(taskIndex)
 
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
@@ -75,6 +88,17 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
   const execTasks: AITaskInfoProps[] = []
   genExecTask({ task: taskTree, level: 1, tasks: execTasks })
   execTasks.shift()
+  // 将任务关联的任务名转换成task_index
+  for (let item of execTasks) {
+    if (item.depends_on && item.depends_on.length > 0) {
+      item.depends_on = item.depends_on
+        .map((depend) => {
+          const dependTask = execTasks.find((t) => t.semantic_identifier === depend)
+          return dependTask ? dependTask.index : ''
+        })
+        .filter(Boolean)
+    }
+  }
   return execTasks
 }
 // #endregion
@@ -143,6 +167,7 @@ export const indexedDBDataToReActChatRenderItem = (
         children: JSONParseLog(item.children || '[]'),
         renderNum: 0,
         isCached: true,
+        kind: item.kind,
       }
     }
     return {
@@ -153,6 +178,7 @@ export const indexedDBDataToReActChatRenderItem = (
       renderNum: 0,
       children: JSONParseLog(item.children || '[]'),
       isCached: true,
+      kind: 'item',
     }
   })
 
@@ -175,8 +201,9 @@ export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: strin
   elements.map((item, index) => ({
     token: item.token,
     type: item.type,
-    isGroup: item.isGroup || false,
-    children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
+    kind: item.kind,
+    isGroup: item.kind === 'group' || item.kind === 'task',
+    children: JSON.stringify(item.kind === 'group' || item.kind === 'task' ? item.children : []),
     sessionId,
     cacheOrder: index,
   }))

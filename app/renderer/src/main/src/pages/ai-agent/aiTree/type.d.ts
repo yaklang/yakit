@@ -1,6 +1,5 @@
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import type { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
-
 export interface AITreeProps {
   tasks: AITaskInfoProps[]
   onNodeClick?: AITreeNodeProps['onClick']
@@ -27,4 +26,9 @@ export interface AITreeNodeProps {
   data: AITaskInfoProps
   onClick?: () => void
   aiTreeTitleExtraNode?: (value: AITaskInfoProps) => React.ReactNode
+  isDimmed?: boolean
+  isHovered?: boolean
+  dependsOnTasks?: AITaskInfoProps[]
+  onNodeHover?: (index: string) => void
+  onNodeHoverEnd?: () => void
 }

@@ -3,18 +3,13 @@ import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo } fro
 import styles from './AIGroupStreamCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import {
-  OutlineArrowsexpandIcon,
-  OutlineBrainIcon,
-  OutlineChevronsDownUpIcon,
-  OutlineChevronsUpDownIcon,
-} from '@/assets/icon/outline'
+import { OutlineArrowsexpandIcon, OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { useClickAway, useMemoizedFn } from 'ahooks'
+import useClickFocus from '../../../ai-re-act/hooks/useClickFocus'
 import { Tooltip } from 'antd'
 
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
@@ -101,21 +96,16 @@ const AIGroupStreamCard: FC<{
   session: string
 }> = ({ elements, hasNext, session }) => {
   const lastElement = elements[elements.length - 1]
-  const { stream } = useTypedStream({ chatType: lastElement.chatType, token: lastElement.token, session })
+  const { stream } = useTypedStream({ chatType: lastElement?.chatType, token: lastElement?.token ?? '', session })
   const { nodeLabel } = useAINodeLabel(stream?.data.NodeIdVerbose)
   const [expand, setExpand] = useState(true)
   const content = stream?.data.content || ''
   const shouldShowMask = useMemo(() => content.length > STREAM_MASK_THRESHOLD, [content])
   const contentRef = useRef<HTMLDivElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const { ref: containerRef, isFocus } = useClickFocus<HTMLDivElement>()
 
-  const [isFocus, setIsFocus] = useState(false)
   const [isScroll, setIsScroll] = useState(false)
   const allowAutoScrollRef = useRef<boolean>(true)
-
-  useClickAway(() => {
-    if (isFocus) setIsFocus(false)
-  }, [containerRef])
 
   // 点击其他地方取消滚动
   useEffect(() => {
@@ -183,10 +173,6 @@ const AIGroupStreamCard: FC<{
       setExpand(false)
     }
   }, [hasNext])
-
-  const onSetFocus = useMemoizedFn(() => {
-    setIsFocus(true)
-  })
   if (!stream) return null
   return (
     <div
@@ -194,7 +180,6 @@ const AIGroupStreamCard: FC<{
         [styles['container-focus']]: isFocus,
       })}
       ref={containerRef}
-      onClick={onSetFocus}
     >
       <div
         className={styles.title}

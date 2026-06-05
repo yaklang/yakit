@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { WebFuzzerAiStoreCardRightHeader } from '@/pages/ai-agent/components/WebFuzzerAiStoreCardRightHeader'
 import { AIYaklangCodeProps } from './type'
 import ChatCard from '../ChatCard'
-import { OutlinCompileTwoIcon } from '@/assets/icon/outline'
+// import { OutlinCompileTwoIcon } from '@/assets/icon/outline'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import ModalInfo from '../ModelInfo'
 import styles from './AIYaklangCode.module.scss'
@@ -72,7 +72,8 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
 
   return (
     <div className={styles['ai-yaklang-code-hover-wrap']}>
-      <ChatCard titleText={nodeLabel} titleIcon={<OutlinCompileTwoIcon />} titleExtra={titleExtra}>
+      {/*  titleIcon={<OutlinCompileTwoIcon />}  */}
+      <ChatCard titleText={nodeLabel} titleExtra={titleExtra}>
         <div className={styles['ai-yaklang-code']}>{renderCode()}</div>
         {referenceNode}
       </ChatCard>

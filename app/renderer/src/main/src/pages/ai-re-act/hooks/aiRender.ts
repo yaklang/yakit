@@ -1,6 +1,6 @@
-import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AIOutputI18n, AITaskStatusType } from './grpcApi'
-import { AIChatIPCStartParams } from './type'
+import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n, AIInputEvent } from './grpcApi'
+import type { AIChatIPCStartParams } from './type'
 
 /** 工具流式输出里的可选操作列表 */
 export interface ToolStreamSelectors {
@@ -11,7 +11,6 @@ export interface ToolStreamSelectors {
 
 /** 流式输出的信息内容 */
 export interface AIStreamOutput {
-  TaskIndex?: AIOutputEvent['TaskIndex']
   CallToolID: AIOutputEvent['CallToolID']
   EventUUID: AIOutputEvent['EventUUID']
   NodeId: AIOutputEvent['NodeId']
@@ -25,7 +24,6 @@ export interface AIStreamOutput {
 /** 工具结果的信息内容 */
 export interface AIToolResult {
   type: '' | 'stream' | 'result'
-  TaskIndex?: AIOutputEvent['TaskIndex']
   callToolId: string
   /**工具名称 */
   toolName: string
@@ -70,11 +68,15 @@ export interface AIToolResult {
   riskFlowDataCount: number
 }
 
-/** 任务开始节点的信息 */
+/** 任务节点的信息 */
 export interface AITaskStartInfo {
+  /** AIAgentGrpcApi.PlanTask.index */
   taskIndex: string
+  /** AIAgentGrpcApi.PlanTask.name */
   taskName: string
+  /** AIAgentGrpcApi.PlanTask.goal */
   goal: string
+  /** AIAgentGrpcApi.PlanTask.progress */
   status?: AITaskStatusType
 }
 
@@ -186,8 +188,6 @@ export enum AIChatQSDataTypeEnum {
   REQUIRE_USER_INTERACTIVE = 'require_user_interactive',
   /**智能体/forge审阅 */
   EXEC_AIFORGE_REVIEW_REQUIRE = 'exec_aiforge_review_require',
-  /**Divider Card */
-  TASK_INDEX_NODE = 'task_index_node',
   /**工具决策 */
   TOOL_CALL_DECISION = 'tool_call_decision',
   /**当前任务规划结束标志 */
@@ -202,6 +202,8 @@ export enum AIChatQSDataTypeEnum {
   Reference_Material = 'reference_material',
   /** stream数据集合组 */
   STREAM_GROUP = 'stream_group',
+  /** 任务节点集合组 */
+  TASK_NODE_GROUP = 'task_node_group',
   /** 用户手动介入上下文 */
   USER_MANUAL_INTERVENTION = 'user_manual_intervention',
   /** HTTP 流 fuzz 执行状态卡片（http_flow_fuzz_status） */
@@ -224,17 +226,26 @@ export interface ReActChatBaseInfo {
   /** 缓存数据里的顺序 */
   cacheOrder?: number
 }
+
+/** 独立 UI 节点 */
 export interface ReActChatElement extends ReActChatBaseInfo {
-  /** 标记不是组 */
-  isGroup?: false
+  kind: 'item'
 }
+/** stream合成组group的节点 */
 export interface ReActChatGroupElement extends ReActChatBaseInfo {
-  /** 标记是组 */
-  isGroup: true
+  kind: 'group'
   children: ReActChatElement[]
 }
 
-export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement
+/** 进入 task 容器内部的子节点类型集合 */
+export type ReActChatTaskElementSub = ReActChatElement | ReActChatGroupElement
+/** 任务内的所有节点 */
+export interface ReActChatTaskElement extends ReActChatBaseInfo {
+  kind: 'task'
+  children: ReActChatTaskElementSub[]
+}
+
+export type ReActChatRenderItem = ReActChatElement | ReActChatGroupElement | ReActChatTaskElement
 
 // #region chat 问答内容组件的类型集合(包括了类型推导)
 export interface AIChatQSDataBase<T extends string, U> {
@@ -245,6 +256,8 @@ export interface AIChatQSDataBase<T extends string, U> {
   AIService: AIOutputEvent['AIService']
   AIModelName: AIOutputEvent['AIModelName']
   Timestamp: AIOutputEvent['Timestamp']
+  /** 节点信息所属的任务节点索引 */
+  taskIndex?: AIOutputEvent['TaskIndex']
   /** 前端专属数据，供前端逻辑和UI处理使用 */
   extraValue?: AIChatIPCStartParams['extraValue']
   /** 参考资料 */
@@ -261,7 +274,6 @@ export type ChatApiRequestFailed = AIChatQSDataBase<
   AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
   AIAgentGrpcApi.AIApiRequestFailedPayload
 >
-
 type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
 type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
 type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
@@ -273,7 +285,7 @@ type ChatRequireUserInteractive = AIChatQSDataBase<
   UIRequireUserInteractive
 >
 type ChatExecAIForgeReview = AIChatQSDataBase<AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE, UIExecAIForgeReview>
-type ChatTaskIndexNode = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_INDEX_NODE, AITaskStartInfo>
+export type ChatTaskNodeGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_NODE_GROUP, AITaskStartInfo>
 export type ChatToolCallDecision = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_CALL_DECISION, AIToolCallDecision>
 type ChatPlanExecEnd = AIChatQSDataBase<AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION, string>
 type ChatFailPlanAndExecution = AIChatQSDataBase<AIChatQSDataTypeEnum.FAIL_PLAN_AND_EXECUTION, FailTaskChatError>
@@ -288,7 +300,6 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
   AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION,
   UserManualInterventionContext
 >
-
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
 
@@ -303,7 +314,7 @@ export type AIChatQSData =
   | ChatToolUseReviewRequire
   | ChatRequireUserInteractive
   | ChatExecAIForgeReview
-  | ChatTaskIndexNode
+  | ChatTaskNodeGroup
   | ChatToolCallDecision
   | ChatPlanExecEnd
   | ChatFailPlanAndExecution

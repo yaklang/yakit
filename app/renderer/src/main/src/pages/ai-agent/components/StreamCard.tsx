@@ -36,7 +36,7 @@ const PromptCard: FC<{ prompt?: string }> = ({ prompt }) => {
 
 const StreamCard: FC<StreamCardProps> = ({
   titleText,
-  titleIcon,
+  // titleIcon,
   content,
   fileList,
   prompt,
@@ -56,7 +56,7 @@ const StreamCard: FC<StreamCardProps> = ({
   return (
     <ChatCard
       titleText={titleText}
-      titleIcon={<div className={styles['stream-icon']}>{titleIcon ?? <SolidHashtagIcon />}</div>}
+      // titleIcon={<div className={styles['stream-icon']}>{titleIcon ?? <SolidHashtagIcon />}</div>}
       titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
       footer={prompt && <PromptCard prompt={prompt} />}
     >
