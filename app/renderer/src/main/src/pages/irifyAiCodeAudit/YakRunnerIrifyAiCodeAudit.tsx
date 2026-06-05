@@ -70,6 +70,7 @@ import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SplitView } from '../yakRunner/SplitView/SplitView'
 import { getStorageYakRunnerAiCodeAuditShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/yakRunnerAiCodeAudit'
+import { useIrifyWorkbenchAiAttachRef } from './IrifyWorkbenchAiAttachContext'
 const { ipcRenderer } = window.require('electron')
 
 /**
@@ -109,6 +110,16 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
   const [activeFile, setActiveFile] = useState<FileDetailInfo>()
   const [runnerTabsId, setRunnerTabsId] = useState<string>()
   const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
+
+  const irifyWorkbenchAttachRef = useIrifyWorkbenchAiAttachRef()
+  useEffect(() => {
+    if (!irifyWorkbenchAttachRef) return
+    if (fileTree.length > 0 && fileTree[0].path?.trim()) {
+      irifyWorkbenchAttachRef.current.projectRootAbsPath = fileTree[0].path.trim()
+    } else {
+      irifyWorkbenchAttachRef.current.projectRootAbsPath = undefined
+    }
+  }, [fileTree, irifyWorkbenchAttachRef])
 
   const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
     if (getMapFileDetail(path).isCreate) {
