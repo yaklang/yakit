@@ -1,88 +1,112 @@
-import { notification } from 'antd'
-import { ArgsProps } from 'antd/lib/notification'
-import React, { ReactNode } from 'react'
+import React, { ReactNode, useEffect } from 'react'
+import { notification, NotificationArgsProps } from 'antd'
 import { CheckCircleOutlineIcon, CloseCircleIcon, ExclamationOutlineIcon } from '@/assets/newIcon'
 import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
+import { NotificationInstance } from 'antd/es/notification/interface'
 
-export const warn = (msg: React.ReactNode) => {
-  yakitNotify('warning', msg)
-}
+type NotifyArgument = NotificationArgsProps | string | React.ReactNode
+type NotifyType = 'error' | 'success' | 'warning' | 'info'
 
-export const info = (msg: React.ReactNode) => {
-  yakitNotify('info', msg)
-}
-
-export const yakitInfo = (msg) => {
-  yakitNotify('info', msg)
-}
-
-export const success = (msg: React.ReactNode) => {
-  yakitNotify('success', msg)
-}
-export const successControlled = (msg: React.ReactNode, time?: number) => {
-  notification['success']({ message: msg, placement: 'bottomLeft', duration: time === undefined ? 4.5 : time })
-}
-
-export const failed = (msg: React.ReactNode) => {
-  yakitFailed(msg)
-}
-
-// ==========================新版 yakit notification ==========================
-export const yakitFailed = (props: ArgsProps | string | React.ReactNode, isShowCopy?: boolean) => {
-  yakitNotify('error', props, isShowCopy)
+// ========================== 全局单例 ==========================
+let globalNotificationApi: NotificationInstance | null = null
+export const setGlobalNotificationApi = (api: any) => {
+  globalNotificationApi = api
 }
 
 /**
- * @param type
- * @returns {React.ReactNode} 图标
+ * 通知提供者：内部使用 notification.useNotification()
+ * 必须放在组件树顶层（如根组件内部）
  */
-const getIcon = (type) => {
-  switch (type) {
-    case 'error':
-      return <CloseCircleIcon className="yakit-notify-icon yakit-notify-error-icon" />
-    case 'success':
-      return <CheckCircleOutlineIcon className="yakit-notify-icon yakit-notify-success-icon" />
-    case 'warning':
-      return <ExclamationOutlineIcon className="yakit-notify-icon yakit-notify-warning-icon" />
-    default:
-      return <></>
-  }
-}
-
-export const yakitNotify = (
-  notifyType: 'error' | 'success' | 'warning' | 'info',
-  props: ArgsProps | string | React.ReactNode,
-  isShowCopy?: boolean,
-) => {
-  let newProps: ArgsProps = {
-    message: '',
-  }
-
-  const copyBtn = (copyStr) => (
-    <div style={{ display: 'flex', justifyContent: 'end' }}>
-      <CopyComponents copyText={copyStr} />
-    </div>
-  )
-
-  if (typeof props === 'string') {
-    const isCopy = isShowCopy && props.length > 500
-    const str = isCopy ? `${props.slice(0, 500)}...` : props
-    newProps.message = (
-      <div style={{ whiteSpace: 'pre-wrap' }}>
-        {str}
-        {isCopy && copyBtn(props)}
-      </div>
-    )
-  } else if (typeof props === 'object') {
-    newProps = props as ArgsProps
-  } else {
-    newProps.message = props
-  }
-  notification[notifyType]({
-    ...newProps,
-    icon: getIcon(notifyType),
-    placement: 'bottomLeft',
-    className: `yakit-notification-${notifyType}`,
-    // bottom: 8,
+export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [api, contextHolder] = notification.useNotification({
+    stack: {
+      threshold: 10,
+    },
+    bottom: 8,
   })
+
+  // 注册 api 到全局
+  useEffect(() => {
+    setGlobalNotificationApi(api)
+    return () => {
+      setGlobalNotificationApi(null)
+    }
+  }, [api])
+
+  return (
+    <>
+      {contextHolder}
+      {children}
+    </>
+  )
 }
+
+const NOTIFY_ICON_MAP: Record<NotifyType, ReactNode> = {
+  error: <CloseCircleIcon className="yakit-notify-icon yakit-notify-error-icon" />,
+  success: <CheckCircleOutlineIcon className="yakit-notify-icon yakit-notify-success-icon" />,
+  warning: <ExclamationOutlineIcon className="yakit-notify-icon yakit-notify-warning-icon" />,
+  info: <></>,
+}
+const getIcon = (type: NotifyType) => NOTIFY_ICON_MAP[type]
+
+const CopyButton = ({ text }: { text: string }) => (
+  <div style={{ display: 'flex', justifyContent: 'end' }}>
+    <CopyComponents copyText={text} />
+  </div>
+)
+
+function normalizeProps(props: NotifyArgument, isShowCopy?: boolean): NotificationArgsProps {
+  // 情况1：字符串 -> 构造 message 为带复制按钮的 div
+  if (typeof props === 'string') {
+    const shouldTruncate = isShowCopy && props.length > 500
+    const displayStr = shouldTruncate ? `${props.slice(0, 500)}...` : props
+    return {
+      message: (
+        <div style={{ whiteSpace: 'pre-wrap' }}>
+          {displayStr}
+          {shouldTruncate && <CopyButton text={props} />}
+        </div>
+      ),
+    }
+  }
+  // 情况2：已经是完整的 NotificationArgsProps 对象
+  if (typeof props === 'object' && props !== null && !React.isValidElement(props)) {
+    return props as NotificationArgsProps
+  }
+  // 情况3：React 元素、number、其他原始类型 -> 作为 message
+  return { message: props as ReactNode }
+}
+
+// ========================== 核心通知方法 ==========================
+export const yakitNotify = (notifyType: NotifyType, props: NotifyArgument, isShowCopy?: boolean) => {
+  const baseProps = normalizeProps(props, isShowCopy)
+  const config: NotificationArgsProps = {
+    ...baseProps,
+    icon: getIcon(notifyType),
+    className: `yakit-notification-${notifyType}`,
+    placement: 'bottomLeft',
+  }
+
+  const api = globalNotificationApi
+  if (api && typeof api[notifyType] === 'function') {
+    api[notifyType](config)
+  } else {
+    notification[notifyType](config)
+  }
+}
+
+type NotifyMethod = (props: NotifyArgument, isShowCopy?: boolean) => void
+const createNotifyMethod = (type: NotifyType): NotifyMethod => {
+  return (props, isShowCopy) => yakitNotify(type, props, isShowCopy)
+}
+
+// ========================== 导出方法 ==========================
+export const warn = createNotifyMethod('warning')
+export const success = createNotifyMethod('success')
+export const failed = createNotifyMethod('error')
+export const info = createNotifyMethod('info')
+
+export const yakitWarn = warn
+export const yakitSuccess = success
+export const yakitFailed = failed
+export const yakitInfo = info
