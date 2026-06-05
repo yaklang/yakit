@@ -136,13 +136,14 @@ function useCasualChat(params: UseCasualChatParams) {
 
       const ipcContent = Uint8ArrayToString(res.Content) || ''
 
-      if (res.Type === 'structured' && res.NodeId === 'system') {
-        const data = JSON.parse(ipcContent) || ''
-        if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
-          // handleTaskNode(res)
-        }
-        return
-      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
+      // if (res.Type === 'structured' && res.NodeId === 'system') {
+      //   const data = JSON.parse(ipcContent) || ''
+      //   if (data && typeof data === 'object' && ['pop_task', 'push_task'].includes(data?.type)) {
+      //     handleTaskNode(res)
+      //   }
+      //   return
+      // } else
+      if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
         // 更新待办清单卡片数据
         const info = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
         const chatDetail = getCasualChat()
