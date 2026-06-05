@@ -14,6 +14,7 @@ import {
 } from '@/routes/newRoute'
 import { ExtraMenu, OrdinaryMenu } from './ExtraMenu'
 import { SortAscendingIcon, SortDescendingIcon } from '@/assets/newIcon'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { MenuCodec } from './MenuCodec'
 import { MenuDNSLog } from './MenuDNSLog'
 import { MenuMode } from './MenuMode'
@@ -573,6 +574,16 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             <OrdinaryMenu menuList={getSecurityExpertLeftMenu()} onMenuSelect={onClickSecurityExpertMenu} />
             <ManagementTab hideIcon />
             <OrdinaryMenu menuList={getSecurityExpertNotepadMenu()} onMenuSelect={onClickSecurityExpertMenu} />
+            <MenuPlugin
+              loading={loading}
+              pluginList={pluginMenu}
+              onMenuSelect={(route) => onClickMenu(route, 'plugin')}
+              onRestore={() => {
+                isInitRef.current = true
+              }}
+            >
+              <YakitButton type="secondary2">{t('Layout.MenuPlugin.commonPlugins')}</YakitButton>
+            </MenuPlugin>
           </div>
         ) : (
           <>

@@ -21,6 +21,7 @@ import { JSONParseLog } from '@/utils/tool'
 const { ipcRenderer } = window.require('electron')
 
 interface MenuPluginProps {
+  children?: React.ReactNode
   loading: boolean
   pluginList: EnhancedPublicRouteMenuProps[]
   onMenuSelect: (route: RouteToPageProps) => void
@@ -152,6 +153,24 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
       </div>
     )
   }, [pluginList, loading, i18n.language])
+
+  if (props.children) {
+    return (
+      <div className={classNames(styles['plugin-btn'], { [styles['plugin-active-btn']]: listShow })}>
+        <YakitPopover
+          overlayClassName={styles['plugin-list-popover']}
+          overlayStyle={{ paddingTop: 6 }}
+          placement="bottomRight"
+          trigger={'click'}
+          content={listDom}
+          visible={listShow}
+          onVisibleChange={(visible) => setListShow(visible)}
+        >
+          <div className={styles['body-style']}>{props.children}</div>
+        </YakitPopover>
+      </div>
+    )
+  }
 
   return (
     <div className={styles['menu-plugin-wrapper']}>
