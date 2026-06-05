@@ -497,6 +497,8 @@ export const getAction = (mode: FilterMode) => {
       return 'discard'
     case 'match':
       return 'retain'
+    case 'fail':
+      return 'fail'
     default:
       return ''
   }
@@ -1295,6 +1297,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       if (retryTaskID && (retryTaskID + '').length > 0) {
         const params = { ...httpParams, RetryTaskID: parseInt(retryTaskID + '', 10) }
         const retryParams = _.omit(params, ['Request', 'RequestRaw'])
+        console.log('retryParams', retryParams)
         ipcRenderer.invoke('HTTPFuzzer', retryParams, tokenRef.current)
         setIsPause(true)
       }
@@ -1303,8 +1306,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       const matchTaskID = successFuzzer?.length > 0 ? successFuzzer[0]?.TaskId : undefined
       const params = { ...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID }
       setLoadingText(t('HTTPFuzzerPage.matchingInProgress'))
+      console.log('matchParams', params)
       ipcRenderer.invoke('HTTPFuzzer', params, tokenRef.current)
     } else {
+      console.log('sendParams', httpParams)
       ipcRenderer.invoke('HTTPFuzzer', httpParams, tokenRef.current)
     }
     setHasExtractorRules(!!(httpParams?.Matchers?.length || httpParams?.Extractors?.length))
@@ -1461,6 +1466,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     const updateDataThrottle = throttle(updateData, 500, { leading: false, trailing: true })
 
     ipcRenderer.on(dataToken, (e: any, data: any) => {
+      console.log(data, 'data')
       taskIDRef.current = data.TaskId
 
       if (runtimeIdRef.current) {

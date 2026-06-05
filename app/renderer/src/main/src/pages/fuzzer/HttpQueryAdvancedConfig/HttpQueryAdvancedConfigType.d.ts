@@ -3,7 +3,7 @@ import { MatchingAndExtraction } from '../MatcherAndExtractionCard/MatcherAndExt
 import { ReactNode } from 'react'
 import { WebFuzzerType } from '../WebFuzzerPage/WebFuzzerPageType'
 
-export type FilterMode = 'drop' | 'match' | 'onlyMatch'
+export type FilterMode = 'drop' | 'match' | 'onlyMatch' | 'fail'
 
 export type FuzzTagMode = 'close' | 'standard' | 'legacy'
 

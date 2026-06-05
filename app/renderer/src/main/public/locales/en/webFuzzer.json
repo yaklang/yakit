@@ -638,7 +638,8 @@
     "expression": "Expression",
     "discard": "Discard",
     "match": "Keep",
-    "onlyMatch": "Only Match"
+    "onlyMatch": "Only Match",
+    "failed": "Failed"
   },
   "MatcherItem": {
     "match_type": "Match Type",
