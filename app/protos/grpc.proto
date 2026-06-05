@@ -1031,6 +1031,12 @@ service Yak {
   rpc DeleteMCPServer(DeleteMCPServerRequest) returns (GeneralResponse);
   rpc UpdateMCPServer(UpdateMCPServerRequest) returns (GeneralResponse);
   rpc GetAllMCPServers(GetAllMCPServersRequest) returns (GetAllMCPServersResponse);
+  rpc UpdateMCPServerToolConfig(UpdateMCPServerToolConfigRequest) returns (GeneralResponse);
+
+  // MCP tool-level enable/disable management
+  rpc GetMCPToolList(GetMCPToolListRequest) returns (GetMCPToolListResponse);
+  rpc GetMCPToolDetail(GetMCPToolDetailRequest) returns (MCPClientToolConfig);
+  rpc SetMCPToolEnabled(SetMCPToolEnabledRequest) returns (GeneralResponse);
 
   // RAG Collection Search
   rpc RAGCollectionSearch(RAGCollectionSearchRequest) returns (stream RAGCollectionSearchResponse);
@@ -1123,6 +1129,14 @@ message UpdateMCPServerRequest {
   repeated KVPair Headers = 8;
 }
 
+// UpdateMCPServerToolConfigRequest sets the Enable flag for a single tool
+// within a named MCP server.
+message UpdateMCPServerToolConfigRequest {
+  string ServerName = 1;
+  string ToolName = 2;
+  bool Enable = 3;
+}
+
 // 支持分页查询
 message GetAllMCPServersRequest {
   string Keyword = 1;
@@ -1144,6 +1158,8 @@ message MCPServerTool {
   string Name = 1;
   string Description = 2;
   repeated MCPServerToolParamInfo Params = 3;
+  // Whether this tool is enabled (loaded for use by the AI agent).
+  bool Enable = 4;
 }
 
 message MCPServer {
@@ -1163,6 +1179,40 @@ message GetAllMCPServersResponse {
   repeated MCPServer MCPServers = 1;
   Paging Pagination = 2;
   int64 Total = 3;
+}
+
+message MCPClientToolConfig {
+  int64 ID = 1;
+  string ToolName = 2;
+  string Source = 3;
+  string ServerName = 4;
+  bool Enable = 5;
+  string Description = 6;
+  repeated MCPServerToolParamInfo Params = 7;
+}
+
+message GetMCPToolListRequest {
+  string Keyword = 1;
+  string Source = 2;
+  string ServerName = 3;
+  bool OnlyEnabled = 4;
+  Paging Pagination = 5;
+  bool ForceSync = 6;
+}
+
+message GetMCPToolListResponse {
+  repeated MCPClientToolConfig Tools = 1;
+  Paging Pagination = 2;
+  int64 Total = 3;
+}
+
+message SetMCPToolEnabledRequest {
+  string ToolName = 1;
+  bool Enable = 2;
+}
+
+message GetMCPToolDetailRequest {
+  string ToolName = 1;
 }
 
 message EntityRepository {
@@ -1868,6 +1918,13 @@ message McpConfig {
   string Url = 3;
 }
 
+message AIEnabledCapability {
+  // 能力名称：工具名 / 技能名 / 插件 ScriptName / 蓝图 ForgeName / MCP 服务名或 mcp_{server}_{tool} 工具名
+  string Name = 1;
+  // 能力类型：tool | skill | plugin | forge | mcp_tool
+  string Type = 2;
+}
+
 message AIStartParams {
   // if set will try recovery
   string CoordinatorId = 17;
@@ -1982,7 +2039,13 @@ message AIStartParams {
   // 会话来源（如 ide / cli / yak），写入项目库 ai_sessions_v1.source
   string Source = 41;
 
+  // 启动时预启用能力（工具 / 技能 / 插件），支持会话缓存与热加载
+  repeated AIEnabledCapability EnabledCapabilities = 42;
+
   int64 PlanExecTaskConcurrency = 45; // 计划执行任务的并发度
+  // 为 true 时 StartAIReAct 不新建 ReAct，最多等待 1 分钟直到同 TimelineSessionID 的会话
+  // 在进程内注册后再将 gRPC 输入流 attach 到该运行中会话。
+  bool Attach = 46;
 }
 
 message AITaskFilter {
@@ -2317,8 +2380,13 @@ message StartMcpServerRequest {
   repeated string Script = 7;
   // enable all tool sets
   bool EnableAll = 8;
-  // enable yak ai tool
+  // Deprecated: use EnableAIToolFramework instead, which subsumes this path
+  // with better execution quality (stdout/stderr capture, multiple script types).
   bool EnableYakAITool = 9;
+  // expose built-in aitool-framework tools (fs, ssa, yakscript, etc.)
+  bool EnableAIToolFramework = 10;
+  // bridge external MCP servers already enabled in AI Agent
+  bool EnableBridgeExternalMCP = 11;
 }
 
 message StartMcpServerResponse {
@@ -2326,8 +2394,10 @@ message StartMcpServerResponse {
   string Status = 1;
   // server message or error message
   string Message = 2;
-  // server URL
+  // SSE endpoint URL, e.g. http://host:port/sse
   string ServerUrl = 3;
+  // Streamable HTTP endpoint URL, e.g. http://host:port/mcp
+  string StreamableHttpUrl = 4;
 }
 
 message GetSpaceEngineAccountStatusRequest {

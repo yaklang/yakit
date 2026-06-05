@@ -13,10 +13,20 @@ export interface mcpStreamHooks {
   }
   mcpStreamEvent: {
     onCancel: () => void
-    onStart: () => void
+    onStart: (options?: StartMcpServerOptions) => void
     onSetMcpUrl: (url: string) => void
   }
 }
+
+export interface StartMcpServerOptions {
+  /** Legacy MCP toolsets (port_scan, httpflow, etc.) */
+  EnableAll?: boolean
+  /** AITool-framework builtin tools (fs, ssa, yakscript, etc.) */
+  EnableAIToolFramework?: boolean
+  /** Bridge external MCP servers enabled in AI Agent */
+  EnableBridgeExternalMCP?: boolean
+}
+
 interface StartMcpServerRequest {
   Host: string
   Port: number
@@ -26,6 +36,8 @@ interface StartMcpServerRequest {
   DisableResource?: string[]
   Script?: string[]
   EnableAll: boolean
+  EnableAIToolFramework?: boolean
+  EnableBridgeExternalMCP?: boolean
 }
 
 export interface StartMcpServerResponse {
@@ -43,7 +55,11 @@ export default function useMcpStream(props: useMcpHooks) {
   const [mcpToken, setMcpToken] = useState<string>(randomString(40))
   const [mcpCurrent, setMcpCurrent] = useState<StartMcpServerResponse | undefined>(undefined)
   const [mcpServerUrl, setMcpServerUrl] = useState<string>('')
-  const [mcpUrl, setMcpUrl] = useState<string>(SystemInfo.mode === 'remote' ? remoteMcpDefalutUrl : localMcpDefalutUrl)
+  const [mcpUrl, setMcpUrl] = useState<string>(localMcpDefalutUrl)
+
+  useEffect(() => {
+    setMcpUrl(SystemInfo.mode === 'remote' ? remoteMcpDefalutUrl : localMcpDefalutUrl)
+  }, [SystemInfo.mode])
 
   useEffect(() => {
     const offData = yakitStream.onData(mcpToken, async (data: StartMcpServerResponse) => {
@@ -82,7 +98,7 @@ export default function useMcpStream(props: useMcpHooks) {
     }
   }, [mcpToken])
 
-  const onStart = () => {
+  const onStart = (options?: StartMcpServerOptions) => {
     if (mcpUrl.trim() === '') {
       yakitNotify('error', t('McpHook.urlRequired'))
       return
@@ -103,7 +119,9 @@ export default function useMcpStream(props: useMcpHooks) {
     const params: StartMcpServerRequest = {
       Host: host,
       Port: port,
-      EnableAll: true,
+      EnableAll: !!options?.EnableAll,
+      EnableAIToolFramework: !!options?.EnableAIToolFramework,
+      EnableBridgeExternalMCP: !!options?.EnableBridgeExternalMCP,
     }
 
     const token = randomString(40)
