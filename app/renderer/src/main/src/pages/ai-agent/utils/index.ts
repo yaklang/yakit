@@ -181,7 +181,7 @@ const getResourceInfoByMention = (mention: AIMentionCommandParams): AttachedReso
 }
 /** @name 将前端的结构转化为符合定义的结构 */
 export const getAIReActRequestParams = (value: HandleStartParams) => {
-  const { extraValue, mentionList = [], imageList = [], httpFlowList = [], showQS } = value
+  const { extraValue, mentionList = [], imageList = [], httpFlowList = [], codeBlockList = [], showQS } = value
   let extra: HandleStartParams['extraValue'] = {}
   let attachedResourceInfo: AIInputEvent['AttachedResourceInfo'] = []
   for (let item of mentionList) {
@@ -217,6 +217,17 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
         Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_HTTP_FLOW,
         Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_HTTP_FLOW_ID,
         Value: id,
+      },
+    ]
+  }
+
+  for (let item of codeBlockList) {
+    attachedResourceInfo = [
+      ...attachedResourceInfo,
+      {
+        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK,
+        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_CONTENT,
+        Value: item.content,
       },
     ]
   }

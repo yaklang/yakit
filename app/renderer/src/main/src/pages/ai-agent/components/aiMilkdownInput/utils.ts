@@ -2,6 +2,7 @@ import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorT
 import { editorViewCtx, parserCtx } from '@milkdown/kit/core'
 import { AIMentionCommandParams, aiMentionCustomId } from './aiMilkdownMention/aiMentionPlugin'
 import { AIHttpFlowCommandParams, aiHttpFlowCustomId } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { AICodeBlockCommandParams, aiCodeBlockCustomId } from './aiCodeBlock/aiCustomCodeBlockPlugin'
 import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
 import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 
@@ -9,6 +10,7 @@ import { imgTypes } from '@/components/MilkdownEditor/utils/utils'
 export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
   const mentions: AIMentionCommandParams[] = []
   const httpFlowList: AIHttpFlowCommandParams[] = []
+  const codeBlockList: AICodeBlockCommandParams[] = []
   const imageList: string[] = []
   let plainText = ''
   editor?.action &&
@@ -29,6 +31,29 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
             ...(node.attrs as AIHttpFlowCommandParams),
           })
         }
+        if (node?.type?.name === aiCodeBlockCustomId) {
+          const attrs = node.attrs as AICodeBlockCommandParams & {
+            startLineNumber?: number
+            startColumn?: number
+            endLineNumber?: number
+            endColumn?: number
+          }
+          const range =
+            attrs.startLineNumber || attrs.endLineNumber
+              ? {
+                  startLineNumber: Number(attrs.startLineNumber || 0),
+                  startColumn: Number(attrs.startColumn || 0),
+                  endLineNumber: Number(attrs.endLineNumber || 0),
+                  endColumn: Number(attrs.endColumn || 0),
+                }
+              : null
+          codeBlockList.push({
+            content: attrs.content || '',
+            range,
+            name: attrs.name || '',
+            path: attrs.path,
+          })
+        }
         if (node?.type?.name === state?.schema?.nodes?.image?.name) {
           const src = node.attrs.src
           if (src) {
@@ -38,7 +63,7 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
       })
       plainText = doc.textBetween(0, doc?.content?.size, '\n\n')
     })
-  return { mentions, plainText, imageList, httpFlowList }
+  return { mentions, plainText, imageList, httpFlowList, codeBlockList }
 }
 
 type Mention = {

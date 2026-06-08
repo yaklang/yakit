@@ -12,6 +12,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
 import { IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED } from './irifyAiCodeAuditConstants'
+import emiter from '@/utils/eventBus/eventBus'
 
 const defaultAiTabs: YakitTabsProps[] = [
   {
@@ -51,6 +52,35 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
     }
     setActiveKey(key)
   })
+
+  const onSendCodeBlockFun = useMemoizedFn((res: string) => {
+    const needOpenPanel = !openTabsFlag || activeKey !== 'ai'
+    if (!openTabsFlag) {
+      setOpenTabsFlag(true)
+    }
+    if (activeKey !== 'ai') {
+      setActiveKey('ai')
+    }
+    setShowFreeChat(true)
+
+    const forward = () => {
+      emiter.emit('setAIInputByType', res)
+    }
+    if (needOpenPanel) {
+      setTimeout(() => {
+        forward()
+      }, 200)
+    } else {
+      forward()
+    }
+  })
+
+  useEffect(() => {
+    emiter.on('onAiCodeAuditSendCodeBlock', onSendCodeBlockFun)
+    return () => {
+      emiter.off('onAiCodeAuditSendCodeBlock', onSendCodeBlockFun)
+    }
+  }, [onSendCodeBlockFun])
 
   const resizeBoxProps = useCreation(() => {
     if (placement === 'left') {
