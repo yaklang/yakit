@@ -72,6 +72,17 @@ import { WatchFolderID } from './FileTreeMap/watchFolderID'
 import { randomString } from '@/utils/randomUtil'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
+import { yakRunnerPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
+import { IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/irifyFocusMode'
+import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import { appendCodeAuditTargetAttachmentToEvent } from '@/pages/irifyAiCodeAudit/codeAuditAttachment'
+import {
+  YakRunnerAiAttachProvider,
+  YakRunnerAiAttachRef,
+  useYakRunnerAiAttachRef,
+} from './YakRunnerAiAttachContext'
+import { YakRunnerAiSidePanel } from './YakRunnerAiSidePanel'
 const { ipcRenderer } = window.require('electron')
 
 // 模拟tabs分块及对应文件
@@ -99,7 +110,7 @@ export const YakRunnerTab: YakitTabsProps[] = [
   },
 ]
 
-export const YakRunner: React.FC<YakRunnerProps> = (props) => {
+const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const { initCode } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
 
@@ -109,6 +120,16 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
   const [activeFile, setActiveFile] = useState<FileDetailInfo>()
   const [runnerTabsId, setRunnerTabsId] = useState<string>()
   const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
+
+  const yakRunnerAiAttachRef = useYakRunnerAiAttachRef()
+  useEffect(() => {
+    if (!yakRunnerAiAttachRef) return
+    if (fileTree.length > 0 && fileTree[0].path?.trim()) {
+      yakRunnerAiAttachRef.current.projectRootAbsPath = fileTree[0].path.trim()
+    } else {
+      yakRunnerAiAttachRef.current.projectRootAbsPath = undefined
+    }
+  }, [fileTree, yakRunnerAiAttachRef])
 
   const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
     if (getMapFileDetail(path).isCreate) {
@@ -1056,5 +1077,35 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         okButtonText={t('YakitButton.iKnow')}
       />
     </YakRunnerContext.Provider>
+  )
+}
+
+const YakRunnerWithAIInner: React.FC<YakRunnerProps> = (props) => {
+  const attachRef = useYakRunnerAiAttachRef()
+
+  const transformInputEvent = useMemoizedFn((event: AIInputEvent) => {
+    return appendCodeAuditTargetAttachmentToEvent(event, attachRef?.current?.projectRootAbsPath)
+  })
+
+  return (
+    <HistoryAIReActChatProvider
+      cacheDataStore={yakRunnerPageAiStore}
+      focusModeLoop={IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT}
+      transformInputEvent={transformInputEvent}
+    >
+      <YakRunnerAiSidePanel>
+        <YakRunnerWorkbench {...props} />
+      </YakRunnerAiSidePanel>
+    </HistoryAIReActChatProvider>
+  )
+}
+
+/** Yak Runner：右侧通过 `HistoryAIReActChatProvider` / `useHistoryAIReActChat` 嵌入代码安全审计 AI 对话 */
+export const YakRunner: React.FC<YakRunnerProps> = (props) => {
+  const attachRef = useRef<YakRunnerAiAttachRef>({})
+  return (
+    <YakRunnerAiAttachProvider attachRef={attachRef}>
+      <YakRunnerWithAIInner {...props} />
+    </YakRunnerAiAttachProvider>
   )
 }

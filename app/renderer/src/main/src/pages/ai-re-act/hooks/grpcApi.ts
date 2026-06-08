@@ -33,6 +33,8 @@ export enum AISourceEnum {
   flow = 'flow',
   /** irify 来源 */
   irify = 'irify',
+  /** Yak Runner 代码审计 */
+  yakRunner = 'yakRunner',
   /** 兼容老数据 */
   other = '',
 }
