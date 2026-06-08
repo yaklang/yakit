@@ -201,6 +201,8 @@ export const histroyAiStore = new ChatDataStore()
 export const FlowAiStore = new ChatDataStore()
 /** Irify：独立「AI 代码审计」页 */
 export const irifyAiCodeAuditPageAiStore = new ChatDataStore()
+/** Yak Runner：嵌入代码安全审计 AI 侧栏 */
+export const yakRunnerPageAiStore = new ChatDataStore()
 
 /** Web Fuzzer 每页 `new WebFuzzerAiStore(pageId)`；与上方单例区分需用 `instanceof` */
 export class WebFuzzerAiStore extends ChatDataStore {
@@ -217,5 +219,6 @@ export type ChatDataStoreKey =
   | 'histroyAiStore'
   | 'FlowAiStore'
   | 'irifyAiCodeAuditPageAiStore'
+  | 'yakRunnerPageAiStore'
   | 'WebFuzzerAiStore'
   | 'unknown'

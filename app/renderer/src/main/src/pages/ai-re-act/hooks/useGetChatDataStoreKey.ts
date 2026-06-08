@@ -9,6 +9,7 @@ import {
   knowledgeBaseDataStore,
   WebFuzzerAiStore,
   irifyAiCodeAuditPageAiStore,
+  yakRunnerPageAiStore,
 } from '@/pages/ai-agent/store/ChatDataStore'
 import type { Domain } from '@/pages/ai-agent/store/constants'
 import type { AISource } from './grpcApi'
@@ -25,6 +26,8 @@ export const getChatDataStoreKey = (store?: ChatDataStore): ChatDataStoreKey => 
       return 'knowledgeBaseDataStore'
     case irifyAiCodeAuditPageAiStore:
       return 'irifyAiCodeAuditPageAiStore'
+    case yakRunnerPageAiStore:
+      return 'yakRunnerPageAiStore'
     default:
       if (store instanceof WebFuzzerAiStore) return 'WebFuzzerAiStore'
       return 'unknown'
@@ -53,6 +56,8 @@ export const getAISourceFromChatDataStoreKey = (key: ChatDataStoreKey): AISource
       return 'webFuzzer'
     case 'irifyAiCodeAuditPageAiStore':
       return 'irify'
+    case 'yakRunnerPageAiStore':
+      return 'yakRunner'
     default:
       return undefined
   }
