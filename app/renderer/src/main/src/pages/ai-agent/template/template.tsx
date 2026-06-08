@@ -72,6 +72,7 @@ import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
 import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
+import { AttachedCodeSelectionPayload } from '@/pages/irifyAiCodeAudit/attachToAiChat'
 
 /** @name AI-Agent专用Textarea组件,行高为20px */
 export const QSInputTextarea: React.FC<QSInputTextareaProps & RefAttributes<TextAreaRef>> = memo(
@@ -109,6 +110,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
       filterMentionType,
       chatDataStoreKey,
       onHttpFlowRemove,
+      mentionFileSystemRoots,
     } = props
     const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
     const { chatIPCData } = useChatIPCStore()
@@ -176,6 +178,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const { setting, activeChat } = useAIAgentStore()
     const { setSetting } = useAIAgentDispatcher()
     const [disabled, setDisabled] = useState<boolean>(false)
+    const [selectedCodeList, setSelectedCodeList] = useState<AttachedCodeSelectionPayload[]>([])
 
     const { isHovering, dropRef } = useAIChatDrop({
       onFilesChange: (v) => onFilesChange(v),
@@ -211,6 +214,12 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             const params = data.params as AIMentionCommandParams
             onSetMention(params)
             break
+          case 'codeSelection':
+            const selection = data.params as AttachedCodeSelectionPayload
+            if (selection?.path && selection.content) {
+              setSelectedCodeList((prev) => [...prev, selection])
+            }
+            break
 
           default:
             break
@@ -228,11 +237,13 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
         mentionList: mentions,
         imageList,
         httpFlowList,
+        selectedCodeList,
         showQS: qs,
         focusMode,
         sessionId: aiMilkdownInputRef.current?.getSessionId(),
       }
       onSubmit && onSubmit(value)
+      setSelectedCodeList([])
     })
     // #endregion
 
@@ -446,6 +457,25 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             </YakitSpin>
           </AIPlanPromptPopover>
         </div>
+        {selectedCodeList.length > 0 && (
+          <div className={styles['selected-code-tags']}>
+            {selectedCodeList.map((item, index) => {
+              const fileName = item.path.split(/[/\\]/).pop() || item.path
+              return (
+                <YakitTag
+                  key={`${item.path}-${item.startLine}-${item.endLine}-${index}`}
+                  color="blue"
+                  size="small"
+                  border={false}
+                  closable
+                  onClose={() => setSelectedCodeList((prev) => prev.filter((_, i) => i !== index))}
+                >
+                  {`${fileName} (${item.startLine}-${item.endLine})`}
+                </YakitTag>
+              )
+            })}
+          </div>
+        )}
         <div className={classNames(styles['textarea-wrapper'])} onKeyDown={handleTextareaKeyDown}>
           <AIMilkdownInput
             ref={aiMilkdownInputRef}
@@ -456,6 +486,7 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             onHttpFlowRemove={onHttpFlowRemove}
             filterMode={filterMentionType}
             chatDataStoreKey={chatDataStoreKey}
+            mentionFileSystemRoots={mentionFileSystemRoots}
           />
           <div className={styles['footer']}>
             {inputFooterLeft ?? (

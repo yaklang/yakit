@@ -21,12 +21,13 @@ export const aiMentionFactory = slashFactory('ai-mention-commands')
 interface AIMilkdownMentionProps {
   onMemfitExtra?: (v: AIMentionCommandParams) => void
   filterMode?: AIChatMentionProps['filterMode']
+  mentionFileSystemRoots?: AIChatMentionProps['mentionFileSystemRoots']
 }
 export const mentionWidth = () => (i18n.language.startsWith('zh') ? 300 : 342)
 const mentionTarget = '@'
 
 export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
-  const { onMemfitExtra, filterMode } = props
+  const { onMemfitExtra, filterMode, mentionFileSystemRoots } = props
   const ref = useRef<HTMLDivElement>(null)
   const slashProvider = useRef<SlashProvider>()
 
@@ -120,7 +121,7 @@ export const AIMilkdownMention: React.FC<AIMilkdownMentionProps> = (props) => {
       }}
       ref={ref}
     >
-      <AIChatMention onSelect={onSure} filterMode={filterMode} />
+      <AIChatMention onSelect={onSure} filterMode={filterMode} mentionFileSystemRoots={mentionFileSystemRoots} />
     </div>
   )
 }

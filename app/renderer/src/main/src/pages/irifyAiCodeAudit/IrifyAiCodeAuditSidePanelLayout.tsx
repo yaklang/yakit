@@ -12,6 +12,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
 import { IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED } from './irifyAiCodeAuditConstants'
+import { useIrifyWorkbenchAiAttachRef } from './IrifyWorkbenchAiAttachContext'
+import emiter from '@/utils/eventBus/eventBus'
 
 const defaultAiTabs: YakitTabsProps[] = [
   {
@@ -38,8 +40,31 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
 }> = ({ placement, children, rootClassName, sideTabs }) => {
   const { t, i18n } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
+  const attachRef = useIrifyWorkbenchAiAttachRef()
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
+
+  const syncMentionFileSystemRoots = useMemoizedFn(() => {
+    const path = attachRef?.current?.projectRootAbsPath?.trim()
+    return path ? [{ path, isFolder: true as const }] : undefined
+  })
+
+  const [mentionFileSystemRoots, setMentionFileSystemRoots] = useState<
+    { path: string; isFolder: boolean }[] | undefined
+  >()
+
+  useEffect(() => {
+    const refresh = () => setMentionFileSystemRoots(syncMentionFileSystemRoots())
+    refresh()
+    emiter.on('onAiCodeAuditOpenFileTree', refresh)
+    emiter.on('onAiCodeAuditRefreshFileTree', refresh)
+    emiter.on('onAiCodeAuditResetFileTree', refresh)
+    return () => {
+      emiter.off('onAiCodeAuditOpenFileTree', refresh)
+      emiter.off('onAiCodeAuditRefreshFileTree', refresh)
+      emiter.off('onAiCodeAuditResetFileTree', refresh)
+    }
+  }, [syncMentionFileSystemRoots])
 
   useEffect(() => {
     setShowFreeChat(true)
@@ -96,6 +121,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
         ],
 
         filterMentionType: ['focusMode'],
+        mentionFileSystemRoots,
       },
     })
 

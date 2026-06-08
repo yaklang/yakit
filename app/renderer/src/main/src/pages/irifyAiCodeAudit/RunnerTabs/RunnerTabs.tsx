@@ -30,6 +30,7 @@ import {
 import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
 import { YakRunnerOpenFolderIcon } from '../../yakRunner/icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
@@ -82,6 +83,7 @@ import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { SystemInfo } from '@/constants/hardware'
 import i18n from '@/i18n/i18n'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
+import { emitAttachCodeSelectionToAiChat, emitAttachPathToAiChat } from '../attachToAiChat'
 const tYak = i18n.getFixedT(null, 'yakRunner')
 const { ipcRenderer } = window.require('electron')
 
@@ -987,7 +989,7 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const { tabsId } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner'])
+  const { t, i18n } = useI18nNamespaces(['yakRunner', 'irifyAiCodeAudit'])
   const { areaInfo, activeFile } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
@@ -1251,6 +1253,43 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     [editorInfo?.code],
   )
 
+  const editorContextMenu: OtherMenuListProps = useMemo(() => {
+    return {
+      sendToAiChat: {
+        menu: [
+          { type: 'divider' },
+          { key: 'add-file-to-ai', label: t('addFileToAi') },
+          { key: 'add-selection-to-ai', label: t('addSelectionToAi') },
+        ],
+        onRun: (editor, key) => {
+          if (key === 'add-file-to-ai') {
+            if (editorInfo?.path) {
+              emitAttachPathToAiChat(editorInfo.path, false)
+            }
+            return
+          }
+          if (key === 'add-selection-to-ai') {
+            const selection = editor.getSelection()
+            if (!selection || selection.isEmpty()) {
+              yakitNotify('warning', t('noSelectionForAi'))
+              return
+            }
+            const model = editor.getModel()
+            if (!model || !editorInfo?.path) return
+            const content = model.getValueInRange(selection)
+            emitAttachCodeSelectionToAiChat({
+              path: editorInfo.path,
+              startLine: selection.startLineNumber,
+              endLine: selection.endLineNumber,
+              language: editorInfo.language || '',
+              content,
+            })
+          }
+        },
+      },
+    }
+  }, [editorInfo?.path, editorInfo?.language, t])
+
   return (
     <div className={styles['runner-tab-pane']}>
       {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1282,6 +1321,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
               setValue={setYakitEditorValue}
               highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
               highLightClass="hight-light-yak-runner-color"
+              contextMenu={editorContextMenu}
             />
           )}
         </>

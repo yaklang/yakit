@@ -63,6 +63,8 @@ export interface AIReActChatProps {
     onHttpFlowRemove?: AIChatTextareaProps['onHttpFlowRemove']
     /** 发送问题后回调（如清空 history 表勾选） */
     onAfterSubmit?: () => void
+    /** IRify 等工作区 @ 提及时的工程根目录 */
+    mentionFileSystemRoots?: { path: string; isFolder: boolean }[]
   }
 }
 

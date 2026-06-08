@@ -4,5 +4,9 @@
   "quickStart": "快速開始",
   "openLocalFolder": "打開本地文件夾",
   "recentlyOpened": "最近打開",
-  "newChat": "新建會話"
+  "newChat": "新建會話",
+  "sendToAiChat": "添加到 AI 對話",
+  "addFileToAi": "添加當前文件到 AI 對話",
+  "addSelectionToAi": "添加選中代碼到 AI 對話",
+  "noSelectionForAi": "請先在編輯器中選中代碼"
 }

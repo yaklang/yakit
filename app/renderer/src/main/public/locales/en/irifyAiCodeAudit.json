@@ -4,5 +4,9 @@
   "quickStart": "Get started",
   "openLocalFolder": "Open local folder",
   "recentlyOpened": "Recently opened",
-  "newChat": "New chat"
+  "newChat": "New chat",
+  "sendToAiChat": "Add to AI chat",
+  "addFileToAi": "Add current file to AI chat",
+  "addSelectionToAi": "Add selected code to AI chat",
+  "noSelectionForAi": "Select code in the editor first"
 }

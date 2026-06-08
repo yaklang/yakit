@@ -7,6 +7,7 @@ import {
 } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
 import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { AIChatMentionProps } from '../components/aiChatMention/type'
+import { AttachedCodeSelectionPayload } from '@/pages/irifyAiCodeAudit/attachToAiChat'
 import { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
 import { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 import { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
@@ -23,6 +24,8 @@ export interface AIChatTextareaSubmit {
   imageList?: string[]
   /** history 勾选的流量 */
   httpFlowList?: AIHttpFlowCommandParams[]
+  /** 编辑器选中的代码片段 */
+  selectedCodeList?: AttachedCodeSelectionPayload[]
   focusMode?: string
   /** 新建会话得 默认sessionId */
   sessionId?: string
@@ -75,6 +78,8 @@ export interface AIChatTextareaProps {
   /** 图片路径前缀 */
   chatDataStoreKey: string
   onHttpFlowRemove?: (payload: AIHttpFlowRemovePayload) => void
+  /** IRify 等工作区 @ 提及时的工程根目录（优先于 AI Agent customFolder） */
+  mentionFileSystemRoots?: { path: string; isFolder: boolean }[]
 }
 
 export interface FileToChatQuestionList {

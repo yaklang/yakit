@@ -44,6 +44,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import { OpenFileByPathProps } from '../YakRunnerIrifyAiCodeAuditType'
 import { setClipboardText } from '@/utils/clipboard'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { applyFileTreeDragToDataTransfer, emitAttachPathToAiChat } from '../attachToAiChat'
 import { setIrifyAiCodeAuditLastFolderExpanded } from '../utils'
 
 const FolderMenu: (t: TFunction) => YakitMenuItemProps[] = (t) => {
@@ -282,7 +283,7 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
     setCopyPath,
     setFoucsedKey,
   } = props
-  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi', 'irifyAiCodeAudit'])
   // 是否为输入模式
   const [isInput, setInput] = useState<boolean>(false)
   // 是否为编辑（用于默认选中文件名）
@@ -658,6 +659,10 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
   })
 
   const menuData: YakitMenuItemType[] = useMemo(() => {
+    const sendToAiChatItem: YakitMenuItemType = {
+      label: t('sendToAiChat'),
+      key: 'sendToAiChat',
+    }
     const base: YakitMenuItemType[] = [
       {
         label: t('YakitButton.delete'),
@@ -678,6 +683,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
     }
     if (info.isFolder) {
       return [
+        sendToAiChatItem,
+        { type: 'divider' },
         ...CloseFolder,
         ...FolderMenu(t),
         { type: 'divider' },
@@ -690,6 +697,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
       ]
     } else {
       return [
+        sendToAiChatItem,
+        { type: 'divider' },
         { label: t('FileTree.showInFolder'), key: 'openFileSystem' },
         { label: t('FileTree.openTerminal'), key: 'openTernimal' },
         { type: 'divider' },
@@ -748,6 +757,9 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
           case 'delete':
             setRemoveCheckVisible(true)
             break
+          case 'sendToAiChat':
+            emitAttachPathToAiChat(info.path, info.isFolder)
+            break
           default:
             break
         }
@@ -778,6 +790,11 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
     }
   }, [info.icon, isFolder, isExpanded, info.isBottom])
 
+  const handleDragStart = useMemoizedFn((e: React.DragEvent<HTMLDivElement>) => {
+    if (info.isBottom || isInput || !e.dataTransfer) return
+    applyFileTreeDragToDataTransfer(e.dataTransfer, info.path, info.isFolder)
+  })
+
   return (
     <>
       {info.isBottom ? (
@@ -789,6 +806,8 @@ const FileTreeNode: React.FC<FileTreeNodeProps> = memo((props) => {
             [styles['node-foucsed']]: isFoucsed,
           })}
           style={{ paddingLeft: (info.depth - 1) * 16 + 8 }}
+          draggable={!info.isBottom && !isInput}
+          onDragStart={handleDragStart}
           onClick={handleClick}
           onContextMenu={handleContextMenu}
         >

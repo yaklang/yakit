@@ -14,6 +14,8 @@ export interface AIChatMentionProps {
   defaultActiveTab?: AIMentionTabsEnum
   onSelect: (type: AIMentionTypeItem, value?: AIChatMentionSelectItem) => void
   filterMode?: `${AIMentionTabsEnum}`[]
+  /** 优先于 AI Agent customFolder 的文件系统根目录 */
+  mentionFileSystemRoots?: { path: string; isFolder: boolean }[]
 }
 interface AIChatMention {
   keyWord: string
@@ -44,6 +46,7 @@ export interface AIMentionSelectItemProps {
 }
 export interface FileSystemTreeOfMentionProps {
   onSelect: (path: string, isFolder: boolean) => void
+  roots?: { path: string; isFolder: boolean }[]
 }
 
 export interface FocusModeOfMentionProps extends AIChatMention, AIChatMentionRef {

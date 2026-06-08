@@ -27,6 +27,8 @@ export interface AIMilkdownInputBaseProps {
   onHttpFlowRemove?: (payload: AIHttpFlowRemovePayload) => void
   // 外部传入需要筛选掉的选项
   filterMode?: AIChatMentionProps['filterMode']
+  /** IRify 等工作区 @ 提及时的工程根目录 */
+  mentionFileSystemRoots?: AIChatMentionProps['mentionFileSystemRoots']
   /**文件缓存路径 */
   chatDataStoreKey: string
 }

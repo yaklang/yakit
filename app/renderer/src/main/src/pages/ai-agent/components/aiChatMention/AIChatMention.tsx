@@ -51,7 +51,7 @@ const alphanumericKeys = [
   ...Array.from({ length: 10 }, (_, i) => `numpad${i}`), //小键盘数字键
 ]
 export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) => {
-  const { onSelect, defaultActiveTab, filterMode } = props
+  const { onSelect, defaultActiveTab, filterMode, mentionFileSystemRoots } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const [activeKey, setActiveKey, getActiveKey] = useGetSetState<AIMentionTabsEnum>(
     defaultActiveTab || AIMentionTabsEnum.Forge_Name,
@@ -210,7 +210,7 @@ export const AIChatMention: React.FC<AIChatMentionProps> = React.memo((props) =>
           />
         )
       case AIMentionTabsEnum.File_System:
-        return <FileSystemTreeOfMention onSelect={onSelectFile} />
+        return <FileSystemTreeOfMention onSelect={onSelectFile} roots={mentionFileSystemRoots} />
       case AIMentionTabsEnum.FocusMode:
         return (
           <FocusModeOfMention
@@ -732,10 +732,12 @@ const AIMentionSelectItem: React.FC<AIMentionSelectItemProps> = React.memo((prop
 })
 
 const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.memo((props) => {
-  const { onSelect } = props
+  const { onSelect, roots: rootsProp } = props
   const [selected, setSelected] = useState<FileNodeProps>()
-  // 用户文件夹
   const customFolder = useCustomFolder()
+
+  const rootItems = rootsProp?.length ? rootsProp : customFolder
+  const expandByDefault = !!rootsProp?.length
 
   const onSetCheckedKeys = useMemoizedFn((c: boolean, nodeData: FileNodeProps) => {
     if (!nodeData) return
@@ -743,18 +745,17 @@ const FileSystemTreeOfMention: React.FC<FileSystemTreeOfMentionProps> = React.me
   })
   return (
     <div className={styles['file-system-tree-of-mention']}>
-      {customFolder.map((item) => (
+      {rootItems.map((item) => (
         <FileTreeSystemList
           key={item.path}
           path={item.path}
-          isOpen={false}
+          isOpen={expandByDefault}
           isShowRightMenu={false}
           checkable={true}
           isFolder={item.isFolder}
           selected={selected}
           setSelected={setSelected}
           checkedKeys={[]}
-          // checkedKeys={checkedKeys}
           setCheckedKeys={onSetCheckedKeys}
         />
       ))}

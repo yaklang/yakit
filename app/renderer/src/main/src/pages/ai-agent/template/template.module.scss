@@ -168,4 +168,10 @@ textarea.qs-input-textarea {
   gap: 4px;
   flex-wrap: wrap;
 }
+.selected-code-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 4px;
+}
 // #endregion

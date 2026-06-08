@@ -59,6 +59,7 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
       filterMode,
       chatDataStoreKey,
       onHttpFlowRemove,
+      mentionFileSystemRoots,
     } = props
     const { t, i18n } = useI18nNamespaces(['aiAgent'])
     const nodeViewFactory = useNodeViewFactory()
@@ -146,7 +147,13 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           (ctx: Ctx) => () => {
             ctx.set(aiMentionFactory.key, {
               view: pluginViewFactory({
-                component: () => <AIMilkdownMention onMemfitExtra={onMemfitExtra} filterMode={filterMode} />,
+                component: () => (
+                  <AIMilkdownMention
+                    onMemfitExtra={onMemfitExtra}
+                    filterMode={filterMode}
+                    mentionFileSystemRoots={mentionFileSystemRoots}
+                  />
+                ),
               }),
             })
           },
