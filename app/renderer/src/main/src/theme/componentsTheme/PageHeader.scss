@@ -1,8 +1,21 @@
-// .ant-page-header .ant-page-header-heading-left {
-//   .ant-page-header-heading-title {
-//     color: var(--Colors-Use-Neutral-Text-1-Title);
-//   }
-//   .ant-page-header-heading-sub-title {
-//     color: var(--Colors-Use-Neutral-Text-4-Help-text);
-//   }
-// }
+.ant-page-header {
+  .ant-page-header-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+
+    .ant-page-header-heading-left {
+      .ant-page-header-heading-title {
+        margin-right: 8px;
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .ant-page-header-heading-sub-title {
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      }
+    }
+  }
+}

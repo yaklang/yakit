@@ -53,6 +53,7 @@ import { formatTimestamp } from '@/utils/timeUtil'
 import { JSONParseLog } from '@/utils/tool'
 import { HTTPFlowCodec } from '@/utils/encodec'
 import { YakitMenu, YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu'
+import { PageContainer } from '@ant-design/pro-layout'
 const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
 
@@ -295,8 +296,8 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
     >
       {flow ? (
         <>
-          {/* {props.noHeader ? undefined : (
-            <PageHeader
+          {props.noHeader ? undefined : (
+            <PageContainer
               title={t('HTTPFlowDetail.requestDetails')}
               subTitle={`${props.id}${
                 (props.payloads || []).length > 0 ? `  Payload: ${props.payloads?.join(',')}` : ''
@@ -331,7 +332,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                 )
               }
             />
-          )} */}
+          )}
           <Space direction={'vertical'} style={{ width: '100%' }}>
             <Descriptions
               column={4}
