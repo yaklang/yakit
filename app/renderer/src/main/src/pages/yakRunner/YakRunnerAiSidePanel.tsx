@@ -11,6 +11,7 @@ import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './YakRunnerAiSidePanel.module.scss'
+import emiter from '@/utils/eventBus/eventBus'
 
 const defaultAiTabs: YakitTabsProps[] = [
   {
@@ -42,6 +43,35 @@ export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ chil
     }
     setActiveKey(key)
   })
+
+  const onSendCodeBlockFun = useMemoizedFn((res: string) => {
+    const needOpenPanel = !openTabsFlag || activeKey !== 'ai'
+    if (!openTabsFlag) {
+      setOpenTabsFlag(true)
+    }
+    if (activeKey !== 'ai') {
+      setActiveKey('ai')
+    }
+    setShowFreeChat(true)
+
+    const forward = () => {
+      emiter.emit('setAIInputByType', res)
+    }
+    if (needOpenPanel) {
+      setTimeout(() => {
+        forward()
+      }, 200)
+    } else {
+      forward()
+    }
+  })
+
+  useEffect(() => {
+    emiter.on('onYakRunnerSendCodeBlock', onSendCodeBlockFun)
+    return () => {
+      emiter.off('onYakRunnerSendCodeBlock', onSendCodeBlockFun)
+    }
+  }, [onSendCodeBlockFun])
 
   const resizeBoxProps = useCreation(() => {
     return openTabsFlag

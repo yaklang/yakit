@@ -74,14 +74,10 @@ import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
 import { yakRunnerPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/irifyFocusMode'
+import { YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/focusMode'
 import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { appendCodeAuditTargetAttachmentToEvent } from '@/pages/irifyAiCodeAudit/codeAuditAttachment'
-import {
-  YakRunnerAiAttachProvider,
-  YakRunnerAiAttachRef,
-  useYakRunnerAiAttachRef,
-} from './YakRunnerAiAttachContext'
+import { YakRunnerAiAttachProvider, YakRunnerAiAttachRef, useYakRunnerAiAttachRef } from './YakRunnerAiAttachContext'
 import { YakRunnerAiSidePanel } from './YakRunnerAiSidePanel'
 const { ipcRenderer } = window.require('electron')
 
@@ -1090,7 +1086,7 @@ const YakRunnerWithAIInner: React.FC<YakRunnerProps> = (props) => {
   return (
     <HistoryAIReActChatProvider
       cacheDataStore={yakRunnerPageAiStore}
-      focusModeLoop={IRIFY_FOCUS_MODE_CODE_SECURITY_AUDIT}
+      focusModeLoop={YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT}
       transformInputEvent={transformInputEvent}
     >
       <YakRunnerAiSidePanel>
