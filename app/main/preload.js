@@ -70,10 +70,15 @@ process.on('loaded', function () {
       updateCredential: (payload) => invoke('updateCredential', payload),
       onCloseWindow: (callback) => subscribe('close-windows-renderer', callback),
       onMinimizeWindow: (callback) => subscribe('minimize-windows-renderer', callback),
+      sync: (message) => invoke('aux-window:app-sync', message),
+      onSync: (callback) => subscribe('aux-window:app-sync', callback),
     },
     theme: {
-      setTheme: (theme) => invoke('set-theme', theme),
-      onUpdated: (callback) => subscribe('theme-updated', callback),
+      setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),
+      onUpdated: (callback) =>
+        subscribe('aux-window:app-sync', (message) => {
+          if (message?.type === 'theme') callback(message.payload)
+        }),
     },
     system: {
       fetchSystemName: () => invoke('fetch-system-name'),
@@ -163,6 +168,11 @@ process.on('loaded', function () {
       maximize: () => send('maximize-childWin'),
       restore: () => send('restore-childWin'),
       close: () => send('close-childWin'),
+    },
+    auxWindow: {
+      ready: (windowId) => send('aux-window:ready', { windowId }),
+      onInit: (callback) => subscribe('aux-window:init-data', callback),
+      onPush: (callback) => subscribe('aux-window:push-data', callback),
     },
     dialog: {
       showSaveDialog: (name) => invoke('show-save-dialog', name),

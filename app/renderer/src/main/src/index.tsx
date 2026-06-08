@@ -18,6 +18,7 @@ import { GetMainColor, getRemoteI18nGV } from './utils/envfile'
 import i18n from '@/i18n/i18n'
 import { useTheme } from './hook/useTheme'
 import { generateAllThemeColors } from './yakit-colors-generator'
+import { registerAppSyncHandlers } from '@/auxWindow/messaging'
 import { debugToPrintLogs } from './utils/logCollection'
 
 window.MonacoEnvironment = {
@@ -138,6 +139,8 @@ if (window.location.search.includes('window=child') || window.location.search.in
 // }
 // ahooks useVirtualList在createRoot(divRoot).render生成下的元素会出现渲染不及时，掉帧闪的问题，暂时先换成ReactDOM.render，期待官方修复
 // antd menu 存在多个二级菜单时, 在createRoot(divRoot).render生成下，会导致鼠标从一个二级菜单移动到下一个二级菜单后，前一个二级菜单不消失的情况，暂不确定原因，等升级antd5后再次尝试
+
+registerAppSyncHandlers()
 
 ReactDOM.render(
   // <React.StrictMode>

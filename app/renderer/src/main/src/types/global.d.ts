@@ -9,6 +9,11 @@ declare module 'fs' {
 
 type BridgeCleanup = () => void
 
+interface AppSyncMessage {
+  type: 'theme' | 'i18n'
+  payload: string
+}
+
 interface YakitBridge {
   app: {
     generateStartEngine: () => Promise<unknown>
@@ -29,6 +34,8 @@ interface YakitBridge {
     updateCredential: (payload: { credential: any }) => Promise<unknown>
     onCloseWindow: (callback: (payload?: any) => void) => BridgeCleanup
     onMinimizeWindow: (callback: (payload?: any) => void) => BridgeCleanup
+    sync: (message: AppSyncMessage) => Promise<unknown>
+    onSync: (callback: (message: AppSyncMessage) => void) => BridgeCleanup
   }
   theme: {
     setTheme: (theme: 'light' | 'dark') => Promise<unknown>
@@ -122,6 +129,11 @@ interface YakitBridge {
     maximize: () => void
     restore: () => void
     close: () => void
+  }
+  auxWindow: {
+    ready: (windowId: string) => void
+    onInit: (callback: (payload: AuxWindowInitPayload) => void) => BridgeCleanup
+    onPush: (callback: (payload: AuxWindowPushPayload) => void) => BridgeCleanup
   }
   dialog: {
     showSaveDialog: (name: string) => Promise<{ canceled: boolean; filePath?: string }>

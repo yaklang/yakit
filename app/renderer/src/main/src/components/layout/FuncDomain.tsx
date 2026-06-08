@@ -144,6 +144,7 @@ import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
 import { SystemInfo } from '@/constants/hardware'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { cloneDeep } from 'lodash'
+import { syncAppSettings } from '@/auxWindow/messaging'
 import {
   yakitApp,
   yakitEngine,
@@ -1384,6 +1385,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
       case 'zh-TW':
         i18n.changeLanguage(type)
         setLocalValue(getRemoteI18nGV(), type)
+        syncAppSettings({ type: 'i18n', payload: type })
         return
       default:
         return

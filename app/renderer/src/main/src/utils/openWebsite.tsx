@@ -99,7 +99,7 @@ export const openConsoleNewWindow = () => {
   if (clickEngineConsoleFlag) return
   if (!engineConsoleWindowHash) {
     changeClickEngineConsoleFlag(true)
-    yakitWindow.openConsoleWindow()
+    yakitWindow.openConsoleWindow().finally(() => changeClickEngineConsoleFlag(false))
   } else {
     yakitWindow.focusConsoleWindow()
   }
