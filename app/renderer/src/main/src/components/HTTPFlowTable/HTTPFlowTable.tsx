@@ -1,25 +1,18 @@
-import React, { ReactNode, Ref, useEffect, useMemo, useRef, useState, useContext } from 'react'
-import { Divider, Form, Input, Tooltip, Badge, Progress, Modal } from 'antd'
-import {
-  HistoryPluginSearchType,
-  MitmExtractAggregateFlowFilterRow,
-  YakQueryHTTPFlowRequest,
-} from '../../utils/yakQueryHTTPFlow'
+import React, { Ref, useEffect, useMemo, useRef, useState, useContext } from 'react'
+import { Divider, Tooltip, Badge } from 'antd'
+import { YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
 import { PaginationSchema, YakScript } from '../../pages/invoker/schema'
-import { HTTPFlowDetail, HTTPFlowDetailProp } from '../HTTPFlowDetail'
+import { HTTPFlowDetailProp } from '../HTTPFlowDetail'
 import { info, yakitNotify, yakitFailed } from '../../utils/notification'
 import style from './HTTPFlowTable.module.scss'
 import { formatTimestamp } from '../../utils/timeUtil'
 import { buildHTTPFlowSuffixOptions, formatHTTPFlowPathSuffix } from './HTTPFlowPathSuffix'
 import {
-  useControllableValue,
   useCreation,
   useDebounceEffect,
   useDebounceFn,
   useMemoizedFn,
   useUpdateEffect,
-  useVirtualList,
-  useInViewport,
   useThrottleEffect,
 } from 'ahooks'
 import ReactResizeDetector from 'react-resize-detector'
@@ -31,38 +24,26 @@ import {
 import { execPacketScan, execPacketScanWithNewTab } from '@/pages/packetScanner/PacketScanner'
 import { GetPacketScanByCursorMenuItem, packetScanDefaultValue } from '@/pages/packetScanner/DefaultPacketScanGroup'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { FooterBottom, TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
+import { TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
 import {
   CheckCircleIcon,
-  RemoveIcon,
-  StatusOfflineIcon,
   ColorSwatchIcon,
   ChevronDownIcon,
   ArrowCircleRightSvgIcon,
   ChromeFrameSvgIcon,
-  CheckIcon,
   CloudDownloadIcon,
-  DragSortIcon,
 } from '@/assets/newIcon'
 import classNames from 'classnames'
-import {
-  ColumnsTypeProps,
-  FiltersItemProps,
-  SelectSearchProps,
-  SortProps,
-} from '../TableVirtualResize/TableVirtualResizeType'
+import { ColumnsTypeProps, FiltersItemProps, SortProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow, saveABSFileToOpen } from '@/utils/openWebsite'
 import { showResponseViaHTTPFlowID } from '@/components/ShowInBrowser'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
-import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitCheckableTag } from '../yakitUI/YakitTag/YakitCheckableTag'
-import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitMenu } from '../yakitUI/YakitMenu/YakitMenu'
 import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMenu'
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { showByRightContext } from '../yakitUI/YakitMenu/showByRightContext'
-import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 import { ShareModal } from '@/pages/fuzzer/components/ShareImportExportData'
 import { useSize } from 'ahooks'
@@ -75,18 +56,12 @@ import { loadAdvancedConfig } from '@/pages/mitm/MITMAdvancedConfig'
 import { HTTPHistorySourcePageType } from '../HTTPHistory'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import {
-  OutlineArrownarrowdownIcon,
-  OutlineArrownarrowupIcon,
-  OutlineBanIcon,
   OutlineCogIcon,
   OutlineFilterIcon,
-  OutlineInformationcircleIcon,
-  OutlineQuestionmarkcircleIcon,
   OutlineRefreshIcon,
   OutlineSearchIcon,
   OutlineSelectorIcon,
   OutlineStarIcon,
-  OutlineXIcon,
 } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
 import { serverPushStatus } from '@/utils/duplex/duplex'
@@ -95,29 +70,18 @@ import { queryYakScriptList } from '@/pages/yakitStore/network'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { PluginSwitchToTag } from '@/pages/pluginEditor/defaultconstants'
-import { Uint8ArrayToString } from '@/utils/str'
 import { newWebsocketFuzzerTab } from '@/pages/websocket/WebsocketFuzzer'
 import cloneDeep from 'lodash/cloneDeep'
 import { setClipboardText } from '@/utils/clipboard'
 import { RemoteHistoryGV } from '@/enums/history'
-import { RemoteGV } from '@/yakitGV'
-import { YakitCombinationSearch } from '../YakitCombinationSearch/YakitCombinationSearch'
 import { v4 as uuidv4 } from 'uuid'
-import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
-import {
-  filterColorTag,
-  getSingleColorType,
-  isCellRedSingleColor,
-  TableCellToColorTag,
-} from '../TableVirtualResize/utils'
+import { filterColorTag, getSingleColorType, isCellRedSingleColor } from '../TableVirtualResize/utils'
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
 import { getHTTPFlowExportFields } from './HTTPFlowExportFields'
-import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
-import { showYakitDrawer, YakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
-import { ExclamationCircleOutlined } from '@ant-design/icons'
+import { showYakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import MITMContext from '@/pages/mitm/Context/MITMContext'
 import {
   getGlobalShortcutKeyEvents,
@@ -131,16 +95,13 @@ import {
 import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import { DebouncedFunc, isEqual } from 'lodash'
+import { isEqual } from 'lodash'
 import { defalutColumnsOrder } from '@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter'
-import { getReleaseEditionName, isEnpriTrace } from '@/utils/envfile'
-import { HTTPFlowsToOnlineRequest } from '@/utils/login'
+import { isEnpriTrace } from '@/utils/envfile'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
-import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
-import { OptionProps, YakitCombinationSearchProps } from '../YakitCombinationSearch/YakitCombinationSearchType'
 import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { JSONParseLog } from '@/utils/tool'
@@ -157,554 +118,58 @@ import {
   safeParseHTTPFlowTableCache,
   splitHTTPFlowTableShieldData,
 } from './HTTPFlowTable.utils'
-import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
-import { SystemInfo } from '@/constants/hardware'
-import { YakParamProps } from '@/pages/plugins/pluginsType'
-import { YakitPopconfirm } from '../yakitUI/YakitPopconfirm/YakitPopconfirm'
+import {
+  AdvancedSet,
+  ColorSearch,
+  EditTagsModal,
+  HistorySearch,
+  HTTPFlowShield,
+  ImportExportProgress,
+  onExpandHTTPFlow,
+  RangeInputNumberTableWrapper,
+} from './components'
+import {
+  HTTP_FLOW_FAVORITE_TAG,
+  HTTP_FLOW_TABLE_SHIELD_DATA,
+  OFFSET_LIMIT,
+  OFFSET_STEP,
+  contentType,
+  defSort,
+  type codecHistoryPluginProps,
+  type HTTPFlow,
+  type HTTPFlowTableProp,
+  type HistoryMenuData,
+  type ShieldData,
+  type UpdateCacheData,
+  type YakQueryHTTPFlowResponse,
+  type HTTPFlowsFieldGroupResponse,
+  type ExportHTTPFlowStreamRequest,
+  type ColumnAllInfoItem,
+  type EditTagsInfo,
+  type HTTPFlowsToOnlineBatchRequest,
+  type HTTPFlowsToOnlineBatchResponse,
+  SourceType,
+} from './HTTPFlowTable.constants'
+import { availableColors } from './HTTPFlowTable.availableColors'
+import {
+  buildFavoriteTags,
+  buildHTTPFlowQueryTags,
+  getClassNameData,
+  getHTTPFlowReqAndResToString,
+  getRunTimeIdObj,
+  isHTTPFlowFavorite,
+  onConvertBodySizeByUnit,
+  filterHTTPFlowsByFavoriteAndTags,
+} from './HTTPFlowTable.utils'
+
+//导出给其他组件用
+export * from './HTTPFlowTable.constants'
+export * from './HTTPFlowTable.availableColors'
+export * from './HTTPFlowTable.utils'
+export * from './components'
+
 const { ipcRenderer } = window.require('electron')
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'history'])
-export interface codecHistoryPluginProps {
-  key: string
-  label: string
-  params: YakParamProps[]
-  isAiPlugin: boolean
-}
-
-export interface HTTPHeaderItem {
-  Header: string
-  Value: string
-}
-
-export interface HTTPFlow {
-  Id: number
-  Method: string
-  Path: string
-  Hash: string
-  IsHTTPS: boolean
-  Url: string
-  Request: Uint8Array
-  Response: Uint8Array
-  StatusCode: number
-  BodyLength: number
-  BodySizeVerbose?: string
-  RequestLength?: number
-  RequestSizeVerbose?: string
-  ContentType: string
-  SourceType: string
-  RequestHeader: HTTPHeaderItem[]
-  ResponseHeader: HTTPHeaderItem[]
-  GetParamsTotal: number
-  PostParamsTotal: number
-  CookieParamsTotal: number
-  CreatedAt: number
-  UpdatedAt: number
-  HostPort?: string
-  IPAddress?: string
-  HtmlTitle?: string
-  PathSuffix?: string
-
-  GetParams: FuzzableParams[]
-  PostParams: FuzzableParams[]
-  CookieParams: FuzzableParams[]
-
-  Tags?: string
-
-  // Placeholder
-  IsPlaceholder?: boolean
-
-  IsWebsocket?: boolean
-  WebsocketHash?: string
-
-  // 仅仅是前端 表格单元格样式
-  cellClassName?: string
-
-  /*
-   * */
-  InvalidForUTF8Request?: boolean
-  InvalidForUTF8Response?: boolean
-  RawRequestBodyBase64?: string
-  RawResponseBodyBase64?: string
-  SafeHTTPRequest?: string
-
-  /*
-    Extracted
-    * */
-  Domains?: string[]
-  RootDomains?: string[]
-  JsonObjects?: string[]
-
-  /**
-   * 超大响应
-   */
-  IsTooLargeResponse: boolean
-  TooLargeResponseHeaderFile: string
-  TooLargeResponseBodyFile: string
-  DisableRenderStyles: boolean
-
-  /**前端 Uint8Array对应的string */
-  RequestString: string
-  ResponseString: string
-
-  HiddenIndex?: string
-
-  FromPlugin: string
-}
-/**获取请求包Request和响应包Response  string */
-export const getHTTPFlowReqAndResToString = (flow: HTTPFlow) => {
-  return {
-    ...flow,
-    RequestString: !!flow?.Request?.length ? Uint8ArrayToString(flow.Request) : '',
-    ResponseString: !!flow?.Response?.length ? Uint8ArrayToString(flow.Response) : '',
-  }
-}
-
-export interface FuzzableParams {
-  Position: string
-  ParamName: string
-  OriginValue: Uint8Array
-  AutoTemplate: Uint8Array
-  IsHTTPS: boolean
-}
-
-export const onExpandHTTPFlow = (
-  flow: HTTPFlow | undefined,
-  onClosed: () => any,
-  downstreamProxyStr: string,
-  t?: TFunction, // 部分调用位置不确认，暂时为可选参数
-  pageType?: HTTPHistorySourcePageType,
-) => {
-  if (!flow) {
-    return <YakitEmpty title={t?.('HTTPFlowTable.requestDetailsNotFound') || '找不到该请求详情'}></YakitEmpty>
-  }
-
-  return (
-    <div style={{ width: '100%' }}>
-      <HTTPFlowDetail pageType={pageType} id={flow.Id} onClose={onClosed} downstreamProxyStr={downstreamProxyStr} />
-    </div>
-  )
-}
-
-export interface HistoryTableTitleShow {
-  /**是否显示表格title */
-  noTableTitle?: boolean
-  /** 是否显示类型切换*/
-  showSourceType?: boolean
-  /** 是否显示高级配置 */
-  showAdvancedSearch?: boolean
-  /** 是否显示协议切换 */
-  showProtocolType?: boolean
-  /** 是否显示搜索 */
-  showHistorySearch?: boolean
-  /** 是否显示颜色切换 */
-  showColorSwatch?: boolean
-  /** 是否显示批量操作 */
-  showBatchActions?: boolean
-  /** 是否显示清空 */
-  showDelAll?: boolean
-  /** 是否显示设置 */
-  showSetting?: boolean
-  /** 是否显示刷新 */
-  showRefresh?: boolean
-  /** 是否显示流量分析器 */
-  showHistoryAnalysisBtn?: boolean
-  /** 若传入则覆盖默认行为（打开独立流量分析页），用于 Web Fuzzer 等需带上下文跳转的场景 */
-  onHistoryAnalysisClick?: () => void
-}
-
-export interface HTTPFlowTableProp extends HistoryTableTitleShow {
-  onSelected?: (i?: HTTPFlow) => any
-  params?: YakQueryHTTPFlowRequest
-  mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
-  inViewport?: boolean
-  onSearch?: (i: string) => any
-  title?: string
-  onlyShowFirstNode?: boolean
-  setOnlyShowFirstNode?: (i: boolean) => void
-  refresh?: boolean
-  importRefresh?: boolean
-  httpHistoryTableTitleStyle?: React.CSSProperties
-  // 多开页面使用此组件，采用historyId区分
-  historyId?: string
-  // 使用此组件页面类型
-  pageType?: HTTPHistorySourcePageType
-  includeInUrl?: string[]
-  onQueryParams?: (queryParams: string, execFlag: boolean) => void
-  titleHeight?: number
-  containerClassName?: string
-  /** RuntimeId 流量过滤条件(RuntimeId) */
-  runTimeId?: string
-  /** 下游代理地址 */
-  downstreamProxyStr?: string
-  /** 进程名 */
-  ProcessName?: string[]
-  /** 标签筛选 */
-  TagsFilter?: string[]
-  /** 过滤运行时ID Dom */
-  filterTagDom?: ReactNode
-  onSetTableTotal?: (t: number) => void
-  onSetTableSelectNum?: (s: number) => void
-  onSetHasNewData?: (f: boolean) => void
-  /** 勾选流量 id 同步到 AI 输入框 */
-  onSetSelectedHttpFlowIds?: (ids: string[]) => void
-  /** 注册表格勾选操作方法（供 AI 标签移除时回写） */
-  onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
-  /**
-   * 作为 `excludeColumnsKey` 的初值并跳过远程缓存读取，
-   */
-  defaultExcludeColumnsKey?: string[]
-}
-
-export const StatusCodeToColor = (code: number) => {
-  if (code >= 400) {
-    return 'var( --yakit-danger-5)'
-  } else if (code < 400 && code >= 300) {
-    return 'var( --Colors-Use-Warning-Primary)'
-  } else {
-    return 'var( --Colors-Use-Success-Primary)'
-  }
-}
-
-export const DurationMsToColor = (code: number) => {
-  if (code >= 600) {
-    return 'var( --yakit-danger-5)'
-  } else if (code < 600 && code >= 300) {
-    return 'var( --Colors-Use-Warning-Primary)'
-  } else {
-    return 'var( --Colors-Use-Success-Primary)'
-  }
-}
-
-export const LogLevelToCode = (level: string) => {
-  switch (level.toLowerCase()) {
-    case 'info':
-    case 'information':
-    case 'low':
-      return 'blue'
-    case 'debug':
-      return 'gray'
-    case 'finished':
-    case 'success':
-      return 'green'
-    case 'fatal':
-    case 'error':
-    case 'panic':
-    case 'err':
-    case 'high':
-    case 'critical':
-      return 'red'
-    case 'warning':
-    case 'warn':
-    case 'middle':
-    case 'medium':
-      return 'orange'
-    default:
-      return 'blue'
-  }
-}
-
-// 通过关键词输出渲染颜色
-const TableRowColor = (key: string) => {
-  switch (key) {
-    case 'RED':
-      return 'color-opacity-bg-red color-text-red color-font-weight-red'
-    case 'GREEN':
-      return 'color-opacity-bg-green color-text-green color-font-weight-green'
-    case 'BLUE':
-      return 'color-opacity-bg-blue color-text-blue color-font-weight-blue'
-    case 'YELLOW':
-      return 'color-opacity-bg-yellow color-text-yellow color-font-weight-yellow'
-    case 'ORANGE':
-      return 'color-opacity-bg-orange color-text-orange color-font-weight-orange'
-    case 'PURPLE':
-      return 'color-opacity-bg-purple color-text-purple color-font-weight-purple'
-    case 'CYAN':
-      return 'color-opacity-bg-cyan color-text-cyan color-font-weight-cyan'
-    case 'GREY':
-      return 'color-opacity-bg-grey color-text-grey color-font-weight-grey'
-    default:
-      return ''
-  }
-}
-
-export const HTTP_FLOW_FAVORITE_TAG = 'YAKIT_FAVORITE'
-
-const getHTTPFlowTags = (tags?: string) => {
-  return tags ? tags.split('|').filter(Boolean) : []
-}
-
-export const isHTTPFlowFavorite = (flow?: HTTPFlow) => {
-  return getHTTPFlowTags(flow?.Tags).includes(HTTP_FLOW_FAVORITE_TAG)
-}
-
-export const buildFavoriteTags = (tags: string | undefined, favorite: boolean) => {
-  const nextTags = getHTTPFlowTags(tags).filter((tag) => tag !== HTTP_FLOW_FAVORITE_TAG)
-  if (favorite) nextTags.push(HTTP_FLOW_FAVORITE_TAG)
-  return nextTags
-}
-
-export const buildHTTPFlowQueryTags = (tags: string[], onlyFavorite: boolean) => {
-  return onlyFavorite ? [...tags, HTTP_FLOW_FAVORITE_TAG] : [...tags]
-}
-
-const matchHTTPFlowTagsFilter = (flow: HTTPFlow, tagsFilter: string[]) => {
-  if (!tagsFilter.length) return true
-  const flowTags = getHTTPFlowTags(flow.Tags)
-  return tagsFilter.some((tag) => flowTags.includes(tag))
-}
-
-export const filterHTTPFlowsByFavoriteAndTags = (list: HTTPFlow[], tagsFilter: string[], onlyFavorite: boolean) => {
-  return list.filter((flow) => {
-    if (onlyFavorite && !isHTTPFlowFavorite(flow)) return false
-    return matchHTTPFlowTagsFilter(flow, tagsFilter)
-  })
-}
-
-export const availableColors = [
-  {
-    color: 'RED',
-    title: '红色[#F4736B]',
-    className: TableRowColor('RED'),
-    searchWord: TableCellToColorTag['RED'],
-    render: (t) => (
-      <div className={classNames(style['history-color-tag'])}>
-        <div className={classNames(style['tag-color-display'], 'color-bg-red')}></div>
-        {t('YakitTable.red')}
-      </div>
-    ),
-  },
-  {
-    color: 'GREEN',
-    title: '绿色[#56C991]',
-    className: TableRowColor('GREEN'),
-    searchWord: TableCellToColorTag['GREEN'],
-    render: (t) => (
-      <div className={classNames(style['history-color-tag'])}>
-        <div className={classNames(style['tag-color-display'], 'color-bg-green')}></div>
-        {t('YakitTable.green')}
-      </div>
-    ),
-  },
-  {
-    color: 'BLUE',
-    title: '蓝色[#4A94F8]',
-    className: TableRowColor('BLUE'),
-    searchWord: TableCellToColorTag['BLUE'],
-    render: (t) => (
-      <div className={classNames(style['history-color-tag'])}>
-        <div className={classNames(style['tag-color-display'], 'color-bg-blue')}></div>
-        {t('YakitTable.blue')}
-      </div>
-    ),
-  },
-  {
-    color: 'YELLOW',
-    title: '黄色[#FFD583]',
-    searchWord: TableCellToColorTag['YELLOW'],
-    className: TableRowColor('YELLOW'),
-    render: (t) => (
-      <div className={classNames(style['history-color-tag'])}>
-        <div className={classNames(style['tag-color-display'], 'color-bg-yellow')}></div>
-        {t('YakitTable.yellow')}
-      </div>
-    ),
-  },
-  {
-    color: 'ORANGE',
-    title: '橙色[#FFB660]',
-    searchWord: TableCellToColorTag['ORANGE'],
-    className: TableRowColor('ORANGE'),
-    render: (t) => (
-      <div className={classNames(style['history-color-tag'])}>
-        <div className={classNames(style['tag-color-display'], 'color-bg-orange')}></div>
-        {t('YakitTable.orange')}
-      </div>
-    ),
-  },
-  {
-    color: 'PURPLE',
-    title: '紫色[#8863F7]',
-    searchWord: TableCellToColorTag['PURPLE'],
-    className: TableRowColor('PURPLE'),
-    render: (t) => (
-      <div className={classNames(style['history-color-tag'])}>
-        <div className={classNames(style['tag-color-display'], 'color-bg-purple')}></div>
-        {t('YakitTable.purple')}
-      </div>
-    ),
-  },
-  {
-    color: 'CYAN',
-    title: '青色[#35D8EE]',
-    searchWord: TableCellToColorTag['CYAN'],
-    className: TableRowColor('CYAN'),
-    render: (t) => (
-      <div className={classNames(style['history-color-tag'])}>
-        <div className={classNames(style['tag-color-display'], 'color-bg-cyan')}></div>
-        {t('YakitTable.cyan')}
-      </div>
-    ),
-  },
-  {
-    color: 'GREY',
-    title: '灰色[#B4BBCA]',
-    searchWord: TableCellToColorTag['GREY'],
-    className: TableRowColor('GREY'),
-    render: (t) => (
-      <div className={classNames(style['history-color-tag'])}>
-        <div className={classNames(style['tag-color-display'], 'color-bg-grey')}></div>
-        {t('YakitTable.grey')}
-      </div>
-    ),
-  },
-]
-
-export interface YakQueryHTTPFlowResponse {
-  Data: HTTPFlow[]
-  Total: number
-  Pagination: PaginationSchema
-}
-
-export interface HTTPFlowsToOnlineBatchRequest {
-  ToOnlineWhere: HTTPFlowsToOnlineRequest
-  UploadHTTPFlowsWhere: YakQueryHTTPFlowRequest
-}
-
-export interface HTTPFlowsToOnlineBatchResponse {
-  SuccessCount: number
-  FailedCount: number
-}
-
-export interface HTTPFlowsFieldGroupResponse {
-  Tags: TagsCode[]
-  StatusCode: TagsCode[]
-  Suffixes: TagsCode[]
-}
-
-export interface TagsCode {
-  Value: string
-  Total: number
-}
-
-export interface CompateData {
-  content: string
-  language: string
-}
-
-const OFFSET_LIMIT = 30
-const OFFSET_STEP = 100
-
-export interface ShieldData {
-  data: (string | number)[]
-}
-
-export const defSort: SortProps = {
-  order: 'desc',
-  orderBy: 'id',
-}
-
-export const SourceType = [
-  { text: (t) => 'MITM', value: 'mitm' },
-  { text: (t) => t('HTTPFlowTable.plugin'), value: 'scan' },
-  {
-    text: (t) => t('HTTPFlowTable.crawler'),
-    value: 'basic-crawler',
-  },
-]
-
-interface UpdateCacheData {
-  id: number
-  tags: string
-}
-
-export const getClassNameData = (resData: HTTPFlow[]) => {
-  let newData: HTTPFlow[] = []
-  const length = resData.length
-  if (length > 0) {
-  }
-  for (let index = 0; index < length; index++) {
-    const item: HTTPFlow = resData[index]
-    let className: string | undefined = ''
-    className = filterColorTag(item.Tags) || undefined
-    const newItem = {
-      ...item,
-      cellClassName: className,
-    }
-    newData.push(newItem)
-  }
-  return newData
-}
-
-/**
- * @description 根据单位转为对应的值
- * @returns {number}
- */
-export const onConvertBodySizeByUnit = (length: number, unit: 'B' | 'K' | 'M') => {
-  switch (unit) {
-    case 'K':
-      return Number(length) * 1024
-    case 'M':
-      return Number(length) * 1024 * 1024
-    default:
-      return Number(length)
-  }
-}
-
-/**
- * @description 根据单位转为B
- * @returns {number}
- */
-export const onConvertBodySizeToB = (length: number, unit: 'B' | 'K' | 'M') => {
-  let v = length
-  switch (unit) {
-    case 'K':
-      v = Number(length) / 1024
-      break
-    case 'M':
-      v = Number(length) / 1024 / 1024
-      break
-    default:
-      v = Number(length)
-      break
-  }
-  return Math.ceil(v)
-}
-
-const HTTP_FLOW_TABLE_SHIELD_DATA = 'HTTP_FLOW_TABLE_SHIELD_DATA'
-
-export interface ExportHTTPFlowStreamRequest {
-  Filter: YakQueryHTTPFlowRequest
-  FieldName?: string[]
-  ExportType: 'csv' | 'har'
-  TargetPath: string
-}
-
-interface ImportExportStreamResponse {
-  ExportFilePath?: string
-  Percent: number
-  Verbose: string
-}
-
-const getRunTimeIdObj = (runTimeId?: string) => {
-  return {
-    RuntimeIDs: runTimeId && runTimeId.indexOf(',') !== -1 ? runTimeId.split(',') : undefined,
-    RuntimeId: runTimeId && runTimeId.indexOf(',') === -1 ? runTimeId : undefined,
-  }
-}
-interface HistoryMenuData {
-  key: string
-  label: React.ReactNode
-  keybindings?: string[]
-  number?: number
-  webSocket?: boolean
-  default?: boolean
-  all?: boolean
-  children?: HistoryMenuData[]
-  onClickSingle?: (flow: HTTPFlow) => void
-  onClick?: (flow: HTTPFlow) => void
-  onClickBatch?: (flows: HTTPFlow[], n?: number) => void
-  params?: YakParamProps[]
-  isAiPlugin?: boolean
-}
 
 export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const {
@@ -4872,511 +4337,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     </div>
   )
 })
-
-interface HTTPFlowShieldProps {
-  shieldData: ShieldData
-  cancleFilter: (s: string | number) => void
-  cancleAllFilter: (mitmVersion: string) => void
-}
-
-export const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlowShieldProps) => {
-  const { shieldData, cancleFilter, cancleAllFilter } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'history'])
-  const mitmContent = useContext(MITMContext)
-
-  const mitmVersion = useCreation(() => {
-    return mitmContent.mitmStore.version
-  }, [mitmContent.mitmStore.version])
-  return (
-    <>
-      {shieldData?.data.length > 0 && (
-        <YakitPopover
-          placement="bottomLeft"
-          trigger="click"
-          content={
-            <div className={style['title-header']}>
-              {shieldData?.data.map((item: number | string) => (
-                <div className={style['title-selected-tag']} key={item}>
-                  <Tooltip title={item}>
-                    <div className={classNames(style['tag-name-style'])}>{item}</div>
-                  </Tooltip>
-                  <div className={classNames(style['tag-del-style'])} onClick={() => cancleFilter(item)}>
-                    <RemoveIcon />
-                  </div>
-                </div>
-              ))}
-              <YakitPopconfirm
-                title={t('HTTPFlowTable.resetConfirm')}
-                placement="top"
-                onConfirm={() => cancleAllFilter(mitmVersion)}
-              >
-                <YakitButton type="text" className={style['shield-reset']}>
-                  {t('YakitButton.reset')}
-                </YakitButton>
-              </YakitPopconfirm>
-            </div>
-          }
-          overlayClassName={style['http-history-table-shield-popover']}
-        >
-          <div
-            className={style['http-history-table-left-shield']}
-            style={{ width: i18n.language.startsWith('zh') ? 115 : 150 }}
-          >
-            <span className="content-ellipsis">{t('HTTPFlowShield.conditionBlocked')}</span>
-            <span className={style['http-history-table-left-number']}>{shieldData?.data.length}</span>
-            <StatusOfflineIcon className={style['http-history-table-left-shield-icon']} />
-          </div>
-        </YakitPopover>
-      )}
-    </>
-  )
-})
-
-interface ColorSearchProps {
-  color: string[]
-  setColor: (s: string[]) => void
-  onReset: () => void
-  onSure: () => void
-  setIsShowColor: (b: boolean) => void
-}
-
-export const ColorSearch = React.memo((props: ColorSearchProps) => {
-  const { color, setColor, onReset, onSure, setIsShowColor } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
-  const onMouseLeave = useMemoizedFn(() => {
-    setIsShowColor(false)
-    onSure()
-  })
-  const onSelect = useMemoizedFn((ele) => {
-    const index = color.findIndex((c) => c === ele.searchWord)
-    if (index === -1) {
-      const newColor: string[] = [...color, ele.searchWord]
-      setColor(newColor)
-    } else {
-      color.splice(index, 1)
-      setColor([...color])
-    }
-  })
-
-  const NoColor = useMemo(
-    () => ({
-      color: 'NOCOLOR',
-      searchWord: 'YAKIT_COLOR_NONE',
-      render: (t) => (
-        <div className={classNames(style['history-color-tag'])}>
-          <OutlineBanIcon className={classNames(style['tag-color-display'])} />
-          {t('YakitTable.noColor')}
-        </div>
-      ),
-    }),
-    [],
-  )
-
-  return (
-    <div onMouseLeave={onMouseLeave}>
-      <div className={style['http-history-table-color-item-list']}>
-        {[...availableColors, NoColor].map((ele) => {
-          const checked = color.findIndex((c) => c === ele.searchWord) !== -1
-          return (
-            <div
-              className={classNames(style['http-history-table-color-item'], {
-                [style['http-history-table-color-item-active']]: checked,
-              })}
-              onClick={() => onSelect(ele)}
-              key={ele.color}
-            >
-              <div className={style['http-history-table-color-item-render']}>{ele.render(t)}</div>
-              {checked && <CheckIcon className={style['check-icon']} />}
-            </div>
-          )
-        })}
-      </div>
-      <FooterBottom className={style['color-select-footer']} onReset={onReset} onSure={onSure} />
-    </div>
-  )
-})
-
-export const contentType: FiltersItemProps[] = [
-  {
-    value: 'javascript',
-    label: 'javascript',
-  },
-  {
-    value: 'x-javascript',
-    label: 'x-javascript',
-  },
-  {
-    value: 'css',
-    label: 'css',
-  },
-  {
-    value: 'html',
-    label: 'html',
-  },
-  {
-    value: 'plain',
-    label: 'plain',
-  },
-  {
-    value: 'xml',
-    label: 'xml',
-  },
-  {
-    value: 'json',
-    label: 'json',
-  },
-  {
-    value: 'form-data',
-    label: 'form-data',
-  },
-
-  {
-    value: 'octet-stream',
-    label: 'octet-stream',
-  },
-  {
-    value: 'x-www-form-urlencoded',
-    label: 'x-www-form-urlencoded',
-  },
-  {
-    value: 'xhtml+xml',
-    label: 'xhtml+xml',
-  },
-  {
-    value: 'atom+xml',
-    label: 'atom+xml',
-  },
-  {
-    value: 'pdf',
-    label: 'pdf',
-  },
-  {
-    value: 'msword',
-    label: 'msword',
-  },
-  {
-    value: 'gif',
-    label: 'gif',
-  },
-  {
-    value: 'jpeg',
-    label: 'jpeg',
-  },
-  {
-    value: 'png',
-    label: 'png',
-  },
-]
-
-export const MultipleSelect: React.FC<SelectSearchProps> = (props) => {
-  const {
-    originalList,
-    onSelect,
-    value,
-    filterProps,
-    onClose,
-    onQuery,
-    searchVal,
-    onChangeSearchVal,
-    selectContainerStyle,
-  } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
-  const { filterSearch, filterSearchInputProps = {} } = filterProps || {}
-
-  const containerRef = useRef(null)
-  const wrapperRef = useRef(null)
-  const scrollDomRef = useRef<any>(null)
-  const selectRef = useRef<any>(null)
-
-  const [data, setData] = useState<FiltersItemProps[]>(originalList)
-  useEffect(() => {
-    if (!searchVal) {
-      setData(originalList)
-    }
-  }, [originalList, searchVal])
-  useEffect(() => {
-    // 新版UI组件之前的过度写法
-    const scrollDom = selectRef.current?.firstChild?.firstChild?.firstChild
-    if (!scrollDom) return
-    scrollDomRef.current = scrollDom
-  }, [])
-
-  const [list] = useVirtualList(data, {
-    containerTarget: containerRef,
-    wrapperTarget: wrapperRef,
-    itemHeight: 34,
-    overscan: 15,
-  })
-
-  const onHandleScroll = useDebounceFn(
-    useMemoizedFn(() => {
-      scrollDomRef.current.scrollLeft = scrollDomRef.current.scrollWidth
-    }),
-    { wait: 500 },
-  ).run
-
-  const getRealOriginalList = useMemoizedFn(() => {
-    return originalList
-  })
-  useDebounceEffect(
-    () => {
-      if (searchVal) {
-        const newData = getRealOriginalList().filter((ele) =>
-          ele.label.toLocaleLowerCase().includes(searchVal.toLocaleLowerCase() || ''),
-        )
-        setData(newData)
-      } else {
-        setData(getRealOriginalList())
-      }
-    },
-    [searchVal],
-    { wait: 300 },
-  )
-
-  const onSelectMultiple = useMemoizedFn((selectItem: FiltersItemProps) => {
-    if (value) {
-      if (!Array.isArray(value)) return
-      const index = value.findIndex((ele) => ele === selectItem.value)
-      if (index === -1) {
-        onSelect([...value, selectItem.value], selectItem)
-      } else {
-        const copyValue = structuredClone(value)
-        copyValue.splice(index, 1)
-        onSelect(copyValue, selectItem)
-      }
-    } else {
-      onSelect([selectItem.value], selectItem)
-    }
-    setTimeout(() => {
-      if (filterSearch) onHandleScroll()
-    }, 50)
-  })
-
-  const onReset = useMemoizedFn(() => {
-    onSelect([])
-    setTimeout(() => {
-      onQuery()
-    }, 200)
-  })
-
-  const onSure = useMemoizedFn(() => {
-    onClose()
-  })
-
-  const renderMultiple = useMemoizedFn(() => {
-    return (
-      <div
-        className={classNames(style['select-search-multiple'], {
-          [style['select-search-multiple-filterSearch']]: filterSearch,
-        })}
-      >
-        {filterSearch && (
-          <div className={style['select-heard']} ref={selectRef}>
-            <div className={classNames(style['select-search-input'])}>
-              <YakitInput
-                className={style['select-header-input']}
-                size="middle"
-                value={searchVal}
-                onChange={(e) => {
-                  onChangeSearchVal && onChangeSearchVal(e.target.value)
-                }}
-                {...filterSearchInputProps}
-              />
-            </div>
-          </div>
-        )}
-        <div ref={containerRef} className={style['select-container']} style={selectContainerStyle}>
-          <div ref={wrapperRef} className={style['select-wrapper']}>
-            {(list.length > 0 &&
-              list.map((item) => {
-                const checked = Array.isArray(value) ? value?.findIndex((ele) => ele === item.data.value) !== -1 : false
-                return (
-                  <div
-                    key={item.data.value}
-                    className={classNames(style['select-item'], {
-                      [style['select-item-active']]: checked,
-                    })}
-                    onClick={() => onSelectMultiple(item.data)}
-                  >
-                    <span className={classNames(style['select-item-text'], 'content-ellipsis')}>{item.data.label}</span>
-                    {checked && <CheckIcon className={style['check-icon']} />}
-                  </div>
-                )
-              })) || <div className={classNames(style['no-data'])}>{t('YakitEmpty.noData')}</div>}
-          </div>
-          <FooterBottom onReset={onReset} onSure={onSure} />
-        </div>
-      </div>
-    )
-  })
-
-  return <div className={style['select-search']}>{renderMultiple()}</div>
-}
-
-interface RangeInputNumberTableWrapperProps extends RangeInputNumberProps {
-  showSort?: boolean
-  bodyLengthSort?: 'asc' | 'desc' | false
-  onBodyLengthSort?: (s: 'asc' | 'desc') => void
-  checkBodyLength: boolean
-  onCheckThan0: DebouncedFunc<(check: boolean) => void>
-}
-export const RangeInputNumberTableWrapper: React.FC<RangeInputNumberTableWrapperProps> = React.memo((props) => {
-  const ref = useRef<HTMLDivElement>(null)
-  const {
-    showSort = false,
-    bodyLengthSort,
-    onBodyLengthSort,
-    checkBodyLength,
-    onCheckThan0,
-    minNumber,
-    maxNumber,
-    onSure,
-    onReset,
-    ...reset
-  } = props
-  const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
-  const [show, setShow] = useState<boolean>(false)
-
-  // valueChanged判断用户输入值 点击其他区域触发筛选列表
-  const [_, setValueChanged, getValueChanged] = useGetSetState<boolean>(false)
-
-  const onChangeValued = useMemoizedFn(() => {
-    setValueChanged(true)
-  })
-
-  const [inViewport] = useInViewport(ref)
-
-  useUpdateEffect(() => {
-    if (!inViewport && getValueChanged()) {
-      onSure?.()
-    }
-    !inViewport && setShow(false)
-  }, [inViewport])
-
-  return (
-    <div
-      className={style['rangeInputNumberTableWrapper']}
-      style={{ padding: show ? undefined : '0 8px 8px' }}
-      ref={ref}
-    >
-      {show ? (
-        <RangeInputNumberTable
-          {...reset}
-          minNumber={minNumber}
-          maxNumber={maxNumber}
-          onSure={() => {
-            setValueChanged(false)
-            onSure?.()
-          }}
-          onReset={() => {
-            setValueChanged(false)
-            onReset?.()
-          }}
-          onChangeValued={onChangeValued}
-        />
-      ) : (
-        <>
-          {showSort && (
-            <>
-              <div
-                className={classNames(style['body-length-filter'], {
-                  [style['body-length-filter-active']]: bodyLengthSort === 'asc',
-                })}
-                onClick={() => {
-                  onBodyLengthSort?.('asc')
-                }}
-              >
-                <OutlineArrownarrowupIcon className={style['outlineFilterIcon']} /> {t('YakitTable.asc')}
-              </div>
-              <div
-                className={classNames(style['body-length-filter'], {
-                  [style['body-length-filter-active']]: bodyLengthSort === 'desc',
-                })}
-                onClick={() => {
-                  onBodyLengthSort?.('desc')
-                }}
-              >
-                <OutlineArrownarrowdownIcon className={style['outlineFilterIcon']} /> {t('YakitTable.desc')}
-              </div>
-            </>
-          )}
-          <div
-            className={classNames(style['body-length-filter'], {
-              [style['body-length-filter-active']]: typeof minNumber === 'number' || typeof maxNumber === 'number',
-            })}
-            onClick={() => {
-              setShow(true)
-            }}
-          >
-            <OutlineFilterIcon className={style['outlineFilterIcon']} /> {t('RangeInputNumberTableWrapper.filter')}
-          </div>
-          <Divider style={{ margin: '4px 0' }}></Divider>
-          <div className={style['body-length-checkbox']}>
-            <span className={style['tip']}>{t('RangeInputNumberTableWrapper.greaterThanZeroOnly')}</span>
-            <YakitCheckbox checked={checkBodyLength} onChange={(e) => onCheckThan0(e.target.checked)} />
-          </div>
-        </>
-      )}
-    </div>
-  )
-})
-interface RangeInputNumberProps {
-  minNumber?: number
-  setMinNumber?: (b: number) => void
-  maxNumber?: number
-  setMaxNumber?: (b: number) => void
-  extra?: ReactNode
-  onReset?: () => void
-  onSure?: () => void
-  showFooter?: boolean
-  onChangeValued?: () => void
-}
-
-export const RangeInputNumberTable: React.FC<RangeInputNumberProps> = React.memo((props) => {
-  const { minNumber, setMinNumber, maxNumber, setMaxNumber, extra, onReset, onSure, showFooter, onChangeValued } = props
-  return (
-    <div className={style['table-body-length-filter']}>
-      <Input.Group compact size="small" className={style['input-group']}>
-        <YakitInputNumber
-          className={style['input-left']}
-          placeholder="Minimum"
-          min={0}
-          value={minNumber}
-          onChange={(v) => {
-            if (setMinNumber) setMinNumber(v as number)
-            onChangeValued?.()
-          }}
-          size="small"
-        />
-        <div className={style['input-split']}>~</div>
-        <YakitInputNumber
-          className={style['input-right']}
-          placeholder="Maximum"
-          min={minNumber}
-          value={maxNumber}
-          onChange={(v) => {
-            if (setMaxNumber) setMaxNumber(v as number)
-            onChangeValued?.()
-          }}
-          size="small"
-        />
-        {extra}
-      </Input.Group>
-      {showFooter !== false && (
-        <FooterBottom
-          className={style['input-footer']}
-          onReset={() => {
-            if (onReset) onReset()
-          }}
-          onSure={() => {
-            if (onSure) onSure()
-          }}
-        />
-      )}
-    </div>
-  )
-})
-
 // 发送web fuzzer const
 export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxyStr?: string, fromMITM?: boolean) => {
   let params = {},
@@ -5429,7 +4389,6 @@ export const onSendToTab = async (rowData, openFlag?: boolean, downstreamProxySt
       openFlag === false && info(tOriginal('YakitNotification.sendSuccess'))
     })
 }
-
 // 标注颜色
 export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) => {
   if (!flow) {
@@ -5461,7 +4420,6 @@ export const CalloutColor = (flow: HTTPFlow, i: any, data: HTTPFlow[], setData) 
       yakitFailed(e + '')
     })
 }
-
 // 移除颜色
 export const onRemoveCalloutColor = (flow: HTTPFlow, data: HTTPFlow[], setData) => {
   if (!flow) return
@@ -5531,482 +4489,3 @@ const onBatchExecPacketScan = (params: {
     verbose: currentPacketScan.Verbose,
   })
 }
-
-interface HistorySearchProps {
-  searchVal?: string
-  setSearchVal?: (s: string) => void
-  showPopoverSearch: boolean
-  handleSearch: (searchValue: string, searchType: HistoryPluginSearchType) => void
-  addonBeforeOption?: YakitCombinationSearchProps['addonBeforeOption']
-  hint?: boolean
-}
-export const HistorySearch = React.memo<HistorySearchProps>((props) => {
-  const { showPopoverSearch, handleSearch, hint = true } = props
-  const { t, i18n } = useI18nNamespaces(['history'])
-  const [isHoverSearch, setIsHoverSearch] = useState<boolean>(false)
-  const [searchType, setSearchType, getSearchType] = useGetSetState<HistoryPluginSearchType>('all')
-  const [searchVal, setSearchVal] = useControllableValue<string>(props, {
-    defaultValue: '',
-    valuePropName: 'searchVal',
-    trigger: 'setSearchVal',
-  })
-  const onSelectBeforeOption = useMemoizedFn((o: string) => {
-    setSearchType(o as HistoryPluginSearchType)
-  })
-  useUpdateEffect(() => {
-    onSearch()
-  }, [searchType])
-  const onInputUpadte = useMemoizedFn((e: any) => {
-    setSearchVal(e.target.value)
-  })
-  const onSearch = useDebounceFn(
-    useMemoizedFn(() => {
-      handleSearch(searchVal, getSearchType())
-    }),
-    { wait: 300 },
-  ).run
-  const handleSearchBlur = useMemoizedFn(() => {
-    if (searchVal === '') {
-      onSearch()
-    }
-  })
-  const searchNode = useMemoizedFn(() => {
-    return (
-      <YakitCombinationSearch
-        wrapperClassName={style['http-history-table-right-search']}
-        afterModuleType="input"
-        valueBeforeOption={searchType}
-        onSelectBeforeOption={onSelectBeforeOption}
-        selectProps={{ size: 'small' }}
-        beforeOptionWidth={100}
-        addonBeforeOption={props.addonBeforeOption ?? []}
-        inputSearchModuleTypeProps={{
-          size: 'middle',
-          value: searchVal,
-          onChange: onInputUpadte,
-          onSearch: onSearch,
-          onBlur: handleSearchBlur,
-          // wrapperClassName: style["inputSearchModule"]
-        }}
-      ></YakitCombinationSearch>
-    )
-  })
-  return (
-    <div className={style['http-history-search-wrapper']}>
-      {showPopoverSearch ? (
-        <YakitPopover
-          overlayClassName={style['http-history-search-drop-down-popover']}
-          trigger="click"
-          placement="bottomRight"
-          content={searchNode}
-          visible={isHoverSearch}
-          onVisibleChange={setIsHoverSearch}
-        >
-          <YakitButton icon={<OutlineSearchIcon />} type="outline2" isHover={isHoverSearch || !!searchVal} />
-        </YakitPopover>
-      ) : (
-        searchNode()
-      )}
-      {hint ? (
-        <Tooltip title={t('HistorySearch.fuzzSearchExplanation', { edition: getReleaseEditionName() })}>
-          <OutlineQuestionmarkcircleIcon className={style['http-history-search-question-icon']} />
-        </Tooltip>
-      ) : null}
-    </div>
-  )
-})
-
-interface EditTagsInfo {
-  Id: number
-  Hash: string
-  Tags: string[]
-}
-interface EditTagsModalProps {
-  visible: boolean
-  editTagsInfo?: EditTagsInfo
-  onCancel: () => void
-  onOk: (params: EditTagsInfo) => void
-}
-const EditTagsModal = React.memo<EditTagsModalProps>((props) => {
-  const { visible, editTagsInfo, onCancel, onOk } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'history'])
-  const [form] = Form.useForm()
-
-  useEffect(() => {
-    if (editTagsInfo) {
-      const tagsStr = editTagsInfo.Tags?.filter((tag) => !tag.startsWith('YAKIT_')).join(',') || ''
-      form.setFieldsValue({ tags: tagsStr })
-    }
-  }, [editTagsInfo])
-
-  const handleOk = useMemoizedFn(() => {
-    form.validateFields().then((res) => {
-      if (editTagsInfo) {
-        const { tags } = res
-        const formTags = tags.split(',')
-        const colorTags = editTagsInfo.Tags.filter((item) => item.startsWith('YAKIT_'))
-        const existedTags = [...new Set([...formTags, ...colorTags])].filter((item) => item)
-        onOk({
-          Id: editTagsInfo.Id,
-          Hash: editTagsInfo.Hash,
-          Tags: existedTags,
-        })
-      }
-
-      onCancel()
-    })
-  })
-
-  return (
-    <YakitModal
-      visible={visible}
-      title={t('EditTagsModal.editTag')}
-      width={600}
-      destroyOnClose={true}
-      maskClosable={false}
-      okText={t('YakitButton.save')}
-      onCancel={onCancel}
-      onOk={handleOk}
-    >
-      <Form form={form} colon={false} labelCol={{ span: 3 }} wrapperCol={{ span: 21 }}>
-        <Form.Item label="Tag" name="tags">
-          <YakitInput.TextArea placeholder={t('EditTagsModal.multipleTagsComma')} rows={5}></YakitInput.TextArea>
-        </Form.Item>
-      </Form>
-    </YakitModal>
-  )
-})
-
-declare type getContainerFunc = () => HTMLElement
-interface ImportExportProgressProps {
-  visible: boolean
-  onClose: (finish: boolean, streamData: ImportExportStreamResponse[]) => void
-  getContainer?: string | HTMLElement | getContainerFunc | false
-  title: string
-  subTitle?: string
-  token: string
-  apiKey: string
-}
-export const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((props) => {
-  const { visible, onClose, getContainer, title, subTitle, token, apiKey } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi'])
-  const timeRef = useRef<any>(null)
-  const [importExportStream, setImportExportStream] = useState<ImportExportStreamResponse[]>([])
-  const importExportStreamRef = useRef<ImportExportStreamResponse[]>([])
-
-  const cancelImportExportHTTPFlowStream = () => {
-    ipcRenderer.invoke(`cancel-${apiKey}`, token)
-    ipcRenderer.removeAllListeners(`${token}-data`)
-    ipcRenderer.removeAllListeners(`${token}-error`)
-    ipcRenderer.removeAllListeners(`${token}-end`)
-    clearInterval(timeRef.current)
-  }
-  useEffect(() => {
-    const updateImportExportHTTPFlowStream = () => {
-      setImportExportStream(importExportStreamRef.current.slice())
-    }
-    timeRef.current = setInterval(updateImportExportHTTPFlowStream, 300)
-    ipcRenderer.on(`${token}-data`, async (e, data: ImportExportStreamResponse) => {
-      importExportStreamRef.current.push(data)
-    })
-    ipcRenderer.on(`${token}-error`, (e, error) => {
-      yakitNotify('error', `error: ${error}`)
-      closeModal()
-    })
-    return () => {
-      cancelImportExportHTTPFlowStream()
-    }
-  }, [token])
-
-  const closeModal = useMemoizedFn(() => {
-    onClose(importExportStream[importExportStream.length - 1]?.Percent === 1, importExportStream)
-    cancelImportExportHTTPFlowStream()
-  })
-  useEffect(() => {
-    if (importExportStream[importExportStream.length - 1]?.Percent === 1) {
-      setTimeout(() => {
-        closeModal()
-      }, 500)
-    }
-  }, [JSON.stringify(importExportStream)])
-
-  return (
-    <YakitModal
-      visible={visible}
-      getContainer={getContainer}
-      type="white"
-      title={title}
-      onCancel={closeModal}
-      width={680}
-      closable={true}
-      maskClosable={false}
-      destroyOnClose={true}
-      bodyStyle={{ padding: 0 }}
-      footerStyle={{ justifyContent: 'flex-end' }}
-      footer={
-        <YakitButton type={'outline2'} onClick={closeModal}>
-          {importExportStream[importExportStream.length - 1]?.Percent === 1
-            ? t('YakitButton.finish')
-            : t('YakitButton.cancel')}
-        </YakitButton>
-      }
-    >
-      <div style={{ padding: 15 }} className="yakit-progress-wrapper">
-        {importExportStream[importExportStream.length - 1]?.Percent === undefined && <div>{subTitle}</div>}
-        <Progress
-          strokeColor="var(--Colors-Use-Main-Primary)"
-          trailColor="var(--Colors-Use-Neutral-Bg)"
-          percent={Math.trunc(importExportStream[importExportStream.length - 1]?.Percent * 100)}
-          format={(percent) => `${percent}%`}
-        />
-      </div>
-    </YakitModal>
-  )
-})
-
-export interface ColumnAllInfoItem {
-  dataKey: string
-  title: string
-  isShow: boolean
-}
-interface AdvancedSetSaveItem {
-  backgroundRefresh: boolean
-  dragSelectEnabled: boolean
-  configColumnsAll: ColumnAllInfoItem[]
-}
-interface AdvancedSetProps {
-  showBackgroundRefresh?: boolean
-  dragSelectEnabled?: boolean
-  columnsAllStr: string
-  onCancel: () => void
-  onSave: (setting: AdvancedSetSaveItem) => void
-  defalutColumnsOrder: string[]
-}
-export const AdvancedSet: React.FC<AdvancedSetProps> = React.memo((props) => {
-  const {
-    showBackgroundRefresh = true,
-    dragSelectEnabled: propDragSelectEnabled = true,
-    columnsAllStr,
-    onCancel,
-    onSave,
-    defalutColumnsOrder,
-  } = props
-  const { t, i18n } = useI18nNamespaces(['yakitUi', 'history'])
-  /** ---------- 后台刷新 Start ---------- */
-  const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
-  const oldBackgroundRefresh = useRef<boolean>(false)
-  useEffect(() => {
-    getRemoteValue(RemoteHistoryGV.BackgroundRefresh).then((e) => {
-      oldBackgroundRefresh.current = !!e
-      setBackgroundRefresh(!!e)
-    })
-  }, [])
-  /** ---------- 后台刷新 End ---------- */
-
-  /** ---------- 框选配置 Start ---------- */
-  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(propDragSelectEnabled)
-  /** ---------- 框选配置 End ---------- */
-
-  /** ---------- 自定义列 Start ---------- */
-  const [curColumnsAll, setCurColumnsAll] = useState<ColumnAllInfoItem[]>([])
-  useEffect(() => {
-    try {
-      setCurColumnsAll(JSONParseLog(columnsAllStr))
-    } catch (error) {}
-  }, [columnsAllStr])
-  // 处理拖拽结束
-  const handleDragEnd = (result: any) => {
-    if (!result.destination) return // 没有目标位置，直接返回
-    const newItems = [...curColumnsAll]
-    const [movedItem] = newItems.splice(result.source.index, 1) // 移除被拖拽的项
-    newItems.splice(result.destination.index, 0, movedItem) // 插入到新位置
-    setCurColumnsAll(newItems)
-  }
-  const handleResetColumn = useMemoizedFn(() => {
-    const newItems = [...curColumnsAll]
-    newItems.forEach((item) => {
-      item.isShow = true
-    })
-    const sortedArr = newItems.sort((x, y) => {
-      const keyX = x.dataKey
-      const keyY = y.dataKey
-      return defalutColumnsOrder.indexOf(keyX) - defalutColumnsOrder.indexOf(keyY)
-    })
-    setCurColumnsAll(sortedArr)
-  })
-  /** ---------- 自定义列 End ---------- */
-
-  const handleOk = useMemoizedFn(() => {
-    // 缓存后台刷新状态
-    if (oldBackgroundRefresh.current !== backgroundRefresh) {
-      setRemoteValue(RemoteHistoryGV.BackgroundRefresh, backgroundRefresh ? 'true' : '')
-    }
-    onSave({ backgroundRefresh, dragSelectEnabled, configColumnsAll: curColumnsAll })
-  })
-
-  // 判断是否有修改
-  const handleJudgeModify = useMemoizedFn(async () => {
-    try {
-      // 是否有修改
-      let isModify: boolean = false
-      if (
-        oldBackgroundRefresh.current !== backgroundRefresh ||
-        propDragSelectEnabled !== dragSelectEnabled ||
-        columnsAllStr !== JSON.stringify(curColumnsAll)
-      ) {
-        isModify = true
-      }
-      return isModify
-    } catch (error) {
-      yakitNotify('error', `${error}`)
-      return null
-    }
-  })
-  const handleClose = useMemoizedFn(async () => {
-    const result = await handleJudgeModify()
-    if (result == null) return
-
-    if (result) {
-      Modal.confirm({
-        title: t('YakitModal.friendlyReminder'),
-        icon: <ExclamationCircleOutlined />,
-        content: t('AdvancedSet.saveAdvancedConfigAndClose'),
-        okText: t('YakitButton.save'),
-        cancelText: t('YakitButton.doNotSave'),
-        closable: true,
-        closeIcon: (
-          <div
-            onClick={(e) => {
-              e.stopPropagation()
-              Modal.destroyAll()
-            }}
-            className="modal-remove-icon"
-          >
-            <OutlineXIcon />
-          </div>
-        ),
-        onOk: handleOk,
-        onCancel: onCancel,
-        cancelButtonProps: { size: 'small', className: 'modal-cancel-button' },
-        okButtonProps: { size: 'small', className: 'modal-ok-button' },
-      })
-    } else {
-      onCancel()
-    }
-  })
-
-  return (
-    <YakitDrawer
-      visible={true}
-      width="max(700px, 40%)"
-      className={style['history-advanced-set-wrapper']}
-      onClose={handleClose}
-      title={
-        <div className={style['advanced-configuration-drawer-title']}>
-          <div className={style['advanced-configuration-drawer-title-text']}>{t('AdvancedSet.advancedConfig')}</div>
-          <div className={style['advanced-configuration-drawer-title-btns']}>
-            <YakitButton type="outline2" onClick={onCancel}>
-              {t('YakitButton.cancel')}
-            </YakitButton>
-            <YakitButton type="primary" onClick={handleOk}>
-              {t('YakitButton.save')}
-            </YakitButton>
-          </div>
-        </div>
-      }
-      maskClosable={false}
-    >
-      <div className={style['history-advanced-set-cont']}>
-        {showBackgroundRefresh && (
-          <div className={style['history-advanced-set-item']}>
-            <div className={style['history-advanced-set-item-title']}>{t('AdvancedSet.refreshConfig')}</div>
-            <div className={style['history-advanced-set-item-cont']}>
-              <div className={style['backgroundRefresh']}>
-                <YakitCheckbox
-                  checked={backgroundRefresh}
-                  onChange={(e) => {
-                    setBackgroundRefresh(e.target.checked)
-                  }}
-                />
-                <span className={style['title-style']}>{t('AdvancedSet.backgroundRefresh')}</span>
-                <Tooltip title={t('AdvancedSet.keepRefreshingTrafficData')}>
-                  <OutlineInformationcircleIcon className={style['hint-style']} />
-                </Tooltip>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className={style['history-advanced-set-item']}>
-          <div className={style['history-advanced-set-item-title']}>{t('AdvancedSet.dragSelectConfig')}</div>
-          <div className={style['history-advanced-set-item-cont']}>
-            <div className={style['backgroundRefresh']}>
-              <YakitCheckbox
-                checked={dragSelectEnabled}
-                onChange={(e) => {
-                  setDragSelectEnabled(e.target.checked)
-                }}
-              />
-              <span className={style['title-style']}>{t('AdvancedSet.dragSelectMultiData')}</span>
-              <Tooltip title={t('AdvancedSet.dragSelectMultiDataTip')}>
-                <OutlineInformationcircleIcon className={style['hint-style']} />
-              </Tooltip>
-            </div>
-          </div>
-        </div>
-        <div className={style['history-advanced-set-item']}>
-          <div className={style['history-advanced-set-item-title']}>
-            {t('AdvancedSet.listDisplayFieldsAndOrder')}
-            <YakitButton type="text" onClick={handleResetColumn}>
-              {t('YakitButton.reset')}
-            </YakitButton>
-          </div>
-          <div className={style['history-advanced-set-item-desc']}>{t('AdvancedSet.listDisplayConfigTips')}</div>
-          <div className={style['history-advanced-set-item-cont']}>
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="history-column-list">
-                {(provided) => (
-                  <div className={style['columnSet']} ref={provided.innerRef} {...provided.droppableProps}>
-                    {curColumnsAll.map((item, index) => (
-                      <Draggable key={item.dataKey} draggableId={item.dataKey} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            className={classNames(style['column-item'], {
-                              [style['column-item-not-allowed']]: !item.isShow,
-                            })}
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                          >
-                            <DragSortIcon />
-                            <div className={style['column-title']}>{item.title}</div>
-                            <Tooltip title={item.isShow ? t('YakitButton.disable') : t('YakitButton.enable')}>
-                              <OutlineBanIcon
-                                className={classNames(style['ban-icon'])}
-                                onClick={() => {
-                                  setCurColumnsAll((prev) => {
-                                    const arr = prev.slice()
-                                    arr.forEach((i) => {
-                                      if (i.dataKey === item.dataKey) {
-                                        i.isShow = !item.isShow
-                                      }
-                                    })
-                                    return arr
-                                  })
-                                }}
-                              />
-                            </Tooltip>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </div>
-        </div>
-      </div>
-    </YakitDrawer>
-  )
-})
