@@ -648,11 +648,7 @@ const Main: React.FC<MainProp> = React.memo((props) => {
         content={waterMarkStr()}
         style={controlShow ? { display: 'none' } : { overflow: 'hidden', height: '100%' }}
       >
-        <Layout
-          className="yakit-main-layout main-content-tabs yakit-layout-tabs"
-          style={controlShow ? { display: 'none' } : {}}
-          ref={chartCSDragAreaRef}
-        >
+        <Layout className="yakit-main-layout" style={controlShow ? { display: 'none' } : {}} ref={chartCSDragAreaRef}>
           <AutoSpin spinning={loading}>
             {isShowCustomizeMenu && (
               <CustomizeMenu visible={isShowCustomizeMenu} onClose={() => setIsShowCustomizeMenu(false)} />

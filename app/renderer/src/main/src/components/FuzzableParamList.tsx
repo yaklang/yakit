@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { Typography } from 'antd'
 import { FuzzableParams } from './HTTPFlowTable/HTTPFlowTable'
 import { HTTPPacketFuzzable } from './HTTPHistory'
 import { YakitPopconfirm } from './yakitUI/YakitPopconfirm/YakitPopconfirm'
@@ -13,7 +12,6 @@ import styles from './hTTPFlowDetail.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
-const { Text } = Typography
 
 export interface FuzzableParamListProp extends HTTPPacketFuzzable {
   data: FuzzableParams[]
