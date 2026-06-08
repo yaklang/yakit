@@ -158,7 +158,8 @@
     "quickCreate": "Quick create",
     "unsavedTitle": "File not saved",
     "unsavedContent": "Do you want to save the content in {{name}}?",
-    "savePathMissing": "Save path not found, cancel save"
+    "savePathMissing": "Save path not found, cancel save",
+    "sendAIActions": "Send to AI session"
   },
   "CollapseList": {
     "noHelpInfo": "No help information"

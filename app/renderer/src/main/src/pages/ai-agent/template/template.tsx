@@ -68,6 +68,7 @@ import {
 } from '@/pages/ai-re-act/aiReActTaskChat/AIReActTaskChat'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIMilkdownInputRef } from '../components/aiMilkdownInput/type'
+import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import { YakitCheckableTag } from '@/components/yakitUI/YakitTag/YakitCheckableTag'
 import { AIInputEventHotPatchTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
@@ -211,6 +212,10 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
             const params = data.params as AIMentionCommandParams
             onSetMention(params)
             break
+          case 'codeBlockTag':
+            aiMilkdownInputRef.current?.setCodeRef(data.params as AICodeBlockCommandParams)
+            handleSetTextareaFocus()
+            break
 
           default:
             break
@@ -222,12 +227,15 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     const handleSubmit = useMemoizedFn(() => {
       const qs = getMarkdownValue()
       if (!qs.trim() || !editorMilkdown.current) return
-      const { mentions, imageList, httpFlowList, plainText } = extractDataWithMilkdown(editorMilkdown.current)
+      const { mentions, imageList, httpFlowList, codeBlockList, plainText } = extractDataWithMilkdown(
+        editorMilkdown.current,
+      )
       const value: AIChatTextareaSubmit = {
         qs,
         mentionList: mentions,
         imageList,
         httpFlowList,
+        codeBlockList,
         showQS: qs,
         focusMode,
         sessionId: aiMilkdownInputRef.current?.getSessionId(),

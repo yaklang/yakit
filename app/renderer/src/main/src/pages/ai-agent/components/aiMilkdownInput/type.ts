@@ -1,6 +1,7 @@
 import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
 import { AIHttpFlowRemovePayload } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { AICodeBlockCommandParams } from './aiCodeBlock/aiCustomCodeBlockPlugin'
 import { AIChatMentionProps } from '../aiChatMention/type'
 
 export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
@@ -9,6 +10,7 @@ export interface AIMilkdownInputRef {
   setMention: (v: AIMentionCommandParams) => void
   setImage: () => void
   setHttpFlow: (ids: string[]) => void
+  setCodeRef: (v: AICodeBlockCommandParams) => void
   getSessionId: () => string
 }
 export interface AIMilkdownInputBaseProps {

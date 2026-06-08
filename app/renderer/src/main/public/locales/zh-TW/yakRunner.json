@@ -158,7 +158,8 @@
     "quickCreate": "快捷建立",
     "unsavedTitle": "檔案未儲存",
     "unsavedContent": "是否要儲存{{name}}裡面的內容嗎？",
-    "savePathMissing": "未獲取儲存路徑，取消儲存"
+    "savePathMissing": "未獲取儲存路徑，取消儲存",
+    "sendAIActions": "發送到AI會話"
   },
   "CollapseList": {
     "noHelpInfo": "暫無幫助資訊"
