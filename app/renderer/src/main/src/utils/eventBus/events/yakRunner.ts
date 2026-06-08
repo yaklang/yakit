@@ -49,4 +49,6 @@ export type YakRunnerEventProps = {
   onResetAuditStatus?: string
   // 刷新审计详情（关闭节点信息）
   onRefreshAuditDetail?: string
+  /** 编辑器选中代码发送到自由对话 */
+  onYakRunnerSendCodeBlock: string
 }

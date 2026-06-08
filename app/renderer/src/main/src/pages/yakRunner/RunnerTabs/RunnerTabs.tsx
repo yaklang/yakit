@@ -31,7 +31,15 @@ import {
 import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
 import { YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
+import {
+  useCreation,
+  useDebounceFn,
+  useLongPress,
+  useMemoizedFn,
+  useSize,
+  useThrottleFn,
+  useUpdateEffect,
+} from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
 import { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerType'
@@ -73,6 +81,8 @@ import { FileNodeMapProps } from '../FileTree/FileTreeType'
 import { openFolder } from '../RunnerFileTree/RunnerFileTree'
 import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1229,6 +1239,46 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     [editorInfo?.code],
   )
 
+  const onSendAIAction = useMemoizedFn((editor: IMonacoEditor) => {
+    const content = fetchCursorContent(editor, true)
+    const range = fetchSelectionRange(editor, true)
+    const name = editorInfo?.name
+    if (!name) return
+
+    emiter.emit(
+      'onYakRunnerSendCodeBlock',
+      JSON.stringify({
+        type: 'codeBlockTag',
+        params: {
+          content,
+          range: range
+            ? {
+                startLineNumber: range.startLineNumber,
+                startColumn: range.startColumn,
+                endLineNumber: range.endLineNumber,
+                endColumn: range.endColumn,
+              }
+            : null,
+          name,
+          path: editorInfo?.path,
+        },
+      }),
+    )
+  })
+
+  const rightContextMenu: OtherMenuListProps = useCreation(() => {
+    return {
+      sendAIActions: {
+        menu: [{ key: 'sendAI', label: t('RunnerTabs.sendAIActions') }],
+        onRun: (editor: IMonacoEditor, key: string) => {
+          if (key === 'sendAI') {
+            onSendAIAction(editor)
+          }
+        },
+      },
+    }
+  }, [i18n.language, t])
+
   return (
     <div className={styles['runner-tab-pane']}>
       {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1254,6 +1304,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           setValue={setYakitEditorValue}
           highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
           highLightClass="hight-light-yak-runner-color"
+          contextMenu={rightContextMenu}
         />
       )}
     </div>
