@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Col, Row } from 'antd'
 import { YakEditor } from '../../utils/editors'
+import { PageContainer } from '@ant-design/pro-layout'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -32,7 +33,7 @@ export const AnalyzerPage: React.FC<AnalyzerPageProp> = (props) => {
 
   return (
     <div>
-      {/* <PageHeader title={'HTTP 模糊测试分析器'} /> */}
+      <PageContainer title={'HTTP 模糊测试分析器'} />
       <Row gutter={8}>
         <Col span={12}>
           <div style={{ height: 500 }}>
