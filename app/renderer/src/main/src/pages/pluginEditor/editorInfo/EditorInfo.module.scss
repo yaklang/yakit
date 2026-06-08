@@ -66,6 +66,15 @@
   padding: 20px 12px 12px 12px;
   overflow: hidden auto;
   background: var(--Colors-Use-Basic-Background);
+
+  &-highlight {
+    color: var(--Colors-Use-Neutral-Text-4-Help-text);
+    margin-bottom: 8px;
+    &-btn {
+      margin: 0;
+      padding: 0;
+    }
+  }
 }
 .editor-info-form-global {
   :global {
