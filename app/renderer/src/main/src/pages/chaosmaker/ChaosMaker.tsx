@@ -8,6 +8,7 @@ import { CopyableField } from '@/utils/inputUtil'
 import { showDrawer } from '@/utils/showModal'
 import { ChaosMakerRuleImport } from '@/pages/chaosmaker/ChaosMakerRuleImport'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { PageContainer } from '@ant-design/pro-layout'
 
 export interface ChaosMakerPageProp {}
 
@@ -112,7 +113,7 @@ export const ChaosMakerPage: React.FC<ChaosMakerPageProp> = (props) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
-      {/* <PageHeader
+      <PageContainer
         style={{ width: '100%' }}
         title={'Breach & Attack Simulator Playbook'}
         subTitle={'入侵与攻击模拟剧本管理'}
@@ -132,7 +133,7 @@ export const ChaosMakerPage: React.FC<ChaosMakerPageProp> = (props) => {
             </YakitButton>
           </div>
         }
-      /> */}
+      />
       <div style={{ flex: 1, backgroundColor: 'var(--Colors-Use-Basic-Background)' }}>
         <ResizeBox
           firstMinSize={'400px'}

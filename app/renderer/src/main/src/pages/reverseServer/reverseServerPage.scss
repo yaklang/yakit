@@ -10,6 +10,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    padding-left: 16px;
     .ant-page-header-content {
       flex: 1;
       // overflow: hidden;
@@ -30,6 +31,7 @@
   max-width: 678px;
   width: 100%;
   padding: 0 24px;
+  margin: 0 auto;
   .setting-isremote-hint {
     margin: 10px 0 24px 0;
   }
