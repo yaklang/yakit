@@ -24,6 +24,7 @@ import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInp
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { PageContainer } from '@ant-design/pro-layout'
 
 const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
@@ -81,8 +82,8 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
 
   return (
     <div className="reverse-server-page-wrapper">
-      {/* {status === 'setting' && (
-        <PageHeader
+      {status === 'setting' && (
+        <PageContainer
           className="reverse-server-page-head"
           backIcon={false}
           title={t('NewReverseServerPage.reverseServer')}
@@ -96,8 +97,8 @@ export const NewReverseServerPage: React.FC<FacadeOptionsProp> = (props) => {
               startFacadeServer(setting.setting, setting.remoteIp)
             }}
           />
-        </PageHeader>
-      )} */}
+        </PageContainer>
+      )}
       {status === 'start' && addrParams && (
         <StartReverseServer
           token={getToken()}
@@ -434,7 +435,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
 
       <div className={`reverse-${codeExtra ? 'hidden-' : ''}wrapper`}>
         <div className="reverse-body">
-          {/* <PageHeader
+          <PageContainer
             className="reverse-server-pagehead"
             backIcon={false}
             title={t('NewReverseServerPage.reverseServer')}
@@ -491,7 +492,7 @@ export const StartReverseServer: React.FC<StartReverseServerProp> = (props) => {
                 </div>
               </Col>
             </Row>
-          </PageHeader> */}
+          </PageContainer>
           <div className="reverse-server-data">
             <ReverseTable total={totalRef.current} data={data} clearData={clearData} />
           </div>

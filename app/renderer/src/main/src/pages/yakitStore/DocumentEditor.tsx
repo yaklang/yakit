@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { YakScript } from '../invoker/schema'
 import MDEditor from '@uiw/react-md-editor'
 import { success } from '../../utils/notification'
+import { PageContainer } from '@ant-design/pro-layout'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -16,7 +18,7 @@ export const DocumentEditor: React.FC<DocumentEditorProp> = (props) => {
 
   return (
     <div>
-      {/* <PageHeader
+      <PageContainer
         title={'编辑/添加模块文档'}
         subTitle={props.yakScript.ScriptName + `[${props.yakScript.Id}]`}
         extra={[
@@ -41,7 +43,7 @@ export const DocumentEditor: React.FC<DocumentEditorProp> = (props) => {
             保存 / 创建文档
           </YakitButton>,
         ]}
-      /> */}
+      />
       <MDEditor value={markdown} onChange={(e) => setMarkdown(e || '')} maxHeight={1000} height={700}></MDEditor>
     </div>
   )
