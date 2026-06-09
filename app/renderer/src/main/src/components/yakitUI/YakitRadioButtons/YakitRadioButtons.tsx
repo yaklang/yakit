@@ -1,4 +1,4 @@
-import { Checkbox, Radio } from 'antd'
+import { Radio } from 'antd'
 import React from 'react'
 import { YakitRadioButtonsProps } from './YakitRadioButtonsType'
 import styles from './YakitRadioButtons.module.scss'
