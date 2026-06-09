@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Card, Col, Form, Pagination, Row, Space, Spin, Tree, Menu, Popover, Checkbox } from 'antd'
+import { Card, Col, Form, Pagination, Row, Space, Tree, Menu, Popover, Checkbox } from 'antd'
 import { AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest } from '../../../components/WebsiteTree'
 import { HTTPFlowMiniTable } from '../../../components/HTTPFlowMiniTable'
 import { genDefaultPagination, QueryGeneralResponse } from '../../invoker/schema'
@@ -17,6 +17,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 export interface WebsiteTreeViewerProp {
   pageMode?: boolean
@@ -208,7 +209,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
     <>
       <Row gutter={8} style={{ height: '100%' }}>
         <Col span={7} style={{ height: '100%', overflow: 'auto' }}>
-          <Spin spinning={loading} style={{ height: '100%' }} wrapperClassName="Website-tree-spin">
+          <YakitSpin spinning={loading} style={{ height: '100%' }} wrapperClassName="Website-tree-spin">
             <Card
               className="Website-tree-card"
               title={
@@ -489,7 +490,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                 />
               </div>
             </Card>
-          </Spin>
+          </YakitSpin>
         </Col>
         <Col span={17} style={{ height: '100%' }}>
           <Card

@@ -1,5 +1,6 @@
 import React from 'react'
-import { Spin, SpinProps } from 'antd'
+import { SpinProps } from 'antd'
+import { YakitSpin } from './yakitUI/YakitSpin/YakitSpin'
 
 import './AutoSpin.css'
 
@@ -11,8 +12,8 @@ export const AutoSpin: React.FC<AutoSpinProps> = (props) => {
   const { children, wrapperClassName, ...rest } = props
 
   return (
-    <Spin {...rest} wrapperClassName={`auto-antd-spin ${wrapperClassName || ''}`}>
+    <YakitSpin {...rest} wrapperClassName={`auto-antd-spin ${wrapperClassName || ''}`}>
       {children}
-    </Spin>
+    </YakitSpin>
   )
 }
