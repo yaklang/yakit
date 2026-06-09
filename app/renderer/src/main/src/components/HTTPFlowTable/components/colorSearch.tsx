@@ -22,8 +22,7 @@ export const ColorSearch = React.memo((props: ColorSearchProps) => {
       const newColor: string[] = [...color, ele.searchWord]
       setColor(newColor)
     } else {
-      color.splice(index, 1)
-      setColor([...color])
+      setColor(color.filter((c) => c !== ele.searchWord))
     }
   })
 
