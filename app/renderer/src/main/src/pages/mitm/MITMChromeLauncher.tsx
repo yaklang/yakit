@@ -1,5 +1,5 @@
 import React, { CSSProperties, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Alert, Form, Space, Tooltip, Typography, Modal } from 'antd'
+import { Form, Space, Tooltip, Typography, Modal } from 'antd'
 import { failed, info, yakitNotify } from '../../utils/notification'
 import { CheckOutlined, CloseOutlined, CloudUploadOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -38,6 +38,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { loadAdvancedConfig } from './MITMAdvancedConfig'
 import { Trans } from 'react-i18next'
 import { defHost, defPort } from './MITMServerStartForm/MITMServerStartForm'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 /**
  * @param {boolean} isStartMITM 是否开启mitm服务，已开启mitm服务，显示switch。 未开启显示按钮
@@ -261,7 +262,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         label={' '}
         help={
           <Space style={{ width: '100%', marginBottom: 20 }} direction={'vertical'} size={4}>
-            <Alert
+            <YakitAlert
               style={{ marginTop: 4 }}
               type={'success'}
               message={
@@ -277,7 +278,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
                 </>
               }
             />
-            <Alert
+            <YakitAlert
               style={{ marginTop: 4 }}
               type={'error'}
               message={

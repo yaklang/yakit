@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { showModal } from '@/utils/showModal'
-import { Alert, Form, Space, Table, Tag, Tooltip } from 'antd'
+import { Form, Space, Table, Tag, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { CopyableField, InputItem } from '@/utils/inputUtil'
 import { PlusOutlined, QuestionOutlined, ReloadOutlined } from '@ant-design/icons'
@@ -13,6 +13,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import i18n from '@/i18n/i18n'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 export interface ConfigYaklangEnvironmentProp {}
@@ -59,7 +60,7 @@ const NewEnvKeyForm: React.FC<NewEnvKeyFormProp> = (props) => {
       <YakitSpin spinning={loading}>
         {props.verbose && (
           <Form.Item label={' '} colon={false}>
-            <Alert type={'info'} message={props.verbose} />
+            <YakitAlert type={'info'} message={props.verbose} />
           </Form.Item>
         )}
         <InputItem

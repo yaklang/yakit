@@ -1,12 +1,13 @@
 import React from 'react'
 import { HTTPFlow } from '@/components/HTTPFlowTable/HTTPFlowTable'
-import { Alert, Space } from 'antd'
+import { Space } from 'antd'
 import { failed } from '@/utils/notification'
 import { CopyableField } from '@/utils/inputUtil'
 import { openExternalWebsite } from '@/utils/openWebsite'
 import i18n from '@/i18n/i18n'
 import { showYakitModal } from './yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from './yakitUI/YakitButton/YakitButton'
+import { YakitAlert } from './yakitUI/YakitAlert/YakitAlert'
 const tOriginal = i18n.getFixedT(null, 'components')
 
 const { ipcRenderer } = window.require('electron')
@@ -52,7 +53,7 @@ const showResponse = (v: HTTPFlow | Uint8Array | string, url?: string, noConfirm
         width: '50%',
         content: (modalT) => (
           <Space direction={'vertical'} style={{ maxWidth: '100%' }}>
-            <Alert type={'info'} message={modalT('ShowInBrowser.infoMessage')} />
+            <YakitAlert type={'info'} message={modalT('ShowInBrowser.infoMessage')} />
             <CopyableField text={res.FacadesUrl} mark={true} />
             <YakitButton
               onClick={() => {

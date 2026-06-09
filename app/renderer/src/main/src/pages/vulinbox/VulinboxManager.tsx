@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { EngineConsole } from '@/pages/engineConsole/EngineConsole'
 import { failed, info, success } from '@/utils/notification'
-import { Alert, Form, Progress, Space, Tag } from 'antd'
+import { Form, Progress, Space, Tag } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { randomString } from '@/utils/randomUtil'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
@@ -23,6 +23,7 @@ import { grpcFetchLatestOSSDomain } from '@/apiUtils/grpc'
 import classNames from 'classnames'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 export interface VulinboxManagerProp {}
 
 const { ipcRenderer } = window.require('electron')
@@ -315,7 +316,7 @@ export const VulinboxManager: React.FC<VulinboxManagerProp> = (props) => {
             isVer={false}
             firstNode={
               <div style={{ marginBottom: 8, overflow: 'auto', height: '100%' }}>
-                <Alert
+                <YakitAlert
                   type="info"
                   message={
                     <div>

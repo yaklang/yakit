@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
-import { Alert, Form, Space, Tag } from 'antd'
+import { Form, Space, Tag } from 'antd'
 import { info } from '@/utils/notification'
 import { ReloadOutlined } from '@ant-design/icons'
 import { InputItem } from '@/utils/inputUtil'
@@ -12,6 +12,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 
@@ -77,7 +78,7 @@ export const ConfigEngineProxy: React.FC<ConfigEngineProxyProp> = (props) => {
       wrapperCol={{ span: 14 }}
     >
       <Form.Item label={' '} colon={false}>
-        <Alert
+        <YakitAlert
           closable={false}
           type={'info'}
           message={

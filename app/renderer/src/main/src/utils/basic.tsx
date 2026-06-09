@@ -1,5 +1,5 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Alert, Divider, Form, Space } from 'antd'
+import { Divider, Form, Space } from 'antd'
 import { InputItem, SwitchItem } from './inputUtil'
 import { useGetState, useMemoizedFn } from 'ahooks'
 import { getRemoteValue, setRemoteValue } from './kv'
@@ -23,6 +23,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { RefreshIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitReverse, yakitScript, yakitStream } from '@/services/electronBridge'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 export const ConfigGlobalReverse = React.memo(() => {
   const { t, i18n } = useI18nNamespaces(['utils', 'yakitUi'])
@@ -224,7 +225,7 @@ export const ConfigGlobalReverse = React.memo(() => {
         />
         <Divider orientation={'left'}>{t('basic.ConfigGlobalReverse.publicReverseConfig')}</Divider>
         <Form.Item label={' '} colon={false}>
-          <Alert
+          <YakitAlert
             message={
               <Space direction={'vertical'}>
                 <div>{t('basic.ConfigGlobalReverse.runOnPublicServer')}</div>
