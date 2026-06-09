@@ -5,7 +5,6 @@ import styles from './NewCodecUIStore.module.scss'
 import classNames from 'classnames'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-// import { CheckboxValueType } from 'antd/lib/checkbox/Group'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { OutlineArrowscollapseIcon, OutlineArrowsexpandIcon, OutlineSearchIcon } from '@/assets/icon/outline'
 import { IMonacoEditor } from '@/utils/editors'
@@ -160,9 +159,7 @@ export interface NewCodecCheckUIProps {
   // 可供选择值
   options?: { label: string; value: string }[]
   // 选中值
-  // value?: CheckboxValueType[]
   value?: any[]
-  // onChange?: (v: CheckboxValueType[]) => void
   onChange?: (v: any[]) => void
 }
 export const NewCodecCheckUI: React.FC<NewCodecCheckUIProps> = (props) => {

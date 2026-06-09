@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Col, Row, Table, Tag, Tooltip, Checkbox } from 'antd'
+import { Col, Row, Table, Tag, Tooltip } from 'antd'
 import { YakitPort } from '../../components/yakitLogSchema'
 import { CopyableField, InputItem, OneLine } from '../../utils/inputUtil'
 import { formatTimestamp } from '../../utils/timeUtil'
@@ -12,6 +12,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
 import { setClipboardText } from '@/utils/clipboard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 export interface PortTableProp {
   data: YakitPort[]
   isSimple?: boolean
@@ -97,7 +98,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
             </Row>
             <Row>
               <Col span={12} style={{ display: 'flex', alignItems: 'center' }}>
-                <Checkbox
+                <YakitCheckbox
                   style={{ marginLeft: 8 }}
                   checked={checkedAll}
                   onChange={(e) => {
@@ -110,7 +111,7 @@ export const OpenPortTableViewer: React.FC<PortTableProp> = (props) => {
                   disabled={props.data.length === 0}
                 >
                   全选
-                </Checkbox>
+                </YakitCheckbox>
                 {selectedRowKeys.length > 0 && <Tag color="blue">已选{selectedRowKeys?.length}条</Tag>}
               </Col>
               <Col span={12} style={{ textAlign: 'right' }}>

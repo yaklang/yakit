@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Card, Col, Form, Pagination, Row, Space, Tree, Menu, Popover, Checkbox } from 'antd'
+import { Card, Col, Form, Pagination, Row, Space, Tree, Menu, Popover } from 'antd'
 import { AntDTreeData, ConvertWebsiteForestToTreeData, WebsiteForest } from '../../../components/WebsiteTree'
 import { HTTPFlowMiniTable } from '../../../components/HTTPFlowMiniTable'
 import { genDefaultPagination, QueryGeneralResponse } from '../../invoker/schema'
@@ -18,6 +18,7 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 
 export interface WebsiteTreeViewerProp {
   pageMode?: boolean
@@ -270,7 +271,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                       </Form>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Checkbox
+                      <YakitCheckbox
                         checked={checkedAll}
                         onChange={(e) => {
                           if (!e.target.checked) {
@@ -282,7 +283,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                         }}
                       >
                         全选
-                      </Checkbox>
+                      </YakitCheckbox>
                       {delUrlArr.length === 0 ? (
                         <YakitButton
                           type="outline2"
