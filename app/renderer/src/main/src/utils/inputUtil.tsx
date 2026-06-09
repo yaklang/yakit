@@ -17,7 +17,6 @@ import '@ant-design/compatible/assets/index.css'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import TimeRange, { TimePoint } from './timeRange'
 import { CheckboxOptionType } from 'antd/lib/checkbox'
-// import { CheckboxValueType } from 'antd/es/checkbox/Group'
 import './editableTagsGroup.css'
 import { randomColor } from './randomUtil'
 import { LiteralUnion } from 'antd/lib/_util/type'
@@ -631,10 +630,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = (p) => {
         disabled={p.disabled}
         options={p.data}
         value={p.value}
-        // onChange={(values: CheckboxValueType[]) => {
-        //   let a = values as string[]
-        //   p.setValue(a)
-        // }}
         onChange={(values: any[]) => {
           let a = values as string[]
           p.setValue(a)
