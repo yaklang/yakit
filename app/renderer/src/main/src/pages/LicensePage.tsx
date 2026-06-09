@@ -1,12 +1,13 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { failed, info, success, yakitNotify } from '@/utils/notification'
-import { Button, Col, Divider, Form, Modal, notification, Row, Spin } from 'antd'
+import { Col, Divider, Form, Modal, Row } from 'antd'
 import { InputItem } from '@/utils/inputUtil'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import './LicensePage.scss'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 const { ipcRenderer } = window.require('electron')
 const { Item } = Form
 
@@ -41,7 +42,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
   }, [])
 
   if (!licenseRequest) {
-    return <Spin className="license-spin-box" tip={t('LicensePage.loadingLicense')} />
+    return <YakitSpin wrapperClassName="license-spin-box" tip={t('LicensePage.loadingLicense')} />
   }
 
   const UploadLicense = () => {
@@ -51,7 +52,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
 
   return (
     <div style={{ height: '100%', overflow: 'auto' }}>
-      <Spin spinning={licensePageLoading}>
+      <YakitSpin spinning={licensePageLoading}>
         <Row style={{ paddingTop: 50 }}>
           <Col span={4} />
           <Col span={16}>
@@ -116,7 +117,7 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
           </Col>
           <Col span={4} />
         </Row>
-      </Spin>
+      </YakitSpin>
     </div>
   )
 }
