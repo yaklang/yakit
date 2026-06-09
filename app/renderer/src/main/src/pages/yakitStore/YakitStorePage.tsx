@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef, ReactNode } from 'react'
-import { Spin } from 'antd'
 import { QueryYakScriptRequest, QueryYakScriptsResponse, YakScript } from '../invoker/schema'
 import { failed } from '../../utils/notification'
 import { useStore } from '@/store'
@@ -7,6 +6,7 @@ import './YakitStorePage.scss'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
 import { setTimeout } from 'timers'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -176,7 +176,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
     update(parseInt(`${response.Pagination.Page}`) + 1, undefined)
   })
   return (
-    <Spin spinning={listBodyLoading}>
+    <YakitSpin spinning={listBodyLoading}>
       {(response.Data.length === 0 && emptyNode) || (
         <RollingLoadList<YakScript>
           targetRef={targetRef}
@@ -196,7 +196,7 @@ export const YakModuleList: React.FC<YakModuleListProp> = (props) => {
           )}
         />
       )}
-    </Spin>
+    </YakitSpin>
   )
 }
 
@@ -266,10 +266,10 @@ go func{
             yakit.Error("error: %v", err)
         }
     }
-    
+
     if !str.HasPrefix(gitUrl, "http") { return }
     yakit.Info("Start to load Yak Plugin!")
-    
+
     if proxy != "" {
         yakit.Info("proxy: %v", proxy)
         log.Info("proxy: %v", proxy)
@@ -296,24 +296,24 @@ go func {
             yakit.Error("error: %v", err)
         }
     }
-    
+
     if nucleiGitUrl == "" {
         yakit.Info("no nuclei git url input")
         return
     }
-    
+
     yakit.Info("Start to load Yaml PoC!")
     proxies = make([]string)
     if proxy != "" {
         proxies = append(proxies, proxy)
     }
-    
+
     path, err = nuclei.PullDatabase(nucleiGitUrl, proxies...)
     if err != nil {
         yakit.Error("pull nuclei templates failed: %s", err)
         die(err)
     }
-    
+
     err = nuclei.UpdateDatabase(path)
     if err != nil {
         yakit.Error("update database from %v failed: %v", path, dir)

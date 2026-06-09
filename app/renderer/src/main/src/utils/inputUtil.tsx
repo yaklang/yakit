@@ -6,12 +6,8 @@ import {
   Form,
   Input,
   InputNumber,
-  Popover,
   Radio,
   Row,
-  Select,
-  Spin,
-  Switch,
   Tag,
   Tooltip,
   Typography,
@@ -36,6 +32,7 @@ import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitA
 import { yakitFileSystem } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 type TooltipPlacement =
   | 'top'
@@ -702,7 +699,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
           return false
         }}
       >
-        <Spin spinning={uploadLoading}>
+        <YakitSpin spinning={uploadLoading}>
           {p.loadContent ? (
             <InputItem
               // label={p.label}
@@ -747,7 +744,7 @@ export const InputFileNameItem: React.FC<InputFileNameItemProps> = (p) => {
               }
             />
           )}
-        </Spin>
+        </YakitSpin>
       </Upload.Dragger>
     </Item>
   )

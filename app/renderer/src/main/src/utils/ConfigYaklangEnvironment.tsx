@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { showModal } from '@/utils/showModal'
-import { Alert, Form, Space, Spin, Table, Tag, Tooltip } from 'antd'
+import { Alert, Form, Space, Table, Tag, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { CopyableField, InputItem } from '@/utils/inputUtil'
 import { PlusOutlined, QuestionOutlined, ReloadOutlined } from '@ant-design/icons'
@@ -12,6 +12,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import i18n from '@/i18n/i18n'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 export interface ConfigYaklangEnvironmentProp {}
@@ -55,7 +56,7 @@ const NewEnvKeyForm: React.FC<NewEnvKeyFormProp> = (props) => {
       labelCol={{ span: 5 }}
       wrapperCol={{ span: 14 }}
     >
-      <Spin spinning={loading}>
+      <YakitSpin spinning={loading}>
         {props.verbose && (
           <Form.Item label={' '} colon={false}>
             <Alert type={'info'} message={props.verbose} />
@@ -77,7 +78,7 @@ const NewEnvKeyForm: React.FC<NewEnvKeyFormProp> = (props) => {
             {t('ConfigYaklangEnvironment.setEnvironmentVariable')}{' '}
           </YakitButton>
         </Form.Item>
-      </Spin>
+      </YakitSpin>
     </Form>
   )
 }

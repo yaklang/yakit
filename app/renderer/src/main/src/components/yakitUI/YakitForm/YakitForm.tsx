@@ -1,4 +1,4 @@
-import { Upload, Form, Spin, Divider, Tooltip } from 'antd'
+import { Upload, Form, Divider, Tooltip } from 'antd'
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FileDraggerProps,
@@ -326,7 +326,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
 
   const renderContent = useMemoizedFn((helpNode: ReactNode) => {
     return (
-      <Spin spinning={uploadLoading}>
+      <YakitSpin spinning={uploadLoading}>
         {renderContentValue()}
         <div
           className={classNames(styles['dragger-help-middle'], {
@@ -336,7 +336,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
         >
           {(showDefHelp && <>{helpNode}</>) || <></>}
         </div>
-      </Spin>
+      </YakitSpin>
     )
   })
 
