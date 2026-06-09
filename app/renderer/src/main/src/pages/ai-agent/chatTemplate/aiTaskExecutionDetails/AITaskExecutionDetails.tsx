@@ -12,6 +12,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AIDeleteNodeIcon, AIDoingNodeIcon, AIDoneNodeIcon, AIPendingNodeIcon, AISkippedNodeIcon } from './icon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { AIToDoListItem } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   return (
@@ -103,22 +104,12 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                   </YakitTag>
                 </div>
                 <div className={styles['todo-list']}>
-                  <div className={classNames(styles['todo-item'], styles['running'])}>
-                    <span className={styles['icon-placeholder']} />
-                    <span>这里是正在执行的任务</span>
-                  </div>
-                  <div className={classNames(styles['todo-item'], styles['running'])}>
-                    <span className={styles['icon-placeholder']} />
-                    <span>这里是正在执行，的任务这里是正在执行的任务这里是正在执行的任务</span>
-                  </div>
-                  <div className={styles['todo-item']}>
-                    <span className={styles['icon-placeholder']} />
-                    <span>这里是待执行的任务</span>
-                  </div>
-                  <div className={styles['todo-item']}>
-                    <span className={styles['icon-placeholder']} />
-                    <span>这里是待执行的任务这里是待执行的任务</span>
-                  </div>
+                  {Array.from({ length: 5 }).map((item, index) => (
+                    <AIToDoListItem
+                      key={index}
+                      item={{ content: 'DOING', created_at: 0, id: '1', status: 'DOING', updated_at: 1 }}
+                    />
+                  ))}
                 </div>
               </div>
               {/* 已结束 */}
@@ -130,22 +121,12 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                   </YakitTag>
                 </div>
                 <div className={styles['todo-list']}>
-                  <div className={classNames(styles['todo-item'], styles['running'])}>
-                    <span className={styles['icon-placeholder']} />
-                    <span>这里是正在执行的任务</span>
-                  </div>
-                  <div className={classNames(styles['todo-item'], styles['running'])}>
-                    <span className={styles['icon-placeholder']} />
-                    <span>这里是正在执行，的任务这里是正在执行的任务这里是正在执行的任务</span>
-                  </div>
-                  <div className={styles['todo-item']}>
-                    <span className={styles['icon-placeholder']} />
-                    <span>这里是待执行的任务</span>
-                  </div>
-                  <div className={styles['todo-item']}>
-                    <span className={styles['icon-placeholder']} />
-                    <span>这里是待执行的任务这里是待执行的任务</span>
-                  </div>
+                  {Array.from({ length: 15 }).map((item, index) => (
+                    <AIToDoListItem
+                      key={index}
+                      item={{ content: 'DONE', created_at: 0, id: '1', status: 'DONE', updated_at: 1 }}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
