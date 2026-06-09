@@ -55,7 +55,10 @@
     "readFileFailedWithError": "Unable to fetch the file content. Please try again later: {{error}}",
     "selectFile": "Please select a file",
     "singleSelectOnly": "Only single file selection is supported",
-    "historyResetFailed": "History reset failed: {{error}}"
+    "historyResetFailed": "History reset failed: {{error}}",
+    "aiCasualRejectAll": "Reject all",
+    "aiCasualAcceptAll": "Accept all",
+    "aiCasualReviewTitle": "Review AI code changes"
   },
   "AuditCode": {
     "loadMoreFailed": "Failed to load more data: {{error}}",

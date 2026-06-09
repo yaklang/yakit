@@ -1,4 +1,4 @@
-import React, { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Fragment, memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   Selection,
   CursorPosition,
@@ -75,6 +75,11 @@ import { openFolder } from '../RunnerFileTree/RunnerFileTree'
 import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isIRify } from '@/utils/envfile'
+import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
+import type { YakRunnerWorkbenchAiAttachRef } from '../YakRunnerAiAttachContext'
+import { useYakRunnerAiPage } from '../YakRunnerAiPageContext'
+import { registerYakRunnerPageApplyCodeFromAI, registerYakRunnerPageGetEditorCode } from '../yakRunnerAiCodeApplyBridge'
+import { YakRunnerCasualCodeReviewOverlay } from '../YakRunnerCasualCodeReviewOverlay'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 
 const { ipcRenderer } = window.require('electron')
@@ -982,8 +987,10 @@ const RunnerTabBarItem: React.FC<RunnerTabBarItemProps> = memo((props) => {
 const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const { tabsId } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner'])
-  const { areaInfo, activeFile } = useStore()
+  const { areaInfo, activeFile, fileTree } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
+  const yakRunnerAiPage = useYakRunnerAiPage()
+  const attachRef = useYakRunnerAiAttachRef()
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
   // 编辑器实例
   const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -1061,6 +1068,62 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     }
   })
 
+  const editorCodeRef = useRef('')
+  useEffect(() => {
+    editorCodeRef.current = editorInfo?.code ?? ''
+  }, [editorInfo?.code])
+
+  const isActiveEditorPane = Boolean(editorInfo?.isActive && activeFile?.path && editorInfo.path === activeFile.path)
+
+  const syncAttachRef = useMemoizedFn(() => {
+    if (!attachRef || !isActiveEditorPane || !editorInfo) return
+    const workspacePath = fileTree[0]?.path?.trim()
+    const editorFilePath = editorInfo.path?.trim()
+    const sel = selectionRef.current
+    let selectionAttach: YakRunnerWorkbenchAiAttachRef['selection'] | undefined
+    const hasSelection = sel && (sel.startLineNumber !== sel.endLineNumber || sel.startColumn !== sel.endColumn)
+    if (reqEditor && hasSelection && sel) {
+      const model = reqEditor.getModel()
+      const selectedText = model?.getValueInRange({
+        startLineNumber: sel.startLineNumber,
+        startColumn: sel.startColumn,
+        endLineNumber: sel.endLineNumber,
+        endColumn: sel.endColumn,
+      })
+      if (selectedText?.trim()) {
+        selectionAttach = {
+          path: editorFilePath || '',
+          startLine: sel.startLineNumber,
+          endLine: sel.endLineNumber,
+          language: editorInfo.language || 'yak',
+          content: selectedText,
+        }
+      }
+    }
+    attachRef.current = {
+      workspacePath,
+      editorFilePath,
+      selection: selectionAttach,
+    }
+  })
+
+  useEffect(() => {
+    syncAttachRef()
+  }, [editorInfo?.path, editorInfo?.code, fileTree, isActiveEditorPane, syncAttachRef])
+
+  useLayoutEffect(() => {
+    const pageId = yakRunnerAiPage?.pageId
+    if (!pageId || !isActiveEditorPane) return
+    const unregisterApply = registerYakRunnerPageApplyCodeFromAI(pageId, (content) => {
+      updateAreaInputInfo(content)
+    })
+    const unregisterGet = registerYakRunnerPageGetEditorCode(pageId, () => editorCodeRef.current)
+    return () => {
+      unregisterApply()
+      unregisterGet()
+    }
+  }, [yakRunnerAiPage?.pageId, isActiveEditorPane, updateAreaInputInfo])
+
   // 更新当前底部展示信息
   const updateBottomEditorDetails = useDebounceFn(
     async () => {
@@ -1118,8 +1181,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
       const { startLineNumber, startColumn, endLineNumber, endColumn } = selection
       // console.log("当前光标选中位置", startLineNumber, startColumn, endLineNumber, endColumn)
       selectionRef.current = { startLineNumber, startColumn, endLineNumber, endColumn }
-      // 选中时也调用了onDidChangeCursorPosition考虑优化掉重复调用
-      // updateBottomEditorDetails()
+      syncAttachRef()
     })
     // 监听编辑器是否聚焦
     const focusEditor = reqEditor.onDidFocusEditorWidget(() => {
@@ -1246,7 +1308,14 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   )
 
   return (
-    <div className={styles['runner-tab-pane']}>
+    <div className={classNames(styles['runner-tab-pane'], styles['runner-tab-pane-ai'])}>
+      {yakRunnerAiPage?.casualReviewHead && isActiveEditorPane ? (
+        <YakRunnerCasualCodeReviewOverlay
+          roundKey={yakRunnerAiPage.casualReviewHead.id}
+          payload={yakRunnerAiPage.casualReviewHead.payload}
+          onApplyRound={yakRunnerAiPage.onCasualRoundApplyMerged}
+        />
+      ) : null}
       {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
         <div className={styles['warning-editor']}>
           <Result

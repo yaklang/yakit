@@ -371,6 +371,9 @@
 .runner-tab-pane {
   height: 100%;
   background-color: var(--Colors-Use-Neutral-Bg);
+  &.runner-tab-pane-ai {
+    position: relative;
+  }
   .warning-editor {
     height: 100%;
     width: 100%;

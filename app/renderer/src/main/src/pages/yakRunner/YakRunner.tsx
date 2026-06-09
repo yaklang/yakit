@@ -1008,53 +1008,55 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
 
   return (
     <YakRunnerContext.Provider value={{ store, dispatcher }}>
-      <div className={styles['yak-runner']} ref={shortcutRef} tabIndex={0} id="yakit-runnner-main-box-id">
-        <div className={styles['yak-runner-body']}>
-          <YakitResizeBox
-            freeze={!isUnShow}
-            firstRatio={isUnShow ? '25px' : '300px'}
-            firstNodeStyle={isUnShow ? { padding: 0, maxWidth: 25 } : { padding: 0 }}
-            lineDirection="right"
-            firstMinSize={isUnShow ? 25 : 200}
-            lineStyle={{ width: 4 }}
-            secondMinSize={480}
-            firstNode={
-              <LeftSideBar
-                addFileTab={addFileTab}
-                isUnShow={isUnShow}
-                setIsUnShow={setIsUnShow}
-                active={active}
-                setActive={onActiveKey}
-              />
-            }
-            secondNodeStyle={
-              isUnShow ? { padding: 0, minWidth: 'calc(100% - 25px)' } : { overflow: 'unset', padding: 0 }
-            }
-            secondNode={
-              <div
-                className={classNames(styles['yak-runner-code'], {
-                  [styles['yak-runner-code-offset']]: !isUnShow,
-                })}
-              >
-                <div className={styles['code-container']}>{onFixedEditorDetails(onChangeArea())}</div>
-              </div>
-            }
-          />
-        </div>
+      <div className={styles['yak-runner-page-inner']}>
+        <div className={styles['yak-runner']} ref={shortcutRef} tabIndex={0} id="yakit-runnner-main-box-id">
+          <div className={styles['yak-runner-body']}>
+            <YakitResizeBox
+              freeze={!isUnShow}
+              firstRatio={isUnShow ? '25px' : '300px'}
+              firstNodeStyle={isUnShow ? { padding: 0, maxWidth: 25 } : { padding: 0 }}
+              lineDirection="right"
+              firstMinSize={isUnShow ? 25 : 200}
+              lineStyle={{ width: 4 }}
+              secondMinSize={480}
+              firstNode={
+                <LeftSideBar
+                  addFileTab={addFileTab}
+                  isUnShow={isUnShow}
+                  setIsUnShow={setIsUnShow}
+                  active={active}
+                  setActive={onActiveKey}
+                />
+              }
+              secondNodeStyle={
+                isUnShow ? { padding: 0, minWidth: 'calc(100% - 25px)' } : { overflow: 'unset', padding: 0 }
+              }
+              secondNode={
+                <div
+                  className={classNames(styles['yak-runner-code'], {
+                    [styles['yak-runner-code-offset']]: !isUnShow,
+                  })}
+                >
+                  <div className={styles['code-container']}>{onFixedEditorDetails(onChangeArea())}</div>
+                </div>
+              }
+            />
+          </div>
 
-        <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
+          <BottomSideBar onOpenEditorDetails={onOpenEditorDetails} />
+        </div>
+        {/* 文件过大提示框 */}
+        <YakitHint
+          visible={isShowFileHint}
+          title={t('YakRunner.fileTooLargeWarning')}
+          content={t('YakRunner.fileTooLargeContent')}
+          cancelButtonProps={{ style: { display: 'none' } }}
+          onOk={() => {
+            setShowFileHint(false)
+          }}
+          okButtonText={t('YakitButton.iKnow')}
+        />
       </div>
-      {/* 文件过大提示框 */}
-      <YakitHint
-        visible={isShowFileHint}
-        title={t('YakRunner.fileTooLargeWarning')}
-        content={t('YakRunner.fileTooLargeContent')}
-        cancelButtonProps={{ style: { display: 'none' } }}
-        onOk={() => {
-          setShowFileHint(false)
-        }}
-        okButtonText={t('YakitButton.iKnow')}
-      />
     </YakRunnerContext.Provider>
   )
 }

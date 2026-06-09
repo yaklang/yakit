@@ -161,7 +161,7 @@ import {
 } from './deprecatedMenu'
 import { SimpleDetect } from '@/pages/simpleDetect/SimpleDetect'
 import { YakitRoute } from '../enums/yakitRoute'
-import { YakRunner } from '@/pages/yakRunner/YakRunner'
+import { YakRunnerPage } from '@/pages/yakRunner/YakRunnerPage'
 import { IrifyAiCodeAuditPage } from '@/pages/irifyAiCodeAudit/IrifyAiCodeAuditPage'
 import { YakRunnerCodeScan } from '@/pages/yakRunnerCodeScan/YakRunnerCodeScan'
 import { YakRunnerAuditCode } from '@/pages/yakRunnerAuditCode/YakRunnerAuditCode'
@@ -861,7 +861,7 @@ export const RouteToPage: (props: PageItemProps) => ReactNode = (props) => {
     case YakitRoute.DB_CVE:
       return <CVEViewer />
     case YakitRoute.YakScript:
-      return <YakRunner />
+      return <YakRunnerPage />
     case YakitRoute.PayloadManager:
       return <NewPayload />
     case YakitRoute.ConfigManagement:

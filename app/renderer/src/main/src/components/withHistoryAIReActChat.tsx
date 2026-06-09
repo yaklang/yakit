@@ -34,6 +34,11 @@ import {
   enqueueWebFuzzerCasualReplaceReview,
   pushAIFuzzStatusRuntimeIdToWebFuzzerPage,
 } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
+import {
+  applyYaklangCodeChangeToYakRunnerPage,
+  enqueueYakRunnerCasualCodeReview,
+  getYakRunnerPageEditorCode,
+} from '@/pages/yakRunner/yakRunnerAiCodeApplyBridge'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
@@ -106,6 +111,7 @@ export interface HistoryAIReActChatProviderProps {
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
   httpFuzzTabPageId?: string
+  yakRunnerTabPageId?: string
   /**
    * 新建会话使用的默认 SessionID（写入 `setting.TimelineSessionID`）。
    * `useSessionId` 优先级：`activeChat.SessionID` > `setting.TimelineSessionID` > 入参 > 随机 UUID。
@@ -127,6 +133,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   focusModeLoop,
   children,
   httpFuzzTabPageId,
+  yakRunnerTabPageId,
   defaultTimelineSessionID,
   transformInputEvent,
 }: HistoryAIReActChatProviderProps) {
@@ -156,6 +163,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)
+  const initialEditorCodeInCasualRef = useRef<string | null>(null)
 
   const onHttpFuzzRequestChange = useMemoizedFn((data: AIAgentGrpcApi.HttpFuzzRequestChange) => {
     if (!httpFuzzTabPageId) return
@@ -175,6 +183,23 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     applyHttpFuzzRequestChangeToWebFuzzerPage(httpFuzzTabPageId, data)
   })
 
+  const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
+    if (!yakRunnerTabPageId) return
+
+    if (casualLoadingRef.current) {
+      const nextCode = data?.code?.content
+      if (nextCode != null && String(nextCode).trim() !== '' && initialEditorCodeInCasualRef.current != null) {
+        enqueueYakRunnerCasualCodeReview(yakRunnerTabPageId, {
+          original: initialEditorCodeInCasualRef.current ?? '',
+          change: data,
+        })
+        return
+      }
+    }
+
+    applyYaklangCodeChangeToYakRunnerPage(yakRunnerTabPageId, data)
+  })
+
   // AI `http_flow_fuzz_status` 推送：把每次最新的 `runtime_id` 静默推到当前 fuzzer 页签的处理器中。
   // 用户点击「查看详情」会显式再次推送并要求打开抽屉，所以这里不主动打开。
   const onGetHttpFlowFuzzStatus = useMemoizedFn((data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => {
@@ -187,26 +212,34 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const [chatIPCData, events] = useChatIPC({
     cacheDataStore,
     onHttpFuzzRequestChange,
+    onYaklangCodeChange,
     onGetHttpFlowFuzzStatus,
   })
 
   const { execute, casualLoading } = chatIPCData
 
   useEffect(() => {
-    if (!httpFuzzTabPageId) {
+    if (!httpFuzzTabPageId && !yakRunnerTabPageId) {
       casualLoadingRef.current = false
       initialRequestInCasualRef.current = null
+      initialEditorCodeInCasualRef.current = null
       return
     }
 
     if (!casualLoadingRef.current && casualLoading) {
-      initialRequestInCasualRef.current = getWebFuzzerPageRequestString(httpFuzzTabPageId) ?? ''
+      if (httpFuzzTabPageId) {
+        initialRequestInCasualRef.current = getWebFuzzerPageRequestString(httpFuzzTabPageId) ?? ''
+      }
+      if (yakRunnerTabPageId) {
+        initialEditorCodeInCasualRef.current = getYakRunnerPageEditorCode(yakRunnerTabPageId) ?? ''
+      }
     } else if (casualLoadingRef.current && !casualLoading) {
       initialRequestInCasualRef.current = null
+      initialEditorCodeInCasualRef.current = null
     }
 
     casualLoadingRef.current = casualLoading
-  }, [casualLoading, httpFuzzTabPageId])
+  }, [casualLoading, httpFuzzTabPageId, yakRunnerTabPageId])
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID

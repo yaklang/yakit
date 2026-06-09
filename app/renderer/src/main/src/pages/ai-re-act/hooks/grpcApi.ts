@@ -844,6 +844,18 @@ export declare namespace AIAgentGrpcApi {
     source_action: string
   }
 
+  export interface YaklangCodeChange {
+    op: string
+    code: {
+      content: string
+      path?: string
+      summary?: string
+      version: number
+    }
+    reason?: string
+    source_action?: string
+  }
+
   /** `http_flow_fuzz_status` 事件中 progress 内状态码聚合项（最多前 3 项） */
   export interface HttpFlowFuzzStatusStatusCount {
     code: number

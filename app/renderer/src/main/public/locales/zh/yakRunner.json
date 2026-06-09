@@ -55,7 +55,10 @@
     "readFileFailedWithError": "无法获取该文件内容，请检查后后重试: {{error}}",
     "selectFile": "请选择文件",
     "singleSelectOnly": "只支持单选文件",
-    "historyResetFailed": "历史记录异常，重置历史 {{error}}"
+    "historyResetFailed": "历史记录异常，重置历史 {{error}}",
+    "aiCasualRejectAll": "全部放弃",
+    "aiCasualAcceptAll": "全部应用",
+    "aiCasualReviewTitle": "审阅 AI 代码变更"
   },
   "AuditCode": {
     "loadMoreFailed": "加载更多数据错误：{{error}}",

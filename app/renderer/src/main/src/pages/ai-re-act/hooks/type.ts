@@ -177,6 +177,9 @@ export interface UseChatIPCParams {
   /** http_fuzz_request_change事件的回调 */
   onHttpFuzzRequestChange?: (data: AIAgentGrpcApi.HttpFuzzRequestChange) => void
 
+  /** yaklang_code_change 事件的回调 */
+  onYaklangCodeChange?: (data: AIAgentGrpcApi.YaklangCodeChange) => void
+
   /** http_flow_fuzz_status */
   onGetHttpFlowFuzzStatus?: (data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => void
 }

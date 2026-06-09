@@ -70,6 +70,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     onSyncIDChange,
     getSetting,
     onHttpFuzzRequestChange,
+    onYaklangCodeChange,
     onGetHttpFlowFuzzStatus,
   } = params || {}
 
@@ -729,6 +730,13 @@ function useChatIPC(params?: UseChatIPCParams) {
           // http_fuzz_request_change
           const httpFuzzRequest = JSON.parse(ipcContent) as AIAgentGrpcApi.HttpFuzzRequestChange
           onHttpFuzzRequestChange?.(httpFuzzRequest)
+          return
+        }
+
+        if (res.Type === 'yaklang_code_change') {
+          if (res.IsSync) return
+          const yaklangCodeChange = JSON.parse(ipcContent) as AIAgentGrpcApi.YaklangCodeChange
+          onYaklangCodeChange?.(yaklangCodeChange)
           return
         }
 
