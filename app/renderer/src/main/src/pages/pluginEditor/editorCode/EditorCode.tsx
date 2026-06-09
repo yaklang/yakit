@@ -605,9 +605,7 @@ export const EditorCode: React.FC<EditorCodeProps> = memo(
                     form={form}
                     onFinish={() => {}}
                     size="small"
-                    labelCol={{ span: 8 }}
-                    wrapperCol={{ span: 16 }}
-                    labelWrap={true}
+                    layout="vertical"
                     validateMessages={{
                       /* eslint-disable no-template-curly-in-string */
                       required: '${label} 是必填字段',
