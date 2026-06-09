@@ -35,7 +35,7 @@ import {
 } from '@/assets/newIcon'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Alert, Descriptions, Divider } from 'antd'
+import { Descriptions, Divider } from 'antd'
 import classNames from 'classnames'
 import { useCreation, useMap, useMemoizedFn, useSize, useUpdateEffect } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
@@ -75,6 +75,7 @@ import { Trans } from 'react-i18next'
 import i18n from '@/i18n/i18n'
 import { YakitSegmented } from '@/components/yakitUI/YakitSegmented/YakitSegmented'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -787,7 +788,7 @@ export const MatcherCollapse: React.FC<MatcherCollapseProps> = React.memo(
           [styles['matching-extraction-content-hidden']]: type !== 'matchers',
         })}
       >
-        <Alert
+        <YakitAlert
           message={
             pageType === 'webfuzzer'
               ? t('MatcherCollapse.multipleMatchersExplanation')
