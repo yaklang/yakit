@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakEditor } from '@/utils/editors'
-import { Alert, Form, Space } from 'antd'
+import { Form, Space } from 'antd'
 import { getDefaultSpaceEngineStartParams, SpaceEngineStartParams, SpaceEngineStatus } from '@/models/SpaceEngine'
 import { isRegisteredLanguage } from '@/utils/monacoSpec/spaceengine'
 import { DemoItemSwitch } from '@/demoComponents/itemSwitch/ItemSwitch'
@@ -16,6 +16,7 @@ import useHoldingIPCRStream from '@/hook/useHoldingIPCRStream'
 import { useMemoizedFn } from 'ahooks'
 import { PluginResultUI } from '@/pages/yakitStore/viewers/base'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 export interface SpaceEngineOperatorProp {}
 
@@ -131,13 +132,13 @@ export const SpaceEngineOperator: React.FC<SpaceEngineOperatorProp> = (props) =>
             }
           >
             {noEngine ? (
-              <Alert
+              <YakitAlert
                 type={'warning'}
                 description={t('playground.SpaceEngineOperator.setEngineFirst')}
                 style={{ marginBottom: 8 }}
               />
             ) : (
-              <Alert
+              <YakitAlert
                 type={statusFailed === '' ? 'success' : 'error'}
                 description={
                   <div>

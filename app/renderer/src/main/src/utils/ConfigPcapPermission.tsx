@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Alert, Form, Tooltip } from 'antd'
+import { Form, Tooltip } from 'antd'
 import { yakitNotify } from '@/utils/notification'
 import { getReleaseEditionName } from './envfile'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -8,6 +8,7 @@ import { QuestionMarkCircleIcon } from '@/assets/newIcon'
 import { yakitHost, yakitSystem } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import i18n from '@/i18n/i18n'
+import { YakitAlert } from '@/components/yakitUI/YakitAlert/YakitAlert'
 
 const tOriginal = i18n.getFixedT(null, 'utils')
 export interface ConfigPcapPermissionFormProp {
@@ -80,9 +81,9 @@ export const ConfigPcapPermissionForm: React.FC<ConfigPcapPermissionFormProp> = 
         }
       >
         {response.IsPrivileged ? (
-          <Alert type={'success'} message={`您可以正常试用 SYN 扫描等功能，无需修复`} />
+          <YakitAlert type={'success'} message={`您可以正常试用 SYN 扫描等功能，无需修复`} />
         ) : (
-          <Alert type={'warning'} message={`当前引擎不具有网卡操作权限`} />
+          <YakitAlert type={'warning'} message={`当前引擎不具有网卡操作权限`} />
         )}
       </Form.Item>
       {response.IsPrivileged ? (
