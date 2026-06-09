@@ -1,6 +1,5 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { failed, info, success } from '@/utils/notification'
-import { Spin } from 'antd'
 import LicensePage from './LicensePage'
 import { ConfigPrivateDomain } from '@/components/ConfigPrivateDomain/ConfigPrivateDomain'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
@@ -9,6 +8,7 @@ import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { SystemInfo } from '@/constants/hardware'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 const { ipcRenderer } = window.require('electron')
 
 /** 构建期配置：默认需要 License 验证；CI 可设为 false 跳过校验流程 */
@@ -98,7 +98,7 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     <>
       {loading ? (
         <div style={{ paddingTop: 10, textAlign: 'center' }}>
-          <Spin tip={t('EnterpriseJudgeLogin.verifyingLicense')}></Spin>
+          <YakitSpin tip={t('EnterpriseJudgeLogin.verifyingLicense')}></YakitSpin>
         </div>
       ) : (
         <>

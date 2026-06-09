@@ -12,12 +12,12 @@ import { ShortcutKeyListProps, ShortcutKeyProps } from './type'
 import classNames from 'classnames'
 import styles from './ShortcutKey.module.scss'
 import { isConflictToYakEditor } from '@/utils/globalShortcutKey/events/page/yakEditor'
-import { Spin } from 'antd'
 import { GetReleaseEdition } from '@/utils/envfile'
 import { GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { failed } from '@/utils/notification'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const getShortcutPageName = (page, t: TFunction) => {
   if (page === 'global') {
@@ -126,7 +126,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
 
   return (
     <div ref={wrapper} className={styles['shortcut-key']}>
-      <Spin spinning={loading}>
+      <YakitSpin spinning={loading}>
         <div className={styles['header']}>{getShortcutPageName(page, t)}</div>
 
         <div className={styles['shortcut-key-content']}>
@@ -186,7 +186,7 @@ export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
             </div>
           </div>
         </YakitModal>
-      </Spin>
+      </YakitSpin>
     </div>
   )
 })

@@ -2,7 +2,6 @@ import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { failed, info } from '@/utils/notification'
 import { saveABSFileToOpen } from '@/utils/openWebsite'
-import { Spin } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { MITMRuleExportProps, MITMRuleImportProps } from './MITMRuleConfigureType'
 import styles from './MITMRuleConfigure.module.scss'
@@ -12,6 +11,7 @@ import defaultConfig from './yakitMitmReplacerRulesConfig.json'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -44,11 +44,11 @@ export const MITMRuleExport: React.FC<MITMRuleExportProps> = (props) => {
       }}
       bodyStyle={{ padding: 0 }}
     >
-      <Spin spinning={loading}>
+      <YakitSpin spinning={loading}>
         <div style={{ height: 466 }}>
           <YakitEditor type={'json'} value={new Buffer(value).toString('utf8')} readOnly={true} />
         </div>
-      </Spin>
+      </YakitSpin>
     </YakitModal>
   )
 }
@@ -125,7 +125,7 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
       }
       bodyStyle={{ padding: 0 }}
     >
-      <Spin spinning={loading}>
+      <YakitSpin spinning={loading}>
         <div style={{ height: 466 }}>
           <YakitEditor
             type={'json'}
@@ -135,7 +135,7 @@ export const MITMRuleImport: React.FC<MITMRuleImportProps> = (props) => {
             }}
           />
         </div>
-      </Spin>
+      </YakitSpin>
     </YakitModal>
   )
 }
