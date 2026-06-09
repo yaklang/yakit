@@ -112,6 +112,9 @@
   }
   .ant-radio-checked .ant-radio-inner {
     border-color: var(--Colors-Use-Main-Border);
+    background-color: transparent;
+  }
+  .ant-radio-checked .ant-radio-inner::after {
     background-color: var(--Colors-Use-Main-Primary);
   }
   .ant-radio-checked::after {
@@ -129,7 +132,7 @@
     background-color: transparent;
   }
   .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner:after {
-    background-color: var(--Colors-Use-Neutral-Bg);
+    background-color: var(--Colors-Use-Neutral-Disable);
   }
 }
 .plugins-radio-wrapper.ant-radio-wrapper:hover .ant-radio:not(.ant-radio-disabled) .ant-radio-inner {

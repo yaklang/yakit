@@ -6,7 +6,6 @@ import { MultipleNodeInfo } from './MainOperatorContentType'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
 import { useMemoizedFn } from 'ahooks'
-// import { CheckboxValueType } from 'antd/es/checkbox/Group'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
@@ -44,9 +43,6 @@ const BatchAddNewGroup: React.FC<BatchAddNewGroupProp> = React.memo((props) => {
   })
 
   const [checkedTabs, setCheckedTabs] = useState<string[]>(initialValues.tabIds)
-  // const handleTabsChange = useMemoizedFn((checkedValues: CheckboxValueType[]) => {
-  //   setCheckedTabs([...checkedValues] as string[])
-  // })
   const handleTabsChange = useMemoizedFn((checkedValues: any[]) => {
     setCheckedTabs([...checkedValues] as string[])
   })

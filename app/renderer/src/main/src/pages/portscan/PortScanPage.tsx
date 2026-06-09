@@ -16,6 +16,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { HybridScanPluginConfig } from '@/models/HybridScan'
 import { StartBruteParams } from '../securityTool/newBrute/NewBruteType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 
 const { ipcRenderer } = window.require('electron')
 export const ScanPortTemplate = 'scan-port-template'
@@ -267,16 +268,16 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                     setPortroupValue(value)
                   }}
                 >
-                  <Checkbox value={'fast'}>{t('ScanPortForm.fast')}</Checkbox>
-                  <Checkbox value={'middle'}>{t('ScanPortForm.middle')}</Checkbox>
-                  <Checkbox value={'slow'}>{t('ScanPortForm.slow')}</Checkbox>
-                  <Checkbox value={'top100'}>{t('ScanPortForm.top100')}</Checkbox>
-                  <Checkbox value={'topweb'}>{t('ScanPortForm.topweb')}</Checkbox>
-                  <Checkbox value={'top1000+'}>{t('ScanPortForm.top1000')}</Checkbox>
-                  <Checkbox value={'topdb'}>{t('ScanPortForm.topdb')}</Checkbox>
-                  <Checkbox value={'topudp'}>{t('ScanPortForm.topudp')}</Checkbox>
-                  <Checkbox value={'defect'}>{t('ScanPortForm.defect')}</Checkbox>
-                  <Checkbox value={'all'}>{t('ScanPortForm.all')}</Checkbox>
+                  <YakitCheckbox value={'fast'}>{t('ScanPortForm.fast')}</YakitCheckbox>
+                  <YakitCheckbox value={'middle'}>{t('ScanPortForm.middle')}</YakitCheckbox>
+                  <YakitCheckbox value={'slow'}>{t('ScanPortForm.slow')}</YakitCheckbox>
+                  <YakitCheckbox value={'top100'}>{t('ScanPortForm.top100')}</YakitCheckbox>
+                  <YakitCheckbox value={'topweb'}>{t('ScanPortForm.topweb')}</YakitCheckbox>
+                  <YakitCheckbox value={'top1000+'}>{t('ScanPortForm.top1000')}</YakitCheckbox>
+                  <YakitCheckbox value={'topdb'}>{t('ScanPortForm.topdb')}</YakitCheckbox>
+                  <YakitCheckbox value={'topudp'}>{t('ScanPortForm.topudp')}</YakitCheckbox>
+                  <YakitCheckbox value={'defect'}>{t('ScanPortForm.defect')}</YakitCheckbox>
+                  <YakitCheckbox value={'all'}>{t('ScanPortForm.all')}</YakitCheckbox>
                 </Checkbox.Group>
               </Form.Item>
 
@@ -401,7 +402,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 }}
                 otherHelpNode={
                   <>
-                    <Checkbox
+                    <YakitCheckbox
                       checked={simpleParams.ReplaceDefaultUsernameDict}
                       style={{ marginLeft: 16 }}
                       onChange={() => {
@@ -412,7 +413,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                       }}
                     >
                       {t('ScanPortForm.useDefaultUserDict')}
-                    </Checkbox>
+                    </YakitCheckbox>
                     {simpleParams.UsernameFile && (
                       <div>
                         <PaperClipOutlined />
@@ -464,7 +465,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                 }}
                 otherHelpNode={
                   <>
-                    <Checkbox
+                    <YakitCheckbox
                       checked={simpleParams.ReplaceDefaultPasswordDict}
                       style={{ marginLeft: 16 }}
                       onChange={() => {
@@ -475,7 +476,7 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
                       }}
                     >
                       {t('ScanPortForm.useDefaultPasswordDict')}
-                    </Checkbox>
+                    </YakitCheckbox>
                     {simpleParams.PasswordFile && (
                       <div>
                         <PaperClipOutlined />
@@ -530,12 +531,12 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
           <Divider orientation={'left'}>{t('ScanPortForm.basicCrawlerConfig')}</Divider>
           <Form.Item label={t('ScanPortForm.crawlerSettings')} help={t('ScanPortForm.crawlerSettingsHelp')}>
             <Space>
-              <Checkbox
+              <YakitCheckbox
                 onChange={(e) => setParams({ ...params, EnableBasicCrawler: e.target.checked })}
                 checked={params.EnableBasicCrawler}
               >
                 {t('ScanPortForm.enableCrawler')}
-              </Checkbox>
+              </YakitCheckbox>
               <InputNumber
                 addonBefore={t('ScanPortForm.crawlerRequestCount')}
                 value={params.BasicCrawlerRequestMax}

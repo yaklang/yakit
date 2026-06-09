@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Checkbox, Form, Popover, Space, Tag, Tooltip, Typography } from 'antd'
+import { Form, Popover, Space, Tag, Tooltip, Typography } from 'antd'
 import {
   CaretRightOutlined,
   PoweroffOutlined,
@@ -23,6 +23,7 @@ import './HackerPlugin.scss'
 import { showModal } from '../../utils/showModal'
 import { xtermClear } from '../../utils/xtermUtils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 
 const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
@@ -141,7 +142,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
   const renderListItem = useMemoizedFn((info: YakScript) => {
     return (
       <div key={info.ScriptName} className="list-opt">
-        <Checkbox
+        <YakitCheckbox
           checked={selected.includes(info.ScriptName)}
           onChange={(r) => {
             if (r.target.checked) selectYakScript(info)
@@ -167,7 +168,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
               />
             )}
           </Space>
-        </Checkbox>
+        </YakitCheckbox>
         <div style={{ flex: 1, textAlign: 'right' }}>
           {info.Author && (
             <Tooltip title={info.Author}>
@@ -189,7 +190,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
           bodyStyle={{ padding: '0 4px', overflowY: 'hidden' }}
           extra={
             <Space>
-              {/* <Checkbox
+              {/* <YakitCheckbox
                                 indeterminate={indeterminate}
                                 onChange={(r) => {
                                     if (r.target.checked) {
@@ -202,7 +203,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                                 checked={checked}
                             >
                                 全选
-                            </Checkbox> */}
+                            </YakitCheckbox> */}
               <Popover
                 title={'额外设置'}
                 trigger={['click']}

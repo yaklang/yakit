@@ -5,6 +5,7 @@ import { YakScript } from '../../pages/invoker/schema'
 import { showModal } from '../../utils/showModal'
 
 import './yakitPlugin.css'
+import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
 
 export interface PluginListOptInfoProps {
   info: YakScript
@@ -19,7 +20,7 @@ export const PluginListOptInfo: React.FC<PluginListOptInfoProps> = React.memo((p
   return (
     <div className="plugin-list-opt-info-body">
       <div className="plugin-list-opt-info-checkbox">
-        <Checkbox
+        <YakitCheckbox
           className="opt-info-checkbox"
           checked={selected}
           disabled={disabled}
@@ -28,7 +29,7 @@ export const PluginListOptInfo: React.FC<PluginListOptInfoProps> = React.memo((p
           <div className="opt-info-checkbox-title" title={info.ScriptName}>
             {info.ScriptName}
           </div>
-        </Checkbox>
+        </YakitCheckbox>
       </div>
       <div className="plugin-list-opt-info-hint">
         {info.Help && (
