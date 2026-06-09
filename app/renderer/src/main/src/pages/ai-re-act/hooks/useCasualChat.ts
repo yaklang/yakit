@@ -22,7 +22,7 @@ import { DefaultTodoListCardData } from './defaultConstant'
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params: UseCasualChatParams) {
-  const { pushLog, getChatDataStore, getRequest, onReviewRelease } = params || {}
+  const { pushLog, getChatDataStore, getRequest, onReview, onReviewExtra, onReviewRelease } = params || {}
 
   const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
     pushLog && pushLog(logInfo)
@@ -128,6 +128,8 @@ function useCasualChat(params: UseCasualChatParams) {
           review: {
             handleGetReview,
             handleSetReview,
+            onReview,
+            onReviewExtra,
             onReviewRelease,
           },
         })

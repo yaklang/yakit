@@ -518,6 +518,8 @@ export declare namespace AIAgentGrpcApi {
     plans: { root_task: PlanTask }
     selectors: ReviewSelector[]
     plans_id: string
+    /** 为 true 时前端必须弹出人工审查，忽略 ReviewPolicy=yolo */
+    force_manual_review?: boolean
   }
   /** plan_task_analysis 计划树中任务的补充解释和工具数据 */
   export interface PlanReviewRequireExtra {

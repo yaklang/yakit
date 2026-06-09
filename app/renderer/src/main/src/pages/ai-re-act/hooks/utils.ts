@@ -110,6 +110,11 @@ export const handleFlatAITree = (sum: AIAgentGrpcApi.PlanTask[], task: AIAgentGr
   }
 }
 
+/** plan review 是否应强制人工审查（后端 ForceManualPlanReview） */
+export const isForceManualPlanReview = (data?: { force_manual_review?: boolean }) => {
+  return data?.force_manual_review === true
+}
+
 /** 是否自动执行review的continue操作 */
 export const isAutoExecuteReviewContinue = (params: { type?: string; getFunc?: () => AIAgentSetting | undefined }) => {
   try {

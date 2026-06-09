@@ -22,6 +22,7 @@ import {
   generateTaskId,
   genErrorLogData,
   isAutoExecuteReviewContinue,
+  isForceManualPlanReview,
   isToolStderrStream,
   isToolStdoutStream,
 } from './utils'
@@ -1403,7 +1404,8 @@ const handlePlanReview: AIMessageHandler = (request) => {
   }
 
   // 实时数据处理逻辑
-  const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
+  const isAuto =
+    isForceManualPlanReview(data) === false && isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
   if (isAuto) {
     chatData.data.selected = JSON.stringify({ suggestion: 'continue' })
     chatData.data.optionValue = 'continue'
@@ -1411,7 +1413,6 @@ const handlePlanReview: AIMessageHandler = (request) => {
   // 将数据存入hook里的缓存变量中
   review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
   if (info.chatType === 'task') {
-    // 该类型的实时数据只有任务规划才有
     if (isAuto) {
       setContentMap(chatData.id, cloneDeep(chatData))
       handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -1424,6 +1425,18 @@ const handlePlanReview: AIMessageHandler = (request) => {
       currentPlanReviewId = ''
       review?.onReview && review.onReview(cloneDeep(chatData))
     }
+  } else if (info.chatType === 'reAct') {
+    if (isAuto) {
+      setContentMap(chatData.id, cloneDeep(chatData))
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+        mapKey: chatData.id,
+        type: chatData.type,
+        chatType: chatData.chatType,
+      })
+    } else {
+      currentPlanReviewId = ''
+      review?.onReview && review.onReview(cloneDeep(chatData))
+    }
   }
 }
 /** Type='plan_task_analysis' plan-review的补充信息 */
@@ -1432,8 +1445,7 @@ const handlePlanReviewAnalysis: AIMessageHandler = (request) => {
   // 历史数据-该类型数据无用
   if (res.IsSync) return
   if (res.Type !== 'plan_task_analysis') return
-  // 该类型数据只有任务规划才有
-  if (info.chatType !== 'task') return
+  if (info.chatType !== 'task' && info.chatType !== 'reAct') return
 
   const reviewDetail = review?.handleGetReview?.()
   if (!reviewDetail || reviewDetail.type !== AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
@@ -1471,7 +1483,8 @@ const handlePlanReviewAnalysis: AIMessageHandler = (request) => {
   if (!reviewInfo.taskExtra) reviewInfo.taskExtra = new Map()
   reviewInfo.taskExtra.set(data.index, data)
 
-  const isAuto = isAutoExecuteReviewContinue({ getFunc: getRequest })
+  const reviewData = reviewDetail.data as AIAgentGrpcApi.PlanReviewRequire
+  const isAuto = isForceManualPlanReview(reviewData) === false && isAutoExecuteReviewContinue({ getFunc: getRequest })
   if (!isAuto && review?.onReviewExtra) review.onReviewExtra(cloneDeep(data))
 }
 
@@ -1920,6 +1933,8 @@ const handleReviewRelease: AIMessageHandler = (request) => {
       currentPlanReviewId = ''
       // review自动释放后，还需进行的额外逻辑处理
       review?.handleReviewDataToUI && review.handleReviewDataToUI(cloneDeep(chatData))
+    } else if (info.chatType === 'reAct' && chatData.type === AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
+      currentPlanReviewId = ''
     }
     setContentMap(chatData.id, cloneDeep(chatData))
     handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -1928,7 +1943,13 @@ const handleReviewRelease: AIMessageHandler = (request) => {
       chatType: chatData.chatType,
     })
 
-    const isAuto = isAutoExecuteReviewContinue({ type: chatData.type, getFunc: getRequest })
+    const planReviewData =
+      chatData.type === AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE
+        ? (chatData.data as AIAgentGrpcApi.PlanReviewRequire)
+        : undefined
+    const isAuto =
+      isForceManualPlanReview(planReviewData) === false &&
+      isAutoExecuteReviewContinue({ type: chatData.type, getFunc: getRequest })
     if (!isAuto) review?.onReviewRelease && review.onReviewRelease(data.id)
   }
 }

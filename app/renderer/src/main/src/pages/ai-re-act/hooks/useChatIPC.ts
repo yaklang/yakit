@@ -354,6 +354,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     pushLog: logEvents.pushLog,
     getChatDataStore,
     getRequest: fetchAIRequest,
+    onReview: onTaskReview,
+    onReviewExtra: onTaskReviewExtra,
     onReviewRelease: handleCasualReviewRelease,
   })
   // #endregion
