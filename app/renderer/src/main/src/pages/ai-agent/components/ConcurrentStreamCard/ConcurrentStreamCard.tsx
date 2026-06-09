@@ -11,7 +11,6 @@ import { openAIConcurrentStream } from '@/utils/openWebsite'
 import { CHILD_CONTENT_WINDOW_STYLE } from './constants'
 import { useVectorStripeBg } from './hooks/useVectorStripeBg'
 import { useConcurrentStreamCardStyle } from './hooks/useConcurrentStreamCardStyle'
-import { useConcurrentStreamPayload } from './hooks/useConcurrentStreamPayload'
 import ConcurrentStreamCardActions from './ConcurrentStreamCardActions/ConcurrentStreamCardActions'
 
 const { ipcRenderer } = window.require('electron')
@@ -35,9 +34,18 @@ const ConcurrentStreamCard: FC<{
 
   const presentation = useMemo(() => getAIStatusPresentation(raw?.data?.status), [raw?.data?.status])
   const vectorBg = useVectorStripeBg(presentation.stripeColor)
-  const childWindowPayload = useConcurrentStreamPayload({ session, token, chatType, elements })
 
-  // 非进行中任务自动收起
+  const framePayload = useMemo(
+    () => ({
+      session,
+      token,
+      chatType,
+      elements,
+      taskName: raw?.data?.taskName,
+    }),
+    [chatType, elements, raw?.data?.taskName, session, token],
+  )
+
   useEffect(() => {
     if (isChildWindow) return
     if (!raw?.data?.status) return
@@ -46,7 +54,6 @@ const ConcurrentStreamCard: FC<{
     }
   }, [collapseExpand, isChildWindow, raw?.data?.status])
 
-  // 监听子窗口刷新事件
   useEffect(() => {
     if (isChildWindow) return
 
@@ -58,7 +65,7 @@ const ConcurrentStreamCard: FC<{
         return
       }
 
-      openAIConcurrentStream(childWindowPayload)
+      openAIConcurrentStream(framePayload, { silent: true })
     }
 
     ipcRenderer.on('refresh-ai-concurrent-stream', handleRefresh)
@@ -66,16 +73,17 @@ const ConcurrentStreamCard: FC<{
     return () => {
       ipcRenderer.removeListener('refresh-ai-concurrent-stream', handleRefresh)
     }
-  }, [chatType, childWindowPayload, isChildWindow, session, token])
+  }, [chatType, framePayload, isChildWindow, session, token])
 
   const modalInfo = useMemo(() => {
-    return { time: raw?.Timestamp, title: raw?.AIModelName, icon: raw?.AIService }
-  }, [raw?.AIModelName, raw?.AIService, raw?.Timestamp])
+    if (!raw) return undefined
+    return { time: raw.Timestamp, title: raw.AIModelName, icon: raw.AIService }
+  }, [raw])
 
   const coordinatorId = fetchCurrentTaskPlanID()?.coordinatorId
   const taskIndex = raw?.data?.taskIndex
-  const showContinueTask = !!raw && !!coordinatorId && taskIndex != null
-  const showCancelTask = raw?.data?.status === 'processing' && taskIndex != null
+  const showContinueTask = !!raw && !!coordinatorId && taskIndex != null && !isChildWindow
+  const showCancelTask = raw?.data?.status === 'processing' && taskIndex != null && !isChildWindow
   const showStripeBg = !expand && !isChildWindow && !!vectorBg
 
   const cardStyle = useConcurrentStreamCardStyle({
@@ -94,7 +102,7 @@ const ConcurrentStreamCard: FC<{
       style={cardStyle}
       childStyle={isChildWindow ? CHILD_CONTENT_WINDOW_STYLE : undefined}
       onClickTitle={() => {
-        !isChildWindow && expandToggle()
+        if (!isChildWindow) expandToggle()
       }}
       titleMore={
         <ConcurrentStreamCardActions
@@ -102,7 +110,7 @@ const ConcurrentStreamCard: FC<{
           expand={expand}
           onExpandToggle={expandToggle}
           onRefresh={onRefresh}
-          childWindowPayload={childWindowPayload}
+          framePayload={framePayload}
           showContinueTask={showContinueTask}
           showCancelTask={showCancelTask}
           coordinatorId={coordinatorId}

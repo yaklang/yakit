@@ -8,8 +8,8 @@ import {
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
+import type { OpenAIConcurrentStreamPayload } from '@/utils/openWebsite'
 import { openAIConcurrentStream } from '@/utils/openWebsite'
-import type { ConcurrentStreamChildWindowPayload } from '../hooks/useConcurrentStreamPayload'
 import styles from '../ConcurrentStreamCard.module.scss'
 
 /** 卡片标题栏右侧操作区 */
@@ -18,7 +18,7 @@ interface ConcurrentStreamCardActionsProps {
   expand: boolean
   onExpandToggle: () => void
   onRefresh?: () => void
-  childWindowPayload: ConcurrentStreamChildWindowPayload
+  framePayload: OpenAIConcurrentStreamPayload
   showContinueTask: boolean
   showCancelTask: boolean
   coordinatorId?: string
@@ -30,7 +30,7 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   expand,
   onExpandToggle,
   onRefresh,
-  childWindowPayload,
+  framePayload,
   showContinueTask,
   showCancelTask,
   coordinatorId,
@@ -63,7 +63,7 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
           icon={<OutlineListOneIcon />}
           onClick={(e) => {
             e.stopPropagation()
-            openAIConcurrentStream(childWindowPayload)
+            openAIConcurrentStream(framePayload)
           }}
           className={styles['expand-btn']}
         />

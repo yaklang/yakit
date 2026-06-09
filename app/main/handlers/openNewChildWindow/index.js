@@ -60,12 +60,6 @@ module.exports = {
       }
     })
 
-    ipcMain.on('request-ai-concurrent-stream-refresh', (event, params) => {
-      if (childWindow && !childWindow.isDestroyed() && event.sender === childWindow.webContents) {
-        win.webContents.send('refresh-ai-concurrent-stream', params)
-      }
-    })
-
     ipcMain.handle('UIOperate-childWin', (e, params) => {
       switch (params) {
         case 'close':

@@ -4,8 +4,8 @@ import '@/theme/yakit.scss'
 import './styles/aux-base.scss'
 import AuxWindowApp from './AuxWindowApp'
 import { useTheme } from '@/hook/useTheme'
-import { applyAuxThemeColors } from '@/auxWindow/applyAuxThemeColors'
-import { registerAppSyncHandlers } from '@/auxWindow/messaging'
+import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
+import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 
 applyAuxThemeColors(useTheme.getState().theme)
 

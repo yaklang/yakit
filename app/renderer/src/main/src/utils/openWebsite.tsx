@@ -10,17 +10,13 @@ import {
 import i18n from '@/i18n/i18n'
 import { Risk } from '@/pages/risks/schema'
 import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
-import type { AIChatQSData, ReActChatElement, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
 import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
 const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])
 
-export interface OpenAIConcurrentStreamPayload {
-  session: string
-  token: string
-  chatType: ReActChatElement['chatType']
-  elements: ReActChatTaskElementSub[]
-  contentEntries: Array<[string, AIChatQSData]>
-}
+export type OpenAIConcurrentStreamPayload = ConcurrentStreamFramePayload
+
+const { ipcRenderer } = window.require('electron')
 
 const toWritableText = (data?: Uint8Array | string) => {
   if (typeof data === 'string') {
@@ -74,16 +70,20 @@ export const openSSARiskNewWindow = (data?: SSARisk) => {
   }
 }
 
-export const openAIConcurrentStream = (data: OpenAIConcurrentStreamPayload) => {
-  if (childWindowHash) {
-    minWinSendToChildWin({ type: 'openAIConcurrentStream', data })
-  } else {
+export interface OpenAIConcurrentStreamOptions {
+  /** 刷新/推送更新时不弹「新窗口打开中」 */
+  silent?: boolean
+}
+
+/** 打开并发流 aux 子窗，创建时传入 elements 等帧数据 */
+export const openAIConcurrentStream = (
+  data: OpenAIConcurrentStreamPayload,
+  options?: OpenAIConcurrentStreamOptions,
+) => {
+  if (!options?.silent) {
     yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
-    yakitWindow.openChildWindow({
-      type: 'openAIConcurrentStream',
-      data,
-    })
   }
+  return ipcRenderer.invoke('open-ai-concurrent-stream-window', data)
 }
 
 export const minWinSendToChildWin = (params) => {

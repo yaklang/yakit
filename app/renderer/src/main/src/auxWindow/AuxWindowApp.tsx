@@ -2,21 +2,24 @@ import React, { useEffect } from 'react'
 import styles from './AuxWindowApp.module.scss'
 import EngineConsole from '@/auxWindow/pages/EngineConsole/EngineConsole'
 import AiChatLog from '@/auxWindow/pages/AiChatLog/AiChatLog'
+import AIConcurrentStream from '@/auxWindow/pages/AIConcurrentStream/AIConcurrentStream'
+import { AuxWindowRoute } from '@/auxWindow/routes/routes'
 
 const getQueryParam = (param: string) => new URLSearchParams(window.location.search).get(param)
-
-type AuxWindowRoute = 'engine-console' | 'ai-chat-log'
 
 interface AuxWindowPageProps {
   windowId: string
 }
 
 const auxRouteMap: Record<AuxWindowRoute, React.FC<AuxWindowPageProps>> = {
-  'engine-console': EngineConsole,
-  'ai-chat-log': AiChatLog,
+  [AuxWindowRoute.EngineConsole]: EngineConsole,
+  [AuxWindowRoute.AiChatLog]: AiChatLog,
+  [AuxWindowRoute.AiConcurrentStream]: AIConcurrentStream,
 }
 
-const isAuxWindowRoute = (route: string): route is AuxWindowRoute => route in auxRouteMap
+const isAuxWindowRoute = (route: string): route is AuxWindowRoute => {
+  return Object.values(AuxWindowRoute).includes(route as AuxWindowRoute)
+}
 
 const AuxWindowApp: React.FC = () => {
   const windowId = getQueryParam('windowId') || ''

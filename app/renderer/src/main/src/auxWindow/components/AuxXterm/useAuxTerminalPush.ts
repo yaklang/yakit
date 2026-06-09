@@ -1,6 +1,6 @@
 import { type RefObject, useEffect } from 'react'
 import { yakitAuxWindow } from '@/services/electronBridge'
-import { AUX_XTERM_THEME_SYNC } from '@/auxWindow/applyAuxThemeColors'
+import { AUX_XTERM_THEME_SYNC } from '@/auxWindow/utils/applyAuxThemeColors'
 import { getXtermTheme } from './xtermTheme'
 import type { AuxXtermRef } from './AuxXterm'
 

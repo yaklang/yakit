@@ -144,7 +144,7 @@ import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
 import { SystemInfo } from '@/constants/hardware'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { cloneDeep } from 'lodash'
-import { syncAppSettings } from '@/auxWindow/messaging'
+import { syncAppSettings } from '@/auxWindow/utils/messaging'
 import {
   yakitApp,
   yakitEngine,

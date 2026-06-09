@@ -1,7 +1,7 @@
 import { yakitApp } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 import { useTheme, type Theme } from '@/hook/useTheme'
-import { applyAuxThemeColors } from '@/auxWindow/applyAuxThemeColors'
+import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
 
 export type AppSyncType = 'theme' | 'i18n'
 

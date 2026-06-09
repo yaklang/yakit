@@ -3,6 +3,7 @@ const { AuxWindowManager } = require('./AuxWindowManager')
 const { CHANNEL_APP_SYNC } = require('./channels')
 const openConsoleNewWin = require('./openConsoleNewWin')
 const openAiChatLog = require('./openAiChatLog')
+const openAIConcurrentStream = require('./openAIConcurrentStream')
 
 let auxWindowManager = null
 /** @type {{ engineLinkWin?: import('electron').BrowserWindow, safeSend?: Function } | null} */
@@ -36,6 +37,7 @@ module.exports = {
     auxWindowManager = manager
 
     const terminalHandlers = [openConsoleNewWin.register(manager, win), openAiChatLog.register(manager, win)]
+    openAIConcurrentStream.register(manager, win)
 
     ipcMain.on('forward-xterm-theme', (_event, theme) => {
       terminalHandlers.forEach((handler) => {
