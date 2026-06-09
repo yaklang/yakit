@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import { Empty, message, Tree, Upload, Space } from 'antd'
+import { Tree, Upload, Space } from 'antd'
 import { YakEditor } from '@/utils/editors'
 import { useMemoizedFn } from 'ahooks'
 import { loadFromYakURLRaw } from '@/pages/yakURLTree/netif'
@@ -11,6 +11,7 @@ import { failed, yakitInfo } from '@/utils/notification'
 import { InboxOutlined } from '@ant-design/icons'
 import { TreeNode } from '@/components/WebTree/WebTree'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 
 const { DirectoryTree } = Tree
 const { ipcRenderer } = window.require('electron')
@@ -254,7 +255,7 @@ export const JavaDecompilerOperator: React.FC<JavaDecompilerOperatorProp> = (pro
             {decompileContent ? (
               <YakEditor type="java" value={decompileContent} readOnly={true} />
             ) : (
-              <Empty
+              <YakitEmpty
                 description="Select a .class file to view decompiled code"
                 style={{
                   height: '100%',

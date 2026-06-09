@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Empty, Form, Space, Steps } from 'antd'
+import { Form, Space, Steps } from 'antd'
 import { randomString } from '@/utils/randomUtil'
 import { ExecuteChaosMakerRuleRequest } from '@/pages/chaosmaker/ChaosMakerOperators'
 import { InputInteger, SelectOne } from '@/utils/inputUtil'
@@ -8,9 +8,9 @@ import './ChaosMakerRunningSteps.scss'
 import useHoldingIPCRStream from '@/hook/useHoldingIPCRStream'
 import { AutoCard } from '@/components/AutoCard'
 import { PluginResultUI, StatusCardProps } from '@/pages/yakitStore/viewers/base'
-import { StatisticCard } from '@ant-design/pro-card'
 import { StatusCardViewer } from '@/pages/mitm/MITMYakScriptLoader'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
+import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 
 export interface ChaosMakerRunningStepsProp {
   params?: ExecuteChaosMakerRuleRequest
@@ -104,7 +104,7 @@ export const ChaosMakerRunningSteps: React.FC<ChaosMakerRunningStepsProp> = (pro
           />
         </Steps>
       )}
-      {!params && <Empty description={'请您选中你想要执行的剧本规则'} />}
+      {!params && <YakitEmpty description={'请您选中你想要执行的剧本规则'} />}
       {step === 0 && (
         <Form
           labelCol={{ span: 5 }}

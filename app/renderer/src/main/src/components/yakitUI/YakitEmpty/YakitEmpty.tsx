@@ -20,15 +20,13 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
   return (
     <Empty
       image={<img style={{ userSelect: 'none' }} draggable={false} src={emptyImageTarget} alt="" />}
-      imageStyle={
-        props.imageStyle
-          ? props.imageStyle
-          : {
-              height: 200,
-              width: 200,
-              margin: '24px auto',
-            }
-      }
+      styles={{
+        image: props.imageStyle || {
+          height: 200,
+          width: 200,
+          margin: '24px auto',
+        },
+      }}
       {...restProps}
       description={
         props.descriptionReactNode ? (
