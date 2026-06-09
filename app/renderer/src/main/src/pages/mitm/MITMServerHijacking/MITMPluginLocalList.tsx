@@ -5,7 +5,7 @@ import { failed, yakitNotify } from '@/utils/notification'
 import style from '../MITMPage.module.scss'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
-import { Divider, Dropdown, Empty, Progress } from 'antd'
+import { Divider, Dropdown, Progress } from 'antd'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import classNames from 'classnames'
 import {
@@ -1101,7 +1101,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
 
   return (
     <div className={style['plugin-group-list']}>
-      {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />}
+      {pugGroup.length === 0 && <YakitEmpty description="暂无数据" />}
       {pugGroup.map((item) => (
         <div
           className={classNames(style['plugin-group-item'], {
