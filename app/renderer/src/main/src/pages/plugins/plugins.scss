@@ -112,12 +112,10 @@
   }
   .ant-radio-checked .ant-radio-inner {
     border-color: var(--Colors-Use-Main-Border);
+    background-color: var(--Colors-Use-Main-Primary);
   }
   .ant-radio-checked::after {
     border-color: var(--Colors-Use-Main-Border);
-  }
-  .ant-radio-inner::after {
-    background-color: var(--Colors-Use-Main-Border);
   }
   .ant-radio-input:focus + .ant-radio-inner {
     box-shadow: 0 0 0 3px var(--Colors-Use-Main-Focus);
@@ -133,6 +131,9 @@
   .ant-radio.ant-radio-checked.ant-radio-disabled .ant-radio-inner:after {
     background-color: var(--Colors-Use-Neutral-Bg);
   }
+}
+.plugins-radio-wrapper.ant-radio-wrapper:hover .ant-radio:not(.ant-radio-disabled) .ant-radio-inner {
+  border-color: var(--Colors-Use-Main-Border);
 }
 
 // -------------------- 列表上方的header右侧样式 --------------------
