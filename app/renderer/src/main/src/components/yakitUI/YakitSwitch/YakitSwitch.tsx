@@ -4,7 +4,6 @@ import { YakitSwitchProps } from './YakitSwitchType'
 import styles from './YakitSwitch.module.scss'
 import classNames from 'classnames'
 import { CheckIcon, RemoveIcon } from '@/assets/newIcon'
-import './yakitSwitchAnimation.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 /**

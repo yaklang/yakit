@@ -3,7 +3,6 @@ import React from 'react'
 import { YakitSwitchProps } from './YakitSwitchType'
 import styles from './YakitSwitch.module.scss'
 import classNames from 'classnames'
-import './yakitSwitchAnimation.scss'
 import { CheckIcon, RemoveIcon } from '@/assets/newIcon'
 
 /**
