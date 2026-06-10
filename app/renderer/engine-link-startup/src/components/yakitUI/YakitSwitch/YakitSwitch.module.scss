@@ -13,22 +13,14 @@
   padding: 3px;
 
   :global {
-    [ant-click-animating-without-extra-node='true']::after,
-    .ant-click-animating-node {
-      box-shadow: none;
-      opacity: 1;
-      animation:
-        yakitFadeEffectSwitch 1s cubic-bezier(0.08, 0.82, 0.17, 1),
-        yakitWaveEffectSwitch 0.4s cubic-bezier(0.08, 0.82, 0.17, 1);
-    }
 
     .ant-switch {
       background: var(--switch-background-close-color);
       border: 1px solid transparent;
     }
 
-    .ant-switch-checked:focus {
-      box-shadow: 0 0 0 2px var(--switch-box-shadow-color);
+    .ant-switch:hover:not(.ant-switch-disabled) {
+      background: var(--switch-background-close-color);
     }
 
     .ant-switch-checked {
@@ -36,14 +28,18 @@
       background: var(--switch-background-color);
     }
 
-    .ant-switch:focus:hover {
-      box-shadow: none;
+    .ant-switch.ant-switch-checked:hover:not(.ant-switch-disabled) {
+      background-color: var(--Colors-Use-Main-Primary);
     }
 
     .ant-switch-disabled {
       background: var(--switch-background-disable-color);
       border: 1px solid var(--switch-border-close-color);
       opacity: 1;
+    }
+
+    .ant-switch .ant-switch-handle::before {
+      box-shadow: none;
     }
 
     .ant-switch-handle {
@@ -57,14 +53,6 @@
   align-items: center;
   border-radius: 10px;
   padding: 2px;
-
-  :global {
-    .ant-switch-checked {
-      .ant-switch-inner {
-        margin: 0 0 0 2px;
-      }
-    }
-  }
 }
 
 // ========================== max-large ==========================
@@ -74,11 +62,7 @@
   :global {
     .ant-switch-checked {
       .ant-switch-handle {
-        left: calc(100% - 18px - 2px);
-      }
-
-      .ant-switch-inner {
-        margin: 0 4px 0 5px;
+        inset-inline-start: calc(100% - 20px);
       }
     }
   }
@@ -104,14 +88,11 @@
   :global {
     .ant-switch-checked {
       .ant-switch-handle {
-        left: calc(100% - 16px - 2px);
+        inset-inline-start: calc(100% - 18px);
+
         &::before {
           background-color: var(--Colors-Use-Main-On-Primary);
         }
-      }
-
-      .ant-switch-inner {
-        margin: 0 4px 0 3px;
       }
     }
   }
@@ -134,7 +115,6 @@
       color: var(--switch-inner-circular-background-color);
       height: 14px;
       line-height: 14px;
-      margin: 0 0 0 18px;
       display: flex;
       align-items: center;
     }
@@ -156,11 +136,7 @@
   :global {
     .ant-switch-checked {
       .ant-switch-handle {
-        left: calc(100% - 12px - 2px);
-      }
-
-      .ant-switch-inner {
-        margin: 0 4px 0 1px;
+        inset-inline-start: calc(100% - 14px);
       }
     }
   }
@@ -183,7 +159,6 @@
       color: var(--switch-inner-circular-background-color);
       height: 12px;
       line-height: 12px;
-      margin: 0 0 0 13px;
       display: flex;
       align-items: center;
     }
@@ -205,11 +180,7 @@
   :global {
     .ant-switch-checked {
       .ant-switch-handle {
-        left: calc(100% - 8px - 2px);
-      }
-
-      .ant-switch-inner {
-        margin: 0 4px 0 1px;
+        inset-inline-start: calc(100% - 10px);
       }
     }
   }
