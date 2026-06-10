@@ -105,6 +105,7 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = ({ windowId }) => 
         <div className={styles.wrapper}>
           <Suspense fallback={<ConcurrentStreamSkeleton variant="card" />}>
             <ConcurrentStreamCard
+              key={`${frame.session}:${frame.token}:${frame.chatType}`}
               isChildWindow
               onRefresh={requestRefresh}
               session={frame.session}

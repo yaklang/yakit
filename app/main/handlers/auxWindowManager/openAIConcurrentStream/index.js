@@ -3,9 +3,11 @@ const crypto = require('crypto')
 
 const ROUTE = 'ai-concurrent-stream'
 const FETCH_CONTENTS = 'fetch-concurrent-stream-contents'
+/** 全局单例：多个并发卡片共用一个 aux 窗，切换时替换内容 */
+const SINGLETON_KEY = 'ai-concurrent-stream'
 
-function buildSingletonKey(data) {
-  return `ai-concurrent-stream:${data.session}:${data.token}:${data.chatType}`
+function buildSingletonKey(_data) {
+  return SINGLETON_KEY
 }
 
 /**

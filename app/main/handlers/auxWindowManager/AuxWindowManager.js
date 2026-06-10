@@ -123,6 +123,10 @@ class AuxWindowManager {
     const existing = this.findBySingletonKey(singletonKey)
     if (existing) {
       const { windowId, entry } = existing
+      if (title) {
+        entry.meta.title = title
+        entry.win.setTitle(title)
+      }
       entry.win.focus()
       if (payload && Object.keys(payload).length > 0) {
         entry.win.webContents.send(CHANNEL_PUSH, { windowId, route: entry.meta.route, payload })
