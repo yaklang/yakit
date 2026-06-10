@@ -18,8 +18,12 @@ export interface AICodeBlockCommandParams {
   range: AICodeRefRange | null
   /** 文件名 */
   name: string
+  /** 代码语言 */
+  language: string
   /** 文件路径 */
-  path?: string
+  path: string
+  /** 根目录路径 */
+  rootPath: string
   lock?: boolean
 }
 
@@ -28,6 +32,8 @@ const aiCodeBlockCustomAttr = $nodeAttr(aiCodeBlockCustomId, () => ({
   'data-name': '',
   'data-content': '',
   'data-path': '',
+  'data-root-path': '',
+  'data-language': '',
   'data-start-line-number': '',
   'data-start-column': '',
   'data-end-line-number': '',
@@ -60,6 +66,8 @@ export const aiCodeBlockCustomSchema = $nodeSchema(aiCodeBlockCustomId, (ctx) =>
           name: dom.getAttribute('data-name') || '',
           content: dom.getAttribute('data-content') || '',
           path: dom.getAttribute('data-path') || '',
+          rootPath: dom.getAttribute('data-root-path') || '',
+          language: dom.getAttribute('data-language') || '',
           startLineNumber: Number(dom.getAttribute('data-start-line-number') || 0),
           startColumn: Number(dom.getAttribute('data-start-column') || 0),
           endLineNumber: Number(dom.getAttribute('data-end-line-number') || 0),
@@ -77,6 +85,8 @@ export const aiCodeBlockCustomSchema = $nodeSchema(aiCodeBlockCustomId, (ctx) =>
         'data-name': node.attrs.name,
         'data-content': node.attrs.content,
         'data-path': node.attrs.path,
+        'data-root-path': node.attrs.rootPath,
+        'data-language': node.attrs.language,
         'data-start-line-number': String(node.attrs.startLineNumber || 0),
         'data-start-column': String(node.attrs.startColumn || 0),
         'data-end-line-number': String(node.attrs.endLineNumber || 0),
@@ -112,6 +122,8 @@ export const aiCodeBlockCustomSchema = $nodeSchema(aiCodeBlockCustomId, (ctx) =>
             name: node.attrs.name,
             content: node.attrs.content,
             path: node.attrs.path,
+            rootPath: node.attrs.rootPath,
+            language: node.attrs.language,
             startLineNumber: node.attrs.startLineNumber,
             startColumn: node.attrs.startColumn,
             endLineNumber: node.attrs.endLineNumber,
@@ -126,6 +138,8 @@ export const aiCodeBlockCustomSchema = $nodeSchema(aiCodeBlockCustomId, (ctx) =>
     name: { default: '' },
     content: { default: '' },
     path: { default: '' },
+    rootPath: { default: '' },
+    language: { default: '' },
     startLineNumber: { default: 0 },
     startColumn: { default: 0 },
     endLineNumber: { default: 0 },
@@ -140,7 +154,7 @@ export const aiCodeBlockCommand = $command<AICodeBlockCommandParams, string>(
     if (!params) return false
     const { selection, tr } = state
     if (!(selection instanceof TextSelection)) return false
-    const { content, range, name, path, lock } = params
+    const { content, range, name, path, rootPath, language, lock } = params
     const displayText = buildCodeRefDisplayText(name, range)
     const fragment = state.schema.text(displayText)
     dispatch?.(
@@ -152,6 +166,8 @@ export const aiCodeBlockCommand = $command<AICodeBlockCommandParams, string>(
               name,
               content,
               path: path || '',
+              rootPath: rootPath || '',
+              language: language || '',
               startLineNumber: range?.startLineNumber ?? 0,
               startColumn: range?.startColumn ?? 0,
               endLineNumber: range?.endLineNumber ?? 0,

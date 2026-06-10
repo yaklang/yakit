@@ -51,7 +51,9 @@ export const extractDataWithMilkdown = (editor: EditorMilkdownProps) => {
             content: attrs.content || '',
             range,
             name: attrs.name || '',
+            language: attrs.language || '',
             path: attrs.path,
+            rootPath: attrs.rootPath || '',
           })
         }
         if (node?.type?.name === state?.schema?.nodes?.image?.name) {

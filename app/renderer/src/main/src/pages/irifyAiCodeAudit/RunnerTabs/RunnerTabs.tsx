@@ -30,7 +30,15 @@ import {
 import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
 import { YakRunnerOpenFolderIcon } from '../../yakRunner/icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { useCreation, useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
+import {
+  useCreation,
+  useDebounceFn,
+  useLongPress,
+  useMemoizedFn,
+  useSize,
+  useThrottleFn,
+  useUpdateEffect,
+} from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
 import {
@@ -1274,7 +1282,10 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
               }
             : null,
           name,
-          path: editorInfo?.path,
+          language: editorInfo.language || '',
+          path: editorInfo.path,
+          // irify 由于在启动对话已给了根目录路径 此处无需另外给予
+          rootPath: '',
         },
       }),
     )

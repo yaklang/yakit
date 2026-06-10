@@ -83,6 +83,7 @@ import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsTyp
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
+import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -978,6 +979,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const { t, i18n } = useI18nNamespaces(['yakRunner'])
   const { areaInfo, activeFile } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
+  const yakRunnerAiAttachRef = useYakRunnerAiAttachRef()
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
   // 编辑器实例
   const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -1260,7 +1262,9 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
               }
             : null,
           name,
+          language: editorInfo.language || '',
           path: editorInfo?.path,
+          rootPath: yakRunnerAiAttachRef?.current?.projectRootAbsPath || '',
         },
       }),
     )
