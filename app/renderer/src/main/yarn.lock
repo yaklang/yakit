@@ -71,7 +71,7 @@
     "@babel/runtime" "^7.23.2"
     rc-util "^5.38.0"
 
-"@ant-design/cssinjs@^1.21.0", "@ant-design/cssinjs@^1.21.1", "@ant-design/cssinjs@^1.23.0":
+"@ant-design/cssinjs@^1.21.0", "@ant-design/cssinjs@^1.23.0":
   version "1.24.0"
   resolved "https://registry.npmmirror.com/@ant-design/cssinjs/-/cssinjs-1.24.0.tgz#7db091f03f189abc77a13cbd27a2293802cd7285"
   integrity sha512-K4cYrJBsgvL+IoozUXYjbT6LHHNt+19a9zkvpBPxLjFHas1UpPM2A5MlhROb0BT8N8WoavM5VsP9MeSeNK/3mg==
@@ -112,7 +112,7 @@
     classnames "^2.2.6"
     rc-util "^5.9.4"
 
-"@ant-design/icons@^5.0.0", "@ant-design/icons@^5.6.1":
+"@ant-design/icons@^5.6.1":
   version "5.6.1"
   resolved "https://registry.npmmirror.com/@ant-design/icons/-/icons-5.6.1.tgz#7290fcdc3d96ff3fca793ed399053cd29ad5dbd3"
   integrity sha512-0/xS39c91WjPAZOWsvi1//zjx6kAp4kxWwctR6kuU6p133w8RU0D2dSCvZC19uQyharg/sAvYxGYWl01BbZZfg==
@@ -136,51 +136,6 @@
     omit.js "^2.0.2"
     rc-util "^5.4.0"
 
-"@ant-design/pro-card@2.10.0":
-  version "2.10.0"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-card/-/pro-card-2.10.0.tgz#c1e2bcab58502df174a2b3e871925a1f70dc6434"
-  integrity sha512-sLONn1odmE0Wkbse8pol4WiaEzBV8JU5s3FAMflPpycfUcbSaa1ktXzQ7LCo2SAvOS7gkfmpFjBPtrfbigKh4g==
-  dependencies:
-    "@ant-design/cssinjs" "^1.21.1"
-    "@ant-design/icons" "^5.0.0"
-    "@ant-design/pro-provider" "2.16.2"
-    "@ant-design/pro-utils" "2.18.0"
-    "@babel/runtime" "^7.18.0"
-    classnames "^2.3.2"
-    rc-resize-observer "^1.0.0"
-    rc-util "^5.4.0"
-
-"@ant-design/pro-components@^2.8.10":
-  version "2.8.10"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-components/-/pro-components-2.8.10.tgz#6e5037cd58f1aad3ada2755ac84a925bf7fbfa65"
-  integrity sha512-QHnnIXdmC5GTAtm6i8eeJy5yT9npPlFyxpDm+duiDrTRKRFaAQBduArxlH3DA/hoRCCypzPONxfK9BQNIhIyZA==
-  dependencies:
-    "@ant-design/pro-card" "2.10.0"
-    "@ant-design/pro-descriptions" "2.6.10"
-    "@ant-design/pro-field" "3.1.0"
-    "@ant-design/pro-form" "2.32.0"
-    "@ant-design/pro-layout" "7.22.7"
-    "@ant-design/pro-list" "2.6.10"
-    "@ant-design/pro-provider" "2.16.2"
-    "@ant-design/pro-skeleton" "2.2.1"
-    "@ant-design/pro-table" "3.21.0"
-    "@ant-design/pro-utils" "2.18.0"
-    "@babel/runtime" "^7.16.3"
-
-"@ant-design/pro-descriptions@2.6.10":
-  version "2.6.10"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-descriptions/-/pro-descriptions-2.6.10.tgz#3a501c02f4992a58e7b2397c033cb925d2e6b11c"
-  integrity sha512-+4MbiOfumnWlW0Awm4m8JML5o3lR649FD24AaivCmr8BQvIAAXdTITnDMXEg8BqvdP4KOvNsStZrvYfqoev33A==
-  dependencies:
-    "@ant-design/pro-field" "3.1.0"
-    "@ant-design/pro-form" "2.32.0"
-    "@ant-design/pro-provider" "2.16.2"
-    "@ant-design/pro-skeleton" "2.2.1"
-    "@ant-design/pro-utils" "2.18.0"
-    "@babel/runtime" "^7.18.0"
-    rc-resize-observer "^0.2.3"
-    rc-util "^5.0.6"
-
 "@ant-design/pro-field@1.36.7":
   version "1.36.7"
   resolved "https://registry.yarnpkg.com/@ant-design/pro-field/-/pro-field-1.36.7.tgz#dc4ca402da2d46afe6fcd17559a4663c20f6d6dd"
@@ -199,23 +154,6 @@
     omit.js "^2.0.2"
     rc-util "^5.4.0"
     swr "^1.2.0"
-
-"@ant-design/pro-field@3.1.0":
-  version "3.1.0"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-field/-/pro-field-3.1.0.tgz#3b814d3d320d2cde739e7e7d08dbc33eda008827"
-  integrity sha512-+Dgp31WjD+iwg9KIRAMgNkfQivkJKMcYBrIBmho1e8ep/O0HgWSp48g70tBIWi/Lfem/Ky2schF7O8XCFouczw==
-  dependencies:
-    "@ant-design/icons" "^5.0.0"
-    "@ant-design/pro-provider" "2.16.2"
-    "@ant-design/pro-utils" "2.18.0"
-    "@babel/runtime" "^7.18.0"
-    "@chenshuai2144/sketch-color" "^1.0.8"
-    classnames "^2.3.2"
-    dayjs "^1.11.10"
-    lodash "^4.17.21"
-    lodash-es "^4.17.21"
-    rc-util "^5.4.0"
-    swr "^2.0.0"
 
 "@ant-design/pro-form@1.74.7":
   version "1.74.7"
@@ -236,46 +174,6 @@
     rc-util "^5.0.6"
     use-json-comparison "^1.0.5"
     use-media-antd-query "^1.1.0"
-
-"@ant-design/pro-form@2.32.0":
-  version "2.32.0"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-form/-/pro-form-2.32.0.tgz#bbc7758fd3b39cf0d8795d5dcd06fa36b1ab8741"
-  integrity sha512-GZnVAMeYv+YHJb17lJ7rX5PYuQPvEA6EotQnPbHi9tGLN3PfexcAd21rqzuO+OrulU2x7TEMDIxtY9MzvvOGbg==
-  dependencies:
-    "@ant-design/icons" "^5.0.0"
-    "@ant-design/pro-field" "3.1.0"
-    "@ant-design/pro-provider" "2.16.2"
-    "@ant-design/pro-utils" "2.18.0"
-    "@babel/runtime" "^7.18.0"
-    "@chenshuai2144/sketch-color" "^1.0.7"
-    "@umijs/use-params" "^1.0.9"
-    classnames "^2.3.2"
-    dayjs "^1.11.10"
-    lodash "^4.17.21"
-    lodash-es "^4.17.21"
-    rc-resize-observer "^1.1.0"
-    rc-util "^5.0.6"
-
-"@ant-design/pro-layout@7.22.7":
-  version "7.22.7"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-layout/-/pro-layout-7.22.7.tgz#7002b1838e1cdf879bbec813677b478c26fbbb77"
-  integrity sha512-fvmtNA1r9SaasVIQIQt611VSlNxtVxDbQ3e+1GhYQza3tVJi/3gCZuDyfMfTnbLmf3PaW/YvLkn7MqDbzAzoLA==
-  dependencies:
-    "@ant-design/cssinjs" "^1.21.1"
-    "@ant-design/icons" "^5.0.0"
-    "@ant-design/pro-provider" "2.16.2"
-    "@ant-design/pro-utils" "2.18.0"
-    "@babel/runtime" "^7.18.0"
-    "@umijs/route-utils" "^4.0.0"
-    "@umijs/use-params" "^1.0.9"
-    classnames "^2.3.2"
-    lodash "^4.17.21"
-    lodash-es "^4.17.21"
-    path-to-regexp "8.2.0"
-    rc-resize-observer "^1.1.0"
-    rc-util "^5.0.6"
-    swr "^2.0.0"
-    warning "^4.0.3"
 
 "@ant-design/pro-layout@^6.19.7":
   version "6.38.22"
@@ -302,23 +200,6 @@
     use-media-antd-query "^1.1.0"
     warning "^4.0.3"
 
-"@ant-design/pro-list@2.6.10":
-  version "2.6.10"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-list/-/pro-list-2.6.10.tgz#6edcd86d0444afcc69c91ad6e3c134c430ddea89"
-  integrity sha512-xSWwnqCr+hPEYR4qY7nFUaxO5RQBxNlFaPNmobP2i+Im31slk9JuAusgWeIYO0mNhLJuLbxd8CCma2AZij3fBQ==
-  dependencies:
-    "@ant-design/cssinjs" "^1.21.1"
-    "@ant-design/icons" "^5.0.0"
-    "@ant-design/pro-card" "2.10.0"
-    "@ant-design/pro-field" "3.1.0"
-    "@ant-design/pro-table" "3.21.0"
-    "@ant-design/pro-utils" "2.18.0"
-    "@babel/runtime" "^7.18.0"
-    classnames "^2.3.2"
-    dayjs "^1.11.10"
-    rc-resize-observer "^1.0.0"
-    rc-util "^4.19.0"
-
 "@ant-design/pro-provider@1.10.0":
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/@ant-design/pro-provider/-/pro-provider-1.10.0.tgz#6f15a5a7600d6ec7dd42755c4727254a9df46dbd"
@@ -328,49 +209,6 @@
     antd "^4.20.0 "
     rc-util "^5.0.1"
     swr "^1.2.0"
-
-"@ant-design/pro-provider@2.16.2":
-  version "2.16.2"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-provider/-/pro-provider-2.16.2.tgz#3ccec06ea9a69a4d48adc593a268413c813dab2f"
-  integrity sha512-0KmCH1EaOND787Jz6VRMYtLNZmqfT0JPjdUfxhyOxFfnBRfrjyfZgIa6CQoAJLEUMWv57PccWS8wRHVUUk2Yiw==
-  dependencies:
-    "@ant-design/cssinjs" "^1.21.1"
-    "@babel/runtime" "^7.18.0"
-    "@ctrl/tinycolor" "^3.4.0"
-    dayjs "^1.11.10"
-    rc-util "^5.0.1"
-    swr "^2.0.0"
-
-"@ant-design/pro-skeleton@2.2.1":
-  version "2.2.1"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-skeleton/-/pro-skeleton-2.2.1.tgz#c13d3c1b278a35455b712d6d7674673217216842"
-  integrity sha512-3M2jNOZQZWEDR8pheY00OkHREfb0rquvFZLCa6DypGmiksiuuYuR9Y4iA82ZF+mva2FmpHekdwbje/GpbxqBeg==
-  dependencies:
-    "@babel/runtime" "^7.18.0"
-
-"@ant-design/pro-table@3.21.0":
-  version "3.21.0"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-table/-/pro-table-3.21.0.tgz#cae2f3b09c95e9d821092f6013d029886ac62d39"
-  integrity sha512-sI81d3FYRv5sXamUc+M5CsHZ9CchuUQgOAPzo5H4oPAVL5h+mkYGRsBzPsxQX7khTNpWjrAtPoRm5ipx3vvWog==
-  dependencies:
-    "@ant-design/cssinjs" "^1.21.1"
-    "@ant-design/icons" "^5.0.0"
-    "@ant-design/pro-card" "2.10.0"
-    "@ant-design/pro-field" "3.1.0"
-    "@ant-design/pro-form" "2.32.0"
-    "@ant-design/pro-provider" "2.16.2"
-    "@ant-design/pro-utils" "2.18.0"
-    "@babel/runtime" "^7.18.0"
-    "@dnd-kit/core" "^6.0.8"
-    "@dnd-kit/modifiers" "^6.0.1"
-    "@dnd-kit/sortable" "^7.0.2"
-    "@dnd-kit/utilities" "^3.2.1"
-    classnames "^2.3.2"
-    dayjs "^1.11.10"
-    lodash "^4.17.21"
-    lodash-es "^4.17.21"
-    rc-resize-observer "^1.0.0"
-    rc-util "^5.0.1"
 
 "@ant-design/pro-table@^2.57.1":
   version "2.80.8"
@@ -408,22 +246,6 @@
     rc-util "^5.0.6"
     react-sortable-hoc "^2.0.0"
     swr "^1.2.0"
-
-"@ant-design/pro-utils@2.18.0":
-  version "2.18.0"
-  resolved "https://registry.npmmirror.com/@ant-design/pro-utils/-/pro-utils-2.18.0.tgz#50a6bcc95742b71a7a17252f7db6c2ccd2ec60f4"
-  integrity sha512-8+ikyrN8L8a8Ph4oeHTOJEiranTj18+9+WHCHjKNdEfukI7Rjn8xpYdLJWb2AUJkb9d4eoAqjd5+k+7w81Df0w==
-  dependencies:
-    "@ant-design/icons" "^5.0.0"
-    "@ant-design/pro-provider" "2.16.2"
-    "@babel/runtime" "^7.18.0"
-    classnames "^2.3.2"
-    dayjs "^1.11.10"
-    lodash "^4.17.21"
-    lodash-es "^4.17.21"
-    rc-util "^5.0.6"
-    safe-stable-stringify "^2.4.3"
-    swr "^2.0.0"
 
 "@ant-design/react-slick@~0.29.1":
   version "0.29.2"
@@ -2824,14 +2646,6 @@
   resolved "https://registry.npmjs.org/@braintree/sanitize-url/-/sanitize-url-7.1.1.tgz#15e19737d946559289b915e5dad3b4c28407735e"
   integrity sha512-i1L7noDNxtFyL5DmZafWy1wRVhGehQmzZaz1HiN5e7iylJMSZR7ekOV7NsIqa5qBldlLrsKv4HbgFUVlQrz8Mw==
 
-"@chenshuai2144/sketch-color@^1.0.7":
-  version "1.0.9"
-  resolved "https://registry.npmmirror.com/@chenshuai2144/sketch-color/-/sketch-color-1.0.9.tgz#41144e2d9656bff2143516d4e8e62e5003bd466a"
-  integrity sha512-obzSy26cb7Pm7OprWyVpgMpIlrZpZ0B7vbrU0RMbvRg0YAI890S5Xy02Aj1Nhl4+KTbi1lVYHt6HQP8Hm9s+1w==
-  dependencies:
-    reactcss "^1.2.3"
-    tinycolor2 "^1.4.2"
-
 "@chenshuai2144/sketch-color@^1.0.8":
   version "1.0.8"
   resolved "https://registry.yarnpkg.com/@chenshuai2144/sketch-color/-/sketch-color-1.0.8.tgz#5cde7ac1dae5687223a8f751b0e4f77a5776d566"
@@ -3005,13 +2819,6 @@
   dependencies:
     tslib "^2.0.0"
 
-"@dnd-kit/accessibility@^3.1.1":
-  version "3.1.1"
-  resolved "https://registry.npmmirror.com/@dnd-kit/accessibility/-/accessibility-3.1.1.tgz#3b4202bd6bb370a0730f6734867785919beac6af"
-  integrity sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==
-  dependencies:
-    tslib "^2.0.0"
-
 "@dnd-kit/core@^4.0.1":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@dnd-kit/core/-/core-4.0.3.tgz#49abe3c9b481b6e07909df1781e88b20f3dd25b0"
@@ -3021,42 +2828,10 @@
     "@dnd-kit/utilities" "^3.0.1"
     tslib "^2.0.0"
 
-"@dnd-kit/core@^6.0.8":
-  version "6.3.1"
-  resolved "https://registry.npmmirror.com/@dnd-kit/core/-/core-6.3.1.tgz#4c36406a62c7baac499726f899935f93f0e6d003"
-  integrity sha512-xkGBRQQab4RLwgXxoqETICr6S5JlogafbhNsidmrkVv2YRs5MLwpjoF2qpiGjQt8S9AoxtIV603s0GIUpY5eYQ==
-  dependencies:
-    "@dnd-kit/accessibility" "^3.1.1"
-    "@dnd-kit/utilities" "^3.2.2"
-    tslib "^2.0.0"
-
-"@dnd-kit/modifiers@^6.0.1":
-  version "6.0.1"
-  resolved "https://registry.npmmirror.com/@dnd-kit/modifiers/-/modifiers-6.0.1.tgz#9e39b25fd6e323659604cc74488fe044d33188c8"
-  integrity sha512-rbxcsg3HhzlcMHVHWDuh9LCjpOVAgqbV78wLGI8tziXY3+qcMQ61qVXIvNKQFuhj75dSfD+o+PYZQ/NUk2A23A==
-  dependencies:
-    "@dnd-kit/utilities" "^3.2.1"
-    tslib "^2.0.0"
-
-"@dnd-kit/sortable@^7.0.2":
-  version "7.0.2"
-  resolved "https://registry.npmmirror.com/@dnd-kit/sortable/-/sortable-7.0.2.tgz#791d550872457f3f3c843e00d159b640f982011c"
-  integrity sha512-wDkBHHf9iCi1veM834Gbk1429bd4lHX4RpAwT0y2cHLf246GAvU2sVw/oxWNpPKQNQRQaeGXhAVgrOl1IT+iyA==
-  dependencies:
-    "@dnd-kit/utilities" "^3.2.0"
-    tslib "^2.0.0"
-
 "@dnd-kit/utilities@^3.0.1":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@dnd-kit/utilities/-/utilities-3.2.0.tgz#b3e956ea63a1347c9d0e1316b037ddcc6140acda"
   integrity sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==
-  dependencies:
-    tslib "^2.0.0"
-
-"@dnd-kit/utilities@^3.2.0", "@dnd-kit/utilities@^3.2.1", "@dnd-kit/utilities@^3.2.2":
-  version "3.2.2"
-  resolved "https://registry.npmmirror.com/@dnd-kit/utilities/-/utilities-3.2.2.tgz#5a32b6af356dc5f74d61b37d6f7129a4040ced7b"
-  integrity sha512-+MKAJEOfaBe5SmV6t34p80MMKhjvUz0vRrvVJbPT0WElzaOJ/1xs+D+KDv+tD/NE5ujfrChEcshd4fLn0wpiqg==
   dependencies:
     tslib "^2.0.0"
 
@@ -5690,11 +5465,6 @@
     fast-deep-equal "^3.1.3"
     lodash.isequal "^4.5.0"
     memoize-one "^5.1.1"
-
-"@umijs/route-utils@^4.0.0":
-  version "4.0.3"
-  resolved "https://registry.npmmirror.com/@umijs/route-utils/-/route-utils-4.0.3.tgz#70779ee069ac048509786bcf316368d3516ca5fd"
-  integrity sha512-zPEcYhl1cSfkSRDzzGgoD1mDvGjxoOTJFvkn55srfgdQ3NZe2ZMCScCU6DEnOxuKP1XDVf8pqyqCDVd2+RCQIw==
 
 "@umijs/ssr-darkreader@^4.9.44":
   version "4.9.45"
@@ -8455,7 +8225,7 @@ dayjs@1.x, dayjs@^1.9.1:
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.6.tgz#2e79a226314ec3ec904e3ee1dd5a4f5e5b1c7afb"
   integrity sha512-zZbY5giJAinCG+7AGaw0wIhNZ6J8AhWuSXKvuc1KAyMiRsvGQWqh4L+MomvhdAYjN+lqvVCMq1I41e3YHvXkyQ==
 
-dayjs@^1.11.10, dayjs@^1.11.11:
+dayjs@^1.11.11:
   version "1.11.21"
   resolved "https://registry.npmmirror.com/dayjs/-/dayjs-1.11.21.tgz#57f87562e62de76f3c704bd2b8d522fc33068eb2"
   integrity sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==
@@ -14717,11 +14487,6 @@ path-to-regexp@2.4.0:
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-2.4.0.tgz#35ce7f333d5616f1c1e1bfe266c3aba2e5b2e704"
   integrity sha512-G6zHoVqC6GGTQkZwF4lkuEyMbVOjoBKAEybQUypI1WTkqinCOrq2x6U2+phkJ1XsEMTy4LjtwPI7HW+NVrRR2w==
 
-path-to-regexp@8.2.0:
-  version "8.2.0"
-  resolved "https://registry.npmmirror.com/path-to-regexp/-/path-to-regexp-8.2.0.tgz#73990cc29e57a3ff2a0d914095156df5db79e8b4"
-  integrity sha512-TdrF7fW9Rphjq4RjrW0Kp2AW0Ahwu9sRGTkS6bvDi0SCwZlEZYmcfDbEsTz8RVk0EHIS/Vd1bv3JhG+1xZuAyQ==
-
 path-type@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/path-type/-/path-type-4.0.0.tgz#84ed01c0a7ba380afe09d90a8c180dcd9d03043b"
@@ -16281,16 +16046,6 @@ rc-rate@~2.9.0:
     classnames "^2.2.5"
     rc-util "^5.0.1"
 
-rc-resize-observer@^0.2.3:
-  version "0.2.6"
-  resolved "https://registry.npmmirror.com/rc-resize-observer/-/rc-resize-observer-0.2.6.tgz#c1b642f6d1293e34c4e3715f47f69443a167b825"
-  integrity sha512-YX6nYnd6fk7zbuvT6oSDMKiZjyngjHoy+fz+vL3Tez38d/G5iGdaDJa2yE7345G6sc4Mm1IGRUIwclvltddhmA==
-  dependencies:
-    "@babel/runtime" "^7.10.1"
-    classnames "^2.2.1"
-    rc-util "^5.0.0"
-    resize-observer-polyfill "^1.5.1"
-
 rc-resize-observer@^1.0.0, rc-resize-observer@^1.1.0, rc-resize-observer@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/rc-resize-observer/-/rc-resize-observer-1.2.0.tgz#9f46052f81cdf03498be35144cb7c53fd282c4c7"
@@ -16575,7 +16330,7 @@ rc-upload@~4.3.0:
     classnames "^2.2.5"
     rc-util "^5.2.0"
 
-rc-util@^4.10.0, rc-util@^4.15.3, rc-util@^4.19.0:
+rc-util@^4.10.0, rc-util@^4.15.3:
   version "4.21.1"
   resolved "https://registry.yarnpkg.com/rc-util/-/rc-util-4.21.1.tgz#88602d0c3185020aa1053d9a1e70eac161becb05"
   integrity sha512-Z+vlkSQVc1l8O2UjR3WQ+XdWlhj5q9BMQNLk2iOBch75CqPfrJyGtcWMcnhRlNuDu0Ndtt4kLVO8JI8BrABobg==
@@ -16586,14 +16341,6 @@ rc-util@^4.10.0, rc-util@^4.15.3, rc-util@^4.19.0:
     react-lifecycles-compat "^3.0.4"
     shallowequal "^1.1.0"
 
-rc-util@^5.0.0, rc-util@^5.25.2, rc-util@^5.27.0, rc-util@^5.30.0, rc-util@^5.31.1, rc-util@^5.32.2, rc-util@^5.34.1, rc-util@^5.35.0, rc-util@^5.36.0, rc-util@^5.38.0, rc-util@^5.38.1, rc-util@^5.40.1, rc-util@^5.43.0, rc-util@^5.44.0, rc-util@^5.44.1, rc-util@^5.44.3, rc-util@^5.44.4:
-  version "5.44.4"
-  resolved "https://registry.npmmirror.com/rc-util/-/rc-util-5.44.4.tgz#89ee9037683cca01cd60f1a6bbda761457dd6ba5"
-  integrity sha512-resueRJzmHG9Q6rI/DfK6Kdv9/Lfls05vzMs1Sk3M2P+3cJa+MakaZyWY8IPfehVuhPJFKrIY1IK4GqbiaiY5w==
-  dependencies:
-    "@babel/runtime" "^7.18.3"
-    react-is "^18.2.0"
-
 rc-util@^5.0.1, rc-util@^5.0.6, rc-util@^5.12.0, rc-util@^5.15.0, rc-util@^5.16.0, rc-util@^5.16.1, rc-util@^5.17.0, rc-util@^5.18.1, rc-util@^5.19.2, rc-util@^5.2.0, rc-util@^5.2.1, rc-util@^5.20.1, rc-util@^5.21.0, rc-util@^5.21.2, rc-util@^5.22.5, rc-util@^5.23.0, rc-util@^5.24.4, rc-util@^5.3.0, rc-util@^5.4.0, rc-util@^5.6.1, rc-util@^5.8.0, rc-util@^5.9.4:
   version "5.24.5"
   resolved "https://registry.yarnpkg.com/rc-util/-/rc-util-5.24.5.tgz#d486fada224fcaf7146e06e961d30c1c774e6209"
@@ -16602,6 +16349,14 @@ rc-util@^5.0.1, rc-util@^5.0.6, rc-util@^5.12.0, rc-util@^5.15.0, rc-util@^5.16.
     "@babel/runtime" "^7.18.3"
     react-is "^16.12.0"
     shallowequal "^1.1.0"
+
+rc-util@^5.25.2, rc-util@^5.27.0, rc-util@^5.30.0, rc-util@^5.31.1, rc-util@^5.32.2, rc-util@^5.34.1, rc-util@^5.35.0, rc-util@^5.36.0, rc-util@^5.38.0, rc-util@^5.38.1, rc-util@^5.40.1, rc-util@^5.43.0, rc-util@^5.44.0, rc-util@^5.44.1, rc-util@^5.44.3, rc-util@^5.44.4:
+  version "5.44.4"
+  resolved "https://registry.npmmirror.com/rc-util/-/rc-util-5.44.4.tgz#89ee9037683cca01cd60f1a6bbda761457dd6ba5"
+  integrity sha512-resueRJzmHG9Q6rI/DfK6Kdv9/Lfls05vzMs1Sk3M2P+3cJa+MakaZyWY8IPfehVuhPJFKrIY1IK4GqbiaiY5w==
+  dependencies:
+    "@babel/runtime" "^7.18.3"
+    react-is "^18.2.0"
 
 rc-util@^5.37.0:
   version "5.43.0"
@@ -17866,11 +17621,6 @@ safe-regex-test@^1.0.0:
     get-intrinsic "^1.1.3"
     is-regex "^1.1.4"
 
-safe-stable-stringify@^2.4.3:
-  version "2.5.0"
-  resolved "https://registry.npmmirror.com/safe-stable-stringify/-/safe-stable-stringify-2.5.0.tgz#4ca2f8e385f2831c432a719b108a3bf7af42a1dd"
-  integrity sha512-b3rppTKm9T+PsVCBEOUR46GWI7fdOs00VKZ1+9c1EWDaDMvjQc6tUwuFyIprgGgTcWoVHSKrU8H31ZHA2e0RHA==
-
 "safer-buffer@>= 2.1.2 < 3", "safer-buffer@>= 2.1.2 < 3.0.0", safer-buffer@^2.1.0:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
@@ -18874,14 +18624,6 @@ swr@^1.2.0:
   resolved "https://registry.yarnpkg.com/swr/-/swr-1.3.0.tgz#c6531866a35b4db37b38b72c45a63171faf9f4e8"
   integrity sha512-dkghQrOl2ORX9HYrMDtPa7LTVHJjCTeZoB1dqTbnnEDlSvN8JEKpYIYurDfvbQFUUS8Cg8PceFVZNkW0KNNYPw==
 
-swr@^2.0.0:
-  version "2.4.1"
-  resolved "https://registry.npmmirror.com/swr/-/swr-2.4.1.tgz#c9e48abff6bf4b04846342e2f1f6be108a078cf6"
-  integrity sha512-2CC6CiKQtEwaEeNiqWTAw9PGykW8SR5zZX8MZk6TeAvEAnVS7Visz8WzphqgtQ8v2xz/4Q5K+j+SeMaKXeeQIA==
-  dependencies:
-    dequal "^2.0.3"
-    use-sync-external-store "^1.6.0"
-
 symbol-tree@^3.2.4:
   version "3.2.4"
   resolved "https://registry.yarnpkg.com/symbol-tree/-/symbol-tree-3.2.4.tgz#430637d248ba77e078883951fb9aa0eed7c63fa2"
@@ -19720,11 +19462,6 @@ use-sync-external-store@1.2.0, use-sync-external-store@^1.0.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/use-sync-external-store/-/use-sync-external-store-1.2.0.tgz#7dbefd6ef3fe4e767a0cf5d7287aacfb5846928a"
   integrity sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==
-
-use-sync-external-store@^1.6.0:
-  version "1.6.0"
-  resolved "https://registry.npmmirror.com/use-sync-external-store/-/use-sync-external-store-1.6.0.tgz#b174bfa65cb2b526732d9f2ac0a408027876f32d"
-  integrity sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==
 
 util-deprecate@^1.0.1, util-deprecate@^1.0.2, util-deprecate@~1.0.1:
   version "1.0.2"
