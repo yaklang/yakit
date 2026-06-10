@@ -6,6 +6,7 @@ import { HandleStartParams } from '../aiAgentChat/type'
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { omit } from 'lodash'
 import { randomString } from '@/utils/randomUtil'
+import { isIRify } from '@/utils/envfile'
 
 /**
  * @name 将一维tree转换成树结构
@@ -222,14 +223,39 @@ export const getAIReActRequestParams = (value: HandleStartParams) => {
   }
 
   for (let item of codeBlockList) {
-    attachedResourceInfo = [
-      ...attachedResourceInfo,
-      {
-        Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK,
-        Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_FILE_CONTENT,
-        Value: item.content,
-      },
-    ]
+    const content = {
+      path: item.path,
+      startLine: item.range?.startLineNumber,
+      endLine: item.range?.endLineNumber,
+      language: item.language,
+      content: item.content,
+    }
+    const addItem: AttachedResourceInfo[] = isIRify()
+      ? [
+          {
+            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content,
+            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content,
+            Value: JSON.stringify(content),
+          },
+        ]
+      : [
+          {
+            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
+            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID,
+            Value: item.rootPath,
+          },
+          {
+            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File,
+            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID,
+            Value: item.path,
+          },
+          {
+            Type: AttachedResourceTypeEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content,
+            Key: AttachedResourceKeyEnum.CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content,
+            Value: JSON.stringify(content),
+          },
+        ]
+    attachedResourceInfo = [...attachedResourceInfo, ...addItem]
   }
 
   if (!!showQS) {
