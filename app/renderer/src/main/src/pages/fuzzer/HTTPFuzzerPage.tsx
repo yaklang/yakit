@@ -1265,6 +1265,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   })
 
+  const fuzzerTaskId = useMemo(() => {
+    //成功和失败的数据id都一样（已确认）
+    return successFuzzer[0]?.TaskId || failedFuzzer[0]?.TaskId || ''
+  }, [successFuzzer, failedFuzzer])
+
   const submitToHTTPFuzzer = useMemoizedFn(() => {
     logger(
       httpFuzzerLog({
@@ -1293,23 +1298,20 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
     if (retryRef.current) {
       retryRef.current = false
-      const retryTaskID = failedFuzzer?.length > 0 ? failedFuzzer[0]?.TaskId : undefined
+      const retryTaskID = fuzzerTaskId
       if (retryTaskID && (retryTaskID + '').length > 0) {
         const params = { ...httpParams, RetryTaskID: parseInt(retryTaskID + '', 10) }
         const retryParams = _.omit(params, ['Request', 'RequestRaw'])
-        console.log('retryParams', retryParams)
         ipcRenderer.invoke('HTTPFuzzer', retryParams, tokenRef.current)
         setIsPause(true)
       }
     } else if (matchRef.current) {
       matchRef.current = false
-      const matchTaskID = successFuzzer?.length > 0 ? successFuzzer[0]?.TaskId : undefined
+      const matchTaskID = fuzzerTaskId
       const params = { ...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID }
       setLoadingText(t('HTTPFuzzerPage.matchingInProgress'))
-      console.log('matchParams', params)
       ipcRenderer.invoke('HTTPFuzzer', params, tokenRef.current)
     } else {
-      console.log('sendParams', httpParams)
       ipcRenderer.invoke('HTTPFuzzer', httpParams, tokenRef.current)
     }
     setHasExtractorRules(!!(httpParams?.Matchers?.length || httpParams?.Extractors?.length))
@@ -1466,7 +1468,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     const updateDataThrottle = throttle(updateData, 500, { leading: false, trailing: true })
 
     ipcRenderer.on(dataToken, (e: any, data: any) => {
-      console.log(data, 'data')
       taskIDRef.current = data.TaskId
 
       if (runtimeIdRef.current) {
@@ -2866,6 +2867,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                   {renderHotPatchTag}
                 </div>
                 <div className={styles['fuzzer-heard-right']}>
+                  {fuzzerTaskId && (
+                    <Tooltip title={`TaskId: ${fuzzerTaskId}`}>
+                      <YakitButton type="text2" icon={<QuestionMarkCircleIcon />} />
+                    </Tooltip>
+                  )}
                   {getFuzzerRequestParams && typeof getFuzzerRequestParams === 'function' ? (
                     <ShareImportExportData
                       module="fuzzer"
