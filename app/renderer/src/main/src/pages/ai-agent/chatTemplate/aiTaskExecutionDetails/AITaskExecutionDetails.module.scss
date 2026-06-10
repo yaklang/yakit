@@ -101,6 +101,9 @@
       font-weight: 400;
       line-height: 16px; /* 133.333% */
       letter-spacing: 0.5px;
+      .empty-text {
+        color: var(--Colors-Use-Neutral-Text-4-Help-text);
+      }
     }
   }
 
@@ -159,21 +162,24 @@
             letter-spacing: 0.5px;
           }
         }
-
         .progress-bar {
-          flex: 1;
-          max-width: 200px;
-          height: 6px;
-          background: var(--Colors-Use-Neutral-Border);
-          border-radius: 3px;
-          overflow: hidden;
-
-          .progress-fill {
-            height: 100%;
-            background: var(--Colors-Use-Blue-Active); /* 替换进度条颜色变量 */
-            border-radius: 3px;
+          width: 60px;
+          :global {
+            .ant-progress-inner {
+              border: 1px solid var(--Colors-Use-Neutral-Border);
+            }
           }
         }
+      }
+      .empty-body {
+        border-radius: 6px;
+        border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+        background: var(--Colors-Use-Neutral-Bg);
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
       }
       .stats-content {
         display: grid;
@@ -314,107 +320,106 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
     gap: 16px;
+  }
+  .section-card {
+    border-radius: 8px;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    .section-card-title {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
 
-    .section-card {
-      border-radius: 8px;
-      border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-      padding: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px; /* 142.857% */
+      letter-spacing: 0.1px;
+      padding: 6px 8px 2px 8px;
+    }
+  }
+
+  .plugin-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+
+    border-radius: 6px;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+    background: var(--Colors-Use-Neutral-Bg);
+
+    .plugin-group-header {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      .section-card-title {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
-
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 20px; /* 142.857% */
-        letter-spacing: 0.1px;
-        padding: 6px 8px 2px 8px;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      padding: 4px 12px;
+      .add-btn {
+        padding-right: 0;
+      }
+      .plugin-group-title {
+        display: flex;
+        align-items: center;
+        gap: 4px;
       }
     }
 
-    .plugin-group {
+    .plugin-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 4px;
+      gap: 2px;
+      padding: 0px 8px 8px 8px;
 
-      border-radius: 6px;
-      border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-      background: var(--Colors-Use-Neutral-Bg);
-
-      .plugin-group-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 12px;
-        color: var(--Colors-Use-Neutral-Text-3-Secondary);
-        padding: 4px 12px;
-        .add-btn {
-          padding-right: 0;
-        }
-        .plugin-group-title {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-      }
-
-      .plugin-list {
+      .plugin-item {
+        padding: 2px;
+        padding-left: 6px;
+        border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+        background: var(--Colors-Use-Basic-Background);
+        border-radius: 6px;
         display: flex;
         flex-direction: column;
-        gap: 2px;
-        padding: 0px 8px 8px 8px;
+        justify-content: center;
+        position: relative;
+        min-height: 28px;
 
-        .plugin-item {
-          padding: 2px;
-          padding-left: 6px;
-          border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-          background: var(--Colors-Use-Basic-Background);
-          border-radius: 6px;
+        color: var(--Colors-Use-Neutral-Text-2-Primary);
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 16px;
+        letter-spacing: 0.5px;
+        .plugin-item-heard {
           display: flex;
-          flex-direction: column;
-          justify-content: center;
-          position: relative;
-          min-height: 28px;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .plugin-item-title {
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          word-break: break-all;
+          min-height: 24px;
+          padding: 4px 0;
+        }
 
-          color: var(--Colors-Use-Neutral-Text-2-Primary);
+        .plugin-item-desc {
           font-size: 12px;
-          font-style: normal;
-          font-weight: 400;
-          line-height: 16px;
-          letter-spacing: 0.5px;
-          .plugin-item-heard {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-          }
-          .plugin-item-title {
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            word-break: break-all;
-            min-height: 24px;
-            padding: 4px 0;
-          }
+          color: var(--Colors-Use-Neutral-Text-4-Help-text);
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+          word-break: break-all;
+        }
 
-          .plugin-item-desc {
-            font-size: 12px;
-            color: var(--Colors-Use-Neutral-Text-4-Help-text);
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            word-break: break-all;
-          }
+        .plugin-item-actions {
+          display: none;
+        }
 
+        &:hover {
           .plugin-item-actions {
-            display: none;
-          }
-
-          &:hover {
-            .plugin-item-actions {
-              display: block;
-            }
+            display: block;
           }
         }
       }

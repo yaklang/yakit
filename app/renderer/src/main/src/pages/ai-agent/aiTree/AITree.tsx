@@ -13,11 +13,11 @@ import emiter from '@/utils/eventBus/eventBus'
 import { AIHistorySkipTask } from '../chatTemplate/historyTaskTree/HistoryTaskTree'
 import useAIAgentStore from '../useContext/useStore'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { AIToDoList } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
 import { DefaultTodoListCardData } from '@/pages/ai-re-act/hooks/defaultConstant'
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { cloneDeep } from 'lodash'
 import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
+import { Tooltip } from 'antd'
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -155,6 +155,19 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
       }
       setTodoListVisible(visible)
     })
+    const onDetails = useMemoizedFn(() => {
+      emiter.emit(
+        'actionAITaskContentTab',
+        JSON.stringify({
+          type: 'add',
+          params: {
+            key: data.index,
+            label: data.name,
+            goal: data.goal,
+          },
+        }),
+      )
+    })
     const getTitleNode = useMemoizedFn(() => {
       return (
         <div className={styles['node-title']}>
@@ -176,23 +189,8 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
               <OutlineInformationcircleIcon className={styles['info-icon']} />
             </YakitPopover>
             {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskIndex={data.index} />}
-            {data.isLeaf && unFinish && getTodoData()?.items?.length > 0 && (
-              <YakitPopover
-                placement="top"
-                content={
-                  <AIToDoList
-                    className={classNames({
-                      [styles['no-animation']]: data.progress !== AITaskStatus.inProgress,
-                    })}
-                    todoData={todoListRef.current}
-                    bannedExpand={true}
-                  />
-                }
-                overlayClassName={styles['to-do-list-popover']}
-                destroyTooltipOnHide={true}
-                visible={todoListVisible}
-                onVisibleChange={onVisibleChange}
-              >
+            {data.isLeaf && unFinish && (
+              <Tooltip title="待办事项" placement="top">
                 <YakitButton
                   size="small"
                   icon={<OutlineListTodoIcon />}
@@ -200,8 +198,9 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
                   className={classNames({
                     [styles['list-to-do-icon']]: !todoListVisible,
                   })}
+                  onClick={onDetails}
                 />
-              </YakitPopover>
+              </Tooltip>
             )}
             {aiTreeTitleExtraNode && <div className={styles['ai-tree-extra-node']}>{aiTreeTitleExtraNode?.(data)}</div>}
           </div>

@@ -54,7 +54,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
               <div className={styles['card-heard-extra']}>
                 <span className={styles['tip']}>进度</span>
                 <span className={styles['progress ']}>
-                  {finishedCount}/{total}
+                  {finishedCount}/{total || 1}
                 </span>
                 <Progress
                   strokeColor="var(--Colors-Use-Neutral-Disable)"
