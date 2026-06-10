@@ -1,4 +1,4 @@
-import type { AIToolResult, TodoListCardData } from './aiRender'
+import type { AIToolResult, PlanItemDetailsData, TodoListCardData } from './aiRender'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
 import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from './type'
 
@@ -154,4 +154,39 @@ export const DefaultTodoListCardData: TodoListCardData = {
     skipped: 0,
   },
   uuid: '',
+}
+
+export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
+  uuid: '',
+  tool: {
+    fixed: [],
+    dynamic: [],
+  },
+  forges: {
+    fixed: [],
+    dynamic: [],
+  },
+  skills: {
+    fixed: [],
+    dynamic: [],
+  },
+  plugins: {
+    fixed: [],
+    dynamic: [],
+  },
+  mcpServices: {
+    fixed: [],
+    dynamic: [],
+  },
+  perception: {
+    summary: [],
+    topics: [],
+    keywords: [],
+    changed: false,
+    confidence: 0,
+    trigger: '',
+    epoch: 0,
+    intent_shift: 'none',
+    timestamp: 0,
+  },
 }

@@ -14,6 +14,7 @@ import type {
   ReActChatRenderItem,
   ReActChatTaskElement,
   ReActChatTaskElementSub,
+  PlanItemDetailsData,
 } from './aiRender'
 
 import { Uint8ArrayToString } from '@/utils/str'
@@ -31,10 +32,11 @@ import {
   AIStreamContentType,
   convertNodeIdToVerbose,
   DefaultAIToolResult,
+  DefaultPlanItemDetailsData,
   DefaultToolResultSummary,
 } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-
+import { v4 as uuidv4 } from 'uuid'
 // #region Common Utils
 /** grpc流数据转换成错误信息输出到日志中 */
 const handleErrorGRPCToLog: (
@@ -442,6 +444,90 @@ const handleReportFinish: AIMessageHandler = (request) => {
     mapKey: chatData.id,
     type: cardType,
     chatType: info.chatType,
+  })
+}
+/** Type='structured'&NodeId='capability_inventory' 能力清单(tool/skills/forge/yak_plugin/mac) */
+const handleCapabilityInventory: AIMessageHandler = (request) => {
+  const { res, getChatDataStore } = request
+  if (!res.TaskIndex) return
+  if (res.Type !== 'structured' && res.NodeId !== 'capability_inventory') return
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanItemDetails
+
+  const { fixed, dynamic } = payload
+
+  const itemData: PlanItemDetailsData = {
+    ...cloneDeep(DefaultPlanItemDetailsData),
+    uuid: uuidv4(),
+    tool: {
+      fixed: [],
+      dynamic: [],
+    },
+    forges: {
+      fixed: [],
+      dynamic: [],
+    },
+    skills: {
+      fixed: [],
+      dynamic: [],
+    },
+    plugins: {
+      fixed: [],
+      dynamic: [],
+    },
+    mcpServices: {
+      fixed: [],
+      dynamic: [],
+    },
+  }
+
+  if (!!fixed?.tools) {
+    itemData.tool.fixed = fixed.tools
+  }
+  if (!!fixed?.mcp_servers) {
+    itemData.mcpServices.fixed = fixed.mcp_servers
+  }
+
+  if (!!dynamic?.tools) {
+    for (const item of dynamic.tools) {
+      switch (item.category) {
+        case 'tool':
+          itemData.tool.dynamic.push(item)
+          break
+        case 'yak_plugin':
+          itemData.plugins.dynamic.push(item)
+          break
+        case 'mcp':
+          itemData.mcpServices.dynamic.push(item)
+          break
+        default:
+          break
+      }
+    }
+  }
+  if (!!dynamic?.skills) {
+    itemData.skills.dynamic = dynamic.skills
+  }
+  if (!!dynamic?.forges) {
+    itemData.forges.dynamic = dynamic.forges
+  }
+  const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || {}
+  if (oldData) getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, { ...oldData, ...itemData })
+}
+/** Type='perception'&NodeId='perception' 意图感知 */
+const handlePerception: AIMessageHandler = (request) => {
+  const { res, getChatDataStore } = request
+  if (!res.TaskIndex) return
+  if (res.Type !== 'perception' && res.NodeId !== 'perception') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const perception = (JSON.parse(ipcContent) as AIAgentGrpcApi.PerceptionData) || {}
+  const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || {}
+  getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
+    ...cloneDeep(DefaultPlanItemDetailsData),
+    ...oldData,
+    uuid: uuidv4(),
+    perception,
   })
 }
 // #endregion
@@ -1980,4 +2066,6 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   api_request_failed: handleApiRequestFailed,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
   'report-finish': handleReportFinish,
+  capability_inventory: handleCapabilityInventory,
+  perception: handlePerception,
 }

@@ -219,6 +219,10 @@ function useTaskChat(params: UseTaskChatParams) {
         funcKey = res.NodeId
       } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
         funcKey = res.Type
+      } else if (res.Type === 'structured' && res.NodeId === 'capability_inventory') {
+        funcKey = res.NodeId
+      } else if (res.Type === 'perception' && res.NodeId === 'perception') {
+        funcKey = res.Type
       }
 
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
@@ -241,6 +245,7 @@ function useTaskChat(params: UseTaskChatParams) {
             onReviewRelease,
             handleReviewDataToUI,
           },
+          getChatDataStore,
         })
         return
       }
