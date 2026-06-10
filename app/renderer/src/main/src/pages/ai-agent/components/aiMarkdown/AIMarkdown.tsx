@@ -22,6 +22,7 @@ import { saveABSFileToOpen } from '@/utils/openWebsite'
 import { useGoEditNotepad } from '@/pages/notepadManage/hook/useGoEditNotepad'
 import { ModifyNotepadPageInfoProps } from '@/store/pageInfo'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
 
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
   const { content, nodeLabel, className, modalInfo, referenceNode } = props
@@ -81,7 +82,7 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
   })
 
   // 判断路由，子窗口有些功能不展示
-  const isChildWindow = useRef(new URLSearchParams(window.location.search).get('window') === 'child')
+  const isChildWindow = useRef(isAuxOrChildWindow())
 
   return (
     <ChatCard

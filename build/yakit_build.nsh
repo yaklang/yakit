@@ -62,7 +62,7 @@ FunctionEnd
 Function FinishLeave
     ${NSD_GetState} $mui.FinishPage.Run $0
     ${If} $0 <> 0
-    Exec "$INSTDIR\$EXE_NAME.exe"
+    ExecShell "open" "$INSTDIR\$EXE_NAME.exe"
     ${EndIf}
     ${NSD_GetState} $mui.FinishPage.ShowReadme $0
     ${If} $0 <> 0

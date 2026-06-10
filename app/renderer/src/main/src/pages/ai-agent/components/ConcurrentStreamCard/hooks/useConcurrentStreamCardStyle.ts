@@ -18,12 +18,18 @@ export function buildConcurrentStreamCardStyle({
   if (isChildWindow) return CHILD_WINDOW_STYLE
 
   const base = { padding: CARD_PADDING }
+  const isGradientBg = bgColor.includes('gradient(')
 
   if (!showStripe) {
-    return { ...base, background: bgColor }
+    return {
+      ...base,
+      backgroundImage: isGradientBg ? bgColor : undefined,
+      backgroundColor: isGradientBg ? undefined : bgColor,
+      backgroundRepeat: undefined,
+      backgroundPosition: undefined,
+      backgroundSize: undefined,
+    }
   }
-
-  const isGradientBg = bgColor.includes('gradient(')
 
   return {
     ...base,

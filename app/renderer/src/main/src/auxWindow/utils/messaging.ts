@@ -2,6 +2,7 @@ import { yakitApp } from '@/services/electronBridge'
 import i18n from '@/i18n/i18n'
 import { useTheme, type Theme } from '@/hook/useTheme'
 import { applyAuxThemeColors } from '@/auxWindow/utils/applyAuxThemeColors'
+import { isAuxWindow } from '@/utils/isAuxOrChildWindow'
 
 export type AppSyncType = 'theme' | 'i18n'
 
@@ -11,9 +12,6 @@ export interface AppSyncMessage {
 }
 
 let appSyncRegistered = false
-
-const isAuxWindow = () =>
-  window.location.pathname.includes('yakit-aux') || new URLSearchParams(window.location.search).has('route')
 
 function handleAppSyncMessage(message: AppSyncMessage) {
   if (!message?.type) return

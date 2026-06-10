@@ -9,7 +9,11 @@ body,
 }
 
 body {
-  font-family: Consolas, 'Lucida Console', 'Courier New', monospace;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   background: var(--Colors-Use-Neutral-Bg, #fff);
   color: var(--Colors-Use-Neutral-Text-1-Title, #000);
 }
