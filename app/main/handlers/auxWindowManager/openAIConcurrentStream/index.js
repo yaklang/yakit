@@ -61,7 +61,6 @@ function register(manager, mainWindow) {
       payload: data,
       width: 1200,
       height: 800,
-      openDevTools: true,
     })
   })
 
