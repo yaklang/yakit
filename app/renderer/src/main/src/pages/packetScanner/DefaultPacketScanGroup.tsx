@@ -72,7 +72,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
       key={'数据包扫描'}
       title={t('PacketScanButton.packetScan')}
       trigger={['click']}
-      visible={visible}
+      open={visible}
       content={
         <Space direction={'vertical'} style={{ width: i18n.language.startsWith('zh') ? 150 : 200 }}>
           {packetScanDefaultValue.map((i, n) => {

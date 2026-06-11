@@ -2272,7 +2272,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                 <span className="content-ellipsis">{item.name}</span>
               </Tooltip>
               <YakitPopover
-                overlayClassName={styles['edit-name-popover']}
+                classNames={{ root: styles['edit-name-popover'] }}
                 content={
                   <div
                     className={styles['edit-name-popover-content']}
@@ -2307,8 +2307,8 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                 }
                 placement="top"
                 trigger={['click']}
-                visible={editNameVisible}
-                onVisibleChange={setEditNameVisible}
+                open={editNameVisible}
+                onOpenChange={setEditNameVisible}
               >
                 <YakitButton
                   icon={<OutlinePencilaltIcon />}
@@ -2388,13 +2388,13 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
                         </LabelNodeItem>
                       </div>
                     }
-                    visible={visible}
-                    onVisibleChange={(v) => {
+                    open={visible}
+                    onOpenChange={(v) => {
                       if (disabled) return
                       if (!item.pageId) return
                       setVisible(v)
                     }}
-                    overlayClassName={styles['cog-popover']}
+                    classNames={{ root: styles['cog-popover'] }}
                   >
                     <YakitButton
                       icon={<SolidSwitchConfigurationIcon />}

@@ -1356,8 +1356,8 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                   <div className={styles['input-footer']}>
                     {(+width || 451) < 450 ? (
                       <YakitPopover
-                        overlayClassName={styles['yakit-popover-type']}
-                        overlayStyle={{ paddingBottom: 4 }}
+                        classNames={{ root: styles['yakit-popover-type'] }}
+                        styles={{ root: { paddingBottom: 4 } }}
                         placement="topRight"
                         trigger={'click'}
                         content={
@@ -1443,7 +1443,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                           <YakitPopover
                             title={'插件配置'}
                             // placement="topLeft"
-                            overlayClassName={styles['chatcs-plugin-option-popover']}
+                            classNames={{ root: styles['chatcs-plugin-option-popover'] }}
                             content={
                               <div className={styles['option-box']}>
                                 <div>最大执行数量：</div>
@@ -1461,11 +1461,11 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                                 </div>
                               </div>
                             }
-                            onVisibleChange={(v) => {
+                            onOpenChange={(v) => {
                               setPopoverVisible(v)
                             }}
-                            overlayInnerStyle={{ width: 220 }}
-                            visible={popoverVisible}
+                            styles={{ body: { width: 220 } }}
+                            open={popoverVisible}
                           >
                             <YakitButton icon={<SettingOutlined />} type={'text'} size={'small'} />
                           </YakitPopover>

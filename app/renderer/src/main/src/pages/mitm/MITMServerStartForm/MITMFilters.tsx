@@ -344,7 +344,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                     <span className={classNames(styles['header-id'])}>
                       <span>{displayName}</span>
                       <YakitPopover
-                        overlayClassName={styles['edit-name-popover']}
+                        classNames={{ root: styles['edit-name-popover'] }}
                         content={
                           <div className={styles['edit-name-popover-content']} onClick={(e) => e.stopPropagation()}>
                             <div className={styles['edit-name-popover-content-title']}>
@@ -365,8 +365,8 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
                         }
                         placement="top"
                         trigger={['click']}
-                        visible={editNameVisible && currentIndex === index}
-                        onVisibleChange={(visible) => {
+                        open={editNameVisible && currentIndex === index}
+                        onOpenChange={(visible) => {
                           setEditNameVisible(visible)
                           if (!visible) {
                             onCloseEditName()

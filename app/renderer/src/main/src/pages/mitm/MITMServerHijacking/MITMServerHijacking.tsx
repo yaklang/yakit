@@ -534,11 +534,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
           </div>
           {isNarrow && (
             <YakitPopover
-              overlayClassName={classNames(style['more-popover'])}
+              classNames={{ root: classNames(style['more-popover']) }}
               placement="bottomRight"
               trigger="click"
-              visible={morePopoverVisible}
-              onVisibleChange={setMorePopoverVisible}
+              open={morePopoverVisible}
+              onOpenChange={setMorePopoverVisible}
               content={
                 <YakitMenu
                   selectedKeys={[]}

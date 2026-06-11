@@ -158,13 +158,13 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
     return (
       <div className={classNames(styles['plugin-btn'], { [styles['plugin-active-btn']]: listShow })}>
         <YakitPopover
-          overlayClassName={styles['plugin-list-popover']}
-          overlayStyle={{ paddingTop: 6 }}
+          classNames={{ root: styles['plugin-list-popover'] }}
+          styles={{ root: { paddingTop: 6 } }}
           placement="bottomRight"
           trigger={'click'}
           content={listDom}
-          visible={listShow}
-          onVisibleChange={(visible) => setListShow(visible)}
+          open={listShow}
+          onOpenChange={(visible) => setListShow(visible)}
         >
           <div className={styles['body-style']}>{props.children}</div>
         </YakitPopover>
@@ -223,13 +223,13 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
           </div>
           <div className={classNames(styles['plugin-btn'], { [styles['plugin-active-btn']]: listShow })}>
             <YakitPopover
-              overlayClassName={styles['plugin-list-popover']}
-              overlayStyle={{ paddingTop: 6 }}
+              classNames={{ root: styles['plugin-list-popover'] }}
+              styles={{ root: { paddingTop: 6 } }}
               placement="bottomRight"
               trigger={'click'}
               content={listDom}
-              visible={listShow}
-              onVisibleChange={(visible) => setListShow(visible)}
+              open={listShow}
+              onOpenChange={(visible) => setListShow(visible)}
             >
               <div className={styles['body-style']}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
             </YakitPopover>

@@ -194,10 +194,12 @@
 
 .hotCode-group-submenu {
   :global {
-    .ant-popover-inner-content {
-      padding: 4px 6px;
-      max-height: 380px;
-      overflow-y: auto;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 4px 6px;
+        max-height: 380px;
+        overflow-y: overlay;
+      }
     }
   }
 

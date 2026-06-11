@@ -308,7 +308,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                   })
                 ) : (
                   <YakitPopover
-                    overlayClassName={styles['hub-outer-list-filter-popover']}
+                    classNames={{ root: styles['hub-outer-list-filter-popover'] }}
                     content={
                       <div className={styles['hub-outer-list-filter']}>
                         {showTagList.map((item) => {
@@ -327,7 +327,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                       </div>
                     }
                     trigger="hover"
-                    onVisibleChange={setTagShow}
+                    onOpenChange={setTagShow}
                     placement="bottomLeft"
                   >
                     <div
@@ -936,7 +936,7 @@ export const HubDetailListOpt: <T>(props: HubDetailListOptProps<T>) => any = mem
           </Tooltip>
           <YakitPopover
             placement="topRight"
-            overlayClassName={styles['terminal-popover']}
+            classNames={{ root: styles['terminal-popover'] }}
             content={<YakEditor type={pluginType} value={content} readOnly={true} />}
           >
             <OutlineTerminalIcon className={styles['plugin-details-item-show-icon-style']} />

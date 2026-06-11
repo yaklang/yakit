@@ -537,14 +537,14 @@ export const WindowPositionOPMenu: React.FC<WindowPositionOPProps> = memo((props
 
   return (
     <YakitPopover
-      overlayClassName={styles['window-position-op-popover']}
-      overlayStyle={{ paddingTop: 2 }}
+      classNames={{ root: styles['window-position-op-popover'] }}
+      styles={{ root: { paddingTop: 2 } }}
       title={<span>{t('YakitWindow.dockPosition')}</span>}
       placement={'bottomRight'}
       content={content}
       trigger="hover"
-      visible={show}
-      onVisibleChange={(visible) => setShow(visible)}
+      open={show}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <YakitButton isHover={show} type="text2" icon={<OutlineDotshorizontalIcon />} />
     </YakitPopover>

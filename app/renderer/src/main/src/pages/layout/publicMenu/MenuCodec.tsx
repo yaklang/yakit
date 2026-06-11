@@ -180,12 +180,12 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
     <div className={styles['menu-codec-wrapper']}>
       <div className={styles['func-btn-body']}>
         <YakitPopover
-          overlayClassName={styles['codec-menu-popover']}
-          overlayStyle={{ paddingTop: 2 }}
+          classNames={{ root: styles['codec-menu-popover'] }}
+          styles={{ root: { paddingTop: 2 } }}
           placement="bottomLeft"
           content={decodeMenu}
-          visible={codeShow}
-          onVisibleChange={(visible) => setCodeShow(visible)}
+          open={codeShow}
+          onOpenChange={(visible) => setCodeShow(visible)}
         >
           <YakitButton type={avtiveKey === 'decode' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
             <div className={styles['codec-menu-btn']}>
@@ -195,12 +195,12 @@ export const MenuCodec: React.FC<MenuCodecProps> = React.memo((props) => {
           </YakitButton>
         </YakitPopover>
         <YakitPopover
-          overlayClassName={styles['codec-menu-popover']}
-          overlayStyle={{ paddingTop: 2 }}
+          classNames={{ root: styles['codec-menu-popover'] }}
+          styles={{ root: { paddingTop: 2 } }}
           placement="bottomLeft"
           content={codeMenu}
-          visible={decodeShow}
-          onVisibleChange={(visible) => setDecodeShow(visible)}
+          open={decodeShow}
+          onOpenChange={(visible) => setDecodeShow(visible)}
         >
           <YakitButton type={avtiveKey === 'code' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
             <div className={styles['encode-menu-btn']}>

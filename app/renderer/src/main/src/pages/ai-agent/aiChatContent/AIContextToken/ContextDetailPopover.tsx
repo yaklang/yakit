@@ -67,11 +67,11 @@ const ContextDetailPopover: React.FC<ContextDetailPopoverProps> = ({ session, ex
   return (
     <YakitPopover
       content={popoverContent}
-      destroyTooltipOnHide={true}
+      destroyOnHidden={true}
       trigger="click"
-      overlayClassName={styles['echarts-details-popover']}
-      visible={visible}
-      onVisibleChange={setVisible}
+      classNames={{ root: styles['echarts-details-popover'] }}
+      open={visible}
+      onOpenChange={setVisible}
     >
       <Tooltip title={t('YakitButton.viewDetail')}>
         <YakitButton isHover={visible} icon={<OutlinePresentationchartlineIcon />} type="outline2" {...buttonProps} />

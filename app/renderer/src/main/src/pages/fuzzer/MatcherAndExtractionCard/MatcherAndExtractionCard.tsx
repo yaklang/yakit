@@ -1153,7 +1153,7 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                 <span className={classNames(styles['header-id'])}>
                   <span>{extractorItem.Name || `data_${index}`}</span>
                   <YakitPopover
-                    overlayClassName={styles['edit-name-popover']}
+                    classNames={{ root: styles['edit-name-popover'] }}
                     content={
                       <div
                         className={styles['edit-name-popover-content']}
@@ -1178,8 +1178,8 @@ export const ExtractorCollapse: React.FC<ExtractorCollapseProps> = React.memo((p
                     }
                     placement="top"
                     trigger={['click']}
-                    visible={editNameVisible && currentIndex === index}
-                    onVisibleChange={setEditNameVisible}
+                    open={editNameVisible && currentIndex === index}
+                    onOpenChange={setEditNameVisible}
                   >
                     <PencilAltIcon
                       className={classNames({
@@ -1422,7 +1422,7 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
   })
   return (
     <YakitPopover
-      overlayClassName={styles['color-select-popover']}
+      classNames={{ root: styles['color-select-popover'] }}
       content={
         <div className={styles['color-select-content']}>
           <span className={styles['hit-color']}>{t('ColorSelect.hit_color')}</span>
@@ -1449,8 +1449,8 @@ export const ColorSelect: React.FC<ColorSelectProps> = React.memo((props) => {
         </div>
       }
       placement="bottom"
-      visible={isShowColor}
-      onVisibleChange={setIsShowColor}
+      open={isShowColor}
+      onOpenChange={setIsShowColor}
     >
       <div
         className={classNames(styles['color-select-btn'], {

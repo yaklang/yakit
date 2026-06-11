@@ -353,7 +353,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
               return (
                 <React.Fragment key={key}>
                   <YakitPopover
-                    overlayClassName={styles['forge-opt-popover']}
+                    classNames={{ root: styles['forge-opt-popover'] }}
                     placement="right"
                     content={
                       <div className={styles['forge-detail']}>

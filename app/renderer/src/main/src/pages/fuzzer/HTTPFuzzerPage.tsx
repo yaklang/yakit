@@ -2827,7 +2827,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                     <YakitPopover
                       trigger={'click'}
                       placement={'leftTop'}
-                      destroyTooltipOnHide={true}
+                      destroyOnHidden={true}
                       content={
                         <div style={{ width: 400 }}>
                           <HTTPFuzzerHistorySelector
@@ -3747,7 +3747,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
           <YakitPopover
             trigger={'click'}
             content={searchNode}
-            onVisibleChange={(b) => {
+            onOpenChange={(b) => {
               if (!b) {
                 setQuery({
                   ...query,
@@ -4000,8 +4000,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </Space>
               </>
             }
-            visible={exportDataVisible}
-            onVisibleChange={(visible) => {
+            open={exportDataVisible}
+            onOpenChange={(visible) => {
               setExportDataVisible(visible)
             }}
           >
@@ -4052,8 +4052,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
                 </Space>
               </>
             }
-            visible={exportDataVisible}
-            onVisibleChange={(visible) => {
+            open={exportDataVisible}
+            onOpenChange={(visible) => {
               setExportDataVisible(visible)
             }}
           >

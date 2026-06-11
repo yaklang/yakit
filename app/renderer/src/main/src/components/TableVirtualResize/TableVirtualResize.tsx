@@ -25,7 +25,7 @@ import {
 } from './TableVirtualResizeType'
 import ReactResizeDetector from 'react-resize-detector'
 import styles from './TableVirtualResize.module.scss'
-import { Divider, Popover, RadioChangeEvent, Tooltip } from 'antd'
+import { Divider, RadioChangeEvent, Tooltip } from 'antd'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
   FilterIcon,
@@ -56,6 +56,7 @@ import ShortcutKeyFocusHook from '@/utils/globalShortcutKey/shortcutKeyFocusHook
 import { v4 as uuidv4 } from 'uuid'
 import { ShortcutKeyFocusType } from '@/utils/globalShortcutKey/events/global'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 const { RangePicker } = YakitDatePicker
 
 /**
@@ -1796,7 +1797,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
           )}
           {columnsItem?.filterProps && (
             <>
-              <Popover
+              <YakitPopover
                 placement="bottom"
                 trigger="click"
                 content={
@@ -1811,9 +1812,9 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                       : renderFilterPopover(columnsItem, filterKey, columnsItem?.filterProps?.filtersType)}
                   </div>
                 }
-                overlayClassName={styles['search-popover']}
-                visible={opensPopover[filterKey]}
-                onVisibleChange={(v) => {
+                classNames={{ root: styles['search-popover'] }}
+                open={opensPopover[filterKey]}
+                onOpenChange={(v) => {
                   setOpensPopover({
                     ...opensPopover,
                     [filterKey]: v,
@@ -1836,7 +1837,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                 >
                   {columnsItem.filterProps.filterIcon ? columnsItem.filterProps.filterIcon : <FilterIcon />}
                 </div>
-              </Popover>
+              </YakitPopover>
             </>
           )}
           {columnsItem.afterIconExtra}

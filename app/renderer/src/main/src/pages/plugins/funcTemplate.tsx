@@ -160,11 +160,11 @@ export const TypeSelect: React.FC<TypeSelectProps> = memo((props) => {
       {!isEllipsis && (
         <div className={styles['ellipsis-wrapper']}>
           <YakitPopover
-            overlayClassName={styles['ellipsis-type-select-popover']}
+            classNames={{ root: styles['ellipsis-type-select-popover'] }}
             trigger={'click'}
             placement="bottomRight"
-            visible={visible}
-            onVisibleChange={(value) => setVisible(value)}
+            open={visible}
+            onOpenChange={(value) => setVisible(value)}
             content={
               <div className={styles['ellipsis-type-select-wrapper']}>
                 <div className={styles['list-wrapper']}>
@@ -353,7 +353,7 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
         }}
       />
       <YakitPopover
-        overlayClassName={styles['func-search-popver']}
+        classNames={{ root: styles['func-search-popver'] }}
         content={
           <YakitCombinationSearch
             beforeOptionWidth={92}
@@ -370,8 +370,8 @@ export const FuncSearch: React.FC<FuncSearchProps> = memo((props) => {
           />
         }
         trigger="click"
-        visible={showPopver}
-        onVisibleChange={setShowPopver}
+        open={showPopver}
+        onOpenChange={setShowPopver}
         placement="bottomRight"
       >
         <YakitButton
@@ -576,7 +576,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                 })
               ) : (
                 <YakitPopover
-                  overlayClassName={styles['plugins-list-tag-total-popover']}
+                  classNames={{ root: styles['plugins-list-tag-total-popover'] }}
                   content={
                     <div className={styles['plugins-list-tag-total']}>
                       {showTagList.map((item) => {
@@ -595,7 +595,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                     </div>
                   }
                   trigger="hover"
-                  onVisibleChange={setTagShow}
+                  onOpenChange={setTagShow}
                   placement="bottomLeft"
                 >
                   <div
@@ -1479,11 +1479,11 @@ export const FilterPopoverBtn: React.FC<FilterPopoverBtnProps> = memo((props) =>
   })
   return (
     <YakitPopover
-      overlayClassName={styles['filter-popover-btn']}
+      classNames={{ root: styles['filter-popover-btn'] }}
       placement="bottomLeft"
       trigger={['click']}
-      visible={visible}
-      onVisibleChange={(value) => {
+      open={visible}
+      onOpenChange={(value) => {
         setVisible(value)
         if (!value) onFinish(form.getFieldsValue())
       }}

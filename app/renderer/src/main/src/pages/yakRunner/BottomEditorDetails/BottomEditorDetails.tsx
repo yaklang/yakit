@@ -286,7 +286,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
               <YakitPopover
                 placement="left"
                 trigger="click"
-                overlayClassName={styles['yak-runner-menu-popover']}
+                classNames={{ root: styles['yak-runner-menu-popover'] }}
                 title={<div style={{ display: 'flex' }}>{t('BottomEditorDetails.terminalFontConfig')}</div>}
                 content={
                   <>
@@ -334,7 +334,7 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                     />
                   </>
                 }
-                onVisibleChange={(v) => {
+                onOpenChange={(v) => {
                   if (!v) {
                     if (terminalRef.current) {
                       terminalRef.current.terminal.options.fontFamily = terminaFont.fontFamily
@@ -343,8 +343,8 @@ export const BottomEditorDetails: React.FC<BottomEditorDetailsProps> = (props) =
                   }
                   setPopoverVisible(v)
                 }}
-                overlayInnerStyle={{ width: 340 }}
-                visible={popoverVisible}
+                styles={{ body: { width: 340 } }}
+                open={popoverVisible}
               >
                 <YakitButton icon={<OutlineCogIcon />} type={popoverVisible ? 'text' : 'text2'} />
               </YakitPopover>

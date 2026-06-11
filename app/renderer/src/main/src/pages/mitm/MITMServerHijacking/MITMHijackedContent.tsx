@@ -854,7 +854,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                   </Tooltip>
                 </div>
                 <YakitPopover
-                  overlayClassName={styles['mitm-v2-hijacked-manual-drop-down-popover']}
+                  classNames={{ root: styles['mitm-v2-hijacked-manual-drop-down-popover'] }}
                   content={
                     <YakitMenu
                       width={150}
@@ -878,8 +878,8 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                   }
                   trigger="click"
                   placement="bottomLeft"
-                  visible={mitmV2PopoverVisible}
-                  onVisibleChange={setMITMV2PopoverVisible}
+                  open={mitmV2PopoverVisible}
+                  onOpenChange={setMITMV2PopoverVisible}
                 >
                   <YakitButton
                     type="outline2"

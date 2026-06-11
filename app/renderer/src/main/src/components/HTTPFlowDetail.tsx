@@ -1152,7 +1152,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
 
                             <Space>
                               <YakitPopover
-                                overlayClassName={styles['http-flow-mini-drop-down-popover']}
+                                classNames={{ root: styles['http-flow-mini-drop-down-popover'] }}
                                 content={
                                   <YakitMenu
                                     width={150}
@@ -1165,8 +1165,8 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
                                 }
                                 trigger="click"
                                 placement="bottomLeft"
-                                onVisibleChange={setPopoverVisible}
-                                visible={popoverVisible}
+                                onOpenChange={setPopoverVisible}
+                                open={popoverVisible}
                               >
                                 <YakitButton type="text" size="small">
                                   {t('HTTPFlowDetailMini.more')}
@@ -2096,8 +2096,8 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
   return (
     <YakitPopover
       trigger="click"
-      overlayClassName={styles['codec-menu-popover']}
-      overlayStyle={{ paddingTop: 2 }}
+      classNames={{ root: styles['codec-menu-popover'] }}
+      styles={{ root: { paddingTop: 2 } }}
       placement="bottomLeft"
       content={
         <div className={styles['codec-menu-cont-wrapper']}>
@@ -2122,8 +2122,8 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
           ))}
         </div>
       }
-      visible={codeShow}
-      onVisibleChange={(visible) => setCodeShow(visible)}
+      open={codeShow}
+      onOpenChange={(visible) => setCodeShow(visible)}
     >
       <YakitButton size="small" type={codeKey !== '' ? 'primary' : 'outline2'} onClick={(e) => e.preventDefault()}>
         {t('CodingPopover.encoding')}

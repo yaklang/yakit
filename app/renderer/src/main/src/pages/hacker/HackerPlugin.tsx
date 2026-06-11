@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Form, Popover, Space, Tag, Tooltip, Typography } from 'antd'
+import { Form, Space, Tag, Tooltip, Typography } from 'antd'
 import {
   CaretRightOutlined,
   PoweroffOutlined,
@@ -24,6 +24,7 @@ import { showModal } from '../../utils/showModal'
 import { xtermClear } from '../../utils/xtermUtils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
 const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
@@ -204,7 +205,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                             >
                                 全选
                             </YakitCheckbox> */}
-              <Popover
+              <YakitPopover
                 title={'额外设置'}
                 trigger={['click']}
                 content={
@@ -232,8 +233,8 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                 }
               >
                 <YakitButton size={'small'} icon={<SettingOutlined />} type={'text'} />
-              </Popover>
-              <Popover
+              </YakitPopover>
+              <YakitPopover
                 title={'搜索插件关键字'}
                 trigger={['click']}
                 content={
@@ -261,7 +262,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                 }
               >
                 <YakitButton size={'small'} type={!!keyword ? 'primary' : 'text'} icon={<SearchOutlined />} />
-              </Popover>
+              </YakitPopover>
               {execting ? (
                 <YakitButton
                   type="text"

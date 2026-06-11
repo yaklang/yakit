@@ -239,8 +239,8 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
             </div>
           }
           trigger={['hover', 'click']}
-          visible={visible}
-          onVisibleChange={onVisibleChange}
+          open={visible}
+          onOpenChange={onVisibleChange}
         >
           <YakitButton
             type="text2"

@@ -228,11 +228,11 @@
     .ant-popover-content {
       transform: translateY(14px);
     }
-    .ant-popover-inner-content {
-      padding: 0;
-    }
     .ant-popover-inner {
       border-radius: 8px;
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
   }
 }

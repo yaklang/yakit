@@ -110,7 +110,7 @@ const CustomCodecListItemOperate: React.FC<CustomCodecListItemOperateProps> = Re
       {/*    visiblePopover={visiblePopover}*/}
       {/*    setVisiblePopover={setVisiblePopover}*/}
       {/*/>*/}
-      <YakitPopover placement="topRight" overlayClassName={style['terminal-popover']} content={popoverContent}>
+      <YakitPopover placement="topRight" classNames={{ root: style['terminal-popover'] }} content={popoverContent}>
         <TerminalIcon className={style['plugin-local-icon']} />
       </YakitPopover>
     </div>

@@ -67,12 +67,12 @@ const HistorySearch = React.memo<HistorySearchProps>((props) => {
     <div className={style['http-history-search-wrapper']}>
       {showPopoverSearch ? (
         <YakitPopover
-          overlayClassName={style['http-history-search-drop-down-popover']}
+          classNames={{ root: style['http-history-search-drop-down-popover'] }}
           trigger="click"
           placement="bottomRight"
           content={searchNode}
-          visible={isHoverSearch}
-          onVisibleChange={setIsHoverSearch}
+          open={isHoverSearch}
+          onOpenChange={setIsHoverSearch}
         >
           <YakitButton icon={<OutlineSearchIcon />} type="outline2" isHover={isHoverSearch || !!searchVal} />
         </YakitPopover>

@@ -399,10 +399,10 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
   return (
     <div className={styles['tooltip']} ref={ref} style={{ width: tooltipWidth }}>
       <YakitPopover
-        overlayClassName={styles['tooltip-popover']}
+        classNames={{ root: styles['tooltip-popover'] }}
         placement="bottomLeft"
-        visible={visibleText}
-        onVisibleChange={setVisibleText}
+        open={visibleText}
+        onOpenChange={setVisibleText}
         content={
           <div className={styles['tooltip-popover-content']}>
             {tooltipTextList.map((ele) => {
@@ -435,10 +435,10 @@ export const TooltipView: React.FC<TooltipViewProps> = () => {
       </YakitPopover>
       <div className={styles['tooltip-divider']} />
       <YakitPopover
-        overlayClassName={styles['tooltip-popover']}
+        classNames={{ root: styles['tooltip-popover'] }}
         placement="bottomLeft"
-        visible={visibleLight}
-        onVisibleChange={setVisibleLight}
+        open={visibleLight}
+        onOpenChange={setVisibleLight}
         content={
           <div className={styles['tooltip-light-popover-content']}>
             {highlight.map((item) => (

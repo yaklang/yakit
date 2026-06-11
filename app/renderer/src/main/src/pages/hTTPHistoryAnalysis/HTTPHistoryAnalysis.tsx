@@ -1326,14 +1326,14 @@ const TerminalPopover: React.FC<TerminalPopoverProps> = React.memo((props) => {
   return (
     <YakitPopover
       placement="right"
-      overlayClassName={classNames(styles['matching-extraction-content'], styles['terminal-popover'])}
+      classNames={{ root: classNames(styles['matching-extraction-content'], styles['terminal-popover']) }}
       content={
         <div className={styles['terminal-popover-content']} ref={popoverContentRef}>
           {popoverContent}
         </div>
       }
-      visible={visiblePopover}
-      onVisibleChange={(v) => {
+      open={visiblePopover}
+      onOpenChange={(v) => {
         if (v) {
           setTimeout(() => {
             onSetArrowTop()

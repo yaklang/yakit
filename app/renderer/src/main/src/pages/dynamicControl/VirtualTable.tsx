@@ -39,8 +39,8 @@ const VirtualTableTitle: React.FC<VirtualTableTitleProps> = (props) => {
                 placement={item?.filterProps.popoverDirection ? item?.filterProps.popoverDirection : 'bottom'}
                 trigger={'click'}
                 content={item?.filterProps.filterRender}
-                overlayClassName={styles['ui-op-setting-dropdown']}
-                // visible={opensPopover[filterKey]}
+                classNames={{ root: styles['ui-op-setting-dropdown'] }}
+                // open={opensPopover[filterKey]}
               >
                 <div onClick={() => {}} className={classNames(styles['virtual-table-title-filter-icon'])}>
                   <FilterIcon />
