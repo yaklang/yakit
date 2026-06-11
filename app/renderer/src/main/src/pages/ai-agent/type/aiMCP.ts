@@ -85,25 +85,12 @@ export const isMCPTierActive = (tiers: MCPTierVisibility) => {
   return tiers.enableLegacyMcpTools || tiers.enableAIToolFramework || tiers.enableBridgeExternalMcp
 }
 
-export const resolveMCPToolListSourceFilter = (tiers: MCPTierVisibility): MCPToolSource | '' => {
+export const resolveMCPToolListSourceFilter = (tiers: MCPTierVisibility): string[] => {
   const sources: MCPToolSource[] = []
   if (tiers.enableLegacyMcpTools) sources.push('builtin')
   if (tiers.enableAIToolFramework) sources.push('aitool')
   if (tiers.enableBridgeExternalMcp) sources.push('bridge')
-  if (sources.length === 1) return sources[0]
-  return ''
-}
-
-export const isMCPToolVisibleForTiers = (
-  tool: Pick<MCPToolConfig, 'Source'>,
-  enableLegacyMcpTools: boolean,
-  enableAIToolFramework: boolean,
-  enableBridgeExternalMcp = false,
-) => {
-  if (tool.Source === 'builtin') return enableLegacyMcpTools
-  if (tool.Source === 'aitool') return enableAIToolFramework
-  if (tool.Source === 'bridge') return enableBridgeExternalMcp
-  return false
+  return sources
 }
 
 // ---- MCP Tool-level enable/disable management ----
@@ -124,7 +111,7 @@ export interface GetMCPToolListRequest {
   /** Fuzzy filter by tool name or description */
   Keyword: string
   /** "builtin" | "aitool" | "bridge" | "" (all) */
-  Source: MCPToolSource | ''
+  Source: string | string[]
   /** Filter bridge tools by origin server name */
   ServerName: string
   /** When true, return only enabled tools */

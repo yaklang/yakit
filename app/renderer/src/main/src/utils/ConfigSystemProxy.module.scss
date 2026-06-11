@@ -116,12 +116,6 @@
       background: var(--Colors-Use-Neutral-Bg-Hover);
     }
 
-    .transport-tab-disabled-label {
-      display: inline-block;
-      color: var(--Colors-Use-Neutral-Disable);
-      cursor: not-allowed;
-    }
-
     .transport-info {
       margin-top: 16px;
 
@@ -136,6 +130,7 @@
         }
 
         &-json {
+          flex: 1;
         }
       }
 

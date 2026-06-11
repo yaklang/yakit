@@ -13,7 +13,7 @@ export interface mcpStreamHooks {
   }
   mcpStreamEvent: {
     onCancel: () => void
-    onStart: (options?: StartMcpServerOptions) => void
+    onStart: (options: StartMcpServerOptions) => void
     onSetMcpUrl: (url: string) => void
   }
 }
@@ -98,7 +98,7 @@ export default function useMcpStream(props: useMcpHooks) {
     }
   }, [mcpToken])
 
-  const onStart = (options?: StartMcpServerOptions) => {
+  const onStart = (options: StartMcpServerOptions) => {
     if (mcpUrl.trim() === '') {
       yakitNotify('error', t('McpHook.urlRequired'))
       return

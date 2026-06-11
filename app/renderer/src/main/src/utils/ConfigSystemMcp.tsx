@@ -13,7 +13,6 @@ import {
   GetMCPToolListRequest,
   GetMCPToolListResponse,
   isMCPTierActive,
-  isMCPToolVisibleForTiers,
   MCPTierVisibility,
   MCPToolConfig,
   MCPToolSource,
@@ -31,6 +30,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import styles from './ConfigSystemProxy.module.scss'
 import classNames from 'classnames'
+import { cloneDeep } from 'lodash'
 const { ipcRenderer } = window.require('electron')
 
 const TRANSPORT_OPTIONS = [
@@ -79,11 +79,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       return {
         ...item,
         disabled: true,
-        label: (
-          <Tooltip title={t('ConfigSystemMcp.stdio_remote_disabled_tip')}>
-            <span className={styles['transport-tab-disabled-label']}>{item.label}</span>
-          </Tooltip>
-        ),
+        label: <Tooltip title={t('ConfigSystemMcp.stdio_remote_disabled_tip')}>{item.label}</Tooltip>,
       }
     })
   }, [isRemoteEngine, i18n.language])
@@ -171,12 +167,26 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
   const [enableLegacyMcpTools, setEnableLegacyMcpTools] = useState<boolean>(true)
   const [enableAIToolFramework, setEnableAIToolFramework] = useState<boolean>(false)
   const [enableBridgeExternalMcp, setEnableBridgeExternalMcp] = useState<boolean>(false)
+  const tierVisibilityRef = useRef<MCPTierVisibility>({
+    enableLegacyMcpTools,
+    enableAIToolFramework,
+    enableBridgeExternalMcp,
+  })
+  const hasActiveToolTier = useMemo(
+    () =>
+      isMCPTierActive({
+        enableLegacyMcpTools,
+        enableAIToolFramework,
+        enableBridgeExternalMcp,
+      }),
+    [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp],
+  )
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   const [forceSyncLoading, setForceSyncLoading] = useState<boolean>(false)
   const isInitRequestRef = useRef<boolean>(true)
   const [query, setQuery] = useState<GetMCPToolListRequest>({
     Keyword: '',
-    Source: '',
+    Source: ['builtin'],
     ServerName: '',
     OnlyEnabled: false,
     Pagination: {
@@ -194,28 +204,6 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     Total: 0,
   })
 
-  const tierVisibility = useMemo<MCPTierVisibility>(
-    () => ({
-      enableLegacyMcpTools,
-      enableAIToolFramework,
-      enableBridgeExternalMcp,
-    }),
-    [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp],
-  )
-
-  const hasActiveToolTier = isMCPTierActive(tierVisibility)
-
-  const displayTools = useMemo(() => {
-    return response.Tools.filter((tool) =>
-      isMCPToolVisibleForTiers(
-        tool,
-        tierVisibility.enableLegacyMcpTools,
-        tierVisibility.enableAIToolFramework,
-        tierVisibility.enableBridgeExternalMcp,
-      ),
-    )
-  }, [response.Tools, tierVisibility])
-
   const getSourceLabel = useMemoizedFn((source: MCPToolSource) => {
     switch (source) {
       case 'builtin':
@@ -229,21 +217,18 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     }
   })
 
-  const sourceFilterOptions = useMemo(() => {
-    const options: { value: MCPToolSource; label: string }[] = []
-    if (tierVisibility.enableLegacyMcpTools) {
-      options.push({ value: 'builtin', label: t('ConfigSystemMcp.source_legacy') })
-    }
-    if (tierVisibility.enableAIToolFramework) {
-      options.push({ value: 'aitool', label: t('ConfigSystemMcp.source_aitool') })
-    }
-    if (tierVisibility.enableBridgeExternalMcp) {
-      options.push({ value: 'bridge', label: t('ConfigSystemMcp.source_bridge') })
-    }
-    return options
-  }, [tierVisibility, i18n.language])
-
   const columns: ColumnsTypeProps[] = useMemo(() => {
+    const sourceFilterOptions: { value: MCPToolSource; label: string }[] = []
+    if (enableLegacyMcpTools) {
+      sourceFilterOptions.push({ value: 'builtin', label: t('ConfigSystemMcp.source_legacy') })
+    }
+    if (enableAIToolFramework) {
+      sourceFilterOptions.push({ value: 'aitool', label: t('ConfigSystemMcp.source_aitool') })
+    }
+    if (enableBridgeExternalMcp) {
+      sourceFilterOptions.push({ value: 'bridge', label: t('ConfigSystemMcp.source_bridge') })
+    }
+
     return [
       {
         title: t('ConfigSystemMcp.tool_source'),
@@ -253,9 +238,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         filterProps: {
           filterKey: 'Source',
           filtersType: 'select',
-          filtersSelectAll: {
-            isAll: true,
-          },
+          filterMultiple: true,
           filters: sourceFilterOptions,
           filterIcon: <OutlineFilterIcon className={styles['filter-icon']} />,
         },
@@ -286,23 +269,10 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       {
         title: t('ConfigSystemMcp.enable_tool'),
         dataKey: 'Enable',
-        render: (text, record) => (
-          <YakitSwitch
-            checked={text}
-            disabled={
-              !isMCPToolVisibleForTiers(
-                record,
-                tierVisibility.enableLegacyMcpTools,
-                tierVisibility.enableAIToolFramework,
-                tierVisibility.enableBridgeExternalMcp,
-              )
-            }
-            onChange={(v) => handleToggle(v, record)}
-          />
-        ),
+        render: (text, record) => <YakitSwitch checked={text} onChange={(v) => handleToggle(v, record)} />,
       },
     ]
-  }, [i18n.language, tierVisibility, sourceFilterOptions])
+  }, [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp, i18n.language])
 
   const queyChangeUpdateData = useDebounceFn(
     () => {
@@ -323,75 +293,68 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     queyChangeUpdateData()
   }, [query])
 
-  const getToolList = useMemoizedFn(
-    async (page: number, forceSync = false, tiers = tierVisibility, queryOverride?: Partial<GetMCPToolListRequest>) => {
-      if (!isMCPTierActive(tiers)) {
-        setResponse({
-          Tools: [],
-          Pagination: {
-            ...genDefaultPagination(20),
-            OrderBy: 'created_at',
-          },
-          Total: 0,
-        })
-        return
-      }
-
-      const activeQuery = { ...query, ...queryOverride }
-      const tierSource = resolveMCPToolListSourceFilter(tiers)
-      const params: GetMCPToolListRequest = {
-        ...activeQuery,
-        Source: activeQuery.Source || tierSource,
-        ForceSync: forceSync,
+  const getToolList = useMemoizedFn(async (page: number) => {
+    if (!hasActiveToolTier) {
+      setResponse({
+        Tools: [],
         Pagination: {
-          ...activeQuery.Pagination,
-          Page: page,
+          ...genDefaultPagination(20),
+          OrderBy: 'created_at',
         },
+        Total: 0,
+      })
+      return
+    }
+
+    const params: GetMCPToolListRequest = {
+      ...cloneDeep(query),
+      Pagination: {
+        ...query.Pagination,
+        Page: page,
+      },
+    }
+    params.Source = params.Source + ''
+    const isInit = page === 1
+    isInitRequestRef.current = false
+    if (isInit) {
+      if (query.ForceSync) {
+        setForceSyncLoading(true)
+      } else {
+        setLoading(true)
       }
-      const isInit = page === 1
-      isInitRequestRef.current = false
+    }
+    try {
+      const res = await grpcGetMCPToolList(params)
+      const tools = res.Tools || []
+      setResponse((prev) => ({
+        Tools: isInit ? tools : prev.Tools.concat(tools),
+        Pagination: res.Pagination,
+        Total: res.Total,
+      }))
       if (isInit) {
-        if (forceSync) {
-          setForceSyncLoading(true)
+        setIsRefresh((prev) => !prev)
+      }
+    } finally {
+      if (isInit) {
+        if (query.ForceSync) {
+          setForceSyncLoading(false)
         } else {
-          setLoading(true)
+          setLoading(false)
         }
       }
-      try {
-        const res = await grpcGetMCPToolList(params)
-        const tools = res.Tools || []
-        setResponse((prev) => ({
-          Tools: isInit ? tools : prev.Tools.concat(tools),
-          Pagination: res.Pagination,
-          Total: res.Total,
-        }))
-        if (isInit) {
-          setIsRefresh((prev) => !prev)
-        }
-      } finally {
-        if (isInit) {
-          if (forceSync) {
-            setForceSyncLoading(false)
-          } else {
-            setLoading(false)
-          }
-        }
-      }
-    },
-  )
+    }
+  })
 
   const onRefreshTools = useMemoizedFn(() => {
-    if (!hasActiveToolTier) return
-    getToolList(1, false)
+    setQuery((prev) => ({ ...prev, ForceSync: false }))
   })
 
   const onForceSyncTools = useMemoizedFn(() => {
-    if (!enableBridgeExternalMcp || !hasActiveToolTier) return
-    getToolList(1, true)
+    setQuery((prev) => ({ ...prev, ForceSync: true }))
   })
 
   const resetAndFetchTools = useMemoizedFn((tiers: MCPTierVisibility, forceSync = false) => {
-    setQuery((prev) => ({ ...prev, Source: '' }))
+    tierVisibilityRef.current = tiers
     setResponse({
       Tools: [],
       Pagination: {
@@ -400,13 +363,15 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       },
       Total: 0,
     })
-    setIsRefresh((prev) => !prev)
-    getToolList(1, forceSync, tiers, { Source: '' })
+    if (!isMCPTierActive(tiers)) {
+      return
+    }
+    setQuery((prev) => ({ ...prev, Source: resolveMCPToolListSourceFilter(tiers), ForceSync: forceSync }))
   })
 
   const onLegacyTierChange = useMemoizedFn((checked: boolean) => {
     const tiers = {
-      ...tierVisibility,
+      ...tierVisibilityRef.current,
       enableLegacyMcpTools: checked,
     }
     setEnableLegacyMcpTools(checked)
@@ -415,9 +380,9 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
 
   const onAIToolFrameworkChange = useMemoizedFn((checked: boolean) => {
     const tiers = {
-      ...tierVisibility,
+      ...tierVisibilityRef.current,
       enableAIToolFramework: checked,
-      enableBridgeExternalMcp: checked ? tierVisibility.enableBridgeExternalMcp : false,
+      enableBridgeExternalMcp: checked ? tierVisibilityRef.current.enableBridgeExternalMcp : false,
     }
     setEnableAIToolFramework(checked)
     if (!checked) {
@@ -428,7 +393,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
 
   const onBridgeTierChange = useMemoizedFn((checked: boolean) => {
     const tiers = {
-      ...tierVisibility,
+      ...tierVisibilityRef.current,
       enableBridgeExternalMcp: checked,
     }
     setEnableBridgeExternalMcp(checked)
@@ -443,16 +408,6 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
   })
 
   const handleToggle = useMemoizedFn((checked: boolean, record: MCPToolConfig) => {
-    if (
-      !isMCPToolVisibleForTiers(
-        record,
-        tierVisibility.enableLegacyMcpTools,
-        tierVisibility.enableAIToolFramework,
-        tierVisibility.enableBridgeExternalMcp,
-      )
-    ) {
-      return
-    }
     grpcSetMCPToolEnabled({ ToolName: record.ToolName, Enable: checked }, true)
       .then(() => {
         setResponse((prev) => ({
@@ -469,6 +424,9 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
   })
 
   const onSetMcp = useMemoizedFn(() => {
+    if (!hasActiveToolTier) {
+      return
+    }
     mcpStreamEvent.onStart({
       EnableAll: enableLegacyMcpTools,
       EnableAIToolFramework: enableAIToolFramework,
@@ -616,7 +574,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
                       </div>
                     </div>
                   }
-                  data={displayTools}
+                  data={response.Tools}
                   enableDrag={false}
                   renderKey="ToolName"
                   columns={columns}
@@ -637,7 +595,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
               <YakitButton type="outline2" onClick={onCloseModal}>
                 {t('YakitButton.cancel')}
               </YakitButton>
-              <YakitButton colors="primary" onClick={onSetMcp}>
+              <YakitButton colors="primary" disabled={!hasActiveToolTier} onClick={onSetMcp}>
                 {t('YakitButton.enable')}
               </YakitButton>
             </div>
