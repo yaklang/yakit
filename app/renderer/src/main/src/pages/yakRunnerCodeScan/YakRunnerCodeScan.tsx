@@ -2917,7 +2917,6 @@ export const FlowRuleDetailsListItem: React.FC<FlowRuleDetailsListItemProps> = R
           <Tooltip
             title={data.Description || 'No Description about it.'}
             placement="topRight"
-            overlayClassName="plugins-tooltip"
           >
             <OutlineQuestionmarkcircleIcon className={styles['flow-rule-item-show-icon-style']} />
           </Tooltip>

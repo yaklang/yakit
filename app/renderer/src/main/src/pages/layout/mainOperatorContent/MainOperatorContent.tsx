@@ -3830,8 +3830,8 @@ const TabItem: React.FC<TabItemProps> = React.memo((props) => {
             >
               <Tooltip
                 title={item.verboseKey ? t(item.verboseKey) : item.verbose || ''}
-                overlayClassName={styles['toolTip-overlay']}
-                destroyTooltipOnHide={true}
+                classNames={{ root: styles['toolTip-overlay'] }}
+                destroyOnHidden={true}
                 placement="top"
               >
                 <div className={styles['tab-menu-item-verbose-wrapper']}>
@@ -6062,8 +6062,8 @@ const SubTabItem: React.FC<SubTabItemProps> = React.memo((props) => {
             )}
             <Tooltip
               title={subItem.verbose || ''}
-              overlayClassName={styles['toolTip-overlay']}
-              destroyTooltipOnHide={true}
+              classNames={{ root: styles['toolTip-overlay'] }}
+              destroyOnHidden={true}
               placement="top"
             >
               <div className={styles['tab-menu-item-verbose-wrapper']}>

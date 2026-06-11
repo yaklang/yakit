@@ -1009,7 +1009,7 @@ const PromptAndActiveTextarea: React.FC<PromptAndActiveTextareaProps> = memo((pr
     >
       <div className={styles['textarea-header']}>
         <div className={styles['header-title']}>{title}</div>
-        <Tooltip overlayClassName={styles['textarea-hint-icon-tooltip']} title={hint}>
+        <Tooltip classNames={{ root: styles['textarea-hint-icon-tooltip'] }} title={hint}>
           {!!hint && <OutlineInformationcircleIcon className={styles['header-hint-icon']} />}
         </Tooltip>
       </div>

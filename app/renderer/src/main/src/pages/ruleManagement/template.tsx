@@ -1032,8 +1032,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
               <div className={styles['header-title']}>{t('EditRuleDrawer.basicInfo')}</div>
               <Tooltip
                 title={t('EditRuleDrawer.collapseBasicInfo')}
-                visible={infoTooltipShow}
-                onVisibleChange={setInfoTooltipShow}
+                open={infoTooltipShow}
+                onOpenChange={setInfoTooltipShow}
               >
                 <YakitButton type="text2" icon={<OutlineCloseIcon />} onClick={handleSetExpand} />
               </Tooltip>
@@ -1106,8 +1106,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
                   <Tooltip
                     placement="topLeft"
                     title={t('EditRuleDrawer.expandBasicInfo')}
-                    visible={codeTooltipShow}
-                    onVisibleChange={setCodeTooltipShow}
+                    open={codeTooltipShow}
+                    onOpenChange={setCodeTooltipShow}
                   >
                     <YakitButton type="text2" icon={<OutlineOpenIcon />} onClick={handleSetExpand} />
                   </Tooltip>

@@ -787,7 +787,7 @@ export const HubListOnline: React.FC<HubListOnlineProps> = memo((props) => {
                 <div className={styles['hub-detail-list-extra']}>
                   <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type="online" />
                   <div className={styles['divider-style']}></div>
-                  <Tooltip title="下载插件" overlayClassName="plugins-tooltip">
+                  <Tooltip title="下载插件">
                     <YakitButton
                       type="text2"
                       loading={batchDownloadLoading}

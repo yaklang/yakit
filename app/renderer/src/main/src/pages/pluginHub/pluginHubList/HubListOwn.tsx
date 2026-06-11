@@ -810,7 +810,6 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                   <div className={styles['divider-style']}></div>
                   <Tooltip
                     title={selectedNum > 0 ? t('YakitButton.download') : t('YakitButton.oneClickDownload')}
-                    overlayClassName="plugins-tooltip"
                   >
                     <YakitButton
                       type="text2"
@@ -823,7 +822,6 @@ export const HubListOwn: React.FC<HubListOwnProps> = memo((props) => {
                   {/* <div className={styles["divider-style"]}></div>
                                     <Tooltip
                                         title={selectedNum > 0 ? "删除" : "清空"}
-                                        overlayClassName='plugins-tooltip'
                                     >
                                         <YakitButton
                                             type='text2'

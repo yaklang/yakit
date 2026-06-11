@@ -1110,7 +1110,7 @@ const SystemRouteMenuDataItem: React.FC<SystemRouteMenuDataItemProps> = React.me
         <Tooltip
           title={item.describeUi ? t(item.describeUi) : item.describe || 'No Description about it.'}
           placement="topRight"
-          overlayClassName={style['question-tooltip']}
+          classNames={{ root: style['question-tooltip'] }}
         >
           <QuestionMarkCircleIcon className={style['menu-question-icon']} />
         </Tooltip>
@@ -1390,8 +1390,8 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
       <Tooltip
         title={plugin.Help || 'No Description about it.'}
         placement="topRight"
-        overlayClassName={style['question-tooltip']}
-        onVisibleChange={(v) => {
+        classNames={{ root: style['question-tooltip'] }}
+        onOpenChange={(v) => {
           if (v && !plugin.Help) {
             if (getScriptInfo) getScriptInfo(plugin)
           }
