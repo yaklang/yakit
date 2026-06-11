@@ -1636,6 +1636,8 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
               .catch(() => ({
                 HttpflowId: item.HttpflowId,
                 Url: item.Url,
+                Request: item.Request ? StringToUint8Array(item.Request) : undefined,
+                Response: item.Response ? StringToUint8Array(item.Response) : undefined,
               })),
           ),
         )
@@ -1646,7 +1648,12 @@ export const YakitRiskDetails: React.FC<YakitRiskDetailsProps> = React.memo((pro
       } catch (e) {
         if (!cancelled) {
           info.PacketPairs.filter((item) => item.HttpflowId).map((item) => {
-            baseArr.push(item)
+            baseArr.push({
+              HttpflowId: item.HttpflowId,
+              Url: item.Url,
+              Request: item.Request ? StringToUint8Array(item.Request) : undefined,
+              Response: item.Response ? StringToUint8Array(item.Response) : undefined,
+            } as PacketHistory)
           })
           setPacketHistory(baseArr)
         }

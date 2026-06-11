@@ -1,4 +1,4 @@
-export interface PacketHistory extends PacketOrigin, PacketPair {
+export interface PacketHistory extends PacketOrigin, Omit<PacketPair, 'Request' | 'Response'> {
   Request?: Uint8Array
   Response?: Uint8Array
 }
@@ -10,6 +10,8 @@ interface PacketOrigin {
 interface PacketPair {
   HttpflowId?: number
   Url?: string
+  Request?: string
+  Response?: string
 }
 export interface Risk {
   Hash: string
