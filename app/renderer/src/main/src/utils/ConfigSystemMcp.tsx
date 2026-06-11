@@ -16,7 +16,6 @@ import {
   MCPTierVisibility,
   MCPToolConfig,
   MCPToolSource,
-  hasMultipleMCPToolSources,
   resolveMCPToolListSourceFilter,
 } from '@/pages/ai-agent/type/aiMCP'
 import { genDefaultPagination } from '@/pages/invoker/schema'
@@ -31,6 +30,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { SafeMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
 import styles from './ConfigSystemProxy.module.scss'
 import classNames from 'classnames'
+import { cloneDeep } from 'lodash'
 const { ipcRenderer } = window.require('electron')
 
 const TRANSPORT_OPTIONS = [
@@ -186,7 +186,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
   const isInitRequestRef = useRef<boolean>(true)
   const [query, setQuery] = useState<GetMCPToolListRequest>({
     Keyword: '',
-    Source: 'builtin',
+    Source: ['builtin'],
     ServerName: '',
     OnlyEnabled: false,
     Pagination: {
@@ -238,9 +238,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
         filterProps: {
           filterKey: 'Source',
           filtersType: 'select',
-          filtersSelectAll: {
-            isAll: hasMultipleMCPToolSources(tierVisibilityRef.current),
-          },
+          filterMultiple: true,
           filters: sourceFilterOptions,
           filterIcon: <OutlineFilterIcon className={styles['filter-icon']} />,
         },
@@ -296,7 +294,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
   }, [query])
 
   const getToolList = useMemoizedFn(async (page: number) => {
-    if (!isMCPTierActive(tierVisibilityRef.current)) {
+    if (!hasActiveToolTier) {
       setResponse({
         Tools: [],
         Pagination: {
@@ -309,12 +307,13 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     }
 
     const params: GetMCPToolListRequest = {
-      ...query,
+      ...cloneDeep(query),
       Pagination: {
         ...query.Pagination,
         Page: page,
       },
     }
+    params.Source = params.Source + ''
     const isInit = page === 1
     isInitRequestRef.current = false
     if (isInit) {
@@ -325,7 +324,6 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       }
     }
     try {
-      console.log('params', params)
       const res = await grpcGetMCPToolList(params)
       const tools = res.Tools || []
       setResponse((prev) => ({
