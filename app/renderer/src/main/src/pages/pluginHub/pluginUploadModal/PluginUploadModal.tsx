@@ -362,7 +362,6 @@ const PluginUploadSelectPrivate: React.FC<PluginUploadSelectPrivateProps> = memo
       </div>
       <div className={styles['upload-modal-select-private']}>
         <Radio
-          className="plugins-radio-wrapper"
           checked={isPrivate}
           onClick={(e) => {
             setIsPrivate(true)
@@ -371,7 +370,6 @@ const PluginUploadSelectPrivate: React.FC<PluginUploadSelectPrivateProps> = memo
           私密(仅自己可见)
         </Radio>
         <Radio
-          className="plugins-radio-wrapper"
           checked={!isPrivate}
           onClick={(e) => {
             setIsPrivate(false)

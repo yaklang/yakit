@@ -543,7 +543,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
         return (
           <div className={styles['radio-status']}>
             {i ? (
-              <Radio className={styles['radio-status-active']} defaultChecked={true}>
+              <Radio defaultChecked={true}>
                 远程中
               </Radio>
             ) : (
