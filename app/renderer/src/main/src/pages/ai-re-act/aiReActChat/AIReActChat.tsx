@@ -326,8 +326,8 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         {externalParameters.rightIcon.history && (
                           <Tooltip
                             trigger={['click']}
-                            destroyTooltipOnHide
-                            overlayClassName={styles['history-chat-tooltip']}
+                            destroyOnHidden
+                            classNames={{ root: styles['history-chat-tooltip'] }}
                             title={
                               <div className={styles['history-chat-tooltip-content']}>
                                 <HistoryChat embedded aiSource={historyChatAISource} />

@@ -996,7 +996,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               <Tooltip
                 title={t('MITMRule.official_website')}
                 placement="top"
-                overlayClassName={styles['question-tooltip']}
+                classNames={{ root: styles['question-tooltip'] }}
               >
                 <YakitButton
                   type="outline2"

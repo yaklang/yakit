@@ -110,9 +110,8 @@ export const EditorInfo: React.FC<EditorInfoProps> = memo(
           {t('EditorInfo.basicInfo')}
           <Tooltip
             title={t('EditorInfo.collapseBasicInfo')}
-            overlayClassName="plugins-tooltip"
-            visible={visible}
-            onVisibleChange={(show) => setVisible(show)}
+            open={visible}
+            onOpenChange={(show) => setVisible(show)}
           >
             <div className={styles['expand-btn']} onClick={handleFold}>
               <OutlineCloseIcon />

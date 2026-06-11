@@ -290,7 +290,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
                 title={t('HistoryChat.clearChats')}
                 placement="topRight"
                 getPopupContainer={popupContainer}
-                overlayClassName={embedded ? embeddedOverlayClass : undefined}
+                classNames={{ root: embedded ? embeddedOverlayClass : undefined }}
               >
                 <YakitButton
                   disabled={clearLoading || sessions.length === 0}

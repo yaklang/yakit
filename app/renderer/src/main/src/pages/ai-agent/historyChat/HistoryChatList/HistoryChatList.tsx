@@ -247,7 +247,7 @@ const HistoryChatList: FC<{
                     <Tooltip
                       title={t('HistoryChatList.editTitle')}
                       placement="topRight"
-                      overlayClassName={classNames(styles['history-item-extra-tooltip'], overlayClassName)}
+                      classNames={{ root: classNames(styles['history-item-extra-tooltip'], overlayClassName) }}
                       getPopupContainer={getPopupContainer}
                     >
                       <YakitButton

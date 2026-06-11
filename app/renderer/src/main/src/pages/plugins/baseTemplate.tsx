@@ -294,7 +294,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
               {pluginName || '-'}
             </div>
             <div className={styles['subtitle-wrapper']}>
-              <Tooltip title={help || 'No Description about it.'} overlayClassName="plugins-tooltip">
+              <Tooltip title={help || 'No Description about it.'}>
                 <OutlineQuestionmarkcircleIcon className={styles['help-icon']} />
               </Tooltip>
               {titleNode || null}
@@ -371,7 +371,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
               <div className={styles['divider-style']} />
               <div className={styles['copy-wrapper']}>
                 <span>来源:</span>
-                <Tooltip title={`复制插件 “${basePluginName}” 为 “${pluginName}”`} overlayClassName="plugins-tooltip">
+                <Tooltip title={`复制插件 “${basePluginName}” 为 “${pluginName}”`}>
                   <YakitTag style={{ marginRight: 0, cursor: 'pointer' }}>复制</YakitTag>
                 </Tooltip>
               </div>
@@ -1007,7 +1007,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
         </div>
         <div className={'plugin-details-item-show'}>
           {extraNode()}
-          <Tooltip title={help || 'No Description about it.'} placement="topRight" overlayClassName="plugins-tooltip">
+          <Tooltip title={help || 'No Description about it.'} placement="topRight">
             <OutlineQuestionmarkcircleIcon className={'plugin-details-item-show-icon-style'} />
           </Tooltip>
           <YakitPopover
