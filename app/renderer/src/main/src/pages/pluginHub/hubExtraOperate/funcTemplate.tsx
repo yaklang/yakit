@@ -445,7 +445,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
               <>
                 <div style={{ marginRight: 8 }} className={styles['divider-style']}></div>
                 <YakitPopover
-                  overlayClassName={styles['contributes-popover']}
+                  classNames={{ root: styles['contributes-popover'] }}
                   placement="bottom"
                   content={
                     <div className={styles['contributes-list']}>
@@ -459,7 +459,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                       ))}
                     </div>
                   }
-                  onVisibleChange={setPrShow}
+                  onOpenChange={setPrShow}
                 >
                   <YakitButton type="text2" isActive={prShow}>
                     {t('HubExtraOperate.contributors', { count: contributes.length })}

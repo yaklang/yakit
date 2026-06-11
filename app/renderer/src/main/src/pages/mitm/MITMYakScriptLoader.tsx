@@ -422,9 +422,9 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                   label: (
                     <YakitPopover
                       placement="right"
-                      overlayClassName={style['terminal-popover']}
+                      classNames={{ root: style['terminal-popover'] }}
                       content={<YakEditor type={i.Type} value={i.Content} readOnly={true} />}
-                      onVisibleChange={(v) => {
+                      onOpenChange={(v) => {
                         if (v && !i.Content) {
                           getScriptInfo(i)
                         }

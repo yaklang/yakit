@@ -19,6 +19,7 @@ import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopco
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 
 export interface WebsiteTreeViewerProp {
   pageMode?: boolean
@@ -297,8 +298,8 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                           <ChevronDownIcon style={{ color: '#85899E' }} />
                         </YakitButton>
                       ) : (
-                        <Popover
-                          overlayClassName={style['http-history-table-drop-down-popover']}
+                        <YakitPopover
+                          classNames={{ root: style['http-history-table-drop-down-popover'] }}
                           content={
                             <Menu className={style['http-history-table-drop-down-batch']}>
                               <Menu.Item>
@@ -335,7 +336,7 @@ export const WebsiteTreeViewer: React.FC<WebsiteTreeViewerProp> = (props) => {
                             批量操作
                             <ChevronDownIcon style={{ color: '#85899E' }} />
                           </YakitButton>
-                        </Popover>
+                        </YakitPopover>
                       )}
                     </div>
                   </Space>

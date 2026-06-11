@@ -102,8 +102,8 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
                   {(record.collaborator || []).map((ele) => ele.user_name).join(',')}
                 </div>
               }
-              destroyTooltipOnHide={true}
-              overlayClassName={styles['collaborators-popover']}
+              destroyOnHidden={true}
+              classNames={{ root: styles['collaborators-popover'] }}
             >
               <span className="content-ellipsis">
                 {(record.collaborator || []).map((ele) => ele.user_name).join(',')}

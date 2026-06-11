@@ -110,8 +110,8 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
 
   return (
     <YakitPopover
-      visible={show}
-      overlayClassName={classNames(styles['ui-op-dropdown'], styles['ui-engine-list-dropdown'])}
+      open={show}
+      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-engine-list-dropdown']) }}
       placement={'bottomRight'}
       content={
         <div ref={listRef} className={styles['ui-engine-list-wrapper']}>
@@ -270,7 +270,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
           </div>
         </div>
       }
-      onVisibleChange={(visible) => setShow(visible)}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>

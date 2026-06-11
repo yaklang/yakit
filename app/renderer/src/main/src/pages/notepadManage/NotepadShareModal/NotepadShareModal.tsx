@@ -346,8 +346,8 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
   }, [currentRole])
   return (
     <YakitPopover
-      visible={authVisibleMenu}
-      onVisibleChange={setAuthVisibleMenu}
+      open={authVisibleMenu}
+      onOpenChange={setAuthVisibleMenu}
       content={
         <div className={styles['auth-popover-menu-list']}>
           {menuList.map((ele, index) =>
@@ -371,7 +371,7 @@ const AuthPopover: React.FC<AuthPopoverProps> = React.memo((props) => {
           )}
         </div>
       }
-      overlayClassName={styles['auth-popover']}
+      classNames={{ root: styles['auth-popover'] }}
       placement="bottom"
     >
       <YakitButton type="text" className={className}>

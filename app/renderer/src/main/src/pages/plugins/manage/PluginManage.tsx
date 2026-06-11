@@ -1274,7 +1274,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                           })
                         ) : (
                           <YakitPopover
-                            overlayClassName={styles['hub-outer-list-group-popover']}
+                            classNames={{ root: styles['hub-outer-list-group-popover'] }}
                             content={
                               <div className={styles['hub-outer-list-filter']}>
                                 {showGroupList.map((group) => {
@@ -1293,7 +1293,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                               </div>
                             }
                             trigger="hover"
-                            onVisibleChange={setGroupTagShow}
+                            onOpenChange={setGroupTagShow}
                             placement="bottom"
                           >
                             <div
@@ -1312,8 +1312,8 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                       </div>
                     )}
                     <YakitPopover
-                      visible={addGroupVisible}
-                      overlayClassName={styles['add-group-popover']}
+                      open={addGroupVisible}
+                      classNames={{ root: styles['add-group-popover'] }}
                       placement="bottomRight"
                       trigger="click"
                       content={
@@ -1324,7 +1324,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                           onCanle={() => setAddGroupVisible(false)}
                         ></UpdateGroupList>
                       }
-                      onVisibleChange={(visible) => {
+                      onOpenChange={(visible) => {
                         setAddGroupVisible(visible)
                       }}
                     >

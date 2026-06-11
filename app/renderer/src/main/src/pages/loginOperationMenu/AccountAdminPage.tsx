@@ -593,7 +593,7 @@ const OrganizationAdmin: React.FC<OrganizationAdminProps> = (props) => {
                       <YakitPopover
                         title={t('OrganizationAdmin.editName')}
                         trigger={'click'}
-                        destroyTooltipOnHide
+                        destroyOnHidden
                         content={
                           <YakitInput
                             size="small"

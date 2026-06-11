@@ -284,7 +284,7 @@ export const StringFuzzer = forwardRef<StringFuzzerRef, StringFuzzerProps>((prop
                   {renderList.map((item) => (
                     <YakitPopover
                       placement="rightTop"
-                      overlayClassName={styles['stringFuzzer-popover']}
+                      classNames={{ root: styles['stringFuzzer-popover'] }}
                       content={
                         <div className={styles['stringFuzzer-popover-cont']}>
                           <div className={styles['stringFuzzer-popover-cont-name']}>{item.VerboseName}</div>

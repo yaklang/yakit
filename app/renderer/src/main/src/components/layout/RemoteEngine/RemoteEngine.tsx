@@ -1,29 +1,31 @@
-import classNames from 'classnames'
-import { PEMExampleProps, RemoteEngineProps, RemoteLinkInfo, YakitAuthInfo } from './RemoteEngineType'
 import React, { useEffect, useState } from 'react'
 import { getLocalValue, setLocalValue } from '@/utils/kv'
-import { LocalGVS } from '@/enums/yakitGV'
 import { useMemoizedFn } from 'ahooks'
-import { getReleaseEditionName } from '@/utils/envfile'
-import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
-import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
-import { Divider, Form } from 'antd'
-import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
-import {
-  OutlineArrowcirclerightIcon,
-  OutlineExitIcon,
-  OutlineQuestionmarkcircleIcon,
-  OutlineXIcon,
-} from '@/assets/outline'
+import { Form } from 'antd'
+import { PEMExampleProps, RemoteEngineProps, RemoteLinkInfo, YakitAuthInfo } from './RemoteEngineType'
+import { LocalGVS } from '@/enums/localGlobal'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { getReleaseEditionName, isCommunityEdition, isEnpriTrace, isEnpriTraceAgent, isIRify } from '@/utils/envfile'
+import { YakitThemeSvgIcon } from '../icons'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { EngineModeVerbose } from '../../utils'
-import { Editor } from '@/components/Editor'
-import { yakitApp, yakitEngine, yakitShell } from '@/utils/electronBridge'
+import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { EngineModeVerbose } from '@/components/basics/YakitLoading'
+import { CopyComponents } from '@/components/yakitUI/YakitTag/YakitTag'
+import { OutlineQuestionmarkcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { YakEditor } from '@/utils/editors'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+import yakitEE from '@/assets/yakitEE.png'
+import yakitSE from '@/assets/yakitSE.png'
+import yakitSS from '@/assets/yakitSS.png'
+import classNames from 'classnames'
 import styles from './RemoteEngine.module.scss'
+import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
+import { Trans } from 'react-i18next'
+import { yakitEngine, yakitShell } from '@/services/electronBridge'
 
 const DefaultRemoteLink: RemoteLinkInfo = {
   allowSave: false,
@@ -33,8 +35,8 @@ const DefaultRemoteLink: RemoteLinkInfo = {
 }
 
 export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
-  const { loading, setLoading, onSubmit, onSwitchLocalEngine } = props
-  const { t, i18n } = useI18nNamespaces(['link'])
+  const { t } = useI18nNamespaces(['remote', 'yakitUi'])
+  const { loading, setLoading, installedEngine, onSubmit, onSwitchLocalEngine } = props
 
   /** 远程主机参数 */
   const [remote, setRemote] = useState<RemoteLinkInfo>({ ...DefaultRemoteLink })
@@ -134,90 +136,89 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
     <div className={styles['remote-engine-wrapper']}>
       <YakitSpin spinning={loading}>
         <div className={styles['remote-yaklang-engine-body']}>
-          <div className={styles['remote-title']}>{t('RemoteEngine.remote_mode')}</div>
-          <div className={styles['remote-history']}>
-            <div className={styles['select-title']} style={{ width: i18n.language === 'en' ? 180 : 80 }}>
-              {t('RemoteEngine.connection_history')}
-            </div>
-            <YakitSelect
-              wrapperClassName={styles['select-style']}
-              placeholder={t('RemoteEngine.select_placeholder')}
-              onSelect={onSelectHistory}
-              size="middle"
-              optionLabelProp="value"
-              allowClear
-              options={auths.map((item) => {
-                return {
-                  label: (
-                    <div className={styles['remote-history-label-wrapper']}>
-                      <div className={styles['remote-history-label']}>{item.name}</div>
-                      <OutlineXIcon
-                        className={styles['option-item-close']}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          delRemoteHistoryItem(item)
-                        }}
-                      />
-                    </div>
-                  ),
-                  value: item.name,
-                }
-              })}
-            ></YakitSelect>
-          </div>
-          <div className={styles['divider-line']}></div>
-          <div className={styles['remote-info']}>
-            <Form colon={false} requiredMark={false} layout="vertical">
-              <div className={styles['form-item-inline']}>
-                <Form.Item
-                  label={
-                    <div className={styles.requiredLabel}>
-                      Yak gRPC {t('RemoteEngine.grpc_host_label')}
-                      <span className={styles.redStar}>*</span>
-                    </div>
-                  }
-                  required={true}
-                  style={{ flex: 1 }}
-                >
-                  <YakitInput
-                    className={classNames({
-                      [styles['error-border']]: isCheck && !remote.host,
-                    })}
-                    value={remote.host}
-                    onChange={(e) => setRemote({ ...remote, host: e.target.value })}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label={
-                    <div className={styles.requiredLabel}>
-                      Yak gRPC {t('RemoteEngine.grpc_port_label')}
-                      <span className={styles.redStar}>*</span>
-                    </div>
-                  }
-                  required={true}
-                  style={{ flex: 1 }}
-                >
-                  <YakitInput
-                    className={classNames({
-                      [styles['error-border']]: isCheck && !remote.port,
-                    })}
-                    value={remote.port}
-                    onChange={(e) => setRemote({ ...remote, port: e.target.value })}
-                  />
-                </Form.Item>
+          <div className={styles['remote-title']}>
+            {isCommunityEdition() && (
+              <>
+                {isIRify() ? (
+                  <div className={styles['logo-img']}>
+                    {/* <img src={yakitSS} alt='暂无图片' /> */}
+                    <SolidIrifyMiniLogoIcon />
+                  </div>
+                ) : (
+                  <YakitThemeSvgIcon className={styles['logo-img']} />
+                )}
+              </>
+            )}
+            {isEnpriTrace() && (
+              <div className={styles['logo-img']}>
+                {isIRify() ? <SolidIrifyMiniLogoIcon /> : <img src={yakitEE} alt={t('YakitEmpty.noImage')} />}
               </div>
+            )}
+            {isEnpriTraceAgent() && (
+              <div className={styles['logo-img']}>
+                <img src={yakitSE} alt={t('YakitEmpty.noImage')} />
+              </div>
+            )}
+            <div className={styles['title-style']}>{t('RemoteEngine.remoteMode')}</div>
+            <div className={styles['remote-history']}>
+              <div className={styles['select-title']}>{t('RemoteEngine.connectionHistory')}</div>
+              <YakitSelect
+                wrapperClassName={styles['select-style']}
+                placeholder={t('RemoteEngine.selectPlaceholder')}
+                onSelect={onSelectHistory}
+                optionLabelProp="value"
+                allowClear
+                options={auths.map((item) => {
+                  return {
+                    label: (
+                      <div className={styles['remote-history-label-wrapper']}>
+                        <div className={styles['remote-history-label']}>{item.name}</div>
+                        <OutlineXIcon
+                          className={styles['option-item-close']}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            delRemoteHistoryItem(item)
+                          }}
+                        />
+                      </div>
+                    ),
+                    value: item.name,
+                  }
+                })}
+              ></YakitSelect>
+            </div>
+          </div>
 
-              <Form.Item label={t('RemoteEngine.enable_tls')}>
-                <YakitSwitch size="middle" checked={remote.tls} onChange={(tls) => setRemote({ ...remote, tls })} />
+          <div className={styles['rmeote-divider']}></div>
+          <div className={styles['remote-info']}>
+            <Form colon={false} labelAlign="right" labelCol={{ span: 8 }}>
+              <Form.Item label={t('RemoteEngine.hostLabel')} required={true}>
+                <YakitInput
+                  className={classNames(styles['input-style'], {
+                    [styles['error-border']]: isCheck && !remote.host,
+                  })}
+                  value={remote.host}
+                  onChange={(e) => setRemote({ ...remote, host: e.target.value })}
+                />
+              </Form.Item>
+              <Form.Item label={t('RemoteEngine.portLabel')} required={true}>
+                <YakitInput
+                  className={classNames(styles['input-style'], {
+                    [styles['error-border']]: isCheck && !remote.port,
+                  })}
+                  value={remote.port}
+                  onChange={(e) => setRemote({ ...remote, port: e.target.value })}
+                />
+              </Form.Item>
+              <Form.Item label={t('RemoteEngine.tlsLabel')}>
+                <YakitSwitch size="large" checked={remote.tls} onChange={(tls) => setRemote({ ...remote, tls })} />
               </Form.Item>
               {remote.tls && (
                 <>
                   <Form.Item
                     label={
                       <div className={styles['pem-title']}>
-                        {t('RemoteEngine.grpc_root_ca_pem')}
-                        <span className={styles.redStar}>*</span>{' '}
+                        {t('RemoteEngine.pemLabel')}{' '}
                         <PEMExample setShow={setShowSTL}>
                           <OutlineQuestionmarkcircleIcon
                             className={showSTL ? styles['icon-show-style'] : styles['icon-style']}
@@ -233,14 +234,14 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                         [styles['error-border']]: isCheck && !remote.caPem,
                       })}
                     >
-                      <Editor
-                        language={'pem'}
+                      <YakEditor
+                        type={'pem'}
                         value={remote.caPem}
-                        onSetValue={(caPem) => setRemote({ ...remote, caPem })}
+                        setValue={(caPem) => setRemote({ ...remote, caPem })}
                       />
                     </div>
                   </Form.Item>
-                  <Form.Item label={t('RemoteEngine.password')}>
+                  <Form.Item label={t('RemoteEngine.passwordLabel')}>
                     <YakitInput
                       className={styles['input-style']}
                       value={remote.password}
@@ -252,7 +253,7 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
               <Form.Item
                 label={
                   <div className={styles['pem-title']}>
-                    {t('RemoteEngine.save_as_history')}{' '}
+                    {t('RemoteEngine.saveHistoryLabel')}{' '}
                     <PEMHint setShow={setShowAllow}>
                       <OutlineQuestionmarkcircleIcon
                         className={classNames(styles['icon-style'], {
@@ -265,21 +266,16 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                 }
               >
                 <YakitSwitch
-                  size="middle"
+                  size="large"
                   checked={remote.allowSave}
                   onChange={(allowSave: boolean) => setRemote({ ...remote, allowSave })}
                 />
               </Form.Item>
               {remote.allowSave && (
                 <Form.Item
-                  label={
-                    <div className={styles.requiredLabel}>
-                      {t('RemoteEngine.link_name')}
-                      <span className={styles.redStar}>*</span>
-                    </div>
-                  }
+                  label={t('RemoteEngine.connectionNameLabel')}
                   required={true}
-                  help={t('RemoteEngine.link_name_help')}
+                  help={t('RemoteEngine.connectionNameHelp')}
                 >
                   <YakitInput
                     className={classNames(styles['input-style'], {
@@ -290,31 +286,16 @@ export const RemoteEngine: React.FC<RemoteEngineProps> = React.memo((props) => {
                   />
                 </Form.Item>
               )}
-              <Form.Item label="">
-                <YakitButton size="large" onClick={submit} className={styles['btn-style']}>
-                  {t('RemoteEngine.start_connect')}
+              <Form.Item label=" " style={{ marginTop: 24 }}>
+                <YakitButton size="max" onClick={submit}>
+                  {t('RemoteEngine.connectButton')}
+                </YakitButton>
+
+                <YakitButton style={{ marginLeft: 8 }} size="max" type="outline2" onClick={handleSwitchLocalEngine}>
+                  {installedEngine ? EngineModeVerbose('local') : t('YakitButton.back')}
                 </YakitButton>
               </Form.Item>
             </Form>
-          </div>
-          <div className={styles['footer-btn']}>
-            <span className={styles['exit-btn']} onClick={() => yakitApp.closeWindow()}>
-              <OutlineExitIcon className={styles['exit-icon']} />
-              {t('RemoteEngine.exit')}
-            </span>
-            <Divider type="vertical"></Divider>
-            <span
-              className={classNames(styles['go-local'], {
-                [styles['go-local-disable']]: loading,
-              })}
-              onClick={() => {
-                if (loading) return
-                handleSwitchLocalEngine()
-              }}
-            >
-              {EngineModeVerbose('local')}
-              <OutlineArrowcirclerightIcon className={styles['arrow-circle-right-icon']} />
-            </span>
           </div>
         </div>
       </YakitSpin>
@@ -345,19 +326,24 @@ WOG+9PGLcr4IRJx5LUEZ5FB1
 
 /** @name PEM示例弹窗 */
 const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['remote'])
   const { children, setShow } = props
-  const { t } = useI18nNamespaces(['link'])
 
   const content = (
     <div className={classNames(styles['pem-example'], styles['pem-wrapper'])}>
-      <div className={styles['title-style']}>{t('RemoteEngine.pem_format_required')}</div>
-      {t('RemoteEngine.pem_tls_hint_prefix')} <div className={styles['content-code']}>yak grpc --tls</div>
-      {t('RemoteEngine.pem_tls_hint_suffix')}
+      <div className={styles['title-style']}>{t('PEMExample.pemTitle')}</div>
+      <Trans
+        i18nKey="PEMExample.pemContent"
+        ns="remote"
+        components={{
+          code: <div className={styles['content-code']}></div>,
+        }}
+      />
       <br />
-      {t('RemoteEngine.pem_example_intro')}
+      {t('PEMExample.pemExample')}
       <br />
       <div className={styles['code-pem']}>
-        <Editor language="plaintext" readOnly={true} value={PemPlaceHolder} />
+        <YakEditor type="plaintext" readOnly={true} value={PemPlaceHolder} />
       </div>
     </div>
   )
@@ -376,8 +362,8 @@ const PEMExample: React.FC<PEMExampleProps> = React.memo((props) => {
 })
 /** @name PEM说明弹窗 */
 const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['remote'])
   const { children, setShow } = props
-  const { t } = useI18nNamespaces(['link'])
 
   const [remotePath, setRemotePath] = useState<string>('')
   useEffect(() => {
@@ -395,9 +381,9 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
 
   const content = (
     <div className={classNames(styles['pem-hint'], styles['pem-wrapper'])}>
-      {t('RemoteEngine.history_not_uploaded', { name: getReleaseEditionName() })}
+      {t('PEMHint.saveHistoryNote', { appName: getReleaseEditionName() })}
       <br />
-      {t('RemoteEngine.find_remote_login_locally')}
+      {t('PEMHint.saveHistoryLocation')}
       <br />
       <div className={styles['path-wrapper']}>
         <div className={styles['link-wrapper']}>
@@ -407,7 +393,7 @@ const PEMHint: React.FC<PEMExampleProps> = React.memo((props) => {
           <CopyComponents className={styles['copy-icon']} copyText={remotePath} />
         </div>
         <div className={styles['link-open']} onClick={openFile}>
-          {t('RemoteEngine.open_remote_info_storage')}
+          {t('PEMHint.openLocation')}
         </div>
       </div>
     </div>

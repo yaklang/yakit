@@ -136,7 +136,7 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
             <YakitPopover
               placement="rightBottom"
               key={item.id}
-              overlayClassName={styles['memory-popover-wrapper']}
+              classNames={{ root: styles['memory-popover-wrapper'] }}
               content={<AIMemoryContent item={item} />}
             >
               <div key={item.id} className={styles['memory-item']}>

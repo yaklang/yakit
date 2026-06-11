@@ -290,7 +290,7 @@ const WebsocketClientOperator: React.FC<WebsocketClientOperatorProp> = memo((pro
                     </Form>
                   </>
                 }
-                onVisibleChange={(v) => {
+                onOpenChange={(v) => {
                   if (!v) {
                     form.validateFields().then((values) => {
                       setTimeoutSeconds(values.timeoutSeconds)

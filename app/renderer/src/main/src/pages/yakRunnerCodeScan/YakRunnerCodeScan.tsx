@@ -413,8 +413,8 @@ const CodeScanRuleSetting: React.FC<CodeScanRuleSettingProps> = React.memo((prop
             </YakitCheckbox>
           </div>
         }
-        visible={visible}
-        onVisibleChange={setVisible}
+        open={visible}
+        onOpenChange={setVisible}
         placement="bottomRight"
         trigger={'click'}
       >
@@ -607,7 +607,7 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
         <div className={styles['filter-wrapper']}>
           <div className={styles['header-filter-tag']}>
             <YakitPopover
-              overlayClassName={styles['code-scan-rule-group-popover']}
+              classNames={{ root: styles['code-scan-rule-group-popover'] }}
               content={
                 <div className={styles['code-scan-rule-list-filter']}>
                   {groupList.map((item) => {
@@ -627,8 +627,8 @@ const CodeScanRuleByKeyWord: React.FC<CodeScanRuleByKeyWordProps> = React.memo((
                 </div>
               }
               trigger="hover"
-              visible={groupTagShow}
-              onVisibleChange={setGroupTagShow}
+              open={groupTagShow}
+              onOpenChange={setGroupTagShow}
               placement="bottom"
             >
               <div

@@ -53,8 +53,8 @@ const AIStreamNode: FC<{
       {index}. {stream.data.content}
       <YakitPopover
         trigger={'click'}
-        visible={openPopover}
-        onVisibleChange={setOpenPopover}
+        open={openPopover}
+        onOpenChange={setOpenPopover}
         content={
           <div className={styles['popover-reference-wrapper']}>
             <div className={styles['popover-reference-title']}>

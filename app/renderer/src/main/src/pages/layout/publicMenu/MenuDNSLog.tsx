@@ -434,13 +434,13 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
           })}
         >
           <YakitPopover
-            overlayClassName={styles['dnslog-list-popover']}
-            overlayStyle={{ paddingTop: 2 }}
+            classNames={{ root: styles['dnslog-list-popover'] }}
+            styles={{ root: { paddingTop: 2 } }}
             placement="bottomRight"
             trigger={'click'}
             content={listDom}
-            visible={listShow}
-            onVisibleChange={(visible) => setListShow(visible)}
+            open={listShow}
+            onOpenChange={(visible) => setListShow(visible)}
           >
             <div className={styles['body-style']}>{listShow ? <ChevronUpIcon /> : <ChevronDownIcon />}</div>
           </YakitPopover>

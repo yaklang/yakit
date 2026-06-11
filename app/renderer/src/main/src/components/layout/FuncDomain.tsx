@@ -1062,11 +1062,11 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   return (
     <>
       <YakitPopover
-        overlayClassName={classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown'])}
+        classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
         placement={'bottom'}
         content={menu}
-        visible={show}
-        onVisibleChange={(visible) => setShow(visible)}
+        open={show}
+        onOpenChange={(visible) => setShow(visible)}
         trigger="click"
       >
         <div className={styles['ui-op-btn-wrapper']}>
@@ -1156,11 +1156,11 @@ const UIDevTool: React.FC<UIDevTool> = React.memo((props) => {
 
   return (
     <YakitPopover
-      overlayClassName={classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown'])}
+      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
       placement={'bottom'}
       trigger={'click'}
       content={menu}
-      onVisibleChange={(visible) => setShow(visible)}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
@@ -1418,8 +1418,8 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
           ) : (
             <>
               <YakitPopover
-                visible={moreVersionPopShow}
-                overlayClassName={styles['more-versions-popover']}
+                open={moreVersionPopShow}
+                classNames={{ root: styles['more-versions-popover'] }}
                 placement="bottomLeft"
                 trigger="click"
                 content={
@@ -1432,7 +1432,7 @@ const UIOpUpdateYaklang: React.FC<UIOpUpdateProps> = React.memo((props) => {
                     }}
                   />
                 }
-                onVisibleChange={(visible) => {
+                onOpenChange={(visible) => {
                   setMoreVersionPopShow(visible)
                 }}
               >
@@ -2289,12 +2289,12 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
   return (
     <YakitPopover
-      overlayClassName={classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown'])}
+      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown']) }}
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
-      visible={show}
-      onVisibleChange={(visible) => {
+      open={show}
+      onOpenChange={(visible) => {
         if (isShowEnpriTraceUpdateVisible) return
         if (editShow.visible) setShow(false)
         else setShow(visible)
@@ -2657,11 +2657,11 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   return (
     <YakitPopover
-      overlayClassName={classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown'])}
+      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown']) }}
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
-      onVisibleChange={(visible) => setShow(visible)}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
@@ -2888,12 +2888,12 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   return (
     <YakitPopover
-      overlayClassName={classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown'])}
+      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown']) }}
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
-      visible={show}
-      onVisibleChange={(visible) => setShow(visible)}
+      open={show}
+      onOpenChange={(visible) => setShow(visible)}
     >
       <div className={styles['ui-op-btn-wrapper']}>
         <div className={classNames(styles['op-btn-body'], { [styles['op-btn-body-hover']]: show })}>
@@ -3219,12 +3219,12 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
   return (
     <>
       <YakitPopover
-        overlayClassName={classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown'])}
-        overlayStyle={{ paddingBottom: 0 }}
+        classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
+        styles={{ root: { paddingBottom: 0 } }}
         placement={'bottom'}
         content={menu}
-        visible={show}
-        onVisibleChange={(visible) => setShow(visible)}
+        open={show}
+        onOpenChange={(visible) => setShow(visible)}
         trigger={'click'}
       >
         <div className={styles['ui-op-btn-wrapper']}>

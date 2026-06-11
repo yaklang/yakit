@@ -183,7 +183,7 @@ export const ImagePreviewList: React.FC<ImagePreviewListProps> = memo((props) =>
         {imgList.surplus.length > 0 && (
           <YakitPopover
             trigger="click"
-            visible={popoverVisible}
+            open={popoverVisible}
             content={
               <div className={styles['popover-preview-list']}>
                 {imgList.surplus.map((item, index) => {
@@ -226,7 +226,7 @@ export const ImagePreviewList: React.FC<ImagePreviewListProps> = memo((props) =>
                 })}
               </div>
             }
-            onVisibleChange={(visible) => {
+            onOpenChange={(visible) => {
               setPopoverVisible(visible)
             }}
           >

@@ -1447,7 +1447,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
           )}
 
           <YakitPopover
-            overlayClassName={styles['http-history-table-drop-down-popover']}
+            classNames={{ root: styles['http-history-table-drop-down-popover'] }}
             content={
               <CodecRunListHistoryStore
                 onSelect={(v) => onMenuSelect(v)}
@@ -1460,8 +1460,8 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
             }
             trigger="click"
             placement="bottomRight"
-            onVisibleChange={setPopoverVisible}
-            visible={popoverVisible}
+            onOpenChange={setPopoverVisible}
+            open={popoverVisible}
           >
             <Tooltip title={t('CodecRunListHistoryStore.historyStore')}>
               <div className={styles['extra-icon']}>
@@ -1629,9 +1629,9 @@ export const NewCodecLeftDragListItem: React.FC<NewCodecLeftDragListItemProps> =
 
   const dragListItemDom = useMemoizedFn((item: CodecMethod) => (
     <YakitPopover
-      // visible={true}
+      // open={true}
       placement="right"
-      overlayClassName={styles['drag-list-item-popover']}
+      classNames={{ root: styles['drag-list-item-popover'] }}
       content={
         <div className={styles['popover-content']}>
           <div className={styles['title']}>{item.CodecName}</div>

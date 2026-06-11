@@ -497,8 +497,8 @@ const AIOnlineModeSetting: React.FC<AIOnlineModeSettingProps> = React.memo((prop
           </Form>
         </div>
       }
-      visible={visible}
-      onVisibleChange={onSetConfig}
+      open={visible}
+      onOpenChange={onSetConfig}
       placement="bottomRight"
     >
       <YakitButton type="text2" icon={<OutlineCogIcon />} />

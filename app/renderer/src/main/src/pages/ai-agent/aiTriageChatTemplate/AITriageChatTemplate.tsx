@@ -86,7 +86,7 @@ export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
           {tools.length > 0 && (
             <YakitPopover
               placement="bottomLeft"
-              overlayClassName={styles['forge-info-opt-tools-popover']}
+              classNames={{ root: styles['forge-info-opt-tools-popover'] }}
               content={
                 <div className={styles['tools-popover-content']}>
                   <div className={styles['tools-header']}>模板关联工具</div>
@@ -102,8 +102,8 @@ export const AIForgeInfoOpt: React.FC<AIForgeInfoOptProps> = memo((props) => {
                   </div>
                 </div>
               }
-              visible={toolsShow}
-              onVisibleChange={setToolsShow}
+              open={toolsShow}
+              onOpenChange={setToolsShow}
             >
               <YakitTag className={styles['footer-tag']}>
                 <div className={styles['tag-body']}>

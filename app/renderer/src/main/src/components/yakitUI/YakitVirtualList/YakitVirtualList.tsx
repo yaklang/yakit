@@ -404,8 +404,8 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
   })
   return (
     <YakitPopover
-      visible={visible}
-      onVisibleChange={onVisibleChange}
+      open={visible}
+      onOpenChange={onVisibleChange}
       placement={placement || 'bottomLeft'}
       content={
         <div className={styles['filter-popover-content']}>
@@ -462,7 +462,7 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
           </div>
         </div>
       }
-      overlayClassName={styles['author-filter-popover']}
+      classNames={{ root: styles['author-filter-popover'] }}
     >
       {children}
     </YakitPopover>

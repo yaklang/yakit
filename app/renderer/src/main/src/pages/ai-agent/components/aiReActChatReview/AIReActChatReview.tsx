@@ -196,7 +196,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
             <div className={styles['summary-content']}>{short_summary}</div>
             <div className={styles['summary-detail']}>
               <YakitPopover
-                overlayClassName={styles['task-review-summary-popover']}
+                classNames={{ root: styles['task-review-summary-popover'] }}
                 content={
                   <div className={styles['task-long-summary']}>
                     <div className={styles['summary-header']}>

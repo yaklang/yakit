@@ -72,7 +72,7 @@ export const PacketScanButton: React.FC<PacketScanButtonProp> = (props) => {
     <YakitPopover
       key={'数据包扫描'}
       trigger={['click']}
-      visible={visible}
+      open={visible}
       content={
         <Space direction={'vertical'} style={{ width: i18n.language.startsWith('zh') ? 150 : 200 }}>
           {packetScanDefaultValue.map((i, n) => {
