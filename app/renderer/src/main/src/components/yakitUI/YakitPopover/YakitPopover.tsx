@@ -7,7 +7,7 @@ import styles from './yakitPopover.module.scss'
 export interface YakitPopoverProp extends PopoverProps {}
 
 export const YakitPopover: React.FC<YakitPopoverProp> = React.memo((props) => {
-  const { children, overlayClassName, placement, ...resePopover } = props
+  const { children, placement, classNames: popoverClassNames, ...resePopover } = props
 
   const direction = useMemo(() => {
     if (!placement) return 'top'
@@ -20,9 +20,11 @@ export const YakitPopover: React.FC<YakitPopoverProp> = React.memo((props) => {
   return (
     <Popover
       {...resePopover}
-      overlayClassName={classNames(styles['yakit-popover-wrapper'], styles[`yakit-popover-${direction}-wrapper`], {
-        [overlayClassName || '']: !!overlayClassName,
-      })}
+      classNames={{
+        root: classNames(styles['yakit-popover-wrapper'], styles[`yakit-popover-${direction}-wrapper`], {
+          [popoverClassNames?.root || '']: !!popoverClassNames?.root,
+        }),
+      }}
       placement={placement}
     >
       {children}

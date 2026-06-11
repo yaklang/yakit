@@ -2689,7 +2689,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 </Tooltip>
                 <div className={styles['http-history-table-color-swatch']}>
                   <YakitPopover
-                    overlayClassName={styles['http-history-table-color-popover']}
+                    classNames={{ root: styles['http-history-table-color-popover'] }}
                     content={
                       <ColorSearch
                         color={color}
@@ -2711,8 +2711,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                     }
                     trigger="click"
                     placement="bottomLeft"
-                    visible={isShowColor}
-                    onVisibleChange={(visible) => {
+                    open={isShowColor}
+                    onOpenChange={(visible) => {
                       if (!visible) setIsShowColor(false)
                     }}
                   >
@@ -2727,7 +2727,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                   </YakitPopover>
                 </div>
                 <YakitPopover
-                  overlayClassName={styles['http-history-table-drop-down-popover']}
+                  classNames={{ root: styles['http-history-table-drop-down-popover'] }}
                   content={
                     <YakitMenu
                       width={150}
@@ -2741,8 +2741,8 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                   }
                   trigger="click"
                   placement="bottomLeft"
-                  onVisibleChange={setBatchVisible}
-                  visible={batchVisible}
+                  onOpenChange={setBatchVisible}
+                  open={batchVisible}
                 >
                   <YakitButton type="outline2" disabled={selectedRowKeys.length === 0}>
                     {t('YakitButton.batchOperation')}

@@ -48,7 +48,7 @@ const HTTPFlowShield: React.FC<HTTPFlowShieldProps> = React.memo((props: HTTPFlo
               </YakitPopconfirm>
             </div>
           }
-          overlayClassName={style['http-history-table-shield-popover']}
+          classNames={{ root: style['http-history-table-shield-popover'] }}
         >
           <div
             className={style['http-history-table-left-shield']}

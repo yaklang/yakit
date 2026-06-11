@@ -1410,7 +1410,7 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
                 <YakitPopover
                   trigger="hover"
                   placement="right"
-                  overlayClassName={styles['hotCode-group-submenu']}
+                  classNames={{ root: styles['hotCode-group-submenu'] }}
                   content={
                     <div className={classNames(styles['hotCode-list'], styles['hotCode-group-submenu-list'])}>
                       {team.node.map((item) => renderHotCodeItem(item))}

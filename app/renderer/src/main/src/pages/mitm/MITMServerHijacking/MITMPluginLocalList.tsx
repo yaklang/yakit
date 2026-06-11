@@ -869,8 +869,8 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
       </Dropdown>
       {isShowGroupMagBtn && (
         <YakitPopover
-          visible={addGroupVisible}
-          overlayClassName={style['add-group-popover']}
+          open={addGroupVisible}
+          classNames={{ root: style['add-group-popover'] }}
           placement="bottomRight"
           trigger="click"
           content={
@@ -881,7 +881,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
               onCanle={() => setAddGroupVisible(false)}
             ></UpdateGroupList>
           }
-          onVisibleChange={(visible) => {
+          onOpenChange={(visible) => {
             if (visible) {
               getYakScriptGroup()
             }

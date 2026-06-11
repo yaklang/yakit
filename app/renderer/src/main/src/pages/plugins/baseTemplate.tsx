@@ -328,7 +328,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
               <>
                 <div style={{ marginRight: 8 }} className={styles['divider-style']}></div>
                 <YakitPopover
-                  overlayClassName={styles['contributes-popover']}
+                  classNames={{ root: styles['contributes-popover'] }}
                   placement="bottom"
                   content={
                     <div className={styles['contributes-list']}>
@@ -342,7 +342,7 @@ export const PluginDetailHeader: React.FC<PluginDetailHeaderProps> = memo((props
                       ))}
                     </div>
                   }
-                  onVisibleChange={setPrShow}
+                  onOpenChange={setPrShow}
                 >
                   <YakitButton type="text2" isActive={prShow}>
                     {`${contributes.length}位协作者`}
@@ -1012,7 +1012,7 @@ export const PluginDetailsListItem: <T>(props: PluginDetailsListItemProps<T>) =>
           </Tooltip>
           <YakitPopover
             placement="topRight"
-            overlayClassName={'terminal-popover'}
+            classNames={{ root: 'terminal-popover' }}
             content={<YakEditor type={pluginType} value={content} readOnly={true} />}
           >
             <OutlineTerminalIcon className={'plugin-details-item-show-icon-style'} />

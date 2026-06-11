@@ -149,8 +149,8 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
           <p>{data.name}</p>
           <div className={styles['node-extra']}>
             <YakitPopover
-              overlayClassName={styles['task-detail-popover']}
-              overlayStyle={{ paddingLeft: 4 }}
+              classNames={{ root: styles['task-detail-popover'] }}
+              styles={{ root: { paddingLeft: 4 } }}
               placement="rightTop"
               content={
                 <div className={styles['detail-wrapper']}>
@@ -158,8 +158,8 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
                   <div className={styles['detail-description']}>{data.goal}</div>
                 </div>
               }
-              visible={infoShow}
-              onVisibleChange={setInfoShow}
+              open={infoShow}
+              onOpenChange={setInfoShow}
             >
               <OutlineInformationcircleIcon className={styles['info-icon']} />
             </YakitPopover>
@@ -265,9 +265,9 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
           )
         })}
         <YakitPopover
-          overlayClassName={styles['depends-on-popover']}
+          classNames={{ root: styles['depends-on-popover'] }}
           placement="right"
-          visible={isHovered}
+          open={isHovered}
           content={
             <div className={styles['depends-on-content']}>
               <div className={styles['depends-on-title']}>高亮的为该任务的关联任务</div>

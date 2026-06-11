@@ -252,7 +252,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
           <YakitPopover
             placement="right"
             content={<AIMCPToolDetailPopover item={record} />}
-            overlayStyle={{ maxWidth: 440 }}
+            styles={{ root: { maxWidth: 440 } }}
           >
             <div className={styles['tool-name-wrap']}>
               <div className={styles['tool-name']}>{text}</div>

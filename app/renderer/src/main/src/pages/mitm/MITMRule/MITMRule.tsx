@@ -1204,7 +1204,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                 )}
                 <YakitPopover
                   placement={'bottom'}
-                  arrowPointAtCenter={true}
+                  arrow={{ pointAtCenter: true }}
                   content={
                     <YakitMenu
                       data={batchMenuData(excludeBatchMenuKey, t)}
@@ -1214,7 +1214,7 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                     />
                   }
                   trigger="hover"
-                  overlayClassName={classNames(styles['popover-remove'])}
+                  classNames={{ root: classNames(styles['popover-remove']) }}
                 >
                   <YakitButton
                     type="outline2"

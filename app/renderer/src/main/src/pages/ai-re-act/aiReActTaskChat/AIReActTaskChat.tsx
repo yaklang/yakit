@@ -202,9 +202,9 @@ export const AIManualAdditionPopover: React.FC<AIManualAdditionPopoverProps> = R
 
   return (
     <YakitPopover
-      visible={manualAdditionVisible}
+      open={manualAdditionVisible}
       content={<AIManualAddition chatType={chatType} onCancel={() => setManualAdditionVisible(false)} />}
-      onVisibleChange={setManualAdditionVisible}
+      onOpenChange={setManualAdditionVisible}
       trigger={'click'}
     >
       {children}
@@ -259,7 +259,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
   })
   return (
     <YakitPopover
-      visible={visible}
+      open={visible}
       content={
         <Form
           form={form}
@@ -287,9 +287,9 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
           </Form.Item>
         </Form>
       }
-      onVisibleChange={setVisible}
+      onOpenChange={setVisible}
       trigger={'click'}
-      destroyTooltipOnHide={true}
+      destroyOnHidden={true}
     >
       {children}
     </YakitPopover>
@@ -448,10 +448,10 @@ export const AIGlobalCommandPopover: React.FC<AIGlobalCommandPopoverProps> = Rea
   //#endregion
   return (
     <YakitPopover
-      visible={visible}
+      open={visible}
       content={<AIGlobalCommand ref={aiGlobalCommandRef} onCancel={() => setVisible(false)} onSave={onSave} />}
-      destroyTooltipOnHide={true}
-      onVisibleChange={onGlobalCommandVisibleChange}
+      destroyOnHidden={true}
+      onOpenChange={onGlobalCommandVisibleChange}
       trigger={'click'}
     >
       <div
@@ -522,10 +522,10 @@ export const AIPlanPromptPopover: React.FC<AIPlanPromptPopoverProps> = React.mem
   })
   return (
     <YakitPopover
-      visible={visible}
+      open={visible}
       content={<AIPlanPrompt ref={aiPlanPromptRef} onCancel={() => setVisible(false)} onSave={onSave} />}
-      destroyTooltipOnHide={true}
-      onVisibleChange={onPlanPromptVisibleChange}
+      destroyOnHidden={true}
+      onOpenChange={onPlanPromptVisibleChange}
       trigger={'click'}
     >
       <div

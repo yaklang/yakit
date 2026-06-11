@@ -444,7 +444,7 @@ const EntityTable: FC<KnowledgeBaseTableHeaderProps & { linkId: string[] }> = (p
               <React.Fragment>
                 <Divider type="vertical" />
                 <YakitPopover
-                  overlayClassName={styles['table-selected-filter-popover']}
+                  classNames={{ root: styles['table-selected-filter-popover'] }}
                   content={
                     <div className={styles['hub-outer-list-filter']}>
                       {selectList.map((item) => {

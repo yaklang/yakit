@@ -84,7 +84,7 @@ export const AIBottomDetails: React.FC<AIBottomDetailsProps> = (props) => {
           <YakitPopover
             placement="left"
             trigger="click"
-            overlayClassName={styles['ai-menu-popover']}
+            classNames={{ root: styles['ai-menu-popover'] }}
             title={<div style={{ display: 'flex' }}>终端字体配置</div>}
             content={
               <>
@@ -132,7 +132,7 @@ export const AIBottomDetails: React.FC<AIBottomDetailsProps> = (props) => {
                 />
               </>
             }
-            onVisibleChange={(v) => {
+            onOpenChange={(v) => {
               if (!v) {
                 if (terminalRef.current) {
                   terminalRef.current.terminal.options.fontFamily = terminaFont.fontFamily
@@ -141,8 +141,8 @@ export const AIBottomDetails: React.FC<AIBottomDetailsProps> = (props) => {
               }
               setPopoverVisible(v)
             }}
-            overlayInnerStyle={{ width: 340 }}
-            visible={popoverVisible}
+            styles={{ body: { width: 340 } }}
+            open={popoverVisible}
           >
             <YakitButton icon={<OutlineCogIcon />} type={popoverVisible ? 'text' : 'text2'} />
           </YakitPopover>

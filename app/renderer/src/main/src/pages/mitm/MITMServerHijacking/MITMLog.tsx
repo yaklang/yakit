@@ -338,9 +338,9 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
               </div>
             </div>
           }
-          overlayClassName={styles['http-mitm-table-process-popover']}
-          onVisibleChange={setProcessVisible}
-          visible={processVisible}
+          classNames={{ root: styles['http-mitm-table-process-popover'] }}
+          onOpenChange={setProcessVisible}
+          open={processVisible}
         >
           {curProcess.length >= 1 ? (
             <YakitButton type="primary">进程筛选（{curProcess.length}）</YakitButton>

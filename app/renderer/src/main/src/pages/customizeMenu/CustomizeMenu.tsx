@@ -1401,9 +1401,9 @@ export const PluginLocalInfoIcon: React.FC<PluginLocalInfoProps> = React.memo((p
       </Tooltip>
       <YakitPopover
         placement="topRight"
-        overlayClassName={style['terminal-popover']}
+        classNames={{ root: style['terminal-popover'] }}
         content={YakitEditor}
-        onVisibleChange={(v) => {
+        onOpenChange={(v) => {
           if (v && !plugin.Content) {
             if (getScriptInfo) getScriptInfo(plugin)
           }

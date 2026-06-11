@@ -337,7 +337,7 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
     <>
       <YakitPopover
         placement="right"
-        overlayClassName={styles['terminal-popover']}
+        classNames={{ root: styles['terminal-popover'] }}
         content={<YakitEditor type={'yak'} value={item.Content} readOnly={true} />}
       >
         <div className={styles['ai-tool-list-item-content']} onClick={onToolClick}>

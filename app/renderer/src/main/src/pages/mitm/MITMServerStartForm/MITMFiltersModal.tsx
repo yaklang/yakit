@@ -446,7 +446,7 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             onClick={onSaveFilter}
           />
           <YakitPopover
-            overlayClassName={styles['http-history-table-drop-down-popover']}
+            classNames={{ root: styles['http-history-table-drop-down-popover'] }}
             content={
               <MitmFilterHistoryStore
                 editFilterName={editFilterName}
@@ -459,8 +459,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
             }
             trigger="click"
             placement="bottom"
-            onVisibleChange={setPopoverVisible}
-            visible={popoverVisible}
+            onOpenChange={setPopoverVisible}
+            open={popoverVisible}
           >
             <YakitButton style={{ padding: '3px 8px' }} icon={<OutlineClockIcon />} type="text" />
           </YakitPopover>

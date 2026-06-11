@@ -173,9 +173,9 @@ const ContextTable: FC<{
           <div className={styles['count-column-title']}>
             <span>{tableCountMetric === 'tokens' ? 'Token' : 'Byte'}</span>
             <YakitPopover
-              overlayClassName={styles['metric-table-filter-dropdown']}
-              visible={tableMetricPopoverOpen}
-              onVisibleChange={setTableMetricPopoverOpen}
+              classNames={{ root: styles['metric-table-filter-dropdown'] }}
+              open={tableMetricPopoverOpen}
+              onOpenChange={setTableMetricPopoverOpen}
               placement="bottomLeft"
               trigger="click"
               content={
