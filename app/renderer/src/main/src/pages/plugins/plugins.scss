@@ -20,69 +20,6 @@
 .aduit-status-flag-color {
   color: var(--Colors-Use-Blue-Primary);
 }
-// -------------------- tooltip组件样式 ↓↓↓ --------------------
-.plugins-tooltip {
-  .ant-tooltip-inner {
-    display: flex;
-    padding: 8px 12px;
-    border-radius: 4px;
-    background: var(--Colors-Use-Neutral-Text-1-Title);
-    border: 1px solid var(--Colors-Use-Neutral-Text-1-Title);
-    color: var(--Colors-Use-Basic-Background);
-    box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
-    // border-bottom-width: 0px;
-
-    font-size: 12px;
-    line-height: 16px;
-    cursor: text;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-top {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    bottom: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-topLeft {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    bottom: 1px;
-    left: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-topRight {
-  padding-bottom: 4px;
-  .ant-tooltip-arrow {
-    right: 1px;
-    bottom: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottom {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    top: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottomLeft {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    top: 1px;
-    left: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-bottomRight {
-  padding-top: 4px;
-  .ant-tooltip-arrow {
-    right: 1px;
-    top: 1px;
-  }
-}
-.plugins-tooltip.ant-tooltip-placement-right {
-  padding-left: 4px;
-  .ant-tooltip-arrow {
-    left: 1px;
-  }
-}
 // -------------------- form组件样式 ↓↓↓ --------------------
 .plugins-form {
   width: 100%;

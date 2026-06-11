@@ -849,7 +849,6 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 <div className={styles['mitm-v2-switch']}>
                   <YakitCheckbox checked={isOnlyLookResponse} onChange={onHijackResponse} />
                   <Tooltip
-                    overlayClassName="plugins-tooltip"
                     title={t('MITMHijackedContent.when_checked_all_requests_will_be_forwar')}
                     placement="top"
                   >

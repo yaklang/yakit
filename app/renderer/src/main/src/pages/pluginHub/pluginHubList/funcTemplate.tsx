@@ -316,7 +316,6 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                             <Tooltip
                               title={item.label}
                               placement="top"
-                              overlayClassName="plugins-tooltip"
                               key={item.value}
                             >
                               <YakitTag closable onClose={() => onDelTag(item)}>
@@ -1408,7 +1407,7 @@ export const LocalOptFooterExtra: React.FC<LocalOptFooterExtraProps> = memo((pro
     <div className={styles['local-opt-footer-extra']}>
       {isShowUpload && (
         <>
-          <Tooltip title="上传" visible={uploadTipShow} onVisibleChange={(val) => setUploadTipShow(val)}>
+          <Tooltip title="上传" open={uploadTipShow} onOpenChange={(val) => setUploadTipShow(val)}>
             <YakitButton
               type="text2"
               icon={<OutlineClouduploadIcon />}

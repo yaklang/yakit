@@ -235,7 +235,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
   }, [])
 
   return isIcon ? (
-    <Tooltip title={name} placement={tooltipPlacement} overlayClassName="plugins-tooltip">
+    <Tooltip title={name} placement={tooltipPlacement}>
       <YakitButton {...rest}></YakitButton>
     </Tooltip>
   ) : (
@@ -249,7 +249,7 @@ export const FuncBtn: React.FC<FuncBtnProps> = memo((props) => {
 export const FuncBtnIcon: React.FC<FuncBtnIconProps> = memo((props) => {
   const { name, ...rest } = props
   return (
-    <Tooltip title={name} overlayClassName="plugins-tooltip">
+    <Tooltip title={name}>
       <YakitButton {...rest}></YakitButton>
     </Tooltip>
   )
@@ -538,7 +538,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
         <div className={styles['header-body']}>
           {!visible && (
             <div className={styles['header-body-filter']}>
-              <Tooltip title={t('FuncTemplate.expandFilter')} placement="topLeft" overlayClassName="plugins-tooltip">
+              <Tooltip title={t('FuncTemplate.expandFilter')} placement="topLeft">
                 <YakitButton
                   type="text2"
                   onClick={onExpend}
@@ -584,7 +584,6 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                           <Tooltip
                             title={item.label}
                             placement="top"
-                            overlayClassName="plugins-tooltip"
                             key={item.value}
                           >
                             <YakitTag closable onClose={() => onDelTag(item)}>
@@ -618,7 +617,6 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
         <div className={styles['header-extra']}>
           {extraHeader || null}
           <Tooltip
-            className="plugins-tooltip"
             placement="topRight"
             title={isList ? t('FuncTemplate.switchToGrid') : t('FuncTemplate.switchToList')}
           >

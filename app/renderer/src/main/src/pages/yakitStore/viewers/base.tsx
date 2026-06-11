@@ -126,7 +126,7 @@ const renderCard = (infoList, type) => {
             <Tooltip
               color="#fff"
               title={<TooltipTitle list={infoList} />}
-              overlayClassName="status-cards-info"
+              classNames={{ root: "status-cards-info" }}
               placement="topLeft"
             >
               <Statistic

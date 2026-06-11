@@ -63,7 +63,7 @@ export const HubButton: React.FC<HubButtonProps> = memo((props) => {
   }, [size])
 
   return (
-    <Tooltip overlayClassName="plugins-tooltip" title={tooltipHint}>
+    <Tooltip title={tooltipHint}>
       <YakitButton
         {...rest}
         className={classNames(className, { [styles[paddingClass]]: isIcon })}
@@ -412,7 +412,7 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
               {pluginName || '-'}
             </div>
             <div className={styles['subtitle-wrapper']}>
-              <Tooltip title={help || 'No Description about it.'} overlayClassName="plugins-tooltip">
+              <Tooltip title={help || 'No Description about it.'}>
                 <OutlineQuestionmarkcircleIcon className={styles['help-icon']} />
               </Tooltip>
             </div>
@@ -476,7 +476,6 @@ export const HubDetailHeader: React.FC<HubDetailHeaderProps> = memo((props) => {
                 <span className={styles['text-style']}>{t('HubExtraOperate.source')}</span>
                 <Tooltip
                   title={t('HubExtraOperate.copyPlugin', { basePluginName, pluginName })}
-                  overlayClassName="plugins-tooltip"
                 >
                   <YakitTag style={{ marginRight: 0, cursor: 'pointer' }}>{t('YakitButton.copy')}</YakitTag>
                 </Tooltip>

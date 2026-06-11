@@ -353,7 +353,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
               </Descriptions.Item>
               <Descriptions.Item key={'url'} span={2} label={t('HTTPFlowDetail.requestURL')}>
                 <div style={{ display: 'flex' }}>
-                  <Tooltip title={flow.Url} overlayInnerStyle={{ maxHeight: 300, overflowY: 'auto' }}>
+                  <Tooltip title={flow.Url} styles={{ body: { maxHeight: 300, overflowY: 'auto' } }}>
                     <span className="content-ellipsis">{flow.Url}</span>
                   </Tooltip>
                   <CopyComponents copyText={flow.Url} />
@@ -576,9 +576,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                               <div style={{ display: 'flex' }}>
                                 <Tooltip
                                   title={i.Value}
-                                  overlayInnerStyle={{
-                                    maxHeight: 300,
-                                    overflowY: 'auto',
+                                  styles={{
+                                    body: {
+                                      maxHeight: 300,
+                                      overflowY: 'auto',
+                                    },
                                   }}
                                 >
                                   <span className="content-ellipsis">{i.Value}</span>
@@ -628,9 +630,11 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                               <div style={{ display: 'flex' }}>
                                 <Tooltip
                                   title={i.Value}
-                                  overlayInnerStyle={{
-                                    maxHeight: 300,
-                                    overflowY: 'auto',
+                                  styles={{
+                                    body: {
+                                      maxHeight: 300,
+                                      overflowY: 'auto',
+                                    },
                                   }}
                                 >
                                   <span className="content-ellipsis">{i.Value}</span>
@@ -993,7 +997,7 @@ export const HTTPFlowDetailMini: React.FC<HTTPFlowDetailProp> = (props) => {
         >
           <Descriptions.Item key={'URL'} span={1} label={'URL'}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Tooltip title={flow?.Url} overlayInnerStyle={{ maxHeight: 300, overflowY: 'auto' }}>
+              <Tooltip title={flow?.Url} styles={{ body: { maxHeight: 300, overflowY: 'auto' } }}>
                 <span className="content-ellipsis">{flow?.Url}</span>
               </Tooltip>
               <CopyComponents copyText={flow?.Url || ''} />

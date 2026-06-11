@@ -444,8 +444,8 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
                     <Tooltip
                       title={i.Help || 'No Description about it.'}
                       placement="right"
-                      overlayClassName={style['question-tooltip']}
-                      onVisibleChange={(v) => {
+                      classNames={{ root: style['question-tooltip'] }}
+                      onOpenChange={(v) => {
                         if (v && !i.Help) {
                           getScriptInfo(i)
                         }

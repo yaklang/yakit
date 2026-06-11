@@ -1263,7 +1263,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                             <div className={styles['hub-outer-list-filter']}>
                               {showGroupList.map((group) => {
                                 return (
-                                  <Tooltip title={group} placement="top" overlayClassName="plugins-tooltip" key={group}>
+                                  <Tooltip title={group} placement="top" key={group}>
                                     <YakitTag closable onClose={() => onRemoveGroup(group)}>
                                       {group}
                                     </YakitTag>
@@ -1432,7 +1432,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
               <div className={styles['hub-detail-list-extra']}>
                 <FilterPopoverBtn defaultFilter={filters} onFilter={onDetailFilter} type="local" />
                 <div className={styles['divider-style']}></div>
-                <Tooltip title={t('HubListLocal.uploadPlugin')} overlayClassName="plugins-tooltip">
+                <Tooltip title={t('HubListLocal.uploadPlugin')}>
                   <YakitButton
                     type="text2"
                     loading={batchUploadLoading}
@@ -1442,7 +1442,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                   />
                 </Tooltip>
                 {/* <div className={styles["divider-style"]}></div>
-                                <Tooltip title={selectedNum > 0 ? "删除" : "清空"} overlayClassName='plugins-tooltip'>
+                                <Tooltip title={selectedNum > 0 ? "删除" : "清空"}>
                                     <YakitButton
                                         type='text2'
                                         loading={batchDelLoading}

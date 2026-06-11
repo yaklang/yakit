@@ -453,7 +453,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
       <>
         {queryParams?.rate?.map((item) => {
           return (
-            <Tooltip title={item.label} placement="top" overlayClassName="plugins-tooltip" key={item.id}>
+            <Tooltip title={item.label} placement="top" key={item.id}>
               <YakitTag closable onClose={() => onDelRate(item)} className={styles['tag-item']}>
                 {item.label}({numeral(item.min).format('0.00')}~{numeral(item.max).format('0.00')})
               </YakitTag>
@@ -462,7 +462,7 @@ const MemoryTable: React.FC<MemoryTableProps> = React.memo((props) => {
         })}
         {queryParams?.tags?.map((item) => {
           return (
-            <Tooltip title={item.Value} placement="top" overlayClassName="plugins-tooltip" key={item.Value}>
+            <Tooltip title={item.Value} placement="top" key={item.Value}>
               <YakitTag closable onClose={() => onDelTag(item)} className={styles['tag-item']}>
                 {item.Value}
               </YakitTag>

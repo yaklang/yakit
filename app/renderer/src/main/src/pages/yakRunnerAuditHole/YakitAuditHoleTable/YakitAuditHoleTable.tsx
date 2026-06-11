@@ -439,8 +439,8 @@ export const YakitAuditHoleTable: React.FC<YakitAuditHoleTableProps> = React.mem
             <Divider type="vertical" />
             <Tooltip
               title={t('YakitAuditHoleTable.misstatementFeedback')}
-              destroyTooltipOnHide={true}
-              overlayStyle={{ paddingBottom: 0 }}
+              destroyOnHidden={true}
+              styles={{ root: { paddingBottom: 0 } }}
               placement="top"
             >
               <OutlineUploadIcon

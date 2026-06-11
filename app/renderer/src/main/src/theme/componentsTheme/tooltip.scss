@@ -3,23 +3,22 @@
 }
 
 .ant-tooltip-inner {
-  min-height: 24px;
-  padding: 2px 8px;
   display: flex;
   align-items: center;
+  padding: 8px 12px;
+  cursor: text;
   word-break: break-all;
-  background: var(--Colors-Use-Neutral-Text-1-Title);
-  border: 1px solid var(--Colors-Use-Neutral-Text-1-Title);
   color: var(--Colors-Use-Basic-Background);
+  border: 1px solid var(--Colors-Use-Neutral-Text-1-Title);
+  border-radius: 4px;
+  background: var(--Colors-Use-Neutral-Text-1-Title);
   box-shadow: 0px 8px 16px 0px var(--Colors-Use-Basic-Shadow);
+  line-height: 16px;
+  border-bottom-width: 0px;
 }
 
-.ant-tooltip-arrow {
-  width: 16px;
-  height: 16px;
-  &-content {
-    &::before {
-      background: var(--Colors-Use-Neutral-Text-1-Title);
-    }
+.ant-tooltip .ant-tooltip-arrow {
+  &::before {
+    background: var(--Colors-Use-Neutral-Text-1-Title);
   }
 }
