@@ -66,9 +66,12 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     setActiveKey(key)
   })
 
-  const onClose = useMemoizedFn(() => {
-    setTabs((v) => v.filter((item) => item.value !== activeKey))
-    setActiveKey(getTabs()[getTabs().length - 1].value) // 最少有一个tab
+  const onClose = useMemoizedFn((key: string) => {
+    if (key === activeKey) {
+      const index = getTabs().findIndex((item) => item.value === key)
+      if (index !== -1) setActiveKey(getTabs()[index - 1].value) // 最少有一个tab
+    }
+    setTabs((v) => v.filter((item) => item.value !== key))
   })
   const tabBarRender = useMemoizedFn((tab: YakitTabsProps, node: ReactNode[]) => {
     const [label] = node
@@ -80,7 +83,13 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
     return (
       <div className={styles['tab-bar-item']}>
         {finalLabel}
-        <OutlineXIcon onClick={onClose} className={styles['x-icon']} />
+        <OutlineXIcon
+          onClick={(e) => {
+            e.stopPropagation()
+            onClose(tab.value)
+          }}
+          className={styles['x-icon']}
+        />
       </div>
     )
   })

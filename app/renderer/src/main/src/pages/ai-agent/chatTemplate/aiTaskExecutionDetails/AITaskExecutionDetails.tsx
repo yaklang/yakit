@@ -31,10 +31,21 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   const [todoList, setTodoList] = useState<TodoListCardData>()
   const perPlanItemDetailsDataUUIdRef = useRef<string>('')
   const perTodoListUUIdRef = useRef<string>('')
+  useEffect(() => {
+    onReset()
+    getData()
+    getTodoList()
+  }, [taskIndex])
   useInterval(() => {
     getData()
     getTodoList()
   }, 5 * 1000)
+  const onReset = useMemoizedFn(() => {
+    setPlanItemDetailsData(undefined)
+    setTodoList(undefined)
+    perPlanItemDetailsDataUUIdRef.current = ''
+    perTodoListUUIdRef.current = ''
+  })
   const getTodoList = useMemoizedFn(() => {
     if (!taskIndex) return
     const todoListMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.taskChat.todoListMap
@@ -85,27 +96,27 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     for (const item of todoList?.items || []) {
       switch (item.status) {
         case 'PENDING':
-          progressNumber[0].footerLeft = (progressNumber[0].footerLeft as number) + 1
+          progressNumber[0].footerLeft = progressNumber[0].footerLeft + 1
           unFinish.push(item)
           break
 
         case 'DOING':
-          progressNumber[1].footerLeft = (progressNumber[1].footerLeft as number) + 1
+          progressNumber[1].footerLeft = progressNumber[1].footerLeft + 1
           unFinish.push(item)
           break
 
         case 'DONE':
-          progressNumber[2].footerLeft = (progressNumber[2].footerLeft as number) + 1
+          progressNumber[2].footerLeft = progressNumber[2].footerLeft + 1
           finished.push(item)
           break
 
         case 'SKIPPED':
-          progressNumber[3].footerLeft = (progressNumber[3].footerLeft as number) + 1
+          progressNumber[3].footerLeft = progressNumber[3].footerLeft + 1
           finished.push(item)
           break
 
         case 'DELETED':
-          progressNumber[4].footerLeft = (progressNumber[4].footerLeft as number) + 1
+          progressNumber[4].footerLeft = progressNumber[4].footerLeft + 1
           finished.push(item)
           break
         default:
@@ -130,8 +141,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         {/* 上半部分：左侧目标与意图 + 右侧统计 */}
         <div className={styles['top-section']}>
           <div className={styles['top-left']}>
-            <AITaskExecutionDetailsCard title="任务目标">{taskGoal}</AITaskExecutionDetailsCard>
-            <AITaskExecutionDetailsCard title="意图感知">{perception?.summary}</AITaskExecutionDetailsCard>
+            <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} />
+            <AITaskExecutionDetailsCard title="意图感知" content={perception?.summary} />
           </div>
           <div className={styles['task-statistics']}>
             <div className={styles['stats-header']}>
@@ -230,6 +241,8 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
   const { colTitle, fixedList, dynamicList } = props
+  const [fixedScroll, setFixedScroll] = useState<boolean>(false)
+  const [dynamicScroll, setDynamicScroll] = useState<boolean>(false)
   return (
     <div className={styles['section-card']}>
       <div className={styles['section-card-title']}>{colTitle}</div>
@@ -244,11 +257,17 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
               </YakitTag>
             </div>
           </div>
-          <div className={styles['plugin-list']}>
+          <div
+            className={styles['plugin-list']}
+            style={{ overflowY: fixedScroll ? 'auto' : 'hidden' }}
+            onMouseEnter={() => setFixedScroll(true)}
+            onMouseLeave={() => setFixedScroll(false)}
+          >
             {fixedList.map((fixedItem, index) => (
               <AITaskActionItem
                 key={fixedItem.verbose_name + fixedItem.name}
                 title={fixedItem.verbose_name || fixedItem.name}
+                description={fixedItem.description}
               />
             ))}
           </div>
@@ -268,7 +287,12 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
           </YakitButton>
         </div>
         {!!dynamicList.length && (
-          <div className={styles['plugin-list']}>
+          <div
+            className={styles['plugin-list']}
+            style={{ overflowY: dynamicScroll ? 'auto' : 'hidden' }}
+            onMouseEnter={() => setDynamicScroll(true)}
+            onMouseLeave={() => setDynamicScroll(false)}
+          >
             {dynamicList.map((dynamicItem, index) => (
               <AITaskActionItem
                 key={dynamicItem.name}
@@ -302,12 +326,12 @@ const AITaskActionItem: React.FC<AITaskActionItemProps> = React.memo((props) => 
 })
 
 const AITaskExecutionDetailsCard: React.FC<AITaskExecutionDetailsCardProps> = React.memo((props) => {
-  const { title, children, className } = props
+  const { title, content, className } = props
   return (
     <div className={classNames(styles['card'], className)}>
       <div className={styles['card-title']}>{title}</div>
       <div className={styles['card-content']}>
-        {!!children ? children : <span className={styles['empty-text']}>暂无信息...</span>}
+        {!!content ? content : <span className={styles['empty-text']}>暂无信息...</span>}
       </div>
     </div>
   )

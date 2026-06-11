@@ -296,13 +296,6 @@
             line-height: 16px; /* 133.333% */
             letter-spacing: 0.5px;
           }
-
-          .todo-count {
-            background: #e9ecef;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 12px;
-          }
         }
 
         .todo-list {
@@ -320,6 +313,7 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
     gap: 16px;
+    align-items: start;
   }
   .section-card {
     border-radius: 8px;
@@ -371,6 +365,8 @@
       flex-direction: column;
       gap: 2px;
       padding: 0px 8px 8px 8px;
+      max-height: 300px;
+      overflow: auto;
 
       .plugin-item {
         padding: 2px;
@@ -382,7 +378,6 @@
         flex-direction: column;
         justify-content: center;
         position: relative;
-        min-height: 28px;
 
         color: var(--Colors-Use-Neutral-Text-2-Primary);
         font-size: 12px;

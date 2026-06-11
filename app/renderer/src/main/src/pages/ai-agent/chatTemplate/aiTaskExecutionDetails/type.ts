@@ -25,7 +25,7 @@ export interface AITaskDetailsCardListProps {
 }
 export interface AITaskExecutionDetailsCardProps {
   title: ReactNode
-  children: ReactNode
+  content: ReactNode
   className?: string
 }
 
@@ -33,7 +33,7 @@ export interface AITaskStatisticsStatusItem {
   key: string
   color: Uncapitalize<ThemeColorName> | 'neutral-with-border'
   title: ReactNode
-  footerLeft: ReactNode
+  footerLeft: number
   footerRight: ReactNode
 }
 export interface AITaskStatisticsStatusProps {
