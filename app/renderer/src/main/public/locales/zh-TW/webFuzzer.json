@@ -21,6 +21,21 @@
     "concurrency": "組併發",
     "AI": "AI"
   },
+  "WebFuzzerAiTestTemplate": {
+    "add": "新增",
+    "addTitle": "新增 AI 測試模板",
+    "editTitle": "編輯 AI 測試模板",
+    "label": "名稱",
+    "prompt": "提示詞",
+    "labelPlaceholder": "請輸入模板名稱",
+    "promptPlaceholder": "請輸入 AI 測試提示詞",
+    "labelRequired": "請輸入模板名稱",
+    "promptRequired": "請輸入 AI 測試提示詞",
+    "labelDuplicate": "模板名稱已存在",
+    "promptMaxLength": "提示詞不能超過 {{max}} 字",
+    "deleteConfirm": "確認刪除該 AI 測試模板？",
+    "deleteLastOne": "至少保留一條 AI 測試模板"
+  },
   "WebFuzzerAiRequestCompare": {
     "title": "請求對比",
     "leftTitle": "當前 Web Fuzzer 請求",
@@ -81,6 +96,7 @@
     "webFuzzerDemo": "WebFuzzer 爆破動畫演示",
     "bruteForceExample": "爆破示例",
     "AI_new_conversation": "新建對話",
+    "aiTest": "AI測試",
     "followRedirects": "跟隨重定向",
     "generatePathTemplate": "生成為 Path 模板",
     "generateRawTemplate": "生成為 Raw 模板",

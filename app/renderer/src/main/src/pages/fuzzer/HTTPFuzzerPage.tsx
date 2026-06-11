@@ -29,6 +29,8 @@ import { HTTPFuzzerHotPatchSidebar, HotCodeTemplate, HotPatchTempItem } from './
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
 import { StringToUint8Array, Uint8ArrayToString } from '../../utils/str'
 import { PacketScanButton } from '@/pages/packetScanner/DefaultPacketScanGroup'
+import { WebFuzzerAiTestMenu } from './components/WebFuzzerAiTestMenu/WebFuzzerAiTestMenu'
+import { WebFuzzerAiTestTemplate } from '@/defaultConstants/webFuzzerAiTestTemplates'
 import styles from './HTTPFuzzerPage.module.scss'
 import { ShareImportExportData } from './components/ShareImportExportData'
 import {
@@ -2470,6 +2472,34 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     getNewCurrentPage()
   })
 
+  const openAiPanel = useMemoizedFn(() => {
+    emiter.emit('sendSwitchSequenceToMainOperatorContent', JSON.stringify({ type: 'ai' }))
+    emiter.emit('onSwitchTypeWebFuzzerPage', JSON.stringify({ type: 'ai' }))
+    emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai', open: true }))
+    emiter.emit('onCurrentFuzzerPage', true)
+    setShowFreeChat(true)
+  })
+
+  const onAiTest = useMemoizedFn((template: WebFuzzerAiTestTemplate) => {
+    if (!requestRef.current?.trim()) {
+      yakitNotify('info', t('HTTPFuzzerPage.editAndSendRequest'))
+      return
+    }
+    openAiPanel()
+    historyAIReActChatBridge.setMention({
+      mentionId: focusModeLoop,
+      mentionType: 'focusMode',
+      mentionName: focusModeLoop,
+    })
+    historyAIReActChatBridge.handleStart({
+      qs: template.prompt,
+      focusMode: focusModeLoop,
+      extraValue: {
+        showQS: template.label,
+      },
+    })
+  })
+
   const jumpHTTPHistoryAnalysis = useMemoizedFn(() => {
     setTrafficAnalysisVisible(true)
   })
@@ -2713,10 +2743,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           {t('YakitButton.continue')}
                         </YakitButton>
                       ) : (
-                        <YakitButton onClick={sendRequest} type={'primary'} size="large">
-                          {t('YakitButton.sendRequest')}{' '}
-                          {convertKeyboardToUIKey(getHttpFuzzerShortcutKeyEvents()['sendRequest*httpFuzzer'].keys)}
-                        </YakitButton>
+                        <>
+                          <YakitButton onClick={sendRequest} type={'primary'} size="large">
+                            {t('YakitButton.sendRequest')}{' '}
+                            {convertKeyboardToUIKey(getHttpFuzzerShortcutKeyEvents()['sendRequest*httpFuzzer'].keys)}
+                          </YakitButton>
+                          <WebFuzzerAiTestMenu inViewport={inViewport} onSelect={onAiTest} />
+                        </>
                       )}
                     </>
                   ) : (
