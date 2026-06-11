@@ -28,6 +28,7 @@ import {
   IRifyHomeMediumIcon,
   IRifyHomeSeriousIcon,
 } from './icon'
+import { useSize } from 'ahooks'
 
 const SEVERITY_TAG_COLOR: Record<RiskSeverity, 'serious' | 'danger' | 'warning' | 'yellow'> = {
   serious: 'serious',
@@ -42,6 +43,16 @@ const SEVERITY_LABEL: Record<RiskSeverity, string> = {
   medium: '中危',
   low: '低危',
 }
+
+const RISK_DISTRIBUTION_COLOR_KEYS = [
+  '--Colors-Use-Neutral-Border',
+  '--yakit-colors-Main-30',
+  '--yakit-colors-Main-40',
+  '--yakit-colors-Main-70',
+  '--yakit-colors-Main-90',
+] as const
+
+const RISK_DISTRIBUTION_COLORS = RISK_DISTRIBUTION_COLOR_KEYS.map((key) => `var(${key})`)
 
 const onOpenPage = (route: YakitRoute, params?: any) => {
   emiter.emit('openPage', JSON.stringify({ route, params: params ?? {} }))
@@ -139,7 +150,7 @@ const RiskGaugeChart: React.FC<{ value: number; level: string; levelLabel: strin
     }
   }, [value, level, levelLabel, colors])
 
-  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} notMerge lazyUpdate />
+  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
 }
 
 const RiskDistributionChart: React.FC<{
@@ -148,30 +159,60 @@ const RiskDistributionChart: React.FC<{
   items: { name: string; value: number; percent: number }[]
 }> = ({ total, totalLabel, items }) => {
   const colors = useGetColorsByTheme()
-
+  const { width } = useSize(document.querySelector('body')) || { width: 0, height: 0 }
   const option = useMemo<EChartsOption>(() => {
-    const purpleColors = [
-      colors['--yakit-colors-Purple-70'],
-      colors['--yakit-colors-Purple-60'],
-      colors['--yakit-colors-Purple-50'],
-      colors['--yakit-colors-Purple-40'],
-      colors['--yakit-colors-Purple-30'],
+    const distributionColors = [
+      colors['--Colors-Use-Neutral-Border'],
+      colors['--yakit-colors-Main-30'],
+      colors['--yakit-colors-Main-40'],
+      colors['--yakit-colors-Main-70'],
+      colors['--yakit-colors-Main-90'],
     ]
     const textColor = colors['--Colors-Use-Neutral-Text-1-Title']
-    const subTextColor = colors['--Colors-Use-Neutral-Text-3-Secondary']
+    const subTextColor = colors['--Colors-Use-Neutral-Text-4-Help-text']
+    const bgHoverColor = colors['--Colors-Use-Neutral-Bg-Hover']
 
-    return {
-      color: purpleColors,
+    let option = {
+      color: distributionColors,
+      tooltip: {
+        trigger: 'item',
+        confine: false,
+        appendToBody: true,
+        position: (point, _params, _dom, _rect, size) => {
+          const x = point[0] + 10
+          const y = point[1] - size.contentSize[1] / 2
+          return [x, y]
+        },
+        formatter: (params) => {
+          const index = Number(params.name)
+          const item = items[index]
+          if (!item) return ''
+          return `${item.name} : ${item.value} (${item.percent}%)`
+        },
+      },
       series: [
         {
-          type: 'pie',
-          radius: ['58%', '78%'],
-          center: ['32%', '50%'],
+          // 空心饼图内外径
+          radius: ['68%', '90%'],
+          // 饼图上下左右位置
+          center: ['45%', '50%'],
+          itemStyle: {
+            borderColor: '#FFFFFF',
+            borderWidth: 2,
+          },
           avoidLabelOverlap: false,
-          label: { show: false },
-          labelLine: { show: false },
-          data: items.map((item) => ({
-            name: item.name,
+          type: 'pie',
+          label: {
+            show: false,
+          },
+          labelLine: {
+            show: false,
+          },
+          emphasis: {
+            scale: false, // ❗关闭外扩
+          },
+          data: items.map((item, index) => ({
+            name: String(index),
             value: item.value,
           })),
         },
@@ -179,59 +220,70 @@ const RiskDistributionChart: React.FC<{
       graphic: [
         {
           type: 'text',
-          left: '22%',
-          top: '42%',
+          left: '25%',
+          top: '40%',
           style: {
             text: String(total),
             fill: textColor,
             fontSize: 24,
-            fontWeight: 600,
+            fontWeight: 400,
             textAlign: 'center',
             width: 80,
           },
         },
         {
           type: 'text',
-          left: '22%',
-          top: '56%',
+          left: '20%',
+          top: '58%',
           style: {
             text: totalLabel,
             fill: subTextColor,
-            fontSize: 11,
+            fontSize: 12,
             textAlign: 'center',
             width: 80,
           },
         },
       ],
     }
-  }, [total, totalLabel, items, colors])
+    // if (width <= 1080) {
+    //   option.series[0].center = ['18%', '50%']
+    //   option.graphic[0].left = '10%'
+    //   option.graphic[1].left = '8%'
+    // } else if (width > 1080 && width <= 1280) {
+    //   option.series[0].center = ['20%', '50%']
+    //   option.graphic[0].left = '10%'
+    //   option.graphic[1].left = '8%'
+    // } else if (width > 1280) {
+    //   option.series[0].center = ['18%', '50%']
+    //   option.graphic[0].left = '10%'
+    //   option.graphic[1].left = '8%'
+    // }
 
-  return <ReactECharts option={option} style={{ width: '100%', height: 200 }} notMerge lazyUpdate />
+    return option as EChartsOption
+  }, [total, totalLabel, items, colors, width])
+
+  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
 }
+
+const RULE_HITS_LABEL_WIDTH = 88 //宽度80+间距8
 
 const RuleHitsBarChart: React.FC<{ items: { name: string; value: number }[] }> = ({ items }) => {
   const colors = useGetColorsByTheme()
 
   const option = useMemo<EChartsOption>(() => {
-    const purpleColors = [
-      colors['--yakit-colors-Purple-70'],
-      colors['--yakit-colors-Purple-60'],
-      colors['--yakit-colors-Purple-50'],
-      colors['--yakit-colors-Purple-40'],
-      colors['--yakit-colors-Purple-30'],
-    ]
+    const barColors = RISK_DISTRIBUTION_COLOR_KEYS.map((key) => colors[key])
     const textColor = colors['--Colors-Use-Neutral-Text-1-Title']
     const subTextColor = colors['--Colors-Use-Neutral-Text-3-Secondary']
-    const borderColor = colors['--Colors-Use-Neutral-Border']
     const reversedItems = [...items].reverse()
 
     return {
       grid: {
-        left: 0,
-        right: 36,
-        top: 8,
+        left: RULE_HITS_LABEL_WIDTH,
+        right: 0,
+        top: 0,
         bottom: 0,
-        containLabel: true,
+        height: items.length * 32,
+        containLabel: false,
       },
       xAxis: {
         type: 'value',
@@ -244,7 +296,11 @@ const RuleHitsBarChart: React.FC<{ items: { name: string; value: number }[] }> =
         axisLine: { show: false },
         axisTick: { show: false },
         axisLabel: {
-          color: textColor,
+          width: RULE_HITS_LABEL_WIDTH,
+          align: 'left',
+          margin: RULE_HITS_LABEL_WIDTH,
+          overflow: 'truncate',
+          color: subTextColor,
           fontSize: 12,
         },
       },
@@ -254,29 +310,25 @@ const RuleHitsBarChart: React.FC<{ items: { name: string; value: number }[] }> =
           data: reversedItems.map((item, index) => ({
             value: item.value,
             itemStyle: {
-              color: purpleColors[purpleColors.length - 1 - index],
+              color: barColors[index],
               borderRadius: [0, 4, 4, 0],
             },
             label: {
               show: true,
               position: 'right',
-              color: subTextColor,
+              color: textColor,
               fontSize: 12,
               formatter: '{c}',
             },
           })),
-          barWidth: 14,
-          showBackground: true,
-          backgroundStyle: {
-            color: borderColor,
-            borderRadius: [0, 4, 4, 0],
-          },
+          barWidth: 10,
+          showBackground: false,
         },
       ],
     }
   }, [items, colors])
 
-  return <ReactECharts option={option} style={{ width: '100%', height: 200 }} notMerge lazyUpdate />
+  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
 }
 
 const IRifyHome: React.FC<IRifyHomeProps> = () => {
@@ -285,7 +337,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
   return (
     <div className={styles['irify-home']}>
       <div className={styles['irify-home-content']}>
-        <section className={styles['hero-section']}>
+        <div className={styles['hero-section']}>
           <div className={styles['page-header']}>
             <div className={styles['page-header-text']}>
               <div className={styles['page-title']}>代码审计工作台</div>
@@ -429,96 +481,95 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
               </div>
             </div>
           </div>
-        </section>
-
-        <section className={styles['panel-card']}>
-          <div className={styles['panel-card-title']}>风险概览</div>
-          <div className={styles['risk-overview']}>
-            <div className={styles['risk-gauge']}>
-              <RiskGaugeChart value={50} level={'中危'} levelLabel={'危险等级'} />
-            </div>
-            <div className={styles['risk-stats-grid']}>
-              <div className={styles['risk-stats-grid-item']}>
-                <div className={classNames(styles['risk-stat-item'], styles[`risk-stat-item-serious`])}>
-                  <div className={styles['risk-stat-content']}>
-                    <div className={styles['risk-stat-bar']}>
-                      <IRifyHomeSeriousIcon />
-                    </div>
-                    <div className={styles['risk-stat-label']}>
-                      <div className={styles['risk-stat-label-title']}>严重(1.0%)</div>
-                      <div className={styles['risk-stat-label-sub-title']}>Serious</div>
-                    </div>
-                  </div>
-                  <div className={styles['risk-stat-count']}>3</div>
-                </div>
-                <div className={styles['risk-stats-grid-line']} />
-                <div className={classNames(styles['risk-stat-item'], styles[`risk-stat-item-high`])}>
-                  <div className={styles['risk-stat-content']}>
-                    <div className={styles['risk-stat-bar']}>
-                      <IRifyHomeHighIcon />
-                    </div>
-                    <div className={styles['risk-stat-label']}>
-                      <div className={styles['risk-stat-label-title']}>高危(1.0%)</div>
-                      <div className={styles['risk-stat-label-sub-title']}>High</div>
-                    </div>
-                  </div>
-                  <div className={styles['risk-stat-count']}>3</div>
-                </div>
+        </div>
+        <div className={styles['main-chart']}>
+          <div className={classNames(styles['panel-card'])}>
+            <div className={styles['panel-card-title']}>风险概览</div>
+            <div className={styles['risk-overview']}>
+              <div className={styles['risk-gauge']}>
+                <RiskGaugeChart value={50} level={'中危'} levelLabel={'危险等级'} />
               </div>
-              <div className={styles['risk-stats-line']} />
-              <div className={styles['risk-stats-grid-item']}>
-                <div className={classNames(styles['risk-stat-item'], styles[`risk-stat-item-medium`])}>
-                  <div className={styles['risk-stat-content']}>
-                    <div className={styles['risk-stat-bar']}>
-                      <IRifyHomeMediumIcon />
+              <div className={styles['risk-stats-grid']}>
+                <div className={styles['risk-stats-grid-item']}>
+                  <div className={classNames(styles['risk-stat-item'], styles[`risk-stat-item-serious`])}>
+                    <div className={styles['risk-stat-content']}>
+                      <div className={styles['risk-stat-bar']}>
+                        <IRifyHomeSeriousIcon />
+                      </div>
+                      <div className={styles['risk-stat-label']}>
+                        <div className={styles['risk-stat-label-title']}>严重(1.0%)</div>
+                        <div className={styles['risk-stat-label-sub-title']}>Serious</div>
+                      </div>
                     </div>
-                    <div className={styles['risk-stat-label']}>
-                      <div className={styles['risk-stat-label-title']}>中危(81.0%)</div>
-                      <div className={styles['risk-stat-label-sub-title']}>Medium</div>
-                    </div>
+                    <div className={styles['risk-stat-count']}>3</div>
                   </div>
-                  <div className={styles['risk-stat-count']}>223</div>
+                  <div className={styles['risk-stats-grid-line']} />
+                  <div className={classNames(styles['risk-stat-item'], styles[`risk-stat-item-high`])}>
+                    <div className={styles['risk-stat-content']}>
+                      <div className={styles['risk-stat-bar']}>
+                        <IRifyHomeHighIcon />
+                      </div>
+                      <div className={styles['risk-stat-label']}>
+                        <div className={styles['risk-stat-label-title']}>高危(1.0%)</div>
+                        <div className={styles['risk-stat-label-sub-title']}>High</div>
+                      </div>
+                    </div>
+                    <div className={styles['risk-stat-count']}>3</div>
+                  </div>
                 </div>
-                <div className={styles['risk-stats-grid-line']} />
-
-                <div className={classNames(styles['risk-stat-item'], styles[`risk-stat-item-low`])}>
-                  <div className={styles['risk-stat-content']}>
-                    <div className={styles['risk-stat-bar']}>
-                      <IRifyHomeLowIcon />
+                <div className={styles['risk-stats-line']} />
+                <div className={styles['risk-stats-grid-item']}>
+                  <div className={classNames(styles['risk-stat-item'], styles[`risk-stat-item-medium`])}>
+                    <div className={styles['risk-stat-content']}>
+                      <div className={styles['risk-stat-bar']}>
+                        <IRifyHomeMediumIcon />
+                      </div>
+                      <div className={styles['risk-stat-label']}>
+                        <div className={styles['risk-stat-label-title']}>中危(81.0%)</div>
+                        <div className={styles['risk-stat-label-sub-title']}>Medium</div>
+                      </div>
                     </div>
-                    <div className={styles['risk-stat-label']}>
-                      <div className={styles['risk-stat-label-title']}>低危(7.0%)</div>
-                      <div className={styles['risk-stat-label-sub-title']}>Low</div>
-                    </div>
+                    <div className={styles['risk-stat-count']}>223</div>
                   </div>
-                  <div className={styles['risk-stat-count']}>24</div>
+                  <div className={styles['risk-stats-grid-line']} />
+
+                  <div className={classNames(styles['risk-stat-item'], styles[`risk-stat-item-low`])}>
+                    <div className={styles['risk-stat-content']}>
+                      <div className={styles['risk-stat-bar']}>
+                        <IRifyHomeLowIcon />
+                      </div>
+                      <div className={styles['risk-stat-label']}>
+                        <div className={styles['risk-stat-label-title']}>低危(7.0%)</div>
+                        <div className={styles['risk-stat-label-sub-title']}>Low</div>
+                      </div>
+                    </div>
+                    <div className={styles['risk-stat-count']}>24</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </section>
 
-        <section className={styles['chart-row']}>
           <div className={classNames(styles['panel-card'], styles['chart-card'])}>
             <div className={styles['panel-card-title']}>风险分布</div>
             <div className={styles['distribution-content']}>
-              <div className={styles['distribution-chart']}>
+              <div className={styles['distribution-content-echarts']}>
                 <RiskDistributionChart
                   total={data.riskDistribution.total}
                   totalLabel={data.riskDistribution.totalLabel}
                   items={data.riskDistribution.items}
                 />
               </div>
-              <div className={styles['distribution-legend']}>
+              <div className={styles['distribution-content-legend']}>
                 {data.riskDistribution.items.map((item, index) => (
                   <div key={`${item.name}-${index}`} className={styles['distribution-legend-item']}>
-                    <span
-                      className={styles['distribution-legend-dot']}
-                      style={{
-                        backgroundColor: `var(--yakit-colors-Purple-${70 - index * 10})`,
-                      }}
-                    />
-                    <span className={styles['distribution-legend-name']}>{item.name}</span>
+                    <span className={styles['distribution-legend-icon']}>
+                      <span
+                        className={styles['distribution-legend-dot']}
+                        style={{ backgroundColor: RISK_DISTRIBUTION_COLORS[index] }}
+                      />
+                      <span className={styles['distribution-legend-name']}>{item.name}</span>
+                    </span>
                     <span className={styles['distribution-legend-value']}>{item.value}</span>
                     <span className={styles['distribution-legend-percent']}>{item.percent}%</span>
                   </div>
@@ -529,36 +580,13 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
 
           <div className={classNames(styles['panel-card'], styles['chart-card'])}>
             <div className={styles['panel-card-title']}>规则命中 Top5</div>
-            <RuleHitsBarChart items={data.ruleHitsTop5} />
-          </div>
-        </section>
-
-        <section className={styles['bottom-row']}>
-          <div className={classNames(styles['panel-card'], styles['ai-results-card'])}>
-            <div className={styles['panel-card-header']}>
-              <div className={styles['panel-card-title']}>AI 审计成果</div>
-              <button
-                type="button"
-                className={styles['panel-card-link']}
-                onClick={() => onOpenPage(YakitRoute.Irify_AI_Code_Audit)}
-              >
-                查看全部
-                <OutlineChevronrightIcon />
-              </button>
-            </div>
-            <div className={styles['ai-results-list']}>
-              {data.aiAuditResults.map((item, index) => (
-                <div key={`${item.title}-${index}`} className={styles['ai-results-item']}>
-                  <span className={styles['ai-results-dot']} />
-                  <span className={styles['ai-results-title']}>{item.title}</span>
-                  <YakitTag size="small" color={SEVERITY_TAG_COLOR[item.severity]}>
-                    {SEVERITY_LABEL[item.severity]}
-                  </YakitTag>
-                </div>
-              ))}
+            <div className={styles['rule-hits-bar-chart']}>
+              <RuleHitsBarChart items={data.ruleHitsTop5} />
             </div>
           </div>
+        </div>
 
+        <div className={styles['bottom-row']}>
           <div className={classNames(styles['panel-card'], styles['projects-card'])}>
             <div className={styles['panel-card-header']}>
               <div className={styles['panel-card-title']}>近期项目</div>
@@ -600,7 +628,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
               </table>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   )
