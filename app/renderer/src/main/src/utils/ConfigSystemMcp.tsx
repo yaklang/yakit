@@ -16,6 +16,7 @@ import {
   MCPTierVisibility,
   MCPToolConfig,
   MCPToolSource,
+  hasMultipleMCPToolSources,
   resolveMCPToolListSourceFilter,
 } from '@/pages/ai-agent/type/aiMCP'
 import { genDefaultPagination } from '@/pages/invoker/schema'
@@ -171,7 +172,15 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
     enableAIToolFramework,
     enableBridgeExternalMcp,
   })
-  const hasActiveToolTier = isMCPTierActive(tierVisibilityRef.current)
+  const hasActiveToolTier = useMemo(
+    () =>
+      isMCPTierActive({
+        enableLegacyMcpTools,
+        enableAIToolFramework,
+        enableBridgeExternalMcp,
+      }),
+    [enableLegacyMcpTools, enableAIToolFramework, enableBridgeExternalMcp],
+  )
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
   const [forceSyncLoading, setForceSyncLoading] = useState<boolean>(false)
   const isInitRequestRef = useRef<boolean>(true)
@@ -230,7 +239,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
           filterKey: 'Source',
           filtersType: 'select',
           filtersSelectAll: {
-            isAll: resolveMCPToolListSourceFilter(tierVisibilityRef.current) === '' ? true : false,
+            isAll: hasMultipleMCPToolSources(tierVisibilityRef.current),
           },
           filters: sourceFilterOptions,
           filterIcon: <OutlineFilterIcon className={styles['filter-icon']} />,
@@ -356,6 +365,9 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
       },
       Total: 0,
     })
+    if (!isMCPTierActive(tiers)) {
+      return
+    }
     setQuery((prev) => ({ ...prev, Source: resolveMCPToolListSourceFilter(tiers), ForceSync: forceSync }))
   })
 
@@ -414,6 +426,9 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
   })
 
   const onSetMcp = useMemoizedFn(() => {
+    if (!hasActiveToolTier) {
+      return
+    }
     mcpStreamEvent.onStart({
       EnableAll: enableLegacyMcpTools,
       EnableAIToolFramework: enableAIToolFramework,
@@ -582,7 +597,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
               <YakitButton type="outline2" onClick={onCloseModal}>
                 {t('YakitButton.cancel')}
               </YakitButton>
-              <YakitButton colors="primary" onClick={onSetMcp}>
+              <YakitButton colors="primary" disabled={!hasActiveToolTier} onClick={onSetMcp}>
                 {t('YakitButton.enable')}
               </YakitButton>
             </div>
