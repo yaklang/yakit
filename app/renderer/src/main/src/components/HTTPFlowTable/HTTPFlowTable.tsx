@@ -25,14 +25,7 @@ import { execPacketScan, execPacketScanWithNewTab } from '@/pages/packetScanner/
 import { GetPacketScanByCursorMenuItem, packetScanDefaultValue } from '@/pages/packetScanner/DefaultPacketScanGroup'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { TableVirtualResize } from '../TableVirtualResize/TableVirtualResize'
-import {
-  CheckCircleIcon,
-  ColorSwatchIcon,
-  ChevronDownIcon,
-  ArrowCircleRightSvgIcon,
-  ChromeFrameSvgIcon,
-  CloudDownloadIcon,
-} from '@/assets/newIcon'
+import { ColorSwatchIcon, ChevronDownIcon, CloudDownloadIcon } from '@/assets/newIcon'
 import classNames from 'classnames'
 import { ColumnsTypeProps, FiltersItemProps, SortProps } from '../TableVirtualResize/TableVirtualResizeType'
 import { minWinSendToChildWin, openExternalWebsite, openPacketNewWindow, saveABSFileToOpen } from '@/utils/openWebsite'
@@ -55,14 +48,7 @@ import { MITMConsts } from '@/pages/mitm/MITMConsts'
 import { loadAdvancedConfig } from '@/pages/mitm/MITMAdvancedConfig'
 import { HTTPHistorySourcePageType } from '../HTTPHistory'
 import { useHttpFlowStore } from '@/store/httpFlow'
-import {
-  OutlineCogIcon,
-  OutlineFilterIcon,
-  OutlineRefreshIcon,
-  OutlineSearchIcon,
-  OutlineSelectorIcon,
-  OutlineStarIcon,
-} from '@/assets/icon/outline'
+import { OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import { useCampare } from '@/hook/useCompare/useCompare'
@@ -75,7 +61,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import { setClipboardText } from '@/utils/clipboard'
 import { RemoteHistoryGV } from '@/enums/history'
 import { v4 as uuidv4 } from 'uuid'
-import { filterColorTag, getSingleColorType, isCellRedSingleColor } from '../TableVirtualResize/utils'
+import { filterColorTag } from '../TableVirtualResize/utils'
 import { randomString } from '@/utils/randomUtil'
 import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 import { usePageInfo } from '@/store/pageInfo'
@@ -83,20 +69,23 @@ import { shallow } from 'zustand/shallow'
 import { getHTTPFlowExportFields } from './HTTPFlowExportFields'
 import { showYakitDrawer } from '../yakitUI/YakitDrawer/YakitDrawer'
 import MITMContext from '@/pages/mitm/Context/MITMContext'
-import {
-  getGlobalShortcutKeyEvents,
-  GlobalShortcutKey,
-  ShortcutKeyFocusType,
-} from '@/utils/globalShortcutKey/events/global'
+import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from '@/utils/globalShortcutKey/events/global'
 import {
   getYakitMultipleShortcutKeyEvents,
   YakitMultipleShortcutKey,
 } from '@/utils/globalShortcutKey/events/multiple/yakitMultiple'
 import { convertKeyboardToUIKey } from '@/utils/globalShortcutKey/utils'
-import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { isEqual } from 'lodash'
-import { defalutColumnsOrder } from '@/pages/hTTPHistoryAnalysis/HTTPHistory/HTTPHistoryFilter'
+import {
+  buildHTTPFlowTableColumnArr,
+  getHTTPFlowDefaultColumnsOrder,
+  isHTTPFlowSpecialCustomColumn,
+  mergeHTTPFlowColumnsOrder,
+  noColumnsKey,
+  resolveHTTPFlowTableColumns,
+} from './HTTPFlowTable.columns'
+import { useHTTPFlowTableShortcutKeys } from './useHTTPFlowTableShortcutKeys'
 import { isEnpriTrace } from '@/utils/envfile'
 import { NowProjectDescription } from '@/pages/globalVariable'
 import { useStore } from '@/store'
@@ -126,14 +115,11 @@ import {
   HTTPFlowShield,
   ImportExportProgress,
   onExpandHTTPFlow,
-  RangeInputNumberTableWrapper,
 } from './components'
 import {
-  HTTP_FLOW_FAVORITE_TAG,
   HTTP_FLOW_TABLE_SHIELD_DATA,
   OFFSET_LIMIT,
   OFFSET_STEP,
-  contentType,
   defSort,
   type codecHistoryPluginProps,
   type HTTPFlow,
@@ -158,12 +144,12 @@ import {
   getHTTPFlowReqAndResToString,
   getRunTimeIdObj,
   isHTTPFlowFavorite,
-  onConvertBodySizeByUnit,
   filterHTTPFlowsByFavoriteAndTags,
 } from './HTTPFlowTable.utils'
 
 //导出给其他组件用
 export * from './HTTPFlowTable.constants'
+export * from './HTTPFlowTable.columns'
 export * from './HTTPFlowTable.availableColors'
 export * from './HTTPFlowTable.utils'
 export * from './components'
@@ -310,121 +296,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const refreshTabsContRef = useRef<boolean>(false)
 
   const fromMITM = useMemo(() => props.pageType === 'MITM', [props.pageType])
-
-  useShortcutKeyTrigger('sendAndJump*common', (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    // 为约束monaco与history同时存在相同快捷键所导致的2次触发(在monaco中执行)
-    // 此时focus用于标记manaco中是否有焦点 有则不执行
-    if (inViewport && !item) {
-      const selected = getSelected()
-      if (selected) {
-        selected.IsWebsocket
-          ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request)
-          : onSendToTab(selected, true, downstreamProxyStr, fromMITM)
-      }
-    }
-  })
-
-  useShortcutKeyTrigger('send*common', (focus) => {
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (inViewport && !item) {
-      const selected = getSelected()
-      if (selected) {
-        selected.IsWebsocket
-          ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
-          : onSendToTab(selected, false, downstreamProxyStr, fromMITM)
-      }
-    }
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    setClipboardText(selected.Url || '')
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    const nextUrl = getUrlWithoutQuery(selected.Url)
-    if (!nextUrl) {
-      yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
-      return
-    }
-    setClipboardText(nextUrl)
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    selected.Url && openExternalWebsite(selected.Url)
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    showResponseViaHTTPFlowID(selected)
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockRecord, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    onShieldRecord(selected)
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockURL, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    onShieldURL(selected)
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableBlockDomain, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    onShieldDomain(selected)
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteRecord, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    onRemoveHttpHistory({ Id: [selected.Id] })
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteURL, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    onRemoveHttpHistory({ URLPrefix: selected.Url })
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableDeleteDomain, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    onRemoveHttpHistory({ URLPrefix: selected?.HostPort?.split(':')[0] })
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), false)
-  })
-
-  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
-    const selected = getSelected()
-    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
-    if (!inViewport || !selected || item) return
-    generateCSRFPocByRequest(selected.Request, selected.IsHTTPS, (e) => setClipboardText(e), true)
-  })
 
   const size = useSize(ref)
 
@@ -1386,13 +1257,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   ).run
 
   // #region 表格自定义相关（excludeCustomColumnsKey这个变量暂时勿动，没有做其他列兼容）
-  // 需要完全排除列字段，表格不可能出现的列
-  const noColumnsKey: string[] = ['Payloads']
-  // 不需要参与自定义的列（也就是不需要存进缓存）
-  const excludeCustomColumnsKey: string[] = ['Payloads']
-  const specialCustoms = useMemoizedFn((key) => {
-    return excludeCustomColumnsKey.includes(key) || noColumnsKey.includes(key)
-  })
+  const specialCustoms = useMemoizedFn((key: string) => isHTTPFlowSpecialCustomColumn(key))
   // 排除展示的列（包含noColumnsKey）
   const [excludeColumnsKey, setExcludeColumnsKey] = useState<string[]>(() => {
     if (defaultExcludeColumnsKey && defaultExcludeColumnsKey.length > 0) {
@@ -1402,7 +1267,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return noColumnsKey
   })
   // 默认所有列展示顺序
-  const defalutColumnsOrderRef = useRef<string[]>(defalutColumnsOrder.filter((key) => !noColumnsKey.includes(key)))
+  const defalutColumnsOrderRef = useRef<string[]>(getHTTPFlowDefaultColumnsOrder())
   // 所有列展示顺序（不包含excludeCustomColumnsKey）
   const [columnsOrder, setColumnsOrder] = useState<string[]>([])
   useEffect(() => {
@@ -1435,20 +1300,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           if (res[1].status === 'fulfilled') {
             try {
               const arr = JSONParseLog(res[1].value, { page: 'HTTPFlowTable', fun: 'HTTPFlowTableColumnsOrder' }) || []
-              // 确保顺序缓存里面的key一定在默认所有列中存在
-              const arr2 = arr.filter((key: string) => defalutColumnsOrderRef.current.includes(key))
-              // 按照 defalutColumnsOrderRef.current 顺序补充新增列
-              defalutColumnsOrderRef.current.forEach((key: string, idx: number) => {
-                if (!arr2.includes(key)) {
-                  let insertIdx = arr2.findIndex((k) => defalutColumnsOrderRef.current.indexOf(k) > idx)
-                  if (insertIdx === -1) {
-                    arr2.push(key)
-                  } else {
-                    arr2.splice(insertIdx, 0, key)
-                  }
-                }
-              })
-              const realArr = arr2.filter((key) => !specialCustoms(key))
+              const realArr = mergeHTTPFlowColumnsOrder(arr, defalutColumnsOrderRef.current)
               setRemoteValue(RemoteHistoryGV.HistroyColumnsOrder, JSON.stringify(realArr))
               if (!isEqual(realArr, columnsOrder)) {
                 refreshTabelKey = true
@@ -1476,6 +1328,36 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [tableKeyNumber, setTableKeyNumber] = useState<string>(uuidv4())
   // 序号是否固定
   const [idFixed, setIdFixed] = useState<boolean>(true)
+
+  const columnActionHandlers = useMemo(
+    () => ({
+      onToggleFavorite: (e: React.MouseEvent, rowData: HTTPFlow, favorite: boolean) => {
+        e.stopPropagation()
+        toggleHTTPFlowFavorite(rowData, favorite, setData, onlyFavorite)
+      },
+      onOpenInBrowser: (e: React.MouseEvent, rowData: HTTPFlow) => {
+        e.stopPropagation()
+        ipcRenderer
+          .invoke('GetHTTPFlowById', { Id: rowData?.Id })
+          .then((i: HTTPFlow) => {
+            i.Url && openExternalWebsite(i.Url)
+          })
+          .catch((e: any) => {
+            yakitNotify('error', `Query HTTPFlow failed: ${e}`)
+          })
+      },
+      onExpand: (e: React.MouseEvent, rowData: HTTPFlow) => {
+        e.stopPropagation()
+        let m = showYakitDrawer({
+          width: '80%',
+          content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr, t, pageType),
+          bodyStyle: { paddingTop: 5 },
+        })
+      },
+    }),
+    [downstreamProxyStr, onlyFavorite, pageType, t],
+  )
+
   const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
     debugToPrintLogs({
       page: 'HTTPFlowTable',
@@ -1483,454 +1365,35 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       status: 'INFO',
       content: 'start creating',
     })
-    // ⚠️ 注意：此处新增或删除列请务必同步 流量分析页面，还有处理 defalutColumnsOrder 变量，这个变量是存的全部的列默认顺序key
-    const columnArr: ColumnsTypeProps[] = [
-      {
-        title: t('YakitTable.order'),
-        dataKey: 'Id',
-        fixed: idFixed ? 'left' : undefined,
-        ellipsis: false,
-        width: 96,
-        enableDrag: false,
-        sorterProps: {
-          sorter: true,
-        },
-      },
-      {
-        title: t('HTTPFlowTable.method'),
-        dataKey: 'Method',
-        width: 100,
-        filterProps: {
-          filterKey: 'Methods',
-          filtersType: 'select',
-          filterMultiple: true,
-          filters: [
-            {
-              label: 'GET',
-              value: 'GET',
-            },
-            {
-              label: 'POST',
-              value: 'POST',
-            },
-            {
-              label: 'HEAD',
-              value: 'HEAD',
-            },
-            {
-              label: 'PUT',
-              value: 'PUT',
-            },
-            {
-              label: 'DELETE',
-              value: 'DELETE',
-            },
-            {
-              label: 'PATCH',
-              value: 'PATCH',
-            },
-          ],
-        },
-      },
-      {
-        title: t('HTTPFlowTable.statusCode'),
-        dataKey: 'StatusCode',
-        width: 120,
-        filterProps: {
-          filterKey: 'StatusCode',
-          filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={style['filter-icon']} />,
-          filterInputProps: {
-            placeholder: t('YakitInput.supportInputFormat'),
-            wrapperStyle: { width: 270 },
-            onRegular: (value) => {
-              // 只允许输入数字、逗号和连字符，去掉所有其他字符
-              return value.replace(/[^0-9,-]/g, '')
-            },
-          },
-        },
-        render: (text, rowData) => {
-          return (
-            <div
-              className={classNames({
-                [style['status-code']]: !isCellRedSingleColor(rowData.cellClassName),
-              })}
-            >
-              {text}
-            </div>
-          )
-        },
-      },
-      {
-        title: 'URL',
-        dataKey: 'Url',
-        width: 400,
-        filterProps: {
-          filterKey: 'SearchURL',
-          filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={style['filter-icon']} />,
-        },
-      },
-      {
-        title: 'Host',
-        dataKey: 'Host',
-        width: 200,
-      },
-      {
-        title: 'Path',
-        dataKey: 'Path',
-        width: 400,
-      },
-      {
-        title: t('HTTPFlowTable.fromPlugin'),
-        dataKey: 'FromPlugin',
-        width: 200,
-        filterProps: {
-          filterKey: 'FromPlugin',
-          filtersType: 'input',
-          filterIcon: <OutlineSearchIcon className={style['filter-icon']} />,
-        },
-      },
-      {
-        title: 'Tags',
-        dataKey: 'Tags',
-        width: 150,
-        render: (text) => {
-          return text
-            ? `${text}`
-                .split('|')
-                .filter(
-                  (i) =>
-                    !i.startsWith('YAKIT_COLOR_') &&
-                    i !== HTTP_FLOW_FAVORITE_TAG &&
-                    comBuiltinTagList.every(({ value }) => value !== i),
-                )
-                .join(', ')
-            : ''
-        },
-      },
-      {
-        title: 'IP',
-        dataKey: 'IPAddress',
-        width: 200,
-      },
-      {
-        title: t('HTTPFlowTable.bodyLength'),
-        dataKey: 'BodyLength',
-        width: 130,
-        filterProps: {
-          filterKey: 'bodyLength',
-          filterIcon: <OutlineSelectorIcon className={style['filter-icon']} />,
-          filterRender: (closePopover: () => void) => (
-            <RangeInputNumberTableWrapper
-              checkBodyLength={checkBodyLength}
-              onCheckThan0={onCheckThan0}
-              minNumber={getAfterBodyLength()}
-              setMinNumber={setAfterBodyLength}
-              maxNumber={getBeforeBodyLength()}
-              setMaxNumber={setBeforeBodyLength}
-              onReset={() => {
-                setParams((prev) => ({
-                  ...prev,
-                  AfterBodyLength: checkBodyLength ? 1 : undefined,
-                  BeforeBodyLength: undefined,
-                }))
-                setBeforeBodyLength(undefined)
-                setAfterBodyLength(undefined)
-                setBodyLengthUnit('B')
-                setTimeout(() => {
-                  closePopover()
-                }, 50)
-              }}
-              onSure={() => {
-                const afterBodyLen = getAfterBodyLength()
-                const beforeBodyLen = getBeforeBodyLength()
-                setParams((prev) => ({
-                  ...prev,
-                  AfterBodyLength:
-                    checkBodyLength && !afterBodyLen
-                      ? 1
-                      : afterBodyLen
-                        ? onConvertBodySizeByUnit(afterBodyLen, getBodyLengthUnit())
-                        : undefined,
-                  BeforeBodyLength: beforeBodyLen
-                    ? onConvertBodySizeByUnit(beforeBodyLen, getBodyLengthUnit())
-                    : undefined,
-                }))
-                setTimeout(() => {
-                  closePopover()
-                }, 50)
-              }}
-              extra={
-                <YakitSelect
-                  value={getBodyLengthUnit()}
-                  onSelect={(val) => {
-                    setBodyLengthUnit(val)
-                  }}
-                  wrapperClassName={style['unit-select']}
-                  size="small"
-                >
-                  <YakitSelect value="B">B</YakitSelect>
-                  <YakitSelect value="K">K</YakitSelect>
-                  <YakitSelect value="M">M</YakitSelect>
-                </YakitSelect>
-              }
-            />
-          ),
-        },
-        render: (_, rowData) => {
-          return (
-            <>
-              {/* 1M 以上的话，是红色*/}
-              {rowData.BodyLength !== -1 && (
-                <div
-                  className={classNames({
-                    [style['body-length-text-red']]:
-                      rowData.BodyLength > 1000000 && !isCellRedSingleColor(rowData.cellClassName),
-                  })}
-                >
-                  {rowData.BodyLength}
-                  {rowData.BodySizeVerbose && rowData.BodyLength > 1024 ? `（${rowData.BodySizeVerbose}）` : ''}
-                </div>
-              )}
-            </>
-          )
-        },
-      },
-      {
-        title: 'Title',
-        dataKey: 'HtmlTitle',
-        width: 200,
-      },
-      {
-        title: t('HTTPFlowTable.params'),
-        dataKey: 'GetParamsTotal',
-        width: 130,
-        filterProps: {
-          filterKey: 'HaveParamsTotal',
-          filtersType: 'select',
-          filtersSelectAll: {
-            isAll: true,
-          },
-          filters: [
-            {
-              label: t('HTTPFlowTable.have'),
-              value: 'true',
-            },
-            {
-              label: t('HTTPFlowTable.none'),
-              value: 'false',
-            },
-          ],
-        },
-        render: (_, rowData) => (
-          <div className={style['check-circle']}>
-            {(rowData.GetParamsTotal > 0 || rowData.PostParamsTotal > 0) && (
-              <CheckCircleIcon
-                className={classNames({
-                  [style['check-circle-icon']]: !isCellRedSingleColor(rowData.cellClassName),
-                })}
-              />
-            )}
-          </div>
-        ),
-      },
-      {
-        title: t('HTTPFlowTable.contentType'),
-        dataKey: 'ContentType',
-        width: 150,
-        render: (text) => {
-          let contentTypeFixed =
-            text
-              .split(';')
-              .map((el: any) => el.trim())
-              .filter((i: any) => !i.startsWith('charset'))
-              .join(',') || '-'
-          if (contentTypeFixed.includes('/')) {
-            const contentTypeFixedNew = contentTypeFixed.split('/').pop()
-            if (!!contentTypeFixedNew) {
-              contentTypeFixed = contentTypeFixedNew
-            }
-          }
-          return <div>{contentTypeFixed === 'null' ? '' : contentTypeFixed}</div>
-        },
-        filterProps: {
-          filtersType: 'select',
-          filterMultiple: true,
-          filterSearchInputProps: {
-            size: 'small',
-          },
-          filters: contentType,
-        },
-      },
-      {
-        title: t('HTTPFlowTable.pathSuffix'),
-        dataKey: 'PathSuffix',
-        width: 100,
-        filterProps: {
-          filterKey: 'IncludeSuffix',
-          filtersType: 'select',
-          filterMultiple: true,
-          filterSearchInputProps: { size: 'small' },
-          filters: suffixList,
-        },
-        render: (_, rowData) => {
-          return <div>{formatHTTPFlowPathSuffix(rowData.Path || '', rowData.PathSuffix)}</div>
-        },
-      },
-      {
-        title: t('HTTPFlowTable.durationMs'),
-        dataKey: 'DurationMs',
-        width: 120,
-        render: (text, rowData) => {
-          let timeMs: number = parseInt(text)
-          return (
-            <div
-              className={classNames({
-                [style['duration-ms']]: !isCellRedSingleColor(rowData.cellClassName),
-              })}
-            >
-              {timeMs}
-            </div>
-          )
-        },
-      },
-      {
-        title: t('HTTPFlowTable.updatedAt'),
-        dataKey: 'UpdatedAt',
-        filterProps: {
-          filterKey: 'UpdatedAt',
-          filtersType: 'dateTime',
-        },
-        width: 200,
-        render: (text) => <div title={formatTimestamp(text)}>{text === 0 ? '-' : formatTimestamp(text)}</div>,
-      },
-      {
-        title: t('HTTPFlowTable.requestSizeVerbose'),
-        dataKey: 'RequestSizeVerbose',
-        enableDrag: false,
-        width: 120,
-        render: (text, { RequestLength }) =>
-          `${RequestLength || text.slice(0, -1)}${RequestLength > 1024 ? `（${text}）` : ''}`,
-      },
-      {
-        title: t('YakitTable.action'),
-        dataKey: 'action',
-        width: 104,
-        fixed: 'right',
-        render: (_, rowData) => {
-          if (!rowData.Hash) return <></>
-          const colorType = getSingleColorType(rowData.cellClassName) // 获取颜色类型
-          const favorite = isHTTPFlowFavorite(rowData)
-          return (
-            <div
-              className={classNames(style['action-btn-group'], {
-                [style[`hover-${colorType}-row`]]: !!colorType, // 添加 hover 类
-              })}
-            >
-              {favorite ? (
-                <SolidStarIcon
-                  className={classNames(style['favorite-icon-active'], style['icon-hover'])}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    toggleHTTPFlowFavorite(rowData, false, setData, onlyFavorite)
-                  }}
-                />
-              ) : (
-                <OutlineStarIcon
-                  className={classNames(style['favorite-icon'], style['icon-hover'], {
-                    [style['icon-style']]: !colorType,
-                  })}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    toggleHTTPFlowFavorite(rowData, true, setData, onlyFavorite)
-                  }}
-                />
-              )}
-              <div className={style['divider-style']} />
-              <ChromeFrameSvgIcon
-                className={classNames(style['icon-hover'], {
-                  [style['icon-style']]: !colorType,
-                })}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  ipcRenderer
-                    .invoke('GetHTTPFlowById', { Id: rowData?.Id })
-                    .then((i: HTTPFlow) => {
-                      i.Url && openExternalWebsite(i.Url)
-                    })
-                    .catch((e: any) => {
-                      yakitNotify('error', `Query HTTPFlow failed: ${e}`)
-                    })
-                }}
-              />
-              <div className={style['divider-style']}></div>
 
-              <ArrowCircleRightSvgIcon
-                className={classNames(style['icon-hover'], {
-                  [style['icon-style']]: !colorType,
-                })}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  let m = showYakitDrawer({
-                    width: '80%',
-                    content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr, t, pageType),
-                    bodyStyle: { paddingTop: 5 },
-                  })
-                }}
-              />
-            </div>
-          )
-        },
-      },
-    ]
-
-    let finalColumns: ColumnsTypeProps[] = []
-    // 排序
-    if (columnsOrder.length) {
-      // 提取 Id 和 action
-      const idColumn = columnArr.find((col) => col.dataKey === 'Id')
-      const actionColumn = columnArr.find((col) => col.dataKey === 'action')
-      // 过滤掉 Id 和 action以及不可能出现的列
-      const middleColumns = columnArr.filter((item) => !['Id', 'action', ...noColumnsKey].includes(item.dataKey))
-
-      // 先按 columnsOrder 排序
-      const sortedColumns = middleColumns.sort(
-        (a, b) => columnsOrder.indexOf(a.dataKey) - columnsOrder.indexOf(b.dataKey),
-      )
-
-      // 先加上Id
-      if (idColumn) finalColumns.push(idColumn)
-      sortedColumns.forEach((col) => {
-        // 加入当前 columnsOrder 里的字段
-        finalColumns.push(col)
-      })
-      // 最后加上action
-      if (actionColumn) finalColumns.push(actionColumn)
-    } else {
-      finalColumns = columnArr.slice()
-    }
-
-    const arr = finalColumns
-      .filter((item) => !['Id', 'action', ...noColumnsKey].includes(item.dataKey))
-      .map((item) => ({
-        dataKey: item.dataKey,
-        title: item.title,
-        isShow: !excludeColumnsKey.includes(item.dataKey),
-      }))
-    configColumnRef.current = arr
-
-    const realColumns = finalColumns.filter((ele) => !excludeColumnsKey.includes(ele.dataKey))
-    setIdFixed(realColumns.length !== 2)
+    const columnArr = buildHTTPFlowTableColumnArr({
+      t: t as (...args: any[]) => any,
+      idFixed,
+      suffixList,
+      checkBodyLength,
+      onCheckThan0,
+      getAfterBodyLength,
+      setAfterBodyLength,
+      getBeforeBodyLength,
+      setBeforeBodyLength,
+      getBodyLengthUnit,
+      setBodyLengthUnit,
+      setParams,
+      actionHandlers: columnActionHandlers,
+      comBuiltinTagList,
+    })
+    const { columns: realColumns, configColumns } = resolveHTTPFlowTableColumns({
+      columnArr,
+      columnsOrder,
+      excludeColumnsKey,
+      setIdFixed,
+    })
+    configColumnRef.current = configColumns
     return realColumns
   }, [
-    tags,
-    tagsFilter,
-    tagSearchVal,
     checkBodyLength,
     downstreamProxyStr,
     pageType,
-    queryParams,
     onlyFavorite,
     columnsOrder,
     excludeColumnsKey,
@@ -1938,6 +1401,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     i18n.language,
     comSuffixList,
     comBuiltinTagList,
+    columnActionHandlers,
   ])
   // #endregion
 
@@ -3381,6 +2845,21 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     const newObj = { ...shieldData, data: newArr }
     setShieldData(newObj)
   })
+
+  useHTTPFlowTableShortcutKeys({
+    inViewport,
+    getSelected,
+    downstreamProxyStr,
+    fromMITM,
+    t,
+    getUrlWithoutQuery,
+    onSendToTab,
+    onShieldRecord,
+    onShieldURL,
+    onShieldDomain,
+    onRemoveHttpHistory,
+  })
+
   /**@description 重置查询条件并刷新 */
   const resetParams = useMemo(() => {
     const obj: YakQueryHTTPFlowRequest = {
@@ -4256,10 +3735,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           enableDrag={true}
           enableDragSelection={dragSelectEnabled}
           columns={columns}
-          // onRowClick={(v)=>{
-          // 此处onRowClick会调用onSetCurrentRow导致重复响应
-          //     onRowClick(v)
-          // }}
           onRowContextMenu={onRowContextMenu}
           pagination={{
             page: pagination.Page,
