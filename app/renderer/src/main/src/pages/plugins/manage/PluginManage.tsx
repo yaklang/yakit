@@ -1729,7 +1729,6 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
           type === 'nopass' && null
           // <div className={styles["no-pass-kind"]}>
           //     <Radio
-          //         className='plugins-radio-wrapper'
           //         checked={kind === "body"}
           //         onClick={(e) => {
           //             if (kind === "body") return
@@ -1739,7 +1738,6 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
           //         内容不通过
           //     </Radio>
           //     <Radio
-          //         className='plugins-radio-wrapper'
           //         checked={kind === "extra"}
           //         onClick={(e) => {
           //             if (kind === "extra") return
