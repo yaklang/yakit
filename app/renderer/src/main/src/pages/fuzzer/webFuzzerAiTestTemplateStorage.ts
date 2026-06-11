@@ -12,12 +12,10 @@ function isValidTemplate(item: unknown): item is WebFuzzerAiTestTemplate {
 }
 
 function normalizeTemplates(list: WebFuzzerAiTestTemplate[]): WebFuzzerAiTestTemplate[] {
-  return list
-    .filter(isValidTemplate)
-    .map((item) => ({
-      label: item.label.trim(),
-      prompt: item.prompt,
-    }))
+  return list.filter(isValidTemplate).map((item) => ({
+    label: item.label.trim(),
+    prompt: item.prompt,
+  }))
 }
 
 export async function saveWebFuzzerAiTestTemplates(templates: WebFuzzerAiTestTemplate[]): Promise<void> {
