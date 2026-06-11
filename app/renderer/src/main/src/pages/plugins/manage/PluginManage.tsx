@@ -1282,7 +1282,6 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                                     <Tooltip
                                       title={group}
                                       placement="top"
-                                      overlayClassName="plugins-tooltip"
                                       key={group}
                                     >
                                       <YakitTag closable onClose={() => onRemoveGroup(group)}>

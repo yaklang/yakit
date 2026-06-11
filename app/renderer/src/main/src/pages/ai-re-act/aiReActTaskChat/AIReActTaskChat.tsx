@@ -389,7 +389,7 @@ export const AIInputSettingPopover: React.FC<AIInputSettingPopoverProps> = React
             label={
               <>
                 同步意图识别
-                <Tooltip overlayClassName={styles['form-info-icon-tooltip']} title={'开启后回答精度更高，但速度会变慢'}>
+                <Tooltip classNames={{ root: styles['form-info-icon-tooltip'] }} title={'开启后回答精度更高，但速度会变慢'}>
                   <OutlineInformationcircleIcon className={styles['info-icon']} />
                 </Tooltip>
               </>

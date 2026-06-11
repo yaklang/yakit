@@ -405,7 +405,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         <Tooltip
                           title={t('ForgeName.exportForge')}
                           placement="topRight"
-                          overlayClassName={styles['item-extra-tooltip']}
+                          classNames={{ root: styles['item-extra-tooltip'] }}
                         >
                           <YakitButton
                             type="text2"
@@ -423,7 +423,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         <Tooltip
                           title={t('ForgeName.editForge')}
                           placement="topRight"
-                          overlayClassName={styles['item-extra-tooltip']}
+                          classNames={{ root: styles['item-extra-tooltip'] }}
                         >
                           <YakitButton
                             type="text2"
@@ -437,7 +437,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
                         <Tooltip
                           title={t('ForgeName.deleteForge')}
                           placement="topRight"
-                          overlayClassName={styles['item-extra-tooltip']}
+                          classNames={{ root: styles['item-extra-tooltip'] }}
                         >
                           <YakitPopconfirm
                             title={t('ForgeName.deleteForgeConfirm')}

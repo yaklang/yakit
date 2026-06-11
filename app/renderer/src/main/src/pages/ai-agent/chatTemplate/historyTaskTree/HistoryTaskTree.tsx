@@ -229,7 +229,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       onVisibleChange={setVisible}
       destroyTooltipOnHide={true}
     >
-      <Tooltip title="从该节点开始继续任务" destroyTooltipOnHide={true}>
+      <Tooltip title="从该节点开始继续任务" destroyOnHidden={true}>
         <YakitButton
           type="text"
           onClick={(e) => {
@@ -275,7 +275,7 @@ export const AIHistorySkipTask: React.FC<{ taskIndex: string }> = React.memo(({ 
         e?.stopPropagation()
       }}
     >
-      <Tooltip title="跳过当前任务" destroyTooltipOnHide={true}>
+      <Tooltip title="跳过当前任务" destroyOnHidden={true}>
         <YakitButton
           size="small"
           icon={<RedoDotIcon />}

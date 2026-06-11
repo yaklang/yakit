@@ -1172,7 +1172,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             <div className={styles['extra-base-btn']}>
               {chatcsType === 'ChatCS' && history.length !== 0 && (
                 <>
-                  <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'会话历史记录'}>
+                  <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'会话历史记录'}>
                     <div
                       className={classNames(styles['big-btn'], styles['btn-style'], {
                         [styles['disable-style']]: loading,
@@ -1190,7 +1190,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
               )}
               {chatcsType === 'PluginAI' && pluginAIList.length > 0 && !showOnly && (
                 <>
-                  <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'清空插件输出'}>
+                  <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'清空插件输出'}>
                     <div
                       className={classNames(styles['small-btn'], styles['btn-style'])}
                       onClick={() => {
@@ -1205,7 +1205,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
               )}
               {chatcsType === 'PluginAI' && showOnly && (
                 <>
-                  <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'历史'}>
+                  <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'历史'}>
                     <div
                       className={classNames(styles['big-btn'], styles['btn-style'])}
                       onClick={() => {
@@ -1366,7 +1366,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                               <div className={styles['type-title']}>
                                 回答类型
                                 <Tooltip
-                                  overlayClassName={styles['tooltip-wrapper']}
+                                  classNames={{ root: styles['tooltip-wrapper'] }}
                                   title={'ChatCS 将根据选择的类型回答你的问题'}
                                 >
                                   <QuestionMarkCircleIcon />
@@ -1418,7 +1418,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                       <div className={styles['footer-type-wrapper']}>
                         <div className={styles['type-title']}>
                           回答类型
-                          <Tooltip overlayStyle={{ paddingBottom: 5 }} title={'ChatCS 将根据选择的类型回答你的问题'}>
+                          <Tooltip styles={{ root: { paddingBottom: 5 } }} title={'ChatCS 将根据选择的类型回答你的问题'}>
                             <QuestionMarkCircleIcon />
                           </Tooltip>
                           :
@@ -2318,7 +2318,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                       </div>
                     </div>
                     <div className={styles['opt-operate']}>
-                      <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'编辑对话标题'}>
+                      <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'编辑对话标题'}>
                         <div
                           className={styles['operate-btn']}
                           onClick={(e) => {
@@ -2329,7 +2329,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
                           <PencilAltIcon />
                         </div>
                       </Tooltip>
-                      <Tooltip overlayClassName={styles['tooltip-wrapper']} title={'删除该对话'}>
+                      <Tooltip classNames={{ root: styles['tooltip-wrapper'] }} title={'删除该对话'}>
                         <div
                           className={styles['operate-btn']}
                           onClick={(e) => {

@@ -657,7 +657,7 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
               }
 
               return (
-                <Tooltip overlayStyle={{ paddingRight: 4 }} placement="left" title={hint}>
+                <Tooltip styles={{ root: { paddingRight: 4 } }} placement="left" title={hint}>
                   {barNode}
                 </Tooltip>
               )
