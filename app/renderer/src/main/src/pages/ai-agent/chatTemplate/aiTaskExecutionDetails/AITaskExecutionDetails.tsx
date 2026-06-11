@@ -22,7 +22,7 @@ import { useCreation, useInterval, useMemoizedFn, useSelections } from 'ahooks'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import useAIAgentStore from '../../useContext/useStore'
 import { ForgesAndSkillsDynamicItem, PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, isEqual } from 'lodash'
 import { Progress } from 'antd'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -36,7 +36,7 @@ import { grpcGetAIToolList } from '../../aiToolList/utils'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AIAgentGrpcApi, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEventHotPatchTypeEnum, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
 import { apiQueryYakScript } from '@/pages/plugins/utils'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
@@ -176,7 +176,20 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         <div className={styles['top-section']}>
           <div className={styles['top-left']}>
             <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} />
-            <AITaskExecutionDetailsCard title="意图感知" content={perception?.summary} />
+            <AITaskExecutionDetailsCard
+              title="意图感知"
+              content={
+                (perception?.summary?.length || 0) > 0 ? (
+                  <div className={styles['perception-content']}>
+                    {perception?.summary.map((item) => (
+                      <div key={item} className={styles['item']}>
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                ) : null
+              }
+            />
           </div>
           <div className={styles['task-statistics']}>
             <div className={styles['stats-header']}>
@@ -278,7 +291,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 
 const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.memo((props) => {
   const { title, type, onClose } = props
-  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
+  const { handleSendConfigHotpatch, handleSendSyncMessage } = useChatIPCDispatcher()
 
   const [keyword, setKeyword] = useState<string>()
   const [loading, setLoading] = useState<boolean>(false)
@@ -380,7 +393,7 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
       },
       (item: AIForge) => ({
         label: item.ForgeVerboseName || item.ForgeName,
-        type: 'forge',
+        type: item.ForgeType === 'skillmd' ? 'skills' : 'forge',
         value: item.ForgeName,
       }),
     )
@@ -426,6 +439,7 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
             ...response.Pagination,
             Page: p,
           },
+          EnableForAI: true,
         }
         if (kw) {
           query.FieldKeywords = kw
@@ -457,25 +471,30 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
   const loadMoreData = useMemoizedFn(() => getList(+response.Pagination.Page + 1))
 
   const onSave = useMemoizedFn(() => {
-    // console.log('selected', selected)
     const enabledCapabilities: AIStartParams['EnabledCapabilities'] = selected.map((item) => {
       return {
         Name: item.value,
         Type: item.type,
       }
     })
-    // console.log('selected', selected, enabledCapabilities)
-    // handleSendConfigHotpatch({
-    //   hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnabledCapabilities,
-    //   params: {
-    //     EnabledCapabilities: enabledCapabilities,
-    //   },
-    // })
+    console.log('selected', selected, enabledCapabilities)
+    handleSendConfigHotpatch({
+      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnabledCapabilities,
+      params: {
+        EnabledCapabilities: enabledCapabilities,
+      },
+    })
+    // setTimeout(() => {
+    //   handleSendSyncMessage({
+    //     syncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+    //   })
+    // }, 1000)
+    onClose()
   })
   return (
     <div className={styles['ai-add-popover']}>
-      <div className={styles['content']}>
-        <div className={styles['title']}>{title}</div>
+      <div className={styles['ai-add-popover-content']}>
+        <div className={styles['ai-add-popover-title']}>{title}</div>
         <div className={styles['list-body']}>
           <YakitInput.Search
             placeholder="请输入关键词搜索"
@@ -493,7 +512,10 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
                     return (
                       <React.Fragment key={rowData.value}>
                         <YakitCheckbox checked={isSelected(rowData)} onChange={(e) => toggle(rowData)} />
-                        <div className={styles['label']}>{rowData.label}</div>
+                        <div className={styles['title']}>
+                          <div>{rowData.label}</div>
+                          {rowData.type === 'skills' && <YakitTag color="info">skills</YakitTag>}
+                        </div>
                       </React.Fragment>
                     )
                   }}
@@ -534,11 +556,37 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
   )
 })
 
+const getType = (value: string) => {
+  let type = value
+  switch (value) {
+    case 'yak_plugin':
+      type = 'plugin'
+      break
+
+    default:
+      break
+  }
+  return type
+}
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
   const { type, colTitle, fixedList, dynamicList } = props
+  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
   const [fixedScroll, setFixedScroll] = useState<boolean>(false)
   const [dynamicScroll, setDynamicScroll] = useState<boolean>(false)
   const [visible, setVisible] = useState<boolean>(false)
+  const onRemove = useMemoizedFn((dynamicItem) => {
+    handleSendConfigHotpatch({
+      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_DisabledCapabilities,
+      params: {
+        EnabledCapabilities: dynamicList
+          .filter((ele) => isEqual(ele, dynamicItem))
+          .map((item) => ({
+            Name: item.name,
+            Type: getType(item.category),
+          })),
+      },
+    })
+  })
   return (
     <div className={styles['section-card']}>
       <div className={styles['section-card-title']}>{colTitle}</div>
@@ -608,7 +656,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
                 description={dynamicItem.description}
                 category={dynamicItem.category as PlanItemDetailsDynamicKeys}
                 titleExtra={
-                  <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => {}}>
+                  <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
                     <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
                   </YakitPopconfirm>
                 }

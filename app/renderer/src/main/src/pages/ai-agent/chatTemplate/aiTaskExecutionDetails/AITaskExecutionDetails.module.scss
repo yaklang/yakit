@@ -494,12 +494,12 @@
   min-height: 120px;
   overflow: hidden;
   width: 473px;
-  .content {
+  .ai-add-popover-content {
     display: flex;
     flex-direction: column;
     flex: 1;
     overflow: hidden;
-    .title {
+    .ai-add-popover-title {
       padding: 12px 16px 4px 16px;
       font-size: 14px;
       font-weight: 600;
@@ -551,11 +551,17 @@
           letter-spacing: 0.5px;
           height: 28px;
           cursor: pointer;
-          .label {
-            white-space: nowrap;
-            text-overflow: ellipsis;
+          .title {
+            display: flex;
+            align-items: center;
             overflow: hidden;
-            word-break: break-all;
+
+            .label {
+              white-space: nowrap;
+              text-overflow: ellipsis;
+              overflow: hidden;
+              word-break: break-all;
+            }
           }
           &:hover {
             background: var(--Colors-Use-Neutral-Bg-Hover);
@@ -589,5 +595,14 @@
       display: flex;
       gap: 8px;
     }
+  }
+}
+
+.perception-content {
+  .item {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-break: break-all;
   }
 }

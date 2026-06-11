@@ -173,6 +173,7 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_EnablePlan = 'EnablePlan',
 
   HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
+  HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
 
   /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',
@@ -216,6 +217,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_USER_INTERVENTION = 'user_intervention',
   /** 获取历史会话数据 */
   SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
+  /** 获取能力相关数据 */
+  SYNC_CAPABILITY_INVENTORY = 'capability_inventory_sync',
 }
 
 export interface AIInputEvent {
