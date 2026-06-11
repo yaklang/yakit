@@ -203,8 +203,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     showHistoryAnalysisBtn = false,
     onHistoryAnalysisClick,
     defaultExcludeColumnsKey,
+    builtinTagList = [],
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'history'])
+  const comBuiltinTagList = useCampare(builtinTagList)
 
   // 导出字段映射配置
   const arrList = useMemo(() => getHTTPFlowExportFields(t), [t])
@@ -1597,7 +1599,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           return text
             ? `${text}`
                 .split('|')
-                .filter((i) => !i.startsWith('YAKIT_COLOR_') && i !== HTTP_FLOW_FAVORITE_TAG)
+                .filter(
+                  (i) =>
+                    !i.startsWith('YAKIT_COLOR_') &&
+                    i !== HTTP_FLOW_FAVORITE_TAG &&
+                    comBuiltinTagList.every(({ value }) => value !== i),
+                )
                 .join(', ')
             : ''
         },
@@ -1930,6 +1937,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     idFixed,
     i18n.language,
     comSuffixList,
+    comBuiltinTagList,
   ])
   // #endregion
 

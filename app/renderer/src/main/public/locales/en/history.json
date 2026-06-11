@@ -2,6 +2,7 @@
   "HTTPHistory": {
     "websiteTree": "Website Tree",
     "process": "Process",
+    "builtinTag": "System Tag",
     "pleaseEnterDomainToSearch": "Please enter a domain to search, e.g., baidu.com",
     "AI": "AI"
   },

@@ -138,6 +138,7 @@ export interface HTTPFlowTableProp extends HistoryTableTitleShow {
   onSetSelectedHttpFlowIds?: (ids: string[]) => void
   onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
   defaultExcludeColumnsKey?: string[]
+  builtinTagList?: FiltersItemProps[]
 }
 
 export interface YakQueryHTTPFlowResponse {
@@ -165,6 +166,7 @@ export interface HTTPFlowsFieldGroupResponse {
 export interface TagsCode {
   Value: string
   Total: number
+  Builtin?: boolean
 }
 
 export interface CompateData {

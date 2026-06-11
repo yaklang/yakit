@@ -205,6 +205,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [curProcess, setCurProcess] = useState<string[]>([])
   const [processQueryparams, setProcessQueryparams] = useState<string>('')
   const [curTags, setCurTags] = useState<string[]>([])
+  const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
   const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
@@ -338,6 +339,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                   curTags={curTags}
                   onSetCurTags={setCurTags}
                   onSetCurProcess={setCurProcess}
+                  setBuiltinTagList={setBuiltinTagList}
                   resetTableAndEditorShow={(table, editor) => {
                     setOnlyShowFirstNode(table)
                     setSecondNodeVisible(editor)
@@ -404,6 +406,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
               includeInUrl={includeInUrl}
               curProcess={curProcess}
               curTags={curTags}
+              builtinTagList={builtinTagList}
               mitmAggregateFilterRows={mitmAggregateFilterRows}
               onQueryParams={onQueryParams}
               onSetTableTotal={setHttpFlowTableDataLength}
@@ -448,6 +451,7 @@ interface HTTPFlowRealTimeTableAndEditorProps extends HistoryTableTitleShow {
   includeInUrl?: string[]
   curProcess?: string[]
   curTags?: string[]
+  builtinTagList?: FiltersItemProps[]
   onQueryParams?: (queryParams: string, execFlag: boolean) => void
   downstreamProxyStr?: string
   onSetTableTotal?: (t: number) => void
@@ -477,6 +481,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
     filterTagDom,
     curProcess,
     curTags,
+    builtinTagList,
     onQueryParams,
     downstreamProxyStr,
     onSetTableTotal,
@@ -635,6 +640,7 @@ export const HTTPFlowRealTimeTableAndEditor: React.FC<HTTPFlowRealTimeTableAndEd
               downstreamProxyStr={downstreamProxy}
               ProcessName={curProcess}
               TagsFilter={curTags}
+              builtinTagList={builtinTagList}
               onSetTableTotal={onSetTableTotal}
               onSetTableSelectNum={onSetTableSelectNum}
               onSetHasNewData={onSetHasNewData}
@@ -832,7 +838,7 @@ export interface ProcessItem {
   process: string
   icon?: ReactElement
 }
-type HistoryProcessPanelKey = 'process' | 'tag'
+type HistoryProcessPanelKey = 'process' | 'tag' | 'builtinTag'
 interface HistoryProcessProps {
   queryparamsStr: string
   refreshProcessFlag: boolean
@@ -841,6 +847,7 @@ interface HistoryProcessProps {
   curTags?: string[]
   onSetCurTags?: (curTags: string[]) => void
   resetTableAndEditorShow?: (table: boolean, editor: boolean) => void // 重置 表格显示-编辑器不显示
+  setBuiltinTagList?: (builtinTagList: FiltersItemProps[]) => void
 }
 export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) => {
   const {
@@ -851,6 +858,7 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
     onSetCurProcess,
     onSetCurTags,
     resetTableAndEditorShow,
+    setBuiltinTagList: propsSetBuiltinTagList,
   } = props
   const processRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(processRef)
@@ -861,10 +869,16 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
   const curProcessRef = useRef<string[]>(curProcess)
   const [searchTagVal, setSearchTagVal] = useState<string>('')
   const [tagList, setTagList] = useState<FiltersItemProps[]>([])
+  const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
   const [tagListLoading, setTagListLoading] = useState<boolean>(false)
-  const [activeKey, setActiveKey] = useState<string[]>(['process', 'tag'])
-  const { t } = useI18nNamespaces(['history', 'yakitUi'])
-  const [searchValues, setSearchValues] = useState<{ process: string; tag: string }>({ process: '', tag: '' })
+  const [activeKey, setActiveKey] = useState<string[]>(['process', 'tag', 'builtinTag'])
+  const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
+  const [searchValues, setSearchValues] = useState<{ process: string; tag: string; builtinTag: string }>({
+    process: '',
+    tag: '',
+    builtinTag: '',
+  })
+  const [searchBuiltinTagVal, setSearchBuiltinTagVal] = useState<string>('')
 
   useEffect(() => {
     searchProcessValRef.current = searchProcessVal
@@ -950,11 +964,19 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
       })
       .then((rsp: HTTPFlowsFieldGroupResponse) => {
         const tags = (rsp.Tags || []).filter((item) => item.Value && item.Value !== HTTP_FLOW_FAVORITE_TAG)
-        const realTags: FiltersItemProps[] = tags.map(({ Value }) => ({
-          label: Value,
-          value: Value,
-        }))
-        setTagList(realTags)
+        const toFilterItem = (Value: string) => ({ label: Value, value: Value })
+        let TagList: FiltersItemProps[] = [],
+          builtinTagList: FiltersItemProps[] = []
+        tags.forEach(({ Value, Builtin }) => {
+          if (Builtin) {
+            builtinTagList.push(toFilterItem(Value))
+          } else {
+            TagList.push(toFilterItem(Value))
+          }
+        })
+        setTagList(TagList)
+        setBuiltinTagList(builtinTagList)
+        propsSetBuiltinTagList?.(builtinTagList)
       })
       .catch((error) => {
         yakitNotify('error', `query HTTP Flows Field Group failed: ${error}`)
@@ -984,6 +1006,14 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
       : tagList
   }, [searchTagVal, tagList])
 
+  const renderBuiltinTagList = useMemo(() => {
+    return searchBuiltinTagVal
+      ? builtinTagList.filter((item) =>
+          item.label.toLocaleLowerCase().includes(searchBuiltinTagVal.toLocaleLowerCase()),
+        )
+      : builtinTagList
+  }, [searchBuiltinTagVal, builtinTagList])
+
   const onTagItemClick = useMemoizedFn((tag: FiltersItemProps) => {
     const nextTags = curTags.includes(tag.value)
       ? curTags.filter((item) => item !== tag.value)
@@ -994,13 +1024,20 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
   const onSearch = useMemoizedFn((key: HistoryProcessPanelKey) => {
     if (key === 'process') {
       setSearchProcessVal(searchValues.process)
+    } else if (key === 'builtinTag') {
+      setSearchBuiltinTagVal(searchValues.builtinTag)
     } else {
       setSearchTagVal(searchValues.tag)
     }
   })
 
   const renderSearchInput = useMemoizedFn((key: HistoryProcessPanelKey) => {
-    const hasActiveSearch = key === 'process' ? !!searchProcessVal.trim() : !!searchTagVal.trim()
+    const hasActiveSearch =
+      key === 'process'
+        ? !!searchProcessVal.trim()
+        : key === 'builtinTag'
+          ? !!searchBuiltinTagVal.trim()
+          : !!searchTagVal.trim()
     return (
       <div onClick={(e) => e.stopPropagation()}>
         <YakitPopover
@@ -1029,15 +1066,17 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
 
   const renderPanel = useMemoizedFn((panelItem: { header: string; key: HistoryProcessPanelKey }) => {
     const { header, key } = panelItem
-    const loading = key === 'tag' ? tagListLoading : processLoading
-    const list = key === 'tag' ? renderTagList : renderProcessList
+    const isProcess = key === 'process'
+    const loading = isProcess ? processLoading : tagListLoading
+    const list = isProcess ? renderProcessList : key === 'builtinTag' ? renderBuiltinTagList : renderTagList
+    if (list.length === 0) return null
     return (
       <YakitPanel header={header} key={key} extra={renderSearchInput(key)}>
         {loading ? (
           <YakitSpin style={{ display: 'block' }} />
         ) : list.length ? (
           list.map((item) => {
-            if (key === 'tag') {
+            if (!isProcess) {
               const checked = curTags.includes(item.value)
               return (
                 <label
@@ -1101,8 +1140,12 @@ export const HistoryProcess: React.FC<HistoryProcessProps> = React.memo((props) 
         header: 'Tag',
         key: 'tag' as HistoryProcessPanelKey,
       },
+      {
+        header: t('HTTPHistory.builtinTag'),
+        key: 'builtinTag' as HistoryProcessPanelKey,
+      },
     ],
-    [t],
+    [i18n.language],
   )
 
   return (
