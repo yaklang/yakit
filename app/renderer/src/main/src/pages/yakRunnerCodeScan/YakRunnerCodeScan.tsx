@@ -1341,7 +1341,6 @@ const CodeScanExecuteContent: React.FC<CodeScanExecuteContentProps> = React.memo
           <>
             <div className={styles['default-content']}>代码审计只能打开一个项目，请选择项目在代码审计中查看</div>
             <Radio.Group
-              className="plugins-radio-wrapper"
               value={openProject}
               onChange={(e) => {
                 setOpenProject(e.target.value)

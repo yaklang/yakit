@@ -1818,7 +1818,6 @@ export const PluginTypeTag: React.FC<PluginTypeTagProps> = memo((props) => {
       <div className={styles['type-tag-header']}>
         {icon}
         <Radio
-          className="plugins-radio-wrapper"
           disabled={disabled}
           checked={checked}
           onClick={(e) => {

@@ -57,22 +57,6 @@
         }
       }
     }
-    .radio-status-active {
-      :global {
-        span {
-          color: #f28b44;
-        }
-        .ant-radio-checked .ant-radio-inner {
-          border-color: #f28b44;
-        }
-        .ant-radio-inner::after {
-          background-color: #f28b44;
-        }
-        .ant-radio-checked::after {
-          border: #f28b44;
-        }
-      }
-    }
   }
 }
 .dynamic-control {
