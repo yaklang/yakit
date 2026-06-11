@@ -151,11 +151,18 @@ export interface AIStartParams {
    */
   Source?: AISource
 
+  EnabledCapabilities?: AIEnabledCapability[]
+
   /**
    * 任务规划里并发任务的数量
    * 默认：2
    */
   PlanExecTaskConcurrency?: number
+}
+
+interface AIEnabledCapability {
+  Name: string
+  Type: string
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
@@ -164,6 +171,8 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AgreePolicy = 'AgreePolicy',
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
+
+  HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
 
   /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',
@@ -557,11 +566,10 @@ export declare namespace AIAgentGrpcApi {
      * metadata:仅注册表
      * loaded:已注入 SKILLS_CONTEXT
      */
-    skill_load_state: 'metadata' | 'loaded'
+    skill_load_state: 'metadata' | 'loaded' | ''
   }
   export interface PlanItemDetailsDynamicForgesItem {
     name: string
-    verbose_name: string
     description: string
     category: 'forge'
   }

@@ -2,10 +2,14 @@ import React, { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import {
   AITaskActionItemProps,
+  AITaskDetailsAddListItem,
+  AITaskDetailsAddPopoverProps,
+  AITaskDetailsAddPopoverResponse,
   AITaskDetailsCardListProps,
   AITaskExecutionDetailsCardProps,
   AITaskExecutionDetailsProps,
   AITaskStatisticsStatusProps,
+  PlanItemDetailsDynamicKeys,
 } from './type'
 import { OutlinePresentationchartbarIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import styles from './AITaskExecutionDetails.module.scss'
@@ -14,13 +18,26 @@ import { AIDeleteNodeIcon, AIDoingNodeIcon, AIDoneNodeIcon, AIPendingNodeIcon, A
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIToDoListItem } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
-import { useCreation, useInterval, useMemoizedFn } from 'ahooks'
+import { useCreation, useInterval, useMemoizedFn, useSelections } from 'ahooks'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import useAIAgentStore from '../../useContext/useStore'
-import { PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
+import { ForgesAndSkillsDynamicItem, PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
 import { cloneDeep } from 'lodash'
 import { Progress } from 'antd'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
+import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
+import { genDefaultPagination, PaginationSchema, QueryYakScriptRequest, YakScript } from '@/pages/invoker/schema'
+import { AIForge, QueryAIForgeRequest } from '../../type/forge'
+import { grpcQueryAIForge } from '../../grpc'
+import { AITool, GetAIToolListRequest } from '../../type/aiTool'
+import { grpcGetAIToolList } from '../../aiToolList/utils'
+import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
+import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { AIAgentGrpcApi, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
+import { apiQueryYakScript } from '@/pages/plugins/utils'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskIndex, taskGoal, taskName } = props
@@ -126,6 +143,23 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     return { unFinish, finished, progressNumber }
   }, [todoList?.items])
 
+  const forgeFixedList = useCreation(() => {
+    let forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
+      planItemDetailsData?.skills.fixed.concat(planItemDetailsData?.forges.fixed || []) || []
+    return forgeFixed
+  }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
+  const forgeDynamicList = useCreation(() => {
+    const forge: ForgesAndSkillsDynamicItem[] =
+      planItemDetailsData?.forges?.dynamic.map((ele) => ({
+        name: ele.name,
+        description: ele.description,
+        category: ele.category,
+        skill_load_state: '',
+      })) || []
+    const skills: ForgesAndSkillsDynamicItem[] = planItemDetailsData?.skills?.dynamic.map((ele) => ele) || []
+    let forgeDynamic: ForgesAndSkillsDynamicItem[] = skills.concat(forge) || []
+    return forgeDynamic
+  }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
   return (
     <div className={styles['ai-task-execution-details-container']}>
       {/* 头部 */}
@@ -217,18 +251,21 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         <div className={styles['bottom-section']}>
           <AITaskDetailsCardList
             key="forge"
+            type="forge"
             colTitle="技能"
-            fixedList={planItemDetailsData?.forges.fixed || []}
-            dynamicList={planItemDetailsData?.forges.dynamic || []}
+            fixedList={forgeFixedList}
+            dynamicList={forgeDynamicList}
           />
           <AITaskDetailsCardList
             key="tool"
+            type="tool"
             colTitle={'工具'}
             fixedList={planItemDetailsData?.tool.fixed || []}
             dynamicList={planItemDetailsData?.tool.dynamic || []}
           />
           <AITaskDetailsCardList
             key="yak_plugin"
+            type="yak_plugin"
             colTitle={'插件'}
             fixedList={planItemDetailsData?.plugins.fixed || []}
             dynamicList={planItemDetailsData?.plugins.dynamic || []}
@@ -239,10 +276,269 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   )
 })
 
+const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.memo((props) => {
+  const { title, type, onClose } = props
+  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
+
+  const [keyword, setKeyword] = useState<string>()
+  const [loading, setLoading] = useState<boolean>(false)
+  const [hasMore, setHasMore] = useState<boolean>(false)
+  const [spinning, setSpinning] = useState<boolean>(false)
+  const [isRef, setIsRef] = useState<boolean>(false)
+  const [response, setResponse] = useState<AITaskDetailsAddPopoverResponse>({
+    Pagination: { ...genDefaultPagination(20) },
+    data: [],
+    total: 0,
+  })
+  const { selected, allSelected, isSelected, toggle, toggleAll, unSelectAll, partiallySelected } = useSelections(
+    response.data,
+  )
+  useEffect(() => {
+    getList()
+  }, [])
+
+  const getList = useMemoizedFn((page?: number) => {
+    switch (type) {
+      case 'forge':
+        getForge(page)
+        break
+      case 'tool':
+        getTool(page)
+        break
+      case 'yak_plugin':
+        getYakPlugin(page)
+        break
+      default:
+        break
+    }
+  })
+
+  /**
+   * 基础查询方法：接收目标页码、请求函数和数据映射函数
+   */
+  const getListBase = useMemoizedFn(
+    async <T,>(
+      page: number | undefined,
+      fetcher: (targetPage: number, kw?: string) => Promise<{ data: T[]; total: number; pagination: PaginationSchema }>,
+      mapper: (item: T) => AITaskDetailsAddListItem,
+    ) => {
+      const targetPage = page || 1
+      if (targetPage === 1) {
+        setSpinning(true)
+        unSelectAll()
+      }
+      try {
+        const res = await fetcher(targetPage, keyword)
+        const rawData = res.data || []
+        const newData = rawData.map(mapper)
+        const newPage = +(res.pagination?.Page || targetPage)
+
+        const currentDataLength = newPage === 1 ? newData.length : newData.length + response.data.length
+        setHasMore(currentDataLength < +res.total)
+
+        setResponse((prev) => {
+          return {
+            data: newPage === 1 ? newData : [...prev.data, ...newData],
+            Pagination: res.pagination || prev.Pagination,
+            total: +res.total,
+          }
+        })
+
+        if (newPage === 1) {
+          setIsRef(!isRef)
+        }
+      } catch (error) {
+        console.error('Fetch list error:', error)
+      } finally {
+        setTimeout(() => {
+          setLoading(false)
+          setSpinning(false)
+        }, 300)
+      }
+    },
+  )
+
+  const getForge = useMemoizedFn(async (page?: number) => {
+    getListBase(
+      page,
+      async (p, kw) => {
+        const request: QueryAIForgeRequest = {
+          Pagination: {
+            ...response.Pagination,
+            Page: p,
+          },
+        }
+        if (kw) {
+          request.Filter = { Keyword: kw }
+        }
+        const res = await grpcQueryAIForge(request)
+        return {
+          data: res.Data || [],
+          total: res.Total,
+          pagination: res.Pagination,
+        }
+      },
+      (item: AIForge) => ({
+        label: item.ForgeVerboseName || item.ForgeName,
+        type: 'forge',
+        value: item.ForgeName,
+      }),
+    )
+  })
+
+  const getTool = useMemoizedFn((page?: number) => {
+    getListBase(
+      page,
+      async (p, kw) => {
+        const newQuery: GetAIToolListRequest = {
+          Query: '',
+          ToolName: '',
+          Pagination: {
+            ...response.Pagination,
+            Page: p,
+          },
+          OnlyFavorites: false,
+        }
+        if (kw) {
+          newQuery.Query = kw
+        }
+        const res = await grpcGetAIToolList(newQuery)
+        return {
+          data: res.Tools || [],
+          total: res.Total,
+          pagination: res.Pagination,
+        }
+      },
+      (item: AITool) => ({
+        label: item.VerboseName || item.Name,
+        type: 'tool',
+        value: item.Name,
+      }),
+    )
+  })
+
+  const getYakPlugin = useMemoizedFn((page?: number) => {
+    getListBase(
+      page,
+      async (p, kw) => {
+        const query: QueryYakScriptRequest = {
+          Pagination: {
+            ...response.Pagination,
+            Page: p,
+          },
+        }
+        if (kw) {
+          query.FieldKeywords = kw
+        }
+        const res = await apiQueryYakScript(query)
+        return {
+          data: res.Data || [],
+          total: res.Total,
+          pagination: res.Pagination,
+        }
+      },
+      (item: YakScript) => ({
+        label: item.ScriptName,
+        type: 'plugin',
+        value: item.ScriptName,
+      }),
+    )
+  })
+
+  const onSearch = useMemoizedFn((value: string) => {
+    setKeyword(value)
+    setTimeout(() => {
+      getList()
+    }, 200)
+  })
+  const onPressEnter = useMemoizedFn((e) => {
+    onSearch(e.target.value)
+  })
+  const loadMoreData = useMemoizedFn(() => getList(+response.Pagination.Page + 1))
+
+  const onSave = useMemoizedFn(() => {
+    // console.log('selected', selected)
+    const enabledCapabilities: AIStartParams['EnabledCapabilities'] = selected.map((item) => {
+      return {
+        Name: item.value,
+        Type: item.type,
+      }
+    })
+    // console.log('selected', selected, enabledCapabilities)
+    // handleSendConfigHotpatch({
+    //   hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnabledCapabilities,
+    //   params: {
+    //     EnabledCapabilities: enabledCapabilities,
+    //   },
+    // })
+  })
+  return (
+    <div className={styles['ai-add-popover']}>
+      <div className={styles['content']}>
+        <div className={styles['title']}>{title}</div>
+        <div className={styles['list-body']}>
+          <YakitInput.Search
+            placeholder="请输入关键词搜索"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onSearch={onSearch}
+            onPressEnter={onPressEnter}
+          />
+          <div className={styles['list']}>
+            <YakitSpin spinning={spinning} wrapperClassName={styles['spin']}>
+              {response.data.length > 0 ? (
+                <RollingLoadList<AITaskDetailsAddListItem>
+                  data={response.data}
+                  renderRow={(rowData: AITaskDetailsAddListItem, index: number) => {
+                    return (
+                      <React.Fragment key={rowData.value}>
+                        <YakitCheckbox checked={isSelected(rowData)} onChange={(e) => toggle(rowData)} />
+                        <div className={styles['label']}>{rowData.label}</div>
+                      </React.Fragment>
+                    )
+                  }}
+                  classNameRow={styles['ai-add-list-item']}
+                  classNameList={styles['ai-add-list']}
+                  defItemHeight={28}
+                  rowKey="value"
+                  loadMoreData={loadMoreData}
+                  page={+response.Pagination.Page}
+                  hasMore={hasMore}
+                  loading={loading}
+                />
+              ) : (
+                <YakitEmpty style={{ marginTop: 24 }} />
+              )}
+            </YakitSpin>
+          </div>
+        </div>
+      </div>
+      <div className={styles['footer']}>
+        <div className={styles['footer-left']}>
+          <div className={styles['select-all']}>
+            <YakitCheckbox checked={allSelected} onChange={() => toggleAll()} indeterminate={partiallySelected} />
+            <span>全选</span>
+          </div>
+          <TableTotalAndSelectNumber total={response.total} selectNum={selected.length} />
+        </div>
+        <div className={styles['footer-right']}>
+          <YakitButton onClick={onClose} type="outline1">
+            取消
+          </YakitButton>
+          <YakitButton type="primary" onClick={onSave}>
+            确定
+          </YakitButton>
+        </div>
+      </div>
+    </div>
+  )
+})
+
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
-  const { colTitle, fixedList, dynamicList } = props
+  const { type, colTitle, fixedList, dynamicList } = props
   const [fixedScroll, setFixedScroll] = useState<boolean>(false)
   const [dynamicScroll, setDynamicScroll] = useState<boolean>(false)
+  const [visible, setVisible] = useState<boolean>(false)
   return (
     <div className={styles['section-card']}>
       <div className={styles['section-card-title']}>{colTitle}</div>
@@ -282,9 +578,21 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
               {dynamicList.length}
             </YakitTag>
           </div>
-          <YakitButton type="text" className={styles['add-btn']}>
-            添加
-          </YakitButton>
+          <YakitPopover
+            content={
+              <AITaskDetailsAddPopover type={type} title={`添加${colTitle}`} onClose={() => setVisible(false)} />
+            }
+            trigger="click"
+            placement="top"
+            destroyTooltipOnHide
+            visible={visible}
+            onVisibleChange={setVisible}
+            overlayClassName={styles['add-popover']}
+          >
+            <YakitButton type="text" className={styles['add-btn']}>
+              添加
+            </YakitButton>
+          </YakitPopover>
         </div>
         {!!dynamicList.length && (
           <div
@@ -298,6 +606,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
                 key={dynamicItem.name}
                 title={dynamicItem.name}
                 description={dynamicItem.description}
+                category={dynamicItem.category as PlanItemDetailsDynamicKeys}
                 titleExtra={
                   <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => {}}>
                     <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
@@ -313,11 +622,14 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
 })
 
 const AITaskActionItem: React.FC<AITaskActionItemProps> = React.memo((props) => {
-  const { title, description, titleExtra } = props
+  const { title, category, description, titleExtra } = props
   return (
     <div className={classNames(styles['plugin-item'])}>
       <div className={styles['plugin-item-heard']}>
-        <div className={styles['plugin-item-title']}>{title}</div>
+        <div className={styles['plugin-item-title']}>
+          <div className={styles['text']}>{title}</div>
+          {category === 'skills' && <YakitTag color="info">skills</YakitTag>}
+        </div>
         {titleExtra && <div className={styles['plugin-item-actions']}>{titleExtra}</div>}
       </div>
       {description && <div className={styles['plugin-item-desc']}>{description}</div>}

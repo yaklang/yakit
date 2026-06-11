@@ -159,6 +159,11 @@ export interface TodoListCardData {
   uuid: string
 }
 
+export type ForgesAndSkillsDynamicItem = Omit<AIAgentGrpcApi.PlanItemDetailsDynamicForgesItem, 'category'> &
+  Omit<AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem, 'category'> & {
+    category: 'forge' | 'skill'
+  }
+
 /** 任务树节点的详情数据 */
 export interface PlanItemDetailsData {
   /** UI定时刷新数据渲染，用于确定数据是否有更新 */
