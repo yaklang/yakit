@@ -17,6 +17,7 @@ import { getLocalValue } from './utils/kv'
 import { GetMainColor, getRemoteI18nGV } from './utils/envfile'
 import i18n from '@/i18n/i18n'
 import { useTheme } from './hook/useTheme'
+import { generateAllSemanticColors } from './yakit-colors-component'
 import { generateAllThemeColors } from './yakit-colors-generator'
 import { debugToPrintLogs } from './utils/logCollection'
 
@@ -105,8 +106,10 @@ const App = () => {
   const { theme } = useTheme()
   useEffect(() => {
     const targetEditionColor = GetMainColor(theme)
-    const generateAllThemeColor: Record<string, string> = generateAllThemeColors(theme, targetEditionColor)
-    applyThemeColors(theme, generateAllThemeColor)
+    applyThemeColors(theme, {
+      ...generateAllThemeColors(theme, targetEditionColor),
+      ...generateAllSemanticColors(theme),
+    })
   }, [theme])
 
   if (windowType === 'markdown-pdf-print') {

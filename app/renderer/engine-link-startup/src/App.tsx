@@ -4,6 +4,7 @@ import './theme/ThemeClass.scss'
 import './theme/yakit.scss'
 import { GetMainColor, getReleaseEditionName, isCommunityEdition, isIRify, isMemfit } from './utils/envfile'
 import { useTheme } from './hooks/useTheme'
+import { generateAllSemanticColors } from './yakit-colors-component'
 import { generateAllThemeColors } from './yakit-colors-generator'
 import { yakitApp } from './utils/electronBridge'
 import styles from './App.module.scss'
@@ -47,8 +48,10 @@ const App: React.FC = memo(() => {
   // 主题色处理
   useEffect(() => {
     const targetEditionColor = GetMainColor(theme)
-    const colors = generateAllThemeColors(theme, targetEditionColor)
-    applyThemeColors(theme, colors)
+    applyThemeColors(theme, {
+      ...generateAllThemeColors(theme, targetEditionColor),
+      ...generateAllSemanticColors(theme),
+    })
     setReady(true)
   }, [theme])
 
