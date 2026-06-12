@@ -3,6 +3,8 @@ export enum RemoteHistoryGV {
   HistoryLeftTabs = 'new_history_left_tabs',
   /** @name 是否已了解chat-cs功能 */
   BackgroundRefresh = 'background-refresh',
+  /** @name 是否开启框选多选 */
+  DragSelectEnabled = 'drag-select-enabled',
   /** @name 排除展示列key值 */
   HistroyExcludeColumnsKey = 'history-exclude-columns-newkey',
   HistroyColumnsOrder = 'history-columns-neworder',
