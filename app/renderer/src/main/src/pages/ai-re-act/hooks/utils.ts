@@ -3,7 +3,13 @@
  */
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
-import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType, TodoListCardData } from './aiRender'
+import type {
+  AITaskInfoProps,
+  ReActChatRenderItem,
+  AIChatQSDataType,
+  TodoListCardData,
+  ChatListRenderType,
+} from './aiRender'
 import type { AIChatLogToInfo, AIChatLogData } from './type'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
@@ -150,7 +156,7 @@ export const isToolExecStream = (nodeID: string) => {
  * indexedDB 数据库数据转 ReActChatRenderItem
  */
 export const indexedDBDataToReActChatRenderItem = (
-  chatType: ReActChatRenderItem['chatType'],
+  chatType: ChatListRenderType,
   data: DialogueRecord[],
 ): ReActChatRenderItem[] =>
   data.map((item) => {

@@ -5,7 +5,7 @@ import { useBoolean } from 'ahooks'
 import styles from './ConcurrentStreamCard.module.scss'
 import ConcurrentStreamContent from './ConcurrentStreamContent/ConcurrentStreamContent'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import type { ChatTaskNodeGroup, ReActChatElement, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ChatListRenderType, ChatTaskNodeGroup, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
 import { getAIStatusPresentation } from '../../utils/AIStatusUtils'
 import { openAIConcurrentStream } from '@/utils/openWebsite'
 import { CHILD_CONTENT_WINDOW_STYLE } from './constants'
@@ -20,7 +20,7 @@ const ConcurrentStreamCard: FC<{
   elements: ReActChatTaskElementSub[]
   session: string
   token: string
-  chatType: ReActChatElement['chatType']
+  chatType: ChatListRenderType
   isChildWindow?: boolean
   onRefresh?: () => void
 }> = ({ session, elements, chatType, token, isChildWindow, onRefresh }) => {

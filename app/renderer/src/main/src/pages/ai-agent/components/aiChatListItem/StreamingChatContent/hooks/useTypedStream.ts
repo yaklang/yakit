@@ -1,11 +1,11 @@
 // hooks/useTypedStream.ts
 import { useMemo } from 'react'
-import { ChatStream, ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatListRenderType, ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useStreamingTypewriter } from './useStreamingTypewriter'
 import { useStreamingChatContent } from './useStreamingChatContent'
 
 export interface UseTypedStreamOptions {
-  chatType: ReActChatRenderItem['chatType']
+  chatType: ChatListRenderType
   token: string
   session: string
   /** 每次输出的字符数，默认 6（更快更流畅） */

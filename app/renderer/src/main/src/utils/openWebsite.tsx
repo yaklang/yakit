@@ -10,14 +10,14 @@ import {
 import i18n from '@/i18n/i18n'
 import { Risk } from '@/pages/risks/schema'
 import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
-import type { AIChatQSData, ReActChatElement, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIChatQSData, ChatListRenderType, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
 import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
 const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])
 
 export interface OpenAIConcurrentStreamPayload {
   session: string
   token: string
-  chatType: ReActChatElement['chatType']
+  chatType: ChatListRenderType
   elements: ReActChatTaskElementSub[]
   contentEntries: Array<[string, AIChatQSData]>
 }

@@ -11,6 +11,7 @@ import {
   AIChatQSDataTypeEnum,
   AIToolResult,
   AIYakExecFileRecord,
+  ChatListRenderType,
   ReActChatBaseInfo,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
@@ -52,7 +53,7 @@ interface ToolInvokerCardProps {
   modalInfo?: ModalInfoProps
   operationInfo: OperationCardFooterProps
   data: AIToolResult
-  chatType: ReActChatBaseInfo['chatType']
+  chatType: ChatListRenderType
   token: string
 }
 interface PreWrapperProps {

@@ -1287,64 +1287,6 @@ const handleToolCallSummary: AIMessageHandler = (request) => {
   }
 }
 
-/** 工具执行结果的流量数据计数逻辑 */
-const handleTrafficCount: AIMessageHandler = (request) => {
-  const { res, getContentMap, pushLog } = request
-  // 历史数据中的流量计数无效
-  // if (res.IsSync) return
-
-  const ipcContent = Uint8ArrayToString(res.Content) || ''
-  const data = JSON.parse(ipcContent) as AIAgentGrpcApi.HTTPTrafficNotice & AIAgentGrpcApi.RiskTrafficNotice
-
-  if (!data.runtime_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据, runtime_id 为空`))
-    return
-  }
-  const toolResult = getContentMap(data.runtime_id)
-  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `${res.Type}数据(call_tool_id:${data.runtime_id}), 没有对应的工具执行结果数据`),
-    )
-    return
-  }
-
-  let update = false
-  switch (res.Type) {
-    case 'yak_httpflow_count':
-      if (data.http_flow_count !== toolResult.data.httpFlowDataCount) {
-        toolResult.data.httpFlowDataCount = data.http_flow_count ?? 0
-        update = true
-      }
-      break
-    case 'yak_risk_count':
-      if (data.risk_count !== toolResult.data.riskFlowDataCount) {
-        toolResult.data.riskFlowDataCount = data.risk_count ?? 0
-        update = true
-      }
-      break
-    default:
-      break
-  }
-  if (!update) return
-  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-    mapKey: toolResult.id,
-    type: toolResult.type,
-    chatType: toolResult.chatType,
-  })
-}
-
-/** Type='yak_httpflow_count' 新增流量数据 */
-const handleYakHttpFlow: AIMessageHandler = (request) => {
-  if (request.res.Type !== 'yak_httpflow_count') return
-  handleTrafficCount(request)
-}
-/** Type='yak_risk_count' 新增风险数据 */
-const handleYakRisk: AIMessageHandler = (request) => {
-  if (request.res.Type !== 'yak_risk_count') return
-  handleTrafficCount(request)
-}
 // #endregion
 
 // #region review相关的处理逻辑
@@ -1960,8 +1902,6 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   tool_call_done: handleToolCallDone,
   tool_call_error: handleToolCallError,
   tool_call_summary: handleToolCallSummary,
-  yak_httpflow_count: handleYakHttpFlow,
-  yak_risk_count: handleYakRisk,
   stream_start: handleStreamStart,
   stream: handleStream,
   'stream-finished': handleStreamFinished,

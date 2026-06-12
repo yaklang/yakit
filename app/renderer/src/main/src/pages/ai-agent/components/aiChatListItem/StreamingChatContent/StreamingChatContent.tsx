@@ -1,5 +1,5 @@
 import { AIStreamNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
-import { type ReActChatElement, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ChatListRenderType, ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { memo, type FC } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
 import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
@@ -15,7 +15,7 @@ type StreamingChatContentProps = ReActChatRenderItem & {
 }
 
 type SingleStreamProps = {
-  chatType: ReActChatElement['chatType']
+  chatType: ChatListRenderType
   token: string
   streamClassName?: StreamCls
   session: string
