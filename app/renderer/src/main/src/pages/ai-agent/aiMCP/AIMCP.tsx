@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AIMCPListItemProps,
   AIMCPListProps,
@@ -51,6 +51,8 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { SolidToolIcon } from '@/assets/icon/solid'
 import { yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { ConfigMcpModal } from '@/utils/ConfigSystemMcp'
+import { useYakMcpStream } from '@/store/yakMcpStream'
 
 const AIMCP: React.FC<AIMCPProps> = React.memo((props) => {
   const [listType, setListType] = useState<'mcp' | 'mcp-tool'>('mcp')
@@ -243,6 +245,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   const [hasMore, setHasMore] = useState<boolean>(false)
   const [isRef, setIsRef] = useState<boolean>(false)
   const [recalculation, setRecalculation] = useState<boolean>(false)
+  const [configMcpModalVisible, setConfigMcpModalVisible] = useState<boolean>(false)
   const [response, setResponse] = useState<GetAllMCPServersResponse>({
     MCPServers: [],
     Pagination: genDefaultPagination(20),
@@ -250,7 +253,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
   })
   const mcpListRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(mcpListRef)
-
+  const mcp = useYakMcpStream()
   useEffect(() => {
     getList()
   }, [inViewPort])
@@ -340,7 +343,10 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
           </Tooltip>
           <YakitRoundCornerTag>{response.Total}</YakitRoundCornerTag>
         </div>
-        <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIMCP} />
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <YakitButton onClick={() => setConfigMcpModalVisible(true)}>Yak Mcp</YakitButton>
+          <YakitButton icon={<OutlinePlussmIcon />} onClick={handleNewAIMCP} />
+        </div>
       </div>
       <YakitInput.Search
         value={keyWord}
@@ -372,6 +378,7 @@ const AIMCPList: React.FC<AIMCPListProps> = React.memo((props) => {
           recalculation={recalculation}
         />
       </YakitSpin>
+      {configMcpModalVisible && <ConfigMcpModal mcp={mcp} onClose={() => setConfigMcpModalVisible(false)} />}
     </div>
   )
 })

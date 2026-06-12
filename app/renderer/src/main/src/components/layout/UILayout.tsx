@@ -93,7 +93,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { LocalGVS } from '@/enums/localGlobal'
 import { useSoftMode } from '@/store/softMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import useMcpStream from './hooks/useMcp/useMcp'
+import { useSyncYakMcpStream } from '@/store/yakMcpStream'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
 import {
   yakitAI,
@@ -132,7 +132,7 @@ export interface UILayoutProp {
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
   const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi'])
-  const [mcpStreamInfo, mcpStreamEvent] = useMcpStream({})
+  const mcp = useSyncYakMcpStream({})
   const { currentPageTabRouteKey } = usePageInfo(
     (s) => ({
       currentPageTabRouteKey: s.currentPageTabRouteKey,
@@ -1595,14 +1595,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
   })
   const dropClassName = { [styles['header-title-drop']]: drop }
-
-  const mcp = useMemo(
-    () => ({
-      mcpStreamInfo,
-      mcpStreamEvent,
-    }),
-    [mcpStreamInfo, mcpStreamEvent],
-  )
 
   return (
     <div className={styles['ui-layout-wrapper']}>
