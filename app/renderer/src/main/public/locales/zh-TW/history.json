@@ -2,6 +2,7 @@
   "HTTPHistory": {
     "websiteTree": "網站樹",
     "process": "程序",
+    "builtinTag": "系統Tag",
     "pleaseEnterDomainToSearch": "請輸入域名進行搜尋，例baidu.com",
     "AI": "AI"
   },

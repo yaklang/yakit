@@ -267,6 +267,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     setRulesQueryparams(linkedQueries.rulesQueryparams)
   })
   // #endregion
+  const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
 
   return (
     <div className={styles['HTTPHistoryFilter']}>
@@ -319,6 +320,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                   curTags={curTags}
                   onSetCurTags={setCurTags}
                   onSetCurProcess={setCurProcess}
+                  setBuiltinTagList={setBuiltinTagList}
                 ></HistoryProcess>
               </div>
               <div className={styles['process-wrapper']} style={{ display: activeKey === 'rules' ? 'block' : 'none' }}>
@@ -393,6 +395,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
               closable={closable}
               mitmAggregateFilterRows={mitmAggregateFilterRows}
               onDataChange={setHttpFlowTableDataLength}
+              builtinTagList={builtinTagList}
             />
           </div>
         }
@@ -455,6 +458,7 @@ interface HTTPFlowTableProps {
   mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
   onDataChange?: (dataLength: number) => void
   onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
+  builtinTagList?: FiltersItemProps[]
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
   const {
@@ -477,7 +481,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     mitmAggregateFilterRows = [],
     onDataChange,
     onRegisterTableSelectApi,
+    builtinTagList = [],
   } = props
+  const comBuiltinTagList = useCampare(builtinTagList)
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'history', 'yakitRoute'])
   const { currentPageTabRouteKey, queryPagesDataById } = usePageInfo(
     (s) => ({
@@ -1045,7 +1051,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           return text
             ? `${text}`
                 .split('|')
-                .filter((i) => !i.startsWith('YAKIT_COLOR_') && i !== HTTP_FLOW_FAVORITE_TAG)
+                .filter(
+                  (i) =>
+                    !i.startsWith('YAKIT_COLOR_') &&
+                    i !== HTTP_FLOW_FAVORITE_TAG &&
+                    comBuiltinTagList.every(({ value }) => value !== i),
+                )
                 .join(', ')
             : ''
         },
@@ -1397,6 +1408,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     i18n.language,
     onlyFavorite,
     comSuffixList,
+    comBuiltinTagList,
   ])
   // #endregion
 

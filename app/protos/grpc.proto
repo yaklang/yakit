@@ -7027,6 +7027,7 @@ message HTTPFlowsExtractRequest {
 message TagsCode {
   string Value = 1;
   int32 Total = 2;
+  bool Builtin = 3;   // 后端内置/有特殊语义
 }
 
 message WebsocketFlows {
