@@ -33,6 +33,21 @@ module.exports = (win, getClient) => {
     return await asyncGetCurrentProjectEx(params)
   })
 
+  const asyncGetSSAWorkbenchDashboard = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetSSAWorkbenchDashboard(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('GetSSAWorkbenchDashboard', async (e, params) => {
+    return await asyncGetSSAWorkbenchDashboard(params)
+  })
+
   // asyncGetProjects wrapper
   const asyncGetProjects = (params) => {
     return new Promise((resolve, reject) => {
