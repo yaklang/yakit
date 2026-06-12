@@ -80,11 +80,10 @@ const RiskGaugeChart: React.FC<{ list: FieldName[] }> = ({ list }) => {
 
 const RiskDistributionChart: React.FC<{
   total: number
-  totalLabel: string
   items: { name: string; value: number; percent: number }[]
-}> = ({ total, totalLabel, items }) => {
+}> = ({ total, items }) => {
   const colors = useGetColorsByTheme()
-  const { width } = useSize(document.querySelector('body')) || { width: 0, height: 0 }
+  // const { width } = useSize(document.querySelector('body')) || { width: 0, height: 0 }
   const option = useMemo<EChartsOption>(() => {
     const distributionColors = [
       colors['--Colors-Use-Neutral-Border'],
@@ -158,10 +157,10 @@ const RiskDistributionChart: React.FC<{
         },
         {
           type: 'text',
-          left: '20%',
+          left: '30%',
           top: '58%',
           style: {
-            text: totalLabel,
+            text: '总风险',
             fill: subTextColor,
             fontSize: 12,
             textAlign: 'center',
@@ -185,7 +184,7 @@ const RiskDistributionChart: React.FC<{
     // }
 
     return option as EChartsOption
-  }, [total, totalLabel, items, colors, width])
+  }, [total, items, colors])
 
   return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
 }

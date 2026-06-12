@@ -1,54 +1,48 @@
-import React, { useEffect, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { Tooltip } from 'antd'
-import { useMemoizedFn } from 'ahooks'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { SSAProjectResponse } from '@/pages/yakRunnerAuditCode/AuditCode/AuditCodeType'
-import { genDefaultPagination, QueryGeneralResponse } from '@/pages/invoker/schema'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { failed, yakitFailed } from '@/utils/notification'
+import { failed } from '@/utils/notification'
 import styles from './IRifyHomeTable.module.scss'
 import { YakitRoute } from '@/enums/yakitRoute'
 import emiter from '@/utils/eventBus/eventBus'
-import { getGroupNamesTotal } from '../yakRunnerCodeScan/utils'
 import { OutlineReloadScanIcon, OutlineScanIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AfreshAuditModal } from '../yakRunnerAuditCode/AuditCode/AuditCode'
 import { formatTimestamp } from '@/utils/timeUtil'
+import { SSAWorkbenchRecentProject } from './IRifyHomeType'
 
-const { ipcRenderer } = window.require('electron')
+export interface IRifyHomeTableRow {
+  ID: number
+  ProjectName: string
+  Language: string
+  Description: string
+  RiskNumber: number
+  UpdatedAt: number
+}
 
-const RECENT_PROJECT_LIMIT = 10
+export interface IRifyHomeTableProps {
+  data?: SSAWorkbenchRecentProject[]
+}
 
-export interface IRifyHomeTableProps {}
-
-export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = () => {
+export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [] }) => {
   const { t } = useI18nNamespaces(['yakRunner', 'yakitUi'])
-  const [loading, setLoading] = useState(false)
-  const [data, setData] = useState<SSAProjectResponse[]>([])
   const [JSONStringConfig, setJSONStringConfig] = useState<string>()
-  const update = useMemoizedFn(async () => {
-    setLoading(true)
-    try {
-      const item: QueryGeneralResponse<SSAProjectResponse> = await ipcRenderer.invoke('QuerySSAProject', {
-        Filter: { SearchKeyword: '' },
-        Pagination: genDefaultPagination(RECENT_PROJECT_LIMIT),
-      })
-      item.Data = (item as any).Projects
-      console.log('item.Data---', item.Data)
-      setData(item.Data || [])
-    } catch (e) {
-      yakitFailed(t('AuditCode.fetchListDataFailed', { error: String(e) }), true)
-    } finally {
-      setLoading(false)
-    }
-  })
 
-  useEffect(() => {
-    update()
-  }, [])
+  const tableData = useMemo<IRifyHomeTableRow[]>(
+    () =>
+      data.map((item) => ({
+        ID: item.ID,
+        ProjectName: item.ProjectName,
+        Language: item.Language,
+        Description: item.HighestRiskVerbose,
+        RiskNumber: item.RiskCount,
+        UpdatedAt: item.UpdatedAt,
+      })),
+    [data],
+  )
 
   const columns: ColumnsTypeProps[] = [
     {
@@ -84,7 +78,7 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = () => {
     {
       title: '更新时间',
       dataKey: 'UpdatedAt',
-      width: 120,
+      width: 200,
       render: (text) => {
         return formatTimestamp(text)
       },
@@ -141,10 +135,9 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = () => {
 
   return (
     <div className={styles['irify-home-table']} id="irify-home-table">
-      <TableVirtualResize<SSAProjectResponse>
-        loading={loading}
+      <TableVirtualResize<IRifyHomeTableRow>
         columns={columns}
-        data={data}
+        data={tableData}
         renderKey="ID"
         isRefresh={false}
         disableSorting
@@ -155,7 +148,9 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = () => {
       <AfreshAuditModal
         nameOrConfig={JSONStringConfig}
         setNameOrConfig={setJSONStringConfig}
-        onSuccee={() => update()}
+        onSuccee={() => {
+          // 重新刷新数据
+        }}
         warrpId={document.getElementById('irify-home-table')}
         type="compile"
       />
