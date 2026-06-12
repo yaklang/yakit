@@ -46,6 +46,7 @@ export const HubSideBarList: YakitTabsProps[] = [
 export const DefaultExportRequest: ExportYakScriptStreamRequest = {
   OutputFilename: '',
   Password: '',
+  OutputPluginDir: '',
   Filter: {
     ...convertLocalPluginsRequestParams({
       filter: defaultFilter,

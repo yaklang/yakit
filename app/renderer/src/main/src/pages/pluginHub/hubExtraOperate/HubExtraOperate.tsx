@@ -50,8 +50,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './HubExtraOperate.module.scss'
 import { grpcQueryYakScriptSkipUpdate, grpcSetYakScriptSkipUpdate } from '../utils/grpc'
-import { SystemInfo } from '@/constants/hardware'
-import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 
 export interface HubExtraOperateRef {
   downloadedNext: (flag: boolean) => void
@@ -473,18 +471,15 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       try {
         let m = showYakitModal({
           title: (modalT) => modalT('HubExtraOperate.exportPlugin'),
-          width: 450,
+          width: 650,
           closable: true,
           maskClosable: false,
           footer: null,
           content: (
-            <div style={{ marginBottom: 15 }}>
-              <div className={styles.infoBox}>
-                远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
-              </div>
+            <div style={{ padding: '12px 0' }}>
               <PluginLocalExportForm
                 onCancel={() => m.destroy()}
-                onOK={async (values) => {
+                onOK={(values) => {
                   const page: PluginListPageMeta = {
                     page: 1,
                     limit: 20,
@@ -499,24 +494,11 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                   const params: ExportYakScriptStreamRequest = {
                     OutputFilename: values.OutputFilename,
                     Password: values.Password,
+                    OutputPluginDir: values.OutputPluginDir,
                     Filter: { ...query, IncludedScriptNames: names },
                   }
                   exportParams.current = params
-                  if (SystemInfo.mode === 'local') {
-                    try {
-                      const file = await handleSaveFileSystemDialog({
-                        title: '导出插件',
-                        defaultPath: values.OutputFilename,
-                      })
-
-                      if (!file || file.canceled) return
-
-                      const filePath = file.filePath
-                      if (!filePath) return
-
-                      setExportModal(true)
-                    } catch (error) {}
-                  }
+                  setExportModal(true)
                   m.destroy()
                 }}
               ></PluginLocalExportForm>

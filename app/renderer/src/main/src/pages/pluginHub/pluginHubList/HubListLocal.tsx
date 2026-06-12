@@ -86,8 +86,6 @@ import styles from './PluginHubList.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
-import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
-import { SystemInfo } from '@/constants/hardware'
 interface HubListLocalProps extends HubListBaseProps {
   rootElementId?: string
   openGroupDrawer: boolean
@@ -560,16 +558,15 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     try {
       let m = showYakitModal({
         title: (modalT) => modalT('HubListLocal.exportPlugin'),
-        width: 450,
+        width: 650,
         closable: true,
         maskClosable: false,
         footer: null,
         content: (
-          <div style={{ marginBottom: 15 }}>
-            <div className={styles.infoBox}>{t('HubListLocal.exportHint')}</div>
+          <div style={{ padding: '12px 0' }}>
             <PluginLocalExportForm
               onCancel={() => m.destroy()}
-              onOK={async (values) => {
+              onOK={(values) => {
                 const page: PluginListPageMeta = {
                   page: +response.Pagination.Page,
                   limit: +response.Pagination.Limit || 20,
@@ -586,24 +583,11 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                 const params: ExportYakScriptStreamRequest = {
                   OutputFilename: values.OutputFilename,
                   Password: values.Password,
+                  OutputPluginDir: values.OutputPluginDir,
                   Filter: { ...query, IncludedScriptNames: names },
                 }
                 exportParams.current = params
-                if (SystemInfo.mode === 'local') {
-                  try {
-                    const file = await handleSaveFileSystemDialog({
-                      title: '导出插件',
-                      defaultPath: values.OutputFilename,
-                    })
-
-                    if (!file || file.canceled) return
-
-                    const filePath = file.filePath
-                    if (!filePath) return
-
-                    setExportModal(true)
-                  } catch (error) {}
-                }
+                setExportModal(true)
                 m.destroy()
               }}
             ></PluginLocalExportForm>

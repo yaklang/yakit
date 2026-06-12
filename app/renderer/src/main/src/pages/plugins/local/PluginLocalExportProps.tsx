@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import {
@@ -16,6 +16,8 @@ import { ExecResult } from '@/pages/invoker/schema'
 import { ExecResultMessage } from '@/components/yakitLogSchema'
 import { openABSFileLocated } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
+import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
+import { getPathJoin } from '@/pages/yakRunner/utils'
 const { ipcRenderer } = window.require('electron')
 
 declare type getContainerFunc = () => HTMLElement
@@ -31,7 +33,6 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
   const [localStreamData, setLocalStreamData] = useState<SaveProgressStream>()
   const localStreamDataRef = useRef<SaveProgressStream>()
   const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
-  const locallogListInfoRef = useRef<LogListInfo[]>([])
 
   useDebounceEffect(
     () => {
@@ -50,7 +51,6 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
         // 每200毫秒渲染一次数据
         timer = setInterval(() => {
           setLocalStreamData(localStreamDataRef.current)
-          // setLocallogListInfo([...locallogListInfoRef.current])
         }, 200)
 
         ipcRenderer.on('export-yak-script-data', (e, data: ExecResult) => {
@@ -58,25 +58,23 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
             page: 'PluginLocalExportProps',
             fun: 'export-yak-script-data',
           })
-          if (obj.type === 'log' && obj.content.level === 'file') {
-            locallogListInfoRef.current.unshift({
-              message: obj.content.data,
-              isError: false,
-              key: uuidv4(),
-            })
-          }
           if (obj.type === 'progress') {
             localStreamDataRef.current = { Progress: obj.content.progress }
             if (obj.content.progress === 1) {
-              const logMsg = locallogListInfoRef.current[locallogListInfoRef.current.length - 1].message
-              try {
-                const logObj = JSONParseLog(logMsg, { page: 'PluginLocalExportProps', fun: 'progress' }) || {}
-                ipcRenderer.invoke('is-file-exists', logObj.path).then((flag: boolean) => {
+              let name = exportLocalParams.OutputFilename
+              if (!exportLocalParams.OutputFilename.endsWith('.zip')) {
+                name += '.zip'
+              }
+              if (exportLocalParams.Password) {
+                name += '.enc'
+              }
+              getPathJoin(exportLocalParams.OutputPluginDir, name).then((path) => {
+                ipcRenderer.invoke('is-file-exists', path).then((flag: boolean) => {
                   if (flag) {
-                    openABSFileLocated(logObj.path)
+                    openABSFileLocated(path)
                   }
                 })
-              } catch (error) {}
+              })
               setTimeout(() => {
                 handleExportLocalPluginFinish()
               }, 300)
@@ -99,7 +97,6 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
     setLocalStreamData(undefined)
     setLocallogListInfo([])
     localStreamDataRef.current = undefined
-    locallogListInfoRef.current = []
   }
 
   const handleExportLocalPluginFinish = () => {
@@ -144,11 +141,17 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
 
 interface PluginLocalExportFormProps {
   onCancel: () => void
-  onOK: (values: { OutputFilename: string; Password: string }) => void
+  onOK: (values: { OutputFilename: string; Password: string; OutputPluginDir: string }) => void
 }
 export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (props) => {
   const { onCancel, onOK } = props
   const [form] = Form.useForm()
+
+  useEffect(() => {
+    ipcRenderer.invoke('GetProjectsFilePath').then((path) => {
+      form.setFieldsValue({ OutputPluginDir: path })
+    })
+  }, [])
 
   return (
     <Form
@@ -161,6 +164,16 @@ export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (prop
         e.preventDefault()
       }}
     >
+      <YakitFormDragger
+        formItemProps={{
+          name: 'OutputPluginDir',
+          label: '导出路径',
+          rules: [{ required: true, message: '请输入导出路径' }],
+        }}
+        multiple={false}
+        selectType="folder"
+      />
+
       <Form.Item label={'文件名'} rules={[{ required: true, message: '请填写文件夹名' }]} name={'OutputFilename'}>
         <YakitInput />
       </Form.Item>
