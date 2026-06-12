@@ -15,7 +15,7 @@ import {
   YakTypePluginSwitchs,
 } from '../defaultconstants'
 import { YakitPluginBaseInfo } from '../base'
-import { yakitNotify } from '@/utils/notification'
+import { failed, yakitNotify } from '@/utils/notification'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
@@ -28,6 +28,15 @@ import '../../plugins/plugins.scss'
 import styles from './EditorInfo.module.scss'
 import { AIPluginComponent } from './AIPluginComponent'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
+import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
+import { ExpandAndRetractExcessiveState } from '@/pages/plugins/operator/expandAndRetract/ExpandAndRetract'
+import { randomString } from '@/utils/randomUtil'
+import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
+import { defPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/constants'
+import { JSONParseLog } from '@/utils/tool'
+import { setAIModal } from '@/pages/ai-agent/aiModelList/AIModelList'
 export interface EditorInfoFormRefProps {
   onSubmit: () => Promise<YakitPluginBaseInfo | undefined>
   setNameForm: (name: string) => void
@@ -133,7 +142,7 @@ interface EditorInfoFormProps extends EditorBaseInfoProps {}
 export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
   forwardRef((props, ref) => {
     const { isEdit, data, initType, setType, setName, getCodeContent } = props
-    const { t } = useI18nNamespaces(['plugin', 'yakitUi'])
+    const { t } = useI18nNamespaces(['plugin', 'yakitUi', 'aiAgent'])
 
     const [form] = Form.useForm()
     useImperativeHandle(
@@ -341,8 +350,128 @@ export const EditorInfoForm: React.FC<EditorInfoFormProps> = memo(
     }
     /** ---------- 案例文档 End ---------- */
 
+    const tokenRef = useRef<string>(randomString(40))
+    const [executeStatus, setExecuteStatus] = useState<ExpandAndRetractExcessiveState>('default')
+    const [streamInfo, debugPluginStreamEvent] = useHoldGRPCStream({
+      taskName: 'debug-plugin',
+      apiKey: 'DebugPlugin',
+      token: tokenRef.current,
+      onEnd: () => {
+        debugPluginStreamEvent.stop()
+        setTimeout(() => {
+          setExecuteStatus('finished')
+        }, 300)
+      },
+      setRuntimeId: (rId) => {
+        yakitNotify('info', t('EditorInfo.debugTaskStarted', { rId }))
+      },
+    })
+
+    const handleGenerate = useMemoizedFn(async () => {
+      const codeContent = getCodeContent()
+      if (codeContent?.trim().length === 0) {
+        failed(t('EditorInfo.pluginSourceEmpty'))
+        return
+      }
+      try {
+        debugPluginStreamEvent.reset()
+        const plugin = await grpcFetchLocalPluginDetail({ Name: 'YakScript AI元数据生成' }, false)
+        const token = tokenRef.current
+
+        let executeParams: DebugPluginRequest = {
+          Code: '',
+          PluginType: plugin.Type,
+          Input: '',
+          HTTPRequestTemplate: {
+            ...defPluginExecuteFormValue,
+          },
+          ExecParams: [
+            {
+              Key: 'content',
+              Value: codeContent || '',
+            },
+            {
+              Key: 'script_name',
+              Value: 'script.yak',
+            },
+            {
+              Key: 'type',
+              Value: 'yak',
+            },
+            {
+              Key: 'tags',
+              Value: '',
+            },
+            {
+              Key: 'desc',
+              Value: '',
+            },
+            {
+              Key: 'mode',
+              Value: '',
+            },
+          ],
+          PluginName: plugin.ScriptName,
+        }
+
+        apiDebugPlugin({
+          params: executeParams,
+          token: token,
+          pluginCustomParams: plugin.Params,
+        }).then(() => {
+          setExecuteStatus('process')
+          debugPluginStreamEvent.start()
+        })
+      } catch (error) {}
+    })
+
+    useUpdateEffect(() => {
+      if (executeStatus !== 'finished') return
+      const raw = streamInfo?.logState?.find((item) => item?.level === 'info')?.data
+      if (raw == null) return
+      try {
+        let transformLogState: Record<string, unknown>
+        if (typeof raw === 'string') {
+          const parsed = JSONParseLog(raw, { page: 'AIPluginComponent' })
+          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return
+          transformLogState = parsed as Record<string, unknown>
+        } else if (typeof raw === 'object' && !Array.isArray(raw)) {
+          transformLogState = raw as Record<string, unknown>
+        } else return
+        updateFormData({
+          Tags: typeof transformLogState.tags === 'string' ? transformLogState.tags.split(',') : [],
+          ScriptName: typeof transformLogState.name === 'string' ? transformLogState.name : '',
+          Help: typeof transformLogState.description === 'string' ? transformLogState.description : '',
+        })
+      } catch {
+        failed(t('EditorInfo.parseAIResultFailed'))
+      }
+    }, [streamInfo, executeStatus])
+
+    const handleSetting = useMemoizedFn(() => {
+      setAIModal({
+        t,
+        onSuccess: () => {},
+      })
+    })
+
     return (
       <div className={styles['editor-info-form']}>
+        <div className={styles['editor-info-form-highlight']}>
+          {t('EditorInfo.aiGenerateHint')}
+          <YakitButton
+            type="text"
+            className={styles['editor-info-form-highlight-btn']}
+            onClick={handleGenerate}
+            loading={executeStatus === 'process'}
+          >
+            {t('EditorInfo.aiGenerateClick')}
+          </YakitButton>
+          {t('EditorInfo.aiNotConfiguredHint')}
+          <YakitButton type="text" className={styles['editor-info-form-highlight-btn']} onClick={handleSetting}>
+            {t('EditorInfo.aiConfigureClick')}
+          </YakitButton>
+        </div>
         <Form className={styles['editor-info-form-global']} form={form} layout="vertical">
           <Form.Item
             label={

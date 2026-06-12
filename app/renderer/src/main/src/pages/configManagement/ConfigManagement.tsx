@@ -335,7 +335,7 @@ export const HotPatchManagement: React.FC = () => {
         const allNames = [...seededNames, ...nameArr]
         const newList = allNames.map((name) => ({
           name,
-          temp: '',
+          temp: DEFAULT_GLOBAL_TEMPLATES.find((item) => item.name === name)?.content || '',
           isDefault: DEFAULT_GLOBAL_TEMPLATES.some((item) => item.name === name),
         }))
         const currentEnabledName = enabledName || (globalHotPatchConfig?.Enabled ? globalEnabledTemplateName : '')

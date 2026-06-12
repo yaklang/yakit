@@ -117,7 +117,14 @@
     "linkedPluginType": "联动插件类型",
     "linkedPluginTypeRequired": "联动插件类型必填",
     "switchScriptType": "切换脚本类型",
-    "switchScriptTypeContent": "切换脚本类型会清空源码内容，确定切换吗？"
+    "switchScriptTypeContent": "切换脚本类型会清空源码内容，确定切换吗？",
+    "aiGenerateHint": "以下内容可通过AI生成，",
+    "aiGenerateClick": "点击生成，",
+    "aiNotConfiguredHint": "如未配置AI可",
+    "aiConfigureClick": "点此配置",
+    "pluginSourceEmpty": "插件源码不能为空",
+    "parseAIResultFailed": "解析 AI 生成结果失败",
+    "debugTaskStarted": "调试任务启动成功，运行时 ID: {{rId}}"
   },
   "TempExampleHelp": {
     "fileRead": "文件读取(普通特征字符串匹配)",

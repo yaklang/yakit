@@ -117,7 +117,14 @@
     "linkedPluginType": "聯動外掛型別",
     "linkedPluginTypeRequired": "聯動外掛型別必填",
     "switchScriptType": "切換指令碼型別",
-    "switchScriptTypeContent": "切換指令碼型別會清空原始碼內容，確定切換嗎？"
+    "switchScriptTypeContent": "切換指令碼型別會清空原始碼內容，確定切換嗎？",
+    "aiGenerateHint": "以下內容可透過AI生成，",
+    "aiGenerateClick": "點擊生成，",
+    "aiNotConfiguredHint": "如未配置AI可",
+    "aiConfigureClick": "點此配置",
+    "pluginSourceEmpty": "外掛原始碼不能為空",
+    "parseAIResultFailed": "解析 AI 生成結果失敗",
+    "debugTaskStarted": "除錯任務啟動成功，執行時 ID: {{rId}}"
   },
   "TempExampleHelp": {
     "fileRead": "檔案讀取(普通特徵字串匹配)",
