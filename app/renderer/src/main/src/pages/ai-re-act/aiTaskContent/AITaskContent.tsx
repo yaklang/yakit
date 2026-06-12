@@ -112,7 +112,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       activeKey={activeKey}
       onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
       onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
-      className={styles['tab-wrap']}
+      className={styles['ai-task-tab-wrap']}
       t={t}
       tabBarExtraContent={tabBarExtraContent}
     >
