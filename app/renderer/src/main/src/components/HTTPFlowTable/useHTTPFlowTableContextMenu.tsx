@@ -121,7 +121,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onShieldURL,
     onShieldDomain,
     onBatch,
-    onViewAttachmentDataRefresh
+    onViewAttachmentDataRefresh,
   } = options
 
   const menuData = useMemo(() => {
