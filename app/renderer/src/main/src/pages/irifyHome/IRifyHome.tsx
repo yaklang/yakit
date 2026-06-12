@@ -1,12 +1,9 @@
-import React, { useMemo } from 'react'
-import ReactECharts from 'echarts-for-react'
-import type { EChartsOption } from 'echarts'
+import React from 'react'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import {
-  OutlineBookopenIcon,
   OutlineHomeIcon,
   OutlineArrowsmrightIcon,
   OutlineCheckIcon,
@@ -14,12 +11,17 @@ import {
   OutlineNotebookIcon,
   OutlineAIIcon,
 } from '@/assets/icon/outline'
-import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { IRifyHomeProps, RiskSeverity } from './IRifyHomeType'
 import { MOCK_HOME_DATA } from './IRifyHomeMockData'
 import styles from './IRifyHome.module.scss'
-import { PrivateOutlineAuditCodeIcon, PrivateOutlineCodeScanIcon } from '@/routes/privateIcon'
-import { PublicAIAuditCodeIcon, PublicAuditCodeIcon, PublicCodeScanIcon } from '@/routes/publicIcon'
+import {
+  PublicAIAuditCodeIcon,
+  PublicAuditCodeIcon,
+  PublicAuditHoleIcon,
+  PublicCodeScanIcon,
+  PublicProjectManagerIcon,
+  PublicRuleManagementIcon,
+} from '@/routes/publicIcon'
 import {
   IRifyDivergencyIcon,
   IRifyHomeGhostIcon,
@@ -27,8 +29,15 @@ import {
   IRifyHomeLowIcon,
   IRifyHomeMediumIcon,
   IRifyHomeSeriousIcon,
+  IRifyQuickAccessJavaDecompilerIcon,
 } from './icon'
-import { useSize } from 'ahooks'
+import {
+  RISK_DISTRIBUTION_COLOR_KEYS,
+  RiskDistributionChart,
+  RiskGaugeChart,
+  RuleHitsBarChart,
+} from './IRifyHomeEchats'
+import { IRifyHomeTable } from './IRifyHomeTable'
 
 const SEVERITY_TAG_COLOR: Record<RiskSeverity, 'serious' | 'danger' | 'warning' | 'yellow'> = {
   serious: 'serious',
@@ -44,291 +53,17 @@ const SEVERITY_LABEL: Record<RiskSeverity, string> = {
   low: '低危',
 }
 
-const RISK_DISTRIBUTION_COLOR_KEYS = [
-  '--Colors-Use-Neutral-Border',
-  '--yakit-colors-Main-30',
-  '--yakit-colors-Main-40',
-  '--yakit-colors-Main-70',
-  '--yakit-colors-Main-90',
-] as const
-
 const RISK_DISTRIBUTION_COLORS = RISK_DISTRIBUTION_COLOR_KEYS.map((key) => `var(${key})`)
+
+const MOCK_RISK_LEVEL_LIST = [
+  { Total: 3, Name: 'critical', Verbose: '严重', Delta: 0 },
+  { Total: 3, Name: 'high', Verbose: '高危', Delta: 0 },
+  { Total: 223, Name: 'medium', Verbose: '中危', Delta: 0 },
+  { Total: 24, Name: 'low', Verbose: '低危', Delta: 0 },
+]
 
 const onOpenPage = (route: YakitRoute, params?: any) => {
   emiter.emit('openPage', JSON.stringify({ route, params: params ?? {} }))
-}
-
-const RiskGaugeChart: React.FC<{ value: number; level: string; levelLabel: string }> = ({
-  value,
-  level,
-  levelLabel,
-}) => {
-  const colors = useGetColorsByTheme()
-
-  const option = useMemo<EChartsOption>(() => {
-    const green = colors['--Colors-Use-Status-Safe']
-    const yellow = colors['--Colors-Use-Status-Low']
-    const orange = colors['--Colors-Use-Status-Medium']
-    const red = colors['--Colors-Use-Status-High']
-    const textColor = colors['--Colors-Use-Neutral-Text-1-Title']
-    const subTextColor = colors['--Colors-Use-Neutral-Text-3-Secondary']
-
-    return {
-      series: [
-        {
-          type: 'gauge',
-          startAngle: 200,
-          endAngle: -20,
-          min: 0,
-          max: 100,
-          radius: '100%',
-          center: ['50%', '72%'],
-          splitNumber: 4,
-          axisLine: {
-            lineStyle: {
-              width: 14,
-              color: [
-                [0.25, green],
-                [0.5, yellow],
-                [0.75, orange],
-                [1, red],
-              ],
-            },
-          },
-          pointer: {
-            icon: 'triangle',
-            length: '55%',
-            width: 8,
-            itemStyle: {
-              color: textColor,
-            },
-          },
-          axisTick: { show: false },
-          splitLine: { show: false },
-          axisLabel: {
-            color: subTextColor,
-            fontSize: 11,
-            distance: -36,
-            formatter: (val: number) => {
-              if (val === 0) return 'S'
-              if (val === 25) return 'L'
-              if (val === 50) return 'M'
-              if (val === 75) return 'H'
-              if (val === 100) return 'S'
-              return ''
-            },
-          },
-          detail: {
-            show: false,
-          },
-          data: [{ value }],
-        },
-      ],
-      graphic: [
-        {
-          type: 'text',
-          left: 'center',
-          top: '58%',
-          style: {
-            text: level,
-            fill: textColor,
-            fontSize: 28,
-            fontWeight: 600,
-          },
-        },
-        {
-          type: 'text',
-          left: 'center',
-          top: '72%',
-          style: {
-            text: levelLabel,
-            fill: subTextColor,
-            fontSize: 12,
-          },
-        },
-      ],
-    }
-  }, [value, level, levelLabel, colors])
-
-  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
-}
-
-const RiskDistributionChart: React.FC<{
-  total: number
-  totalLabel: string
-  items: { name: string; value: number; percent: number }[]
-}> = ({ total, totalLabel, items }) => {
-  const colors = useGetColorsByTheme()
-  const { width } = useSize(document.querySelector('body')) || { width: 0, height: 0 }
-  const option = useMemo<EChartsOption>(() => {
-    const distributionColors = [
-      colors['--Colors-Use-Neutral-Border'],
-      colors['--yakit-colors-Main-30'],
-      colors['--yakit-colors-Main-40'],
-      colors['--yakit-colors-Main-70'],
-      colors['--yakit-colors-Main-90'],
-    ]
-    const textColor = colors['--Colors-Use-Neutral-Text-1-Title']
-    const subTextColor = colors['--Colors-Use-Neutral-Text-4-Help-text']
-    const bgHoverColor = colors['--Colors-Use-Neutral-Bg-Hover']
-
-    let option = {
-      color: distributionColors,
-      tooltip: {
-        trigger: 'item',
-        confine: false,
-        appendToBody: true,
-        position: (point, _params, _dom, _rect, size) => {
-          const x = point[0] + 10
-          const y = point[1] - size.contentSize[1] / 2
-          return [x, y]
-        },
-        formatter: (params) => {
-          const index = Number(params.name)
-          const item = items[index]
-          if (!item) return ''
-          return `${item.name} : ${item.value} (${item.percent}%)`
-        },
-      },
-      series: [
-        {
-          // 空心饼图内外径
-          radius: ['68%', '90%'],
-          // 饼图上下左右位置
-          center: ['45%', '50%'],
-          itemStyle: {
-            borderColor: '#FFFFFF',
-            borderWidth: 2,
-          },
-          avoidLabelOverlap: false,
-          type: 'pie',
-          label: {
-            show: false,
-          },
-          labelLine: {
-            show: false,
-          },
-          emphasis: {
-            scale: false, // ❗关闭外扩
-          },
-          data: items.map((item, index) => ({
-            name: String(index),
-            value: item.value,
-          })),
-        },
-      ],
-      graphic: [
-        {
-          type: 'text',
-          left: '25%',
-          top: '40%',
-          style: {
-            text: String(total),
-            fill: textColor,
-            fontSize: 24,
-            fontWeight: 400,
-            textAlign: 'center',
-            width: 80,
-          },
-        },
-        {
-          type: 'text',
-          left: '20%',
-          top: '58%',
-          style: {
-            text: totalLabel,
-            fill: subTextColor,
-            fontSize: 12,
-            textAlign: 'center',
-            width: 80,
-          },
-        },
-      ],
-    }
-    // if (width <= 1080) {
-    //   option.series[0].center = ['18%', '50%']
-    //   option.graphic[0].left = '10%'
-    //   option.graphic[1].left = '8%'
-    // } else if (width > 1080 && width <= 1280) {
-    //   option.series[0].center = ['20%', '50%']
-    //   option.graphic[0].left = '10%'
-    //   option.graphic[1].left = '8%'
-    // } else if (width > 1280) {
-    //   option.series[0].center = ['18%', '50%']
-    //   option.graphic[0].left = '10%'
-    //   option.graphic[1].left = '8%'
-    // }
-
-    return option as EChartsOption
-  }, [total, totalLabel, items, colors, width])
-
-  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
-}
-
-const RULE_HITS_LABEL_WIDTH = 88 //宽度80+间距8
-
-const RuleHitsBarChart: React.FC<{ items: { name: string; value: number }[] }> = ({ items }) => {
-  const colors = useGetColorsByTheme()
-
-  const option = useMemo<EChartsOption>(() => {
-    const barColors = RISK_DISTRIBUTION_COLOR_KEYS.map((key) => colors[key])
-    const textColor = colors['--Colors-Use-Neutral-Text-1-Title']
-    const subTextColor = colors['--Colors-Use-Neutral-Text-3-Secondary']
-    const reversedItems = [...items].reverse()
-
-    return {
-      grid: {
-        left: RULE_HITS_LABEL_WIDTH,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        height: items.length * 32,
-        containLabel: false,
-      },
-      xAxis: {
-        type: 'value',
-        show: false,
-        max: Math.max(...items.map((item) => item.value)) * 1.2,
-      },
-      yAxis: {
-        type: 'category',
-        data: reversedItems.map((item) => item.name),
-        axisLine: { show: false },
-        axisTick: { show: false },
-        axisLabel: {
-          width: RULE_HITS_LABEL_WIDTH,
-          align: 'left',
-          margin: RULE_HITS_LABEL_WIDTH,
-          overflow: 'truncate',
-          color: subTextColor,
-          fontSize: 12,
-        },
-      },
-      series: [
-        {
-          type: 'bar',
-          data: reversedItems.map((item, index) => ({
-            value: item.value,
-            itemStyle: {
-              color: barColors[index],
-              borderRadius: [0, 4, 4, 0],
-            },
-            label: {
-              show: true,
-              position: 'right',
-              color: textColor,
-              fontSize: 12,
-              formatter: '{c}',
-            },
-          })),
-          barWidth: 10,
-          showBackground: false,
-        },
-      ],
-    }
-  }, [items, colors])
-
-  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
 }
 
 const IRifyHome: React.FC<IRifyHomeProps> = () => {
@@ -487,7 +222,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
             <div className={styles['panel-card-title']}>风险概览</div>
             <div className={styles['risk-overview']}>
               <div className={styles['risk-gauge']}>
-                <RiskGaugeChart value={50} level={'中危'} levelLabel={'危险等级'} />
+                <RiskGaugeChart list={MOCK_RISK_LEVEL_LIST} />
               </div>
               <div className={styles['risk-stats-grid']}>
                 <div className={styles['risk-stats-grid-item']}>
@@ -600,32 +335,51 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
               </button>
             </div>
             <div className={styles['projects-table-wrapper']}>
-              <table className={styles['projects-table']}>
-                <thead>
-                  <tr>
-                    <th>项目</th>
-                    <th>语言</th>
-                    <th>项目风险</th>
-                    <th>风险数</th>
-                    <th>更新时间</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.recentProjects.map((project, index) => (
-                    <tr key={`${project.name}-${index}`}>
-                      <td className={styles['projects-table-name']}>{project.name}</td>
-                      <td>{project.language}</td>
-                      <td>
-                        <YakitTag size="small" color={SEVERITY_TAG_COLOR[project.risk]}>
-                          {SEVERITY_LABEL[project.risk]}
-                        </YakitTag>
-                      </td>
-                      <td>{project.riskCount}</td>
-                      <td className={styles['projects-table-time']}>{project.updateTime}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <IRifyHomeTable />
+            </div>
+          </div>
+          <div className={classNames(styles['panel-card'], styles['quick-access-card'])}>
+            <div className={styles['panel-card-title']}>快速入口</div>
+            <div className={styles['quick-access-list']}>
+              <div className={styles['quick-access-item']} onClick={() => onOpenPage(YakitRoute.Rule_Management)}>
+                <div className={styles['quick-access-item-icon']}>
+                  <PublicRuleManagementIcon />
+                </div>
+                <div className={styles['quick-access-item-content']}>
+                  <div className={styles['quick-access-item-title']}>规则管理</div>
+                  <div className={styles['quick-access-item-desc']}>这里是描述文案</div>
+                </div>
+              </div>
+              <div className={styles['quick-access-item']} onClick={() => onOpenPage(YakitRoute.Yak_Java_Decompiler)}>
+                <div className={styles['quick-access-item-icon']}>
+                  <IRifyQuickAccessJavaDecompilerIcon />
+                </div>
+                <div className={styles['quick-access-item-content']}>
+                  <div className={styles['quick-access-item-title']}>JAVA 反编译</div>
+                  <div className={styles['quick-access-item-desc']}>这里是描述文案</div>
+                </div>
+              </div>
+              <div className={styles['quick-access-item']} onClick={() => onOpenPage(YakitRoute.YakRunner_Audit_Hole)}>
+                <div className={styles['quick-access-item-icon']}>
+                  <PublicAuditHoleIcon />
+                </div>
+                <div className={styles['quick-access-item-content']}>
+                  <div className={styles['quick-access-item-title']}>审计漏洞</div>
+                  <div className={styles['quick-access-item-desc']}>这里是描述文案</div>
+                </div>
+              </div>
+              <div
+                className={styles['quick-access-item']}
+                onClick={() => onOpenPage(YakitRoute.YakRunner_Project_Manager)}
+              >
+                <div className={styles['quick-access-item-icon']}>
+                  <PublicProjectManagerIcon />
+                </div>
+                <div className={styles['quick-access-item-content']}>
+                  <div className={styles['quick-access-item-title']}>项目管理</div>
+                  <div className={styles['quick-access-item-desc']}>这里是描述文案</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
