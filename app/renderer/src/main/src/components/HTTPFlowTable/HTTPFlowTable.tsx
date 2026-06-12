@@ -86,6 +86,7 @@ import {
 import {
   buildHTTPFlowTableAdvancedQuery,
   buildLegacyHTTPFlowTableFilterConfig,
+  getFullRange,
   hasActiveHTTPFlowTableFilterConfig,
   safeParseHTTPFlowTableCache,
   splitHTTPFlowTableShieldData,
@@ -188,6 +189,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return mitmContent.mitmStore.version
   }, [mitmContent.mitmStore.version])
   const [data, setData] = useState<HTTPFlow[]>([])
+  const viewAttachIdFirstRef = useRef<boolean>(false)
+  const [viewAttachId, setViewAttachId] = useState<number>(0)
   const [color, setColor] = useState<string[]>([])
   const [onlyFavorite, setOnlyFavorite] = useState(false)
   const [isShowColor, setIsShowColor] = useState<boolean>(false)
@@ -749,6 +752,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           setIsRefresh(!isRefresh)
           setPagination(rsp.Pagination)
           setData([...newData])
+
+          setTimeout(() => {
+            if (viewAttachIdFirstRef.current) {
+              viewAttachIdFirstRef.current = false
+              setScrollToIndex(viewAttachId + '_' + Math.random())
+            }
+          }, 500)
+
           if (['desc', 'none'].includes(tableOrder)) {
             maxIdRef.current = newData.length > 0 ? newData[0].Id : 0
             minIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
@@ -904,9 +915,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       }
       setSelectedRowKeys([])
       setSelectedRows([])
-      setScrollToIndex(0)
-      setCurrentIndex(undefined)
-      setOnlyShowFirstNode && setOnlyShowFirstNode(true)
+      if (!viewAttachIdFirstRef.current) {
+        setScrollToIndex(0)
+        setCurrentIndex(undefined)
+        setOnlyShowFirstNode && setOnlyShowFirstNode(true)
+      }
       setUpdateCacheData([])
       getDataByGrpc(query, 'update')
     } else {
@@ -2135,6 +2148,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setWatchRefresh((prev) => !prev)
     setColor([])
     setOnlyFavorite(false)
+    setViewAttachId(0)
     setCheckBodyLength(false)
     setBeforeBodyLength(undefined)
     setAfterBodyLength(undefined)
@@ -2160,6 +2174,15 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   useUpdateEffect(() => {
     onImportResetRefresh()
   }, [importRefresh])
+
+  /**查看附近数据包 */
+  const onViewAttachmentDataRefresh = useMemoizedFn((id: number) => {
+    viewAttachIdFirstRef.current = true
+    setParams({ ...resetParams, IncludeId: getFullRange(+id) })
+    setTriggerParamsWatch((old) => !old)
+    resetAllFun()
+    setViewAttachId(+id)
+  })
 
   /**
    * @description 分享数据包
@@ -2281,6 +2304,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onShieldURL,
     onShieldDomain,
     onBatch,
+    onViewAttachmentDataRefresh,
   })
 
   useEffect(() => {
@@ -2460,6 +2484,24 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     [onlyFavorite, i18n.language],
   )
 
+  const viewAttachTag = useMemo(
+    () =>
+      !!viewAttachId && (
+        <Tooltip title={`${t('HTTPFlowTable.viewAttachTip', { Id: viewAttachId })}`}>
+          <YakitTag
+            closable
+            onClose={() => {
+              setViewAttachId(0)
+              setParams((prev) => ({ ...prev, IncludeId: [] }))
+            }}
+          >
+            {t('HTTPFlowTable.RowContextMenu.viewAttach')}
+          </YakitTag>
+        </Tooltip>
+      ),
+    [viewAttachId, i18n.language],
+  )
+
   const renderTitle = useMemo(() => {
     if (noTableTitle) return
     return (
@@ -2516,8 +2558,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
                 </span>
               </div>
             </div>
-            {filterTagDom ? <div className={style['http-history-table-filter-tag-wrap']}>{filterTagDom}</div> : null}
-            {onlyFavoriteTag}
+            <div className={style['http-history-table-filter-tag-wrap']}>
+              {filterTagDom}
+              {onlyFavoriteTag}
+              {viewAttachTag}
+            </div>
           </div>
           <div className={style['http-history-table-right']}>
             {showAdvancedSearch && (
@@ -2802,6 +2847,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onToggleOnlyFavorite,
     onlyFavorite,
     onlyFavoriteTag,
+    viewAttachTag,
     params.IsWebsocket,
     params.SourceType,
     props.httpHistoryTableTitleStyle,
