@@ -121,7 +121,10 @@
     "riskCount": "風險個數",
     "verifying": "正在校驗",
     "addProject": "新增專案",
-    "jumpCodeScanFailed": "跳轉程式碼掃描頁失敗：{{error}}"
+    "jumpCodeScanFailed": "跳轉程式碼掃描頁失敗：{{error}}",
+    "compileTime": "歷史編輯記錄",
+    "scanCount": "掃描次數",
+    "noCompileHistory": "暫無編譯歷史"
   },
   "RunnerFileTree": {
     "all": "全部",

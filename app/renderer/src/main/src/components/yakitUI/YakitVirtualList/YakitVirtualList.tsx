@@ -10,7 +10,7 @@ import {
   useUpdateEffect,
   useVirtualList,
 } from 'ahooks'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ReactResizeDetector from 'react-resize-detector'
 import { LoadingOutlined } from '@ant-design/icons'
 import {
@@ -21,12 +21,14 @@ import React from 'react'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { AuthorImg } from '@/pages/plugins/funcTemplate'
-import { OutlineSearchIcon } from '@/assets/icon/outline'
+import { OutlineChevrondownIcon, OutlineChevronrightIcon, OutlineSearchIcon } from '@/assets/icon/outline'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+
+const DEFAULT_ITEM_HEIGHT = 48
 
 export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>) => {
   const { t } = useI18nNamespaces(['yakitUi'])
@@ -42,6 +44,8 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
     page = 0,
     loadMoreData,
     onClickRow,
+    dynamicHeight = false,
+    expandable,
   } = props
 
   const [vlistHeigth, setVListHeight] = useState(600)
@@ -49,11 +53,41 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
+  // 动态行高缓存
+  const [rowHeights, setRowHeights] = useState<Map<number, number>>(new Map())
+  const { expandedRowRender, expandedRowKeys = [], onExpend, setExpandedKeys } = expandable || {}
+
+  // 当 data 变化时，重置高度缓存（避免使用错误的高度）
+  useEffect(() => {
+    if (dynamicHeight) {
+      setRowHeights(new Map())
+    }
+  }, [data, dynamicHeight])
+
+  // 测量并更新行高
+  const measureAndUpdateHeight = useMemoizedFn((index: number, el: HTMLDivElement | null) => {
+    if (!dynamicHeight || !el) return
+    const height = el.getBoundingClientRect().height
+    const cached = rowHeights.get(index)
+    if (Math.abs(height - (cached || 0)) > 0.5) {
+      setRowHeights((prev) => {
+        const newMap = new Map(prev)
+        newMap.set(index, height)
+        return newMap
+      })
+    }
+  })
+
+  // 动态 itemHeight 函数
+  const getItemHeight = useMemoizedFn((index: number): number => {
+    if (!dynamicHeight) return DEFAULT_ITEM_HEIGHT
+    return rowHeights.get(index) ?? DEFAULT_ITEM_HEIGHT
+  })
 
   const [list, scrollTo] = useVirtualList(data, {
     containerTarget: containerRef,
     wrapperTarget: wrapperRef,
-    itemHeight: 48,
+    itemHeight: getItemHeight,
     overscan: 5,
   })
 
@@ -201,51 +235,82 @@ export const YakitVirtualList = <T extends any>(props: YakitVirtualListProps<T>)
             onScroll={onScrollCapture}
           >
             <div ref={wrapperRef} className={styles['virtual-list-wrapper']}>
-              {list.map((ele) => (
-                <div
-                  className={classNames(styles['virtual-list-item'], {
-                    [styles['virtual-list-item-click']]: !!onClickRow,
-                  })}
-                  onClick={() => onClickRowFun(ele.data)}
-                  key={ele.data[renderKey] || ele.index}
-                >
-                  {columns.map((item, index) => {
-                    return (
-                      <div
-                        key={`${ele.index}-${item.title}`}
-                        style={item?.width ? { width: item.width } : {}}
-                        className={classNames(styles['virtual-list-cell'], {
-                          [styles['virtual-list-cell-flex']]: !item.width,
-                        })}
-                      >
-                        {index === 0 && rowSelection && (
-                          <YakitProtoCheckbox
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              onChangeCheckboxSingle(
-                                e.target.checked,
-                                renderKey ? ele.data[renderKey] : ele.index,
-                                ele.data,
-                              )
-                            }}
-                            checked={
-                              rowSelection?.selectedRowKeys?.findIndex(
-                                (c) => c === (renderKey ? ele.data[renderKey] : ele.index),
-                              ) !== -1
-                            }
-                            {...(checkboxPropsMap.get(ele.data[renderKey]) || {})}
-                          />
-                        )}
-                        {item?.render ? (
-                          item.render(ele.data[item.dataIndex], ele.data, ele.index)
-                        ) : (
-                          <div className="content-ellipsis">{ele.data[item.dataIndex]}</div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              ))}
+              {list.map((ele) => {
+                const rowKey = ele.data[renderKey]
+                const isExpanded = expandedRowKeys.includes(rowKey)
+                return (
+                  <div
+                    key={ele.data[renderKey]}
+                    ref={(el) => measureAndUpdateHeight(ele.index, el)}
+                    className={classNames({
+                      [styles['virtual-list-item-expanded-bg']]: isExpanded,
+                    })}
+                  >
+                    <div
+                      className={classNames(styles['virtual-list-item-row'], {
+                        [styles['virtual-list-item-row-click']]: !!onClickRow,
+                      })}
+                      onClick={() => onClickRowFun(ele.data)}
+                    >
+                      {columns.map((item, index) => {
+                        return (
+                          <div
+                            key={`${ele.index}-${item.title}`}
+                            style={item?.width ? { width: item.width } : {}}
+                            className={classNames(styles['virtual-list-cell'], {
+                              [styles['virtual-list-cell-flex']]: !item.width,
+                            })}
+                          >
+                            {index === 0 && expandable && (
+                              <YakitButton
+                                type={isExpanded ? 'text' : 'text2'}
+                                icon={isExpanded ? <OutlineChevrondownIcon /> : <OutlineChevronrightIcon />}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  const isExpanded = expandedRowKeys.includes(rowKey)
+                                  if (!isExpanded) {
+                                    onExpend?.(ele.data)
+                                  }
+                                  const newKeys = isExpanded
+                                    ? expandedRowKeys.filter((k) => k !== rowKey)
+                                    : [...expandedRowKeys, rowKey]
+                                  setExpandedKeys?.(newKeys)
+                                }}
+                              />
+                            )}
+                            {index === 0 && rowSelection && (
+                              <YakitProtoCheckbox
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                  onChangeCheckboxSingle(
+                                    e.target.checked,
+                                    renderKey ? ele.data[renderKey] : ele.index,
+                                    ele.data,
+                                  )
+                                }}
+                                checked={
+                                  rowSelection?.selectedRowKeys?.findIndex(
+                                    (c) => c === (renderKey ? ele.data[renderKey] : ele.index),
+                                  ) !== -1
+                                }
+                                {...(checkboxPropsMap.get(ele.data[renderKey]) || {})}
+                              />
+                            )}
+                            {item?.render ? (
+                              item.render(ele.data[item.dataIndex], ele.data, ele.index)
+                            ) : (
+                              <div className="content-ellipsis">{ele.data[item.dataIndex]}</div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {isExpanded && expandedRowRender && (
+                      <div className={styles['virtual-list-item-expanded']}>{expandedRowRender(ele.data)}</div>
+                    )}
+                  </div>
+                )
+              })}
               {loading && hasMore && (
                 <div className={styles['text-center']}>
                   <LoadingOutlined />

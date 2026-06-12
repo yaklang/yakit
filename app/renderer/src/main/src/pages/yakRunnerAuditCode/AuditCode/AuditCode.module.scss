@@ -5,6 +5,7 @@
   padding-left: 4px;
   display: flex;
   flex-direction: column;
+
   .header {
     padding: 4px 8px;
     height: 32px;
@@ -12,12 +13,14 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+
     .title {
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
       font-size: 12px;
       font-weight: 500;
       line-height: 16px;
     }
+
     .extra {
       flex: 1;
       display: flex;
@@ -26,12 +29,15 @@
       align-items: center;
     }
   }
+
   .textarea-box {
     padding: 0px 8px 8px 8px;
   }
+
   .no-audit {
     padding-top: 80px;
   }
+
   .no-data {
     font-style: normal;
     font-weight: 400;
@@ -41,15 +47,19 @@
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     margin-top: 8px;
   }
+
   .audit-tree {
     flex: 1;
     overflow: hidden;
   }
+
   .audit-log {
     flex: 1;
     overflow: auto;
+
     .audit-log-wrapper {
       overflow: auto;
+
       :global {
         .ant-tabs-nav {
           display: none;
@@ -74,39 +84,49 @@
 .audit-tree {
   height: 100%;
   padding: 0px 0px 0px 4px;
+
   :global {
     .ant-tree {
       background-color: var(--Colors-Use-Basic-Background);
     }
+
     .ant-tree .ant-tree-treenode {
       padding-bottom: 0;
     }
+
     .ant-tree-switcher {
       display: none;
     }
+
     .ant-tree .ant-tree-node-content-wrapper {
       padding: 0;
       line-height: normal;
       min-height: auto;
       border-radius: 0;
     }
+
     .ant-tree .ant-tree-node-content-wrapper:hover {
       background-color: transparent;
     }
+
     .ant-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
       background-color: transparent;
     }
+
     .ant-tree.ant-tree-block-node .ant-tree-list-holder-inner .ant-tree-node-content-wrapper {
       flex: 1;
       overflow: hidden;
     }
+
     .ant-tree-indent-unit {
       width: 0px;
     }
+
     // 树的滚动条
     .ant-tree-list-scrollbar {
       width: 6px !important;
     }
+
     .ant-tree-list-scrollbar-thumb {
       background: var(--Colors-Use-Basic-Background) !important;
     }
@@ -117,6 +137,7 @@
       .node-switcher {
         display: none;
       }
+
       .node-loading {
         display: flex;
       }
@@ -140,6 +161,7 @@
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 11px;
   line-height: 22px;
+
   &:hover {
     color: var(--Colors-Use-Main-Primary);
   }
@@ -153,41 +175,48 @@
   gap: 2px;
   cursor: pointer;
   user-select: none;
+
   .node-switcher {
     width: 16px;
     height: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
+
     svg {
       width: 16px;
       height: 16px;
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
       transition: transform 0.3s;
     }
+
     &.expanded {
       svg {
         transform: rotate(90deg);
       }
     }
   }
+
   .node-loading {
     display: none;
     width: 16px;
     height: 16px;
     justify-content: center;
     align-items: center;
+
     svg {
       width: 12px;
       height: 12px;
       color: var(--Colors-Use-Main-Primary);
     }
   }
+
   .node-error {
     svg {
       color: var(--Colors-Use-Error-Primary);
     }
   }
+
   .img-box {
     width: 16px;
     height: 16px;
@@ -207,6 +236,7 @@
       flex-direction: row;
       justify-content: space-between;
       gap: 4px;
+
       .detail {
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
@@ -214,11 +244,14 @@
         line-height: 16px;
         overflow: hidden;
 
-        flex-shrink: 0; /* 防止这个元素被压缩  */
+        flex-shrink: 0;
+
+        /* 防止这个元素被压缩  */
         .detail-tag {
           margin-left: 4px;
         }
       }
+
       .name {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
         font-size: 12px;
@@ -226,24 +259,30 @@
         line-height: 16px;
         overflow: hidden;
 
-        flex-shrink: 1; /* 允许这个元素被压缩 */
+        flex-shrink: 1;
+        /* 允许这个元素被压缩 */
       }
+
       .name-active {
         color: var(--Colors-Use-Neutral-Text-1-Title);
       }
     }
+
     .bug {
       color: var(--Colors-Use-Neutral-Text-1-Title);
       display: flex;
       align-items: center;
+
       svg {
         height: 14px;
         width: 14px;
       }
     }
+
     .active-bug {
       color: var(--Colors-Use-Main-Primary);
     }
+
     .count {
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
       font-size: 12px;
@@ -260,6 +299,7 @@
   &.node-selected {
     background-color: var(--Colors-Use-Main-Bg);
   }
+
   &.node-foucsed {
     border: 1px solid var(--Colors-Use-Main-Border);
     background-color: var(--Colors-Use-Main-Bg);
@@ -270,20 +310,25 @@
 
   .icon-box {
     display: flex;
+
     svg {
       height: 16px;
       width: 16px;
     }
   }
+
   .hint-icon {
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
+
   .info-icon {
     color: var(--Colors-Use-Blue-Primary);
   }
+
   .warn-icon {
     color: var(--Colors-Use-Warning-Primary);
   }
+
   .error-icon {
     color: var(--Colors-Use-Error-Primary);
   }
@@ -293,6 +338,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+
   .header {
     padding: 8px 16px;
     height: 40px;
@@ -301,26 +347,31 @@
     justify-content: space-between;
     border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
     background: var(--Colors-Use-Neutral-Bg);
+
     .main {
       display: flex;
       flex-direction: row;
       align-items: center;
       gap: 8px;
+
       .title {
         font-size: 14px;
         font-weight: 600;
         line-height: 20px;
       }
+
       .sub-title {
         display: flex;
         flex-direction: row;
         gap: 4px;
+
         .text {
           color: var(--Colors-Use-Neutral-Text-3-Secondary);
           font-size: 12px;
           font-weight: 400;
           line-height: 16px;
         }
+
         .number {
           color: var(--Colors-Use-Main-Primary);
           font-size: 12px;
@@ -329,16 +380,20 @@
         }
       }
     }
+
     .extra {
       display: flex;
       flex-direction: row;
       align-items: center;
       gap: 8px;
+
       .search-icon {
         color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
         svg {
           height: 12px;
           width: 12px;
+
           path {
             stroke-width: 1.5;
           }
@@ -346,13 +401,20 @@
       }
     }
   }
+
   .table {
     padding: 12px 16px;
     flex: 1;
     overflow: hidden;
+
     .audit-virtual-list {
       height: 100%;
+
+      .audit-expanded-row {
+        background-color: aqua;
+      }
     }
+
     .audit-text {
       overflow: hidden;
     }
@@ -361,8 +423,121 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 12px;
     }
+  }
+}
+
+.extra-menu {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  svg {
+    height: 16px;
+    width: 16px;
+  }
+
+  .menu-name {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+  }
+}
+
+.project-compile-preview {
+  margin-left: 25px;
+  border-radius: 4px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.project-compile-preview-compact {
+  margin-bottom: 6px;
+  padding: 4px 10px;
+}
+
+.project-compile-preview-header,
+.project-compile-preview-row {
+  display: grid;
+  grid-template-columns: 1.4fr 140px 140px 110px;
+  gap: 8px;
+  align-items: center;
+  min-height: 28px;
+  padding: 12px;
+}
+
+.project-compile-preview-header {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  min-height: 24px;
+}
+
+.project-compile-preview-row {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 16px;
+  background-color: var(--Colors-Use-Basic-Background);
+}
+
+.project-compile-preview-row-clickable {
+  cursor: pointer;
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}
+
+.project-compile-preview-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-compile-preview-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.project-compile-preview-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+}
+
+.project-compile-preview-empty {
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  line-height: 16px;
+  padding: 12px;
+  background-color: var(--Colors-Use-Basic-Background);
+}
+
+.project-compile-preview-more {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 11px;
+  line-height: 22px;
+  user-select: none;
+  border-top: 1px dashed var(--Colors-Use-Neutral-Border);
+  background: transparent;
+  transition:
+    color 0.15s,
+    background 0.15s;
+
+  &:hover {
+    color: var(--Colors-Use-Main-Primary);
+    background: var(--Colors-Use-Main-Bg);
   }
 }
 
@@ -372,12 +547,14 @@
   justify-content: space-between;
   align-items: center;
   gap: 4px;
+
   .text-style {
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     font-size: 12px;
     font-weight: 600;
     line-height: 16px;
   }
+
   .divider-style {
     flex: 1;
     overflow: hidden;
@@ -385,56 +562,67 @@
     border-top: 1px dashed var(--Colors-Use-Neutral-Border);
   }
 }
+
 .project-manager-edit {
   // 以下为jsonSchema样式特殊处理---start
   .form-json-schema-wrapper {
     padding: 0px 16px;
     max-height: 600px;
     overflow: auto;
+
     *:has(> label[title='基础信息']),
     *:has(> label[title='代码源配置']),
     *:has(> label[title='编译配置']) {
       display: none;
     }
   }
+
   .baseInfo {
     fieldset[id='root'] > div:first-child > div:nth-child(2) {
       height: 0px;
       overflow: hidden;
     }
+
     fieldset[id='root'] > div:first-child > div:nth-child(3) {
       height: 0px;
       overflow: hidden;
     }
   }
+
   .codeSource {
     fieldset[id='root'] > div:first-child > div:first-child {
       height: 0px;
       overflow: hidden;
     }
+
     fieldset[id='root'] > div:first-child > div:nth-child(3) {
       height: 0px;
       overflow: hidden;
     }
   }
+
   .compile {
     fieldset[id='root'] > div:first-child > div:first-child {
       height: 0px;
       overflow: hidden;
     }
+
     fieldset[id='root'] > div:first-child > div:nth-child(2) {
       height: 0px;
       overflow: hidden;
     }
   }
+
   // 以上为jsonSchema样式特殊处理---end
 
   .form-type-radio {
     padding: 0px 16px;
   }
+
   .project-manager-edit-form {
     padding: 8px 24px 8px 24px;
   }
+
   .opt-btn {
     padding: 0px 24px;
     display: flex;
@@ -453,13 +641,22 @@
   border-radius: 4px;
   cursor: pointer;
   color: var(--Colors-Use-Neutral-Text-3-Secondary);
+
   svg {
     width: 16px;
     height: 16px;
   }
+
   &:hover {
     background-color: var(--Colors-Use-Neutral-Bg);
     color: var(--Colors-Use-Main-Primary);
+  }
+}
+
+.extra-icon-delete {
+  color: var(--Colors-Use-Error-Primary);
+  &:hover {
+    color: var(--Colors-Use-Error-Primary);
   }
 }
 
@@ -467,6 +664,7 @@
   .custom-params-wrapper {
     padding-right: 16px;
   }
+
   :global {
     .json-schema-form {
       .json-schema-row-form {
@@ -487,20 +685,25 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+
   .header {
     display: flex;
     flex-direction: row;
     gap: 4px;
   }
+
   .onlyRisk-box {
     padding: 4px 8px;
   }
+
   .audit-history-list-container {
     flex: 1;
     overflow: hidden;
+
     .history-item-box {
       padding: 2px;
       border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+
       .history-item {
         margin-bottom: 4px;
         cursor: pointer;
@@ -509,10 +712,12 @@
         justify-content: space-between;
         align-items: center;
         color: var(--Colors-Use-Neutral-Text-1-Title);
+
         .title {
           display: flex;
           gap: 6px;
         }
+
         &:hover {
           border-color: transparent;
           box-shadow:
@@ -530,12 +735,14 @@
   justify-content: space-between;
   align-items: center;
   gap: 4px;
+
   .text-style {
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
     font-size: 12px;
     font-weight: 600;
     line-height: 16px;
   }
+
   .divider-style {
     flex: 1;
     overflow: hidden;
@@ -567,6 +774,7 @@
   justify-content: flex-end;
   align-items: center;
   gap: 8px;
+
   .clear-button {
     padding: 0 12px 0 0;
   }

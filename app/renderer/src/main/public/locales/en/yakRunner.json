@@ -121,7 +121,10 @@
     "riskCount": "Risk count",
     "verifying": "Verifying...",
     "addProject": "Add Project",
-    "jumpCodeScanFailed": "Failed to jump to code scan page: {{error}}"
+    "jumpCodeScanFailed": "Failed to jump to code scan page: {{error}}",
+    "compileTime": "Historical Compilation Records",
+    "scanCount": "Scan count",
+    "noCompileHistory": "No compile history"
   },
   "RunnerFileTree": {
     "all": "All",
