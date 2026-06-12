@@ -50,6 +50,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './HubExtraOperate.module.scss'
 import { grpcQueryYakScriptSkipUpdate, grpcSetYakScriptSkipUpdate } from '../utils/grpc'
+import { SystemInfo } from '@/constants/hardware'
+import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
 
 export interface HubExtraOperateRef {
   downloadedNext: (flag: boolean) => void
@@ -482,7 +484,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
               </div>
               <PluginLocalExportForm
                 onCancel={() => m.destroy()}
-                onOK={(values) => {
+                onOK={async (values) => {
                   const page: PluginListPageMeta = {
                     page: 1,
                     limit: 20,
@@ -500,7 +502,21 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                     Filter: { ...query, IncludedScriptNames: names },
                   }
                   exportParams.current = params
-                  setExportModal(true)
+                  if (SystemInfo.mode === 'local') {
+                    try {
+                      const file = await handleSaveFileSystemDialog({
+                        title: '导出插件',
+                        defaultPath: values.OutputFilename,
+                      })
+
+                      if (!file || file.canceled) return
+
+                      const filePath = file.filePath
+                      if (!filePath) return
+
+                      setExportModal(true)
+                    } catch (error) {}
+                  }
                   m.destroy()
                 }}
               ></PluginLocalExportForm>

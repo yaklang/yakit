@@ -86,6 +86,8 @@ import styles from './PluginHubList.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
+import { handleSaveFileSystemDialog } from '@/utils/fileSystemDialog'
+import { SystemInfo } from '@/constants/hardware'
 interface HubListLocalProps extends HubListBaseProps {
   rootElementId?: string
   openGroupDrawer: boolean
@@ -567,7 +569,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
             <div className={styles.infoBox}>{t('HubListLocal.exportHint')}</div>
             <PluginLocalExportForm
               onCancel={() => m.destroy()}
-              onOK={(values) => {
+              onOK={async (values) => {
                 const page: PluginListPageMeta = {
                   page: +response.Pagination.Page,
                   limit: +response.Pagination.Limit || 20,
@@ -587,7 +589,21 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
                   Filter: { ...query, IncludedScriptNames: names },
                 }
                 exportParams.current = params
-                setExportModal(true)
+                if (SystemInfo.mode === 'local') {
+                  try {
+                    const file = await handleSaveFileSystemDialog({
+                      title: '导出插件',
+                      defaultPath: values.OutputFilename,
+                    })
+
+                    if (!file || file.canceled) return
+
+                    const filePath = file.filePath
+                    if (!filePath) return
+
+                    setExportModal(true)
+                  } catch (error) {}
+                }
                 m.destroy()
               }}
             ></PluginLocalExportForm>
