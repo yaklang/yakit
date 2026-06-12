@@ -1051,6 +1051,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         setBackgroundRefresh(!!value)
       })
       .catch(() => {})
+    getRemoteValue(RemoteHistoryGV.DragSelectEnabled)
+      .then((value) => {
+        setDragSelectEnabled(value !== 'false')
+      })
+      .catch(() => {})
   }, [inViewport])
 
   // 实时更新滚动条位置
@@ -2930,7 +2935,10 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
             // 后台刷新
             if (newBackgroundRefresh !== backgroundRefresh) setBackgroundRefresh(newBackgroundRefresh)
             // 框选配置
-            if (newDragSelectEnabled !== dragSelectEnabled) setDragSelectEnabled(newDragSelectEnabled)
+            if (newDragSelectEnabled !== dragSelectEnabled) {
+              setDragSelectEnabled(newDragSelectEnabled)
+              setRemoteValue(RemoteHistoryGV.DragSelectEnabled, newDragSelectEnabled ? 'true' : 'false')
+            }
             // 自定义列
             const unshowKeys = configColumnsAll.filter((item) => !item.isShow).map((item) => item.dataKey)
             const newExcludeColumnsKey = [...noColumnsKey, ...unshowKeys]
