@@ -40,6 +40,7 @@ import { useStreamingChatContent } from './aiChatListItem/StreamingChatContent/h
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { AIReviewParams } from './aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -77,7 +78,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
   const { data } = props
 
   // 判断路由，子窗口有些功能不展示
-  const isChildWindow = useRef(new URLSearchParams(window.location.search).get('window') === 'child')
+  const isChildWindow = useRef(isAuxOrChildWindow())
 
   const renderContent = useMemoizedFn(() => {
     // 过滤掉打开文件

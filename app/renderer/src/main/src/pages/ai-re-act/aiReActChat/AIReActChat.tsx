@@ -159,7 +159,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           }
 
           setActiveChat && setActiveChat(newChat)
-          emiter.emit('sessionData', JSON.stringify({ type: 'prependSession', payload: newChat }))
+          emiter.emit(
+            'sessionData',
+            JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
+          )
           // 新建的额外操作
           onChat?.()
         } else {

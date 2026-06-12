@@ -1111,6 +1111,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         setSwitchLoading(false)
       }, 200)
       endAfterSession.current = ''
+      chatID.current = ''
       cacheDataStore?.clear()
       return
     }

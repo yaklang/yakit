@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-cn" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Yakit Aux Window" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Yakit</title>
+    <style>
+      html,
+      body {
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+      }
+
+      #initial-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: var(--yakit-colors-Neutral-0, #fff);
+      }
+
+      #initial-loading span {
+        margin-right: 10px;
+        font-size: 16px;
+        color: var(--yakit-colors-Neutral-80, #868c97);
+      }
+
+      #initial-loading .initial-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--yakit-colors-Neutral-40, #ccd0d6);
+        border-top: 2px solid var(--yakit-colors-Neutral-80, #868c97);
+        border-radius: 50%;
+        animation: initial-spinner 0.8s linear infinite;
+        box-sizing: border-box;
+      }
+
+      @keyframes initial-spinner {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root">
+      <div id="initial-loading">
+        <span>正在加载</span>
+        <div class="initial-spinner"></div>
+      </div>
+    </div>
+  </body>
+</html>

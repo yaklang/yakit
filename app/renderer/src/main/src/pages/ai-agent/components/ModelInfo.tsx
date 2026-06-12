@@ -3,9 +3,8 @@ import { AIOnlineModelIconMap } from '../defaultConstant'
 import styles from './ModelInfo.module.scss'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { useCreation } from 'ahooks'
-import { OutlineAtomIconByStatus } from '../aiModelList/AIModelList'
 import { AISystemOutputIcon } from '../aiModelList/icon'
-import { getModelName } from '../aiModelList/utils'
+import { getModelName } from '../aiModelList/modelName'
 
 export interface ModalInfoProps {
   icon?: string
@@ -20,16 +19,21 @@ export interface ModalInfoProps {
 
 const ModalInfo: FC<ModalInfoProps> = ({ icon, title, time, trailing }) => {
   const iconSvg = useCreation(() => {
-    if (!icon)
+    if (!icon) {
       return (
         <div className={styles['title-icon']}>
           <AISystemOutputIcon />
         </div>
       )
+    }
     return (
       (AIOnlineModelIconMap[icon] && (
         <div className={styles['title-icon']}>{AIOnlineModelIconMap[icon || '']}</div>
-      )) || <OutlineAtomIconByStatus iconClassName={styles['icon-small']} />
+      )) || (
+        <div className={styles['title-icon']}>
+          <AISystemOutputIcon />
+        </div>
+      )
     )
   }, [icon])
 

@@ -19,6 +19,7 @@ export const yakitHost = getBridge().host
 export const yakitWindow = getBridge().window
 export const yakitWindowControls = getBridge().windowControls
 export const yakitChildWindow = getBridge().childWindow
+export const yakitAuxWindow = getBridge().auxWindow
 export const yakitDialog = getBridge().dialog
 export const yakitLogs = getBridge().logs
 export const yakitEditorTools = getBridge().editorTools

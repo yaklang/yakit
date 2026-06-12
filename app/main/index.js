@@ -528,15 +528,6 @@ function registerGlobalIPC() {
     win?.webContents?.setZoomFactor(normalizeFactor)
   })
 
-  // ------------------- 主题相关 -------------------
-  ipcMain.handle('set-theme', (_e, theme) => {
-    ;[
-      // 通知所有窗口更新
-      engineLinkWin,
-      win,
-    ].forEach((w) => safeSend(w, 'theme-updated', theme))
-  })
-
   // ------------------- render已准备好 -------------------
   ipcMain.on('engine-win-render-ok', (event) => {
     markRenderOk(engineLinkWin)
@@ -637,6 +628,8 @@ function registerGlobalIPC() {
   }
   try {
     registerIPC(win)
+    const auxWindowHandler = require('./handlers/auxWindowManager/index')
+    auxWindowHandler.configureBroadcast({ engineLinkWin, safeSend })
     printLogOutputFile('[Main] registerIPC completed')
   } catch (err) {
     printLogOutputFile(`[Main] registerIPC error: ${err}}`)

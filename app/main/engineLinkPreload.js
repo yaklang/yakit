@@ -40,8 +40,11 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     onCredentialUpdate: (callback) => subscribe('from-win-updateCredential', callback),
   },
   theme: {
-    setTheme: (theme) => invoke('set-theme', theme),
-    onUpdated: (callback) => subscribe('theme-updated', callback),
+    setTheme: (theme) => invoke('aux-window:app-sync', { type: 'theme', payload: theme }),
+    onUpdated: (callback) =>
+      subscribe('aux-window:app-sync', (message) => {
+        if (message?.type === 'theme') callback(message.payload)
+      }),
   },
   shell: {
     openUrl: (url) => invokePrefixed('open-url', url),

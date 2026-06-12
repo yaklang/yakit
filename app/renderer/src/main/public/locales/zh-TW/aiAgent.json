@@ -2,7 +2,7 @@
   "AiAgengt": {
     "intelligentModels": "高質模型",
     "lightweightModels": "輕量模型",
-    "visionModels": "視覺模式",
+    "visionModels": "視覺模型",
     "callingMode": "呼叫模式",
     "aiModel": "AI模型",
     "focusMode": "場景"
