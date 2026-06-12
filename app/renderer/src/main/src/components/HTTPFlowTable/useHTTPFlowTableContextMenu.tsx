@@ -78,6 +78,7 @@ export interface UseHTTPFlowTableContextMenuOptions {
   onShieldURL: (flow: HTTPFlow) => void
   onShieldDomain: (flow: HTTPFlow) => void
   onBatch: (f: (element: HTTPFlow) => void, number: number, all?: boolean) => void
+  onViewAttachmentDataRefresh: (id: number) => void
 }
 
 export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenuOptions) => {
@@ -120,6 +121,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     onShieldURL,
     onShieldDomain,
     onBatch,
+    onViewAttachmentDataRefresh
   } = options
 
   const menuData = useMemo(() => {
@@ -510,6 +512,13 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           const ids: string[] = list.map((ele) => ele.Id + '')
           onShareData(ids, n!)
         },
+      },
+      {
+        key: 'viewAttach',
+        label: t('HTTPFlowTable.RowContextMenu.viewAttach'),
+        default: true,
+        webSocket: false,
+        onClickSingle: (v) => onViewAttachmentDataRefresh(v.Id),
       },
       {
         key: '导出数据',
