@@ -5,7 +5,7 @@ import { Dropdown } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 
-import { OutlineBotIcon, OutlinePencilaltIcon, OutlinePluscircleIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { OutlinePencilaltIcon, OutlinePluscircleIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { WebFuzzerAiTestTemplate } from '@/defaultConstants/webFuzzerAiTestTemplates'
@@ -182,7 +182,7 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
         }}
         overlayClassName={styles['web-fuzzer-ai-test-menu-overlay']}
       >
-        <YakitButton type="primary" size="large" icon={<OutlineBotIcon />} loading={loading && templates.length === 0}>
+        <YakitButton type="primary" size="large" loading={loading && templates.length === 0}>
           {t('HTTPFuzzerPage.aiTest')}
         </YakitButton>
       </Dropdown>
