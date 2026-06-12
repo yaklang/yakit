@@ -151,11 +151,18 @@ export interface AIStartParams {
    */
   Source?: AISource
 
+  EnabledCapabilities?: AIEnabledCapability[]
+
   /**
    * 任务规划里并发任务的数量
    * 默认：2
    */
   PlanExecTaskConcurrency?: number
+}
+
+interface AIEnabledCapability {
+  Name: string
+  Type: string
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
@@ -164,6 +171,9 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AgreePolicy = 'AgreePolicy',
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
+
+  HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
+  HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
 
   /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',
@@ -207,6 +217,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_USER_INTERVENTION = 'user_intervention',
   /** 获取历史会话数据 */
   SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
+  /** 获取能力相关数据 */
+  SYNC_CAPABILITY_INVENTORY = 'capability_inventory_sync',
 }
 
 export interface AIInputEvent {
@@ -525,6 +537,69 @@ export declare namespace AIAgentGrpcApi {
     index: string
     keywords: string[]
     plans_id: string
+  }
+
+  /**
+   * 计划树Card中固定的工具和技能数据
+   */
+  export interface PlanItemDetailsFixedItem {
+    name: string
+    verbose_name: string
+    description: string
+    category: 'tool' | 'mcp_server'
+  }
+
+  /**
+   * 任务树Card中动态生成的工具和技能数据
+   */
+  export interface PlanItemDetailsDynamicToolItem {
+    name: string
+    verbose_name: string
+    description: string
+    /**
+     * 常见值：tool / yak_plugin / mcp
+     */
+    category: 'tool' | 'yak_plugin' | 'mcp'
+  }
+  export interface PlanItemDetailsDynamicSkillsItem {
+    name: string
+    description: string
+    category: 'skill'
+    /**
+     * metadata:仅注册表
+     * loaded:已注入 SKILLS_CONTEXT
+     */
+    skill_load_state: 'metadata' | 'loaded' | ''
+  }
+  export interface PlanItemDetailsDynamicForgesItem {
+    name: string
+    description: string
+    category: 'forge'
+  }
+  export interface PlanItemDetails {
+    fixed: { tools: PlanItemDetailsFixedItem[]; mcp_servers: PlanItemDetailsFixedItem[] }
+    dynamic: {
+      tools: PlanItemDetailsDynamicToolItem[]
+      skills: PlanItemDetailsDynamicSkillsItem[]
+      forges: PlanItemDetailsDynamicForgesItem[]
+    }
+  }
+
+  export interface PerceptionData {
+    summary: string
+    topics: string[]
+    keywords: string[]
+    changed: boolean
+    confidence: number
+    trigger: string
+    epoch: number
+    /**
+     * none 意图方向未变
+     * drift 轻微漂移，不触发昂贵下游刷新
+     * pivot 方向性 pivot，触发能力/知识补充
+     */
+    intent_shift: 'none' | 'drift' | 'pivot'
+    timestamp: number
   }
 
   /** task_review_require */

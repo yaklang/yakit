@@ -156,6 +156,9 @@ export interface QueryYakScriptRequest extends QueryGeneralRequest {
 
   // 关键词搜索
   FieldKeywords?: string
+
+  /** 为 true 时仅返回 enable_for_ai=true 的插件 */
+  EnableForAI?: boolean
 }
 
 /*

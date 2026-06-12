@@ -57,6 +57,7 @@ import AIReActTaskEmpty from './AIReActTaskEmpty'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { has } from 'lodash'
+import { AITaskContent } from '../aiTaskContent/AITaskContent'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
@@ -104,26 +105,21 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
           maxWidth: leftExpand ? '' : '30px',
           borderRight: leftExpand ? 'none' : '1px solid var(--Colors-Use-Neutral-Border)',
         }}
-        secondNodeStyle={{ width: leftExpand ? '100%' : 'calc(100% - 30px)', overflow: 'auto hidden' }}
+        secondNodeStyle={{ width: leftExpand ? '100%' : 'calc(100% - 30px)', padding: 0, overflow: 'auto hidden' }}
         firstNode={<AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />}
         secondNode={
           <>
             {!!taskChat?.elements?.length ? (
               <div className={styles['chat-content-wrapper']}>
-                <div className={styles['header']}>
-                  <div className={styles['title']}>
-                    <ColorsBrainCircuitIcon />
-                    深度规划
-                  </div>
-                  <div className={styles['extra']}>
+                <AITaskContent
+                  tabBarExtraContent={
                     <YakitButton
                       type="text2"
                       icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
                       onClick={onIsExpand}
                     />
-                  </div>
-                </div>
-                <AIReActTaskChatContent />
+                  }
+                />
               </div>
             ) : (
               <AIReActTaskEmpty
@@ -142,7 +138,7 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 
 export default AIReActTaskChat
 
-const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
+export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
   const { reviewInfo, planReviewTreeKeywordsMap, chatIPCData } = useChatIPCStore()
   const { t } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()

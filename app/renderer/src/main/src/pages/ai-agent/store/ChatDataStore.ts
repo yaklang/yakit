@@ -97,6 +97,7 @@ export class ChatDataStore {
         elements: [],
         contents: new Map(),
         todoListMap: new Map(),
+        planDetailsMap: new Map(),
       },
       grpcFolders: [],
       reActTimelines: [],

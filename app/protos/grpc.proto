@@ -5862,6 +5862,8 @@ message QueryYakScriptRequest {
   int64 IsMITMParamPlugins = 20; //0->默认全部 1->是mitm带参数插件 2->mitm不带参数
   string FieldKeywords = 21;
   string VectorSearchContent = 22;
+  // 为 true 时仅返回 enable_for_ai=true 的插件
+  bool EnableForAI = 23;
 }
 
 message PluginGroup {

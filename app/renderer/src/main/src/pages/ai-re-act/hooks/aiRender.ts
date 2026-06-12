@@ -159,6 +159,38 @@ export interface TodoListCardData {
   uuid: string
 }
 
+export type ForgesAndSkillsDynamicItem = Omit<AIAgentGrpcApi.PlanItemDetailsDynamicForgesItem, 'category'> &
+  Omit<AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem, 'category'> & {
+    category: 'forge' | 'skill'
+  }
+
+/** 任务树节点的详情数据 */
+export interface PlanItemDetailsData {
+  /** UI定时刷新数据渲染，用于确定数据是否有更新 */
+  uuid: string
+  tool: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  forges: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicForgesItem[]
+  }
+  skills: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem[]
+  }
+  plugins: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  mcpServices: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  perception: AIAgentGrpcApi.PerceptionData
+}
+
 /** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */
 export interface HttpFlowFuzzStatusCardData {
   fuzz_id: string

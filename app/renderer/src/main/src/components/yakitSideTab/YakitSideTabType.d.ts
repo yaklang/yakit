@@ -24,6 +24,12 @@ export interface YakitSideTabProps extends Pick<YakitTabsItemProps, 'onTabPaneRe
 
   className?: string
   btnItemClassName?: string
+
+  /**
+   * tab bar 上额外的元素，常用于操作按钮等
+   * 目前只支持 horizontal
+   */
+  tabBarExtraContent?: ReactNode
 }
 
 export interface YakitTabsProps {
