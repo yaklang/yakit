@@ -36,7 +36,12 @@ import { grpcGetAIToolList } from '../../aiToolList/utils'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumber/TableTotalAndSelectNumber'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { AIAgentGrpcApi, AIInputEventHotPatchTypeEnum, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
+import {
+  AIAgentGrpcApi,
+  AIInputEventHotPatchTypeEnum,
+  AIInputEventSyncTypeEnum,
+  AIStartParams,
+} from '@/pages/ai-re-act/hooks/grpcApi'
 import { apiQueryYakScript } from '@/pages/plugins/utils'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
@@ -181,7 +186,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
               content={
                 (perception?.summary?.length || 0) > 0 ? (
                   <div className={styles['perception-content']}>
-                    {perception?.summary.map((item) => (
+                    {perception?.summary?.map((item) => (
                       <div key={item} className={styles['item']}>
                         {item}
                       </div>
@@ -484,11 +489,11 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         EnabledCapabilities: enabledCapabilities,
       },
     })
-    // setTimeout(() => {
-    //   handleSendSyncMessage({
-    //     syncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
-    //   })
-    // }, 1000)
+    setTimeout(() => {
+      handleSendSyncMessage({
+        syncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+      })
+    }, 1000)
     onClose()
   })
   return (
@@ -570,7 +575,7 @@ const getType = (value: string) => {
 }
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
   const { type, colTitle, fixedList, dynamicList } = props
-  const { handleSendConfigHotpatch } = useChatIPCDispatcher()
+  const { handleSendConfigHotpatch, handleSendSyncMessage } = useChatIPCDispatcher()
   const [fixedScroll, setFixedScroll] = useState<boolean>(false)
   const [dynamicScroll, setDynamicScroll] = useState<boolean>(false)
   const [visible, setVisible] = useState<boolean>(false)
@@ -586,6 +591,11 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
           })),
       },
     })
+    setTimeout(() => {
+      handleSendSyncMessage({
+        syncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+      })
+    }, 1000)
   })
   return (
     <div className={styles['section-card']}>
