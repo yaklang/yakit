@@ -1,0 +1,124 @@
+.web-fuzzer-ai-test-menu-overlay {
+  :global {
+    .ant-dropdown-menu {
+      padding: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+}
+
+.web-fuzzer-ai-test-menu {
+  min-width: 280px;
+  max-width: 360px;
+  padding: 4px 0;
+  border-radius: 4px;
+  background: var(--Colors-Use-Basic-Background);
+  box-shadow:
+    0 3px 6px -4px rgba(0, 0, 0, 0.12),
+    0 6px 16px 0 rgba(0, 0, 0, 0.08),
+    0 9px 28px 8px rgba(0, 0, 0, 0.05);
+}
+
+.web-fuzzer-ai-test-menu-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.web-fuzzer-ai-test-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 0 12px;
+  min-height: 32px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+
+    .web-fuzzer-ai-test-menu-item-label {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+  }
+}
+
+.web-fuzzer-ai-test-menu-item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.web-fuzzer-ai-test-menu-item-label {
+  flex: 1;
+  min-width: 0;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  line-height: 32px;
+}
+
+.web-fuzzer-ai-test-menu-item-action {
+  flex-shrink: 0;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+
+  svg {
+    transition: color 0.2s;
+  }
+}
+
+.web-fuzzer-ai-test-menu-item-action-edit {
+  svg {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+
+  &:hover,
+  &:focus {
+    background: var(--Colors-Use-Main-Focus);
+    border-color: transparent;
+
+    svg {
+      color: var(--Colors-Use-Main-Primary);
+    }
+  }
+}
+
+.web-fuzzer-ai-test-menu-item-action-delete {
+  svg {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+
+  &:hover,
+  &:focus {
+    background: var(--Colors-Use-Error-Focus);
+    border-color: transparent;
+
+    svg {
+      color: var(--Colors-Use-Error-Primary);
+    }
+  }
+}
+
+.web-fuzzer-ai-test-menu-footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--Colors-Use-Neutral-Border);
+  color: var(--Colors-Use-Main-Primary);
+  font-size: 12px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+}

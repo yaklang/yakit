@@ -21,6 +21,21 @@
     "concurrency": "Group Concurrency",
     "AI": "AI"
   },
+  "WebFuzzerAiTestTemplate": {
+    "add": "Add",
+    "addTitle": "Add AI Test Template",
+    "editTitle": "Edit AI Test Template",
+    "label": "Name",
+    "prompt": "Prompt",
+    "labelPlaceholder": "Enter template name",
+    "promptPlaceholder": "Enter AI test prompt",
+    "labelRequired": "Please enter a template name",
+    "promptRequired": "Please enter an AI test prompt",
+    "labelDuplicate": "Template name already exists",
+    "promptMaxLength": "Prompt cannot exceed {{max}} characters",
+    "deleteConfirm": "Delete this AI test template?",
+    "deleteLastOne": "Keep at least one AI test template"
+  },
   "WebFuzzerAiRequestCompare": {
     "title": "Request diff",
     "leftTitle": "Current Web Fuzzer request",
@@ -81,6 +96,7 @@
     "webFuzzerDemo": "WebFuzzer Brute-Force Animation Demo",
     "bruteForceExample": "Brute-Force Example",
     "AI_new_conversation": "New conversation",
+    "aiTest": "AI Test",
     "followRedirects": "Follow Redirects",
     "generatePathTemplate": "Generate as Path Template",
     "generateRawTemplate": "Generate as Raw Template",

@@ -18,8 +18,9 @@ import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
 import { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { createActiveChatSessionId } from '@/pages/ai-agent/utils'
+import { createActiveChatSessionId, getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
+import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import {
   AIHandleStartExtraProps,
   AIHandleStartParams,
@@ -36,6 +37,7 @@ import {
   enqueueWebFuzzerCasualReplaceReview,
   pushAIFuzzStatusRuntimeIdToWebFuzzerPage,
 } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
+import { appendWebFuzzerRequestRawAttachmentToEvent } from '@/pages/fuzzer/webFuzzerAiRequestAttachment'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import { getAISourceFromChatDataStoreKey, getChatDataStoreKey } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
@@ -62,6 +64,7 @@ export interface HistoryAIReActChatBridge {
   deselectHttpFlowId: (id: string) => void
   setMention: (v: AIMentionCommandParams) => void
   setValue: (v: string) => void
+  handleStart: (value: HandleStartParams) => void
 }
 
 export interface HistoryAIReActChatSlotOptions {
@@ -93,38 +96,25 @@ export function useHistoryAIReActChat(): HistoryAIReActChatContextValue {
 }
 
 /**
- * 仅 Web Fuzzer：在发往引擎的 `AIInputEvent` 中，把当前请求包拼在 `UserQuery` / `FreeInput` 前（见 `onStartRequest` / `onSendRequest`）
+ * 仅 Web Fuzzer：在发往引擎的 `AIInputEvent.AttachedResourceInfo` 中附带当前请求包（见 `onStartRequest` / `onSendRequest`）
  */
-function prependWebFuzzerHttpRequestToSendFields(event: AIInputEvent, requestRaw: string): AIInputEvent {
-  const raw = (requestRaw || '').trim()
-  if (!raw) return event
-  const join = (user: string) => `${raw}\n\n----\n\n${user ?? ''}`.trim()
-  if (event.IsStart && event.Params) {
-    const uq = event.Params.UserQuery
-    if (uq != null) {
-      return {
-        ...event,
-        Params: {
-          ...event.Params,
-          UserQuery: join(uq),
-        },
-      }
-    }
-  }
-  if (event.IsFreeInput && event.FreeInput != null) {
-    return { ...event, FreeInput: join(event.FreeInput) }
-  }
-  return event
+function attachWebFuzzerHttpRequestToEvent(
+  event: AIInputEvent,
+  sessionId: string | undefined | null,
+  requestRaw: string | null,
+): AIInputEvent {
+  if (requestRaw == null) return event
+  return appendWebFuzzerRequestRawAttachmentToEvent(event, sessionId, requestRaw)
 }
 
 export interface HistoryAIReActChatProviderProps {
   cacheDataStore: ChatDataStore
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
-  /** Web Fuzzer 页签 id：AI 改包回写、请求拼接、fuzz 状态推送等桥接用，与 SessionID 无关 */
+  /** Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关 */
   httpFuzzTabPageId?: string
   /**
-   * - 在 `onStartRequest` / `onSendRequest` 内置（WebFuzzer 请求拼接）处理之后执行
+   * - 在 `onStartRequest` / `onSendRequest` 内置（WebFuzzer 请求附件）处理之后执行
    * - Irify「代码审计」用它把工程根路径附件追加到 `AttachedResourceInfo`
    */
   transformInputEvent?: (event: AIInputEvent) => AIInputEvent
@@ -320,9 +310,9 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
       if (httpFuzzTabPageId) {
         const raw = getWebFuzzerPageRequestString(httpFuzzTabPageId)
-        if (raw != null) {
-          params = prependWebFuzzerHttpRequestToSendFields(params, raw)
-        }
+        const sessionId =
+          data.params.Params?.TimelineSessionID || activeChat?.SessionID || getSetting().TimelineSessionID
+        params = attachWebFuzzerHttpRequestToEvent(params, sessionId, raw)
       }
       if (transformInputEvent) {
         params = transformInputEvent(params)
@@ -389,9 +379,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
     if (httpFuzzTabPageId) {
       const raw = getWebFuzzerPageRequestString(httpFuzzTabPageId)
-      if (raw != null) {
-        params = prependWebFuzzerHttpRequestToSendFields(params, raw)
-      }
+      params = attachWebFuzzerHttpRequestToEvent(params, activeChat?.SessionID, raw)
     }
     if (transformInputEvent) {
       params = transformInputEvent(params)
@@ -402,6 +390,41 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         params,
       })
     })
+  })
+
+  /** 与输入框提交一致：执行中走自由输入，否则开启新会话 */
+  const handleSubmitQuery = useMemoizedFn((value: HandleStartParams) => {
+    const sessionID = activeChat?.SessionID
+    if (execute && sessionID) {
+      const { extra, attachedResourceInfo } = getAIReActRequestParams(value)
+      const chatMessage: AIInputEvent = {
+        IsFreeInput: true,
+        FreeInput: value.qs,
+        AttachedResourceInfo: attachedResourceInfo,
+        FocusModeLoop: value.focusMode ?? focusModeLoop,
+      }
+      const onSend = (res: AISendResProps) => {
+        const { params } = res
+        events.onSend({
+          token: sessionID,
+          type: 'casual',
+          params: {
+            IsFreeInput: true,
+            ...params,
+          },
+          extraValue: extra,
+        })
+        emiter.emit('sessionData', JSON.stringify({ type: 'refresh', sessionId: sessionID }))
+        aiReActChatRef.current?.setValue('')
+      }
+      onSendRequest({ params: chatMessage })
+        .then(onSend)
+        .catch(() => {
+          onSend({ params: chatMessage })
+        })
+      return
+    }
+    aiReActChatRef.current?.handleStart(value)
   })
 
   const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
@@ -499,8 +522,13 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       setValue: (v) => {
         aiReActChatRef.current?.setValue(v)
       },
+      handleStart: (value) => {
+        setTimeout(() => {
+          handleSubmitQuery(value)
+        })
+      },
     }),
-    [activeID, events, onStop, onNewChat, onChatFromHistory, setActiveChat],
+    [activeID, events, onStop, onNewChat, onChatFromHistory, setActiveChat, handleSubmitQuery],
   )
 
   const renderHistoryAIReActChat = useCallback(

@@ -23,4 +23,6 @@ export enum FuzzerRemoteGV {
   FuzzerHotCodeSwitchAndCode = 'Fuzzer_HotCode_Switch_And_Code',
   FuzzerCodeEnCoding = 'Fuzzer_Code_EnCoding',
   FuzzerExportCustomFields = 'Fuzzer_Export_Custom_Fields',
+  /** @name WebFuzzer AI 测试模板列表（JSON 数组） */
+  WebFuzzerAiTestTemplates = 'webFuzzer_ai_test_templates',
 }
