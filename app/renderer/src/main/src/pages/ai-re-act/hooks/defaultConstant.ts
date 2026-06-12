@@ -179,7 +179,7 @@ export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
     dynamic: [],
   },
   perception: {
-    summary: [],
+    summary: '',
     topics: [],
     keywords: [],
     changed: false,

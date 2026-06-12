@@ -586,7 +586,7 @@ export declare namespace AIAgentGrpcApi {
   }
 
   export interface PerceptionData {
-    summary: string[]
+    summary: string
     topics: string[]
     keywords: string[]
     changed: boolean

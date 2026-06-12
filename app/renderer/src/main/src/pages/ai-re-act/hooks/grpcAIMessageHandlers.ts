@@ -37,6 +37,7 @@ import {
 } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { v4 as uuidv4 } from 'uuid'
+import { isArray, isEmpty } from 'lodash'
 // #region Common Utils
 /** grpc流数据转换成错误信息输出到日志中 */
 const handleErrorGRPCToLog: (
@@ -522,12 +523,16 @@ const handlePerception: AIMessageHandler = (request) => {
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const perception = (JSON.parse(ipcContent) as AIAgentGrpcApi.PerceptionData) || {}
+  if (isEmpty(perception)) return
   const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || {}
   getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
     ...cloneDeep(DefaultPlanItemDetailsData),
     ...oldData,
     uuid: uuidv4(),
-    perception,
+    perception: {
+      ...perception,
+      summary: isArray(perception.summary) ? perception.summary.join(',') : perception.summary,
+    },
   })
 }
 // #endregion

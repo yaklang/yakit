@@ -183,17 +183,18 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             <AITaskExecutionDetailsCard title="任务目标" content={taskGoal} />
             <AITaskExecutionDetailsCard
               title="意图感知"
-              content={
-                (perception?.summary?.length || 0) > 0 ? (
-                  <div className={styles['perception-content']}>
-                    {perception?.summary?.map((item) => (
-                      <div key={item} className={styles['item']}>
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                ) : null
-              }
+              content={perception?.summary}
+              // content={
+              //   (perception?.summary?.length || 0) > 0 ? (
+              //     <div className={styles['perception-content']}>
+              //       {perception?.summary?.map((item) => (
+              //         <div key={item} className={styles['item']}>
+              //           {item}
+              //         </div>
+              //       ))}
+              //     </div>
+              //   ) : null
+              // }
             />
           </div>
           <div className={styles['task-statistics']}>
@@ -482,7 +483,6 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         Type: item.type,
       }
     })
-    console.log('selected', selected, enabledCapabilities)
     handleSendConfigHotpatch({
       hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnabledCapabilities,
       params: {
@@ -636,7 +636,8 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
               {dynamicList.length}
             </YakitTag>
           </div>
-          <YakitPopover
+          {/* TODO - 等待后端 */}
+          {/* <YakitPopover
             content={
               <AITaskDetailsAddPopover type={type} title={`添加${colTitle}`} onClose={() => setVisible(false)} />
             }
@@ -650,7 +651,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             <YakitButton type="text" className={styles['add-btn']}>
               添加
             </YakitButton>
-          </YakitPopover>
+          </YakitPopover> */}
         </div>
         {!!dynamicList.length && (
           <div
@@ -665,11 +666,12 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
                 title={dynamicItem.name}
                 description={dynamicItem.description}
                 category={dynamicItem.category as PlanItemDetailsDynamicKeys}
-                titleExtra={
-                  <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
-                    <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
-                  </YakitPopconfirm>
-                }
+                // TODO - 等待后端
+                // titleExtra={
+                //   <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
+                //     <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
+                //   </YakitPopconfirm>
+                // }
               />
             ))}
           </div>
