@@ -2511,6 +2511,10 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setTrafficAnalysisVisible(true)
   })
 
+  const concatRuntimeIds = useMemoizedFn(() => {
+    return [...new Set([...successFuzzerRef.current, ...failedFuzzerRef.current].map(({ RuntimeID }) => RuntimeID))]
+  })
+
   const getContainerSize = useSize(fuzzerRef || document.body)
   // 抽屉展示高度
   const showHeight = useMemo(() => getContainerSize?.height || 400, [getContainerSize])
@@ -2524,7 +2528,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       ? [aiFuzzRuntimeId]
       : allAiFuzzRuntimeIds.length > 0
         ? allAiFuzzRuntimeIds
-        : runtimeIdRef.current.split(',')
+        : concatRuntimeIds()
     const params = {
       webFuzzer: true,
       runtimeId: runtimeIds,
