@@ -25,7 +25,6 @@ import { apiGetSSARiskFieldGroupEx } from '../yakRunnerAuditHole/YakitAuditHoleT
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SystemInfo } from '@/constants/hardware'
 import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
-import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 const { ipcRenderer } = window.require('electron')
 interface IRifyHomeProps {}
 const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
@@ -89,9 +88,6 @@ const IRifyHome: React.FC<IRifyHomeProps> = (props) => {
   const riskLevelTotal = (verbose: string) => {
     return riskLevelData.find((item) => item.Verbose === verbose)?.Total || 0
   }
-
-  const colors = useGetColorsByTheme()
-  console.log('colors', colors['--Colors-Use-Neutral-Text-1-Title'])
 
   return (
     <div className={styles['irify-home']} ref={homeRef}>

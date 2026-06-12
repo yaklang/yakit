@@ -152,25 +152,3 @@ export function generateStatusSemanticColors(mode = 'light') {
   }
   return {}
 }
-
-const COLOR_NAMES = ['Main', 'Error', 'Warning', 'Success', 'Blue']
-const COLOR_TAG_NAMES = ['Purple', 'Magenta', 'Lake-blue', 'Cyan', 'Green', 'Red', 'Orange', 'Yellow', 'Grey']
-
-/** @param {'light' | 'dark'} [mode] @returns {Record<string, string>} */
-export function generateAllSemanticColors(mode = 'light') {
-  const result = {
-    ...generateNeutralSemanticColors(mode),
-    ...generateBasicSemanticColors(mode),
-    ...generateStatusSemanticColors(mode),
-  }
-
-  COLOR_NAMES.forEach((colorName) => {
-    Object.assign(result, generateSemanticColors(colorName, mode))
-  })
-
-  COLOR_TAG_NAMES.forEach((colorName) => {
-    Object.assign(result, generateTagSemanticColors(colorName, mode))
-  })
-
-  return result
-}
