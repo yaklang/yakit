@@ -638,7 +638,8 @@
     "expression": "表示式",
     "discard": "丟棄",
     "match": "保留",
-    "onlyMatch": "僅匹配"
+    "onlyMatch": "僅匹配",
+    "failed": "失敗"
   },
   "MatcherItem": {
     "match_type": "匹配型別",
