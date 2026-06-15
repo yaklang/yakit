@@ -2,7 +2,7 @@ import React, { ReactNode, useEffect, useState } from 'react'
 import classNames from 'classnames'
 import styles from './AIToDoList.module.scss'
 import type { AIToDoListItemProps, AIToDoListProps } from './type'
-import { OutlineChevronleftIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { OutlineChevrondownIcon, OutlineChevronleftIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
 import { Progress } from 'antd'
@@ -38,7 +38,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                     {hidden ? (
                       <OutlineChevronrightIcon className={styles['chevron-icon']} />
                     ) : (
-                      <OutlineChevronleftIcon className={styles['chevron-icon']} />
+                      <OutlineChevrondownIcon className={styles['chevron-icon']} />
                     )}
                   </>
                 )}

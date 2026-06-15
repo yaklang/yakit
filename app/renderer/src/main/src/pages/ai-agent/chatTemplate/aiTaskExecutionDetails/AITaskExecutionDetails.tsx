@@ -43,6 +43,8 @@ import {
   AIStartParams,
 } from '@/pages/ai-re-act/hooks/grpcApi'
 import { apiQueryYakScript } from '@/pages/plugins/utils'
+import { grpcGetAllMCPServers } from '../../aiMCP/utils'
+import { GetAllMCPServersRequest, MCPServer } from '../../type/aiMCP'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskIndex, taskGoal, taskName } = props
@@ -289,6 +291,13 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             fixedList={planItemDetailsData?.plugins.fixed || []}
             dynamicList={planItemDetailsData?.plugins.dynamic || []}
           />
+          {/* <AITaskDetailsCardList
+            key="mcpServices"
+            type="mcpServices"
+            colTitle={'mcp'}
+            fixedList={planItemDetailsData?.mcpServices.fixed || []}
+            dynamicList={planItemDetailsData?.mcpServices.dynamic || []}
+          /> */}
         </div>
       </div>
     </div>
@@ -326,6 +335,9 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         break
       case 'yak_plugin':
         getYakPlugin(page)
+        break
+      case 'mcpServices':
+        getMCPServices(page)
         break
       default:
         break
@@ -461,6 +473,38 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         label: item.ScriptName,
         type: 'plugin',
         value: item.ScriptName,
+      }),
+    )
+  })
+
+  const getMCPServices = useMemoizedFn((page?: number) => {
+    getListBase(
+      page,
+      async (p, kw) => {
+        const query: GetAllMCPServersRequest = {
+          Keyword: '',
+          Pagination: {
+            ...genDefaultPagination(20),
+            OrderBy: 'created_at',
+            Page: page || 1,
+            Limit: -1,
+          },
+          IsShowToolList: true,
+        }
+        if (kw) {
+          query.Keyword = kw
+        }
+        const res = await grpcGetAllMCPServers(query)
+        return {
+          data: res.MCPServers || [],
+          total: res.Total,
+          pagination: res.Pagination,
+        }
+      },
+      (item: MCPServer) => ({
+        label: item.Name,
+        type: 'mcp_tool',
+        value: item.Name,
       }),
     )
   })
@@ -636,8 +680,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
               {dynamicList.length}
             </YakitTag>
           </div>
-          {/* TODO - 等待后端 */}
-          {/* <YakitPopover
+          <YakitPopover
             content={
               <AITaskDetailsAddPopover type={type} title={`添加${colTitle}`} onClose={() => setVisible(false)} />
             }
@@ -651,7 +694,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             <YakitButton type="text" className={styles['add-btn']}>
               添加
             </YakitButton>
-          </YakitPopover> */}
+          </YakitPopover>
         </div>
         {!!dynamicList.length && (
           <div
@@ -666,12 +709,11 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
                 title={dynamicItem.name}
                 description={dynamicItem.description}
                 category={dynamicItem.category as PlanItemDetailsDynamicKeys}
-                // TODO - 等待后端
-                // titleExtra={
-                //   <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
-                //     <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
-                //   </YakitPopconfirm>
-                // }
+                titleExtra={
+                  <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
+                    <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
+                  </YakitPopconfirm>
+                }
               />
             ))}
           </div>
