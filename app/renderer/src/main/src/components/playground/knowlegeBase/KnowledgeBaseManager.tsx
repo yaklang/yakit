@@ -80,9 +80,11 @@ export const KnowledgeBaseManager: React.FC<KnowledgeBaseManagerProps> = (props)
         })}
         placement="right"
         width={600}
-        visible={qaDrawerVisible}
+        open={qaDrawerVisible}
         onClose={handleCloseQADrawer}
-        bodyStyle={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}
+        styles={{
+          body: { padding: 0, height: '100%', display: 'flex', flexDirection: 'column' },
+        }}
       >
         <KnowledgeBaseQA
           knowledgeBase={selectedKnowledgeBase}

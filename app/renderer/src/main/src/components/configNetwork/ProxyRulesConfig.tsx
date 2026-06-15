@@ -505,7 +505,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       placement="bottom"
       onClose={onClose}
       height="70%"
@@ -520,7 +520,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         </div>
       }
       maskClosable={false}
-      className={styles['proxy-rules-config-overlay']}
+      rootClassName={styles['proxy-rules-config-overlay']}
     >
       {drawerContent}
     </YakitDrawer>

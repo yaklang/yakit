@@ -996,8 +996,8 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
         mask={false}
         closable={false}
         keyboard={false}
-        className={styles['edit-rule-drawer']}
-        bodyStyle={{ padding: 0 }}
+        rootClassName={styles['edit-rule-drawer']}
+        styles={{ body: { padding: 0 } }}
         height={showHeight}
         title={drawerTitle}
         extra={

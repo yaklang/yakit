@@ -600,9 +600,9 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
         closable={false}
         keyboard={false}
         height={boxHeight + 26}
-        visible={visible}
-        bodyStyle={{ padding: 0 }}
-        className={classNames(styles['audit-history-drawer'])}
+        open={visible}
+        styles={{ body: { padding: 0 } }}
+        rootClassName={classNames(styles['audit-history-drawer'])}
         onClose={onCloseDrawer}
       >
         <AuditHistoryTable

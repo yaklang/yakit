@@ -722,7 +722,7 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
         showYakitDrawer({
           title: 'HotPatch Tag Result',
           width: '45%',
-          className: styles['hotPatch-result-drawer'],
+          rootClassName: styles['hotPatch-result-drawer'],
           content: (
             <AutoCard
               size={'small'}

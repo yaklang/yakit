@@ -351,8 +351,8 @@ export const PluginLogMergeDetail: React.FC<PluginLogMergeDetailProps> = memo((p
         closable={false}
         keyboard={false}
         height={showHeight}
-        visible={visible}
-        className={styles['plugin-log-merge-detail-drawer']}
+        open={visible}
+        rootClassName={styles['plugin-log-merge-detail-drawer']}
         title={
           <YakitRadioButtons
             size="large"

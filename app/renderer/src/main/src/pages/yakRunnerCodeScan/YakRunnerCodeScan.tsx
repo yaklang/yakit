@@ -2224,7 +2224,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
         <React.Suspense fallback={<>loading...</>}>
           {auditDetailShow && auditInfo.current && (
             <YakitDrawer
-              visible={auditDetailShow}
+              open={auditDetailShow}
               onClose={handleCancelDetail}
               width="90%"
               title="审计详情"
@@ -2233,7 +2233,7 @@ export const CodeScanMainExecuteContent: React.FC<CodeScaMainExecuteContentProps
                   在代码审计中打开
                 </YakitButton>
               }
-              bodyStyle={{ overflow: 'hidden', padding: 0 }}
+              styles={{ body: { overflow: 'hidden', padding: 0 } }}
             >
               {/* 审计详情 */}
               <div className={classNames(styles['drawer-body'])}>
@@ -2913,10 +2913,7 @@ export const FlowRuleDetailsListItem: React.FC<FlowRuleDetailsListItemProps> = R
           </div>
         </div>
         <div className={styles['flow-rule-item-show']}>
-          <Tooltip
-            title={data.Description || 'No Description about it.'}
-            placement="topRight"
-          >
+          <Tooltip title={data.Description || 'No Description about it.'} placement="topRight">
             <OutlineQuestionmarkcircleIcon className={styles['flow-rule-item-show-icon-style']} />
           </Tooltip>
         </div>

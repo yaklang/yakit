@@ -1796,13 +1796,12 @@ export const NTMLConfig: React.FC<NTMLConfigProps> = (props) => {
         width="max(700px, 50%)"
         closable={false}
         onClose={() => onClose()}
-        visible={visible}
+        open={visible}
         getContainer={getContainer}
         // mask={false}
         maskClosable={false}
         // style={{height: visible ? heightDrawer : 0}}
-        className={classNames(styles['ntlm-config-drawer'])}
-        contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
+        rootClassName={classNames(styles['ntlm-config-drawer'])}
         title={
           <div className={styles['heard-title']}>
             <div className={styles['title']}>{t('ConfigNetworkPage.httpAuthGlobalConfig')}</div>

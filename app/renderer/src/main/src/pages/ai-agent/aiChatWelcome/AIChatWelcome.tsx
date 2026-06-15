@@ -272,7 +272,7 @@ const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
 
         <YakitDrawer
           width={298}
-          visible={openDrawer}
+          open={openDrawer}
           getContainer={false}
           className={styles['drawer']}
           mask={false}

@@ -74,12 +74,12 @@ const PluginExecuteDetailDrawer: FC<PluginExecuteDetailDrawerProps> = (props) =>
 
   return (
     <YakitDrawer
-      visible={buildingDrawer.visible}
+      open={buildingDrawer.visible}
       onClose={props.onCloseViewBuildProcess}
       title={props.title}
       width="80%"
       footer={null}
-      className={classNames(styles['plugin-execute-detail-drawer'])}
+      rootClassName={classNames(styles['plugin-execute-detail-drawer'])}
     >
       {resultPluginExecuteResult}
       <RoundedStopButton

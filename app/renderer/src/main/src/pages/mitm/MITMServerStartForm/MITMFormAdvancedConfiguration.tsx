@@ -226,8 +226,8 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
 
     return (
       <YakitDrawer
-        className={styles['advanced-configuration-drawer']}
-        visible={visible}
+        rootClassName={styles['advanced-configuration-drawer']}
+        open={visible}
         onClose={() => onClose()}
         width="max(700px, 40%)"
         title={
