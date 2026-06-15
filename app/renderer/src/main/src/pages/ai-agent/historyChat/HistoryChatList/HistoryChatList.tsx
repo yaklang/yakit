@@ -304,7 +304,7 @@ const HistoryChatList: FC<{
                       title={t('HistoryChatList.deleteConfirm')}
                       placement="bottom"
                       getPopupContainer={getPopupContainer}
-                      overlayClassName={overlayClassName}
+                      classNames={{ root: overlayClassName }}
                       onConfirm={(e) => {
                         e?.stopPropagation()
                         handleDeleteChat(item)

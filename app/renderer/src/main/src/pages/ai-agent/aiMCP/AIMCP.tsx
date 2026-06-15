@@ -560,8 +560,8 @@ const AIMCPListItem: React.FC<AIMCPListItemProps> = React.memo((props) => {
                 title={t('AIMCP.disableConfirm', { name: item.Name })}
                 onConfirm={onStop}
                 onCancel={() => setStopVisible(false)}
-                visible={stopVisible}
-                onVisibleChange={setStopVisible}
+                open={stopVisible}
+                onOpenChange={setStopVisible}
                 trigger={'click'}
                 okButtonProps={{ loading: stopLoading }}
               >
