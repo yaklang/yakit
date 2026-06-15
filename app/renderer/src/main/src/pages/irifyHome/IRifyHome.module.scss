@@ -586,8 +586,6 @@
   gap: 8px;
 }
 
-.projects-card {
-}
 .projects-table-wrapper {
   width: 100%;
   overflow: hidden;
@@ -766,4 +764,8 @@
       width: auto;
     }
   }
+}
+
+.projects-card {
+  max-height: 220px;
 }
