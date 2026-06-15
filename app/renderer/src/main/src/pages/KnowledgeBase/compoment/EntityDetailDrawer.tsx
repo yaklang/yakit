@@ -239,11 +239,11 @@ const EntityDetailDrawer: FC<EntityDetailDrawerProps> = ({
       placement="right"
       width="80%"
       onClose={onClose}
-      visible={entityDrawerDetail.visible}
+      open={entityDrawerDetail.visible}
       title={'实体详情'}
       maskClosable={true}
-      destroyOnClose={true}
-      className={classNames(styles['entity-detail-drawer'])}
+      destroyOnHidden={true}
+      rootClassName={classNames(styles['entity-detail-drawer'])}
     >
       <div className={styles['detail-drawer-content']}>
         <div className={styles['detail-left']}>

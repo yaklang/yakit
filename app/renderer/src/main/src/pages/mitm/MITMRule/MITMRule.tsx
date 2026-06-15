@@ -1279,12 +1279,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             placement="bottom"
             closable={false}
             onClose={() => onClose()}
-            visible={visible}
+            open={visible}
             getContainer={getContainer}
             mask={false}
             style={{ height: visible ? heightDrawer : 0 }}
-            className={classNames(styles['mitm-rule-drawer'])}
-            contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
+            rootClassName={classNames(styles['mitm-rule-drawer'])}
             title={title()}
             extra={extra()}
           >

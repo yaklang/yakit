@@ -1825,10 +1825,10 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
         mask={false}
         keyboard={false}
         height={showHeight}
-        visible={true}
+        open={true}
         onClose={() => setTrafficAnalysisVisible(false)}
-        className={styles['http-traffic-analysis-overlay']}
-        destroyOnClose
+        rootClassName={styles['http-traffic-analysis-overlay']}
+        destroyOnHidden
       >
         <React.Suspense fallback={<YakitSpin spinning={true} />}>
           <HTTPHistoryAnalysis pageId={currentItem?.pageId || ''} params={params} closable={false} />

@@ -55,7 +55,7 @@ export const CodeScanTaskListDrawer: React.FC<CodeScanTaskListDrawerProps> = (pr
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       onClose={onClose}
       width="45%"
       title="任务列表"
@@ -76,7 +76,7 @@ export const CodeScanTaskListDrawer: React.FC<CodeScanTaskListDrawerProps> = (pr
           )}
         </>
       }
-      bodyStyle={{ overflow: 'hidden' }}
+      styles={{ body: { overflow: 'hidden' } }}
     >
       <CodeScanTaskList
         visible={visible}

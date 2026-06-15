@@ -147,8 +147,8 @@ export const BaseDrawer: React.FC<BaseDrawerProp> = (props) => {
 
   return (
     <YakitDrawer
-      visible={visible}
-      destroyOnClose={true}
+      open={visible}
+      destroyOnHidden={true}
       onClose={close}
       closable={true}
       width={'50%'}

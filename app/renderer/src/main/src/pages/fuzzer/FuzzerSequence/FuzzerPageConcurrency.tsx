@@ -80,9 +80,9 @@ const AdvancedSet: React.FC<AdvancedSetProps> = memo((props) => {
 
   return (
     <YakitDrawer
-      visible={visible}
+      open={visible}
       width="25%"
-      className={styles['history-advanced-set-wrapper']}
+      rootClassName={styles['history-advanced-set-wrapper']}
       onClose={onCancel}
       title={
         <div className={styles['advanced-configuration-drawer-title']}>

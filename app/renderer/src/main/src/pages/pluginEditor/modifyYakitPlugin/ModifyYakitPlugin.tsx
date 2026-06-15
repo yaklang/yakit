@@ -111,8 +111,8 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
         closable={false}
         keyboard={false}
         height={showHeight}
-        visible={visible}
-        className={classNames(styles['plugin-debug-drawer'])}
+        open={visible}
+        rootClassName={classNames(styles['plugin-debug-drawer'])}
       >
         {visible && (
           <PluginEditor

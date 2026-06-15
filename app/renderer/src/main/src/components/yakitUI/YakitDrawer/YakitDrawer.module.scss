@@ -1,10 +1,9 @@
 .yakit-drawer {
   :global {
     .ant-drawer-content-wrapper {
-      box-shadow: var(--Colors-Use-Basic-Shadow) 0px -2px 4px !important;
+      box-shadow: var(--Colors-Use-Basic-Shadow) 0px -2px 4px;
     }
     .ant-drawer-content {
-      box-shadow: -2px 0px 0px 0px var(--Colors-Use-Basic-Shadow);
       background-color: var(--Colors-Use-Basic-Background);
     }
     .ant-drawer-header {
@@ -27,14 +26,9 @@
         }
       }
     }
-    .ant-drawer-close {
-      margin-right: 8px;
-      padding: 0;
-    }
     .ant-drawer-body {
       background: var(--Colors-Use-Basic-Background);
       border-left: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-      box-shadow: 0 -2px 4px 0 var(--Colors-Use-Basic-Shadow);
     }
   }
 }
