@@ -18,6 +18,7 @@ import { openABSFileLocated } from '@/utils/openWebsite'
 import { JSONParseLog } from '@/utils/tool'
 import { YakitFormDragger } from '@/components/yakitUI/YakitForm/YakitForm'
 import { getPathJoin } from '@/pages/yakRunner/utils'
+import { SystemInfo } from '@/constants/hardware'
 const { ipcRenderer } = window.require('electron')
 
 declare type getContainerFunc = () => HTMLElement
@@ -146,6 +147,7 @@ interface PluginLocalExportFormProps {
 export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (props) => {
   const { onCancel, onOK } = props
   const [form] = Form.useForm()
+  const isRemoteEngine = SystemInfo.mode === 'remote'
 
   useEffect(() => {
     ipcRenderer.invoke('GetProjectsFilePath').then((path) => {
@@ -172,6 +174,9 @@ export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (prop
         }}
         multiple={false}
         selectType="folder"
+        help={isRemoteEngine ? '可手动输入导出路径，' : '可手动输入导出路径或点击此处'}
+        uploadFolderText="选择文件夹"
+        showUploadBtn={!isRemoteEngine}
       />
 
       <Form.Item label={'文件名'} rules={[{ required: true, message: '请填写文件夹名' }]} name={'OutputFilename'}>

@@ -90,6 +90,7 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
     help,
     uploadFileText,
     uploadFolderText,
+    showUploadBtn = true,
     value: fileName,
     onChange: setFileName,
     setContent,
@@ -520,17 +521,19 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             <div className={classNames(styles['form-item-help'], helpClassName)}>
               <span>
                 {help || t('YakitFormDragger.dragOrClickHere')}
-                <span
-                  className={classNames(styles['dragger-help-active'], {
-                    [styles['dragger-help-active-disabled']]: disabled,
-                  })}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onUploadFile()
-                  }}
-                >
-                  {uploadFileText || t('YakitFormDragger.uploadFile')}
-                </span>
+                {showUploadBtn && (
+                  <span
+                    className={classNames(styles['dragger-help-active'], {
+                      [styles['dragger-help-active-disabled']]: disabled,
+                    })}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onUploadFile()
+                    }}
+                  >
+                    {uploadFileText || t('YakitFormDragger.uploadFile')}
+                  </span>
+                )}
               </span>
               {isShowPathNumber && (
                 <span>
@@ -550,17 +553,19 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             <div className={styles['form-item-help']}>
               <span>
                 {help || t('YakitFormDragger.dragOrClickHere')}
-                <span
-                  className={classNames(styles['dragger-help-active'], {
-                    [styles['dragger-help-active-disabled']]: disabled,
-                  })}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onUploadFolder()
-                  }}
-                >
-                  {uploadFolderText || t('YakitFormDragger.uploadFolder')}
-                </span>
+                {showUploadBtn && (
+                  <span
+                    className={classNames(styles['dragger-help-active'], {
+                      [styles['dragger-help-active-disabled']]: disabled,
+                    })}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onUploadFolder()
+                    }}
+                  >
+                    {uploadFolderText || t('YakitFormDragger.uploadFolder')}
+                  </span>
+                )}
               </span>
               {isShowPathNumber && (
                 <span>
@@ -580,31 +585,34 @@ export const YakitDragger: React.FC<YakitDraggerProps> = React.memo((props) => {
             <div className={styles['form-item-help']}>
               <span>
                 {help || t('YakitFormDragger.dragOrClickHere')}
-                <span
-                  className={classNames(styles['dragger-help-active'], {
-                    [styles['dragger-help-active-disabled']]: disabled,
-                  })}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onUploadFile()
-                  }}
-                >
-                  {uploadFileText || t('YakitFormDragger.uploadFile')}
-                </span>
-                <Divider type="vertical" />
-                <span
-                  className={classNames(styles['dragger-help-active'], {
-                    [styles['dragger-help-active-disabled']]: disabled,
-                  })}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onUploadFolder()
-                  }}
-                >
-                  {uploadFolderText || t('YakitFormDragger.uploadFolder')}
-                </span>
+                {showUploadBtn && (
+                  <>
+                    <span
+                      className={classNames(styles['dragger-help-active'], {
+                        [styles['dragger-help-active-disabled']]: disabled,
+                      })}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onUploadFile()
+                      }}
+                    >
+                      {uploadFileText || t('YakitFormDragger.uploadFile')}
+                    </span>
+                    <Divider type="vertical" />
+                    <span
+                      className={classNames(styles['dragger-help-active'], {
+                        [styles['dragger-help-active-disabled']]: disabled,
+                      })}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onUploadFolder()
+                      }}
+                    >
+                      {uploadFolderText || t('YakitFormDragger.uploadFolder')}
+                    </span>
+                  </>
+                )}
               </span>
-
               {isShowPathNumber && (
                 <span>
                   {t('YakitFormDragger.detected')}
