@@ -33,7 +33,7 @@ export interface IRifyHomeTableProps {
 }
 
 export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [], onRefresh }) => {
-  const { t } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const { t } = useI18nNamespaces(['irifyHome', 'yakRunner', 'yakitUi'])
   const [JSONStringConfig, setJSONStringConfig] = useState<string>()
 
   const tableData = useMemo<IRifyHomeTableRow[]>(
@@ -53,7 +53,7 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [], onRef
 
   const columns: ColumnsTypeProps[] = [
     {
-      title: '项目',
+      title: t('IRifyHomeTable.project'),
       dataKey: 'ProjectName',
       render: (text) => {
         return (
@@ -62,12 +62,12 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [], onRef
       },
     },
     {
-      title: '语言',
+      title: t('IRifyHomeTable.language'),
       dataKey: 'Language',
       width: 120,
     },
     {
-      title: '项目风险',
+      title: t('IRifyHomeTable.projectRisk'),
       dataKey: 'Description',
       width: 120,
       render: (text, record) => {
@@ -91,12 +91,12 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [], onRef
       },
     },
     {
-      title: '风险数量',
+      title: t('IRifyHomeTable.riskCount'),
       width: 120,
       dataKey: 'RiskNumber',
     },
     {
-      title: '更新时间',
+      title: t('IRifyHomeTable.updatedAt'),
       dataKey: 'UpdatedAt',
       width: 200,
       render: (text) => {

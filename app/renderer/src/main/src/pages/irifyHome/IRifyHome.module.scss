@@ -660,8 +660,8 @@
   line-height: 16px;
   letter-spacing: 0.5px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  // text-overflow: ellipsis;
+  // white-space: nowrap;
 }
 
 @media (min-width: 900px) and (max-width: 1080px) {

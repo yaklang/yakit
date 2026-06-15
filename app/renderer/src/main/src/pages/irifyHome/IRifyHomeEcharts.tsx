@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import type { EChartsOption } from 'echarts'
 import ReactECharts from 'echarts-for-react'
 import { FieldName } from '../risks/RiskTable'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const RISK_DISTRIBUTION_COLOR_KEYS = [
   '--Colors-Use-Neutral-Border',
@@ -15,31 +16,37 @@ const RISK_DISTRIBUTION_COLOR_KEYS = [
 const getRiskDistributionColors = (colors: Record<string, string>) =>
   RISK_DISTRIBUTION_COLOR_KEYS.map((key) => colors[key] || colors['--Colors-Use-Main-Primary']).filter(Boolean)
 
-const SEVERITY_KEYWORDS = ['严重', '高危', '中危', '低危', '信息'] as const
+const SEVERITY_ORDER: { severities: string[]; index: number }[] = [
+  { severities: ['critical'], index: 0 },
+  { severities: ['high'], index: 1 },
+  { severities: ['medium', 'middle', 'warn'], index: 2 },
+  { severities: ['low'], index: 3 },
+  { severities: ['info'], index: 4 },
+]
 
 const RiskGaugeChart: React.FC<{ list: FieldName[] }> = ({ list }) => {
   const colors = useGetColorsByTheme()
 
   const option = useMemo<EChartsOption>(() => {
     const textColor = colors['--Colors-Use-Neutral-Text-1-Title']
-    const newData = Array(SEVERITY_KEYWORDS.length).fill(null)
+    const newData = Array(SEVERITY_ORDER.length).fill(null)
     list.forEach((ele) => {
-      SEVERITY_KEYWORDS.forEach((keyword, index) => {
-        if (ele.Verbose.includes(keyword) && ele.Total > 0) {
-          const colorKey = RISK_DISTRIBUTION_COLOR_KEYS[SEVERITY_KEYWORDS.length - 1 - index]
-          newData[index] = {
-            name: ele.Verbose,
-            key: ele.Name,
-            value: ele.Total,
-            itemStyle: {
-              color: colors[colorKey],
-            },
-            label: {
-              color: textColor,
-            },
-          }
+      const severity = ele.Name?.toLowerCase() ?? ''
+      const match = SEVERITY_ORDER.find((item) => item.severities.includes(severity))
+      if (match && ele.Total > 0) {
+        const colorKey = RISK_DISTRIBUTION_COLOR_KEYS[SEVERITY_ORDER.length - 1 - match.index]
+        newData[match.index] = {
+          name: ele.Verbose,
+          key: ele.Name,
+          value: ele.Total,
+          itemStyle: {
+            color: colors[colorKey],
+          },
+          label: {
+            color: textColor,
+          },
         }
-      })
+      }
     })
 
     return {
@@ -85,6 +92,8 @@ const RiskDistributionChart: React.FC<{
   items: { name: string; value: number; percent: number }[]
 }> = ({ total, items }) => {
   const colors = useGetColorsByTheme()
+  const { t } = useI18nNamespaces(['irifyHome'])
+  const totalRiskLabel = t('IRifyHomeEcharts.totalRisk')
   // const { width } = useSize(document.querySelector('body')) || { width: 0, height: 0 }
   const option = useMemo<EChartsOption>(() => {
     const distributionColors = getRiskDistributionColors(colors)
@@ -125,7 +134,7 @@ const RiskDistributionChart: React.FC<{
           label: {
             show: true,
             position: 'center',
-            formatter: () => `{total|${total}}\n{label|总风险}`,
+            formatter: () => `{total|${total}}\n{label|${totalRiskLabel}}`,
             rich: {
               total: {
                 fontSize: 24,
@@ -170,7 +179,7 @@ const RiskDistributionChart: React.FC<{
     }
 
     return option as EChartsOption
-  }, [total, items, colors])
+  }, [total, items, colors, totalRiskLabel])
 
   return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
 }
