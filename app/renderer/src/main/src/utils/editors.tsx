@@ -470,6 +470,8 @@ export interface NewHTTPPacketEditorProp extends HTTPPacketFuzzable {
   noMinimap?: boolean
   onAddOverlayWidget?: (editor: IMonacoEditor, isShow?: boolean) => any
   extraEditorProps?: YakitEditorProps | any
+  /** 是否启用二进制 Fuzztag 折叠（unquote/hexdecode/base64decode/file 折叠为小块，点击 HEX 编辑） */
+  foldBinaryFuzztag?: boolean
 
   highLightText?: HighLightText[] | Selection[]
   highLightFind?: HighLightText[] | Selection[]
@@ -1191,6 +1193,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
                     fixContentType={props.fixContentType}
                     originalContentType={props.originalContentType}
                     fixContentTypeHoverMessage={props.fixContentTypeHoverMessage}
+                    foldBinaryFuzztag={props.foldBinaryFuzztag}
                     {...props.extraEditorProps}
                   />
                 )}
