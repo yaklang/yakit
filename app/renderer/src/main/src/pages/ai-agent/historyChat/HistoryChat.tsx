@@ -43,7 +43,7 @@ const renderClearConfirm = (
       title={title}
       onConfirm={onConfirm}
       getPopupContainer={overlayOptions?.getPopupContainer}
-      overlayClassName={overlayOptions?.overlayClassName}
+      classNames={{ root: overlayOptions?.overlayClassName }}
     >
       <div className={styles['clear-confirm-trigger']} onClick={(e) => e.stopPropagation()}>
         {label}

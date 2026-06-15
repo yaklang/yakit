@@ -1276,8 +1276,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                   title={t('AILocalModelListItem.disableConfirm', { name: item.Name })}
                   onConfirm={onStop}
                   onCancel={() => setStopVisible(false)}
-                  visible={stopVisible}
-                  onVisibleChange={setStopVisible}
+                  open={stopVisible}
+                  onOpenChange={setStopVisible}
                   trigger={'click'}
                   okButtonProps={{ loading: stopLoading }}
                 >
