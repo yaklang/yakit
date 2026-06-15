@@ -1418,7 +1418,10 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                       <div className={styles['footer-type-wrapper']}>
                         <div className={styles['type-title']}>
                           回答类型
-                          <Tooltip styles={{ root: { paddingBottom: 5 } }} title={'ChatCS 将根据选择的类型回答你的问题'}>
+                          <Tooltip
+                            styles={{ root: { paddingBottom: 5 } }}
+                            title={'ChatCS 将根据选择的类型回答你的问题'}
+                          >
                             <QuestionMarkCircleIcon />
                           </Tooltip>
                           :
@@ -2659,9 +2662,9 @@ const PromptWidget: React.FC<PromptWidgetProps> = memo((props) => {
         ))}
       </div>
       <YakitDrawer
-        // className={styles['drawer-wrapper']}
-        className={classNames([styles['chat-cs-prompt-drawer'], styles['drawer-wrapper']])}
-        visible={visible}
+        // rootClassName={styles['drawer-wrapper']}
+        rootClassName={classNames([styles['chat-cs-prompt-drawer'], styles['drawer-wrapper']])}
+        open={visible}
         placement="bottom"
         height={452}
         onClose={() => onClose()}

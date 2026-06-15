@@ -1104,7 +1104,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         let m = showYakitDrawer({
           width: '80%',
           content: onExpandHTTPFlow(rowData, () => m.destroy(), downstreamProxyStr, t, pageType),
-          bodyStyle: { paddingTop: 5 },
+          styles: { body: { paddingTop: 5 } },
         })
       },
     }),

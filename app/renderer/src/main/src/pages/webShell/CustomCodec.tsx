@@ -190,12 +190,11 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
       placement="bottom"
       closable={false}
       onClose={() => onClose()}
-      visible={visibleDrawer}
+      open={visibleDrawer}
       mask={false}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       style={{ height: visibleDrawer ? heightDrawer : 0 }}
-      className={classNames(mitmStyles['mitm-rule-drawer'])}
-      contentWrapperStyle={{ boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
+      rootClassName={classNames(mitmStyles['mitm-rule-drawer'])}
       title={<div className={mitmStyles['heard-title']}>{title}</div>}
       extra={
         <div className={mitmStyles['heard-right-operation']}>

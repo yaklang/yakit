@@ -27,7 +27,7 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
     const m = showYakitDrawer({
       title: t('YakitButton.detail'),
       width: '40%',
-      bodyStyle: { padding: 0 },
+      styles: { body: { padding: 0 } },
       content: <AIChatToolDrawerContent callToolId={callToolId} aiFilePath={aiFilePath} />,
       onClose: () => m.destroy(),
     })

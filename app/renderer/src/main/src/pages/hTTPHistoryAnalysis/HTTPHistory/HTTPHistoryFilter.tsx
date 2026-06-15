@@ -1346,7 +1346,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                   let m = showYakitDrawer({
                     width: '80%',
                     content: onExpandHTTPFlow(rowData, () => m.destroy(), '', t),
-                    bodyStyle: { paddingTop: 5 },
+                    styles: { body: { paddingTop: 5 } },
                   })
                 }}
               />

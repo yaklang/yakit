@@ -263,7 +263,7 @@ export const analyzeFuzzerResponse = (
         />
       </>
     ),
-    bodyStyle: { paddingTop: 5 },
+    styles: { body: { paddingTop: 5 } },
   })
 }
 
@@ -2559,9 +2559,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         mask={false}
         keyboard={false}
         height={showHeight}
-        visible={true}
+        open={true}
         onClose={() => setTrafficAnalysisVisible(false)}
-        className={styles['http-traffic-analysis-overlay']}
+        rootClassName={styles['http-traffic-analysis-overlay']}
       >
         <React.Suspense fallback={<YakitSpin spinning={true} />}>
           <HTTPHistoryAnalysis pageId={currentItem.pageId} params={params} closable={false} />

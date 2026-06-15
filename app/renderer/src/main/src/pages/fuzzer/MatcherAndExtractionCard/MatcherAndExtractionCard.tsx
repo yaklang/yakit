@@ -1510,12 +1510,14 @@ export const MatcherAndExtractionDrawer: React.FC<MatcherAndExtractionDrawerProp
   return (
     <YakitDrawer
       mask={false}
-      visible={visibleDrawer}
+      open={visibleDrawer}
       width="100vh"
-      headerStyle={{ display: 'none' }}
+      styles={{
+        wrapper: { height: heightDrawer },
+        header: { display: 'none' },
+        body: { padding: 0 },
+      }}
       style={{ height: visibleDrawer ? heightDrawer : 0 }}
-      contentWrapperStyle={{ height: heightDrawer, boxShadow: '0px -2px 4px rgba(133, 137, 158, 0.2)' }}
-      bodyStyle={{ padding: 0 }}
       placement="bottom"
     >
       <MatcherAndExtractionCard

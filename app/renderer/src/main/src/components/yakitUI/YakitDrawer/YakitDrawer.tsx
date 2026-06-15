@@ -18,14 +18,14 @@ const tOriginal = i18n.getFixedT(null, 'yakitUi')
  * @augments DrawerProps 继承antd的 DrawerProps 默认属性
  */
 export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
-  const { visible, ...restProps } = props
+  const { open, ...restProps } = props
   useEffect(() => {
-    if (visible) {
+    if (open) {
       emiter.emit('setYakitHeaderDraggable', false)
     } else {
       emiter.emit('setYakitHeaderDraggable', true)
     }
-  }, [visible])
+  }, [open])
 
   useEffect(() => {
     return () => emiter.emit('setYakitHeaderDraggable', true)
@@ -33,17 +33,17 @@ export const YakitDrawer: React.FC<YakitDrawerProps> = (props) => {
 
   return (
     <Drawer
-      visible={visible}
+      open={open}
       {...restProps}
       closeIcon={
         <div className={styles['yakit-drawer-icon']}>
           {props.closeIcon || <RemoveIcon className={styles['yakit-drawer-remove-icon']} />}
         </div>
       }
-      className={classNames(
+      rootClassName={classNames(
         styles['yakit-drawer'],
         { [styles['yakit-drawer-bottom']]: props.placement === 'bottom' },
-        props.className,
+        props.rootClassName,
       )}
     >
       {props.children}
@@ -67,9 +67,9 @@ const YakitBaseDrawer: React.FC<ShowDrawerProps> = (props) => {
         if (props.onCancel) props.onCancel(e)
         setVisible(false)
       }}
-      visible={visible}
+      open={visible}
       closable={true}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       {...resProps}
     />
   )
