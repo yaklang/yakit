@@ -9,6 +9,8 @@ import { MITMLogHeardExtra } from './MITMLog'
 import ReactResizeDetector from 'react-resize-detector'
 import { useStore } from '@/store/mitmState'
 import { HTTPFlowRealTimeTableAndEditor } from '@/components/HTTPHistory'
+import { HTTPFlowsFieldGroupResponse } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { FiltersItemProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import emiter from '@/utils/eventBus/eventBus'
 import { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MITMFilters'
@@ -164,6 +166,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const [sourceType, setSourceType] = useState<string>('mitm')
   const [tableTotal, setTableTotal] = useState<number>(0)
   const [tableSelectNum, setTableSelectNum] = useState<number>(0)
+  const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
   const [manualTableTotal, setManualTableTotal] = useState<number>(0)
   const [manualTableSelectNumber, setManualTableSelectNumber] = useState<number>(0)
   const [mitmV2PopoverVisible, setMITMV2PopoverVisible] = useState<boolean>(false)
@@ -174,6 +177,29 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     onBatchHijackingResponse: () => {},
     onSubmitAllData: () => {},
   })
+
+  const refreshBuiltinTags = useMemoizedFn(() => {
+    ipcRenderer
+      .invoke('HTTPFlowsFieldGroup', {
+        RefreshRequest: true,
+        IsAll: true,
+      })
+      .then((rsp: HTTPFlowsFieldGroupResponse) => {
+        const tags = (rsp.Tags || [])
+          .filter(({ Builtin }) => Builtin)
+          .map(({ Value }) => ({ label: Value, value: Value }))
+        setBuiltinTagList(tags)
+      })
+      .catch((error) => {
+        yakitNotify('error', `query HTTP Flows Field Group failed: ${error}`)
+      })
+  })
+
+  useEffect(() => {
+    if (autoForward === 'log') {
+      refreshBuiltinTags()
+    }
+  }, [autoForward])
 
   /** 黄色提示 start */
   const moreRuleLimitFlagRef = useRef<boolean>(true)
@@ -1012,6 +1038,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 )
               } catch (error) {}
             }}
+            builtinTagList={builtinTagList}
           />
         </div>
       </>
