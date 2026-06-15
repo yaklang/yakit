@@ -105,6 +105,7 @@ export interface SSAWorkbenchRecentProject {
   HighestRiskVerbose: string
   RiskCount: number
   UpdatedAt: number
+  JSONStringConfig: string
 }
 
 export interface GetSSAWorkbenchDashboardResponse {

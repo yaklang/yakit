@@ -13,6 +13,8 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { AfreshAuditModal } from '../yakRunnerAuditCode/AuditCode/AuditCode'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { SSAWorkbenchRecentProject } from './IRifyHomeType'
+import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { getGroupNamesTotal } from '../yakRunnerCodeScan/utils'
 
 export interface IRifyHomeTableRow {
   ID: number
@@ -21,13 +23,16 @@ export interface IRifyHomeTableRow {
   Description: string
   RiskNumber: number
   UpdatedAt: number
+  JSONStringConfig: string
+  Severity: string
 }
 
 export interface IRifyHomeTableProps {
   data?: SSAWorkbenchRecentProject[]
+  onRefresh?: () => void
 }
 
-export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [] }) => {
+export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [], onRefresh }) => {
   const { t } = useI18nNamespaces(['yakRunner', 'yakitUi'])
   const [JSONStringConfig, setJSONStringConfig] = useState<string>()
 
@@ -40,6 +45,8 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [] }) => 
         Description: item.HighestRiskVerbose,
         RiskNumber: item.RiskCount,
         UpdatedAt: item.UpdatedAt,
+        JSONStringConfig: item.JSONStringConfig ?? '',
+        Severity: item.HighestRiskSeverity ?? '',
       })),
     [data],
   )
@@ -62,12 +69,25 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [] }) => 
     {
       title: '项目风险',
       dataKey: 'Description',
-      render: (text) => {
-        return (
-          <Tooltip title={text}>
-            <div className={classNames('yakit-content-single-ellipsis', styles['irify-home-table-text'])}>{text}</div>
-          </Tooltip>
-        )
+      width: 120,
+      render: (text, record) => {
+        const getSeverityColor = (type) => {
+          switch (type) {
+            case 'low':
+              return 'warning'
+            case 'middle':
+              return 'info'
+            case 'high':
+              return 'danger'
+            case 'critical':
+              return 'serious'
+            case 'info':
+              return 'info'
+            default:
+              return 'warning'
+          }
+        }
+        return record.Severity ? <YakitTag color={getSeverityColor(record.Severity)}>{text}</YakitTag> : '-'
       },
     },
     {
@@ -86,8 +106,9 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [] }) => 
     {
       title: t('YakitTable.action'),
       dataKey: 'action',
+      fixed: 'right',
       width: 120,
-      render: (text) => {
+      render: (_, record) => {
         return (
           <div className={styles['audit-opt']} onClick={(e) => e.stopPropagation()}>
             <Tooltip title={t('YakitButton.compile')}>
@@ -96,7 +117,7 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [] }) => 
                 icon={<OutlineReloadScanIcon />}
                 onClick={(e) => {
                   e.stopPropagation()
-                  // setJSONStringConfig(record.JSONStringConfig)
+                  setJSONStringConfig(record.JSONStringConfig)
                 }}
               />
             </Tooltip>
@@ -108,19 +129,19 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [] }) => 
                 onClick={async (e) => {
                   e.stopPropagation()
                   try {
-                    // const selectTotal = await getGroupNamesTotal({ GroupNames: [record.Language] })
-                    // emiter.emit(
-                    //   'openPage',
-                    //   JSON.stringify({
-                    //     route: YakitRoute.YakRunner_Code_Scan,
-                    //     params: {
-                    //       projectName: record.ProjectName,
-                    //       projectId: record.ID,
-                    //       GroupNames: [record.Language],
-                    //       selectTotal,
-                    //     },
-                    //   }),
-                    // )
+                    const selectTotal = await getGroupNamesTotal({ GroupNames: [record.Language] })
+                    emiter.emit(
+                      'openPage',
+                      JSON.stringify({
+                        route: YakitRoute.YakRunner_Code_Scan,
+                        params: {
+                          projectName: record.ProjectName,
+                          projectId: record.ID,
+                          GroupNames: [record.Language],
+                          selectTotal,
+                        },
+                      }),
+                    )
                   } catch (error) {
                     failed(t('AuditCode.jumpCodeScanFailed', { error: String(error) }))
                   }
@@ -149,7 +170,7 @@ export const IRifyHomeTable: React.FC<IRifyHomeTableProps> = ({ data = [] }) => 
         nameOrConfig={JSONStringConfig}
         setNameOrConfig={setJSONStringConfig}
         onSuccee={() => {
-          // 重新刷新数据
+          onRefresh?.()
         }}
         warrpId={document.getElementById('irify-home-table')}
         type="compile"

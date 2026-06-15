@@ -1,4 +1,3 @@
-import { useSize } from 'ahooks'
 import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { useMemo } from 'react'
 import type { EChartsOption } from 'echarts'
@@ -12,6 +11,9 @@ const RISK_DISTRIBUTION_COLOR_KEYS = [
   '--yakit-colors-Main-70',
   '--yakit-colors-Main-90',
 ] as const
+
+const getRiskDistributionColors = (colors: Record<string, string>) =>
+  RISK_DISTRIBUTION_COLOR_KEYS.map((key) => colors[key] || colors['--Colors-Use-Main-Primary']).filter(Boolean)
 
 const SEVERITY_KEYWORDS = ['严重', '高危', '中危', '低危', '信息'] as const
 
@@ -85,13 +87,7 @@ const RiskDistributionChart: React.FC<{
   const colors = useGetColorsByTheme()
   // const { width } = useSize(document.querySelector('body')) || { width: 0, height: 0 }
   const option = useMemo<EChartsOption>(() => {
-    const distributionColors = [
-      colors['--Colors-Use-Neutral-Border'],
-      colors['--yakit-colors-Main-30'],
-      colors['--yakit-colors-Main-40'],
-      colors['--yakit-colors-Main-70'],
-      colors['--yakit-colors-Main-90'],
-    ]
+    const distributionColors = getRiskDistributionColors(colors)
     const textColor = colors['--Colors-Use-Neutral-Text-1-Title']
     const subTextColor = colors['--Colors-Use-Neutral-Text-4-Help-text']
     const bgHoverColor = colors['--Colors-Use-Neutral-Bg-Hover']
@@ -118,8 +114,8 @@ const RiskDistributionChart: React.FC<{
         {
           // 空心饼图内外径
           radius: ['68%', '90%'],
-          // 饼图上下左右位置
-          center: ['45%', '50%'],
+          // 饼图  左右  上下  位置
+          center: ['50%', '50%'],
           itemStyle: {
             borderColor: '#FFFFFF',
             borderWidth: 2,
@@ -127,61 +123,51 @@ const RiskDistributionChart: React.FC<{
           avoidLabelOverlap: false,
           type: 'pie',
           label: {
-            show: false,
+            show: true,
+            position: 'center',
+            formatter: () => `{total|${total}}\n{label|总风险}`,
+            rich: {
+              total: {
+                fontSize: 24,
+                fontWeight: 400,
+                color: textColor,
+                lineHeight: 32,
+              },
+              label: {
+                fontSize: 12,
+                color: subTextColor,
+                lineHeight: 18,
+              },
+            },
           },
           labelLine: {
             show: false,
           },
           emphasis: {
-            scale: false, // ❗关闭外扩
+            scale: true,
+            scaleSize: 6,
+            label: {
+              show: true,
+            },
           },
-          data: items.map((item, index) => ({
-            name: String(index),
-            value: item.value,
-          })),
-        },
-      ],
-      graphic: [
-        {
-          type: 'text',
-          left: '25%',
-          top: '40%',
-          style: {
-            text: String(total),
-            fill: textColor,
-            fontSize: 24,
-            fontWeight: 400,
-            textAlign: 'center',
-            width: 80,
-          },
-        },
-        {
-          type: 'text',
-          left: '30%',
-          top: '58%',
-          style: {
-            text: '总风险',
-            fill: subTextColor,
-            fontSize: 12,
-            textAlign: 'center',
-            width: 80,
-          },
+          data: items.map((item, index) => {
+            const color = distributionColors[index % distributionColors.length]
+            return {
+              name: String(index),
+              value: item.value,
+              itemStyle: {
+                color,
+              },
+              emphasis: {
+                itemStyle: {
+                  color,
+                },
+              },
+            }
+          }),
         },
       ],
     }
-    // if (width <= 1080) {
-    //   option.series[0].center = ['18%', '50%']
-    //   option.graphic[0].left = '10%'
-    //   option.graphic[1].left = '8%'
-    // } else if (width > 1080 && width <= 1280) {
-    //   option.series[0].center = ['20%', '50%']
-    //   option.graphic[0].left = '10%'
-    //   option.graphic[1].left = '8%'
-    // } else if (width > 1280) {
-    //   option.series[0].center = ['18%', '50%']
-    //   option.graphic[0].left = '10%'
-    //   option.graphic[1].left = '8%'
-    // }
 
     return option as EChartsOption
   }, [total, items, colors])
@@ -195,12 +181,26 @@ const RuleHitsBarChart: React.FC<{ items: { name: string; value: number }[] }> =
   const colors = useGetColorsByTheme()
 
   const option = useMemo<EChartsOption>(() => {
-    const barColors = RISK_DISTRIBUTION_COLOR_KEYS.map((key) => colors[key])
+    const barColors = getRiskDistributionColors(colors)
     const textColor = colors['--Colors-Use-Neutral-Text-1-Title']
     const subTextColor = colors['--Colors-Use-Neutral-Text-3-Secondary']
     const reversedItems = [...items].reverse()
 
     return {
+      tooltip: {
+        trigger: 'item',
+        confine: false,
+        appendToBody: true,
+        position: (point, _params, _dom, _rect, size) => {
+          const x = point[0] + 10
+          const y = point[1] - size.contentSize[1] / 2
+          return [x, y]
+        },
+        formatter: (params) => {
+          if (Array.isArray(params)) return ''
+          return `${params.name} : ${params.value}`
+        },
+      },
       grid: {
         left: RULE_HITS_LABEL_WIDTH,
         right: 0,
@@ -231,20 +231,48 @@ const RuleHitsBarChart: React.FC<{ items: { name: string; value: number }[] }> =
       series: [
         {
           type: 'bar',
-          data: reversedItems.map((item, index) => ({
-            value: item.value,
+          emphasis: {
+            focus: 'none',
             itemStyle: {
-              color: barColors[index],
-              borderRadius: [0, 4, 4, 0],
+              opacity: 1,
             },
-            label: {
-              show: true,
-              position: 'right',
-              color: textColor,
-              fontSize: 12,
-              formatter: '{c}',
+          },
+          blur: {
+            itemStyle: {
+              opacity: 1,
             },
-          })),
+          },
+          data: reversedItems.map((item, index) => {
+            const color = barColors[index % barColors.length]
+            return {
+              value: item.value,
+              itemStyle: {
+                color,
+                borderRadius: [0, 4, 4, 0],
+              },
+              emphasis: {
+                itemStyle: {
+                  color,
+                  opacity: 1,
+                  borderRadius: [0, 4, 4, 0],
+                },
+              },
+              blur: {
+                itemStyle: {
+                  color,
+                  opacity: 1,
+                  borderRadius: [0, 4, 4, 0],
+                },
+              },
+              label: {
+                show: true,
+                position: 'right',
+                color: textColor,
+                fontSize: 12,
+                formatter: '{c}',
+              },
+            }
+          }),
           barWidth: 10,
           showBackground: false,
         },
@@ -255,4 +283,10 @@ const RuleHitsBarChart: React.FC<{ items: { name: string; value: number }[] }> =
   return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
 }
 
-export { RISK_DISTRIBUTION_COLOR_KEYS, RiskGaugeChart, RiskDistributionChart, RuleHitsBarChart }
+export {
+  getRiskDistributionColors,
+  RISK_DISTRIBUTION_COLOR_KEYS,
+  RiskGaugeChart,
+  RiskDistributionChart,
+  RuleHitsBarChart,
+}

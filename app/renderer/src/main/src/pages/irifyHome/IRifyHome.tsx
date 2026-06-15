@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitRoute } from '@/enums/yakitRoute'
@@ -34,19 +34,13 @@ import {
   IRifyHomeSeriousIcon,
   IRifyQuickAccessJavaDecompilerIcon,
 } from './icon'
-import {
-  RISK_DISTRIBUTION_COLOR_KEYS,
-  RiskDistributionChart,
-  RiskGaugeChart,
-  RuleHitsBarChart,
-} from './IRifyHomeEchats'
+import { getRiskDistributionColors, RiskDistributionChart, RiskGaugeChart, RuleHitsBarChart } from './IRifyHomeEcharts'
+import useGetColorsByTheme from '@/hook/useGetColorsByTheme'
 import { IRifyHomeTable } from './IRifyHomeTable'
-import { useMemoizedFn } from 'ahooks'
+import { useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { yakitProject } from '@/services/electronBridge'
 import { yakitFailed } from '@/utils/notification'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-
-const RISK_DISTRIBUTION_COLORS = RISK_DISTRIBUTION_COLOR_KEYS.map((key) => `var(${key})`)
 
 const RISK_STAT_CONFIG = [
   {
@@ -91,13 +85,22 @@ const onOpenPage = (route: YakitRoute, params?: any) => {
 }
 
 const IRifyHome: React.FC<IRifyHomeProps> = () => {
+  const themeColors = useGetColorsByTheme()
   const [responseData, setResponseData] = useState<GetSSAWorkbenchDashboardResponse>()
   const [loading, setLoading] = useState(false)
-  const getIRifyData = useMemoizedFn(() => {
-    setLoading(true)
+  const ref = useRef<HTMLDivElement>(null)
+  const [inViewport = true] = useInViewport(ref)
+  const getIRifyData = useMemoizedFn((isLoading: boolean = true) => {
+    if (isLoading) {
+      setLoading(true)
+    }
     yakitProject
-      .getSSAWorkbenchDashboard({} as GetSSAWorkbenchDashboardRequest)
+      .getSSAWorkbenchDashboard({
+        RecentProjectLimit: 10,
+      } as GetSSAWorkbenchDashboardRequest)
       .then((data: GetSSAWorkbenchDashboardResponse) => {
+        console.log('data', data)
+
         setResponseData(data)
       })
       .catch((e) => {
@@ -111,6 +114,12 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
   useEffect(() => {
     getIRifyData()
   }, [])
+
+  useUpdateEffect(() => {
+    if (inViewport) {
+      getIRifyData(false)
+    }
+  }, [inViewport])
 
   const riskOverviewList = useMemo(() => responseData?.RiskOverview ?? [], [responseData?.RiskOverview])
   const riskGaugeList = useMemo(() => toRiskGaugeList(riskOverviewList), [riskOverviewList])
@@ -133,6 +142,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
   )
   const totalRiskCount = responseData?.TotalRiskCount ?? 0
   const recentProjects = responseData?.RecentProjects ?? []
+  const riskDistributionColors = useMemo(() => getRiskDistributionColors(themeColors), [themeColors])
 
   const renderRiskStatItem = (config: (typeof RISK_STAT_CONFIG)[number]) => {
     const item = findRiskLevelItem(riskOverviewList, config.severities)
@@ -161,7 +171,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
 
   return (
     <YakitSpin spinning={loading}>
-      <div className={styles['irify-home']}>
+      <div className={styles['irify-home']} ref={ref}>
         <div className={styles['irify-home-content']}>
           <div className={styles['hero-section']}>
             <div className={styles['page-header']}>
@@ -313,9 +323,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
             <div className={classNames(styles['panel-card'])}>
               <div className={styles['panel-card-title']}>风险概览</div>
               <div className={styles['risk-overview']}>
-                <div className={styles['risk-gauge']}>
-                  <RiskGaugeChart list={riskGaugeList} />
-                </div>
+                <div className={styles['risk-gauge']}>{inViewport && <RiskGaugeChart list={riskGaugeList} />}</div>
                 <div className={styles['risk-stats-grid']}>
                   <div className={styles['risk-stats-grid-item']}>
                     {renderRiskStatItem(RISK_STAT_CONFIG[0])}
@@ -336,7 +344,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
               <div className={styles['panel-card-title']}>风险分布</div>
               <div className={styles['distribution-content']}>
                 <div className={styles['distribution-content-echarts']}>
-                  <RiskDistributionChart total={totalRiskCount} items={riskDistributionItems} />
+                  {inViewport && <RiskDistributionChart total={totalRiskCount} items={riskDistributionItems} />}
                 </div>
                 <div className={styles['distribution-content-legend']}>
                   {riskDistributionItems.map((item, index) => (
@@ -344,12 +352,16 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                       <span className={styles['distribution-legend-icon']}>
                         <span
                           className={styles['distribution-legend-dot']}
-                          style={{ backgroundColor: RISK_DISTRIBUTION_COLORS[index] }}
+                          style={{
+                            backgroundColor:
+                              riskDistributionColors[index % riskDistributionColors.length] ||
+                              themeColors['--Colors-Use-Main-Primary'],
+                          }}
                         />
                         <span className={styles['distribution-legend-name']}>{item.name}</span>
                       </span>
                       <span className={styles['distribution-legend-value']}>{item.value}</span>
-                      <span className={styles['distribution-legend-percent']}>{item.percent}%</span>
+                      <span className={styles['distribution-legend-percent']}>{item.percent.toFixed(1)}%</span>
                     </div>
                   ))}
                 </div>
@@ -359,7 +371,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
             <div className={classNames(styles['panel-card'], styles['chart-card'])}>
               <div className={styles['panel-card-title']}>规则命中 Top5</div>
               <div className={styles['rule-hits-bar-chart']}>
-                <RuleHitsBarChart items={ruleHitsTop5} />
+                {inViewport && <RuleHitsBarChart items={ruleHitsTop5} />}
               </div>
             </div>
           </div>
@@ -378,7 +390,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                 </button>
               </div>
               <div className={styles['projects-table-wrapper']}>
-                <IRifyHomeTable data={recentProjects} />
+                <IRifyHomeTable data={recentProjects} onRefresh={() => getIRifyData(false)} />
               </div>
             </div>
             <div className={classNames(styles['panel-card'], styles['quick-access-card'])}>

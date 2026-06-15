@@ -5361,6 +5361,7 @@ message ExportYakScriptStreamRequest {
   QueryYakScriptRequest Filter = 1;
   string OutputFilename = 2;
   string Password = 3;
+  string OutputPluginDir = 4;
 }
 
 message ImportYakScriptStreamRequest {
@@ -6658,6 +6659,7 @@ message FuzzerResponse {
   bool MatchedByMatcher = 46;
   string HitColor = 47;
   repeated RedirectHTTPFlow RedirectFlows = 48;
+  bool MatcherMarkFail = 63;
 
   // too large file operators
   bool IsTooLargeResponse = 49;
@@ -7031,7 +7033,7 @@ message HTTPFlowsExtractRequest {
 message TagsCode {
   string Value = 1;
   int32 Total = 2;
-  bool Builtin = 3;   // 后端内置/有特殊语义
+  bool Builtin = 3; // 后端内置/有特殊语义
 }
 
 message WebsocketFlows {
@@ -8517,6 +8519,7 @@ message HotPatchTemplate {
   string Name = 1;
   string Content = 2;
   string Type = 3; // fuzzer/mitm/httpflow-analyze/global
+  repeated string Tags = 4;
 }
 
 message HotPatchTemplateRequest {
@@ -8524,6 +8527,7 @@ message HotPatchTemplateRequest {
   repeated string Name = 2;
   repeated string ContentKeyword = 3;
   string Type = 4; // fuzzer/mitm/httpflow-analyze/global
+  repeated string Tags = 5;
 }
 
 message UpdateHotPatchTemplateRequest {
@@ -9287,6 +9291,7 @@ message SSAWorkbenchRecentProject {
   string HighestRiskVerbose = 5;
   int64 RiskCount = 6;
   int64 UpdatedAt = 7;
+  string JSONStringConfig = 8;
 }
 
 message GetSSAWorkbenchDashboardResponse {
