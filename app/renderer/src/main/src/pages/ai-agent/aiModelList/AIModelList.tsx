@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
   AILocalModelListItemPromptHintProps,
   AILocalModelListItemProps,
@@ -838,7 +838,7 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
       <div className={styles['ai-online-model-list-item-extra']}>
         <div className={styles['ai-online-model-list-item-extra-edit']}>
           <YakitButton type="text2" icon={<OutlineEngineIcon />} onClick={onCheckModel} loading={testLoading} />
-          <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEditClick} />
+          <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEditClick} disabled={item?.IsOnline} />
           <YakitPopconfirm
             title={`确定要删除厂商${config.Type},模型名称为${modelName} 吗？`}
             onConfirm={onRemoveClick}
