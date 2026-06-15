@@ -4,11 +4,12 @@ import {
   buildChipLabel,
   collapseBinaryFuzztag,
   expandBinaryFuzztag,
+  expandBinaryFuzztagByModelKey,
+  registerBinaryFoldEntries,
+  unregisterBinaryFoldEntries,
   findPlaceholderOffsets,
   goUnquoteToBytes,
   bytesToHex,
-  setBinaryChangeInfo,
-  isBinaryChanged,
 } from '../binaryFuzztag'
 
 const bigUnquoteContent = '"' + '\\xff\\xd8'.repeat(40) + '"' // 远大于阈值
@@ -41,10 +42,22 @@ describe('binaryFuzztag collapse/expand', () => {
     expect(second.text).toBe(first.text)
   })
 
-  it('内容短于阈值不折叠', () => {
-    const small = `{{unquote("` + 'A'.repeat(BINARY_FOLD_THRESHOLD - 10) + `")}}`
-    const { text, entries } = collapseBinaryFuzztag(small)
-    expect(text).toBe(small)
+  it('可编辑类型(unquote/hex/base64)无论内容大小都折叠', () => {
+    // 远小于阈值的极短内容也应折叠为可点击小块
+    const tinyUnquote = `{{unquote("\\xff")}}`
+    const tinyHex = `{{hexdec(ab)}}`
+    const tinyB64 = `{{base64decode(QQ==)}}`
+    expect(collapseBinaryFuzztag(tinyUnquote).entries.size).toBe(1)
+    expect(collapseBinaryFuzztag(tinyHex).entries.size).toBe(1)
+    expect(collapseBinaryFuzztag(tinyB64).entries.size).toBe(1)
+    // 折叠后正文不再含原始参数
+    expect(collapseBinaryFuzztag(tinyUnquote).text).toContain('#YBIN_')
+  })
+
+  it('只读 file 引用仍按阈值过滤：短引用不折叠', () => {
+    const smallFile = `{{file(/tmp/` + 'a'.repeat(BINARY_FOLD_THRESHOLD - 30) + `)}}`
+    const { text, entries } = collapseBinaryFuzztag(smallFile)
+    expect(text).toBe(smallFile)
     expect(entries.size).toBe(0)
   })
 
@@ -91,21 +104,94 @@ describe('binaryFuzztag collapse/expand', () => {
     const second = collapseBinaryFuzztag(expandBinaryFuzztag(first.text, first.entries))
     expect(second.text).toBe(first.text)
   })
+
+  it('占位被破坏(少一个})无法 expand；只要保留映射，补回后即可还原真实内容', () => {
+    // 模拟：折叠得到占位与映射
+    const first = collapseBinaryFuzztag(bigUnquoteTag)
+    const placeholder = first.text // 形如 {{unquote(#YBIN_<id>#)}}
+    // 累积保留映射（对应组件内 binaryFoldEntriesRef 的合并语义）
+    const persistentEntries = new Map(first.entries)
+
+    // backspace 破坏：删去末尾一个 }
+    const broken = placeholder.slice(0, -1)
+    // 破坏态无法匹配占位，expand 原样返回（此刻真实内容仅存于映射表中，不会被还原）
+    expect(expandBinaryFuzztag(broken, persistentEntries)).toBe(broken)
+    expect(broken).not.toBe(placeholder)
+
+    // 补回 } 还原完整占位：因映射保留，可还原出原始真实标签
+    const restored = broken + '}'
+    expect(restored).toBe(placeholder)
+    expect(expandBinaryFuzztag(restored, persistentEntries)).toBe(bigUnquoteTag)
+
+    // 还原后再次折叠应得到相同占位（小块可重新渲染）
+    const second = collapseBinaryFuzztag(expandBinaryFuzztag(restored, persistentEntries))
+    expect(second.text).toBe(placeholder)
+  })
+
+  it('整表替换会丢失历史项导致无法恢复，累积合并则可恢复（对比验证）', () => {
+    const first = collapseBinaryFuzztag(bigUnquoteTag)
+    const placeholder = first.text
+    const id = Array.from(first.entries.keys())[0]
+
+    // 破坏态文本再 collapse：得不到任何折叠项（破坏的占位不是合法二进制标签）
+    const broken = placeholder.slice(0, -1)
+    const afterBroken = collapseBinaryFuzztag(broken)
+    expect(afterBroken.entries.has(id)).toBe(false)
+
+    // 整表替换语义：映射被清空 -> 即使补回占位也无法 expand
+    const replacedMap = afterBroken.entries
+    expect(expandBinaryFuzztag(placeholder, replacedMap)).toBe(placeholder)
+
+    // 累积合并语义：保留历史项 -> 补回占位可正确 expand
+    const mergedMap = new Map(first.entries)
+    afterBroken.entries.forEach((v, k) => mergedMap.set(k, v))
+    expect(expandBinaryFuzztag(placeholder, mergedMap)).toBe(bigUnquoteTag)
+  })
 })
 
-describe('binaryFuzztag change-info', () => {
-  it('记录改动后 buildChipLabel 显示 Changed 且样式判定为已改', () => {
+describe('binaryFuzztag changed 标记（布尔，只记是否被修改）', () => {
+  it('changed=true 时 buildChipLabel 只追加 |Changed（不含增删改细节）', () => {
     const { entries } = collapseBinaryFuzztag(bigUnquoteTag)
     const entry = Array.from(entries.values())[0]
-    setBinaryChangeInfo(entry.id, { addedCount: 12, overriddenCount: 5, removedCount: 0 })
-    const label = buildChipLabel(entry)
+    const label = buildChipLabel(entry, true)
     expect(label).toContain('Binary[')
-    expect(label).toContain('Changed:')
-    expect(label).toContain('+12add')
-    expect(label).toContain('~5override')
+    expect(label).toContain('|Changed')
+    // 不再写细节
+    expect(label).not.toContain('Changed:')
+    expect(label).not.toContain('add')
+    expect(label).not.toContain('override')
     // 标签内不得含空格（editor renderWhitespace:'all' 会把空格渲染成 middot）
     expect(label).not.toContain(' ')
-    expect(isBinaryChanged(entry.id)).toBe(true)
+  })
+
+  it('changed=false（默认）时不追加 Changed 标记', () => {
+    const { entries } = collapseBinaryFuzztag(bigUnquoteTag)
+    const entry = Array.from(entries.values())[0]
+    expect(buildChipLabel(entry)).not.toContain('Changed')
+    expect(buildChipLabel(entry, false)).not.toContain('Changed')
+  })
+})
+
+describe('复制还原：注册表按 model 还原占位为真实内容', () => {
+  it('已注册：含 #YBIN_ 占位的选区文本被还原为真实标签', () => {
+    const modelKey = {} // 用任意稳定对象模拟 monaco model
+    const { text, entries } = collapseBinaryFuzztag(`prefix ${bigUnquoteTag} suffix`)
+    registerBinaryFoldEntries(modelKey, entries)
+    // 模拟复制选区拿到的是含占位的 model 文本
+    expect(text).toContain('#YBIN_')
+    const expanded = expandBinaryFuzztagByModelKey(modelKey, text)
+    expect(expanded).not.toContain('#YBIN_')
+    expect(expanded).toContain(bigUnquoteTag)
+    unregisterBinaryFoldEntries(modelKey)
+  })
+
+  it('未注册或无占位：原样返回，不抛错', () => {
+    const modelKey = {}
+    expect(expandBinaryFuzztagByModelKey(modelKey, 'plain text')).toBe('plain text')
+    // 未注册的 key 即使含占位也原样返回（拿不到映射）
+    const { text } = collapseBinaryFuzztag(bigUnquoteTag)
+    expect(expandBinaryFuzztagByModelKey(modelKey, text)).toBe(text)
+    expect(expandBinaryFuzztagByModelKey(null, text)).toBe(text)
   })
 })
 
@@ -122,12 +208,52 @@ describe('goUnquoteToBytes', () => {
 })
 
 describe('buildChipLabel', () => {
-  it('binary 小块包含字节数且不含空格', () => {
+  it('binary 小块包含字节数且不含普通空格(U+0020)', () => {
     const { entries } = collapseBinaryFuzztag(bigUnquoteTag)
     const entry = Array.from(entries.values())[0]
     const label = buildChipLabel(entry)
     expect(label).toMatch(/Binary\[.*\d+B/)
+    // 提示用 U+00A0 拼接，不含普通空格，避免 renderWhitespace 圆点与折行
     expect(label).not.toContain(' ')
+  })
+
+  it('按类型显示 Binary / HexString / Base64 前缀', () => {
+    const unquote = Array.from(collapseBinaryFuzztag(bigUnquoteTag).entries.values())[0]
+    const hex = Array.from(collapseBinaryFuzztag(`{{hexdec(${'ab'.repeat(40)})}}`).entries.values())[0]
+    const b64 = Array.from(collapseBinaryFuzztag(`{{base64decode(${'QUJD'.repeat(20)})}}`).entries.values())[0]
+    expect(buildChipLabel(unquote)).toMatch(/^Binary\[/)
+    expect(buildChipLabel(hex)).toMatch(/^HexString\[/)
+    expect(buildChipLabel(b64)).toMatch(/^Base64\[/)
+  })
+
+  it('base64/hex 小块展示解码后的可读文本（如 Base64[asdf] / HexString[asdf]）', () => {
+    // YXNkZg== -> asdf
+    const b64 = Array.from(collapseBinaryFuzztag('{{base64d(YXNkZg==)}}').entries.values())[0]
+    expect(b64.previewText).toBe('asdf')
+    expect(buildChipLabel(b64)).toMatch(/^Base64\[asdf\]/)
+    // 61736466 -> asdf
+    const hex = Array.from(collapseBinaryFuzztag('{{hexd(61736466)}}').entries.values())[0]
+    expect(hex.previewText).toBe('asdf')
+    expect(buildChipLabel(hex)).toMatch(/^HexString\[asdf\]/)
+  })
+
+  it('base64/hex 内容不可打印时回退到 0x..NB 字节预览', () => {
+    // 0x00 0x01 0x02 不可打印
+    const hex = Array.from(collapseBinaryFuzztag(`{{hexd(000102${'ff'.repeat(40)})}}`).entries.values())[0]
+    expect(hex.previewText).toBeUndefined()
+    expect(buildChipLabel(hex)).toMatch(/^HexString\[0x[0-9a-f]+\.\.\d+B/)
+  })
+
+  it('小块末尾追加“Click to modify”点击提示(用 U+00A0 拼接)', () => {
+    const entry = Array.from(collapseBinaryFuzztag(bigUnquoteTag).entries.values())[0]
+    const label = buildChipLabel(entry)
+    // 含提示词但不含普通空格
+    expect(label).toContain('Click')
+    expect(label).toContain('modify')
+    expect(label).toContain('\u00A0')
+    expect(label).not.toContain(' ')
+    // 形如 Binary[...]\u00A0Click\u00A0to\u00A0modify
+    expect(label.replace(/\u00A0/g, ' ')).toContain('Click to modify')
   })
 })
 

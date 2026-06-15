@@ -26,6 +26,8 @@ export interface BinaryFuzztagEntry {
   // 预览信息
   byteLength: number
   previewHex: string
+  // 解码后的可读文本预览（仅 base64/hex 且内容可打印时存在），用于小块展示 Base64[asdf] 这类直观文案
+  previewText?: string
 }
 
 export interface BinaryCollapseResult {
@@ -63,18 +65,69 @@ const hashId = (str: string): string => {
 }
 
 // 预览信息缓存：key 为 id，避免每次按键都重新扫描大块内容
-const previewCache = new Map<string, { byteLength: number; previewHex: string }>()
+const previewCache = new Map<string, { byteLength: number; previewHex: string; previewText?: string }>()
 
-// 编辑改动信息：key 为占位 id（内容 hash），记录相对原始内容的增删改字节数
-export interface BinaryChangeInfo {
-  addedCount: number
-  overriddenCount: number
-  removedCount: number
+// 字节 -> 可读文本：仅当解码为合法 UTF-8 且不含不可见控制符(允许 \t \n \r)时返回，否则返回 undefined
+// 用于 base64/hex 小块直观展示解码内容（如 Base64[asdf]）；二进制内容则回退到 0x..NB 字节预览
+const bytesToDisplayText = (bytes: Uint8Array): string | undefined => {
+  if (!bytes || bytes.length === 0) {
+    return undefined
+  }
+  try {
+    const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
+    if (text.length === 0) {
+      return undefined
+    }
+    // U+FFFD 表示非法 UTF-8 序列
+    if (text.indexOf('\uFFFD') >= 0) {
+      return undefined
+    }
+    // 含不可见控制符（除 \t \n \r 外）则视为二进制，不做文本预览
+    if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text)) {
+      return undefined
+    }
+    return text
+  } catch (e) {
+    return undefined
+  }
 }
-const changeInfoMap = new Map<string, BinaryChangeInfo>()
-export const getBinaryChangeInfo = (id: string): BinaryChangeInfo | undefined => changeInfoMap.get(id)
-export const setBinaryChangeInfo = (id: string, info: BinaryChangeInfo): void => {
-  changeInfoMap.set(id, info)
+
+// hex 字符串 -> 字节（仅取前若干字符用于预览）
+const hexHeadToBytes = (hex: string, maxChars: number): Uint8Array => {
+  const stripped = hex.replace(/\s+/g, '')
+  const head = stripped.slice(0, maxChars - (maxChars % 2))
+  const n = Math.floor(head.length / 2)
+  const out = new Uint8Array(n)
+  for (let i = 0; i < n; i++) {
+    out[i] = parseInt(head.substr(i * 2, 2), 16) & 0xff
+  }
+  return out
+}
+
+// 占位还原注册表：key 为 monaco model（或任意稳定对象），value 为该编辑器的 占位id -> 标签信息 映射。
+// 目的：让所有"读取 model 文本去复制/导出"的路径（DOM copy 事件、右键自定义复制、fetchCursorContent 等）
+// 都能把 {{tag(#YBIN_id#)}} 占位还原成真实内容，保证复制粘贴出去的永远是真实标签而非内部占位。
+const modelEntriesRegistry = new WeakMap<object, Map<string, BinaryFuzztagEntry>>()
+export const registerBinaryFoldEntries = (modelKey: object, entries: Map<string, BinaryFuzztagEntry>): void => {
+  if (modelKey) {
+    modelEntriesRegistry.set(modelKey, entries)
+  }
+}
+export const unregisterBinaryFoldEntries = (modelKey: object): void => {
+  if (modelKey) {
+    modelEntriesRegistry.delete(modelKey)
+  }
+}
+// 用注册表把文本里的占位还原为真实标签；无注册或无占位则原样返回。供 editorUtils 等外部模块复用。
+export const expandBinaryFuzztagByModelKey = (modelKey: object | null | undefined, text: string): string => {
+  if (!modelKey || !text || text.indexOf(PLACEHOLDER_PREFIX) < 0) {
+    return text
+  }
+  const entries = modelEntriesRegistry.get(modelKey)
+  if (!entries) {
+    return text
+  }
+  return expandBinaryFuzztag(text, entries)
 }
 
 const buildPlaceholder = (tagName: string, id: string): string =>
@@ -108,27 +161,40 @@ const computePreview = (
   kind: BinaryTagKind,
   content: string,
   id: string,
-): { byteLength: number; previewHex: string } => {
+): { byteLength: number; previewHex: string; previewText?: string } => {
   const cached = previewCache.get(id)
   if (cached) {
     return cached
   }
-  let result = { byteLength: content.length, previewHex: '' }
+  let result: { byteLength: number; previewHex: string; previewText?: string } = {
+    byteLength: content.length,
+    previewHex: '',
+  }
   try {
     if (kind === 'hex') {
       const stripped = content.replace(/\s+/g, '')
-      result = { byteLength: Math.floor(stripped.length / 2), previewHex: stripped.slice(0, 8).toLowerCase() }
+      const headBytes = hexHeadToBytes(stripped, 96)
+      result = {
+        byteLength: Math.floor(stripped.length / 2),
+        previewHex: stripped.slice(0, 8).toLowerCase(),
+        previewText: bytesToDisplayText(headBytes),
+      }
     } else if (kind === 'base64') {
       const stripped = content.replace(/\s+/g, '')
       const padLen = (stripped.match(/=+$/) || [''])[0].length
       const byteLength = Math.max(0, Math.floor((stripped.length * 3) / 4) - padLen)
       let previewHex = ''
+      let previewText: string | undefined
       try {
-        const head = stripped.slice(0, 12).replace(/=+$/, '')
+        // 仅解码前若干 base64 字符用于预览，避免大内容全量解码
+        const headLen = Math.min(stripped.length, 64)
+        const head = stripped.slice(0, headLen - (headLen % 4))
         const bin = atob(head)
-        previewHex = bytesToHex(strToByteArray(bin)).slice(0, 8)
+        const bytes = Uint8Array.from(strToByteArray(bin))
+        previewHex = bytesToHex(bytes.slice(0, 4))
+        previewText = bytesToDisplayText(bytes)
       } catch (e) {}
-      result = { byteLength, previewHex }
+      result = { byteLength, previewHex, previewText }
     } else if (kind === 'unquote') {
       const bytes = goUnquoteToBytes(content)
       result = { byteLength: bytes.length, previewHex: bytesToHex(bytes.slice(0, 4)) }
@@ -159,8 +225,12 @@ export const collapseBinaryFuzztag = (raw: string): BinaryCollapseResult => {
     if (!kind) {
       continue
     }
-    // 阈值过滤（参数文本长度）；不折叠的标签保留在后续 slice 中
-    if (nc.content.length <= BINARY_FOLD_THRESHOLD) {
+    // 折叠策略：
+    // - 可编辑类型(unquote/hex/base64)：无论内容大小一律折叠为可点击小块，
+    //   让用户对任意 Binary/HexString/Base64 标签都能点击打开辅助输入器编辑。
+    // - 只读 file 引用：仍按阈值过滤，避免短引用被打扰。
+    // 不折叠的标签保留在后续 slice 中。
+    if (kind === 'file' && nc.content.length <= BINARY_FOLD_THRESHOLD) {
       continue
     }
     const originalTagText = m[0]
@@ -175,6 +245,7 @@ export const collapseBinaryFuzztag = (raw: string): BinaryCollapseResult => {
       innerContent: nc.content,
       byteLength: preview.byteLength,
       previewHex: preview.previewHex,
+      previewText: preview.previewText,
     })
     out += raw.slice(pre, m.index)
     out += buildPlaceholder(nc.tagName, id)
@@ -217,35 +288,49 @@ export const findPlaceholderOffsets = (text: string): PlaceholderOffset[] => {
   return res
 }
 
-// 生成小块展示文案：编辑后仍保持 Binary[xxx] 外观，并追加 Changed:add/override 标注
-// 注意：editor 开启 renderWhitespace:'all'，标签内的空格会被渲染成 middot 圆点，
-// 故此处刻意不使用空格（用 _ . / 等连接），同时避免空格成为换行点导致小块折行。
-export const buildChipLabel = (entry: BinaryFuzztagEntry): string => {
-  if (entry.kind === 'file') {
-    const base = entry.innerContent.split(/[\\/]/).pop() || entry.innerContent
-    return `File[${truncateMiddle(base, 32).replace(/\s+/g, '_')}]`
-  }
-  const head = entry.previewHex ? `0x${entry.previewHex}..` : ''
-  let inner = `${head}${entry.byteLength}B`
-  const change = changeInfoMap.get(entry.id)
-  if (change) {
-    const parts: string[] = []
-    if (change.addedCount > 0) {
-      parts.push(`+${change.addedCount}add`)
-    }
-    if (change.overriddenCount > 0) {
-      parts.push(`~${change.overriddenCount}override`)
-    }
-    if (change.removedCount > 0) {
-      parts.push(`-${change.removedCount}del`)
-    }
-    inner += parts.length > 0 ? `|Changed:${parts.join('/')}` : '|Changed'
-  }
-  return `Binary[${inner}]`
+// 小块类型前缀：按解码语义区分三类可编辑标签 + 只读文件引用
+// unquote -> Binary, hexdecode -> HexString, base64decode -> Base64, file -> File
+const KIND_CHIP_PREFIX: Record<BinaryTagKind, string> = {
+  unquote: 'Binary',
+  hex: 'HexString',
+  base64: 'Base64',
+  file: 'File',
 }
 
-// 判断某占位是否被编辑过（用于装饰样式切换）
-export const isBinaryChanged = (id: string): boolean => changeInfoMap.has(id)
+// 不间断空格(U+00A0)：editor 开启 renderWhitespace:'all' 只会把普通空格(U+0020)/Tab 渲染成
+// middot 圆点，U+00A0 不会被渲染成圆点；用它拼接“点击修改”提示，既能正常显示空格分词，
+// 又不出现圆点、也不会成为换行点导致小块折行。
+const NBSP = '\u00A0'
+// 提示用户该小块可点击编辑/查看。英文文案：Click to modify / Click to view
+const CLICK_HINT_EDIT = `${NBSP}Click${NBSP}to${NBSP}modify`
+const CLICK_HINT_VIEW = `${NBSP}Click${NBSP}to${NBSP}view`
+
+// 小块内文本净化：换行/Tab 转义为可见转义符，普通空格转 U+00A0，避免 renderWhitespace 圆点与折行
+const sanitizeChipText = (s: string): string =>
+  s.replace(/\r/g, '\\r').replace(/\n/g, '\\n').replace(/\t/g, '\\t').replace(/ /g, NBSP)
+
+// 生成小块展示文案：按类型显示 Binary/HexString/Base64/File[xxx]，
+// changed 为 true 时仅追加 "|Changed"（只记是否被修改，不写增删改细节），末尾追加“点击修改/查看”提示。
+// changed 由调用方按"编辑器中第 N 个标签是否被改过"决定，与内容无关，保证复制出去的永远是纯内容。
+// 注意：除提示中的 U+00A0 外不使用普通空格（避免 renderWhitespace 圆点与折行）。
+export const buildChipLabel = (entry: BinaryFuzztagEntry, changed = false): string => {
+  if (entry.kind === 'file') {
+    const base = entry.innerContent.split(/[\\/]/).pop() || entry.innerContent
+    return `File[${truncateMiddle(base, 32).replace(/\s+/g, '_')}]${CLICK_HINT_VIEW}`
+  }
+  // base64/hex 优先展示解码后的可读文本（如 Base64[asdf]）；不可打印的二进制内容回退到 0x..NB 字节预览
+  let inner: string
+  if ((entry.kind === 'base64' || entry.kind === 'hex') && entry.previewText) {
+    inner = sanitizeChipText(truncateMiddle(entry.previewText, 24))
+  } else {
+    const head = entry.previewHex ? `0x${entry.previewHex}..` : ''
+    inner = `${head}${entry.byteLength}B`
+  }
+  if (changed) {
+    inner += '|Changed'
+  }
+  return `${KIND_CHIP_PREFIX[entry.kind]}[${inner}]${CLICK_HINT_EDIT}`
+}
 
 const truncateMiddle = (s: string, max: number): string => {
   if (s.length <= max) {
