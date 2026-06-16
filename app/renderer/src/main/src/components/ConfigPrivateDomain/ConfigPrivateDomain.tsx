@@ -127,7 +127,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       const { isOpen, content } =
         (await apiSystemConfig(true)).data?.find((item) => item.configName === 'forceChangePwd') || {}
       const days = Number(content)
-      if (isOpen || !days || !res.updatedAt) return
+      if (!isOpen || !days || !res.updatedAt || res.from_platform !== 'company') return
       if (Math.floor(Date.now() / 1000) - days * 86400 > res.updatedAt) {
         yakitAuth.requestPasswordReset()
       }
