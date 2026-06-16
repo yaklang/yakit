@@ -1710,32 +1710,38 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
                 })}
               </div>
             )}
-            {response && (+response?.Score || 0) < 60 && (
+
+            {
               <div className={styles['opt-results-wrap']}>
-                <YakitButton type="text" onClick={handleCopyAll} className={styles['copy-btn']}>
-                  一键复制
-                </YakitButton>
-                <div className={styles['opt-results']}>
-                  <SolidExclamationIcon />
-                  <div className={styles['content-style']}>
-                    {isSpecial
-                      ? specialHint || t('CodeScoreModule.unable_to_judge_manual_review')
-                      : failedHint || t('CodeScoreModule.upload_failed_fix_and_retry')}
+                {!!(response?.Results || []).length && (
+                  <YakitButton type="text" onClick={handleCopyAll} className={styles['copy-btn']}>
+                    一键复制
+                  </YakitButton>
+                )}
+                {response && (+response?.Score || 0) < 60 && (
+                  <div className={styles['opt-results']}>
+                    <SolidExclamationIcon />
+                    <div className={styles['content-style']}>
+                      {isSpecial
+                        ? specialHint || t('CodeScoreModule.unable_to_judge_manual_review')
+                        : failedHint || t('CodeScoreModule.upload_failed_fix_and_retry')}
+                    </div>
                   </div>
-                </div>
+                )}
+                {response && (+response?.Score || 0) >= 60 && (
+                  <div className={styles['opt-results']}>
+                    <div className={styles['success-score']}>
+                      {+response?.Score}
+                      <span className={styles['suffix-style']}>{t('CodeScoreModule.score')}</span>
+                    </div>
+                    <div className={styles['content-style']}>
+                      {successHint || t('CodeScoreModule.uploading_plugin_good_performance')}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-            {response && (+response?.Score || 0) >= 60 && (
-              <div className={styles['opt-results']}>
-                <div className={styles['success-score']}>
-                  {+response?.Score}
-                  <span className={styles['suffix-style']}>{t('CodeScoreModule.score')}</span>
-                </div>
-                <div className={styles['content-style']}>
-                  {successHint || t('CodeScoreModule.uploading_plugin_good_performance')}
-                </div>
-              </div>
-            )}
+            }
+
             {!response && (
               <div className={styles['opt-results']}>
                 <div className={styles['content-style']}>{t('CodeScoreModule.check_error_try_again')}</div>
