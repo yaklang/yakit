@@ -44,6 +44,7 @@ const defaultOtherSetting = {
   HostAliveConcurrent: defPortScanExecuteExtraFormValue.HostAliveConcurrent,
   ExcludeHosts: defPortScanExecuteExtraFormValue.ExcludeHosts,
   ExcludePorts: defPortScanExecuteExtraFormValue.ExcludePorts,
+  DisableOpenPortGuard: defPortScanExecuteExtraFormValue.DisableOpenPortGuard,
 }
 /**爬虫设置 */
 const defaultReptileSetting = {
@@ -692,6 +693,7 @@ export const ScanOtherSettingsPanel: React.FC<ScanOtherSettingsPanelProps> = Rea
         </Form.Item>
         <Form.Item
           label={t('ScanPortForm.systemProtection')}
+          name="DisableOpenPortGuard"
           valuePropName="checked"
           extra={t('ScanPortForm.systemProtectionHelp')}
         >

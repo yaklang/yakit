@@ -289,6 +289,7 @@ export const defPortScanExecuteExtraFormValue: PortScanExecuteExtraFormValue = {
   scanProtocol: 'tcp',
   /**前端使用 */
   pluginGroup: [],
+  DisableOpenPortGuard: true,
 }
 
 const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = React.memo(
