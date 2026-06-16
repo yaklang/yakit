@@ -69,7 +69,9 @@
     "tcpPingPort": "TCP Ping Ports",
     "tcpPingPortHelp": "Configure TCP Ping ports: use whether these ports are open as the basis for TCP Ping",
     "excludeHosts": "Exclude Hosts",
-    "excludePorts": "Exclude Ports"
+    "excludePorts": "Exclude Ports",
+    "systemProtection": "System Protection",
+    "systemProtectionHelp": "When enabled, if more than 150 open ports are detected on the same host, the system protection mechanism will be triggered and automatically stop the scan."
   },
   "NewPortScan": {
     "pluginType": "Plugin Type"

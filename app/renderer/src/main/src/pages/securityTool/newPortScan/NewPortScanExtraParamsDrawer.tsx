@@ -690,6 +690,13 @@ export const ScanOtherSettingsPanel: React.FC<ScanOtherSettingsPanelProps> = Rea
         <Form.Item label={t('ScanPortForm.excludePorts')} name="ExcludePorts">
           <YakitInput placeholder={t('YakitInput.please_enter')} />
         </Form.Item>
+        <Form.Item
+          label={t('ScanPortForm.systemProtection')}
+          valuePropName="checked"
+          extra={t('ScanPortForm.systemProtectionHelp')}
+        >
+          <YakitSwitch />
+        </Form.Item>
       </YakitPanel>
     </>
   )
