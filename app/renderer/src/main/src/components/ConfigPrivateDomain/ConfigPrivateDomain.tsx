@@ -17,7 +17,7 @@ import { CacheDropDownGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitAutoCompleteRefProps } from '../yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace } from '@/utils/envfile'
-import { useUploadInfoByEnpriTrace } from '../layout/utils'
+import { apiSystemConfig, useUploadInfoByEnpriTrace } from '../layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -115,6 +115,15 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       }
       // 首次登录强制修改密码
       if (!res.loginTime) {
+        yakitAuth.requestPasswordReset()
+        return
+      }
+      //超过设置时间 强制修改密码
+      const { isOpen, content } =
+        (await apiSystemConfig(true)).data?.find((item) => item.configName === 'forceChangePwd') || {}
+      const days = Number(content)
+      if (isOpen || !days || !res.updatedAt) return
+      if (Math.floor(Date.now() / 1000) - days * 86400 > res.updatedAt) {
         yakitAuth.requestPasswordReset()
       }
     } catch (err) {
