@@ -1288,7 +1288,7 @@ const FingerprintFormModal: React.FC<FingerprintFormModalProps> = (props) => {
 
   return (
     <YakitModal
-      visible={true}
+      open={true}
       title={(initialValues ? '编辑' : '创建') + '指纹'}
       width={500}
       onOk={() => {

@@ -1100,7 +1100,7 @@ const PluginCopyModal: React.FC<PluginCopyModalProps> = memo((props) => {
       centered={true}
       maskClosable={false}
       closable={true}
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       onOk={onSubmit}
       bodyStyle={{ padding: 0 }}

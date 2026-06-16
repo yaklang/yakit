@@ -1532,13 +1532,13 @@ export const AddHotCodeTemplate: React.FC<AddHotCodeTemplateProps> = React.memo(
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       title={title || t('AddHotCodeTemplate.save_hot_reload_template')}
       width={400}
       onCancel={onCancel}
       okText={t('YakitButton.save')}
       onOk={onOk}
-      destroyOnClose
+      destroyOnHidden
       footer={null}
     >
       <div className={styles['hotCodeTemp-save']}>

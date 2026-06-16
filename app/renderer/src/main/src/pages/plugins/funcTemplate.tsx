@@ -581,11 +581,7 @@ export const PluginsList: React.FC<PluginsListProps> = memo((props) => {
                     <div className={styles['plugins-list-tag-total']}>
                       {showTagList.map((item) => {
                         return (
-                          <Tooltip
-                            title={item.label}
-                            placement="top"
-                            key={item.value}
-                          >
+                          <Tooltip title={item.label} placement="top" key={item.value}>
                             <YakitTag closable onClose={() => onDelTag(item)}>
                               {item.label}
                             </YakitTag>
@@ -1789,9 +1785,9 @@ export const CodeScoreModal: React.FC<CodeScoreModalProps> = memo((props) => {
       centered={true}
       maskClosable={false}
       closable={true}
-      visible={visible}
+      open={visible}
       footer={null}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       onCancel={onFailed}
       bodyStyle={{ padding: 0 }}
     >
@@ -1865,7 +1861,7 @@ export const PluginEditorModal: React.FC<PluginEditorModalProps> = memo((props) 
       closable={true}
       closeIcon={<OutlineArrowscollapseIcon className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(content)}
       bodyStyle={{ padding: 0 }}
     >
@@ -1910,7 +1906,7 @@ export const PluginDiffEditorModal: React.FC<PluginDiffEditorModalProps> = memo(
       closable={true}
       closeIcon={<OutlineArrowscollapseIcon className={styles['plugin-editor-modal-close-icon']} />}
       footer={null}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(content)}
       bodyStyle={{ padding: 0 }}
     >

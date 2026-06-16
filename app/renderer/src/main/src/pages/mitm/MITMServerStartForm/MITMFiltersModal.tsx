@@ -367,8 +367,8 @@ const MITMFiltersModal: React.FC<MITMFiltersModalProps> = React.memo((props) => 
 
   return (
     <YakitModal
-      visible={visible}
-      destroyOnClose
+      open={visible}
+      destroyOnHidden
       onCancel={() => {
         setVisible(false)
       }}
@@ -707,8 +707,8 @@ const ImportFileModal: React.FC<ImportFileModalProps> = (props) => {
           {t('MITMFiltersModal.drag_hint_suffix')}
         </div>
       }
-      destroyOnClose={true}
-      visible={visible}
+      destroyOnHidden={true}
+      open={visible}
       okText={okText}
       onCancel={onCancel}
       onOk={() => onOk(value)}

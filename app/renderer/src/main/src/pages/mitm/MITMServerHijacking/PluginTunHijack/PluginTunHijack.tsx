@@ -300,7 +300,7 @@ const ConnectivityCheckAction: React.FC = React.memo(() => {
       </Tooltip>
       <YakitModal
         maskClosable={false}
-        visible={connectivityVisible}
+        open={connectivityVisible}
         title={t('PluginTunHijack.connectivityCheck')}
         footer={
           <div className={styles['connectivity-check-footer']}>
@@ -608,10 +608,10 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
           </div>
         </div>
         <YakitModal
-          visible={visible}
+          open={visible}
           title="添加路由"
           width={600}
-          destroyOnClose={true}
+          destroyOnHidden={true}
           onCancel={onCancel}
           onOk={handleRouteOk}
           okText="开始执行"
@@ -1103,7 +1103,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
 
   return (
     <YakitModal
-      visible={!!hijackProcessInfo}
+      open={!!hijackProcessInfo}
       title={
         <>
           信息详情
@@ -1113,7 +1113,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
         </>
       }
       width={800}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       onCancel={() => setHijackProcessInfo(undefined)}
       footer={null}
     >

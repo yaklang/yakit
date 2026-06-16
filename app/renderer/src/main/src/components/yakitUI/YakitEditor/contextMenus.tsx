@@ -1,7 +1,6 @@
 import { OtherMenuListProps, YakitIMonacoEditor } from './YakitEditorType'
 import { EditorMenuItemType } from './EditorMenu'
 import { Space } from 'antd'
-import { showModal } from '@/utils/showModal'
 import { AutoCard } from '../../AutoCard'
 import { YakitEditor } from './YakitEditor'
 import { YakitButton } from '../YakitButton/YakitButton'
@@ -16,6 +15,7 @@ import { getGlobalShortcutKeyEvents, GlobalShortcutKey } from '@/utils/globalSho
 import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/page/yakEditor'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
 import { TFunction } from '@/i18n/useI18nNamespaces'
+import { showYakitModal } from '../YakitModal/YakitModalConfirm'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -343,7 +343,7 @@ const execCodec = async (
     .invoke('Codec', { Text: text, Type: typeStr, ScriptName: scriptName })
     .then((result: { Result: string }) => {
       if (replaceEditor) {
-        let m = showModal({
+        let m = showYakitModal({
           width: '50%',
           content: (
             <AutoCard
@@ -376,7 +376,7 @@ const execCodec = async (
       }
 
       if (noPrompt) {
-        showModal({
+        showYakitModal({
           title: title || t('YakitEditor.encodeResult'),
           width: '50%',
           content: (

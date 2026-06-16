@@ -1279,11 +1279,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
                               <div className={styles['hub-outer-list-filter']}>
                                 {showGroupList.map((group) => {
                                   return (
-                                    <Tooltip
-                                      title={group}
-                                      placement="top"
-                                      key={group}
-                                    >
+                                    <Tooltip title={group} placement="top" key={group}>
                                       <YakitTag closable onClose={() => onRemoveGroup(group)}>
                                         {group}
                                       </YakitTag>
@@ -1469,7 +1465,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         <YakitModal
           title={t('PluginManage.importGroupTitle')}
           closable={true}
-          visible={importGroupVisible}
+          open={importGroupVisible}
           maskClosable={false}
           centered
           onCancel={() => setImportGroupVisible(false)}
@@ -1509,7 +1505,7 @@ export const PluginManage: React.FC<PluginManageProps> = (props) => {
         <YakitModal
           title={t('PluginManage.uploadPluginLibrary')}
           closable={true}
-          visible={uploadPluginLibraryVisible}
+          open={uploadPluginLibraryVisible}
           maskClosable={false}
           onCancel={() => setUploadPluginLibraryVisible(false)}
           footer={null}
@@ -1631,7 +1627,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
       centered={true}
       closable={true}
       keyboard={false}
-      visible={visible}
+      open={visible}
       cancelButtonProps={{ loading: submitLoading }}
       confirmLoading={submitLoading}
       onCancel={cancel}
@@ -1719,7 +1715,7 @@ export const ReasonModal: React.FC<ReasonModalProps> = memo((props) => {
       closable={true}
       maskClosable={false}
       keyboard={false}
-      visible={visible}
+      open={visible}
       onCancel={setVisible}
       onOk={onSubmit}
       bodyStyle={{ padding: 0 }}

@@ -310,7 +310,7 @@ const ContextTable: FC<{
       />
       <YakitModal
         title="详情"
-        visible={!!previewKey}
+        open={!!previewKey}
         footer={null}
         width={720}
         centered

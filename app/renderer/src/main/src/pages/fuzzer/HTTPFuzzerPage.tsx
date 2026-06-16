@@ -4066,7 +4066,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
         <YakitModal
           title={t('SecondNodeExtra.extractFromResponsePacket')}
           onCancel={() => setResponseExtractorVisible(false)}
-          visible={responseExtractorVisible}
+          open={responseExtractorVisible}
           width="80%"
           maskClosable={false}
           footer={null}

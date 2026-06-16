@@ -7,9 +7,13 @@ import classNames from 'classnames'
 import styles from './yakitModal.module.scss'
 import { OutlineXIcon } from '@/assets/outline'
 
-export interface YakitModalProp extends Omit<ModalProps, 'cancelButtonProps' | 'okButtonProps' | 'okType'> {
+export interface YakitModalProp extends Omit<
+  ModalProps,
+  'cancelButtonProps' | 'okButtonProps' | 'okType' | 'bodyStyle'
+> {
   headerStyle?: CSSProperties
   footerStyle?: CSSProperties
+  bodyStyle?: CSSProperties
 
   cancelButtonProps?: YakitButtonProp
   okButtonProps?: YakitButtonProp
@@ -122,7 +126,7 @@ export const YakitModal: React.FC<YakitModalProp> = (props) => {
         {footer === null ? null : (
           <div style={footerStyle || undefined} className={styles['footer-body']}>
             {!!footer ? (
-              footer
+              typeof footer !== 'function' && footer
             ) : (
               <>
                 <div className={styles['footer-extra']}>{footerExtra || null}</div>

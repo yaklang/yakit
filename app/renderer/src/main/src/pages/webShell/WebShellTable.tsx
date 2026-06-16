@@ -22,7 +22,6 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { useDebounceEffect, useDebounceFn, useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { genDefaultPagination, PaginationSchema, QueryGeneralResponse } from '@/pages/invoker/schema'
 import style from '@/components/HTTPFlowTable/HTTPFlowTable.module.scss'
-import { showModal } from '@/utils/showModal'
 import { RemarkDetail, WebShellCreatorForm } from '@/pages/webShell/WebShellComp'
 import { YakitMenu, YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { deleteWebShell, featurePing } from '@/pages/webShell/WebShellManager'
@@ -39,6 +38,7 @@ import { WebShellDetailOpt } from './WebShellDetailOpt'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { shallow } from 'zustand/shallow'
 import { useMenuHeight } from '@/store/menuHeight'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 
 export interface WebShellManagerProp {
   available: boolean
@@ -209,7 +209,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
               <YakitButton
                 type="primary"
                 onClick={() => {
-                  let m = showModal({
+                  let m = showYakitModal({
                     title: '备注',
                     width: '60%',
                     content: <RemarkDetail remark={i.Remark} />,
@@ -385,7 +385,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
     if (!selected) return
     switch (key) {
       case 'webshell-curd-edit':
-        const edit = showModal({
+        const edit = showYakitModal({
           title: '编辑 Shell',
           width: '60%',
           content: (
@@ -487,7 +487,7 @@ const WebShellTableList: React.FC<WebShellTableListProps> = React.memo((props) =
                     type="primary"
                     onClick={() => {
                       // setDataBaseUpdateVisible(true)
-                      let m = showModal({
+                      let m = showYakitModal({
                         title: '添加网站',
                         width: '60%',
                         content: (

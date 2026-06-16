@@ -10,7 +10,6 @@ import {
 } from './icons'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
 import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { showModal } from '@/utils/showModal'
 import { failed, info, success, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import { ConfigPrivateDomain } from '../ConfigPrivateDomain/ConfigPrivateDomain'
 import { ConfigGlobalReverse } from '@/utils/basic'
@@ -744,10 +743,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
 
       {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)} />}
       <YakitModal
-        visible={passwordShow}
+        open={passwordShow}
         closable={passwordClose}
         title={t('Main.setPassword')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         bodyStyle={{ padding: '10px 24px 24px 24px' }}
         width={520}
@@ -758,9 +757,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       </YakitModal>
 
       <YakitModal
-        visible={uploadModalShow}
+        open={uploadModalShow}
         title={t('FuncDomain.uploadData')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         bodyStyle={{ padding: '10px 24px 24px 24px' }}
         width={520}
@@ -889,7 +888,7 @@ const RunNodeModal: React.FC<RunNodeContProp> = (props) => {
       width={600}
       maskClosable={false}
       closable={true}
-      visible={visible}
+      open={visible}
       okText={t('YakitButton.confirm')}
       onCancel={onCloseModal}
       onOk={onOKFun}
@@ -2598,7 +2597,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
         closable={true}
         type="white"
         size="large"
-        visible={editShow.visible}
+        open={editShow.visible}
         cancelButtonProps={{ loading: editLoading }}
         okButtonProps={{ loading: editLoading }}
         onCancel={() => setEditShow({ visible: false, type: 'yakit' })}
@@ -2617,7 +2616,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
       <YakitModal
         type="white"
         size="large"
-        visible={isShowEnpriTraceUpdateVisible}
+        open={isShowEnpriTraceUpdateVisible}
         title="检测到 内网版 EnpriTrace 版本升级"
         children={`检测到有新版本${yakitLastIntranetVersion}，请立即更新`}
         onCancel={() => {
@@ -3085,7 +3084,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
     }).then((res) => {
       if (!res || res.Data.length === 0) return
       setShow(false)
-      let m = showModal({
+      let m = showYakitModal({
         width: '80%',
         title: '详情',
         content: (
@@ -3592,8 +3591,8 @@ const CrashLogModal: React.FC<CrashLogModalProps> = (props) => {
     <YakitModal
       title="崩溃日志采集"
       width={'70%'}
-      visible={!!runtimeId}
-      destroyOnClose
+      open={!!runtimeId}
+      destroyOnHidden
       onCancel={onCancel}
       footer={
         <div className={styles['crash-log-footer']}>

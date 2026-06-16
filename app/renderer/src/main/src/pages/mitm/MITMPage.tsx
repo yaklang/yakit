@@ -1416,7 +1416,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
     <>
       <YakitModal
         type="white"
-        visible={visible}
+        open={visible}
         onCancel={onCancel}
         width={getLoadModeInfo('width') || 680}
         closable={true}

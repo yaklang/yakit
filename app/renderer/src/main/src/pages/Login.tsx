@@ -1,17 +1,16 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react'
-import { Modal } from 'antd'
 import { ExclamationCircleOutlined, GithubOutlined, RightOutlined, WechatOutlined } from '@ant-design/icons'
 import { failed } from '@/utils/notification'
 import './Login.scss'
 import { NetWorkApi } from '@/services/fetch'
 import { ConfigPrivateDomain } from '@/components/ConfigPrivateDomain/ConfigPrivateDomain'
-import { showModal } from '../utils/showModal'
 import { isEnterpriseEdition } from '@/utils/envfile'
 import { apiDownloadPluginMine } from './plugins/utils'
-import { YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
+import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { yakitAuth } from '@/services/electronBridge'
+import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 
 export interface LoginProp {
   visible: boolean
@@ -28,7 +27,7 @@ const Login: React.FC<LoginProp> = (props) => {
   // 打开企业登录面板
   const openEnterpriseModal = () => {
     props.onCancel()
-    const m = showModal({
+    const m = showYakitModal({
       title: '',
       centered: true,
       content: <ConfigPrivateDomain onClose={() => m.destroy()} enterpriseLogin={true} />,
@@ -99,8 +98,8 @@ const Login: React.FC<LoginProp> = (props) => {
     }
   }, [])
   return (
-    <Modal
-      visible={props.visible}
+    <YakitModal
+      open={props.visible}
       closable={false}
       footer={null}
       onCancel={() => props.onCancel()}
@@ -130,7 +129,7 @@ const Login: React.FC<LoginProp> = (props) => {
           </div>
         </div>
       </YakitSpin>
-    </Modal>
+    </YakitModal>
   )
 }
 

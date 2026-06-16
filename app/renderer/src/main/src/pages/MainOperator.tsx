@@ -689,9 +689,9 @@ const Main: React.FC<MainProp> = React.memo((props) => {
 
           {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
           <YakitModal
-            visible={passwordShow}
+            open={passwordShow}
             title={t('Main.setPassword')}
-            destroyOnClose={true}
+            destroyOnHidden={true}
             maskClosable={false}
             bodyStyle={{ padding: '10px 24px 24px 24px' }}
             width={520}

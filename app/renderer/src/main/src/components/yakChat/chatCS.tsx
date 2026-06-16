@@ -2838,7 +2838,7 @@ const EditNameModal: React.FC<EditNameModalProps> = memo((props) => {
       keyboard={false}
       maskClosable={false}
       width={modalWidth}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       bodyStyle={{ padding: 0 }}
     >

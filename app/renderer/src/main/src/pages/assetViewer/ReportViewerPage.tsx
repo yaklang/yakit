@@ -344,7 +344,7 @@ const ReportList: React.FC<ReportListProp> = (props) => {
       </div>
       <YakitModal
         title={t('ReportViewerPage.generateReport')}
-        visible={createVisible}
+        open={createVisible}
         width={'45%'}
         footer={null}
         onCancel={() => setCreateVisible(false)}

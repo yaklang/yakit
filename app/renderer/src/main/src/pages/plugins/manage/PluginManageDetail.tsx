@@ -875,9 +875,7 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
           <div className={'details-filter-extra-wrapper'}>
             <FilterPopoverBtn defaultFilter={filters} onFilter={onFilter} type="check" />
             <div style={{ height: 12 }} className="divider-style"></div>
-            <Tooltip
-              title={selectNum > 0 ? t('YakitButton.batchDownload') : t('YakitButton.oneClickDownload')}
-            >
+            <Tooltip title={selectNum > 0 ? t('YakitButton.batchDownload') : t('YakitButton.oneClickDownload')}>
               <YakitButton
                 loading={downloadLoading}
                 type="text2"
@@ -1116,9 +1114,9 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
             centered={true}
             maskClosable={false}
             closable={true}
-            visible={scoreHint}
+            open={scoreHint}
             footer={null}
-            destroyOnClose={true}
+            destroyOnHidden={true}
             onCancel={handleCancelScoreHint}
             bodyStyle={{ padding: 0 }}
           >

@@ -85,11 +85,11 @@ const KnowledgeBaseFormModal: FC<TKnowledgeBaseFormModalProps> = ({
   return (
     <YakitModal
       title={title}
-      visible={visible}
+      open={visible}
       onCancel={handOpenKnowledgeBasesModal}
       onOk={handleCreateKnowledge}
       width={600}
-      destroyOnClose
+      destroyOnHidden
       maskClosable={false}
       footer={
         <div className={styles['delete-yakit-hint']}>

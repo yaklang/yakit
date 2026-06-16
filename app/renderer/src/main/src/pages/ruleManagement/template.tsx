@@ -2193,7 +2193,7 @@ export const RuleUploadAndDownloadModal: React.FC<RuleUploadAndDownloadModalProp
     <YakitModal
       className={styles['RuleUploadAndDownloadModal']}
       getContainer={getContainer}
-      visible={true}
+      open={true}
       width={650}
       type="white"
       closable={false}

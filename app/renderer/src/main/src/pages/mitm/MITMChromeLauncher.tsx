@@ -352,7 +352,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
         {chromeLauncherParamsVisible && (
           <YakitModal
             title={t('MITMChromeLauncher.browser_params_config')}
-            visible={chromeLauncherParamsVisible}
+            open={chromeLauncherParamsVisible}
             onCancel={() => setChromeLauncherParamsVisible(false)}
             closable={true}
             maskClosable={false}
@@ -501,7 +501,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
       {chromeVisible && (
         <YakitModal
           title={t('MITMChromeLauncher.confirm_start_no_config_chrome_params')}
-          visible={chromeVisible}
+          open={chromeVisible}
           onCancel={() => setChromeVisible(false)}
           closable={true}
           width="50%"

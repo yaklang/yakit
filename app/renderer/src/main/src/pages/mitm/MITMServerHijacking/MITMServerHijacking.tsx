@@ -736,11 +736,11 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
   return (
     <>
       <YakitModal
-        visible={downStreamAgentModalVisible}
+        open={downStreamAgentModalVisible}
         title="下游代理"
         width={506}
         maskClosable={false}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         closable
         centered
         okText="确认"

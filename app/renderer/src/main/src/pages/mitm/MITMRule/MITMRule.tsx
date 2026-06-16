@@ -1282,7 +1282,7 @@ const MITMRuleWhiteListModal: React.FC<MITMRuleWhiteListModalProps> = React.memo
   return (
     <YakitModal
       title={t('MITMRule.white_list_modal_title')}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       onOk={() => {
         onOk(currentWhiteList)
