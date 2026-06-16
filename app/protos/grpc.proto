@@ -1848,6 +1848,8 @@ message AIOutputEvent {
   bytes Content = 9;
   int64 Timestamp = 10;
   string TaskIndex = 11;
+  // TaskId is the logical task identifier (AIStatefulTask.GetId), distinct from TaskUUID.
+  string TaskId = 25;
   bool DisableMarkdown = 13;
   bool IsSync = 12; // 是否是同步消息
   string SyncID = 14; // 用于同步消息的 ID
@@ -1894,6 +1896,10 @@ message AIInputEvent {
 
   // 设置专注模式
   string FocusModeLoop = 16;
+
+  // 配置热补丁目标任务的逻辑 ID (AIStatefulTask.GetId)。
+  // 非空时，仅当前正在执行且 ID 匹配的任务会应用该热补丁（主要用于能力热更新）。
+  string TaskId = 17;
 }
 
 message AttachedResourceInfo {
