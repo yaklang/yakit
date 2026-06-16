@@ -69,12 +69,15 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
               if (exportLocalParams.Password) {
                 name += '.enc'
               }
-              getPathJoin(exportLocalParams.OutputPluginDir, name).then((path) => {
-                ipcRenderer.invoke('is-file-exists', path).then((flag: boolean) => {
-                  if (flag) {
+              ipcRenderer.invoke('is-file-exists', exportLocalParams.OutputPluginDir).then((flag: boolean) => {
+                if (!flag) {
+                  yakitNotify('error', '目标路径不存在，导出失败')
+                } else {
+                  getPathJoin(exportLocalParams.OutputPluginDir, name).then((path) => {
                     openABSFileLocated(path)
-                  }
-                })
+                    yakitNotify('success', '导出成功')
+                  })
+                }
               })
               setTimeout(() => {
                 handleExportLocalPluginFinish()
