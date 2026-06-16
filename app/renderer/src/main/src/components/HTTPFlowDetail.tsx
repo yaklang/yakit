@@ -443,6 +443,7 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
                       <NewHTTPPacketEditor
                         fromMITM={fromMITM}
                         readOnly={true}
+                        foldBinaryFuzztag={true}
                         noHeader={true}
                         originValue={flow.RequestString}
                         defaultHttps={flow?.IsHTTPS}
@@ -1773,6 +1774,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             })()}
             originValue={originResValue}
             readOnly={true}
+            foldBinaryFuzztag={true}
             noLineNumber={true}
             sendToWebFuzzer={sendToWebFuzzer}
             downstreamProxyStr={downstreamProxyStr}
