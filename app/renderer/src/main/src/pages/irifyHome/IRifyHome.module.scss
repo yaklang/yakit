@@ -516,7 +516,6 @@
     display: flex;
     // flex: 1;
     flex-direction: column;
-    justify-content: center;
     gap: 12px;
     min-width: 0;
     padding-left: 8px;
@@ -660,8 +659,8 @@
   line-height: 16px;
   letter-spacing: 0.5px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  // text-overflow: ellipsis;
+  // white-space: nowrap;
 }
 
 @media (min-width: 900px) and (max-width: 1080px) {

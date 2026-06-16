@@ -910,6 +910,9 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       case YakitRoute.Rule_Management:
         addRuleManagement(params)
         break
+      case YakitRoute.Yak_Java_Decompiler:
+        addYakJavaDecompiler()
+        break
       case YakitRoute.YakRunner_Project_Manager:
         addProjectManager()
         break
@@ -1026,6 +1029,10 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         },
       },
     )
+  })
+
+  const addYakJavaDecompiler = useMemoizedFn(() => {
+    openMenuPage({ route: YakitRoute.Yak_Java_Decompiler })
   })
 
   const addYakRunnerCodeScanPage = useMemoizedFn((data: CodeScanPageInfoProps) => {

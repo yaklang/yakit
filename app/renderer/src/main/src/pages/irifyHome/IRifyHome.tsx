@@ -41,6 +41,7 @@ import { useInViewport, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { yakitProject } from '@/services/electronBridge'
 import { yakitFailed } from '@/utils/notification'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const RISK_STAT_CONFIG = [
   {
@@ -85,6 +86,7 @@ const onOpenPage = (route: YakitRoute, params?: any) => {
 }
 
 const IRifyHome: React.FC<IRifyHomeProps> = () => {
+  const { t } = useI18nNamespaces(['irifyHome'])
   const themeColors = useGetColorsByTheme()
   const [responseData, setResponseData] = useState<GetSSAWorkbenchDashboardResponse>()
   const [loading, setLoading] = useState(false)
@@ -104,7 +106,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
         setResponseData(data)
       })
       .catch((e) => {
-        yakitFailed('获取首页数据失败：' + e)
+        yakitFailed(t('IRifyHome.fetchDataFailed', { error: e }))
       })
       .finally(() => {
         setLoading(false)
@@ -176,10 +178,8 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
           <div className={styles['hero-section']}>
             <div className={styles['page-header']}>
               <div className={styles['page-header-text']}>
-                <div className={styles['page-title']}>代码审计工作台</div>
-                <div className={styles['page-subtitle']}>
-                  区分 AI 联网审计与 SSA 离线规则审计，统一查看扫描成果与风险态势
-                </div>
+                <div className={styles['page-title']}>{t('IRifyHome.pageTitle')}</div>
+                <div className={styles['page-subtitle']}>{t('IRifyHome.pageSubtitle')}</div>
               </div>
               <div className={styles['header-stats']}>
                 <div className={styles['header-stat-card']}>
@@ -188,7 +188,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                   </div>
                   <div className={styles['header-stat-info']}>
                     <div className={styles['header-stat-value']}>{responseData?.Summary.ProjectCount || 0}</div>
-                    <div className={styles['header-stat-label']}>项目</div>
+                    <div className={styles['header-stat-label']}>{t('IRifyHome.project')}</div>
                   </div>
                 </div>
                 <div className={styles['header-stat-card']}>
@@ -197,7 +197,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                   </div>
                   <div className={styles['header-stat-info']}>
                     <div className={styles['header-stat-value']}>{responseData?.Summary.RuleCount || 0}</div>
-                    <div className={styles['header-stat-label']}>规则库</div>
+                    <div className={styles['header-stat-label']}>{t('IRifyHome.ruleLibrary')}</div>
                   </div>
                 </div>
                 <div className={styles['header-stat-card']}>
@@ -206,7 +206,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                   </div>
                   <div className={styles['header-stat-info']}>
                     <div className={styles['header-stat-value']}>{responseData?.Summary.AIAuditTaskCount || 0}</div>
-                    <div className={styles['header-stat-label']}>AI 审计任务</div>
+                    <div className={styles['header-stat-label']}>{t('IRifyHome.aiAuditTask')}</div>
                   </div>
                 </div>
               </div>
@@ -223,34 +223,34 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                     <div className={classNames(styles['audit-mode-card-icon'], styles['audit-mode-card-icon-primary'])}>
                       <PublicAIAuditCodeIcon />
                     </div>
-                    <span className={styles['audit-mode-card-title']}>AI 代码审计</span>
+                    <span className={styles['audit-mode-card-title']}>{t('AuditMode.aiCodeAudit')}</span>
 
                     <span className={classNames(styles['audit-mode-badge'], styles['audit-mode-badge-online'])}>
-                      联网
+                      {t('AuditMode.online')}
                     </span>
                   </div>
-                  <div className={styles['audit-mode-card-subtitle']}>适合：复杂业务 / 需要解释 / 需要辅助研判</div>
+                  <div className={styles['audit-mode-card-subtitle']}>{t('AuditMode.aiSubtitle')}</div>
                 </div>
 
                 <div className={styles['audit-mode-features']}>
                   <div className={styles['audit-mode-feature-item']}>
                     <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
-                    <span>面向复杂业务逻辑、跨文件关联、自然语言分析与风险解释</span>
+                    <span>{t('AuditMode.aiFeature1')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
                     <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
-                    <span>支持联网知识增强、场景理解、问题归因、修复建议</span>
+                    <span>{t('AuditMode.aiFeature2')}</span>
                   </div>
                 </div>
 
                 <div className={styles['audit-mode-tags']}>
-                  <span className={styles['audit-mode-tag']}>业务逻辑</span>
-                  <span className={styles['audit-mode-tag']}>上下文理解</span>
-                  <span className={styles['audit-mode-tag']}>风险解释</span>
-                  <span className={styles['audit-mode-tag']}>修复建议</span>
+                  <span className={styles['audit-mode-tag']}>{t('AuditMode.tagBusinessLogic')}</span>
+                  <span className={styles['audit-mode-tag']}>{t('AuditMode.tagContextUnderstanding')}</span>
+                  <span className={styles['audit-mode-tag']}>{t('AuditMode.tagRiskExplanation')}</span>
+                  <span className={styles['audit-mode-tag']}>{t('AuditMode.tagFixSuggestion')}</span>
                 </div>
                 <div className={styles['audit-mode-button']} onClick={() => onOpenPage(YakitRoute.Irify_AI_Code_Audit)}>
-                  开始 AI 审计
+                  {t('AuditMode.startAiAudit')}
                   <OutlineArrowsmrightIcon />
                 </div>
               </div>
@@ -260,10 +260,10 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                     <div className={styles['audit-mode-card-icon']}>
                       <PublicAuditCodeIcon />
                     </div>
-                    <span className={styles['audit-mode-card-title']}>传统代码审计</span>
+                    <span className={styles['audit-mode-card-title']}>{t('AuditMode.traditionalCodeAudit')}</span>
 
                     <span className={classNames(styles['audit-mode-badge'], styles['audit-mode-badge-offline'])}>
-                      离线
+                      {t('AuditMode.offline')}
                     </span>
                   </div>
                 </div>
@@ -271,11 +271,11 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                 <div className={styles['audit-mode-features']}>
                   <div className={styles['audit-mode-feature-item']}>
                     <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
-                    <span>通过编写审计规则对代码行为进行分析，发现代码中的风险片段</span>
+                    <span>{t('AuditMode.traditionalFeature1')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
                     <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
-                    <span>Java、PHP、Yaklang、Golang</span>
+                    <span>{t('AuditMode.traditionalFeature2')}</span>
                   </div>
                 </div>
 
@@ -283,7 +283,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                   className={styles['audit-mode-button']}
                   onClick={() => onOpenPage(YakitRoute.YakRunner_Audit_Code)}
                 >
-                  开始审计
+                  {t('AuditMode.startAudit')}
                   <OutlineArrowsmrightIcon />
                 </div>
               </div>
@@ -293,27 +293,27 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                     <div className={styles['audit-mode-card-icon']}>
                       <PublicCodeScanIcon />
                     </div>
-                    <span className={styles['audit-mode-card-title']}>代码扫描</span>
+                    <span className={styles['audit-mode-card-title']}>{t('AuditMode.codeScan')}</span>
                   </div>
                 </div>
 
                 <div className={styles['audit-mode-features']}>
                   <div className={styles['audit-mode-feature-item']}>
                     <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
-                    <span>内置丰富规则库</span>
+                    <span>{t('AuditMode.scanFeature1')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
                     <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
-                    <span>可自由选择规则分组进行代码扫描</span>
+                    <span>{t('AuditMode.scanFeature2')}</span>
                   </div>
                   <div className={styles['audit-mode-feature-item']}>
                     <OutlineCheckIcon className={styles['audit-mode-feature-icon']} />
-                    <span>帮助分析代码结构和发现代码中的风险片段</span>
+                    <span>{t('AuditMode.scanFeature3')}</span>
                   </div>
                 </div>
 
                 <div className={styles['audit-mode-button']} onClick={() => onOpenPage(YakitRoute.YakRunner_Code_Scan)}>
-                  开始扫描
+                  {t('AuditMode.startScan')}
                   <OutlineArrowsmrightIcon />
                 </div>
               </div>
@@ -321,7 +321,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
           </div>
           <div className={styles['main-chart']}>
             <div className={classNames(styles['panel-card'])}>
-              <div className={styles['panel-card-title']}>风险概览</div>
+              <div className={styles['panel-card-title']}>{t('IRifyHome.riskOverview')}</div>
               <div className={styles['risk-overview']}>
                 <div className={styles['risk-gauge']}>{inViewport && <RiskGaugeChart list={riskGaugeList} />}</div>
                 <div className={styles['risk-stats-grid']}>
@@ -341,7 +341,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
             </div>
 
             <div className={classNames(styles['panel-card'], styles['chart-card'])}>
-              <div className={styles['panel-card-title']}>风险分布</div>
+              <div className={styles['panel-card-title']}>{t('IRifyHome.riskDistribution')}</div>
               <div className={styles['distribution-content']}>
                 <div className={styles['distribution-content-echarts']}>
                   {inViewport && <RiskDistributionChart total={totalRiskCount} items={riskDistributionItems} />}
@@ -369,7 +369,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
             </div>
 
             <div className={classNames(styles['panel-card'], styles['chart-card'])}>
-              <div className={styles['panel-card-title']}>规则命中 Top5</div>
+              <div className={styles['panel-card-title']}>{t('IRifyHome.ruleHitsTop5')}</div>
               <div className={styles['rule-hits-bar-chart']}>
                 {inViewport && <RuleHitsBarChart items={ruleHitsTop5} />}
               </div>
@@ -379,13 +379,13 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
           <div className={styles['bottom-row']}>
             <div className={classNames(styles['panel-card'], styles['projects-card'])}>
               <div className={styles['panel-card-header']}>
-                <div className={styles['panel-card-title']}>近期项目</div>
+                <div className={styles['panel-card-title']}>{t('IRifyHome.recentProjects')}</div>
                 <button
                   type="button"
                   className={styles['panel-card-link']}
                   onClick={() => onOpenPage(YakitRoute.YakRunner_Project_Manager)}
                 >
-                  查看全部
+                  {t('IRifyHome.viewAll')}
                   <OutlineChevronrightIcon />
                 </button>
               </div>
@@ -394,15 +394,15 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
               </div>
             </div>
             <div className={classNames(styles['panel-card'], styles['quick-access-card'])}>
-              <div className={styles['panel-card-title']}>快速入口</div>
+              <div className={styles['panel-card-title']}>{t('IRifyHome.quickAccess')}</div>
               <div className={styles['quick-access-list']}>
                 <div className={styles['quick-access-item']} onClick={() => onOpenPage(YakitRoute.Rule_Management)}>
                   <div className={styles['quick-access-item-icon']}>
                     <PublicRuleManagementIcon />
                   </div>
                   <div className={styles['quick-access-item-content']}>
-                    <div className={styles['quick-access-item-title']}>规则管理</div>
-                    <div className={styles['quick-access-item-desc']}>这里是描述文案</div>
+                    <div className={styles['quick-access-item-title']}>{t('QuickAccess.ruleManagement')}</div>
+                    <div className={styles['quick-access-item-desc']}>{t('QuickAccess.ruleManagementDesc')}</div>
                   </div>
                 </div>
                 <div className={styles['quick-access-item']} onClick={() => onOpenPage(YakitRoute.Yak_Java_Decompiler)}>
@@ -410,8 +410,8 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                     <IRifyQuickAccessJavaDecompilerIcon />
                   </div>
                   <div className={styles['quick-access-item-content']}>
-                    <div className={styles['quick-access-item-title']}>JAVA 反编译</div>
-                    <div className={styles['quick-access-item-desc']}>这里是描述文案</div>
+                    <div className={styles['quick-access-item-title']}>{t('QuickAccess.javaDecompiler')}</div>
+                    <div className={styles['quick-access-item-desc']}>{t('QuickAccess.javaDecompilerDesc')}</div>
                   </div>
                 </div>
                 <div
@@ -422,8 +422,8 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                     <PublicAuditHoleIcon />
                   </div>
                   <div className={styles['quick-access-item-content']}>
-                    <div className={styles['quick-access-item-title']}>审计漏洞</div>
-                    <div className={styles['quick-access-item-desc']}>这里是描述文案</div>
+                    <div className={styles['quick-access-item-title']}>{t('QuickAccess.auditHole')}</div>
+                    <div className={styles['quick-access-item-desc']}>{t('QuickAccess.auditHoleDesc')}</div>
                   </div>
                 </div>
                 <div
@@ -434,8 +434,8 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
                     <PublicProjectManagerIcon />
                   </div>
                   <div className={styles['quick-access-item-content']}>
-                    <div className={styles['quick-access-item-title']}>项目管理</div>
-                    <div className={styles['quick-access-item-desc']}>这里是描述文案</div>
+                    <div className={styles['quick-access-item-title']}>{t('QuickAccess.projectManagement')}</div>
+                    <div className={styles['quick-access-item-desc']}>{t('QuickAccess.projectManagementDesc')}</div>
                   </div>
                 </div>
               </div>

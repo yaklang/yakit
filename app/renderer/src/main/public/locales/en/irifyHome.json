@@ -1,0 +1,58 @@
+{
+  "IRifyHome": {
+    "fetchDataFailed": "Failed to fetch dashboard data: {{error}}",
+    "pageTitle": "Code Audit Workbench",
+    "pageSubtitle": "Distinguish AI online audit from SSA offline rule audit, and view scan results and risk posture in one place",
+    "project": "Projects",
+    "ruleLibrary": "Rule Library",
+    "aiAuditTask": "AI Audit Tasks",
+    "riskOverview": "Risk Overview",
+    "riskDistribution": "Risk Distribution",
+    "ruleHitsTop5": "Top 5 Rule Hits",
+    "recentProjects": "Recent Projects",
+    "viewAll": "View All",
+    "quickAccess": "Quick Access"
+  },
+  "AuditMode": {
+    "aiCodeAudit": "AI Code Audit",
+    "online": "Online",
+    "aiSubtitle": "Best for: complex business logic / explanation needed / assisted analysis",
+    "aiFeature1": "Handles complex business logic, cross-file correlation, natural language analysis, and risk explanation",
+    "aiFeature2": "Supports online knowledge enhancement, scenario understanding, root cause analysis, and fix suggestions",
+    "tagBusinessLogic": "Business Logic",
+    "tagContextUnderstanding": "Context Understanding",
+    "tagRiskExplanation": "Risk Explanation",
+    "tagFixSuggestion": "Fix Suggestions",
+    "startAiAudit": "Start AI Audit",
+    "traditionalCodeAudit": "Traditional Code Audit",
+    "offline": "Offline",
+    "traditionalFeature1": "Analyze code behavior through audit rules to find risky code fragments",
+    "traditionalFeature2": "Java, PHP, Yaklang, Golang",
+    "startAudit": "Start Audit",
+    "codeScan": "Code Scan",
+    "scanFeature1": "Built-in rich rule library",
+    "scanFeature2": "Freely select rule groups for code scanning",
+    "scanFeature3": "Helps analyze code structure and find risky code fragments",
+    "startScan": "Start Scan"
+  },
+  "QuickAccess": {
+    "ruleManagement": "Rule Management",
+    "ruleManagementDesc": "Add, delete, modify, and group rules, and upload rules",
+    "javaDecompiler": "Java Decompiler",
+    "javaDecompilerDesc": "Decompile compiled bytecode files into human-readable Java source code",
+    "auditHole": "Audit Vulnerabilities",
+    "auditHoleDesc": "View all vulnerabilities found during code scanning or auditing",
+    "projectManagement": "Project Management",
+    "projectManagementDesc": "Manage all projects compiled and scanned"
+  },
+  "IRifyHomeTable": {
+    "project": "Project",
+    "language": "Language",
+    "projectRisk": "Project Risk",
+    "riskCount": "Risk Count",
+    "updatedAt": "Updated At"
+  },
+  "IRifyHomeEcharts": {
+    "totalRisk": "Total Risks"
+  }
+}
