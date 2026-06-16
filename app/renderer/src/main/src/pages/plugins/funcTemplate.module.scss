@@ -1066,6 +1066,14 @@
           }
         }
       }
+      .opt-results-wrap {
+        position: relative;
+        .copy-btn {
+          position: absolute;
+          left: 0;
+          top: 30px;
+        }
+      }
       .opt-results {
         padding: 20px 12px 20px 12px;
         display: flex;

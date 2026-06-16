@@ -4,6 +4,7 @@ import {
   CodeScoreModalProps,
   CodeScoreModuleProps,
   CodeScoreSmokingEvaluateResponseProps,
+  CodeScoreSmokingEvaluateResultProps,
   FilterPopoverBtnProps,
   FuncBtnIconProps,
   FuncBtnProps,
@@ -39,6 +40,7 @@ import {
   OutlineCalendarIcon,
   OutlineClouddownloadIcon,
   OutlineDatabasebackupIcon,
+  OutlineDocumentduplicateIcon,
   OutlineDotshorizontalIcon,
   OutlineFilterIcon,
   OutlineOpenIcon,
@@ -101,6 +103,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
+import { setClipboardText } from '@/utils/clipboard'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -1600,6 +1603,31 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
     callback(true)
   })
 
+  // 从 item.Range 中提取位置信息字符串
+  const getErrorPosition = (item: CodeScoreSmokingEvaluateResultProps): string => {
+    try {
+      const { StartLine, StartColumn, EndLine, EndColumn } = item.Range || {}
+      if (StartLine && StartColumn && EndLine && EndColumn) {
+        return `[${StartLine}:${StartColumn}-${EndLine}:${EndColumn}]`
+      }
+    } catch (error) {}
+    return ''
+  }
+
+  // 格式化单条检测结果
+  const formatSingleResult = (item: CodeScoreSmokingEvaluateResultProps) => {
+    let errorPosition = getErrorPosition(item)
+    // 基础内容：Item + Suggestion + 位置（如果有）
+    return `${item.Item}\n${item.Suggestion}${errorPosition ? `\n${errorPosition}` : ''}`
+  }
+
+  // 一键复制所有
+  const handleCopyAll = () => {
+    if (!response?.Results || response.Results.length === 0) return
+    const allText = response.Results.map((item) => formatSingleResult(item)).join('\n\n')
+    setClipboardText(allText)
+  }
+
   return (
     <div className={styles['code-score-modal']}>
       {!hiddenScoreHint && (
@@ -1659,19 +1687,19 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
             {response && (
               <div className={styles['list-body']}>
                 {(response?.Results || []).map((item, index) => {
-                  let errorPosition: string = ''
-                  try {
-                    const { StartLine, StartColumn, EndLine, EndColumn } = item.Range || {}
-                    if (StartLine && StartColumn && EndLine && EndColumn) {
-                      errorPosition = `[${StartLine}:${StartColumn}-${EndLine}:${EndColumn}]`
-                    }
-                  } catch (error) {}
-
+                  const errorPosition = getErrorPosition(item)
                   return (
                     <div className={styles['list-opt']} key={item.IdKey}>
                       <div className={styles['opt-header']}>
                         {item.Severity === 'Warning' ? <PluginTestWarningIcon /> : <PluginTestErrorIcon />}
                         {item.Item}
+                        <YakitButton
+                          icon={<OutlineDocumentduplicateIcon />}
+                          type="text"
+                          onClick={() => {
+                            setClipboardText(formatSingleResult(item))
+                          }}
+                        />
                       </div>
                       <div className={styles['opt-content']}>
                         <pre>{item.Suggestion}</pre>
@@ -1683,12 +1711,17 @@ export const CodeScoreModule: React.FC<CodeScoreModuleProps> = memo((props) => {
               </div>
             )}
             {response && (+response?.Score || 0) < 60 && (
-              <div className={styles['opt-results']}>
-                <SolidExclamationIcon />
-                <div className={styles['content-style']}>
-                  {isSpecial
-                    ? specialHint || t('CodeScoreModule.unable_to_judge_manual_review')
-                    : failedHint || t('CodeScoreModule.upload_failed_fix_and_retry')}
+              <div className={styles['opt-results-wrap']}>
+                <YakitButton type="text" onClick={handleCopyAll} className={styles['copy-btn']}>
+                  一键复制
+                </YakitButton>
+                <div className={styles['opt-results']}>
+                  <SolidExclamationIcon />
+                  <div className={styles['content-style']}>
+                    {isSpecial
+                      ? specialHint || t('CodeScoreModule.unable_to_judge_manual_review')
+                      : failedHint || t('CodeScoreModule.upload_failed_fix_and_retry')}
+                  </div>
                 </div>
               </div>
             )}
