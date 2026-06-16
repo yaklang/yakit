@@ -278,13 +278,13 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
       try {
         return (
-          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat.todoList ||
+          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat?.planDetails?.todoList ||
           cloneDeep(DefaultTodoListCardData)
         )
       } catch (error) {
         return cloneDeep(DefaultTodoListCardData)
       }
-    }, [chatIPCData.casualChat.toolListRenderNumber, activeChat?.SessionID])
+    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
     return (
       <>
         <div

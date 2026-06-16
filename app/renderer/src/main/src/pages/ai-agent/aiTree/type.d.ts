@@ -5,6 +5,7 @@ export interface AITreeProps {
   onNodeClick?: AITreeNodeProps['onClick']
   className?: string
   aiTreeTitleExtraNode?: (value: AITaskInfoProps) => React.ReactNode
+  taskType: AITreeNodeProps['taskType']
 }
 
 export interface AITreeNodeProps {
@@ -31,4 +32,6 @@ export interface AITreeNodeProps {
   dependsOnTasks?: AITaskInfoProps[]
   onNodeHover?: (index: string) => void
   onNodeHoverEnd?: () => void
+  /** 任务类型 */
+  taskType: 'current' | 'history'
 }

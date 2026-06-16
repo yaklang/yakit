@@ -168,6 +168,7 @@ export type ForgesAndSkillsDynamicItem = Omit<AIAgentGrpcApi.PlanItemDetailsDyna
 export interface PlanItemDetailsData {
   /** UI定时刷新数据渲染，用于确定数据是否有更新 */
   uuid: string
+  todoList: TodoListCardData
   tool: {
     fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
     dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]

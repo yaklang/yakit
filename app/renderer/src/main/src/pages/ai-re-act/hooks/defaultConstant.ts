@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash'
 import type { AIToolResult, PlanItemDetailsData, TodoListCardData } from './aiRender'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
 import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from './type'
@@ -158,6 +159,7 @@ export const DefaultTodoListCardData: TodoListCardData = {
 
 export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
   uuid: '',
+  todoList: { ...DefaultTodoListCardData },
   tool: {
     fixed: [],
     dynamic: [],

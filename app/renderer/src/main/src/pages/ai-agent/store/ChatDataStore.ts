@@ -3,7 +3,7 @@ import type { AIChatData } from '../type/aiChat'
 import { AIChatQSData, ReActChatBaseInfo } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIModelTypeEnum } from '../defaultConstant'
 import { cloneDeep } from 'lodash'
-import { DefaultCurrentExecTaskTree, DefaultTodoListCardData } from '@/pages/ai-re-act/hooks/defaultConstant'
+import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
@@ -90,13 +90,12 @@ export class ChatDataStore {
       casualChat: {
         elements: [],
         contents: new Map(),
-        todoList: cloneDeep(DefaultTodoListCardData),
+        planDetails: cloneDeep(DefaultPlanItemDetailsData),
       },
       taskChat: {
         plan: cloneDeep(DefaultCurrentExecTaskTree),
         elements: [],
         contents: new Map(),
-        todoListMap: new Map(),
         planDetailsMap: new Map(),
       },
       grpcFolders: [],

@@ -32,7 +32,7 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 }
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-  const { tasks, className, aiTreeTitleExtraNode } = props
+  const { tasks, className, aiTreeTitleExtraNode, taskType } = props
   const [hoveredIndex, setHoveredIndex] = useState<string | null>(null)
 
   const onNodeHoverEnd = useCallback(() => setHoveredIndex(null), [])
@@ -91,6 +91,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
             onNodeHover={setHoveredIndex}
             onNodeHoverEnd={onNodeHoverEnd}
             aiTreeTitleExtraNode={aiTreeTitleExtraNode}
+            taskType={taskType}
           />
         )
       })}
@@ -113,6 +114,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
     onNodeHover,
     onNodeHoverEnd,
     aiTreeTitleExtraNode,
+    taskType,
   }) => {
     const [todoListVisible, setTodoListVisible] = useState<boolean>(false)
 
@@ -135,8 +137,8 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
       if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
       try {
         return (
-          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.taskChat.todoListMap.get(data.index) ||
-          cloneDeep(DefaultTodoListCardData)
+          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.taskChat.planDetailsMap.get(data.index)
+            ?.todoList || cloneDeep(DefaultTodoListCardData)
         )
       } catch (error) {
         return cloneDeep(DefaultTodoListCardData)
@@ -189,7 +191,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
               <OutlineInformationcircleIcon className={styles['info-icon']} />
             </YakitPopover>
             {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskIndex={data.index} />}
-            {data.isLeaf && unFinish && (
+            {taskType === 'current' && data.isLeaf && unFinish && (
               <Tooltip title="待办事项" placement="top">
                 <YakitButton
                   size="small"

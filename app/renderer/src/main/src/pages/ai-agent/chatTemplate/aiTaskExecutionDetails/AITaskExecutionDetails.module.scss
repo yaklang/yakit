@@ -56,7 +56,7 @@
   .content-body {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     padding-right: 12px;
     padding-bottom: 12px;
     width: 100%;
@@ -312,10 +312,12 @@
   }
 
   .bottom-section {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(220px, 1fr));
-    gap: 16px;
-    align-items: start;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    flex: 1;
+    overflow: hidden;
+    min-height: 500px;
   }
   .section-card {
     border-radius: 8px;
@@ -324,6 +326,12 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+
+    width: calc((100% - 24px) / 4); // 3*8
+    overflow: hidden;
+    height: fit-content;
+    max-height: 100%;
+
     .section-card-title {
       color: var(--Colors-Use-Neutral-Text-1-Title);
 
@@ -339,11 +347,13 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 4px;
 
     border-radius: 6px;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
     background: var(--Colors-Use-Neutral-Bg);
+
+    overflow: hidden;
+    flex: 0 1 auto;
 
     .plugin-group-header {
       display: flex;
@@ -367,8 +377,8 @@
       flex-direction: column;
       gap: 2px;
       padding: 0px 8px 8px 8px;
-      max-height: 300px;
       overflow: auto;
+      flex: 1 1 auto;
 
       .plugin-item {
         padding: 2px;
@@ -453,13 +463,15 @@
       }
     }
     .bottom-section {
-      /* 取消三列网格，强制单列垂直排列 */
-      grid-template-columns: minmax(0, 1fr);
+      overflow: initial;
+      .section-card {
+        width: calc((100% - 8px) / 2); // 一个gap：8px
+      }
     }
   }
 }
 
-@container task-details (max-width: 400px) {
+@container task-details (max-width: 500px) {
   .ai-task-execution-details-container {
     .top-section .task-statistics {
       .stats-overview {
@@ -475,6 +487,12 @@
         > :nth-child(n + 4) {
           grid-column: span 3;
         }
+      }
+    }
+    .bottom-section {
+      overflow: initial;
+      .section-card {
+        width: 100%; /* 单列占满全宽 */
       }
     }
   }

@@ -44,7 +44,7 @@ import {
 } from '@/pages/ai-re-act/hooks/grpcApi'
 import { apiQueryYakScript } from '@/pages/plugins/utils'
 import { grpcGetAllMCPServers } from '../../aiMCP/utils'
-import { GetAllMCPServersRequest, MCPServer } from '../../type/aiMCP'
+import { GetAllMCPServersRequest, MCPServer, MCPServerTool } from '../../type/aiMCP'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskIndex, taskGoal, taskName } = props
@@ -52,33 +52,17 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   const { activeChat } = useAIAgentStore()
 
   const [planItemDetailsData, setPlanItemDetailsData] = useState<PlanItemDetailsData>()
-  const [todoList, setTodoList] = useState<TodoListCardData>()
   const perPlanItemDetailsDataUUIdRef = useRef<string>('')
-  const perTodoListUUIdRef = useRef<string>('')
   useEffect(() => {
     onReset()
     getData()
-    getTodoList()
   }, [taskIndex])
   useInterval(() => {
     getData()
-    getTodoList()
   }, 5 * 1000)
   const onReset = useMemoizedFn(() => {
     setPlanItemDetailsData(undefined)
-    setTodoList(undefined)
     perPlanItemDetailsDataUUIdRef.current = ''
-    perTodoListUUIdRef.current = ''
-  })
-  const getTodoList = useMemoizedFn(() => {
-    if (!taskIndex) return
-    const todoListMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.taskChat.todoListMap
-    if (!todoListMap || todoListMap.size === 0) return
-    const itemData: TodoListCardData | undefined = todoListMap.get(taskIndex)
-    if (!itemData) return
-    if (perTodoListUUIdRef.current === itemData.uuid) return
-    perTodoListUUIdRef.current = itemData.uuid
-    setTodoList(cloneDeep(itemData))
   })
   const getData = useMemoizedFn(() => {
     if (!taskIndex) return
@@ -96,9 +80,16 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   }, [planItemDetailsData?.perception])
 
   const finishedCount = useCreation(() => {
-    return (todoList?.stats?.deleted || 0) + (todoList?.stats?.done || 0) + (todoList?.stats?.skipped || 0)
-  }, [todoList?.stats])
-  const total = useCreation(() => todoList?.items?.length || 0, [todoList?.items?.length])
+    return (
+      (planItemDetailsData?.todoList?.stats?.deleted || 0) +
+      (planItemDetailsData?.todoList?.stats?.done || 0) +
+      (planItemDetailsData?.todoList?.stats?.skipped || 0)
+    )
+  }, [planItemDetailsData?.todoList?.stats])
+  const total = useCreation(
+    () => planItemDetailsData?.todoList?.items?.length || 0,
+    [planItemDetailsData?.todoList?.items?.length],
+  )
 
   const todoData = useCreation(() => {
     const unFinish: TodoListCardData['items'] = []
@@ -117,7 +108,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       { key: 'deleted', color: 'red', title: '已删除', footerLeft: 0, footerRight: <AIDeleteNodeIcon /> },
     ]
 
-    for (const item of todoList?.items || []) {
+    for (const item of planItemDetailsData?.todoList?.items || []) {
       switch (item.status) {
         case 'PENDING':
           progressNumber[0].footerLeft = progressNumber[0].footerLeft + 1
@@ -148,7 +139,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       }
     }
     return { unFinish, finished, progressNumber }
-  }, [todoList?.items])
+  }, [planItemDetailsData?.todoList?.items])
 
   const forgeFixedList = useCreation(() => {
     let forgeFixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[] =
@@ -201,7 +192,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
           </div>
           <div className={styles['task-statistics']}>
             <div className={styles['stats-header']}>
-              <span className={styles['title']}>任务统计</span>
+              <span className={styles['title']}>待办任务</span>
               {!!total && (
                 <>
                   <span className={styles['progress-text']}>
@@ -291,13 +282,13 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             fixedList={planItemDetailsData?.plugins.fixed || []}
             dynamicList={planItemDetailsData?.plugins.dynamic || []}
           />
-          {/* <AITaskDetailsCardList
+          <AITaskDetailsCardList
             key="mcpServices"
             type="mcpServices"
             colTitle={'mcp'}
             fixedList={planItemDetailsData?.mcpServices.fixed || []}
             dynamicList={planItemDetailsData?.mcpServices.dynamic || []}
-          /> */}
+          />
         </div>
       </div>
     </div>
@@ -495,13 +486,14 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
           query.Keyword = kw
         }
         const res = await grpcGetAllMCPServers(query)
+        const mcpTools: MCPServerTool[] = res.MCPServers?.flatMap((server) => server.Tools || []) || []
         return {
-          data: res.MCPServers || [],
+          data: mcpTools,
           total: res.Total,
           pagination: res.Pagination,
         }
       },
-      (item: MCPServer) => ({
+      (item: MCPServerTool) => ({
         label: item.Name,
         type: 'mcp_tool',
         value: item.Name,

@@ -22,6 +22,7 @@ import {
   genBaseAIChatData,
   generateTaskId,
   genErrorLogData,
+  handleTodoListData,
   isAutoExecuteReviewContinue,
   isToolStderrStream,
   isToolStdoutStream,
@@ -487,6 +488,32 @@ const handleReportFinish: AIMessageHandler = (request) => {
     chatType: info.chatType,
   })
 }
+/** Type='current_task_todo_list_update'&NodeId='current_task_todo_list' todolist */
+const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
+  const { res, info, getChatDataStore, callback } = request
+  if (res.Type !== 'current_task_todo_list_update' || res.NodeId !== 'current_task_todo_list') return
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  // 更新待办清单卡片数据
+  const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
+  if (isEmpty(data)) return
+
+  const newData = handleTodoListData(data.items, data.task_id, data.task_index)
+  if (info.chatType === 'task') {
+    const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(data.task_index)
+    if (!oldData) return
+    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
+      ...cloneDeep(DefaultPlanItemDetailsData),
+      ...oldData,
+      uuid: uuidv4(),
+      todoList: newData,
+    })
+  } else if (info.chatType === 'reAct') {
+    const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
+    if (!chatDetail) return
+    chatDetail.todoList = newData
+    callback?.(res)
+  }
+}
 /** Type='structured'&NodeId='capability_inventory' 能力清单(tool/skills/forge/yak_plugin/mac) */
 const handleCapabilityInventory: AIMessageHandler = (request) => {
   const { res, getChatDataStore } = request
@@ -494,7 +521,7 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
   if (res.Type !== 'structured' && res.NodeId !== 'capability_inventory') return
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanItemDetails
-
+  if (isEmpty(payload)) return
   const { fixed, dynamic } = payload
 
   const itemData: PlanItemDetailsData = {
@@ -553,7 +580,11 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
     itemData.forges.dynamic = dynamic.forges
   }
   const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || {}
-  if (oldData) getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, { ...oldData, ...itemData })
+  getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
+    ...cloneDeep(DefaultPlanItemDetailsData),
+    ...oldData,
+    ...itemData,
+  })
 }
 /** Type='perception'&NodeId='perception' 意图感知 */
 const handlePerception: AIMessageHandler = (request) => {
@@ -2157,6 +2188,7 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   api_request_failed: handleApiRequestFailed,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
   'report-finish': handleReportFinish,
+  current_task_todo_list_update: handleCurrentTaskTodoListUpdate,
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
 }
