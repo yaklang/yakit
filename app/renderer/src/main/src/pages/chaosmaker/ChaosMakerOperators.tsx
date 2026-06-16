@@ -3,7 +3,6 @@ import { Form, Space } from 'antd'
 import { AutoCard } from '@/components/AutoCard'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { ChaosMakerRuleGroup } from '@/pages/chaosmaker/ChaosMaker'
-import { showModal } from '@/utils/showModal'
 import { InputInteger, InputItem } from '@/utils/inputUtil'
 import { failed, info } from '@/utils/notification'
 import { debugYakitModal, showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -186,7 +185,7 @@ export const ChaosMakerOperators: React.FC<ChaosMakerOperatorsProp> = (props) =>
                       {
                         title: '添加节点',
                         onClick: () => {
-                          const m = showModal({
+                          const m = showYakitModal({
                             title: '添加一个新的 BAS 节点',
                             width: '50%',
                             content: (

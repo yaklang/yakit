@@ -443,7 +443,7 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
 
   return (
     <YakitModal
-      visible={true}
+      open={true}
       width={800}
       title={'Yak Mcp'}
       footer={null}

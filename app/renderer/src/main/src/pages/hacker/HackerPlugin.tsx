@@ -20,11 +20,11 @@ import { InputInteger, InputItem } from '../../utils/inputUtil'
 import ReactResizeDetector from 'react-resize-detector'
 
 import './HackerPlugin.scss'
-import { showModal } from '../../utils/showModal'
 import { xtermClear } from '../../utils/xtermUtils'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 
 const { ipcRenderer } = window.require('electron')
 const { Text } = Typography
@@ -159,7 +159,7 @@ export const HackerPlugin: React.FC<HackerPluginProps> = React.memo((props) => {
                 size={'small'}
                 type={'text'}
                 onClick={() => {
-                  showModal({
+                  showYakitModal({
                     width: '40%',
                     title: 'Help',
                     content: <>{info.Help}</>,

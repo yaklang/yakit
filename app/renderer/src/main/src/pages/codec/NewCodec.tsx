@@ -1543,7 +1543,7 @@ export const NewCodecMiddleRunList: React.FC<NewCodecMiddleRunListProps> = forwa
         </YakitButton>
       </div>
       <YakitModal
-        visible={cacheModal}
+        open={cacheModal}
         bodyStyle={{ padding: 0 }}
         title={t('NewCodecMiddleRunList.saveCodecOrder')}
         width={400}

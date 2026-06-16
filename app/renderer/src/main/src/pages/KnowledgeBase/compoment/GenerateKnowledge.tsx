@@ -173,7 +173,7 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
         {children ? children : <YakitButton type="primary" size="large" icon={<OutlinePlay2Icon />} name="生成知识" />}
       </YakitDropdownMenu>
       <YakitModal
-        visible={additionalConditionsVisible}
+        open={additionalConditionsVisible}
         title="补充条件"
         onOk={() => {
           if (additionalConditionsValue.trim().length > 0) {

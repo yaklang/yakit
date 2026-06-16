@@ -132,9 +132,9 @@ export const ModifyYakitPlugin: React.FC<ModifyYakitPluginProps> = memo((props) 
           cancelText="不保存"
           cancelButtonProps={{ onClick: () => unsavedHintCallback(false) }}
           keyboard={false}
-          maskStyle={{ position: 'absolute' }}
+          styles={{ mask: { position: 'absolute' } }}
           wrapClassName={styles['unsaved-hint']}
-          visible={unSavedHint}
+          open={unSavedHint}
           onOk={() => unsavedHintCallback(true)}
           onCancel={cancelUnsavedHint}
         >

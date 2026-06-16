@@ -1,12 +1,15 @@
 // ========================== Modal.confirm start ==========================
-.ant-modal-content {
+.ant-modal .ant-modal-content {
   background-color: var(--Colors-Use-Basic-Background);
   border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-  background: var(--Colors-Use-Neutral-Bg);
+  background: var(--Colors-Use-Basic-White);
   box-shadow: 0px 2px 24px 0px var(--Colors-Use-Basic-Shadow);
   overflow: hidden;
   .ant-modal-close {
     color: var(--Colors-Use-Neutral-Text-1-Title);
+    &:hover {
+      background-color: transparent;
+    }
   }
   .ant-modal-header {
     background: var(--Colors-Use-Basic-Background);
@@ -40,7 +43,7 @@
   }
 }
 
-.modal-cancel-button {
+.ant-modal-confirm-btns .ant-btn.modal-cancel-button {
   border-radius: 4px;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   border: 1px solid var(--Colors-Use-Neutral-Border);
@@ -61,7 +64,7 @@
   }
 }
 
-.modal-ok-button {
+.ant-modal-confirm-btns .ant-btn.modal-ok-button {
   border-radius: 4px;
   border-color: var(--Colors-Use-Main-Primary);
   background: var(--Colors-Use-Main-Primary);

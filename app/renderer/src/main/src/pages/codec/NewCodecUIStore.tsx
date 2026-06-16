@@ -479,7 +479,7 @@ export const NewCodecEditor: React.FC<NewCodecEditorProps> = (props) => {
           closable={false}
           maskClosable={false}
           hiddenHeader={true}
-          visible={isShowExtend}
+          open={isShowExtend}
           bodyStyle={{ padding: 0 }}
         >
           <NewCodecEditorBody

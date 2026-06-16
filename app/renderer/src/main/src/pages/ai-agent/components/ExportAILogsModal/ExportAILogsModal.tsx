@@ -40,7 +40,7 @@ export const ExportAILogsModal: React.FC<ExportAILogsModalProps> = (props) => {
   return (
     <YakitModal
       title={t('ExportAILogsModal.title')}
-      visible={visible}
+      open={visible}
       onCancel={onCancel}
       onOk={handleOk}
       confirmLoading={loading}

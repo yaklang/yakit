@@ -54,7 +54,7 @@ const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((pr
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       getContainer={getContainer}
       type="white"
       title={title}
@@ -62,7 +62,7 @@ const ImportExportProgress: React.FC<ImportExportProgressProps> = React.memo((pr
       width={680}
       closable={true}
       maskClosable={false}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       bodyStyle={{ padding: 0 }}
       footerStyle={{ justifyContent: 'flex-end' }}
       footer={

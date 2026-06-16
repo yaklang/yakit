@@ -2,10 +2,10 @@ import React from 'react'
 import { Checkbox, Tooltip } from 'antd'
 import { QuestionCircleOutlined, UserOutlined } from '@ant-design/icons'
 import { YakScript } from '../../pages/invoker/schema'
-import { showModal } from '../../utils/showModal'
 
 import './yakitPlugin.css'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
+import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
 
 export interface PluginListOptInfoProps {
   info: YakScript
@@ -35,7 +35,7 @@ export const PluginListOptInfo: React.FC<PluginListOptInfoProps> = React.memo((p
         {info.Help && (
           <a
             onClick={() => {
-              showModal({
+              showYakitModal({
                 width: '40%',
                 title: 'Help',
                 content: <>{info.Help}</>,

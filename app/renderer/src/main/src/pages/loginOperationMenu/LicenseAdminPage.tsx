@@ -293,9 +293,9 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
         onChange={onTableChange}
       ></TableVirtualResize>
       <YakitModal
-        visible={enterprisesPopShow}
+        open={enterprisesPopShow}
         title={editInfoRef.current ? t('LicenseAdminPage.editCompany') : t('LicenseAdminPage.createCompany')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         width={600}
         onCancel={() => {
@@ -316,9 +316,9 @@ export const LicenseAdminPage: React.FC<LicenseAdminPageProp> = (props) => {
         />
       </YakitModal>
       <YakitModal
-        visible={createLicensePopShow}
+        open={createLicensePopShow}
         title={t('LicenseAdminPage.generateLicense')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         width={600}
         onCancel={() => {
