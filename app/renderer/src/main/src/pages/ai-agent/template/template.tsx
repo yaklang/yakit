@@ -297,8 +297,8 @@ export const AIChatTextarea: React.FC<AIChatTextareaProps> = memo(
     // #endregion
     const handleTextareaKeyDown = useMemoizedFn((e) => {
       const keys = convertKeyEventToKeyCombination(e)
+      e.stopPropagation()
       if (!e.nativeEvent?.isComposing && keys?.join() === YakitKeyBoard.Enter) {
-        e.stopPropagation()
         e.preventDefault()
         handleSubmit()
       }
