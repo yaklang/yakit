@@ -199,7 +199,7 @@ function useChatIPC(params?: UseChatIPCParams) {
   // #region 系统信息流展示相关逻辑
   /** 记录都存在过的系统信息uuid, 只展示最新的一条系统信息 */
   const systemEventUUID = useRef<string[]>([])
-  const [systemStream, setSystemStream] = useState('')
+  const [systemStream, setSystemStream] = useThrottleState('', { wait: 100 })
   const handleSetSystemStream = useMemoizedFn((uuid: string, content: string) => {
     const lastUUID = systemEventUUID.current[systemEventUUID.current.length - 1]
     if (lastUUID) {
