@@ -1057,6 +1057,23 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     }
   })
 
+  useEffect(() => {
+    const onForceSetCode = (json: string) => {
+      try {
+        const { path, code } = JSON.parse(json) as { path: string; code: string }
+        if (editorInfo?.path !== path) return
+        if (reqEditor) {
+          reqEditor.setValue(code)
+        }
+        updateAreaInputInfo(code)
+      } catch (error) {}
+    }
+    emiter.on('onYakRunnerEditorForceSetCode', onForceSetCode)
+    return () => {
+      emiter.off('onYakRunnerEditorForceSetCode', onForceSetCode)
+    }
+  }, [editorInfo?.path, reqEditor, updateAreaInputInfo])
+
   // 更新当前底部展示信息
   const updateBottomEditorDetails = useDebounceFn(
     async () => {

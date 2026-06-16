@@ -1,0 +1,75 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--Colors-Use-Basic-Background);
+  outline: none;
+}
+
+.cardStretch {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 4px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  font-size: 12px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  flex-shrink: 0;
+}
+
+.diffWrap {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bulkExtra {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulkAcceptWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.acceptMetaCard {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 2px);
+  z-index: 70;
+  width: 400px;
+  max-width: min(70vw, 520px);
+  max-height: 180px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  background: var(--Colors-Use-Basic-Background);
+  box-shadow: 0 10px 30px var(--Colors-Use-Basic-Shadow);
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+}
+
+.acceptMetaTitle {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

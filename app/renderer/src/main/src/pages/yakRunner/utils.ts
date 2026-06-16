@@ -1011,6 +1011,26 @@ export const loadFolderDetail = (path) => {
 }
 
 /**
+ * @name 从文件名截取后缀（最后一个 `.` 之后，不含点）
+ * @example getFileSuffixFromName('x.x.txt') => 'txt'
+ */
+export const getFileSuffixFromName = (fileName: string): string => {
+  const dotIndex = fileName.lastIndexOf('.')
+  if (dotIndex <= 0 || dotIndex >= fileName.length - 1) return ''
+  return fileName.slice(dotIndex + 1)
+}
+
+/**
+ * @name 从路径截取文件名后缀（仅看 basename，避免路径中的 `.` 干扰）
+ */
+export const getFileSuffixFromPath = (filePath: string): string => {
+  const normalized = filePath.replace(/\\/g, '/').trim()
+  if (!normalized) return ''
+  const name = normalized.slice(normalized.lastIndexOf('/') + 1)
+  return getFileSuffixFromName(name)
+}
+
+/**
  * @name 编辑器代码类型判断
  */
 export const monacaLanguageType = (suffix?: string) => {

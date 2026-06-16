@@ -51,4 +51,6 @@ export type YakRunnerEventProps = {
   onRefreshAuditDetail?: string
   /** 编辑器选中代码发送到自由对话 */
   onYakRunnerSendCodeBlock: string
+  /** AI `yaklang_code_change` 写回当前 Monaco 编辑器 */
+  onYakRunnerEditorForceSetCode: string
 }
