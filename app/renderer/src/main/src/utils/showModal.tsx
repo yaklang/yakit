@@ -28,13 +28,13 @@ export const BaseModal: React.FC<BaseModalProp> = (props) => {
     <Modal
       {...props}
       footer={false}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       onOk={(e) => {
         if (props.onOk) props.onOk(e)
       }}
       closable={true}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       cancelButtonProps={{ hidden: true }}
     />
   )
@@ -47,7 +47,8 @@ export interface ShowModalProps extends Omit<BaseModalProp, 'title' | 'content'>
   type?: string
   hiddenHeader?: boolean
   subTitle?: string
-  onOkText?: string //这个版本的antd modal没有这个属性声明
+  onOkText?: string
+  onCancelText?: string
 }
 
 export const showModal = (props: ShowModalProps) => {

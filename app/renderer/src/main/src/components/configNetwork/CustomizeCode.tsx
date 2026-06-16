@@ -349,7 +349,7 @@ const CodeCustomizeModal: FC<CodeCustomizeModalProps> = (props) => {
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       width={650}
       title={title}
       onCancel={onCancel}

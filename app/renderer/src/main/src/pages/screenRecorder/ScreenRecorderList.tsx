@@ -776,7 +776,7 @@ const ScreenRecorderListItem: React.FC<ScreenRecorderListItemProps> = (props) =>
         </YakitPopconfirm>
       </div>
       <YakitModal
-        visible={visible}
+        open={visible}
         footer={null}
         closeIcon={<></>}
         centered

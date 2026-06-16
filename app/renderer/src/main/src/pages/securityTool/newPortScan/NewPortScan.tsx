@@ -781,7 +781,7 @@ const NewPortScanExecuteForm: React.FC<NewPortScanExecuteFormProps> = React.memo
 
       <YakitModal
         title={t('NewPortScanExecuteForm.saveFingerprintConfig')}
-        visible={saveTemplateVisible}
+        open={saveTemplateVisible}
         onCancel={() => setSaveTemplateVisible(false)}
         width={400}
         footer={null}

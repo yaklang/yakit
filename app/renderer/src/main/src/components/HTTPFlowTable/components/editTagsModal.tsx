@@ -38,10 +38,10 @@ const EditTagsModal = React.memo<EditTagsModalProps>((props) => {
 
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       title={t('EditTagsModal.editTag')}
       width={600}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       maskClosable={false}
       okText={t('YakitButton.save')}
       onCancel={onCancel}

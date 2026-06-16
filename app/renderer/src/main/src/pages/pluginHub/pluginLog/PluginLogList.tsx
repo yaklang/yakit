@@ -414,7 +414,7 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
           getContainer={document.getElementById(getContainer || '') || undefined}
           title="评论详情"
           type="white"
-          visible={showQuotation}
+          open={showQuotation}
           centered={true}
           footer={null}
           onCancel={handleCancelShowQuotaion}

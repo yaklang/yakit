@@ -1,7 +1,6 @@
 import { YakURL } from '@/pages/yakURLTree/data'
 import { yakitFailed } from '@/utils/notification'
 import { requestYakURLList } from './yakURLTree/netif'
-import { showModal } from '@/utils/showModal'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { showYakitModal, YakitModalConfirm } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { Divider } from 'antd'
@@ -152,7 +151,7 @@ export const updateFile = (url: YakURL, setLoading: (value: boolean) => void) =>
     const content = rsp.Resources[0]?.Extra.find((extra) => extra.Key === 'content')?.Value || ''
     // 找到回显的结果，并将其值赋给 'content'
     setLoading(false) // 请求结束后，设置加载状态为 false
-    const edit = showModal({
+    const edit = showYakitModal({
       title: '编辑 Shell',
       width: '60%',
       content: (

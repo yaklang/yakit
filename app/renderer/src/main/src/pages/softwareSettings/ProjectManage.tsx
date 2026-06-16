@@ -2082,8 +2082,8 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
       centered={true}
       footer={null}
       width={448}
-      destroyOnClose={true}
-      visible={visible}
+      destroyOnHidden={true}
+      open={visible}
       onCancel={onClose}
       bodyStyle={{ padding: 0 }}
     >

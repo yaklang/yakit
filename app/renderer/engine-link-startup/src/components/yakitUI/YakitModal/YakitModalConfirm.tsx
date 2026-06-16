@@ -155,7 +155,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           <YakitButton
             type="outline2"
             onClick={(e) => {
-              if (props.onCancel) props.onCancel(e)
+              if (props.onCancel) props.onCancel(e as React.MouseEvent<HTMLButtonElement>)
               setVisible(false)
             }}
             {...props.cancelButtonProps}
@@ -168,7 +168,7 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
                 setLoading(true)
               }
               if (props.onOk) {
-                props.onOk(e)
+                props.onOk(e as React.MouseEvent<HTMLButtonElement>)
               }
             }}
             loading={loading}
@@ -178,17 +178,17 @@ const YakitBaseModal: React.FC<YakitBaseModalProps> = (props) => {
           </YakitButton>
         </div>
       }
-      visible={visible}
+      open={visible}
       closable={true}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       closeIcon={
         <div
           onClick={(e) => {
             e.stopPropagation()
             if (props.onCloseX) {
-              props.onCloseX(e)
+              props.onCloseX(e as unknown as React.MouseEvent<HTMLButtonElement>)
             } else {
-              props.onCancel?.(e)
+              props.onCancel?.(e as unknown as React.MouseEvent<HTMLButtonElement>)
             }
             setVisible(false)
           }}

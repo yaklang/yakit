@@ -361,10 +361,10 @@ const EditKnowledgenBaseModal: FC<TEditKnowledgeBaseModalProps> = (props) => {
   return (
     <YakitModal
       title={'修改基础信息'}
-      visible={visible}
+      open={visible}
       onCancel={onClose}
       width={600}
-      destroyOnClose
+      destroyOnHidden
       maskClosable={false}
       footer={
         <div className={styles['delete-yakit-hint']}>

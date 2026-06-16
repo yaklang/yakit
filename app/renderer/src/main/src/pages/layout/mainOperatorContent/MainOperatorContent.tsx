@@ -3444,7 +3444,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
         />
       </YakitSpin>
       <YakitModal
-        visible={bugTestShow}
+        open={bugTestShow}
         onCancel={() => setBugTestShow(false)}
         onOk={() => {
           if (!bugTestValue) {

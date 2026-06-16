@@ -373,7 +373,7 @@ export const KnowledgeBaseList: React.FC<KnowledgeBaseListProps> = ({
             ? t('playground.KnowledgeBaseList.editKnowledgeBase')
             : t('playground.KnowledgeBaseList.addKnowledgeBase')
         }
-        visible={modalVisible}
+        open={modalVisible}
         onCancel={() => {
           setModalVisible(false)
           setEditingKb(undefined)

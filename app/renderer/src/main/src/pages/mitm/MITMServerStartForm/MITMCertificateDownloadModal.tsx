@@ -42,7 +42,7 @@ export const MITMCertificateDownloadModal: React.FC<MITMCertificateDownloadModal
   })
   return (
     <YakitModal
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       closable={true}
       title={t('MITMCertificateDownloadModal.download_cert')}

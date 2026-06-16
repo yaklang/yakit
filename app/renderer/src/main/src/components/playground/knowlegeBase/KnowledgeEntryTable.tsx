@@ -367,7 +367,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
 
       <YakitModal
         title={editingEntry ? t('playground.KnowledgeEntryTable.editEntry') : '新增知识条目'}
-        visible={modalVisible}
+        open={modalVisible}
         onCancel={() => {
           setModalVisible(false)
           setEditingEntry(undefined)

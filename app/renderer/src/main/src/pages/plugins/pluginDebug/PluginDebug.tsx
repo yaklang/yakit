@@ -141,7 +141,7 @@ export const PluginDebug: React.FC<PluginDebugProps> = memo((props) => {
         centered={true}
         maskClosable={false}
         closable={true}
-        visible={diffShow}
+        open={diffShow}
         okText="合并"
         onCancel={onCancelDiff}
         onOk={onOkDiff}

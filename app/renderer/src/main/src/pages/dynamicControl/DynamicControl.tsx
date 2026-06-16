@@ -357,8 +357,8 @@ export const DynamicControl: React.FC<DynamicControlProps> = (props) => {
   const { isShow, onCancel, children, mainTitle, secondTitle, width } = props
   return (
     <YakitModal
-      visible={isShow}
-      destroyOnClose={true}
+      open={isShow}
+      destroyOnHidden={true}
       maskClosable={false}
       bodyStyle={{ padding: '18px 24px 24px 24px' }}
       width={width || 448}
@@ -543,9 +543,7 @@ export const ControlAdminPage: React.FC<ControlAdminPageProps> = (props) => {
         return (
           <div className={styles['radio-status']}>
             {i ? (
-              <Radio defaultChecked={true}>
-                远程中
-              </Radio>
+              <Radio defaultChecked={true}>远程中</Radio>
             ) : (
               <Radio disabled={true} checked={true}>
                 已结束

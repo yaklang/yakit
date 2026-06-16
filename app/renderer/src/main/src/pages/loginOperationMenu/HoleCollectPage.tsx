@@ -5,7 +5,6 @@ import { useGetState, useMemoizedFn } from 'ahooks'
 import { NetWorkApi } from '@/services/fetch'
 import { API } from '@/services/swagger/resposeType'
 import { formatTimestamp } from '@/utils/timeUtil'
-import { showModal } from '@/utils/showModal'
 import styles from './HoleCollectPage.module.scss'
 import { failed, success, warn, info } from '@/utils/notification'
 import classNames from 'classnames'
@@ -21,6 +20,7 @@ import { PaginationSchema } from '../../pages/invoker/schema'
 import { RiskDetails, cellColorFontSetting } from '../risks/RiskTable'
 import { Risk } from '../risks/schema'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 const { ipcRenderer } = window.require('electron')
 const { Paragraph } = Typography
 const { Option } = YakitSelect
@@ -227,7 +227,7 @@ export const HoleCollectPage: React.FC<HoleCollectPageProps> = (props) => {
                   Severity: i.severity,
                   RuntimeId: i.runtime_id,
                 }
-                showModal({
+                showYakitModal({
                   width: '80%',
                   title: (modalT) => modalT('YakitButton.detail'),
                   content: (

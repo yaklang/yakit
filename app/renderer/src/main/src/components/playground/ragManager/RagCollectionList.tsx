@@ -222,7 +222,7 @@ export const RagCollectionList: React.FC<RagCollectionListProps> = ({
       {/* 集合详情弹窗 */}
       <YakitModal
         title={t('playground.RagCollectionList.detailTitle')}
-        visible={detailModalVisible}
+        open={detailModalVisible}
         onCancel={() => {
           setDetailModalVisible(false)
           setSelectedCollectionDetail(undefined)

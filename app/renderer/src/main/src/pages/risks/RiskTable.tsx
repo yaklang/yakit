@@ -6,7 +6,6 @@ import { useGetState, useMemoizedFn } from 'ahooks'
 import { formatTimestamp } from '../../utils/timeUtil'
 import { ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 import { failed } from '../../utils/notification'
-import { showModal } from '../../utils/showModal'
 import { InputItem } from '../../utils/inputUtil'
 
 import infoImg from '../../assets/riskDetails/info.png'
@@ -26,6 +25,7 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { yakitRisk } from '@/services/electronBridge'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 
 export interface RiskTableProp {
   severity?: string
@@ -444,7 +444,7 @@ export const RiskTable: React.FC<RiskTableProp> = (props) => {
               size="small"
               type={'text'}
               onClick={() => {
-                let m = showModal({
+                let m = showYakitModal({
                   width: '80%',
                   title: '详情',
                   content: (

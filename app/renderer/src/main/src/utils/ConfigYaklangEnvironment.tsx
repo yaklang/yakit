@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { showModal } from '@/utils/showModal'
 import { Form, Space, Table, Tag, Tooltip } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { CopyableField, InputItem } from '@/utils/inputUtil'
@@ -117,7 +116,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
               icon={<PlusOutlined />}
               type={'primary'}
               onClick={() => {
-                const m = showModal({
+                const m = showYakitModal({
                   title: t('ConfigYaklangEnvironment.newVariableTitle'),
                   width: 600,
                   content: (
@@ -169,7 +168,7 @@ export const ConfigYaklangEnvironment: React.FC<ConfigYaklangEnvironmentProp> = 
                 <YakitButton
                   size={'small'}
                   onClick={() => {
-                    const m = showModal({
+                    const m = showYakitModal({
                       title: t('ConfigYaklangEnvironment.editVariableTitle'),
                       width: 650,
                       content: (

@@ -66,7 +66,7 @@ const AddKnowledgeBaseModal: FC<AddKnowledgeBaseModalProps> = ({
   return (
     <YakitModal
       title="添加"
-      visible={addModalData.visible}
+      open={addModalData.visible}
       onCancel={onCancel}
       onOk={onOk}
       className={styles['create-knowledge-from']}

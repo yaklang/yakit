@@ -361,9 +361,9 @@ export const TrustListPage: React.FC<TrustListPageProp> = (props) => {
         }}
       ></TableVirtualResize>
       <YakitModal
-        visible={createUserShow}
+        open={createUserShow}
         title={t('TrustListPage.addUser')}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         maskClosable={false}
         bodyStyle={{ padding: '10px 24px 24px 24px' }}
         width={500}

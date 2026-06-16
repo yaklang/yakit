@@ -189,8 +189,7 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
     <>
       <YakitModal
         title={isEdit ? t('MITMRuleFromModal.edit_rule') : t('MITMRuleFromModal.add_rule')}
-        visible={modalVisible}
-        // visible={true}
+        open={modalVisible}
         onCancel={() => onClose()}
         closable
         okType="primary"
@@ -635,13 +634,13 @@ export const InputHTTPHeaderForm: React.FC<InputHTTPHeaderFormProps> = React.mem
   return (
     <YakitModal
       title={t('InputHTTPHeaderForm.enter_new_http_header')}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       zIndex={1002}
       footer={null}
       closable={true}
       bodyStyle={{ padding: 0 }}
-      destroyOnClose={true}
+      destroyOnHidden={true}
     >
       <Form
         labelCol={{ span: 5 }}
@@ -760,14 +759,14 @@ const InputHTTPCookieForm: React.FC<InputHTTPCookieFormProps> = React.memo((prop
   return (
     <YakitModal
       title={t('InputHTTPCookieForm.enter_new_cookie_value')}
-      visible={visible}
+      open={visible}
       onCancel={() => setVisible(false)}
       zIndex={1002}
       footer={null}
       closable={true}
       width={600}
       bodyStyle={{ padding: 0 }}
-      destroyOnClose={true}
+      destroyOnHidden={true}
     >
       <Form
         labelCol={{ span: 5 }}
@@ -960,7 +959,7 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
       <YakitModal
         title={t('RuleContent.auto_extract_regex')}
         subTitle={t('RuleContent.select_in_editor_generate_regex')}
-        visible={ruleVisible}
+        open={ruleVisible}
         onCancel={() => setRuleVisible(false)}
         width={840}
         zIndex={1002}

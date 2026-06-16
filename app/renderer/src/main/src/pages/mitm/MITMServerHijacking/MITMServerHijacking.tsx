@@ -739,11 +739,11 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
   return (
     <>
       <YakitModal
-        visible={downStreamAgentModalVisible}
+        open={downStreamAgentModalVisible}
         title={t('ProxyConfig.downstream_agent')}
         width={506}
         maskClosable={false}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         closable
         centered
         okText={t('YakitButton.confirm')}

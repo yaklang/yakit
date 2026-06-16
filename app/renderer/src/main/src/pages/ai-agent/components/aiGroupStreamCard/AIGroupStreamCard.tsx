@@ -42,7 +42,7 @@ const AIStreamNode: FC<{
   return (
     <div className={styles['single-stream-text']}>
       <YakitModal
-        visible={open}
+        open={open}
         title={`${index}. ${nodeLabel}`}
         cancelButtonProps={{ style: { display: 'none' } }}
         onOk={onClose}

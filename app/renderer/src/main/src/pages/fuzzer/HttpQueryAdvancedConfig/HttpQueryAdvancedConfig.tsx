@@ -1471,11 +1471,11 @@ const BatchTargetModal: React.FC<BatchTargetModalProp> = React.memo((props) => {
 
   return (
     <YakitModal
-      visible={batchTargetModalVisible}
+      open={batchTargetModalVisible}
       title={t('BatchTargetModal.configure_batch_target')}
       width={600}
       maskClosable={false}
-      destroyOnClose={true}
+      destroyOnHidden={true}
       closable
       centered
       okText={t('YakitButton.confirm')}
