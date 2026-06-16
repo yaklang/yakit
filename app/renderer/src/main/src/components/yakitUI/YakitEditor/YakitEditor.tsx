@@ -1360,9 +1360,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         return
       }
       lastValue = newValue
-      try {
-        current = model.deltaDecorations(current, generateDecorations())
-      } catch (e) {}
+      scheduleDecorations()
     })
     scheduleDecorations()
 

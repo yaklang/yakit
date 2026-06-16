@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { BinaryFuzztagEntry, bytesToHex } from './binaryFuzztag'
 import { BinaryFuzztagHexEditor } from './BinaryFuzztagHexEditor'
+import styles from './BinaryFuzztagModal.module.scss'
 
 // 提交结果：只记录是否被修改（不再携带增删改细节）
 export interface BinaryFuzztagSubmitResult {
@@ -33,25 +34,15 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
   const byteLen = useMemo(() => dataRef.current.length, [hostVersion])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '64vh' }}>
-      <div
-        style={{
-          padding: '8px 16px',
-          fontSize: 12,
-          color: 'var(--Colors-Use-Neutral-Text-3-Secondary)',
-          borderBottom: '1px solid var(--Colors-Use-Neutral-Border)',
-          display: 'flex',
-          gap: 16,
-          flexWrap: 'wrap',
-        }}
-      >
+    <div className={styles['modal-root']}>
+      <div className={styles['modal-header']}>
         <span>{`Tag: {{${entry.tagName}(...)}}`}</span>
         <span>{`Bytes: ${byteLen}`}</span>
         <span>{`Head: 0x${previewHex}`}</span>
-        {readOnly && <span style={{ color: 'var(--Colors-Use-Yellow-Text)' }}>read-only</span>}
+        {readOnly && <span className={styles['read-only']}>read-only</span>}
       </div>
 
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div className={styles['modal-body']}>
         <BinaryFuzztagHexEditor
           dataRef={dataRef}
           readOnly={readOnly}
@@ -62,15 +53,7 @@ export const BinaryFuzztagHexModal: React.FC<BinaryFuzztagHexModalProps> = (prop
         />
       </div>
 
-      <div
-        style={{
-          padding: '8px 16px',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          borderTop: '1px solid var(--Colors-Use-Neutral-Border)',
-        }}
-      >
+      <div className={styles['modal-footer']}>
         <YakitButton type="outline2" onClick={onCancel}>
           取消
         </YakitButton>

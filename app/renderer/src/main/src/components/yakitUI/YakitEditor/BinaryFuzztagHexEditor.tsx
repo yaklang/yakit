@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useCallback, useMemo, useRef, useState } from 'react'
+import React, { MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import HexEditor from 'react-hex-editor'
 import oneDarkPro from 'react-hex-editor/themes/oneDarkPro'
 import { useTheme } from '@/hook/useTheme'
@@ -6,6 +6,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { warn } from '@/utils/notification'
+import styles from './BinaryFuzztagModal.module.scss'
 
 type EditMode = 'insert' | 'replace'
 type InputFormat = 'hex' | 'ascii'
@@ -30,9 +31,11 @@ const askOverflow = (): Promise<'append' | 'discard' | 'cancel'> =>
         m.destroy()
       },
       content: (
-        <div style={{ padding: 16 }}>
-          <div style={{ marginBottom: 16 }}>输入内容超过所选字节范围，应该继续追加多余部分，还是放弃多余部分？</div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <div className={styles['overflow-content']}>
+          <div className={styles['overflow-message']}>
+            输入内容超过所选字节范围，应该继续追加多余部分，还是放弃多余部分？
+          </div>
+          <div className={styles['overflow-actions']}>
             <YakitButton
               type="outline2"
               onClick={() => {
@@ -85,18 +88,38 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
   const selStartRef = useRef<number | null>(null)
   const selEndRef = useRef<number | null>(null)
   const draggingRef = useRef<boolean>(false)
+  const selDisplayRafRef = useRef<number | null>(null)
   const [selDisplay, setSelDisplay] = useState<string>('')
 
   const refreshSelDisplay = useCallback(() => {
     const s = selStartRef.current
     const e = selEndRef.current
     if (s == null || e == null) {
-      setSelDisplay('')
+      setSelDisplay((prev) => (prev === '' ? prev : ''))
       return
     }
     const lo = Math.min(s, e)
     const hi = Math.max(s, e)
-    setSelDisplay(`0x${lo.toString(16)} - 0x${hi.toString(16)} (len ${hi - lo + 1})`)
+    const next = `0x${lo.toString(16)} - 0x${hi.toString(16)} (len ${hi - lo + 1})`
+    setSelDisplay((prev) => (prev === next ? prev : next))
+  }, [])
+
+  const scheduleSelDisplay = useCallback(() => {
+    if (selDisplayRafRef.current !== null) {
+      return
+    }
+    selDisplayRafRef.current = requestAnimationFrame(() => {
+      selDisplayRafRef.current = null
+      refreshSelDisplay()
+    })
+  }, [refreshSelDisplay])
+
+  useEffect(() => {
+    return () => {
+      if (selDisplayRafRef.current !== null) {
+        cancelAnimationFrame(selDisplayRafRef.current)
+      }
+    }
   }, [])
 
   const getOffsetFromEvent = (e: React.MouseEvent): number | null => {
@@ -130,8 +153,11 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
     if (off == null) {
       return
     }
+    if (selEndRef.current === off) {
+      return
+    }
     selEndRef.current = off
-    refreshSelDisplay()
+    scheduleSelDisplay()
   }
   const handleHexMouseUp = (e: React.MouseEvent) => {
     if (!draggingRef.current) {
@@ -250,26 +276,17 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <div className={styles['hex-editor-root']}>
       {!readOnly && (
-        <div
-          style={{
-            padding: '8px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            flexWrap: 'wrap',
-            borderBottom: '1px solid var(--Colors-Use-Neutral-Border)',
-          }}
-        >
-          <span style={{ fontSize: 12 }}>模式:</span>
+        <div className={styles['hex-toolbar']}>
+          <span className={styles['hex-toolbar-label']}>模式:</span>
           {modeBtn('insert', '插入')}
           {modeBtn('replace', '替换')}
-          <span style={{ fontSize: 12, marginLeft: 8 }}>输入:</span>
+          <span className={`${styles['hex-toolbar-label']} ${styles['hex-toolbar-label-spaced']}`}>输入:</span>
           {fmtBtn('hex', 'HEX')}
           {fmtBtn('ascii', 'ASCII')}
           <YakitInput
-            style={{ flex: 1, minWidth: 160 }}
+            className={styles['hex-input']}
             size="small"
             value={inputValue}
             placeholder={inputFormat === 'hex' ? '如 ffd8ff..(偶数位hex)' : '直接输入文本'}
@@ -278,7 +295,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
           <YakitButton type="primary" size="small" onClick={applyEdit}>
             应用
           </YakitButton>
-          <span style={{ fontSize: 12, color: 'var(--Colors-Use-Neutral-Text-3-Secondary)' }}>
+          <span className={styles['hex-hint']}>
             {mode === 'replace'
               ? selDisplay
                 ? `选区: ${selDisplay}`
@@ -291,7 +308,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
       )}
 
       <div
-        style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}
+        className={styles['hex-body']}
         onMouseDownCapture={handleHexMouseDown}
         onMouseMoveCapture={handleHexMouseMove}
         onMouseUpCapture={handleHexMouseUp}

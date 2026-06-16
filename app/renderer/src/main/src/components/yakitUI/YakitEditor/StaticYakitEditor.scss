@@ -209,7 +209,7 @@
 }
 
 .binary-fuzz-chip {
-  color: #ffffff;
+  color: var(--Colors-Use-Main-On-Primary) !important;
   background-color: var(--Colors-Use-Main-Primary);
   border: 1px solid var(--Colors-Use-Main-Primary);
   padding: 1px 8px;
@@ -222,7 +222,7 @@
   cursor: pointer;
   user-select: none;
   opacity: 1 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px var(--Colors-Use-Basic-Shadow);
 }
 
 .binary-fuzz-chip:hover {
@@ -231,7 +231,7 @@
 
 // 编辑后的小块：更醒目的橙色，提示已修改
 .binary-fuzz-chip-changed {
-  color: #ffffff;
-  background-color: var(--Colors-Use-Orange-Primary);
-  border: 1px solid var(--Colors-Use-Orange-Border);
+  color: var(--Colors-Use-Warning-On-Primary) !important;
+  background-color: var(--Colors-Use-Warning-Primary);
+  border: 1px solid var(--Colors-Use-Warning-Border);
 }

@@ -4,6 +4,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { BinaryFuzztagEntry, bytesToHex } from './binaryFuzztag'
 import { BinaryFuzztagHexEditor } from './BinaryFuzztagHexEditor'
 import { BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
+import styles from './BinaryFuzztagModal.module.scss'
 
 export interface Base64HexFuzztagModalProps {
   // 仅用于 base64 / hex 两类可编辑标签
@@ -25,6 +26,37 @@ const decodeText = (bytes: Uint8Array): string => {
 }
 
 const encodeText = (text: string): Uint8Array => new TextEncoder().encode(text)
+
+const utf8ByteLength = (text: string): number => {
+  let len = 0
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i)
+    if (code <= 0x7f) {
+      len += 1
+    } else if (code <= 0x7ff) {
+      len += 2
+    } else if (code >= 0xd800 && code <= 0xdbff && i + 1 < text.length) {
+      const next = text.charCodeAt(i + 1)
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        len += 4
+        i += 1
+      } else {
+        len += 3
+      }
+    } else {
+      len += 3
+    }
+  }
+  return len
+}
+
+const encodeTextHead = (text: string, maxBytes: number): Uint8Array => {
+  if (!text) {
+    return new Uint8Array()
+  }
+  const head = Array.from(text).slice(0, maxBytes).join('')
+  return encodeText(head).slice(0, maxBytes)
+}
 
 // 字节是否相等：用于判定"是否被修改"（只记是否改过，不记细节）
 const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean => {
@@ -59,13 +91,18 @@ export const Base64HexFuzztagModal: React.FC<Base64HexFuzztagModalProps> = (prop
   const [hexMountKey, setHexMountKey] = useState<number>(0)
   const [hostVersion, setHostVersion] = useState<number>(0)
 
-  // 当前字节（随模式不同来源不同），用于头部预览
-  const curBytes = useMemo<Uint8Array>(() => {
-    return editorType === 'text' ? encodeText(text) : dataRef.current
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const bytePreview = useMemo(() => {
+    if (editorType === 'text') {
+      return {
+        byteLen: utf8ByteLength(text),
+        previewHex: bytesToHex(encodeTextHead(text, 8)),
+      }
+    }
+    return {
+      byteLen: dataRef.current.length,
+      previewHex: bytesToHex(dataRef.current.slice(0, 8)),
+    }
   }, [editorType, text, hostVersion])
-
-  const previewHex = useMemo(() => bytesToHex(curBytes.slice(0, 8)), [curBytes])
 
   const switchTo = (type: EditorType) => {
     if (type === editorType) {
@@ -96,35 +133,24 @@ export const Base64HexFuzztagModal: React.FC<Base64HexFuzztagModalProps> = (prop
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '64vh' }}>
-      <div
-        style={{
-          padding: '8px 16px',
-          fontSize: 12,
-          color: 'var(--Colors-Use-Neutral-Text-3-Secondary)',
-          borderBottom: '1px solid var(--Colors-Use-Neutral-Border)',
-          display: 'flex',
-          gap: 16,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
+    <div className={styles['modal-root']}>
+      <div className={styles['modal-header']}>
         <span>{`${kindLabel}: {{${entry.tagName}(...)}}`}</span>
-        <span>{`Bytes: ${curBytes.length}`}</span>
-        <span>{`Head: 0x${previewHex}`}</span>
-        <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12 }}>编辑器:</span>
+        <span>{`Bytes: ${bytePreview.byteLen}`}</span>
+        <span>{`Head: 0x${bytePreview.previewHex}`}</span>
+        <span className={styles['mode-switcher']}>
+          <span className={styles['mode-label']}>编辑器:</span>
           {typeBtn('text', '文本')}
           {typeBtn('hex', 'HEX')}
         </span>
-        {readOnly && <span style={{ color: 'var(--Colors-Use-Yellow-Text)' }}>read-only</span>}
+        {readOnly && <span className={styles['read-only']}>read-only</span>}
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <div className={styles['modal-body-column']}>
         {editorType === 'text' ? (
-          <div style={{ flex: 1, minHeight: 0, padding: 12 }}>
+          <div className={styles['text-pane']}>
             <YakitInput.TextArea
-              style={{ height: '100%', resize: 'none', fontFamily: 'monospace' }}
+              className={styles['text-area']}
               value={text}
               readOnly={readOnly}
               placeholder="直接输入要修改的内容（文本将按 UTF-8 编码）"
@@ -141,15 +167,7 @@ export const Base64HexFuzztagModal: React.FC<Base64HexFuzztagModalProps> = (prop
         )}
       </div>
 
-      <div
-        style={{
-          padding: '8px 16px',
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: 8,
-          borderTop: '1px solid var(--Colors-Use-Neutral-Border)',
-        }}
-      >
+      <div className={styles['modal-footer']}>
         <YakitButton type="outline2" onClick={onCancel}>
           取消
         </YakitButton>
