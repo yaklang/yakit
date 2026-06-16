@@ -9,6 +9,7 @@ import { useGoogleChromePluginPath, useStore, yakitDynamicStatus } from './store
 import { refreshToken } from './utils/login'
 import UILayout from './components/layout/UILayout'
 import { getReleaseEditionName, getRemoteHttpSettingGV, isCommunityEdition, isIRify, isMemfit } from '@/utils/envfile'
+import { FIXED_PRIVATE_DOMAIN_BASE_URL } from '@/enums/privateDomain'
 import { RemoteGV } from './yakitGV'
 import { coordinate, setChartsColorList } from './pages/globalVariable'
 import { remoteOperation } from './pages/dynamicControl/DynamicControl'
@@ -146,37 +147,24 @@ function NewApp() {
   const timeRef = useRef<NodeJS.Timeout>()
   const testYak = () => {
     getRemoteValue(getRemoteHttpSettingGV()).then((setting) => {
-      if (!setting) {
-        yakitProfile
-          .getOnlineProfile({})
-          .then((data: OnlineProfileProps) => {
-            yakitApp.syncEditBaseUrl(data.BaseUrl)
-            setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify({ BaseUrl: data.BaseUrl }))
-            refreshLogin()
-            timeRef.current = setTimeout(() => {
-              if (timeRef.current) clearTimeout(timeRef.current)
-            }, 200)
-          })
-          .catch((e) => {
-            failed(t('NewApp.fetchFailed', { error: String(e) }))
-          })
-      } else {
-        const values = JSONParseLog(setting, { page: 'NewApp', fun: 'testYak' })
-        yakitProfile
-          .setOnlineProfile({
-            ...values,
-            IsCompany: true,
-          } as OnlineProfileProps)
-          .then(() => {
-            yakitApp.syncEditBaseUrl(values.BaseUrl)
-            setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
-            refreshLogin()
-            timeRef.current = setTimeout(() => {
-              if (timeRef.current) clearTimeout(timeRef.current)
-            }, 200)
-          })
-          .catch((e: any) => failed(t('NewApp.setPrivateDomainFailed', { error: String(e) })))
-      }
+      const storedValues = setting
+        ? JSONParseLog(setting, { page: 'NewApp', fun: 'testYak' })
+        : {}
+      const values = { ...storedValues, BaseUrl: FIXED_PRIVATE_DOMAIN_BASE_URL }
+      yakitProfile
+        .setOnlineProfile({
+          ...values,
+          IsCompany: true,
+        } as OnlineProfileProps)
+        .then(() => {
+          yakitApp.syncEditBaseUrl(FIXED_PRIVATE_DOMAIN_BASE_URL)
+          setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
+          refreshLogin()
+          timeRef.current = setTimeout(() => {
+            if (timeRef.current) clearTimeout(timeRef.current)
+          }, 200)
+        })
+        .catch((e: any) => failed(t('NewApp.setPrivateDomainFailed', { error: String(e) })))
     })
   }
 
@@ -209,8 +197,8 @@ function NewApp() {
               wechatHeadImg: res.from_platform === 'wechat' ? res.head_img : null,
               qqName: res.from_platform === 'qq' ? res.name : null,
               qqHeadImg: res.from_platform === 'qq' ? res.head_img : null,
-              companyName: res.from_platform === 'company' ? res.name : null,
-              companyHeadImg: res.from_platform === 'company' ? res.head_img : null,
+              companyName: ['company', 'ccb'].includes(res.from_platform) ? res.name : null,
+              companyHeadImg: ['company', 'ccb'].includes(res.from_platform) ? res.head_img : null,
               role: res.role,
               user_id: res.user_id,
               token: resToken,
