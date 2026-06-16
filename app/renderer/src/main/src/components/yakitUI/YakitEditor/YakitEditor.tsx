@@ -295,7 +295,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   // 侧表：占位 id -> 原始标签信息；handleBinaryChange 据此 expand 还原真实文本
   const binaryFoldEntriesRef = useRef<Map<string, BinaryFuzztagEntry>>(new Map())
   // 占位范围（仿 privacyMaskRangesRef），用于点击命中打开 HEX 编辑弹窗
-  const binaryFoldRangesRef = useRef<{ id: string; range: monaco.Range }[]>([])
+  const binaryFoldRangesRef = useRef<{ id: string; range: monaco.Range; ordinal: number }[]>([])
   // "被修改"记录：按编辑器中第 N 个二进制标签(文档顺序的序号)记录，只记是否改过(布尔)。
   // 与内容/占位 id 解耦，保证复制粘贴出去的永远是纯内容、不含任何改动元数据。
   const binaryModifiedOrdinalsRef = useRef<Set<number>>(new Set())
@@ -1285,7 +1285,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           try {
             const fullText = model.getValue()
             const offsets = findPlaceholderOffsets(fullText)
-            const newRanges: { id: string; range: monaco.Range }[] = []
+            const newRanges: { id: string; range: monaco.Range; ordinal: number }[] = []
             // index 即"编辑器中第 N 个二进制标签"的序号，按文档顺序；据此判断是否被修改过
             offsets.forEach((off, index) => {
               const entry = binaryFoldEntriesRef.current.get(off.id)
@@ -1296,7 +1296,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
               const start = model.getPositionAt(off.start)
               const end = model.getPositionAt(off.end)
               const range = new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column)
-              newRanges.push({ id: off.id, range })
+              newRanges.push({ id: off.id, range, ordinal: index })
               dec.push({
                 id: 'binary-fold-' + off.id + '-' + off.start,
                 ownerId: 0,
@@ -1442,7 +1442,10 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     const mouseDownDisposable = editor.onMouseDown(handleHostPrivacyClick)
 
     // 二进制 Fuzztag 折叠：点击小块打开 HEX 编辑弹窗
-    const openBinaryFoldEditor = async (entry: BinaryFuzztagEntry) => {
+    const openBinaryFoldEditor = async (
+      entry: BinaryFuzztagEntry,
+      hit: { id: string; range: monaco.Range; ordinal: number },
+    ) => {
       // 不可编辑（如 file）：只读展示原始引用文本
       if (!entry.editable) {
         const infoModal = showYakitModal({
@@ -1475,25 +1478,12 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           newEntries.forEach((v, k) => {
             binaryFoldEntriesRef.current.set(k, v)
           })
-          // 按"编辑器中第 N 个标签"记录被修改：编辑前后该占位所在序号不变(数量不变)，标记其序号为已修改。
-          // 只记是否改过(布尔)，与内容/占位 id 解耦，复制粘贴出去的永远是纯内容。
-          const text = model.getValue()
-          const ordinal = findPlaceholderOffsets(text).findIndex((o) => o.id === entry.id)
-          if (ordinal >= 0) {
-            binaryModifiedOrdinalsRef.current.add(ordinal)
-          }
-          // 在当前模型中定位该 id 占位并替换
-          const placeholderRe = new RegExp('\\{\\{[\\w:]+\\(#YBIN_' + entry.id + '#\\)\\}\\}')
-          const matched = text.match(placeholderRe)
-          if (!matched || matched.index === undefined) {
-            infoModal.destroy()
-            return
-          }
-          const startPos = model.getPositionAt(matched.index)
-          const endPos = model.getPositionAt(matched.index + matched[0].length)
+          // 按点击命中的第 N 个标签记录修改，并直接替换命中的 decoration range。
+          // 相同二进制标签会拥有相同 id，不能再按 id 全文搜索，否则会误改第一个相同标签。
+          binaryModifiedOrdinalsRef.current.add(hit.ordinal)
           editor.executeEdits('binary-fuzz-fold', [
             {
-              range: new monaco.Range(startPos.lineNumber, startPos.column, endPos.lineNumber, endPos.column),
+              range: hit.range,
               text: newPlaceholderText,
               forceMoveMarkers: true,
             },
@@ -1543,7 +1533,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       }
       const clickPosition = e.target.position
       // 解析对应 entry：按点击所在行匹配占位范围（同行多个时取最近列）
-      let hit: { id: string; range: monaco.Range } | undefined
+      let hit: { id: string; range: monaco.Range; ordinal: number } | undefined
       if (clickPosition) {
         const sameLine = binaryFoldRangesRef.current.filter(
           (item) => item.range.startLineNumber === clickPosition.lineNumber,
@@ -1569,7 +1559,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       if (!entry) {
         return
       }
-      openBinaryFoldEditor(entry)
+      openBinaryFoldEditor(entry, hit)
     }
     const binaryFoldMouseDownDisposable = editor.onMouseDown(handleBinaryFoldClick)
 

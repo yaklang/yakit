@@ -64,8 +64,21 @@ const hashId = (str: string): string => {
   return (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0')
 }
 
-// 预览信息缓存：key 为 id，避免每次按键都重新扫描大块内容
+// 预览信息缓存：key 为 id，避免每次按键都重新扫描大块内容；限制上限避免长会话内存膨胀
+const MAX_PREVIEW_CACHE_SIZE = 1000
 const previewCache = new Map<string, { byteLength: number; previewHex: string; previewText?: string }>()
+
+const rememberPreview = (id: string, value: { byteLength: number; previewHex: string; previewText?: string }): void => {
+  previewCache.delete(id)
+  previewCache.set(id, value)
+  while (previewCache.size > MAX_PREVIEW_CACHE_SIZE) {
+    const oldest = previewCache.keys().next().value
+    if (oldest === undefined) {
+      break
+    }
+    previewCache.delete(oldest)
+  }
+}
 
 // 字节 -> 可读文本：仅当解码为合法 UTF-8 且不含不可见控制符(允许 \t \n \r)时返回，否则返回 undefined
 // 用于 base64/hex 小块直观展示解码内容（如 Base64[asdf]）；二进制内容则回退到 0x..NB 字节预览
@@ -164,6 +177,7 @@ const computePreview = (
 ): { byteLength: number; previewHex: string; previewText?: string } => {
   const cached = previewCache.get(id)
   if (cached) {
+    rememberPreview(id, cached)
     return cached
   }
   let result: { byteLength: number; previewHex: string; previewText?: string } = {
@@ -202,7 +216,7 @@ const computePreview = (
       result = { byteLength: content.length, previewHex: '' }
     }
   } catch (e) {}
-  previewCache.set(id, result)
+  rememberPreview(id, result)
   return result
 }
 
