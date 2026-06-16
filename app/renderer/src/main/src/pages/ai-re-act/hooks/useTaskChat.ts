@@ -6,21 +6,14 @@ import type {
   UseTaskChatParams,
   UseTaskChatState,
 } from './type'
-import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps, TodoListCardData } from './aiRender'
+import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { useEffect, useRef, useState } from 'react'
-import { useCreation, useMemoizedFn, useThrottleFn } from 'ahooks'
+import { useRef, useState } from 'react'
+import { useCreation, useMemoizedFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import {
-  genBaseAIChatData,
-  generateTaskId,
-  genExecTasks,
-  handleGrpcDataPushLog,
-  handleTodoListData,
-  isValidTaskIndex,
-} from './utils'
+import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, handleTodoListData, isValidTaskIndex } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -79,8 +72,11 @@ function useTaskChat(params: UseTaskChatParams) {
 
   const handleTaskNode = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     try {
-      const taskKey = generateTaskId(getCurrentTaskPlanID()?.taskID, info.task.index)
-      const existing = getContentMap(taskKey || '')
+      const taskKey = getCurrentTaskPlanID()?.taskID
+        ? `${getCurrentTaskPlanID()?.taskID}-${info.task.index}`
+        : undefined
+      if (!taskKey) return
+      const existing = getContentMap(taskKey)
       if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         handleGrpcDataPushLog({
           info: res,
@@ -109,6 +105,19 @@ function useTaskChat(params: UseTaskChatParams) {
         setElements((old) => {
           const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
           if (exists) return old
+          const last = old[old.length - 1]
+          if (last.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
+            // 实时数据下，将默认任务聚合组置底
+            old.splice(old.length - 1, 0, {
+              token: chatData.id,
+              type: chatData.type,
+              renderNum: 1,
+              chatType: 'task',
+              kind: 'task',
+              children: [],
+            })
+            return [...old]
+          }
           return [
             ...old,
             { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },

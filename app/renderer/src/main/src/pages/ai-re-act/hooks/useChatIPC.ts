@@ -25,7 +25,7 @@ import type {
 } from './grpcApi'
 import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { DeepPartial } from '@/pages/ai-agent/store/ChatDataStore'
-import type { AIChatQSData, ReActChatBaseInfo } from './aiRender'
+import { AIChatQSDataTypeEnum, type AIChatQSData, type ReActChatBaseInfo } from './aiRender'
 
 import { useEffect, useRef, useState } from 'react'
 import { yakitNotify } from '@/utils/notification'
@@ -36,7 +36,7 @@ import useAIPerfData, { UseAIPerfDataTypes } from './useAIPerfData'
 import useCasualChat from './useCasualChat'
 import useYakExecResult, { UseYakExecResultTypes } from './useYakExecResult'
 import useTaskChat from './useTaskChat'
-import { genErrorLogData, genExecTasks, handleGrpcDataPushLog } from './utils'
+import { genBaseAIChatData, genErrorLogData, genExecTasks, handleGrpcDataPushLog } from './utils'
 import { AITaskStatus, AIInputEventSyncTypeEnum } from './grpcApi'
 import useAIChatLog from './useAIChatLog'
 import cloneDeep from 'lodash/cloneDeep'
@@ -770,6 +770,21 @@ function useChatIPC(params?: UseChatIPCParams) {
             setTaskStatus(() => ({ loading: true, plan: '加载中...', task: '加载中...' }))
             // 触发任务规划UI展示的回调
             onTaskStart && onTaskStart()
+            const chatData: AIChatQSData = {
+              ...genBaseAIChatData(res),
+              id: `${currentTaskPlanID.current.taskID}-unknown`,
+              chatType: 'task',
+              type: AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP,
+            } as AIChatQSData
+            getChatDataStore?.()?.taskChat?.contents.set(chatData.id, chatData)
+            taskChatEvent.setElements((old) => {
+              const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
+              if (exists) return old
+              return [
+                ...old,
+                { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
+              ]
+            })
           }
           /** 获取最新任务树状态 */
           sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })

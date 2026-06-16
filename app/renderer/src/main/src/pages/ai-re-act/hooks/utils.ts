@@ -4,7 +4,7 @@
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
 import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType, TodoListCardData } from './aiRender'
-import type { AIChatLogToInfo, AIChatLogData } from './type'
+import type { AIChatLogToInfo, AIChatLogData, TaskChatTaskInfo, AIMessageHandlerParams } from './type'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
@@ -12,9 +12,19 @@ import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
 
 /** 生成任务的唯一标识 */
-export const generateTaskId = (reActTaskID: string | undefined, task_index: string) => {
-  if (!reActTaskID) return undefined
-  return `${reActTaskID}-${task_index}`
+export const generateTaskId = (params: {
+  chatType: ReActChatRenderItem['chatType']
+  res: AIOutputEvent
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
+  getContentMap: AIMessageHandlerParams['getContentMap']
+}) => {
+  const { chatType, res, getCurrentTaskPlanID, getContentMap } = params
+  if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
+    const taskKey = res.TaskIndex ? `${getCurrentTaskPlanID()?.taskID}-${res.TaskIndex}` : ''
+    return `${getCurrentTaskPlanID()?.taskID}-${!!getContentMap(taskKey) ? res.TaskIndex : 'unknown'}`
+  }
+  return undefined
 }
 /** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
 export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/
