@@ -23,7 +23,7 @@ interface YakitBridge {
     syncEditBaseUrl: (baseUrl: string) => unknown
     syncUpdateUser: (user: any) => unknown
     killRunNode: (pid: number) => Promise<unknown>
-    userSignOut: () => void
+    userSignOut: (params: { isEnpriTrace?: boolean }) => void
     triggerDevtool: () => Promise<unknown>
     setZoomFactor: (factor: number) => Promise<unknown>
     reload: () => Promise<unknown>
@@ -181,6 +181,7 @@ interface YakitBridge {
     editBaseUrl: (baseUrl: string) => Promise<any>
     requestPasswordReset: () => Promise<any>
     onSignInData: (callback: (payload: any) => void) => BridgeCleanup
+    onSignCCBInData: (callback: (payload: any) => void) => BridgeCleanup
     onBaseUrlStatus: (callback: (payload: any) => void) => BridgeCleanup
   }
   release: {

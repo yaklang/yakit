@@ -312,7 +312,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     ]
 
     // CE 版本
-    if (userInfo.platform !== 'company') {
+    if (userInfo.platform !== 'company' && userInfo.platform !== 'ccb') {
       let isNew: boolean = false
       // CE-超管
       if (userInfo.role === 'superAdmin') {
@@ -374,7 +374,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       if (userInfo.role === 'admin') {
         // 管理员
         if (isEnpriTraceAgent()) {
-          setUserMenu([
+          let cacheMenus: YakitMenuItemType[] = [
             ...userAvatar,
             UserMenusMap['holeCollect'],
             UserMenusMap['roleAdmin'],
@@ -382,7 +382,12 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
             UserMenusMap['setPassword'],
             UserMenusMap['pluginAudit'],
             ...signOutMenu,
-          ])
+          ]
+          // 非原生系统登录时 不显示修改密码
+          if (userInfo.platform !== 'company') {
+            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
+          }
+          setUserMenu(cacheMenus)
         } else {
           let cacheMenus: YakitMenuItemType[] = [
             ...userAvatar,
@@ -412,6 +417,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           // IRify 版本时管理员不显示插件管理
           if (isIRify()) {
             cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'plugin-audit')
+          }
+          // 非原生系统登录时 不显示修改密码
+          if (userInfo.platform !== 'company') {
+            cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
           }
           setUserMenu([...cacheMenus])
         }
@@ -455,7 +464,10 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           isNew = true
           cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'close-dynamic-control')
         }
-
+        // 非原生系统登录时 不显示修改密码
+        if (userInfo.platform !== 'company') {
+          cacheMenus = cacheMenus.filter((item) => (item as YakitMenuItemProps).key !== 'set-password')
+        }
         if (isNew) {
           setUserMenu([...cacheMenus])
         } else {
@@ -722,7 +734,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                       },
                     }}
                   >
-                    {userInfo.platform === 'company' ? (
+                    {['company', 'ccb'].includes(userInfo.platform || '') ? (
                       judgeDynamic(userInfo, avatarColor.current, dynamicMenuOpen, dynamicConnect, t)
                     ) : (
                       <img
