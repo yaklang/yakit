@@ -75,6 +75,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { WebTree } from '@/components/WebTree/WebTree'
 import ReactResizeDetector from 'react-resize-detector'
 import { HistoryProcess, HistoryTab } from '@/components/HTTPHistory'
+import { useBuiltinTagList } from '@/components/HTTPFlowTable/useBuiltinTagList'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { v4 as uuidv4 } from 'uuid'
 import { cloneDeep, isEqual, toArray } from 'lodash'
@@ -267,10 +268,12 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     setRulesQueryparams(linkedQueries.rulesQueryparams)
   })
   // #endregion
-  const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
+  const httpHistoryFilterRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(httpHistoryFilterRef)
+  const { builtinTagList, setBuiltinTagList } = useBuiltinTagList(true, inViewport)
 
   return (
-    <div className={styles['HTTPHistoryFilter']}>
+    <div className={styles['HTTPHistoryFilter']} ref={httpHistoryFilterRef}>
       <YakitResizeBox
         isVer={false}
         freeze={openTabsFlag}
