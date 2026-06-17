@@ -760,9 +760,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     }
 
     const normIncoming = String(incoming).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-    const normOriginal = String(baseline)
-      .replace(/\r\n/g, '\n')
-      .replace(/\r/g, '\n')
+    const normOriginal = String(baseline).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
     if (normOriginal === normIncoming) {
       if (casualReviewSessionIdRef.current != null) {
         setCasualReviewQueue([])

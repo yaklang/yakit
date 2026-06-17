@@ -81,7 +81,7 @@ export const AICustomCodeRef: React.FC = () => {
         [styles['code-block-custom-no-effect']]: !closable && !clickable,
         [styles['code-block-custom-clickable']]: clickable,
       })}
-      color='lakeBlue'
+      color="lakeBlue"
       onClick={onOpenCodeRef}
       contentEditable={false}
     >

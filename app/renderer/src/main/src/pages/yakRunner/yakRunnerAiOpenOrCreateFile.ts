@@ -111,7 +111,9 @@ export async function openOrCreateYakRunnerFileAtPath(
   return { newAreaInfo, newActiveFile, created }
 }
 
-export function createYakRunnerScratchFileForAI(params: CreateYakRunnerScratchFileParams): OpenOrCreateYakRunnerFileResult {
+export function createYakRunnerScratchFileForAI(
+  params: CreateYakRunnerScratchFileParams,
+): OpenOrCreateYakRunnerFileResult {
   const { fileName, content, language, areaInfo, activeFile } = params
   const name = fileName.trim() || `gen_code_${Date.now()}.yak`
   const suffix = getFileSuffixFromName(name)

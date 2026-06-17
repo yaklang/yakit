@@ -1,8 +1,5 @@
 import type { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '@/pages/ai-re-act/hooks/grpcApi'
-import {
-  AttachedResourceKeyEnum,
-  AttachedResourceTypeEnum,
-} from '@/pages/ai-agent/defaultConstant'
+import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { getFileSuffixFromPath } from '@/pages/yakRunner/utils'
 import { yakitFailed } from '@/utils/notification'
 
@@ -195,12 +192,7 @@ export function applyYaklangCodeChangeToYakRunnerPage(
   if (content.trim() === '') return
   const path = resolveYaklangCodeChangePath(data)
   const lastApplied = lastAppliedCodeByPage.get(pageId)
-  if (
-    !options?.skipReplaceDedup &&
-    lastApplied &&
-    lastApplied.content === content &&
-    lastApplied.path === path
-  ) {
+  if (!options?.skipReplaceDedup && lastApplied && lastApplied.content === content && lastApplied.path === path) {
     return
   }
   lastAppliedCodeByPage.set(pageId, { content, path })
