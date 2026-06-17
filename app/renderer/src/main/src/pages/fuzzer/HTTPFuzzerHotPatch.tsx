@@ -14,6 +14,7 @@ import { showYakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import {
   OutlineChevrondownIcon,
+  OutlineChevronrightIcon,
   OutlineClouddownloadIcon,
   OutlineClouduploadIcon,
   OutlineFileUpIcon,
@@ -57,6 +58,7 @@ import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
+import { formatTemplateTeams } from '../configManagement/ConfigManagement'
 interface HTTPFuzzerHotPatchProp {
   pageId: string
   onInsert: (s: string) => any
@@ -1023,6 +1025,7 @@ export interface HotPatchTempItem {
   nameUi?: string
   temp: string
   isDefault: boolean
+  Tags?: string
 }
 
 interface DeleteHotPatchTemplateRequest {
@@ -1071,23 +1074,30 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     if (hotCodeTempVisible || dropdown === false) {
       if (tab === 'local') {
         ipcRenderer
-          .invoke('QueryHotPatchTemplateList', {
+          .invoke('QueryHotPatchTemplate', {
             Type: type,
           })
-          .then((res: QueryHotPatchTemplateListResponse) => {
-            const nameArr = res.Name
-            const newHotPatchTempLocal = hotPatchTempLocalRef.current.slice().filter(({ isDefault }) => isDefault)
-            nameArr.forEach((name) => {
-              const index = newHotPatchTempLocal.findIndex((item) => item.name === name)
-              if (index === -1) {
-                newHotPatchTempLocal.push({
-                  name,
-                  temp: '',
-                  isDefault: false,
-                })
+          .then((res: QueryHotPatchTemplateResponse) => {
+            const defaultItems = hotPatchTempLocalRef.current.filter(({ isDefault }) => isDefault)
+            const list: HotPatchTempItem[] = (res.Data || []).map((item) => {
+              const def = defaultItems.find((d) => d.name === item.Name)
+              return {
+                name: item.Name,
+                temp: item.Content || '',
+                isDefault: !!def,
+                Tags: item.Tags?.join(',') || '',
               }
             })
-            onSetHotPatchTempLocal(newHotPatchTempLocal)
+            defaultItems.forEach((def) => {
+              if (list.some((item) => item.name === def.name)) return
+              list.push({
+                name: def.name,
+                temp: def.temp,
+                isDefault: true,
+                Tags: '',
+              })
+            })
+            onSetHotPatchTempLocal(list)
           })
           .catch((error) => {
             yakitNotify('error', error + '')
@@ -1288,13 +1298,88 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
     return flag
   }, [userInfo])
 
-  const renderHotPatchTemp = useMemo(() => {
-    if (tab === 'local') return hotPatchTempLocal
-    if (tab === 'online') return hotPatchTempOnline
-    return []
-  }, [tab, hotPatchTempLocal, hotPatchTempOnline])
+  const renderHotCodeItem = useMemoizedFn((item: HotPatchTempItem) => (
+    <div className={styles['hotCode-item']} key={item.name}>
+      <YakitPopover
+        trigger="hover"
+        placement="right"
+        overlayClassName={styles['hotCode-popover']}
+        content={dropdown && <YakitEditor type={'yak'} value={viewCurHotCode} readOnly={true} />}
+        onVisibleChange={(v) => {
+          if (v) {
+            onClickHotCodeName(item)
+          }
+        }}
+        zIndex={9999}
+      >
+        <YakitPopconfirm
+          title={t('HotCodeTemplate.confirm_overwrite_hot_reload_code')}
+          onConfirm={() => {
+            onClickHotCodeName(item, true)
+          }}
+          placement="right"
+          disabled={dropdown}
+        >
+          <div
+            className={styles['hotCode-item-cont']}
+            onClick={() => {
+              if (dropdown) {
+                onClickHotCodeName(item, true)
+              }
+            }}
+          >
+            <div
+              className={classNames(styles['hotCode-item-name'], 'content-ellipsis')}
+              title={t(item.nameUi || item.name)}
+            >
+              {t(item.nameUi || item.name)}
+            </div>
+            <div className={styles['extra-opt-btns']}>
+              {tab === 'local' && !item.isDefault && hasPermissions && (
+                <YakitButton
+                  icon={<OutlineClouduploadIcon />}
+                  type="text2"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    uploadHotPatchTemplateToOnline(item)
+                  }}
+                ></YakitButton>
+              )}
+              {tab === 'online' && (
+                <YakitButton
+                  icon={<OutlineClouddownloadIcon />}
+                  type="text2"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    downloadHotPatchTemplate(item)
+                  }}
+                ></YakitButton>
+              )}
+              {(tab === 'local' && !item.isDefault) || (tab === 'online' && hasPermissions) ? (
+                <YakitButton
+                  icon={<OutlineTrashIcon />}
+                  type="text"
+                  colors="danger"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteHotPatchTemplate(item)
+                  }}
+                ></YakitButton>
+              ) : null}
+            </div>
+            {item.isDefault && (
+              <YakitTag color="info" size="small">
+                {t('YakitButton.builtIn')}
+              </YakitTag>
+            )}
+          </div>
+        </YakitPopconfirm>
+      </YakitPopover>
+    </div>
+  ))
 
   const overlayCont = useMemo(() => {
+    const teams = formatTemplateTeams(tab === 'local' ? hotPatchTempLocal : hotPatchTempOnline)
     return (
       <div
         className={styles['hotCode-list']}
@@ -1324,97 +1409,42 @@ export const HotCodeTemplate: React.FC<HotCodeTemplateProps> = React.memo((props
             }}
           />
         )}
-        {renderHotPatchTemp.length ? (
-          <>
-            {renderHotPatchTemp.map((item) => (
-              <div className={styles['hotCode-item']} key={item.name}>
+        {teams.length ? (
+          teams.map((team) =>
+            team.tags ? (
+              <div className={styles['hotCode-group-item']} key={`${tab}-${team.tags}`}>
                 <YakitPopover
                   trigger="hover"
                   placement="right"
-                  overlayClassName={styles['hotCode-popover']}
-                  content={dropdown && <YakitEditor type={'yak'} value={viewCurHotCode} readOnly={true} />}
-                  onVisibleChange={(v) => {
-                    if (v) {
-                      onClickHotCodeName(item)
-                    }
-                  }}
-                  zIndex={9999}
-                >
-                  <YakitPopconfirm
-                    title={t('HotCodeTemplate.confirm_overwrite_hot_reload_code')}
-                    onConfirm={(e) => {
-                      onClickHotCodeName(item, true)
-                    }}
-                    placement="right"
-                    disabled={dropdown}
-                  >
-                    <div
-                      className={classNames(styles['hotCode-item-cont'])}
-                      onClick={() => {
-                        if (dropdown) {
-                          onClickHotCodeName(item, true)
-                        }
-                      }}
-                    >
-                      <div
-                        className={classNames(styles['hotCode-item-name'], 'content-ellipsis')}
-                        title={t(item.nameUi || item.name)}
-                      >
-                        {t(item.nameUi || item.name)}
-                      </div>
-                      <div className={styles['extra-opt-btns']}>
-                        {/* 本地上传 */}
-                        {tab === 'local' && !item.isDefault && hasPermissions && (
-                          <YakitButton
-                            icon={<OutlineClouduploadIcon />}
-                            type="text2"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              uploadHotPatchTemplateToOnline(item)
-                            }}
-                          ></YakitButton>
-                        )}
-                        {/* 线上下载 */}
-                        {tab === 'online' && (
-                          <YakitButton
-                            icon={<OutlineClouddownloadIcon />}
-                            type="text2"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              downloadHotPatchTemplate(item)
-                            }}
-                          ></YakitButton>
-                        )}
-                        {/* 删除 */}
-                        {(tab === 'local' && !item.isDefault) || (tab === 'online' && hasPermissions) ? (
-                          <YakitButton
-                            icon={<OutlineTrashIcon />}
-                            type="text"
-                            colors="danger"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              deleteHotPatchTemplate(item)
-                            }}
-                          ></YakitButton>
-                        ) : null}
-                      </div>
-                      {item.isDefault && (
-                        <YakitTag color="info" size="small">
-                          {t('YakitButton.builtIn')}
-                        </YakitTag>
-                      )}
+                  overlayClassName={styles['hotCode-group-submenu']}
+                  content={
+                    <div className={classNames(styles['hotCode-list'], styles['hotCode-group-submenu-list'])}>
+                      {team.node.map((item) => renderHotCodeItem(item))}
                     </div>
-                  </YakitPopconfirm>
+                  }
+                  zIndex={9998}
+                >
+                  <div className={styles['hotCode-group-item-cont']}>
+                    <span
+                      className={classNames(styles['hotCode-group-item-name'], 'content-ellipsis')}
+                      title={team.tags}
+                    >
+                      {team.tags}
+                    </span>
+                    <OutlineChevronrightIcon className={styles['hotCode-group-item-arrow']} />
+                  </div>
                 </YakitPopover>
               </div>
-            ))}
-          </>
+            ) : (
+              renderHotCodeItem(team.node[0])
+            ),
+          )
         ) : (
           <YakitEmpty></YakitEmpty>
         )}
       </div>
     )
-  }, [tab, renderHotPatchTemp, viewCurHotCode, hasPermissions, dropdown])
+  }, [tab, hotPatchTempLocal, hotPatchTempOnline, renderHotCodeItem, viewCurHotCode, dropdown])
 
   return (
     <>
@@ -1454,6 +1484,7 @@ interface HotPatchTemplate {
   Name: string
   Content: string
   Type: string
+  Tags?: string[]
 }
 interface AddHotCodeTemplateProps {
   title?: string

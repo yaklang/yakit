@@ -15,6 +15,7 @@ import {
   OutlinePencilaltIcon,
   OutlineTerminalIcon,
   OutlineInformationcircleIcon,
+  OutlineChevronrightIcon,
 } from '@/assets/icon/outline'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { Tooltip } from 'antd'
@@ -39,7 +40,7 @@ import { isEnpriTrace } from '@/utils/envfile'
 import { NetWorkApi } from '@/services/fetch'
 import { API } from '@/services/swagger/resposeType'
 import styles from './ConfigManagement.module.scss'
-import { SolidDotsverticalIcon, SolidPlayIcon, SolidStopIcon } from '@/assets/icon/solid'
+import { SolidChevronrightIcon, SolidDotsverticalIcon, SolidPlayIcon, SolidStopIcon } from '@/assets/icon/solid'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import {
   DEFAULT_GLOBAL_TEMPLATE_CONTENT,
@@ -126,13 +127,15 @@ export default ConfigManagement
 
 type PanelHotCodeType = Exclude<HotCodeType, 'global'>
 
-interface QueryHotPatchTemplateListResponse {
-  Name: string[]
-  Total: number
+interface HotPatchTemplateItem {
+  Name: string
+  Content: string
+  Type: string
+  Tags?: string[]
 }
 
 interface QueryHotPatchTemplateResponse {
-  Data: { Name: string; Content: string; Type: string }[]
+  Data: HotPatchTemplateItem[]
 }
 
 interface StringFuzzerParams {
@@ -154,6 +157,11 @@ interface GetOnlineHotPatchTemplateRequest {
   name?: string
 }
 
+interface HotPatchTemplateTeam {
+  tags: string
+  node: HotPatchTempItem[]
+}
+
 const INPUT_MAX_LENGTH = 50
 const DEBUG_TIMEOUT_SECONDS = 20
 const DEBUG_LIMIT = 300
@@ -171,6 +179,74 @@ const HOT_PATCH_PARAMS_GETTER_DEFAULT = `__getParams__ = func() {
         // "foo-params": "asdfasdfassss",      # 可用 {{params(foo-params)}}
     }
 }`
+
+export const formatTemplateTeams = (list: HotPatchTempItem[]): HotPatchTemplateTeam[] => {
+  const taggedTeams: HotPatchTemplateTeam[] = []
+  const emptyTagNodes: HotPatchTempItem[] = []
+  const tagIndexMap = new Map<string, number>()
+
+  list.forEach((item) => {
+    const tags = item.Tags?.trim() || ''
+    if (!tags) {
+      emptyTagNodes.push(item)
+      return
+    }
+    const index = tagIndexMap.get(tags)
+    if (index === undefined) {
+      tagIndexMap.set(tags, taggedTeams.length)
+      taggedTeams.push({ tags, node: [item] })
+      return
+    }
+    taggedTeams[index].node.push(item)
+  })
+
+  emptyTagNodes.forEach((item) => {
+    taggedTeams.push({ tags: '', node: [item] })
+  })
+
+  return taggedTeams
+}
+
+function collectTemplateGroups(list: HotPatchTempItem[]) {
+  const groups = new Set<string>()
+  list.forEach((item) => {
+    const tag = item.Tags?.trim()
+    if (tag) groups.add(tag)
+  })
+  return Array.from(groups)
+}
+
+const ensureHotPatchDefaultTemplates = async (
+  type: string,
+  resData: HotPatchTemplateItem[],
+  defaults: Array<{ name: string; content: string }>,
+) => {
+  const seededNames: HotPatchTemplateItem[] = []
+  for (const tpl of defaults) {
+    if (resData.some(({ Name }) => Name === tpl.name)) continue
+    const newTemplate: HotPatchTemplateItem = {
+      Type: type,
+      Content: tpl.content,
+      Name: tpl.name,
+      Tags: [],
+    }
+    try {
+      await ipcRenderer.invoke('CreateHotPatchTemplate', newTemplate)
+      seededNames.push(newTemplate)
+    } catch (error) {
+      yakitFailed(error + '')
+    }
+  }
+  return [...seededNames, ...resData]
+}
+
+const toHotPatchTempItems = (list: HotPatchTemplateItem[], isDefault: (name: string) => boolean): HotPatchTempItem[] =>
+  list.map(({ Name, Tags }) => ({
+    name: Name,
+    temp: '',
+    isDefault: isDefault(Name),
+    Tags: Tags?.join(',') || '',
+  }))
 
 export const HotPatchManagement: React.FC = () => {
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'yakitRoute', 'layout', 'webFuzzer'])
@@ -194,6 +270,13 @@ export const HotPatchManagement: React.FC = () => {
   const [editingTemplateKey, setEditingTemplateKey] = useState('')
   const [editingValue, setEditingValue] = useState('')
   const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState(false)
+  const [groupModalVisible, setGroupModalVisible] = useState(false)
+  const [groupModalValue, setGroupModalValue] = useState('')
+  const [groupModalTarget, setGroupModalTarget] = useState<{ item: HotPatchTempItem; type: HotCodeType } | null>(null)
+  const [templateMenuVisibleKey, setTemplateMenuVisibleKey] = useState('')
+  const [groupSubmenuVisibleKey, setGroupSubmenuVisibleKey] = useState('')
+  const [collapsedTemplateGroupKeys, setCollapsedTemplateGroupKeys] = useState<Set<string>>(() => new Set())
+  const groupSubmenuCloseTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const [loading, setLoading] = useState(false)
   const [templateListLoading, setTemplateListLoading] = useState(false)
   const [editorTab, setEditorTab] = useState<'source' | 'result'>('source')
@@ -205,7 +288,7 @@ export const HotPatchManagement: React.FC = () => {
 
   const isGlobalType = useMemo(() => activeType === 'global', [activeType])
 
-  const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType) => {
+  const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType): HotPatchTempItem[] => {
     switch (type) {
       case 'fuzzer':
         return cloneDeep(HotPatchTempDefault)
@@ -315,29 +398,17 @@ export const HotPatchManagement: React.FC = () => {
   const loadGlobalTemplateList = useMemoizedFn((selectedName?: string, enabledName?: string) => {
     setGlobalTemplateListLoading(true)
     ipcRenderer
-      .invoke('QueryHotPatchTemplateList', { Type: 'global' })
-      .then(async (res: QueryHotPatchTemplateListResponse) => {
-        const nameArr = res.Name || []
-        const seededNames: string[] = []
-        for (const tpl of DEFAULT_GLOBAL_TEMPLATES) {
-          if (nameArr.includes(tpl.name)) continue
-          try {
-            await ipcRenderer.invoke('CreateHotPatchTemplate', {
-              Type: 'global',
-              Content: tpl.content,
-              Name: tpl.name,
-            })
-            seededNames.push(tpl.name)
-          } catch (error) {
-            yakitFailed(error + '')
-          }
-        }
-        const allNames = [...seededNames, ...nameArr]
-        const newList = allNames.map((name) => ({
-          name,
-          temp: DEFAULT_GLOBAL_TEMPLATES.find((item) => item.name === name)?.content || '',
-          isDefault: DEFAULT_GLOBAL_TEMPLATES.some((item) => item.name === name),
-        }))
+      .invoke('QueryHotPatchTemplate', { Type: 'global' })
+      .then(async (res: QueryHotPatchTemplateResponse) => {
+        const resData = res.Data || []
+        const allNames = await ensureHotPatchDefaultTemplates(
+          'global',
+          resData,
+          DEFAULT_GLOBAL_TEMPLATES.map((tpl) => ({ name: tpl.name, content: tpl.content })),
+        )
+        const newList = toHotPatchTempItems(allNames, (name) =>
+          DEFAULT_GLOBAL_TEMPLATES.some((item) => item.name === name),
+        )
         const currentEnabledName = enabledName || (globalHotPatchConfig?.Enabled ? globalEnabledTemplateName : '')
         const nextList = sortGlobalTemplateList(newList, currentEnabledName)
         setGlobalTemplateList(nextList)
@@ -361,20 +432,15 @@ export const HotPatchManagement: React.FC = () => {
     const defaultTemplates = getDefaultTemplates(type)
     setTemplateListLoading(true)
     ipcRenderer
-      .invoke('QueryHotPatchTemplateList', { Type: type })
-      .then(async (res: QueryHotPatchTemplateListResponse) => {
-        const nameArr = res.Name || []
-        const newList: HotPatchTempItem[] = [...defaultTemplates]
-        nameArr.forEach((name) => {
-          const index = newList.findIndex((item) => item.name === name)
-          if (index === -1) {
-            newList.push({
-              name,
-              temp: '',
-              isDefault: false,
-            })
-          }
-        })
+      .invoke('QueryHotPatchTemplate', { Type: type })
+      .then(async (res: QueryHotPatchTemplateResponse) => {
+        const resData = res.Data || []
+        const allNames = await ensureHotPatchDefaultTemplates(
+          type,
+          resData,
+          defaultTemplates.map((tpl) => ({ name: tpl.name, content: tpl.temp })),
+        )
+        const newList = toHotPatchTempItems(allNames, (name) => defaultTemplates.some((item) => item.name === name))
         setTemplateList(newList)
         if (selectedName && newList.some((item) => item.name === selectedName)) {
           syncSelectedTemplate(type, selectedName)
@@ -712,8 +778,120 @@ export const HotPatchManagement: React.FC = () => {
     }
   })
 
+  const globalTemplateGroups = useMemo(() => collectTemplateGroups(globalTemplateList), [globalTemplateList])
+  const panelTemplateGroups = useMemo(() => collectTemplateGroups(templateList), [templateList])
+
+  const closeTemplateMenu = useMemoizedFn(() => {
+    setTemplateMenuVisibleKey('')
+    setGroupSubmenuVisibleKey('')
+  })
+
+  const onGroupSubmenuHover = useMemoizedFn((templateKey: string | null) => {
+    if (groupSubmenuCloseTimerRef.current) {
+      clearTimeout(groupSubmenuCloseTimerRef.current)
+      groupSubmenuCloseTimerRef.current = undefined
+    }
+    if (templateKey) {
+      setGroupSubmenuVisibleKey(templateKey)
+      return
+    }
+    groupSubmenuCloseTimerRef.current = setTimeout(() => {
+      setGroupSubmenuVisibleKey('')
+    }, 120)
+  })
+
+  const updateTemplateTagInList = useMemoizedFn((type: HotCodeType, name: string, tag: string) => {
+    const updater = (list: HotPatchTempItem[]) =>
+      list.map((item) => (item.name === name ? { ...item, Tags: tag } : item))
+    if (type === 'global') {
+      setGlobalTemplateList(updater)
+    } else {
+      setTemplateList(updater)
+    }
+  })
+
+  const onUpdateTemplateTags = useMemoizedFn(async (item: HotPatchTempItem, type: HotCodeType, tag: string) => {
+    const Tags = tag.trim()
+    if (!Tags) return
+
+    const params = {
+      Condition: { Type: type, Name: [item.name] },
+      Data: { Tags: [Tags] },
+    }
+
+    await ipcRenderer.invoke('UpdateHotPatchTemplate', params)
+
+    updateTemplateTagInList(type, item.name, Tags)
+    closeTemplateMenu()
+    yakitNotify('success', t('HotCodeTemplate.add_to_group_success'))
+  })
+
+  const onOpenCreateGroupModal = useMemoizedFn((item: HotPatchTempItem, type: HotCodeType) => {
+    setGroupModalTarget({ item, type })
+    setGroupModalValue('')
+    setGroupModalVisible(true)
+    closeTemplateMenu()
+  })
+
+  const onConfirmCreateGroup = useMemoizedFn(async () => {
+    const tag = groupModalValue.trim()
+    if (!tag || !groupModalTarget) return
+    await onUpdateTemplateTags(groupModalTarget.item, groupModalTarget.type, tag)
+    setGroupModalVisible(false)
+    setGroupModalValue('')
+    setGroupModalTarget(null)
+  })
+
+  const renderAddToGroupSubmenu = useMemoizedFn(
+    (type: HotCodeType, item: HotPatchTempItem, currentTemplateKey: string, groups: string[]) => (
+      <div
+        className={styles['popover-menu-item-submenu']}
+        onMouseEnter={() => onGroupSubmenuHover(currentTemplateKey)}
+        onMouseLeave={() => onGroupSubmenuHover(null)}
+      >
+        <div className={styles['popover-menu-item']}>
+          <span>{t('HotCodeTemplate.add_to_group')}</span>
+          <OutlineChevronrightIcon className={styles['popover-menu-arrow']} />
+        </div>
+        <div
+          className={classNames(styles['popover-submenu'], {
+            [styles['popover-submenu-visible']]: groupSubmenuVisibleKey === currentTemplateKey,
+          })}
+          onMouseEnter={() => onGroupSubmenuHover(currentTemplateKey)}
+          onMouseLeave={() => onGroupSubmenuHover(null)}
+        >
+          <div
+            className={styles['popover-menu-item']}
+            onClick={(e) => {
+              e.stopPropagation()
+              onOpenCreateGroupModal(item, type)
+            }}
+          >
+            <span>{t('HotCodeTemplate.create_group')}...</span>
+          </div>
+          {groups.map((group) => (
+            <div
+              key={group}
+              className={styles['popover-menu-item']}
+              onClick={(e) => {
+                e.stopPropagation()
+                onUpdateTemplateTags(item, type, group)
+              }}
+            >
+              <span className={styles['popover-menu-group-name']} title={group}>
+                {group}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  )
+
   const renderTemplateItem = useMemoizedFn((type: HotCodeType, item: HotPatchTempItem, source: 'local' | 'online') => {
     const currentTemplateKey = getTemplateKey(type, item.name)
+    const existingGroups = type === 'global' ? globalTemplateGroups : panelTemplateGroups
+    const showTemplateMenu = source === 'local' || (source === 'online' && hasPermissions)
     return (
       <div
         key={`${type}-${source}-${item.name}`}
@@ -754,11 +932,19 @@ export const HotPatchManagement: React.FC = () => {
                 {t('YakitButton.enabled')}
               </YakitTag>
             )}
-            {((!item.isDefault && source === 'local') || (source === 'online' && hasPermissions)) && (
+            {showTemplateMenu && (
               <YakitPopover
                 overlayClassName={styles['template-popover']}
+                visible={templateMenuVisibleKey === currentTemplateKey}
+                onVisibleChange={(visible) => {
+                  setTemplateMenuVisibleKey(visible ? currentTemplateKey : '')
+                  if (!visible) {
+                    setGroupSubmenuVisibleKey('')
+                  }
+                }}
                 content={
                   <>
+                    {source === 'local' && renderAddToGroupSubmenu(type, item, currentTemplateKey, existingGroups)}
                     {type === 'global' &&
                       (() => {
                         const isThisItemEnabled =
@@ -776,16 +962,12 @@ export const HotPatchManagement: React.FC = () => {
                               isThisItemEnabled ? onDisableGlobalHotPatch() : onEnableSelectedAsGlobal(item.name)
                             }}
                           >
-                            {isThisItemEnabled ? (
-                              <SolidStopIcon className={styles['popover-menu-icon']} />
-                            ) : (
-                              <SolidPlayIcon className={styles['popover-menu-icon']} />
-                            )}
+                            {isThisItemEnabled ? <SolidStopIcon /> : <SolidPlayIcon />}
                             <span>{isThisItemEnabled ? t('YakitButton.close') : t('YakitButton.enable')}</span>
                           </div>
                         )
                       })()}
-                    {source === 'local' && (
+                    {source === 'local' && !item.isDefault && (
                       <div
                         className={styles['popover-menu-item']}
                         onClick={(e) => {
@@ -793,20 +975,22 @@ export const HotPatchManagement: React.FC = () => {
                           onRenameTemplate(item, type)
                         }}
                       >
-                        <OutlinePencilaltIcon className={styles['popover-menu-icon']} />
+                        <OutlinePencilaltIcon />
                         <span>{t('YakitButton.rename')}</span>
                       </div>
                     )}
-                    <div
-                      className={classNames(styles['popover-menu-item'], styles['popover-menu-item-danger'])}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onDeleteTemplate(item, source, type)
-                      }}
-                    >
-                      <OutlineTrashIcon className={styles['popover-menu-icon']} />
-                      <span>{t('YakitButton.delete')}</span>
-                    </div>
+                    {((!item.isDefault && source === 'local') || (source === 'online' && hasPermissions)) && (
+                      <div
+                        className={classNames(styles['popover-menu-item'], styles['popover-menu-item-danger'])}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onDeleteTemplate(item, source, type)
+                        }}
+                      >
+                        <OutlineTrashIcon />
+                        <span>{t('YakitButton.delete')}</span>
+                      </div>
+                    )}
                   </>
                 }
               >
@@ -818,6 +1002,59 @@ export const HotPatchManagement: React.FC = () => {
       </div>
     )
   })
+
+  const renderTemplateTeamList = useMemoizedFn(
+    (type: HotCodeType, list: HotPatchTempItem[], source: 'local' | 'online') => {
+      const getGroupKey = (tags: string) => `${type}:${source}:${tags}`
+
+      return formatTemplateTeams(list).map((team, index) => {
+        if (!team.tags) {
+          return (
+            <React.Fragment key={`ungrouped-${type}-${source}-${index}`}>
+              {team.node.map((item) => renderTemplateItem(type, item, source))}
+            </React.Fragment>
+          )
+        }
+
+        const groupKey = getGroupKey(team.tags)
+        const expanded = !collapsedTemplateGroupKeys.has(groupKey)
+
+        return (
+          <div key={groupKey} className={styles['template-tree-group']}>
+            <div
+              className={styles['template-tree-group-header']}
+              onClick={() => {
+                setCollapsedTemplateGroupKeys((prev) => {
+                  const next = new Set(prev)
+                  if (next.has(groupKey)) {
+                    next.delete(groupKey)
+                  } else {
+                    next.add(groupKey)
+                  }
+                  return next
+                })
+              }}
+            >
+              <SolidChevronrightIcon
+                className={classNames(styles['template-tree-expand-icon'], {
+                  [styles['template-tree-expand-icon-expanded']]: expanded,
+                })}
+              />
+              <span className={styles['template-tree-group-title']} title={team.tags}>
+                {team.tags}
+              </span>
+              <span className={styles['template-tree-group-count']}>{team.node.length}</span>
+            </div>
+            {expanded && (
+              <div className={styles['template-tree-group-children']}>
+                {team.node.map((item) => renderTemplateItem(type, item, source))}
+              </div>
+            )}
+          </div>
+        )
+      })
+    },
+  )
 
   const renderMenu = useMemoizedFn(() => {
     return (
@@ -847,9 +1084,7 @@ export const HotPatchManagement: React.FC = () => {
               <div className={styles['type-template']}>
                 <YakitSpin spinning={globalTemplateListLoading}>
                   <div className={styles['type-template-scroll']}>
-                    <div className={styles['template-section']}>
-                      {globalTemplateList.map((item) => renderTemplateItem('global', item, 'local'))}
-                    </div>
+                    {renderTemplateTeamList('global', globalTemplateList, 'local')}
                   </div>
                 </YakitSpin>
               </div>
@@ -874,16 +1109,12 @@ export const HotPatchManagement: React.FC = () => {
               <div className={styles['type-template']}>
                 <YakitSpin spinning={templateListLoading}>
                   <div className={styles['type-template-scroll']}>
-                    <div className={styles['template-section']}>
-                      {templateList.map((item) => renderTemplateItem(panelType, item, 'local'))}
-                    </div>
+                    {renderTemplateTeamList(panelType, templateList, 'local')}
                     {isEnpriTrace() && panelType === 'fuzzer' && (
                       <>
                         <div className={styles['template-divider']} />
-                        <div className={styles['template-section']}>
-                          <div className={styles['template-section-title']}>{t('HotCodeTemplate.online_template')}</div>
-                          {templateListOnline.map((item) => renderTemplateItem(panelType, item, 'online'))}
-                        </div>
+                        <div className={styles['template-section-title']}>{t('HotCodeTemplate.online_template')}</div>
+                        {templateListOnline.map((item) => renderTemplateItem(panelType, item, 'online'))}
                       </>
                     )}
                   </div>
@@ -1042,6 +1273,29 @@ export const HotPatchManagement: React.FC = () => {
           onChange={(e) => setCreateModalValue(e.target.value)}
           maxLength={INPUT_MAX_LENGTH}
         />
+      </YakitModal>
+
+      <YakitModal
+        visible={groupModalVisible}
+        title={t('HotCodeTemplate.create_group')}
+        onCancel={() => setGroupModalVisible(false)}
+        onOk={onConfirmCreateGroup}
+        okButtonProps={{ disabled: !groupModalValue.trim() }}
+      >
+        <div className={styles['group-modal-form']}>
+          <div className={styles['group-modal-label']}>
+            <span className={styles['group-modal-required']}>*</span>
+            {t('HotCodeTemplate.group_name')}:
+          </div>
+          <YakitInput
+            placeholder={t('HotCodeTemplate.enter_group_name')}
+            value={groupModalValue}
+            onChange={(e) => setGroupModalValue(e.target.value)}
+            showCount
+            maxLength={INPUT_MAX_LENGTH}
+          />
+          <div className={styles['group-modal-tip']}>{t('HotCodeTemplate.create_group_tip')}</div>
+        </div>
       </YakitModal>
 
       <AddHotCodeTemplate
