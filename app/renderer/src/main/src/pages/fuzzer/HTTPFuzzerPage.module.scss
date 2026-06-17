@@ -230,8 +230,10 @@
 
 .editor-cog-popover {
   :global {
-    .ant-popover-inner-content {
-      padding: 8px;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 8px;
+      }
     }
   }
 }

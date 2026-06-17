@@ -144,13 +144,11 @@
     .ant-popover-title {
       border-bottom: 0;
       min-width: unset;
-      color: var(--Colors-Use-Neutral-Text-1-Title);
     }
-    .ant-popover-inner-content {
-      padding-top: 0;
-    }
-    .ant-popover-arrow {
-      right: 1px !important;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding-top: 0;
+      }
     }
   }
 }

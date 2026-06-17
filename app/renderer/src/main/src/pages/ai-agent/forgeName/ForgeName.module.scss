@@ -122,13 +122,12 @@
 }
 
 .forge-opt-popover {
-  padding-left: 4px;
   :global {
     .ant-popover-inner {
       border: none;
-    }
-    .ant-popover-inner-content {
-      padding: 0;
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
   }
   .forge-detail {

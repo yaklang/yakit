@@ -542,29 +542,17 @@
   }
 }
 
-.search-popover {
+.search-popover.search-popover {
   min-width: 88px;
 
   :global {
-    .ant-popover-inner-content {
-      padding: 0;
-    }
-    .ant-popover-arrow-content {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      background-color: var(--Colors-Use-Basic-Background);
-    }
-    .ant-popover-arrow-content::before {
-      background: none;
-    }
-
     .ant-popover-inner {
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
-      border: 1px solid var(--Colors-Use-Neutral-Border);
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
-
     .ant-popover-arrow {
-      top: 2.514719px;
+      top: 1px !important;
     }
 
     .ant-select {

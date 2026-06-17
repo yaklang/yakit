@@ -176,18 +176,11 @@
     background-color: var(--Colors-Use-Neutral-Bg-Hover);
   }
 }
-.ui-op-dropdown {
-  top: 24px !important;
-}
 .ui-op-setting-dropdown {
   :global {
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
       .ant-popover-inner-content {
-        padding: 6px 4px 8px 4px;
-        padding-bottom: 0;
+        padding: 6px 4px 0px 4px;
       }
     }
   }
@@ -195,9 +188,6 @@
 .ui-op-plus-dropdown {
   :global {
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 6px 20px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
       .ant-popover-inner-content {
         padding: 0;
       }
@@ -761,13 +751,9 @@
 }
 
 .more-versions-popover {
-  padding-top: 0px;
   :global {
     .ant-popover-arrow {
       display: none;
-    }
-    .ant-popover-inner {
-      border-radius: 4px;
     }
   }
 }
