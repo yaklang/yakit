@@ -331,6 +331,9 @@
   }
 
   .popover-menu-item-submenu {
+    span {
+      font-size: 12px;
+    }
     position: relative;
 
     > .popover-menu-item {

@@ -592,7 +592,9 @@
     "group_name": "組名",
     "enter_group_name": "請輸入組名",
     "create_group_tip": "新建分組並將當前模板移入分組內",
-    "add_to_group_success": "已添加到分組"
+    "add_to_group_success": "已添加到分組",
+    "remove_from_group": "移除分組",
+    "remove_from_group_success": "已移除分組"
   },
   "AddHotCodeTemplate": {
     "hot_reload_template_name_empty": "熱載入模板名為空",

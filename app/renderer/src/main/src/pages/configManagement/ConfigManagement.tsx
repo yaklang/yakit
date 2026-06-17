@@ -812,18 +812,24 @@ export const HotPatchManagement: React.FC = () => {
 
   const onUpdateTemplateTags = useMemoizedFn(async (item: HotPatchTempItem, type: HotCodeType, tag: string) => {
     const Tags = tag.trim()
-    if (!Tags) return
 
     const params = {
       Condition: { Type: type, Name: [item.name] },
-      Data: { Tags: [Tags] },
+      Data: { Tags: Tags ? [Tags] : [] },
     }
 
     await ipcRenderer.invoke('UpdateHotPatchTemplate', params)
 
     updateTemplateTagInList(type, item.name, Tags)
     closeTemplateMenu()
-    yakitNotify('success', t('HotCodeTemplate.add_to_group_success'))
+    yakitNotify(
+      'success',
+      t(Tags ? 'HotCodeTemplate.add_to_group_success' : 'HotCodeTemplate.remove_from_group_success'),
+    )
+  })
+
+  const onRemoveTemplateGroup = useMemoizedFn(async (item: HotPatchTempItem, type: HotCodeType) => {
+    await onUpdateTemplateTags(item, type, '')
   })
 
   const onOpenCreateGroupModal = useMemoizedFn((item: HotPatchTempItem, type: HotCodeType) => {
@@ -853,6 +859,17 @@ export const HotPatchManagement: React.FC = () => {
           <span>{t('HotCodeTemplate.add_to_group')}</span>
           <OutlineChevronrightIcon className={styles['popover-menu-arrow']} />
         </div>
+        {!!item.Tags?.trim() && (
+          <div
+            className={styles['popover-menu-item']}
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemoveTemplateGroup(item, type)
+            }}
+          >
+            <span>{t('HotCodeTemplate.remove_from_group')}</span>
+          </div>
+        )}
         <div
           className={classNames(styles['popover-submenu'], {
             [styles['popover-submenu-visible']]: groupSubmenuVisibleKey === currentTemplateKey,
