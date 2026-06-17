@@ -673,12 +673,6 @@
 }
 
 .edit-name-popover {
-  :global {
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
-  }
-
   &-content {
     display: flex;
     flex-direction: column;

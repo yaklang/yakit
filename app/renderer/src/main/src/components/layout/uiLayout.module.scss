@@ -247,14 +247,13 @@
 
 .sampling-popover {
   width: 350px;
-  padding-top: 10px;
-  border-radius: 4px;
   overflow: hidden;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
 
   :global {
-    .ant-popover-inner-content {
-      padding: 0;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
   }
 

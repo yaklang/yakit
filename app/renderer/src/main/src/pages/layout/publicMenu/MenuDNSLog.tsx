@@ -435,7 +435,6 @@ export const MenuDNSLog: React.FC<MenuDNSLogProps> = React.memo((props) => {
         >
           <YakitPopover
             classNames={{ root: styles['dnslog-list-popover'] }}
-            styles={{ root: { paddingTop: 2 } }}
             placement="bottomRight"
             trigger={'click'}
             content={listDom}

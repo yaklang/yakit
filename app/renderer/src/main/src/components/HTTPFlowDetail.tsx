@@ -2132,7 +2132,6 @@ export const CodingPopover: React.FC<CodingPopoverProps> = (props) => {
     <YakitPopover
       trigger="click"
       classNames={{ root: styles['codec-menu-popover'] }}
-      styles={{ root: { paddingTop: 2 } }}
       placement="bottomLeft"
       content={
         <div className={styles['codec-menu-cont-wrapper']}>

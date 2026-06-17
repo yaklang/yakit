@@ -82,11 +82,11 @@
 }
 .memory-popover-wrapper {
   :global {
-    .ant-popover-inner-content {
-      padding: 8px;
-    }
     .ant-popover-inner {
       border-radius: 8px;
+      .ant-popover-inner-content {
+        padding: 8px;
+      }
     }
   }
 }

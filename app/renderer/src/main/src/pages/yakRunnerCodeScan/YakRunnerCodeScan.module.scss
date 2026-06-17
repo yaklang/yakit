@@ -453,8 +453,10 @@
 
 .code-scan-rule-group-popover {
   :global {
-    .ant-popover-inner-content {
-      padding: 6px;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 6px;
+      }
     }
   }
   .code-scan-rule-list-filter {

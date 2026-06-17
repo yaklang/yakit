@@ -1464,11 +1464,7 @@
 .base-QA-footer-popover {
   :global {
     .ant-popover-inner {
-      border-radius: 4px;
-      border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-      background: var(--Colors-Use-Basic-Background);
       .ant-popover-inner-content {
-        color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-style: normal;
         font-weight: 600;
@@ -2131,9 +2127,6 @@
 .knowledge-history-popover {
   :global {
     .ant-popover-inner {
-      border-radius: 4px;
-      border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-      background: var(--Colors-Use-Basic-Background);
       .ant-popover-inner-content {
         padding: 8px 4px;
       }
@@ -2205,16 +2198,6 @@
 }
 
 .install-content-popover {
-  :global {
-    .ant-popover-inner {
-      border-radius: 4px;
-      border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-      background: var(--Colors-Use-Basic-Background);
-      .ant-popover-inner-content {
-        padding: 12px;
-      }
-    }
-  }
   .install-content {
     display: flex;
     flex-direction: column;
@@ -2247,19 +2230,16 @@
 }
 
 .table-selected-filter-popover {
-  padding-top: 4px;
   :global {
     .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
-      padding: 12px;
-      div {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        max-height: 300px;
-        overflow-y: auto;
+      .ant-popover-inner-content {
+        div {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          max-height: 300px;
+          overflow-y: overlay;
+        }
       }
     }
     .ant-popover-arrow {

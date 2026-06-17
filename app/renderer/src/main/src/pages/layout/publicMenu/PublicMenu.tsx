@@ -466,7 +466,6 @@ const PublicMenu: React.FC<PublicMenuProps> = React.memo((props) => {
             <YakitPopover
               key={`${item.label}-${index}`}
               trigger={'click'}
-              styles={{ root: { paddingTop: 2 } }}
               classNames={{ root: styles['child-menu-popover'] }}
               placement={index === 0 ? 'bottomLeft' : 'bottom'}
               open={noExpandMenu === index}

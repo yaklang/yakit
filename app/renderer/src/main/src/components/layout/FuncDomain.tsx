@@ -1062,7 +1062,7 @@ const UIOpSetting: React.FC<UIOpSettingProp> = React.memo((props) => {
   return (
     <>
       <YakitPopover
-        classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
+        classNames={{ root: classNames(styles['ui-op-setting-dropdown']) }}
         placement={'bottom'}
         content={menu}
         open={show}
@@ -1156,7 +1156,7 @@ const UIDevTool: React.FC<UIDevTool> = React.memo((props) => {
 
   return (
     <YakitPopover
-      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
+      classNames={{ root: classNames(styles['ui-op-setting-dropdown']) }}
       placement={'bottom'}
       trigger={'click'}
       content={menu}
@@ -2289,7 +2289,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
 
   return (
     <YakitPopover
-      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown']) }}
+      classNames={{ root: classNames(styles['ui-op-plus-dropdown']) }}
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
@@ -2657,7 +2657,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   return (
     <YakitPopover
-      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown']) }}
+      classNames={{ root: classNames(styles['ui-op-plus-dropdown']) }}
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
@@ -2888,7 +2888,7 @@ const UIOpIRifyRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
 
   return (
     <YakitPopover
-      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-plus-dropdown']) }}
+      classNames={{ root: classNames(styles['ui-op-plus-dropdown']) }}
       placement={'bottomRight'}
       trigger={'click'}
       content={notice}
@@ -3219,8 +3219,7 @@ const ScreenAndScreenshot: React.FC<ScreenAndScreenshotProps> = React.memo((prop
   return (
     <>
       <YakitPopover
-        classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-op-setting-dropdown']) }}
-        styles={{ root: { paddingBottom: 0 } }}
+        classNames={{ root: classNames(styles['ui-op-setting-dropdown']) }}
         placement={'bottom'}
         content={menu}
         open={show}

@@ -99,10 +99,6 @@
 .more-popover {
   :global {
     .ant-popover-inner {
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
-
       .ant-popover-inner-content {
         padding: 6px 4px 4px 4px;
       }
@@ -540,13 +536,13 @@
 }
 
 .http-mitm-table-process-popover {
-  padding-top: 5px;
   :global {
-    .ant-popover-inner-content {
-      padding: 0;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
   }
-
   .process-cont-wrapper {
     width: 200px;
     padding: 10px;
@@ -672,10 +668,11 @@
   }
 }
 .mitm-v2-hijacked-manual-drop-down-popover {
-  padding-top: 5px;
   :global {
-    .ant-popover-inner-content {
-      padding: 4px;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 4px;
+      }
     }
   }
 }

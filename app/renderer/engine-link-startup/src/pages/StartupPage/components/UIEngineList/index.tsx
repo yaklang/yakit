@@ -111,7 +111,7 @@ export const UIEngineList: React.FC<UIEngineListProp> = React.memo((props) => {
   return (
     <YakitPopover
       open={show}
-      classNames={{ root: classNames(styles['ui-op-dropdown'], styles['ui-engine-list-dropdown']) }}
+      classNames={{ root: classNames(styles['ui-engine-list-dropdown']) }}
       placement={'bottomRight'}
       content={
         <div ref={listRef} className={styles['ui-engine-list-wrapper']}>

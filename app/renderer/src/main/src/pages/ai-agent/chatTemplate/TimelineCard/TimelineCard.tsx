@@ -42,7 +42,6 @@ const TimelineRow = memo(
 
           <YakitPopover
             classNames={{ root: styles['timeline-popover'] }}
-            styles={{ root: { paddingLeft: 4 } }}
             placement="right"
             content={<div style={{ maxHeight, overflowY: 'auto' }}>{item.content}</div>}
           >

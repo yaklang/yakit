@@ -172,17 +172,14 @@
 }
 
 .auth-popover {
-  padding-top: 0;
   :global {
     .ant-popover-arrow {
       display: none;
     }
     .ant-popover-inner {
-      border-radius: 4px;
-    }
-    .ant-popover-inner-content {
-      padding: 8px 4px;
-      border-radius: 4px;
+      .ant-popover-inner-content {
+        padding: 8px 4px;
+      }
     }
   }
 }

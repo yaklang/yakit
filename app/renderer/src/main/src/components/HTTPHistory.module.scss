@@ -41,13 +41,11 @@
 }
 
 .history-process-popover {
-  padding-top: 5px;
   :global {
-    .ant-popover-inner-content {
-      padding: 4px;
-      border: 1px solid var(--Colors-Use-Neutral-Border);
-      box-shadow: 0px 8px 16px var(--Colors-Use-Basic-Shadow);
-      border-radius: 4px;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 4px;
+      }
     }
   }
 }
