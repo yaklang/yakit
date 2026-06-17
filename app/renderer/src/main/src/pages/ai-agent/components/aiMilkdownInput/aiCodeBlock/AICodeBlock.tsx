@@ -4,10 +4,14 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { buildCodeRefDisplayText } from './aiCustomCodeBlockPlugin'
+import { openCodeBlockRef } from './openCodeBlockRef'
 import styles from './AICustomCodeBlock.module.scss'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
 
 export const AICustomCodeRef: React.FC = () => {
   const { node, selected, view, contentRef } = useNodeViewContext()
+  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
   const readonly = useCreation(() => {
     return !view.editable
@@ -21,18 +25,23 @@ export const AICustomCodeRef: React.FC = () => {
     return node?.attrs?.name || ''
   }, [node?.attrs?.name])
 
+  const path = useCreation(() => {
+    return node?.attrs?.path || ''
+  }, [node?.attrs?.path])
+
+  const range = useCreation(() => {
+    if (!node?.attrs?.startLineNumber && !node?.attrs?.endLineNumber) return null
+    return {
+      startLineNumber: Number(node?.attrs?.startLineNumber || 0),
+      startColumn: Number(node?.attrs?.startColumn || 0),
+      endLineNumber: Number(node?.attrs?.endLineNumber || 0),
+      endColumn: Number(node?.attrs?.endColumn || 0),
+    }
+  }, [node?.attrs?.startLineNumber, node?.attrs?.startColumn, node?.attrs?.endLineNumber, node?.attrs?.endColumn])
+
   const displayText = useCreation(() => {
-    const range =
-      node?.attrs?.startLineNumber || node?.attrs?.endLineNumber
-        ? {
-            startLineNumber: Number(node?.attrs?.startLineNumber || 0),
-            startColumn: Number(node?.attrs?.startColumn || 0),
-            endLineNumber: Number(node?.attrs?.endLineNumber || 0),
-            endColumn: Number(node?.attrs?.endColumn || 0),
-          }
-        : null
     return buildCodeRefDisplayText(name, range)
-  }, [name, node?.attrs?.startLineNumber, node?.attrs?.startColumn, node?.attrs?.endLineNumber, node?.attrs?.endColumn])
+  }, [name, range])
 
   const onRemove = useMemoizedFn(() => {
     if (locked) return
@@ -46,9 +55,20 @@ export const AICustomCodeRef: React.FC = () => {
     }
   })
 
+  const onOpenCodeRef = useMemoizedFn((e: React.MouseEvent) => {
+    if (!path) return
+    e.stopPropagation()
+    e.preventDefault()
+    openCodeBlockRef(currentRouteKey, { path, name, range })
+  })
+
   const closable = useCreation(() => {
     return !readonly && !locked
   }, [readonly, locked])
+
+  const clickable = useCreation(() => {
+    return !!path
+  }, [path])
 
   return (
     <YakitTag
@@ -58,15 +78,11 @@ export const AICustomCodeRef: React.FC = () => {
       className={classNames(styles['code-block-custom'], {
         [styles['code-block-custom-selected']]: selected && !readonly,
         [styles['code-block-custom-readonly']]: readonly,
-        [styles['code-block-custom-no-effect']]: !closable,
+        [styles['code-block-custom-no-effect']]: !closable && !clickable,
+        [styles['code-block-custom-clickable']]: clickable,
       })}
       color='lakeBlue'
-      onClick={(e) => {
-        if (closable) {
-          e.stopPropagation()
-          e.preventDefault()
-        }
-      }}
+      onClick={onOpenCodeRef}
       contentEditable={false}
     >
       <div
@@ -74,12 +90,7 @@ export const AICustomCodeRef: React.FC = () => {
         contentEditable={false}
         ref={contentRef}
         title={displayText}
-        onClick={(e) => {
-          if (closable) {
-            e.stopPropagation()
-            e.preventDefault()
-          }
-        }}
+        onClick={onOpenCodeRef}
       ></div>
     </YakitTag>
   )
