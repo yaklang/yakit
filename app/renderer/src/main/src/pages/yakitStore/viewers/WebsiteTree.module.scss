@@ -1,8 +1,10 @@
 .http-history-table-drop-down-popover {
   z-index: 990;
   :global {
-    .ant-popover-inner-content {
-      padding: 0;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
   }
 

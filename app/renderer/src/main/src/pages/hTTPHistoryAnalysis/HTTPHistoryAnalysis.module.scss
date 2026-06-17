@@ -474,40 +474,14 @@
 
 .terminal-popover {
   width: 675px;
-  padding: 12px 0;
-
-  $_arrow-top: var(--arrow-top, 50%);
 
   :global {
-    .ant-popover-content {
-      margin-bottom: 12px;
-      margin-left: 12px;
-    }
-
-    .ant-popover-inner-content {
-      overflow-y: overlay;
-      max-height: 400px;
-      padding: 4px;
-    }
-
-    .ant-popover-arrow {
-      display: none;
-    }
-  }
-
-  .terminal-popover-content {
-    &::after {
-      position: absolute;
-      top: $_arrow-top;
-      left: -6px;
-      width: 0;
-      height: 0;
-      content: '';
-      transition: all 0.3s;
-      transform: rotate(-45deg);
-      pointer-events: none;
-      border-bottom: 12px solid transparent;
-      border-left: 12px solid var(--Colors-Use-Basic-Background);
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        overflow-y: overlay;
+        max-height: 400px;
+        padding: 4px;
+      }
     }
   }
 }

@@ -267,11 +267,12 @@
 }
 
 .color-select-popover {
-  padding-top: 4px;
   width: 136px;
   :global {
-    .ant-popover-inner-content {
-      padding: 0;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 0;
+      }
     }
     .ant-popover-arrow {
       top: initial !important;
@@ -342,11 +343,6 @@
 }
 
 .edit-name-popover {
-  :global {
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
-  }
   .edit-name-popover-content {
     display: flex;
     flex-direction: column;

@@ -390,17 +390,7 @@
 }
 
 .hub-outer-list-group-popover {
-  padding-top: 4px;
-
   :global {
-    .ant-popover-inner {
-      border-radius: 4px;
-    }
-
-    .ant-popover-inner-content {
-      padding: 12px;
-    }
-
     .ant-popover-arrow {
       left: 110px;
     }
@@ -465,18 +455,16 @@
 }
 
 .add-group-popover {
-  padding-top: 0px;
-  border: 1px solid var(--Colors-Use-Neutral-Border);
-  border-radius: 4px;
   overflow: hidden;
 
   :global {
     .ant-popover-arrow {
       display: none;
     }
-
-    .ant-popover-inner-content {
-      padding: 14px 0 0;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 14px 0 0;
+      }
     }
   }
 }

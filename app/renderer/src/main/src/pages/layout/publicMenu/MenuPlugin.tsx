@@ -159,7 +159,6 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
       <div className={classNames(styles['plugin-btn'], { [styles['plugin-active-btn']]: listShow })}>
         <YakitPopover
           classNames={{ root: styles['plugin-list-popover'] }}
-          styles={{ root: { paddingTop: 6 } }}
           placement="bottomRight"
           trigger={'click'}
           content={listDom}
@@ -224,7 +223,6 @@ export const MenuPlugin: React.FC<MenuPluginProps> = React.memo((props) => {
           <div className={classNames(styles['plugin-btn'], { [styles['plugin-active-btn']]: listShow })}>
             <YakitPopover
               classNames={{ root: styles['plugin-list-popover'] }}
-              styles={{ root: { paddingTop: 6 } }}
               placement="bottomRight"
               trigger={'click'}
               content={listDom}

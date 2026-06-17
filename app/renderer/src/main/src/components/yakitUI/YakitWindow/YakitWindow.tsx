@@ -538,7 +538,6 @@ export const WindowPositionOPMenu: React.FC<WindowPositionOPProps> = memo((props
   return (
     <YakitPopover
       classNames={{ root: styles['window-position-op-popover'] }}
-      styles={{ root: { paddingTop: 2 } }}
       title={<span>{t('YakitWindow.dockPosition')}</span>}
       placement={'bottomRight'}
       content={content}

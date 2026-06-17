@@ -2,78 +2,70 @@
   :global {
     .ant-popover-title {
       padding: 8px 12px 8px 12px;
-      line-height: 16px;
       color: var(--Colors-Use-Neutral-Text-1-Title);
       border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+      line-height: 16px;
+      min-width: inherit;
     }
-    .ant-popover-inner-content {
-      color: var(--Colors-Use-Neutral-Text-1-Title);
+
+    .ant-popover-inner {
+      padding: 0;
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      background-color: var(--Colors-Use-Basic-Background);
+      box-shadow: 0 8px 16px var(--Colors-Use-Basic-Shadow);
+      border-radius: 4px;
+
+      .ant-popover-inner-content {
+        color: var(--Colors-Use-Neutral-Text-1-Title);
+        padding: 12px;
+      }
     }
   }
 }
-.yakit-popover-top-wrapper {
+
+.yakit-popover-wrapper.yakit-popover-top-wrapper {
   :global {
     .ant-popover-arrow {
       bottom: 1px;
 
-      .ant-popover-arrow-content {
-        border: 1px solid var(--Colors-Use-Neutral-Border);
+      &::before {
         background-color: var(--Colors-Use-Basic-Background);
-      }
-
-      .ant-popover-arrow-content::before {
-        opacity: 0;
       }
     }
   }
 }
 
-.yakit-popover-left-wrapper {
+.yakit-popover-wrapper.yakit-popover-left-wrapper {
   :global {
     .ant-popover-arrow {
       right: 1px;
 
-      .ant-popover-arrow-content {
-        border: 1px solid var(--Colors-Use-Neutral-Border);
+      &::before {
         background-color: var(--Colors-Use-Basic-Background);
-      }
-
-      .ant-popover-arrow-content::before {
-        opacity: 0;
       }
     }
   }
 }
 
-.yakit-popover-right-wrapper {
+.yakit-popover-wrapper.yakit-popover-right-wrapper {
   :global {
     .ant-popover-arrow {
       left: 1px;
 
-      .ant-popover-arrow-content {
-        border: 1px solid var(--Colors-Use-Neutral-Border);
+      &::before {
         background-color: var(--Colors-Use-Basic-Background);
-      }
-
-      .ant-popover-arrow-content::before {
-        opacity: 0;
       }
     }
   }
 }
 
-.yakit-popover-bottom-wrapper {
+.yakit-popover-wrapper.yakit-popover-bottom-wrapper {
   :global {
     .ant-popover-arrow {
       top: 1px;
 
-      .ant-popover-arrow-content {
-        border: 1px solid var(--Colors-Use-Neutral-Border);
+      &::before {
         background-color: var(--Colors-Use-Basic-Background);
-      }
-
-      .ant-popover-arrow-content::before {
-        opacity: 0;
       }
     }
   }

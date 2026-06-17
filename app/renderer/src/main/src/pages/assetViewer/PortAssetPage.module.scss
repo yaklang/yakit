@@ -88,9 +88,11 @@
     .ant-popover-placement-bottomRight {
       padding-top: 5px;
     }
-    .ant-popover-inner-content {
-      padding: 8px 4px;
-      padding-bottom: 4px;
+    .ant-popover-inner {
+      .ant-popover-inner-content {
+        padding: 8px 4px;
+        padding-bottom: 4px;
+      }
     }
   }
 }

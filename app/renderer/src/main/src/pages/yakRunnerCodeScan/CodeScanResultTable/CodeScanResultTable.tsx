@@ -485,8 +485,8 @@ export const CodeScanResultTable: React.FC<CodeScanResultTableProps> = React.mem
             <Tooltip
               title="在代码审计中打开"
               destroyOnHidden={true}
-              styles={{ root: {paddingBottom: 0} }}
               placement="top"
+              styles={{ root: { paddingBottom: 0 } }}
             >
               <YakitButton
                 type="text2"

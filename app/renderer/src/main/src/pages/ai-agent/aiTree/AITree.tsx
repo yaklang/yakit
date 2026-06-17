@@ -177,7 +177,6 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
           <div className={styles['node-extra']}>
             <YakitPopover
               classNames={{ root: styles['task-detail-popover'] }}
-              styles={{ root: { paddingLeft: 4 } }}
               placement="rightTop"
               content={
                 <div className={styles['detail-wrapper']}>

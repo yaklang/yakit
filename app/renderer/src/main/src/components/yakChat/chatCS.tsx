@@ -1356,8 +1356,6 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                   <div className={styles['input-footer']}>
                     {(+width || 451) < 450 ? (
                       <YakitPopover
-                        classNames={{ root: styles['yakit-popover-type'] }}
-                        styles={{ root: { paddingBottom: 4 } }}
                         placement="topRight"
                         trigger={'click'}
                         content={
