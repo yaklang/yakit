@@ -565,7 +565,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     try {
       let m = showYakitModal({
         title: (modalT) => modalT('HubListLocal.exportPlugin'),
-        width: 550,
+        width: isRemoteEngine ? 500 : 550,
         closable: true,
         maskClosable: false,
         footer: null,

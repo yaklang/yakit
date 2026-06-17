@@ -83,7 +83,7 @@
     "uploadLoginLater": "Please log in before uploading plugins",
     "uploadBusy": "A plugin is currently being uploaded, please try again later",
     "exportPlugin": "Export Plugin",
-    "exportHint": "After exporting in remote mode, please open ~\\Yakit\\yakit-projects\\projects to view the exported file; the filename does not need an extension",
+    "exportHint": "After exporting in remote mode, please go to the folder ~Yakit\\yakit-projects\\projects to view the exported files. You do not need to add a file extension to the filename.",
     "manage": "Manage",
     "newPlugin": "New Plugin",
     "doNotDownload": "Do not download",

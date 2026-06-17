@@ -479,7 +479,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       try {
         let m = showYakitModal({
           title: (modalT) => modalT('HubExtraOperate.exportPlugin'),
-          width: 550,
+          width: isRemoteEngine ? 500 : 550,
           closable: true,
           maskClosable: false,
           footer: null,
