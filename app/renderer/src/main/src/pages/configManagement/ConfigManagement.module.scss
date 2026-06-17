@@ -166,6 +166,13 @@
             background-color: var(--Colors-Use-Main-Hover);
           }
 
+          .template-more-icon {
+            opacity: 1 !important;
+            svg {
+              color: var(--Colors-Use-Main-On-Primary) !important;
+            }
+          }
+
           .template-name {
             color: inherit;
           }

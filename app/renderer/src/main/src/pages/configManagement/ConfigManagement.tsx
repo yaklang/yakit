@@ -508,7 +508,7 @@ export const HotPatchManagement: React.FC = () => {
     setSelectedTemplateSource(source)
     resetDebug()
 
-    if (source === 'online' || item.isDefault) {
+    if (source === 'online') {
       setCode(item.temp)
       return
     }
