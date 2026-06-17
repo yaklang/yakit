@@ -1034,7 +1034,7 @@ export const StartupPage: React.FC = () => {
       } else if (isMemfit()) {
         return { type: 'svg', component: SolidMemfitFontLogoIcon, width: 112, height: 41 }
       } else {
-        return { type: 'img', src: theme === 'light' ? yakitEELogo : yakitEEDarkLogo, width: 137, height: 40 }
+        return { type: 'img', src: theme === 'light' ? yakitEELogo : yakitEEDarkLogo, width: 168, height: 40 }
       }
     }
 

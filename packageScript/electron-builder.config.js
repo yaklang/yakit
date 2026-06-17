@@ -21,9 +21,9 @@ const platform = process.env.PLATFORM
 switch (platform) {
   case 'yakitEE':
     appInfoOption = {
-      appId: 'io.yaklang.enpritrace',
-      extraMetadata: { name: 'enpritrace' },
-      productName: 'EnpriTrace',
+      appId: 'io.yaklang.penetrax',
+      extraMetadata: { name: 'penetrax' },
+      productName: 'PenetraX',
       copyright: 'Copyright © 2021 v1ll4n',
     }
     files = ['!app/assets/**/*', 'app/assets/yakit-close.png', 'app/assets/yakiteelogo*', ...fixedFile]
