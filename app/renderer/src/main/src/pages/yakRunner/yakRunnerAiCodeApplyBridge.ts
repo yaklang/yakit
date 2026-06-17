@@ -1,6 +1,6 @@
 import type { AIAgentGrpcApi, AIInputEvent, AttachedResourceInfo } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AttachedResourceKeyEnum, AttachedResourceTypeEnum } from '@/pages/ai-agent/defaultConstant'
-import { getFileSuffixFromPath } from '@/pages/yakRunner/utils'
+import { getFileSuffixFromPath, normalizeYakRunnerFilePath } from '@/pages/yakRunner/utils'
 import { yakitFailed } from '@/utils/notification'
 
 export const YAK_RUNNER_AI_PAGE_ID = 'yak-runner-main'
@@ -30,7 +30,9 @@ type YakRunnerCasualCodeReplaceReviewHandler = (payload: YakRunnerCasualCodeRepl
 const pageCasualReplaceReviewHandlers = new Map<string, YakRunnerCasualCodeReplaceReviewHandler>()
 
 export function resolveYaklangCodeChangePath(change: AIAgentGrpcApi.YaklangCodeChange): string | undefined {
-  return change.code?.path?.trim() || undefined
+  const path = change.code?.path?.trim()
+  if (!path) return undefined
+  return normalizeYakRunnerFilePath(path)
 }
 
 /** 从 AI 返回的 `code.path` 解析文件后缀，原样返回（如 `yak`、`sf`、`txt`） */

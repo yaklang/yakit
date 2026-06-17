@@ -31,8 +31,8 @@ import {
   setYakRunnerHistory,
   setYakRunnerLastAreaFile,
   setYakRunnerLastFolderExpanded,
-  shouldYakRunnerFileSaveAs,
-  grpcFetchSaveFile,
+  normalizeYakRunnerFilePath,
+  saveYakRunnerUnsavedFile,
   updateAreaFileInfo,
 } from './utils'
 import { AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps, YakRunnerProps } from './YakRunnerType'
@@ -655,7 +655,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   }, [areaInfo])
 
   const applyCodeToEditor = useMemoizedFn(async (content: string, extras?: YakRunnerApplyCodeExtras) => {
-    const targetPath = extras?.path?.trim() || activeFileRef.current?.path
+    const targetPath = normalizeYakRunnerFilePath(extras?.path?.trim() || activeFileRef.current?.path || '')
     if (!targetPath) return
     const needsSaveAs = extras?.needsSaveAs ?? false
 
@@ -877,70 +877,18 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const ctrl_s = useMemoizedFn(async () => {
     try {
       if (activeFile && activeFile.isUnSave && activeFile.code && activeFile.code.length > 0) {
-        if (!shouldYakRunnerFileSaveAs(activeFile)) {
-          await grpcFetchSaveFile(activeFile.path, activeFile.code)
-          const file: FileDetailInfo = { ...activeFile, isUnSave: false, needsSaveAs: false }
-          const newAreaInfo = updateAreaFileInfo(areaInfo, file, activeFile.path)
-          setAreaInfo(newAreaInfo)
-          setActiveFile(file)
-          success(t('YakRunner.saveSuccess', { name: activeFile.name }))
-          return
+        const result = await saveYakRunnerUnsavedFile({
+          file: activeFile,
+          areaInfo,
+          fileTree,
+          defaultSavePath: codePath,
+        })
+        if (result.canceled) return
+        if (result.saved) {
+          setAreaInfo(result.areaInfo)
+          setActiveFile(result.file)
+          success(t('YakRunner.saveSuccess', { name: result.file.name }))
         }
-
-        ipcRenderer
-          .invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${activeFile.name}`)
-          .then(async (res) => {
-            const path = res.filePath
-            const name = res.name
-            if (path.length > 0) {
-              const suffix = name.split('.').pop()
-
-              const file: FileDetailInfo = {
-                ...activeFile,
-                path,
-                isUnSave: false,
-                needsSaveAs: false,
-                language: monacaLanguageType(suffix || ''),
-              }
-              const parentPath = await getPathParent(file.path)
-              const parentDetail = getMapFileDetail(parentPath)
-              const result = await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? '' : parentPath)
-              // 如若保存路径为文件列表中则需要更新文件树
-              if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
-                let arr: FileNodeMapProps[] = []
-                arr = await grpcFetchFileTree(parentPath)
-                if (arr.length > 0) {
-                  let childArr: string[] = []
-                  // 文件Map
-                  arr.forEach((item) => {
-                    // 注入文件结构Map
-                    childArr.push(item.path)
-                    // 文件Map
-                    setMapFileDetail(item.path, item)
-                  })
-                  setMapFolderDetail(parentPath, childArr)
-                }
-                emiter.emit('onRefreshFileTree', parentPath)
-              }
-              if (result.length > 0) {
-                file.name = result[0].name
-                file.isDelete = false
-                success(t('YakRunner.saveSuccess', { name: result[0].name }))
-                const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
-                const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
-                setAreaInfo && setAreaInfo(newAreaInfo)
-                setActiveFile && setActiveFile(file)
-
-                // 创建文件时接入历史记录
-                const history: YakRunnerHistoryProps = {
-                  isFile: true,
-                  name,
-                  path,
-                }
-                setYakRunnerHistory(history)
-              }
-            }
-          })
       }
     } catch (error) {
       failed(t('YakRunner.saveFailed', { name: activeFile?.name || '' }))

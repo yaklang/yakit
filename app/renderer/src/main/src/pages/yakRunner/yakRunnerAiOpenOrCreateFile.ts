@@ -14,6 +14,7 @@ import {
   grpcFetchCreateFolder,
   judgeAreaExistFilePath,
   monacaLanguageType,
+  normalizeYakRunnerFilePath,
 } from './utils'
 
 const { ipcRenderer } = window.require('electron')
@@ -69,7 +70,7 @@ export async function openOrCreateYakRunnerFileAtPath(
   params: OpenOrCreateYakRunnerFileParams,
 ): Promise<OpenOrCreateYakRunnerFileResult | null> {
   const { targetPath, content, language, needsSaveAs = false, areaInfo, activeFile } = params
-  const path = targetPath.trim()
+  const path = normalizeYakRunnerFilePath(targetPath.trim())
   if (!path) return null
 
   const existingInArea = await judgeAreaExistFilePath(areaInfo, path)

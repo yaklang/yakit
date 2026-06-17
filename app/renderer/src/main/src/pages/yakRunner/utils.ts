@@ -16,7 +16,7 @@ import { FileDetailInfo, OptionalFileDetailInfo } from './RunnerTabs/RunnerTabsT
 import { v4 as uuidv4 } from 'uuid'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
-import { setMapFileDetail } from './FileTreeMap/FileMap'
+import { setMapFileDetail, getMapFileDetail } from './FileTreeMap/FileMap'
 import { setMapFolderDetail } from './FileTreeMap/ChildMap'
 import { randomString } from '@/utils/randomUtil'
 import { YaklangMonacoSpec } from '@/utils/monacoSpec/yakEditor'
@@ -111,11 +111,39 @@ export const grpcFetchRenameFileTree: (
 /**
  * @name 文件保存
  */
+/** 统一路径分隔符，便于 Win/Mac 比较（`C:\a` === `C:/a`） */
+export const normalizeYakRunnerFilePath = (filePath?: string | null): string => {
+  const path = filePath?.trim() || ''
+  if (!path) return ''
+  return path.replace(/\\/g, '/')
+}
+
+export const isSameYakRunnerFilePath = (a?: string | null, b?: string | null): boolean => {
+  const left = normalizeYakRunnerFilePath(a)
+  const right = normalizeYakRunnerFilePath(b)
+  if (!left || !right) return false
+  if (/^[a-zA-Z]:\//.test(left) || /^[a-zA-Z]:\//.test(right)) {
+    return left.toLowerCase() === right.toLowerCase()
+  }
+  return left === right
+}
+
+/** 是否为磁盘上的绝对路径（含 Win 盘符、UNC） */
+export const isYakRunnerAbsoluteFilePath = (filePath?: string | null): boolean => {
+  const path = normalizeYakRunnerFilePath(filePath)
+  if (!path) return false
+  if (/^[a-zA-Z]:\//.test(path)) return true
+  if (path.startsWith('//')) return true
+  if (path.startsWith('/')) return true
+  return false
+}
+
 /** 临时/未命名 tab 的 path（如 Untitled、文件树 `-create` 占位） */
 export const isYakRunnerScratchFilePath = (filePath?: string | null): boolean => {
-  const path = filePath?.trim()
-  if (!path) return true
-  if (path.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(path)) return false
+  const raw = filePath?.trim()
+  if (!raw) return true
+  const path = normalizeYakRunnerFilePath(raw)
+  if (isYakRunnerAbsoluteFilePath(path)) return false
   if (/-Untitle-\d+\.yak$/i.test(path)) return true
   if (/-create$/i.test(path)) return true
   if (/^\d{10,}-/.test(path)) return true
@@ -151,6 +179,81 @@ export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNode
       reject(error)
     }
   })
+}
+
+export type SaveYakRunnerUnsavedFileParams = {
+  file: FileDetailInfo
+  areaInfo: AreaInfoProps[]
+  fileTree: FileTreeListProps[]
+  defaultSavePath?: string
+}
+
+export type SaveYakRunnerUnsavedFileResult = {
+  areaInfo: AreaInfoProps[]
+  file: FileDetailInfo
+  saved: boolean
+  canceled?: boolean
+}
+
+/** Yak Runner 未保存文件落盘：`replace`/绝对路径直接覆盖，临时文件或 `create` 走另存为 */
+export async function saveYakRunnerUnsavedFile(
+  params: SaveYakRunnerUnsavedFileParams,
+): Promise<SaveYakRunnerUnsavedFileResult> {
+  const { file, areaInfo, fileTree, defaultSavePath = '' } = params
+  const code = file.code || ''
+
+  if (!shouldYakRunnerFileSaveAs(file)) {
+    await grpcFetchSaveFile(file.path, code)
+    const savedFile: FileDetailInfo = { ...file, isUnSave: false, needsSaveAs: false }
+    const newAreaInfo = updateAreaFileInfo(areaInfo, savedFile, file.path)
+    return { areaInfo: newAreaInfo, file: savedFile, saved: true }
+  }
+
+  const res = await ipcRenderer.invoke(
+    'show-save-dialog',
+    `${defaultSavePath}${defaultSavePath ? '/' : ''}${file.name}`,
+  )
+  const path = res.filePath
+  const name = res.name
+  if (!path?.length) {
+    return { areaInfo, file, saved: false, canceled: true }
+  }
+
+  const suffix = name.split('.').pop()
+  const savedFile: FileDetailInfo = {
+    ...file,
+    path,
+    isUnSave: false,
+    needsSaveAs: false,
+    language: monacaLanguageType(suffix || ''),
+  }
+  const parentPath = await getPathParent(savedFile.path)
+  const parentDetail = getMapFileDetail(parentPath)
+  const result = await grpcFetchCreateFile(savedFile.path, savedFile.code, parentDetail.isReadFail ? '' : parentPath)
+
+  if (fileTree.length > 0 && savedFile.path.startsWith(fileTree[0].path)) {
+    const arr = await grpcFetchFileTree(parentPath)
+    if (arr.length > 0) {
+      const childArr: string[] = []
+      arr.forEach((item) => {
+        childArr.push(item.path)
+        setMapFileDetail(item.path, item)
+      })
+      setMapFolderDetail(parentPath, childArr)
+    }
+    emiter.emit('onRefreshFileTree', parentPath)
+  }
+
+  if (result.length > 0) {
+    savedFile.name = result[0].name
+    savedFile.isDelete = false
+    const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, savedFile).newAreaInfo
+    const newAreaInfo = updateAreaFileInfo(removeAreaInfo, savedFile, file.path)
+    setYakRunnerHistory({ isFile: true, name, path })
+    return { areaInfo: newAreaInfo, file: savedFile, saved: true }
+  }
+
+  return { areaInfo, file, saved: false }
 }
 
 /**
@@ -463,9 +566,9 @@ export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string):
     newAreaInfo.forEach((item, index) => {
       item.elements.forEach((itemIn, indexIn) => {
         itemIn.files.forEach((file, fileIndex) => {
-          if (file.path === path) {
-            resolve(file)
-          }
+          if (isSameYakRunnerFilePath(file.path, path)) {
+          resolve(file)
+        }
         })
       })
     })
@@ -502,7 +605,7 @@ export const updateAreaFileInfo = (areaInfo: AreaInfoProps[], data: OptionalFile
   newAreaInfo.forEach((item, index) => {
     item.elements.forEach((itemIn, indexIn) => {
       itemIn.files.forEach((file, fileIndex) => {
-        if (file.path === path) {
+        if (isSameYakRunnerFilePath(file.path, path)) {
           newAreaInfo[index].elements[indexIn].files[fileIndex] = {
             ...newAreaInfo[index].elements[indexIn].files[fileIndex],
             ...data,

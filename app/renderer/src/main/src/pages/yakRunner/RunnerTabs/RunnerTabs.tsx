@@ -50,16 +50,14 @@ import {
   getOpenFileInfo,
   getPathParent,
   getYakRunnerHistory,
-  grpcFetchCreateFile,
-  grpcFetchFileTree,
   grpcFetchRenameFileTree,
   grpcFetchSaveFile,
   isResetActiveFile,
   judgeAreaExistFilePath,
   monacaLanguageType,
   removeYakRunnerAreaFileInfo,
-  setYakRunnerHistory,
-  shouldYakRunnerFileSaveAs,
+  isSameYakRunnerFilePath,
+  saveYakRunnerUnsavedFile,
   updateAreaFileInfo,
 } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
@@ -1062,7 +1060,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     const onForceSetCode = (json: string) => {
       try {
         const { path, code } = JSON.parse(json) as { path: string; code: string }
-        if (editorInfo?.path !== path) return
+        if (editorInfo?.path !== path && !isSameYakRunnerFilePath(editorInfo?.path, path)) return
         if (reqEditor) {
           reqEditor.setValue(code)
         }
@@ -1492,80 +1490,25 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
   const onSaveFile = useMemoizedFn(async () => {
     setShowModal(false)
     try {
-      if (!shouldYakRunnerFileSaveAs(info)) {
-        await grpcFetchSaveFile(info.path, info.code || '')
-        const file: FileDetailInfo = { ...info, isUnSave: false, needsSaveAs: false }
-        const newAreaInfo = updateAreaFileInfo(areaInfo, file, info.path)
-        setAreaInfo && setAreaInfo(newAreaInfo)
-        setActiveFile && setActiveFile(file)
-        success(`${info.name} 保存成功`)
+      const result = await saveYakRunnerUnsavedFile({
+        file: info,
+        areaInfo,
+        fileTree,
+        defaultSavePath: codePath,
+      })
+      if (result.canceled) {
+        warn(t('RunnerTabs.savePathMissing'))
+        onCancel()
+        return
+      }
+      if (result.saved) {
+        setAreaInfo && setAreaInfo(result.areaInfo)
+        setActiveFile && setActiveFile(result.file)
+        success(`${result.file.name} 保存成功`)
         if (waitSaveList.length > 0) {
           setWaitSaveList(waitSaveList.slice(0, -1))
         }
-        return
       }
-
-      ipcRenderer.invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${info.name}`).then(async (res) => {
-        try {
-          const path = res.filePath
-          const name = res.name
-          if (path.length > 0) {
-            const suffix = name.split('.').pop()
-            const file: FileDetailInfo = {
-              ...info,
-              path,
-              isUnSave: false,
-              needsSaveAs: false,
-              language: monacaLanguageType(suffix),
-            }
-            const parentPath = await getPathParent(file.path)
-            const parentDetail = getMapFileDetail(parentPath)
-            const result = await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? '' : parentPath)
-            // 如若保存路径为文件列表中则需要更新文件树
-            if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
-              let arr: FileNodeMapProps[] = await grpcFetchFileTree(parentPath)
-              if (arr.length > 0) {
-                let childArr: string[] = []
-                // 文件Map
-                arr.forEach((item) => {
-                  // 注入文件结构Map
-                  childArr.push(item.path)
-                  // 文件Map
-                  setMapFileDetail(item.path, item)
-                })
-                setMapFolderDetail(parentPath, childArr)
-              }
-              emiter.emit('onRefreshFileTree', parentPath)
-            }
-            if (result.length > 0) {
-              file.name = result[0].name
-              file.isDelete = false
-              success(`${file.name} 保存成功`)
-              // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
-              const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
-              const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
-              setAreaInfo && setAreaInfo(newAreaInfo)
-              setActiveFile && setActiveFile(file)
-
-              if (waitSaveList.length > 0) {
-                // 减少保存队列
-                setWaitSaveList(waitSaveList.slice(0, -1))
-              }
-
-              // 创建文件时接入历史记录
-              const history: YakRunnerHistoryProps = {
-                isFile: true,
-                name,
-                path,
-              }
-              setYakRunnerHistory(history)
-            }
-          } else {
-            warn(t('RunnerTabs.savePathMissing'))
-            onCancel()
-          }
-        } catch (error) {}
-      })
     } catch (error) {}
   })
 
