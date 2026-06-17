@@ -58,7 +58,11 @@ import { RemotePluginGV } from '@/enums/plugin'
 import { SolidCloudpluginIcon, SolidPrivatepluginIcon, SolidYakOfficialPluginColorIcon } from '@/assets/icon/colors'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { PluginLocalUpload } from '@/pages/plugins/local/PluginLocalUpload'
-import { PluginLocalExport, PluginLocalExportForm } from '@/pages/plugins/local/PluginLocalExportProps'
+import {
+  PluginLocalExport,
+  PluginLocalExportForm,
+  PluginLocalExportFormRefProps,
+} from '@/pages/plugins/local/PluginLocalExportProps'
 import { DefaultExportRequest, DefaultLocalPlugin, PluginOperateHint } from '../defaultConstant'
 import useGetSetState from '../hooks/useGetSetState'
 import {
@@ -86,6 +90,7 @@ import styles from './PluginHubList.module.scss'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 import { useEmptyImage } from '@/hook/useResultEmpty/SearchEmpty'
+import { SystemInfo } from '@/constants/hardware'
 interface HubListLocalProps extends HubListBaseProps {
   rootElementId?: string
   openGroupDrawer: boolean
@@ -107,6 +112,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     onChangeOnline,
   } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'plugin', 'pluginHub'])
+  const isRemoteEngine = SystemInfo.mode === 'remote'
 
   const emptyImageTarget = useEmptyImage('search')
   const divRef = useRef<HTMLDivElement>(null)
@@ -540,6 +546,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
 
   /** ---------- 导出插件 Start ---------- */
   // 导出本地插件
+  const pluginLocalExportFormRef = useRef<PluginLocalExportFormRefProps>()
   const [exportModal, setExportModal] = useState<boolean>(false)
   const exportParams = useRef<ExportYakScriptStreamRequest>({ ...DefaultExportRequest })
   const exportSource = useRef<string>('')
@@ -558,13 +565,27 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
     try {
       let m = showYakitModal({
         title: (modalT) => modalT('HubListLocal.exportPlugin'),
-        width: 650,
+        width: 550,
         closable: true,
         maskClosable: false,
         footer: null,
         content: (
-          <div style={{ padding: '12px 0' }}>
+          <div style={{ padding: isRemoteEngine ? '0 0 12px' : '12px 0' }}>
+            {isRemoteEngine && (
+              <div className={styles.infoBox}>
+                {t('HubListLocal.exportHint')}
+                <YakitButton
+                  type="text"
+                  onClick={() => {
+                    pluginLocalExportFormRef.current?.onSetShowChangePath(true)
+                  }}
+                >
+                  修改路径
+                </YakitButton>
+              </div>
+            )}
             <PluginLocalExportForm
+              ref={pluginLocalExportFormRef}
               onCancel={() => m.destroy()}
               onOK={(values) => {
                 const page: PluginListPageMeta = {

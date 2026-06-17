@@ -83,6 +83,7 @@
     "uploadLoginLater": "登入後才可上傳外掛",
     "uploadBusy": "有外掛正在執行上傳操作,請稍後再試",
     "exportPlugin": "匯出外掛",
+    "exportHint": "遠端模式下匯出後請開啟~Yakit\\yakit-projects\\projects路徑檢視匯出檔案，檔名無需填寫字尾",
     "manage": "管理",
     "newPlugin": "新建外掛",
     "doNotDownload": "不下載",

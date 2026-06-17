@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import {
@@ -34,6 +34,7 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
   const [localStreamData, setLocalStreamData] = useState<SaveProgressStream>()
   const localStreamDataRef = useRef<SaveProgressStream>()
   const [locallogListInfo, setLocallogListInfo] = useState<LogListInfo[]>([])
+  const isRemoteEngine = SystemInfo.mode === 'remote'
 
   useDebounceEffect(
     () => {
@@ -69,16 +70,22 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
               if (exportLocalParams.Password) {
                 name += '.enc'
               }
-              ipcRenderer.invoke('is-file-exists', exportLocalParams.OutputPluginDir).then((flag: boolean) => {
-                if (!flag) {
-                  yakitNotify('error', '目标路径不存在，导出失败')
-                } else {
-                  getPathJoin(exportLocalParams.OutputPluginDir, name).then((path) => {
-                    openABSFileLocated(path)
-                    yakitNotify('success', '导出成功')
-                  })
-                }
-              })
+
+              if (!isRemoteEngine) {
+                ipcRenderer.invoke('is-file-exists', exportLocalParams.OutputPluginDir).then((flag: boolean) => {
+                  if (!flag) {
+                    yakitNotify('error', '目标路径不存在，导出失败')
+                  } else {
+                    getPathJoin(exportLocalParams.OutputPluginDir, name).then((path) => {
+                      openABSFileLocated(path)
+                      yakitNotify('success', '导出完毕')
+                    })
+                  }
+                })
+              } else {
+                yakitNotify('success', '导出完毕')
+              }
+
               setTimeout(() => {
                 handleExportLocalPluginFinish()
               }, 300)
@@ -143,20 +150,35 @@ export const PluginLocalExport: React.FC<PluginLocalExportProps> = (props) => {
   )
 }
 
+export interface PluginLocalExportFormRefProps {
+  onSetShowChangePath: React.Dispatch<React.SetStateAction<boolean>>
+}
 interface PluginLocalExportFormProps {
+  ref?: ForwardedRef<PluginLocalExportFormRefProps>
   onCancel: () => void
   onOK: (values: { OutputFilename: string; Password: string; OutputPluginDir: string }) => void
 }
-export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (props) => {
+export const PluginLocalExportForm = forwardRef((props: PluginLocalExportFormProps, ref) => {
   const { onCancel, onOK } = props
   const [form] = Form.useForm()
   const isRemoteEngine = SystemInfo.mode === 'remote'
+  const [showChangePath, setShowChangePath] = useState<boolean>(!isRemoteEngine)
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      onSetShowChangePath: setShowChangePath,
+    }),
+    [form],
+  )
 
   useEffect(() => {
-    ipcRenderer.invoke('GetProjectsFilePath').then((path) => {
-      form.setFieldsValue({ OutputPluginDir: path })
-    })
-  }, [])
+    if (!isRemoteEngine) {
+      ipcRenderer.invoke('GetProjectsFilePath').then((path) => {
+        form.setFieldsValue({ OutputPluginDir: path })
+      })
+    }
+  }, [isRemoteEngine])
 
   return (
     <Form
@@ -169,19 +191,20 @@ export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (prop
         e.preventDefault()
       }}
     >
-      <YakitFormDragger
-        formItemProps={{
-          name: 'OutputPluginDir',
-          label: '导出路径',
-          rules: [{ required: true, message: '请输入导出路径' }],
-        }}
-        multiple={false}
-        selectType="folder"
-        help={isRemoteEngine ? '可手动输入导出路径，' : '可手动输入导出路径或点击此处'}
-        uploadFolderText="选择文件夹"
-        showUploadBtn={!isRemoteEngine}
-      />
-
+      {showChangePath && (
+        <YakitFormDragger
+          formItemProps={{
+            name: 'OutputPluginDir',
+            label: '导出路径',
+            rules: [{ required: !isRemoteEngine, message: '请输入导出路径' }],
+          }}
+          multiple={false}
+          selectType="folder"
+          help={isRemoteEngine ? '可手动输入导出路径，' : '可手动输入导出路径或点击此处'}
+          uploadFolderText="选择文件夹"
+          showUploadBtn={!isRemoteEngine}
+        />
+      )}
       <Form.Item label={'文件名'} rules={[{ required: true, message: '请填写文件夹名' }]} name={'OutputFilename'}>
         <YakitInput />
       </Form.Item>
@@ -200,4 +223,4 @@ export const PluginLocalExportForm: React.FC<PluginLocalExportFormProps> = (prop
       </div>
     </Form>
   )
-}
+})
