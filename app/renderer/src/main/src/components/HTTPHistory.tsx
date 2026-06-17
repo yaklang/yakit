@@ -138,11 +138,11 @@ export const HistoryTab: YakitTabsProps[] = [
     label: 'HTTPFlowExtractedDataTable.ruleData',
     value: 'rules',
   },
-  {
-    icon: <OutlineBotIcon />,
-    label: 'HTTPHistory.AI',
-    value: 'ai',
-  },
+  // {
+  //   icon: <OutlineBotIcon />,
+  //   label: 'HTTPHistory.AI',
+  //   value: 'ai',
+  // },
 ]
 const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()

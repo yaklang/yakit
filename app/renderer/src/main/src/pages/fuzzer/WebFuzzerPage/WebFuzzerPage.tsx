@@ -45,11 +45,11 @@ export const webFuzzerTabs = (t: TFunction) => {
       label: t('HTTPFuzzerPage.hotReload'),
       icon: <OutlineLightningboltIcon />,
     },
-    {
-      key: 'ai',
-      label: t('WebFuzzerPage.AI'),
-      icon: <OutlineBotIcon />,
-    },
+    // {
+    //   key: 'ai',
+    //   label: t('WebFuzzerPage.AI'),
+    //   icon: <OutlineBotIcon />,
+    // },
     {
       key: 'sequence',
       label: t('WebFuzzerPage.sequence'),
