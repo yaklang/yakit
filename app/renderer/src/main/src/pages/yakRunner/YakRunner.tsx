@@ -31,6 +31,8 @@ import {
   setYakRunnerHistory,
   setYakRunnerLastAreaFile,
   setYakRunnerLastFolderExpanded,
+  shouldYakRunnerFileSaveAs,
+  grpcFetchSaveFile,
   updateAreaFileInfo,
 } from './utils'
 import { AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps, YakRunnerProps } from './YakRunnerType'
@@ -655,18 +657,23 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const applyCodeToEditor = useMemoizedFn(async (content: string, extras?: YakRunnerApplyCodeExtras) => {
     const targetPath = extras?.path?.trim() || activeFileRef.current?.path
     if (!targetPath) return
+    const needsSaveAs = extras?.needsSaveAs ?? false
 
     const existingInArea = await judgeAreaExistFilePath(areaInfoRef.current, targetPath)
     if (existingInArea) {
-      const newAreaInfo = updateAreaFileInfo(areaInfoRef.current, { code: content, isUnSave: true }, targetPath)
+      const newAreaInfo = updateAreaFileInfo(
+        areaInfoRef.current,
+        { code: content, isUnSave: true, needsSaveAs },
+        targetPath,
+      )
       setAreaInfo(newAreaInfo)
       areaInfoRef.current = newAreaInfo
       if (activeFileRef.current?.path === targetPath) {
-        const next = { ...activeFileRef.current, code: content, isUnSave: true }
+        const next = { ...activeFileRef.current, code: content, isUnSave: true, needsSaveAs }
         setActiveFile(next)
         activeFileRef.current = next
       } else {
-        const newActiveFile = { ...existingInArea, code: content, isUnSave: true, isActive: true }
+        const newActiveFile = { ...existingInArea, code: content, isUnSave: true, isActive: true, needsSaveAs }
         const activatedAreaInfo = setAreaFileActive(newAreaInfo, targetPath)
         setAreaInfo(activatedAreaInfo)
         areaInfoRef.current = activatedAreaInfo
@@ -682,6 +689,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
         targetPath,
         content,
         language: extras?.language,
+        needsSaveAs,
         areaInfo: areaInfoRef.current,
         activeFile: activeFileRef.current,
       })
@@ -703,6 +711,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
         targetPath,
         content: '',
         language: payload.language,
+        needsSaveAs: true,
         areaInfo: areaInfoRef.current,
         activeFile: activeFileRef.current,
       })
@@ -867,10 +876,19 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   }, [])
 
   // 存储文件
-  const ctrl_s = useMemoizedFn(() => {
+  const ctrl_s = useMemoizedFn(async () => {
     try {
-      // 如若未保存 则
       if (activeFile && activeFile.isUnSave && activeFile.code && activeFile.code.length > 0) {
+        if (!shouldYakRunnerFileSaveAs(activeFile)) {
+          await grpcFetchSaveFile(activeFile.path, activeFile.code)
+          const file: FileDetailInfo = { ...activeFile, isUnSave: false, needsSaveAs: false }
+          const newAreaInfo = updateAreaFileInfo(areaInfo, file, activeFile.path)
+          setAreaInfo(newAreaInfo)
+          setActiveFile(file)
+          success(t('YakRunner.saveSuccess', { name: activeFile.name }))
+          return
+        }
+
         ipcRenderer
           .invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${activeFile.name}`)
           .then(async (res) => {
@@ -883,6 +901,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
                 ...activeFile,
                 path,
                 isUnSave: false,
+                needsSaveAs: false,
                 language: monacaLanguageType(suffix || ''),
               }
               const parentPath = await getPathParent(file.path)

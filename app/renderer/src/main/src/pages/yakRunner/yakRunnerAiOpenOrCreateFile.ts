@@ -22,6 +22,7 @@ export type OpenOrCreateYakRunnerFileParams = {
   targetPath: string
   content: string
   language?: string
+  needsSaveAs?: boolean
   areaInfo: AreaInfoProps[]
   activeFile?: FileDetailInfo
 }
@@ -67,7 +68,7 @@ async function ensureParentDirsExist(filePath: string): Promise<void> {
 export async function openOrCreateYakRunnerFileAtPath(
   params: OpenOrCreateYakRunnerFileParams,
 ): Promise<OpenOrCreateYakRunnerFileResult | null> {
-  const { targetPath, content, language, areaInfo, activeFile } = params
+  const { targetPath, content, language, needsSaveAs = false, areaInfo, activeFile } = params
   const path = targetPath.trim()
   if (!path) return null
 
@@ -102,7 +103,8 @@ export async function openOrCreateYakRunnerFileAtPath(
     path,
     parent: parentPath || null,
     language: resolvedLanguage,
-    isUnSave: existsOnDisk && !created,
+    isUnSave: needsSaveAs || (existsOnDisk && !created),
+    needsSaveAs,
   }
 
   const { newAreaInfo, newActiveFile } = addAreaFileInfo(areaInfo, fileInfo, activeFile)
@@ -124,6 +126,7 @@ export function createYakRunnerScratchFileForAI(params: CreateYakRunnerScratchFi
     parent: null,
     language: monacaLanguageType(language || suffix),
     isUnSave: true,
+    needsSaveAs: true,
   }
 
   const { newAreaInfo, newActiveFile } = addAreaFileInfo(areaInfo, fileInfo, activeFile)

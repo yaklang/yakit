@@ -8,7 +8,7 @@ import { yakitFailed } from '@/utils/notification'
 
 export const YAK_RUNNER_AI_PAGE_ID = 'yak-runner-main'
 
-export type YakRunnerApplyCodeExtras = { path?: string; language?: string }
+export type YakRunnerApplyCodeExtras = { path?: string; language?: string; needsSaveAs?: boolean }
 
 export type YakRunnerWorkspaceContext = {
   directoryPath?: string
@@ -204,5 +204,9 @@ export function applyYaklangCodeChangeToYakRunnerPage(
     return
   }
   lastAppliedCodeByPage.set(pageId, { content, path })
-  fn(content, { path, language: resolveYaklangCodeChangeLanguage(data) })
+  fn(content, {
+    path,
+    language: resolveYaklangCodeChangeLanguage(data),
+    needsSaveAs: data.op === 'create',
+  })
 }

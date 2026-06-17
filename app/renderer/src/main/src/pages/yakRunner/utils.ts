@@ -111,6 +111,25 @@ export const grpcFetchRenameFileTree: (
 /**
  * @name 文件保存
  */
+/** 临时/未命名 tab 的 path（如 Untitled、文件树 `-create` 占位） */
+export const isYakRunnerScratchFilePath = (filePath?: string | null): boolean => {
+  const path = filePath?.trim()
+  if (!path) return true
+  if (path.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(path)) return false
+  if (/-Untitle-\d+\.yak$/i.test(path)) return true
+  if (/-create$/i.test(path)) return true
+  if (/^\d{10,}-/.test(path)) return true
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i.test(path)) return true
+  return true
+}
+
+/** 是否应弹出「另存为」：仅 `op:create` 或临时文件；`op:replace` 且有绝对路径则直接覆盖保存 */
+export const shouldYakRunnerFileSaveAs = (file: { path?: string; needsSaveAs?: boolean }): boolean => {
+  if (file.needsSaveAs === true) return true
+  if (file.needsSaveAs === false) return false
+  return isYakRunnerScratchFilePath(file.path)
+}
+
 export const grpcFetchSaveFile: (path: string, code: string) => Promise<FileNodeMapProps[]> = (path, code) => {
   return new Promise(async (resolve, reject) => {
     const params = {

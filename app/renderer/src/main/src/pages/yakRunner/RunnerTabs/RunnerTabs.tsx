@@ -59,6 +59,7 @@ import {
   monacaLanguageType,
   removeYakRunnerAreaFileInfo,
   setYakRunnerHistory,
+  shouldYakRunnerFileSaveAs,
   updateAreaFileInfo,
 } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
@@ -1488,9 +1489,23 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
     setShowModal(false)
   })
 
-  const onSaveFile = useMemoizedFn(() => {
+  const onSaveFile = useMemoizedFn(async () => {
     setShowModal(false)
-    ipcRenderer.invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${info.name}`).then(async (res) => {
+    try {
+      if (!shouldYakRunnerFileSaveAs(info)) {
+        await grpcFetchSaveFile(info.path, info.code || '')
+        const file: FileDetailInfo = { ...info, isUnSave: false, needsSaveAs: false }
+        const newAreaInfo = updateAreaFileInfo(areaInfo, file, info.path)
+        setAreaInfo && setAreaInfo(newAreaInfo)
+        setActiveFile && setActiveFile(file)
+        success(`${info.name} 保存成功`)
+        if (waitSaveList.length > 0) {
+          setWaitSaveList(waitSaveList.slice(0, -1))
+        }
+        return
+      }
+
+      ipcRenderer.invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${info.name}`).then(async (res) => {
       try {
         const path = res.filePath
         const name = res.name
@@ -1500,6 +1515,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
             ...info,
             path,
             isUnSave: false,
+            needsSaveAs: false,
             language: monacaLanguageType(suffix),
           }
           const parentPath = await getPathParent(file.path)
@@ -1550,6 +1566,7 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
         }
       } catch (error) {}
     })
+    } catch (error) {}
   })
 
   return (

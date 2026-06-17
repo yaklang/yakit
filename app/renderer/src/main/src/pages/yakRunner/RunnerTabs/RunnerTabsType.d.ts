@@ -42,6 +42,8 @@ export interface FileDetailInfo {
   highLightRange?: Selection
   /** 是否未保存（用于临时文件创建） */
   isUnSave?: boolean
+  /** AI `op:create` 或临时文件：保存时需「另存为」选择路径 */
+  needsSaveAs?: boolean
   /** 是否已被外部删除（文件树监控-删除） */
   isDelete?: boolean
   /** 语法检查（代码打开时执行） */
