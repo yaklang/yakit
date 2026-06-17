@@ -101,8 +101,6 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
         RecentProjectLimit: 10,
       } as GetSSAWorkbenchDashboardRequest)
       .then((data: GetSSAWorkbenchDashboardResponse) => {
-        console.log('data', data)
-
         setResponseData(data)
       })
       .catch((e) => {
