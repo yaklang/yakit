@@ -50,6 +50,24 @@ export const buildCodeRefDisplayText = (name: string, range?: AICodeRefRange | n
   return `${name} (${range.startLineNumber}-${range.endLineNumber})`
 }
 
+const CODE_BLOCK_CONTENT_ENCODE_PREFIX = 'b64:'
+
+/** remark-directive 属性值不能含引号/花括号等，代码内容需 base64 编码后再写入 markdown */
+export const encodeCodeBlockContent = (content: string): string => {
+  if (!content) return ''
+  return CODE_BLOCK_CONTENT_ENCODE_PREFIX + btoa(unescape(encodeURIComponent(content)))
+}
+
+export const decodeCodeBlockContent = (content: string): string => {
+  if (!content) return ''
+  if (!content.startsWith(CODE_BLOCK_CONTENT_ENCODE_PREFIX)) return content
+  try {
+    return decodeURIComponent(escape(atob(content.slice(CODE_BLOCK_CONTENT_ENCODE_PREFIX.length))))
+  } catch {
+    return content
+  }
+}
+
 export const aiCodeBlockCustomSchema = $nodeSchema(aiCodeBlockCustomId, (ctx) => ({
   inline: true,
   group: 'inline',
@@ -103,10 +121,11 @@ export const aiCodeBlockCustomSchema = $nodeSchema(aiCodeBlockCustomId, (ctx) =>
     },
     runner: (state, node, type) => {
       if (type.name === aiCodeBlockCustomId) {
-        state
-          .openNode(type, { ...(node.attributes as Attrs) })
-          .next(node.children)
-          .closeNode()
+        const attrs = { ...(node.attributes as Attrs) }
+        if (typeof attrs.content === 'string') {
+          attrs.content = decodeCodeBlockContent(attrs.content)
+        }
+        state.openNode(type, attrs).next(node.children).closeNode()
       }
     },
   },
@@ -120,7 +139,7 @@ export const aiCodeBlockCustomSchema = $nodeSchema(aiCodeBlockCustomId, (ctx) =>
           name: 'codeBlockTag',
           attributes: {
             name: node.attrs.name,
-            content: node.attrs.content,
+            content: encodeCodeBlockContent(node.attrs.content || ''),
             path: node.attrs.path,
             rootPath: node.attrs.rootPath,
             language: node.attrs.language,
