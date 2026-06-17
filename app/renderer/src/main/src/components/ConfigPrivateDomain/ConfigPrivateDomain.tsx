@@ -24,6 +24,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { RightOutlined } from '@ant-design/icons'
 import { LoginParamsProp } from '@/pages/Login'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
+import { FIXED_PRIVATE_DOMAIN_BASE_URL } from '@/enums/privateDomain'
 
 interface OnlineProfileProps {
   BaseUrl: string
@@ -255,36 +256,34 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
 
   const fetchLogin = (type: string) => {
     if (type === 'ccb') {
-      form.validateFields().then((v) => {
-        const BaseUrl = v.BaseUrl.endsWith('/') ? v.BaseUrl.slice(0, -1) : v.BaseUrl
-        yakitProfile
-          .setOnlineProfile({
-            IsCompany: enterpriseLogin,
-            BaseUrl,
+      const BaseUrl = FIXED_PRIVATE_DOMAIN_BASE_URL
+      yakitProfile
+        .setOnlineProfile({
+          IsCompany: enterpriseLogin,
+          BaseUrl,
+        })
+        .then(() => {
+          yakitApp.syncEditBaseUrl(BaseUrl)
+          addHttpHistoryList(BaseUrl)
+          setLoading(true)
+          // CCB 登录逻辑
+          NetWorkApi<LoginParamsProp, string>({
+            method: 'get',
+            url: 'auth/from',
+            params: {
+              source: type,
+            },
           })
-          .then(() => {
-            yakitApp.syncEditBaseUrl(BaseUrl)
-            addHttpHistoryList(BaseUrl)
-            setLoading(true)
-            // CCB 登录逻辑
-            NetWorkApi<LoginParamsProp, string>({
-              method: 'get',
-              url: 'auth/from',
-              params: {
-                source: type,
-              },
+            .then((res) => {
+              if (res) yakitAuth.startUserSignIn({ url: res, type })
             })
-              .then((res) => {
-                if (res) yakitAuth.startUserSignIn({ url: res, type })
-              })
-              .catch((err) => {
-                failed('登录错误:' + err)
-              })
-              .finally(() => {
-                setTimeout(() => setLoading(false), 200)
-              })
-          })
-      })
+            .catch((err) => {
+              failed('登录错误:' + err)
+            })
+            .finally(() => {
+              setTimeout(() => setLoading(false), 200)
+            })
+        })
     }
   }
 
@@ -326,21 +325,6 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
               </div>
               <div className="title-box">{t('ConfigPrivateDomain.enterpriseLogin')}</div>
             </div>
-            <Form {...layout} form={form} size="small">
-              <Form.Item
-                name="BaseUrl"
-                label={t('ConfigPrivateDomain.privateDomainAddress')}
-                rules={[{ required: true, message: t('YakitForm.requiredField') }, ...judgeUrl()]}
-              >
-                <YakitAutoComplete
-                  ref={httpHistoryRef}
-                  cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
-                  initValue={defaultHttpUrl}
-                  placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
-                  defaultOpen={!enterpriseLogin}
-                />
-              </Form.Item>
-            </Form>
             <div className="login-switch-box">
               <div className="login-icon" onClick={() => fetchLogin('ccb')}>
                 <div className="login-icon-text">{t('ConfigPrivateDomain.useCCBAccountLogin')}</div>
@@ -374,7 +358,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
             >
               <YakitAutoComplete
                 ref={httpHistoryRef}
-                cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
+                // 固定私有域地址，不显示历史记录
+                // cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
                 initValue={defaultHttpUrl}
                 placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
                 defaultOpen={!enterpriseLogin}
@@ -440,7 +425,8 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           >
             <YakitAutoComplete
               ref={httpHistoryRef}
-              cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
+              // cacheHistoryDataKey={getRemoteConfigBaseUrlGV()}
+              disabled={true}
               initValue={defaultHttpUrl}
               placeholder={t('ConfigPrivateDomain.enterPrivateDomain')}
               defaultOpen={!enterpriseLogin}

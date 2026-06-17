@@ -23,7 +23,7 @@ interface YakitBridge {
     syncEditBaseUrl: (baseUrl: string) => unknown
     syncUpdateUser: (user: any) => unknown
     killRunNode: (pid: number) => Promise<unknown>
-    userSignOut: () => void
+    userSignOut: (params: { isEnpriTrace?: boolean }) => void
     triggerDevtool: () => Promise<unknown>
     setZoomFactor: (factor: number) => Promise<unknown>
     reload: () => Promise<unknown>
