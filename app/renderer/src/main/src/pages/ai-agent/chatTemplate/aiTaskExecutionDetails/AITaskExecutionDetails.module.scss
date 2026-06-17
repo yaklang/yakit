@@ -319,24 +319,23 @@
   }
 
   .bottom-section {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
     overflow: hidden;
     min-height: 500px;
+    border-radius: 8px;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   }
   .section-card {
     border-radius: 8px;
-    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+
     padding: 4px;
     display: flex;
     flex-direction: column;
     gap: 4px;
 
-    width: calc((100% - 24px) / 4); // 3*8
     overflow: hidden;
-    height: fit-content;
     max-height: 100%;
 
     .section-card-title {
@@ -360,7 +359,7 @@
     background: var(--Colors-Use-Neutral-Bg);
 
     overflow: hidden;
-    flex: 0 1 auto;
+    flex: 1;
 
     .plugin-group-header {
       display: flex;
@@ -368,7 +367,7 @@
       align-items: center;
       font-size: 12px;
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
-      padding: 4px 12px;
+      padding: 4px 8px;
       .add-btn {
         padding-right: 0;
       }
@@ -455,12 +454,6 @@
   .ai-task-execution-details-container {
     .summary-section {
       grid-template-columns: repeat(2, 1fr);
-      > :nth-child(1) {
-        grid-column: span 1;
-      }
-      > :nth-child(n + 2) {
-        grid-column: span 1;
-      }
     }
     .top-section {
       /* 取左右分栏，强制单列垂直排列 */
@@ -480,8 +473,26 @@
     }
     .bottom-section {
       overflow: initial;
+      position: relative;
+      grid-template-columns: repeat(2, 1fr);
+      min-height: initial;
       .section-card {
-        width: calc((100% - 8px) / 2); // 一个gap：8px
+        position: relative;
+        &:nth-child(3) {
+          overflow: visible;
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 1px;
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+          }
+        }
+      }
+      .plugin-list {
+        max-height: 500px;
       }
     }
   }
@@ -492,9 +503,6 @@
     .summary-section {
       grid-template-columns: 1fr;
       gap: 8px;
-      > * {
-        grid-column: span 1;
-      }
     }
     .top-section .task-statistics {
       .stats-overview {
@@ -514,8 +522,16 @@
     }
     .bottom-section {
       overflow: initial;
+      grid-template-columns: 1fr;
+
       .section-card {
-        width: 100%; /* 单列占满全宽 */
+        position: relative;
+        &:nth-child(3) {
+          overflow: hidden;
+          &::before {
+            width: 0;
+          }
+        }
       }
     }
   }

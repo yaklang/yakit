@@ -49,6 +49,7 @@ import {
   HorizontalScrollCardItemInfoMultiple,
   HorizontalScrollCardItemInfoSingle,
 } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
+import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName } = props
@@ -662,11 +663,21 @@ const getType = (value: string) => {
   }
   return type
 }
+const typeOptions = [
+  {
+    label: '固定加载',
+    value: 'fixed',
+  },
+  {
+    label: '动态加载',
+    value: 'dynamic',
+  },
+]
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
   const { type, colTitle, fixedList, dynamicList, taskId } = props
   const { handleSendConfigHotpatch, handleSendSyncMessage } = useChatIPCDispatcher()
-  const [fixedScroll, setFixedScroll] = useState<boolean>(false)
-  const [dynamicScroll, setDynamicScroll] = useState<boolean>(false)
+  const [configType, setConfigType] = useState<'fixed' | 'dynamic'>('fixed')
+  const [scroll, setScroll] = useState<boolean>(false)
   const [visible, setVisible] = useState<boolean>(false)
   const onRemove = useMemoizedFn((dynamicItem) => {
     handleSendConfigHotpatch({
@@ -687,88 +698,78 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
       })
     }, 1000)
   })
+  const renderList = useMemoizedFn(() => {
+    switch (configType) {
+      case 'fixed':
+        return fixedList.map((fixedItem, index) => (
+          <AITaskActionItem
+            key={fixedItem.verbose_name + fixedItem.name}
+            title={fixedItem.verbose_name || fixedItem.name}
+            description={fixedItem.description}
+          />
+        ))
+      case 'dynamic':
+        return dynamicList.map((dynamicItem, index) => (
+          <AITaskActionItem
+            key={dynamicItem.name}
+            title={dynamicItem.name}
+            description={dynamicItem.description}
+            category={dynamicItem.category as PlanItemDetailsDynamicKeys}
+            titleExtra={
+              <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
+                <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
+              </YakitPopconfirm>
+            }
+          />
+        ))
+      default:
+        return <></>
+    }
+  })
   return (
     <div className={styles['section-card']}>
       <div className={styles['section-card-title']}>{colTitle}</div>
-      {/* 固定加载 */}
-      {!!fixedList.length && (
-        <div className={styles['plugin-group']}>
-          <div className={styles['plugin-group-header']}>
-            <div className={styles['plugin-group-title']}>
-              固定加载
-              <YakitTag border={false} fullRadius size="small">
-                {fixedList.length}
-              </YakitTag>
-            </div>
-          </div>
-          <div
-            className={styles['plugin-list']}
-            style={{ overflowY: fixedScroll ? 'auto' : 'hidden' }}
-            onMouseEnter={() => setFixedScroll(true)}
-            onMouseLeave={() => setFixedScroll(false)}
-          >
-            {fixedList.map((fixedItem, index) => (
-              <AITaskActionItem
-                key={fixedItem.verbose_name + fixedItem.name}
-                title={fixedItem.verbose_name || fixedItem.name}
-                description={fixedItem.description}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-      {/* 动态加载 */}
       <div className={styles['plugin-group']}>
         <div className={styles['plugin-group-header']}>
           <div className={styles['plugin-group-title']}>
-            动态加载
-            <YakitTag border={false} fullRadius size="small">
-              {dynamicList.length}
-            </YakitTag>
+            <YakitRadioButtons
+              buttonStyle="solid"
+              value={configType}
+              onChange={(e) => setConfigType(e.target.value)}
+              options={typeOptions}
+            />
           </div>
-          <YakitPopover
-            content={
-              <AITaskDetailsAddPopover
-                type={type}
-                title={`添加${colTitle}`}
-                taskId={taskId}
-                onClose={() => setVisible(false)}
-              />
-            }
-            trigger="click"
-            placement="top"
-            destroyTooltipOnHide
-            visible={visible}
-            onVisibleChange={setVisible}
-            overlayClassName={styles['add-popover']}
-          >
-            <YakitButton type="text" className={styles['add-btn']}>
-              添加
-            </YakitButton>
-          </YakitPopover>
+          {configType === 'dynamic' && (
+            <YakitPopover
+              content={
+                <AITaskDetailsAddPopover
+                  type={type}
+                  title={`添加${colTitle}`}
+                  taskId={taskId}
+                  onClose={() => setVisible(false)}
+                />
+              }
+              trigger="click"
+              placement="top"
+              destroyTooltipOnHide
+              visible={visible}
+              onVisibleChange={setVisible}
+              overlayClassName={styles['add-popover']}
+            >
+              <YakitButton type="text" className={styles['add-btn']}>
+                添加
+              </YakitButton>
+            </YakitPopover>
+          )}
         </div>
-        {!!dynamicList.length && (
-          <div
-            className={styles['plugin-list']}
-            style={{ overflowY: dynamicScroll ? 'auto' : 'hidden' }}
-            onMouseEnter={() => setDynamicScroll(true)}
-            onMouseLeave={() => setDynamicScroll(false)}
-          >
-            {dynamicList.map((dynamicItem, index) => (
-              <AITaskActionItem
-                key={dynamicItem.name}
-                title={dynamicItem.name}
-                description={dynamicItem.description}
-                category={dynamicItem.category as PlanItemDetailsDynamicKeys}
-                titleExtra={
-                  <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
-                    <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
-                  </YakitPopconfirm>
-                }
-              />
-            ))}
-          </div>
-        )}
+        <div
+          className={styles['plugin-list']}
+          style={{ overflowY: scroll ? 'auto' : 'hidden' }}
+          onMouseEnter={() => setScroll(true)}
+          onMouseLeave={() => setScroll(false)}
+        >
+          {renderList()}
+        </div>
       </div>
     </div>
   )
