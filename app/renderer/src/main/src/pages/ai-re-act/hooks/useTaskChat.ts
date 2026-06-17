@@ -89,7 +89,7 @@ function useTaskChat(params: UseTaskChatParams) {
           type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
           data: {
             taskIndex: info.task.index,
-            taskId: res.TaskId,
+            taskId: info.task.task_id,
             taskName: info.task.name,
             goal: info.task.goal,
             status: info.task.task_status || AITaskStatus.inProgress,

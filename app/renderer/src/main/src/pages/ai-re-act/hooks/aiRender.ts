@@ -70,6 +70,8 @@ export interface AIToolResult {
 
 /** 任务节点的信息 */
 export interface AITaskStartInfo {
+  /** AIAgentGrpcApi.PlanTask.taskId */
+  taskId: string
   /** AIAgentGrpcApi.PlanTask.index */
   taskIndex: string
   /** AIAgentGrpcApi.PlanTask.name */

@@ -511,6 +511,8 @@ export declare namespace AIAgentGrpcApi {
       name: string
       /** 正文 */
       goal: string
+      /** 任务id */
+      task_id: string
       /** 后端供(push_task|pop_task)对应的唯一标识 */
       task_uuid?: string
       /** 后端供pop_task反馈的任务执行状态 */

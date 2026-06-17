@@ -21,6 +21,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useConcurrentStreamRefreshListener } from './concurrentStream/useConcurrentStreamRefreshListener'
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
+import { yakitNotify } from '@/utils/notification'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -109,12 +110,16 @@ const ConcurrentStreamCard: FC<{
   const onDetails = useMemoizedFn(() => {
     const data = raw?.data
     if (!data) return
+    if (!data.taskId) {
+      yakitNotify('error', 'taskId为空')
+      return
+    }
     emiter.emit(
       'actionAITaskContentTab',
       JSON.stringify({
         type: 'add',
         params: {
-          key: data.taskIndex,
+          key: data.taskId,
           label: data.taskName,
           goal: data.goal,
         },
