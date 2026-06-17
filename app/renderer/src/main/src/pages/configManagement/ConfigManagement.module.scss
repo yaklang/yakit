@@ -303,6 +303,10 @@
     cursor: pointer;
     color: var(--Colors-Use-Neutral-Text-1-Title);
 
+    span {
+      font-size: 12px;
+    }
+
     svg {
       height: 16px;
       width: 16px;
