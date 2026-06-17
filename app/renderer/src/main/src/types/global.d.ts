@@ -310,6 +310,7 @@ interface YakitBridge {
   project: {
     setCurrentProject: (params: any) => Promise<any>
     getCurrentProjectEx: (params: any) => Promise<any>
+    getSSAWorkbenchDashboard: (params: any) => Promise<any>
     getDefaultProjectEx: (params: any) => Promise<any>
     getProjects: (params: any) => Promise<any>
     exportProject: (params: any, token: string) => Promise<any>

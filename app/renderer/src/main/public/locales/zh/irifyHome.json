@@ -1,0 +1,58 @@
+{
+  "IRifyHome": {
+    "fetchDataFailed": "获取首页数据失败：{{error}}",
+    "pageTitle": "代码审计工作台",
+    "pageSubtitle": "区分 AI 联网审计与 SSA 离线规则审计，统一查看扫描成果与风险态势",
+    "project": "项目",
+    "ruleLibrary": "规则库",
+    "aiAuditTask": "AI 审计任务",
+    "riskOverview": "风险概览",
+    "riskDistribution": "风险分布",
+    "ruleHitsTop5": "规则命中 Top5",
+    "recentProjects": "近期项目",
+    "viewAll": "查看全部",
+    "quickAccess": "快速入口"
+  },
+  "AuditMode": {
+    "aiCodeAudit": "AI 代码审计",
+    "online": "联网",
+    "aiSubtitle": "适合：复杂业务 / 需要解释 / 需要辅助研判",
+    "aiFeature1": "面向复杂业务逻辑、跨文件关联、自然语言分析与风险解释",
+    "aiFeature2": "支持联网知识增强、场景理解、问题归因、修复建议",
+    "tagBusinessLogic": "业务逻辑",
+    "tagContextUnderstanding": "上下文理解",
+    "tagRiskExplanation": "风险解释",
+    "tagFixSuggestion": "修复建议",
+    "startAiAudit": "开始 AI 审计",
+    "traditionalCodeAudit": "传统代码审计",
+    "offline": "离线",
+    "traditionalFeature1": "通过编写审计规则对代码行为进行分析，发现代码中的风险片段",
+    "traditionalFeature2": "Java、PHP、Yaklang、Golang",
+    "startAudit": "开始审计",
+    "codeScan": "代码扫描",
+    "scanFeature1": "内置丰富规则库",
+    "scanFeature2": "可自由选择规则分组进行代码扫描",
+    "scanFeature3": "帮助分析代码结构和发现代码中的风险片段",
+    "startScan": "开始扫描"
+  },
+  "QuickAccess": {
+    "ruleManagement": "规则管理",
+    "ruleManagementDesc": "对规则进行增删改查以及分组和上传操作",
+    "javaDecompiler": "JAVA 反编译",
+    "javaDecompilerDesc": "将已编译的字节码文件还原为人类可读的 Java 源代码",
+    "auditHole": "审计漏洞",
+    "auditHoleDesc": "查看代码扫描或审计中发现的所有漏洞",
+    "projectManagement": "项目管理",
+    "projectManagementDesc": "对编译和扫描的所有项目进行管理"
+  },
+  "IRifyHomeTable": {
+    "project": "项目",
+    "language": "语言",
+    "projectRisk": "项目风险",
+    "riskCount": "风险数量",
+    "updatedAt": "更新时间"
+  },
+  "IRifyHomeEcharts": {
+    "totalRisk": "总风险"
+  }
+}

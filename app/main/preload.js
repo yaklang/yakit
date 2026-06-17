@@ -349,6 +349,7 @@ process.on('loaded', function () {
     project: {
       setCurrentProject: (params) => invoke('SetCurrentProject', params),
       getCurrentProjectEx: (params) => invoke('GetCurrentProjectEx', params),
+      getSSAWorkbenchDashboard: (params) => invoke('GetSSAWorkbenchDashboard', params),
       getDefaultProjectEx: (params) => invoke('GetDefaultProjectEx', params),
       getProjects: (params) => invoke('GetProjects', params),
       exportProject: (params, token) => invoke('ExportProject', params, token),
