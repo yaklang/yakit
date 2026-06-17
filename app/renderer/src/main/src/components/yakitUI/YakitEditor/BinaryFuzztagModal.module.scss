@@ -18,6 +18,9 @@
 .modal-body {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-body-column {
@@ -66,6 +69,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
   min-height: 0;
 }
 
@@ -100,6 +104,41 @@
   flex: 1;
   overflow: hidden;
   min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.hex-editor-surface {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  user-select: none;
+
+  :global {
+    .hexEditorHeader,
+    .hexEditorBody {
+      overflow-x: hidden;
+    }
+
+    .hNamKE.editAscii .byteValue.selection > .nybbleHighValue,
+    .hNamKE.notFocused .byteValue.selection > .nybbleHighValue,
+    .hNamKE.editAscii .byteValue.selection > .nybbleLowValue,
+    .hNamKE.notFocused .byteValue.selection > .nybbleLowValue {
+      background-color: var(--Colors-Use-Main-Primary);
+      color: var(--Colors-Use-Neutral-Bg);
+    }
+
+    .hNamKE.editHex .asciiValue.selectionCursor,
+    .hNamKE.notFocused .asciiValue.selectionCursor,
+    .hNamKE.editHex .asciiValue.selection,
+    .hNamKE.notFocused .asciiValue.selection {
+      background-color: var(--Colors-Use-Main-Primary);
+      color: var(--Colors-Use-Neutral-Bg);
+    }
+  }
 }
 
 .overflow-content {

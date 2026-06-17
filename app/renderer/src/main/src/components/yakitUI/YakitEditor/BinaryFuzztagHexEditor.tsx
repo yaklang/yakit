@@ -11,6 +11,19 @@ import styles from './BinaryFuzztagModal.module.scss'
 type EditMode = 'insert' | 'replace'
 type InputFormat = 'hex' | 'ascii'
 
+const HEX_BYTE_WIDTH = 20
+const HEX_ASCII_WIDTH = 10
+const HEX_GUTTER_WIDTH = 8
+const HEX_LABEL_WIDTH = 64
+const HEX_ROW_HEIGHT = 24
+const HEX_INLINE_STYLES = {
+  byte: { width: HEX_BYTE_WIDTH, height: HEX_ROW_HEIGHT },
+  ascii: { width: HEX_ASCII_WIDTH, height: HEX_ROW_HEIGHT },
+  gutter: { width: HEX_GUTTER_WIDTH, height: HEX_ROW_HEIGHT },
+  offsetLabel: { width: HEX_LABEL_WIDTH, height: HEX_ROW_HEIGHT },
+  row: { height: HEX_ROW_HEIGHT },
+}
+
 export interface BinaryFuzztagHexEditorProps {
   // 共享字节缓冲：编辑直接原地修改它，宿主据此提交。多模式(文本/HEX)间靠它共享同一份数据
   dataRef: MutableRefObject<Uint8Array>
@@ -140,6 +153,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
     if (off == null) {
       return
     }
+    e.preventDefault()
     selStartRef.current = off
     selEndRef.current = off
     draggingRef.current = true
@@ -153,6 +167,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
     if (off == null) {
       return
     }
+    e.preventDefault()
     if (selEndRef.current === off) {
       return
     }
@@ -165,6 +180,7 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
     }
     const off = getOffsetFromEvent(e)
     if (off != null) {
+      e.preventDefault()
       selEndRef.current = off
     }
     draggingRef.current = false
@@ -312,20 +328,28 @@ export const BinaryFuzztagHexEditor: React.FC<BinaryFuzztagHexEditorProps> = (pr
         onMouseDownCapture={handleHexMouseDown}
         onMouseMoveCapture={handleHexMouseMove}
         onMouseUpCapture={handleHexMouseUp}
+        onDragStart={(e) => e.preventDefault()}
       >
-        <HexEditor
-          columns={16}
-          data={dataRef.current}
-          nonce={nonce}
-          readOnly={readOnly}
-          onSetValue={handleSetValue}
-          overscanCount={0x03}
-          showAscii={true}
-          showColumnLabels={true}
-          showRowLabels={true}
-          highlightColumn={true}
-          theme={targetHexTheme}
-        />
+        <div className={styles['hex-editor-surface']}>
+          <HexEditor
+            data={dataRef.current}
+            nonce={nonce}
+            readOnly={readOnly}
+            onSetValue={handleSetValue}
+            byteWidth={HEX_BYTE_WIDTH}
+            asciiWidth={HEX_ASCII_WIDTH}
+            gutterWidth={HEX_GUTTER_WIDTH}
+            labelWidth={HEX_LABEL_WIDTH}
+            rowHeight={HEX_ROW_HEIGHT}
+            inlineStyles={HEX_INLINE_STYLES}
+            overscanCount={0x08}
+            showAscii={true}
+            showColumnLabels={true}
+            showRowLabels={true}
+            highlightColumn={true}
+            theme={targetHexTheme}
+          />
+        </div>
       </div>
     </div>
   )

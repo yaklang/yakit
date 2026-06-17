@@ -33,7 +33,7 @@ import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/pag
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { JSONParseLog } from '@/utils/tool'
-import { fetchCursorContent } from './editorUtils'
+import { fetchCursorContent, fetchEditorFullContent } from './editorUtils'
 const { ipcRenderer } = window.require('electron')
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = 'HTTP_PACKET_EDITOR_DisableUnicodeDecode'
@@ -581,7 +581,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             }
           } else {
             try {
-              const text = webFuzzerValue || editor.getModel()?.getValue() || ''
+              const text = webFuzzerValue || fetchEditorFullContent(editor)
               if (!text) {
                 info(t('YakitEditor.HTTPPacketYakitEditor.packetEmpty'))
                 return

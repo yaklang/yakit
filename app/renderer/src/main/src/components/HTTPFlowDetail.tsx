@@ -1775,6 +1775,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             originValue={originResValue}
             readOnly={true}
             foldBinaryFuzztag={true}
+            webFuzzerValue={originResValue}
             noLineNumber={true}
             sendToWebFuzzer={sendToWebFuzzer}
             downstreamProxyStr={downstreamProxyStr}

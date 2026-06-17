@@ -132,6 +132,14 @@ export const fetchCursorContent = (editor: YakitIMonacoEditor, isGetRow?: boolea
   // 还原二进制 Fuzztag 折叠占位(#YBIN_)为真实内容，保证右键复制等路径复制出去的是真实标签而非内部占位
   return expandBinaryFuzztagByModelKey(model, model.getValueInRange(range))
 }
+
+/** 获取编辑器全文，并还原二进制 Fuzztag 折叠占位(#YBIN_)为真实内容 */
+export const fetchEditorFullContent = (editor: YakitIMonacoEditor): string => {
+  const model = editor?.getModel()
+  if (!model) return ''
+  return expandBinaryFuzztagByModelKey(model, model.getValue())
+}
+
 /**
  * @name 获取编辑器光标选中内容字节数
  * @param editor 编辑器对象实例
