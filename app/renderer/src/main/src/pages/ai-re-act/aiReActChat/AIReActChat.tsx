@@ -274,15 +274,25 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
       handleSendSyncMessage(params)
     })
+
+    const getPlanDetails = useMemoizedFn(() => {
+      if (!activeChat?.SessionID) return
+      return chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat?.planDetails
+    })
     const todoData: TodoListCardData = useCreation(() => {
       if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
       try {
-        return (
-          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat?.planDetails?.todoList ||
-          cloneDeep(DefaultTodoListCardData)
-        )
+        return getPlanDetails()?.todoList || cloneDeep(DefaultTodoListCardData)
       } catch (error) {
         return cloneDeep(DefaultTodoListCardData)
+      }
+    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+    const taskId = useCreation(() => {
+      if (!activeChat?.SessionID) return ''
+      try {
+        return getPlanDetails()?.taskId || ''
+      } catch (error) {
+        return ''
       }
     }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
     return (
@@ -350,7 +360,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               </div>
               {todoData?.items?.length > 0 && (
                 <div className={styles['todoList-wrapper']}>
-                  <AIToDoList className={styles['to-do-list']} todoData={todoData} />
+                  <AIToDoList className={styles['to-do-list']} todoData={todoData} taskId={taskId} />
                 </div>
               )}
               <AIReActChatContents chats={chatIPCData.casualChat} />

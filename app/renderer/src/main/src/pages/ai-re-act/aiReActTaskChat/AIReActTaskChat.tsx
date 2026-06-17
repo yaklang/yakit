@@ -63,7 +63,6 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
   const [{ randomAIMaterialsData, loadingAIMaterials }, { onRefresh }] = useGetAIMaterialsData()
 
-  const { taskChat } = useChatIPCStore().chatIPCData
   const [leftExpand, setLeftExpand] = useState(true)
   const [expand, setExpand] = useState(false)
 
@@ -109,26 +108,23 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
         firstNode={<AIReActTaskChatLeftSide leftExpand={leftExpand} setLeftExpand={setLeftExpand} />}
         secondNode={
           <>
-            {!!taskChat?.elements?.length ? (
-              <div className={styles['chat-content-wrapper']}>
-                <AITaskContent
-                  tabBarExtraContent={
-                    <YakitButton
-                      type="text2"
-                      icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
-                      onClick={onIsExpand}
-                    />
-                  }
+            <AITaskContent
+              tabBarExtraContent={
+                <YakitButton
+                  type="text2"
+                  icon={expand ? <OutlineArrowscollapseIcon /> : <OutlineArrowsexpandIcon />}
+                  onClick={onIsExpand}
                 />
-              </div>
-            ) : (
-              <AIReActTaskEmpty
-                loadingAIMaterials={loadingAIMaterials}
-                randomAIMaterialsData={randomAIMaterialsData}
-                onRefresh={onRefresh}
-                onClickItem={onClickItem}
-              />
-            )}
+              }
+              emptyNode={
+                <AIReActTaskEmpty
+                  loadingAIMaterials={loadingAIMaterials}
+                  randomAIMaterialsData={randomAIMaterialsData}
+                  onRefresh={onRefresh}
+                  onClickItem={onClickItem}
+                />
+              }
+            />
           </>
         }
       />

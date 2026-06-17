@@ -3,7 +3,7 @@ import { AITreeNodeProps, AITreeProps } from './type'
 import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from './icon'
 import { OutlineInformationcircleIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 
 import classNames from 'classnames'
 import styles from './AITree.module.scss'
@@ -14,10 +14,10 @@ import { AIHistorySkipTask } from '../chatTemplate/historyTaskTree/HistoryTaskTr
 import useAIAgentStore from '../useContext/useStore'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { DefaultTodoListCardData } from '@/pages/ai-re-act/hooks/defaultConstant'
-import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { cloneDeep } from 'lodash'
 import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import { Tooltip } from 'antd'
+import { yakitNotify } from '@/utils/notification'
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -154,12 +154,16 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
       setTodoListVisible(visible)
     })
     const onDetails = useMemoizedFn(() => {
+      if (!data.task_id) {
+        yakitNotify('error', 'task_id为空')
+        return
+      }
       emiter.emit(
         'actionAITaskContentTab',
         JSON.stringify({
           type: 'add',
           params: {
-            key: data.index,
+            key: data.task_id,
             label: data.name,
             goal: data.goal,
           },

@@ -107,6 +107,13 @@
     }
   }
 
+  .summary-section {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+  }
+
   .top-section {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -446,6 +453,15 @@
    ==================================================== */
 @container task-details (max-width: 800px) {
   .ai-task-execution-details-container {
+    .summary-section {
+      grid-template-columns: repeat(2, 1fr);
+      > :nth-child(1) {
+        grid-column: span 1;
+      }
+      > :nth-child(n + 2) {
+        grid-column: span 1;
+      }
+    }
     .top-section {
       /* 取左右分栏，强制单列垂直排列 */
       grid-template-columns: 1fr;
@@ -473,6 +489,13 @@
 
 @container task-details (max-width: 500px) {
   .ai-task-execution-details-container {
+    .summary-section {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      > * {
+        grid-column: span 1;
+      }
+    }
     .top-section .task-statistics {
       .stats-overview {
         /* 使用 6 列的基础网格 */
@@ -497,7 +520,6 @@
     }
   }
 }
-
 .add-popover {
   :global {
     .ant-popover-inner-content {
@@ -525,17 +547,9 @@
       font-weight: 600;
       color: var(--Colors-Use-Neutral-Text-1-Title);
       border-radius: 4px 4px 0 0;
-      height: 40px;
       flex-shrink: 0;
     }
     .list-body {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 0 16px;
-      overflow: hidden;
-    }
-    .list {
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -543,21 +557,9 @@
       flex: 1;
       height: 100%;
       min-height: 50px;
-      .spin {
-        overflow: hidden;
-        flex: 1;
-        min-height: 0;
-        :global {
-          .ant-spin-container {
-            overflow: hidden;
-          }
-        }
-      }
       .ai-add-list {
-        display: flex;
-        flex-direction: column;
+        padding: 0 16px;
         width: 100%;
-        flex: 1;
         .ai-add-list-item {
           display: flex;
           align-items: center;

@@ -5,7 +5,7 @@ import { ThemeColorName } from '@/yakit-colors-generator'
 import { ReactNode } from 'react'
 
 export interface AITaskExecutionDetailsProps {
-  taskIndex: string
+  taskId: string
   taskName?: string
   taskGoal?: string
 }
@@ -24,11 +24,13 @@ export type PlanItemDetailsDynamicItem = PlanItemDetailsData[PlanItemDetailsDyna
 export interface AITaskDetailsCardListProps {
   type: string
   colTitle: ReactNode
+  taskId: string
   fixedList: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
   dynamicList: (PlanItemDetailsDynamicItem | ForgesAndSkillsDynamicItem)[]
 }
 export interface AITaskDetailsAddPopoverProps {
   title: string
+  taskId: string
   type: AITaskDetailsCardListProps['type']
   onClose: () => void
 }

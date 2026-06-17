@@ -89,6 +89,7 @@ function useTaskChat(params: UseTaskChatParams) {
           type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
           data: {
             taskIndex: info.task.index,
+            taskId: res.TaskId,
             taskName: info.task.name,
             goal: info.task.goal,
             status: info.task.task_status || AITaskStatus.inProgress,
@@ -230,6 +231,8 @@ function useTaskChat(params: UseTaskChatParams) {
         funcKey = res.Type
       } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
         funcKey = res.Type
+      } else if (res.NodeId === 'session_snapshot') {
+        funcKey = res.NodeId
       }
 
       const handleFunc = grpcAIMessageHandlers[funcKey || '']

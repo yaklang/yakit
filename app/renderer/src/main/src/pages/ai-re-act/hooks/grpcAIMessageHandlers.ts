@@ -38,7 +38,8 @@ import {
 } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { v4 as uuidv4 } from 'uuid'
-import { isArray, isEmpty } from 'lodash'
+import isEmpty from 'lodash/isEmpty'
+import isArray from 'lodash/isArray'
 // #region Common Utils
 /** grpc流数据转换成错误信息输出到日志中 */
 const handleErrorGRPCToLog: (
@@ -491,6 +492,7 @@ const handleReportFinish: AIMessageHandler = (request) => {
 /** Type='current_task_todo_list_update'&NodeId='current_task_todo_list' todolist */
 const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
   const { res, info, getChatDataStore, callback } = request
+  if (!res.TaskId) return
   if (res.Type !== 'current_task_todo_list_update' || res.NodeId !== 'current_task_todo_list') return
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   // 更新待办清单卡片数据
@@ -501,23 +503,25 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
   if (info.chatType === 'task') {
     const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(data.task_index)
     if (!oldData) return
-    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
+    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
       ...cloneDeep(DefaultPlanItemDetailsData),
       ...oldData,
       uuid: uuidv4(),
       todoList: newData,
+      taskId: oldData.taskId || res.TaskId,
     })
   } else if (info.chatType === 'reAct') {
     const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
     if (!chatDetail) return
+    chatDetail.taskId = chatDetail.taskId || res.TaskId
     chatDetail.todoList = newData
     callback?.(res)
   }
 }
 /** Type='structured'&NodeId='capability_inventory' 能力清单(tool/skills/forge/yak_plugin/mac) */
 const handleCapabilityInventory: AIMessageHandler = (request) => {
-  const { res, getChatDataStore } = request
-  if (!res.TaskIndex) return
+  const { res, info, getChatDataStore } = request
+  if (!res.TaskId) return
   if (res.Type !== 'structured' && res.NodeId !== 'capability_inventory') return
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanItemDetails
@@ -579,32 +583,77 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
   if (!!dynamic?.forges) {
     itemData.forges.dynamic = dynamic.forges
   }
-  const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || {}
-  getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
-    ...cloneDeep(DefaultPlanItemDetailsData),
-    ...oldData,
-    ...itemData,
-  })
+  if (info.chatType === 'task') {
+    const oldData =
+      getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
+      ...oldData,
+      ...itemData,
+      taskId: oldData?.taskId || res.TaskId,
+    })
+  } else if (info.chatType === 'reAct') {
+    const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
+    if (!chatDetail) return
+    Object.assign(chatDetail, {
+      ...itemData,
+      taskId: chatDetail.taskId || res.TaskId,
+    })
+  }
 }
 /** Type='perception'&NodeId='perception' 意图感知 */
 const handlePerception: AIMessageHandler = (request) => {
-  const { res, getChatDataStore } = request
-  if (!res.TaskIndex) return
+  const { res, info, getChatDataStore } = request
+  if (!res.TaskId) return
   if (res.Type !== 'perception' && res.NodeId !== 'perception') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const perception = (JSON.parse(ipcContent) as AIAgentGrpcApi.PerceptionData) || {}
   if (isEmpty(perception)) return
-  const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || {}
-  getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
-    ...cloneDeep(DefaultPlanItemDetailsData),
-    ...oldData,
-    uuid: uuidv4(),
-    perception: {
-      ...perception,
-      summary: isArray(perception.summary) ? perception.summary.join(',') : perception.summary,
-    },
-  })
+  perception.summary = isArray(perception.summary) ? perception.summary.join(',') : perception.summary
+  if (info.chatType === 'task') {
+    const oldData =
+      getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || cloneDeep(DefaultPlanItemDetailsData)
+    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
+      ...oldData,
+      taskId: oldData?.taskId || res.TaskId,
+      uuid: uuidv4(),
+      perception,
+    })
+  } else if (info.chatType === 'reAct') {
+    const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
+    if (!chatDetail) return
+    Object.assign(chatDetail, {
+      taskId: chatDetail.taskId || res.TaskId,
+      perception,
+    })
+  }
+}
+
+const handleSessionSnapshot: AIMessageHandler = (request) => {
+  const { res, info } = request
+  if (!res.TaskId) return
+  if (res.Type !== 'session_snapshot') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
+  if (isEmpty(snapshot)) return
+  if (info.chatType === 'task') {
+    const oldData =
+      request.getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    request.getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
+      ...oldData,
+      taskId: oldData?.taskId || res.TaskId,
+      uuid: uuidv4(),
+      execution: snapshot.execution,
+    })
+  } else if (info.chatType === 'reAct') {
+    const chatDetail = request.getChatDataStore?.()?.casualChat?.planDetails
+    if (!chatDetail) return
+    Object.assign(chatDetail, {
+      taskId: chatDetail.taskId || res.TaskId,
+      execution: snapshot.execution,
+    })
+  }
 }
 // #endregion
 
@@ -2191,4 +2240,5 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   current_task_todo_list_update: handleCurrentTaskTodoListUpdate,
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
+  session_snapshot: handleSessionSnapshot,
 }

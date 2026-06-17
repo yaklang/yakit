@@ -110,8 +110,14 @@ function useCasualChat(params: UseCasualChatParams) {
         funcKey = res.NodeId
       } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
         funcKey = res.Type
+      } else if (res.Type === 'structured' && res.NodeId === 'capability_inventory') {
+        funcKey = res.NodeId
+      } else if (res.Type === 'perception' && res.NodeId === 'perception') {
+        funcKey = res.Type
       } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
         funcKey = res.Type
+      } else if (res.NodeId === 'session_snapshot') {
+        funcKey = res.NodeId
       }
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
       if (handleFunc) {

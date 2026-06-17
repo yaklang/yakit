@@ -105,7 +105,7 @@ $radius: 8px;
         line-height: 16px; /* 133.333% */
         letter-spacing: 0.5px;
         flex: 1;
-        min-width: 100px;
+        min-width: 120px;
         .progress-bar {
           :global {
             .ant-progress-inner {
@@ -136,14 +136,12 @@ $radius: 8px;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        // overflow: hidden;
+        overflow: hidden;
       }
       .card-list-inner-hidden {
-        // height: 0;
         display: none;
       }
       .card-list-item {
-        // min-height: 0;
       }
     }
 
@@ -166,6 +164,7 @@ $radius: 8px;
   display: flex;
   align-items: center;
   gap: 4px;
+  overflow: hidden;
 }
 .card-list-item-pending {
   .item-text {

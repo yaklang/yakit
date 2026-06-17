@@ -12,19 +12,17 @@ import classNames from 'classnames'
 import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
 import { AIReActTaskChatContent } from '../aiReActTaskChat/AIReActTaskChat'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
+import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
-  const { tabBarExtraContent } = props
+  const { tabBarExtraContent, emptyNode } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
-  const [tabs, setTabs, getTabs] = useGetSetState<YakitSideTabProps['yakitTabs']>([
-    {
-      label: '深度规划',
-      value: 'taskContent',
-    },
-  ])
+  const { taskChat } = useChatIPCStore().chatIPCData
+  const [tabs, setTabs, getTabs] = useGetSetState<YakitSideTabProps['yakitTabs']>([])
   const [activeKey, setActiveKey] = useState<string>('taskContent')
 
+  const isSetTaskTabRef = useRef<boolean>(false)
   const taskGoalRef = useRef<Map<string, string>>(new Map())
   const divRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(divRef)
@@ -37,6 +35,21 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       }
     }
   }, [inViewport])
+  useEffect(() => {
+    if (!isSetTaskTabRef.current && taskChat.elements.length) {
+      setTabs((prv) => [
+        {
+          label: '深度规划',
+          value: 'taskContent',
+        },
+        ...prv,
+      ])
+      isSetTaskTabRef.current = true
+    } else if (!taskChat.elements.length) {
+      setTabs((prv) => prv.filter((item) => item.value !== 'taskContent'))
+      isSetTaskTabRef.current = false
+    }
+  }, [taskChat.elements.length])
   const onActionAITaskContentTab = useMemoizedFn((data: string) => {
     try {
       const info: AIAgentTriggerEventInfo = JSON.parse(data)
@@ -69,7 +82,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const onClose = useMemoizedFn((key: string) => {
     if (key === activeKey) {
       const index = getTabs().findIndex((item) => item.value === key)
-      if (index !== -1) setActiveKey(getTabs()[index - 1].value) // 最少有一个tab
+      if (index !== -1) setActiveKey(getTabs()[index - 1]?.value || 'taskContent')
     }
     setTabs((v) => v.filter((item) => item.value !== key))
   })
@@ -101,26 +114,28 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       default:
         const taskItem = tabs.find((item) => item.value === activeKey)
         const goal = taskGoalRef.current.get(activeKey)
-        return <AITaskExecutionDetails taskIndex={activeKey} taskGoal={goal} taskName={taskItem?.label as string} />
+        return <AITaskExecutionDetails taskId={activeKey} taskGoal={goal} taskName={taskItem?.label as string} />
     }
   }, [activeKey, tabs])
   return (
-    <YakitSideTab
-      key={i18n.language}
-      type="horizontal"
-      yakitTabs={tabs}
-      activeKey={activeKey}
-      onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
-      onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
-      className={styles['ai-task-tab-wrap']}
-      t={t}
-      tabBarExtraContent={tabBarExtraContent}
-    >
-      {activeKey && (
-        <div ref={divRef} className={classNames(styles['tab-content'])}>
-          {tabContent}
-        </div>
+    <div className={styles['chat-content-wrapper']}>
+      {!!taskChat?.elements?.length || !!tabs.length ? (
+        <YakitSideTab
+          key={i18n.language}
+          type="horizontal"
+          yakitTabs={tabs}
+          activeKey={activeKey}
+          onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
+          onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
+          className={styles['ai-task-tab-wrap']}
+          t={t}
+          tabBarExtraContent={tabBarExtraContent}
+        >
+          {activeKey && <div className={classNames(styles['tab-content'])}>{tabContent}</div>}
+        </YakitSideTab>
+      ) : (
+        emptyNode
       )}
-    </YakitSideTab>
+    </div>
   )
 })

@@ -37,15 +37,7 @@
       }
     }
   }
-  .chat-content-wrapper {
-    @extend %display-column-center;
-    flex: 1;
-    overflow: hidden;
-    height: 100%;
-    width: 100%;
-    position: relative;
-    min-width: 200px;
-  }
+
   .header {
     @extend %display-flex-center;
     justify-content: space-between;

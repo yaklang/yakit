@@ -251,6 +251,11 @@ export interface AIInputEvent {
   AttachedResourceInfo?: AttachedResourceInfo[]
   /** 场景 */
   FocusModeLoop?: string
+  /**
+   * 配置热补丁目标任务的逻辑 ID (AIStatefulTask.GetId)。
+   * 非空时，仅当前正在执行且 ID 匹配的任务会应用该热补丁（主要用于能力热更新）。
+   */
+  TaskId?: string
 }
 export interface AttachedResourceInfo {
   Key: AttachedResourceKeyEnum
@@ -280,6 +285,10 @@ export interface AIOutputEvent {
   Timestamp: number
   // 任务索引
   TaskIndex: string
+  /**
+   * TaskId is the logical task identifier (AIStatefulTask.GetId), distinct from TaskUUID.
+   */
+  TaskId: string
   /** 是否禁用 markdown 渲染 UI */
   DisableMarkdown: boolean
   /** 是否是同步消息 */
@@ -464,6 +473,8 @@ export declare namespace AIAgentGrpcApi {
 
   /** 计划内单个任务的详情 */
   export interface PlanTask {
+    /** 任务id */
+    task_id: string
     index: string
     /** 任务名 */
     name: string
@@ -602,6 +613,24 @@ export declare namespace AIAgentGrpcApi {
      */
     intent_shift: 'none' | 'drift' | 'pivot'
     timestamp: number
+  }
+
+  export interface SessionSnapshot {
+    revision: number
+    updated_at: number
+    execution: {
+      status: string
+      tool_call_success: number
+      tool_call_failed: number
+      tool_call_total: number
+      execution_minutes: number
+      http_flow_count: number
+      risk_count: number
+      modified_file_count: number
+    }
+    /** 下面两个字段暂时没有用，故不添加 */
+    // perception
+    // capabilities
   }
 
   /** task_review_require */
