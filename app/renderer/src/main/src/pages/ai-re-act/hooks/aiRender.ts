@@ -344,7 +344,7 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
 >
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
-type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
+export type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
 
 export type AIChatQSData =
   | ChatQuestion

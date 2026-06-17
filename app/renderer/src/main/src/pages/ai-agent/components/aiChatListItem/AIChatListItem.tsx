@@ -72,7 +72,7 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const { handleSendCasual } = useChatIPCDispatcher()
-  const { taskChat, yakExecResult } = useChatIPCStore().chatIPCData
+  const { yakExecResult } = useChatIPCStore().chatIPCData
   const { activeChat } = useAIAgentStore()
   const session = sessionProp || activeChat?.SessionID
   const aiStreamNodeProps = useCreation(() => {
@@ -93,7 +93,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
     return (
       item.type === AIChatQSDataTypeEnum.STREAM ||
       item.type === AIChatQSDataTypeEnum.STREAM_GROUP ||
-      item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP
+      item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP ||
+      item.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
     )
   }, [item.type])
 

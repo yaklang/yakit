@@ -10,6 +10,7 @@ import {
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
 import type { OpenAIConcurrentStreamPayload } from '@/utils/openWebsite'
 import { openAIConcurrentStream } from '@/utils/openWebsite'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from '../ConcurrentStreamCard.module.scss'
 
 /** 卡片标题栏右侧操作区 */
@@ -36,9 +37,11 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   coordinatorId,
   taskIndex,
 }) => {
+  const { t } = useI18nNamespaces(['aiAgent'])
+
   if (isChildWindow) {
     return (
-      <Tooltip title="刷新">
+      <Tooltip title={t('ConcurrentStreamCard.refresh')}>
         <YakitButton
           size="middle"
           type="text"
@@ -56,7 +59,7 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
         <AIHistoryContinueTask coordinatorId={coordinatorId} taskIndex={taskIndex} />
       )}
       {showCancelTask && taskIndex != null && <AIHistorySkipTask taskIndex={taskIndex} />}
-      <Tooltip title="新窗口打开">
+      <Tooltip title={t('ConcurrentStreamCard.openInNewWindow')}>
         <YakitButton
           size="small"
           type="text"
@@ -68,7 +71,7 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
           className={styles['expand-btn']}
         />
       </Tooltip>
-      <Tooltip title={expand ? '收起' : '展开'}>
+      <Tooltip title={expand ? t('ConcurrentStreamCard.collapse') : t('ConcurrentStreamCard.expand')}>
         <YakitButton
           size="small"
           type="text"

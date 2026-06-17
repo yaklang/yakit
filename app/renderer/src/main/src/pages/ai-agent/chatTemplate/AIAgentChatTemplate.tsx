@@ -34,7 +34,6 @@ import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
-import useAIAgentStore from '../useContext/useStore'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
@@ -385,9 +384,6 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
   const { callToolId, aiFilePath } = props
   const [toolList, setToolList] = useState<AIChatQSData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
-  useEffect(() => {
-    getList()
-  }, [])
 
   const { yakExecResult } = useChatIPCStore().chatIPCData
 
@@ -405,6 +401,9 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         }, 200)
       })
   })
+
+  useMount(getList)
+
   return (
     <div className={styles['ai-chat-tool-drawer-content']}>
       {loading ? (

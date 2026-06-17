@@ -714,8 +714,6 @@ const handleStreamStart: AIMessageHandler = (request) => {
       getContentMap: request.getContentMap,
     }),
   })
-  if (info.chatType === 'task')
-    console.log('event_writer_id', event_writer_id, getContentMap(event_writer_id)?.taskIndex)
 }
 
 /** 将 task 容器内 children 写回顶层 list，并给renderNum加一 */
@@ -1113,31 +1111,32 @@ const handleReferenceMaterial: AIMessageHandler = (request) => {
       type: toolResult.type,
       chatType: toolResult.chatType,
     })
-  } else {
-    const chatData: AIChatQSData = {
-      ...genBaseAIChatData(res),
-      id: data.event_uuid,
-      chatType: info.chatType,
-      type: AIChatQSDataTypeEnum.Reference_Material,
-      data: {
-        NodeId: res.NodeId,
-        NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
-      },
-      reference: [data],
-      taskIndex: generateTaskId({
-        chatType: info.chatType,
-        res,
-        getCurrentTaskPlanID: request.getCurrentTaskPlanID,
-        getContentMap: request.getContentMap,
-      }),
-    }
-    setContentMap(chatData.id, chatData)
-    handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
-      mapKey: chatData.id,
-      type: chatData.type,
-      chatType: chatData.chatType,
-    })
   }
+  // else {
+  //   const chatData: AIChatQSData = {
+  //     ...genBaseAIChatData(res),
+  //     id: data.event_uuid,
+  //     chatType: info.chatType,
+  //     type: AIChatQSDataTypeEnum.Reference_Material,
+  //     data: {
+  //       NodeId: res.NodeId,
+  //       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
+  //     },
+  //     reference: [data],
+  //     taskIndex: generateTaskId({
+  //       chatType: info.chatType,
+  //       res,
+  //       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+  //       getContentMap: request.getContentMap,
+  //     }),
+  //   }
+  //   setContentMap(chatData.id, chatData)
+  //   handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+  //     mapKey: chatData.id,
+  //     type: chatData.type,
+  //     chatType: chatData.chatType,
+  //   })
+  // }
 }
 // #endregion
 
