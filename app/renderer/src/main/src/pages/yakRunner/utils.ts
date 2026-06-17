@@ -567,8 +567,8 @@ export const judgeAreaExistFilePath = (areaInfo: AreaInfoProps[], path: string):
       item.elements.forEach((itemIn, indexIn) => {
         itemIn.files.forEach((file, fileIndex) => {
           if (isSameYakRunnerFilePath(file.path, path)) {
-          resolve(file)
-        }
+            resolve(file)
+          }
         })
       })
     })
