@@ -80,7 +80,6 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       if (!planDetailsMap || planDetailsMap.size === 0) return
       itemData = planDetailsMap.get(taskId)
     }
-    console.log('itemData', taskId, chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || ''), itemData)
     if (!itemData) return
     if (perPlanItemDetailsDataUUIdRef.current === itemData.uuid) return
     perPlanItemDetailsDataUUIdRef.current = itemData.uuid

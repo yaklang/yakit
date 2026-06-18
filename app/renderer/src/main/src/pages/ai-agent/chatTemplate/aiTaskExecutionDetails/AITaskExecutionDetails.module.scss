@@ -480,10 +480,13 @@
     .bottom-section {
       overflow: initial;
       position: relative;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       min-height: initial;
       .section-card {
         position: relative;
+        /* 增加宽度限制 */
+        min-width: 0;
+        max-width: 100%;
         &:nth-child(3) {
           overflow: visible;
           &::before {
