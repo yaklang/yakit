@@ -10,11 +10,17 @@ export interface AITaskExecutionDetailsProps {
   taskGoal?: string
 }
 export interface AITaskActionItemProps {
-  title: ReactNode
-  description?: ReactNode
+  title: string
+  description?: string
   titleExtra?: ReactNode
-  category?: PlanItemDetailsDynamicKeys
+  category?: PlanItemDetailsCategoryTypes
 }
+export type PlanItemDetailsCategoryTypes = (
+  | AIAgentGrpcApi.PlanItemDetailsFixedItem
+  | AIAgentGrpcApi.PlanItemDetailsDynamicToolItem
+  | AIAgentGrpcApi.PlanItemDetailsDynamicSkillsItem
+  | AIAgentGrpcApi.PlanItemDetailsDynamicForgesItem
+)['category']
 
 export type PlanItemDetailsDynamicKeys = {
   [K in keyof PlanItemDetailsData]: PlanItemDetailsData[K] extends { dynamic: any[] } ? K : never

@@ -192,7 +192,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
             </YakitPopover>
             {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskIndex={data.index} />}
             {taskType === 'current' && data.isLeaf && (
-              <Tooltip title="待办事项" placement="top">
+              <Tooltip title="任务详情" placement="top">
                 <YakitButton
                   size="small"
                   icon={<OutlineListTodoIcon />}

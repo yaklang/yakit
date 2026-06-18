@@ -85,7 +85,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                   showInfo={false}
                   className={styles['progress-bar']}
                 />
-                <Tooltip title="待办事项" placement="top">
+                <Tooltip title="任务详情" placement="top">
                   <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
                 </Tooltip>
               </div>

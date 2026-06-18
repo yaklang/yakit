@@ -9,7 +9,6 @@ import {
   AITaskExecutionDetailsCardProps,
   AITaskExecutionDetailsProps,
   AITaskStatisticsStatusProps,
-  PlanItemDetailsDynamicKeys,
 } from './type'
 import { OutlinePresentationchartbarIcon, OutlineTrashIcon } from '@/assets/icon/outline'
 import styles from './AITaskExecutionDetails.module.scss'
@@ -170,19 +169,20 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   }, [planItemDetailsData?.execution])
 
   const toolCall = useCreation(() => {
+    if (!execution) return ['成功', '失败次数', '总次数'].map((item) => ({ Id: item, Data: '暂无', Timestamp: 0 }))
     return [
       {
-        Data: `${execution?.tool_call_success || `暂无`}`,
+        Data: `${execution?.tool_call_success ?? `0`}`,
         Id: '成功',
         Timestamp: 0,
       },
       {
-        Data: `${execution?.tool_call_failed || `暂无`}`,
+        Data: `${execution?.tool_call_failed ?? `0`}`,
         Id: '失败次数',
         Timestamp: 0,
       },
       {
-        Data: `${execution?.tool_call_total || `暂无`}`,
+        Data: `${execution?.tool_call_total ?? `0`}`,
         Id: '总次数',
         Timestamp: 0,
       },
@@ -190,15 +190,15 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   }, [execution?.tool_call_success, execution?.tool_call_failed, execution?.tool_call_total])
   const executionMinutes = useCreation(() => {
     if (!execution) return '暂无'
-    return `${execution.execution_minutes || `暂无`}`
+    return `${execution.execution_minutes ?? `0`}`
   }, [execution?.execution_minutes])
   const httpFlowCount = useCreation(() => {
     if (!execution) return '暂无'
-    return `${execution.http_flow_count || `暂无`}`
+    return `${execution.http_flow_count ?? `0`}`
   }, [execution?.http_flow_count])
   const riskCount = useCreation(() => {
     if (!execution) return '暂无'
-    return `${execution.risk_count || `暂无`}`
+    return `${execution.risk_count ?? `0`}`
   }, [execution?.risk_count])
   return (
     <div className={styles['ai-task-execution-details-container']}>
@@ -453,7 +453,7 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
       },
       (item: AIForge) => ({
         label: item.ForgeVerboseName || item.ForgeName,
-        type: item.ForgeType === 'skillmd' ? 'skills' : 'forge',
+        type: item.ForgeType === 'skillmd' ? 'skill' : 'forge',
         value: item.ForgeName,
       }),
     )
@@ -608,8 +608,12 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
                     <React.Fragment key={rowData.value}>
                       <YakitCheckbox checked={isSelected(rowData)} onChange={(e) => toggle(rowData)} />
                       <div className={styles['title']}>
-                        <div>{rowData.label}</div>
-                        {rowData.type === 'skills' && <YakitTag color="info">skills</YakitTag>}
+                        <div className={styles['label']}>{rowData.label}</div>
+                        {rowData.type === 'skill' && (
+                          <YakitTag color="info" size="small">
+                            skill
+                          </YakitTag>
+                        )}
                       </div>
                     </React.Fragment>
                   )
@@ -705,6 +709,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
           <AITaskActionItem
             key={fixedItem.verbose_name + fixedItem.name}
             title={fixedItem.verbose_name || fixedItem.name}
+            category={fixedItem.category}
             description={fixedItem.description}
           />
         ))
@@ -714,7 +719,7 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             key={dynamicItem.name}
             title={dynamicItem.name}
             description={dynamicItem.description}
-            category={dynamicItem.category as PlanItemDetailsDynamicKeys}
+            category={dynamicItem.category}
             titleExtra={
               <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
                 <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
@@ -737,7 +742,11 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
               value={configType}
               onChange={(e) => setConfigType(e.target.value)}
               options={typeOptions}
+              // size="small"
             />
+            {/* <YakitTag border={false} fullRadius size="small">
+              {configType === 'dynamic' ? dynamicList.length : fixedList.length}
+            </YakitTag> */}
           </div>
           {configType === 'dynamic' && (
             <YakitPopover
@@ -781,12 +790,22 @@ const AITaskActionItem: React.FC<AITaskActionItemProps> = React.memo((props) => 
     <div className={classNames(styles['plugin-item'])}>
       <div className={styles['plugin-item-heard']}>
         <div className={styles['plugin-item-title']}>
-          <div className={styles['text']}>{title}</div>
-          {category === 'skills' && <YakitTag color="info">skills</YakitTag>}
+          <div className={styles['text']} title={title}>
+            {title}
+          </div>
+          {category === 'skill' && (
+            <YakitTag color="info" size="small">
+              skill
+            </YakitTag>
+          )}
         </div>
         {titleExtra && <div className={styles['plugin-item-actions']}>{titleExtra}</div>}
       </div>
-      {description && <div className={styles['plugin-item-desc']}>{description}</div>}
+      {description && (
+        <div className={styles['plugin-item-desc']} title={description}>
+          {description}
+        </div>
+      )}
     </div>
   )
 })

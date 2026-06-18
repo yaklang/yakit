@@ -323,7 +323,6 @@
     grid-template-columns: repeat(4, 1fr);
 
     overflow: hidden;
-    min-height: 500px;
     border-radius: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   }
@@ -375,6 +374,12 @@
         display: flex;
         align-items: center;
         gap: 4px;
+        overflow: hidden;
+        :global {
+          .ant-radio-button-wrapper {
+            padding: 0 8px;
+          }
+        }
       }
     }
 
@@ -409,12 +414,12 @@
           justify-content: space-between;
         }
         .plugin-item-title {
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-          word-break: break-all;
+          display: flex;
+          align-items: center;
+          gap: 4px;
           min-height: 24px;
           padding: 4px 0;
+          overflow: hidden;
           .text {
             white-space: nowrap;
             text-overflow: ellipsis;
@@ -592,6 +597,7 @@
           .title {
             display: flex;
             align-items: center;
+            gap: 4px;
             overflow: hidden;
 
             .label {

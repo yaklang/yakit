@@ -630,24 +630,24 @@ const handlePerception: AIMessageHandler = (request) => {
 }
 
 const handleSessionSnapshot: AIMessageHandler = (request) => {
-  const { res, info } = request
+  const { res, info, getChatDataStore } = request
   if (!res.TaskId) return
-  if (res.Type !== 'session_snapshot') return
+  if (res.NodeId !== 'session_snapshot') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
   if (isEmpty(snapshot)) return
   if (info.chatType === 'task') {
     const oldData =
-      request.getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    request.getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
+      getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
       ...oldData,
       taskId: oldData?.taskId || res.TaskId,
       uuid: uuidv4(),
       execution: snapshot.execution,
     })
   } else if (info.chatType === 'reAct') {
-    const chatDetail = request.getChatDataStore?.()?.casualChat?.planDetails
+    const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
     if (!chatDetail) return
     Object.assign(chatDetail, {
       taskId: chatDetail.taskId || res.TaskId,
