@@ -1004,12 +1004,6 @@ export const HTTPFuzzerHotPatchSidebar: React.FC<HTTPFuzzerHotPatchSidebarProp> 
   )
 })
 
-interface QueryHotPatchTemplateListResponse {
-  Pagination: Paging
-  Name: string[]
-  Total: number
-}
-
 interface HotPatchTemplateRequest {
   Name: string[]
   Type: HotCodeType

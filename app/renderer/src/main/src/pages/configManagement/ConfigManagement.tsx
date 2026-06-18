@@ -288,6 +288,14 @@ export const HotPatchManagement: React.FC = () => {
 
   const isGlobalType = useMemo(() => activeType === 'global', [activeType])
 
+  useEffect(() => {
+    return () => {
+      if (groupSubmenuCloseTimerRef.current) {
+        clearTimeout(groupSubmenuCloseTimerRef.current)
+      }
+    }
+  }, [])
+
   const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType): HotPatchTempItem[] => {
     switch (type) {
       case 'fuzzer':
@@ -817,15 +825,17 @@ export const HotPatchManagement: React.FC = () => {
       Condition: { Type: type, Name: [item.name] },
       Data: { Tags: Tags ? [Tags] : [] },
     }
-
-    await ipcRenderer.invoke('UpdateHotPatchTemplate', params)
-
-    updateTemplateTagInList(type, item.name, Tags)
-    closeTemplateMenu()
-    yakitNotify(
-      'success',
-      t(Tags ? 'HotCodeTemplate.add_to_group_success' : 'HotCodeTemplate.remove_from_group_success'),
-    )
+    try {
+      await ipcRenderer.invoke('UpdateHotPatchTemplate', params)
+      updateTemplateTagInList(type, item.name, Tags)
+      closeTemplateMenu()
+      yakitNotify(
+        'success',
+        t(Tags ? 'HotCodeTemplate.add_to_group_success' : 'HotCodeTemplate.remove_from_group_success'),
+      )
+    } catch (error) {
+      yakitFailed(error + '')
+    }
   })
 
   const onRemoveTemplateGroup = useMemoizedFn(async (item: HotPatchTempItem, type: HotCodeType) => {
