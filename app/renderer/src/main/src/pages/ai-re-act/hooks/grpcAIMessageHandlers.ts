@@ -501,10 +501,10 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
 
   const newData = handleTodoListData(data.items, data.task_id, data.task_index)
   if (info.chatType === 'task') {
-    const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(data.task_index)
-    if (!oldData) return
+    const oldData =
+      getChatDataStore?.()?.taskChat.planDetailsMap.get(data.task_index) || cloneDeep(DefaultPlanItemDetailsData)
+
     getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
-      ...cloneDeep(DefaultPlanItemDetailsData),
       ...oldData,
       uuid: uuidv4(),
       todoList: newData,
@@ -523,13 +523,16 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
   const { res, info, getChatDataStore } = request
   if (!res.TaskId) return
   if (res.Type !== 'structured' && res.NodeId !== 'capability_inventory') return
+
+  const chatStore = getChatDataStore?.()
+  if (!chatStore) return
+
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanItemDetails
   if (isEmpty(payload)) return
   const { fixed, dynamic } = payload
 
-  const itemData: PlanItemDetailsData = {
-    ...cloneDeep(DefaultPlanItemDetailsData),
+  const itemData: Pick<PlanItemDetailsData, 'uuid' | 'tool' | 'forges' | 'skills' | 'plugins' | 'mcp'> = {
     uuid: uuidv4(),
     tool: {
       fixed: [],
@@ -605,20 +608,19 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
     itemData.forges.dynamic = dynamic.forges
   }
   if (info.chatType === 'task') {
-    const oldData =
-      getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, {
       ...oldData,
       ...itemData,
       taskId: oldData?.taskId || res.TaskId,
     })
   } else if (info.chatType === 'reAct') {
-    const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
-    if (!chatDetail) return
+    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
     Object.assign(chatDetail, {
       ...itemData,
       taskId: chatDetail.taskId || res.TaskId,
     })
+    chatStore.casualChat.planDetails = chatDetail
   }
 }
 /** Type='perception'&NodeId='perception' 意图感知 */
@@ -626,27 +628,28 @@ const handlePerception: AIMessageHandler = (request) => {
   const { res, info, getChatDataStore } = request
   if (!res.TaskId) return
   if (res.Type !== 'perception' && res.NodeId !== 'perception') return
-
+  const chatStore = getChatDataStore?.()
+  if (!chatStore) return
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const perception = (JSON.parse(ipcContent) as AIAgentGrpcApi.PerceptionData) || {}
   if (isEmpty(perception)) return
   perception.summary = isArray(perception.summary) ? perception.summary.join(',') : perception.summary
   if (info.chatType === 'task') {
-    const oldData =
-      getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || cloneDeep(DefaultPlanItemDetailsData)
-    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskIndex) || cloneDeep(DefaultPlanItemDetailsData)
+    chatStore.taskChat.planDetailsMap.set(res.TaskIndex, {
       ...oldData,
       taskId: oldData?.taskId || res.TaskId,
       uuid: uuidv4(),
       perception,
     })
   } else if (info.chatType === 'reAct') {
-    const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
-    if (!chatDetail) return
-    Object.assign(chatDetail, {
-      taskId: chatDetail.taskId || res.TaskId,
-      perception,
-    })
+    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+
+    chatDetail.uuid = uuidv4()
+    chatDetail.taskId = chatDetail.taskId || res.TaskId
+    chatDetail.perception = perception
+
+    chatStore.casualChat.planDetails = chatDetail
   }
 }
 
@@ -655,25 +658,28 @@ const handleSessionSnapshot: AIMessageHandler = (request) => {
   if (!res.TaskId) return
   if (res.NodeId !== 'session_snapshot') return
 
+  const chatStore = getChatDataStore?.()
+  if (!chatStore) return
+
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
   if (isEmpty(snapshot)) return
   if (info.chatType === 'task') {
-    const oldData =
-      getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, {
       ...oldData,
       taskId: oldData?.taskId || res.TaskId,
       uuid: uuidv4(),
       execution: snapshot.execution,
     })
   } else if (info.chatType === 'reAct') {
-    const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
-    if (!chatDetail) return
-    Object.assign(chatDetail, {
-      taskId: chatDetail.taskId || res.TaskId,
-      execution: snapshot.execution,
-    })
+    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+
+    chatDetail.uuid = uuidv4()
+    chatDetail.taskId = chatDetail.taskId || res.TaskId
+    chatDetail.execution = snapshot.execution
+
+    chatStore.casualChat.planDetails = chatDetail
   }
 }
 // #endregion

@@ -21,7 +21,8 @@ import { useCreation, useInterval, useMemoizedFn, useSelections } from 'ahooks'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import useAIAgentStore from '../../useContext/useStore'
 import { ForgesAndSkillsDynamicItem, PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
-import { cloneDeep, isEqual } from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import isEqual from 'lodash/isEqual'
 import { Progress } from 'antd'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
@@ -79,10 +80,11 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       if (!planDetailsMap || planDetailsMap.size === 0) return
       itemData = planDetailsMap.get(taskId)
     }
+    console.log('itemData', taskId, chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || ''), itemData)
     if (!itemData) return
     if (perPlanItemDetailsDataUUIdRef.current === itemData.uuid) return
     perPlanItemDetailsDataUUIdRef.current = itemData.uuid
-    setPlanItemDetailsData(itemData)
+    setPlanItemDetailsData(cloneDeep(itemData))
   })
   const perception = useCreation(() => {
     if (!planItemDetailsData) return
@@ -169,43 +171,43 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     return forgeDynamic
   }, [planItemDetailsData?.forges, planItemDetailsData?.skills])
 
-  const execution = useCreation(() => {
-    if (!planItemDetailsData) return
-    return planItemDetailsData.execution
-  }, [planItemDetailsData?.execution])
-
   const toolCall = useCreation(() => {
-    if (!execution) return ['成功', '失败次数', '总次数'].map((item) => ({ Id: item, Data: '暂无', Timestamp: 0 }))
+    if (!planItemDetailsData?.execution)
+      return ['成功', '失败次数', '总次数'].map((item) => ({ Id: item, Data: '暂无', Timestamp: 0 }))
     return [
       {
-        Data: `${execution?.tool_call_success ?? `0`}`,
+        Data: `${planItemDetailsData?.execution?.tool_call_success ?? `0`}`,
         Id: '成功',
         Timestamp: 0,
       },
       {
-        Data: `${execution?.tool_call_failed ?? `0`}`,
+        Data: `${planItemDetailsData?.execution?.tool_call_failed ?? `0`}`,
         Id: '失败次数',
         Timestamp: 0,
       },
       {
-        Data: `${execution?.tool_call_total ?? `0`}`,
+        Data: `${planItemDetailsData?.execution?.tool_call_total ?? `0`}`,
         Id: '总次数',
         Timestamp: 0,
       },
     ]
-  }, [execution?.tool_call_success, execution?.tool_call_failed, execution?.tool_call_total])
+  }, [
+    planItemDetailsData?.execution?.tool_call_success,
+    planItemDetailsData?.execution?.tool_call_failed,
+    planItemDetailsData?.execution?.tool_call_total,
+  ])
   const executionMinutes = useCreation(() => {
-    if (!execution) return '暂无'
-    return `${execution.execution_minutes ?? `0`}`
-  }, [execution?.execution_minutes])
+    if (!planItemDetailsData?.execution) return '暂无'
+    return `${planItemDetailsData?.execution.execution_minutes ?? `0`}`
+  }, [planItemDetailsData?.execution?.execution_minutes])
   const httpFlowCount = useCreation(() => {
-    if (!execution) return '暂无'
-    return `${execution.http_flow_count ?? `0`}`
-  }, [execution?.http_flow_count])
+    if (!planItemDetailsData?.execution) return '暂无'
+    return `${planItemDetailsData?.execution.http_flow_count ?? `0`}`
+  }, [planItemDetailsData?.execution?.http_flow_count])
   const riskCount = useCreation(() => {
-    if (!execution) return '暂无'
-    return `${execution.risk_count ?? `0`}`
-  }, [execution?.risk_count])
+    if (!planItemDetailsData?.execution) return '暂无'
+    return `${planItemDetailsData?.execution.risk_count ?? `0`}`
+  }, [planItemDetailsData?.execution?.risk_count])
   return (
     <div className={styles['ai-task-execution-details-container']}>
       {/* 头部 */}
