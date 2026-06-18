@@ -38,6 +38,13 @@ import {
   pushAIFuzzStatusRuntimeIdToWebFuzzerPage,
 } from '@/pages/fuzzer/webFuzzerAiRequestApplyBridge'
 import { appendWebFuzzerRequestRawAttachmentToEvent } from '@/pages/fuzzer/webFuzzerAiRequestAttachment'
+import {
+  appendYakRunnerWorkspaceContextToEvent,
+  createYakRunnerGeneratedCodeFileName,
+  enqueueYakRunnerCasualCodeReplaceReview,
+  getYakRunnerPageActiveCodeString,
+  resolveYaklangCreateTargetPath,
+} from '../pages/yakRunner/yakRunnerAiCodeApplyBridge'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import { getAISourceFromChatDataStoreKey, getChatDataStoreKey } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
@@ -107,12 +114,73 @@ function attachWebFuzzerHttpRequestToEvent(
   return appendWebFuzzerRequestRawAttachmentToEvent(event, sessionId, requestRaw)
 }
 
+const CODE_BLOCK_TAG_DIRECTIVE = ':codeBlockTag'
+
+/** 跳过 Milkdown 序列化的 `:codeBlockTag[...]{...}` 指令（含 attributes 内嵌代码） */
+function skipCodeBlockTagDirective(markdown: string, start: number): number {
+  let i = start + CODE_BLOCK_TAG_DIRECTIVE.length
+  if (markdown[i] === '[') {
+    const closeBracket = markdown.indexOf(']', i)
+    if (closeBracket === -1) return markdown.length
+    i = closeBracket + 1
+  }
+  if (markdown[i] !== '{') return i
+  i++
+  let inQuote = false
+  let escape = false
+  while (i < markdown.length) {
+    const c = markdown[i]
+    if (escape) {
+      escape = false
+    } else if (c === '\\') {
+      escape = true
+    } else if (c === '"') {
+      inQuote = !inQuote
+    } else if (c === '}' && !inQuote) {
+      return i + 1
+    }
+    i++
+  }
+  return markdown.length
+}
+
+/**
+ * Yak Runner 等代码审计：`IsStart` 的 `UserQuery` 只保留用户输入的文字描述；
+ * 选中代码已通过 `AttachedResourceInfo`（codeBlockList）附带，不应重复写入 UserQuery。
+ */
+function normalizeStartUserQueryToTextDescription(event: AIInputEvent): AIInputEvent {
+  if (!event.IsStart || event.Params?.UserQuery == null) return event
+  const raw = String(event.Params.UserQuery)
+  let textOnly = ''
+  let cursor = 0
+  while (cursor < raw.length) {
+    const idx = raw.indexOf(CODE_BLOCK_TAG_DIRECTIVE, cursor)
+    if (idx === -1) {
+      textOnly += raw.slice(cursor)
+      break
+    }
+    textOnly += raw.slice(cursor, idx)
+    cursor = skipCodeBlockTagDirective(raw, idx)
+  }
+  textOnly = textOnly.replace(/\n{3,}/g, '\n\n').trim()
+  if (textOnly === raw.trim()) return event
+  return {
+    ...event,
+    Params: {
+      ...event.Params,
+      UserQuery: textOnly,
+    },
+  }
+}
+
 export interface HistoryAIReActChatProviderProps {
   cacheDataStore: ChatDataStore
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
   /** Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关 */
   httpFuzzTabPageId?: string
+  /** Yak Runner 工作区 id：AI `yaklang_code_change` 审阅/写回桥接 */
+  yakRunnerPageId?: string
   /**
    * - 在 `onStartRequest` / `onSendRequest` 内置（WebFuzzer 请求附件）处理之后执行
    * - Irify「代码审计」用它把工程根路径附件追加到 `AttachedResourceInfo`
@@ -129,6 +197,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   focusModeLoop,
   children,
   httpFuzzTabPageId,
+  yakRunnerPageId,
   transformInputEvent,
   resolveStartExtraParams,
   mergeRemoteAIAgentSetting,
@@ -143,10 +212,12 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const [activeChat, setActiveChat] = useSafeState<AISession>()
   const casualLoadingRef = useRef(false)
   const initialRequestInCasualRef = useRef<string | null>(null)
+  const initialCodeInCasualRef = useRef<string | null>(null)
   const clearTableSelectionRef = useRef<(() => void) | null>(null)
   const deselectHttpFlowIdRef = useRef<((id: string) => void) | null>(null)
   const pendingMentionRef = useRef<AIMentionCommandParams | null>(null)
   const chatReadyRef = useRef(false)
+  const yakRunnerLastAttachedResourceInfoRef = useRef<AIInputEvent['AttachedResourceInfo']>([])
   const embeddedSettingCacheReadyRef = useRef(false)
   const lastPersistedEmbeddedSettingRef = useRef<{
     ReviewPolicy?: AIAgentSetting['ReviewPolicy']
@@ -231,6 +302,41 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     applyHttpFuzzRequestChangeToWebFuzzerPage(httpFuzzTabPageId, data)
   })
 
+  const onYaklangCodeChange = useMemoizedFn((data: AIAgentGrpcApi.YaklangCodeChange) => {
+    if (!yakRunnerPageId) return
+
+    const nextCode = data?.code?.content
+    if (nextCode == null || String(nextCode).trim() === '') return
+
+    const isCreate = data.op === 'create'
+    const createFileName = isCreate ? createYakRunnerGeneratedCodeFileName() : undefined
+    const createPath = isCreate
+      ? resolveYaklangCreateTargetPath(yakRunnerPageId, yakRunnerLastAttachedResourceInfoRef.current, createFileName)
+      : undefined
+    const change = isCreate
+      ? {
+          ...data,
+          code: {
+            ...data.code,
+            path: createPath,
+          },
+        }
+      : data
+
+    const original = isCreate
+      ? ''
+      : casualLoadingRef.current && initialCodeInCasualRef.current != null
+        ? initialCodeInCasualRef.current
+        : (getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? '')
+
+    enqueueYakRunnerCasualCodeReplaceReview(yakRunnerPageId, {
+      original,
+      change,
+      fileName: createFileName,
+      isCreate,
+    })
+  })
+
   // AI `http_flow_fuzz_status` 推送：把每次最新的 `runtime_id` 静默推到当前 fuzzer 页签的处理器中。
   // 用户点击「查看详情」会显式再次推送并要求打开抽屉，所以这里不主动打开。
   const onGetHttpFlowFuzzStatus = useMemoizedFn((data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => {
@@ -252,6 +358,7 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     getSetting,
     onHttpFuzzRequestChange,
     onGetHttpFlowFuzzStatus,
+    onYaklangCodeChange,
   })
 
   const imageStoreKey = useCreation(() => getChatDataStoreKey(cacheDataStore), [cacheDataStore])
@@ -260,20 +367,27 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
   const { execute, casualLoading } = chatIPCData
 
   useEffect(() => {
-    if (!httpFuzzTabPageId) {
+    if (!httpFuzzTabPageId && !yakRunnerPageId) {
       casualLoadingRef.current = false
       initialRequestInCasualRef.current = null
+      initialCodeInCasualRef.current = null
       return
     }
 
     if (!casualLoadingRef.current && casualLoading) {
-      initialRequestInCasualRef.current = getWebFuzzerPageRequestString(httpFuzzTabPageId) ?? ''
+      if (httpFuzzTabPageId) {
+        initialRequestInCasualRef.current = getWebFuzzerPageRequestString(httpFuzzTabPageId) ?? ''
+      }
+      if (yakRunnerPageId) {
+        initialCodeInCasualRef.current = getYakRunnerPageActiveCodeString(yakRunnerPageId) ?? ''
+      }
     } else if (casualLoadingRef.current && !casualLoading) {
       initialRequestInCasualRef.current = null
+      initialCodeInCasualRef.current = null
     }
 
     casualLoadingRef.current = casualLoading
-  }, [casualLoading, httpFuzzTabPageId])
+  }, [casualLoading, httpFuzzTabPageId, yakRunnerPageId])
 
   const activeID = useCreation(() => {
     return activeChat?.SessionID
@@ -316,6 +430,11 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       }
       if (transformInputEvent) {
         params = transformInputEvent(params)
+      }
+      if (yakRunnerPageId) {
+        params = appendYakRunnerWorkspaceContextToEvent(yakRunnerPageId, params)
+        params = normalizeStartUserQueryToTextDescription(params)
+        yakRunnerLastAttachedResourceInfoRef.current = params.AttachedResourceInfo || []
       }
       resolve({
         params,
@@ -383,6 +502,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }
     if (transformInputEvent) {
       params = transformInputEvent(params)
+    }
+    if (yakRunnerPageId) {
+      params = appendYakRunnerWorkspaceContextToEvent(yakRunnerPageId, params)
+      yakRunnerLastAttachedResourceInfoRef.current = params.AttachedResourceInfo || []
     }
 
     return new Promise<AISendResProps>((resolve) => {

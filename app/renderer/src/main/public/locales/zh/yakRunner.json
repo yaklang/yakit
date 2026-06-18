@@ -161,7 +161,8 @@
     "quickCreate": "快捷创建",
     "unsavedTitle": "文件未保存",
     "unsavedContent": "是否要保存{{name}}里面的内容吗？",
-    "savePathMissing": "未获取保存路径，取消保存"
+    "savePathMissing": "未获取保存路径，取消保存",
+    "sendAIActions": "发送到AI会话"
   },
   "CollapseList": {
     "noHelpInfo": "暂无帮助信息"

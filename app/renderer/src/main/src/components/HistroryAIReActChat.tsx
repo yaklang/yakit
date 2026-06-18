@@ -56,7 +56,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     externalParameters,
   } = props
 
-  const [globalNetworkConfig, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
+  const [_, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
 
   const chatWidth = useListenWidth(refRef)
 

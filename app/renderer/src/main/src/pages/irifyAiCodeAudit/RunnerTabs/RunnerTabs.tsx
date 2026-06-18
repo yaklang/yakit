@@ -30,7 +30,15 @@ import {
 import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
 import { YakRunnerOpenFolderIcon } from '../../yakRunner/icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
+import {
+  useCreation,
+  useDebounceFn,
+  useLongPress,
+  useMemoizedFn,
+  useSize,
+  useThrottleFn,
+  useUpdateEffect,
+} from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
 import {
@@ -82,6 +90,8 @@ import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { SystemInfo } from '@/constants/hardware'
 import i18n from '@/i18n/i18n'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
+import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
 const tYak = i18n.getFixedT(null, 'yakRunner')
 const { ipcRenderer } = window.require('electron')
 
@@ -1251,6 +1261,49 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     [editorInfo?.code],
   )
 
+  const onSendAIAction = useMemoizedFn((editor: IMonacoEditor) => {
+    const content = fetchCursorContent(editor, true)
+    const range = fetchSelectionRange(editor, true)
+    const name = editorInfo?.name
+    if (!name) return
+
+    emiter.emit(
+      'onAiCodeAuditSendCodeBlock',
+      JSON.stringify({
+        type: 'codeBlockTag',
+        params: {
+          content,
+          range: range
+            ? {
+                startLineNumber: range.startLineNumber,
+                startColumn: range.startColumn,
+                endLineNumber: range.endLineNumber,
+                endColumn: range.endColumn,
+              }
+            : null,
+          name,
+          language: editorInfo.language || '',
+          path: editorInfo.path,
+          // irify 由于在启动对话已给了根目录路径 此处无需另外给予
+          rootPath: '',
+        },
+      }),
+    )
+  })
+
+  const rightContextMenu: OtherMenuListProps = useCreation(() => {
+    return {
+      sendAIActions: {
+        menu: [{ key: 'sendAI', label: t('RunnerTabs.sendAIActions') }],
+        onRun: (editor: IMonacoEditor, key: string) => {
+          if (key === 'sendAI') {
+            onSendAIAction(editor)
+          }
+        },
+      },
+    }
+  }, [i18n.language, t])
+
   return (
     <div className={styles['runner-tab-pane']}>
       {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1282,6 +1335,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
               setValue={setYakitEditorValue}
               highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
               highLightClass="hight-light-yak-runner-color"
+              contextMenu={rightContextMenu}
             />
           )}
         </>

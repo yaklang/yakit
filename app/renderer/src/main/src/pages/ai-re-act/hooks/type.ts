@@ -189,6 +189,9 @@ export interface UseChatIPCParams {
 
   /** http_flow_fuzz_status */
   onGetHttpFlowFuzzStatus?: (data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => void
+
+  /** yaklang_code_change 事件的回调 */
+  onYaklangCodeChange?: (data: AIAgentGrpcApi.YaklangCodeChange) => void
 }
 
 /** 会话文件系统-pin */

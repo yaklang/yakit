@@ -31,7 +31,15 @@ import {
 import { SolidYakCattleNoBackColorIcon } from '@/assets/icon/colors'
 import { YakRunnerNewFileIcon, YakRunnerOpenAuditIcon, YakRunnerOpenFileIcon, YakRunnerOpenFolderIcon } from '../icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import { useDebounceFn, useLongPress, useMemoizedFn, useSize, useThrottleFn, useUpdateEffect } from 'ahooks'
+import {
+  useCreation,
+  useDebounceFn,
+  useLongPress,
+  useMemoizedFn,
+  useSize,
+  useThrottleFn,
+  useUpdateEffect,
+} from 'ahooks'
 import useStore from '../hooks/useStore'
 import useDispatcher from '../hooks/useDispatcher'
 import { AreaInfoProps, OpenFileByPathProps, TabFileProps, YakRunnerHistoryProps } from '../YakRunnerType'
@@ -42,15 +50,14 @@ import {
   getOpenFileInfo,
   getPathParent,
   getYakRunnerHistory,
-  grpcFetchCreateFile,
-  grpcFetchFileTree,
   grpcFetchRenameFileTree,
   grpcFetchSaveFile,
   isResetActiveFile,
   judgeAreaExistFilePath,
   monacaLanguageType,
   removeYakRunnerAreaFileInfo,
-  setYakRunnerHistory,
+  isSameYakRunnerFilePath,
+  saveYakRunnerUnsavedFile,
   updateAreaFileInfo,
 } from '../utils'
 import cloneDeep from 'lodash/cloneDeep'
@@ -73,6 +80,9 @@ import { FileNodeMapProps } from '../FileTree/FileTreeType'
 import { openFolder } from '../RunnerFileTree/RunnerFileTree'
 import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
+import { fetchCursorContent, fetchSelectionRange } from '@/components/yakitUI/YakitEditor/editorUtils'
+import { useYakRunnerAiAttachRef } from '../YakRunnerAiAttachContext'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -968,6 +978,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const { t, i18n } = useI18nNamespaces(['yakRunner'])
   const { areaInfo, activeFile } = useStore()
   const { setAreaInfo, setActiveFile } = useDispatcher()
+  const yakRunnerAiAttachRef = useYakRunnerAiAttachRef()
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
   // 编辑器实例
   const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
@@ -1044,6 +1055,38 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
       updateAreaFun(content)
     }
   })
+
+  useEffect(() => {
+    const onForceSetCode = (json: string) => {
+      try {
+        const { path, code, isUnSave } = JSON.parse(json) as {
+          path: string
+          code: string
+          isUnSave?: boolean
+        }
+        if (editorInfo?.path !== path && !isSameYakRunnerFilePath(editorInfo?.path, path)) return
+        if (reqEditor) {
+          reqEditor.setValue(code)
+        }
+        if (typeof isUnSave === 'boolean') {
+          if (editorInfo) {
+            setEditorInfo({
+              ...editorInfo,
+              code,
+              isUnSave,
+              needsSaveAs: isUnSave ? editorInfo.needsSaveAs : false,
+            })
+          }
+          return
+        }
+        updateAreaInputInfo(code)
+      } catch (error) {}
+    }
+    emiter.on('onYakRunnerEditorForceSetCode', onForceSetCode)
+    return () => {
+      emiter.off('onYakRunnerEditorForceSetCode', onForceSetCode)
+    }
+  }, [editorInfo?.path, reqEditor, updateAreaInputInfo])
 
   // 更新当前底部展示信息
   const updateBottomEditorDetails = useDebounceFn(
@@ -1229,6 +1272,48 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     [editorInfo?.code],
   )
 
+  const onSendAIAction = useMemoizedFn((editor: IMonacoEditor) => {
+    const content = fetchCursorContent(editor, true)
+    const range = fetchSelectionRange(editor, true)
+    const name = editorInfo?.name
+    if (!name) return
+
+    emiter.emit(
+      'onYakRunnerSendCodeBlock',
+      JSON.stringify({
+        type: 'codeBlockTag',
+        params: {
+          content,
+          range: range
+            ? {
+                startLineNumber: range.startLineNumber,
+                startColumn: range.startColumn,
+                endLineNumber: range.endLineNumber,
+                endColumn: range.endColumn,
+              }
+            : null,
+          name,
+          language: editorInfo.language || '',
+          path: editorInfo?.path,
+          rootPath: yakRunnerAiAttachRef?.current?.projectRootAbsPath || '',
+        },
+      }),
+    )
+  })
+
+  const rightContextMenu: OtherMenuListProps = useCreation(() => {
+    return {
+      sendAIActions: {
+        menu: [{ key: 'sendAI', label: t('RunnerTabs.sendAIActions') }],
+        onRun: (editor: IMonacoEditor, key: string) => {
+          if (key === 'sendAI') {
+            onSendAIAction(editor)
+          }
+        },
+      },
+    }
+  }, [i18n.language, t])
+
   return (
     <div className={styles['runner-tab-pane']}>
       {editorInfo && !editorInfo.isPlainText && !allowBinary ? (
@@ -1254,6 +1339,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
           setValue={setYakitEditorValue}
           highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
           highLightClass="hight-light-yak-runner-color"
+          contextMenu={rightContextMenu}
         />
       )}
     </div>
@@ -1416,68 +1502,29 @@ export const YakitRunnerSaveModal: React.FC<YakitRunnerSaveModalProps> = (props)
     setShowModal(false)
   })
 
-  const onSaveFile = useMemoizedFn(() => {
+  const onSaveFile = useMemoizedFn(async () => {
     setShowModal(false)
-    ipcRenderer.invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${info.name}`).then(async (res) => {
-      try {
-        const path = res.filePath
-        const name = res.name
-        if (path.length > 0) {
-          const suffix = name.split('.').pop()
-          const file: FileDetailInfo = {
-            ...info,
-            path,
-            isUnSave: false,
-            language: monacaLanguageType(suffix),
-          }
-          const parentPath = await getPathParent(file.path)
-          const parentDetail = getMapFileDetail(parentPath)
-          const result = await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? '' : parentPath)
-          // 如若保存路径为文件列表中则需要更新文件树
-          if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
-            let arr: FileNodeMapProps[] = await grpcFetchFileTree(parentPath)
-            if (arr.length > 0) {
-              let childArr: string[] = []
-              // 文件Map
-              arr.forEach((item) => {
-                // 注入文件结构Map
-                childArr.push(item.path)
-                // 文件Map
-                setMapFileDetail(item.path, item)
-              })
-              setMapFolderDetail(parentPath, childArr)
-            }
-            emiter.emit('onRefreshFileTree', parentPath)
-          }
-          if (result.length > 0) {
-            file.name = result[0].name
-            file.isDelete = false
-            success(`${file.name} 保存成功`)
-            // 如若更改后的path与 areaInfo 中重复则需要移除原有数据
-            const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
-            const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, info.path)
-            setAreaInfo && setAreaInfo(newAreaInfo)
-            setActiveFile && setActiveFile(file)
-
-            if (waitSaveList.length > 0) {
-              // 减少保存队列
-              setWaitSaveList(waitSaveList.slice(0, -1))
-            }
-
-            // 创建文件时接入历史记录
-            const history: YakRunnerHistoryProps = {
-              isFile: true,
-              name,
-              path,
-            }
-            setYakRunnerHistory(history)
-          }
-        } else {
-          warn(t('RunnerTabs.savePathMissing'))
-          onCancel()
+    try {
+      const result = await saveYakRunnerUnsavedFile({
+        file: info,
+        areaInfo,
+        fileTree,
+        defaultSavePath: codePath,
+      })
+      if (result.canceled) {
+        warn(t('RunnerTabs.savePathMissing'))
+        onCancel()
+        return
+      }
+      if (result.saved) {
+        setAreaInfo && setAreaInfo(result.areaInfo)
+        setActiveFile && setActiveFile(result.file)
+        success(`${result.file.name} 保存成功`)
+        if (waitSaveList.length > 0) {
+          setWaitSaveList(waitSaveList.slice(0, -1))
         }
-      } catch (error) {}
-    })
+      }
+    } catch (error) {}
   })
 
   return (

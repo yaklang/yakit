@@ -10,8 +10,7 @@ import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
-import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
-import { IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED } from './irifyAiCodeAuditConstants'
+import styles from './YakRunnerAiSidePanel.module.scss'
 import emiter from '@/utils/eventBus/eventBus'
 
 const defaultAiTabs: YakitTabsProps[] = [
@@ -22,22 +21,14 @@ const defaultAiTabs: YakitTabsProps[] = [
   },
 ]
 
-type Placement = 'left' | 'right'
-
-export interface IrifyAiCodeAuditSidePanelLayoutProps {
+export interface YakRunnerAiSidePanelProps {
   children: React.ReactNode
-  placement?: Placement
   rootClassName?: string
-  sideTabs?: YakitTabsProps[]
 }
 
-const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
-  placement: Placement
-  rootClassName?: string
-  children: React.ReactNode
-  sideTabs: YakitTabsProps[]
-}> = ({ placement, children, rootClassName, sideTabs }) => {
-  const { t, i18n } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
+/** Yak Runner 右侧 AI 侧栏：消费 `useHistoryAIReActChat` */
+export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ children, rootClassName }) => {
+  const { t, i18n } = useI18nNamespaces(['history', 'yakRunner'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
@@ -76,29 +67,23 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
   })
 
   useEffect(() => {
-    emiter.on('onAiCodeAuditSendCodeBlock', onSendCodeBlockFun)
+    emiter.on('onYakRunnerSendCodeBlock', onSendCodeBlockFun)
     return () => {
-      emiter.off('onAiCodeAuditSendCodeBlock', onSendCodeBlockFun)
+      emiter.off('onYakRunnerSendCodeBlock', onSendCodeBlockFun)
     }
   }, [onSendCodeBlockFun])
 
   const resizeBoxProps = useCreation(() => {
-    if (placement === 'left') {
-      return openTabsFlag
-        ? { firstRatio: '20%', secondRatio: '80%' }
-        : { firstRatio: '24px', secondRatio: 'calc(100% - 24px)' }
-    }
     return openTabsFlag
       ? { firstRatio: '80%', secondRatio: '20%' }
       : { firstRatio: 'calc(100% - 24px)', secondRatio: '24px' }
-  }, [openTabsFlag, placement])
+  }, [openTabsFlag])
 
   const aiChat =
     activeKey === 'ai' &&
     renderHistoryAIReActChat({
       className: styles.aiChatWrap,
       externalParameters: {
-        defaultValue: IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED,
         isOpen: false,
         rightIcon: {
           history: true,
@@ -124,18 +109,17 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
             },
           },
         ],
-
         filterMentionType: ['focusMode'],
       },
     })
 
   const rail = (
-    <div className={placement === 'left' ? styles.railLeft : styles.railRight}>
+    <div className={styles.railRight}>
       <YakitSideTab
         key={i18n.language}
         t={t}
-        type={placement === 'right' ? 'vertical-right' : undefined}
-        yakitTabs={sideTabs}
+        type="vertical-right"
+        yakitTabs={defaultAiTabs}
         activeKey={activeKey}
         onActiveKey={onActiveKey}
         show={openTabsFlag}
@@ -146,31 +130,6 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
       </YakitSideTab>
     </div>
   )
-
-  if (placement === 'left') {
-    return (
-      <div className={classNames(styles.layoutRoot, rootClassName)}>
-        <YakitResizeBox
-          isVer={false}
-          freeze={openTabsFlag}
-          isRecalculateWH={openTabsFlag}
-          firstNode={() => rail}
-          lineStyle={{ display: '' }}
-          firstNodeStyle={{ minWidth: 0, flexShrink: 0 }}
-          firstMinSize={openTabsFlag ? '325px' : '24px'}
-          secondMinSize={720}
-          secondNode={children}
-          secondNodeStyle={{
-            padding: undefined,
-            display: '',
-            minWidth: 0,
-            overflow: 'hidden',
-          }}
-          {...resizeBoxProps}
-        />
-      </div>
-    )
-  }
 
   return (
     <div className={classNames(styles.layoutRoot, rootClassName)}>
@@ -193,18 +152,5 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
         {...resizeBoxProps}
       />
     </div>
-  )
-}
-
-export const IrifyAiCodeAuditSidePanelLayout: React.FC<IrifyAiCodeAuditSidePanelLayoutProps> = ({
-  children,
-  placement = 'right',
-  rootClassName,
-  sideTabs = defaultAiTabs,
-}) => {
-  return (
-    <IrifyAiCodeAuditSidePanelLayoutInner placement={placement} rootClassName={rootClassName} sideTabs={sideTabs}>
-      {children}
-    </IrifyAiCodeAuditSidePanelLayoutInner>
   )
 }

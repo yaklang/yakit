@@ -1,11 +1,11 @@
 import type { DialogueContentRecord, DialogueRecord } from './type'
 
-export const dbVersion = 2
+export const dbVersion = 3
 // 所有业务共用同一个 IndexedDB 数据库。
 export const DB_NAME = 'aiChatMessageDB'
 
 // 业务域列表，每个域会自动生成对应的 TaskDB 和 CasualDB 表。
-export const DOMAINS = ['ai', 'history', 'knowledgeBase', 'webFuzzer', 'flow', 'irify'] as const
+export const DOMAINS = ['ai', 'history', 'knowledgeBase', 'webFuzzer', 'flow', 'irify', 'yakRunner'] as const
 export type Domain = (typeof DOMAINS)[number]
 
 const BASE_STORE_SUFFIXES = ['TaskDB', 'CasualDB'] as const

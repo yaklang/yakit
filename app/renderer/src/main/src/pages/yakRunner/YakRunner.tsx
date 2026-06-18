@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   useCreation,
   useDebounceEffect,
@@ -31,6 +31,11 @@ import {
   setYakRunnerHistory,
   setYakRunnerLastAreaFile,
   setYakRunnerLastFolderExpanded,
+  normalizeYakRunnerFilePath,
+  isSameYakRunnerFilePath,
+  isYakRunnerScratchFilePath,
+  grpcFetchSaveFile,
+  saveYakRunnerUnsavedFile,
   updateAreaFileInfo,
 } from './utils'
 import { AreaInfoProps, OpenFileByPathProps, YakRunnerHistoryProps, YakRunnerProps } from './YakRunnerType'
@@ -72,6 +77,23 @@ import { WatchFolderID } from './FileTreeMap/watchFolderID'
 import { randomString } from '@/utils/randomUtil'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
+import { yakRunnerPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
+import { YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/focusMode'
+import { YakRunnerAiAttachProvider, YakRunnerAiAttachRef, useYakRunnerAiAttachRef } from './YakRunnerAiAttachContext'
+import { YakRunnerAiSidePanel } from './YakRunnerAiSidePanel'
+import { YakRunnerCasualCodeReplaceReviewOverlay } from './YakRunnerCasualCodeReplaceReviewOverlay'
+import { createYakRunnerScratchFileForAI, openOrCreateYakRunnerFileAtPath } from './yakRunnerAiOpenOrCreateFile'
+import {
+  YAK_RUNNER_AI_PAGE_ID,
+  applyYaklangCodeChangeToYakRunnerPage,
+  registerYakRunnerPageApplyCodeFromAI,
+  registerYakRunnerPageCasualCodeReplaceReview,
+  registerYakRunnerPageGetActiveCodeString,
+  registerYakRunnerPageGetWorkspaceContext,
+  type YakRunnerApplyCodeExtras,
+  type YakRunnerCasualCodeReplaceReviewPayload,
+} from './yakRunnerAiCodeApplyBridge'
 const { ipcRenderer } = window.require('electron')
 
 // 模拟tabs分块及对应文件
@@ -99,7 +121,7 @@ export const YakRunnerTab: YakitTabsProps[] = [
   },
 ]
 
-export const YakRunner: React.FC<YakRunnerProps> = (props) => {
+const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
   const { initCode } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
 
@@ -109,6 +131,16 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
   const [activeFile, setActiveFile] = useState<FileDetailInfo>()
   const [runnerTabsId, setRunnerTabsId] = useState<string>()
   const [isShowFileHint, setShowFileHint] = useState<boolean>(false)
+
+  const yakRunnerAiAttachRef = useYakRunnerAiAttachRef()
+  useEffect(() => {
+    if (!yakRunnerAiAttachRef) return
+    if (fileTree.length > 0 && fileTree[0].path?.trim()) {
+      yakRunnerAiAttachRef.current.projectRootAbsPath = fileTree[0].path.trim()
+    } else {
+      yakRunnerAiAttachRef.current.projectRootAbsPath = undefined
+    }
+  }, [fileTree, yakRunnerAiAttachRef])
 
   const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
     if (getMapFileDetail(path).isCreate) {
@@ -611,6 +643,206 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
     }
   }, [])
 
+  const activeFileRef = useRef(activeFile)
+  const areaInfoRef = useRef(areaInfo)
+  const casualReviewQueueIdRef = useRef(0)
+  const casualReviewSessionIdRef = useRef<string | null>(null)
+  const [casualReviewQueue, setCasualReviewQueue] = useState<
+    { id: string; payload: YakRunnerCasualCodeReplaceReviewPayload }[]
+  >([])
+  useEffect(() => {
+    activeFileRef.current = activeFile
+  }, [activeFile])
+  useEffect(() => {
+    areaInfoRef.current = areaInfo
+  }, [areaInfo])
+
+  const applyCodeToEditor = useMemoizedFn(async (content: string, extras?: YakRunnerApplyCodeExtras) => {
+    const targetPath = normalizeYakRunnerFilePath(extras?.path?.trim() || activeFileRef.current?.path || '')
+    if (!targetPath) return
+    const needsSaveAs = extras?.needsSaveAs ?? false
+    let isUnSave = needsSaveAs || isYakRunnerScratchFilePath(targetPath)
+
+    if (!isUnSave) {
+      try {
+        await grpcFetchSaveFile(targetPath, content)
+      } catch (error) {
+        failed(`error: ${error}`)
+        isUnSave = true
+      }
+    }
+
+    const filePatch = { code: content, isUnSave, needsSaveAs: isUnSave ? needsSaveAs : false }
+
+    const existingInArea = await judgeAreaExistFilePath(areaInfoRef.current, targetPath)
+    if (existingInArea) {
+      const newAreaInfo = updateAreaFileInfo(areaInfoRef.current, filePatch, targetPath)
+      setAreaInfo(newAreaInfo)
+      areaInfoRef.current = newAreaInfo
+      if (activeFileRef.current && isSameYakRunnerFilePath(activeFileRef.current.path, targetPath)) {
+        const next: FileDetailInfo = { ...activeFileRef.current, ...filePatch }
+        setActiveFile(next)
+        activeFileRef.current = next
+      } else {
+        const newActiveFile = { ...existingInArea, ...filePatch, isActive: true }
+        const activatedAreaInfo = setAreaFileActive(newAreaInfo, targetPath)
+        setAreaInfo(activatedAreaInfo)
+        areaInfoRef.current = activatedAreaInfo
+        setActiveFile(newActiveFile)
+        activeFileRef.current = newActiveFile
+      }
+      emiter.emit('onYakRunnerEditorForceSetCode', JSON.stringify({ path: targetPath, code: content, isUnSave }))
+      return
+    }
+
+    try {
+      const opened = await openOrCreateYakRunnerFileAtPath({
+        targetPath,
+        content,
+        language: extras?.language,
+        needsSaveAs: isUnSave ? needsSaveAs : false,
+        areaInfo: areaInfoRef.current,
+        activeFile: activeFileRef.current,
+      })
+      if (!opened) return
+
+      const mergedActiveFile = { ...opened.newActiveFile, ...filePatch }
+      const newAreaInfo = updateAreaFileInfo(opened.newAreaInfo, filePatch, targetPath)
+      setAreaInfo(newAreaInfo)
+      areaInfoRef.current = newAreaInfo
+      setActiveFile(mergedActiveFile)
+      activeFileRef.current = mergedActiveFile
+      emiter.emit('onYakRunnerEditorForceSetCode', JSON.stringify({ path: targetPath, code: content, isUnSave }))
+    } catch (error) {
+      failed(`error: ${error}`)
+    }
+  })
+
+  const openEmptyFileBeforeCreateDiff = useMemoizedFn(async (payload: YakRunnerCasualCodeReplaceReviewPayload) => {
+    const targetPath = payload.change.code?.path?.trim()
+    if (targetPath) {
+      return openOrCreateYakRunnerFileAtPath({
+        targetPath,
+        content: '',
+        language: payload.language,
+        needsSaveAs: true,
+        areaInfo: areaInfoRef.current,
+        activeFile: activeFileRef.current,
+      })
+    }
+
+    return createYakRunnerScratchFileForAI({
+      fileName: payload.fileName || 'gen_code.yak',
+      content: '',
+      language: payload.language,
+      areaInfo: areaInfoRef.current,
+      activeFile: activeFileRef.current,
+    })
+  })
+
+  const onCasualCodeReplaceReviewEnqueued = useMemoizedFn(async (payload: YakRunnerCasualCodeReplaceReviewPayload) => {
+    const incoming = payload.change.code?.content ?? ''
+    let baseline = payload.original ?? ''
+    let payloadForReview = payload
+
+    if (payload.isCreate || payload.change.op === 'create') {
+      try {
+        const opened = await openEmptyFileBeforeCreateDiff(payload)
+        if (!opened) return
+        setAreaInfo(opened.newAreaInfo)
+        areaInfoRef.current = opened.newAreaInfo
+        setActiveFile(opened.newActiveFile)
+        activeFileRef.current = opened.newActiveFile
+        baseline = ''
+        payloadForReview = {
+          ...payload,
+          original: '',
+          fileName: payload.fileName || opened.newActiveFile.name,
+          language: payload.language || opened.newActiveFile.language,
+          change: {
+            ...payload.change,
+            code: {
+              ...payload.change.code,
+              path: opened.newActiveFile.path,
+            },
+          },
+        }
+      } catch (error) {
+        failed(`error: ${error}`)
+        return
+      }
+    }
+
+    const normIncoming = String(incoming).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    const normOriginal = String(baseline).replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    if (normOriginal === normIncoming) {
+      if (casualReviewSessionIdRef.current != null) {
+        setCasualReviewQueue([])
+        casualReviewSessionIdRef.current = null
+      }
+      return
+    }
+
+    const enrichedPayload: YakRunnerCasualCodeReplaceReviewPayload = {
+      ...payloadForReview,
+      original: baseline,
+      language: payloadForReview.language || activeFileRef.current?.language,
+      fileName: payloadForReview.fileName || activeFileRef.current?.name,
+    }
+
+    if (casualReviewSessionIdRef.current == null) {
+      casualReviewQueueIdRef.current += 1
+      casualReviewSessionIdRef.current = `yr-${casualReviewQueueIdRef.current}`
+    }
+    const id = casualReviewSessionIdRef.current
+    setCasualReviewQueue([{ id, payload: enrichedPayload }])
+  })
+
+  const onCasualRoundApplyMerged = useMemoizedFn((mergedCode: string, done?: boolean) => {
+    const head = casualReviewQueue[0]
+    if (!head) return
+    applyYaklangCodeChangeToYakRunnerPage(
+      YAK_RUNNER_AI_PAGE_ID,
+      {
+        ...head.payload.change,
+        code: { ...head.payload.change.code, content: mergedCode },
+      },
+      { skipReplaceDedup: true },
+    )
+    if (done) {
+      setCasualReviewQueue([])
+      casualReviewSessionIdRef.current = null
+    }
+  })
+
+  useLayoutEffect(() => {
+    const unregisterApply = registerYakRunnerPageApplyCodeFromAI(YAK_RUNNER_AI_PAGE_ID, applyCodeToEditor)
+    const unregisterGet = registerYakRunnerPageGetActiveCodeString(
+      YAK_RUNNER_AI_PAGE_ID,
+      () => activeFileRef.current?.code ?? '',
+    )
+    const unregisterWorkspace = registerYakRunnerPageGetWorkspaceContext(YAK_RUNNER_AI_PAGE_ID, () => ({
+      directoryPath: yakRunnerAiAttachRef?.current?.projectRootAbsPath,
+      filePath: activeFileRef.current?.path,
+    }))
+    const unregisterCasual = registerYakRunnerPageCasualCodeReplaceReview(
+      YAK_RUNNER_AI_PAGE_ID,
+      onCasualCodeReplaceReviewEnqueued,
+    )
+    return () => {
+      unregisterApply()
+      unregisterGet()
+      unregisterWorkspace()
+      unregisterCasual()
+    }
+  }, [
+    applyCodeToEditor,
+    onCasualCodeReplaceReviewEnqueued,
+    onCasualRoundApplyMerged,
+    openEmptyFileBeforeCreateDiff,
+    yakRunnerAiAttachRef,
+  ])
+
   const shortcutRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(shortcutRef)
   const unTitleCountRef = useRef<number>(1)
@@ -656,63 +888,21 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
   }, [])
 
   // 存储文件
-  const ctrl_s = useMemoizedFn(() => {
+  const ctrl_s = useMemoizedFn(async () => {
     try {
-      // 如若未保存 则
       if (activeFile && activeFile.isUnSave && activeFile.code && activeFile.code.length > 0) {
-        ipcRenderer
-          .invoke('show-save-dialog', `${codePath}${codePath ? '/' : ''}${activeFile.name}`)
-          .then(async (res) => {
-            const path = res.filePath
-            const name = res.name
-            if (path.length > 0) {
-              const suffix = name.split('.').pop()
-
-              const file: FileDetailInfo = {
-                ...activeFile,
-                path,
-                isUnSave: false,
-                language: monacaLanguageType(suffix || ''),
-              }
-              const parentPath = await getPathParent(file.path)
-              const parentDetail = getMapFileDetail(parentPath)
-              const result = await grpcFetchCreateFile(file.path, file.code, parentDetail.isReadFail ? '' : parentPath)
-              // 如若保存路径为文件列表中则需要更新文件树
-              if (fileTree.length > 0 && file.path.startsWith(fileTree[0].path)) {
-                let arr: FileNodeMapProps[] = []
-                arr = await grpcFetchFileTree(parentPath)
-                if (arr.length > 0) {
-                  let childArr: string[] = []
-                  // 文件Map
-                  arr.forEach((item) => {
-                    // 注入文件结构Map
-                    childArr.push(item.path)
-                    // 文件Map
-                    setMapFileDetail(item.path, item)
-                  })
-                  setMapFolderDetail(parentPath, childArr)
-                }
-                emiter.emit('onRefreshFileTree', parentPath)
-              }
-              if (result.length > 0) {
-                file.name = result[0].name
-                file.isDelete = false
-                success(t('YakRunner.saveSuccess', { name: result[0].name }))
-                const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, file).newAreaInfo
-                const newAreaInfo = updateAreaFileInfo(removeAreaInfo, file, activeFile.path)
-                setAreaInfo && setAreaInfo(newAreaInfo)
-                setActiveFile && setActiveFile(file)
-
-                // 创建文件时接入历史记录
-                const history: YakRunnerHistoryProps = {
-                  isFile: true,
-                  name,
-                  path,
-                }
-                setYakRunnerHistory(history)
-              }
-            }
-          })
+        const result = await saveYakRunnerUnsavedFile({
+          file: activeFile,
+          areaInfo,
+          fileTree,
+          defaultSavePath: codePath,
+        })
+        if (result.canceled) return
+        if (result.saved) {
+          setAreaInfo(result.areaInfo)
+          setActiveFile(result.file)
+          success(t('YakRunner.saveSuccess', { name: result.file.name }))
+        }
       }
     } catch (error) {
       failed(t('YakRunner.saveFailed', { name: activeFile?.name || '' }))
@@ -1036,7 +1226,16 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
                   [styles['yak-runner-code-offset']]: !isUnShow,
                 })}
               >
-                <div className={styles['code-container']}>{onFixedEditorDetails(onChangeArea())}</div>
+                <div className={styles['code-editor-wrap']}>
+                  {onFixedEditorDetails(onChangeArea())}
+                  {casualReviewQueue[0] ? (
+                    <YakRunnerCasualCodeReplaceReviewOverlay
+                      roundKey={casualReviewQueue[0].id}
+                      payload={casualReviewQueue[0].payload}
+                      onApplyRound={onCasualRoundApplyMerged}
+                    />
+                  ) : null}
+                </div>
               </div>
             }
           />
@@ -1056,5 +1255,29 @@ export const YakRunner: React.FC<YakRunnerProps> = (props) => {
         okButtonText={t('YakitButton.iKnow')}
       />
     </YakRunnerContext.Provider>
+  )
+}
+
+const YakRunnerWithAIInner: React.FC<YakRunnerProps> = (props) => {
+  return (
+    <HistoryAIReActChatProvider
+      cacheDataStore={yakRunnerPageAiStore}
+      focusModeLoop={YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT}
+      yakRunnerPageId={YAK_RUNNER_AI_PAGE_ID}
+    >
+      <YakRunnerAiSidePanel>
+        <YakRunnerWorkbench {...props} />
+      </YakRunnerAiSidePanel>
+    </HistoryAIReActChatProvider>
+  )
+}
+
+/** Yak Runner：右侧通过 `HistoryAIReActChatProvider` / `useHistoryAIReActChat` 嵌入代码安全审计 AI 对话 */
+export const YakRunner: React.FC<YakRunnerProps> = (props) => {
+  const attachRef = useRef<YakRunnerAiAttachRef>({})
+  return (
+    <YakRunnerAiAttachProvider attachRef={attachRef}>
+      <YakRunnerWithAIInner {...props} />
+    </YakRunnerAiAttachProvider>
   )
 }

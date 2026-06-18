@@ -33,6 +33,8 @@ export enum AISourceEnum {
   flow = 'flow',
   /** irify 来源 */
   irify = 'irify',
+  /** Yak Runner 代码审计 */
+  yakRunner = 'yakRunner',
   /** 兼容老数据 */
   other = '',
 }
@@ -926,6 +928,17 @@ export declare namespace AIAgentGrpcApi {
     estimated_tokens: number
   }
 
+  export interface YaklangCodeChange {
+    op: string
+    code: {
+      content: string
+      path?: string
+      summary?: string
+      version: number
+    }
+    reason?: string
+    source_action?: string
+  }
   /** prompt_profile 中按 role 拆分的字节统计项 */
   export interface PromptProfileRoleStat {
     role_name: string

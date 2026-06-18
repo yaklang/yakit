@@ -52,4 +52,6 @@ export type YakRunnerAiCodeAuditEventProps = {
 
   // 等待删除
   onIrifyAiCodeAuditOpenFileTree: string
+  /** 编辑器选中代码发送到自由对话 */
+  onAiCodeAuditSendCodeBlock: string
 }
