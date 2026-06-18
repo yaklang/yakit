@@ -33,7 +33,6 @@ const getHttpsAgentByDomain = (domain) => {
   //     console.info(`use ssl ca-bundle for ${domain}`);
   //     return new https.Agent({ca: caBundle, rejectUnauthorized: true}) // unsafe...
   // }
-  console.info(`skip ssl ca-bundle for ${domain}`)
   return undefined
 }
 
