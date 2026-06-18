@@ -208,7 +208,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   }, [scrollToBottom])
 
   const {
-    systemStream,
     requestHistoryState: { taskLoadMoreLoading },
   } = useChatIPCStore().chatIPCData
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
@@ -307,8 +306,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   )
 
   const Footer = useCallback(
-    () => <TaskLoading className={styles['task-loading-footer']} taskStatus={taskStatus} systemStream={systemStream} />,
-    [taskStatus, systemStream],
+    () => <TaskLoading className={styles['task-loading-footer']} taskStatus={taskStatus} />,
+    [taskStatus],
   )
   const Header = useCallback(
     () =>

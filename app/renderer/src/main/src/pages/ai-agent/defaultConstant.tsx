@@ -288,7 +288,6 @@ export const defaultChatIPCData: UseChatIPCState = {
   reActTimelines: [],
   memoryList: { ...DefaultMemoryList },
   taskStatus: { loading: false, plan: '', task: '' },
-  systemStream: '',
   focusMode: '',
   switchLoading: false,
   planHistoryList: cloneDeep(DefaultPlanHistoryList),

@@ -48,6 +48,7 @@ import {
   DefaultPlanLoadingStatus,
 } from './defaultConstant'
 import useThrottleState from '@/hook/useThrottleState'
+import { aiSystemStreamStore } from '@/store/aiSystemStream'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import useAINodeLabel from './useAINodeLabel'
 import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
@@ -198,26 +199,11 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   // #region 系统信息流展示相关逻辑
   /** 记录都存在过的系统信息uuid, 只展示最新的一条系统信息 */
-  const systemEventUUID = useRef<string[]>([])
-  const [systemStream, setSystemStream] = useThrottleState('', { wait: 100 })
   const handleSetSystemStream = useMemoizedFn((uuid: string, content: string) => {
-    const lastUUID = systemEventUUID.current[systemEventUUID.current.length - 1]
-    if (lastUUID) {
-      if (lastUUID === uuid) {
-        setSystemStream((old) => old + content)
-      } else {
-        if (systemEventUUID.current.includes(uuid)) return
-        systemEventUUID.current.push(uuid)
-        setSystemStream(content)
-      }
-    } else {
-      systemEventUUID.current.push(uuid)
-      setSystemStream(content)
-    }
+    aiSystemStreamStore.appendChunk(uuid, content)
   })
   const handleResetSystemStream = useMemoizedFn(() => {
-    systemEventUUID.current = []
-    setSystemStream('')
+    aiSystemStreamStore.reset()
   })
   // #endregion
 
@@ -1262,7 +1248,6 @@ function useChatIPC(params?: UseChatIPCParams) {
       casualTitle,
       casualLoading,
 
-      systemStream,
       focusMode,
       switchLoading,
       planHistoryList,
@@ -1287,7 +1272,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     casualTitle,
     casualLoading,
 
-    systemStream,
     focusMode,
     switchLoading,
     planHistoryList,

@@ -108,9 +108,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   const { chats } = props
   const {
     casualTitle,
-    casualLoading,
     requestHistoryState: { casualLoadMoreLoading },
-    systemStream,
     execute,
   } = useChatIPCStore().chatIPCData
 
