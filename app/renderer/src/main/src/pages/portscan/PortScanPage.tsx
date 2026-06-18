@@ -51,6 +51,7 @@ export interface PortScanParams {
 
   ExcludeHosts?: string
   ExcludePorts?: string
+  DisableOpenPortGuard?: boolean
   EnableBasicCrawler?: boolean
   EnableBrute?: boolean
   SkipCveBaseLine?: boolean

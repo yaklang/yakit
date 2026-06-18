@@ -5631,6 +5631,10 @@ message PortScanRequest {
   // 指纹规则组
   bool EnableFingerprintGroup = 32;
   repeated string FingerprintGroup = 33;
+
+  // servicescan 单主机开放端口数熔断配置
+  int64 OpenPortGuardLimit = 34;
+  bool DisableOpenPortGuard = 35;
 }
 
 message DeletePortsRequest {
