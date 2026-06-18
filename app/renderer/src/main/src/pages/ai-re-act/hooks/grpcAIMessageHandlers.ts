@@ -609,17 +609,24 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
   }
   if (info.chatType === 'task') {
     const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    chatStore.taskChat.planDetailsMap.set(res.TaskId, {
-      ...oldData,
-      ...itemData,
-      taskId: oldData?.taskId || res.TaskId,
-    })
+    oldData.uuid = itemData.uuid
+    oldData.taskId = oldData?.taskId || res.TaskId
+    oldData.tool = itemData.tool
+    oldData.forges = itemData.forges
+    oldData.skills = itemData.skills
+    oldData.plugins = itemData.plugins
+    oldData.mcp = itemData.mcp
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
     const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
-    Object.assign(chatDetail, {
-      ...itemData,
-      taskId: chatDetail.taskId || res.TaskId,
-    })
+    chatDetail.uuid = itemData.uuid
+    chatDetail.taskId = chatDetail?.taskId || res.TaskId
+    chatDetail.tool = itemData.tool
+    chatDetail.forges = itemData.forges
+    chatDetail.skills = itemData.skills
+    chatDetail.plugins = itemData.plugins
+    chatDetail.mcp = itemData.mcp
+
     chatStore.casualChat.planDetails = chatDetail
   }
 }
@@ -636,12 +643,10 @@ const handlePerception: AIMessageHandler = (request) => {
   perception.summary = isArray(perception.summary) ? perception.summary.join(',') : perception.summary
   if (info.chatType === 'task') {
     const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskIndex) || cloneDeep(DefaultPlanItemDetailsData)
-    chatStore.taskChat.planDetailsMap.set(res.TaskIndex, {
-      ...oldData,
-      taskId: oldData?.taskId || res.TaskId,
-      uuid: uuidv4(),
-      perception,
-    })
+    oldData.taskId = oldData?.taskId || res.TaskId
+    oldData.uuid = uuidv4()
+    oldData.perception = perception
+    chatStore.taskChat.planDetailsMap.set(res.TaskIndex, oldData)
   } else if (info.chatType === 'reAct') {
     const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
 
@@ -666,12 +671,11 @@ const handleSessionSnapshot: AIMessageHandler = (request) => {
   if (isEmpty(snapshot)) return
   if (info.chatType === 'task') {
     const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
-    chatStore.taskChat.planDetailsMap.set(res.TaskId, {
-      ...oldData,
-      taskId: oldData?.taskId || res.TaskId,
-      uuid: uuidv4(),
-      execution: snapshot.execution,
-    })
+    oldData.taskId = oldData?.taskId || res.TaskId
+    oldData.uuid = uuidv4()
+    oldData.execution = snapshot.execution
+
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
     const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
 
