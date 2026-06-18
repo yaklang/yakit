@@ -22,6 +22,8 @@ export type useVirtualTableHookParams<T, DataT, DataKey> = {
     data: string
     id: string
   }
+  /** 外部传入可见性时优先使用 */
+  inViewport?: boolean
 }
 
 export type VirtualPaging = {

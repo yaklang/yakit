@@ -1,7 +1,7 @@
 ﻿import React, { Ref, useEffect, useMemo, useRef, useState, useContext } from 'react'
 import { Divider, Tooltip, Badge } from 'antd'
 import { YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
-import { PaginationSchema, YakScript } from '../../pages/invoker/schema'
+import { YakScript } from '../../pages/invoker/schema'
 import { HTTPFlowDetailProp } from '../HTTPFlowDetail'
 import { yakitNotify, yakitFailed } from '../../utils/notification'
 import style from './HTTPFlowTable.module.scss'
@@ -41,7 +41,8 @@ import { HTTPHistorySourcePageType } from '../HTTPHistory'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { OutlineCogIcon, OutlineFilterIcon, OutlineRefreshIcon } from '@/assets/icon/outline'
 import { SolidStarIcon } from '@/assets/icon/solid'
-import { serverPushStatus } from '@/utils/duplex/duplex'
+import useVirtualTableHook from '@/hook/useVirtualTableHook/useVirtualTableHook'
+import { ParamsTProps } from '@/hook/useVirtualTableHook/useVirtualTableHookType'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { queryYakScriptList } from '@/pages/yakitStore/network'
 import { IconSolidAIIcon, IconSolidAIWhiteIcon } from '@/assets/icon/colors'
@@ -188,49 +189,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const mitmVersion = useCreation(() => {
     return mitmContent.mitmStore.version
   }, [mitmContent.mitmStore.version])
-  const [data, setData] = useState<HTTPFlow[]>([])
   const viewAttachIdFirstRef = useRef<boolean>(false)
   const [viewAttachId, setViewAttachId] = useState<number>(0)
   const [color, setColor] = useState<string[]>([])
   const [onlyFavorite, setOnlyFavorite] = useState(false)
   const [isShowColor, setIsShowColor] = useState<boolean>(false)
   const mitmAggregateFilterRows = props.mitmAggregateFilterRows || []
-  const [params, setParams, getParams] = useGetSetState<YakQueryHTTPFlowRequest>({
-    SourceType: props.params?.SourceType || 'mitm',
-    ...getRunTimeIdObj(runTimeId),
-    FromPlugin: '',
-    Full: false,
-    Tags: [],
-  })
-
   const campareMitmAggregateFilterRows = useCampare(mitmAggregateFilterRows)
-  useUpdateEffect(() => {
-    setParams((prev) => ({
-      ...prev,
-      MitmExtractAggregateFilterRows: mitmAggregateFilterRows,
-    }))
-  }, [campareMitmAggregateFilterRows])
-  useEffect(() => {
-    setParams((pre) => ({
-      ...pre,
-      ...getRunTimeIdObj(runTimeId),
-    }))
-  }, [runTimeId])
   const [tagsFilter, setTagsFilter] = useState<string[]>([])
   const [tagSearchVal, setTagSearchVal] = useState<string>('')
 
-  const [pagination, setPagination] = useState<PaginationSchema>({
-    Limit: OFFSET_LIMIT,
-    Order: 'desc',
-    OrderBy: 'created_at',
-    Page: 1,
-  })
   const isOneceLoading = useRef<boolean>(true)
 
-  const [total, setTotal] = useState<number>(0)
   const [suffixList, setSuffixList] = useState<FiltersItemProps[]>([])
   const comSuffixList = useCampare(suffixList)
-  const [loading, setLoading] = useState(false)
   const [selected, setSelected, getSelected] = useGetSetState<HTTPFlow>()
 
   const { compareState, setCompareState, setCompareLeft, setCompareRight } = useHttpFlowStore()
@@ -241,19 +213,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
   const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
   const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetSetState<'B' | 'K' | 'M'>('B')
-  // 最新一条数据ID
-  const maxIdRef = useRef<number>(0)
-  // 最后一条数据ID
-  const minIdRef = useRef<number>(0)
-  // 接口是否正在请求
-  const isGrpcRef = useRef<boolean>(false)
-  const [tags, setTags] = useState<FiltersItemProps[]>([])
   const [currentIndex, setCurrentIndex] = useState<number>()
   const [scrollToIndex, setScrollToIndex] = useState<number | string>()
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
   const [selectedRows, setSelectedRows] = useState<HTTPFlow[]>([])
   const [isAllSelect, setIsAllSelect] = useState<boolean>(false)
-  const [offsetData, setOffsetData, getOffsetData] = useGetSetState<HTTPFlow[]>([])
   const [afterBodyLength, setAfterBodyLength, getAfterBodyLength] = useGetSetState<number>()
   const [beforeBodyLength, setBeforeBodyLength, getBeforeBodyLength] = useGetSetState<number>()
   const [isReset, setIsReset] = useState<boolean>(false)
@@ -266,8 +230,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [exportDataKey, setExportDataKey] = useState<string[]>([])
 
   const [drawerFormVisible, setDrawerFormVisible] = useState<boolean>(false)
-  // 表格排序
-  const sortRef = useRef<SortProps>(defSort)
 
   const tableRef = useRef<any>(null)
 
@@ -280,6 +242,233 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const fromMITM = useMemo(() => props.pageType === 'MITM', [props.pageType])
 
   const size = useSize(ref)
+
+  /** ---------- 后台刷新 Start ---------- */
+  const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
+  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(true)
+  const isBackgroundRefresh = useMemo(() => {
+    return backgroundRefresh && pageType !== 'MITM'
+  }, [backgroundRefresh, pageType])
+
+  // 整表重新加载时清空选中（hook 在换筛选、刷新时会调 onFirst）
+  const onFirst = useMemoizedFn(() => {
+    setSelectedRowKeys([])
+    setSelectedRows([])
+    if (!viewAttachIdFirstRef.current) {
+      setScrollToIndex(0)
+      setCurrentIndex(undefined)
+      setOnlyShowFirstNode && setOnlyShowFirstNode(true)
+    }
+    setUpdateCacheData([])
+    setIsRefresh((v) => !v)
+  })
+
+  // 接口返回后：去掉前端收藏/标签过滤 + 行颜色
+  const initResDataFun = useMemoizedFn((arr: HTTPFlow[]) =>
+    getClassNameData(filterHTTPFlowsByFavoriteAndTags(arr, tagsFilter, onlyFavorite)),
+  )
+
+  const [total, setTotal] = useState(0)
+  const extraTimerRef = useRef<ReturnType<typeof setInterval>>()
+  const getAddDataByGrpcRef = useRef<(query: YakQueryHTTPFlowRequest) => void>(() => {})
+  const offsetDataRef = useRef<HTTPFlow[]>([])
+  const updateDataRef = useRef<() => void>(() => {})
+
+  useEffect(() => {
+    return () => {
+      if (extraTimerRef.current) {
+        clearInterval(extraTimerRef.current)
+      }
+    }
+  }, [])
+
+  // hook 用 Pagination.AfterId，后端 QueryHTTPFlows 要顶层 AfterId，这里做一层转换
+  const apiQueryHTTPFlows = useMemoizedFn(async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
+    const { Pagination, Filter } = hookParams
+    const { AfterId, BeforeId, FixedLimit, ...paginationFields } = Pagination
+    // 仅 update（无游标）时更新 total
+    const isUpdateRequest = !AfterId && !BeforeId
+    const query: YakQueryHTTPFlowRequest = {
+      ...Filter,
+      Pagination: { ...paginationFields },
+      ...(AfterId ? { AfterId } : {}),
+      ...(BeforeId ? { BeforeId } : {}),
+    }
+    if (Array.isArray(query.Methods)) {
+      query.Methods = query.Methods.join(',')
+    }
+    if ('bodyLength' in query) {
+      delete query.bodyLength
+    }
+    //插件执行中流量数据必有runTimeId
+    if (pageType === 'Plugin' && !runTimeId) {
+      if (isUpdateRequest) {
+        setTotal(0)
+      }
+      return { Data: [], Total: 0, Pagination: paginationFields }
+    }
+    if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
+      const time = await getRemoteValue(MITMConsts.MITMStartTimeStamp)
+      if (time) {
+        query.AfterUpdatedAt = parseInt(time, 10)
+      }
+    }
+    const rsp = (await ipcRenderer.invoke('QueryHTTPFlows', query)) as YakQueryHTTPFlowResponse
+    if (isUpdateRequest) {
+      setTotal(rsp.Total)
+      if (extraTimerRef.current) {
+        clearInterval(extraTimerRef.current)
+      }
+      extraTimerRef.current = setInterval(() => getAddDataByGrpcRef.current(query), 1000)
+    }
+    return rsp
+  })
+
+  const isTopLoadRequest = useMemoizedFn((hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
+    const { AfterId, BeforeId, Limit } = hookParams.Pagination
+    return !!AfterId && !BeforeId && Limit !== OFFSET_STEP
+  })
+
+  // history 页面时，判断倒序情况，并且未加载的数据（减去 offsetData 缓存）超过 200 条时整表刷新
+  const grpcQueryHTTPFlows = useMemoizedFn(async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
+    const { Pagination } = hookParams
+    const { AfterId, BeforeId, Order, OrderBy, ...paginationFields } = Pagination
+    if (!backgroundRefresh && pageType !== 'MITM' && isTopLoadRequest(hookParams) && Order !== 'asc') {
+      try {
+        const rsp = await apiQueryHTTPFlows({
+          ...hookParams,
+          Pagination: {
+            Page: 1,
+            Limit: 300,
+            Order: 'desc',
+            OrderBy: OrderBy || 'id',
+            AfterId,
+          },
+        })
+        if (Number(rsp.Total) - offsetDataRef.current.length > 200) {
+          updateDataRef.current()
+          return { Data: [], Total: 0, Pagination: paginationFields }
+        }
+      } catch (error) {}
+    }
+    return apiQueryHTTPFlows(hookParams)
+  })
+
+  // 表格数据交给 useVirtualTableHook：负责上下滚动加载、中间位置拉新数据（offsetData 红点）
+  const [
+    tableParams,
+    data,
+    ,
+    pagination,
+    loading,
+    offsetData,
+    { startT, setTLoad: setLoading, setTData, noResetRefreshT: updateData, setP },
+  ] = useVirtualTableHook<ParamsTProps & { Filter: YakQueryHTTPFlowRequest }, HTTPFlow, 'Data', 'Id'>({
+    tableBoxRef: useRef(null), // props.inViewport 判断可见性，不必再挂一个 ref
+    tableRef,
+    boxHeightRef,
+    grpcFun: grpcQueryHTTPFlows,
+    onFirst,
+    initResDataFun,
+    inViewport: inViewport || isBackgroundRefresh,
+    defaultParams: {
+      Filter: {
+        SourceType: props.params?.SourceType || 'mitm',
+        ...getRunTimeIdObj(runTimeId),
+        FromPlugin: '',
+        Full: false,
+        Tags: [],
+      },
+      Pagination: {
+        Page: 1,
+        Limit: OFFSET_LIMIT,
+        Order: 'desc',
+        OrderBy: 'created_at',
+      },
+    },
+  })
+
+  // 定时刷新 total，不参与上下滚动加载
+  const getAddDataByGrpc = useMemoizedFn((query: YakQueryHTTPFlowRequest) => {
+    const clientHeight = tableRef.current?.containerRef?.clientHeight
+    if (clientHeight === 0) return
+    const copyQuery = structuredClone(query)
+    copyQuery.Pagination = {
+      Page: 1,
+      Limit: pagination.Limit,
+      Order: 'desc',
+      OrderBy: 'Id',
+    }
+    ipcRenderer
+      .invoke('QueryHTTPFlows', copyQuery)
+      .then((rsp: YakQueryHTTPFlowResponse) => {
+        const resData = rsp?.Data || []
+        if (resData.length) {
+          setTotal(rsp.Total)
+        }
+      })
+      .catch(() => {
+        if (extraTimerRef.current) {
+          clearInterval(extraTimerRef.current)
+        }
+      })
+  })
+  getAddDataByGrpcRef.current = getAddDataByGrpc
+
+  type ParamsUpdater = YakQueryHTTPFlowRequest | ((prev: YakQueryHTTPFlowRequest) => YakQueryHTTPFlowRequest)
+  const paramsRef = useRef<YakQueryHTTPFlowRequest>({} as YakQueryHTTPFlowRequest)
+  paramsRef.current = tableParams.Filter
+  const params = tableParams.Filter
+  const setParams = useMemoizedFn(
+    (next: ParamsUpdater | Pick<ParamsTProps, 'Pagination'> | Pick<ParamsTProps, 'Filter'>) => {
+      if (typeof next === 'function') {
+        setP({ Filter: next(paramsRef.current) } as ParamsTProps & { Filter: YakQueryHTTPFlowRequest })
+        return
+      }
+      if ('Pagination' in next) {
+        setP(next as ParamsTProps)
+        return
+      }
+      setP({ Filter: next as YakQueryHTTPFlowRequest } as ParamsTProps)
+    },
+  )
+  const getParams = useMemoizedFn(() => paramsRef.current)
+
+  useUpdateEffect(() => {
+    setParams((prev) => ({
+      ...prev,
+      MitmExtractAggregateFilterRows: mitmAggregateFilterRows,
+    }))
+  }, [campareMitmAggregateFilterRows])
+  useEffect(() => {
+    setParams((pre) => ({
+      ...pre,
+      ...getRunTimeIdObj(runTimeId),
+    }))
+  }, [runTimeId])
+
+  // 兼容原来 setData 写法（收藏、改标签等会原地改表格行）
+  const setData = useMemoizedFn((value: React.SetStateAction<HTTPFlow[]>) => {
+    if (typeof value === 'function') {
+      setTData(value(data))
+      return
+    }
+    setTData(value)
+  })
+  updateDataRef.current = updateData
+
+  useEffect(() => {
+    if (!viewAttachIdFirstRef.current || !data.length) return
+    viewAttachIdFirstRef.current = false
+    const timer = setTimeout(() => {
+      emiter.emit('onScrollToByClick', JSON.stringify({ historyId, id: viewAttachId + '' }))
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [data, historyId, viewAttachId])
+
+  useEffect(() => {
+    offsetDataRef.current = offsetData
+  }, [offsetData])
 
   useUpdateEffect(() => {
     updateData()
@@ -509,20 +698,20 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if (filter['ContentType']) {
         filter['SearchContentType'] = filter['ContentType'].join(',')
       }
-      setParams((prev) => {
-        const newParams = {
-          ...prev,
-          ...filter,
-          Tags: buildHTTPFlowQueryTags(tagsFilter, onlyFavorite),
-          bodyLength: !!(afterBodyLength || beforeBodyLength || checkBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
-        }
-        return newParams
-      })
-      setTriggerParamsWatch((old) => !old)
-      sortRef.current = {
-        ...sort,
-        ...(sort.orderBy === 'DurationMs' ? { orderBy: 'duration' } : {}),
+      const newParams = {
+        ...getParams(),
+        ...filter,
+        Tags: buildHTTPFlowQueryTags(tagsFilter, onlyFavorite),
+        bodyLength: !!(afterBodyLength || beforeBodyLength || checkBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
       }
+      setParams(newParams)
+      setParams({
+        Pagination: {
+          ...tableParams.Pagination,
+          Order: sort.order,
+          OrderBy: sort.orderBy === 'DurationMs' ? 'duration' : sort.orderBy || 'id',
+        },
+      } as ParamsTProps)
     },
     { wait: 500 },
   ).run
@@ -602,410 +791,18 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     [queryParams, inViewport],
     { wait: 500 },
   )
-  const updateQueryParams = (query) => {
-    const copyQuery = cloneDeep(query)
+  useUpdateEffect(() => {
+    const copyQuery = cloneDeep(tableParams.Filter)
     delete copyQuery.Pagination
     delete copyQuery.AfterId
     delete copyQuery.BeforeId
     setQueryParams(JSON.stringify(copyQuery))
-  }
-
-  const extraTimerRef = useRef<any>() // 用于控制获取total和最大id的轮询
-  useEffect(() => {
-    return () => {
-      clearInterval(extraTimerRef.current)
-    }
-  }, [])
-
-  // 方法请求
-  const getDataByGrpc = useMemoizedFn(async (query, type: 'top' | 'bottom' | 'update' | 'offset') => {
-    // 插件执行中流量数据必有runTimeId
-    if (['Plugin'].includes(pageType || '') && !runTimeId) {
-      setTimeout(() => {
-        setLoading(false)
-        isGrpcRef.current = false
-      }, 100)
-      return
-    }
-
-    // history 页面时，判断倒序情况，并且未加载的数据超过200条时刷新页面(这里的数据是减去了缓存数据[offsetdata]数量后的数据)
-    // start
-    let isInitRefresh: boolean = false
-    if (
-      !backgroundRefresh &&
-      pageType !== 'MITM' &&
-      type === 'top' &&
-      sortRef.current.order !== 'asc' &&
-      maxIdRef.current
-    ) {
-      const paginationProps = {
-        Page: 1,
-        Limit: 300,
-        Order: 'desc',
-        OrderBy: sortRef.current.orderBy || 'id',
-      }
-      const query = {
-        ...params,
-        Pagination: { ...paginationProps },
-        AfterId: maxIdRef.current,
-      }
-      // 真正需要传给后端的查询数据
-      const realQuery = cloneDeep(query)
-      try {
-        let res = (await ipcRenderer.invoke('QueryHTTPFlows', realQuery)) as YakQueryHTTPFlowResponse
-        isInitRefresh = Number(res.Total) > 200
-      } catch (error) {}
-    }
-    if (isInitRefresh) {
-      updateData()
-      return
-    }
-    // end
-
-    if (isGrpcRef.current) return
-    isGrpcRef.current = true
-
-    query.Methods = Array.isArray(query.Methods) ? query.Methods.join(',') : ''
-    if ('bodyLength' in query) {
-      delete query.bodyLength
-    }
-
-    // 真正需要传给后端的查询数据
-    const realQuery = cloneDeep(query)
-    // 表格上的顺序
-    const tableOrder = query.Pagination.Order
-    // 倒序时需要额外处理传给后端顺序
-    if (['desc', 'none'].includes(tableOrder)) {
-      if (['top', 'offset'].includes(type)) {
-        realQuery.Pagination.Order = 'asc'
-      }
-    }
-    updateQueryParams(realQuery)
-    debugToPrintLogs({
-      page: 'HTTPFlowTable',
-      fun: 'getDataByGrpc',
-      content: 'type:' + type + '; ' + JSON.stringify(realQuery),
-      status: 'INFO',
-    })
-    ipcRenderer
-      .invoke('QueryHTTPFlows', realQuery)
-      .then((rsp: YakQueryHTTPFlowResponse) => {
-        const resData = rsp?.Data || []
-        const newData: HTTPFlow[] = filterHTTPFlowsByFavoriteAndTags(
-          getClassNameData(resData),
-          tagsFilter,
-          onlyFavorite,
-        )
-        const copyData = newData.slice()
-        if (type === 'top') {
-          if (newData.length <= 0) {
-            // 没有数据
-            serverPushStatus && setIsLoop(false)
-            return
-          }
-          if (['desc', 'none'].includes(tableOrder)) {
-            const reverseData = copyData.reverse()
-            const nextData = [...reverseData, ...data]
-            setData(nextData)
-            maxIdRef.current = reverseData[0].Id
-          } else {
-            // 升序
-            if (rsp.Pagination.Limit - data.length >= 0) {
-              const nextData = [...data, ...newData]
-              setData(nextData)
-              maxIdRef.current = newData[newData.length - 1].Id
-            }
-          }
-        } else if (type === 'bottom') {
-          if (newData.length <= 0) {
-            // 没有数据
-            serverPushStatus && setIsLoop(false)
-            return
-          }
-          const arr = [...data, ...newData]
-          setData(arr)
-          if (['desc', 'none'].includes(tableOrder)) {
-            minIdRef.current = newData[newData.length - 1].Id
-          } else {
-            // 升序
-            maxIdRef.current = newData[newData.length - 1].Id
-          }
-        } else if (type === 'offset') {
-          if (resData.length <= 0) {
-            // 没有数据
-            serverPushStatus && setIsLoop(false)
-            return
-          }
-          if (['desc', 'none'].includes(tableOrder)) {
-            const reverseData = copyData.reverse()
-            const newOffsetData = reverseData.concat(getOffsetData())
-            maxIdRef.current = newOffsetData[0].Id
-            setOffsetData(newOffsetData)
-          }
-        } else {
-          if (resData.length <= 0) {
-            // 没有数据
-            serverPushStatus && setIsLoop(false)
-          }
-          setSelectedRowKeys([])
-          setSelectedRows([])
-          setIsRefresh(!isRefresh)
-          setPagination(rsp.Pagination)
-          setData([...newData])
-
-          if (viewAttachIdFirstRef.current) {
-            viewAttachIdFirstRef.current = false
-            setTimeout(() => {
-              emiter.emit('onScrollToByClick', JSON.stringify({ historyId, id: viewAttachId + '' }))
-            }, 500)
-          }
-
-          if (['desc', 'none'].includes(tableOrder)) {
-            maxIdRef.current = newData.length > 0 ? newData[0].Id : 0
-            minIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
-          } else {
-            maxIdRef.current = newData.length > 0 ? newData[newData.length - 1].Id : 0
-            minIdRef.current = newData.length > 0 ? newData[0].Id : 0
-          }
-          setTotal(rsp.Total)
-          // 开启定时器 用于算total和拿最新的最大id
-          if (extraTimerRef.current) {
-            clearInterval(extraTimerRef.current)
-          }
-          extraTimerRef.current = setInterval(() => getAddDataByGrpc(realQuery), 1000)
-        }
-      })
-      .catch((e: any) => {
-        if (idRef.current) {
-          clearInterval(idRef.current)
-        }
-        debugToPrintLogs({
-          page: 'HTTPFlowTable',
-          fun: 'getDataByGrpc',
-          content: e,
-        })
-        yakitNotify('error', `query HTTP Flow failed: ${e}`)
-      })
-      .finally(() =>
-        setTimeout(() => {
-          setLoading(false)
-          isGrpcRef.current = false
-        }, 100),
-      )
-  })
-
-  const getAddDataByGrpc = useMemoizedFn((query) => {
-    if (!isLoop) return
-    const clientHeight = tableRef.current?.containerRef?.clientHeight
-    // 解决页面未显示时 此接口轮询导致接口锁死
-    if (clientHeight === 0) return
-    const copyQuery = structuredClone(query)
-    copyQuery.Pagination = {
-      Page: 1,
-      Limit: pagination.Limit,
-      Order: 'desc',
-      OrderBy: 'Id',
-    }
-    ipcRenderer
-      .invoke('QueryHTTPFlows', copyQuery)
-      .then((rsp: YakQueryHTTPFlowResponse) => {
-        const resData = rsp?.Data || []
-        if (resData.length) {
-          setTotal(rsp.Total)
-        }
-      })
-      .catch(() => {
-        if (extraTimerRef.current) {
-          clearInterval(extraTimerRef.current)
-        }
-      })
-  })
-
-  // 偏移量更新顶部数据
-  const updateTopData = useMemoizedFn(() => {
-    // 倒序的时候有储存的偏移量 则直接使用
-    if (getOffsetData().length && ['desc', 'none'].includes(sortRef.current.order)) {
-      setData([...getOffsetData(), ...data])
-      setOffsetData([])
-      return
-    }
-    // 如无偏移 则直接请求数据
-    if (maxIdRef.current === 0) {
-      updateData()
-      return
-    }
-    const paginationProps = {
-      Page: 1,
-      Limit: pagination.Limit,
-      Order: sortRef.current.order,
-      OrderBy: sortRef.current.orderBy || 'id',
-    }
-
-    const query = {
-      ...params,
-      Pagination: { ...paginationProps },
-      AfterId: maxIdRef.current,
-    }
-    if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
-      updateMITMPageQuery(query, 'top')
-      return
-    }
-    getDataByGrpc(query, 'top')
-  })
-
-  // 偏移量更新底部数据
-  const updateBottomData = useMemoizedFn(() => {
-    // 如无偏移 则直接请求数据
-    if (minIdRef.current === 0) {
-      updateData()
-      return
-    }
-    const paginationProps = {
-      Page: 1,
-      Limit: pagination.Limit,
-      Order: sortRef.current.order,
-      OrderBy: sortRef.current.orderBy || 'id',
-    }
-
-    const query = {
-      ...params,
-      BeforeId: ['desc', 'none'].includes(paginationProps.Order) ? minIdRef.current : undefined,
-      AfterId: ['desc', 'none'].includes(paginationProps.Order) ? undefined : maxIdRef.current,
-      Pagination: { ...paginationProps },
-    }
-    if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
-      updateMITMPageQuery(query, 'bottom')
-      return
-    }
-    getDataByGrpc(query, 'bottom')
-  })
-
-  const queyChangeUpdateData = useDebounceFn(
-    () => {
-      updateData()
-    },
-    { wait: 500 },
-  ).run
-  const [triggerParamsWatch, setTriggerParamsWatch] = useState<boolean>(false)
-  const comParams = useCampare(params)
-  useUpdateEffect(() => {
-    queyChangeUpdateData()
-  }, [comParams, triggerParamsWatch])
-  // 根据页面大小动态计算需要获取的最新数据条数(初始请求)
-  const updateData = useMemoizedFn(() => {
-    if (boxHeightRef.current) {
-      setOffsetData([])
-      maxIdRef.current = 0
-      minIdRef.current = 0
-      const limitCount: number = Math.ceil(boxHeightRef.current / 28)
-      const paginationProps = {
-        Page: 1,
-        Limit: limitCount,
-        Order: sortRef.current.order,
-        OrderBy: sortRef.current.orderBy || 'id',
-      }
-      isGrpcRef.current = false
-      const query = {
-        ...params,
-        Pagination: { ...paginationProps },
-      }
-      if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
-        updateMITMPageQuery(query, 'update')
-        return
-      }
-      setSelectedRowKeys([])
-      setSelectedRows([])
-      if (!viewAttachIdFirstRef.current) {
-        setScrollToIndex(0)
-        setCurrentIndex(undefined)
-        setOnlyShowFirstNode && setOnlyShowFirstNode(true)
-      }
-      setUpdateCacheData([])
-      getDataByGrpc(query, 'update')
-    } else {
-      setIsLoop(true)
-    }
-  })
-
-  // 滚轮处于中间时 监听是否有数据更新
-  const updateOffsetData = useMemoizedFn(() => {
-    const paginationProps = {
-      Page: 1,
-      Limit: OFFSET_STEP,
-      Order: 'desc',
-      OrderBy: 'id',
-    }
-    const query = {
-      ...params,
-      AfterId: maxIdRef.current,
-      Pagination: { ...paginationProps },
-    }
-
-    if (pageType === 'MITM' && query.AfterUpdatedAt === undefined && query.BeforeUpdatedAt === undefined) {
-      updateMITMPageQuery(query, 'offset')
-      return
-    }
-    getDataByGrpc(query, 'offset')
-  })
-
-  const updateMITMPageQuery = useMemoizedFn((query, type: 'top' | 'bottom' | 'update' | 'offset') => {
-    getRemoteValue(MITMConsts.MITMStartTimeStamp).then((time: string) => {
-      if (!data) return
-      query.AfterUpdatedAt = parseInt(time)
-      getDataByGrpc(query, type)
-    })
-  })
-
-  const scrollUpdate = useMemoizedFn(() => {
-    if (isGrpcRef.current) return
-    const scrollTop = tableRef.current?.containerRef?.scrollTop
-    const clientHeight = tableRef.current?.containerRef?.clientHeight
-    const scrollHeight = tableRef.current?.containerRef?.scrollHeight
-    // let scrollBottom: number|undefined = undefined
-    let scrollBottomPercent: number | undefined = undefined
-    if (typeof scrollTop === 'number' && typeof clientHeight === 'number' && typeof scrollHeight === 'number') {
-      // scrollBottom = parseInt((scrollHeight - scrollTop - clientHeight).toFixed())
-      scrollBottomPercent = Number(((scrollTop + clientHeight) / scrollHeight).toFixed(2))
-    }
-
-    // 如果页面可见，更新滚动条位置信息
-    // 记录的滚动条位置信息为了，在后台刷新时使用，因为在后台时，该页面已被 display:none
-    if (inViewport) {
-      scrollSize.current = { scrollTop, scrollBottomPercent: scrollBottomPercent || 0 }
-    }
-
-    // 滚动条接近触顶
-    if (scrollSize.current.scrollTop < 10) {
-      updateTopData()
-      setOffsetData([])
-    }
-    // 滚动条接近触底
-    else if (
-      typeof scrollSize.current.scrollBottomPercent === 'number' &&
-      scrollSize.current.scrollBottomPercent > 0.9
-    ) {
-      updateBottomData()
-      setOffsetData([])
-    }
-    // 滚动条在中间 增量
-    else {
-      if (data.length === 0) {
-        updateData()
-      } else {
-        // 倒序的时候才需要掉接口拿偏移数据
-        if (['desc', 'none'].includes(sortRef.current.order)) {
-          updateOffsetData()
-        }
-      }
-    }
-  })
+  }, [tableParams.Filter])
 
   useEffect(() => {
     props.onSelected && props.onSelected(selected)
   }, [selected])
 
-  // 是否循环接口
-  const [isLoop, setIsLoop] = useState<boolean>(!serverPushStatus)
   const [updateCacheData, setUpdateCacheData] = useState<UpdateCacheData[]>([])
 
   const onRefreshQueryHTTPFlowsFun = useMemoizedFn((data) => {
@@ -1018,7 +815,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       }
     } catch (error) {}
     setWatchRefresh((prev) => !prev)
-    setIsLoop(true)
+    startT()
   })
   useEffect(() => {
     emiter.on('onRefreshQueryHTTPFlows', onRefreshQueryHTTPFlowsFun)
@@ -1027,36 +824,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
   }, [])
 
-  useEffect(() => {
-    let sTop, cHeight, sHeight
-    let id = setInterval(() => {
-      const scrollTop = tableRef.current?.containerRef?.scrollTop
-      const clientHeight = tableRef.current?.containerRef?.clientHeight
-      const scrollHeight = tableRef.current?.containerRef?.scrollHeight
-      if (sTop !== scrollTop || cHeight !== clientHeight || sHeight !== scrollHeight) {
-        setIsLoop(true)
-      }
-      sTop = scrollTop
-      cHeight = clientHeight
-      sHeight = scrollHeight
-    }, 1000)
-    return () => clearInterval(id)
-  }, [])
-
-  // 设置是否自动刷新
-  const idRef = useRef<any>()
-  useEffect(() => {
-    return () => {
-      clearInterval(idRef.current)
-    }
-  }, [])
-
-  /** ---------- 后台刷新 Start ---------- */
-  const [backgroundRefresh, setBackgroundRefresh] = useState<boolean>(false)
-  const [dragSelectEnabled, setDragSelectEnabled] = useState<boolean>(true)
-  const isBackgroundRefresh = useMemo(() => {
-    return backgroundRefresh && pageType !== 'MITM'
-  }, [backgroundRefresh, pageType])
   useEffect(() => {
     // 获取缓存的后台刷新状态
     getRemoteValue(RemoteHistoryGV.BackgroundRefresh)
@@ -1070,27 +837,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       })
       .catch(() => {})
   }, [inViewport])
-
-  // 实时更新滚动条位置
-  const scrollSize = useRef<{ scrollTop: number; scrollBottomPercent: number }>({
-    scrollTop: 0,
-    scrollBottomPercent: 0,
-  })
-  /** ---------- 后台刷新 End ---------- */
-
-  useEffect(() => {
-    if (inViewport || isBackgroundRefresh) {
-      scrollUpdate()
-      if (isLoop) {
-        if (idRef.current) {
-          clearInterval(idRef.current)
-        }
-        idRef.current = setInterval(scrollUpdate, 1000)
-      }
-    }
-    return () => clearInterval(idRef.current)
-  }, [inViewport, isLoop, isBackgroundRefresh])
-
   // 保留数组中非重复数据
   const filterNonUnique = (arr) => arr.filter((i) => arr.indexOf(i) === arr.lastIndexOf(i))
   // 数组去重
@@ -1155,7 +901,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     setSelectedRowKeys([])
     setSelectedRows([])
     setIsAllSelect(false)
-    setTriggerParamsWatch((old) => !old)
   })
 
   useEffect(() => {
@@ -2143,7 +1888,13 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return obj
   }, [props.params, pageType, runTimeId, params])
   const resetAllFun = useMemoizedFn(() => {
-    sortRef.current = defSort
+    setParams({
+      Pagination: {
+        ...tableParams.Pagination,
+        Order: defSort.order,
+        OrderBy: defSort.orderBy,
+      },
+    } as ParamsTProps)
     setIsReset(!isReset)
     setWatchRefresh((prev) => !prev)
     setColor([])
@@ -2158,17 +1909,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   })
   const onResetRefresh = useMemoizedFn(() => {
     setParams({ ...resetParams })
-    setTriggerParamsWatch((old) => !old)
     resetAllFun()
   })
   /**@description 导入重置查询条件并刷新 */
   const onImportResetRefresh = useMemoizedFn(() => {
-    const newParams = {
-      ...resetParams,
-      SourceType: '',
-    }
-    setParams(newParams)
-    setTriggerParamsWatch((old) => !old)
+    setParams({ ...resetParams, SourceType: '' })
     resetAllFun()
   })
   useUpdateEffect(() => {
@@ -2179,7 +1924,6 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const onViewAttachmentDataRefresh = useMemoizedFn((id: number) => {
     viewAttachIdFirstRef.current = true
     setParams({ ...resetParams, SourceType: props.params?.SourceType || '', IncludeId: getFullRange(+id) })
-    setTriggerParamsWatch((old) => !old)
     resetAllFun()
     setViewAttachId(+id)
   })
@@ -2321,7 +2065,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       const { version = '', mitmHasParamsNames = '' } = value
       if (version !== mitmVersion) return
       const mitmHasParamsNamesArr = mitmHasParamsNames.split(',').filter((item) => item)
-      let selectTypeList = (params.SourceType?.split(',') || []).filter((item) => item)
+      let selectTypeList = (getParams().SourceType?.split(',') || []).filter((item) => item)
       if (mitmHasParamsNamesArr.length) {
         selectTypeList = ['mitm', 'scan']
       } else {

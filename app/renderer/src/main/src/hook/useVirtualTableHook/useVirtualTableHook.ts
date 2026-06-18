@@ -70,6 +70,7 @@ export default function useVirtualTableHook<
     onFirst,
     initResDataFun,
     responseKey = { data: 'Data', id: 'Id' },
+    inViewport: inViewportProp,
   } = props
 
   const [params, setParams] = useState<ParamsTProps>(defaultParams)
@@ -100,7 +101,8 @@ export default function useVirtualTableHook<
   // stopT 后避免被内部逻辑(滚动/布局)再次开启轮询
   const loopPausedRef = useRef<boolean>(false)
   // 表格是否可见
-  const [inViewport] = useInViewport(tableBoxRef)
+  const [internalInViewport] = useInViewport(tableBoxRef)
+  const inViewport = inViewportProp ?? internalInViewport
   // 是否允许更改endLoop
   const isAllowSetEndLoopRef = useRef<boolean>(false)
 
