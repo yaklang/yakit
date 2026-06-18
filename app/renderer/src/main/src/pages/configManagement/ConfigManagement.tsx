@@ -186,7 +186,7 @@ export const formatTemplateTeams = (list: HotPatchTempItem[]): HotPatchTemplateT
   const tagIndexMap = new Map<string, number>()
 
   list.forEach((item) => {
-    const tags = item.Tags?.trim() || ''
+    const tags = '' // item.Tags?.trim() ||  '' // TODO: 下周在上
     if (!tags) {
       emptyTagNodes.push(item)
       return
@@ -918,7 +918,7 @@ export const HotPatchManagement: React.FC = () => {
   const renderTemplateItem = useMemoizedFn((type: HotCodeType, item: HotPatchTempItem, source: 'local' | 'online') => {
     const currentTemplateKey = getTemplateKey(type, item.name)
     const existingGroups = type === 'global' ? globalTemplateGroups : panelTemplateGroups
-    const showTemplateMenu = source === 'local' || (source === 'online' && hasPermissions)
+    const showTemplateMenu = (source === 'local' || (source === 'online' && hasPermissions)) && !item.isDefault // TODO: 上分组去掉
     return (
       <div
         key={`${type}-${source}-${item.name}`}
@@ -971,7 +971,7 @@ export const HotPatchManagement: React.FC = () => {
                 }}
                 content={
                   <>
-                    {source === 'local' && renderAddToGroupSubmenu(type, item, currentTemplateKey, existingGroups)}
+                    {/* {source === 'local' && renderAddToGroupSubmenu(type, item, currentTemplateKey, existingGroups)} */}
                     {type === 'global' &&
                       (() => {
                         const isThisItemEnabled =
