@@ -494,6 +494,10 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
   const { res, info, getChatDataStore, callback } = request
   if (!res.TaskId) return
   if (res.Type !== 'current_task_todo_list_update' || res.NodeId !== 'current_task_todo_list') return
+
+  const chatStore = getChatDataStore?.()
+  if (!chatStore) return
+
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   // 更新待办清单卡片数据
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
@@ -501,17 +505,15 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
 
   const newData = handleTodoListData(data.items, data.task_id, data.task_index)
   if (info.chatType === 'task') {
-    const oldData =
-      getChatDataStore?.()?.taskChat.planDetailsMap.get(data.task_index) || cloneDeep(DefaultPlanItemDetailsData)
+    const oldData = chatStore.taskChat.planDetailsMap.get(data.task_index) || cloneDeep(DefaultPlanItemDetailsData)
 
-    getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskId, {
-      ...oldData,
-      uuid: uuidv4(),
-      todoList: newData,
-      taskId: oldData.taskId || res.TaskId,
-    })
+    oldData.uuid = uuidv4()
+    oldData.taskId = oldData.taskId || res.TaskId
+    oldData.todoList = newData
+
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
-    const chatDetail = getChatDataStore?.()?.casualChat?.planDetails
+    const chatDetail = chatStore.casualChat?.planDetails
     if (!chatDetail) return
     chatDetail.taskId = chatDetail.taskId || res.TaskId
     chatDetail.todoList = newData
