@@ -712,10 +712,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
       areaInfoRef.current = newAreaInfo
       setActiveFile(mergedActiveFile)
       activeFileRef.current = mergedActiveFile
-      emiter.emit(
-        'onYakRunnerEditorForceSetCode',
-        JSON.stringify({ path: targetPath, code: content, isUnSave }),
-      )
+      emiter.emit('onYakRunnerEditorForceSetCode', JSON.stringify({ path: targetPath, code: content, isUnSave }))
     } catch (error) {
       failed(`error: ${error}`)
     }
