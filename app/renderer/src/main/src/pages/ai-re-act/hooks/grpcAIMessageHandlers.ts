@@ -547,17 +547,32 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
       fixed: [],
       dynamic: [],
     },
-    mcpServices: {
+    mcp: {
       fixed: [],
       dynamic: [],
     },
   }
 
   if (!!fixed?.tools) {
-    itemData.tool.fixed = fixed.tools
+    for (const item of fixed.tools) {
+      switch (item.category) {
+        case 'tool':
+          itemData.tool.fixed.push(item)
+          break
+        case 'mcp':
+          itemData.mcp.fixed.push(item)
+          break
+        default:
+          break
+      }
+    }
   }
-  if (!!fixed?.mcp_servers) {
-    itemData.mcpServices.fixed = fixed.mcp_servers
+  /** 暂时目前没有这个数据 */
+  // if (!!fixed?.mcp_servers) {
+  //   itemData.mcpServices.fixed = fixed.mcp_servers
+  // }
+  if (!!fixed?.forges) {
+    itemData.forges.fixed = fixed.forges
   }
 
   if (!!dynamic?.tools) {
@@ -570,7 +585,7 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
           itemData.plugins.dynamic.push(item)
           break
         case 'mcp':
-          itemData.mcpServices.dynamic.push(item)
+          itemData.mcp.dynamic.push(item)
           break
         default:
           break

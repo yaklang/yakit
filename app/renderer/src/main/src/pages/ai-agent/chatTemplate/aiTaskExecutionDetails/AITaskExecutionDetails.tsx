@@ -70,13 +70,19 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
   })
   const getData = useMemoizedFn(() => {
     if (!taskId) return
-    const planDetailsMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.taskChat.planDetailsMap
-    if (!planDetailsMap || planDetailsMap.size === 0) return
-    const itemData: PlanItemDetailsData | undefined = planDetailsMap.get(taskId)
+    let itemData: PlanItemDetailsData | undefined = undefined
+    if (taskId.includes('react')) {
+      itemData = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat.planDetails
+    } else {
+      const planDetailsMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')
+        ?.taskChat.planDetailsMap
+      if (!planDetailsMap || planDetailsMap.size === 0) return
+      itemData = planDetailsMap.get(taskId)
+    }
     if (!itemData) return
     if (perPlanItemDetailsDataUUIdRef.current === itemData.uuid) return
     perPlanItemDetailsDataUUIdRef.current = itemData.uuid
-    setPlanItemDetailsData(cloneDeep(itemData))
+    setPlanItemDetailsData(itemData)
   })
   const perception = useCreation(() => {
     if (!planItemDetailsData) return
@@ -334,12 +340,12 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             dynamicList={planItemDetailsData?.plugins.dynamic || []}
           />
           <AITaskDetailsCardList
-            key="mcpServices"
-            type="mcpServices"
-            colTitle={'mcp'}
+            key="mcp"
+            type="mcp"
+            colTitle={'MCP'}
             taskId={taskId}
-            fixedList={planItemDetailsData?.mcpServices.fixed || []}
-            dynamicList={planItemDetailsData?.mcpServices.dynamic || []}
+            fixedList={planItemDetailsData?.mcp.fixed || []}
+            dynamicList={planItemDetailsData?.mcp.dynamic || []}
           />
         </div>
       </div>
@@ -379,7 +385,7 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
       case 'yak_plugin':
         getYakPlugin(page)
         break
-      case 'mcpServices':
+      case 'mcp':
         getMCPServices(page)
         break
       default:

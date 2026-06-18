@@ -177,6 +177,10 @@ export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
     fixed: [],
     dynamic: [],
   },
+  mcp: {
+    fixed: [],
+    dynamic: [],
+  },
   mcpServices: {
     fixed: [],
     dynamic: [],

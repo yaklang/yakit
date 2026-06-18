@@ -2,19 +2,17 @@ import React, { useState } from 'react'
 import classNames from 'classnames'
 import styles from './AIToDoList.module.scss'
 import type { AIToDoListItemProps, AIToDoListProps } from './type'
-import { OutlineChevrondownIcon, OutlineChevronrightIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
+import { OutlineChevrondownIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
-import { Progress, Tooltip } from 'antd'
+import { Progress } from 'antd'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { AIToDoListDeletedIcon, AIToDoListPendingIcon, AIToDoListDoneIcon, AIToDoListSkippedIcon } from './icon'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
-import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import emiter from '@/utils/eventBus/eventBus'
-import { yakitNotify } from '@/utils/notification'
 
 export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
   const { className, todoData, taskId, bannedExpand } = props
+
   const [hidden, setHidden] = useState(!bannedExpand)
   const finishedCount = useCreation(() => {
     return todoData.stats.deleted + todoData.stats.done + todoData.stats.skipped
@@ -29,24 +27,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
     if (bannedExpand) return
     setHidden((v) => !v)
   })
-  const onDetails = useMemoizedFn((e) => {
-    e.stopPropagation()
-    if (!taskId) {
-      yakitNotify('error', 'taskId不存在')
-      return
-    }
-    emiter.emit(
-      'actionAITaskContentTab',
-      JSON.stringify({
-        type: 'add',
-        params: {
-          key: taskId,
-          label: '自由对话',
-          goal: '',
-        },
-      }),
-    )
-  })
+
   return (
     <div className={classNames(styles['ai-to-do-list-wrapper'], className)}>
       <div className={styles['card']}>
@@ -85,9 +66,6 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                   showInfo={false}
                   className={styles['progress-bar']}
                 />
-                <Tooltip title="任务详情" placement="top">
-                  <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
-                </Tooltip>
               </div>
             </div>
             <div

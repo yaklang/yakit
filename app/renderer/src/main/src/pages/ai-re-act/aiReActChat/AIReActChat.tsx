@@ -39,6 +39,7 @@ import { AIToDoList } from './aiToDoList/AIToDoList'
 import { cloneDeep } from 'lodash'
 import { DefaultTodoListCardData } from '../hooks/defaultConstant'
 import { TodoListCardData } from '../hooks/aiRender'
+import { OutlineListTodoIcon } from '@/assets/icon/outline'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -295,6 +296,28 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         return ''
       }
     }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+    const onDetails = useMemoizedFn((e) => {
+      e.stopPropagation()
+      if (!taskId) {
+        yakitNotify('error', 'taskId不存在')
+        return
+      }
+      if (chatDataStoreKey === 'aiChatDataStore') {
+        emiter.emit(
+          'actionAITaskContentTab',
+          JSON.stringify({
+            type: 'add',
+            params: {
+              key: taskId,
+              label: '自由对话',
+              goal: '',
+            },
+          }),
+        )
+      } else {
+        yakitNotify('info', '当前会话数据源不支持查看任务详情')
+      }
+    })
     return (
       <>
         <div
@@ -354,7 +377,12 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         {externalParameters.rightIcon.close}
                       </>
                     ) : (
-                      <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
+                      <>
+                        <Tooltip title="任务详情" placement="top">
+                          <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
+                        </Tooltip>
+                        <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
+                      </>
                     ))}
                 </div>
               </div>

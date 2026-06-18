@@ -561,7 +561,7 @@ export declare namespace AIAgentGrpcApi {
     name: string
     verbose_name: string
     description: string
-    category: 'tool' | 'mcp_server'
+    category: 'tool' | 'mcp_server' | 'forge' | 'skill' | 'yak_plugin' | 'mcp'
   }
 
   /**
@@ -592,7 +592,12 @@ export declare namespace AIAgentGrpcApi {
     category: 'forge'
   }
   export interface PlanItemDetails {
-    fixed: { tools: PlanItemDetailsFixedItem[]; mcp_servers: PlanItemDetailsFixedItem[] }
+    fixed: {
+      tools: PlanItemDetailsFixedItem[]
+      mcp_servers: PlanItemDetailsFixedItem[]
+      forges: PlanItemDetailsFixedItem[]
+      skills: PlanItemDetailsFixedItem[]
+    }
     dynamic: {
       tools: PlanItemDetailsDynamicToolItem[]
       skills: PlanItemDetailsDynamicSkillsItem[]

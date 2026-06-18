@@ -189,6 +189,11 @@ export interface PlanItemDetailsData {
     fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
     dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
   }
+  mcp: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  /** 目前没有这个数据 */
   mcpServices: {
     fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
     dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
