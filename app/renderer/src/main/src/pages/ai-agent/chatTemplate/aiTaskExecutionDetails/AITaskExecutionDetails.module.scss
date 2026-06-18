@@ -5,7 +5,7 @@
   padding: 12px 0 0 12px;
 
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
 
   /* 声明为容器查询的上下文，基于行内尺寸(宽度)进行计算 */
   container-type: inline-size;
@@ -15,6 +15,7 @@
     align-items: center;
     gap: 12px;
     overflow: hidden;
+    flex-shrink: 0;
 
     .header-title {
       display: flex;
@@ -62,8 +63,8 @@
     width: 100%;
 
     flex: 1;
-    min-height: 0;
-    overflow-y: auto;
+    min-height: 800px;
+    // overflow-y: auto;
   }
 
   .card {
