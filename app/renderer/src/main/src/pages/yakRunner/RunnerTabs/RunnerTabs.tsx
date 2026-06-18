@@ -1059,10 +1059,25 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   useEffect(() => {
     const onForceSetCode = (json: string) => {
       try {
-        const { path, code } = JSON.parse(json) as { path: string; code: string }
+        const { path, code, isUnSave } = JSON.parse(json) as {
+          path: string
+          code: string
+          isUnSave?: boolean
+        }
         if (editorInfo?.path !== path && !isSameYakRunnerFilePath(editorInfo?.path, path)) return
         if (reqEditor) {
           reqEditor.setValue(code)
+        }
+        if (typeof isUnSave === 'boolean') {
+          if (editorInfo) {
+            setEditorInfo({
+              ...editorInfo,
+              code,
+              isUnSave,
+              needsSaveAs: isUnSave ? editorInfo.needsSaveAs : false,
+            })
+          }
+          return
         }
         updateAreaInputInfo(code)
       } catch (error) {}

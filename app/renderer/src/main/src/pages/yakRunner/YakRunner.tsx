@@ -32,6 +32,9 @@ import {
   setYakRunnerLastAreaFile,
   setYakRunnerLastFolderExpanded,
   normalizeYakRunnerFilePath,
+  isSameYakRunnerFilePath,
+  isYakRunnerScratchFilePath,
+  grpcFetchSaveFile,
   saveYakRunnerUnsavedFile,
   updateAreaFileInfo,
 } from './utils'
@@ -658,29 +661,37 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
     const targetPath = normalizeYakRunnerFilePath(extras?.path?.trim() || activeFileRef.current?.path || '')
     if (!targetPath) return
     const needsSaveAs = extras?.needsSaveAs ?? false
+    let isUnSave = needsSaveAs || isYakRunnerScratchFilePath(targetPath)
+
+    if (!isUnSave) {
+      try {
+        await grpcFetchSaveFile(targetPath, content)
+      } catch (error) {
+        failed(`error: ${error}`)
+        isUnSave = true
+      }
+    }
+
+    const filePatch = { code: content, isUnSave, needsSaveAs: isUnSave ? needsSaveAs : false }
 
     const existingInArea = await judgeAreaExistFilePath(areaInfoRef.current, targetPath)
     if (existingInArea) {
-      const newAreaInfo = updateAreaFileInfo(
-        areaInfoRef.current,
-        { code: content, isUnSave: true, needsSaveAs },
-        targetPath,
-      )
+      const newAreaInfo = updateAreaFileInfo(areaInfoRef.current, filePatch, targetPath)
       setAreaInfo(newAreaInfo)
       areaInfoRef.current = newAreaInfo
-      if (activeFileRef.current?.path === targetPath) {
-        const next = { ...activeFileRef.current, code: content, isUnSave: true, needsSaveAs }
+      if (activeFileRef.current && isSameYakRunnerFilePath(activeFileRef.current.path, targetPath)) {
+        const next: FileDetailInfo = { ...activeFileRef.current, ...filePatch }
         setActiveFile(next)
         activeFileRef.current = next
       } else {
-        const newActiveFile = { ...existingInArea, code: content, isUnSave: true, isActive: true, needsSaveAs }
+        const newActiveFile = { ...existingInArea, ...filePatch, isActive: true }
         const activatedAreaInfo = setAreaFileActive(newAreaInfo, targetPath)
         setAreaInfo(activatedAreaInfo)
         areaInfoRef.current = activatedAreaInfo
         setActiveFile(newActiveFile)
         activeFileRef.current = newActiveFile
       }
-      emiter.emit('onYakRunnerEditorForceSetCode', JSON.stringify({ path: targetPath, code: content }))
+      emiter.emit('onYakRunnerEditorForceSetCode', JSON.stringify({ path: targetPath, code: content, isUnSave }))
       return
     }
 
@@ -689,16 +700,22 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
         targetPath,
         content,
         language: extras?.language,
-        needsSaveAs,
+        needsSaveAs: isUnSave ? needsSaveAs : false,
         areaInfo: areaInfoRef.current,
         activeFile: activeFileRef.current,
       })
       if (!opened) return
-      setAreaInfo(opened.newAreaInfo)
-      areaInfoRef.current = opened.newAreaInfo
-      setActiveFile(opened.newActiveFile)
-      activeFileRef.current = opened.newActiveFile
-      emiter.emit('onYakRunnerEditorForceSetCode', JSON.stringify({ path: targetPath, code: content }))
+
+      const mergedActiveFile = { ...opened.newActiveFile, ...filePatch }
+      const newAreaInfo = updateAreaFileInfo(opened.newAreaInfo, filePatch, targetPath)
+      setAreaInfo(newAreaInfo)
+      areaInfoRef.current = newAreaInfo
+      setActiveFile(mergedActiveFile)
+      activeFileRef.current = mergedActiveFile
+      emiter.emit(
+        'onYakRunnerEditorForceSetCode',
+        JSON.stringify({ path: targetPath, code: content, isUnSave }),
+      )
     } catch (error) {
       failed(`error: ${error}`)
     }

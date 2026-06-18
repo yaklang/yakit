@@ -104,7 +104,7 @@ export async function openOrCreateYakRunnerFileAtPath(
     path,
     parent: parentPath || null,
     language: resolvedLanguage,
-    isUnSave: needsSaveAs || (existsOnDisk && !created),
+    isUnSave: needsSaveAs,
     needsSaveAs,
   }
 
