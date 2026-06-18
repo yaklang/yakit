@@ -222,20 +222,20 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
         <div className={styles['summary-section']}>
           <HorizontalScrollCardItemInfoMultiple info={toolCall} tag={'工具调用'} />
           <HorizontalScrollCardItemInfoSingle
-            item={{ Id: executionMinutes, Data: '执行时长(单位min)', Timestamp: 0 }}
-            tag={executionMinutes}
+            item={{ Id: '执行时长(单位min)', Data: executionMinutes, Timestamp: 0 }}
+            tag="执行时长(单位min)"
             compact={false}
           />
 
           <HorizontalScrollCardItemInfoSingle
-            item={{ Id: httpFlowCount, Data: '产生流量数', Timestamp: 0 }}
-            tag={httpFlowCount}
+            item={{ Id: '产生流量数', Data: httpFlowCount, Timestamp: 0 }}
+            tag="产生流量数"
             compact={false}
           />
 
           <HorizontalScrollCardItemInfoSingle
-            item={{ Id: riskCount, Data: '漏洞数', Timestamp: 0 }}
-            tag={riskCount}
+            item={{ Id: '漏洞数', Data: riskCount, Timestamp: 0 }}
+            tag="漏洞数"
             compact={false}
           />
         </div>
