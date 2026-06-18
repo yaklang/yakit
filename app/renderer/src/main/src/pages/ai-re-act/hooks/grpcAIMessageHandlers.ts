@@ -559,6 +559,9 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
         case 'tool':
           itemData.tool.fixed.push(item)
           break
+        case 'yak_plugin':
+          itemData.plugins.fixed.push(item)
+          break
         case 'mcp':
           itemData.mcp.fixed.push(item)
           break
@@ -573,6 +576,9 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
   // }
   if (!!fixed?.forges) {
     itemData.forges.fixed = fixed.forges
+  }
+  if (!!fixed?.skills) {
+    itemData.skills.fixed = fixed.skills
   }
 
   if (!!dynamic?.tools) {
