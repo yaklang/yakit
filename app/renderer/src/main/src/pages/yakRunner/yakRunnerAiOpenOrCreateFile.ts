@@ -45,9 +45,9 @@ export type CreateYakRunnerScratchFileParams = {
 async function pathExistsOnDisk(filePath: string): Promise<boolean> {
   try {
     await ipcRenderer.invoke('is-exists-file', filePath)
-    return true
-  } catch {
     return false
+  } catch {
+    return true
   }
 }
 
