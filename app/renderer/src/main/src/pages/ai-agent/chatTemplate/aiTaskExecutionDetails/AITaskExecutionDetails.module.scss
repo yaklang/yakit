@@ -321,7 +321,7 @@
   .bottom-section {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-
+    min-height: 90px;
     overflow: hidden;
     border-radius: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
