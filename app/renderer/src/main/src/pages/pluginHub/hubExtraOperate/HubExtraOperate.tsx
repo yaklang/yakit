@@ -32,7 +32,11 @@ import {
 import { YakitPluginOnlineDetail } from '@/pages/plugins/online/PluginsOnlineType'
 import { useStore } from '@/store'
 import useListenWidth from '../hooks/useListenWidth'
-import { PluginLocalExport, PluginLocalExportForm } from '@/pages/plugins/local/PluginLocalExportProps'
+import {
+  PluginLocalExport,
+  PluginLocalExportForm,
+  PluginLocalExportFormRefProps,
+} from '@/pages/plugins/local/PluginLocalExportProps'
 import { DefaultExportRequest, PluginOperateHint } from '../defaultConstant'
 import { NoPromptHint } from '../utilsUI/UtilsTemplate'
 import { PluginListPageMeta } from '@/pages/plugins/baseTemplateType'
@@ -50,6 +54,8 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './HubExtraOperate.module.scss'
 import { grpcQueryYakScriptSkipUpdate, grpcSetYakScriptSkipUpdate } from '../utils/grpc'
+import { SystemInfo } from '@/constants/hardware'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 export interface HubExtraOperateRef {
   downloadedNext: (flag: boolean) => void
@@ -76,6 +82,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
   forwardRef((props, ref) => {
     const { t, i18n } = useI18nNamespaces(['pluginHub', 'yakitUi'])
     const { getContainer, active, online, local, downloadLoading, onDownload, onEdit, onCallback } = props
+    const isRemoteEngine = SystemInfo.mode === 'remote'
 
     useImperativeHandle(
       ref,
@@ -459,6 +466,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
 
     /** ---------- 导出插件 Start ---------- */
     // 导出本地插件
+    const pluginLocalExportFormRef = useRef<PluginLocalExportFormRefProps>()
     const [exportModal, setExportModal] = useState<boolean>(false)
     const exportParams = useRef<ExportYakScriptStreamRequest>({ ...DefaultExportRequest })
 
@@ -471,16 +479,27 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
       try {
         let m = showYakitModal({
           title: (modalT) => modalT('HubExtraOperate.exportPlugin'),
-          width: 450,
+          width: isRemoteEngine ? 500 : 550,
           closable: true,
           maskClosable: false,
           footer: null,
           content: (
-            <div style={{ marginBottom: 15 }}>
-              <div className={styles.infoBox}>
-                远程模式下导出后请打开~Yakit\yakit-projects\projects路径查看导出文件，文件名无需填写后缀
-              </div>
+            <div style={{ padding: isRemoteEngine ? '0 0 12px' : '12px 0' }}>
+              {isRemoteEngine && (
+                <div className={styles.infoBox}>
+                  {t('HubListLocal.exportHint')}
+                  <YakitButton
+                    type="text"
+                    onClick={() => {
+                      pluginLocalExportFormRef.current?.onSetShowChangePath(true)
+                    }}
+                  >
+                    修改路径
+                  </YakitButton>
+                </div>
+              )}
               <PluginLocalExportForm
+                ref={pluginLocalExportFormRef}
                 onCancel={() => m.destroy()}
                 onOK={(values) => {
                   const page: PluginListPageMeta = {
@@ -497,6 +516,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
                   const params: ExportYakScriptStreamRequest = {
                     OutputFilename: values.OutputFilename,
                     Password: values.Password,
+                    OutputPluginDir: values.OutputPluginDir,
                     Filter: { ...query, IncludedScriptNames: names },
                   }
                   exportParams.current = params

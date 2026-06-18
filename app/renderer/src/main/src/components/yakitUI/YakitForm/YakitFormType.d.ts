@@ -33,6 +33,7 @@ export interface YakitDraggerProps extends FileDraggerProps {
   help?: ReactDOM
   showExtraHelp?: ReactDOM
   showDefHelp?: boolean
+  showUploadBtn?: boolean
   /**回显的文本值 */
   value?: string
   /**回显的文本回调事件 */
