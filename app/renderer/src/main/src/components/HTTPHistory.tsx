@@ -92,6 +92,7 @@ import { yakitNotify } from '@/utils/notification'
 import { FiltersItemProps } from './TableVirtualResize/TableVirtualResizeType'
 import { HTTPFlowRuleDataFilter } from './HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { useCampare } from '@/hook/useCompare/useCompare'
+import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -205,7 +206,9 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [curProcess, setCurProcess] = useState<string[]>([])
   const [processQueryparams, setProcessQueryparams] = useState<string>('')
   const [curTags, setCurTags] = useState<string[]>([])
-  const [builtinTagList, setBuiltinTagList] = useState<FiltersItemProps[]>([])
+  const httpHistoryRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(httpHistoryRef)
+  const { builtinTagList, setBuiltinTagList } = useBuiltinTagList(true, inViewport)
   const [rulesQueryparams, setRulesQueryparams] = useState<string>('')
   const [mitmAggregateFilterRows, setMitmAggregateFilterRows] = useState<MitmExtractAggregateFlowFilterRow[]>([])
   const [httpFlowTableDataLength, setHttpFlowTableDataLength] = useState<number>(0)
@@ -287,7 +290,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   // #endregion
 
   return (
-    <div className={styles.hTTPHistory}>
+    <div className={styles.hTTPHistory} ref={httpHistoryRef}>
       <YakitResizeBox
         isVer={false}
         freeze={openTabsFlag}
