@@ -586,7 +586,15 @@
     "online_template": "Online Template",
     "confirm_overwrite_hot_reload_code": "Confirm overwriting the current hot-reload code?",
     "code_template": "Code Template",
-    "save_disable_tip": "The default template cannot be modified; it is recommended to save it as a new template"
+    "save_disable_tip": "The default template cannot be modified; it is recommended to save it as a new template",
+    "add_to_group": "Add to Group",
+    "create_group": "Create Group",
+    "group_name": "Group Name",
+    "enter_group_name": "Enter group name",
+    "create_group_tip": "Create a new group and move the current template into it",
+    "add_to_group_success": "Added to group",
+    "remove_from_group": "Remove from Group",
+    "remove_from_group_success": "Removed from group"
   },
   "AddHotCodeTemplate": {
     "hot_reload_template_name_empty": "Hot-reload template name is empty",

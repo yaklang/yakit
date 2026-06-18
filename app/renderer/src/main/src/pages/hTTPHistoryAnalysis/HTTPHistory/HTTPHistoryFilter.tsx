@@ -2529,8 +2529,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 ))}
                 <TableTotalAndSelectNumber total={total} selectNum={isAllSelect ? total : selectedRowKeys.length} />
                 {onlyFavoriteTag}
-                <Divider type="vertical" />
-                {runtimeId && <YakitTag color="info">{runtimeId + ''}</YakitTag>}
+                {!!runtimeId.length && (
+                  <>
+                    <Divider type="vertical" />
+                    <YakitTag color="info">{runtimeId + ''}</YakitTag>
+                  </>
+                )}
               </div>
               <div className={styles['http-history-table-right']}>
                 {webFuzzerPageId && toWebFuzzer && closable && (

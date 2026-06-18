@@ -586,7 +586,15 @@
     "online_template": "線上模板",
     "confirm_overwrite_hot_reload_code": "是否確認覆蓋當前熱載入程式碼",
     "code_template": "程式碼模板",
-    "save_disable_tip": "預設模板不支援修改，建議另存為新模板"
+    "save_disable_tip": "預設模板不支援修改，建議另存為新模板",
+    "add_to_group": "添加到分組",
+    "create_group": "新建分組",
+    "group_name": "組名",
+    "enter_group_name": "請輸入組名",
+    "create_group_tip": "新建分組並將當前模板移入分組內",
+    "add_to_group_success": "已添加到分組",
+    "remove_from_group": "移除分組",
+    "remove_from_group_success": "已移除分組"
   },
   "AddHotCodeTemplate": {
     "hot_reload_template_name_empty": "熱載入模板名為空",
