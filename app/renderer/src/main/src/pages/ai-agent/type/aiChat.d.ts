@@ -58,11 +58,11 @@ export interface AIChatData {
   casualChat: Omit<UseChatIPCState['casualChat'], 'toolListRenderNumber'> & {
     /** 会话内每条信息的详情 */
     contents: Map<string, AIChatQSData>
-    todoList: TodoListCardData
+    /** react 任务对应的详情数据 */
+    planDetails: PlanItemDetailsData
   }
   taskChat: UseChatIPCState['taskChat'] & {
     contents: Map<string, AIChatQSData>
-    todoListMap: Map<string, TodoListCardData>
     /** 任务列表的子任务对应的详情数据 */
     planDetailsMap: Map<string, PlanItemDetailsData>
   }

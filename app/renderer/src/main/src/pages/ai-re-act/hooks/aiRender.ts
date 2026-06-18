@@ -70,6 +70,8 @@ export interface AIToolResult {
 
 /** 任务节点的信息 */
 export interface AITaskStartInfo {
+  /** AIAgentGrpcApi.PlanTask.taskId */
+  taskId: string
   /** AIAgentGrpcApi.PlanTask.index */
   taskIndex: string
   /** AIAgentGrpcApi.PlanTask.name */
@@ -168,6 +170,9 @@ export type ForgesAndSkillsDynamicItem = Omit<AIAgentGrpcApi.PlanItemDetailsDyna
 export interface PlanItemDetailsData {
   /** UI定时刷新数据渲染，用于确定数据是否有更新 */
   uuid: string
+  /** 任务id */
+  taskId: string
+  todoList: TodoListCardData
   tool: {
     fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
     dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
@@ -184,11 +189,17 @@ export interface PlanItemDetailsData {
     fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
     dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
   }
+  mcp: {
+    fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
+    dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
+  }
+  /** 目前没有这个数据 */
   mcpServices: {
     fixed: AIAgentGrpcApi.PlanItemDetailsFixedItem[]
     dynamic: AIAgentGrpcApi.PlanItemDetailsDynamicToolItem[]
   }
   perception: AIAgentGrpcApi.PerceptionData
+  execution: AIAgentGrpcApi.SessionSnapshot['execution']
 }
 
 /** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */

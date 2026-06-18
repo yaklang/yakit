@@ -5,6 +5,7 @@ import {
   OutlineChevronsDownUpIcon,
   OutlineChevronsUpDownIcon,
   OutlineListOneIcon,
+  OutlineListTodoIcon,
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { AIHistoryContinueTask, AIHistorySkipTask } from '../../../chatTemplate/historyTaskTree/HistoryTaskTree'
@@ -19,9 +20,11 @@ interface ConcurrentStreamCardActionsProps {
   expand: boolean
   onExpandToggle: () => void
   onRefresh?: () => void
+  onDetails?: () => void
   framePayload: OpenAIConcurrentStreamPayload
   showContinueTask: boolean
   showCancelTask: boolean
+  showDetails: boolean
   coordinatorId?: string
   taskIndex?: string | null
 }
@@ -31,9 +34,11 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
   expand,
   onExpandToggle,
   onRefresh,
+  onDetails,
   framePayload,
   showContinueTask,
   showCancelTask,
+  showDetails,
   coordinatorId,
   taskIndex,
 }) => {
@@ -52,13 +57,17 @@ const ConcurrentStreamCardActions: FC<ConcurrentStreamCardActionsProps> = ({
       </Tooltip>
     )
   }
-
   return (
     <>
       {showContinueTask && coordinatorId != null && taskIndex != null && (
         <AIHistoryContinueTask coordinatorId={coordinatorId} taskIndex={taskIndex} />
       )}
       {showCancelTask && taskIndex != null && <AIHistorySkipTask taskIndex={taskIndex} />}
+      {showDetails && (
+        <Tooltip title="任务详情" placement="top">
+          <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
+        </Tooltip>
+      )}
       <Tooltip title={t('ConcurrentStreamCard.openInNewWindow')}>
         <YakitButton
           size="small"

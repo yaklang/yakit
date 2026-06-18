@@ -1,17 +1,23 @@
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import classNames from 'classnames'
 import styles from './AIToDoList.module.scss'
 import type { AIToDoListItemProps, AIToDoListProps } from './type'
-import { OutlineChevronleftIcon, OutlineChevronrightIcon } from '@/assets/icon/outline'
+import { OutlineChevrondownIcon, OutlineChevronrightIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import YakitSolidLoading from '@/components/yakitUI/YakitSolidLoading/YakitSolidLoading'
-import { Progress } from 'antd'
+import { Progress, Tooltip } from 'antd'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { AIToDoListDeletedIcon, AIToDoListPendingIcon, AIToDoListDoneIcon, AIToDoListSkippedIcon } from './icon'
 import { AIToDoListStatusEnum } from '@/pages/ai-agent/defaultConstant'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import emiter from '@/utils/eventBus/eventBus'
+import { yakitNotify } from '@/utils/notification'
+import useGetChatDataStoreKey from '../../hooks/useGetChatDataStoreKey'
 
 export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
-  const { className, todoData, bannedExpand } = props
+  const { className, todoData, taskId, bannedExpand } = props
+
+  const { chatDataStoreKey } = useGetChatDataStoreKey()
   const [hidden, setHidden] = useState(!bannedExpand)
   const finishedCount = useCreation(() => {
     return todoData.stats.deleted + todoData.stats.done + todoData.stats.skipped
@@ -26,6 +32,28 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
     if (bannedExpand) return
     setHidden((v) => !v)
   })
+  const onDetails = useMemoizedFn((e) => {
+    e.stopPropagation()
+    if (!taskId) {
+      yakitNotify('error', 'taskId不存在')
+      return
+    }
+    if (chatDataStoreKey === 'aiChatDataStore') {
+      emiter.emit(
+        'actionAITaskContentTab',
+        JSON.stringify({
+          type: 'add',
+          params: {
+            key: taskId,
+            label: '自由对话',
+            goal: '',
+          },
+        }),
+      )
+    } else {
+      yakitNotify('info', '当前会话数据源不支持查看任务详情')
+    }
+  })
   return (
     <div className={classNames(styles['ai-to-do-list-wrapper'], className)}>
       <div className={styles['card']}>
@@ -38,7 +66,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                     {hidden ? (
                       <OutlineChevronrightIcon className={styles['chevron-icon']} />
                     ) : (
-                      <OutlineChevronleftIcon className={styles['chevron-icon']} />
+                      <OutlineChevrondownIcon className={styles['chevron-icon']} />
                     )}
                   </>
                 )}
@@ -64,6 +92,11 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                   showInfo={false}
                   className={styles['progress-bar']}
                 />
+                {chatDataStoreKey === 'aiChatDataStore' && (
+                  <Tooltip title="任务详情" placement="top">
+                    <YakitButton size="small" icon={<OutlineListTodoIcon />} type="text2" onClick={onDetails} />
+                  </Tooltip>
+                )}
               </div>
             </div>
             <div
@@ -112,7 +145,9 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
     return (
       <>
         <AIToDoListPendingIcon />
-        <div className={classNames(styles['item-text'], styles['help-text'])}>{item.content}</div>
+        <div className={classNames(styles['item-text'], styles['help-text'])} title={item.content}>
+          {item.content}
+        </div>
       </>
     )
   })
@@ -120,7 +155,9 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
     return (
       <>
         <YakitSolidLoading size={16} className={styles['loading']} />
-        <div className={classNames(styles['item-text'], styles['main'])}>{item.content}</div>
+        <div className={classNames(styles['item-text'], styles['main'])} title={item.content}>
+          {item.content}
+        </div>
       </>
     )
   })
@@ -128,7 +165,9 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
     return (
       <>
         <AIToDoListDoneIcon />
-        <div className={classNames(styles['item-text'], styles['help-text'])}>{item.content}</div>
+        <div className={classNames(styles['item-text'], styles['help-text'])} title={item.content}>
+          {item.content}
+        </div>
       </>
     )
   })
@@ -136,7 +175,9 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
     return (
       <>
         <AIToDoListDeletedIcon />
-        <div className={classNames(styles['item-text'], styles['help-text'])}>{item.content}</div>
+        <div className={classNames(styles['item-text'], styles['help-text'])} title={item.content}>
+          {item.content}
+        </div>
       </>
     )
   })
@@ -144,7 +185,9 @@ export const AIToDoListItem: React.FC<AIToDoListItemProps> = React.memo((props) 
     return (
       <>
         <AIToDoListSkippedIcon />
-        <div className={classNames(styles['item-text'], styles['skip-text'])}>{item.content}</div>
+        <div className={classNames(styles['item-text'], styles['skip-text'])} title={item.content}>
+          {item.content}
+        </div>
       </>
     )
   })

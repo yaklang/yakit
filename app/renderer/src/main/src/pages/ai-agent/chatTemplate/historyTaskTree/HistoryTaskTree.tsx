@@ -71,7 +71,11 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
             }
             key={currentCoordinatorId}
           >
-            <HistoryTaskTreeItem item={currentTaskItem} currentCoordinatorId={currentCoordinatorId} />
+            <HistoryTaskTreeItem
+              item={currentTaskItem}
+              currentCoordinatorId={currentCoordinatorId}
+              taskType="current"
+            />
           </YakitCollapse.YakitPanel>
         )}
         {data.records
@@ -91,7 +95,7 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
                 }
                 key={item.coordinator_id}
               >
-                <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} />
+                <HistoryTaskTreeItem item={item} currentCoordinatorId={currentCoordinatorId} taskType="history" />
               </YakitCollapse.YakitPanel>
             )
           })}
@@ -288,7 +292,7 @@ export const AIHistorySkipTask: React.FC<{ taskIndex: string }> = React.memo(({ 
 
 /**任务历史的单个树节点 */
 const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => {
-  const { item, currentCoordinatorId } = props
+  const { item, currentCoordinatorId, taskType } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   const time = useCreation(() => {
     return formatTimestamp(item.created_at_unix)
@@ -302,7 +306,12 @@ const HistoryTaskTreeItem: React.FC<HistoryTaskTreeItemProps> = memo((props) => 
         <div className={styles['time']}>{t('HistoryTaskTree.updateTime', { time })}</div>
       )}
 
-      <AITree tasks={item.task_tree} className={styles['tree-wrapper']} aiTreeTitleExtraNode={onAITreeTitleExtraNode} />
+      <AITree
+        tasks={item.task_tree}
+        className={styles['tree-wrapper']}
+        aiTreeTitleExtraNode={onAITreeTitleExtraNode}
+        taskType={taskType}
+      />
     </div>
   )
 })

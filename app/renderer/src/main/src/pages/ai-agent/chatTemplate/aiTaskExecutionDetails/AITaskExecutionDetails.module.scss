@@ -5,7 +5,7 @@
   padding: 12px 0 0 12px;
 
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
 
   /* 声明为容器查询的上下文，基于行内尺寸(宽度)进行计算 */
   container-type: inline-size;
@@ -15,6 +15,7 @@
     align-items: center;
     gap: 12px;
     overflow: hidden;
+    flex-shrink: 0;
 
     .header-title {
       display: flex;
@@ -56,14 +57,14 @@
   .content-body {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     padding-right: 12px;
     padding-bottom: 12px;
     width: 100%;
 
     flex: 1;
-    min-height: 0;
-    overflow-y: auto;
+    min-height: 800px;
+    // overflow-y: auto;
   }
 
   .card {
@@ -105,6 +106,13 @@
         color: var(--Colors-Use-Neutral-Text-4-Help-text);
       }
     }
+  }
+
+  .summary-section {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
   }
 
   .top-section {
@@ -313,17 +321,23 @@
 
   .bottom-section {
     display: grid;
-    grid-template-columns: repeat(3, minmax(220px, 1fr));
-    gap: 16px;
-    align-items: start;
+    grid-template-columns: repeat(4, 1fr);
+    min-height: 90px;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   }
   .section-card {
     border-radius: 8px;
-    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+
     padding: 4px;
     display: flex;
     flex-direction: column;
     gap: 4px;
+
+    overflow: hidden;
+    max-height: 100%;
+
     .section-card-title {
       color: var(--Colors-Use-Neutral-Text-1-Title);
 
@@ -339,11 +353,13 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-top: 4px;
 
     border-radius: 6px;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
     background: var(--Colors-Use-Neutral-Bg);
+
+    overflow: hidden;
+    flex: 1;
 
     .plugin-group-header {
       display: flex;
@@ -351,7 +367,7 @@
       align-items: center;
       font-size: 12px;
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
-      padding: 4px 12px;
+      padding: 4px 8px;
       .add-btn {
         padding-right: 0;
       }
@@ -359,6 +375,12 @@
         display: flex;
         align-items: center;
         gap: 4px;
+        overflow: hidden;
+        :global {
+          .ant-radio-button-wrapper {
+            padding: 0 8px;
+          }
+        }
       }
     }
 
@@ -367,8 +389,8 @@
       flex-direction: column;
       gap: 2px;
       padding: 0px 8px 8px 8px;
-      max-height: 300px;
       overflow: auto;
+      flex: 1 1 auto;
 
       .plugin-item {
         padding: 2px;
@@ -393,12 +415,12 @@
           justify-content: space-between;
         }
         .plugin-item-title {
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-          word-break: break-all;
+          display: flex;
+          align-items: center;
+          gap: 4px;
           min-height: 24px;
           padding: 4px 0;
+          overflow: hidden;
           .text {
             white-space: nowrap;
             text-overflow: ellipsis;
@@ -436,6 +458,9 @@
    ==================================================== */
 @container task-details (max-width: 800px) {
   .ai-task-execution-details-container {
+    .summary-section {
+      grid-template-columns: repeat(2, 1fr);
+    }
     .top-section {
       /* 取左右分栏，强制单列垂直排列 */
       grid-template-columns: 1fr;
@@ -453,14 +478,41 @@
       }
     }
     .bottom-section {
-      /* 取消三列网格，强制单列垂直排列 */
-      grid-template-columns: minmax(0, 1fr);
+      overflow: initial;
+      position: relative;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      min-height: initial;
+      .section-card {
+        position: relative;
+        /* 增加宽度限制 */
+        min-width: 0;
+        max-width: 100%;
+        &:nth-child(3) {
+          overflow: visible;
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 1px;
+            background-color: var(--Colors-Use-Neutral-Bg-Hover);
+          }
+        }
+      }
+      .plugin-list {
+        max-height: 500px;
+      }
     }
   }
 }
 
-@container task-details (max-width: 400px) {
+@container task-details (max-width: 500px) {
   .ai-task-execution-details-container {
+    .summary-section {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
     .top-section .task-statistics {
       .stats-overview {
         /* 使用 6 列的基础网格 */
@@ -477,9 +529,22 @@
         }
       }
     }
+    .bottom-section {
+      overflow: initial;
+      grid-template-columns: 1fr;
+
+      .section-card {
+        position: relative;
+        &:nth-child(3) {
+          overflow: hidden;
+          &::before {
+            width: 0;
+          }
+        }
+      }
+    }
   }
 }
-
 .add-popover {
   :global {
     .ant-popover-inner-content {
@@ -507,17 +572,9 @@
       font-weight: 600;
       color: var(--Colors-Use-Neutral-Text-1-Title);
       border-radius: 4px 4px 0 0;
-      height: 40px;
       flex-shrink: 0;
     }
     .list-body {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 0 16px;
-      overflow: hidden;
-    }
-    .list {
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -525,21 +582,9 @@
       flex: 1;
       height: 100%;
       min-height: 50px;
-      .spin {
-        overflow: hidden;
-        flex: 1;
-        min-height: 0;
-        :global {
-          .ant-spin-container {
-            overflow: hidden;
-          }
-        }
-      }
       .ai-add-list {
-        display: flex;
-        flex-direction: column;
+        padding: 0 16px;
         width: 100%;
-        flex: 1;
         .ai-add-list-item {
           display: flex;
           align-items: center;
@@ -556,6 +601,7 @@
           .title {
             display: flex;
             align-items: center;
+            gap: 4px;
             overflow: hidden;
 
             .label {

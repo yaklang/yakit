@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash'
 import type { AIToolResult, PlanItemDetailsData, TodoListCardData } from './aiRender'
 import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
 import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from './type'
@@ -158,6 +159,8 @@ export const DefaultTodoListCardData: TodoListCardData = {
 
 export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
   uuid: '',
+  taskId: '',
+  todoList: { ...DefaultTodoListCardData },
   tool: {
     fixed: [],
     dynamic: [],
@@ -171,6 +174,10 @@ export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
     dynamic: [],
   },
   plugins: {
+    fixed: [],
+    dynamic: [],
+  },
+  mcp: {
     fixed: [],
     dynamic: [],
   },
@@ -188,5 +195,15 @@ export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
     epoch: 0,
     intent_shift: 'none',
     timestamp: 0,
+  },
+  execution: {
+    status: '',
+    tool_call_success: 0,
+    tool_call_failed: 0,
+    tool_call_total: 0,
+    execution_minutes: 0,
+    http_flow_count: 0,
+    risk_count: 0,
+    modified_file_count: 0,
   },
 }

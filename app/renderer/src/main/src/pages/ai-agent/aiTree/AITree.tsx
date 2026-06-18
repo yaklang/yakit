@@ -3,7 +3,7 @@ import { AITreeNodeProps, AITreeProps } from './type'
 import { TaskErrorIcon, TaskInProgressIcon, TaskSkippedIcon, TaskSuccessIcon } from './icon'
 import { OutlineInformationcircleIcon, OutlineListTodoIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useMemoizedFn } from 'ahooks'
 
 import classNames from 'classnames'
 import styles from './AITree.module.scss'
@@ -14,10 +14,10 @@ import { AIHistorySkipTask } from '../chatTemplate/historyTaskTree/HistoryTaskTr
 import useAIAgentStore from '../useContext/useStore'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { DefaultTodoListCardData } from '@/pages/ai-re-act/hooks/defaultConstant'
-import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { cloneDeep } from 'lodash'
 import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import { Tooltip } from 'antd'
+import { yakitNotify } from '@/utils/notification'
 
 // 起始节点层级
 const START_LEVEL = 1
@@ -32,7 +32,7 @@ function lineStyles(i: number, levelDiff: number, lineNum: number) {
 }
 
 export const AITree: React.FC<AITreeProps> = memo((props) => {
-  const { tasks, className, aiTreeTitleExtraNode } = props
+  const { tasks, className, aiTreeTitleExtraNode, taskType } = props
   const [hoveredIndex, setHoveredIndex] = useState<string | null>(null)
 
   const onNodeHoverEnd = useCallback(() => setHoveredIndex(null), [])
@@ -91,6 +91,7 @@ export const AITree: React.FC<AITreeProps> = memo((props) => {
             onNodeHover={setHoveredIndex}
             onNodeHoverEnd={onNodeHoverEnd}
             aiTreeTitleExtraNode={aiTreeTitleExtraNode}
+            taskType={taskType}
           />
         )
       })}
@@ -113,6 +114,7 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
     onNodeHover,
     onNodeHoverEnd,
     aiTreeTitleExtraNode,
+    taskType,
   }) => {
     const [todoListVisible, setTodoListVisible] = useState<boolean>(false)
 
@@ -135,17 +137,13 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
       if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
       try {
         return (
-          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.taskChat.todoListMap.get(data.index) ||
-          cloneDeep(DefaultTodoListCardData)
+          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.taskChat.planDetailsMap.get(data.index)
+            ?.todoList || cloneDeep(DefaultTodoListCardData)
         )
       } catch (error) {
         return cloneDeep(DefaultTodoListCardData)
       }
     })
-    const unFinish = useCreation(
-      () => data.progress === AITaskStatus.created || data.progress === AITaskStatus.inProgress,
-      [data.progress],
-    )
     const todoListRef = useRef<TodoListCardData>(getTodoData())
     const onVisibleChange = useMemoizedFn((visible: boolean) => {
       if (visible) {
@@ -156,12 +154,16 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
       setTodoListVisible(visible)
     })
     const onDetails = useMemoizedFn(() => {
+      if (!data.task_id) {
+        yakitNotify('error', 'task_id为空')
+        return
+      }
       emiter.emit(
         'actionAITaskContentTab',
         JSON.stringify({
           type: 'add',
           params: {
-            key: data.index,
+            key: data.task_id,
             label: data.name,
             goal: data.goal,
           },
@@ -189,8 +191,8 @@ const AITreeNode: React.FC<AITreeNodeProps> = memo(
               <OutlineInformationcircleIcon className={styles['info-icon']} />
             </YakitPopover>
             {data.isLeaf && data.progress === 'processing' && <AIHistorySkipTask taskIndex={data.index} />}
-            {data.isLeaf && unFinish && (
-              <Tooltip title="待办事项" placement="top">
+            {taskType === 'current' && data.isLeaf && (
+              <Tooltip title="任务详情" placement="top">
                 <YakitButton
                   size="small"
                   icon={<OutlineListTodoIcon />}

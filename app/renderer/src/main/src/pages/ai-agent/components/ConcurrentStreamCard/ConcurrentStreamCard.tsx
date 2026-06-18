@@ -1,7 +1,7 @@
 import { useEffect, useMemo, type FC } from 'react'
 import ChatCard from '../ChatCard'
 import ModalInfo from '../ModelInfo'
-import { useBoolean } from 'ahooks'
+import { useBoolean, useMemoizedFn } from 'ahooks'
 import styles from './ConcurrentStreamCard.module.scss'
 import ConcurrentStreamContent from './ConcurrentStreamContent/ConcurrentStreamContent'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
@@ -19,6 +19,11 @@ import { useConcurrentStreamCardStyle } from './hooks/useConcurrentStreamCardSty
 import ConcurrentStreamCardActions from './ConcurrentStreamCardActions/ConcurrentStreamCardActions'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useConcurrentStreamRefreshListener } from './concurrentStream/useConcurrentStreamRefreshListener'
+import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import emiter from '@/utils/eventBus/eventBus'
+import { yakitNotify } from '@/utils/notification'
+
+const { ipcRenderer } = window.require('electron')
 
 const ConcurrentStreamCard: FC<{
   elements: ReActChatTaskElementSub[]
@@ -94,6 +99,33 @@ const ConcurrentStreamCard: FC<{
     if (elements.length === 0) return elements
     return elements.filter((item) => item.type !== ('task-dependency-graph' as AIChatQSDataTypeEnum))
   }, [elements])
+
+  const showDetails = useMemo(() => {
+    if (isChildWindow) return false
+    if (!raw) return false
+    const status = raw?.data?.status
+    return status === AITaskStatus.created || status === AITaskStatus.inProgress
+  }, [raw?.data?.status])
+
+  const onDetails = useMemoizedFn(() => {
+    const data = raw?.data
+    if (!data) return
+    if (!data.taskId) {
+      yakitNotify('error', 'taskId为空')
+      return
+    }
+    emiter.emit(
+      'actionAITaskContentTab',
+      JSON.stringify({
+        type: 'add',
+        params: {
+          key: data.taskId,
+          label: data.taskName,
+          goal: data.goal,
+        },
+      }),
+    )
+  })
   return (
     <ChatCard
       className="concurrent-stream-card"
@@ -111,9 +143,11 @@ const ConcurrentStreamCard: FC<{
           expand={expand}
           onExpandToggle={expandToggle}
           onRefresh={onRefresh}
+          onDetails={onDetails}
           framePayload={framePayload}
           showContinueTask={showContinueTask}
           showCancelTask={showCancelTask}
+          showDetails={showDetails}
           coordinatorId={coordinatorId}
           taskIndex={taskIndex}
         />

@@ -22,6 +22,7 @@ import {
   genBaseAIChatData,
   generateTaskId,
   genErrorLogData,
+  handleTodoListData,
   isAutoExecuteReviewContinue,
   isToolStderrStream,
   isToolStdoutStream,
@@ -37,7 +38,8 @@ import {
 } from './defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
 import { v4 as uuidv4 } from 'uuid'
-import { isArray, isEmpty } from 'lodash'
+import isEmpty from 'lodash/isEmpty'
+import isArray from 'lodash/isArray'
 // #region Common Utils
 /** grpc流数据转换成错误信息输出到日志中 */
 const handleErrorGRPCToLog: (
@@ -487,18 +489,50 @@ const handleReportFinish: AIMessageHandler = (request) => {
     chatType: info.chatType,
   })
 }
+/** Type='current_task_todo_list_update'&NodeId='current_task_todo_list' todolist */
+const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
+  const { res, info, getChatDataStore, callback } = request
+  if (!res.TaskId) return
+  if (res.Type !== 'current_task_todo_list_update' || res.NodeId !== 'current_task_todo_list') return
+
+  const chatStore = getChatDataStore?.()
+  if (!chatStore) return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  // 更新待办清单卡片数据
+  const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
+  if (isEmpty(data)) return
+
+  const newData = handleTodoListData(data.items, data.task_id, data.task_index)
+  if (info.chatType === 'task') {
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    oldData.uuid = uuidv4()
+    oldData.taskId = oldData.taskId || res.TaskId
+    oldData.todoList = newData
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
+  } else if (info.chatType === 'reAct') {
+    const chatDetail = chatStore.casualChat?.planDetails
+    if (!chatDetail) return
+    chatDetail.taskId = chatDetail.taskId || res.TaskId
+    chatDetail.todoList = newData
+    callback?.(res)
+  }
+}
 /** Type='structured'&NodeId='capability_inventory' 能力清单(tool/skills/forge/yak_plugin/mac) */
 const handleCapabilityInventory: AIMessageHandler = (request) => {
-  const { res, getChatDataStore } = request
-  if (!res.TaskIndex) return
+  const { res, info, getChatDataStore } = request
+  if (!res.TaskId) return
   if (res.Type !== 'structured' && res.NodeId !== 'capability_inventory') return
+
+  const chatStore = getChatDataStore?.()
+  if (!chatStore) return
+
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanItemDetails
-
+  if (isEmpty(payload)) return
   const { fixed, dynamic } = payload
 
-  const itemData: PlanItemDetailsData = {
-    ...cloneDeep(DefaultPlanItemDetailsData),
+  const itemData: Pick<PlanItemDetailsData, 'uuid' | 'tool' | 'forges' | 'skills' | 'plugins' | 'mcp'> = {
     uuid: uuidv4(),
     tool: {
       fixed: [],
@@ -516,17 +550,38 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
       fixed: [],
       dynamic: [],
     },
-    mcpServices: {
+    mcp: {
       fixed: [],
       dynamic: [],
     },
   }
 
   if (!!fixed?.tools) {
-    itemData.tool.fixed = fixed.tools
+    for (const item of fixed.tools) {
+      switch (item.category) {
+        case 'tool':
+          itemData.tool.fixed.push(item)
+          break
+        case 'yak_plugin':
+          itemData.plugins.fixed.push(item)
+          break
+        case 'mcp':
+          itemData.mcp.fixed.push(item)
+          break
+        default:
+          break
+      }
+    }
   }
-  if (!!fixed?.mcp_servers) {
-    itemData.mcpServices.fixed = fixed.mcp_servers
+  /** 暂时目前没有这个数据 */
+  // if (!!fixed?.mcp_servers) {
+  //   itemData.mcpServices.fixed = fixed.mcp_servers
+  // }
+  if (!!fixed?.forges) {
+    itemData.forges.fixed = fixed.forges
+  }
+  if (!!fixed?.skills) {
+    itemData.skills.fixed = fixed.skills
   }
 
   if (!!dynamic?.tools) {
@@ -539,7 +594,7 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
           itemData.plugins.dynamic.push(item)
           break
         case 'mcp':
-          itemData.mcpServices.dynamic.push(item)
+          itemData.mcp.dynamic.push(item)
           break
         default:
           break
@@ -552,28 +607,84 @@ const handleCapabilityInventory: AIMessageHandler = (request) => {
   if (!!dynamic?.forges) {
     itemData.forges.dynamic = dynamic.forges
   }
-  const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || {}
-  if (oldData) getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, { ...oldData, ...itemData })
+  if (info.chatType === 'task') {
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    oldData.uuid = itemData.uuid
+    oldData.taskId = oldData?.taskId || res.TaskId
+    oldData.tool = itemData.tool
+    oldData.forges = itemData.forges
+    oldData.skills = itemData.skills
+    oldData.plugins = itemData.plugins
+    oldData.mcp = itemData.mcp
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
+  } else if (info.chatType === 'reAct') {
+    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+    chatDetail.uuid = itemData.uuid
+    chatDetail.taskId = chatDetail?.taskId || res.TaskId
+    chatDetail.tool = itemData.tool
+    chatDetail.forges = itemData.forges
+    chatDetail.skills = itemData.skills
+    chatDetail.plugins = itemData.plugins
+    chatDetail.mcp = itemData.mcp
+
+    chatStore.casualChat.planDetails = chatDetail
+  }
 }
 /** Type='perception'&NodeId='perception' 意图感知 */
 const handlePerception: AIMessageHandler = (request) => {
-  const { res, getChatDataStore } = request
-  if (!res.TaskIndex) return
+  const { res, info, getChatDataStore } = request
+  if (!res.TaskId) return
   if (res.Type !== 'perception' && res.NodeId !== 'perception') return
-
+  const chatStore = getChatDataStore?.()
+  if (!chatStore) return
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const perception = (JSON.parse(ipcContent) as AIAgentGrpcApi.PerceptionData) || {}
   if (isEmpty(perception)) return
-  const oldData = getChatDataStore?.()?.taskChat.planDetailsMap.get(res.TaskIndex) || {}
-  getChatDataStore?.()?.taskChat.planDetailsMap.set(res.TaskIndex, {
-    ...cloneDeep(DefaultPlanItemDetailsData),
-    ...oldData,
-    uuid: uuidv4(),
-    perception: {
-      ...perception,
-      summary: isArray(perception.summary) ? perception.summary.join(',') : perception.summary,
-    },
-  })
+  perception.summary = isArray(perception.summary) ? perception.summary.join(',') : perception.summary
+  if (info.chatType === 'task') {
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    oldData.taskId = oldData?.taskId || res.TaskId
+    oldData.uuid = uuidv4()
+    oldData.perception = perception
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
+  } else if (info.chatType === 'reAct') {
+    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+
+    chatDetail.uuid = uuidv4()
+    chatDetail.taskId = chatDetail.taskId || res.TaskId
+    chatDetail.perception = perception
+
+    chatStore.casualChat.planDetails = chatDetail
+  }
+}
+
+const handleSessionSnapshot: AIMessageHandler = (request) => {
+  const { res, info, getChatDataStore } = request
+  if (!res.TaskId) return
+  if (res.NodeId !== 'session_snapshot') return
+
+  const chatStore = getChatDataStore?.()
+  if (!chatStore) return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const snapshot = (JSON.parse(ipcContent) as AIAgentGrpcApi.SessionSnapshot) || {}
+  if (isEmpty(snapshot)) return
+  if (info.chatType === 'task') {
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
+    oldData.taskId = oldData?.taskId || res.TaskId
+    oldData.uuid = uuidv4()
+    oldData.execution = snapshot.execution
+
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
+  } else if (info.chatType === 'reAct') {
+    const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
+
+    chatDetail.uuid = uuidv4()
+    chatDetail.taskId = chatDetail.taskId || res.TaskId
+    chatDetail.execution = snapshot.execution
+
+    chatStore.casualChat.planDetails = chatDetail
+  }
 }
 // #endregion
 
@@ -2157,6 +2268,8 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   api_request_failed: handleApiRequestFailed,
   http_flow_fuzz_status: handleHttpFlowFuzzStatus,
   'report-finish': handleReportFinish,
+  current_task_todo_list_update: handleCurrentTaskTodoListUpdate,
   capability_inventory: handleCapabilityInventory,
   perception: handlePerception,
+  session_snapshot: handleSessionSnapshot,
 }

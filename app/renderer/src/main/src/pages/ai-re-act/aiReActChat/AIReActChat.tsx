@@ -39,6 +39,7 @@ import { AIToDoList } from './aiToDoList/AIToDoList'
 import { cloneDeep } from 'lodash'
 import { DefaultTodoListCardData } from '../hooks/defaultConstant'
 import { TodoListCardData } from '../hooks/aiRender'
+import { OutlineListTodoIcon } from '@/assets/icon/outline'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -274,17 +275,28 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       }
       handleSendSyncMessage(params)
     })
+
+    const getPlanDetails = useMemoizedFn(() => {
+      if (!activeChat?.SessionID) return
+      return chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat?.planDetails
+    })
     const todoData: TodoListCardData = useCreation(() => {
       if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
       try {
-        return (
-          chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat.todoList ||
-          cloneDeep(DefaultTodoListCardData)
-        )
+        return getPlanDetails()?.todoList || cloneDeep(DefaultTodoListCardData)
       } catch (error) {
         return cloneDeep(DefaultTodoListCardData)
       }
-    }, [chatIPCData.casualChat.toolListRenderNumber, activeChat?.SessionID])
+    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+    const taskId = useCreation(() => {
+      if (!activeChat?.SessionID) return ''
+      try {
+        return getPlanDetails()?.taskId || ''
+      } catch (error) {
+        return ''
+      }
+    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+
     return (
       <>
         <div
@@ -344,13 +356,15 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                         {externalParameters.rightIcon.close}
                       </>
                     ) : (
-                      <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
+                      <>
+                        <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
+                      </>
                     ))}
                 </div>
               </div>
               {todoData?.items?.length > 0 && (
                 <div className={styles['todoList-wrapper']}>
-                  <AIToDoList className={styles['to-do-list']} todoData={todoData} />
+                  <AIToDoList className={styles['to-do-list']} todoData={todoData} taskId={taskId} />
                 </div>
               )}
               <AIReActChatContents chats={chatIPCData.casualChat} />

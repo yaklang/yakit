@@ -131,6 +131,7 @@ export const MCPTransportTypeList: { value: MCPServerType; label: string }[] = [
  */
 export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAgentGrpcApi.PlanTask = (info) => {
   let data: AIAgentGrpcApi.PlanTask = {
+    task_id: '',
     index: '',
     name: '',
     goal: '',
@@ -145,6 +146,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
     summary: '',
   }
   if (!!info) {
+    data.task_id = info.task_id || ''
     data.index = info.index || ''
     data.name = info.name || ''
     data.goal = info.goal || ''

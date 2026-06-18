@@ -41,10 +41,6 @@ function useTaskChat(params: UseTaskChatParams) {
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
 
-  const getTodoList = useMemoizedFn(() => {
-    return getChatDataStore?.()?.taskChat?.todoListMap
-  })
-
   const getContentMap = useMemoizedFn((mapKey: string) => {
     const contentMap = getChatDataStore?.()?.taskChat?.contents
     if (!contentMap) return undefined
@@ -93,6 +89,7 @@ function useTaskChat(params: UseTaskChatParams) {
           type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
           data: {
             taskIndex: info.task.index,
+            taskId: info.task.task_id,
             taskName: info.task.name,
             goal: info.task.goal,
             status: info.task.task_status || AITaskStatus.inProgress,
@@ -232,6 +229,10 @@ function useTaskChat(params: UseTaskChatParams) {
         funcKey = res.NodeId
       } else if (res.Type === 'perception' && res.NodeId === 'perception') {
         funcKey = res.Type
+      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
+        funcKey = res.Type
+      } else if (res.NodeId === 'session_snapshot') {
+        funcKey = res.NodeId
       }
 
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
@@ -288,13 +289,6 @@ function useTaskChat(params: UseTaskChatParams) {
           setPlan(cloneDeep(DefaultCurrentExecTaskTree))
         }
         return
-      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
-        // 更新待办清单卡片数据
-        const info = JSON.parse(ipcContent) as AIAgentGrpcApi.TodoListUpdate
-        const todoListMap = getTodoList()
-        if (!todoListMap) return
-        const newData = handleTodoListData(info.items, info.task_id, info.task_index)
-        todoListMap.set(info.task_index, newData)
       }
 
       // 未识别类型全部归档到日志处理

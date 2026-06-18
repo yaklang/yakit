@@ -683,7 +683,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
-
+        // console.log('ipcContent', res, `------${res.TaskIndex}`, ipcContent)
         if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
           const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
           const chatStore = getChatDataStore()
@@ -746,8 +746,8 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (res.Type === 'start_plan_and_execution') {
           if (res.IsSync) return
-          // 清空任务规划的待办清单卡片数据
-          getChatDataStore()?.taskChat.todoListMap.clear()
+          /** 清空任务规划的todolist详情 */
+          getChatDataStore()?.taskChat.planDetailsMap.clear()
           // 触发任务规划，并传出任务规划流的标识 coordinator_id
           const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
           if (startInfo.coordinator_id && currentTaskPlanID.current?.coordinatorId !== startInfo.coordinator_id) {

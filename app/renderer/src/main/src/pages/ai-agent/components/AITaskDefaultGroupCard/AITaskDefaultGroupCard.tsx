@@ -77,6 +77,7 @@ const AITaskDefaultGroupCard: FC<{
             framePayload={framePayload}
             showContinueTask={false}
             showCancelTask={false}
+            showDetails={false}
           />
         </div>
       </div>

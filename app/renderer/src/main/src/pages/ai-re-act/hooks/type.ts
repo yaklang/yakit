@@ -381,7 +381,9 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
     handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
   }
   /** store数据 */
-  getChatDataStore?: UseHookBaseParams['getChatDataStore']
+  getChatDataStore: UseHookBaseParams['getChatDataStore']
+  /** 回调方法 */
+  callback?: (data: AIOutputEvent) => void
 }
 export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #endregion
