@@ -211,10 +211,10 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
 })
 
 /** 挂到 body，避免 Virtuoso 滚出视口时卸载列表项导致弹窗消失 */
-export const openAIReferenceModal = (referenceList: ChatReferenceMaterialPayload) => {
+export const openAIReferenceModal = (referenceList: ChatReferenceMaterialPayload, title = '参考资料') => {
   const code = referenceList.map((item) => item.payload).join('\n')
   const modal = showYakitModal({
-    title: '参考资料',
+    title,
     cancelButtonProps: { style: { display: 'none' } },
     bodyStyle: { height: 500 },
     content: <YakitEditor type="plaintext" readOnly value={code} />,

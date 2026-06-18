@@ -13,14 +13,12 @@ import {
   type ReActChatTaskElementSub,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import { getAIStatusPresentation } from '../../utils/AIStatusUtils'
-import { openAIConcurrentStream } from '@/utils/openWebsite'
 import { CHILD_CONTENT_WINDOW_STYLE } from './constants'
 import { useVectorStripeBg } from './hooks/useVectorStripeBg'
 import { useConcurrentStreamCardStyle } from './hooks/useConcurrentStreamCardStyle'
 import ConcurrentStreamCardActions from './ConcurrentStreamCardActions/ConcurrentStreamCardActions'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-
-const { ipcRenderer } = window.require('electron')
+import { useConcurrentStreamRefreshListener } from './concurrentStream/useConcurrentStreamRefreshListener'
 
 const ConcurrentStreamCard: FC<{
   elements: ReActChatTaskElementSub[]
@@ -72,26 +70,7 @@ const ConcurrentStreamCard: FC<{
     }
   }, [collapseExpand, isChildWindow, raw?.data?.status])
 
-  useEffect(() => {
-    if (isChildWindow) return
-
-    const handleRefresh = (_event, params) => {
-      if (params?.type !== 'openAIConcurrentStream') return
-
-      const refreshData = params.data
-      if (refreshData?.session !== session || refreshData?.token !== token || refreshData?.chatType !== chatType) {
-        return
-      }
-
-      openAIConcurrentStream(framePayload, { silent: true })
-    }
-
-    ipcRenderer.on('refresh-ai-concurrent-stream', handleRefresh)
-
-    return () => {
-      ipcRenderer.removeListener('refresh-ai-concurrent-stream', handleRefresh)
-    }
-  }, [chatType, framePayload, isChildWindow, session, token])
+  useConcurrentStreamRefreshListener(framePayload, session, token, chatType, !isChildWindow)
 
   const modalInfo = useMemo(() => {
     if (!raw) return undefined

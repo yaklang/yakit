@@ -6,12 +6,15 @@ import {
   type ConcurrentStreamFramePayload,
   isConcurrentStreamFrame,
 } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
-import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum, type AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { buildConcurrentStreamContext } from './buildConcurrentStreamContext'
 import { fetchConcurrentStreamContents } from './fetchConcurrentStreamContents'
 import styles from './AIConcurrentStream.module.scss'
 
 const ConcurrentStreamCard = lazy(() => import('@/pages/ai-agent/components/ConcurrentStreamCard/ConcurrentStreamCard'))
+const AITaskDefaultGroupCard = lazy(
+  () => import('@/pages/ai-agent/components/AITaskDefaultGroupCard/AITaskDefaultGroupCard'),
+)
 
 const { ipcRenderer } = window.require('electron')
 
@@ -82,6 +85,14 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = ({ windowId }) => 
     return buildConcurrentStreamContext({ ...frame, contentEntries })
   }, [contentEntries, frame])
 
+  const isTaskDefaultGroup = useMemo(() => {
+    if (!frame || !contentEntries) return false
+    const root = contentEntries.find(([key]) => key === frame.token)?.[1]
+    return root?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
+  }, [contentEntries, frame])
+
+  const cardKey = `${frame?.session}:${frame?.token}:${frame?.chatType}`
+
   const requestRefresh = () => {
     if (!frame) return
     ipcRenderer.send('request-ai-concurrent-stream-refresh', {
@@ -104,15 +115,27 @@ const AIConcurrentStream: React.FC<AIConcurrentStreamProps> = ({ windowId }) => 
         <div className={styles.divider} />
         <div className={styles.wrapper}>
           <Suspense fallback={<ConcurrentStreamSkeleton variant="card" />}>
-            <ConcurrentStreamCard
-              key={`${frame.session}:${frame.token}:${frame.chatType}`}
-              isChildWindow
-              onRefresh={requestRefresh}
-              session={frame.session}
-              token={frame.token}
-              chatType={frame.chatType}
-              elements={frame.elements}
-            />
+            {isTaskDefaultGroup ? (
+              <AITaskDefaultGroupCard
+                key={cardKey}
+                isChildWindow
+                onRefresh={requestRefresh}
+                session={frame.session}
+                token={frame.token}
+                chatType={frame.chatType}
+                elements={frame.elements}
+              />
+            ) : (
+              <ConcurrentStreamCard
+                key={cardKey}
+                isChildWindow
+                onRefresh={requestRefresh}
+                session={frame.session}
+                token={frame.token}
+                chatType={frame.chatType}
+                elements={frame.elements}
+              />
+            )}
           </Suspense>
         </div>
       </div>

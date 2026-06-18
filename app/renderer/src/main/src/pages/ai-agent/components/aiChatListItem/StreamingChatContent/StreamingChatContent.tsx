@@ -1,8 +1,9 @@
 import { AIStreamNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
-import { type ReActChatElement, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum, type ReActChatElement, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { memo, type FC } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
 import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
+import AITaskDefaultGroupCard from '../../AITaskDefaultGroupCard/AITaskDefaultGroupCard'
 import ConcurrentStreamCard from '../../ConcurrentStreamCard/ConcurrentStreamCard'
 
 type StreamCls = { className: string } | { aiMarkdownProps?: { className: string } }
@@ -34,7 +35,19 @@ const AIStreamCard: FC<SingleStreamProps> = ({ chatType, token, streamClassName,
 const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
   const { streamClassName, chatType, token, hasNext, session, itemIndex: listItemIndex } = props
   if (props.kind === 'task') {
-    return <ConcurrentStreamCard token={token} session={session} elements={props.children} chatType={chatType} />
+    if (props.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
+      return (
+        <AITaskDefaultGroupCard
+          token={token}
+          session={session}
+          chatType={chatType}
+          elements={props.children}
+          hasNext={hasNext}
+        />
+      )
+    } else {
+      return <ConcurrentStreamCard token={token} session={session} elements={props.children} chatType={chatType} />
+    }
   }
   if (props.kind === 'group') {
     return <AIGroupStreamCard session={session} elements={props.children} hasNext={hasNext} />

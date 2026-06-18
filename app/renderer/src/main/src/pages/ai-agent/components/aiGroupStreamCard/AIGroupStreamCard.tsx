@@ -15,8 +15,8 @@ import { Tooltip } from 'antd'
 export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties }> = ({ code, style }) => {
   return (
     <pre className={styles['code-wrapper']} style={style}>
-      {code.map((item) => (
-        <code key={item.event_uuid}>{item.payload}</code>
+      {code.map((item, index) => (
+        <code key={`${item.event_uuid}-${index}`}>{item.payload}</code>
       ))}
     </pre>
   )
