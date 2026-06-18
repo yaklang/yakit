@@ -196,7 +196,12 @@ const handleThought: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.THOUGHT,
     data: thought || '',
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   setContentMap(chatData.id, chatData)
   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -220,7 +225,12 @@ const handleResult: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.THOUGHT,
     data: result || '',
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   setContentMap(chatData.id, chatData)
   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -245,7 +255,12 @@ const handleFailReactTask: AIMessageHandler = (request) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   setContentMap(chatData.id, chatData)
   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -274,7 +289,12 @@ const handleToolCallDecision: AIMessageHandler = (request) => {
         En: i18n.en,
       },
     },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   setContentMap(chatData.id, chatData)
   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -299,7 +319,12 @@ const handleFailPlanAndExecution: AIMessageHandler = (request) => {
       NodeId: res.NodeId,
       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
     },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   setContentMap(chatData.id, chatData)
   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -328,7 +353,12 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
     AIModelName: '',
     // showQS为了UI渲染方便，重新构建的字段
     extraValue: { showQS: data.react_task_input || '' },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   setContentMap(chatData.id, chatData)
   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -352,7 +382,12 @@ const handleApiRequestFailed: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED,
     data,
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   setContentMap(chatData.id, chatData)
   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
@@ -402,7 +437,12 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
       chatType: info.chatType,
       type: cardType,
       data: nextData,
-      taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+      taskIndex: generateTaskId({
+        chatType: info.chatType,
+        res,
+        getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+        getContentMap: request.getContentMap,
+      }),
     }
     setContentMap(fuzz_id, chatData)
   }
@@ -608,7 +648,12 @@ const handleStreamStart: AIMessageHandler = (request) => {
         content: '',
         ContentType: res.ContentType,
       },
-      taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+      taskIndex: generateTaskId({
+        chatType: info.chatType,
+        res,
+        getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+        getContentMap: request.getContentMap,
+      }),
     })
     return
   }
@@ -662,7 +707,12 @@ const handleStreamStart: AIMessageHandler = (request) => {
       content: '',
       ContentType: res.ContentType,
     },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   })
 }
 
@@ -1061,26 +1111,32 @@ const handleReferenceMaterial: AIMessageHandler = (request) => {
       type: toolResult.type,
       chatType: toolResult.chatType,
     })
-  } else {
-    const chatData: AIChatQSData = {
-      ...genBaseAIChatData(res),
-      id: data.event_uuid,
-      chatType: info.chatType,
-      type: AIChatQSDataTypeEnum.Reference_Material,
-      data: {
-        NodeId: res.NodeId,
-        NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
-      },
-      reference: [data],
-      taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
-    }
-    setContentMap(chatData.id, chatData)
-    handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
-      mapKey: chatData.id,
-      type: chatData.type,
-      chatType: chatData.chatType,
-    })
   }
+  // else {
+  //   const chatData: AIChatQSData = {
+  //     ...genBaseAIChatData(res),
+  //     id: data.event_uuid,
+  //     chatType: info.chatType,
+  //     type: AIChatQSDataTypeEnum.Reference_Material,
+  //     data: {
+  //       NodeId: res.NodeId,
+  //       NodeIdVerbose: res.NodeIdVerbose || convertNodeIdToVerbose(res.NodeId),
+  //     },
+  //     reference: [data],
+  //     taskIndex: generateTaskId({
+  //       chatType: info.chatType,
+  //       res,
+  //       getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+  //       getContentMap: request.getContentMap,
+  //     }),
+  //   }
+  //   setContentMap(chatData.id, chatData)
+  //   handleUpdateUISingleState(setElements, getContentMap, res.IsSync, {
+  //     mapKey: chatData.id,
+  //     type: chatData.type,
+  //     chatType: chatData.chatType,
+  //   })
+  // }
 }
 // #endregion
 
@@ -1112,7 +1168,12 @@ const handleToolCallStart: AIMessageHandler = (request) => {
     chatType: info.chatType,
     type: AIChatQSDataTypeEnum.TOOL_RESULT,
     data: toolResult,
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   })
 }
 
@@ -1473,23 +1534,28 @@ const handlePlanReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
-    const target = reviewReleaseID[data.id]
-    if (target) {
-      chatData.data.selected = JSON.stringify(target.params)
-      chatData.data.optionValue = target.params?.suggestion || 'continue'
-    }
-    setContentMap(chatData.id, cloneDeep(chatData))
-    if (target) {
-      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-        mapKey: chatData.id,
-        type: chatData.type,
-        chatType: chatData.chatType,
-      })
-    }
+    // const target = reviewReleaseID[data.id]
+    // if (target) {
+    //   chatData.data.selected = JSON.stringify(target.params)
+    //   chatData.data.optionValue = target.params?.suggestion || 'continue'
+    // }
+    // setContentMap(chatData.id, cloneDeep(chatData))
+    // if (target) {
+    //   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+    //     mapKey: chatData.id,
+    //     type: chatData.type,
+    //     chatType: chatData.chatType,
+    //   })
+    // }
     return
   }
 
@@ -1504,12 +1570,12 @@ const handlePlanReview: AIMessageHandler = (request) => {
   if (info.chatType === 'task') {
     // 该类型的实时数据只有任务规划才有
     if (isAuto) {
-      setContentMap(chatData.id, cloneDeep(chatData))
-      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-        mapKey: chatData.id,
-        type: chatData.type,
-        chatType: chatData.chatType,
-      })
+      // setContentMap(chatData.id, cloneDeep(chatData))
+      // handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+      //   mapKey: chatData.id,
+      //   type: chatData.type,
+      //   chatType: chatData.chatType,
+      // })
       review?.handleReviewDataToUI && review.handleReviewDataToUI(cloneDeep(chatData))
     } else {
       currentPlanReviewId = ''
@@ -1591,23 +1657,28 @@ const handleTaskReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
-    const target = reviewReleaseID[data.id]
-    if (target) {
-      chatData.data.selected = JSON.stringify(target.params)
-      chatData.data.optionValue = target.params?.suggestion || 'continue'
-    }
-    setContentMap(chatData.id, cloneDeep(chatData))
-    if (target) {
-      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-        mapKey: chatData.id,
-        type: chatData.type,
-        chatType: chatData.chatType,
-      })
-    }
+    // const target = reviewReleaseID[data.id]
+    // if (target) {
+    //   chatData.data.selected = JSON.stringify(target.params)
+    //   chatData.data.optionValue = target.params?.suggestion || 'continue'
+    // }
+    // setContentMap(chatData.id, cloneDeep(chatData))
+    // if (target) {
+    //   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+    //     mapKey: chatData.id,
+    //     type: chatData.type,
+    //     chatType: chatData.chatType,
+    //   })
+    // }
     return
   }
 
@@ -1621,12 +1692,12 @@ const handleTaskReview: AIMessageHandler = (request) => {
   review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
   if (info.chatType === 'task') {
     if (isAuto) {
-      setContentMap(chatData.id, cloneDeep(chatData))
-      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-        mapKey: chatData.id,
-        type: chatData.type,
-        chatType: chatData.chatType,
-      })
+      // setContentMap(chatData.id, cloneDeep(chatData))
+      // handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+      //   mapKey: chatData.id,
+      //   type: chatData.type,
+      //   chatType: chatData.chatType,
+      // })
     } else {
       review?.onReview && review.onReview(cloneDeep(chatData))
     }
@@ -1665,23 +1736,28 @@ const handleToolReview: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
-    const target = reviewReleaseID[data.id]
-    if (target) {
-      chatData.data.selected = JSON.stringify(target.params)
-      chatData.data.optionValue = target.params?.suggestion || 'continue'
-    }
-    setContentMap(chatData.id, cloneDeep(chatData))
-    if (target) {
-      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-        mapKey: chatData.id,
-        type: chatData.type,
-        chatType: chatData.chatType,
-      })
-    }
+    // const target = reviewReleaseID[data.id]
+    // if (target) {
+    //   chatData.data.selected = JSON.stringify(target.params)
+    //   chatData.data.optionValue = target.params?.suggestion || 'continue'
+    // }
+    // setContentMap(chatData.id, cloneDeep(chatData))
+    // if (target) {
+    //   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+    //     mapKey: chatData.id,
+    //     type: chatData.type,
+    //     chatType: chatData.chatType,
+    //   })
+    // }
     return
   }
 
@@ -1695,12 +1771,12 @@ const handleToolReview: AIMessageHandler = (request) => {
   review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
   if (info.chatType === 'task') {
     if (isAuto) {
-      setContentMap(chatData.id, cloneDeep(chatData))
-      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-        mapKey: chatData.id,
-        type: chatData.type,
-        chatType: chatData.chatType,
-      })
+      // setContentMap(chatData.id, cloneDeep(chatData))
+      // handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+      //   mapKey: chatData.id,
+      //   type: chatData.type,
+      //   chatType: chatData.chatType,
+      // })
     } else {
       review?.onReview && review.onReview(cloneDeep(chatData))
     }
@@ -1736,23 +1812,28 @@ const handleUserInteractive: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE,
     data: cloneDeep(data),
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
-    const target = reviewReleaseID[data.id]
-    if (target) {
-      chatData.data.selected = JSON.stringify(target.params)
-      chatData.data.optionValue = target.params?.suggestion || 'continue'
-    }
-    setContentMap(chatData.id, cloneDeep(chatData))
-    if (target) {
-      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-        mapKey: chatData.id,
-        type: chatData.type,
-        chatType: chatData.chatType,
-      })
-    }
+    // const target = reviewReleaseID[data.id]
+    // if (target) {
+    //   chatData.data.selected = JSON.stringify(target.params)
+    //   chatData.data.optionValue = target.params?.suggestion || 'continue'
+    // }
+    // setContentMap(chatData.id, cloneDeep(chatData))
+    // if (target) {
+    //   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+    //     mapKey: chatData.id,
+    //     type: chatData.type,
+    //     chatType: chatData.chatType,
+    //   })
+    // }
     return
   }
 
@@ -1797,23 +1878,28 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
     id: data.id,
     type: AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE,
     data: { ...cloneDeep(data) },
-    taskIndex: res.TaskIndex ? generateTaskId(request.getCurrentTaskPlanID?.()?.taskID, res.TaskIndex) : undefined,
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
-    const target = reviewReleaseID[data.id]
-    if (target) {
-      chatData.data.selected = JSON.stringify(target.params)
-      chatData.data.optionValue = target.params?.suggestion || 'continue'
-    }
-    setContentMap(chatData.id, cloneDeep(chatData))
-    if (target) {
-      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-        mapKey: chatData.id,
-        type: chatData.type,
-        chatType: chatData.chatType,
-      })
-    }
+    // const target = reviewReleaseID[data.id]
+    // if (target) {
+    //   chatData.data.selected = JSON.stringify(target.params)
+    //   chatData.data.optionValue = target.params?.suggestion || 'continue'
+    // }
+    // setContentMap(chatData.id, cloneDeep(chatData))
+    // if (target) {
+    //   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+    //     mapKey: chatData.id,
+    //     type: chatData.type,
+    //     chatType: chatData.chatType,
+    //   })
+    // }
     return
   }
 

@@ -519,6 +519,13 @@
     "editTitle": "Edit session title",
     "deleteConfirm": "Are you sure you want to delete this session? This cannot be recovered"
   },
+  "ConcurrentStreamCard": {
+    "systemInfo": "System Information",
+    "refresh": "Refresh",
+    "openInNewWindow": "Open in New Window",
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
   "AIChatSetting": {
     "permissionsAndSecurity": "Permissions & Security",
     "planningAndExecution": "Planning & Execution",

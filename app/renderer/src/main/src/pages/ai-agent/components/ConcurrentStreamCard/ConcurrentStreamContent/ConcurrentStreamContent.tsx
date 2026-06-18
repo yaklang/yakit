@@ -1,5 +1,5 @@
 import type { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
-import { type FC, useLayoutEffect, useRef, useState } from 'react'
+import { type FC, memo, useLayoutEffect, useRef, useState } from 'react'
 import { useLatest, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import useClickFocus from '../../../../ai-re-act/hooks/useClickFocus'
@@ -14,7 +14,7 @@ interface ConcurrentStreamContentProps {
   isChildWindow?: boolean
 }
 
-const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements, session, isChildWindow }) => {
+const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = memo(({ elements, session, isChildWindow }) => {
   const { ref: scrollRef, isFocus } = useClickFocus<HTMLDivElement>()
 
   /** 当前渲染起始下标，初始从末尾 PAGE_SIZE 处开始，新增元素始终可见 */
@@ -31,6 +31,7 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements, s
     const el = scrollRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /** 新元素到来时，若在底部则自动跟随 */
@@ -39,6 +40,7 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements, s
     const el = scrollRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elements.length])
 
   /** 加载旧数据后保持滚动位置不跳动 */
@@ -84,5 +86,5 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = ({ elements, s
       ))}
     </div>
   )
-}
+})
 export default ConcurrentStreamContent

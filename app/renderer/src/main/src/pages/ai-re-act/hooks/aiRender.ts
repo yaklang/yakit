@@ -250,6 +250,8 @@ export enum AIChatQSDataTypeEnum {
   HTTP_FLOW_FUZZ_STATUS = 'http_flow_fuzz_status',
   /** 报告生成完成（report_finish） */
   REPORT_FINISH = 'report_finish',
+  /** 任务规划-未标识组的默认组 */
+  TASK_DEFAULT_GROUP = 'task_default_group',
 }
 
 export type AIChatQSDataType = `${AIChatQSDataTypeEnum}`
@@ -342,6 +344,7 @@ export type ChatUserManualIntervention = AIChatQSDataBase<
 >
 type ChatHttpFlowFuzzStatus = AIChatQSDataBase<AIChatQSDataTypeEnum.HTTP_FLOW_FUZZ_STATUS, HttpFlowFuzzStatusCardData>
 type ChatReportFinish = AIChatQSDataBase<AIChatQSDataTypeEnum.REPORT_FINISH, ReportFinishCardData>
+export type ChatTaskDefaultGroup = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP, undefined>
 
 export type AIChatQSData =
   | ChatQuestion
@@ -367,4 +370,5 @@ export type AIChatQSData =
   | ChatApiRequestFailed
   | ChatHttpFlowFuzzStatus
   | ChatReportFinish
+  | ChatTaskDefaultGroup
 // #endregion

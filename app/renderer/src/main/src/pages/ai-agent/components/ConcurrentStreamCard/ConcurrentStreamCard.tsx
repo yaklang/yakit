@@ -5,15 +5,20 @@ import { useBoolean } from 'ahooks'
 import styles from './ConcurrentStreamCard.module.scss'
 import ConcurrentStreamContent from './ConcurrentStreamContent/ConcurrentStreamContent'
 import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import type { ChatTaskNodeGroup, ReActChatElement, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
+import {
+  AIChatQSDataTypeEnum,
+  ChatTaskDefaultGroup,
+  type ChatTaskNodeGroup,
+  type ReActChatElement,
+  type ReActChatTaskElementSub,
+} from '@/pages/ai-re-act/hooks/aiRender'
 import { getAIStatusPresentation } from '../../utils/AIStatusUtils'
-import { openAIConcurrentStream } from '@/utils/openWebsite'
 import { CHILD_CONTENT_WINDOW_STYLE } from './constants'
 import { useVectorStripeBg } from './hooks/useVectorStripeBg'
 import { useConcurrentStreamCardStyle } from './hooks/useConcurrentStreamCardStyle'
 import ConcurrentStreamCardActions from './ConcurrentStreamCardActions/ConcurrentStreamCardActions'
-
-const { ipcRenderer } = window.require('electron')
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useConcurrentStreamRefreshListener } from './concurrentStream/useConcurrentStreamRefreshListener'
 
 const ConcurrentStreamCard: FC<{
   elements: ReActChatTaskElementSub[]
@@ -26,14 +31,25 @@ const ConcurrentStreamCard: FC<{
   const [expand, { toggle: expandToggle, setFalse: collapseExpand }] = useBoolean(true)
   const { fetchChatDataStore, fetchCurrentTaskPlanID } = useChatIPCDispatcher().chatIPCEvents
 
+  const { t } = useI18nNamespaces(['aiAgent'])
+
   const raw = fetchChatDataStore()?.getContentMap({
     session,
     chatType,
     mapKey: token,
-  }) as ChatTaskNodeGroup | undefined
+  }) as ChatTaskNodeGroup | ChatTaskDefaultGroup | undefined
 
+  // 是否是默认任务分组
+  const isTaskDefaultGroup = raw?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
   const presentation = useMemo(() => getAIStatusPresentation(raw?.data?.status), [raw?.data?.status])
   const vectorBg = useVectorStripeBg(presentation.stripeColor)
+
+  const titleText = useMemo(() => {
+    if (isTaskDefaultGroup) {
+      return t('ConcurrentStreamCard.systemInfo')
+    }
+    return raw?.data?.taskName || ''
+  }, [isTaskDefaultGroup, raw?.data?.taskName, t])
 
   const framePayload = useMemo(
     () => ({
@@ -41,9 +57,9 @@ const ConcurrentStreamCard: FC<{
       token,
       chatType,
       elements,
-      taskName: raw?.data?.taskName,
+      taskName: titleText,
     }),
-    [chatType, elements, raw?.data?.taskName, session, token],
+    [chatType, elements, session, titleText, token],
   )
 
   useEffect(() => {
@@ -54,31 +70,12 @@ const ConcurrentStreamCard: FC<{
     }
   }, [collapseExpand, isChildWindow, raw?.data?.status])
 
-  useEffect(() => {
-    if (isChildWindow) return
-
-    const handleRefresh = (_event, params) => {
-      if (params?.type !== 'openAIConcurrentStream') return
-
-      const refreshData = params.data
-      if (refreshData?.session !== session || refreshData?.token !== token || refreshData?.chatType !== chatType) {
-        return
-      }
-
-      openAIConcurrentStream(framePayload, { silent: true })
-    }
-
-    ipcRenderer.on('refresh-ai-concurrent-stream', handleRefresh)
-
-    return () => {
-      ipcRenderer.removeListener('refresh-ai-concurrent-stream', handleRefresh)
-    }
-  }, [chatType, framePayload, isChildWindow, session, token])
+  useConcurrentStreamRefreshListener(framePayload, session, token, chatType, !isChildWindow)
 
   const modalInfo = useMemo(() => {
     if (!raw) return undefined
-    return { time: raw.Timestamp, title: raw.AIModelName, icon: raw.AIService }
-  }, [raw])
+    return { time: isTaskDefaultGroup ? 0 : raw.Timestamp, title: raw.AIModelName, icon: raw.AIService }
+  }, [isTaskDefaultGroup, raw])
 
   const coordinatorId = fetchCurrentTaskPlanID()?.coordinatorId
   const taskIndex = raw?.data?.taskIndex
@@ -93,11 +90,15 @@ const ConcurrentStreamCard: FC<{
     isChildWindow,
   })
 
+  const newElements = useMemo(() => {
+    if (elements.length === 0) return elements
+    return elements.filter((item) => item.type !== ('task-dependency-graph' as AIChatQSDataTypeEnum))
+  }, [elements])
   return (
     <ChatCard
       className="concurrent-stream-card"
       titleIcon={presentation.icon}
-      titleText={<div className={styles['task-name']}>{raw?.data?.taskName}</div>}
+      titleText={<div className={styles['task-name']}>{titleText}</div>}
       titleExtra={modalInfo && <ModalInfo {...modalInfo} />}
       style={cardStyle}
       childStyle={isChildWindow ? CHILD_CONTENT_WINDOW_STYLE : undefined}
@@ -120,13 +121,13 @@ const ConcurrentStreamCard: FC<{
     >
       {expand && (
         <div className={isChildWindow ? styles['concurrent-stream-content'] : undefined}>
-          <div className={styles['goal']}>{raw?.data.goal}</div>
+          <div className={styles['goal']}>{raw?.data?.goal}</div>
           <div
             className={styles['content']}
             hidden={elements.length === 0}
             style={isChildWindow ? { flex: 1, maxHeight: 'inherit', height: 0 } : undefined}
           >
-            <ConcurrentStreamContent session={session} elements={elements} isChildWindow={isChildWindow} />
+            <ConcurrentStreamContent session={session} elements={newElements} isChildWindow={isChildWindow} />
           </div>
         </div>
       )}

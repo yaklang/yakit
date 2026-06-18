@@ -519,6 +519,13 @@
     "editTitle": "编辑对话标题",
     "deleteConfirm": "是否确认删除该历史对话，删除后将无法恢复"
   },
+  "ConcurrentStreamCard": {
+    "systemInfo": "系统信息",
+    "refresh": "刷新",
+    "openInNewWindow": "新窗口打开",
+    "collapse": "收起",
+    "expand": "展开"
+  },
   "AIChatSetting": {
     "permissionsAndSecurity": "基础权限与安全",
     "planningAndExecution": "任务规划与执行",
