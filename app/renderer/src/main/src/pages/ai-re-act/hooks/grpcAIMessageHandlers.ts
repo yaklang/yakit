@@ -646,7 +646,7 @@ const handlePerception: AIMessageHandler = (request) => {
     oldData.taskId = oldData?.taskId || res.TaskId
     oldData.uuid = uuidv4()
     oldData.perception = perception
-    chatStore.taskChat.planDetailsMap.set(res.TaskIndex, oldData)
+    chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
     const chatDetail = chatStore.casualChat?.planDetails || cloneDeep(DefaultPlanItemDetailsData)
 
