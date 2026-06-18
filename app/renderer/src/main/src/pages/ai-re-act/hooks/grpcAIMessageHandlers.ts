@@ -505,12 +505,10 @@ const handleCurrentTaskTodoListUpdate: AIMessageHandler = (request) => {
 
   const newData = handleTodoListData(data.items, data.task_id, data.task_index)
   if (info.chatType === 'task') {
-    const oldData = chatStore.taskChat.planDetailsMap.get(data.task_index) || cloneDeep(DefaultPlanItemDetailsData)
-
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
     oldData.uuid = uuidv4()
     oldData.taskId = oldData.taskId || res.TaskId
     oldData.todoList = newData
-
     chatStore.taskChat.planDetailsMap.set(res.TaskId, oldData)
   } else if (info.chatType === 'reAct') {
     const chatDetail = chatStore.casualChat?.planDetails
@@ -644,7 +642,7 @@ const handlePerception: AIMessageHandler = (request) => {
   if (isEmpty(perception)) return
   perception.summary = isArray(perception.summary) ? perception.summary.join(',') : perception.summary
   if (info.chatType === 'task') {
-    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskIndex) || cloneDeep(DefaultPlanItemDetailsData)
+    const oldData = chatStore.taskChat.planDetailsMap.get(res.TaskId) || cloneDeep(DefaultPlanItemDetailsData)
     oldData.taskId = oldData?.taskId || res.TaskId
     oldData.uuid = uuidv4()
     oldData.perception = perception
