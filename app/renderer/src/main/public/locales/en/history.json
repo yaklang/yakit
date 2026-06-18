@@ -93,8 +93,10 @@
       "networkDevicesAndOASystem": "Network Devices and OA System",
       "securityProduct": "Security Product",
       "remoteCodeExecutionScan": "Remote Code Execution (Scan)",
-      "sQLInjection": "SQL Injection"
+      "sQLInjection": "SQL Injection",
+      "viewAttach": "View nearby data packages"
     },
+    "viewAttachTip": "View nearby data packages for {{Id}}",
     "setColorSuccess": "Set HTTPFlow color successfully",
     "removeColorSuccess": "Clear HTTPFlow color successfully",
     "sendLimitData": "You can only send a maximum of {{maxLength}} data entries at a time",

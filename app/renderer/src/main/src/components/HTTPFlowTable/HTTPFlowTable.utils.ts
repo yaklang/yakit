@@ -408,3 +408,13 @@ export const getRunTimeIdObj = (runTimeId?: string) => {
     RuntimeId: runTimeId && runTimeId.indexOf(',') === -1 ? runTimeId : undefined,
   }
 }
+
+export function getFullRange(id: number, count = 10, minId = 1, maxId = null) {
+  const range: number[] = []
+  const start = Math.max(minId, id - count)
+  const end = maxId === null ? id + count : Math.min(maxId, id + count)
+  for (let i = start; i <= end; i++) {
+    range.push(i)
+  }
+  return range
+}
