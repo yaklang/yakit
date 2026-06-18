@@ -195,10 +195,10 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     planItemDetailsData?.execution?.tool_call_failed,
     planItemDetailsData?.execution?.tool_call_total,
   ])
-  const executionMinutes = useCreation(() => {
-    if (!planItemDetailsData?.execution) return '暂无'
-    return `${planItemDetailsData?.execution.execution_minutes ?? `0`}`
-  }, [planItemDetailsData?.execution?.execution_minutes])
+  // const executionMinutes = useCreation(() => {
+  //   if (!planItemDetailsData?.execution) return '暂无'
+  //   return `${planItemDetailsData?.execution.execution_minutes ?? `0`}`
+  // }, [planItemDetailsData?.execution?.execution_minutes])
   const httpFlowCount = useCreation(() => {
     if (!planItemDetailsData?.execution) return '暂无'
     return `${planItemDetailsData?.execution.http_flow_count ?? `0`}`
@@ -221,11 +221,11 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       <div className={styles['content-body']}>
         <div className={styles['summary-section']}>
           <HorizontalScrollCardItemInfoMultiple info={toolCall} tag={'工具调用'} />
-          <HorizontalScrollCardItemInfoSingle
+          {/* <HorizontalScrollCardItemInfoSingle
             item={{ Id: '执行时长(单位min)', Data: executionMinutes, Timestamp: 0 }}
             tag="执行时长(单位min)"
             compact={false}
-          />
+          /> */}
 
           <HorizontalScrollCardItemInfoSingle
             item={{ Id: '产生流量数', Data: httpFlowCount, Timestamp: 0 }}

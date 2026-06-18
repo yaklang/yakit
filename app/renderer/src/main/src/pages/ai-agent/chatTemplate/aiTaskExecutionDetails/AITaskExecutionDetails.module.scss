@@ -110,7 +110,7 @@
 
   .summary-section {
     display: grid;
-    grid-template-columns: minmax(120px, 1fr) repeat(3, 1fr);
+    grid-template-columns: minmax(120px, 1fr) repeat(2, 1fr);
     gap: 8px;
     width: 100%;
   }
@@ -459,7 +459,7 @@
 @container task-details (max-width: 800px) {
   .ai-task-execution-details-container {
     .summary-section {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
     }
     .top-section {
       /* 取左右分栏，强制单列垂直排列 */
