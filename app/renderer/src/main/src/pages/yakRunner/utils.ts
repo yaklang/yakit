@@ -202,58 +202,63 @@ export async function saveYakRunnerUnsavedFile(
   const { file, areaInfo, fileTree, defaultSavePath = '' } = params
   const code = file.code || ''
 
-  if (!shouldYakRunnerFileSaveAs(file)) {
-    await grpcFetchSaveFile(file.path, code)
-    const savedFile: FileDetailInfo = { ...file, isUnSave: false, needsSaveAs: false }
-    const newAreaInfo = updateAreaFileInfo(areaInfo, savedFile, file.path)
-    return { areaInfo: newAreaInfo, file: savedFile, saved: true }
-  }
-
-  const res = await ipcRenderer.invoke(
-    'show-save-dialog',
-    `${defaultSavePath}${defaultSavePath ? '/' : ''}${file.name}`,
-  )
-  const path = res.filePath
-  const name = res.name
-  if (!path?.length) {
-    return { areaInfo, file, saved: false, canceled: true }
-  }
-
-  const suffix = name.split('.').pop()
-  const savedFile: FileDetailInfo = {
-    ...file,
-    path,
-    isUnSave: false,
-    needsSaveAs: false,
-    language: monacaLanguageType(suffix || ''),
-  }
-  const parentPath = await getPathParent(savedFile.path)
-  const parentDetail = getMapFileDetail(parentPath)
-  const result = await grpcFetchCreateFile(savedFile.path, savedFile.code, parentDetail.isReadFail ? '' : parentPath)
-
-  if (fileTree.length > 0 && savedFile.path.startsWith(fileTree[0].path)) {
-    const arr = await grpcFetchFileTree(parentPath)
-    if (arr.length > 0) {
-      const childArr: string[] = []
-      arr.forEach((item) => {
-        childArr.push(item.path)
-        setMapFileDetail(item.path, item)
-      })
-      setMapFolderDetail(parentPath, childArr)
+  try {
+    if (!shouldYakRunnerFileSaveAs(file)) {
+      await grpcFetchSaveFile(file.path, code)
+      const savedFile: FileDetailInfo = { ...file, isUnSave: false, needsSaveAs: false }
+      const newAreaInfo = updateAreaFileInfo(areaInfo, savedFile, file.path)
+      return { areaInfo: newAreaInfo, file: savedFile, saved: true }
     }
-    emiter.emit('onRefreshFileTree', parentPath)
-  }
 
-  if (result.length > 0) {
-    savedFile.name = result[0].name
-    savedFile.isDelete = false
-    const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, savedFile).newAreaInfo
-    const newAreaInfo = updateAreaFileInfo(removeAreaInfo, savedFile, file.path)
-    setYakRunnerHistory({ isFile: true, name, path })
-    return { areaInfo: newAreaInfo, file: savedFile, saved: true }
-  }
+    const res = await ipcRenderer.invoke(
+      'show-save-dialog',
+      `${defaultSavePath}${defaultSavePath ? '/' : ''}${file.name}`,
+    )
+    const path = res.filePath
+    const name = res.name
+    if (!path?.length) {
+      return { areaInfo, file, saved: false, canceled: true }
+    }
 
-  return { areaInfo, file, saved: false }
+    const suffix = name.split('.').pop()
+    const savedFile: FileDetailInfo = {
+      ...file,
+      path,
+      isUnSave: false,
+      needsSaveAs: false,
+      language: monacaLanguageType(suffix || ''),
+    }
+    const parentPath = await getPathParent(savedFile.path)
+    const parentDetail = getMapFileDetail(parentPath)
+    const result = await grpcFetchCreateFile(savedFile.path, savedFile.code, parentDetail.isReadFail ? '' : parentPath)
+
+    if (fileTree.length > 0 && savedFile.path.startsWith(fileTree[0].path)) {
+      const arr = await grpcFetchFileTree(parentPath)
+      if (arr.length > 0) {
+        const childArr: string[] = []
+        arr.forEach((item) => {
+          childArr.push(item.path)
+          setMapFileDetail(item.path, item)
+        })
+        setMapFolderDetail(parentPath, childArr)
+      }
+      emiter.emit('onRefreshFileTree', parentPath)
+    }
+
+    if (result.length > 0) {
+      savedFile.name = result[0].name
+      savedFile.isDelete = false
+      const removeAreaInfo = removeYakRunnerAreaFileInfo(areaInfo, savedFile).newAreaInfo
+      const newAreaInfo = updateAreaFileInfo(removeAreaInfo, savedFile, file.path)
+      setYakRunnerHistory({ isFile: true, name, path })
+      return { areaInfo: newAreaInfo, file: savedFile, saved: true }
+    }
+
+    return { areaInfo, file, saved: false }
+  } catch (error) {
+    failed(tOriginal('YakRunner.saveFailed', { name: file.name }))
+    return { areaInfo, file, saved: false }
+  }
 }
 
 /**
