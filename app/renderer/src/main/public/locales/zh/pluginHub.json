@@ -83,7 +83,7 @@
     "uploadLoginLater": "登录后才可上传插件",
     "uploadBusy": "有插件正在执行上传操作,请稍后再试",
     "exportPlugin": "导出插件",
-    "exportHint": "远程模式下导出后请打开~Yakit\\yakit-projects\\projects路径查看导出文件，文件名无需填写后缀",
+    "exportHint": "远程模式下默认导出到~Yakit\\yakit-projects\\projects路径, 文件名无需填写后缀",
     "manage": "管理",
     "newPlugin": "新建插件",
     "doNotDownload": "不下载",

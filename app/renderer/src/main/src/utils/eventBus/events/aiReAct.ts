@@ -9,4 +9,8 @@ export type AIReActEventProps = {
    * string>{AIAgentTriggerEventInfo}
    */
   switchAIAgentTab: string
+  /**
+   * string>{AIAgentTriggerEventInfo}
+   */
+  actionAITaskContentTab: string
 }

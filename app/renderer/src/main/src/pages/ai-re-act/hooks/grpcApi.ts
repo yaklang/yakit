@@ -1,14 +1,16 @@
-import { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
-import { KVPair } from '@/models/kv'
-import { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
-import { AITaskInfoProps } from './aiRender'
-import { AITool } from '@/pages/ai-agent/type/aiTool'
-import { AIForge } from '@/pages/ai-agent/type/forge'
-import { KnowledgeBaseEntry } from '@/components/playground/knowlegeBase/types'
+import type { KnowledgeBaseEntry } from '@/components/playground/knowlegeBase'
+import type { StreamResult, HoldGRPCStreamProps } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
+import type { KVPair } from '@/models/kv'
+import type { AITool } from '@/pages/ai-agent/type/aiTool'
+import type { AIForge } from '@/pages/ai-agent/type/forge'
+import type { ExecResult, PaginationSchema } from '@/pages/invoker/schema'
+import type { AITaskInfoProps } from './aiRender'
+
 import {
-  AIModelTypeEnumType,
+  AIToDoListStatusEnumType,
   AttachedResourceKeyEnum,
   AttachedResourceTypeEnum,
+  type AIModelTypeEnumType,
 } from '@/pages/ai-agent/defaultConstant'
 
 // #region 双工接口请求和响应结构
@@ -31,6 +33,8 @@ export enum AISourceEnum {
   flow = 'flow',
   /** irify 来源 */
   irify = 'irify',
+  /** Yak Runner 代码审计 */
+  yakRunner = 'yakRunner',
   /** 兼容老数据 */
   other = '',
 }
@@ -148,6 +152,19 @@ export interface AIStartParams {
    *
    */
   Source?: AISource
+
+  EnabledCapabilities?: AIEnabledCapability[]
+
+  /**
+   * 任务规划里并发任务的数量
+   * 默认：2
+   */
+  PlanExecTaskConcurrency?: number
+}
+
+interface AIEnabledCapability {
+  Name: string
+  Type: string
 }
 
 /** AIInputEvent-HotpatchType 的可选值 */
@@ -156,6 +173,9 @@ export enum AIInputEventHotPatchTypeEnum {
   HotPatchType_AgreePolicy = 'AgreePolicy',
   HotPatchType_SyncPerceptionTrigger = 'SyncPerceptionTrigger',
   HotPatchType_EnablePlan = 'EnablePlan',
+
+  HotPatchType_EnabledCapabilities = 'EnabledCapabilities',
+  HotPatchType_DisabledCapabilities = 'DisabledCapabilities',
 
   /**@deprecated ai相关配置的热更新不需要前端传了，后端每次都去查询最新的 */
   HotPatchType_AIService = 'AIService',
@@ -199,6 +219,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_USER_INTERVENTION = 'user_intervention',
   /** 获取历史会话数据 */
   SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
+  /** 获取能力相关数据 */
+  SYNC_CAPABILITY_INVENTORY = 'capability_inventory_sync',
 }
 
 export interface AIInputEvent {
@@ -229,6 +251,11 @@ export interface AIInputEvent {
   AttachedResourceInfo?: AttachedResourceInfo[]
   /** 场景 */
   FocusModeLoop?: string
+  /**
+   * 配置热补丁目标任务的逻辑 ID (AIStatefulTask.GetId)。
+   * 非空时，仅当前正在执行且 ID 匹配的任务会应用该热补丁（主要用于能力热更新）。
+   */
+  TaskId?: string
 }
 export interface AttachedResourceInfo {
   Key: AttachedResourceKeyEnum
@@ -258,6 +285,10 @@ export interface AIOutputEvent {
   Timestamp: number
   // 任务索引
   TaskIndex: string
+  /**
+   * TaskId is the logical task identifier (AIStatefulTask.GetId), distinct from TaskUUID.
+   */
+  TaskId: string
   /** 是否禁用 markdown 渲染 UI */
   DisableMarkdown: boolean
   /** 是否是同步消息 */
@@ -386,6 +417,42 @@ export declare namespace AIAgentGrpcApi {
     liteforge_action: string
   }
 
+  /**
+   * todo_list_update + NodeId todo_list 时 Content(JSON) 结构
+   */
+  export interface TodoListUpdate {
+    applied_ops: TodoListUpdateAppliedOps[]
+    items: TodoListUpdateItem[]
+    iteration_index: number
+    satisfied: boolean
+    stats: TodoListUpdateStats
+    task_id: string
+    task_index: string
+  }
+  export interface TodoListUpdateAppliedOps {
+    content: string
+    id: string
+    op: string
+  }
+
+  export interface TodoListUpdateItem {
+    content: string
+    created_at: number
+    id: string
+    status: AIToDoListStatusEnumType
+    updated_at: number
+    scope_task_id?: string
+    scope_task_index?: string
+  }
+
+  export interface TodoListUpdateStats {
+    deleted: number
+    doing: number
+    done: number
+    pending: number
+    skipped: number
+  }
+
   /** review_release 释放消息 */
   export interface ReviewRelease {
     /** review对应的id */
@@ -406,11 +473,17 @@ export declare namespace AIAgentGrpcApi {
 
   /** 计划内单个任务的详情 */
   export interface PlanTask {
+    /** 任务id */
+    task_id: string
     index: string
     /** 任务名 */
     name: string
     /** 正文 */
     goal: string
+    /** -- */
+    semantic_identifier: string
+    /** 关联任务名 */
+    depends_on?: string[]
     progress?: AITaskStatusType
     subtasks?: AITaskInfoProps[]
     /**评阅时树节点是否被删 */
@@ -438,6 +511,8 @@ export declare namespace AIAgentGrpcApi {
       name: string
       /** 正文 */
       goal: string
+      /** 任务id */
+      task_id: string
       /** 后端供(push_task|pop_task)对应的唯一标识 */
       task_uuid?: string
       /** 后端供pop_task反馈的任务执行状态 */
@@ -477,6 +552,92 @@ export declare namespace AIAgentGrpcApi {
     index: string
     keywords: string[]
     plans_id: string
+  }
+
+  /**
+   * 计划树Card中固定的工具和技能数据
+   */
+  export interface PlanItemDetailsFixedItem {
+    name: string
+    verbose_name: string
+    description: string
+    category: 'tool' | 'mcp_server' | 'forge' | 'skill' | 'yak_plugin' | 'mcp'
+  }
+
+  /**
+   * 任务树Card中动态生成的工具和技能数据
+   */
+  export interface PlanItemDetailsDynamicToolItem {
+    name: string
+    verbose_name: string
+    description: string
+    /**
+     * 常见值：tool / yak_plugin / mcp
+     */
+    category: 'tool' | 'yak_plugin' | 'mcp'
+  }
+  export interface PlanItemDetailsDynamicSkillsItem {
+    name: string
+    description: string
+    category: 'skill'
+    /**
+     * metadata:仅注册表
+     * loaded:已注入 SKILLS_CONTEXT
+     */
+    skill_load_state: 'metadata' | 'loaded' | ''
+  }
+  export interface PlanItemDetailsDynamicForgesItem {
+    name: string
+    description: string
+    category: 'forge'
+  }
+  export interface PlanItemDetails {
+    fixed: {
+      tools: PlanItemDetailsFixedItem[]
+      mcp_servers: PlanItemDetailsFixedItem[]
+      forges: PlanItemDetailsFixedItem[]
+      skills: PlanItemDetailsFixedItem[]
+    }
+    dynamic: {
+      tools: PlanItemDetailsDynamicToolItem[]
+      skills: PlanItemDetailsDynamicSkillsItem[]
+      forges: PlanItemDetailsDynamicForgesItem[]
+    }
+  }
+
+  export interface PerceptionData {
+    summary: string
+    topics: string[]
+    keywords: string[]
+    changed: boolean
+    confidence: number
+    trigger: string
+    epoch: number
+    /**
+     * none 意图方向未变
+     * drift 轻微漂移，不触发昂贵下游刷新
+     * pivot 方向性 pivot，触发能力/知识补充
+     */
+    intent_shift: 'none' | 'drift' | 'pivot'
+    timestamp: number
+  }
+
+  export interface SessionSnapshot {
+    revision: number
+    updated_at: number
+    execution: {
+      status: string
+      tool_call_success: number
+      tool_call_failed: number
+      tool_call_total: number
+      execution_minutes: number
+      http_flow_count: number
+      risk_count: number
+      modified_file_count: number
+    }
+    /** 下面两个字段暂时没有用，故不添加 */
+    // perception
+    // capabilities
   }
 
   /** task_review_require */
@@ -803,6 +964,17 @@ export declare namespace AIAgentGrpcApi {
     estimated_tokens: number
   }
 
+  export interface YaklangCodeChange {
+    op: string
+    code: {
+      content: string
+      path?: string
+      summary?: string
+      version: number
+    }
+    reason?: string
+    source_action?: string
+  }
   /** prompt_profile 中按 role 拆分的字节统计项 */
   export interface PromptProfileRoleStat {
     role_name: string

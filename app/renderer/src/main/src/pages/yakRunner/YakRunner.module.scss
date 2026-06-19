@@ -16,13 +16,14 @@
     height: 100%;
     width: 100%;
     overflow: hidden;
-    .code-container {
+    .code-editor-wrap {
+      position: relative;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      .runner-tabs-top {
-        border-top: 1px solid #ffffff;
-      }
+    }
+    .runner-tabs-top {
+      border-top: 1px solid var(--Colors-Use-Neutral-Border);
     }
   }
   // &-code-offset{

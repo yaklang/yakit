@@ -17,11 +17,6 @@ export interface YakRunnerCodeProps {
   name?: string
 }
 
-export interface ViewsInfoProps {
-  direction: 'vertical' | 'horizontal' | ''
-  views: ViewFileProps | ViewsInfoProps[] | null
-}
-
 export interface YakRunnerHistoryProps {
   // 是否为文件
   isFile: boolean
@@ -50,7 +45,6 @@ export interface OpenFileByPathProps {
     name: string
     parent?: string | null
     highLightRange?: Selection
-    aiReport?: boolean
   }
   // 是否记录历史
   isHistory?: boolean

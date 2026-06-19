@@ -21,6 +21,7 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
     className = '',
     btnItemClassName = '',
     t,
+    tabBarExtraContent,
   } = props
   const { t: tYakitUi, i18n } = useI18nNamespaces(['yakitUi'])
   const [show, setShow] = useControllableValue<boolean>(props, {
@@ -91,19 +92,24 @@ export const YakitSideTab: React.FC<YakitSideTabProps> = React.memo((props, ref)
         return (
           <>
             <div className={styles['yakit-side-tab-horizontal']}>
-              {yakitTabs.map((item) => (
-                <YakitTabsItem
-                  key={item.value}
-                  item={item}
-                  onChange={onChange}
-                  className={classNames(styles['yakit-side-tab-horizontal-item'], btnItemClassName, {
-                    [styles['yakit-side-tab-horizontal-item-active']]: item.value === activeKey,
-                  })}
-                  onTabPaneRender={onTabPaneRender}
-                  barHint={barHint}
-                  t={t}
-                />
-              ))}
+              <div className={styles['yakit-side-tab-horizontal-list']}>
+                {yakitTabs.map((item) => (
+                  <YakitTabsItem
+                    key={item.value}
+                    item={item}
+                    onChange={onChange}
+                    className={classNames(styles['yakit-side-tab-horizontal-item'], btnItemClassName, {
+                      [styles['yakit-side-tab-horizontal-item-active']]: item.value === activeKey,
+                    })}
+                    onTabPaneRender={onTabPaneRender}
+                    barHint={barHint}
+                    t={t}
+                  />
+                ))}
+              </div>
+              {tabBarExtraContent && (
+                <div className={styles['yakit-side-tab-horizontal-extra']}>{tabBarExtraContent}</div>
+              )}
             </div>
             {children}
           </>

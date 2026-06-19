@@ -11,6 +11,14 @@
     justify-content: space-between;
     align-items: center;
 
+    .button-border {
+      border-color: var(--Colors-Use-Neutral-Border);
+
+      &:hover {
+        border-color: var(--Colors-Use-Main-Primary);
+      }
+    }
+
     .menu-wrapper-left {
       display: flex;
       gap: 8px;

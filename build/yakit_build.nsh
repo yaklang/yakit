@@ -35,6 +35,32 @@ Function ForceQuit
     Quit
 FunctionEnd
 
+Function ShowInstallPermissionError
+    MessageBox MB_OK|MB_ICONSTOP "安装失败：当前安装目录没有写入权限。$\r$\n$\r$\n目标目录：$INSTDIR$\r$\n$\r$\n请检查权限，或右键选择“以管理员身份运行”后重试。"
+    Quit
+FunctionEnd
+
+Function EnsureInstallDirWritable
+    ${If} $INSTDIR == ""
+        Return
+    ${EndIf}
+
+    ClearErrors
+    CreateDirectory "$INSTDIR"
+    ${If} ${Errors}
+        Call ShowInstallPermissionError
+    ${EndIf}
+
+    ; 通过创建临时文件预检查写权限，避免后续落到 NSIS 的内部错误提示
+    ClearErrors
+    FileOpen $0 "$INSTDIR\.__yakit_write_test__.tmp" w
+    ${If} ${Errors}
+        Call ShowInstallPermissionError
+    ${EndIf}
+    FileClose $0
+    Delete "$INSTDIR\.__yakit_write_test__.tmp"
+FunctionEnd
+
 
 !insertmacro MUI_PAGE_WELCOME
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW DirectoryPageShow
@@ -62,7 +88,7 @@ FunctionEnd
 Function FinishLeave
     ${NSD_GetState} $mui.FinishPage.Run $0
     ${If} $0 <> 0
-    Exec "$INSTDIR\$EXE_NAME.exe"
+    ExecShell "open" "$INSTDIR\$EXE_NAME.exe"
     ${EndIf}
     ${NSD_GetState} $mui.FinishPage.ShowReadme $0
     ${If} $0 <> 0
@@ -211,10 +237,20 @@ FunctionEnd
 !macroend
 
 !macro customInstall
+    DetailPrint "检查安装目录权限..."
+    Call EnsureInstallDirWritable
+
+    ; 创建 yakit-projects 文件夹
+    DetailPrint "创建yakit-projects文件夹..."
+    ClearErrors
+    CreateDirectory "$INSTDIR\yakit-projects"
+    ${If} ${Errors}
+        Call ShowInstallPermissionError
+    ${EndIf}
+
     ; Migrate yakit-projects folder
     ${If} "$PROFILE\yakit-projects" != "$INSTDIR\yakit-projects"
     ${AndIf} ${FileExists} "$PROFILE\yakit-projects"
-        CreateDirectory "$INSTDIR\yakit-projects"
         ClearErrors
         ; 旧版本数据可能包含多层目录和隐藏文件，这里必须递归复制，且不要在安装阶段直接删源目录
         nsExec::Exec '"$SYSDIR\cmd.exe" /C xcopy "$PROFILE\yakit-projects" "$INSTDIR\yakit-projects\\" /E /I /H /K /Y /C >nul 2>&1'
@@ -230,9 +266,6 @@ FunctionEnd
     DetailPrint "写入环境变量..."
     WriteRegStr HKCU "Software\Yakit" $INSTALL_PATH_REG_KEY_NAME "$INSTDIR"
     WriteRegStr HKCU "Environment" "YAKIT_HOME" "$INSTDIR\yakit-projects"
-    ; 创建 yakit-projects 文件夹
-    DetailPrint "创建yakit-projects文件夹..."
-    CreateDirectory "$INSTDIR\yakit-projects"
     DetailPrint "正在安装..."
 !macroend
 
@@ -244,9 +277,10 @@ Section "Main" SectionMain
         Pop $0
         ${If} $0 == 0
             StrCpy $INSTDIR "$INSTDIR\$EXE_NAME"
-            CreateDirectory $INSTDIR
         ${EndIf}
     ${EndIf}
+
+    Call EnsureInstallDirWritable
 
 SectionEnd
 

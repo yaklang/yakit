@@ -24,7 +24,6 @@ import {
   GetConnectPort,
   getReleaseEditionName,
   isCommunityYakit,
-  isEnpriTrace,
   isEnpriTraceAgent,
   isEnterpriseEdition,
   isIRify,
@@ -49,7 +48,6 @@ import { useScreenRecorder } from '@/store/screenRecorder'
 import { ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicControl'
 import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { RemoteEngine } from './RemoteEngine/RemoteEngine'
 import { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
@@ -95,7 +93,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { LocalGVS } from '@/enums/localGlobal'
 import { useSoftMode } from '@/store/softMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import useMcpStream from './hooks/useMcp/useMcp'
+import { useSyncYakMcpStream } from '@/store/yakMcpStream'
 import { YakParamProps } from '@/pages/plugins/pluginsType'
 import {
   yakitAI,
@@ -134,7 +132,7 @@ export interface UILayoutProp {
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
   const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi'])
-  const [mcpStreamInfo, mcpStreamEvent] = useMcpStream({})
+  const mcp = useSyncYakMcpStream({})
   const { currentPageTabRouteKey } = usePageInfo(
     (s) => ({
       currentPageTabRouteKey: s.currentPageTabRouteKey,
@@ -189,8 +187,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   // 模式 目前只有yakit社区版有
   const { setSoftMode } = useSoftMode()
   /** ---------- 软件状态相关属性 End ---------- */
-
-  const [_, aiGlobalConfigEvent] = useAIGlobalConfig()
 
   // #region 新窗口引擎已经启动好，只需要看门狗检查是否ready，此处默认初始化一些变量
   const [showLoadingPage, setShowLoadingPage] = useState<boolean>(false)
@@ -276,11 +272,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     uploadProjectEvent.startUpload({
       isAutoUploadProject: true,
     })
-
-    // 登录获取服务端AI配置
-    if (userInfo.isLogin && isEnpriTrace()) {
-      aiGlobalConfigEvent.getAIGlobalConfigAfterLogin()
-    }
   }, [userInfo.isLogin])
 
   useEffect(() => {
@@ -1604,14 +1595,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
     })
   })
   const dropClassName = { [styles['header-title-drop']]: drop }
-
-  const mcp = useMemo(
-    () => ({
-      mcpStreamInfo,
-      mcpStreamEvent,
-    }),
-    [mcpStreamInfo, mcpStreamEvent],
-  )
 
   return (
     <div className={styles['ui-layout-wrapper']}>

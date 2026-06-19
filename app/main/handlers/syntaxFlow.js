@@ -419,6 +419,11 @@ module.exports = (win, getClient) => {
     return path.join(yakProjects, fileName)
   })
 
+  // 获取 yakit-projects 文件夹下 projects 里面的文件路径
+  ipcMain.handle('GetProjectsFilePath', async () => {
+    return yakProjects
+  })
+
   const asyncCheckSyntaxFlowRuleUpdate = (params) => {
     return new Promise((resolve, reject) => {
       getClient().CheckSyntaxFlowRuleUpdate(params, (err, data) => {

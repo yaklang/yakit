@@ -66,7 +66,14 @@ const YakitSolidLoadingInner = forwardRef<HTMLDivElement, YakitSolidLoadingProps
         })}
         aria-hidden
       >
-        <ColorsTaskNodesIcon style={iconStyle} />
+        <ColorsTaskNodesIcon
+          style={
+            {
+              ...iconStyle,
+              '--size': iconStyle.fontSize,
+            } as CSSProperties
+          }
+        />
       </span>
       {tip ? <span className={styles['yakit-solid-loading-tip']}>{tip}</span> : null}
     </div>

@@ -183,7 +183,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
                     AllowPlanUserInteract: AIAgentSettingDefault.AllowPlanUserInteract,
                     PlanUserInteractMaxCount: AIAgentSettingDefault.PlanUserInteractMaxCount,
                     ReActMaxIteration: AIAgentSettingDefault.ReActMaxIteration,
-                    // PlanExecTaskConcurrency: AIAgentSettingDefault.PlanExecTaskConcurrency,// TODO - 等待 nonight/feat/concurrnecy-task
+                    PlanExecTaskConcurrency: AIAgentSettingDefault.PlanExecTaskConcurrency,
                   }
                   onReset(restValue)
                 }}
@@ -220,8 +220,7 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
             <Form.Item label={<>ReAct 迭代轮数限制</>} name="ReActMaxIteration">
               <YakitInputNumber type="horizontal" size="small" min={0} max={100} />
             </Form.Item>
-            {/* TODO - 等待 nonight/feat/concurrnecy-task */}
-            {/* <Form.Item
+            <Form.Item
               label={
                 <>
                   深度规划任务并发数
@@ -235,8 +234,8 @@ const AIChatSetting: React.FC<AIChatSettingProps> = memo((props) => {
               }
               name="PlanExecTaskConcurrency"
             >
-              <YakitInputNumber type="horizontal" size="small" min={0} max={100} />
-            </Form.Item> */}
+              <YakitInputNumber type="horizontal" size="small" min={1} max={5} />
+            </Form.Item>
           </YakitPanel>
           <YakitPanel
             header={t('AIChatSetting.automation')}

@@ -83,7 +83,8 @@ export function mergeCasualLineHunks(
   hunks: CasualLineHunk[],
   decisions: Record<string, 'accept' | 'reject'>,
 ): string {
-  const baseLines = norm(baseline).split('\n')
+  const base = norm(baseline)
+  const baseLines = base ? base.split('\n') : []
   const sorted = [...hunks].sort((a, b) => a.origStart - b.origStart)
   let cursor = 0
   const result: string[] = []

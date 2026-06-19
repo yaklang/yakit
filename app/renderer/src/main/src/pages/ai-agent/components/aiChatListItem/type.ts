@@ -8,4 +8,5 @@ export interface AIChatListItemProps {
   tasksProps?: { tasks: AIAgentGrpcApi.PlanTask[]; yakExecResult: UseYakExecResultState }
   hasNext?: boolean
   itemIndex?: number
+  session?: string
 }

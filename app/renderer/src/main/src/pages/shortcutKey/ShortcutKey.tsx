@@ -37,7 +37,7 @@ const getShortcutPageName = (page, t: TFunction) => {
 
 export const ShortcutKey: React.FC<ShortcutKeyProps> = memo((props) => {
   const { page } = props
-  const { t, i18n } = useI18nNamespaces(['shortcutKey', 'utils'])
+  const { t, i18n } = useI18nNamespaces(['shortcutKey', 'utils', 'yakitUi', 'history'])
 
   const wrapper = useRef<HTMLDivElement>(null)
 

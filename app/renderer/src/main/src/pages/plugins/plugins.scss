@@ -105,6 +105,8 @@
 }
 // -------------------- radio组件样式 ↓↓↓ --------------------
 .plugins-radio-wrapper {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+
   .ant-radio:hover .ant-radio-inner {
     border-color: var(--Colors-Use-Main-Border);
   }

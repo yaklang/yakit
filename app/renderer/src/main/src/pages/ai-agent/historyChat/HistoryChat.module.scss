@@ -1,12 +1,14 @@
 .history-chat {
   width: 100%;
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
   background-color: var(--Colors-Use-Basic-Background);
 
   .header-wrapper {
+    flex-shrink: 0;
     padding: 8px 12px 0 12px;
     display: flex;
     flex-direction: column;
@@ -46,7 +48,10 @@
 
   .content {
     flex: 1;
-    overflow: hidden auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -66,3 +71,12 @@
 //         }
 //     }
 // }
+
+// Tooltip 默认 z-index 1060，embedded 场景下 Dropdown / Popconfirm 需更高层级
+.history-chat-embedded-overlay {
+  z-index: 1100;
+}
+
+.history-chat-embedded-popconfirm {
+  z-index: 1110;
+}

@@ -17,7 +17,7 @@ import { CacheDropDownGV } from '@/yakitGV'
 import emiter from '@/utils/eventBus/eventBus'
 import { YakitAutoCompleteRefProps } from '../yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { getRemoteConfigBaseUrlGV, getRemoteHttpSettingGV, isEnpriTrace } from '@/utils/envfile'
-import { useUploadInfoByEnpriTrace } from '../layout/utils'
+import { apiSystemConfig, useUploadInfoByEnpriTrace } from '../layout/utils'
 import { JSONParseLog } from '@/utils/tool'
 import { yakitAuth, yakitCodec, yakitProfile, yakitUILayout } from '@/services/electronBridge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -75,58 +75,65 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   }
   // 企业登录
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
-  const loginUser = useMemoizedFn(() => {
+  const loginUser = useMemoizedFn(async () => {
     const { user_name, pwd } = getFormValue()
-    NetWorkApi<API.UrmLoginRequest, API.UserData>({
-      method: 'post',
-      url: 'urm/login',
-      data: {
-        user_name: user_name.trim(),
-        pwd,
-      },
-    })
-      .then((res: API.UserData) => {
-        yakitAuth.companySignIn({ ...res }).then((data) => {
-          const user = {
-            isLogin: true,
-            platform: res.from_platform,
-            githubName: res.from_platform === 'github' ? res.name : null,
-            githubHeadImg: res.from_platform === 'github' ? res.head_img : null,
-            wechatName: res.from_platform === 'wechat' ? res.name : null,
-            wechatHeadImg: res.from_platform === 'wechat' ? res.head_img : null,
-            qqName: res.from_platform === 'qq' ? res.name : null,
-            qqHeadImg: res.from_platform === 'qq' ? res.head_img : null,
-            companyName: res.from_platform === 'company' ? res.name : null,
-            companyHeadImg: res.from_platform === 'company' ? res.head_img : null,
-            role: res.role,
-            user_id: res.user_id,
-            token: res.token,
-          }
-          setStoreUserInfo(user)
-          if (data?.next) {
-            success(t('ConfigPrivateDomain.enterpriseLoginSuccess'))
-            onClose && onClose()
-            onSuccee && onSuccee()
-            uploadProjectEvent.startUpload({
-              isUploadSyncData: true,
-              isUpdateGlobalConfig: enterpriseLogin,
-            })
-          }
-          // 首次登录强制修改密码
-          if (!res.loginTime) {
-            yakitAuth.requestPasswordReset()
-          }
+    try {
+      const md5Res = await yakitCodec.run({ Type: 'md5', Text: pwd, Params: [], ScriptName: '' })
+      const res = await NetWorkApi<API.UrmLoginRequest, API.UserData>({
+        method: 'post',
+        url: 'urm/login',
+        data: {
+          user_name: user_name.trim(),
+          pwd: md5Res.Result,
+        },
+      })
+      const data = await yakitAuth.companySignIn({ ...res })
+      const user = {
+        isLogin: true,
+        platform: res.from_platform,
+        githubName: res.from_platform === 'github' ? res.name : null,
+        githubHeadImg: res.from_platform === 'github' ? res.head_img : null,
+        wechatName: res.from_platform === 'wechat' ? res.name : null,
+        wechatHeadImg: res.from_platform === 'wechat' ? res.head_img : null,
+        qqName: res.from_platform === 'qq' ? res.name : null,
+        qqHeadImg: res.from_platform === 'qq' ? res.head_img : null,
+        companyName: res.from_platform === 'company' ? res.name : null,
+        companyHeadImg: res.from_platform === 'company' ? res.head_img : null,
+        role: res.role,
+        user_id: res.user_id,
+        token: res.token,
+      }
+      setStoreUserInfo(user)
+      if (data?.next) {
+        success(t('ConfigPrivateDomain.enterpriseLoginSuccess'))
+        onClose && onClose()
+        onSuccee && onSuccee()
+        uploadProjectEvent.startUpload({
+          isUploadSyncData: true,
+          isUpdateGlobalConfig: enterpriseLogin,
         })
-      })
-      .catch((err) => {
-        setTimeout(() => setLoading(false), 300)
-        failed(t('ConfigPrivateDomain.enterpriseLoginFailed', { error: String(err) }))
-        if (typeof err === 'string' && skipShow && (err.includes('密码不正确') || err.includes('用户不存在'))) {
-          return
-        }
-        setShowSkip(true)
-      })
-      .finally(() => {})
+      }
+      // 首次登录强制修改密码
+      if (!res.loginTime) {
+        yakitAuth.requestPasswordReset()
+        return
+      }
+      //超过设置时间 强制修改密码
+      const { isOpen, content } =
+        (await apiSystemConfig(true)).data?.find((item) => item.configName === 'forceChangePwd') || {}
+      const days = Number(content)
+      if (!isOpen || !days || !res.updatedAt || res.from_platform !== 'company') return
+      if (Math.floor(Date.now() / 1000) - days * 86400 > res.updatedAt) {
+        yakitAuth.requestPasswordReset()
+      }
+    } catch (err) {
+      setTimeout(() => setLoading(false), 300)
+      failed(t('ConfigPrivateDomain.enterpriseLoginFailed', { error: String(err) }))
+      if (typeof err === 'string' && skipShow && (err.includes('密码不正确') || err.includes('用户不存在'))) {
+        return
+      }
+      setShowSkip(true)
+    }
   })
 
   const onFinish = useMemoizedFn((v: OnlineProfileProps) => {

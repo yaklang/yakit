@@ -25,7 +25,7 @@ import type {
 } from './grpcApi'
 import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { DeepPartial } from '@/pages/ai-agent/store/ChatDataStore'
-import type { AIChatQSData, ReActChatBaseInfo } from './aiRender'
+import { AIChatQSDataTypeEnum, type AIChatQSData, type ReActChatBaseInfo } from './aiRender'
 
 import { useEffect, useRef, useState } from 'react'
 import { yakitNotify } from '@/utils/notification'
@@ -36,7 +36,7 @@ import useAIPerfData, { UseAIPerfDataTypes } from './useAIPerfData'
 import useCasualChat from './useCasualChat'
 import useYakExecResult, { UseYakExecResultTypes } from './useYakExecResult'
 import useTaskChat from './useTaskChat'
-import { genErrorLogData, genExecTasks, handleGrpcDataPushLog } from './utils'
+import { genBaseAIChatData, genErrorLogData, genExecTasks, handleGrpcDataPushLog } from './utils'
 import { AITaskStatus, AIInputEventSyncTypeEnum } from './grpcApi'
 import useAIChatLog from './useAIChatLog'
 import cloneDeep from 'lodash/cloneDeep'
@@ -48,11 +48,13 @@ import {
   DefaultPlanLoadingStatus,
 } from './defaultConstant'
 import useThrottleState from '@/hook/useThrottleState'
+import { aiSystemStreamStore } from '@/store/aiSystemStream'
 import { grpcQueryAIEvent } from '@/pages/ai-agent/grpc'
 import useAINodeLabel from './useAINodeLabel'
 import { formatAIAgentSetting } from '@/pages/ai-agent/utils'
 import { handleResetForNewSession } from './grpcAIMessageHandlers'
 import useAIMessageData from './useAIMessageData'
+import { getDomainFromAISource } from './useGetChatDataStoreKey'
 
 const { ipcRenderer } = window.require('electron')
 function useChatIPC(params?: UseChatIPCParams): [UseChatIPCState, UseChatIPCEvents]
@@ -71,6 +73,8 @@ function useChatIPC(params?: UseChatIPCParams) {
     getSetting,
     onHttpFuzzRequestChange,
     onGetHttpFlowFuzzStatus,
+    onYaklangCodeChange,
+    aiSource = 'ai',
   } = params || {}
 
   const { getLabelByParams } = useAINodeLabel()
@@ -196,26 +200,11 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   // #region 系统信息流展示相关逻辑
   /** 记录都存在过的系统信息uuid, 只展示最新的一条系统信息 */
-  const systemEventUUID = useRef<string[]>([])
-  const [systemStream, setSystemStream] = useState('')
   const handleSetSystemStream = useMemoizedFn((uuid: string, content: string) => {
-    const lastUUID = systemEventUUID.current[systemEventUUID.current.length - 1]
-    if (lastUUID) {
-      if (lastUUID === uuid) {
-        setSystemStream((old) => old + content)
-      } else {
-        if (systemEventUUID.current.includes(uuid)) return
-        systemEventUUID.current.push(uuid)
-        setSystemStream(content)
-      }
-    } else {
-      systemEventUUID.current.push(uuid)
-      setSystemStream(content)
-    }
+    aiSystemStreamStore.appendChunk(uuid, content)
   })
   const handleResetSystemStream = useMemoizedFn(() => {
-    systemEventUUID.current = []
-    setSystemStream('')
+    aiSystemStreamStore.reset()
   })
   // #endregion
 
@@ -362,6 +351,9 @@ function useChatIPC(params?: UseChatIPCParams) {
   const fetchCurrentTaskPlanID = useMemoizedFn(() => {
     return currentTaskPlanID.current
   })
+  const resetCurrentTaskPlanID = useMemoizedFn(() => {
+    currentTaskPlanID.current = undefined
+  })
 
   /** 用户主动(关闭/恢复)当前问题的loading状态(任务规划) */
   const [cancelTaskLoading, setCancelTaskLoading] = useState(false)
@@ -376,6 +368,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     pushLog: logEvents.pushLog,
     getChatDataStore,
     getRequest: fetchAIRequest,
+    getCurrentTaskPlanID: fetchCurrentTaskPlanID,
     onReview: onTaskReview,
     onReviewExtra: onTaskReviewExtra,
     onReviewRelease: handleTaskReviewRelease,
@@ -394,7 +387,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   // #region 历史数据的请求hook
   const [requestState, requestEvents] = useAIMessageData({
-    type: 'ai',
+    type: getDomainFromAISource(aiSource),
     getChatStore: getChatDataStore,
     setContentMap: handleSetContentMap,
     setCasualElements: casualChatEvent.setElements,
@@ -540,7 +533,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     // 清空自由对话相关的ID
     currentCasualTaskID.current = ''
     // 清空任务规划相关的ID
-    currentTaskPlanID.current = undefined
+    resetCurrentTaskPlanID()
     taskChatEvent.handleResetPlanTree()
   })
 
@@ -560,7 +553,7 @@ function useChatIPC(params?: UseChatIPCParams) {
     handleResetPlanHistoryList()
     currentCasualTaskID.current = ''
     handleUpdateCasualStatus('reset')
-    currentTaskPlanID.current = undefined
+    resetCurrentTaskPlanID()
     handleResetTaskStatus()
 
     setCancelCasualLoading(false)
@@ -690,8 +683,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
-        // console.log('onStart-res', res, ipcContent)
-
+        // console.log('ipcContent', res, `------${res.TaskIndex}`, ipcContent)
         if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
           const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
           const chatStore = getChatDataStore()
@@ -737,6 +729,13 @@ function useChatIPC(params?: UseChatIPCParams) {
           onGetHttpFlowFuzzStatus?.(httpFlowFuzzStatus)
         }
 
+        if (res.Type === 'yaklang_code_change') {
+          if (res.IsSync) return
+          const yaklangCodeChange = JSON.parse(ipcContent) as AIAgentGrpcApi.YaklangCodeChange
+          onYaklangCodeChange?.(yaklangCodeChange)
+          return
+        }
+
         if (res.Type === 'structured' && res.NodeId === 'session_title') {
           if (res.IsSync) return
           // 生成会话的名称
@@ -747,6 +746,8 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (res.Type === 'start_plan_and_execution') {
           if (res.IsSync) return
+          /** 清空任务规划的todolist详情 */
+          getChatDataStore()?.taskChat.planDetailsMap.clear()
           // 触发任务规划，并传出任务规划流的标识 coordinator_id
           const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
           if (startInfo.coordinator_id && currentTaskPlanID.current?.coordinatorId !== startInfo.coordinator_id) {
@@ -763,6 +764,21 @@ function useChatIPC(params?: UseChatIPCParams) {
             setTaskStatus(() => ({ loading: true, plan: '加载中...', task: '加载中...' }))
             // 触发任务规划UI展示的回调
             onTaskStart && onTaskStart()
+            const chatData: AIChatQSData = {
+              ...genBaseAIChatData(res),
+              id: `${currentTaskPlanID.current.taskID}-unknown`,
+              chatType: 'task',
+              type: AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP,
+            } as AIChatQSData
+            getChatDataStore?.()?.taskChat?.contents.set(chatData.id, chatData)
+            taskChatEvent.setElements((old) => {
+              const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
+              if (exists) return old
+              return [
+                ...old,
+                { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
+              ]
+            })
           }
           /** 获取最新任务树状态 */
           sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
@@ -851,6 +867,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             handleTriggerQuestionQueueRequest()
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
             currentCasualTaskID.current = data.react_task_id
+            casualChatEvent.resetTodoListData()
             if (data.focus_mode) {
               // 记录场景状态
               handleFocusModeChange(data.react_task_id, data.focus_mode)
@@ -942,6 +959,7 @@ function useChatIPC(params?: UseChatIPCParams) {
               }
               if (focusOfTaskID.current === react_task_id) handleResetFocusMode()
               handleUpdateCasualStatus('remove')
+              casualChatEvent.resetTodoListData()
               if (currentTaskPlanID.current?.taskID === react_task_id) {
                 currentTaskPlanID.current.status = react_task_now_status as AITaskStatus
                 setCancelTaskLoading(false)
@@ -1005,7 +1023,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         if (res.Type === 'stream') {
           if (res.IsSystem || res.IsReason) {
-            const { CallToolID, TaskIndex, NodeId, NodeIdVerbose, EventUUID, StreamDelta, ContentType } = res
+            const { CallToolID, NodeId, NodeIdVerbose, EventUUID, StreamDelta, ContentType } = res
             if (!NodeId || !EventUUID) return
             let ipcStreamDelta = Uint8ArrayToString(StreamDelta) || ''
             const content = ipcContent + ipcStreamDelta
@@ -1013,7 +1031,6 @@ function useChatIPC(params?: UseChatIPCParams) {
               type: 'stream',
               Timestamp: res.Timestamp,
               data: {
-                TaskIndex,
                 CallToolID,
                 NodeId,
                 NodeIdVerbose: NodeIdVerbose || convertNodeIdToVerbose(NodeId),
@@ -1103,6 +1120,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         setSwitchLoading(false)
       }, 200)
       endAfterSession.current = ''
+      chatID.current = ''
       cacheDataStore?.clear()
       return
     }
@@ -1238,7 +1256,6 @@ function useChatIPC(params?: UseChatIPCParams) {
       casualTitle,
       casualLoading,
 
-      systemStream,
       focusMode,
       switchLoading,
       planHistoryList,
@@ -1263,7 +1280,6 @@ function useChatIPC(params?: UseChatIPCParams) {
     casualTitle,
     casualLoading,
 
-    systemStream,
     focusMode,
     switchLoading,
     planHistoryList,
@@ -1292,6 +1308,7 @@ function useChatIPC(params?: UseChatIPCParams) {
       handleUserManualIntervention,
       handleLoadMoreHistory: handleLoadMore,
       handleHasMoreHistory: handleHasMore,
+      resetCurrentTaskPlanID,
     }
   }, [])
 

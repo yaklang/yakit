@@ -454,15 +454,17 @@ monaco.languages.setMonarchTokensProvider(fuzzHTTPMonacoSpec, {
       [/"/, 'json.value', '@pop'],
     ],
     body: [
+      // fuzztag 优先级必须高于 JSON 根节点，否则 {{ 的首个 { 会被 JSON 规则吞掉导致渲染失败
+      [/{{/, 'fuzz.tag.inner', '@fuzz_tag'],
       [/(\{)/, { token: 'json.start', next: '@body_json_object' }], // JSON 对象根节点
       [/(\[)/, { token: 'json.array.start', next: '@body_json_array' }], // JSON 数组根节点
-      [/{{/, 'fuzz.tag.inner', '@fuzz_tag'],
       [/-{2,}.*/, 'body.boundary', '@body_form'],
       [/%[0-9ABCDEFabcdef]{2}/, 'http.urlencoded'],
       [/./, 'http.query.params', '@http_query_params'],
     ],
     // 通用 JSON 对象内部（用于根对象和嵌套对象）
     body_json_object: [
+      [/{{/, 'fuzz.tag.inner', '@fuzz_tag'], // 优先解析 fuzztag，避免被 { 规则吞掉
       [/\s+/, 'whitespace'], // 跳过空白/缩进/换行
       [/}/, { token: 'json.end', next: '@pop' }], // 对象结束
       [/"/, 'json.key', '@string_double'], // 字符串键
@@ -474,6 +476,7 @@ monaco.languages.setMonarchTokensProvider(fuzzHTTPMonacoSpec, {
     ],
     // JSON 值部分（对象内部）
     body_json_value: [
+      [/{{/, 'fuzz.tag.inner', '@fuzz_tag'], // 优先解析 fuzztag，避免被 {/数字 规则吞掉
       [/\s+/, 'whitespace'], // 跳过空白
       [/,/, { token: 'delimiter', next: '@pop' }], // 值结束，返回对象状态处理下一个键
       [/}/, { token: 'json.end', next: '@pop', goBack: 1 }], // 对象直接结束（兼容无逗号）
@@ -485,6 +488,7 @@ monaco.languages.setMonarchTokensProvider(fuzzHTTPMonacoSpec, {
     ],
     // JSON 数组（支持顶层数组及嵌套数组）
     body_json_array: [
+      [/{{/, 'fuzz.tag.inner', '@fuzz_tag'], // 优先解析 fuzztag，避免被 {/数字 规则吞掉
       [/\s+/, 'whitespace'], // 跳过空白
       [/\]/, { token: 'json.array.end', next: '@pop' }], // 数组结束
       [/,/, 'delimiter'], // 元素分隔符

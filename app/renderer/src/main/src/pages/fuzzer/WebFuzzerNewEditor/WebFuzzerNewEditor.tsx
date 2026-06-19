@@ -179,6 +179,7 @@ export const WebFuzzerNewEditor: React.FC<WebFuzzerNewEditorProps> = React.memo(
           pageId,
           privacy,
           showHostHint: true,
+          foldBinaryFuzztag: true,
         }}
         title={
           <span style={{ fontSize: 12 }}>

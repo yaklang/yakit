@@ -13,6 +13,10 @@ import classNames from 'classnames'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import { ChevrondownButton, ChevronleftButton, RoundedStopButton } from './AIReActComponent'
+import { Tooltip } from 'antd'
+import { ClockIcon } from '@/assets/newIcon'
+import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
 import { AIInputEvent, AIInputEventSyncTypeEnum, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
@@ -23,10 +27,19 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
-import useGetChatDataStoreKey, { getAISourceFromChatDataStoreKey } from '../hooks/useGetChatDataStoreKey'
+import useGetChatDataStoreKey, {
+  getAISourceFromChatDataStoreKey,
+  getAISourceListFromChatDataStoreKey,
+} from '../hooks/useGetChatDataStoreKey'
 import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import emiter from '@/utils/eventBus/eventBus'
 import { omit } from 'lodash'
+import AIContextToken from '@/pages/ai-agent/aiChatContent/AIContextToken/AIContextToken'
+import { AIToDoList } from './aiToDoList/AIToDoList'
+import { cloneDeep } from 'lodash'
+import { DefaultTodoListCardData } from '../hooks/defaultConstant'
+import { TodoListCardData } from '../hooks/aiRender'
+import { OutlineListTodoIcon } from '@/assets/icon/outline'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -42,6 +55,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const { setActiveChat } = useAIAgentDispatcher()
 
     const { chatDataStoreKey } = useGetChatDataStoreKey()
+    const historyChatAISource = useCreation(
+      () => getAISourceListFromChatDataStoreKey(chatDataStoreKey),
+      [chatDataStoreKey],
+    )
     const { chatIPCData } = useChatIPCStore()
     const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
@@ -58,6 +75,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const { activeChat, setting } = useAIAgentStore()
     const { getSession } = useSessionId()
+
+    const contextTokenSession = useCreation(() => {
+      return activeChat?.SessionID || setting.TimelineSessionID
+    }, [activeChat?.SessionID, setting.TimelineSessionID])
 
     const questionQueue = useCreation(() => chatIPCData.questionQueue, [chatIPCData.questionQueue])
 
@@ -139,7 +160,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
           }
 
           setActiveChat && setActiveChat(newChat)
-          emiter.emit('sessionData', JSON.stringify({ type: 'prependSession', payload: newChat }))
+          emiter.emit(
+            'sessionData',
+            JSON.stringify({ type: 'prependSession', payload: { ...newChat, isCreate: false } }),
+          )
           // 新建的额外操作
           onChat?.()
         } else {
@@ -252,6 +276,27 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       handleSendSyncMessage(params)
     })
 
+    const getPlanDetails = useMemoizedFn(() => {
+      if (!activeChat?.SessionID) return
+      return chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID)?.casualChat?.planDetails
+    })
+    const todoData: TodoListCardData = useCreation(() => {
+      if (!activeChat?.SessionID) return cloneDeep(DefaultTodoListCardData)
+      try {
+        return getPlanDetails()?.todoList || cloneDeep(DefaultTodoListCardData)
+      } catch (error) {
+        return cloneDeep(DefaultTodoListCardData)
+      }
+    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+    const taskId = useCreation(() => {
+      if (!activeChat?.SessionID) return ''
+      try {
+        return getPlanDetails()?.taskId || ''
+      } catch (error) {
+        return ''
+      }
+    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+
     return (
       <>
         <div
@@ -270,16 +315,58 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               <div className={classNames(styles['chat-header'], chatContainerHeaderClassName)}>
                 <div className={styles['chat-header-title']}>
                   <ColorsChatIcon />
-                  {title}
-                  {focusMode && <YakitTag fullRadius={true}>场景:{focusMode}</YakitTag>}
+                  <span className={styles['chat-header-title-text']}>{title}</span>
+                  {focusMode && (
+                    <YakitTag fullRadius={true} className={styles['chat-header-focus-mode']}>
+                      场景:{focusMode}
+                    </YakitTag>
+                  )}
                 </div>
                 <div className={styles['chat-header-extra']}>
                   {isShowRetract &&
-                    (externalParameters?.rightIcon ?? (
-                      <ChevronleftButton onClick={() => handleSwitchShowFreeChat(false)} />
+                    (externalParameters?.rightIcon ? (
+                      <>
+                        {externalParameters.rightIcon.dataDetails && (
+                          <AIContextToken
+                            iconOnly
+                            execute={execute}
+                            session={contextTokenSession}
+                            buttonProps={
+                              externalParameters.rightIcon.dataDetails === true
+                                ? undefined
+                                : externalParameters.rightIcon.dataDetails
+                            }
+                          />
+                        )}
+                        {externalParameters.rightIcon.history && (
+                          <Tooltip
+                            trigger={['click']}
+                            destroyTooltipOnHide
+                            overlayClassName={styles['history-chat-tooltip']}
+                            title={
+                              <div className={styles['history-chat-tooltip-content']}>
+                                <HistoryChat embedded aiSource={historyChatAISource} />
+                              </div>
+                            }
+                          >
+                            <YakitButton type="text2" icon={<ClockIcon />} title="" />
+                          </Tooltip>
+                        )}
+                        {externalParameters.rightIcon.add}
+                        {externalParameters.rightIcon.close}
+                      </>
+                    ) : (
+                      <>
+                        <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
+                      </>
                     ))}
                 </div>
               </div>
+              {todoData?.items?.length > 0 && (
+                <div className={styles['todoList-wrapper']}>
+                  <AIToDoList className={styles['to-do-list']} todoData={todoData} taskId={taskId} />
+                </div>
+              )}
               <AIReActChatContents chats={chatIPCData.casualChat} />
             </div>
             <div className={classNames(styles['chat-footer'])}>
@@ -293,9 +380,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       ref={aiChatTextareaRef}
                       loading={false}
                       onSubmit={handleSubmit}
-                      defaultValue={externalParameters?.defaultValue}
-                      filterMentionType={externalParameters?.filterMentionType}
-                      isOpen={externalParameters?.isOpen}
                       inputFooterRight={
                         <div className={styles['extra-footer-right']}>
                           {casualLoading && (
@@ -307,8 +391,6 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                           )}
                         </div>
                       }
-                      footerLeftTypes={externalParameters?.footerLeftTypes}
-                      onHttpFlowRemove={externalParameters?.onHttpFlowRemove}
                       chatDataStoreKey={chatDataStoreKey}
                       {...omit(externalParameters, 'rightIcon')}
                     />
@@ -317,7 +399,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               </div>
             </div>
           </div>
-          <div className={styles['open-wrapper']} onClick={() => handleSwitchShowFreeChat(true)}>
+          <div className={styles['open-wrapper']} onClick={(e) => handleSwitchShowFreeChat(true)}>
             <ChevrondownButton />
             <div className={styles['text']}>自由对话</div>
           </div>

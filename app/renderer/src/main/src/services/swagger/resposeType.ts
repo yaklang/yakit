@@ -98,6 +98,8 @@ export declare namespace API {
      * 判断是否首次登录
      */
     loginTime?: number
+    /** 密码最近更新时间（unix 秒） */
+    updatedAt?: number
     /**
      * 企业版用户是否有审核权限
      */

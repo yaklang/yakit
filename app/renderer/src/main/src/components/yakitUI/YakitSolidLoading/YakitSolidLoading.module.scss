@@ -32,9 +32,14 @@
 }
 
 .yakit-solid-loading-icon-wrap {
+  --size: 16px;
   display: inline-flex;
   flex-shrink: 0;
   line-height: 0;
+  svg {
+    width: var(--size);
+    height: var(--size);
+  }
 }
 
 .yakit-solid-loading-icon-wrap--spin {

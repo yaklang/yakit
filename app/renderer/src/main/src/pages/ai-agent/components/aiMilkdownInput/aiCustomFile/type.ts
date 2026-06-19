@@ -1,6 +1,5 @@
-import { ChatDataStoreKey } from '@/pages/ai-agent/store/ChatDataStore'
-
 export interface AICustomFileProps {
   sessionId: string
-  chatDataStoreKey: ChatDataStoreKey
+  /**文件缓存路径 */
+  chatDataStoreKey: string
 }

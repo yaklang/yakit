@@ -225,6 +225,15 @@ export interface SSAProjectResponse {
   RiskNumber: number
   // 编译次数
   CompileTimes: number
+  // 用于前端
+  detailLoading?: boolean // 详情加载中
+  detailData?: SSAProjectResponseDetail // 缓存的详情数据
+}
+
+export interface SSAProjectResponseDetail {
+  items: SSAProgram[]
+  total: number
+  scanTotals: Record<number, number>
 }
 
 export interface UpdateSSAProjectRequest {

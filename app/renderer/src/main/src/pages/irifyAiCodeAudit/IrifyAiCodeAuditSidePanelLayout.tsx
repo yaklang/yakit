@@ -12,6 +12,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
 import { IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED } from './irifyAiCodeAuditConstants'
+import emiter from '@/utils/eventBus/eventBus'
 
 const defaultAiTabs: YakitTabsProps[] = [
   {
@@ -38,8 +39,6 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
 }> = ({ placement, children, rootClassName, sideTabs }) => {
   const { t, i18n } = useI18nNamespaces(['history', 'irifyAiCodeAudit'])
   const { renderHistoryAIReActChat, setShowFreeChat, historyAIReActChatBridge, focusModeLoop } = useHistoryAIReActChat()
-  console.log(focusModeLoop, 'focusModeLoop')
-
   const [activeKey, setActiveKey] = useState<string>('ai')
   const [openTabsFlag, setOpenTabsFlag] = useState<boolean>(true)
 
@@ -53,6 +52,35 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
     }
     setActiveKey(key)
   })
+
+  const onSendCodeBlockFun = useMemoizedFn((res: string) => {
+    const needOpenPanel = !openTabsFlag || activeKey !== 'ai'
+    if (!openTabsFlag) {
+      setOpenTabsFlag(true)
+    }
+    if (activeKey !== 'ai') {
+      setActiveKey('ai')
+    }
+    setShowFreeChat(true)
+
+    const forward = () => {
+      emiter.emit('setAIInputByType', res)
+    }
+    if (needOpenPanel) {
+      setTimeout(() => {
+        forward()
+      }, 200)
+    } else {
+      forward()
+    }
+  })
+
+  useEffect(() => {
+    emiter.on('onAiCodeAuditSendCodeBlock', onSendCodeBlockFun)
+    return () => {
+      emiter.off('onAiCodeAuditSendCodeBlock', onSendCodeBlockFun)
+    }
+  }, [onSendCodeBlockFun])
 
   const resizeBoxProps = useCreation(() => {
     if (placement === 'left') {
@@ -72,26 +100,20 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
       externalParameters: {
         defaultValue: IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED,
         isOpen: false,
-        rightIcon: (
-          <>
+        rightIcon: {
+          history: true,
+          dataDetails: { type: 'text2' },
+          add: (
             <Tooltip title={t('newChat')}>
               <YakitButton
                 type="text2"
                 icon={<OutlinePlusIcon />}
-                onClick={() => {
-                  const { activeID, events, onStop, onChatFromHistory, setActiveChat } = historyAIReActChatBridge
-                  if (activeID) {
-                    onStop()
-                    events.onReset()
-                    onChatFromHistory(activeID)
-                    setActiveChat(undefined)
-                  }
-                }}
+                onClick={() => historyAIReActChatBridge.onNewChat()}
               />
             </Tooltip>
-            <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-          </>
-        ),
+          ),
+          close: <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />,
+        },
         footerRightTypes: [
           {
             type: AIInputFooterRightEnum.AIFocusMode,

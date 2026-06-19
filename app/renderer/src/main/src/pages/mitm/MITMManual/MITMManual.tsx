@@ -1341,6 +1341,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       noPacketModifier={true}
       readOnly={disabled}
       isResponse={isResponse}
+      foldBinaryFuzztag={true}
       titleStyle={{ overflow: 'hidden' }}
       isShowBeautifyRender={false}
       fromMITM={true}

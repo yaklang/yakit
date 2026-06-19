@@ -6,6 +6,7 @@ import type {
   AIYakExecFileRecord,
   ReActChatBaseInfo,
   ReActChatRenderItem,
+  TodoListCardData,
 } from './aiRender'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '@/pages/ai-agent/store/constants'
@@ -14,6 +15,7 @@ import type {
   AIInputEvent,
   AIOutputEvent,
   AIOutputI18n,
+  AISource,
   AIStartParams,
   AITaskStatusType,
 } from './grpcApi'
@@ -86,11 +88,14 @@ export interface UseCasualChatParams extends UseHookBaseParams {
 
 export interface UseCasualChatState {
   elements: ReActChatRenderItem[]
+  toolListRenderNumber: number
 }
 export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc {
   handleSend: handleSendFunc
   /** 用户手动介入逻辑 */
   handleUserManualIntervention: (chatInfo: AIChatQSData) => void
+  /** 清空todo-list数据 */
+  resetTodoListData: () => void
 }
 // #endregion
 
@@ -98,6 +103,8 @@ export interface UseCasualChatEvents extends UseHookBaseEvents, UseHookStateFunc
 export interface UseTaskChatParams extends UseHookBaseParams {
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID: () => TaskChatTaskInfo | undefined
   /** review 触发回调事件 */
   onReview?: (data: AIChatQSData) => void
   /** plan_review 补充数据 */
@@ -148,6 +155,9 @@ export interface UseChatIPCParams {
   /** 切换会话时，是否自动建立会话连接(default:false) */
   autoConnect?: boolean
 
+  /** 业务来源，用于映射 IndexedDB 消息存储域 */
+  aiSource?: AISource
+
   /** 文件数据缓存实例类 */
   cacheDataStore?: ChatDataStore
   /** 设置会话的名字 */
@@ -179,6 +189,9 @@ export interface UseChatIPCParams {
 
   /** http_flow_fuzz_status */
   onGetHttpFlowFuzzStatus?: (data: AIAgentGrpcApi.GetHttpFlowFuzzStatus) => void
+
+  /** yaklang_code_change 事件的回调 */
+  onYaklangCodeChange?: (data: AIAgentGrpcApi.YaklangCodeChange) => void
 }
 
 /** 会话文件系统-pin */
@@ -229,8 +242,6 @@ export interface UseChatIPCState {
   /** 自由对话的是否进行中 */
   casualLoading: boolean
 
-  /** 系统流信息(isSystem=true&type=stream) */
-  systemStream: string
   /** 场景状态(仅供自由对话[reAct])使用 */
   focusMode: string
   /** 切换session时的loading状态 */
@@ -311,6 +322,8 @@ export interface UseChatIPCEvents {
   handleLoadMoreHistory: (chatType: HistoryChatType) => void
   /** 是否还有更多历史数据 */
   handleHasMoreHistory: (type: HistoryChatType) => boolean
+  /** 清除当前任务规划的ID信息 */
+  resetCurrentTaskPlanID: () => void
 }
 // #endregion
 
@@ -346,6 +359,8 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
   info: {
     chatType: ReActChatRenderItem['chatType']
   }
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
   /** 将数据推送到日志集合中 */
@@ -365,6 +380,10 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
     /** 将 review 数据处理成需要展示的UI数据 */
     handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
   }
+  /** store数据 */
+  getChatDataStore: UseHookBaseParams['getChatDataStore']
+  /** 回调方法 */
+  callback?: (data: AIOutputEvent) => void
 }
 export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #endregion

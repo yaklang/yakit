@@ -43,20 +43,29 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
   }, [setting?.ReviewPolicy, chatIPCData.execute])
   const [selectReviewPolicy, setSelectReviewPolicy] = useState<AIStartParams['ReviewPolicy']>()
 
+  const displayReviewPolicy = useCreation(() => {
+    if (open) return selectReviewPolicy ?? modelValue
+    return modelValue
+  }, [open, selectReviewPolicy, modelValue])
+
   const refRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(refRef)
-
-  useEffect(() => {
-    if (!inViewport) return
-    emiter.on('onRefreshAIReviewRuleSelect', onRefreshAIReviewRuleSelect)
-    return () => {
-      emiter.off('onRefreshAIReviewRuleSelect', onRefreshAIReviewRuleSelect)
-    }
-  }, [inViewport])
 
   const aiReviewRiskControlScore = useCreation(() => {
     return setting?.AIReviewRiskControlScore || AIAgentSettingDefault.AIReviewRiskControlScore
   }, [setting?.AIReviewRiskControlScore])
+
+  useEffect(() => {
+    if (!open) {
+      setSelectReviewPolicy(undefined)
+    }
+  }, [modelValue, open])
+
+  useEffect(() => {
+    if (!visible) {
+      setAIReviewRiskControlScore(undefined)
+    }
+  }, [aiReviewRiskControlScore, visible])
 
   const onRefreshAIReviewRuleSelect = useMemoizedFn((res: string) => {
     if (!chatIPCData.execute) return
@@ -68,6 +77,23 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
       handHotpatchAIReviewRiskControlScore(data?.aiReviewRiskControlScore)
     }
   })
+
+  const onRefreshHistoryAIEmbeddedSetting = useMemoizedFn(() => {
+    if (open) return
+    setSelectReviewPolicy(undefined)
+    if (visible) return
+    setAIReviewRiskControlScore(undefined)
+  })
+
+  useEffect(() => {
+    if (!inViewport) return
+    emiter.on('onRefreshAIReviewRuleSelect', onRefreshAIReviewRuleSelect)
+    emiter.on('onRefreshHistoryAIEmbeddedSetting', onRefreshHistoryAIEmbeddedSetting)
+    return () => {
+      emiter.off('onRefreshAIReviewRuleSelect', onRefreshAIReviewRuleSelect)
+      emiter.off('onRefreshHistoryAIEmbeddedSetting', onRefreshHistoryAIEmbeddedSetting)
+    }
+  }, [inViewport, onRefreshAIReviewRuleSelect, onRefreshHistoryAIEmbeddedSetting])
 
   const handHotpatchReviewPolicy = useMemoizedFn((value: AIStartParams['ReviewPolicy']) => {
     handleSendConfigHotpatch({
@@ -129,7 +155,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
     }
   })
   const renderContent = useMemoizedFn(() => {
-    const currentSelect = AIReviewRuleOptions.find((item) => item.value === (selectReviewPolicy || modelValue))
+    const currentSelect = AIReviewRuleOptions.find((item) => item.value === displayReviewPolicy)
     return (
       <>
         <YakitSelect.Option
@@ -163,6 +189,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
   return (
     <div className={classNames(styles['review-rule-select-wrapper'], props.className)} ref={refRef}>
       <AIChatSelect
+        key={displayReviewPolicy}
         dropdownRender={(menu) => {
           return (
             <div className={styles['drop-select-wrapper']}>
@@ -175,7 +202,7 @@ const AIReviewRuleSelect: React.FC<ReviewRuleSelectProps> = React.memo((props) =
                   <div
                     key={item.value}
                     className={classNames(styles['option-wrapper'], styles['select-option-wrapper'], {
-                      [styles['select-option-active-wrapper']]: item.value === (selectReviewPolicy || modelValue),
+                      [styles['select-option-active-wrapper']]: item.value === displayReviewPolicy,
                     })}
                     onClick={() => setSelectReviewPolicy(item.value)}
                   >

@@ -1,12 +1,11 @@
 import type { DialogueContentRecord, DialogueRecord } from './type'
 
-// 新增业务域时：在 DOMAINS 末尾追加，并将 dbVersion 加 1，新表会在下次 open 时自动创建。
-export const dbVersion = 1
+export const dbVersion = 3
 // 所有业务共用同一个 IndexedDB 数据库。
 export const DB_NAME = 'aiChatMessageDB'
 
 // 业务域列表，每个域会自动生成对应的 TaskDB 和 CasualDB 表。
-export const DOMAINS = ['ai'] as const
+export const DOMAINS = ['ai', 'history', 'knowledgeBase', 'webFuzzer', 'flow', 'irify', 'yakRunner'] as const
 export type Domain = (typeof DOMAINS)[number]
 
 const BASE_STORE_SUFFIXES = ['TaskDB', 'CasualDB'] as const

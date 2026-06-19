@@ -13,12 +13,63 @@ const MODEL_TIERS = [
 type PerfData = AIChatData['aiPerfData']
 
 /** 比较两个 Record<tier, any[]> 类型字段在各模型层级的数组长度是否变化 */
-const isTierArrayLengthChanged = (prev: Record<string, any[]> | undefined, next: Record<string, any[]> | undefined) => {
+export const isTierArrayLengthChanged = (
+  prev: Record<string, any[]> | undefined,
+  next: Record<string, any[]> | undefined,
+) => {
   return MODEL_TIERS.some((tier) => prev?.[tier]?.length !== next?.[tier]?.length)
+}
+
+export const isPressurePerfChanged = (
+  prev: AIChatData['aiPerfData']['pressure'] | null,
+  next: AIChatData['aiPerfData']['pressure'] | null,
+) => {
+  if (!prev && !next) return false
+  if (!prev || !next) return true
+  return isTierArrayLengthChanged(prev, next)
+}
+
+export const isFirstCostPerfChanged = (
+  prev: AIChatData['aiPerfData']['firstCost'] | null,
+  next: AIChatData['aiPerfData']['firstCost'] | null,
+) => {
+  if (!prev && !next) return false
+  if (!prev || !next) return true
+  return isTierArrayLengthChanged(prev, next)
+}
+
+export const isConsumptionPerfChanged = (
+  prev: AIAgentGrpcApi.Consumption | null,
+  next: AIAgentGrpcApi.Consumption | null,
+) => {
+  if (!prev && !next) return false
+  if (!prev || !next) return true
+  if (
+    prev.input_consumption !== next.input_consumption ||
+    prev.output_consumption !== next.output_consumption ||
+    prev.cache_hit_token !== next.cache_hit_token
+  ) {
+    return true
+  }
+  const prevTier = prev.tier_consumption
+  const nextTier = next.tier_consumption
+  return MODEL_TIERS.some(
+    (tier) => Object.keys(prevTier?.[tier] || {}).length !== Object.keys(nextTier?.[tier] || {}).length,
+  )
 }
 
 /** 比较 aiPerfData 是否发生了需要触发更新的变化 */
 export const isPerfDataChanged = (prev: PerfData, next: PerfData): boolean => {
+  const prevConsumption = prev.consumption
+  const nextConsumption = next.consumption
+  if (
+    prevConsumption?.input_consumption !== nextConsumption?.input_consumption ||
+    prevConsumption?.output_consumption !== nextConsumption?.output_consumption ||
+    prevConsumption?.cache_hit_token !== nextConsumption?.cache_hit_token
+  ) {
+    return true
+  }
+
   // 各模型层级的 consumption keys 数量
   const prevTier = prev.consumption?.tier_consumption
   const nextTier = next.consumption?.tier_consumption

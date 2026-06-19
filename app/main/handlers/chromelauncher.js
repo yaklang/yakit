@@ -146,6 +146,10 @@ module.exports = (win, getClient) => {
       ignoreDefaultFlags: true,
       chromeFlags: [
         `--proxy-server=http://${hostRaw}:${portInt}`, // 设置具体的代理服务器地址和端口。
+        // ignoreDefaultFlags 为 true 时 chrome-launcher 不再注入默认抑制参数，
+        // 需手动补上，否则每次启动都会弹出 Chrome 首次运行欢迎框/设为默认浏览器询问
+        '--no-first-run', // 跳过首次运行体验（欢迎页/设为默认浏览器弹框）
+        '--no-default-browser-check', // 不检查是否为默认浏览器
         ...chromeFlags
           .filter((item) => !item.disabled)
           .map((item) => {

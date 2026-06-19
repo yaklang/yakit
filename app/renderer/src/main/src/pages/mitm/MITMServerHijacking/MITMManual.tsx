@@ -360,6 +360,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
       noHeader={true}
       isResponse={currentPacket.substring(0, 5).startsWith('HTTP/')}
       bordered={false}
+      foldBinaryFuzztag={true}
       onChange={setModifiedPacket}
       noPacketModifier={true}
       readOnly={status === 'hijacking'}

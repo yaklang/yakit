@@ -92,6 +92,24 @@ import type { IEvent } from 'monaco-editor'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { fontSizeOptions, useEditorFontSize } from '@/store/editorFontSize'
 import { JSONParseLog } from '@/utils/tool'
+import {
+  BinaryFuzztagEntry,
+  buildChipLabel,
+  collapseBinaryFuzztag,
+  decodeBinaryTag,
+  encodeBytesToTag,
+  expandBinaryFuzztag,
+  findPlaceholderOffsets,
+  registerBinaryFoldEntries,
+  unregisterBinaryFoldEntries,
+} from './binaryFuzztag'
+import { BinaryFuzztagHexModal, BinaryFuzztagSubmitResult } from './BinaryFuzztagHexModal'
+import { Base64HexFuzztagModal } from './Base64HexFuzztagModal'
+import { showYakitModal } from '../YakitModal/YakitModalConfirm'
+
+// 二进制 Fuzztag 折叠侧表的内存上限：累积保留历史项以支持占位被破坏后再补回的恢复，
+// 用上限淘汰最旧项防止长会话内存膨胀
+const MAX_BINARY_FOLD_ENTRIES = 500
 
 export interface CodecTypeProps {
   key?: string
@@ -270,6 +288,59 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
   const { theme: themeGlobal } = useTheme()
 
   const disableUnicodeDecodeRef = useRef(props.disableUnicodeDecode)
+
+  // ===== 二进制 Fuzztag 折叠：翻译边界 =====
+  // 仅在 foldBinaryFuzztag 且 http 类型下启用；模型存短占位，向上抛真实值，下游消费者无感知
+  const foldBinaryEnabled = !!props.foldBinaryFuzztag && type === 'http'
+  // 侧表：占位 id -> 原始标签信息；handleBinaryChange 据此 expand 还原真实文本
+  const binaryFoldEntriesRef = useRef<Map<string, BinaryFuzztagEntry>>(new Map())
+  // 占位范围（仿 privacyMaskRangesRef），用于点击命中打开 HEX 编辑弹窗
+  const binaryFoldRangesRef = useRef<{ id: string; range: monaco.Range; ordinal: number }[]>([])
+  // "被修改"记录：按编辑器中第 N 个二进制标签(文档顺序的序号)记录，只记是否改过(布尔)。
+  // 与内容/占位 id 解耦，保证复制粘贴出去的永远是纯内容、不含任何改动元数据。
+  const binaryModifiedOrdinalsRef = useRef<Set<number>>(new Set())
+  // 计算传给 MonacoEditor 的展示文本（真实值 -> 占位）
+  const displayValue = useMemo(() => {
+    if (!foldBinaryEnabled) {
+      // 原地清空而非替换对象，保持注册表里登记的 map 引用一直有效
+      binaryFoldEntriesRef.current.clear()
+      binaryModifiedOrdinalsRef.current.clear()
+      return value
+    }
+    const { text, entries } = collapseBinaryFuzztag(value ?? '')
+    // 累积合并而非整表替换：保留历史占位映射。
+    // 原因：用户在占位上 backspace 会把占位破坏成非法 fuzztag（如缺一个 }），
+    // 此时 expand 无法匹配 -> 真实二进制会被破坏文本顶替丢失；若再整表替换映射，
+    // 即使补回 }} 也找不到 id 对应的原始标签，Binary 小块与内容永久无法恢复。
+    // 保留映射后，补回完整占位即可由 expand 还原真实内容并重新折叠出小块。
+    const map = binaryFoldEntriesRef.current
+    entries.forEach((v, k) => {
+      // 重新插入以将当前文本中的项标记为最新，避免被下方内存淘汰
+      map.delete(k)
+      map.set(k, v)
+    })
+    // 限制内存上限，淘汰最旧项；当前文本中的项已在上面置为最新，不会被淘汰
+    while (map.size > MAX_BINARY_FOLD_ENTRIES) {
+      const oldest = map.keys().next().value
+      if (oldest === undefined) {
+        break
+      }
+      map.delete(oldest)
+    }
+    return text
+  }, [value, foldBinaryEnabled])
+  // 向上回调：占位 -> 真实值
+  const handleBinaryChange = useMemoizedFn((content: string) => {
+    const emit = setValue || onChange
+    if (!emit) {
+      return
+    }
+    if (!foldBinaryEnabled) {
+      emit(content)
+      return
+    }
+    emit(expandBinaryFuzztag(content, binaryFoldEntriesRef.current))
+  })
 
   useLayoutEffect(() => {
     applyYakitMonacoTheme(propsTheme ?? themeGlobal)
@@ -1205,6 +1276,56 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           })
         })()
 
+        // 二进制 Fuzztag 折叠：为占位渲染 Binary[..]/File[..] 小块，并记录范围用于点击
+        ;(() => {
+          if (!foldBinaryEnabled) {
+            binaryFoldRangesRef.current = []
+            return
+          }
+          try {
+            const fullText = model.getValue()
+            const offsets = findPlaceholderOffsets(fullText)
+            const newRanges: { id: string; range: monaco.Range; ordinal: number }[] = []
+            // index 即"编辑器中第 N 个二进制标签"的序号，按文档顺序；据此判断是否被修改过
+            offsets.forEach((off, index) => {
+              const entry = binaryFoldEntriesRef.current.get(off.id)
+              if (!entry) {
+                return
+              }
+              const changed = binaryModifiedOrdinalsRef.current.has(index)
+              const start = model.getPositionAt(off.start)
+              const end = model.getPositionAt(off.end)
+              const range = new monaco.Range(start.lineNumber, start.column, end.lineNumber, end.column)
+              newRanges.push({ id: off.id, range, ordinal: index })
+              dec.push({
+                id: 'binary-fold-' + off.id + '-' + off.start,
+                ownerId: 0,
+                range,
+                options: {
+                  inlineClassName: 'binary-fuzz-hidden',
+                  // 关键：声明该 inlineClassName 会改变字符宽度（font-size:0），
+                  // 强制 monaco 放弃等宽快速路径(FastRenderedViewLine)、改用 DOM 实测，
+                  // 否则隐藏占位仍按 charWidth*列数 占据光标/选区宽度，表现为 chip 后的可选中空白
+                  inlineClassNameAffectsLetterSpacing: true,
+                  after: {
+                    content: buildChipLabel(entry, changed),
+                    inlineClassName: changed ? 'binary-fuzz-chip binary-fuzz-chip-changed' : 'binary-fuzz-chip',
+                    // chip 带 padding/不同字号，宽度非等宽，同样需 DOM 实测以保证光标/选区贴合
+                    inlineClassNameAffectsLetterSpacing: true,
+                  },
+                  stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+                  hoverMessage: {
+                    value: entry.editable
+                      ? 'Click to modify: open the helper editor to edit content of any size'
+                      : 'Click to view (read-only reference)',
+                  },
+                },
+              } as YakitIModelDecoration)
+            })
+            binaryFoldRangesRef.current = newRanges
+          } catch (e) {}
+        })()
+
         return dec
       } catch (e) {
         // model 可能已被释放
@@ -1239,9 +1360,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         return
       }
       lastValue = newValue
-      try {
-        current = model.deltaDecorations(current, generateDecorations())
-      } catch (e) {}
+      scheduleDecorations()
     })
     scheduleDecorations()
 
@@ -1321,11 +1440,170 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     }
 
     const mouseDownDisposable = editor.onMouseDown(handleHostPrivacyClick)
+
+    // 二进制 Fuzztag 折叠：点击小块打开 HEX 编辑弹窗
+    const openBinaryFoldEditor = async (
+      entry: BinaryFuzztagEntry,
+      hit: { id: string; range: monaco.Range; ordinal: number },
+    ) => {
+      // 不可编辑（如 file）：只读展示原始引用文本
+      if (!entry.editable) {
+        const infoModal = showYakitModal({
+          title: `Binary Reference - {{${entry.tagName}(...)}}`,
+          width: '50%',
+          footer: null,
+          content: (
+            <div style={{ padding: 16, wordBreak: 'break-all', fontFamily: 'monospace', fontSize: 12 }}>
+              {entry.innerContent}
+            </div>
+          ),
+        })
+        return
+      }
+      let initialData: Uint8Array
+      try {
+        initialData = await decodeBinaryTag(entry)
+      } catch (e) {
+        initialData = new Uint8Array()
+      }
+      const handleSubmit = async (bytes: Uint8Array, result: BinaryFuzztagSubmitResult) => {
+        try {
+          if (!result.changed) {
+            infoModal.destroy()
+            return
+          }
+          const newTagText = await encodeBytesToTag(entry.kind, entry.tagName, bytes)
+          // 重新折叠新标签得到新占位 + 侧表项（内容过短则返回原标签不折叠）
+          const { text: newPlaceholderText, entries: newEntries } = collapseBinaryFuzztag(newTagText)
+          newEntries.forEach((v, k) => {
+            binaryFoldEntriesRef.current.set(k, v)
+          })
+          // 按点击命中的第 N 个标签记录修改，并直接替换命中的 decoration range。
+          // 相同二进制标签会拥有相同 id，不能再按 id 全文搜索，否则会误改第一个相同标签。
+          binaryModifiedOrdinalsRef.current.add(hit.ordinal)
+          editor.executeEdits('binary-fuzz-fold', [
+            {
+              range: hit.range,
+              text: newPlaceholderText,
+              forceMoveMarkers: true,
+            },
+          ])
+        } catch (e) {
+          failed(`encode binary fuzztag failed: ${e}`)
+        }
+        infoModal.destroy()
+      }
+      // base64 / hex 走"文本/HEX 可切换"的公共编辑器（默认文本）；unquote(Binary) 走字节级 HEX 编辑器
+      const useTextHexEditor = entry.kind === 'base64' || entry.kind === 'hex'
+      const editorTitle = useTextHexEditor
+        ? `Edit ${entry.kind === 'base64' ? 'Base64' : 'HexString'} - {{${entry.tagName}(...)}}`
+        : `Edit Binary - {{${entry.tagName}(...)}}`
+      const infoModal = showYakitModal({
+        title: editorTitle,
+        width: '60%',
+        footer: null,
+        content: useTextHexEditor ? (
+          <Base64HexFuzztagModal
+            entry={entry}
+            initialData={initialData}
+            onSubmit={handleSubmit}
+            onCancel={() => infoModal.destroy()}
+          />
+        ) : (
+          <BinaryFuzztagHexModal
+            entry={entry}
+            initialData={initialData}
+            onSubmit={handleSubmit}
+            onCancel={() => infoModal.destroy()}
+          />
+        ),
+      })
+    }
+
+    const handleBinaryFoldClick = (e: monaco.editor.IEditorMouseEvent) => {
+      if (!foldBinaryEnabled || !e.event.leftButton) {
+        return
+      }
+      // 仅当点击命中小块本身（橙色/蓝色块）才触发；占位为零宽，行尾空白区域不应响应
+      const domTarget = (e.event.browserEvent?.target ?? null) as HTMLElement | null
+      const chipEl =
+        domTarget && typeof domTarget.closest === 'function' ? domTarget.closest('.binary-fuzz-chip') : null
+      if (!chipEl) {
+        return
+      }
+      const clickPosition = e.target.position
+      // 解析对应 entry：按点击所在行匹配占位范围（同行多个时取最近列）
+      let hit: { id: string; range: monaco.Range; ordinal: number } | undefined
+      if (clickPosition) {
+        const sameLine = binaryFoldRangesRef.current.filter(
+          (item) => item.range.startLineNumber === clickPosition.lineNumber,
+        )
+        if (sameLine.length === 1) {
+          hit = sameLine[0]
+        } else if (sameLine.length > 1) {
+          hit = sameLine.reduce((best, item) =>
+            Math.abs(item.range.startColumn - clickPosition.column) <
+            Math.abs(best.range.startColumn - clickPosition.column)
+              ? item
+              : best,
+          )
+        }
+      }
+      if (!hit && binaryFoldRangesRef.current.length === 1) {
+        hit = binaryFoldRangesRef.current[0]
+      }
+      if (!hit) {
+        return
+      }
+      const entry = binaryFoldEntriesRef.current.get(hit.id)
+      if (!entry) {
+        return
+      }
+      openBinaryFoldEditor(entry, hit)
+    }
+    const binaryFoldMouseDownDisposable = editor.onMouseDown(handleBinaryFoldClick)
+
+    // 二进制 Fuzztag 折叠：拦截 copy/cut，确保复制到剪贴板的是真实内容而非占位
+    // 捕获阶段统一覆盖 Ctrl+C/X、monaco clipboard action、右键菜单
+    const handleEditorClipboard = (ev: ClipboardEvent) => {
+      try {
+        if (!foldBinaryEnabled) {
+          return
+        }
+        const selection = editor.getSelection()
+        if (!selection || selection.isEmpty()) {
+          return
+        }
+        const selected = model.getValueInRange(selection)
+        if (!selected || selected.indexOf('#YBIN_') < 0) {
+          return
+        }
+        const expanded = expandBinaryFuzztag(selected, binaryFoldEntriesRef.current)
+        // 选区里有占位就一定接管复制：preventDefault 并写入还原后的真实内容，
+        // 绝不让 #YBIN_ 占位泄漏到剪贴板
+        ev.clipboardData?.setData('text/plain', expanded)
+        ev.preventDefault()
+        if (ev.type === 'cut' && !readOnly) {
+          editor.executeEdits('binary-fuzz-cut', [{ range: selection, text: '' }])
+        }
+      } catch (e) {}
+    }
+    const editorDomNode = editor.getDomNode()
+    editorDomNode?.addEventListener('copy', handleEditorClipboard, true)
+    editorDomNode?.addEventListener('cut', handleEditorClipboard, true)
+    // 把本编辑器的"占位 id -> 标签信息"映射登记到全局注册表(以 model 为 key)，
+    // 供右键自定义复制/fetchCursorContent 等不经过 DOM copy 事件的路径也能还原占位
+    registerBinaryFoldEntries(model, binaryFoldEntriesRef.current)
+
     return () => {
       try {
         isModelDisposedRef.current = true
         cursorPositionDisposable.dispose()
         mouseDownDisposable.dispose()
+        binaryFoldMouseDownDisposable.dispose()
+        editorDomNode?.removeEventListener('copy', handleEditorClipboard, true)
+        editorDomNode?.removeEventListener('cut', handleEditorClipboard, true)
+        unregisterBinaryFoldEntries(model)
         editor.dispose()
       } catch (e) {}
     }
@@ -1953,8 +2231,8 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
           <MonacoEditor
             // height={100}
             theme={theme || 'kurior'}
-            value={value}
-            onChange={setValue || onChange}
+            value={displayValue}
+            onChange={handleBinaryChange}
             language={language}
             editorDidMount={(editor: YakitIMonacoEditor, monaco) => {
               setEditor(editor)

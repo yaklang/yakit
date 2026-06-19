@@ -147,6 +147,17 @@
       background-color: var(--Colors-Use-Neutral-Border);
     }
   }
+  .yakit-side-tab-horizontal-list {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    flex: 1;
+  }
+  .yakit-side-tab-horizontal-extra {
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+  }
 }
 .yakit-side-tab-horizontal-item {
   @include tab-item() {

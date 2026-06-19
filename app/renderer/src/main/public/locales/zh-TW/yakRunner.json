@@ -121,7 +121,10 @@
     "riskCount": "風險個數",
     "verifying": "正在校驗",
     "addProject": "新增專案",
-    "jumpCodeScanFailed": "跳轉程式碼掃描頁失敗：{{error}}"
+    "jumpCodeScanFailed": "跳轉程式碼掃描頁失敗：{{error}}",
+    "compileTime": "歷史編輯記錄",
+    "scanCount": "掃描次數",
+    "noCompileHistory": "暫無編譯歷史"
   },
   "RunnerFileTree": {
     "all": "全部",
@@ -158,7 +161,8 @@
     "quickCreate": "快捷建立",
     "unsavedTitle": "檔案未儲存",
     "unsavedContent": "是否要儲存{{name}}裡面的內容嗎？",
-    "savePathMissing": "未獲取儲存路徑，取消儲存"
+    "savePathMissing": "未獲取儲存路徑，取消儲存",
+    "sendAIActions": "發送到AI會話"
   },
   "CollapseList": {
     "noHelpInfo": "暫無幫助資訊"

@@ -1,17 +1,36 @@
 /**
  * chat 对话数据相关处理工具
  */
-
-import { generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
+import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
+import type { DialogueRecord } from '@/pages/ai-agent/store/type'
+import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType, TodoListCardData } from './aiRender'
+import type { AIChatLogToInfo, AIChatLogData, TaskChatTaskInfo, AIMessageHandlerParams } from './type'
+import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
-import { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AITaskInfoProps, AIChatQSDataType, ReActChatRenderItem } from './aiRender'
-import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import { AIChatLogData, AIChatLogToInfo } from './type'
-import { DialogueRecord } from '@/pages/ai-agent/store/type'
 import { JSONParseLog } from '@/utils/tool'
 
+/** 生成任务的唯一标识 */
+export const generateTaskId = (params: {
+  chatType: ReActChatRenderItem['chatType']
+  res: AIOutputEvent
+  /** 获取当前任务规划的问题ID信息 */
+  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
+  getContentMap: AIMessageHandlerParams['getContentMap']
+}) => {
+  const { chatType, res, getCurrentTaskPlanID, getContentMap } = params
+  if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
+    const taskKey = res.TaskIndex ? `${getCurrentTaskPlanID()?.taskID}-${res.TaskIndex}` : ''
+    return `${getCurrentTaskPlanID()?.taskID}-${!!getContentMap(taskKey) ? res.TaskIndex : 'unknown'}`
+  }
+  return undefined
+}
+/** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
+export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/
+/** 校验 TaskIndex 是否符合任务子索引格式 */
+export const isValidTaskIndex = (taskIndex?: string): taskIndex is string =>
+  !!taskIndex && TASK_INDEX_PATTERN.test(taskIndex)
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
   return {
@@ -75,6 +94,17 @@ export const genExecTasks = (taskTree: AIAgentGrpcApi.PlanTask) => {
   const execTasks: AITaskInfoProps[] = []
   genExecTask({ task: taskTree, level: 1, tasks: execTasks })
   execTasks.shift()
+  // 将任务关联的任务名转换成task_index
+  for (let item of execTasks) {
+    if (item.depends_on && item.depends_on.length > 0) {
+      item.depends_on = item.depends_on
+        .map((depend) => {
+          const dependTask = execTasks.find((t) => t.semantic_identifier === depend)
+          return dependTask ? dependTask.index : ''
+        })
+        .filter(Boolean)
+    }
+  }
   return execTasks
 }
 // #endregion
@@ -143,6 +173,7 @@ export const indexedDBDataToReActChatRenderItem = (
         children: JSONParseLog(item.children || '[]'),
         renderNum: 0,
         isCached: true,
+        kind: item.kind,
       }
     }
     return {
@@ -153,6 +184,7 @@ export const indexedDBDataToReActChatRenderItem = (
       renderNum: 0,
       children: JSONParseLog(item.children || '[]'),
       isCached: true,
+      kind: 'item',
     }
   })
 
@@ -175,8 +207,59 @@ export const toDialogueData = (elements: ReActChatRenderItem[], sessionId: strin
   elements.map((item, index) => ({
     token: item.token,
     type: item.type,
-    isGroup: item.isGroup || false,
-    children: JSON.stringify('children' in item && item.isGroup ? item.children : []),
+    kind: item.kind,
+    isGroup: item.kind === 'group' || item.kind === 'task',
+    children: JSON.stringify(item.kind === 'group' || item.kind === 'task' ? item.children : []),
     sessionId,
     cacheOrder: index,
   }))
+
+/** 处理后端返回的todoList数据(全量数据，需要过滤出当前任务) */
+export const handleTodoListData: (
+  item: AIAgentGrpcApi.TodoListUpdateItem[],
+  scopeTaskID: string,
+  scopeTaskIndex: string,
+) => TodoListCardData = (item, taskID, taskIndex) => {
+  const scopeTaskID = (taskID || '').trim()
+  const scopeTaskIndex = (taskIndex || '').trim()
+
+  // 当前任务的todo-list
+  const newItems = item.filter((item) => {
+    if (!scopeTaskID && !scopeTaskIndex) return !item.scope_task_id && !item.scope_task_index
+    const itemTaskID = (item.scope_task_id || '').trim()
+    const itemTaskIndex = (item.scope_task_index || '').trim()
+    return itemTaskID === scopeTaskID && itemTaskIndex === scopeTaskIndex
+  })
+
+  // 当前任务的todo状态统计
+  const stats: AIAgentGrpcApi.TodoListUpdateStats = {
+    deleted: 0,
+    doing: 0,
+    done: 0,
+    pending: 0,
+    skipped: 0,
+  }
+  for (const item of newItems) {
+    switch (item.status) {
+      case AIToDoListStatusEnum.Pending:
+        stats.pending += 1
+        break
+      case AIToDoListStatusEnum.Doing:
+        stats.doing += 1
+        break
+      case AIToDoListStatusEnum.Done:
+        stats.done += 1
+        break
+      case AIToDoListStatusEnum.Deleted:
+        stats.deleted += 1
+        break
+      case AIToDoListStatusEnum.Skipped:
+        stats.skipped += 1
+        break
+      default:
+        break
+    }
+  }
+
+  return { items: newItems, stats, uuid: uuidv4() }
+}

@@ -31,6 +31,11 @@ const useAISystemStream = ({ value, systemStream, delay = 2000, enabled = true }
     setMode('value')
   }, [value, enabled, delay])
 
+  useEffect(() => {
+    if (!enabled || mode !== 'systemStream') return
+    setDisplayValue(systemStream)
+  }, [systemStream, mode, enabled])
+
   return { displayValue, mode }
 }
 

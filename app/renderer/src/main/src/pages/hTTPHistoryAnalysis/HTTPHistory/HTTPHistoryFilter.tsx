@@ -17,6 +17,7 @@ import {
   OutlineChevrondownIcon,
   OutlineCogIcon,
   OutlineFilterIcon,
+  OutlineMessageCirclePlusIcon,
   OutlinePlusIcon,
   OutlineRefreshIcon,
   OutlineReplyIcon,
@@ -74,6 +75,7 @@ import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { WebTree } from '@/components/WebTree/WebTree'
 import ReactResizeDetector from 'react-resize-detector'
 import { HistoryProcess, HistoryTab } from '@/components/HTTPHistory'
+import { useBuiltinTagList } from '@/components/HTTPFlowTable/useBuiltinTagList'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { v4 as uuidv4 } from 'uuid'
 import { cloneDeep, isEqual, toArray } from 'lodash'
@@ -103,6 +105,10 @@ import {
   GlobalShortcutKey,
   ShortcutKeyFocusType,
 } from '@/utils/globalShortcutKey/events/global'
+import {
+  getYakitMultipleShortcutKeyEvents,
+  YakitMultipleShortcutKey,
+} from '@/utils/globalShortcutKey/events/multiple/yakitMultiple'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { SolidStarIcon } from '@/assets/icon/solid'
 
@@ -262,9 +268,12 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     setRulesQueryparams(linkedQueries.rulesQueryparams)
   })
   // #endregion
+  const httpHistoryFilterRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(httpHistoryFilterRef)
+  const { builtinTagList, setBuiltinTagList } = useBuiltinTagList(true, inViewport)
 
   return (
-    <div className={styles['HTTPHistoryFilter']}>
+    <div className={styles['HTTPHistoryFilter']} ref={httpHistoryFilterRef}>
       <YakitResizeBox
         isVer={false}
         freeze={openTabsFlag}
@@ -314,6 +323,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                   curTags={curTags}
                   onSetCurTags={setCurTags}
                   onSetCurProcess={setCurProcess}
+                  setBuiltinTagList={setBuiltinTagList}
                 ></HistoryProcess>
               </div>
               <div className={styles['process-wrapper']} style={{ display: activeKey === 'rules' ? 'block' : 'none' }}>
@@ -328,27 +338,22 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                   className: styles['ai-wrapper'],
                   externalParameters: {
                     isOpen: false,
-                    rightIcon: (
-                      <>
-                        <Tooltip title="新建对话">
+                    rightIcon: {
+                      history: true,
+                      dataDetails: { type: 'text2' },
+                      add: (
+                        <Tooltip title="新建会话">
                           <YakitButton
                             type="text2"
-                            icon={<OutlinePlusIcon />}
-                            onClick={() => {
-                              const { activeID, events, onStop, onChatFromHistory, setActiveChat } =
-                                historyAIReActChatBridge
-                              if (activeID) {
-                                onStop()
-                                events.onReset()
-                                onChatFromHistory(activeID)
-                                setActiveChat(undefined)
-                              }
-                            }}
+                            icon={<OutlineMessageCirclePlusIcon />}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
+                      ),
+                      close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
-                      </>
-                    ),
+                      ),
+                    },
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,
@@ -393,6 +398,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
               closable={closable}
               mitmAggregateFilterRows={mitmAggregateFilterRows}
               onDataChange={setHttpFlowTableDataLength}
+              builtinTagList={builtinTagList}
             />
           </div>
         }
@@ -409,13 +415,8 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
 HTTPHistoryFilterInner.displayName = 'HTTPHistoryFilterInner'
 
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = (props) => {
-  const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   return (
-    <HistoryAIReActChatProvider
-      cacheDataStore={FlowAiStore}
-      focusModeLoop="http_flow_analyze"
-      defaultTimelineSessionID={currentRouteKey}
-    >
+    <HistoryAIReActChatProvider cacheDataStore={FlowAiStore} focusModeLoop="http_flow_analyze">
       <HTTPHistoryFilterInner {...props} />
     </HistoryAIReActChatProvider>
   )
@@ -460,6 +461,7 @@ interface HTTPFlowTableProps {
   mitmAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
   onDataChange?: (dataLength: number) => void
   onRegisterTableSelectApi?: (api: { reset: () => void; deselectId: (id: string) => void }) => void
+  builtinTagList?: FiltersItemProps[]
 }
 const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => {
   const {
@@ -482,7 +484,9 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     mitmAggregateFilterRows = [],
     onDataChange,
     onRegisterTableSelectApi,
+    builtinTagList = [],
   } = props
+  const comBuiltinTagList = useCampare(builtinTagList)
   const { t, i18n } = useI18nNamespaces(['yakitUi', 'history', 'yakitRoute'])
   const { currentPageTabRouteKey, queryPagesDataById } = usePageInfo(
     (s) => ({
@@ -1050,7 +1054,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           return text
             ? `${text}`
                 .split('|')
-                .filter((i) => !i.startsWith('YAKIT_COLOR_') && i !== HTTP_FLOW_FAVORITE_TAG)
+                .filter(
+                  (i) =>
+                    !i.startsWith('YAKIT_COLOR_') &&
+                    i !== HTTP_FLOW_FAVORITE_TAG &&
+                    comBuiltinTagList.every(({ value }) => value !== i),
+                )
                 .join(', ')
             : ''
         },
@@ -1402,6 +1411,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     i18n.language,
     onlyFavorite,
     comSuffixList,
+    comBuiltinTagList,
   ])
   // #endregion
 
@@ -1494,6 +1504,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         number: 30,
         default: true,
         webSocket: true,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
         onClickSingle: (v) => setClipboardText(v.Url),
         onClickBatch: (v, number) => {
           if (v.length === 0) {
@@ -1514,6 +1525,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         number: 30,
         default: true,
         webSocket: true,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
         onClickSingle: (v) => {
           const nextUrl = getUrlWithoutQuery(v.Url)
           if (!nextUrl) {
@@ -1556,6 +1568,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
         default: true,
         webSocket: false,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
         onClickSingle: (v) => {
           v.Url && openExternalWebsite(v.Url)
         },
@@ -1565,6 +1578,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
         default: true,
         webSocket: false,
+        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
         onClickSingle: (v) => {
           showResponseViaHTTPFlowID(v)
         },
@@ -1578,10 +1592,13 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           {
             key: 'csrfpoc',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic].keys,
           },
           {
             key: 'auto-submit-csrf-poc',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit'),
+            keybindings:
+              getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit].keys,
           },
         ],
       },
@@ -1918,6 +1935,47 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           : onSendToTab(clickRow, false)
       }
     }
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithQuery, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    setClipboardText(clickRow.Url || '')
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyUrlWithoutQuery, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    const nextUrl = getUrlWithoutQuery(clickRow.Url)
+    if (!nextUrl) {
+      yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+      return
+    }
+    setClipboardText(nextUrl)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableOpenUrlInBrowser, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    clickRow.Url && openExternalWebsite(clickRow.Url)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableViewResponseInBrowser, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    showResponseViaHTTPFlowID(clickRow)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocBasic, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), false)
+  })
+
+  useShortcutKeyTrigger(YakitMultipleShortcutKey.TableCopyAsCsrfPocAutoSubmit, (focus) => {
+    let item = (focus || []).find((item) => item.startsWith(ShortcutKeyFocusType.Monaco))
+    if (!inViewport || !clickRow || item) return
+    generateCSRFPocByRequest(clickRow.Request, clickRow.IsHTTPS, (e) => setClipboardText(e), true)
   })
 
   // 数据包 PoC 模版
@@ -2471,6 +2529,12 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
                 ))}
                 <TableTotalAndSelectNumber total={total} selectNum={isAllSelect ? total : selectedRowKeys.length} />
                 {onlyFavoriteTag}
+                {!!runtimeId.length && (
+                  <>
+                    <Divider type="vertical" />
+                    <YakitTag color="info">{runtimeId + ''}</YakitTag>
+                  </>
+                )}
               </div>
               <div className={styles['http-history-table-right']}>
                 {webFuzzerPageId && toWebFuzzer && closable && (

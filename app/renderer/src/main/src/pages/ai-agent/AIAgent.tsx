@@ -130,6 +130,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
               if (typeof cache !== 'object') return
               const newCache = omit(cache, ['AIService', 'AIModelName'])
               setSetting({
+                ...AIAgentSettingDefault,
                 ...newCache,
                 SyncPerceptionTrigger: false,
                 EnablePlan: false,

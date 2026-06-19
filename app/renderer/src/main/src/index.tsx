@@ -10,36 +10,41 @@ import './yakitUI.scss'
 import './theme/yakit.scss'
 import './yakitLib.scss'
 import './assets/global.scss'
+import './theme/scrollbar.scss'
 import { Suspense, useEffect, useState } from 'react'
 import ChildNewApp from './ChildNewApp'
-import MarkdownPdfPrintPage from './pages/yakRunner/MarkdownPdfPrint/MarkdownPdfPrintPage'
+import MarkdownPdfPrintPage from './pages/irifyAiCodeAudit/MarkdownPdfPrint/MarkdownPdfPrintPage'
 import { getLocalValue } from './utils/kv'
 import { GetMainColor, getRemoteI18nGV } from './utils/envfile'
 import i18n from '@/i18n/i18n'
 import { useTheme } from './hook/useTheme'
 import { generateAllThemeColors } from './yakit-colors-generator'
+import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
+import { setupConcurrentStreamMainBridge } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge'
 import { debugToPrintLogs } from './utils/logCollection'
+
+const MONACO_WORKER_BASE = 'static/js/monaco'
 
 window.MonacoEnvironment = {
   getWorkerUrl: function (moduleId, label) {
     switch (label) {
       case 'json':
-        return 'static/js/json.worker.js'
+        return `${MONACO_WORKER_BASE}/json.worker.js`
       case 'yaml':
-        return 'static/js/yaml.worker.js'
+        return `${MONACO_WORKER_BASE}/yaml.worker.js`
       case 'java':
-        return 'static/js/java.worker.js'
+        return `${MONACO_WORKER_BASE}/java.worker.js`
       case 'go':
-        return 'static/js/go.worker.js'
+        return `${MONACO_WORKER_BASE}/go.worker.js`
       case 'html':
       case 'markdown':
-        return 'static/js/html.worker.js'
+        return `${MONACO_WORKER_BASE}/html.worker.js`
       case 'css':
-        return 'static/js/css.worker.js'
+        return `${MONACO_WORKER_BASE}/css.worker.js`
       default:
         // 有代码高亮、查找、代码折叠等基础功能
         // 但是它不包含各个语言的智能分析、补全、校验等高级功能
-        return 'static/js/editor.worker.js'
+        return `${MONACO_WORKER_BASE}/editor.worker.js`
     }
   },
 }
@@ -138,6 +143,9 @@ if (window.location.search.includes('window=child') || window.location.search.in
 // }
 // ahooks useVirtualList在createRoot(divRoot).render生成下的元素会出现渲染不及时，掉帧闪的问题，暂时先换成ReactDOM.render，期待官方修复
 // antd menu 存在多个二级菜单时, 在createRoot(divRoot).render生成下，会导致鼠标从一个二级菜单移动到下一个二级菜单后，前一个二级菜单不消失的情况，暂不确定原因，等升级antd5后再次尝试
+
+registerAppSyncHandlers()
+setupConcurrentStreamMainBridge()
 
 ReactDOM.render(
   // <React.StrictMode>

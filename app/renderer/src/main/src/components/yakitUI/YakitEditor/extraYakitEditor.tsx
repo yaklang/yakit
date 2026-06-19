@@ -33,7 +33,7 @@ import { YakEditorOptionShortcutKey } from '@/utils/globalShortcutKey/events/pag
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useHttpFlowStore } from '@/store/httpFlow'
 import { JSONParseLog } from '@/utils/tool'
-import { fetchCursorContent } from './editorUtils'
+import { fetchCursorContent, fetchEditorFullContent } from './editorUtils'
 const { ipcRenderer } = window.require('electron')
 
 const HTTP_PACKET_EDITOR_DisableUnicodeDecode = 'HTTP_PACKET_EDITOR_DisableUnicodeDecode'
@@ -155,12 +155,14 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
               {
                 key: 'copy-as-curl',
                 label: t('YakitEditor.HTTPPacketYakitEditor.copyCurlCommand'),
+                keybindings: YakEditorOptionShortcutKey.CopyAsCurl,
               },
               ...(showDownBodyMenu
                 ? [
                     {
                       key: 'copyBodyBase64',
                       label: t('YakitEditor.HTTPPacketYakitEditor.copyBodyBase64'),
+                      keybindings: YakEditorOptionShortcutKey.CopyBodyBase64,
                     },
                   ]
                 : []),
@@ -241,6 +243,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           {
             key: 'copyUrlWithQuery',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
+            keybindings: YakEditorOptionShortcutKey.CopyUrlWithQuery,
           },
         ],
         onRun: () => {
@@ -256,6 +259,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           {
             key: 'copyUrlWithoutQuery',
             label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
+            keybindings: YakEditorOptionShortcutKey.CopyUrlWithoutQuery,
           },
         ],
         onRun: () => {
@@ -284,10 +288,12 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
               {
                 key: 'csrfpoc',
                 label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocBasic'),
+                keybindings: YakEditorOptionShortcutKey.CopyAsCsrfPocBasic,
               },
               {
                 key: 'auto-submit-csrf-poc',
                 label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPocAutoSubmit'),
+                keybindings: YakEditorOptionShortcutKey.CopyAsCsrfPocAutoSubmit,
               },
             ],
           },
@@ -333,6 +339,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           {
             key: 'open-url-in-browser',
             label: t('YakitEditor.HTTPPacketYakitEditor.openUrlInBrowser'),
+            keybindings: YakEditorOptionShortcutKey.OpenUrlInBrowser,
           },
         ],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -369,6 +376,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           {
             key: 'open-in-browser',
             label: t('YakitEditor.HTTPPacketYakitEditor.viewResponseInBrowser'),
+            keybindings: YakEditorOptionShortcutKey.ViewResponseInBrowser,
           },
         ],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
@@ -573,7 +581,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             }
           } else {
             try {
-              const text = webFuzzerValue || editor.getModel()?.getValue() || ''
+              const text = webFuzzerValue || fetchEditorFullContent(editor)
               if (!text) {
                 info(t('YakitEditor.HTTPPacketYakitEditor.packetEmpty'))
                 return

@@ -37,7 +37,7 @@ export const OperationCardFooter: React.FC<OperationCardFooterProps> = ({ copySt
   const handleViewFile = useMemoizedFn(() => {
     if (!aiFilePath) return
     if (currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
-      emiter.emit('onOpenFileByPath', JSON.stringify({ params: { path: aiFilePath }, isHistory: false }))
+      emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify({ params: { path: aiFilePath }, isHistory: false }))
     }
     emiter.emit('switchAIActTab', JSON.stringify({ key: AITabsEnum.File_System }))
     setTimeout(() => {

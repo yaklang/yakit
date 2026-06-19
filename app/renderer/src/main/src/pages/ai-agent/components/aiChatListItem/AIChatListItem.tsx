@@ -68,12 +68,13 @@ const isExtraShow = (extraValue: HandleStartParams['extraValue']) => {
   )
 }
 export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) => {
-  const { item, type, hasNext, itemIndex } = props
+  const { item, type, hasNext, itemIndex, session: sessionProp } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const { handleSendCasual } = useChatIPCDispatcher()
-  const { taskChat, yakExecResult } = useChatIPCStore().chatIPCData
+  const { yakExecResult } = useChatIPCStore().chatIPCData
   const { activeChat } = useAIAgentStore()
+  const session = sessionProp || activeChat?.SessionID
   const aiStreamNodeProps = useCreation(() => {
     switch (type) {
       case 're-act':
@@ -89,7 +90,12 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
   }, [type])
 
   const isStream = useCreation(() => {
-    return item.type === AIChatQSDataTypeEnum.STREAM || item.type === AIChatQSDataTypeEnum.STREAM_GROUP
+    return (
+      item.type === AIChatQSDataTypeEnum.STREAM ||
+      item.type === AIChatQSDataTypeEnum.STREAM_GROUP ||
+      item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP ||
+      item.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP
+    )
   }, [item.type])
 
   const ChatItemRenderer = useMemoizedFn((itemData: AIChatQSData) => {
@@ -142,11 +148,11 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             />
           )
         )
-      case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
       case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
-      case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
+        // case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
+        // case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
         if (!!itemData.data.selected) {
           return <AIReviewResult info={itemData} timestamp={Timestamp} />
         } else {
@@ -162,15 +168,16 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         }
       case AIChatQSDataTypeEnum.USER_MANUAL_INTERVENTION:
         return <AIManualIntervention info={itemData} timestamp={Timestamp} />
-      case AIChatQSDataTypeEnum.TASK_INDEX_NODE:
-        const dividerCardProps = {
-          status: data?.status as AITaskStatus,
-          desc: data?.goal,
-          name: data?.taskName,
-          success: 0,
-          error: 0,
-        }
-        return <DividerCard {...dividerCardProps} />
+      /** 该UI已无效，可以删除 */
+      // case AIChatQSDataTypeEnum.TASK_INDEX_NODE:
+      //   const dividerCardProps = {
+      //     status: data?.status as AITaskStatus,
+      //     desc: data?.goal,
+      //     name: data?.taskName,
+      //     success: 0,
+      //     error: 0,
+      //   }
+      //   return <DividerCard {...dividerCardProps} />
 
       case AIChatQSDataTypeEnum.TOOL_CALL_DECISION:
         return <AIToolDecision item={itemData} />
@@ -202,24 +209,18 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
   })
 
   const renderContent = useMemoizedFn(() => {
-    if (activeChat?.SessionID === undefined) return null
+    if (session === undefined) return null
     if (isStream)
       return (
         <StreamingChatContent
           {...item}
           itemIndex={itemIndex}
-          session={activeChat?.SessionID}
+          session={session}
           hasNext={hasNext}
           streamClassName={aiStreamNodeProps}
         />
       )
-    return (
-      <StaticChatContent
-        {...item}
-        session={activeChat?.SessionID}
-        render={(contentItem) => ChatItemRenderer(contentItem)}
-      />
-    )
+    return <StaticChatContent {...item} session={session} render={(contentItem) => ChatItemRenderer(contentItem)} />
   })
   return <React.Fragment key={item.token}>{renderContent()}</React.Fragment>
 })

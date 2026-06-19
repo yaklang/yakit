@@ -370,7 +370,6 @@ export const AIModelForm: React.FC<AIModelFormProps> = React.memo((props) => {
       const fileName = getFileNameByModelType(modelType)
       if (!fileName) return
 
-      if (!fileName) return
       const oldUpdateItem = aiGlobalConfigData?.aiGlobalConfigRef.current?.[fileName][currentIndexInConfigRef.current]
       const newUpdateItem: AIModelConfig = {
         ...newItem,

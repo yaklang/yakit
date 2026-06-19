@@ -14,3 +14,14 @@
     flex: 1;
   }
 }
+
+.concurrent-stream-divider {
+  height: 1px;
+  width: 100%;
+  background-color: var(--Colors-Use-Neutral-Border);
+}
+.concurrent-stream-wrapper {
+  height: 100%;
+  background-color: var(--Colors-Use-Basic-Background);
+  padding: 4px;
+}

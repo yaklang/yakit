@@ -5,12 +5,12 @@ import {
   AIHttpFlowCommandParams,
   AIHttpFlowRemovePayload,
 } from '../components/aiMilkdownInput/aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { AICodeBlockCommandParams } from '../components/aiMilkdownInput/aiCodeBlock/aiCustomCodeBlockPlugin'
 import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { AIChatMentionProps } from '../components/aiChatMention/type'
 import { AIReviewRuleSelectProps } from '@/pages/ai-re-act/aiReviewRuleSelect/type'
 import { AIModelSelectProps } from '../aiModelList/aiModelSelect/AIModelSelectType'
 import { AIFocusModeProps } from '@/pages/ai-re-act/aiFocusMode/type'
-import { ChatDataStoreKey } from '../store/ChatDataStore'
 
 export interface QSInputTextareaProps extends Omit<TextAreaProps, 'bordered' | 'autoSize'> {}
 
@@ -24,6 +24,8 @@ export interface AIChatTextareaSubmit {
   imageList?: string[]
   /** history 勾选的流量 */
   httpFlowList?: AIHttpFlowCommandParams[]
+  /** 编辑器选中的代码块 */
+  codeBlockList?: AICodeBlockCommandParams[]
   focusMode?: string
   /** 新建会话得 默认sessionId */
   sessionId?: string
@@ -73,7 +75,8 @@ export interface AIChatTextareaProps {
   filterMentionType?: AIChatMentionProps['filterMode']
   footerLeftTypes?: (AIInputInnerFeature | FooterLeftTypesComponentProps)[]
   footerRightTypes?: (AIInputFooterRight | FooterRightTypesComponentProps)[]
-  chatDataStoreKey: ChatDataStoreKey
+  /** 图片路径前缀 */
+  chatDataStoreKey: string
   onHttpFlowRemove?: (payload: AIHttpFlowRemovePayload) => void
 }
 

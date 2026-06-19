@@ -1,6 +1,6 @@
 import { UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
 import { AIAgentGrpcApi, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
-import { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
+import { PlanItemDetailsData, ReActChatRenderItem, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
@@ -55,11 +55,17 @@ export interface AIChatData {
     contextSections: AIContextSectionsDetail
   }
   /** 自由对话(ReAct)会话 */
-  casualChat: UseChatIPCState['casualChat'] & {
+  casualChat: Omit<UseChatIPCState['casualChat'], 'toolListRenderNumber'> & {
     /** 会话内每条信息的详情 */
     contents: Map<string, AIChatQSData>
+    /** react 任务对应的详情数据 */
+    planDetails: PlanItemDetailsData
   }
-  taskChat: UseChatIPCState['taskChat'] & { contents: Map<string, AIChatQSData> }
+  taskChat: UseChatIPCState['taskChat'] & {
+    contents: Map<string, AIChatQSData>
+    /** 任务列表的子任务对应的详情数据 */
+    planDetailsMap: Map<string, PlanItemDetailsData>
+  }
   grpcFolders: UseChatIPCState['grpcFolders']
   reActTimelines: UseChatIPCState['reActTimelines']
 }

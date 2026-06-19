@@ -27,21 +27,21 @@ result.Get
 
 
 type *MatchResult struct {
-  Fields(可用字段): 
-      Target: string  
-      Port: int  
-      State: fp.PortState  
-      Reason: string  
-      Fingerprint: *fp.FingerprintInfo  
-  Methods(可用方法): 
-      func GetBanner() return(string) 
-      func GetCPEs() return([]string) 
-      func GetDomains() return([]string) 
-      func GetHtmlTitle() return(string) 
-      func GetProto() return(fp.TransportProto) 
-      func GetServiceName() return(string) 
-      func IsOpen() return(bool) 
-      func GetRequestRaw() return(bool, []uint8) 
+  Fields(可用字段):
+      Target: string
+      Port: int
+      State: fp.PortState
+      Reason: string
+      Fingerprint: *fp.FingerprintInfo
+  Methods(可用方法):
+      func GetBanner() return(string)
+      func GetCPEs() return([]string)
+      func GetDomains() return([]string)
+      func GetHtmlTitle() return(string)
+      func GetProto() return(fp.TransportProto)
+      func GetServiceName() return(string)
+      func IsOpen() return(bool)
+      func GetRequestRaw() return(bool, []uint8)
       func GetResponseRaw() return([]uint8)
       func GetFuzzRequest() return(*mutate.FuzzRequest)
 }
@@ -53,27 +53,37 @@ export const MITMPluginTemplate: string = `
 
 # mirrorHTTPFlow 会镜像所有的流量到这里，包括 .js / .css / .jpg 这类一般会被劫持程序过滤的请求
 mirrorHTTPFlow = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
-    
+
 }
 
 # mirrorFilteredHTTPFlow 劫持到的流量为 MITM 自动过滤出的可能和 "业务" 有关的流量，会自动过滤掉 js / css 等流量
 mirrorFilteredHTTPFlow = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
-    
+
 }
 
 # mirrorNewWebsite 每新出现一个网站，这个网站的第一个请求，将会在这里被调用！
 mirrorNewWebsite = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
-    
+
 }
 
 # mirrorNewWebsitePath 每新出现一个网站路径，关于这个网站路径的第一个请求，将会在这里被传入回调
 mirrorNewWebsitePath = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
-    
+
 }
 
 # mirrorNewWebsitePathParams 每新出现一个网站路径且带有一些参数，参数通过常见位置和参数名去重，去重的第一个 HTTPFlow 在这里被调用
 mirrorNewWebsitePathParams = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, rsp /*[]byte*/, body /*[]byte*/) {
-    
+
+}
+
+# hijackHTTPRequest 会在过滤后的请求到达 Yakit MITM 前被调用，可以通过该函数提前将请求修改或丢弃
+hijackHTTPRequest = func(isHttps /*bool*/, url /*string*/, req /*[]byte*/, forward /*func(modifiedRequest []byte)*/, drop /*func()*/) {
+
+}
+
+# hijackSaveHTTPFlow 会在流量被存储到数据库前被调用，可以通过该函数对入库前的流量进行修改，例如修改请求/响应、添加 tag/染色等
+hijackSaveHTTPFlow = func(flow /* *schema.HTTPFlow */, modify /* func(modified *schema.HTTPFlow) */, drop /* func() */) {
+
 }
 
 
@@ -88,7 +98,7 @@ requests:
     - |
       GET / HTTP/1.1
       Host: {{Hostname}}
-      
+
       abc
     matchers:
     - type: word

@@ -1710,7 +1710,7 @@ export const FolderComponent: React.FC<FolderComponentProps> = (props) => {
     userInfo,
     showType = 'local',
   } = props
-  const { t, i18n } = useI18nNamespaces(['payload'])
+  const { t, i18n } = useI18nNamespaces(['payload', 'yakitUi'])
   const [menuOpen, setMenuOpen] = useState<boolean>(false)
   const [isEditInput, setEditInput] = useState<boolean>(folder.isCreate === true)
   const [inputName, setInputName] = useState<string>(folder.name)

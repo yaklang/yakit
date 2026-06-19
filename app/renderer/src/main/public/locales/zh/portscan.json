@@ -69,7 +69,9 @@
     "tcpPingPort": "TCP Ping 端口",
     "tcpPingPortHelp": "配置 TCP Ping 端口：以这些端口是否开放作为 TCP Ping 依据",
     "excludeHosts": "排除主机",
-    "excludePorts": "排除端口"
+    "excludePorts": "排除端口",
+    "systemProtection": "系统保护",
+    "systemProtectionHelp": "开启后，同一个主机探测超过150个开放端口会触发系统保护机制，自动中断扫描"
   },
   "NewPortScan": {
     "pluginType": "插件类型"

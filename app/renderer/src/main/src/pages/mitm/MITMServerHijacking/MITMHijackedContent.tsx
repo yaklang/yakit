@@ -1,6 +1,6 @@
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
-import { useCreation, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { MITMResponse, TraceInfo } from '../MITMPage'
 import styles from './MITMServerHijacking.module.scss'
@@ -9,6 +9,7 @@ import { MITMLogHeardExtra } from './MITMLog'
 import ReactResizeDetector from 'react-resize-detector'
 import { useStore } from '@/store/mitmState'
 import { HTTPFlowRealTimeTableAndEditor } from '@/components/HTTPHistory'
+import { useBuiltinTagList } from '@/components/HTTPFlowTable/useBuiltinTagList'
 import { MITMContentReplacerRule } from '../MITMRule/MITMRuleType'
 import emiter from '@/utils/eventBus/eventBus'
 import { MITMAdvancedFilter, MITMFilterData, MITMFilterSchema } from '../MITMServerStartForm/MITMFilters'
@@ -164,6 +165,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const [sourceType, setSourceType] = useState<string>('mitm')
   const [tableTotal, setTableTotal] = useState<number>(0)
   const [tableSelectNum, setTableSelectNum] = useState<number>(0)
+  const mitmHijackedContentRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(mitmHijackedContentRef)
+  const { builtinTagList } = useBuiltinTagList(autoForward === 'log', inViewport)
   const [manualTableTotal, setManualTableTotal] = useState<number>(0)
   const [manualTableSelectNumber, setManualTableSelectNumber] = useState<number>(0)
   const [mitmV2PopoverVisible, setMITMV2PopoverVisible] = useState<boolean>(false)
@@ -1012,6 +1016,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 )
               } catch (error) {}
             }}
+            builtinTagList={builtinTagList}
           />
         </div>
       </>
@@ -1049,7 +1054,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   // #endregion
 
   return (
-    <div className={styles['mitm-hijacked-content']}>
+    <div className={styles['mitm-hijacked-content']} ref={mitmHijackedContentRef}>
       <div>
         <ReactResizeDetector
           onResize={(w, h) => {

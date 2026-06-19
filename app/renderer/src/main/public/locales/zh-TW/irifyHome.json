@@ -1,0 +1,58 @@
+{
+  "IRifyHome": {
+    "fetchDataFailed": "取得首頁資料失敗：{{error}}",
+    "pageTitle": "程式碼審計工作台",
+    "pageSubtitle": "區分 AI 連網審計與 SSA 離線規則審計，統一查看掃描成果與風險態勢",
+    "project": "專案",
+    "ruleLibrary": "規則庫",
+    "aiAuditTask": "AI 審計任務",
+    "riskOverview": "風險概覽",
+    "riskDistribution": "風險分佈",
+    "ruleHitsTop5": "規則命中 Top5",
+    "recentProjects": "近期專案",
+    "viewAll": "查看全部",
+    "quickAccess": "快速入口"
+  },
+  "AuditMode": {
+    "aiCodeAudit": "AI 程式碼審計",
+    "online": "連網",
+    "aiSubtitle": "適合：複雜業務 / 需要解釋 / 需要輔助研判",
+    "aiFeature1": "面向複雜業務邏輯、跨檔案關聯、自然語言分析與風險解釋",
+    "aiFeature2": "支援連網知識增強、場景理解、問題歸因、修復建議",
+    "tagBusinessLogic": "業務邏輯",
+    "tagContextUnderstanding": "上下文理解",
+    "tagRiskExplanation": "風險解釋",
+    "tagFixSuggestion": "修復建議",
+    "startAiAudit": "開始 AI 審計",
+    "traditionalCodeAudit": "傳統程式碼審計",
+    "offline": "離線",
+    "traditionalFeature1": "透過編寫審計規則對程式碼行為進行分析，發現程式碼中的風險片段",
+    "traditionalFeature2": "Java、PHP、Yaklang、Golang",
+    "startAudit": "開始審計",
+    "codeScan": "程式碼掃描",
+    "scanFeature1": "內建豐富規則庫",
+    "scanFeature2": "可自由選擇規則分組進行程式碼掃描",
+    "scanFeature3": "幫助分析程式碼結構和發現程式碼中的風險片段",
+    "startScan": "開始掃描"
+  },
+  "QuickAccess": {
+    "ruleManagement": "規則管理",
+    "ruleManagementDesc": "對規則進行增刪改查以及分組和上傳操作",
+    "javaDecompiler": "JAVA 反編譯",
+    "javaDecompilerDesc": "將已編譯的字節碼文件還原為人類可讀的 Java 源代碼",
+    "auditHole": "審計漏洞",
+    "auditHoleDesc": "查看代碼掃描或審計中發現的所有漏洞",
+    "projectManagement": "專案管理",
+    "projectManagementDesc": "對編譯和掃描的所有專案進行管理"
+  },
+  "IRifyHomeTable": {
+    "project": "專案",
+    "language": "語言",
+    "projectRisk": "專案風險",
+    "riskCount": "風險數量",
+    "updatedAt": "更新時間"
+  },
+  "IRifyHomeEcharts": {
+    "totalRisk": "總風險"
+  }
+}

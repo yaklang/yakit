@@ -18,6 +18,16 @@ export interface YakitVirtualListProps<T> {
   /**加载下一页 */
   loadMoreData: () => void
   onClickRow?: (ele: T) => void
+  dynamicHeight?: boolean
+  /**是否支持展开行（需要配合 dynamicHeight=true） */
+  expandable?: ExpandableConfig<T>
+}
+
+interface ExpandableConfig<T> {
+  expandedRowRender: (record: T) => React.ReactNode
+  expandedRowKeys: React.Key[]
+  onExpend: (record: T) => void
+  setExpandedKeys: React.Dispatch<React.SetStateAction<React.Key[]>>
 }
 
 export interface VirtualListColumns<T> {

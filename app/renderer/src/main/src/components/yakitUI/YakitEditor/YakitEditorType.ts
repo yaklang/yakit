@@ -107,6 +107,8 @@ export interface YakitEditorProps {
   privacy?: boolean
   /** @name 是否显示Host提示装饰器（WebFuzzer） */
   showHostHint?: boolean
+  /** @name 是否启用二进制 Fuzztag 折叠（unquote/hexdecode/base64decode/file 折叠为小块，点击可 HEX 编辑） */
+  foldBinaryFuzztag?: boolean
   /** @name 外部接管解码后的操作，现用于history编解码呼出 */
   execAutoDecodeCallback?: () => void
 }

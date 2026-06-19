@@ -317,6 +317,11 @@
     overflow: hidden;
     display: flex;
     min-width: 0;
+    .knowledge-base-ai-chat {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
     .knowledge-base-container-empty {
       width: 100%;
       height: 100%;

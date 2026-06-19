@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo } from 'react'
+import classNames from 'classnames'
 import { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
 import { useCreation } from 'ahooks'
@@ -13,12 +14,11 @@ import { ModalInfoProps } from '@/pages/ai-agent/components/ModelInfo'
 import { AIStreamContentType } from '../hooks/defaultConstant'
 import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
-import { ReActChatRenderItem } from '../hooks/aiRender'
+import { ChatReferenceMaterialPayload, ReActChatRenderItem } from '../hooks/aiRender'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import Loading from '@/components/Loading/Loading'
-import useAISystemStream from '../hooks/useAISystemStream'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
-import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
+import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -108,9 +108,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   const { chats } = props
   const {
     casualTitle,
-    casualLoading,
     requestHistoryState: { casualLoadMoreLoading },
-    systemStream,
     execute,
   } = useChatIPCStore().chatIPCData
 
@@ -212,40 +210,29 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   )
 })
 
+/** 挂到 body，避免 Virtuoso 滚出视口时卸载列表项导致弹窗消失 */
+export const openAIReferenceModal = (referenceList: ChatReferenceMaterialPayload, title = '参考资料') => {
+  const code = referenceList.map((item) => item.payload).join('\n')
+  const modal = showYakitModal({
+    title,
+    cancelButtonProps: { style: { display: 'none' } },
+    bodyStyle: { height: 500 },
+    content: <YakitEditor type="plaintext" readOnly value={code} />,
+    onOk: () => modal.destroy(),
+  })
+}
+
 export const AIReferenceNode: React.FC<AIReferenceNodeProps> = React.memo((props) => {
-  const { referenceList } = props
-  const [expand, setExpand] = useState<boolean>(false)
-  const code = useCreation(() => {
-    return expand ? referenceList.map((item) => item.payload).join('\n') : ''
-  }, [expand, referenceList])
+  const { referenceList, className } = props
   return (
-    <>
-      <YakitModal
-        visible={expand}
-        title={`参考资料`}
-        cancelButtonProps={{ style: { display: 'none' } }}
-        onOk={(e) => {
-          e.stopPropagation()
-          setExpand(false)
-        }}
-        onCloseX={(e) => {
-          e.stopPropagation()
-          setExpand(false)
-        }}
-        bodyStyle={{ height: 500 }}
-        destroyOnClose
-      >
-        <YakitEditor type="plaintext" readOnly={true} value={code} />
-      </YakitModal>
-      <span
-        className={styles['ai-reference-node']}
-        onClick={(e) => {
-          e.stopPropagation()
-          setExpand(true)
-        }}
-      >
-        [参考资料]
-      </span>
-    </>
+    <span
+      className={classNames(styles['ai-reference-node'], className)}
+      onClick={(e) => {
+        e.stopPropagation()
+        openAIReferenceModal(referenceList)
+      }}
+    >
+      [参考资料]
+    </span>
   )
 })

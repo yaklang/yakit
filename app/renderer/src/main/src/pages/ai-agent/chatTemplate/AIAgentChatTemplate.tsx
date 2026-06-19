@@ -34,7 +34,6 @@ import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
-import useAIAgentStore from '../useContext/useStore'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
@@ -115,11 +114,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
           updated_at_unix: 0,
           root_task_name: taskName,
         }
-        return (
-          <div className={styles['history-task-tree-container']}>
-            <HistoryTaskTree data={planHistoryList} currentTaskItem={currentTaskItem} />
-          </div>
-        )
+        return <HistoryTaskTree data={planHistoryList} currentTaskItem={currentTaskItem} />
       case AIChatLeft.Timeline:
         return <TimelineCard />
       default:
@@ -213,7 +208,6 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   }, [scrollToBottom])
 
   const {
-    systemStream,
     requestHistoryState: { taskLoadMoreLoading },
   } = useChatIPCStore().chatIPCData
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
@@ -312,8 +306,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   )
 
   const Footer = useCallback(
-    () => <TaskLoading className={styles['task-loading-footer']} taskStatus={taskStatus} systemStream={systemStream} />,
-    [taskStatus, systemStream],
+    () => <TaskLoading className={styles['task-loading-footer']} taskStatus={taskStatus} />,
+    [taskStatus],
   )
   const Header = useCallback(
     () =>
@@ -335,7 +329,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
 
   const onScrollToIndex = useMemoizedFn((id) => {
     const index = streams.findIndex((item) => {
-      if (item.type === AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
+      if (item.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         const chatItem = fetchChatDataStore()?.getContentMap({
           session,
           chatType: item.chatType,
@@ -389,9 +383,6 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
   const { callToolId, aiFilePath } = props
   const [toolList, setToolList] = useState<AIChatQSData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
-  useEffect(() => {
-    getList()
-  }, [])
 
   const { yakExecResult } = useChatIPCStore().chatIPCData
 
@@ -409,6 +400,9 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         }, 200)
       })
   })
+
+  useMount(getList)
+
   return (
     <div className={styles['ai-chat-tool-drawer-content']}>
       {loading ? (

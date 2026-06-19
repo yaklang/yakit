@@ -33,8 +33,6 @@ export type YakRunnerEventProps = {
   onOperationFileTree: string
   // 通过路径打开文件
   onOpenFileByPath: string
-  // 打开临时文件
-  onOpenTemporaryFile: string
   // 通过缓存文件路径读取文件内容
   onGetCodeByPathCache: string
   // 打开编译文件Modal
@@ -51,4 +49,8 @@ export type YakRunnerEventProps = {
   onResetAuditStatus?: string
   // 刷新审计详情（关闭节点信息）
   onRefreshAuditDetail?: string
+  /** 编辑器选中代码发送到自由对话 */
+  onYakRunnerSendCodeBlock: string
+  /** AI `yaklang_code_change` 写回当前 Monaco 编辑器 */
+  onYakRunnerEditorForceSetCode: string
 }

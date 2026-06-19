@@ -1496,7 +1496,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
           })
         })
         .catch((err) => {
-          yakitNotify('error', '创建账号失败：' + err?.message || err)
+          yakitNotify('error', '创建账号失败：' + (err?.message || err))
         })
         .finally(() => {
           setLoading(false)

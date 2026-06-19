@@ -3,7 +3,7 @@ import type { AIChatData } from '../type/aiChat'
 import { AIChatQSData, ReActChatBaseInfo } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIModelTypeEnum } from '../defaultConstant'
 import { cloneDeep } from 'lodash'
-import { DefaultCurrentExecTaskTree } from '@/pages/ai-re-act/hooks/defaultConstant'
+import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P]
@@ -90,11 +90,13 @@ export class ChatDataStore {
       casualChat: {
         elements: [],
         contents: new Map(),
+        planDetails: cloneDeep(DefaultPlanItemDetailsData),
       },
       taskChat: {
         plan: cloneDeep(DefaultCurrentExecTaskTree),
         elements: [],
         contents: new Map(),
+        planDetailsMap: new Map(),
       },
       grpcFolders: [],
       reActTimelines: [],
@@ -198,6 +200,8 @@ export const histroyAiStore = new ChatDataStore()
 export const FlowAiStore = new ChatDataStore()
 /** Irify：独立「AI 代码审计」页 */
 export const irifyAiCodeAuditPageAiStore = new ChatDataStore()
+/** Yak Runner：嵌入代码安全审计 AI 侧栏 */
+export const yakRunnerPageAiStore = new ChatDataStore()
 
 /** Web Fuzzer 每页 `new WebFuzzerAiStore(pageId)`；与上方单例区分需用 `instanceof` */
 export class WebFuzzerAiStore extends ChatDataStore {
@@ -214,5 +218,6 @@ export type ChatDataStoreKey =
   | 'histroyAiStore'
   | 'FlowAiStore'
   | 'irifyAiCodeAuditPageAiStore'
+  | 'yakRunnerPageAiStore'
   | 'WebFuzzerAiStore'
   | 'unknown'

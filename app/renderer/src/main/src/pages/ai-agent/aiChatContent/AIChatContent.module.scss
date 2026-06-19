@@ -226,6 +226,12 @@
 
 .echarts-details-popover {
   :global {
+    .ant-popover-arrow {
+      display: none;
+    }
+    .ant-popover-content {
+      transform: translateY(14px);
+    }
     .ant-popover-inner-content {
       padding: 0;
     }
@@ -247,7 +253,7 @@
 .echarts-details-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 42px);
 
   .echarts-details-heard {
     display: flex;

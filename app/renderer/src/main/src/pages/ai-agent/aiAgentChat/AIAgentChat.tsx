@@ -236,11 +236,14 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   /**发送 IsConfigHotpatch 消息 */
   const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
     if (!activeID) return
-    const { hotpatchType, params } = data
+    const { hotpatchType, params, taskId } = data
     const info: AIInputEvent = {
       IsConfigHotpatch: true,
       HotpatchType: hotpatchType,
       Params: params,
+    }
+    if (!!taskId) {
+      info.TaskId = taskId
     }
     events.onSend({ token: activeID, type: '', params: info })
   })

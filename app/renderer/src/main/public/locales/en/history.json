@@ -2,6 +2,7 @@
   "HTTPHistory": {
     "websiteTree": "Website Tree",
     "process": "Process",
+    "builtinTag": "System Tag",
     "pleaseEnterDomainToSearch": "Please enter a domain to search, e.g., baidu.com",
     "AI": "AI"
   },
@@ -92,11 +93,14 @@
       "networkDevicesAndOASystem": "Network Devices and OA System",
       "securityProduct": "Security Product",
       "remoteCodeExecutionScan": "Remote Code Execution (Scan)",
-      "sQLInjection": "SQL Injection"
+      "sQLInjection": "SQL Injection",
+      "viewAttach": "View nearby data packages"
     },
+    "viewAttachTip": "View nearby data packages for {{Id}}",
     "setColorSuccess": "Set HTTPFlow color successfully",
     "removeColorSuccess": "Clear HTTPFlow color successfully",
-    "sendLimitData": "You can only send a maximum of {{maxLength}} data entries at a time"
+    "sendLimitData": "You can only send a maximum of {{maxLength}} data entries at a time",
+    "resetConfirm": "Confirm Reset？"
   },
   "ImportExportProgress": {
     "exportHARData": "Export HAR traffic data"
@@ -126,7 +130,10 @@
     "keepRefreshingTrafficData": "Check this to keep traffic data refreshing even when not on the current page",
     "listDisplayFieldsAndOrder": "List display fields and order",
     "listDisplayConfigTips": "Click to disable a field from being displayed in the list. The display order of the fields is from top to bottom and can be adjusted by dragging. This configuration applies to all traffic tables and traffic analysis tables executed by plugins",
-    "advancedConfigToolTips": "Advanced configuration takes precedence over individual tab configuration items"
+    "advancedConfigToolTips": "Advanced configuration takes precedence over individual tab configuration items",
+    "dragSelectConfig": "Frame selection configuration",
+    "dragSelectMultiData": "Select multiple data entries",
+    "dragSelectMultiDataTip": "When checked, multiple data packets can be selected when using a selection box"
   },
   "HTTPFlowTableFormConfiguration": {
     "saveAdvancedConfigAndClose": "Do you want to save the advanced configuration and close the pop-up window?",

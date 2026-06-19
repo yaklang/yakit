@@ -69,7 +69,9 @@
     "tcpPingPort": "TCP Ping 埠",
     "tcpPingPortHelp": "配置 TCP Ping 埠：以這些埠是否開放作為 TCP Ping 依據",
     "excludeHosts": "排除主機",
-    "excludePorts": "排除埠"
+    "excludePorts": "排除埠",
+    "systemProtection": "系統保護",
+    "systemProtectionHelp": "開啟後，同一個主機探測超過150個開放連接埠會觸發系統保護機制，自動中斷掃描"
   },
   "NewPortScan": {
     "pluginType": "外掛型別"

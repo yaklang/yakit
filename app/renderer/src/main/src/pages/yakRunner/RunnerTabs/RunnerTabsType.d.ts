@@ -42,14 +42,14 @@ export interface FileDetailInfo {
   highLightRange?: Selection
   /** 是否未保存（用于临时文件创建） */
   isUnSave?: boolean
+  /** AI `op:create` 或临时文件：保存时需「另存为」选择路径 */
+  needsSaveAs?: boolean
   /** 是否已被外部删除（文件树监控-删除） */
   isDelete?: boolean
   /** 语法检查（代码打开时执行） */
   syntaxCheck?: IMonacoEditorMarker[]
   /** 帮助信息（代码坐标获取时执行） */
   helpInfo?: any
-  /** 仅在临时文件中使用 用于标识文件是否为AI报告 避免与文件树中的文件混淆*/
-  aiReport?: boolean
 
   // 由于输出和终端直接显示所有的 因此不再绑定在单个文件上
   /** 输出（执行时注入） */

@@ -10,8 +10,13 @@ import {
 import i18n from '@/i18n/i18n'
 import { Risk } from '@/pages/risks/schema'
 import { SSARisk } from '@/pages/yakRunnerAuditHole/YakitAuditHoleTable/YakitAuditHoleTableType'
+import type { ConcurrentStreamFramePayload } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStreamFrame'
 import { yakitDialog, yakitShell, yakitWindow } from '@/services/electronBridge'
 const tOriginal = i18n.getFixedT(null, ['utils', 'yakitUi'])
+
+export type OpenAIConcurrentStreamPayload = ConcurrentStreamFramePayload
+
+const { ipcRenderer } = window.require('electron')
 
 const toWritableText = (data?: Uint8Array | string) => {
   if (typeof data === 'string') {
@@ -65,6 +70,22 @@ export const openSSARiskNewWindow = (data?: SSARisk) => {
   }
 }
 
+export interface OpenAIConcurrentStreamOptions {
+  /** 刷新/推送更新时不弹「新窗口打开中」 */
+  silent?: boolean
+}
+
+/** 打开并发流 aux 子窗，创建时传入 elements 等帧数据 */
+export const openAIConcurrentStream = (
+  data: OpenAIConcurrentStreamPayload,
+  options?: OpenAIConcurrentStreamOptions,
+) => {
+  if (!options?.silent) {
+    yakitNotify('info', tOriginal('OpenWebsite.openingNewWindow'))
+  }
+  return ipcRenderer.invoke('open-ai-concurrent-stream-window', data)
+}
+
 export const minWinSendToChildWin = (params) => {
   yakitWindow.focusChildWindow()
   yakitWindow.sendToChildWindow({
@@ -78,7 +99,7 @@ export const openConsoleNewWindow = () => {
   if (clickEngineConsoleFlag) return
   if (!engineConsoleWindowHash) {
     changeClickEngineConsoleFlag(true)
-    yakitWindow.openConsoleWindow()
+    yakitWindow.openConsoleWindow().finally(() => changeClickEngineConsoleFlag(false))
   } else {
     yakitWindow.focusConsoleWindow()
   }

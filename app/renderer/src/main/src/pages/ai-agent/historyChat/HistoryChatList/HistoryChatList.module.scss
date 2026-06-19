@@ -1,5 +1,6 @@
 .history-chat-list {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   padding-left: 12px;
   padding-right: 12px;
   overflow-y: auto;
@@ -16,6 +17,7 @@
     line-height: 16px;
   }
   .history-item {
+    position: relative;
     height: 32px;
     padding: 0 8px;
     display: flex;
@@ -26,10 +28,12 @@
     cursor: pointer;
     .item-info {
       flex: 1;
+      min-width: 0;
       overflow: hidden;
       display: flex;
       align-items: center;
       gap: 4px;
+      padding-right: 48px;
       .item-icon {
         width: 24px;
         height: 24px;
@@ -52,9 +56,14 @@
       }
     }
     .item-extra {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
       display: none;
       align-items: center;
       gap: 4px;
+      flex-shrink: 0;
       .del-icon {
         svg {
           color: var(--Colors-Use-Error-Primary);

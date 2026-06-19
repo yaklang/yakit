@@ -3,7 +3,6 @@ import OpenPacketNewWindow from './components/OpenPacketNewWindow/OpenPacketNewW
 import styles from './ChildNewApp.module.scss'
 import { useDebounceFn, useMemoizedFn } from 'ahooks'
 import { coordinate } from './pages/globalVariable'
-import { YakitSpin } from './components/yakitUI/YakitSpin/YakitSpin'
 import TitleBar from './components/BaseTitleBar'
 import { RightBugAuditResult, YakitRiskDetails } from './pages/risks/YakitRiskTable/YakitRiskTable'
 
@@ -16,8 +15,12 @@ interface ParentWindowData {
 interface ChildNewAppProps {}
 const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
   const [parentWinData, setParentWinData] = useState<ParentWindowData>()
-  useEffect(() => {
+  const requestLatestParentData = useMemoizedFn(() => {
     ipcRenderer.send('request-parent-data')
+  })
+
+  useEffect(() => {
+    requestLatestParentData()
     ipcRenderer.on('get-parent-window-data', (e, data) => {
       setParentWinData(data as ParentWindowData)
     })
@@ -25,7 +28,7 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
       setParentWinData(undefined)
       ipcRenderer.removeAllListeners('get-parent-window-data')
     }
-  }, [])
+  }, [requestLatestParentData])
   // 全局记录鼠标坐标位置(为右键菜单提供定位)
   const handleMouseMove = useDebounceFn(
     useMemoizedFn((e: MouseEvent) => {
@@ -45,7 +48,7 @@ const ChildNewApp: React.FC<ChildNewAppProps> = (props) => {
     return () => {
       document.removeEventListener('mousemove', handleMouseMove)
     }
-  }, [])
+  }, [handleMouseMove])
 
   const childNewAppEle = useMemo(() => {
     if (parentWinData) {

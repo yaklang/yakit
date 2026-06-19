@@ -2,7 +2,7 @@
   "AiAgengt": {
     "intelligentModels": "高質模型",
     "lightweightModels": "輕量模型",
-    "visionModels": "視覺模式",
+    "visionModels": "視覺模型",
     "callingMode": "呼叫模式",
     "aiModel": "AI模型",
     "focusMode": "場景"
@@ -518,6 +518,13 @@
     "deleteFailed": "刪除會話失敗：{{error}}",
     "editTitle": "編輯對話標題",
     "deleteConfirm": "是否確認刪除該歷史對話，刪除後將無法恢復"
+  },
+  "ConcurrentStreamCard": {
+    "systemInfo": "系統資訊",
+    "refresh": "重新整理",
+    "openInNewWindow": "新視窗開啟",
+    "collapse": "收起",
+    "expand": "展開"
   },
   "AIChatSetting": {
     "permissionsAndSecurity": "基礎權限與安全",

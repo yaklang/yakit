@@ -9,6 +9,8 @@ import styles from './AIAgentSideList.module.scss'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
+import { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
+
 const AIChatSetting = React.lazy(() => import('./AIChatSetting/AIChatSetting'))
 const ForgeName = React.lazy(() => import('./forgeName/ForgeName'))
 const AIToolList = React.lazy(() => import('./aiToolList/AIToolList'))
@@ -61,7 +63,7 @@ export const AIAgentSideList: React.FC<AIAgentSideListProps> = (props) => {
       case AIAgentTabListEnum.History:
         content = (
           <React.Suspense>
-            <HistoryChat />
+            <HistoryChat aiSource={AI_AGENT_HISTORY_AI_SOURCES} />
           </React.Suspense>
         )
         break

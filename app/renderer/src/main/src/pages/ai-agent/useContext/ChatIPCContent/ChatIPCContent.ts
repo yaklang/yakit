@@ -30,6 +30,7 @@ export interface AISendSyncMessageParams {
 export interface AISendConfigHotpatchParams {
   hotpatchType: AIInputEvent['HotpatchType']
   params: MakeOptional<AIStartParams, 'UserQuery'>
+  taskId?: AIInputEvent['TaskId']
 }
 export interface ChatIPCContextDispatcher {
   /** useChatIPC的各种事件 */
@@ -70,6 +71,7 @@ export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
     handleUserManualIntervention: () => {},
     handleLoadMoreHistory: () => {},
     handleHasMoreHistory: () => false,
+    resetCurrentTaskPlanID: () => {},
   },
   handleSendCasual: () => {},
   handleSendTask: () => {},

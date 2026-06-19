@@ -1,5 +1,5 @@
-import { AITaskInfoProps } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AITreeNodeProps } from '../../aiTree/type'
 
 export interface HistoryTaskTreeProps {
   /** 当前任务 */
@@ -13,6 +13,7 @@ export interface HistoryTaskTreeItemProps {
   item: AIAgentGrpcApi.PlanHistory
   /** 当前任务id */
   currentCoordinatorId: string
+  taskType: AITreeNodeProps['taskType']
 }
 
 export interface AIHistoryContinueTaskProps {

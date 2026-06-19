@@ -44,6 +44,13 @@ import {
   aiHttpFlowCustomSchema,
   setHttpFlowListCommand,
 } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { AICustomCodeRef } from './aiCodeBlock/AICodeBlock'
+import {
+  aiCodeBlockCommand,
+  aiCodeBlockCustomPlugin,
+  aiCodeBlockCustomSchema,
+  AICodeBlockCommandParams,
+} from './aiCodeBlock/aiCustomCodeBlockPlugin'
 
 const remarkDirective = $remark(`remark-directive`, () => directive)
 
@@ -67,6 +74,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
     const { getSession } = useSessionId()
 
     const sessionIdRef = React.useRef<string>('') // 作为当前对话得文件路径
+    const chatDataStoreKeyRef = React.useRef(chatDataStoreKey)
+    chatDataStoreKeyRef.current = chatDataStoreKey
 
     useImperativeHandle(
       ref,
@@ -80,6 +89,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
         setHttpFlow: (ids: string[]) => {
           onSetHttpFlow(ids)
         },
+        setCodeRef: (v: AICodeBlockCommandParams) => {
+          onSetCodeRef(v)
+        },
         getSessionId: () => sessionIdRef.current,
       }),
       [],
@@ -90,7 +102,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
           upload,
           $view(imageSchema.node, () =>
             nodeViewFactory({
-              component: () => <AICustomFile sessionId={sessionIdRef.current} chatDataStoreKey={chatDataStoreKey} />,
+              component: () => (
+                <AICustomFile sessionId={sessionIdRef.current} chatDataStoreKey={chatDataStoreKeyRef.current} />
+              ),
             }),
           ),
           (ctx: Ctx) => () => {
@@ -146,6 +160,14 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
               }),
             })
           },
+        ].flat()
+        const codeBlockPlugin = [
+          ...aiCodeBlockCustomPlugin(),
+          $view(aiCodeBlockCustomSchema.node, () =>
+            nodeViewFactory({
+              component: () => <AICustomCodeRef />,
+            }),
+          ),
         ].flat()
         const httpFlowPlugin = [
           ...aiHttpFlowCustomPlugin(),
@@ -213,6 +235,8 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
             .use(httpFlowPlugin)
             // ```codePlugin```
             .use(codePlugin)
+            // code block 代码块
+            .use(codeBlockPlugin)
             // 自定义
             .use(customPlugin)
         )
@@ -238,6 +262,9 @@ export const AIMilkdownInputBase: React.FC<AIMilkdownInputBaseProps> = React.mem
     })
     const onSetHttpFlow = useMemoizedFn((ids: string[]) => {
       get()?.action(callCommand<string[]>(setHttpFlowListCommand.key, ids))
+    })
+    const onSetCodeRef = useMemoizedFn((params: AICodeBlockCommandParams) => {
+      get()?.action(callCommand<AICodeBlockCommandParams>(aiCodeBlockCommand.key, params))
     })
     const onSetImage = useMemoizedFn(() => {
       handleOpenFileSystemDialog({

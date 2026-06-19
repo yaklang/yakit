@@ -17,6 +17,7 @@ export interface LocalPluginExecuteProps {
 export interface ExportYakScriptStreamRequest {
   OutputFilename: string
   Password: string
+  OutputPluginDir: string
   Filter: QueryYakScriptRequest
 }
 

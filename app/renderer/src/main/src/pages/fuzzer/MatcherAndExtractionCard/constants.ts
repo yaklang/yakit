@@ -17,6 +17,10 @@ export const filterModeOptions = (t: TFunction) => {
       value: 'onlyMatch',
       label: t('MatcherCollapse.onlyMatch'),
     },
+    {
+      value: 'fail',
+      label: t('MatcherCollapse.failed'),
+    },
   ]
 }
 

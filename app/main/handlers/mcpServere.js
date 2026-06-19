@@ -64,4 +64,36 @@ module.exports = (win, getClient) => {
   ipcMain.handle('GetAllMCPServers', async (e, params) => {
     return await asyncGetAllMCPServers(params)
   })
+
+  // asyncGetMCPToolList wrapper
+  const asyncGetMCPToolList = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetMCPToolList(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('GetMCPToolList', async (e, params) => {
+    return await asyncGetMCPToolList(params)
+  })
+
+  // asyncSetMCPToolEnabled wrapper
+  const asyncSetMCPToolEnabled = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().SetMCPToolEnabled(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('SetMCPToolEnabled', async (e, params) => {
+    return await asyncSetMCPToolEnabled(params)
+  })
 }

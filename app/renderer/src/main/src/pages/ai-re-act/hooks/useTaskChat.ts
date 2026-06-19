@@ -13,7 +13,7 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog } from './utils'
+import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, handleTodoListData, isValidTaskIndex } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -24,7 +24,16 @@ import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
 function useTaskChat(params: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params: UseTaskChatParams) {
-  const { pushLog, getChatDataStore, getRequest, onReview, onReviewExtra, onReviewRelease, sendRequest } = params || {}
+  const {
+    pushLog,
+    getChatDataStore,
+    getRequest,
+    getCurrentTaskPlanID,
+    onReview,
+    onReviewExtra,
+    onReviewRelease,
+    sendRequest,
+  } = params || {}
 
   const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
     pushLog && pushLog(logInfo)
@@ -48,62 +57,90 @@ function useTaskChat(params: UseTaskChatParams) {
     setPlan(cloneDeep(DefaultCurrentExecTaskTree))
   })
 
-  /** 正在执行中的叶子任务的mapKey集合(已结束的叶子任务会被移除) */
+  /**
+   * 正在执行中的叶子任务的mapKey集合(已结束的叶子任务会被移除)
+   * 主要为了在任务中断时，手动设置为error状态使用
+   */
   const activeLeafTasks = useRef<Set<string>>(new Set())
   const handleResetActiveLeafTasks = useMemoizedFn(() => {
     activeLeafTasks.current.clear()
   })
 
-  /**
-   * 任务节点开始执行, 生成UI展示的信息
-   * 实时数据里 先给push_task，后给pop_task，所以push_task是生成数据的主要依据
-   * 任务规划里该类型只有实时数据
-   */
-  const handleTaskNode = useMemoizedFn((res: AIOutputEvent) => {
+  const handleTaskNode = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     try {
-      let ipcContent = Uint8ArrayToString(res.Content) || ''
-      const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-      if (!info.task.task_uuid || info.task.index === '1') return
-      if (res.IsSync) return
-
-      let taskNodeInfo: AIChatQSData | undefined = getContentMap(info.task.task_uuid)
-      if (!taskNodeInfo) {
-        taskNodeInfo = {
+      const taskKey = getCurrentTaskPlanID()?.taskID
+        ? `${getCurrentTaskPlanID()?.taskID}-${info.task.index}`
+        : undefined
+      if (!taskKey) return
+      const existing = getContentMap(taskKey)
+      if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+        handleGrpcDataPushLog({
+          info: res,
+          pushLog: handlePushLog,
+        })
+        return
+      }
+      const chatData: AIChatQSData =
+        existing ??
+        ({
           ...genBaseAIChatData(res),
-          id: info.task.task_uuid,
+          id: taskKey,
           chatType: 'task',
-          type: AIChatQSDataTypeEnum.TASK_INDEX_NODE,
+          type: AIChatQSDataTypeEnum.TASK_NODE_GROUP,
           data: {
             taskIndex: info.task.index,
+            taskId: info.task.task_id,
             taskName: info.task.name,
             goal: info.task.goal,
             status: info.task.task_status || AITaskStatus.inProgress,
           },
-        }
-        setContentMap(taskNodeInfo.id, taskNodeInfo)
-      }
+        } as AIChatQSData)
 
+      setContentMap(chatData.id, chatData)
       if (info.type === 'push_task') {
-        activeLeafTasks.current.add(taskNodeInfo.id)
-        setElements((old) => [
-          ...old,
-          { token: taskNodeInfo!.id, type: taskNodeInfo!.type, renderNum: 1, chatType: 'task' },
-        ])
+        activeLeafTasks.current.add(chatData.id)
+        setElements((old) => {
+          const exists = old.some((item) => item.token === chatData.id && item.type === chatData.type)
+          if (exists) return old
+          const last = old[old.length - 1]
+          if (last.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
+            // 实时数据下，将默认任务聚合组置底
+            old.splice(old.length - 1, 0, {
+              token: chatData.id,
+              type: chatData.type,
+              renderNum: 1,
+              chatType: 'task',
+              kind: 'task',
+              children: [],
+            })
+            return [...old]
+          }
+          return [
+            ...old,
+            { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'task', children: [] },
+          ]
+        })
       } else if (info.type === 'pop_task') {
         // 删除正在执行队列里的叶子任务, 因为当前任务已经结束了
-        activeLeafTasks.current.delete(info.task.task_uuid)
-        if (taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) return
-        taskNodeInfo.data.status = info.task.task_status
+        activeLeafTasks.current.delete(chatData.id)
+        if (chatData.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+          chatData.data.status = info.task.task_status
+        }
         setElements((old) => {
           return old.map((item) => {
-            if (item.token === taskNodeInfo!.id && item.type === taskNodeInfo!.type) {
+            if (item.token === chatData.id && item.type === chatData.type) {
               return { ...item, renderNum: item.renderNum + 1 }
             }
             return item
           })
         })
       }
-    } catch {}
+    } catch {
+      handleGrpcDataPushLog({
+        info: res,
+        pushLog: handlePushLog,
+      })
+    }
   })
 
   /** 更新任务树指定任务节点的状态 */
@@ -124,7 +161,7 @@ function useTaskChat(params: UseTaskChatParams) {
     const leafTasks = activeLeafTasks.current
     for (let mapKey of leafTasks) {
       const taskNodeInfo = getContentMap(mapKey)
-      if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_INDEX_NODE) {
+      if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
         continue
       }
       taskNodeInfo.data.status = AITaskStatus.error
@@ -188,12 +225,22 @@ function useTaskChat(params: UseTaskChatParams) {
         funcKey = res.NodeId
       } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
         funcKey = res.Type
+      } else if (res.Type === 'structured' && res.NodeId === 'capability_inventory') {
+        funcKey = res.NodeId
+      } else if (res.Type === 'perception' && res.NodeId === 'perception') {
+        funcKey = res.Type
+      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
+        funcKey = res.Type
+      } else if (res.NodeId === 'session_snapshot') {
+        funcKey = res.NodeId
       }
+
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
       if (handleFunc) {
         handleFunc({
           res,
           info: { chatType: 'task' },
+          getCurrentTaskPlanID,
           getRequest,
           setElements,
           getElements,
@@ -208,6 +255,7 @@ function useTaskChat(params: UseTaskChatParams) {
             onReviewRelease,
             handleReviewDataToUI,
           },
+          getChatDataStore,
         })
         return
       }
@@ -218,14 +266,16 @@ function useTaskChat(params: UseTaskChatParams) {
         const data = JSON.parse(ipcContent) || ''
 
         if (data && typeof data === 'object' && data?.type === 'push_task') {
-          const info = JSON.parse(ipcContent) as AIAgentGrpcApi.ChangeTask
-          handleTaskNode(res)
+          // 开始任务的执行
+          const info = data as AIAgentGrpcApi.ChangeTask
           handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
+          if (isValidTaskIndex(info.task.index)) handleTaskNode(res, info)
         }
 
         if (data && typeof data === 'object' && data?.type === 'pop_task') {
           // 结束任务 & 请求更新任务树最新状态数据
-          handleTaskNode(res)
+          const info = data as AIAgentGrpcApi.ChangeTask
+          if (isValidTaskIndex(info.task.index)) handleTaskNode(res, info)
           sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
         }
         return
@@ -273,7 +323,9 @@ function useTaskChat(params: UseTaskChatParams) {
       handleResetReview()
       handleReviewDataToUI(chatData)
       setContentMap(chatData.id, chatData)
-      setElements((old) => old.concat({ token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }))
+      setElements((old) =>
+        old.concat({ token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'item' }),
+      )
 
       cb && cb()
     } catch (error) {}
@@ -294,14 +346,20 @@ function useTaskChat(params: UseTaskChatParams) {
       data: '',
     }
     setContentMap(chatData.id, chatData)
-    setElements((old) => [...old, { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task' }])
+    setElements((old) => [
+      ...old,
+      { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'item' },
+    ])
   })
 
   /** 用户手动介入逻辑 */
   const handleUserManualIntervention = useMemoizedFn((chatInfo: AIChatQSData) => {
     try {
       setContentMap(chatInfo.id, cloneDeep(chatInfo))
-      setElements((old) => [...old, { token: chatInfo.id, type: chatInfo.type, renderNum: 1, chatType: 'task' }])
+      setElements((old) => [
+        ...old,
+        { token: chatInfo.id, type: chatInfo.type, renderNum: 1, chatType: 'task', kind: 'item' },
+      ])
     } catch (error) {
       yakitNotify('error', `用户手动干预操作失败: ${error}`)
     }

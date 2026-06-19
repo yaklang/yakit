@@ -23,9 +23,9 @@ import { AIConfigAPIKeyFormItem } from '@/pages/ai-agent/aiModelList/aiModelForm
 import {
   AI_API_TYPE_OPTIONS,
   DEFAULT_AI_API_TYPE,
-  grpcGetAIThirdPartyAppConfigTemplate,
   normalizeAIAPIType,
-} from '@/pages/ai-agent/aiModelList/utils'
+} from '@/pages/ai-agent/aiModelList/aiApiTypeOptions'
+import { grpcGetAIThirdPartyAppConfigTemplate } from '@/pages/ai-agent/aiModelList/utils'
 import { cloneDeep } from 'lodash'
 import { InputHTTPHeaderForm } from '@/pages/mitm/MITMRule/MITMRuleFromModal'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'

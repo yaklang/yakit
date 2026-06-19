@@ -121,7 +121,10 @@
     "riskCount": "风险个数",
     "verifying": "正在校验",
     "addProject": "添加项目",
-    "jumpCodeScanFailed": "跳转代码扫描页失败：{{error}}"
+    "jumpCodeScanFailed": "跳转代码扫描页失败：{{error}}",
+    "compileTime": "历史编辑记录",
+    "scanCount": "扫描次数",
+    "noCompileHistory": "暂无编译历史"
   },
   "RunnerFileTree": {
     "all": "全部",
@@ -158,7 +161,8 @@
     "quickCreate": "快捷创建",
     "unsavedTitle": "文件未保存",
     "unsavedContent": "是否要保存{{name}}里面的内容吗？",
-    "savePathMissing": "未获取保存路径，取消保存"
+    "savePathMissing": "未获取保存路径，取消保存",
+    "sendAIActions": "发送到AI会话"
   },
   "CollapseList": {
     "noHelpInfo": "暂无帮助信息"

@@ -59,7 +59,7 @@ const FileList: FC<FileListProps> = ({ title, fileList }) => {
     e.stopPropagation()
     if (!isDir && currentRouteKey === YakitRoute.Irify_AI_Code_Audit) {
       const name = getFileName(path, isDir)
-      emiter.emit('onOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
+      emiter.emit('onAiCodeAuditOpenFileByPath', JSON.stringify({ params: { path, name }, isHistory: false }))
     }
   })
 

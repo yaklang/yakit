@@ -184,7 +184,7 @@ import { SoftMode, YakitModeEnum } from '@/store/softMode'
 const HTTPHacker = React.lazy(() => import('../pages/hacker/httpHacker'))
 const MITMHacker = React.lazy(() => import('@/pages/mitm/MITMHacker/MITMHacker'))
 const Home = React.lazy(() => import('@/pages/home/Home'))
-const IRifyHome = React.lazy(() => import('@/pages/home/IRifyHome'))
+const IRifyHome = React.lazy(() => import('@/pages/irifyHome/IRifyHome'))
 const WebFuzzerPage = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/WebFuzzerPage'))
 const PluginHub = React.lazy(() => import('@/pages/pluginHub/pluginHub/PluginHub'))
 const ModifyNotepad = React.lazy(() => import('@/pages/notepadManage/modifyNotepad/ModifyNotepad'))

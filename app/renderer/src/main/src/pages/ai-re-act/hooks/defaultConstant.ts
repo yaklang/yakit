@@ -1,6 +1,7 @@
-import { AIToolResult } from './aiRender'
-import { AIAgentGrpcApi, AIOutputI18n } from './grpcApi'
-import { AIQuestionQueues, CurrentExecTaskTree, PlanLoadingStatus } from './type'
+import { cloneDeep } from 'lodash'
+import type { AIToolResult, PlanItemDetailsData, TodoListCardData } from './aiRender'
+import type { AIOutputI18n, AIAgentGrpcApi } from './grpcApi'
+import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from './type'
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
@@ -141,4 +142,68 @@ export const DefaultPlanHistoryList: AIAgentGrpcApi.PlanHistoryList = {
 export const DefaultCurrentExecTaskTree: CurrentExecTaskTree = {
   task_tree: [],
   root_task_name: '',
+}
+
+/** 待办清单卡片数据-默认值 */
+export const DefaultTodoListCardData: TodoListCardData = {
+  items: [],
+  stats: {
+    deleted: 0,
+    doing: 0,
+    done: 0,
+    pending: 0,
+    skipped: 0,
+  },
+  uuid: '',
+}
+
+export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
+  uuid: '',
+  taskId: '',
+  todoList: { ...DefaultTodoListCardData },
+  tool: {
+    fixed: [],
+    dynamic: [],
+  },
+  forges: {
+    fixed: [],
+    dynamic: [],
+  },
+  skills: {
+    fixed: [],
+    dynamic: [],
+  },
+  plugins: {
+    fixed: [],
+    dynamic: [],
+  },
+  mcp: {
+    fixed: [],
+    dynamic: [],
+  },
+  mcpServices: {
+    fixed: [],
+    dynamic: [],
+  },
+  perception: {
+    summary: '',
+    topics: [],
+    keywords: [],
+    changed: false,
+    confidence: 0,
+    trigger: '',
+    epoch: 0,
+    intent_shift: 'none',
+    timestamp: 0,
+  },
+  execution: {
+    status: '',
+    tool_call_success: 0,
+    tool_call_failed: 0,
+    tool_call_total: 0,
+    execution_minutes: 0,
+    http_flow_count: 0,
+    risk_count: 0,
+    modified_file_count: 0,
+  },
 }

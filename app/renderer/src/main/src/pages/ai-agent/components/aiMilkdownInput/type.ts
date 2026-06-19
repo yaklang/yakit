@@ -1,8 +1,8 @@
 import { EditorMilkdownProps } from '@/components/MilkdownEditor/MilkdownEditorType'
 import { AIMentionCommandParams } from './aiMilkdownMention/aiMentionPlugin'
 import { AIHttpFlowRemovePayload } from './aiMilkdownHttpFlow/aiHttpFlowPlugin'
+import { AICodeBlockCommandParams } from './aiCodeBlock/aiCustomCodeBlockPlugin'
 import { AIChatMentionProps } from '../aiChatMention/type'
-import { ChatDataStoreKey } from '../../store/ChatDataStore'
 
 export interface AIMilkdownInputProps extends AIMilkdownInputBaseProps {}
 
@@ -10,6 +10,7 @@ export interface AIMilkdownInputRef {
   setMention: (v: AIMentionCommandParams) => void
   setImage: () => void
   setHttpFlow: (ids: string[]) => void
+  setCodeRef: (v: AICodeBlockCommandParams) => void
   getSessionId: () => string
 }
 export interface AIMilkdownInputBaseProps {
@@ -29,5 +30,5 @@ export interface AIMilkdownInputBaseProps {
   // 外部传入需要筛选掉的选项
   filterMode?: AIChatMentionProps['filterMode']
   /**文件缓存路径 */
-  chatDataStoreKey: ChatDataStoreKey
+  chatDataStoreKey: string
 }

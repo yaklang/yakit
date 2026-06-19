@@ -116,6 +116,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   DisableToolIntervalReview: false,
   SyncPerceptionTrigger: false,
   EnablePlan: false,
+  PlanExecTaskConcurrency: 2,
 }
 
 /** mcp 自定义服务器配置类型选项 */
@@ -130,9 +131,11 @@ export const MCPTransportTypeList: { value: MCPServerType; label: string }[] = [
  */
 export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAgentGrpcApi.PlanTask = (info) => {
   let data: AIAgentGrpcApi.PlanTask = {
+    task_id: '',
     index: '',
     name: '',
     goal: '',
+    semantic_identifier: '',
     progress: AITaskStatus.created,
     isRemove: false,
     tools: [],
@@ -143,6 +146,7 @@ export const generateTaskChatExecution: (info?: AIAgentGrpcApi.PlanTask) => AIAg
     summary: '',
   }
   if (!!info) {
+    data.task_id = info.task_id || ''
     data.index = info.index || ''
     data.name = info.name || ''
     data.goal = info.goal || ''
@@ -267,6 +271,7 @@ export const defaultChatIPCData: UseChatIPCState = {
   riskRunTimeIDs: [],
   casualChat: {
     elements: [],
+    toolListRenderNumber: 0,
   },
   yakExecResult: {
     card: [],
@@ -285,7 +290,6 @@ export const defaultChatIPCData: UseChatIPCState = {
   reActTimelines: [],
   memoryList: { ...DefaultMemoryList },
   taskStatus: { loading: false, plan: '', task: '' },
-  systemStream: '',
   focusMode: '',
   switchLoading: false,
   planHistoryList: cloneDeep(DefaultPlanHistoryList),
@@ -337,6 +341,8 @@ export enum AttachedResourceTypeEnum {
   CONTEXT_PROVIDER_TYPE_AITOOL = 'aitool',
   CONTEXT_PROVIDER_TYPE_AIFORGE = 'aiforge',
   CONTEXT_PROVIDER_TYPE_HTTP_FLOW = 'http_flow',
+  CONTEXT_PROVIDER_TYPE_CODE_BLOCK_File = 'file',
+  CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'selected',
 }
 
 export enum AttachedResourceKeyEnum {
@@ -345,6 +351,9 @@ export enum AttachedResourceKeyEnum {
   CONTEXT_PROVIDER_KEY_NAME = 'name',
   CONTEXT_PROVIDER_KEY_SYSTEM_FLAG = 'system_flag',
   CONTEXT_PROVIDER_KEY_HTTP_FLOW_ID = 'id',
+  CONTEXT_PROVIDER_KEY_CODE_BLOCK_Directory_ID = 'directory_path',
+  CONTEXT_PROVIDER_KEY_CODE_BLOCK_File_ID = 'file_path',
+  CONTEXT_PROVIDER_TYPE_CODE_BLOCK_Content = 'content',
 }
 
 export enum AIModelPolicyEnum {
@@ -407,3 +416,19 @@ export const defaultExportAIForgeRequest: ExportAIForgeRequest = {
   Password: '',
   Filter: {},
 }
+
+/**ai to do list 状态 */
+export enum AIToDoListStatusEnum {
+  /** 待执行 */
+  Pending = 'PENDING',
+  /** 进行中 */
+  Doing = 'DOING',
+  /** 已完成*/
+  Done = 'DONE',
+  /** 已删除 */
+  Deleted = 'DELETED',
+  /** 已跳过 */
+  Skipped = 'SKIPPED',
+}
+
+export type AIToDoListStatusEnumType = `${AIToDoListStatusEnum}`

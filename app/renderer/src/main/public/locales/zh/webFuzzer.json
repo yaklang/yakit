@@ -21,6 +21,21 @@
     "concurrency": "组并发",
     "AI": "AI"
   },
+  "WebFuzzerAiTestTemplate": {
+    "add": "新增",
+    "addTitle": "新增 AI 测试模板",
+    "editTitle": "编辑 AI 测试模板",
+    "label": "名称",
+    "prompt": "提示词",
+    "labelPlaceholder": "请输入模板名称",
+    "promptPlaceholder": "请输入 AI 测试提示词",
+    "labelRequired": "请输入模板名称",
+    "promptRequired": "请输入 AI 测试提示词",
+    "labelDuplicate": "模板名称已存在",
+    "promptMaxLength": "提示词不能超过 {{max}} 字",
+    "deleteConfirm": "确认删除该 AI 测试模板？",
+    "deleteLastOne": "至少保留一条 AI 测试模板"
+  },
   "WebFuzzerAiRequestCompare": {
     "title": "请求对比",
     "leftTitle": "当前 Web Fuzzer 请求",
@@ -80,7 +95,8 @@
     "performAction": "进行操作",
     "webFuzzerDemo": "WebFuzzer 爆破动画演示",
     "bruteForceExample": "爆破示例",
-    "AI_new_conversation": "新建对话",
+    "AI_new_conversation": "新建会话",
+    "aiTest": "AI测试",
     "followRedirects": "跟随重定向",
     "generatePathTemplate": "生成为 Path 模板",
     "generateRawTemplate": "生成为 Raw 模板",
@@ -570,7 +586,15 @@
     "online_template": "线上模板",
     "confirm_overwrite_hot_reload_code": "是否确认覆盖当前热加载代码",
     "code_template": "代码模板",
-    "save_disable_tip": "默认模板不支持修改，建议另存为新模板"
+    "save_disable_tip": "默认模板不支持修改，建议另存为新模板",
+    "add_to_group": "添加到分组",
+    "create_group": "新建分组",
+    "group_name": "组名",
+    "enter_group_name": "请输入组名",
+    "create_group_tip": "新建分组并将当前模板移入分组内",
+    "add_to_group_success": "已添加到分组",
+    "remove_from_group": "移除分组",
+    "remove_from_group_success": "已移除分组"
   },
   "AddHotCodeTemplate": {
     "hot_reload_template_name_empty": "热加载模板名为空",
@@ -638,7 +662,8 @@
     "expression": "表达式",
     "discard": "丢弃",
     "match": "保留",
-    "onlyMatch": "仅匹配"
+    "onlyMatch": "仅匹配",
+    "failed": "失败"
   },
   "MatcherItem": {
     "match_type": "匹配类型",

@@ -348,14 +348,11 @@ module.exports = {
     // reverse logger
     require('./handlers/reverse-connlogger').register(win, getClient)
 
+    // 辅助窗口（引擎 Console / AI Chat Log + app-sync）
+    require('./handlers/auxWindowManager/index').register(win)
+
     // register open new child window
     require('./handlers/openNewChildWindow/index').register(win, getClient)
-
-    // register open new console window
-    require('./handlers/openConsoleNewWin/index').register(win, getClient)
-
-    // 注册ai日志窗口
-    require('./handlers/openAiChatLog').register(win, getClient)
 
     // 接口注册
     const api = fs.readdirSync(path.join(__dirname, './api'))

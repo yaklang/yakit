@@ -29,6 +29,8 @@ import { HTTPFuzzerHotPatchSidebar, HotCodeTemplate, HotPatchTempItem } from './
 import { exportHTTPFuzzerResponse, exportPayloadResponse, exportExtractedDataResponse } from './HTTPFuzzerPageExport'
 import { StringToUint8Array, Uint8ArrayToString } from '../../utils/str'
 import { PacketScanButton } from '@/pages/packetScanner/DefaultPacketScanGroup'
+import { WebFuzzerAiTestMenu } from './components/WebFuzzerAiTestMenu/WebFuzzerAiTestMenu'
+import { WebFuzzerAiTestTemplate } from '@/defaultConstants/webFuzzerAiTestTemplates'
 import styles from './HTTPFuzzerPage.module.scss'
 import { ShareImportExportData } from './components/ShareImportExportData'
 import {
@@ -70,6 +72,7 @@ import {
   AdvancedConfigValueProps,
   FuzzTagMode,
   ShowResponseMatcherAndExtractionProps,
+  FilterMode,
 } from './HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import {
@@ -490,12 +493,14 @@ export function copyAsUrl(f: { Request: string; IsHTTPS: boolean }, mode: CopyUr
     })
 }
 
-export const getAction = (mode) => {
+export const getAction = (mode: FilterMode) => {
   switch (mode) {
     case 'drop':
       return 'discard'
     case 'match':
       return 'retain'
+    case 'fail':
+      return 'fail'
     default:
       return ''
   }
@@ -1262,6 +1267,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   })
 
+  const fuzzerTaskId = useMemo(() => {
+    //成功和失败的数据id都一样（已确认）
+    return successFuzzer[0]?.TaskId || failedFuzzer[0]?.TaskId || ''
+  }, [successFuzzer, failedFuzzer])
+
   const submitToHTTPFuzzer = useMemoizedFn(() => {
     logger(
       httpFuzzerLog({
@@ -1290,7 +1300,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     setFuzzerTableMaxData(advancedConfigValue.resNumlimit)
     if (retryRef.current) {
       retryRef.current = false
-      const retryTaskID = failedFuzzer?.length > 0 ? failedFuzzer[0]?.TaskId : undefined
+      const retryTaskID = fuzzerTaskId
       if (retryTaskID && (retryTaskID + '').length > 0) {
         const params = { ...httpParams, RetryTaskID: parseInt(retryTaskID + '', 10) }
         const retryParams = _.omit(params, ['Request', 'RequestRaw'])
@@ -1299,7 +1309,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       }
     } else if (matchRef.current) {
       matchRef.current = false
-      const matchTaskID = successFuzzer?.length > 0 ? successFuzzer[0]?.TaskId : undefined
+      const matchTaskID = fuzzerTaskId
       const params = { ...httpParams, ReMatch: true, HistoryWebFuzzerId: matchTaskID }
       setLoadingText(t('HTTPFuzzerPage.matchingInProgress'))
       ipcRenderer.invoke('HTTPFuzzer', params, tokenRef.current)
@@ -2469,8 +2479,40 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     getNewCurrentPage()
   })
 
+  const openAiPanel = useMemoizedFn(() => {
+    emiter.emit('sendSwitchSequenceToMainOperatorContent', JSON.stringify({ type: 'ai' }))
+    emiter.emit('onSwitchTypeWebFuzzerPage', JSON.stringify({ type: 'ai' }))
+    emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai', open: true }))
+    emiter.emit('onCurrentFuzzerPage', true)
+    setShowFreeChat(true)
+  })
+
+  const onAiTest = useMemoizedFn((template: WebFuzzerAiTestTemplate) => {
+    if (!requestRef.current?.trim()) {
+      yakitNotify('info', t('HTTPFuzzerPage.editAndSendRequest'))
+      return
+    }
+    openAiPanel()
+    historyAIReActChatBridge.setMention({
+      mentionId: focusModeLoop,
+      mentionType: 'focusMode',
+      mentionName: focusModeLoop,
+    })
+    historyAIReActChatBridge.handleStart({
+      qs: template.prompt,
+      focusMode: focusModeLoop,
+      extraValue: {
+        showQS: template.label,
+      },
+    })
+  })
+
   const jumpHTTPHistoryAnalysis = useMemoizedFn(() => {
     setTrafficAnalysisVisible(true)
+  })
+
+  const concatRuntimeIds = useMemoizedFn(() => {
+    return [...new Set([...successFuzzerRef.current, ...failedFuzzerRef.current].map(({ RuntimeID }) => RuntimeID))]
   })
 
   const getContainerSize = useSize(fuzzerRef || document.body)
@@ -2486,7 +2528,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       ? [aiFuzzRuntimeId]
       : allAiFuzzRuntimeIds.length > 0
         ? allAiFuzzRuntimeIds
-        : runtimeIdRef.current.split(',')
+        : concatRuntimeIds()
     const params = {
       webFuzzer: true,
       runtimeId: runtimeIds,
@@ -2638,31 +2680,26 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                 fuzzerAiSlot={renderHistoryAIReActChat({
                   externalParameters: {
                     isOpen: false,
-                    rightIcon: (
-                      <>
+                    rightIcon: {
+                      history: true,
+                      dataDetails: { type: 'text2' },
+                      add: (
                         <Tooltip title={t('HTTPFuzzerPage.AI_new_conversation')}>
                           <YakitButton
                             type="text2"
                             icon={<OutlinePlusIcon />}
-                            onClick={() => {
-                              const { activeID, events, onStop, onChatFromHistory, setActiveChat } =
-                                historyAIReActChatBridge
-                              if (activeID) {
-                                onStop()
-                                events.onReset()
-                                onChatFromHistory(activeID)
-                                setActiveChat(undefined)
-                              }
-                            }}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
                           />
                         </Tooltip>
+                      ),
+                      close: (
                         <YakitButton
                           type="text2"
                           icon={<OutlineXIcon />}
                           onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
                         />
-                      </>
-                    ),
+                      ),
+                    },
                     footerRightTypes: [
                       {
                         type: AIInputFooterRightEnum.AIFocusMode,
@@ -2717,10 +2754,13 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           {t('YakitButton.continue')}
                         </YakitButton>
                       ) : (
-                        <YakitButton onClick={sendRequest} type={'primary'} size="large">
-                          {t('YakitButton.sendRequest')}{' '}
-                          {convertKeyboardToUIKey(getHttpFuzzerShortcutKeyEvents()['sendRequest*httpFuzzer'].keys)}
-                        </YakitButton>
+                        <>
+                          <YakitButton onClick={sendRequest} type={'primary'} size="large">
+                            {t('YakitButton.sendRequest')}{' '}
+                            {convertKeyboardToUIKey(getHttpFuzzerShortcutKeyEvents()['sendRequest*httpFuzzer'].keys)}
+                          </YakitButton>
+                          <WebFuzzerAiTestMenu inViewport={inViewport} onSelect={onAiTest} />
+                        </>
                       )}
                     </>
                   ) : (
@@ -2864,6 +2904,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                   {renderHotPatchTag}
                 </div>
                 <div className={styles['fuzzer-heard-right']}>
+                  {fuzzerTaskId && (
+                    <Tooltip title={`TaskId: ${fuzzerTaskId}`}>
+                      <YakitButton type="text2" icon={<QuestionMarkCircleIcon />} />
+                    </Tooltip>
+                  )}
                   {getFuzzerRequestParams && typeof getFuzzerRequestParams === 'function' ? (
                     <ShareImportExportData
                       module="fuzzer"
@@ -3191,18 +3236,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 /** 每个 Web Fuzzer 页签独立 WebFuzzerAiStore，避免多开时共用内存缓存导致会话数据互相覆盖 */
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
   const fuzzerAiChatDataStore = useCreation(() => new WebFuzzerAiStore(props.id), [props.id])
-  // // `props.id` 是页签的 pageId（如 `httpFuzzer-[ZAunr7]-...`）。
-  // // 这里取对应 `PageNodeItemProps.id`（如 `62xKGvDE-1`）作为新建会话的 SessionID，
-  // // 保证同一 Fuzzer 页签内的会话共用稳定 ID。
-  // const pageNodeId = usePageInfo((state) => {
-  //   return state.queryPagesDataById(YakitRoute.HTTPFuzzer, props.id)?.id
-  // }, shallow)
   return (
     <HistoryAIReActChatProvider
       cacheDataStore={fuzzerAiChatDataStore}
       focusModeLoop="http_fuzztest"
       httpFuzzTabPageId={props.id}
-      defaultTimelineSessionID={props.id}
     >
       <HTTPFuzzerPageCore {...props} />
     </HistoryAIReActChatProvider>
@@ -3529,6 +3567,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
   //         content: <ExtractionResultsContent list={rsp.ExtractedResults} />
   //     })
   // })
+  const showSearchIcon = useMemo(() => +(secondNodeSize?.width || 0) <= 730, [secondNodeSize])
 
   if (onlyOneResponse) {
     const searchNode = (
@@ -3552,8 +3591,8 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
       <div className={styles['fuzzer-secondNode-extra']}>
         {!rsp.IsTooLargeResponse ? (
           <>
-            {+(secondNodeSize?.width || 0) >= 650 && searchNode}
-            {+(secondNodeSize?.width || 0) < 650 && (
+            {!showSearchIcon && searchNode}
+            {showSearchIcon && (
               <YakitPopover content={searchNode}>
                 <YakitButton icon={<SearchIcon />} size={size} type="outline2" />
               </YakitPopover>

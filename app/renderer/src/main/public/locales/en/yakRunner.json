@@ -121,7 +121,10 @@
     "riskCount": "Risk count",
     "verifying": "Verifying...",
     "addProject": "Add Project",
-    "jumpCodeScanFailed": "Failed to jump to code scan page: {{error}}"
+    "jumpCodeScanFailed": "Failed to jump to code scan page: {{error}}",
+    "compileTime": "Historical Compilation Records",
+    "scanCount": "Scan count",
+    "noCompileHistory": "No compile history"
   },
   "RunnerFileTree": {
     "all": "All",
@@ -158,7 +161,8 @@
     "quickCreate": "Quick create",
     "unsavedTitle": "File not saved",
     "unsavedContent": "Do you want to save the content in {{name}}?",
-    "savePathMissing": "Save path not found, cancel save"
+    "savePathMissing": "Save path not found, cancel save",
+    "sendAIActions": "Send to AI session"
   },
   "CollapseList": {
     "noHelpInfo": "No help information"

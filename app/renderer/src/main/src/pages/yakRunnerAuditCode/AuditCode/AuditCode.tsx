@@ -19,6 +19,7 @@ import {
   AuditDetailItemProps,
   ResultDataProps,
   DeleteSSAProjectRequest,
+  SSAProjectResponseDetail,
 } from './AuditCodeType'
 import classNames from 'classnames'
 import styles from './AuditCode.module.scss'
@@ -34,6 +35,7 @@ import {
   useDebounceFn,
   useGetState,
   useInterval,
+  useInViewport,
   useMemoizedFn,
   useSafeState,
   useSize,
@@ -50,6 +52,7 @@ import { FormExtraSettingProps } from '@/pages/plugins/operator/localPluginExecu
 import useStore from '../hooks/useStore'
 import { loadAuditFromYakURLRaw } from '../utils'
 import {
+  OutlineArrowcirclerightIcon,
   OutlineBugIcon,
   OutlineChevronrightIcon,
   OutlineClockIcon,
@@ -70,6 +73,7 @@ import { StringToUint8Array } from '@/utils/str'
 import { clearMapAuditDetail, getMapAuditDetail, setMapAuditDetail } from './AuditTree/AuditMap'
 import { clearMapAuditChildDetail, getMapAuditChildDetail, setMapAuditChildDetail } from './AuditTree/ChildMap'
 import {
+  SolidDotsverticalIcon,
   SolidExclamationIcon,
   SolidInformationcircleIcon,
   SolidPluscircleIcon,
@@ -125,11 +129,16 @@ import cloneDeep from 'lodash/cloneDeep'
 import { RJSFSchema } from '@rjsf/utils'
 import { TrashIcon } from '@/assets/newIcon'
 import { IRifyUpdateProjectManagerModal } from '@/pages/YakRunnerProjectManager/YakRunnerProjectManager'
+import { SSAProgram } from '@/pages/yakRunnerScanHistory/YakRunnerScanHistory'
+import { AuditCodePageInfoProps } from '@/store/pageInfo'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { useProxy } from '@/hook/useProxy'
 import { JSONParseLog } from '@/utils/tool'
+import { apiQuerySSAPrograms } from '@/pages/yakRunnerScanHistory/utils'
+import { formatTimestamp } from '@/utils/timeUtil'
+import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 const { YakitPanel } = YakitCollapse
 
 const { ipcRenderer } = window.require('electron')
@@ -2394,9 +2403,48 @@ export const ProjectManagerEditForm: React.FC<ProjectManagerEditFormProps> = mem
   )
 })
 
+const getProgramRiskTotal = (program: SSAProgram) => {
+  return (
+    Number(program.CriticalRiskNumber || 0) +
+    Number(program.HighRiskNumber || 0) +
+    Number(program.WarnRiskNumber || 0) +
+    Number(program.LowRiskNumber || 0) +
+    Number(program.InfoRiskNumber || 0)
+  )
+}
+const fetchScanTotals = async (programs: SSAProgram[], projectId: number) => {
+  const entries = await Promise.all(
+    programs.map(async (program) => {
+      try {
+        const res = await ipcRenderer.invoke('QuerySyntaxFlowScanTask', {
+          Pagination: {
+            Page: 1,
+            Limit: 1,
+            Order: 'desc',
+            OrderBy: 'created_at',
+          },
+          Filter: {
+            Programs: [program.Name],
+            ProjectIds: [projectId],
+            Kind: ['scan'],
+          },
+          ShowDiffRisk: false,
+        })
+        return [program.Id, Number(res?.Total || 0)] as const
+      } catch {
+        return [program.Id, 0] as const
+      }
+    }),
+  )
+  return Object.fromEntries(entries) as Record<number, number>
+}
+const COMPILE_PREVIEW_LIMIT = 3
+
 export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) => {
   const { pageType, onClose, onExecuteAudit, warrpId } = props
   const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const auditHistoryTableRef = useRef<HTMLDivElement>(null)
+  const [inViewport] = useInViewport(auditHistoryTableRef)
   const [JSONStringConfig, setJSONStringConfig] = useState<string>()
   const [refresh, setRefresh] = useControllableValue<boolean>(props, {
     defaultValue: false,
@@ -2423,6 +2471,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     params: DeleteSSAProjectRequest
   }>()
   const [isAllowIRifyUpdate, setIsAllowIRifyUpdate] = useState<boolean>(false)
+
+  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
+  const detailCacheRef = useRef<Map<number, SSAProjectResponseDetail>>(new Map())
+  const loadingMapRef = useRef<Map<number, boolean>>(new Map())
+
   // 接口是否正在请求
   const isGrpcRef = useRef<boolean>(false)
   const afterId = useRef<number>()
@@ -2472,6 +2525,11 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   useEffect(() => {
     update(true)
   }, [refresh])
+  useEffect(() => {
+    if (inViewport) {
+      setRefresh((pre) => !pre)
+    }
+  }, [inViewport])
 
   const update = useMemoizedFn(async (reload?: boolean, page?: number, limit?: number) => {
     if (isGrpcRef.current) return
@@ -2485,6 +2543,7 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
       afterId.current = undefined
       setLoading(true)
       setRefresh(!refresh)
+      clearExpanded()
     }
 
     ipcRenderer
@@ -2554,188 +2613,307 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
     }
   })
 
-  const columns: VirtualListColumns<SSAProjectResponse>[] = [
-    {
-      title: t('AuditCode.projectName'),
-      dataIndex: 'ProjectName',
-      render: (text) => {
-        return (
-          <Tooltip title={text}>
-            <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{text}</div>
-          </Tooltip>
-        )
-      },
-    },
-    {
-      title: '语言',
-      dataIndex: 'Language',
-      width: 120,
-    },
-    {
-      title: t('AuditCode.projectDescription'),
-      dataIndex: 'Description',
-      render: (text, record) => {
-        return (
-          <Tooltip title={text} overlayClassName={styles['tooltip-line-feed']}>
-            <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{text}</div>
-          </Tooltip>
-        )
-      },
-    },
-    {
-      title: t('AuditCode.projectPath'),
-      dataIndex: 'URL',
-      render: (text) => {
-        const path = text || t('AuditCode.unknownPath')
-        return (
-          <>
-            <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{path}</div>
-            <Tooltip title={t('YakitButton.copy')}>
-              <div className={styles['extra-icon']} onClick={() => setClipboardText(path)}>
-                <OutlineDocumentduplicateIcon />
-              </div>
-            </Tooltip>
-          </>
-        )
-      },
-    },
-    {
-      title: t('AuditCode.riskCount'),
-      dataIndex: 'RiskNumber',
-      render: (text) => {
-        try {
-          const countNum = parseInt(text + '')
-          return <>{countNum !== 0 ? <YakitTag color="info">{countNum}</YakitTag> : '-'}</>
-        } catch (error) {
-          return '-'
-        }
-      },
-      width: 120,
-    },
-    {
-      title: '编译次数',
-      dataIndex: 'CompileTimes',
-      render: (text, record) => {
-        try {
-          const countNum = parseInt(text + '')
-          return <>{countNum !== 0 ? countNum : '-'}</>
-        } catch (error) {
-          return '-'
-        }
-      },
-      width: 120,
-    },
-    {
-      title: t('YakitTable.action'),
-      dataIndex: 'action',
-      width: 200,
-      render: (text, record) => {
-        return (
-          <div className={styles['audit-opt']} onClick={(e) => e.stopPropagation()}>
-            <Tooltip title={t('YakitButton.compile')}>
-              <YakitButton
-                type="text"
-                icon={<OutlineReloadScanIcon />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setJSONStringConfig(record.JSONStringConfig)
-                }}
-              />
-            </Tooltip>
+  const onOpenProjectHistory = useMemoizedFn((record: SSAProjectResponse, program?: SSAProgram) => {
+    emiter.emit(
+      'openPage',
+      JSON.stringify({
+        route: YakitRoute.YakRunner_ScanHistory,
+        params: {
+          Programs: [record.ProjectName],
+          ProjectIds: [record.ID],
+          SelectedProgramName: program?.Name,
+        },
+      }),
+    )
+  })
 
-            <Tooltip title={t('AuditCode.codeScan')}>
-              <YakitButton
-                type="text"
-                icon={<OutlineScanIcon />}
-                onClick={async (e) => {
-                  e.stopPropagation()
-                  try {
-                    const selectTotal = await getGroupNamesTotal({ GroupNames: [record.Language] })
-                    emiter.emit(
-                      'openPage',
-                      JSON.stringify({
-                        route: YakitRoute.YakRunner_Code_Scan,
-                        params: {
-                          projectName: record.ProjectName,
-                          projectId: record.ID,
-                          GroupNames: [record.Language],
-                          selectTotal,
-                        },
-                      }),
-                    )
-                    if (pageType === 'auditCode') {
-                      onClose && onClose()
-                    }
-                  } catch (error) {
-                    failed(t('AuditCode.jumpCodeScanFailed', { error: String(error) }))
-                  }
-                }}
-              />
+  const onDeleteCompileHistory = useMemoizedFn(async (record: SSAProjectResponse, programId: number) => {
+    try {
+      await ipcRenderer.invoke('DeleteSSAPrograms', {
+        Filter: {
+          Ids: [programId],
+        },
+      })
+      detailCacheRef.current.delete(record.ID)
+      loadDetail(record)
+      success(t('AuditCode.deleteSuccess'))
+    } catch (error) {
+      failed(t('YakitNotification.deleteFailed', { error: String(error) }))
+    }
+  })
+
+  const loadDetail = useMemoizedFn(async (record: SSAProjectResponse) => {
+    const projectId = record.ID
+
+    // 已有缓存 -> 直接使用（无需加载）
+    if (detailCacheRef.current.has(projectId)) {
+      const cachedData = detailCacheRef.current.get(projectId)
+      updateRecordDetail(record, false, cachedData)
+      return
+    }
+
+    // 如果已经正在加载中，则直接返回，避免重复请求
+    if (loadingMapRef.current.get(projectId)) {
+      return
+    }
+
+    // 标记开始加载
+    loadingMapRef.current.set(projectId, true)
+    updateRecordDetail(record, true)
+
+    try {
+      const res = await apiQuerySSAPrograms({
+        Filter: { ProjectIds: [projectId] },
+        Pagination: {
+          Page: 1,
+          Limit: COMPILE_PREVIEW_LIMIT,
+          Order: 'desc',
+          OrderBy: 'created_at',
+        },
+      })
+      const items = res?.Data || []
+      const scanTotals = await fetchScanTotals(items, projectId)
+
+      const detailData: SSAProjectResponseDetail = {
+        items,
+        total: Number(res?.Total || items.length),
+        scanTotals,
+      }
+
+      detailCacheRef.current.set(projectId, detailData)
+      updateRecordDetail(record, false, detailData)
+    } catch (error) {
+      yakitNotify('error', error + '')
+      // 加载失败，清除 loading 状态，不更新 detailData（或更新为空）
+      updateRecordDetail(record, false)
+    } finally {
+      loadingMapRef.current.set(projectId, false)
+    }
+  })
+  // 更新某条记录的详情状态
+  const updateRecordDetail = (record: SSAProjectResponse, loading: boolean, detailData?: SSAProjectResponseDetail) => {
+    setData((prev) =>
+      prev.map((item) => (item.ID === record.ID ? { ...item, detailData, detailLoading: loading } : item)),
+    )
+  }
+  const clearExpanded = useMemoizedFn(() => {
+    loadingMapRef.current.clear()
+    detailCacheRef.current.clear()
+    setExpandedKeys([])
+  })
+
+  const columns: VirtualListColumns<SSAProjectResponse>[] = useMemo(() => {
+    return [
+      {
+        title: t('AuditCode.projectName'),
+        dataIndex: 'ProjectName',
+        render: (text) => {
+          return (
+            <Tooltip title={text}>
+              <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{text}</div>
             </Tooltip>
-            <Tooltip title={t('AuditCode.projectHistory')}>
-              <YakitButton
-                type="text"
-                icon={<OutlineClockIcon />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  emiter.emit(
-                    'openPage',
-                    JSON.stringify({
-                      route: YakitRoute.YakRunner_ScanHistory,
-                      params: {
-                        Programs: [record.ProjectName],
-                        ProjectIds: [record.ID],
-                      },
-                    }),
-                  )
-                }}
-              />
-            </Tooltip>
-            <Tooltip title={t('YakitButton.edit')}>
-              <YakitButton
-                type="text"
-                icon={<OutlinePencilaltIcon />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  const m = showYakitModal({
-                    title: (modalT) => modalT('AuditCode.editProject'),
-                    width: 600,
-                    type: 'white',
-                    footer: null,
-                    centered: true,
-                    content: (
-                      <ProjectManagerEditForm
-                        record={record}
-                        setData={setData}
-                        onClose={() => m.destroy()}
-                        schema={schema}
-                      />
-                    ),
-                  })
-                }}
-              />
-            </Tooltip>
-            <YakitButton
-              type="text"
-              danger
-              icon={<OutlineTrashIcon />}
-              onClick={(e) => {
-                e?.stopPropagation()
-                setDeleteParams({
-                  titile: `确认删除${record.ProjectName}？`,
-                  params: {
-                    Filter: {
-                      IDs: [parseInt(record.ID + '')],
-                    },
-                  },
-                })
-              }}
-            />
-          </div>
-        )
+          )
+        },
       },
-    },
-  ]
+      {
+        title: '语言',
+        dataIndex: 'Language',
+        width: 120,
+      },
+      {
+        title: t('AuditCode.projectDescription'),
+        dataIndex: 'Description',
+        render: (text, record) => {
+          return (
+            <Tooltip title={text} overlayClassName={styles['tooltip-line-feed']}>
+              <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{text}</div>
+            </Tooltip>
+          )
+        },
+      },
+      {
+        title: t('AuditCode.projectPath'),
+        dataIndex: 'URL',
+        render: (text) => {
+          const path = text || t('AuditCode.unknownPath')
+          return (
+            <>
+              <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{path}</div>
+              <Tooltip title={t('YakitButton.copy')}>
+                <div
+                  className={styles['extra-icon']}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setClipboardText(path)
+                  }}
+                >
+                  <OutlineDocumentduplicateIcon />
+                </div>
+              </Tooltip>
+            </>
+          )
+        },
+      },
+      {
+        title: t('AuditCode.riskCount'),
+        dataIndex: 'RiskNumber',
+        render: (text) => {
+          try {
+            const countNum = parseInt(text + '')
+            return <>{countNum !== 0 ? <YakitTag color="info">{countNum}</YakitTag> : '-'}</>
+          } catch (error) {
+            return '-'
+          }
+        },
+        width: 120,
+      },
+      {
+        title: '编译次数',
+        dataIndex: 'CompileTimes',
+        render: (text, record) => {
+          try {
+            const countNum = parseInt(text + '')
+            return <>{countNum !== 0 ? countNum : '-'}</>
+          } catch (error) {
+            return '-'
+          }
+        },
+        width: 120,
+      },
+      {
+        title: t('YakitTable.action'),
+        dataIndex: 'action',
+        width: 180,
+        render: (text, record, index) => {
+          return (
+            <div className={styles['audit-opt']} onClick={(e) => e.stopPropagation()}>
+              <Tooltip title={t('YakitButton.compile')}>
+                <div
+                  className={styles['extra-icon']}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setJSONStringConfig(record.JSONStringConfig)
+                  }}
+                >
+                  <OutlineReloadScanIcon />
+                </div>
+              </Tooltip>
+              <Divider type="vertical" />
+              <Tooltip title={t('AuditCode.codeScan')}>
+                <div
+                  className={styles['extra-icon']}
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    try {
+                      const selectTotal = await getGroupNamesTotal({ GroupNames: [record.Language] })
+                      emiter.emit(
+                        'openPage',
+                        JSON.stringify({
+                          route: YakitRoute.YakRunner_Code_Scan,
+                          params: {
+                            projectName: record.ProjectName,
+                            projectId: record.ID,
+                            GroupNames: [record.Language],
+                            selectTotal,
+                          },
+                        }),
+                      )
+                      if (pageType === 'auditCode') {
+                        onClose && onClose()
+                      }
+                    } catch (error) {
+                      failed(t('AuditCode.jumpCodeScanFailed', { error: String(error) }))
+                    }
+                  }}
+                >
+                  <OutlineScanIcon />
+                </div>
+              </Tooltip>
+              <Divider type="vertical" />
+              <Tooltip title={t('AuditCode.projectHistory')}>
+                <div
+                  className={styles['extra-icon']}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onOpenProjectHistory(record)
+                  }}
+                >
+                  <OutlineClockIcon />
+                </div>
+              </Tooltip>
+              <Divider type="vertical" />
+              <YakitDropdownMenu
+                menu={{
+                  data: [
+                    {
+                      key: 'edit',
+                      label: (
+                        <div className={styles['extra-menu']}>
+                          <OutlinePencilaltIcon />
+                          <div className={styles['menu-name']}>{t('YakitButton.edit')}</div>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'delete',
+                      label: (
+                        <div className={classNames(styles['extra-menu'], styles['extra-menu-delete'])}>
+                          <OutlineTrashIcon />
+                          <div className={styles['menu-name']}>{t('YakitButton.delete')}</div>
+                        </div>
+                      ),
+                      type: 'danger',
+                    },
+                  ],
+                  onClick: ({ key }) => {
+                    switch (key) {
+                      case 'edit':
+                        const m = showYakitModal({
+                          title: (modalT) => modalT('AuditCode.editProject'),
+                          width: 600,
+                          type: 'white',
+                          footer: null,
+                          centered: true,
+                          content: (
+                            <ProjectManagerEditForm
+                              record={record}
+                              setData={setData}
+                              onClose={() => m.destroy()}
+                              schema={schema}
+                            />
+                          ),
+                        })
+                        break
+                      case 'delete':
+                        setDeleteParams({
+                          titile: `确认删除${record.ProjectName}？`,
+                          params: {
+                            Filter: {
+                              IDs: [parseInt(record.ID + '')],
+                            },
+                          },
+                        })
+                        break
+                      default:
+                        break
+                    }
+                  },
+                }}
+                dropdown={{
+                  trigger: ['click'],
+                  placement: 'bottomRight',
+                }}
+              >
+                <div className={styles['extra-icon']}>
+                  <SolidDotsverticalIcon />
+                </div>
+              </YakitDropdownMenu>
+            </div>
+          )
+        },
+      },
+    ]
+  }, [pageType, schema, i18n.language])
 
   const loadMoreData = useMemoizedFn(() => {
     if (data.length > 0) {
@@ -2753,22 +2931,33 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
   })
 
   const onClickRow = useMemoizedFn((record: SSAProjectResponse) => {
-    emiter.emit(
-      'openPage',
-      JSON.stringify({
-        route: YakitRoute.YakRunner_ScanHistory,
-        params: {
-          Programs: [record.ProjectName],
-          ProjectIds: [record.ID],
-        },
-      }),
-    )
+    if (pageType === 'projectManager') {
+      const isExpanded = expandedKeys.includes(record.ID)
+      if (!isExpanded) {
+        loadDetail(record)
+      }
+      const newKeys = isExpanded ? expandedKeys.filter((k) => k !== record.ID) : [...expandedKeys, record.ID]
+      setExpandedKeys?.(newKeys)
+    } else {
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.YakRunner_ScanHistory,
+          params: {
+            Programs: [record.ProjectName],
+            ProjectIds: [record.ID],
+          },
+        }),
+      )
+    }
   })
+
   return (
     <div
       className={styles['audit-history-table']}
       id="audit-history-table"
       onKeyDown={(event) => event.stopPropagation()}
+      ref={auditHistoryTableRef}
     >
       <div className={styles['header']}>
         <div className={styles['main']}>
@@ -2867,6 +3056,25 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
             onChangeCheckboxSingle: onSelectChange,
           }}
           onClickRow={onClickRow}
+          dynamicHeight={pageType === 'projectManager'}
+          expandable={
+            pageType === 'projectManager'
+              ? {
+                  expandedRowKeys: expandedKeys,
+                  setExpandedKeys: setExpandedKeys,
+                  expandedRowRender: (record) => (
+                    <ProjectManagerDetail
+                      record={record}
+                      onOpenProjectHistory={onOpenProjectHistory}
+                      onDeleteCompileHistory={onDeleteCompileHistory}
+                    />
+                  ),
+                  onExpend: (record) => {
+                    loadDetail(record)
+                  },
+                }
+              : undefined
+          }
         />
       </div>
 
@@ -2901,6 +3109,154 @@ export const AuditHistoryTable: React.FC<AuditHistoryTableProps> = memo((props) 
           </div>
         }
       />
+    </div>
+  )
+})
+
+interface ProjectManagerDetailProps {
+  record: SSAProjectResponse
+  onOpenProjectHistory: (record: SSAProjectResponse, program?: SSAProgram) => void
+  onDeleteCompileHistory: (record: SSAProjectResponse, programId: number) => Promise<void>
+}
+const ProjectManagerDetail: React.FC<ProjectManagerDetailProps> = memo((props) => {
+  const { record, onOpenProjectHistory, onDeleteCompileHistory } = props
+  const { t, i18n } = useI18nNamespaces(['yakRunner', 'yakitUi'])
+  const detailData = record?.detailData
+  const hasPreviewItems = !!detailData?.total
+
+  const onOpenCompileCodeScan = useMemoizedFn(async (record: SSAProjectResponse, program: SSAProgram) => {
+    try {
+      const selectTotal = await getGroupNamesTotal({ GroupNames: [program.Language || record.Language] })
+      emiter.emit(
+        'openPage',
+        JSON.stringify({
+          route: YakitRoute.YakRunner_Code_Scan,
+          params: {
+            projectName: record.ProjectName,
+            projectId: record.ID,
+            historyName: [program.Name],
+            GroupNames: [program.Language || record.Language],
+            selectTotal,
+          },
+        }),
+      )
+    } catch (error) {
+      failed(t('AuditCode.jumpCodeScanFailed', { error: String(error) }))
+    }
+  })
+
+  const onOpenCompileAuditCode = useMemoizedFn((program: SSAProgram) => {
+    const params: AuditCodePageInfoProps = {
+      Schema: 'syntaxflow',
+      Location: program.Name,
+      Path: `/`,
+    }
+    emiter.emit(
+      'openPage',
+      JSON.stringify({
+        route: YakitRoute.YakRunner_Audit_Code,
+        params,
+      }),
+    )
+  })
+
+  return (
+    <div className={styles['project-compile-preview']}>
+      {record.detailLoading ? (
+        <LoadingOutlined />
+      ) : hasPreviewItems ? (
+        <>
+          <div className={styles['project-compile-preview-header']}>
+            <div className={styles['project-compile-preview-cell']}>{t('AuditCode.compileTime')}</div>
+            <div className={styles['project-compile-preview-cell']}>{t('AuditCode.riskCount')}</div>
+            <div className={styles['project-compile-preview-cell']}>{t('AuditCode.scanCount')}</div>
+            <div
+              className={classNames(styles['project-compile-preview-cell'], styles['project-compile-preview-action'])}
+            >
+              {t('YakitTable.action')}
+            </div>
+          </div>
+          {detailData?.items.map((program) => {
+            const riskTotal = getProgramRiskTotal(program)
+            const scanTotal = detailData?.scanTotals[program.Id] || 0
+            return (
+              <div
+                className={classNames(
+                  styles['project-compile-preview-row'],
+                  styles['project-compile-preview-row-clickable'],
+                )}
+                key={program.Id}
+                onClick={() => onOpenProjectHistory(record, program)}
+              >
+                <div className={styles['project-compile-preview-cell']} title={formatTimestamp(program.UpdateAt)}>
+                  {program.UpdateAt ? formatTimestamp(program.UpdateAt) : '-'}
+                </div>
+                <div className={styles['project-compile-preview-cell']}>
+                  <YakitTag color={riskTotal === 0 ? undefined : 'yellow'}>{riskTotal}</YakitTag>
+                </div>
+                <div className={styles['project-compile-preview-cell']}>{scanTotal}</div>
+                <div
+                  className={classNames(
+                    styles['project-compile-preview-cell'],
+                    styles['project-compile-preview-action'],
+                  )}
+                >
+                  <Tooltip title={t('AuditCode.codeScan')}>
+                    <div
+                      className={styles['extra-icon']}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onOpenCompileCodeScan(record, program)
+                      }}
+                    >
+                      <OutlineScanIcon />
+                    </div>
+                  </Tooltip>
+                  <Divider type="vertical" />
+                  <Tooltip title={t('YakRunnerScanHistory.openProject')}>
+                    <div
+                      className={styles['extra-icon']}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onOpenCompileAuditCode(program)
+                      }}
+                    >
+                      <OutlineArrowcirclerightIcon />
+                    </div>
+                  </Tooltip>
+                  <Divider type="vertical" />
+                  <YakitPopconfirm
+                    title={t('YakitCheckbox.confirmDeleteSelected')}
+                    onConfirm={(e) => {
+                      e?.stopPropagation()
+                      onDeleteCompileHistory(record, program.Id)
+                    }}
+                    onCancel={(e) => {
+                      e?.stopPropagation()
+                    }}
+                  >
+                    <div
+                      className={classNames(styles['extra-icon'], styles['extra-icon-delete'])}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                      }}
+                    >
+                      <OutlineTrashIcon />
+                    </div>
+                  </YakitPopconfirm>
+                </div>
+              </div>
+            )
+          })}
+          {detailData?.total > COMPILE_PREVIEW_LIMIT && (
+            <div className={styles['project-compile-preview-more']} onClick={() => onOpenProjectHistory(record)}>
+              {t('YakitButton.more')}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className={styles['project-compile-preview-empty']}>{t('AuditCode.noCompileHistory')}</div>
+      )}
     </div>
   )
 })
