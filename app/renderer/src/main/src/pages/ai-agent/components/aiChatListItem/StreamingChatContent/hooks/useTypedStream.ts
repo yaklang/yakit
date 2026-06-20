@@ -8,11 +8,17 @@ export interface UseTypedStreamOptions {
   chatType: ReActChatRenderItem['chatType']
   token: string
   session: string
-  /** 单步最小输出字符数（下限），默认 4 */
+  /** 单步最小输出字符数（下限），默认 2 */
   step?: number
-  /** 打字间隔时间（毫秒，渲染频率上限），默认 40（约 25fps，平滑且开销可控） */
+  /** 单步最大输出字符数（上限，保证每次渲染长度不会突然过大），默认 18 */
+  maxStep?: number
+  /** 打字间隔时间（毫秒，每次渲染间隔），默认 30（约 33fps，平滑且开销可控） */
   interval?: number
-  /** 追平后端所需帧数，默认 5（越小追得越快） */
+  /**
+   * 目标排空帧数，默认 9。
+   * catchUpFrames * interval ≈ 270ms，接近后端 300ms 轮询间隔，
+   * 让每批数据连续地铺满到下一批到来，消除"卡一会→突然输出一大段"的卡顿。
+   */
   catchUpFrames?: number
 }
 
@@ -29,7 +35,7 @@ export interface UseTypedStreamResult {
  * - 历史记录（直接 end）：禁用打字效果，直接显示
  */
 export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamResult {
-  const { chatType, token, session, step = 4, interval = 40, catchUpFrames = 5 } = options
+  const { chatType, token, session, step = 2, maxStep = 18, interval = 30, catchUpFrames = 9 } = options
 
   // 获取流数据和是否需要打字效果
   const { renderNumber, stream: rawStream, shouldType } = useStreamingChatContent({ chatType, token, session })
@@ -41,6 +47,7 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
   // 平滑流式输出：将后端大块推送的内容逐字显示
   const { displayedContent, isTyping } = useStreamingTypewriter(content, {
     step,
+    maxStep,
     interval,
     catchUpFrames,
     enabled: shouldType,

@@ -2,20 +2,27 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 export interface UseStreamingTypewriterOptions {
   /**
-   * 单步最小输出字符数，默认 1。
-   * 实际每步输出量是自适应的（见 catchUpFrames），此值作为下限保证慢速流也有平滑打字感。
+   * 单步最小输出字符数（下限），默认 1。
+   * 实际每步输出量是自适应的（见 catchUpFrames / maxStep），此值作为下限保证慢速流也有平滑打字感。
    */
   step?: number
   /**
+   * 单步最大输出字符数（上限），默认 20。
+   * 这是"每次渲染长度"的硬保证：无论积压多少，单帧最多揭示 maxStep 个字符，
+   * 杜绝"突然一次性输出一大段"的跳变。积压过大时通过多帧逐步排空而非一帧爆发。
+   */
+  maxStep?: number
+  /**
    * 打字间隔时间（毫秒），默认 16 (约60fps)。
-   * 这是渲染频率的硬上限：无论后端推送多快，每个 interval 最多触发一次重渲染，
-   * 从而保证性能开销恒定可控（包括最普通的流）。
+   * 这是"每次渲染间隔"的硬保证：每个 interval 最多触发一次重渲染，
+   * 性能开销恒定可控（包括最普通的流）。
    */
   interval?: number
   /**
-   * 追平后端所需的帧数，默认 6。值越小追得越快。
-   * 自适应步长 = max(step, ceil(剩余字符 / catchUpFrames))，
-   * 积压越多单步揭示越多，确保渲染速度跟上后端 AI 输出，避免结束时一次性瞬刷。
+   * 目标排空帧数，默认 6。约等于把当前积压在多少帧内铺开揭示完。
+   * 自适应步长 = clamp(ceil(剩余字符 / catchUpFrames), step, maxStep)。
+   * 值偏大可让揭示更连续地铺满到下一批数据到来（消除"空闲→爆发"的卡顿）；
+   * 值偏小则追得更快。建议让 catchUpFrames * interval 接近后端轮询间隔(约300ms)。
    */
   catchUpFrames?: number
   /** 是否启用打字效果，默认 true */
@@ -59,7 +66,15 @@ export function useStreamingTypewriter(
   targetContent: string,
   options: UseStreamingTypewriterOptions = {},
 ): UseStreamingTypewriterResult {
-  const { step = 1, interval = 16, catchUpFrames = 6, enabled = true, finished = false, onCatchUp } = options
+  const {
+    step = 1,
+    maxStep = 20,
+    interval = 16,
+    catchUpFrames = 6,
+    enabled = true,
+    finished = false,
+    onCatchUp,
+  } = options
 
   // 当前显示的内容长度
   const [displayedLength, setDisplayedLength] = useState<number>(0)
@@ -91,7 +106,7 @@ export function useStreamingTypewriter(
   // 推进后通过 setState 触发重渲染，effect 依据最新 displayedLength 决定是否再调度下一步。
   // 关键点：
   //   1. 渲染频率被 interval 硬性封顶：每个 interval 最多一次 setState/重渲染，性能开销恒定可控（含最普通的流）。
-  //   2. 单步揭示量自适应：积压越多步长越大，渲染速度始终跟上后端，避免结束时一次性瞬刷。
+  //   2. 单步揭示量被 [step, maxStep] 双向约束：既保证最小平滑感，又杜绝"一帧爆发输出一大段"。
   //   3. 不在 setState updater 内部产生副作用（调度定时器），避免 StrictMode/并发模式下重复调度导致定时器泄漏与乱序。
   //   4. 每次 effect 重跑都通过 cleanup 清理上一个定时器，保证任意时刻最多只有一个待执行定时器，彻底消除竞争。
   useEffect(() => {
@@ -109,15 +124,16 @@ export function useStreamingTypewriter(
       return
     }
 
-    // 调度单步推进（频率封顶 + 自适应步长）
+    // 调度单步推进（频率封顶 + 步长双向约束）
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null
       setDisplayedLength((prev) => {
         const total = targetContentRef.current.length
         const remaining = total - prev
         if (remaining <= 0) return prev
-        // 自适应步长：积压越多单步揭示越多，保证追上后端输出速度
-        const dynamicStep = Math.max(step, Math.ceil(remaining / catchUpFrames))
+        // 自适应步长：在 [step, maxStep] 区间内按积压量铺开，
+        // 既追得上后端，又保证单帧不超过 maxStep（不会突然输出一大段）
+        const dynamicStep = Math.min(maxStep, Math.max(step, Math.ceil(remaining / catchUpFrames)))
         return Math.min(prev + dynamicStep, total)
       })
     }, interval)
@@ -125,7 +141,7 @@ export function useStreamingTypewriter(
     return () => {
       clearTimer()
     }
-  }, [targetContent, displayedLength, enabled, finished, step, interval, catchUpFrames, clearTimer])
+  }, [targetContent, displayedLength, enabled, finished, step, maxStep, interval, catchUpFrames, clearTimer])
 
   // 组件卸载时清除定时器
   useEffect(() => {
