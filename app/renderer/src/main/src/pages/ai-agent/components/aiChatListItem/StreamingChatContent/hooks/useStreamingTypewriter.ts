@@ -7,6 +7,12 @@ export interface UseStreamingTypewriterOptions {
   interval?: number
   /** 是否启用打字效果，默认 true */
   enabled?: boolean
+  /**
+   * 流是否已经结束。
+   * 流结束后必须保证最终展示的内容等于完整目标内容，
+   * 不能被打字机的中间截断状态污染。
+   */
+  finished?: boolean
   /** 打字完成回调（当显示内容追上目标内容时触发） */
   onCatchUp?: () => void
 }
@@ -40,7 +46,7 @@ export function useStreamingTypewriter(
   targetContent: string,
   options: UseStreamingTypewriterOptions = {},
 ): UseStreamingTypewriterResult {
-  const { step = 1, interval = 16, enabled = true, onCatchUp } = options
+  const { step = 1, interval = 16, enabled = true, finished = false, onCatchUp } = options
 
   // 当前显示的内容长度
   const [displayedLength, setDisplayedLength] = useState<number>(0)
@@ -68,47 +74,36 @@ export function useStreamingTypewriter(
   }, [clearTimer])
 
   // 核心打字逻辑
+  // 采用「单步 + effect 自驱动」模式：每个定时器只推进一步，
+  // 推进后通过 setState 触发重渲染，effect 依据最新 displayedLength 决定是否再调度下一步。
+  // 关键点：
+  //   1. 不在 setState updater 内部产生副作用（调度定时器），避免 StrictMode/并发模式下重复调度导致定时器泄漏与乱序。
+  //   2. 每次 effect 重跑都通过 cleanup 清理上一个定时器，保证任意时刻最多只有一个待执行定时器，彻底消除竞争。
   useEffect(() => {
-    // 如果禁用打字效果，直接显示全部内容
-    if (!enabled) {
+    // 禁用打字效果，或流已结束时，直接停止打字（最终内容由 displayedContent 兜底为完整内容）
+    if (!enabled || finished) {
+      clearTimer()
       setDisplayedLength(targetContent.length)
       return
     }
 
-    // 如果已经追上了目标内容
+    // 已追上目标内容：停止并触发回调
     if (displayedLength >= targetContent.length) {
       clearTimer()
+      onCatchUpRef.current?.()
       return
     }
 
-    // 启动打字定时器
-    const tick = () => {
-      setDisplayedLength((prev) => {
-        const target = targetContentRef.current
-        const nextLength = Math.min(prev + step, target.length)
-
-        // 如果追上了目标内容
-        if (nextLength >= target.length) {
-          clearTimer()
-          onCatchUpRef.current?.()
-          return target.length
-        }
-
-        // 继续打字
-        timerRef.current = window.setTimeout(tick, interval)
-        return nextLength
-      })
-    }
-
-    // 只有当没有正在运行的定时器时才启动
-    if (timerRef.current === null) {
-      timerRef.current = window.setTimeout(tick, interval)
-    }
+    // 调度单步推进
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null
+      setDisplayedLength((prev) => Math.min(prev + step, targetContentRef.current.length))
+    }, interval)
 
     return () => {
-      // 注意：这里不清除定时器，因为 targetContent 变化时我们希望继续打字
+      clearTimer()
     }
-  }, [targetContent, displayedLength, enabled, step, interval, clearTimer])
+  }, [targetContent, displayedLength, enabled, finished, step, interval, clearTimer])
 
   // 组件卸载时清除定时器
   useEffect(() => {
@@ -117,10 +112,10 @@ export function useStreamingTypewriter(
     }
   }, [clearTimer])
 
-  // 计算当前显示的内容
-  const displayedContent = enabled ? targetContent.slice(0, displayedLength) : targetContent
+  // 流结束后强制以完整内容为准，避免任何残留的截断切片污染最终渲染
+  const displayedContent = !enabled || finished ? targetContent : targetContent.slice(0, displayedLength)
 
-  const isTyping = enabled && displayedLength < targetContent.length
+  const isTyping = enabled && !finished && displayedLength < targetContent.length
 
   return {
     displayedContent,
