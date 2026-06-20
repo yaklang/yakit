@@ -43,7 +43,9 @@ const getAIReferenceNodeByType = (contentType?: string) => {
 export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   const { stream, aiMarkdownProps, listItemIndex, streamChatSessionId } = props
   const { reference } = stream
-  const { NodeId, content, NodeIdVerbose, CallToolID, ContentType } = stream.data
+  const { NodeId, content, NodeIdVerbose, CallToolID, ContentType, status } = stream.data
+  // 是否仍在流式输出（结束态 status 为 'end'，历史消息亦为 'end'，据此控制流式淡入效果）
+  const streaming = status !== 'end'
   const { yakExecResult } = useChatIPCStore().chatIPCData
   const { nodeLabel } = useAINodeLabel(NodeIdVerbose)
 
@@ -80,6 +82,7 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
           content={content}
           nodeLabel={nodeLabel}
           modalInfo={modalInfo}
+          streaming={streaming}
           {...aiMarkdownProps}
         />
       )

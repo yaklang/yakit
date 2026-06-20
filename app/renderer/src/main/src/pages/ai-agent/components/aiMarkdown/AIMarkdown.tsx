@@ -25,7 +25,7 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
 
 export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
-  const { content, nodeLabel, className, modalInfo, referenceNode } = props
+  const { content, nodeLabel, className, modalInfo, referenceNode, streaming } = props
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { goAddNotepad } = useGoEditNotepad()
@@ -47,6 +47,8 @@ export const AIMarkdown: React.FC<AIMarkdownProps> = React.memo((props) => {
           <StreamMarkdown
             wrapperClassName={classNames(styles['ai-milkdown'], {
               [styles['ai-milkdown-mini']]: !expand,
+              // 流式输出期间开启淡入渲染（纯 CSS 遮罩，零每帧 JS 开销），结束后自动关闭
+              ['stream-markdown-streaming']: !!streaming,
             })}
             content={item.content}
           />

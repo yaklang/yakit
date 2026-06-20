@@ -8,10 +8,12 @@ export interface UseTypedStreamOptions {
   chatType: ReActChatRenderItem['chatType']
   token: string
   session: string
-  /** 每次输出的字符数，默认 6（更快更流畅） */
+  /** 单步最小输出字符数（下限），默认 4 */
   step?: number
-  /** 打字间隔时间（毫秒），默认 35（稍慢一点，更自然） */
+  /** 打字间隔时间（毫秒，渲染频率上限），默认 40（约 25fps，平滑且开销可控） */
   interval?: number
+  /** 追平后端所需帧数，默认 5（越小追得越快） */
+  catchUpFrames?: number
 }
 
 export interface UseTypedStreamResult {
@@ -27,7 +29,7 @@ export interface UseTypedStreamResult {
  * - 历史记录（直接 end）：禁用打字效果，直接显示
  */
 export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamResult {
-  const { chatType, token, session, step = 6, interval = 35 } = options
+  const { chatType, token, session, step = 4, interval = 40, catchUpFrames = 5 } = options
 
   // 获取流数据和是否需要打字效果
   const { renderNumber, stream: rawStream, shouldType } = useStreamingChatContent({ chatType, token, session })
@@ -40,6 +42,7 @@ export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamRe
   const { displayedContent, isTyping } = useStreamingTypewriter(content, {
     step,
     interval,
+    catchUpFrames,
     enabled: shouldType,
     finished: isFinished,
   })
