@@ -1656,18 +1656,52 @@ Constrain images and videos to the parent width and preserve their intrinsic asp
 }
 
 /*
- * 流式输出淡入效果
- * 仅在流式输出期间（.stream-markdown-streaming）对“最后一个文本块”的底部边缘做渐隐遮罩，
- * 新内容自上而下从“雾化边缘”浮现并逐步变实，形成从前往后的平滑淡入。
- * 纯 CSS 合成层，随内容增长由浏览器自动重算，无每帧 JS 开销，不影响性能；流结束后类被移除自动恢复。
- * 排除代码块/表格/Mermaid 块，避免遮挡这些结构化内容的尾部。
+ * 流式输出视觉反馈
+ * 仅在流式输出期间（.stream-markdown-streaming）生效，纯 CSS 实现，无每帧 JS 开销；流结束后类被移除自动恢复。
+ * 1) 块级淡入：新块出现时做一次性淡入，形成柔和的"浮现"感（挂载即播放，settled 块不会重播）。
+ * 2) 输出指示光标：在最后一个文本块末尾追加一个闪烁小光标，提示"正在输出/思考"。
+ *    排除代码块/表格/Mermaid 块，避免破坏这些结构化内容的布局。
  */
 .stream-markdown.stream-markdown-streaming {
+  > :last-child > * {
+    animation: stream-md-fade-in 0.28s ease-out;
+  }
+
   > :last-child
     > :last-child:not([data-streamdown='code-block']):not([data-streamdown='table-wrapper']):not(
       [data-streamdown='mermaid-block']
-    ) {
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.4em), rgba(0, 0, 0, 0.4) 100%);
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 1.4em), rgba(0, 0, 0, 0.4) 100%);
+    )::after {
+    content: '';
+    display: inline-block;
+    width: 0.45em;
+    height: 1em;
+    margin-left: 2px;
+    border-radius: 1px;
+    background-color: currentColor;
+    opacity: 0.7;
+    vertical-align: text-bottom;
+    animation: stream-md-caret-blink 1s steps(1, end) infinite;
+  }
+}
+
+@keyframes stream-md-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes stream-md-caret-blink {
+  0%,
+  50% {
+    opacity: 0.7;
+  }
+
+  50.01%,
+  100% {
+    opacity: 0;
   }
 }
