@@ -46,7 +46,7 @@
     "skillBase": "Skill",
     "toolBase": "Tool",
     "expandResources": "Expand Resources",
-    "WelcomeHomeSubTitle": "Guarding economic security",
+    "WelcomeHomeSubTitle": "Guarding secure power grid operations",
     "maybeYouWantToAsk": "Maybe you want to ask:",
     "refresh": "Refresh",
     "homeRecommend": "Home Recommendation"
@@ -135,7 +135,7 @@
   "AIAgent": {
     "getKnowledgeBaseFailed": "Failed to get knowledge base list: {{error}}",
     "tip": "Tip",
-    "memfitUpdateNotice": "Haisheng session data upgraded, all historical session records in the system will be deleted.",
+    "memfitUpdateNotice": "Xingque session data upgraded, all historical session records in the system will be deleted.",
     "clearHistoryConfirm": "Whether to clear database history records"
   },
   "AIModelTestResult": {

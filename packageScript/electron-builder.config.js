@@ -79,7 +79,7 @@ switch (platform) {
     appInfoOption = {
       appId: 'io.yaklang.memfit',
       extraMetadata: { name: 'memfit' },
-      productName: '海生',
+      productName: '星阙',
       copyright: 'Copyright © 2021 v1ll4n',
     }
     files = ['!app/assets/**/*', 'app/assets/memfit-close.png', 'app/assets/memfitlogo*', ...fixedFile]

@@ -1021,7 +1021,7 @@ export const StartupPage: React.FC = () => {
       if (isCommunityIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isCommunityMemfit()) {
-        return { type: 'text', text: '海生', width: 112, height: 41 }
+        return { type: 'text', text: '星阙', width: 112, height: 41 }
       } else {
         return { type: 'svg', component: SolidYakitFontLogoIcon, width: 112, height: 41 }
       }
@@ -1032,7 +1032,7 @@ export const StartupPage: React.FC = () => {
       if (isEnpriTraceIRify()) {
         return { type: 'svg', component: SolidIrifyFontLogoIcon, width: 112, height: 41 }
       } else if (isMemfit()) {
-        return { type: 'text', text: '海生', width: 112, height: 41 }
+        return { type: 'text', text: '星阙', width: 112, height: 41 }
       } else {
         return { type: 'img', src: theme === 'light' ? yakitEELogo : yakitEEDarkLogo, width: 137, height: 40 }
       }
@@ -1071,7 +1071,7 @@ export const StartupPage: React.FC = () => {
               <startupLogo.component style={{ height: startupLogo.height, width: startupLogo.width }} />
             )}
           </div>
-          <div className={styles['startup-desc']}>{isMemfit() ? '守卫经济安全' : '为网络安全而生'}</div>
+          <div className={styles['startup-desc']}>{isMemfit() ? '守卫电网安全运行' : '为网络安全而生'}</div>
         </div>
         <YaklangEngineWatchDog
           credential={credential}

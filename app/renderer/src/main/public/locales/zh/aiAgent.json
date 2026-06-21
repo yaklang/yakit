@@ -46,7 +46,7 @@
     "skillBase": "技能库",
     "toolBase": "工具库",
     "expandResources": "扩展资源",
-    "WelcomeHomeSubTitle": "守卫经济安全",
+    "WelcomeHomeSubTitle": "守卫电网安全运行",
     "maybeYouWantToAsk": "你可能想问:",
     "refresh": "换一换",
     "homeRecommend": "首页推荐"
@@ -135,7 +135,7 @@
   "AIAgent": {
     "getKnowledgeBaseFailed": "获取知识库列表失败: {{error}}",
     "tip": "提示",
-    "memfitUpdateNotice": "海生会话数据升级，会删除系统内的所有历史会话记录",
+    "memfitUpdateNotice": "星阙会话数据升级，会删除系统内的所有历史会话记录",
     "clearHistoryConfirm": "是否清除数据库历史记录"
   },
   "AIModelTestResult": {

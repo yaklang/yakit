@@ -16,7 +16,7 @@ const Memfit = () => {
       <g clipPath={`url(#${id})`}>
         <path
           d="M16 32C24.8366 32 32 24.8366 32 16C32 7.16344 24.8366 0 16 0C7.16344 0 0 7.16344 0 16C0 24.8366 7.16344 32 16 32Z"
-          fill="#4373BB"
+          fill="#00594F"
         />
         <mask id={id1} style={{ maskType: 'luminance' }} maskUnits="userSpaceOnUse" x="5" y="4" width="22" height="22">
           <path d="M26.8749 4.05835H5.13477V25.9412H26.8749V4.05835Z" fill="white" />

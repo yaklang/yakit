@@ -27,7 +27,7 @@ export const getReleaseEditionName = () => {
     case PRODUCT_RELEASE_EDITION.IRifyEnpriTrace:
       return 'IRify-EnpriTrace'
     case PRODUCT_RELEASE_EDITION.MEMFIT:
-      return '海生'
+      return '星阙'
     default:
       return 'Yakit'
   }
@@ -153,7 +153,7 @@ export const GetMainColor = (themeMode: Theme) => {
     case 'irify-enterprise':
       return themeMode === 'dark' ? '#B081FF' : '#6A44A9'
     case 'memfit':
-      return themeMode === 'dark' ? '#5E9DEA' : '#2E63B3'
+      return '#00594F'
     case 'enterprise':
     case 'simple-enterprise':
     case 'yakit':

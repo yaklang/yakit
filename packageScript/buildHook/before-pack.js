@@ -21,7 +21,7 @@ module.exports = async function (context) {
 
   const productName = baseInfo.productName
 
-  const artifactName = productName === '海生' ? 'Haisheng' : productName
+  const artifactName = productName === '星阙' ? 'Xingque' : productName
 
   /** win32 */
   const win32Config = context.electronPlatformName === 'win32' ? context.packager.config.win : null

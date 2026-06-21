@@ -196,6 +196,10 @@ export function generateSingleThemeColor(
 
   // Special zero-level for Main color: derive 8% alpha from existing mixed color
   if (name === 'Main') {
+    if (mainColorOverride?.toLowerCase() === '#00594f') {
+      result[`${prefix}60`] = mainColorOverride
+    }
+
     const baseLevel = mode === 'light' ? 60 : 70
     const baseColor = result[`${prefix}${baseLevel}`]
     if (baseColor) {
