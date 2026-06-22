@@ -56,6 +56,9 @@ import { YakitRoute } from '@/enums/yakitRoute'
 import { pluginTypeFilterList } from '@/defaultConstants/PluginBatchExecutor'
 import { defaultScanPortPageInfo } from '@/defaultConstants/NewPortScan'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { getRemoteValue, setRemoteValue } from '@/utils/kv'
+import { RemotePortScanGV } from '@/enums/portScan'
+import { JSONParseLog } from '@/utils/tool'
 
 const NewPortScanExtraParamsDrawer = React.lazy(() => import('./NewPortScanExtraParamsDrawer'))
 
@@ -370,13 +373,52 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
     }, [streamInfo.progressState])
 
     useEffect(() => {
-      apiGetGlobalNetworkConfig().then((rsp: GlobalNetworkConfig) => {
-        setExtraParamsValue({
-          ...extraParamsValue,
-          SynScanNetInterface: rsp.SynScanNetInterface,
+      const fetchData = async () => {
+        const results = await Promise.allSettled([
+          apiGetGlobalNetworkConfig(),
+          getRemoteValue(RemotePortScanGV.DisableOpenPortGuard),
+        ])
+
+        // 初始化要合并到状态的新字段
+        let newSynScanNetInterface: string | undefined
+        let newDisableOpenPortGuard: boolean | undefined
+
+        // 处理第一个结果：apiGetGlobalNetworkConfig
+        const configResult = results[0]
+        if (configResult.status === 'fulfilled') {
+          newSynScanNetInterface = configResult.value.SynScanNetInterface
+        }
+
+        // 处理第二个结果：getRemoteValue
+        const guardResult = results[1]
+        if (guardResult.status === 'fulfilled') {
+          const guardStr = guardResult.value
+          if (guardStr) {
+            try {
+              const obj = JSONParseLog(guardStr, {
+                page: 'NewPortScan',
+                fun: 'RemotePortScanGV.DisableOpenPortGuard',
+              })
+              newDisableOpenPortGuard = obj.DisableOpenPortGuard
+            } catch (parseError) {}
+          }
+        }
+
+        // 合并更新：只有成功获取到值的字段才更新，避免覆盖已有值
+        setExtraParamsValue((prev) => {
+          const update: Partial<typeof prev> = {}
+          if (newSynScanNetInterface !== undefined) {
+            update.SynScanNetInterface = newSynScanNetInterface
+          }
+          if (newDisableOpenPortGuard !== undefined) {
+            update.DisableOpenPortGuard = newDisableOpenPortGuard
+          }
+          return { ...prev, ...update }
         })
-      })
+      }
+      fetchData()
     }, [])
+
     useEffect(() => {
       //  pageInfo.targets 目前情况下只有初始的时候才会变，给Targets设置初始值
       form.setFieldsValue({
@@ -475,6 +517,10 @@ const NewPortScanExecuteContent: React.FC<NewPortScanExecuteContentProps> = Reac
         ...v,
         UserFingerprintFiles: v.UserFingerprintFilesStr ? v.UserFingerprintFilesStr.split(',') : [],
       } as PortScanExecuteExtraFormValue)
+      setRemoteValue(
+        RemotePortScanGV.DisableOpenPortGuard,
+        JSON.stringify({ DisableOpenPortGuard: v.DisableOpenPortGuard }),
+      )
       setExtraParamsVisible(false)
       form.setFieldsValue({
         SkippedHostAliveScan: v.SkippedHostAliveScan,
