@@ -112,8 +112,42 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  publish_memfit_to_oss:
+  # 给 Windows 安装包外壳做 Authenticode 签名(上传 OSS 之前)
+  # 内置引擎已在 yaklang OSS 源头签名，此处只补安装包外壳这一层
+  sign_windows:
     needs: build_memfit
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Memfit artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Memfit-artifacts
+          path: release
+
+      - name: Sign Windows installers
+        uses: ./.github/actions/sign-windows
+        with:
+          path: release
+          key-vault-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_URI }}
+          key-vault-client-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_APPLICATION_ID }}
+          key-vault-tenant-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_DIRECTORY_ID }}
+          key-vault-client-secret: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CLIENT_SECRET }}
+          key-vault-certificate: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CERT_NAME }}
+          timestamp-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_TIMESTAMP_URL }}
+
+      - name: Re-upload signed Memfit artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Memfit-artifacts
+          path: release
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 1
+
+  publish_memfit_to_oss:
+    needs: sign_windows
     runs-on: ubuntu-latest
 
     steps:
