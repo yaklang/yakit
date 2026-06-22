@@ -161,16 +161,15 @@ function parseTag(raw: string, start: number): { tagName: string; content: strin
   if (!tagName) return null
 
   const lower = tagName.toLowerCase()
-  if (lower === 'unquote') {
+  const kind = TAG_NAME_KIND[lower]
+  if (!kind) return null // 未知标签
+
+  // 根据 kind 决定解析方式
+  if (kind === 'unquote') {
     return parseUnquoteTag(raw, parenIdx, tagName)
-  } else if (['hexdec', 'hexd', 'hexdecode'].includes(lower)) {
-    return parseSimpleTag(raw, parenIdx, tagName)
-  } else if (['base64dec', 'base64d', 'b64d', 'base64decode'].includes(lower)) {
-    return parseSimpleTag(raw, parenIdx, tagName)
-  } else if (lower === 'file') {
-    return parseSimpleTag(raw, parenIdx, tagName)
   } else {
-    return null // 未知标签
+    // hex / base64 / file 都使用简单解析
+    return parseSimpleTag(raw, parenIdx, tagName)
   }
 }
 
