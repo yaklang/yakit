@@ -18,10 +18,13 @@
 
   --input-number-background-disabled-color: var(--Colors-Use-Neutral-Bg-Hover);
 
+  .yakit-input-number:global(.ant-input-number.ant-input-number:not(.ant-input-number-disabled)) {
+    background-color: var(--Colors-Use-Basic-Background);
+  }
+
   :global {
     .ant-input-number:not(.ant-input-number-disabled) {
       border-color: var(--input-number-border-color);
-      background-color: var(--Colors-Use-Basic-Background);
       color: var(--Colors-Use-Neutral-Text-1-Title);
     }
     .ant-input-number:hover {
@@ -42,20 +45,8 @@
       box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
       z-index: 1;
     }
-    .ant-input-number-affix-wrapper:focus,
-    .ant-input-number-affix-wrapper-focused {
-      box-shadow: 0 0 0 2px var(--input-number-box-shadow-color);
-      border-color: var(--Colors-Use-Main-Hover);
-    }
-
-    .ant-input-number-affix-wrapper:not(.ant-input-number-affix-wrapper-disabled):hover {
-      border-color: var(--Colors-Use-Main-Hover);
-    }
-    .ant-input-number-disabled:hover {
+    .ant-input-number.ant-input-number-disabled:hover {
       border-color: var(--input-number-border-disabled-color);
-    }
-    .ant-input-number-affix-wrapper > div.ant-input-number {
-      height: 26px;
     }
     .ant-input-number-handler {
       border-color: var(--input-number-border-color);
@@ -80,28 +71,6 @@
     }
   }
 }
-.yakit-input-number-wrapper-small {
-  :global {
-    .ant-input-number-affix-wrapper > div.ant-input-number {
-      height: 22px;
-    }
-  }
-}
-.yakit-input-number-wrapper-large {
-  :global {
-    .ant-input-number-affix-wrapper > div.ant-input-number {
-      height: 30px;
-    }
-  }
-}
-
-.yakit-input-number-wrapper-max-large {
-  :global {
-    .ant-input-number-affix-wrapper > div.ant-input-number {
-      height: 38px;
-    }
-  }
-}
 
 .yakit-input-number-focus {
   border-radius: 4px;
@@ -119,9 +88,6 @@
   :global {
     .ant-input-number-input {
       height: 28px;
-    }
-
-    .ant-input-number-input {
       padding: 0 12px;
     }
     .ant-input-number-input-wrap {
@@ -163,10 +129,6 @@
   :global {
     .ant-input-number-input {
       height: 24px;
-    }
-    .ant-input-number-affix-wrapper > div.ant-input-number {
-      height: 22px;
-      border-radius: 0;
     }
   }
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Checkbox, Divider, Form, Input, InputNumber, Space, Tooltip } from 'antd'
+import { Checkbox, Divider, Form, Input, Space, Tooltip } from 'antd'
 import { InputInteger, InputItem, ManyMultiSelectForString, SelectOne, SwitchItem } from '../../utils/inputUtil'
 import { failed, yakitInfo } from '../../utils/notification'
 import { PresetPorts } from './schema'
@@ -17,6 +17,7 @@ import { HybridScanPluginConfig } from '@/models/HybridScan'
 import { StartBruteParams } from '../securityTool/newBrute/NewBruteType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitCheckbox } from '@/components/yakitUI/YakitCheckbox/YakitCheckbox'
+import { YakitInputNumber } from '@/components/yakitUI/YakitInputNumber/YakitInputNumber'
 
 const { ipcRenderer } = window.require('electron')
 export const ScanPortTemplate = 'scan-port-template'
@@ -537,11 +538,10 @@ export const ScanPortForm: React.FC<ScanPortFormProp> = (props) => {
               >
                 {t('ScanPortForm.enableCrawler')}
               </YakitCheckbox>
-              <InputNumber
-                addonBefore={t('ScanPortForm.crawlerRequestCount')}
-                value={params.BasicCrawlerRequestMax}
-                onChange={(e) => setParams({ ...params, BasicCrawlerRequestMax: e as number })}
-              />
+              <Space.Compact>
+                <Space.Addon>{t('ScanPortForm.crawlerRequestCount')}</Space.Addon>
+                <YakitInputNumber min={1} />
+              </Space.Compact>
             </Space>
           </Form.Item>
         </>
