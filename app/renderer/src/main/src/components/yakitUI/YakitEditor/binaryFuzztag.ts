@@ -146,27 +146,94 @@ export const expandBinaryFuzztagByModelKey = (modelKey: object | null | undefine
 const buildPlaceholder = (tagName: string, id: string): string =>
   `{{${tagName}(${PLACEHOLDER_PREFIX}${id}${PLACEHOLDER_SUFFIX})}}`
 
-// 按标签类型的健壮匹配：
-// - unquote 参数为带转义的双引号串，用 "(?:\\.|[^"\\])*" 精确匹配，二进制内含 }} / { / ( 也不会误判
-// - hex/base64 参数为受限字符集，内容不可能含 )}}，安全
-// - file 参数禁止 ) { } 以避免越界
-const buildTagRegex = (): RegExp =>
-  /\{\{(unquote)\(("(?:\\.|[^"\\])*")\)\}\}|\{\{(hexdec|hexd|hexdecode)\(([0-9a-fA-F\s]+)\)\}\}|\{\{(base64dec|base64d|b64d|base64decode)\(([A-Za-z0-9+/=\s]+)\)\}\}|\{\{(file)\(([^){}]*)\)\}\}/g
+/**
+ * 从 `{{` 开始解析标签，返回标签名、括号内内容及结束位置
+ * @param raw 原始字符串
+ * @param start 指向 `{{` 的索引
+ * @returns 解析结果或 null
+ */
+function parseTag(raw: string, start: number): { tagName: string; content: string; endIndex: number } | null {
+  const afterOpen = start + 2
+  const parenIdx = raw.indexOf('(', afterOpen)
+  if (parenIdx === -1) return null
 
-const matchToNameContent = (m: RegExpExecArray): { tagName: string; content: string } | null => {
-  if (m[1] !== undefined) {
-    return { tagName: m[1], content: m[2] }
+  const tagName = raw.slice(afterOpen, parenIdx).trim()
+  if (!tagName) return null
+
+  const lower = tagName.toLowerCase()
+  if (lower === 'unquote') {
+    return parseUnquoteTag(raw, parenIdx, tagName)
+  } else if (['hexdec', 'hexd', 'hexdecode'].includes(lower)) {
+    return parseSimpleTag(raw, parenIdx, tagName)
+  } else if (['base64dec', 'base64d', 'b64d', 'base64decode'].includes(lower)) {
+    return parseSimpleTag(raw, parenIdx, tagName)
+  } else if (lower === 'file') {
+    return parseSimpleTag(raw, parenIdx, tagName)
+  } else {
+    return null // 未知标签
   }
-  if (m[3] !== undefined) {
-    return { tagName: m[3], content: m[4] }
+}
+
+/**
+ * 解析普通标签（hex/base64/file），内容不含 `)` 和 `}}`
+ */
+function parseSimpleTag(
+  raw: string,
+  parenIdx: number,
+  tagName: string,
+): { tagName: string; content: string; endIndex: number } | null {
+  const start = parenIdx + 1
+  const closeParen = raw.indexOf(')', start)
+  if (closeParen === -1) return null
+
+  // 必须紧跟 `}}`
+  if (!raw.startsWith('}}', closeParen + 1)) return null
+
+  const endIndex = closeParen + 3 // 跳过 `)}}`
+  const content = raw.slice(start, closeParen).trim() // 去掉首尾空白（可选）
+  return { tagName, content, endIndex }
+}
+
+/**
+ * 解析 unquote 标签，正确处理双引号字符串（支持转义）
+ */
+function parseUnquoteTag(
+  raw: string,
+  parenIdx: number,
+  tagName: string,
+): { tagName: string; content: string; endIndex: number } | null {
+  const start = parenIdx + 1
+  if (start >= raw.length || raw[start] !== '"') return null
+
+  // 找到匹配的未转义双引号
+  const closeQuote = findMatchingQuote(raw, start)
+  if (closeQuote === -1) return null
+
+  const afterQuote = closeQuote + 1
+  // 必须紧跟 `)}}`
+  if (raw[afterQuote] !== ')') return null
+  if (!raw.startsWith('}}', afterQuote + 1)) return null
+
+  const endIndex = afterQuote + 3 // 跳过 `)}}`
+  const content = raw.slice(start, closeQuote + 1) // 包含两端引号
+  return { tagName, content, endIndex }
+}
+
+/**
+ * 在 raw 中从 start 位置（指向第一个引号）开始，寻找匹配的未转义双引号
+ */
+function findMatchingQuote(raw: string, start: number): number {
+  let pos = start + 1
+  while (pos < raw.length) {
+    if (raw[pos] === '\\' && pos + 1 < raw.length) {
+      pos += 2 // 跳过转义字符和后面的字符
+    } else if (raw[pos] === '"') {
+      return pos // 找到匹配的引号
+    } else {
+      pos++
+    }
   }
-  if (m[5] !== undefined) {
-    return { tagName: m[5], content: m[6] }
-  }
-  if (m[7] !== undefined) {
-    return { tagName: m[7], content: m[8] }
-  }
-  return null
+  return -1
 }
 
 // 计算预览（byteLength + 前若干字节 hex），带缓存
@@ -223,50 +290,71 @@ const computePreview = (
 // 折叠：真实文本 -> 占位文本 + 侧表
 export const collapseBinaryFuzztag = (raw: string): BinaryCollapseResult => {
   const entries = new Map<string, BinaryFuzztagEntry>()
-  if (!raw || raw.indexOf('{{') < 0) {
+  if (!raw || !raw.includes('{{')) {
     return { text: raw, entries }
   }
-  const reg = buildTagRegex()
-  let out = ''
-  let pre = 0
-  let m: RegExpExecArray | null
-  while ((m = reg.exec(raw)) !== null) {
-    const nc = matchToNameContent(m)
-    if (!nc) {
+
+  const resultParts: string[] = []
+  let i = 0
+  const len = raw.length
+
+  while (i < len) {
+    const openIdx = raw.indexOf('{{', i)
+    if (openIdx === -1) {
+      resultParts.push(raw.slice(i))
+      break
+    }
+
+    // 保留 `{{` 之前的普通文本
+    resultParts.push(raw.slice(i, openIdx))
+
+    // 尝试解析标签
+    const parsed = parseTag(raw, openIdx)
+    if (!parsed) {
+      // 无法解析，保留原 `{{` 作为普通文本
+      resultParts.push(raw.slice(openIdx, openIdx + 2))
+      i = openIdx + 2
       continue
     }
-    const kind = TAG_NAME_KIND[nc.tagName.toLowerCase()]
+
+    const { tagName, content, endIndex } = parsed
+    const fullTag = raw.slice(openIdx, endIndex)
+    const kind = TAG_NAME_KIND[tagName.toLowerCase()]
     if (!kind) {
+      // 未知标签类型，保留原样
+      resultParts.push(fullTag)
+      i = endIndex
       continue
     }
-    // 折叠策略：
-    // - 可编辑类型(unquote/hex/base64)：无论内容大小一律折叠为可点击小块，
-    //   让用户对任意 Binary/HexString/Base64 标签都能点击打开辅助输入器编辑。
-    // - 只读 file 引用：仍按阈值过滤，避免短引用被打扰。
-    // 不折叠的标签保留在后续 slice 中。
-    if (kind === 'file' && nc.content.length <= BINARY_FOLD_THRESHOLD) {
+
+    // 折叠策略：file 短内容不折叠
+    if (kind === 'file' && content.length <= BINARY_FOLD_THRESHOLD) {
+      resultParts.push(fullTag)
+      i = endIndex
       continue
     }
-    const originalTagText = m[0]
-    const id = hashId(originalTagText)
-    const preview = computePreview(kind, nc.content, id)
-    entries.set(id, {
+
+    // 折叠：生成占位符
+    const id = hashId(fullTag)
+    const preview = computePreview(kind, content, id)
+    const entry: BinaryFuzztagEntry = {
       id,
-      tagName: nc.tagName,
+      tagName,
       kind,
       editable: isEditableKind(kind),
-      originalTagText,
-      innerContent: nc.content,
+      originalTagText: fullTag,
+      innerContent: content,
       byteLength: preview.byteLength,
       previewHex: preview.previewHex,
       previewText: preview.previewText,
-    })
-    out += raw.slice(pre, m.index)
-    out += buildPlaceholder(nc.tagName, id)
-    pre = m.index + m[0].length
+    }
+    entries.set(id, entry)
+    resultParts.push(buildPlaceholder(tagName, id))
+
+    i = endIndex
   }
-  out += raw.slice(pre)
-  return { text: out, entries }
+
+  return { text: resultParts.join(''), entries }
 }
 
 const placeholderRegex = () => /\{\{([\w:]+)\(#YBIN_([0-9a-f]+)#\)\}\}/g
