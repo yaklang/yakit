@@ -8,7 +8,7 @@ import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
-import { Form, Space, InputNumber } from 'antd'
+import { Form, Space } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { failed, success } from '@/utils/notification'
 import {
@@ -446,7 +446,7 @@ export const KnowledgeEntryTable: React.FC<KnowledgeEntryTableProps> = ({ knowle
           </Form.Item>
 
           <Form.Item label={t('playground.KnowledgeEntryTable.sourcePage')} name="SourcePage">
-            <InputNumber min={1} style={{ width: '100%' }} />
+            <YakitInputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item label={t('playground.KnowledgeEntryTable.potentialQuestions')} name="PotentialQuestions">

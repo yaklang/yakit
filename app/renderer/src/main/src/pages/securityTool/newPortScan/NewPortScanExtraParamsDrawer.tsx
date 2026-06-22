@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { PortScanExecuteExtraFormValue } from './NewPortScanType'
-import { Checkbox, Form, FormInstance, Tooltip } from 'antd'
+import { Checkbox, Form, FormInstance, Space, Tooltip } from 'antd'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import styles from './NewPortScanExtraParamsDrawer.module.scss'
@@ -588,7 +588,10 @@ export const BasicCrawlerSettingsPanel: React.FC<BasicCrawlerSettingsPanelProps>
               <YakitCheckbox />
             </Form.Item>
             <Form.Item noStyle name="BasicCrawlerRequestMax">
-              <YakitInputNumber min={1} addonBefore={t('ScanPortForm.crawlerRequestCount')} />
+              <Space.Compact>
+                <Space.Addon>{t('ScanPortForm.crawlerRequestCount')}</Space.Addon>
+                <YakitInputNumber min={1} />
+              </Space.Compact>
             </Form.Item>
           </div>
         </Form.Item>
