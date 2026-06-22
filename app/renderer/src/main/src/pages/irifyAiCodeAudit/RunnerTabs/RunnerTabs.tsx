@@ -1364,7 +1364,7 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo(()
     if (SystemInfo.mode === 'remote') {
       let absolutePath = ''
       const m = showYakitModal({
-        title: tYak('RunnerFileTree.enterFolderPath'),
+        title: (modalT) => modalT('RunnerFileTree.enterFolderPath'),
         width: 400,
         type: 'white',
         closable: false,
