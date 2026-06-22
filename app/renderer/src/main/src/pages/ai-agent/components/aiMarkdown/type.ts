@@ -7,4 +7,6 @@ export interface AIMarkdownProps {
   className?: string
   modalInfo: ModalInfoProps
   referenceNode: ReactNode
+  /** 是否正在流式输出（用于开启流式淡入渲染效果，结束后关闭） */
+  streaming?: boolean
 }
