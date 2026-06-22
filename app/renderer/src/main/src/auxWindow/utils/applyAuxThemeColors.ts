@@ -1,5 +1,5 @@
 import { GetMainColor } from '@/utils/envfile'
-import { generateAllThemeColors } from '@/yakit-colors-generator'
+import { applyYakitThemeColors } from '@/utils/applyYakitThemeColors'
 import type { Theme } from '@/hook/useTheme'
 
 export const AUX_XTERM_THEME_SYNC = 'aux:xterm-theme-sync'
@@ -14,11 +14,6 @@ export function scheduleSyncAuxXtermTheme() {
 }
 
 export function applyAuxThemeColors(theme: Theme) {
-  const html = document.documentElement
-  html.setAttribute('data-theme', theme)
-  const colors = generateAllThemeColors(theme, GetMainColor(theme))
-  Object.entries(colors).forEach(([key, value]) => {
-    html.style.setProperty(key, value)
-  })
+  applyYakitThemeColors(theme, GetMainColor(theme))
   scheduleSyncAuxXtermTheme()
 }

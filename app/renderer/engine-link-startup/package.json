@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.10.0",
+    "@yakit-libs/color": "^1.2.0",
     "ahooks": "3.7.9",
     "antd": "4.21.7",
     "buffer": "^6.0.3",

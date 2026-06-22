@@ -84,7 +84,7 @@ const RiskGaugeChart: React.FC<{ list: FieldName[] }> = ({ list }) => {
     }
   }, [list, colors])
 
-  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
+  return <ReactECharts notMerge option={option} style={{ width: '100%', height: '100%' }} />
 }
 
 const RiskDistributionChart: React.FC<{
@@ -126,7 +126,8 @@ const RiskDistributionChart: React.FC<{
           // 饼图  左右  上下  位置
           center: ['50%', '50%'],
           itemStyle: {
-            borderColor: '#FFFFFF',
+            // borderColor: 'var(--Colors-Use-Neutral-Bg)',
+            borderColor: colors['--Colors-Use-Neutral-Bg'],
             borderWidth: 2,
           },
           avoidLabelOverlap: false,
@@ -181,7 +182,7 @@ const RiskDistributionChart: React.FC<{
     return option as EChartsOption
   }, [total, items, colors, totalRiskLabel])
 
-  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
+  return <ReactECharts notMerge option={option} style={{ width: '100%', height: '100%' }} />
 }
 
 const RULE_HITS_LABEL_WIDTH = 88 //宽度80+间距8
@@ -289,7 +290,7 @@ const RuleHitsBarChart: React.FC<{ items: { name: string; value: number }[] }> =
     }
   }, [items, colors])
 
-  return <ReactECharts option={option} style={{ width: '100%', height: '100%' }} />
+  return <ReactECharts notMerge option={option} style={{ width: '100%', height: '100%' }} />
 }
 
 export {

@@ -5539,6 +5539,11 @@
   resolved "https://registry.yarnpkg.com/@xtuc/long/-/long-4.2.2.tgz#d291c6a4e97989b5c61d9acf396ae4fe133a718d"
   integrity sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==
 
+"@yakit-libs/color@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@yakit-libs/color/-/color-1.2.0.tgz#1b9a85ae64b07ada67c426badf2927238b453fbe"
+  integrity sha512-7/E+FE7ORFWJ56UihLKMOgKADKXl/8tWnGs8XWgyJV9EoBUzloPWGpSTu87SCkLYh+GhqsMHak7NAq/yigqKnA==
+
 "@yarnpkg/lockfile@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz#e77a97fbd345b76d83245edcd17d393b1b41fb31"

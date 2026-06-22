@@ -7,7 +7,7 @@ runs:
       shell: bash
       run: |
         set -uo pipefail
-        reg='https://registry.npmjs.org/'
+        reg='https://registry.yarnpkg.com/'
         ok=false
         for attempt in 1 2 3 4 5; do
           if yarn install --frozen-lockfile --registry "$reg" && \

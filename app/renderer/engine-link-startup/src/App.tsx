@@ -4,19 +4,9 @@ import './theme/ThemeClass.scss'
 import './theme/yakit.scss'
 import { GetMainColor, getReleaseEditionName, isCommunityEdition, isIRify, isMemfit } from './utils/envfile'
 import { useTheme } from './hooks/useTheme'
-import { generateAllThemeColors } from './yakit-colors-generator'
+import { applyYakitThemeColors } from './utils/applyYakitThemeColors'
 import { yakitApp } from './utils/electronBridge'
 import styles from './App.module.scss'
-
-function applyThemeColors(theme: 'light' | 'dark', colors: Record<string, string>) {
-  const html = document.documentElement
-
-  html.setAttribute('data-theme', theme)
-
-  Object.entries(colors).forEach(([key, value]) => {
-    html.style.setProperty(`${key}`, value)
-  })
-}
 
 const App: React.FC = memo(() => {
   const { theme } = useTheme()
@@ -46,9 +36,7 @@ const App: React.FC = memo(() => {
 
   // 主题色处理
   useEffect(() => {
-    const targetEditionColor = GetMainColor(theme)
-    const colors = generateAllThemeColors(theme, targetEditionColor)
-    applyThemeColors(theme, colors)
+    applyYakitThemeColors(theme, GetMainColor(theme))
     setReady(true)
   }, [theme])
 
