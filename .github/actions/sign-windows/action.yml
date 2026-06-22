@@ -1,36 +1,36 @@
-name: "Sign Windows Executables"
-description: "Sign Windows .exe files with Azure Key Vault via AzureSignTool (consistent with yaklang engine signing)"
+name: 'Sign Windows Executables'
+description: 'Sign Windows .exe files with Azure Key Vault via AzureSignTool (consistent with yaklang engine signing)'
 
 inputs:
   path:
-    description: "Directory that contains the .exe files to sign"
+    description: 'Directory that contains the .exe files to sign'
     required: false
-    default: "release"
+    default: 'release'
   pattern:
-    description: "Filter pattern (Windows wildcard) used to match files under path"
+    description: 'Filter pattern (Windows wildcard) used to match files under path'
     required: false
-    default: "*windows*.exe"
+    default: '*windows*.exe'
   key-vault-url:
-    description: "Azure Key Vault URI"
+    description: 'Azure Key Vault URI'
     required: true
   key-vault-client-id:
-    description: "Azure application (client) id"
+    description: 'Azure application (client) id'
     required: true
   key-vault-tenant-id:
-    description: "Azure directory (tenant) id"
+    description: 'Azure directory (tenant) id'
     required: true
   key-vault-client-secret:
-    description: "Azure client secret"
+    description: 'Azure client secret'
     required: true
   key-vault-certificate:
-    description: "Certificate name inside the Key Vault"
+    description: 'Certificate name inside the Key Vault'
     required: true
   timestamp-url:
-    description: "RFC3161 timestamp server url"
+    description: 'RFC3161 timestamp server url'
     required: true
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Validate signing inputs
       shell: pwsh
@@ -49,7 +49,7 @@ runs:
     - name: Set up .NET (for AzureSignTool)
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: "8.0.x"
+        dotnet-version: '8.0.x'
 
     - name: Install AzureSignTool
       shell: pwsh
