@@ -171,29 +171,29 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
   const getTextWidget = useMemoizedFn((props: WidgetProps) => {
     const { id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema, uiSchema } =
       props
+    const { classNames: _, ...restOptions } = options // 忽略 classNames
     const uiStyle = uiSchema?.['ui:component_style'] || {}
     if (schema.type === 'number') {
-      return <></>
-      // return (
-      //   <YakitInputNumber
-      //     style={{ width: '100%', ...uiStyle }}
-      //     id={id}
-      //     {...options}
-      //     autoFocus={autofocus}
-      //     required={required}
-      //     disabled={disabled || readonly}
-      //     value={value}
-      //     onChange={(value) => {
-      //       onChange(value)
-      //     }}
-      //     onBlur={(value) => {
-      //       onBlur(id, value)
-      //     }}
-      //     onFocus={(value) => {
-      //       onFocus(id, value)
-      //     }}
-      //   />
-      // )
+      return (
+        <YakitInputNumber
+          style={{ width: '100%', ...uiStyle }}
+          id={id}
+          {...restOptions}
+          autoFocus={autofocus}
+          required={required}
+          disabled={disabled || readonly}
+          value={value}
+          onChange={(value) => {
+            onChange(value)
+          }}
+          onBlur={(value) => {
+            onBlur(id, value)
+          }}
+          onFocus={(value) => {
+            onFocus(id, value)
+          }}
+        />
+      )
     } else if (schema.yakit_type === 'file') {
       return getFileWidget(props)
     } else if (schema.yakit_type === 'files') {
@@ -393,32 +393,33 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     const { id, required, readonly, disabled, value, onChange, onBlur, onFocus, autofocus, options, schema, uiSchema } =
       props
     const uiStyle = uiSchema?.['ui:component_style'] || {}
+    const { classNames: _, ...restOptions } = options // 忽略 classNames
     if (schema.multipleOf) {
-      options.step = schema.multipleOf
+      restOptions.step = schema.multipleOf
     }
 
     if (typeof schema.minimum !== 'undefined') {
-      options.min = schema.minimum
+      restOptions.min = schema.minimum
     }
 
     if (typeof schema.maximum !== 'undefined') {
-      options.max = schema.maximum
+      restOptions.max = schema.maximum
     }
-    return <></>
-    // return (
-    //   <YakitInputNumber
-    //     id={id}
-    //     {...options}
-    //     autoFocus={autofocus}
-    //     required={required}
-    //     disabled={disabled || readonly}
-    //     value={value}
-    //     onChange={(value) => onChange(value)}
-    //     onBlur={(value) => onBlur(id, value)}
-    //     onFocus={(value) => onFocus(id, value)}
-    //     style={uiStyle}
-    //   />
-    // )
+
+    return (
+      <YakitInputNumber
+        id={id}
+        {...restOptions}
+        autoFocus={autofocus}
+        required={required}
+        disabled={disabled || readonly}
+        value={value}
+        onChange={(value) => onChange(value)}
+        onBlur={(value) => onBlur(id, value)}
+        onFocus={(value) => onFocus(id, value)}
+        style={uiStyle}
+      />
+    )
   })
 
   const getFileWidget = useMemoizedFn((props: WidgetProps) => {

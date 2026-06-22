@@ -1,18 +1,5 @@
 import React, { CSSProperties, useEffect, useRef, useState } from 'react'
-import {
-  Button,
-  Checkbox,
-  Col,
-  Form,
-  Input,
-  InputNumber,
-  Radio,
-  Row,
-  Tag,
-  Tooltip,
-  Typography,
-  Upload,
-} from 'antd'
+import { Button, Checkbox, Col, Form, Input, Row, Tag, Tooltip, Typography, Upload } from 'antd'
 import '@ant-design/compatible/assets/index.css'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import TimeRange, { TimePoint } from './timeRange'
@@ -506,7 +493,7 @@ export interface InputNumberProps extends InputBase {
 export const InputFloat: React.FC<InputNumberProps> = (p) => {
   return (
     <Item label={p.label} style={{ ...p.formItemStyle }} help={p.help}>
-      <InputNumber
+      <YakitInputNumber
         size={p.size}
         min={p.min}
         max={p.max}
