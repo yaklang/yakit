@@ -186,7 +186,7 @@ export const formatTemplateTeams = (list: HotPatchTempItem[]): HotPatchTemplateT
   const tagIndexMap = new Map<string, number>()
 
   list.forEach((item) => {
-    const tags = '' // item.Tags?.trim() ||  '' // TODO: 下周在上
+    const tags = item.Tags?.trim() || ''
     if (!tags) {
       emptyTagNodes.push(item)
       return
@@ -808,16 +808,6 @@ export const HotPatchManagement: React.FC = () => {
     }, 120)
   })
 
-  const updateTemplateTagInList = useMemoizedFn((type: HotCodeType, name: string, tag: string) => {
-    const updater = (list: HotPatchTempItem[]) =>
-      list.map((item) => (item.name === name ? { ...item, Tags: tag } : item))
-    if (type === 'global') {
-      setGlobalTemplateList(updater)
-    } else {
-      setTemplateList(updater)
-    }
-  })
-
   const onUpdateTemplateTags = useMemoizedFn(async (item: HotPatchTempItem, type: HotCodeType, tag: string) => {
     const Tags = tag.trim()
 
@@ -827,7 +817,11 @@ export const HotPatchManagement: React.FC = () => {
     }
     try {
       await ipcRenderer.invoke('UpdateHotPatchTemplate', params)
-      updateTemplateTagInList(type, item.name, Tags)
+      if (type === 'global') {
+        loadGlobalTemplateList()
+      } else {
+        loadTemplateList(type)
+      }
       closeTemplateMenu()
       yakitNotify(
         'success',
@@ -918,7 +912,7 @@ export const HotPatchManagement: React.FC = () => {
   const renderTemplateItem = useMemoizedFn((type: HotCodeType, item: HotPatchTempItem, source: 'local' | 'online') => {
     const currentTemplateKey = getTemplateKey(type, item.name)
     const existingGroups = type === 'global' ? globalTemplateGroups : panelTemplateGroups
-    const showTemplateMenu = (source === 'local' || (source === 'online' && hasPermissions)) && !item.isDefault // TODO: 上分组去掉
+    const showTemplateMenu = source === 'local' || (source === 'online' && hasPermissions)
     return (
       <div
         key={`${type}-${source}-${item.name}`}
@@ -971,7 +965,7 @@ export const HotPatchManagement: React.FC = () => {
                 }}
                 content={
                   <>
-                    {/* {source === 'local' && renderAddToGroupSubmenu(type, item, currentTemplateKey, existingGroups)} */}
+                    {source === 'local' && renderAddToGroupSubmenu(type, item, currentTemplateKey, existingGroups)}
                     {type === 'global' &&
                       (() => {
                         const isThisItemEnabled =
