@@ -1,6 +1,11 @@
 import { RequestYakURLResponse, YakURLResource } from '@/pages/yakURLTree/data'
 import { StringToUint8Array } from '@/utils/str'
-import { OpenAPIDocumentInfo, OpenAPIOperationDetail, OpenAPIOperationSummary } from './openapiDocType'
+import {
+  OpenAPIDocumentHistoryItem,
+  OpenAPIDocumentInfo,
+  OpenAPIOperationDetail,
+  OpenAPIOperationSummary,
+} from './openapiDocType'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -53,9 +58,12 @@ async function requestYakURL(method: string, url: Record<string, unknown>, body?
 /** POST openapi://upload/ 上传 Swagger / OpenAPI 文档 */
 export async function uploadOpenAPIDocument(
   content: string,
-  options?: { overrideDomain?: string; overrideIsHttps?: boolean },
+  options?: { fileName?: string; overrideDomain?: string; overrideIsHttps?: boolean },
 ) {
   const query: { Key: string; Value: string }[] = []
+  if (options?.fileName) {
+    query.push({ Key: 'fileName', Value: options.fileName })
+  }
   if (options?.overrideDomain) {
     query.push({ Key: 'overrideDomain', Value: options.overrideDomain })
   }
@@ -81,6 +89,71 @@ export async function uploadOpenAPIDocument(
   const docInfo = parseDocumentInfo(docId, docResource)
   const operations = resources.filter((item) => item.ResourceType === 'openapi-operation').map(parseOperationSummary)
   return { docId, docInfo, operations }
+}
+
+function parseDocumentHistoryItem(resource: YakURLResource): OpenAPIDocumentHistoryItem {
+  const extra = resource.Extra || []
+  const sessionId = getExtraValue(extra, 'session_id') || resource.ResourceName
+  const createdAt = Number(getExtraValue(extra, 'created_at') || getExtraValue(extra, 'uploaded_at') || '0')
+  const updatedAt = Number(getExtraValue(extra, 'updated_at') || createdAt || '0')
+  const lastUsedAt = Number(getExtraValue(extra, 'last_used_at') || updatedAt || createdAt || '0')
+  const title = getExtraValue(extra, 'title') || resource.VerboseName
+  return {
+    sessionId,
+    docId: sessionId,
+    title,
+    fileName: getExtraValue(extra, 'file_name') || undefined,
+    source: getExtraValue(extra, 'source') || undefined,
+    createdAt,
+    updatedAt,
+    lastUsedAt,
+    uploadedAt: createdAt,
+    operationCount: Number(getExtraValue(extra, 'operation_count') || '0'),
+    specVersion: getExtraValue(extra, 'specVersion') || undefined,
+    version: getExtraValue(extra, 'version') || undefined,
+  }
+}
+
+export function getOpenAPIDocumentHistoryTitle(item: OpenAPIDocumentHistoryItem) {
+  return item.fileName || item.title || item.sessionId
+}
+
+export function getOpenAPIDocumentHistoryTimestamp(item: OpenAPIDocumentHistoryItem) {
+  return item.lastUsedAt || item.updatedAt || item.createdAt
+}
+
+/** GET openapi://history/ 获取已上传文档历史（持久化目录） */
+export async function listOpenAPIDocumentHistory(): Promise<OpenAPIDocumentHistoryItem[]> {
+  const resp = await requestYakURL('GET', {
+    Schema: 'openapi',
+    Location: 'history',
+    Path: '/',
+    Query: [],
+  })
+  return (resp.Resources || []).filter((item) => item.ResourceType === 'openapi-document').map(parseDocumentHistoryItem)
+}
+
+/** DELETE openapi://{docId}/ 删除文档及磁盘文件 */
+export async function deleteOpenAPIDocument(docId: string) {
+  await requestYakURL('DELETE', {
+    Schema: 'openapi',
+    Location: docId,
+    Path: '/',
+    Query: [],
+  })
+}
+
+/** GET openapi://{docId}/ 加载指定文档 */
+export async function loadOpenAPIDocumentById(docId: string) {
+  const result = await listOpenAPIDocument(docId)
+  if (!result.docInfo) {
+    throw new Error('openapi document not found')
+  }
+  return {
+    docId,
+    docInfo: result.docInfo,
+    operations: result.operations,
+  }
 }
 
 /** GET openapi://{docId}/ 刷新文档与接口列表 */

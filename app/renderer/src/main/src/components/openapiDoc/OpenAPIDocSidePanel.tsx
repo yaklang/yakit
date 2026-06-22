@@ -1,16 +1,26 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
+import { Tooltip } from 'antd'
+import { ClockIcon } from '@/assets/newIcon'
+import { OutlineBookopenIcon, OutlineSearchIcon, OutlineUploadIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
-import { OutlineSearchIcon, OutlineUploadIcon } from '@/assets/icon/outline'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { yakitFailed, yakitNotify } from '@/utils/notification'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { OpenAPIDocState, OpenAPIOperationSummary } from './openapiDocType'
-import { uploadOpenAPIDocument } from './openapiYakURL'
+import { usePageInfo } from '@/store/pageInfo'
+import { shallow } from 'zustand/shallow'
+import { OpenAPIDocHistory } from './OpenAPIDocHistory'
+import {
+  OpenAPIDocState,
+  OpenAPIDocumentHistoryItem,
+  OpenAPIDocumentInfo,
+  OpenAPIOperationSummary,
+} from './openapiDocType'
+import { loadOpenAPIDocumentById, uploadOpenAPIDocument } from './openapiYakURL'
 import styles from './OpenAPIDocPanel.module.scss'
 
 const { ipcRenderer } = window.require('electron')
@@ -29,6 +39,36 @@ function getMethodColor(method: string) {
   return METHOD_COLORS[method.toUpperCase()] || '#999'
 }
 
+function getFileBaseName(filePath: string) {
+  const normalized = filePath.replace(/\\/g, '/')
+  const parts = normalized.split('/')
+  return parts[parts.length - 1] || ''
+}
+
+function buildDocumentStatePatch(
+  result: {
+    docId: string
+    docInfo: OpenAPIDocumentInfo
+    operations: OpenAPIOperationSummary[]
+  },
+  prev: Pick<OpenAPIDocState, 'overrideDomain' | 'overrideIsHttps'>,
+): Partial<OpenAPIDocState> {
+  return {
+    docId: result.docId,
+    docInfo: result.docInfo,
+    operations: result.operations,
+    parseWarnings: result.docInfo.parseWarnings || [],
+    overrideDomain: result.docInfo.domain || prev.overrideDomain,
+    overrideIsHttps: result.docInfo.isHttps,
+    isHttps: result.docInfo.isHttps,
+    selectedOperation: undefined,
+    operationDetail: undefined,
+    parameterValues: {},
+    requestRaw: '',
+    responseRaw: '',
+  }
+}
+
 interface OpenAPIDocSidePanelProps {
   state: OpenAPIDocState
   onUpdate: (patch: Partial<OpenAPIDocState>) => void
@@ -36,8 +76,55 @@ interface OpenAPIDocSidePanelProps {
 }
 
 export const OpenAPIDocSidePanel: React.FC<OpenAPIDocSidePanelProps> = ({ state, onUpdate, onSelectOperation }) => {
-  const { t } = useI18nNamespaces(['history'])
+  const { t } = useI18nNamespaces(['history', 'webFuzzer'])
   const [keyword, setKeyword] = useState('')
+  const [historyRefreshToken, setHistoryRefreshToken] = useState(0)
+  const autoLoadedRef = useRef(false)
+  const currentRouteKey = usePageInfo((s) => s.getCurrentPageTabRouteKey(), shallow)
+
+  const getPopupContainer = useMemoizedFn(
+    () => document.getElementById(`main-operator-page-body-${currentRouteKey}`) || document.body,
+  )
+
+  const loadDocument = useMemoizedFn(async (docId: string) => {
+    if (state.docId === docId && state.operations.length) return
+    onUpdate({ loading: true })
+    try {
+      const result = await loadOpenAPIDocumentById(docId)
+      onUpdate({
+        ...buildDocumentStatePatch(result, state),
+        loading: false,
+      })
+    } catch (e: any) {
+      onUpdate({ loading: false })
+      yakitFailed(`${t('HTTPHistory.openapiDoc.historyLoadFailed')}: ${e?.message || e}`)
+    }
+  })
+
+  const onHistoryItemsChange = useMemoizedFn((items: OpenAPIDocumentHistoryItem[]) => {
+    if (autoLoadedRef.current || !items.length || state.docId) return
+    autoLoadedRef.current = true
+    loadDocument(items[0].sessionId)
+  })
+
+  const onHistorySelect = useMemoizedFn((item: OpenAPIDocumentHistoryItem) => {
+    loadDocument(item.sessionId)
+  })
+
+  const onHistoryDeleted = useMemoizedFn((sessionId: string) => {
+    if (state.docId !== sessionId) return
+    onUpdate({
+      docId: '',
+      docInfo: undefined,
+      operations: [],
+      selectedOperation: undefined,
+      operationDetail: undefined,
+      parameterValues: {},
+      requestRaw: '',
+      responseRaw: '',
+      parseWarnings: [],
+    })
+  })
 
   const groupedOperations = useMemo(() => {
     const groups = new Map<string, OpenAPIOperationSummary[]>()
@@ -70,24 +157,15 @@ export const OpenAPIDocSidePanel: React.FC<OpenAPIDocSidePanelProps> = ({ state,
       onUpdate({ loading: true })
       const content = await ipcRenderer.invoke('read-file-content', filePath)
       const result = await uploadOpenAPIDocument(content, {
+        fileName: getFileBaseName(filePath),
         overrideDomain: state.overrideDomain || undefined,
         overrideIsHttps: state.overrideIsHttps,
       })
       onUpdate({
-        docId: result.docId,
-        docInfo: result.docInfo,
-        operations: result.operations,
-        parseWarnings: result.docInfo.parseWarnings || [],
-        overrideDomain: result.docInfo.domain || state.overrideDomain,
-        overrideIsHttps: result.docInfo.isHttps,
-        isHttps: result.docInfo.isHttps,
-        selectedOperation: undefined,
-        operationDetail: undefined,
-        parameterValues: {},
-        requestRaw: '',
-        responseRaw: '',
+        ...buildDocumentStatePatch(result, state),
         loading: false,
       })
+      setHistoryRefreshToken((v) => v + 1)
       yakitNotify('success', t('HTTPHistory.openapiDoc.uploadSuccess'))
       if (result.docInfo.parseWarnings?.length) {
         yakitNotify(
@@ -107,52 +185,91 @@ export const OpenAPIDocSidePanel: React.FC<OpenAPIDocSidePanelProps> = ({ state,
   return (
     <div className={styles['openapi-doc-side']}>
       <div className={styles['openapi-doc-side-header']}>
-        <YakitButton type="primary" icon={<OutlineUploadIcon />} onClick={onUpload} loading={state.loading}>
-          {t('HTTPHistory.openapiDoc.upload')}
-        </YakitButton>
+        <div className={styles['openapi-doc-side-header-title']}>
+          <OutlineBookopenIcon />
+          <span>{t('WebFuzzerPage.openapiDoc')}</span>
+        </div>
+        <div className={styles['openapi-doc-side-header-actions']}>
+          <Tooltip
+            trigger={['click']}
+            destroyTooltipOnHide
+            overlayClassName={styles['openapi-doc-history-tooltip']}
+            getPopupContainer={getPopupContainer}
+            title={
+              <div className={styles['openapi-doc-history-tooltip-content']}>
+                <OpenAPIDocHistory
+                  activeDocId={state.docId}
+                  refreshToken={historyRefreshToken}
+                  onSelect={onHistorySelect}
+                  onDeleted={onHistoryDeleted}
+                  onItemsChange={onHistoryItemsChange}
+                  getPopupContainer={getPopupContainer}
+                />
+              </div>
+            }
+          >
+            <YakitButton type="text2" icon={<ClockIcon />} title="" />
+          </Tooltip>
+          <YakitButton
+            type="text2"
+            icon={<OutlineUploadIcon />}
+            onClick={onUpload}
+            loading={state.loading}
+            title={t('HTTPHistory.openapiDoc.upload')}
+          />
+        </div>
       </div>
-      <YakitInput
-        className={styles['openapi-doc-side-search']}
-        prefix={<OutlineSearchIcon />}
-        placeholder={t('HTTPHistory.openapiDoc.searchPlaceholder')}
-        allowClear
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-      />
-      <div className={styles['openapi-doc-side-body']}>
-        <YakitSpin spinning={state.loading}>
-          {!state.docId ? (
-            <div className={styles['openapi-doc-side-empty']}>
-              <YakitEmpty description={t('HTTPHistory.openapiDoc.emptyHint')} />
-            </div>
-          ) : (
-            <div className={styles['openapi-doc-tree']}>
-              {groupedOperations.map(([tag, ops]) => (
-                <div key={tag}>
-                  <div className={styles['openapi-doc-tree-group-title']}>{tag}</div>
-                  {ops.map((op) => (
-                    <div
-                      key={`${op.method}-${op.path}`}
-                      className={classNames(styles['openapi-doc-tree-item'], {
-                        [styles['openapi-doc-tree-item-active']]: isSelected(op),
-                      })}
-                      onClick={() => onSelectOperation(op)}
-                    >
-                      <span
-                        className={styles['openapi-doc-tree-method']}
-                        style={{ backgroundColor: getMethodColor(op.method) }}
-                      >
-                        {op.method}
-                      </span>
-                      <span className={styles['openapi-doc-tree-label']}>{op.summary || op.path}</span>
+
+      {state.docId ? (
+        <>
+          <YakitInput
+            className={styles['openapi-doc-side-search']}
+            prefix={<OutlineSearchIcon />}
+            placeholder={t('HTTPHistory.openapiDoc.searchPlaceholder')}
+            allowClear
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+          />
+          <div className={styles['openapi-doc-side-body']}>
+            <YakitSpin spinning={state.loading}>
+              <div className={styles['openapi-doc-tree']}>
+                {groupedOperations.length ? (
+                  groupedOperations.map(([tag, ops]) => (
+                    <div key={tag}>
+                      <div className={styles['openapi-doc-tree-group-title']}>{tag}</div>
+                      {ops.map((op) => (
+                        <div
+                          key={`${op.method}-${op.path}`}
+                          className={classNames(styles['openapi-doc-tree-item'], {
+                            [styles['openapi-doc-tree-item-active']]: isSelected(op),
+                          })}
+                          onClick={() => onSelectOperation(op)}
+                        >
+                          <span
+                            className={styles['openapi-doc-tree-method']}
+                            style={{ backgroundColor: getMethodColor(op.method) }}
+                          >
+                            {op.method}
+                          </span>
+                          <span className={styles['openapi-doc-tree-label']}>{op.summary || op.path}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-        </YakitSpin>
-      </div>
+                  ))
+                ) : (
+                  <div className={styles['openapi-doc-side-empty']}>
+                    <YakitEmpty description={t('HTTPHistory.openapiDoc.noMatchingApi')} />
+                  </div>
+                )}
+              </div>
+            </YakitSpin>
+          </div>
+        </>
+      ) : (
+        <div className={styles['openapi-doc-side-empty']}>
+          <YakitEmpty description={t('HTTPHistory.openapiDoc.emptyHint')} />
+        </div>
+      )}
     </div>
   )
 }

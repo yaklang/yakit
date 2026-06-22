@@ -11,6 +11,23 @@ export interface OpenAPIDocumentInfo {
   parseWarnings?: string[]
 }
 
+export interface OpenAPIDocumentHistoryItem {
+  sessionId: string
+  title: string
+  fileName?: string
+  source?: string
+  createdAt: number
+  updatedAt: number
+  lastUsedAt: number
+  operationCount: number
+  specVersion?: string
+  version?: string
+  /** @deprecated use sessionId */
+  docId: string
+  /** @deprecated use createdAt */
+  uploadedAt?: number
+}
+
 export interface OpenAPIOperationParameter {
   name: string
   in: string

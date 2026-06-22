@@ -28,7 +28,15 @@
       "sendToFuzzerFailed": "发送到 Web Fuzzer 失败",
       "defaultResponse": "默认响应",
       "parseWarningsTitle": "文档解析提示",
-      "uploadSuccessWithWarnings": "文档已导入，但有 {{count}} 条非标准字段被忽略"
+      "uploadSuccessWithWarnings": "文档已导入，但有 {{count}} 条非标准字段被忽略",
+      "historyTitle": "文档历史",
+      "historyEmpty": "暂无已保存文档",
+      "historyLoadFailed": "加载文档失败",
+      "historyApiCount": "{{count}} 个接口",
+      "deleteConfirm": "确认删除该文档？",
+      "deleteSuccess": "文档已删除",
+      "deleteFailed": "删除文档失败",
+      "noMatchingApi": "没有匹配的接口"
     }
   },
   "HTTPFlowTable": {

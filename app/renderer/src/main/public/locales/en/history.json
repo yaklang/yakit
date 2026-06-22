@@ -28,7 +28,15 @@
       "sendToFuzzerFailed": "Failed to send to Web Fuzzer",
       "defaultResponse": "Default",
       "parseWarningsTitle": "Parse warnings",
-      "uploadSuccessWithWarnings": "Document imported with {{count}} non-standard fields ignored"
+      "uploadSuccessWithWarnings": "Document imported with {{count}} non-standard fields ignored",
+      "historyTitle": "Document History",
+      "historyEmpty": "No saved documents yet",
+      "historyLoadFailed": "Failed to load document",
+      "historyApiCount": "{{count}} APIs",
+      "deleteConfirm": "Delete this document?",
+      "deleteSuccess": "Document deleted",
+      "deleteFailed": "Failed to delete document",
+      "noMatchingApi": "No matching APIs"
     }
   },
   "HTTPFlowTable": {

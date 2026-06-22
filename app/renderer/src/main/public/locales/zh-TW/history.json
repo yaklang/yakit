@@ -28,7 +28,15 @@
       "sendToFuzzerFailed": "發送到 Web Fuzzer 失敗",
       "defaultResponse": "預設回應",
       "parseWarningsTitle": "文件解析提示",
-      "uploadSuccessWithWarnings": "文件已匯入，但有 {{count}} 條非標準欄位被忽略"
+      "uploadSuccessWithWarnings": "文件已匯入，但有 {{count}} 條非標準欄位被忽略",
+      "historyTitle": "文件歷史",
+      "historyEmpty": "暫無已保存文件",
+      "historyLoadFailed": "載入文件失敗",
+      "historyApiCount": "{{count}} 個介面",
+      "deleteConfirm": "確認刪除該文件？",
+      "deleteSuccess": "文件已刪除",
+      "deleteFailed": "刪除文件失敗",
+      "noMatchingApi": "沒有匹配的介面"
     }
   },
   "HTTPFlowTable": {

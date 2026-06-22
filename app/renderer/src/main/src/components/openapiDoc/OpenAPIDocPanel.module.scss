@@ -6,9 +6,34 @@
 
   &-header {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
     padding-right: 12px;
     margin-bottom: 8px;
+
+    &-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      font-size: 12px;
+      font-weight: 600;
+
+      svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+    }
+
+    &-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
   }
 
   &-search {
@@ -24,6 +49,77 @@
 
   &-empty {
     padding: 24px 12px;
+  }
+}
+
+.openapi-doc-history {
+  margin: 0 12px 8px 0;
+  border: 1px solid var(--Colors-Use-Neutral-Border);
+  border-radius: 4px;
+  overflow: hidden;
+
+  &-title {
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--Colors-Use-Neutral-Text-2-Primary);
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    background: var(--Colors-Use-Neutral-Bg);
+  }
+
+  &-empty {
+    padding: 12px 10px;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  }
+
+  &-list {
+    max-height: 160px;
+    overflow: auto;
+  }
+
+  &-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 6px 8px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
+    &-active {
+      background: var(--Colors-Use-Primary-Bg-Hover);
+    }
+
+    &-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    &-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &-meta {
+      margin-top: 2px;
+      font-size: 11px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 }
 
@@ -259,4 +355,132 @@
   height: 100%;
   width: 100%;
   overflow: hidden;
+}
+
+.openapi-doc-history-tooltip {
+  max-width: none;
+
+  &:global(.ant-tooltip-placement-top),
+  &:global(.ant-tooltip-placement-topLeft),
+  &:global(.ant-tooltip-placement-topRight) {
+    padding-bottom: 4px;
+
+    :global(.ant-tooltip-arrow) {
+      bottom: 1px;
+    }
+  }
+
+  &:global(.ant-tooltip-placement-bottom),
+  &:global(.ant-tooltip-placement-bottomLeft),
+  &:global(.ant-tooltip-placement-bottomRight) {
+    padding-top: 4px;
+
+    :global(.ant-tooltip-arrow) {
+      top: 1px;
+    }
+  }
+
+  :global {
+    .ant-tooltip-inner {
+      padding: 0;
+      display: block;
+      min-height: unset;
+      background: var(--Colors-Use-Basic-Background);
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      color: inherit;
+      box-shadow: 0 4px 16px var(--Colors-Use-Basic-Shadow);
+      overflow: hidden;
+    }
+
+    .ant-tooltip-arrow-content {
+      border: 1px solid var(--Colors-Use-Neutral-Border);
+      background-color: var(--Colors-Use-Basic-Background);
+      box-shadow: 0 4px 16px var(--Colors-Use-Basic-Shadow);
+    }
+
+    .ant-tooltip-arrow-content::before {
+      opacity: 0;
+    }
+  }
+}
+
+.openapi-doc-history-tooltip-content {
+  width: 280px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+:global {
+  .openapi-doc-history-panel {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--Colors-Use-Basic-Background);
+
+    &-header {
+      flex-shrink: 0;
+      padding: 8px 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      &-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      &-title {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      &-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: var(--Colors-Use-Neutral-Bg);
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      &-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    }
+
+    &-body {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    &-loading {
+      padding: 16px 12px;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+  }
+
+  .openapi-doc-history-embedded-popconfirm {
+    z-index: 1110;
+  }
 }
