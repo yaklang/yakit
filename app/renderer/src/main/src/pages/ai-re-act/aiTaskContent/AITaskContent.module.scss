@@ -18,6 +18,13 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  overflow: hidden;
+  .tab-bar-item-label {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    word-break: break-all;
+  }
   .x-icon {
     color: var(--Colors-Use-Neutral-Text-3-Secondary);
   }
@@ -25,6 +32,10 @@
 
 .ai-task-tab-wrap {
   width: 100%;
+  .ai-task-tab-item {
+    word-break: keep-all;
+    min-width: 66px;
+  }
 }
 .chat-content-wrapper {
   @extend %display-column-center;
