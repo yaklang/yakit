@@ -3,6 +3,7 @@ import { WebFuzzerPageProps, WebFuzzerType } from './WebFuzzerPageType'
 import styles from './WebFuzzerPage.module.scss'
 import {
   OutlineAdjustmentsIcon,
+  OutlineBookopenIcon,
   OutlineBotIcon,
   OutlineClipboardlistIcon,
   OutlineCollectionIcon,
@@ -44,6 +45,11 @@ export const webFuzzerTabs = (t: TFunction) => {
       key: 'hot-patch',
       label: t('HTTPFuzzerPage.hotReload'),
       icon: <OutlineLightningboltIcon />,
+    },
+    {
+      key: 'openapi-doc',
+      label: t('WebFuzzerPage.openapiDoc'),
+      icon: <OutlineBookopenIcon />,
     },
     {
       key: 'ai',
@@ -154,7 +160,10 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
       case 'sequence':
       case 'concurrency':
         onSetSequence(key)
-        // 当前页面不在fuzzer页面
+        emiter.emit('onCurrentFuzzerPage', false)
+        break
+      case 'openapi-doc':
+        emiter.emit('sendSwitchSequenceToMainOperatorContent', JSON.stringify({ type: key }))
         emiter.emit('onCurrentFuzzerPage', false)
         break
       default:
@@ -170,6 +179,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
         const value = JSONParseLog(data, { page: 'WebFuzzerPage', fun: 'debounceGetFuzzerAdvancedConfigShow' })
         const key = value.type as WebFuzzerType
         if (['sequence', 'concurrency'].includes(key)) return
+        if (key === 'openapi-doc') return
         const c = value.checked
         const newValue = {
           ...advancedConfigShow,
@@ -186,6 +196,7 @@ const WebFuzzerPage: React.FC<WebFuzzerPageProps> = React.memo((props) => {
       const value = JSONParseLog(data, { page: 'WebFuzzerPage', fun: 'onSwitchType' })
       const type = value.type as WebFuzzerType
       if (['sequence', 'concurrency'].includes(type)) return
+      if (type === 'openapi-doc') return
       generalEventSend(type, true)
       setType(type)
     } catch (error) {}

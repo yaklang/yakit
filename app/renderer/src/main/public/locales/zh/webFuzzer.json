@@ -19,7 +19,8 @@
     "rule": "规则",
     "sequence": "序列",
     "concurrency": "组并发",
-    "AI": "AI"
+    "AI": "AI",
+    "openapiDoc": "API 文档"
   },
   "WebFuzzerAiTestTemplate": {
     "add": "新增",

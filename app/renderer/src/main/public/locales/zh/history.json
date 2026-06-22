@@ -4,7 +4,32 @@
     "process": "进程",
     "builtinTag": "系统Tag",
     "pleaseEnterDomainToSearch": "请输入域名进行搜索，例baidu.com",
-    "AI": "AI"
+    "AI": "AI",
+    "openapiDoc": {
+      "tab": "API 文档",
+      "upload": "上传 Swagger / OpenAPI",
+      "uploadTitle": "选择 OpenAPI 文档",
+      "uploadSuccess": "文档解析成功",
+      "uploadFailed": "文档上传失败",
+      "searchPlaceholder": "搜索接口名称或路径",
+      "emptyHint": "请上传 Swagger / OpenAPI 文档",
+      "rightEmptyHint": "上传文档后可在此调试接口",
+      "selectOperationHint": "请从左侧选择接口",
+      "untagged": "未分组",
+      "baseHost": "Base Host",
+      "https": "HTTPS",
+      "parameters": "参数",
+      "previewRequest": "预览请求",
+      "previewFailed": "预览请求失败",
+      "send": "发送",
+      "sendSuccess": "请求发送成功",
+      "sendFailed": "请求发送失败",
+      "sendToWebFuzzer": "发送到 Web Fuzzer",
+      "sendToFuzzerFailed": "发送到 Web Fuzzer 失败",
+      "defaultResponse": "默认响应",
+      "parseWarningsTitle": "文档解析提示",
+      "uploadSuccessWithWarnings": "文档已导入，但有 {{count}} 条非标准字段被忽略"
+    }
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "找不到该请求详情",

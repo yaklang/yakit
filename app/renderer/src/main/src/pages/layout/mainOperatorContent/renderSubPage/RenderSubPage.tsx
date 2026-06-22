@@ -2,7 +2,12 @@ import { NoPaddingRoute, RouteToPageItem } from '@/routes/newRoute'
 import React, { useEffect, useMemo, useRef } from 'react'
 import { useMap, useMemoizedFn } from 'ahooks'
 import styles from './RenderSubPage.module.scss'
-import { PageItemProps, RenderFuzzerSequenceProps, RenderSubPageProps } from './RenderSubPageType'
+import {
+  PageItemProps,
+  RenderFuzzerSequenceProps,
+  RenderOpenAPIDocProps,
+  RenderSubPageProps,
+} from './RenderSubPageType'
 import FuzzerSequence from '@/pages/fuzzer/FuzzerSequence/FuzzerSequence'
 import { useFuzzerSequence } from '@/store/fuzzerSequence'
 import { PageLoading } from '@ant-design/pro-layout'
@@ -10,6 +15,9 @@ import { usePageInfo } from '@/store/pageInfo'
 import { YakitRoute } from '@/enums/yakitRoute'
 
 const FuzzerSequenceWrapper = React.lazy(() => import('@/pages/fuzzer/WebFuzzerPage/FuzzerSequenceWrapper'))
+const OpenAPIDocPage = React.lazy(() =>
+  import('@/components/openapiDoc/OpenAPIDocPage').then((m) => ({ default: m.OpenAPIDocPage })),
+)
 
 export const RenderSubPage: React.FC<RenderSubPageProps> = React.memo(
   (props) => {
@@ -101,6 +109,29 @@ export const RenderFuzzerSequence: React.FC<RenderFuzzerSequenceProps> = React.m
               ),
           )}
         </>
+      )}
+    </div>
+  )
+})
+
+export const RenderOpenAPIDoc: React.FC<RenderOpenAPIDocProps> = React.memo((props) => {
+  const { route, type } = props
+  const isOpenAPIDocType = type === 'openapi-doc'
+
+  return (
+    <div
+      className={styles['fuzzer-sequence-list']}
+      tabIndex={isOpenAPIDocType ? 1 : -1}
+      style={{ display: isOpenAPIDocType ? '' : 'none' }}
+    >
+      {route === YakitRoute.HTTPFuzzer && (
+        <div className={styles['fuzzer-sequence-list-item']}>
+          <React.Suspense fallback={<PageLoading />}>
+            <FuzzerSequenceWrapper type={type}>
+              <OpenAPIDocPage />
+            </FuzzerSequenceWrapper>
+          </React.Suspense>
+        </div>
       )}
     </div>
   )

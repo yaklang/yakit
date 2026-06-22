@@ -26,6 +26,11 @@ export interface RenderFuzzerSequenceProps {
   setType: (w: WebFuzzerType) => void
 }
 
+export interface RenderOpenAPIDocProps {
+  route: YakitRoute
+  type: WebFuzzerType
+}
+
 export interface RenderSubPageItemProps {
   route: YakitRoute
   pluginId?: number

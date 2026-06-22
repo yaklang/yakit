@@ -1,0 +1,262 @@
+.openapi-doc-side {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px 0 12px 12px;
+
+  &-header {
+    display: flex;
+    gap: 8px;
+    padding-right: 12px;
+    margin-bottom: 8px;
+  }
+
+  &-search {
+    flex: 1;
+    margin: 8px 12px 8px 0;
+  }
+
+  &-body {
+    flex: 1;
+    overflow: auto;
+    padding-right: 8px;
+  }
+
+  &-empty {
+    padding: 24px 12px;
+  }
+}
+
+.openapi-doc-tree {
+  &-group-title {
+    padding: 6px 4px;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-weight: 500;
+  }
+
+  &-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 18px;
+
+    &:hover {
+      background: var(--Colors-Use-Neutral-Bg-Hover);
+    }
+
+    &-active {
+      background: var(--Colors-Use-Primary-Bg-Hover);
+    }
+  }
+
+  &-method {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 4px;
+    border-radius: 2px;
+    line-height: 18px;
+    color: #fff;
+  }
+
+  &-label {
+    flex: 1;
+    font-size: 12px;
+    color: var(--Colors-Use-Neutral-Text-1-Title);
+    word-break: break-all;
+  }
+}
+
+.openapi-doc-right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  &-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+    flex-wrap: wrap;
+  }
+
+  &-doc-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+
+    &-title {
+      font-weight: 600;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    &-meta {
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+  }
+
+  &-host {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &-warnings {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--Colors-Use-Warning-Border);
+    background: var(--Colors-Use-Warning-Bg);
+
+    &-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--Colors-Use-Warning-Text);
+      margin-bottom: 4px;
+    }
+
+    &-item {
+      font-size: 12px;
+      color: var(--Colors-Use-Warning-Text);
+      line-height: 18px;
+      word-break: break-all;
+    }
+  }
+
+  &-main {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  &-operation {
+    padding: 12px;
+    border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+
+    &-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    &-method {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: #fff;
+    }
+
+    &-path {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+    }
+
+    &-desc {
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      margin-bottom: 12px;
+    }
+  }
+
+  &-params {
+    margin-bottom: 12px;
+
+    &-title {
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--Colors-Use-Neutral-Text-2-Primary);
+    }
+
+    &-row {
+      display: grid;
+      grid-template-columns: 80px 120px 1fr 160px;
+      gap: 8px;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 12px;
+    }
+
+    &-in {
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+
+    &-name {
+      font-weight: 500;
+    }
+  }
+
+  &-responses {
+    margin-bottom: 12px;
+
+    &-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 12px;
+      font-size: 12px;
+      color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    }
+
+    &-code {
+      font-weight: 600;
+      color: var(--Colors-Use-Neutral-Text-2-Primary);
+    }
+  }
+
+  &-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &-editors {
+    flex: 1;
+    overflow: hidden;
+    min-height: 200px;
+  }
+
+  &-editor-pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    &-title {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+      color: var(--Colors-Use-Neutral-Text-2-Primary);
+    }
+
+    &-body {
+      flex: 1;
+      overflow: hidden;
+    }
+  }
+
+  &-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+}
+
+.openapi-doc-page {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}

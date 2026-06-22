@@ -4,7 +4,32 @@
     "process": "Process",
     "builtinTag": "System Tag",
     "pleaseEnterDomainToSearch": "Please enter a domain to search, e.g., baidu.com",
-    "AI": "AI"
+    "AI": "AI",
+    "openapiDoc": {
+      "tab": "API Docs",
+      "upload": "Upload Swagger / OpenAPI",
+      "uploadTitle": "Select OpenAPI Document",
+      "uploadSuccess": "Document parsed successfully",
+      "uploadFailed": "Failed to upload document",
+      "searchPlaceholder": "Search API name or path",
+      "emptyHint": "Upload a Swagger / OpenAPI document",
+      "rightEmptyHint": "Upload a document to debug APIs here",
+      "selectOperationHint": "Select an API from the left panel",
+      "untagged": "Untagged",
+      "baseHost": "Base Host",
+      "https": "HTTPS",
+      "parameters": "Parameters",
+      "previewRequest": "Preview Request",
+      "previewFailed": "Failed to preview request",
+      "send": "Send",
+      "sendSuccess": "Request sent successfully",
+      "sendFailed": "Failed to send request",
+      "sendToWebFuzzer": "Send to Web Fuzzer",
+      "sendToFuzzerFailed": "Failed to send to Web Fuzzer",
+      "defaultResponse": "Default",
+      "parseWarningsTitle": "Parse warnings",
+      "uploadSuccessWithWarnings": "Document imported with {{count}} non-standard fields ignored"
+    }
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "Request details not found",

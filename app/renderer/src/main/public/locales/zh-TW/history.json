@@ -4,7 +4,32 @@
     "process": "程序",
     "builtinTag": "系統Tag",
     "pleaseEnterDomainToSearch": "請輸入域名進行搜尋，例baidu.com",
-    "AI": "AI"
+    "AI": "AI",
+    "openapiDoc": {
+      "tab": "API 文件",
+      "upload": "上傳 Swagger / OpenAPI",
+      "uploadTitle": "選擇 OpenAPI 文件",
+      "uploadSuccess": "文件解析成功",
+      "uploadFailed": "文件上傳失敗",
+      "searchPlaceholder": "搜尋介面名稱或路徑",
+      "emptyHint": "請上傳 Swagger / OpenAPI 文件",
+      "rightEmptyHint": "上傳文件後可在此除錯介面",
+      "selectOperationHint": "請從左側選擇介面",
+      "untagged": "未分組",
+      "baseHost": "Base Host",
+      "https": "HTTPS",
+      "parameters": "參數",
+      "previewRequest": "預覽請求",
+      "previewFailed": "預覽請求失敗",
+      "send": "發送",
+      "sendSuccess": "請求發送成功",
+      "sendFailed": "請求發送失敗",
+      "sendToWebFuzzer": "發送到 Web Fuzzer",
+      "sendToFuzzerFailed": "發送到 Web Fuzzer 失敗",
+      "defaultResponse": "預設回應",
+      "parseWarningsTitle": "文件解析提示",
+      "uploadSuccessWithWarnings": "文件已匯入，但有 {{count}} 條非標準欄位被忽略"
+    }
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "找不到該請求詳情",

@@ -19,7 +19,8 @@
     "rule": "Rule",
     "sequence": "Sequence",
     "concurrency": "Group Concurrency",
-    "AI": "AI"
+    "AI": "AI",
+    "openapiDoc": "API Docs"
   },
   "WebFuzzerAiTestTemplate": {
     "add": "Add",

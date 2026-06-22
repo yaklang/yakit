@@ -96,7 +96,7 @@ import {
 
 import { FuzzerCacheDataProps, ShareValueProps, getFuzzerCacheData } from '@/pages/fuzzer/HTTPFuzzerPage'
 import { AdvancedConfigValueProps } from '@/pages/fuzzer/HttpQueryAdvancedConfig/HttpQueryAdvancedConfigType'
-import { RenderFuzzerSequence, RenderSubPage } from './renderSubPage/RenderSubPage'
+import { RenderFuzzerSequence, RenderOpenAPIDoc, RenderSubPage } from './renderSubPage/RenderSubPage'
 import { WebFuzzerType } from '@/pages/fuzzer/WebFuzzerPage/WebFuzzerPageType'
 import { FuzzerSequenceCacheDataProps, useFuzzerSequence } from '@/store/fuzzerSequence'
 import emiter from '@/utils/eventBus/eventBus'
@@ -3808,7 +3808,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
     }
   }, [pageItem.multipleNode])
   useUpdateEffect(() => {
-    if (!['sequence', 'concurrency'].includes(type)) {
+    if (!['sequence', 'concurrency', 'openapi-doc'].includes(type)) {
       emiter.emit('onRefWebFuzzer')
       /**VariableList组件从数据中心刷新最新的展开项,从序列切换到其他tab时，inViewport不会发生变化，所以采取信号发送 */
       emiter.emit('onRefVariableActiveKey')
@@ -3959,6 +3959,7 @@ const SubTabList: React.FC<SubTabListProps> = React.memo((props) => {
           selectSubMenuId={selectSubMenu.id || '0'}
         />
         <RenderFuzzerSequence route={pageItem.route} type={type} setType={setType} />
+        <RenderOpenAPIDoc route={pageItem.route} type={type} />
       </div>
     </div>
   )
