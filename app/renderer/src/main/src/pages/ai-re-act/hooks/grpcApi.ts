@@ -626,7 +626,10 @@ export declare namespace AIAgentGrpcApi {
     revision: number
     updated_at: number
     execution: {
+      task_name: string
       status: string
+      started_at: number
+      ended_at: number
       tool_call_success: number
       tool_call_failed: number
       tool_call_total: number
