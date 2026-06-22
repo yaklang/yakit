@@ -61,6 +61,8 @@ jobs:
         env:
             CI: ""
             NODE_OPTIONS: --max_old_space_size=4096
+        outputs:
+            win_artifact: ${{ steps.export_names.outputs.win_artifact }}
 
         steps:
             - name: Display incoming configuration parameters
@@ -212,6 +214,12 @@ jobs:
                   fi
             - name: Show ENV_Software_Name
               run: echo "ENV_Software_Name： $ENV_Software_Name"
+
+            - name: Export artifact names
+              id: export_names
+              shell: bash
+              run: |
+                  echo "win_artifact=${ENV_Software_Name}-${SOFTWARE_VERSION}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe" >> "$GITHUB_OUTPUT"
 
             - name: Build Yakit (MultiPlatform)
               if: ${{ inputs.platform == 'mwl' }}
@@ -443,5 +451,40 @@ jobs:
               with:
                   name: ${{ env.ENV_Software_Name }}-${{ env.SOFTWARE_VERSION }}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
                   path: ./release/${{env.ENV_Software_Name}}-${{env.SOFTWARE_VERSION}}-linux${{ inputs.legacy && '-legacy' || '' }}-arm64.run
+                  if-no-files-found: error
+                  retention-days: 7
+
+    # 给 Windows 安装包外壳做 Authenticode 签名(仅 windows/mwl 平台)
+    # 下载 build_yakit 产出的安装包，签名后用 overwrite 覆盖回同名 artifact
+    sign_windows:
+        needs: build_yakit
+        if: ${{ contains(fromJSON('["windows","mwl"]'), inputs.platform) }}
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Download windows installer artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: ${{ needs.build_yakit.outputs.win_artifact }}
+                  path: release
+
+            - name: Sign Windows installer
+              uses: ./.github/actions/sign-windows
+              with:
+                  path: release
+                  key-vault-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_URI }}
+                  key-vault-client-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_APPLICATION_ID }}
+                  key-vault-tenant-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_DIRECTORY_ID }}
+                  key-vault-client-secret: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CLIENT_SECRET }}
+                  key-vault-certificate: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CERT_NAME }}
+                  timestamp-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_TIMESTAMP_URL }}
+
+            - name: Re-upload signed windows installer
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ needs.build_yakit.outputs.win_artifact }}
+                  path: release
+                  overwrite: true
                   if-no-files-found: error
                   retention-days: 7

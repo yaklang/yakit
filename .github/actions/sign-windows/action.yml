@@ -1,0 +1,95 @@
+name: 'Sign Windows Executables'
+description: 'Sign Windows .exe files with Azure Key Vault via AzureSignTool (consistent with yaklang engine signing)'
+
+inputs:
+  path:
+    description: 'Directory that contains the .exe files to sign'
+    required: false
+    default: 'release'
+  pattern:
+    description: 'Filter pattern (Windows wildcard) used to match files under path'
+    required: false
+    default: '*windows*.exe'
+  key-vault-url:
+    description: 'Azure Key Vault URI'
+    required: true
+  key-vault-client-id:
+    description: 'Azure application (client) id'
+    required: true
+  key-vault-tenant-id:
+    description: 'Azure directory (tenant) id'
+    required: true
+  key-vault-client-secret:
+    description: 'Azure client secret'
+    required: true
+  key-vault-certificate:
+    description: 'Certificate name inside the Key Vault'
+    required: true
+  timestamp-url:
+    description: 'RFC3161 timestamp server url'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate signing inputs
+      shell: pwsh
+      run: |
+        $missing = @()
+        if (-not "${{ inputs.key-vault-url }}") { $missing += "key-vault-url" }
+        if (-not "${{ inputs.key-vault-client-id }}") { $missing += "key-vault-client-id" }
+        if (-not "${{ inputs.key-vault-tenant-id }}") { $missing += "key-vault-tenant-id" }
+        if (-not "${{ inputs.key-vault-client-secret }}") { $missing += "key-vault-client-secret" }
+        if (-not "${{ inputs.key-vault-certificate }}") { $missing += "key-vault-certificate" }
+        if (-not "${{ inputs.timestamp-url }}") { $missing += "timestamp-url" }
+        if ($missing.Count -gt 0) {
+          throw ("Missing required signing inputs: " + ($missing -join ", "))
+        }
+
+    - name: Set up .NET (for AzureSignTool)
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Install AzureSignTool
+      shell: pwsh
+      run: |
+        dotnet tool install --global AzureSignTool
+        "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
+        AzureSignTool --version
+
+    - name: Sign Windows executables
+      shell: pwsh
+      run: |
+        $files = Get-ChildItem -Path "${{ inputs.path }}" -Recurse -Filter "${{ inputs.pattern }}"
+        if (-not $files) {
+          throw "No files matched pattern '${{ inputs.pattern }}' under '${{ inputs.path }}'"
+        }
+        foreach ($f in $files) {
+          Write-Host "Signing $($f.FullName)"
+          AzureSignTool sign `
+            -kvu "${{ inputs.key-vault-url }}" `
+            -kvi "${{ inputs.key-vault-client-id }}" `
+            -kvt "${{ inputs.key-vault-tenant-id }}" `
+            -kvs "${{ inputs.key-vault-client-secret }}" `
+            -kvc "${{ inputs.key-vault-certificate }}" `
+            -tr "${{ inputs.timestamp-url }}" `
+            -td sha256 `
+            -v `
+            "$($f.FullName)"
+          if ($LASTEXITCODE -ne 0) {
+            throw "AzureSignTool failed for $($f.FullName)"
+          }
+        }
+
+    - name: Verify signatures
+      shell: pwsh
+      run: |
+        $files = Get-ChildItem -Path "${{ inputs.path }}" -Recurse -Filter "${{ inputs.pattern }}"
+        foreach ($f in $files) {
+          $sig = Get-AuthenticodeSignature -FilePath $f.FullName
+          Write-Host "$($f.Name): status=$($sig.Status), signer=$($sig.SignerCertificate.Subject)"
+          if ($sig.Status -eq 'NotSigned') {
+            throw "File is still not signed: $($f.Name)"
+          }
+        }

@@ -222,6 +222,44 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # 给 Windows 安装包外壳做 Authenticode 签名(上传 Release/OSS 之前)
+  # 内置引擎已在 yaklang OSS 源头签名，此处只补安装包外壳这一层
+  sign_windows:
+    needs: build_yakit
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        artifact: [Yakit, EnpriTrace]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download ${{ matrix.artifact }} artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-artifacts
+          path: release
+
+      - name: Sign Windows installers
+        uses: ./.github/actions/sign-windows
+        with:
+          path: release
+          key-vault-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_URI }}
+          key-vault-client-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_APPLICATION_ID }}
+          key-vault-tenant-id: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_DIRECTORY_ID }}
+          key-vault-client-secret: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CLIENT_SECRET }}
+          key-vault-certificate: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_CERT_NAME }}
+          timestamp-url: ${{ secrets.AZURE_YAK_CODE_SIGN_KEY_VAULT_TIMESTAMP_URL }}
+
+      - name: Re-upload signed ${{ matrix.artifact }} artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}-artifacts
+          path: release
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 1
+
   cleanup_engine_artifact:
     needs: build_yakit
     runs-on: ubuntu-latest
@@ -233,7 +271,7 @@ jobs:
 
   publish_software_to_oss:
     needs:
-      - build_yakit
+      - sign_windows
     strategy:
       matrix:
         artifact: [Yakit, EnpriTrace] # 需要发布的软件名前缀
