@@ -414,7 +414,7 @@ export const HubExtraOperate: React.FC<HubExtraOperateProps> = memo(
           closable: true,
           footer: null,
           mask: false,
-          destroyOnClose: true,
+          destroyOnHidden: true,
           bodyStyle: { padding: 0 },
           content: (
             <CodeScoreModule

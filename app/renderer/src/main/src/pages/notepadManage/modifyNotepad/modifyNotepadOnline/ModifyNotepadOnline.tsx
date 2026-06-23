@@ -510,7 +510,7 @@ const ModifyNotepadOnline: React.FC<ModifyNotepadOnlineProps> = React.memo((prop
           <YakitInput
             placeholder={t('ModifyNotepad.enterTitle')}
             size="large"
-            bordered={false}
+            variant="borderless"
             className={styles['notepad-input']}
             wrapperStyle={{ height: 40 }}
             value={tabName}

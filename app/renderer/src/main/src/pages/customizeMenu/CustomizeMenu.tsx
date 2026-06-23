@@ -824,7 +824,7 @@ const SecondMenu: React.FC<SecondMenuProps> = React.memo((props) => {
         <div className={style['second-menu-heard-input']}>
           <Input
             placeholder={t('CustomizeMenu.SecondMenu.unnamedMenu1')}
-            bordered={false}
+            variant="borderless"
             suffix={
               <YakitPopconfirm
                 title={t('CustomizeMenu.SecondMenu.deleteMenuConfirm')}

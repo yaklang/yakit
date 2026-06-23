@@ -198,7 +198,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
   return (
     <Form labelCol={{ span: 4 }} wrapperCol={{ span: 18 }} style={{ padding: 24 }}>
       <Form.Item label={t('MITMChromeLauncher.proxy_configuration')}>
-        <YakitInput.Group className={style['chrome-input-group']}>
+        <Space.Compact className={style['chrome-input-group']}>
           <YakitInput
             prefix={'http://'}
             onChange={(e) => setParams({ ...params, host: e.target.value })}
@@ -213,7 +213,7 @@ const MITMChromeLauncher: React.FC<MITMChromeLauncherProp> = (props) => {
             value={`${params.port}`}
             wrapperStyle={{ width: 80 }}
           />
-        </YakitInput.Group>
+        </Space.Compact>
       </Form.Item>
       <Form.Item label={' '} colon={false}>
         <YakitCheckbox

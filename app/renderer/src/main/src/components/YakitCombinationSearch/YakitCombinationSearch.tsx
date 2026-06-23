@@ -1,4 +1,4 @@
-import { Input, InputRef } from 'antd'
+import { Space } from 'antd'
 import React, { useState } from 'react'
 import styles from './YakitCombinationSearch.module.scss'
 import classNames from 'classnames'
@@ -125,7 +125,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
   })
   return (
     <div className={classNames(styles['yakit-combination-search'], wrapperClassName || '')}>
-      <Input.Group compact>
+      <Space.Compact>
         <YakitSelect
           {...selectProps}
           size={selectProps.size || 'middle'}
@@ -144,7 +144,7 @@ export const YakitCombinationSearch: React.FC<YakitCombinationSearchProps> = (pr
           ))}
         </YakitSelect>
         {onRenderRightContent()}
-      </Input.Group>
+      </Space.Compact>
     </div>
   )
 }

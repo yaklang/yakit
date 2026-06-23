@@ -195,27 +195,27 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
     } else if (schema.yakit_type === 'folder') {
       return getFolderWidget(props)
     }
-    return <></>
-    // return (
-    //   <YakitInput
-    //     {...options}
-    //     style={{ width: '100%', ...uiStyle }}
-    //     type="text"
-    //     autoFocus={autofocus}
-    //     required={required}
-    //     disabled={disabled || readonly}
-    //     value={value}
-    //     onChange={(event) => {
-    //       onChange(event.target.value === '' ? options.emptyValue : event.target.value)
-    //     }}
-    //     onBlur={(event) => {
-    //       onBlur(id, event.target.value)
-    //     }}
-    //     onFocus={(event) => {
-    //       onFocus(id, event.target.value)
-    //     }}
-    //   />
-    // )
+
+    return (
+      <YakitInput
+        {...restOptions}
+        style={{ width: '100%', ...uiStyle }}
+        type="text"
+        autoFocus={autofocus}
+        required={required}
+        disabled={disabled || readonly}
+        value={value}
+        onChange={(event) => {
+          onChange(event.target.value === '' ? restOptions.emptyValue : event.target.value)
+        }}
+        onBlur={(event) => {
+          onBlur(id, event.target.value)
+        }}
+        onFocus={(event) => {
+          onFocus(id, event.target.value)
+        }}
+      />
+    )
   })
 
   const getTextareaWidget = useMemoizedFn((props: WidgetProps) => {

@@ -154,7 +154,6 @@ const InternalInputPassword: React.FC<InternalInputPasswordProps & React.RefAttr
 )
 
 type CompoundedComponent = React.ForwardRefExoticComponent<YakitInputProps & React.RefAttributes<InputRef>> & {
-  Group: typeof Input.Group
   Search: typeof InternalSearch
   TextArea: typeof InternalTextArea
   Password: typeof InternalInputPassword
@@ -166,7 +165,6 @@ type CompoundedComponent = React.ForwardRefExoticComponent<YakitInputProps & Rea
  */
 export const YakitInput = InternalInput as CompoundedComponent
 
-YakitInput.Group = Input.Group
 YakitInput.Search = InternalSearch
 YakitInput.TextArea = InternalTextArea
 YakitInput.Password = InternalInputPassword

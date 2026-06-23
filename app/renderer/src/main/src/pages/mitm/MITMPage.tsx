@@ -1421,7 +1421,7 @@ export const ImportLocalPlugin: React.FC<ImportLocalPluginProps> = React.memo((p
         width={getLoadModeInfo('width') || 680}
         closable={true}
         maskClosable={false}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         title={
           !loadPluginMode ? (
             t('ImportLocalPlugin.pluginImportMethod')

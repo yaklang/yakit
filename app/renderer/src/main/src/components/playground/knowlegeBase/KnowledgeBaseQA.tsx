@@ -304,7 +304,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
   })
 
   // 处理回车发送
-  const handleKeyPress = useMemoizedFn((e: React.KeyboardEvent) => {
+  const handleKeyDown = useMemoizedFn((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       if (!loading) {
@@ -504,7 +504,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
                 placeholder={t('playground.KnowledgeBaseQA.questionPlaceholder')}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 rows={3}
                 disabled={loading}
                 maxLength={2000}

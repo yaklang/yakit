@@ -209,10 +209,16 @@
       }
     }
 
-    .ant-btn-primary {
+    .ant-btn-variant-solid {
+      color: var(--Colors-Use-Main-On-Primary);
       border-color: var(--search-border-color);
       background-color: var(--search-background-color);
       background: var(--search-background-color);
+    }
+
+    .ant-btn-variant-solid:not(:disabled):not(.ant-btn-disabled):hover {
+      color: var(--Colors-Use-Main-On-Primary);
+      background-color: var(--Colors-Use-Main-Hover);
     }
 
     .ant-input-search .ant-input:hover,
@@ -272,7 +278,7 @@
       border-radius: 4px;
     }
 
-    .ant-btn-primary {
+    .ant-btn-variant-solid {
       padding: 0;
       text-shadow: none;
       box-shadow: none;

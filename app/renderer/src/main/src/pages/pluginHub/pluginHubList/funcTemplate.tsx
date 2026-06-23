@@ -313,11 +313,7 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
                       <div className={styles['hub-outer-list-filter']}>
                         {showTagList.map((item) => {
                           return (
-                            <Tooltip
-                              title={item.label}
-                              placement="top"
-                              key={item.value}
-                            >
+                            <Tooltip title={item.label} placement="top" key={item.value}>
                               <YakitTag closable onClose={() => onDelTag(item)}>
                                 {item.label}
                               </YakitTag>
@@ -1136,7 +1132,7 @@ export const OwnOptFooterExtra: React.FC<OwnOptFooterExtraProps> = memo((props) 
         closable: true,
         footer: null,
         mask: false,
-        destroyOnClose: true,
+        destroyOnHidden: true,
         bodyStyle: { padding: 0 },
         content: (
           <CodeScoreModule

@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Collapse, Form } from 'antd'
+import { Collapse, Form, Space } from 'antd'
 import { ThirdPartyApplicationConfig } from '@/components/configNetwork/ConfigNetworkPage'
 import { KVPair } from '@/models/kv'
 import { YakitAutoComGroupSearchWithAll } from '../yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
@@ -602,19 +602,15 @@ const AIThirdPartyConfigReadonlyPanel: React.FC<AIThirdPartyConfigReadonlyPanelP
     <div className={styles['readonly-ai-field-row']} key={key}>
       <div className={styles['readonly-ai-label']}>{label}:</div>
       <div className={styles['readonly-ai-control']}>
-        <YakitInput
-          readOnly
-          className={styles['ai-readonly-copy-input']}
-          value={display}
-          addonAfter={
-            <YakitButton
-              type="text2"
-              size="small"
-              icon={<OutlineClipboardcopyIcon />}
-              onClick={() => setClipboardText(clip)}
-            />
-          }
-        />
+        <Space.Compact>
+          <YakitInput readOnly className={styles['ai-readonly-copy-input']} value={display} />
+          <YakitButton
+            type="text2"
+            size="small"
+            icon={<OutlineClipboardcopyIcon />}
+            onClick={() => setClipboardText(clip)}
+          />
+        </Space.Compact>
       </div>
     </div>
   ))
