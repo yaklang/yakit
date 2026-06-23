@@ -114,6 +114,7 @@ import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   registerWebFuzzerPageApplyRequestFromCard,
   registerWebFuzzerPageCasualReplaceReview,
+  registerWebFuzzerPageGetIsHttps,
   registerWebFuzzerPageGetRequestString,
   registerWebFuzzerPageOnAIFuzzStatus,
   type WebFuzzerCasualReplaceReviewPayload,
@@ -879,6 +880,11 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   const [hasExtractorRules, setHasExtractorRules] = useState(false) // 已经点击匹配/提取
 
   const requestRef = useRef<string>(initWebFuzzerPageInfo().request)
+  const isHttpsRef = useRef<boolean>(initWebFuzzerPageInfo().advancedConfigValue.isHttps)
+
+  useEffect(() => {
+    isHttpsRef.current = advancedConfigValue.isHttps
+  }, [advancedConfigValue.isHttps])
   const { setSubscribeClose, getSubscribeClose } = useSubscribeClose()
   const fuzzerRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(fuzzerRef)
@@ -1952,6 +1958,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       refreshRequest()
     })
     const unregisterGet = registerWebFuzzerPageGetRequestString(props.id, () => requestRef.current)
+    const unregisterGetIsHttps = registerWebFuzzerPageGetIsHttps(props.id, () => isHttpsRef.current)
     const unregisterCasualReview = registerWebFuzzerPageCasualReplaceReview(props.id, onCasualReplaceReviewEnqueued)
     const unregisterAIFuzzStatus = registerWebFuzzerPageOnAIFuzzStatus(props.id, (runtimeId) => {
       if (!runtimeId) return
@@ -1964,6 +1971,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     return () => {
       unregisterApply()
       unregisterGet()
+      unregisterGetIsHttps()
       unregisterCasualReview()
       unregisterAIFuzzStatus()
     }

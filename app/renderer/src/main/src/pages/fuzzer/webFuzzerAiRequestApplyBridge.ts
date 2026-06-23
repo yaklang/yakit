@@ -5,6 +5,7 @@ export type WebFuzzerApplyRequestExtras = { isHttps?: boolean }
 
 const pageApplyHandlers = new Map<string, (raw: string, extras?: WebFuzzerApplyRequestExtras) => void>()
 const pageGetRequestHandlers = new Map<string, () => string>()
+const pageGetIsHttpsHandlers = new Map<string, () => boolean>()
 const lastAppliedReplaceRequestByPage = new Map<string, { raw: string; isHttps: boolean | undefined }>()
 
 /** Web Fuzzer 页内联审阅：问答开始前快照 vs AI `replace`（由 `HTTPFuzzerPageCore` 注册） */
@@ -69,6 +70,25 @@ export function registerWebFuzzerPageGetRequestString(pageId: string, getRequest
 /** 读取当前 Web Fuzzer 页签请求盒中的内容；未注册时返回 `null` */
 export function getWebFuzzerPageRequestString(pageId: string): string | null {
   const fn = pageGetRequestHandlers.get(pageId)
+  if (!fn) return null
+  return fn()
+}
+
+/**
+ * 由 `HTTPFuzzerPageCore` 注册，供 AI 附件读取当前页「强制 HTTPS」勾选状态（与请求编辑器同源）。
+ */
+export function registerWebFuzzerPageGetIsHttps(pageId: string, getIsHttps: () => boolean): () => void {
+  pageGetIsHttpsHandlers.set(pageId, getIsHttps)
+  return () => {
+    if (pageGetIsHttpsHandlers.get(pageId) === getIsHttps) {
+      pageGetIsHttpsHandlers.delete(pageId)
+    }
+  }
+}
+
+/** 读取当前 Web Fuzzer 页签的 `isHttps`；未注册时返回 `null` */
+export function getWebFuzzerPageIsHttps(pageId: string): boolean | null {
+  const fn = pageGetIsHttpsHandlers.get(pageId)
   if (!fn) return null
   return fn()
 }
