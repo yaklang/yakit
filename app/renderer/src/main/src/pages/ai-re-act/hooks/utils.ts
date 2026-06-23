@@ -3,34 +3,47 @@
  */
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
-import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType, TodoListCardData } from './aiRender'
-import type { AIChatLogToInfo, AIChatLogData, TaskChatTaskInfo, AIMessageHandlerParams } from './type'
+import type {
+  AITaskInfoProps,
+  ReActChatRenderItem,
+  AIChatQSDataType,
+  TodoListCardData,
+  ChatListRenderType,
+} from './aiRender'
+import type { AIChatLogToInfo, AIChatLogData } from './type'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
 
-/** 生成任务的唯一标识 */
-export const generateTaskId = (params: {
-  chatType: ReActChatRenderItem['chatType']
-  res: AIOutputEvent
-  /** 获取当前任务规划的问题ID信息 */
-  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
-  getContentMap: AIMessageHandlerParams['getContentMap']
-}) => {
-  const { chatType, res, getCurrentTaskPlanID, getContentMap } = params
-  if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
-    const taskKey = res.TaskIndex ? `${getCurrentTaskPlanID()?.taskID}-${res.TaskIndex}` : ''
-    return `${getCurrentTaskPlanID()?.taskID}-${!!getContentMap(taskKey) ? res.TaskIndex : 'unknown'}`
-  }
-  return undefined
+/** 生成任务节点的唯一ID */
+export const generateTaskNodeID = (planID: string, taskID: string) => {
+  return `${planID}-${taskID || 'unknown'}`
 }
+/**
+ * 任务节点内的数据生成任务节点ID
+ * @param isExist 生成的任务节点是否已经存在，不存在则不是任务节点数据，归为默认节点内的数据
+ */
+export const generateTaskNodeDataID = (params: {
+  chatType: ChatListRenderType
+  planID?: string
+  taskID: AIOutputEvent['TaskIndex']
+  isExist: (key: string) => boolean
+}) => {
+  const { chatType, planID, taskID, isExist } = params
+  // 自由对话或者没有任务规划ID，则不生成任务节点ID
+  if (chatType === 'reAct' || !planID) return undefined
+  const keyLabel = `${planID}-${taskID || 'unknown'}`
+  if (isExist(keyLabel)) return keyLabel
+  return `${planID}-unknown`
+}
+
 /** TaskIndex 合法格式：数字与 `-` 组合，如 1-1、1-2 */
-export const TASK_INDEX_PATTERN = /^\d+(-\d+)+$/
+export const TASK_INDEX_PATTERN = /^\d+(?:-\d+)+$/
 /** 校验 TaskIndex 是否符合任务子索引格式 */
-export const isValidTaskIndex = (taskIndex?: string): taskIndex is string =>
-  !!taskIndex && TASK_INDEX_PATTERN.test(taskIndex)
+export const isValidTaskIndex = (taskIndex?: string): boolean => !!taskIndex && TASK_INDEX_PATTERN.test(taskIndex)
+
 /** 生成AI-UI展示的必须基础数据 */
 export const genBaseAIChatData = (info: AIOutputEvent) => {
   return {
@@ -160,7 +173,7 @@ export const isToolExecStream = (nodeID: string) => {
  * indexedDB 数据库数据转 ReActChatRenderItem
  */
 export const indexedDBDataToReActChatRenderItem = (
-  chatType: ReActChatRenderItem['chatType'],
+  chatType: ChatListRenderType,
   data: DialogueRecord[],
 ): ReActChatRenderItem[] =>
   data.map((item) => {

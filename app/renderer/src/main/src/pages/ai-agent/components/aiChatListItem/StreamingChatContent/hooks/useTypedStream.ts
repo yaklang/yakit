@@ -1,11 +1,11 @@
 // hooks/useTypedStream.ts
 import { useMemo } from 'react'
-import { ChatStream, ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatListRenderType, ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useStreamingTypewriter } from './useStreamingTypewriter'
 import { useStreamingChatContent } from './useStreamingChatContent'
 
 export interface UseTypedStreamOptions {
-  chatType: ReActChatRenderItem['chatType']
+  chatType: ChatListRenderType
   token: string
   session: string
   /** 单步最小输出字符数（下限），默认 2 */

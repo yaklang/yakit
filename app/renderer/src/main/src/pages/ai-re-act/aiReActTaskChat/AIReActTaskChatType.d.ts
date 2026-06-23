@@ -3,6 +3,7 @@ import { AIRecommendItem, RandomAIMaterialsDataProps } from '@/pages/ai-agent/ai
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { ReactNode } from 'react'
 import { AIStartParams } from '../hooks/grpcApi'
+import { ChatListRenderType } from '../hooks/aiRender'
 
 export interface AIReActTaskChatProps {
   setShowFreeChat: (show: boolean) => void
@@ -79,6 +80,6 @@ export interface AIPlanPromptProps {
 }
 
 export interface AIManualAdditionProps {
-  chatType: ReActChatBaseInfo['chatType']
+  chatType: ChatListRenderType
   onCancel: () => void
 }
