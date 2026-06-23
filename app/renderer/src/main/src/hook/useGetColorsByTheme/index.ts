@@ -1,14 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useMemo } from 'react'
+import type { ColorHex } from '@yakit-libs/color'
+import { GetMainColor } from '@/utils/envfile'
+import { getYakitColorVars } from '@/utils/yakitColorVars'
 import { useTheme } from '../useTheme'
-import { getAllYakitColorVars } from '@/utils/monacoSpec/theme'
 
 function useGetColorsByTheme() {
-  const colorRef = useRef<Record<string, string>>(getAllYakitColorVars())
   const { theme } = useTheme()
-  useEffect(() => {
-    colorRef.current = getAllYakitColorVars()
-  }, [theme])
-  return colorRef.current || {}
+
+  return useMemo(() => getYakitColorVars(theme, GetMainColor(theme) as ColorHex), [theme])
 }
 
 export default useGetColorsByTheme

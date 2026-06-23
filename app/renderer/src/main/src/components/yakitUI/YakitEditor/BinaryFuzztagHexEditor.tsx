@@ -17,11 +17,11 @@ const HEX_GUTTER_WIDTH = 8
 const HEX_LABEL_WIDTH = 64
 const HEX_ROW_HEIGHT = 24
 const HEX_INLINE_STYLES = {
-  byte: { width: HEX_BYTE_WIDTH, height: HEX_ROW_HEIGHT },
-  ascii: { width: HEX_ASCII_WIDTH, height: HEX_ROW_HEIGHT },
-  gutter: { width: HEX_GUTTER_WIDTH, height: HEX_ROW_HEIGHT },
-  offsetLabel: { width: HEX_LABEL_WIDTH, height: HEX_ROW_HEIGHT },
-  row: { height: HEX_ROW_HEIGHT },
+  byte: { width: HEX_BYTE_WIDTH, height: HEX_ROW_HEIGHT, overflow: 'hidden' },
+  ascii: { width: HEX_ASCII_WIDTH, height: HEX_ROW_HEIGHT, overflow: 'hidden' },
+  gutter: { width: HEX_GUTTER_WIDTH, height: HEX_ROW_HEIGHT, overflow: 'hidden' },
+  offsetLabel: { width: HEX_LABEL_WIDTH, height: HEX_ROW_HEIGHT, overflow: 'hidden' },
+  row: { height: HEX_ROW_HEIGHT, overflow: 'hidden' },
 }
 
 export interface BinaryFuzztagHexEditorProps {

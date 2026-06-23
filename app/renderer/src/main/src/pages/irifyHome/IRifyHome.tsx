@@ -342,7 +342,7 @@ const IRifyHome: React.FC<IRifyHomeProps> = () => {
               <div className={styles['panel-card-title']}>{t('IRifyHome.riskDistribution')}</div>
               <div className={styles['distribution-content']}>
                 <div className={styles['distribution-content-echarts']}>
-                  {inViewport && <RiskDistributionChart total={totalRiskCount} items={riskDistributionItems} />}
+                  {<RiskDistributionChart total={totalRiskCount} items={riskDistributionItems} />}
                 </div>
                 <div className={styles['distribution-content-legend']}>
                   {riskDistributionItems.map((item, index) => (

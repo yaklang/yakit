@@ -18,7 +18,7 @@ import { getLocalValue } from './utils/kv'
 import { GetMainColor, getRemoteI18nGV } from './utils/envfile'
 import i18n from '@/i18n/i18n'
 import { useTheme } from './hook/useTheme'
-import { generateAllThemeColors } from './yakit-colors-generator'
+import { applyYakitThemeColors } from './utils/applyYakitThemeColors'
 import { registerAppSyncHandlers } from '@/auxWindow/utils/messaging'
 import { setupConcurrentStreamMainBridge } from '@/pages/ai-agent/components/ConcurrentStreamCard/concurrentStream/concurrentStreamMainBridge'
 import { debugToPrintLogs } from './utils/logCollection'
@@ -51,16 +51,6 @@ window.MonacoEnvironment = {
 
 const getQueryParam = (param) => {
   return new URLSearchParams(window.location.search).get(param)
-}
-
-function applyThemeColors(theme: 'light' | 'dark', colors: Record<string, string>) {
-  const html = document.documentElement
-
-  html.setAttribute('data-theme', theme)
-
-  Object.entries(colors).forEach(([key, value]) => {
-    html.style.setProperty(`${key}`, value)
-  })
 }
 
 const App = () => {
@@ -109,9 +99,7 @@ const App = () => {
 
   const { theme } = useTheme()
   useEffect(() => {
-    const targetEditionColor = GetMainColor(theme)
-    const generateAllThemeColor: Record<string, string> = generateAllThemeColors(theme, targetEditionColor)
-    applyThemeColors(theme, generateAllThemeColor)
+    applyYakitThemeColors(theme, GetMainColor(theme))
   }, [theme])
 
   if (windowType === 'markdown-pdf-print') {

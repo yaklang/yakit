@@ -1,7 +1,7 @@
 import { ForgesAndSkillsDynamicItem, PlanItemDetailsData } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import { PaginationSchema } from '@/pages/invoker/schema'
-import { ThemeColorName } from '@/yakit-colors-generator'
+import type { ThemeColorName } from '@yakit-libs/color'
 import { ReactNode } from 'react'
 
 export interface AITaskExecutionDetailsProps {
