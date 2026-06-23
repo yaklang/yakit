@@ -6,20 +6,17 @@ import type {
   UseTaskChatParams,
   UseTaskChatState,
 } from './type'
-import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
+import type { AIChatQSData, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
 import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog } from './utils'
 import { yakitNotify } from '@/utils/notification'
-import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
+import { AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import { has } from 'lodash'
-import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
 
 function useTaskChat(params: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
@@ -190,15 +187,6 @@ function useTaskChat(params: UseTaskChatParams) {
 
   // #region review数据-hook缓存数据
   const review = useRef<AIChatQSData>()
-  const handleGetReview = useMemoizedFn(() => {
-    return review.current
-  })
-  const handleSetReview = useMemoizedFn((newReview: AIChatQSData | undefined) => {
-    review.current = cloneDeep(newReview)
-  })
-  const handleResetReview = useMemoizedFn(() => {
-    review.current = undefined
-  })
 
   // 将 review 数据处理成需要展示的UI数据
   const handleReviewDataToUI = useMemoizedFn((reviewInfo: AIChatQSData) => {
@@ -216,90 +204,7 @@ function useTaskChat(params: UseTaskChatParams) {
   // #endregion
 
   /** 处理数据方法 */
-  const handleSetData = useMemoizedFn((res: AIOutputEvent) => {
-    try {
-      let funcKey = res.Type
-      if (res.Type === 'structured' && res.NodeId === 'stream-finished') {
-        // stream数据结束标识
-        funcKey = res.NodeId
-      } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
-        funcKey = res.Type
-      } else if (res.Type === 'structured' && res.NodeId === 'capability_inventory') {
-        funcKey = res.NodeId
-      } else if (res.Type === 'perception' && res.NodeId === 'perception') {
-        funcKey = res.Type
-      } else if (res.Type === 'current_task_todo_list_update' && res.NodeId === 'current_task_todo_list') {
-        funcKey = res.Type
-      } else if (res.NodeId === 'session_snapshot') {
-        funcKey = res.NodeId
-      }
-
-      const handleFunc = grpcAIMessageHandlers[funcKey || '']
-      if (handleFunc) {
-        handleFunc({
-          res,
-          info: { chatType: 'task' },
-          getCurrentTaskPlanID,
-          getRequest,
-          setElements,
-          getElements,
-          setContentMap,
-          getContentMap,
-          pushLog: handlePushLog,
-          review: {
-            handleGetReview,
-            handleSetReview,
-            onReview,
-            onReviewExtra,
-            onReviewRelease,
-            handleReviewDataToUI,
-            sendRequest,
-          },
-          getChatDataStore,
-        })
-        return
-      }
-
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-
-      if (res.Type === 'structured' && res.NodeId === 'system') {
-        const data = JSON.parse(ipcContent) || ''
-
-        if (data && typeof data === 'object' && data?.type === 'push_task') {
-          // 开始任务的执行
-          const info = data as AIAgentGrpcApi.ChangeTask
-          handleUpdateTaskState(info.task.index, AITaskStatus.inProgress)
-          handleTaskNode(res, info)
-        }
-
-        if (data && typeof data === 'object' && data?.type === 'pop_task') {
-          // 结束任务 & 请求更新任务树最新状态数据
-          const info = data as AIAgentGrpcApi.ChangeTask
-          handleTaskNode(res, info)
-          sendRequest && sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN })
-        }
-        return
-      } else if (res.Type === 'plan') {
-        // 更新正在执行的任务树
-        const tasks = JSON.parse(ipcContent) as { root_task: AIAgentGrpcApi.PlanTask }
-        if (has(tasks, 'root_task')) {
-          const plans = genExecTasks(tasks.root_task)
-          setPlan({ task_tree: cloneDeep(plans), root_task_name: tasks.root_task.name })
-        } else {
-          setPlan(cloneDeep(DefaultCurrentExecTaskTree))
-        }
-        return
-      }
-
-      // 未识别类型全部归档到日志处理
-      handleGrpcDataPushLog({ info: res, pushLog: handlePushLog })
-    } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
-    }
-  })
+  const handleSetData = useMemoizedFn((res: AIOutputEvent) => {})
 
   const handleResetData = useMemoizedFn(() => {
     handleResetPlanTree()
@@ -308,46 +213,7 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   /** review 界面选项触发事件 */
-  const handleSend: handleSendFunc = useMemoizedFn(({ request, optionValue, cb }) => {
-    try {
-      const { InteractiveId, InteractiveJSONInput } = request
-      if (!review.current || review.current.id !== InteractiveId) {
-        yakitNotify('error', '未获取到 review 信息, 操作无效')
-        return
-      }
-
-      const chatData = cloneDeep(review.current)
-      ;(chatData.data as AIReviewType).selected = InteractiveJSONInput || ''
-      ;(chatData.data as AIReviewType).optionValue = optionValue
-
-      handleResetReview()
-      handleReviewDataToUI(chatData)
-      setContentMap(chatData.id, chatData)
-      setElements((old) => {
-        let isUpdate = false
-        const newArr = old.map((item) => {
-          if (chatData.taskId && item.token === chatData.taskId && item.kind === 'task') {
-            item.children.push({
-              token: chatData.id,
-              type: chatData.type,
-              renderNum: 1,
-              chatType: 'task',
-              kind: 'item',
-            })
-            isUpdate = true
-            return { ...item, renderNum: item.renderNum + 1 }
-          }
-          return item
-        })
-        if (!isUpdate) {
-          newArr.push({ token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'item' })
-        }
-        return newArr
-      })
-
-      cb && cb()
-    } catch (error) {}
-  })
+  const handleSend: handleSendFunc = useMemoizedFn(({ request, optionValue, cb }) => {})
 
   /** grpc接口关闭后的后续处理逻辑 */
   const handleCloseGrpc = useMemoizedFn(() => {
@@ -356,19 +222,7 @@ function useTaskChat(params: UseTaskChatParams) {
   })
 
   /** 当前任务规划结束-触发UI展示结束标识 */
-  const handlePlanExecEnd = useMemoizedFn((res: AIOutputEvent) => {
-    const chatData: AIChatQSData = {
-      ...genBaseAIChatData(res),
-      chatType: 'task',
-      type: AIChatQSDataTypeEnum.END_PLAN_AND_EXECUTION,
-      data: '',
-    }
-    setContentMap(chatData.id, chatData)
-    setElements((old) => [
-      ...old,
-      { token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'item' },
-    ])
-  })
+  const handlePlanExecEnd = useMemoizedFn((res: AIOutputEvent) => {})
 
   /** 用户手动介入逻辑 */
   const handleUserManualIntervention = useMemoizedFn((chatInfo: AIChatQSData) => {

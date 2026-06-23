@@ -3,42 +3,40 @@
  */
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
-import type { AITaskInfoProps, ReActChatRenderItem, AIChatQSDataType, TodoListCardData } from './aiRender'
-import type { AIChatLogToInfo, AIChatLogData, TaskChatTaskInfo, AIMessageHandlerParams } from './type'
+import type {
+  AITaskInfoProps,
+  ReActChatRenderItem,
+  AIChatQSDataType,
+  TodoListCardData,
+  ChatListRenderType,
+} from './aiRender'
+import type { AIChatLogToInfo, AIChatLogData } from './type'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
-import { AIChatQSDataTypeEnum } from './aiRender'
 import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
 
-/** 生成任务的唯一标识 */
-export const generateTaskId = (params: {
-  chatType: ReActChatRenderItem['chatType']
-  res: AIOutputEvent
-  /** 获取当前任务规划的问题ID信息 */
-  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
-  /** 获取当前自由对话父任务 ID */
-  getTaskId?: () => string
-  getContentMap: AIMessageHandlerParams['getContentMap']
+/** 生成任务节点的唯一ID */
+export const generateTaskNodeID = (planID: string, taskID: string) => {
+  return `${planID}-${taskID || 'unknown'}`
+}
+/**
+ * 任务节点内的数据生成任务节点ID
+ * @param isExist 生成的任务节点是否已经存在，不存在则不是任务节点数据，归为默认节点内的数据
+ */
+export const generateTaskNodeDataID = (params: {
+  chatType: ChatListRenderType
+  planID?: string
+  taskID: AIOutputEvent['TaskIndex']
+  isExist: (key: string) => boolean
 }) => {
-  const { chatType, res, getCurrentTaskPlanID, getTaskId, getContentMap } = params
-  /** 任务规划走 getCurrentTaskPlanID；自由对话走 getTaskId */
-  const parentTaskId = (chatType === 'task' ? getCurrentTaskPlanID?.()?.taskID : getTaskId?.()) || ''
-  if (res.TaskId) {
-    if (!parentTaskId) return undefined
-    const taskGroup = getContentMap(`${parentTaskId}-${res.TaskId}`)
-    if (taskGroup?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      return taskGroup.id
-    }
-  }
-  if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
-    const defaultKey = `${getCurrentTaskPlanID()?.taskID}-unknown`
-    if (getContentMap(defaultKey)?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
-      return defaultKey
-    }
-  }
-  return undefined
+  const { chatType, planID, taskID, isExist } = params
+  // 自由对话或者没有任务规划ID，则不生成任务节点ID
+  if (chatType === 'reAct' || !planID) return undefined
+  const keyLabel = `${planID}-${taskID || 'unknown'}`
+  if (isExist(keyLabel)) return keyLabel
+  return `${planID}-unknown`
 }
 
 /** 生成AI-UI展示的必须基础数据 */
@@ -170,7 +168,7 @@ export const isToolExecStream = (nodeID: string) => {
  * indexedDB 数据库数据转 ReActChatRenderItem
  */
 export const indexedDBDataToReActChatRenderItem = (
-  chatType: ReActChatRenderItem['chatType'],
+  chatType: ChatListRenderType,
   data: DialogueRecord[],
 ): ReActChatRenderItem[] =>
   data.map((item) => {

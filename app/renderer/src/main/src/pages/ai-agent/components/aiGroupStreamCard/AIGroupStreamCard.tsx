@@ -1,4 +1,4 @@
-import { ChatReferenceMaterialPayload, ReActChatElement } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatListRenderType, ChatReferenceMaterialPayload, ReActChatElement } from '@/pages/ai-re-act/hooks/aiRender'
 import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo } from 'react'
 import styles from './AIGroupStreamCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
@@ -23,7 +23,7 @@ export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties
 }
 
 const AIStreamNode: FC<{
-  chatType: ReActChatElement['chatType']
+  chatType: ChatListRenderType
   token: string
   index: number
   session: string
