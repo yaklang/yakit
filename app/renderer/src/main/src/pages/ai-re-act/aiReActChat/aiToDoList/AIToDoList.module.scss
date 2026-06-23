@@ -136,12 +136,10 @@ $radius: 8px;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        overflow: hidden;
+        overflow: hidden auto;
       }
       .card-list-inner-hidden {
         display: none;
-      }
-      .card-list-item {
       }
     }
 
@@ -164,7 +162,6 @@ $radius: 8px;
   display: flex;
   align-items: center;
   gap: 4px;
-  overflow: hidden;
 }
 .card-list-item-pending {
   .item-text {
