@@ -9,7 +9,7 @@ import {
   AIChatQSDataTypeEnum,
   ChatTaskDefaultGroup,
   type ChatTaskNodeGroup,
-  type ReActChatElement,
+  type ChatListRenderType,
   type ReActChatTaskElementSub,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import { getAIStatusPresentation } from '../../utils/AIStatusUtils'
@@ -27,7 +27,7 @@ const ConcurrentStreamCard: FC<{
   elements: ReActChatTaskElementSub[]
   session: string
   token: string
-  chatType: ReActChatElement['chatType']
+  chatType: ChatListRenderType
   isChildWindow?: boolean
   onRefresh?: () => void
 }> = ({ session, elements, chatType, token, isChildWindow, onRefresh }) => {

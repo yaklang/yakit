@@ -1,11 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
-import { ChatStream, ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatListRenderType, ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 
 export interface UseStreamingChatContentParams {
-  chatType: ReActChatRenderItem['chatType']
+  chatType: ChatListRenderType
   token: string
   session: string
 }
