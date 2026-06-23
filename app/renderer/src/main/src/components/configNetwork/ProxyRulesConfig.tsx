@@ -224,6 +224,7 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
                 <YakitButton
                   icon={<OutlineTrashIcon className={styles['icon-trash']} />}
                   type="text2"
+                  size="small"
                   onClick={() => onDelete(record.Id)}
                 />
                 <Divider type="vertical" style={{ margin: '0 12px' }} />
@@ -245,7 +246,8 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         dataSource={Endpoints}
         rowClassName={({ Disabled }) => (Disabled ? styles['row-disabled'] : '')}
         pagination={{
-          showTotal: (i) => t('ProxyConfig.recordPointsCount', { i }),
+          size: 'small',
+          showTotal: (i) => <span className={styles['show-total']}>{t('ProxyConfig.recordPointsCount', { i })}</span>,
           total: Endpoints.length,
         }}
         rowKey="Id"
@@ -321,7 +323,8 @@ const ProxyRulesConfig = (props: ProxyRulesConfigProps) => {
         dataSource={Routes}
         rowClassName={({ Disabled }) => (Disabled ? styles['row-disabled'] : '')}
         pagination={{
-          showTotal: (i) => t('ProxyConfig.recordRoutesCount', { i }),
+          size: 'small',
+          showTotal: (i) => <span className={styles['show-total']}>{t('ProxyConfig.recordRoutesCount', { i })}</span>,
           total: Routes.length,
         }}
         rowKey="Id"

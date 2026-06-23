@@ -15,17 +15,22 @@ import {
   OutlinePencilaltIcon,
   OutlineTerminalIcon,
   OutlineInformationcircleIcon,
-  OutlineChevronrightIcon,
+  OutlinePluscircleIcon,
+  OutlineDocumentaddIcon,
+  OutlineMinuscircleIcon,
 } from '@/assets/icon/outline'
 import { openConsoleNewWindow } from '@/utils/openWebsite'
-import { Tooltip } from 'antd'
+import { Dropdown, Tooltip } from 'antd'
 import classNames from 'classnames'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { getStorageHotPatchManagementShortcutKeyEvents } from '@/utils/globalShortcutKey/events/page/hotPatchManagement'
 import { ShortcutKeyPage } from '@/utils/globalShortcutKey/events/pageMaps'
 import { registerShortcutKeyHandle, unregisterShortcutKeyHandle } from '@/utils/globalShortcutKey/utils'
-import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { YakitMenu, YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
+import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
+import { YakitAutoComplete } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComplete'
+import { YakitSelect } from '@/components/yakitUI/YakitSelect/YakitSelect'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { isEnpriTrace } from '@/utils/envfile'
@@ -193,11 +198,9 @@ export const HotPatchManagement: React.FC = () => {
   const [addHotCodeTemplateVisible, setAddHotCodeTemplateVisible] = useState(false)
   const [groupModalVisible, setGroupModalVisible] = useState(false)
   const [groupModalValue, setGroupModalValue] = useState('')
-  const [groupModalTarget, setGroupModalTarget] = useState<{ item: HotPatchTempItem; type: HotCodeType } | null>(null)
-  const [templateMenuVisibleKey, setTemplateMenuVisibleKey] = useState('')
-  const [groupSubmenuVisibleKey, setGroupSubmenuVisibleKey] = useState('')
+  const [groupModalType, setGroupModalType] = useState<HotCodeType>('global')
+  const [groupModalSelectedNames, setGroupModalSelectedNames] = useState<string[]>([])
   const [collapsedTemplateGroupKeys, setCollapsedTemplateGroupKeys] = useState<Set<string>>(() => new Set())
-  const groupSubmenuCloseTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const [loading, setLoading] = useState(false)
   const [templateListLoading, setTemplateListLoading] = useState(false)
   const [editorTab, setEditorTab] = useState<'source' | 'result'>('source')
@@ -208,14 +211,6 @@ export const HotPatchManagement: React.FC = () => {
   const [inViewport] = useInViewport(selectRef)
 
   const isGlobalType = useMemo(() => activeType === 'global', [activeType])
-
-  useEffect(() => {
-    return () => {
-      if (groupSubmenuCloseTimerRef.current) {
-        clearTimeout(groupSubmenuCloseTimerRef.current)
-      }
-    }
-  }, [])
 
   const getDefaultTemplates = useMemoizedFn((type: PanelHotCodeType): HotPatchTempItem[] => {
     switch (type) {
@@ -710,25 +705,6 @@ export const HotPatchManagement: React.FC = () => {
   const globalTemplateGroups = useMemo(() => collectTemplateGroups(globalTemplateList), [globalTemplateList])
   const panelTemplateGroups = useMemo(() => collectTemplateGroups(templateList), [templateList])
 
-  const closeTemplateMenu = useMemoizedFn(() => {
-    setTemplateMenuVisibleKey('')
-    setGroupSubmenuVisibleKey('')
-  })
-
-  const onGroupSubmenuHover = useMemoizedFn((templateKey: string | null) => {
-    if (groupSubmenuCloseTimerRef.current) {
-      clearTimeout(groupSubmenuCloseTimerRef.current)
-      groupSubmenuCloseTimerRef.current = undefined
-    }
-    if (templateKey) {
-      setGroupSubmenuVisibleKey(templateKey)
-      return
-    }
-    groupSubmenuCloseTimerRef.current = setTimeout(() => {
-      setGroupSubmenuVisibleKey('')
-    }, 120)
-  })
-
   const onUpdateTemplateTags = useMemoizedFn(async (item: HotPatchTempItem, type: HotCodeType, tag: string) => {
     const Tags = tag.trim()
 
@@ -743,7 +719,6 @@ export const HotPatchManagement: React.FC = () => {
       } else {
         loadTemplateList(type)
       }
-      closeTemplateMenu()
       yakitNotify(
         'success',
         t(Tags ? 'HotCodeTemplate.add_to_group_success' : 'HotCodeTemplate.remove_from_group_success'),
@@ -757,77 +732,151 @@ export const HotPatchManagement: React.FC = () => {
     await onUpdateTemplateTags(item, type, '')
   })
 
-  const onOpenCreateGroupModal = useMemoizedFn((item: HotPatchTempItem, type: HotCodeType) => {
-    setGroupModalTarget({ item, type })
+  const onOpenCreateGroupModal = useMemoizedFn((type: HotCodeType, names: string[] = []) => {
+    setGroupModalType(type)
     setGroupModalValue('')
+    setGroupModalSelectedNames(names)
     setGroupModalVisible(true)
-    closeTemplateMenu()
   })
 
   const onConfirmCreateGroup = useMemoizedFn(async () => {
     const tag = groupModalValue.trim()
-    if (!tag || !groupModalTarget) return
-    await onUpdateTemplateTags(groupModalTarget.item, groupModalTarget.type, tag)
-    setGroupModalVisible(false)
-    setGroupModalValue('')
-    setGroupModalTarget(null)
+    if (!tag || groupModalSelectedNames.length === 0) return
+    try {
+      await ipcRenderer.invoke('UpdateHotPatchTemplate', {
+        Condition: { Type: groupModalType, Name: groupModalSelectedNames },
+        Data: { Tags: [tag] },
+      })
+      if (groupModalType === 'global') {
+        loadGlobalTemplateList()
+      } else {
+        loadTemplateList(groupModalType as PanelHotCodeType)
+      }
+      yakitNotify('success', t('HotCodeTemplate.add_to_group_success'))
+      setGroupModalVisible(false)
+      setGroupModalValue('')
+      setGroupModalSelectedNames([])
+    } catch (error) {
+      yakitFailed(error + '')
+    }
   })
 
-  const renderAddToGroupSubmenu = useMemoizedFn(
-    (type: HotCodeType, item: HotPatchTempItem, currentTemplateKey: string, groups: string[]) => (
-      <div
-        className={styles['popover-menu-item-submenu']}
-        onMouseEnter={() => onGroupSubmenuHover(currentTemplateKey)}
-        onMouseLeave={() => onGroupSubmenuHover(null)}
-      >
-        <div className={styles['popover-menu-item']}>
-          <span>{t('HotCodeTemplate.add_to_group')}</span>
-          <OutlineChevronrightIcon className={styles['popover-menu-arrow']} />
-        </div>
-        {!!item.Tags?.trim() && (
-          <div
-            className={styles['popover-menu-item']}
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemoveTemplateGroup(item, type)
-            }}
-          >
-            <span>{t('HotCodeTemplate.remove_from_group')}</span>
-          </div>
-        )}
-        <div
-          className={classNames(styles['popover-submenu'], {
-            [styles['popover-submenu-visible']]: groupSubmenuVisibleKey === currentTemplateKey,
-          })}
-          onMouseEnter={() => onGroupSubmenuHover(currentTemplateKey)}
-          onMouseLeave={() => onGroupSubmenuHover(null)}
-        >
-          <div
-            className={styles['popover-menu-item']}
-            onClick={(e) => {
-              e.stopPropagation()
-              onOpenCreateGroupModal(item, type)
-            }}
-          >
-            <span>{t('HotCodeTemplate.create_group')}...</span>
-          </div>
-          {groups.map((group) => (
-            <div
-              key={group}
-              className={styles['popover-menu-item']}
-              onClick={(e) => {
-                e.stopPropagation()
-                onUpdateTemplateTags(item, type, group)
-              }}
-            >
-              <span className={styles['popover-menu-group-name']} title={group}>
-                {group}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    ),
+  const renderHeaderAddMenu = useMemoizedFn((type: HotCodeType) => (
+    <Dropdown
+      placement="bottomRight"
+      trigger={['click']}
+      overlay={
+        <YakitMenu
+          className={styles['hot-patch-menu']}
+          popupClassName={styles['hot-patch-menu']}
+          width={180}
+          data={[
+            {
+              key: 'create-template',
+              label: t('HotCodeTemplate.create_hot_patch_template'),
+              itemIcon: <OutlineDocumentaddIcon />,
+            },
+            {
+              key: 'create-group',
+              label: t('HotCodeTemplate.create_group'),
+              itemIcon: <OutlinePluscircleIcon />,
+            },
+          ]}
+          onClick={({ key, domEvent }) => {
+            domEvent.stopPropagation()
+            if (key === 'create-template') onAddNewTemplate(type)
+            if (key === 'create-group') onOpenCreateGroupModal(type)
+          }}
+        />
+      }
+    >
+      <YakitButton size="small" type="outline1" icon={<OutlinePlusIcon />} />
+    </Dropdown>
+  ))
+
+  const onShowTemplateContextMenu = useMemoizedFn(
+    (
+      event: React.MouseEvent,
+      type: HotCodeType,
+      item: HotPatchTempItem,
+      source: 'local' | 'online',
+      groups: string[],
+    ) => {
+      event.preventDefault()
+      event.stopPropagation()
+
+      const isGlobalEnabled = globalHotPatchConfig?.Enabled && globalEnabledTemplateName === item.name
+      let menu: YakitMenuItemType[] = []
+
+      if (source === 'local') {
+        menu.push({
+          key: 'add-to-group',
+          label: t('HotCodeTemplate.add_to_group'),
+          itemIcon: <OutlinePluscircleIcon />,
+          children: [
+            { key: 'create-group', label: `${t('HotCodeTemplate.create_group')}` },
+            ...groups.map((group) => ({ key: `group::${group}`, label: group, title: group })),
+          ],
+        })
+      }
+      if (source === 'local' && item.Tags?.trim()) {
+        menu.push({
+          key: 'remove-from-group',
+          label: t('HotCodeTemplate.remove_from_group'),
+          itemIcon: <OutlineMinuscircleIcon />,
+        })
+      }
+      if (type === 'global') {
+        menu = [
+          {
+            key: isGlobalEnabled ? 'disable-global' : 'enable-global',
+            label: isGlobalEnabled ? t('YakitButton.close') : t('YakitButton.enable'),
+            itemIcon: isGlobalEnabled ? <SolidStopIcon /> : <SolidPlayIcon />,
+            type: isGlobalEnabled ? 'danger' : 'text',
+          },
+          ...menu,
+        ]
+      }
+      if (source === 'local' && !item.isDefault) {
+        menu.push({
+          key: 'rename',
+          label: t('YakitButton.rename'),
+          itemIcon: <OutlinePencilaltIcon />,
+        })
+      }
+      if ((!item.isDefault && source === 'local') || (source === 'online' && hasPermissions)) {
+        menu.push({
+          key: 'delete',
+          label: t('YakitButton.delete'),
+          itemIcon: <OutlineTrashIcon />,
+          type: 'danger',
+        })
+      }
+
+      showByRightContext(
+        {
+          width: 180,
+          className: styles['hot-patch-menu'],
+          popupClassName: styles['hot-patch-menu'],
+          data: menu,
+          onClick: ({ key, keyPath }) => {
+            if (keyPath.includes('add-to-group')) {
+              if (key === 'create-group') onOpenCreateGroupModal(type, [item.name])
+              else if (key.startsWith('group::')) onUpdateTemplateTags(item, type, key.slice(7))
+              return
+            }
+            if (key === 'remove-from-group') onRemoveTemplateGroup(item, type)
+            else if (key === 'enable-global') onEnableSelectedAsGlobal(item.name)
+            else if (key === 'disable-global') onDisableGlobalHotPatch()
+            else if (key === 'rename') onRenameTemplate(item, type)
+            else if (key === 'delete') onDeleteTemplate(item, source, type)
+          },
+        },
+        event.clientX,
+        event.clientY,
+        true,
+      )
+    },
   )
 
   const renderTemplateItem = useMemoizedFn((type: HotCodeType, item: HotPatchTempItem, source: 'local' | 'online') => {
@@ -840,11 +889,16 @@ export const HotPatchManagement: React.FC = () => {
         className={classNames(styles['type-template-item'], {
           [styles['type-template-item-active']]:
             activeType === type && selectedTemplate === item.name && selectedTemplateSource === source,
+          [styles['type-template-item-ungrouped']]: !item.Tags,
         })}
         onClick={() => {
           if (editingTemplateKey !== currentTemplateKey) {
             onSelectTemplate(type, item, source)
           }
+        }}
+        onContextMenu={(e) => {
+          if (!showTemplateMenu || editingTemplateKey === currentTemplateKey) return
+          onShowTemplateContextMenu(e, type, item, source, existingGroups)
         }}
       >
         {editingTemplateKey === currentTemplateKey && source === 'local' ? (
@@ -865,79 +919,20 @@ export const HotPatchManagement: React.FC = () => {
               {item.name}
             </span>
             {item.isDefault && (
-              <YakitTag color="info" size="small">
+              <YakitTag className={styles['global-enabled-tag']} color="warning" size="small">
                 {t('YakitButton.builtIn')}
               </YakitTag>
             )}
             {type === 'global' && globalEnabledTemplateName === item.name && (
-              <YakitTag className={styles['global-enabled-tag']} color="info">
+              <YakitTag className={styles['global-enabled-tag']} color="warning" size="small">
                 {t('YakitButton.enabled')}
               </YakitTag>
             )}
             {showTemplateMenu && (
-              <YakitPopover
-                overlayClassName={styles['template-popover']}
-                visible={templateMenuVisibleKey === currentTemplateKey}
-                onVisibleChange={(visible) => {
-                  setTemplateMenuVisibleKey(visible ? currentTemplateKey : '')
-                  if (!visible) {
-                    setGroupSubmenuVisibleKey('')
-                  }
-                }}
-                content={
-                  <>
-                    {source === 'local' && renderAddToGroupSubmenu(type, item, currentTemplateKey, existingGroups)}
-                    {type === 'global' &&
-                      (() => {
-                        const isThisItemEnabled =
-                          globalHotPatchConfig?.Enabled && globalEnabledTemplateName === item.name
-                        return (
-                          <div
-                            className={classNames(
-                              styles['popover-menu-item'],
-                              isThisItemEnabled
-                                ? styles['popover-menu-item-danger']
-                                : styles['popover-menu-item-primary'],
-                            )}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              isThisItemEnabled ? onDisableGlobalHotPatch() : onEnableSelectedAsGlobal(item.name)
-                            }}
-                          >
-                            {isThisItemEnabled ? <SolidStopIcon /> : <SolidPlayIcon />}
-                            <span>{isThisItemEnabled ? t('YakitButton.close') : t('YakitButton.enable')}</span>
-                          </div>
-                        )
-                      })()}
-                    {source === 'local' && !item.isDefault && (
-                      <div
-                        className={styles['popover-menu-item']}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onRenameTemplate(item, type)
-                        }}
-                      >
-                        <OutlinePencilaltIcon />
-                        <span>{t('YakitButton.rename')}</span>
-                      </div>
-                    )}
-                    {((!item.isDefault && source === 'local') || (source === 'online' && hasPermissions)) && (
-                      <div
-                        className={classNames(styles['popover-menu-item'], styles['popover-menu-item-danger'])}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onDeleteTemplate(item, source, type)
-                        }}
-                      >
-                        <OutlineTrashIcon />
-                        <span>{t('YakitButton.delete')}</span>
-                      </div>
-                    )}
-                  </>
-                }
-              >
-                <SolidDotsverticalIcon className={styles['template-more-icon']} onClick={(e) => e.stopPropagation()} />
-              </YakitPopover>
+              <SolidDotsverticalIcon
+                className={styles['template-more-icon']}
+                onClick={(e) => onShowTemplateContextMenu(e, type, item, source, existingGroups)}
+              />
             )}
           </>
         )}
@@ -987,11 +982,7 @@ export const HotPatchManagement: React.FC = () => {
               </span>
               <span className={styles['template-tree-group-count']}>{team.node.length}</span>
             </div>
-            {expanded && (
-              <div className={styles['template-tree-group-children']}>
-                {team.node.map((item) => renderTemplateItem(type, item, source))}
-              </div>
-            )}
+            {expanded && <>{team.node.map((item) => renderTemplateItem(type, item, source))}</>}
           </div>
         )
       })
@@ -1000,7 +991,7 @@ export const HotPatchManagement: React.FC = () => {
 
   const renderMenu = useMemoizedFn(() => {
     return (
-      <div className={styles['type-panel']} style={{ width: i18n.language.startsWith('zh') ? 300 : 330 }}>
+      <div className={styles['type-panel']}>
         <YakitResizeBox
           isVer={true}
           lineDirection="bottom"
@@ -1016,12 +1007,7 @@ export const HotPatchManagement: React.FC = () => {
                     <OutlineInformationcircleIcon className={styles['info-icon']} />
                   </Tooltip>
                 </div>
-                <YakitButton
-                  size="small"
-                  type="outline1"
-                  icon={<OutlinePlusIcon />}
-                  onClick={() => onAddNewTemplate('global')}
-                />
+                {renderHeaderAddMenu('global')}
               </div>
               <div className={styles['type-template']}>
                 <YakitSpin spinning={globalTemplateListLoading}>
@@ -1041,12 +1027,7 @@ export const HotPatchManagement: React.FC = () => {
                   buttonStyle="solid"
                   options={hotCodeTypeOptions}
                 />
-                <YakitButton
-                  size="small"
-                  type="outline1"
-                  icon={<OutlinePlusIcon />}
-                  onClick={() => onAddNewTemplate(panelType)}
-                />
+                {renderHeaderAddMenu(panelType)}
               </div>
               <div className={styles['type-template']}>
                 <YakitSpin spinning={templateListLoading}>
@@ -1093,8 +1074,9 @@ export const HotPatchManagement: React.FC = () => {
     <div className={styles['hot-patch-management']} ref={selectRef}>
       {renderMenu()}
       <div className={styles['editor-panel']}>
-        <div className={styles['editor-title']}>{selectedTemplate}</div>
+        {activeType === 'fuzzer' && <div className={styles['editor-title']}>{selectedTemplate}</div>}
         <div className={styles['editor-header']}>
+          {activeType !== 'fuzzer' && <div className={styles['editor-title']}>{selectedTemplate}</div>}
           <div>
             {!hideTemplateContent && (
               <YakitRadioButtons
@@ -1170,6 +1152,7 @@ export const HotPatchManagement: React.FC = () => {
               )}
             </div>
           }
+          freeze={!hideTemplateContent}
           firstRatio={hideTemplateContent ? '100%' : '70%'}
           firstMinSize="400px"
           secondRatio="30%"
@@ -1220,21 +1203,48 @@ export const HotPatchManagement: React.FC = () => {
       <YakitModal
         visible={groupModalVisible}
         title={t('HotCodeTemplate.create_group')}
-        onCancel={() => setGroupModalVisible(false)}
+        onCancel={() => {
+          setGroupModalVisible(false)
+          setGroupModalValue('')
+          setGroupModalSelectedNames([])
+        }}
         onOk={onConfirmCreateGroup}
-        okButtonProps={{ disabled: !groupModalValue.trim() }}
+        okButtonProps={{ disabled: !groupModalValue.trim() || !groupModalSelectedNames.length }}
       >
         <div className={styles['group-modal-form']}>
           <div className={styles['group-modal-label']}>
             <span className={styles['group-modal-required']}>*</span>
             {t('HotCodeTemplate.group_name')}:
           </div>
-          <YakitInput
+          <YakitAutoComplete
             placeholder={t('HotCodeTemplate.enter_group_name')}
             value={groupModalValue}
-            onChange={(e) => setGroupModalValue(e.target.value)}
-            showCount
+            onSelect={(value) => setGroupModalValue(value as string)}
+            onChange={(value) => setGroupModalValue(value)}
             maxLength={INPUT_MAX_LENGTH}
+          >
+            {(groupModalType === 'global' ? globalTemplateGroups : panelTemplateGroups).map((group) => (
+              <YakitSelect.Option key={group} value={group}>
+                {group}
+              </YakitSelect.Option>
+            ))}
+          </YakitAutoComplete>
+          <div className={styles['group-modal-tip']}>{t('HotCodeTemplate.group_name_tip')}</div>
+          <div className={styles['group-modal-label']}>
+            <span className={styles['group-modal-required']}>*</span>
+            {t('HotCodeTemplate.add_templates_to_group')}:
+          </div>
+          <YakitSelect
+            mode="multiple"
+            allowClear
+            maxTagCount="responsive"
+            placeholder={t('HotCodeTemplate.select_templates_to_group')}
+            value={groupModalSelectedNames}
+            onChange={setGroupModalSelectedNames}
+            options={(groupModalType === 'global' ? globalTemplateList : templateList).map((item) => ({
+              label: item.name,
+              value: item.name,
+            }))}
           />
           <div className={styles['group-modal-tip']}>{t('HotCodeTemplate.create_group_tip')}</div>
         </div>

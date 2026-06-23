@@ -718,6 +718,12 @@
 
     .ant-table-tbody > tr > td {
       background: var(--Colors-Use-Basic-Background);
+      font-size: 12px;
+      padding: 4px 8px !important;
+      svg {
+        height: 14px;
+        width: 14px;
+      }
     }
 
     .ant-table-thead > tr > th,
@@ -739,6 +745,11 @@
     .ant-pagination-total-text {
       color: var(--Colors-Use-Neutral-Text-1-Title);
     }
+  }
+
+  .show-total {
+    color: var(--Colors-Use-Neutral-Text-3-Secondary);
+    font-size: 12px;
   }
 }
 
