@@ -24,6 +24,7 @@ import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/use
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useLoadHistory from '../hooks/useLoadHistory'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
 
 const getAIReferenceNodeByType = (contentType?: string) => {
   switch (contentType) {
@@ -102,6 +103,15 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     }
     case AIStreamContentType.LOG_TOOL_ERROR_OUTPUT:
       return <></>
+    case AIStreamContentType.TEXT_SYNTAXFLOW:
+      return (
+        <AITextSyntaxFlow
+          content={content}
+          nodeIdVerbose={NodeIdVerbose}
+          modalInfo={modalInfo}
+          contentType={ContentType}
+        />
+      )
     default:
       return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} referenceNode={referenceNode} />
   }
