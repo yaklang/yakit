@@ -2055,6 +2055,10 @@ message AIStartParams {
   // 为 true 时 StartAIReAct 不新建 ReAct，最多等待 1 分钟直到同 TimelineSessionID 的会话
   // 在进程内注册后再将 gRPC 输入流 attach 到该运行中会话。
   bool Attach = 46;
+
+  // 为 true 时 request_plan 走 detached plan 审阅流程；默认 false 时走旧版异步 plan-and-execute。
+  // 需配合 EnablePlan=true 才会暴露 request_plan 动作。
+  bool EnableDetachedPlan = 47;
 }
 
 message AITaskFilter {
