@@ -20,6 +20,8 @@
   gap: 4px;
   overflow: hidden;
   .tab-bar-item-label {
+    flex: 1;
+    min-width: 0;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -32,6 +34,11 @@
 
 .ai-task-tab-wrap {
   width: 100%;
+  :global {
+    div[class*='yakit-side-tab-horizontal'] {
+      height: auto;
+    }
+  }
   .ai-task-tab-item {
     word-break: keep-all;
     min-width: 66px;

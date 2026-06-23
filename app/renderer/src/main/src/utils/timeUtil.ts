@@ -75,6 +75,9 @@ export const timeDiffWithMoment = (startedAt: number, endedAt: number) => {
   const start = moment.unix(startedAt) // 或 moment(startedAt * 1000)
   const end = moment.unix(endedAt)
 
+  const diffSeconds = endedAt - startedAt
+  if (!Number.isFinite(diffSeconds) || diffSeconds <= 0) return '0s'
+
   const duration = moment.duration(end.diff(start))
   // 获取各部分
   const hours = Math.floor(duration.asHours())

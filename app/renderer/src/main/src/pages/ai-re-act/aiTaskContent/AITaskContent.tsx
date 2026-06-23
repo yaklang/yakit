@@ -95,7 +95,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
 
     return (
       <div className={styles['tab-bar-item']}>
-        <div className={styles['tab-bar-item-label']} title={`${finalLabel}`}>
+        <div className={styles['tab-bar-item-label']} title={typeof finalLabel === 'string' ? `${finalLabel}` : ''}>
           {finalLabel}
         </div>
         <OutlineXIcon
