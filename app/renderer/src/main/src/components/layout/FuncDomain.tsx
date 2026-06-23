@@ -1239,7 +1239,7 @@ const GetUIOpSettingMenu = () => {
           label: '网站管理',
         },
         { key: 'mcp', label: 'Yak Mcp' },
-        { key: 'ai-agent', label: 'AI Agent' },
+        // { key: 'ai-agent', label: 'AI Agent' },
         { key: 'ssa-result-diff', label: 'ssa-result-diff' },
         { key: 'ai-repository', label: '知识库' },
         { key: 'ssa-compile-history', label: 'SSA项目编译历史' },
