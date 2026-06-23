@@ -95,7 +95,9 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
 
     return (
       <div className={styles['tab-bar-item']}>
-        {finalLabel}
+        <div className={styles['tab-bar-item-label']} title={typeof finalLabel === 'string' ? `${finalLabel}` : ''}>
+          {finalLabel}
+        </div>
         <OutlineXIcon
           onClick={(e) => {
             e.stopPropagation()
@@ -128,6 +130,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
           onActiveKey={(key) => onActiveKey(key as AITabsEnumType)}
           onTabPaneRender={(ele, node) => tabBarRender(ele, node)}
           className={styles['ai-task-tab-wrap']}
+          btnItemClassName={styles['ai-task-tab-item']}
           t={t}
           tabBarExtraContent={tabBarExtraContent}
         >

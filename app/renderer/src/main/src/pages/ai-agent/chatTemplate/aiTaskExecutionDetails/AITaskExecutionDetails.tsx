@@ -50,6 +50,7 @@ import {
   HorizontalScrollCardItemInfoSingle,
 } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
+import { timeDiffWithMoment } from '@/utils/timeUtil'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName } = props
@@ -195,10 +196,18 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     planItemDetailsData?.execution?.tool_call_failed,
     planItemDetailsData?.execution?.tool_call_total,
   ])
-  // const executionMinutes = useCreation(() => {
-  //   if (!planItemDetailsData?.execution) return '暂无'
-  //   return `${planItemDetailsData?.execution.execution_minutes ?? `0`}`
-  // }, [planItemDetailsData?.execution?.execution_minutes])
+  const executionMinutes = useCreation(() => {
+    const startedAt = planItemDetailsData?.execution?.started_at || 0
+    const endedAt = planItemDetailsData?.execution?.ended_at || 0
+    if (!startedAt) return '暂无'
+    if (startedAt && !endedAt) return '执行中'
+
+    return timeDiffWithMoment(startedAt, endedAt)
+  }, [
+    planItemDetailsData?.execution?.status,
+    planItemDetailsData?.execution?.started_at,
+    planItemDetailsData?.execution?.ended_at,
+  ])
   const httpFlowCount = useCreation(() => {
     if (!planItemDetailsData?.execution) return '暂无'
     return `${planItemDetailsData?.execution.http_flow_count ?? `0`}`
@@ -221,11 +230,11 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
       <div className={styles['content-body']}>
         <div className={styles['summary-section']}>
           <HorizontalScrollCardItemInfoMultiple info={toolCall} tag={'工具调用'} />
-          {/* <HorizontalScrollCardItemInfoSingle
-            item={{ Id: '执行时长(单位min)', Data: executionMinutes, Timestamp: 0 }}
-            tag="执行时长(单位min)"
+          <HorizontalScrollCardItemInfoSingle
+            item={{ Id: '执行时长', Data: executionMinutes, Timestamp: 0 }}
+            tag="执行时长"
             compact={false}
-          /> */}
+          />
 
           <HorizontalScrollCardItemInfoSingle
             item={{ Id: '产生流量数', Data: httpFlowCount, Timestamp: 0 }}

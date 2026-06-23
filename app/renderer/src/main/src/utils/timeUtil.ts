@@ -63,3 +63,31 @@ export const formatTimestampJudge = (i: number) => {
     return time.format('YYYY-MM-DD HH:mm:ss')
   }
 }
+
+/**
+ * 使用 moment.js 计算时间差
+ * @param {number} startedAt - 开始时间戳（秒）
+ * @param {number} endedAt   - 结束时间戳（秒）
+ * @returns {string} 格式化的时长，如 "2h30m15s"
+ */
+export const timeDiffWithMoment = (startedAt: number, endedAt: number) => {
+  // moment 默认处理毫秒，所以将秒转为毫秒
+  const start = moment.unix(startedAt) // 或 moment(startedAt * 1000)
+  const end = moment.unix(endedAt)
+
+  const diffSeconds = endedAt - startedAt
+  if (!Number.isFinite(diffSeconds) || diffSeconds <= 0) return '0s'
+
+  const duration = moment.duration(end.diff(start))
+  // 获取各部分
+  const hours = Math.floor(duration.asHours())
+  const minutes = duration.minutes()
+  const seconds = duration.seconds()
+
+  const parts: string[] = []
+  if (hours > 0) parts.push(`${hours}h`)
+  if (minutes > 0) parts.push(`${minutes}m`)
+  parts.push(`${seconds}s`)
+
+  return parts.join('')
+}

@@ -197,7 +197,10 @@ export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
     timestamp: 0,
   },
   execution: {
+    task_name: '',
     status: '',
+    started_at: 0,
+    ended_at: 0,
     tool_call_success: 0,
     tool_call_failed: 0,
     tool_call_total: 0,
