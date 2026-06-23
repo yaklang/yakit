@@ -128,7 +128,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   const { activeChat } = useAIAgentStore()
 
   const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
-  console.log('chats:', chats.elements)
+
   const chatLength = useCreation(() => chats.elements.length, [chats.elements.length])
   // 向上滚动加载
   const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
