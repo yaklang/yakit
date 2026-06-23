@@ -1879,7 +1879,7 @@ const FuzzerSequence: React.FC<FuzzerSequenceProps> = React.memo((props) => {
                   content: <SequenceAnimationAemonstration></SequenceAnimationAemonstration>,
                   footer: null,
                   centered: true,
-                  destroyOnClose: true,
+                  destroyOnHidden: true,
                 })
               }}
             >

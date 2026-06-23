@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Tooltip } from 'antd'
+import { Space, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -489,15 +489,16 @@ export const ConfigMcpModal: React.FC<ConfigMcpModalProps> = (props) => {
           <div className={styles['beforeEnableMcp-wrap']}>
             <div className={styles['mcp-url-input']}>
               <span className={styles['mcp-url-input-label']}>{t('ConfigSystemMcp.startAddress')}</span>
-              <YakitInput
-                addonBefore="http://"
-                value={mcpStreamInfo.mcpUrl}
-                onChange={(e) => {
-                  mcpStreamEvent.onSetMcpUrl(e.target.value)
-                }}
-              />
+              <Space.Compact>
+                http://
+                <YakitInput
+                  value={mcpStreamInfo.mcpUrl}
+                  onChange={(e) => {
+                    mcpStreamEvent.onSetMcpUrl(e.target.value)
+                  }}
+                />
+              </Space.Compact>
             </div>
-
             <div className={styles['mcp-tier-switches']}>
               <div className={styles['mcp-ai-tool-framework']}>
                 <div className={styles['mcp-ai-tool-framework-label']}>

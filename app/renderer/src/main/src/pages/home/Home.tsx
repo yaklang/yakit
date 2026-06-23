@@ -641,7 +641,7 @@ const Home: React.FC<HomeProp> = (props) => {
       ),
       footer: null,
       centered: true,
-      destroyOnClose: true,
+      destroyOnHidden: true,
       maskClosable: false,
     })
   }
@@ -667,7 +667,7 @@ const Home: React.FC<HomeProp> = (props) => {
       content: <SequenceAnimationAemonstration></SequenceAnimationAemonstration>,
       footer: null,
       centered: true,
-      destroyOnClose: true,
+      destroyOnHidden: true,
       maskClosable: false,
     })
   }

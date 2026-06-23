@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Form, Upload } from 'antd'
+import { Form, Space, Upload } from 'antd'
 import { useMemoizedFn } from 'ahooks'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
@@ -114,15 +114,17 @@ export const ConfigSystemProxy: React.FC<ConfigSystemProxyProp> = (props) => {
               icon: <InformationCircleIcon />,
             }}
           >
-            <YakitInput
-              addonBefore={proxy.includes('://') ? undefined : 'http(s)://'}
-              value={proxy}
-              onChange={(e) => {
-                setProxy(e.target.value)
-              }}
-              placeholder={`${defHost}:${defPort}`}
-              size="large"
-            />
+            <Space.Compact>
+              {proxy.includes('://') ? undefined : 'http(s)://'}
+              <YakitInput
+                value={proxy}
+                onChange={(e) => {
+                  setProxy(e.target.value)
+                }}
+                placeholder={`${defHost}:${defPort}`}
+                size="large"
+              />
+            </Space.Compact>
           </Form.Item>
           <div className={styles['config-system-proxy-btns']}>
             <YakitButton type="outline2" size="large" onClick={() => onClose()}>

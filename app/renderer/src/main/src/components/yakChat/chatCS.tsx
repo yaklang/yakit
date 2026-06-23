@@ -1334,7 +1334,7 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
                 <div className={styles['footer-wrapper']}>
                   <Input.TextArea
                     className={styles['text-area-wrapper']}
-                    bordered={false}
+                    variant="borderless"
                     placeholder={`问我任何问题...(${convertKeyboardToUIKey(
                       getChatCSShortcutKeyEvents()['nextLine*chatCS'].keys,
                     )} 换行)`}
@@ -2729,7 +2729,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
               <div className={styles['input-text-area']}>
                 <Input.TextArea
                   autoSize={true}
-                  bordered={false}
+                  variant="borderless"
                   className={styles['text-area-wrapper']}
                   placeholder={`请输入${item}`}
                   onChange={(e) => {
@@ -2755,7 +2755,7 @@ const ChatCsPromptForm: React.FC<ChatCsPromptFormProps> = memo((props) => {
                     <div className={styles["input-text-area"]}>
                         <Input.TextArea
                             autoSize={true}
-                            bordered={false}
+                            variant="borderless"
                             className={styles["text-area-wrapper"]}
                             placeholder='请输入情报需求...'
                         />

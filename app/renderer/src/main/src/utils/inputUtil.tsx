@@ -1,5 +1,5 @@
 import React, { CSSProperties, useEffect, useRef, useState } from 'react'
-import { Button, Checkbox, Col, Form, Input, Row, Tag, Tooltip, Typography, Upload } from 'antd'
+import { Button, Checkbox, Col, Form, Input, Row, Space, Tag, Tooltip, Typography, Upload } from 'antd'
 import '@ant-design/compatible/assets/index.css'
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import TimeRange, { TimePoint } from './timeRange'
@@ -296,7 +296,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
           {items.map((item, index) => {
             return (
               <Form.Item label={t('InputUtil.parameterIndex', { index })}>
-                <Input.Group>
+                <Space.Compact>
                   <Row gutter={10}>
                     <Col span={6}>
                       <Input
@@ -340,26 +340,27 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                         </div>
                       ) : (
                         <>
-                          <Input
-                            placeholder={'Value'}
-                            allowClear={true}
-                            value={items[index].value}
-                            onChange={(e) => {
-                              const value = e.target.value
-                              items[index].value = value.trim()
-                              setItems([...items])
-                            }}
-                            // addonAfter={<>
-                            //     <DeleteOutlined
-                            //         style={{color: "red"}}
-                            //         onClick={() => {
-                            //             if (index > 0) {
-                            //                 items.splice(index, 1)
-                            //                 setItems([...items])
-                            //             }
-                            //         }}/>
-                            // </>}
-                          />
+                          <Space.Compact>
+                            <Input
+                              placeholder={'Value'}
+                              allowClear={true}
+                              value={items[index].value}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                items[index].value = value.trim()
+                                setItems([...items])
+                              }}
+                            />
+                            {/* <DeleteOutlined
+                              style={{ color: 'red' }}
+                              onClick={() => {
+                                if (index > 0) {
+                                  items.splice(index, 1)
+                                  setItems([...items])
+                                }
+                              }}
+                            /> */}
+                          </Space.Compact>
                         </>
                       )}
                     </Col>
@@ -378,7 +379,7 @@ export const InputStringOrJsonItem: React.FC<InputStringOrJsonItemProps> = (prop
                       </Button>
                     </Col>
                   </Row>
-                </Input.Group>
+                </Space.Compact>
               </Form.Item>
             )
           })}
