@@ -409,9 +409,9 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                     </Tooltip>
                   </div>
                   <div className={styles['select-title-right']}>
-                    <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
+                    {/* <Tooltip title={t('AIModelSelect.openConfigTooltip')}>
                       <YakitButton size="small" type="text2" icon={<OutlineCogIcon />} onClick={openModelTab} />
-                    </Tooltip>
+                    </Tooltip> */}
                     {aiType === 'online' && (
                       <Tooltip title={t('YakitButton.refresh')}>
                         <YakitButton
