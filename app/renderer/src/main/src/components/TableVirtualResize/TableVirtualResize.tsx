@@ -2575,7 +2575,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
               allowClear
               value={Array.isArray(value) ? [...value] : []}
               {...filterMultipleProps}
-              dropdownStyle={{ height: 0, padding: 0 }}
+              styles={{ popup: { root: { height: 0, padding: 0 } } }}
               options={data}
               className="select-small"
               onFocus={() => onHandleScroll()}

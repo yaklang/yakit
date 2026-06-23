@@ -355,7 +355,7 @@ const ConcurrencyItem: React.FC<SequenceItemProps> = memo((props) => {
               onChange={(v) => onUpdateItemPage({ ...item, pageId: v.value, pageName: v.label })}
               getPopupContainer={(dom) => dom}
               disabled={disabled}
-              onDropdownVisibleChange={(v) => setSelectVisible(v)}
+              onOpenChange={(v) => setSelectVisible(v)}
               open={selectVisible && !isDragging}
               options={options}
             />

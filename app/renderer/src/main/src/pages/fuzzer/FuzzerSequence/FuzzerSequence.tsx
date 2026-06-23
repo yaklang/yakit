@@ -2441,7 +2441,7 @@ const SequenceItem: React.FC<SequenceItemProps> = React.memo((props) => {
               }}
               getPopupContainer={(dom) => dom}
               disabled={disabled}
-              onDropdownVisibleChange={(v) => {
+              onOpenChange={(v) => {
                 setSelectVisible(v)
               }}
               open={selectVisible && !isDragging}

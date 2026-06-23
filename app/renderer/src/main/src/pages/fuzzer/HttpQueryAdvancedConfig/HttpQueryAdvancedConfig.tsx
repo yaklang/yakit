@@ -597,7 +597,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   mode="tags"
                   size="small"
                   maxTagCount={1}
-                  dropdownMatchSelectWidth={245}
+                  popupMatchSelectWidth={245}
                 />
               </Form.Item>
               <Form.Item label={<> </>}>

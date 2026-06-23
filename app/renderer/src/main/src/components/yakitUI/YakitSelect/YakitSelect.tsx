@@ -299,18 +299,22 @@ export const YakitSelectCustom = <ValueType, OptionType>(
         {...props}
         {...extraProps}
         menuItemSelectedIcon={supportDelCache ? <></> : props.menuItemSelectedIcon}
-        size="middle"
-        dropdownClassName={classNames(
-          styles['yakit-select-popup'],
-          {
-            [styles['yakit-select-wrapper-tags']]: props.mode === 'tags' || props.mode === 'multiple',
-            [styles['yakit-select-popup-y']]: show,
+        size={'small'}
+        classNames={{
+          popup: {
+            root: classNames(
+              styles['yakit-select-popup'],
+              {
+                [styles['yakit-select-wrapper-tags']]: props.mode === 'tags' || props.mode === 'multiple',
+                [styles['yakit-select-popup-y']]: show,
+              },
+              props.classNames?.popup?.root,
+            ),
           },
-          props.dropdownClassName,
-        )}
-        onDropdownVisibleChange={(open) => {
+        }}
+        onOpenChange={(open) => {
           setShow(open)
-          if (props.onDropdownVisibleChange) props.onDropdownVisibleChange(open)
+          if (props.onOpenChange) props.onOpenChange(open)
         }}
         notFoundContent={
           <div className={classNames('yakit-select-notFound')}>
