@@ -2,27 +2,20 @@ import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamTyp
 import type {
   AIChatQSData,
   AIChatQSDataType,
+  AIInputNotifyMessage,
   AIStreamOutput,
   AIYakExecFileRecord,
-  ReActChatBaseInfo,
+  ChatListRenderType,
   ReActChatRenderItem,
-  TodoListCardData,
 } from './aiRender'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '@/pages/ai-agent/store/constants'
-import type {
-  AIAgentGrpcApi,
-  AIInputEvent,
-  AIOutputEvent,
-  AIOutputI18n,
-  AISource,
-  AIStartParams,
-  AITaskStatusType,
-} from './grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AISource, AIStartParams, AITaskStatusType } from './grpcApi'
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
-import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
+import type { AIAgentChatData, AIAgentChatMetaData, AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
+import { createChatStore } from './chatStore'
 
 // #region 公共 hooks 事件
 export interface UseHookBaseParams {
@@ -53,14 +46,6 @@ interface UseHookStateFunc {
 export interface UpdateRenderDataParams {
   mapKey: string
   type: AIChatQSDataType
-}
-// #endregion
-
-// #region useAIPerfData相关定义
-export interface UseAIPerfDataParams extends UseHookBaseParams {}
-
-export interface UseAIPerfDataEvents {
-  handleSetData: (res: AIOutputEvent) => void
 }
 // #endregion
 
@@ -226,8 +211,6 @@ export interface UseChatIPCState {
   httpRunTimeIDs: string[]
   /** 运行时产生risk数据的run_time_id合集 */
   riskRunTimeIDs: string[]
-  /** 插件输出的卡片数据 */
-  yakExecResult: UseYakExecResultState
   /** 自由对话相关数据 */
   casualChat: UseCasualChatState
   /** 任务规划相关数据 */
@@ -259,7 +242,7 @@ export interface UseChatIPCState {
   /** 用户主动取消问题的loading状态(任务规划) */
   cancelTaskLoading: boolean
   /** 流推送的提示文案（notify / rate-limit），展示时长由 duration 系列字段控制，到期自动清空 */
-  notifyMessage: { type: 'notify' | 'rate-limit'; content: string; label: AIOutputI18n } | null
+  notifyMessage: AIInputNotifyMessage | null
   /** 请求历史数据相关State */
   requestHistoryState: UseAIMessageDataState
 }
@@ -319,7 +302,7 @@ export interface UseChatIPCEvents {
   /** 删除会话操作的关联逻辑 */
   onDelChats: (session: string[]) => void
   /** 用户主动取消问题的loading状态变换 */
-  handleCancelLoadingChange: (type: ReActChatBaseInfo['chatType'], status: boolean) => void
+  handleCancelLoadingChange: (type: ChatListRenderType, status: boolean) => void
   /** 清空指定变量数据 */
   handleResetTarget: (target: 'memoryList') => void
   /** 用户手动干预的执行事件 */
@@ -358,42 +341,17 @@ export interface UseAIChatLogEvents {
 // #endregion
 
 // #region AI-Agent相关grpc流数据处理逻辑
-export interface AIMessageHandlerParams extends UseHookStateFunc {
+export interface AIMessageHandlerParams {
   /** grpc流原始数据 */
   res: AIOutputEvent
-  /** 处理数据的额外补充数据 */
-  info: {
-    chatType: ReActChatRenderItem['chatType']
-  }
-  /** 获取当前任务规划的问题ID信息 */
-  getCurrentTaskPlanID?: () => TaskChatTaskInfo | undefined
-  /** 获取流接口请求参数 */
-  getRequest: () => AIAgentSetting | undefined
+  chatType: ChatListRenderType
+  store: ReturnType<typeof createChatStore>
+  rawData: AIAgentChatData
+  request: AIStartParams
+  meta: AIAgentChatMetaData
   /** 将数据推送到日志集合中 */
-  pushLog: UseHookBaseParams['pushLog']
-  /** review 类型相关变量和方法 */
-  review?: {
-    /** 设置review数据 */
-    handleSetReview?: (newReview: AIChatQSData | undefined) => void
-    /** 获取review数据 */
-    handleGetReview?: () => AIChatQSData | undefined
-    /** review 触发回调事件 */
-    onReview?: UseTaskChatParams['onReview']
-    /** plan_review 补充数据 */
-    onReviewExtra?: UseTaskChatParams['onReviewExtra']
-    /** 触发 review-release 后的回调事件 */
-    onReviewRelease?: (id: string) => void
-    /** 将 review 数据处理成需要展示的UI数据 */
-    handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
-    /** 向进行中的 grpc 流发送交互消息 */
-    sendRequest?: UseTaskChatParams['sendRequest']
-  }
-  /** store数据 */
-  getChatDataStore: UseHookBaseParams['getChatDataStore']
-  /** 回调方法 */
-  callback?: (data: AIOutputEvent) => void
-  /** 当前自由对话父任务 ID（任务规划请用 getCurrentTaskPlanID） */
-  getTaskId?: () => string
+  pushLog: (log: AIChatLogData) => void
+  sendRequest: (request: AIInputEvent) => void
 }
 export type AIMessageHandler = (params: AIMessageHandlerParams) => void
 // #endregion
@@ -404,10 +362,7 @@ export type loadMoreType = keyof AIChatData['beforeID']
 export interface AIMessageDataProps {
   type: Domain
   getChatStore: UseHookBaseParams['getChatDataStore']
-  setContentMap: (
-    chatType: ReActChatBaseInfo['chatType'],
-    ...args: Parameters<UseHookStateFunc['setContentMap']>
-  ) => void
+  setContentMap: (chatType: ChatListRenderType, ...args: Parameters<UseHookStateFunc['setContentMap']>) => void
   setCasualElements: UseHookStateFunc['setElements']
   setTaskElements: UseHookStateFunc['setElements']
   grpcLoadMore?: (request: { limit: number; start_id?: number }) => void
@@ -433,7 +388,7 @@ export interface UseAIMessageDataState {
   timelinesLoading: boolean
 }
 
-export type HistoryChatType = ReActChatBaseInfo['chatType'] | 'timelines'
+export type HistoryChatType = ChatListRenderType | 'timelines'
 
 export interface UseAIMessageDataEvents {
   /** 给UI使用的hasMore获取方法 */

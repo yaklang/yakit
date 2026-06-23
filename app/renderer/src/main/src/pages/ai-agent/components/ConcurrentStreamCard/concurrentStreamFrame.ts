@@ -1,9 +1,9 @@
-import type { ReActChatElement, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
+import type { ChatListRenderType, ReActChatTaskElementSub } from '@/pages/ai-re-act/hooks/aiRender'
 
 export interface ConcurrentStreamFramePayload {
   session: string
   token: string
-  chatType: ReActChatElement['chatType']
+  chatType: ChatListRenderType
   elements: ReActChatTaskElementSub[]
   taskName?: string
 }

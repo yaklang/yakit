@@ -1,6 +1,6 @@
 import { SetStateAction } from 'react'
 import type { AIChatData } from '../type/aiChat'
-import { AIChatQSData, ReActChatBaseInfo } from '@/pages/ai-re-act/hooks/aiRender'
+import type { AIChatQSData, ChatListRenderType } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIModelTypeEnum } from '../defaultConstant'
 import { cloneDeep } from 'lodash'
 import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData } from '@/pages/ai-re-act/hooks/defaultConstant'
@@ -11,7 +11,7 @@ export type DeepPartial<T> = {
 
 interface GetContentMapParams {
   session: string
-  chatType: ReActChatBaseInfo['chatType']
+  chatType: ChatListRenderType
   mapKey: string
 }
 
