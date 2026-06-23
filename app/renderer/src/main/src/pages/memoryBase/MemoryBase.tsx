@@ -1125,13 +1125,13 @@ const MemoryQuery: React.FC<MemoryQueryProps> = React.memo((props) => {
               >
                 <div className={styles['select-before']}>预设</div>
                 <YakitSelect
-                  bordered={false}
+                  variant="borderless"
                   options={rateOption}
                   value={rateMode}
                   onSelect={onRateSelect}
                   wrapperClassName={styles['select']}
                   size="small"
-                  onDropdownVisibleChange={setRateSelectVisible}
+                  onOpenChange={setRateSelectVisible}
                 />
               </div>
             </div>

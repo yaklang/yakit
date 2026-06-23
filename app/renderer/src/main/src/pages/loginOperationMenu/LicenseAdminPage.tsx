@@ -686,7 +686,7 @@ const CreateLicense: React.FC<CreateLicenseProps> = (props) => {
                 update(pagination.page + 1)
               }
             }}
-            dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+            popupRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
             notFoundContent={<YakitEmpty />}
           />
         </Form.Item>

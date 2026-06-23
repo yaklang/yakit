@@ -1537,7 +1537,7 @@ const AccountForm: React.FC<AccountFormProps> = (props) => {
               getRolesData(rolePagination.page + 1)
             }
           }}
-          dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+          popupRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
         >
           {roleData.map((item) => (
             <YakitSelect.Option key={item.id} value={item.id}>

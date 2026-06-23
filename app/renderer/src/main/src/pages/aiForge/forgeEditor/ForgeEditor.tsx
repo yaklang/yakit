@@ -850,7 +850,11 @@ const AIForgeEditorInfoForm: React.FC<AIForgeEditorInfoFormProps> = memo(
               >
                 <YakitSelect
                   wrapperClassName={styles['forge-type-select']}
-                  dropdownClassName={styles['forge-type-select-dropdown']}
+                  classNames={{
+                    popup: {
+                      root: styles['forge-type-select-dropdown'],
+                    },
+                  }}
                   onChange={handleTypeChange}
                 >
                   {DefaultForgeTypeList.map((item, index) => {
