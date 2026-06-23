@@ -209,15 +209,12 @@ function useChatIPC(params?: UseChatIPCParams) {
   // #endregion
 
   // #region 场景状态相关逻辑
-  const focusOfTaskID = useRef('')
   const [focusMode, setFocusMode] = useState<string>('')
-  const handleFocusModeChange = useMemoizedFn((id: string, mode: string) => {
-    focusOfTaskID.current = id
+  const handleFocusModeChange = useMemoizedFn((mode: string) => {
     setFocusMode(mode)
   })
 
   const handleResetFocusMode = useMemoizedFn(() => {
-    focusOfTaskID.current = ''
     setFocusMode('')
   })
   // #endregion
@@ -870,7 +867,7 @@ function useChatIPC(params?: UseChatIPCParams) {
             casualChatEvent.resetTodoListData()
             if (data.focus_mode) {
               // 记录场景状态
-              handleFocusModeChange(data.react_task_id, data.focus_mode)
+              handleFocusModeChange(data.focus_mode)
             } else {
               // 非场景状态
               handleResetFocusMode()
@@ -953,11 +950,9 @@ function useChatIPC(params?: UseChatIPCParams) {
             const { react_task_id, react_task_now_status } = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
             if (['completed', 'aborted'].includes(react_task_now_status)) {
               if (currentCasualTaskID.current && currentCasualTaskID.current === react_task_id) {
-                // 问题任务完成或者者被中止后，重置当前问题任务id
-                currentCasualTaskID.current = ''
                 setCancelCasualLoading(false)
               }
-              if (focusOfTaskID.current === react_task_id) handleResetFocusMode()
+              if (currentCasualTaskID.current === react_task_id) handleResetFocusMode()
               handleUpdateCasualStatus('remove')
               casualChatEvent.resetTodoListData()
               if (currentTaskPlanID.current?.taskID === react_task_id) {
