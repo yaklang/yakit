@@ -1643,7 +1643,7 @@ const ModifyAuthorModal: React.FC<ModifyAuthorModalProps> = memo((props) => {
         >
           <YakitSelect
             placeholder={t('PluginManage.searchUsername')}
-            showArrow={false}
+            suffixIcon={null}
             showSearch={true}
             filterOption={false}
             allowClear={true}

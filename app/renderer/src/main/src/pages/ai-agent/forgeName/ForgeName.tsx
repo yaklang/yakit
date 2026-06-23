@@ -627,9 +627,9 @@ export const BatchExportAIforge = memo(
                     getAiToolData(aiToolPagination.Page + 1, searchKeyword)
                   }
                 }}
-                dropdownRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
+                popupRender={(originNode: React.ReactNode) => selectDropdown(originNode)}
                 mode="multiple"
-                onDropdownVisibleChange={(open) => {
+                onOpenChange={(open) => {
                   if (open) {
                     getAiToolData(1, searchKeyword)
                   } else {
