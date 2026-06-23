@@ -12,6 +12,35 @@ const osHome = os.homedir()
 /** 软件关联数据文件夹名 */
 const projectName = 'yakit-projects'
 
+/** EnpriTrace start.bat 生成的项目路径配置文件名 */
+const ENPRITRACE_PROJECT_PATH_FILE = 'project_path.txt'
+
+/**
+ * 读取 EnpriTrace start.bat 写入的 yakit-projects 路径。
+ * start.bat 会在 EnpriTrace 目录下生成 project_path.txt，内容为 .../EnpriTrace/yakit-projects
+ */
+const readEnpriTraceProjectPath = () => {
+  const projectPathFile = path.join(appPath, ENPRITRACE_PROJECT_PATH_FILE)
+  try {
+    if (!fs.existsSync(projectPathFile)) {
+      return ''
+    }
+    const content = fs
+      .readFileSync(projectPathFile, 'utf8')
+      .trim()
+      .replace(/^[\s\uFEFF]+/, '')
+    if (!content) {
+      return ''
+    }
+    if (fs.existsSync(content)) {
+      return content
+    }
+    return ''
+  } catch (error) {
+    return ''
+  }
+}
+
 /** 软件关联数据路径设置逻辑 Start */
 // 数据文件夹路径
 let project_path = ''
@@ -19,6 +48,8 @@ let project_path = ''
 const osHomeProjectPath = path.join(osHome, projectName)
 // 软件环境 项目文件夹路径
 const appProjectPath = path.join(appPath, projectName)
+// EnpriTrace start.bat 指定的 yakit-projects 路径
+const enpriTraceProjectPath = readEnpriTraceProjectPath()
 
 try {
   /**
@@ -46,9 +77,10 @@ try {
 /**
  * @name 软件关联项目相关目录路径
  * 在新版本中，windows自定义安装路径会将os-home目录的yakit-projects迁移到软件根目录下
+ * EnpriTrace 通过 start.bat 生成 project_path.txt 指定 yakit-projects 路径，优先级最高
  * 如果获取项目关联文件夹路径错误时，将自动设置为系统用户下面(容灾处理)
  */
-const YakitProjectPath = project_path || osHomeProjectPath
+const YakitProjectPath = enpriTraceProjectPath || project_path || osHomeProjectPath
 
 console.log(`---------- Global-Path Start ----------`)
 console.log(`software-path: ${appPath}`)
