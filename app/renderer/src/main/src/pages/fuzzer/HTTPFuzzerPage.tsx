@@ -2878,7 +2878,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                         content: <BlastingAnimationAemonstration></BlastingAnimationAemonstration>,
                         footer: null,
                         centered: true,
-                        destroyOnClose: true,
+                        destroyOnHidden: true,
                       })
                     }}
                   >
@@ -3833,7 +3833,7 @@ export const SecondNodeExtra: React.FC<SecondNodeExtraProps> = React.memo((props
               </div>
             </div>
           }
-          onVisibleChange={(b) => {
+          onOpenChange={(b) => {
             if (!b) {
               const l = bodyLengthRef?.current?.getValue() || {}
               const d = durationMsRef?.current?.getValue() || {}

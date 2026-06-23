@@ -470,7 +470,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         </div>
         <div className={styles['ai-require-input']}>
           <Input.TextArea
-            bordered={false}
+            variant="borderless"
             placeholder={t('AIReActChatReview.tellMeMore')}
             autoSize={{ minRows: 4, maxRows: 4 }}
             value={requireQS}
@@ -646,7 +646,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
                   (editShow ? (
                     <div className={styles['review-input']}>
                       <Input.TextArea
-                        bordered={false}
+                        variant="borderless"
                         placeholder={editInfo.current?.prompt || t('YakitInput.please_enter')}
                         value={reviewQS}
                         autoSize={{ minRows: 4, maxRows: 4 }}

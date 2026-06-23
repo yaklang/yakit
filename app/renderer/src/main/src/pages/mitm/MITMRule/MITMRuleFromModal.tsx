@@ -1,4 +1,4 @@
-import { Col, Divider, Form, Row, Tooltip } from 'antd'
+import { Col, Divider, Form, Row, Space, Tooltip } from 'antd'
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import styles from './MITMRuleFromModal.module.scss'
 import classNames from 'classnames'
@@ -922,20 +922,17 @@ export const RuleContent: React.FC<RuleContentProps> = React.forwardRef((props, 
             return (
               <div className={styles['rule-content-row']} key={`rule-row-${index}`}>
                 <div className={styles['rule-content-input']}>
-                  <YakitInput
-                    value={item}
-                    placeholder={t('RuleContent.use_right_tool_generate_regex')}
-                    addonAfter={
-                      <AdjustmentsIcon
-                        className={styles['icon-adjustments']}
-                        onClick={() => onOpenRegexTester(index)}
-                      />
-                    }
-                    onChange={(e) => {
-                      const { value } = e.target
-                      onSetRuleItem(index, value)
-                    }}
-                  />
+                  <Space.Compact>
+                    <YakitInput
+                      value={item}
+                      placeholder={t('RuleContent.use_right_tool_generate_regex')}
+                      onChange={(e) => {
+                        const { value } = e.target
+                        onSetRuleItem(index, value)
+                      }}
+                    />
+                    <AdjustmentsIcon className={styles['icon-adjustments']} onClick={() => onOpenRegexTester(index)} />
+                  </Space.Compact>
                 </div>
                 <div className={styles['rule-content-actions']}>
                   {index !== 0 && (

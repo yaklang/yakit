@@ -43,7 +43,7 @@ export const PluginGroupDrawer: React.FC<PluginFroupMagDrawerProp> = (props) => 
       closable: true,
       maskClosable: false,
       centered: true,
-      destroyOnClose: true,
+      destroyOnHidden: true,
       content: (
         <Form
           form={form}
