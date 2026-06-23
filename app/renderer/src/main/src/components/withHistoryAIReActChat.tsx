@@ -33,6 +33,7 @@ import {
 import { AIAgentGrpcApi, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
+  getWebFuzzerPageIsHttps,
   getWebFuzzerPageRequestString,
   enqueueWebFuzzerCasualReplaceReview,
   pushAIFuzzStatusRuntimeIdToWebFuzzerPage,
@@ -109,9 +110,10 @@ function attachWebFuzzerHttpRequestToEvent(
   event: AIInputEvent,
   sessionId: string | undefined | null,
   requestRaw: string | null,
+  isHttps: boolean,
 ): AIInputEvent {
   if (requestRaw == null) return event
-  return appendWebFuzzerRequestRawAttachmentToEvent(event, sessionId, requestRaw)
+  return appendWebFuzzerRequestRawAttachmentToEvent(event, sessionId, requestRaw, isHttps)
 }
 
 const CODE_BLOCK_TAG_DIRECTIVE = ':codeBlockTag'
@@ -424,9 +426,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
       let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
       if (httpFuzzTabPageId) {
         const raw = getWebFuzzerPageRequestString(httpFuzzTabPageId)
+        const isHttps = getWebFuzzerPageIsHttps(httpFuzzTabPageId) ?? false
         const sessionId =
           data.params.Params?.TimelineSessionID || activeChat?.SessionID || getSetting().TimelineSessionID
-        params = attachWebFuzzerHttpRequestToEvent(params, sessionId, raw)
+        params = attachWebFuzzerHttpRequestToEvent(params, sessionId, raw, isHttps)
       }
       if (transformInputEvent) {
         params = transformInputEvent(params)
@@ -498,7 +501,8 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     let params: AIInputEvent = { ...data.params, FocusModeLoop: focusModeLoop }
     if (httpFuzzTabPageId) {
       const raw = getWebFuzzerPageRequestString(httpFuzzTabPageId)
-      params = attachWebFuzzerHttpRequestToEvent(params, activeChat?.SessionID, raw)
+      const isHttps = getWebFuzzerPageIsHttps(httpFuzzTabPageId) ?? false
+      params = attachWebFuzzerHttpRequestToEvent(params, activeChat?.SessionID, raw, isHttps)
     }
     if (transformInputEvent) {
       params = transformInputEvent(params)

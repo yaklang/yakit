@@ -7,11 +7,19 @@ export function buildWebFuzzerRequestRawAttachmentKey(sessionId: string): string
   return `${sessionId}-${randomString(10)}`
 }
 
-export function buildWebFuzzerRequestRawAttachment(sessionId: string, requestRaw: string): AttachedResourceInfo {
+export function buildWebFuzzerRequestRawAttachment(
+  sessionId: string,
+  requestRaw: string,
+  isHttps: boolean,
+): AttachedResourceInfo {
+  const Value = {
+    http_packet: requestRaw,
+    is_https: isHttps,
+  }
   return {
     Type: WEB_FUZZER_ATTACHED_TYPE_SELECTED as AttachedResourceInfo['Type'],
     Key: buildWebFuzzerRequestRawAttachmentKey(sessionId) as AttachedResourceInfo['Key'],
-    Value: requestRaw,
+    Value: JSON.stringify(Value),
   }
 }
 
@@ -20,13 +28,14 @@ export function appendWebFuzzerRequestRawAttachmentToEvent(
   event: AIInputEvent,
   sessionId: string | undefined | null,
   requestRaw: string | undefined | null,
+  isHttps: boolean,
 ): AIInputEvent {
   const raw = (requestRaw || '').trim()
   const sid = (sessionId || '').trim()
   if (!raw || !sid) return event
   if (!event.IsStart && !event.IsFreeInput) return event
 
-  const item = buildWebFuzzerRequestRawAttachment(sid, raw)
+  const item = buildWebFuzzerRequestRawAttachment(sid, raw, isHttps)
   const existing = event.AttachedResourceInfo || []
   return { ...event, AttachedResourceInfo: [...existing, item] }
 }
