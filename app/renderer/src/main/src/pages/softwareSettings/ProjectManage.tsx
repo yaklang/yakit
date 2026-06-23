@@ -62,6 +62,7 @@ import { API } from '@/services/swagger/resposeType'
 import { useUploadInfoByEnpriTrace } from '@/components/layout/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { Trans } from 'react-i18next'
+import YakitCascader from '@/components/yakitUI/YakitCascader/YakitCascader'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -2130,22 +2131,26 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                   )
                 }
               >
-                <Cascader
-                  // defaultValue={cascaderValue}
+                <YakitCascader
+                  defaultValue={cascaderValue}
                   options={data}
                   fieldNames={{ label: 'ProjectName', value: 'Id', children: 'children' }}
                   changeOnSelect={true}
                   loadData={(selectedOptions) => fetchChildNode(selectedOptions as any)}
                   onChange={(value, selectedOptions) => {
                     if (value) {
-                      setInfo({ ...info, FolderId: +value[0] || 0, ChildFolderId: +value[1] || 0 })
+                      setInfo({
+                        ...info,
+                        FolderId: value[0] !== null ? +value[0] : 0 || 0,
+                        ChildFolderId: value[1] !== null ? +value[1] : 0 || 0,
+                      })
                     } else {
                       setInfo({ ...info, FolderId: 0, ChildFolderId: 0 })
                     }
                   }}
-                  dropdownClassName={styles['cascader-dropdown-body']}
+                  classNames={{ popup: { root: styles['cascader-dropdown-body'] } }}
                   open={dropShow}
-                  onDropdownVisibleChange={(open: boolean) => setDropShow(open)}
+                  onOpenChange={(open: boolean) => setDropShow(open)}
                   suffixIcon={<ChevronDownIcon style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />}
                 />
               </Form.Item>
@@ -2358,7 +2363,7 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
             </Form.Item>
             {!parentNode && (
               <Form.Item label={`${t('NewProjectAndFolder.belongToFolder')} :`}>
-                <Cascader
+                <YakitCascader
                   options={data}
                   fieldNames={{ label: 'ProjectName', value: 'Id', children: 'children' }}
                   changeOnSelect={true}
@@ -2367,14 +2372,14 @@ export const NewProjectAndFolder: React.FC<NewProjectAndFolderProps> = memo((pro
                     if (value) {
                       setImportInfo({
                         ...importInfo,
-                        FolderId: +value[0] || 0,
-                        ChildFolderId: +value[1] || 0,
+                        FolderId: value[0] !== null ? +value[0] : 0 || 0,
+                        ChildFolderId: value[1] !== null ? +value[1] : 0 || 0,
                       })
                     } else {
                       setImportInfo({ ...importInfo, FolderId: 0, ChildFolderId: 0 })
                     }
                   }}
-                  dropdownClassName={styles['cascader-dropdown-body']}
+                  classNames={{ popup: { root: styles['cascader-dropdown-body'] } }}
                   suffixIcon={<ChevronDownIcon style={{ color: 'var(--Colors-Use-Neutral-Text-1-Title)' }} />}
                 />
               </Form.Item>
