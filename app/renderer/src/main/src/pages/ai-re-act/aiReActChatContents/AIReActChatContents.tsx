@@ -24,6 +24,7 @@ import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/use
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useLoadHistory from '../hooks/useLoadHistory'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
+import AITextSyntaxflow from '@/pages/ai-agent/components/aiTextSyntaxflow/AITextSyntaxflow'
 
 const getAIReferenceNodeByType = (contentType?: string) => {
   switch (contentType) {
@@ -102,6 +103,15 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
     }
     case AIStreamContentType.LOG_TOOL_ERROR_OUTPUT:
       return <></>
+    case AIStreamContentType.TEXT_SYNTAXFLOW:
+      return (
+        <AITextSyntaxflow
+          content={content}
+          nodeIdVerbose={NodeIdVerbose}
+          modalInfo={modalInfo}
+          contentType={ContentType}
+        />
+      )
     default:
       return <AIStreamChatContent content={content} nodeIdVerbose={NodeIdVerbose} referenceNode={referenceNode} />
   }
@@ -118,7 +128,7 @@ export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.me
   const { activeChat } = useAIAgentStore()
 
   const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
-
+  console.log('chats:', chats.elements)
   const chatLength = useCreation(() => chats.elements.length, [chats.elements.length])
   // 向上滚动加载
   const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({

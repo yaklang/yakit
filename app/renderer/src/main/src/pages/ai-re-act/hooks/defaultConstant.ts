@@ -99,6 +99,8 @@ export enum AIStreamContentType {
   CODE_PYTHON = 'code/python',
   /** 请求包 */
   CODE_HTTP_REQUEST = 'code/http-request',
+  /** 代码/语法 */
+  TEXT_SYNTAXFLOW = 'text/syntaxflow',
 }
 
 /** 问题队列-默认值 */
