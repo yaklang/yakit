@@ -417,6 +417,9 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   const [allReportItems, setAllReportItems] = useState<ReportItem[][]>([])
   const [current, setCurrent] = useState<number>(1)
   const [reportItems, setReportItems] = useState<ReportItem[]>([])
+  // Word 导出时临时渲染全量报告项（预览分页仅用于展示，不应限制导出范围）
+  const [wordExportItems, setWordExportItems] = useState<ReportItem[] | null>(null)
+  const displayReportItems = wordExportItems ?? reportItems
   const divRef = useRef<HTMLDivElement>(null)
   const [downloadLoading, setDownloadLoading] = useState<boolean>(false)
 
@@ -449,6 +452,11 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
         const newReportItems = truncateArrayBySize(items, 90) // 每页90KB
         setAllReportItems(newReportItems)
         setReportItems(newReportItems[0])
+        setCurrent(1)
+      } else {
+        setAllReportItems([])
+        setReportItems([])
+        setCurrent(1)
       }
     } catch (e) {
       yakitNotify('error', `Parse Report[${props.reportId}]'s items failed`)
@@ -512,7 +520,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
 
   // 下载Word
   const downloadWord = () => {
-    if (!divRef || !divRef.current) return
+    if (!allReportItems.length) return
     setDownloadLoading(true)
     // 此处定时器为了确保已处理其余任务
     setTimeout(() => {
@@ -521,45 +529,61 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
   }
   // 下载报告
   const exportToWord = async () => {
-    if (!divRef || !divRef.current) return
-    const contentHTML = divRef.current
-    if (isEchartsToImg.current) {
-      isEchartsToImg.current = false
-      // 使用html2canvas将ECharts图表转换为图像
-      const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
-      const promises = Array.from(echartsElements).map(async (element) => {
-        const echartType = (element as HTMLElement).getAttribute('echart-type')
-        const options = getEchartsHtml2CanvasOptions(echartType)
-        const canvas = await html2canvas(element as HTMLElement, options)
-        return canvas.toDataURL('image/jpeg')
-      })
-
-      const echartsImages = await Promise.all(promises)
-
-      // 将图像插入到contentHTML中
-      echartsImages.forEach((imageDataUrl, index) => {
-        const img = document.createElement('img')
-        img.src = imageDataUrl
-        img.style.display = 'none'
-        echartsElements[index].appendChild(img)
-      })
+    const fullItems = allReportItems.flat()
+    if (fullItems.length === 0) {
+      setDownloadLoading(false)
+      return
     }
-    // word报告不要附录 table添加边框 移除南丁格尔玫瑰图点击详情(图像中已含)
-    let wordStr: string = contentHTML.outerHTML
-    if (wordStr.includes('附录：')) {
-      wordStr = wordStr.substring(0, contentHTML.outerHTML.indexOf('附录：'))
-    }
-    wordStr = wordStr
-      .replace(/<table(.*?)>/g, '<table$1 border="1">')
-      .replace(/<th(.*?)>/g, '<th$1 style="width: 10%">')
-      .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, '')
 
-    saveAs(
-      //保存文件到本地
-      htmlDocx.asBlob(wordStr), //将html转为docx
-      `${report.Title}.doc`,
-    )
-    setDownloadLoading(false)
+    setWordExportItems(fullItems)
+    // 等待全量报告项渲染完成后再抓取 DOM
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    try {
+      if (!divRef || !divRef.current) {
+        return
+      }
+      const contentHTML = divRef.current
+      if (isEchartsToImg.current) {
+        isEchartsToImg.current = false
+        // 使用html2canvas将ECharts图表转换为图像
+        const echartsElements = contentHTML.querySelectorAll('[data-type="echarts-box"]')
+        const promises = Array.from(echartsElements).map(async (element) => {
+          const echartType = (element as HTMLElement).getAttribute('echart-type')
+          const options = getEchartsHtml2CanvasOptions(echartType)
+          const canvas = await html2canvas(element as HTMLElement, options)
+          return canvas.toDataURL('image/jpeg')
+        })
+
+        const echartsImages = await Promise.all(promises)
+
+        // 将图像插入到contentHTML中
+        echartsImages.forEach((imageDataUrl, index) => {
+          const img = document.createElement('img')
+          img.src = imageDataUrl
+          img.style.display = 'none'
+          echartsElements[index].appendChild(img)
+        })
+      }
+      // word报告不要附录 table添加边框 移除南丁格尔玫瑰图点击详情(图像中已含)
+      let wordStr: string = contentHTML.outerHTML
+      if (wordStr.includes('附录：')) {
+        wordStr = wordStr.substring(0, contentHTML.outerHTML.indexOf('附录：'))
+      }
+      wordStr = wordStr
+        .replace(/<table(.*?)>/g, '<table$1 border="1">')
+        .replace(/<th(.*?)>/g, '<th$1 style="width: 10%">')
+        .replace(/<div[^>]*id=("nightingle-rose-title"|"nightingle-rose-content")[^>]*>[\s\S]*?<\/div>/g, '')
+
+      saveAs(
+        //保存文件到本地
+        htmlDocx.asBlob(wordStr), //将html转为docx
+        `${report.Title}.doc`,
+      )
+    } finally {
+      setWordExportItems(null)
+      setDownloadLoading(false)
+    }
   }
 
   const onChangePagination = (page: number) => {
@@ -687,7 +711,7 @@ const ReportViewer: React.FC<ReportViewerProp> = (props) => {
           >
             <div ref={divRef} className={styles['card-body']} style={{ overflow: 'auto' }}>
               <Space direction={'vertical'} style={{ width: '100%' }}>
-                {reportItems.map((i, index) => (
+                {displayReportItems.map((i, index) => (
                   <ReportItemRender item={i} key={index} />
                 ))}
               </Space>
