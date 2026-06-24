@@ -1,11 +1,11 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 
 import styles from './AIReActChat.module.scss'
 import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
 import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
-import { useControllableValue, useCreation, useInterval, useMemoizedFn } from 'ahooks'
+import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { ColorsChatIcon } from '@/assets/icon/colors'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -376,9 +376,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       </>
                     ) : (
                       <>
-                        <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
-                          任务详情
-                        </YakitButton>
+                        {getTaskId() && (
+                          <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
+                            任务详情
+                          </YakitButton>
+                        )}
                         <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
                       </>
                     ))}
