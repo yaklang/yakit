@@ -134,7 +134,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
     let newMenu: YakitMenuItemType[] = [
       {
         key: 'close',
-        label: '关闭 JAR',
+        label: '关闭项目',
         disabled: !projectName,
       },
       {
@@ -164,7 +164,7 @@ export const RunnerFileTree: React.FC<RunnerFileTreeProps> = memo((props) => {
 
   const downloadAsZipFun = useMemoizedFn(async () => {
     if (!projectName) {
-      failed('没有选择 JAR 文件')
+      failed('请先选择 JAR 文件或目录')
       return
     }
     try {

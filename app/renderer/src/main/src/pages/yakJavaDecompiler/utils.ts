@@ -9,6 +9,9 @@ import { FileDetailInfo, OptionalFileDetailInfo } from './RunnerTabs/RunnerTabsT
 import { v4 as uuidv4 } from 'uuid'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import emiter from '@/utils/eventBus/eventBus'
+import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
+import { getNameByPath } from '../yakRunner/utils'
+import { isAcceptEligible } from '@/components/yakitUI/YakitForm/YakitForm'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -418,6 +421,56 @@ export const getYakJavaDecompilerHistory = (): Promise<YakJavaDecompilerHistoryP
         resolve([])
       }
     })
+  })
+}
+
+export const isJavaDecompilerArchiveFile = (path: string) => isAcceptEligible(path, '.jar,.war,.ear')
+
+export const validateJavaDecompilerCodeSourcePath = (path: string) => {
+  if (isJavaDecompilerArchiveFile(path)) {
+    return true
+  }
+  // 目录路径由后端校验；非 archive 后缀视为目录选择
+  return !/\.(jar|war|ear|zip)$/i.test(path)
+}
+
+/**
+ * @name 打开 JAR/WAR/EAR 文件或包含 JAR 的目录
+ */
+export const openJavaDecompilerCodeSource = (
+  mode: 'file' | 'directory' | 'all' = 'all',
+): Promise<{ path: string; name: string } | null> => {
+  const properties =
+    mode === 'file'
+      ? (['openFile'] as const)
+      : mode === 'directory'
+        ? (['openDirectory'] as const)
+        : (['openFile', 'openDirectory'] as const)
+
+  return new Promise((resolve, reject) => {
+    handleOpenFileSystemDialog({
+      title: mode === 'directory' ? '选择包含 JAR 的目录' : '选择 JAR/WAR/EAR 文件或目录',
+      properties: [...properties],
+    })
+      .then(async (data) => {
+        try {
+          if (data.canceled || data.filePaths.length !== 1) {
+            resolve(null)
+            return
+          }
+          const path: string = data.filePaths[0]
+          if (!validateJavaDecompilerCodeSourcePath(path)) {
+            failed('仅支持 .jar、.war、.ear 文件或本地目录')
+            resolve(null)
+            return
+          }
+          const name = await getNameByPath(path)
+          resolve({ path, name })
+        } catch (error) {
+          reject(error)
+        }
+      })
+      .catch(reject)
   })
 }
 
