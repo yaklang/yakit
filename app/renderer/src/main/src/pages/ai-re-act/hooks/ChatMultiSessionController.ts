@@ -4,12 +4,12 @@ import { createChatStore } from './chatStore'
 import { Uint8ArrayToString } from '@/utils/str'
 import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultMemoryList, DefaultTodoListCardData } from './defaultConstant'
+import { DefaultMemoryList, DefaultPlanItemDetailsData } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
 import { genExecTasks, handleGrpcDataPushLog } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
-import { AIChatQSDataTypeEnum, AIReviewType } from './aiRender'
+import { AIChatQSDataTypeEnum, type AIReviewType } from './aiRender'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 
 const { ipcRenderer } = window.require('electron')
@@ -87,10 +87,10 @@ const genAIAgentChatData = (): AIAgentChatData => {
     },
 
     casualChat: {
-      todoList: cloneDeep(DefaultTodoListCardData),
+      planDetails: cloneDeep(DefaultPlanItemDetailsData),
     },
     taskChat: {
-      todoListMap: new Map(),
+      planDetailsMap: new Map(),
     },
     contents: new Map(),
   }
@@ -120,12 +120,13 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
 }
 
 export class ChatMultiSessionController {
+  private requestPool = new Map<string, AIStartParams>()
   private storePool = new Map<string, ReturnType<typeof createChatStore>>()
   private rawDataPool = new Map<string, AIAgentChatData>()
-  private requestPool = new Map<string, AIStartParams>()
   private metaPool = new Map<string, AIAgentChatMetaData>()
 
   private readyChannels = new Set<string>()
+  private activeShowSession: string | null = null
 
   /** 获取对应会话的所有数据集 */
   public ensureSession(sessionId: string) {
@@ -136,9 +137,9 @@ export class ChatMultiSessionController {
       this.metaPool.set(sessionId, genAIAgentChatMetaData())
     }
     return {
+      request: this.requestPool.get(sessionId)!,
       store: this.storePool.get(sessionId)!,
       rawData: this.rawDataPool.get(sessionId)!,
-      request: this.requestPool.get(sessionId)!,
       meta: this.metaPool.get(sessionId)!,
     }
   }
@@ -147,11 +148,34 @@ export class ChatMultiSessionController {
   public registerActiveChannel(sessionId: string) {
     this.readyChannels.add(sessionId)
   }
+  /** 设置当前展示的会话 Session */
+  public setActiveShowSession(sessionId: string) {
+    this.activeShowSession = sessionId
+  }
+  /** 判断指定会话是否当前正在展示 */
+  public isActiveShowSession(sessionId: string) {
+    return this.activeShowSession === sessionId
+  }
+
+  /** 更新指定会话的配置参数 */
+  public updateSessionConfig(sessionId: string, config: Partial<AIStartParams>) {
+    const { request } = this.ensureSession(sessionId)
+    Object.assign(request, config)
+  }
 
   /** 建立指定session会话的连接 */
-  public handleStartSession(sessionId: string, requestParams: AIChatIPCStartParams, cb?: () => void) {
-    const { params } = requestParams
-    const { request, meta } = this.ensureSession(sessionId)
+  public handleStartSession(requestParams: AIChatIPCStartParams, cb?: (sessionId: string) => void) {
+    const { token: sessionId, params } = requestParams
+    const isExec = this.readyChannels.has(sessionId)
+    if (isExec) {
+      yakitNotify('warning', '会话已经存在，请勿重复建立！')
+      return
+    }
+
+    const { request, store, meta } = this.ensureSession(sessionId)
+
+    store.getState().updateState({ execute: true, casualTitle: '发送问题，开启会话...' })
+
     if (params.Params?.UserQuery) {
       meta.createChatQuestion = {
         IsFreeInput: true,
@@ -169,10 +193,10 @@ export class ChatMultiSessionController {
   /** 主动向grpc发送请求 */
   public handleSendMessage(payload: AIChatSendParams) {
     try {
-      const { token, type, params, optionValue, extraValue } = payload
+      const { token, type, params, optionValue } = payload
       const isExist = this.readyChannels.has(token)
       if (!isExist) {
-        yakitNotify('warning', `[大管家] 会话 ${token} 未 Ready，请求已进队列排队...`)
+        yakitNotify('warning', '会话不存在，无法发送消息')
         return
       }
 
@@ -235,9 +259,9 @@ export class ChatMultiSessionController {
           break
 
         default:
-          this.requestMessage(token, params)
           break
       }
+      this.requestMessage(token, params)
     } catch (error) {}
   }
   /** 向连接中的会话发送请求 */
@@ -261,7 +285,7 @@ export class ChatMultiSessionController {
       } else {
         // 调用历史数据恢复方法
       }
-      meta?.onSessionStartSuccess?.()
+      meta?.onSessionStartSuccess?.(sessionId)
       return
     }
 
@@ -326,20 +350,24 @@ export class ChatMultiSessionController {
     }
   }
 
+  private closeIPCListeners(sessionId: string) {
+    ipcRenderer.removeAllListeners(`${sessionId}-data`)
+    ipcRenderer.removeAllListeners(`${sessionId}-end`)
+    ipcRenderer.removeAllListeners(`${sessionId}-error`)
+  }
+
   // 监听 session-error 事件
   public handleSessionError(sessionId: string, error: any) {}
   // 监听 session-end 事件
-  public handleSessionEnd(sessionId: string, res: any) {}
+  public handleSessionEnd(sessionId: string, res: any) {
+    this.closeIPCListeners(sessionId)
+  }
 
   /** 关闭指定session的连接 */
   public forceCloseSession(sessionId: string) {
     ipcRenderer.invoke('cancel-ai-re-act', sessionId).catch(() => {})
-    // ipcRenderer.removeAllListeners(`${sessionId}-data`)
-    //   ipcRenderer.removeAllListeners(`${sessionId}-end`)
-    //   ipcRenderer.removeAllListeners(`${sessionId}-error`)
 
     this.readyChannels.delete(sessionId)
-    // crossWindowEmitter.clearSessionBuffer(sessionId) // 清理日志内容
   }
 }
 
