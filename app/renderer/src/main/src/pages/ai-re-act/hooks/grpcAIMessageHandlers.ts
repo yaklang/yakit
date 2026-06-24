@@ -1616,6 +1616,20 @@ let reviewReleaseID: Record<string, AIAgentGrpcApi.ReviewRelease> = {}
 /** 记录plan_review补充信息的唯一ID */
 let currentPlanReviewId = ''
 
+/** 将 review 数据注入聊天流 UI（不走 onReview 弹层） */
+const handleTriggerReviewInChat = (
+  request: Pick<AIMessageHandlerParams, 'setContentMap' | 'setElements' | 'getContentMap' | 'res'>,
+  chatData: AIChatQSData,
+) => {
+  const cloned = cloneDeep(chatData)
+  request.setContentMap(cloned.id, cloned)
+  handleUpdateUISingleState(request.setElements, request.getContentMap, request.res.IsSync, {
+    mapKey: cloned.id,
+    type: cloned.type,
+    chatType: cloned.chatType,
+  })
+}
+
 /** Type='plan_review_require' plan-review */
 const handlePlanReview: AIMessageHandler = (request) => {
   const { res, info, getRequest, setContentMap, pushLog, review } = request
@@ -1871,7 +1885,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
       //   chatType: chatData.chatType,
       // })
     } else {
-      review?.onReview && review.onReview(cloneDeep(chatData))
+      handleTriggerReviewInChat(request, chatData)
     }
   } else if (info.chatType === 'reAct') {
     if (isAuto) return
@@ -1951,7 +1965,7 @@ const handleToolReview: AIMessageHandler = (request) => {
       //   chatType: chatData.chatType,
       // })
     } else {
-      review?.onReview && review.onReview(cloneDeep(chatData))
+      handleTriggerReviewInChat(request, chatData)
     }
   } else if (info.chatType === 'reAct') {
     if (isAuto) return
