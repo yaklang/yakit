@@ -321,7 +321,7 @@ export const NewThirdPartyApplicationConfigBase: React.FC<NewThirdPartyApplicati
                     execModelNameOption.current = true
                     getModelNameOption()
                   }}
-                  dropdownRender={(menu) => {
+                  popupRender={(menu) => {
                     return (
                       <>
                         <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>
@@ -923,7 +923,7 @@ export const NewAIThirdPartyApplicationConfigBase: React.FC<NewAIThirdPartyAppli
                     execModelNameOption.current = true
                     getModelNameOption()
                   }}
-                  dropdownRender={(menu) => {
+                  popupRender={(menu) => {
                     return (
                       <>
                         <YakitSpin spinning={modelOptionLoading}>{menu}</YakitSpin>

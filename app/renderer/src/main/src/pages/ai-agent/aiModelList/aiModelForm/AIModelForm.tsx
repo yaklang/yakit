@@ -759,7 +759,7 @@ export const AIConfigAPIKeyFormItem: React.FC<AIConfigAPIKeyFormItemProps> = Rea
       >
         <YakitAutoComplete
           options={options}
-          dropdownRender={(menu) => {
+          popupRender={(menu) => {
             return (
               <>
                 <YakitSpin spinning={loading}>{menu}</YakitSpin>

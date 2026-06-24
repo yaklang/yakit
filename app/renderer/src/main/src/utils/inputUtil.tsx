@@ -136,7 +136,7 @@ export const InputItem: React.FC<InputItemProps> = (props) => {
       {props.autoComplete ? (
         <YakitAutoComplete
           style={{ width: props.width || '100%' }}
-          dropdownMatchSelectWidth={400}
+          popupMatchSelectWidth={400}
           disabled={!!props.disable}
           placeholder={props.placeholder}
           allowClear={true}
