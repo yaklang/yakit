@@ -12,8 +12,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AI_AGENT_HISTORY_AI_SOURCES } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 
 const AIChatSetting = React.lazy(() => import('./AIChatSetting/AIChatSetting'))
-const ForgeName = React.lazy(() => import('./forgeName/ForgeName'))
-const AIToolList = React.lazy(() => import('./aiToolList/AIToolList'))
 const AIModelList = React.lazy(() => import('./aiModelList/AIModelList'))
 const HistoryChat = React.lazy(() => import('./historyChat/HistoryChat'))
 const AIMCP = React.lazy(() => import('./aiMCP/AIMCP'))
