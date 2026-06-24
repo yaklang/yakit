@@ -205,7 +205,7 @@ export interface AIAgentChatMetaData {
   /** 自由对话的实时记忆列表 */
   casualMemoryList: AIAgentGrpcApi.MemoryEntryList
   /** 会话通信流建立成功后的UI回调触发事件 */
-  onSessionStartSuccess?: () => void
+  onSessionStartSuccess?: (sessionId: string) => void
   /** 任务规划的实时记忆列表 */
   taskMemoryList: AIAgentGrpcApi.MemoryEntryList
   /** 当前专注场景ID */

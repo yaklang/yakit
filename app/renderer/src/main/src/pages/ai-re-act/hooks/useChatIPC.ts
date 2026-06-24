@@ -368,7 +368,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
   // #region review事件相关方法
   /** review 界面选项触发事件 */
-  const onSend = useMemoizedFn(({ token, type, params, optionValue, extraValue }: AIChatSendParams) => {
+  const onSend = useMemoizedFn(({ token, type, params, optionValue }: AIChatSendParams) => {
     try {
       if (!getExecute()) {
         yakitNotify('warning', 'AI 未执行任务，无法发送选项')
