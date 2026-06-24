@@ -208,6 +208,9 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         return <AiFailPlanCard item={data} />
       case AIChatQSDataTypeEnum.AI_API_REQUEST_FAILED:
         return <AIModelErrorPrompt item={itemData} />
+      case AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE:
+        console.log(itemData, 'xxx')
+        return null
       default:
         return <></>
     }

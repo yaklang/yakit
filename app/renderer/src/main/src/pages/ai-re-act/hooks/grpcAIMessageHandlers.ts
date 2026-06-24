@@ -1644,7 +1644,7 @@ const handlePlanReview: AIMessageHandler = (request) => {
     chatType: info.chatType,
     id: data.id,
     type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
-    data: { ...cloneDeep(data) },
+    data: { ...cloneDeep(data), reviewType: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE },
     taskIndex: generateTaskId({
       chatType: info.chatType,
       res,
@@ -1692,6 +1692,67 @@ const handlePlanReview: AIMessageHandler = (request) => {
       currentPlanReviewId = ''
       review?.onReview && review.onReview(cloneDeep(chatData))
     }
+  }
+}
+/** Type='detached_plan_require' detached plan review */
+const handleDetachedPlanReview: AIMessageHandler = (request) => {
+  const { res, info, getRequest, pushLog, review, setContentMap } = request
+  if (res.Type !== 'detached_plan_require') return
+
+  if (res.NodeId !== 'detached-plan') return
+  // 历史数据-grpc流数据在任务规划下无效，不处理
+  if (res.IsSync && info.chatType === 'task') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const data = JSON.parse(ipcContent) as AIAgentGrpcApi.DetachedPlanRequire
+  if (!data?.id || !data?.plans?.root_task || !data?.selectors?.length) {
+    handleErrorGRPCToLog(
+      res.IsSync,
+      pushLog,
+      genErrorLogData(
+        res.Timestamp,
+        `${res.Type}数据异常: id:${data?.id || '-'}; selectors:${JSON.stringify(data?.selectors || '-')}; plans:${
+          !!data?.plans?.root_task ? 'valid' : 'invalid'
+        } data`,
+      ),
+    )
+    return
+  }
+
+  const chatData: AIChatQSData = {
+    ...genBaseAIChatData(res),
+    chatType: info.chatType,
+    id: data.id,
+    type: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE,
+    data: { ...cloneDeep(data), reviewType: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE },
+    taskIndex: generateTaskId({
+      chatType: info.chatType,
+      res,
+      getCurrentTaskPlanID: request.getCurrentTaskPlanID,
+      getContentMap: request.getContentMap,
+    }),
+  }
+  if (res.IsSync) return
+
+  const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
+  if (isAuto) {
+    chatData.data.selected = JSON.stringify({ suggestion: 'continue' })
+    chatData.data.optionValue = 'continue'
+  }
+  review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
+  if (info.chatType === 'task') {
+    if (isAuto) {
+      review?.handleReviewDataToUI && review.handleReviewDataToUI(cloneDeep(chatData))
+    } else {
+      review?.onReview && review.onReview(cloneDeep(chatData))
+    }
+  } else if (info.chatType === 'reAct') {
+    setContentMap(chatData.id, cloneDeep(chatData))
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+      mapKey: chatData.id,
+      type: chatData.type,
+      chatType: chatData.chatType,
+    })
   }
 }
 /** Type='plan_task_analysis' plan-review的补充信息 */
@@ -2172,6 +2233,7 @@ const handleReviewRelease: AIMessageHandler = (request) => {
       case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
       case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
+      case AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE:
       case AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE:
         reviewDetail.data.selected = JSON.stringify(data.params)
         reviewDetail.data.optionValue = data.params?.suggestion || 'continue'
@@ -2257,6 +2319,7 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   'stream-finished': handleStreamFinished,
   reference_material: handleReferenceMaterial,
   plan_review_require: handlePlanReview,
+  detached_plan_require: handleDetachedPlanReview,
   plan_task_analysis: handlePlanReviewAnalysis,
   task_review_require: handleTaskReview,
   tool_use_review_require: handleToolReview,
