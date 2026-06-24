@@ -2838,19 +2838,21 @@ const CodeScanAuditExecuteForm: React.FC<CodeScanAuditExecuteFormProps> = React.
                         dots
                         min={0}
                         max={3}
-                        tipFormatter={(value) => {
-                          switch (value) {
-                            case 0:
-                              return '关闭，精度IV'
-                            case 1:
-                              return '慢速，精度III'
-                            case 2:
-                              return '中速，精度II'
-                            case 3:
-                              return '快速，精度I'
-                            default:
-                              return value
-                          }
+                        tooltip={{
+                          formatter: (value) => {
+                            switch (value) {
+                              case 0:
+                                return '关闭，精度IV'
+                              case 1:
+                                return '慢速，精度III'
+                              case 2:
+                                return '中速，精度II'
+                              case 3:
+                                return '快速，精度I'
+                              default:
+                                return value
+                            }
+                          },
                         }}
                       />
                     </Form.Item>

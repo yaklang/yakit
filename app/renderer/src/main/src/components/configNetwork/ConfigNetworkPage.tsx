@@ -894,21 +894,23 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
                     }}
                     min={0x300}
                     max={0x304}
-                    tipFormatter={(value) => {
-                      switch (value) {
-                        case 0x300:
-                          return 'SSLv3'
-                        case 0x301:
-                          return 'TLS 1.0'
-                        case 0x302:
-                          return 'TLS 1.1'
-                        case 0x303:
-                          return 'TLS 1.2'
-                        case 0x304:
-                          return 'TLS 1.3'
-                        default:
-                          return value
-                      }
+                    tooltip={{
+                      formatter: (value) => {
+                        switch (value) {
+                          case 0x300:
+                            return 'SSLv3'
+                          case 0x301:
+                            return 'TLS 1.0'
+                          case 0x302:
+                            return 'TLS 1.1'
+                          case 0x303:
+                            return 'TLS 1.2'
+                          case 0x304:
+                            return 'TLS 1.3'
+                          default:
+                            return value
+                        }
+                      },
                     }}
                   />
                 </Form.Item>
