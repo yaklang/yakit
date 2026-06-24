@@ -284,7 +284,7 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
         const v = restProps.value
         setDropdownSearchText(v !== undefined && v !== null ? String(v) : String(cacheHistoryData.defaultValue || ''))
       }
-      props.onDropdownVisibleChange?.(open)
+      props.onOpenChange?.(open)
     })
 
     return (
@@ -307,14 +307,18 @@ export const YakitAutoComGroupSearchWithAll = React.forwardRef<YakitAutoComplete
             onSearch={mergedOnSearch}
             options={options}
             size="middle"
-            dropdownClassName={classNames(
-              styles['yakit-auto-complete-popup'],
-              {
-                [styles['yakit-auto-complete-popup-y']]: show,
+            classNames={{
+              popup: {
+                root: classNames(
+                  styles['yakit-auto-complete-popup'],
+                  {
+                    [styles['yakit-auto-complete-popup-y']]: show,
+                  },
+                  props.classNames?.popup?.root,
+                ),
               },
-              props.dropdownClassName,
-            )}
-            onDropdownVisibleChange={mergedOnDropdownVisibleChange}
+            }}
+            onOpenChange={mergedOnDropdownVisibleChange}
           />
         )}
       </div>
