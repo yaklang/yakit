@@ -323,9 +323,27 @@ function useTaskChat(params: UseTaskChatParams) {
       handleResetReview()
       handleReviewDataToUI(chatData)
       setContentMap(chatData.id, chatData)
-      setElements((old) =>
-        old.concat({ token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'item' }),
-      )
+      setElements((old) => {
+        let isUpdate = false
+        const newArr = old.map((item) => {
+          if (chatData.taskIndex && item.token === chatData.taskIndex && item.kind === 'task') {
+            item.children.push({
+              token: chatData.id,
+              type: chatData.type,
+              renderNum: 1,
+              chatType: 'task',
+              kind: 'item',
+            })
+            isUpdate = true
+            return { ...item, renderNum: item.renderNum + 1 }
+          }
+          return item
+        })
+        if (!isUpdate) {
+          newArr.push({ token: chatData.id, type: chatData.type, renderNum: 1, chatType: 'task', kind: 'item' })
+        }
+        return newArr
+      })
 
       cb && cb()
     } catch (error) {}
