@@ -130,12 +130,11 @@ $radius: 8px;
       padding: 8px;
       width: 100%;
       background: var(--Colors-Use-Basic-Background);
-      max-height: 200px;
-      overflow-y: auto;
+      overflow-y: hidden;
       .card-list-inner {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        max-height: 200px;
         overflow: hidden auto;
       }
       .card-list-inner-hidden {
@@ -156,12 +155,18 @@ $radius: 8px;
   }
   .loading {
     color: var(--Colors-Use-Main-Primary);
+    svg {
+      width: 16px;
+      height: 16px;
+    }
   }
 }
 .card-list-item {
   display: flex;
   align-items: center;
   gap: 4px;
+  height: 24px;
+  flex-shrink: 0;
 }
 .card-list-item-pending {
   .item-text {

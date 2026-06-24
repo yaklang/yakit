@@ -123,12 +123,15 @@
         flex-shrink: 0;
       }
       .chat-header-focus-mode {
-        min-width: 0;
-        max-width: 100%;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        flex-shrink: 1;
+        .text {
+          min-width: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          flex-shrink: 1;
+        }
       }
     }
     .chat-header-extra {
