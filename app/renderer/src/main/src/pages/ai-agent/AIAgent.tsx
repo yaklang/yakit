@@ -29,6 +29,8 @@ import { AIBottomDetails } from './aiBottomDetails/AIBottomDetails'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { omit } from 'lodash'
 import { grpcDeleteAISession } from './grpc'
+import { useChatIPC } from '../ai-re-act/hooks/useNewChatIPC'
+import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
 
 /** 清空用户缓存的固定值 */
 export const AIAgentCacheClearValue = '20260113'
@@ -94,6 +96,8 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
   }, [setting])
 
+  const { onStart, onSend, onClose, fetchAISource } = useChatIPC({ source: AISourceEnum.aiAgent })
+
   const store: AIAgentContextStore = useMemo(() => {
     return {
       setting: setting,
@@ -105,6 +109,10 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       getSetting: getSetting,
       setSetting: setSetting,
       setActiveChat: setActiveChat,
+      onStart,
+      onSend,
+      onClose,
+      fetchAISource,
     }
   }, [])
 

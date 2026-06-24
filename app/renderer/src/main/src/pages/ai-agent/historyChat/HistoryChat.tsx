@@ -21,15 +21,14 @@ import { SideSettingButton } from '../aiChatWelcome/AIChatWelcome'
 import HistoryChatList, { DAY_MS, getChatTimestamp } from './HistoryChatList/HistoryChatList'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useSessionList from './HistoryChatList/hook/useSessionList'
-import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { type AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { JSONParseLog } from '@/utils/tool'
 import { usePageInfo } from '@/store/pageInfo'
 import { shallow } from 'zustand/shallow'
+import { handAIHistoryChatRemove } from './utils'
+import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import classNames from 'classnames'
 import { filterHistorySessionsBySource, getHistorySourceQuerySources, type HistorySourceFilter } from './source'
-
-const clearLocalChats = (sessions: AISession[]) =>
-  emiter.emit('onDelChats', JSON.stringify(sessions.map((item) => item.SessionID)))
 
 const HISTORY_SOURCE_FILTER_OPTIONS: {
   key: HistorySourceFilter
@@ -93,6 +92,7 @@ interface HistoryChatProps {
 }
 
 const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
+  const { setActiveChat, fetchAISource, onClose } = useAIAgentDispatcher()
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
   const enableHistorySourceFilter = useMemo(() => aiSource.includes('im'), [aiSource])
@@ -105,7 +105,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
   }, [aiSource, enableHistorySourceFilter, historySourceFilter])
   const [{ sessions }, dispatcher] = useSessionList(historyQuerySources)
   const { activeChat } = useAIAgentStore()
-  const { setActiveChat } = useAIAgentDispatcher()
+
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
 
   const getPopupContainer = useMemoizedFn(
@@ -138,12 +138,17 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      if (isGlobalAIAgentHistory) {
-        await grpcDeleteAISession({ DeleteAll: true }, true)
-      } else {
-        await grpcDeleteAISession({ Filter: { Source: historyQuerySources } }, true)
-      }
-      clearLocalChats(visibleSessions)
+      const source = fetchAISource()
+      const filter = isGlobalAIAgentHistory ? { DeleteAll: true } : { Filter: { Source: historyQuerySources } }
+      await handAIHistoryChatRemove({
+        grpcDeleteAISessionParams: filter,
+        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: [] }, //删除全部只需要传chatDataStoreKey
+        forceCloseSessionParams: {
+          aiSource: source,
+          sessionIds: [],
+        },
+      })
+      onClose([])
       onNewChat()
       setActiveChat?.(undefined)
       dispatcher.setSessions?.([])
@@ -180,12 +185,18 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
               BeforeTimestamp: beforeTimestamp,
               Source: historyQuerySources,
             }
-      await grpcDeleteAISession({ Filter: filter }, true)
-
-      clearLocalChats(deletedChats)
-
-      const deletedSessionIds = new Set(deletedChats.map((item) => item.SessionID))
-      const nextChats = sessions.filter((item) => !deletedSessionIds.has(item.SessionID))
+      const sessionIds = sessions.map((item) => item.SessionID)
+      const source = fetchAISource()
+      await handAIHistoryChatRemove({
+        grpcDeleteAISessionParams: { Filter: filter },
+        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
+        forceCloseSessionParams: {
+          aiSource: source,
+          sessionIds: sessionIds,
+        },
+      })
+      onClose(sessionIds)
+      const nextChats = sessions.filter((item) => getChatTimestamp(item) > beforeTimestamp)
       const activeDeleted = !!activeChat && deletedChats.some((item) => item.SessionID === activeChat.SessionID)
 
       if (nextChats.length === 0) {

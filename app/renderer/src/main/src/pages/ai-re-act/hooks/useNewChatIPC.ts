@@ -1,14 +1,15 @@
 // useChatIPC.ts
-import { useEffect, useContext, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { globalSessionEngine } from './ChatMultiSessionController'
 import { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { useMemoizedFn } from 'ahooks'
-import { SessionIdContext } from './explame/SessionRuntime'
 
+import useCurrentSessionId from './useCurrentSessionId'
+import { AISource } from './grpcApi'
 const { ipcRenderer } = window.require('electron')
 
-export function useChatIPC() {
-  const sessionId = useContext(SessionIdContext)
+export function useChatIPC(params: { source: AISource }) {
+  const sessionId = useCurrentSessionId()
   const currentSessionIdRef = useRef(sessionId)
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export function useChatIPC() {
 
   // 这里一定要使用useCallback，通过依赖的sessionId变化，将上一个sessionId的on监听事件进行闭包
   // 多个sessionId就会生成多个自己的监听闭包，从而实现多会话的独立监听
+  // TODO - 需要AISource
   const onStart = useCallback(
     (args: AIChatIPCStartParams, onSuccess?: (sessionId: string) => void) => {
       // 监听网络，直接丢给大脑处理
@@ -39,6 +41,18 @@ export function useChatIPC() {
     globalSessionEngine.handleSendMessage(payload)
   })
 
+  const onClose = useMemoizedFn((sessionId: string[]) => {
+    /** globalSessionEngine.forceCloseSession
+     * TODO - 需要AISource且支持多个会话关闭
+     * TODO - sessionId传[]:清除source下的所有会话
+     */
+    globalSessionEngine.forceCloseSession(sessionId, params.source)
+  })
+
+  const fetchAISource = useMemoizedFn(() => {
+    return params.source
+  })
+
   // 组件卸载时拔插头，清理闭环
   useEffect(() => {
     return () => {
@@ -46,5 +60,5 @@ export function useChatIPC() {
     }
   }, [])
 
-  return { onStart, onSend }
+  return { onStart, onSend, onClose, fetchAISource }
 }

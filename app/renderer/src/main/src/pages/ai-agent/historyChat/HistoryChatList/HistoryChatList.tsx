@@ -10,16 +10,17 @@ import { YakitAIAgentPageID } from '../../defaultConstant'
 import { EditChatNameModal } from '../../UtilModals'
 import { AISession } from '../../type/aiChat'
 import { useInfiniteScroll, useMemoizedFn } from 'ahooks'
-import { grpcDeleteAISession, grpcUpdateAISessionTitle } from '../../grpc'
+import { grpcUpdateAISessionTitle } from '../../grpc'
 import useAIAgentStore from '../../useContext/useStore'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { yakitNotify } from '@/utils/notification'
 import { onNewChat } from '../HistoryChat'
-import emiter from '@/utils/eventBus/eventBus'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import type { SessionListDispatcher } from './hook/useSessionList'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import { getHistorySessionIconMeta, getSessionDisplayTitle } from '../source'
+import { handAIHistoryChatRemove } from '../utils'
+import { getImageStoreKeyByAISource } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 
 export const HOUR_MS = 60 * 60 * 1000
 export const DAY_MS = 24 * HOUR_MS
@@ -194,6 +195,7 @@ const HistoryChatList: FC<{
     editInfo.current = undefined
   })
 
+  const { onClose, fetchAISource } = useAIAgentDispatcher()
   const handleDeleteChat = useMemoizedFn(async (info: AISession) => {
     const { SessionID } = info
     const isLoading = delLoading.includes(SessionID)
@@ -220,8 +222,16 @@ const HistoryChatList: FC<{
     }
 
     try {
-      await grpcDeleteAISession({ Filter: { SessionID: [SessionID], Source: aiSource } }, true)
-      emiter.emit('onDelChats', JSON.stringify([SessionID]))
+      const sessionIds = [SessionID]
+      const source = fetchAISource()
+      await handAIHistoryChatRemove({
+        grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
+        handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },
+        forceCloseSessionParams: {
+          aiSource: source,
+          sessionIds: sessionIds,
+        },
+      })
     } catch (error) {
       setSessions?.(sessionList)
       if (activeSessionId === SessionID) {
