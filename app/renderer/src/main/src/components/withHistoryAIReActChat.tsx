@@ -254,23 +254,12 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     applyHistoryAIEmbeddedReviewPolicy()
   }, [inViewport, applyHistoryAIEmbeddedReviewPolicy])
 
-  useEffect(() => {
-    const onRefreshEmbeddedSetting = () => {
-      applyHistoryAIEmbeddedReviewPolicy()
-    }
-    emiter.on('onRefreshHistoryAIEmbeddedSetting', onRefreshEmbeddedSetting)
-    return () => {
-      emiter.off('onRefreshHistoryAIEmbeddedSetting', onRefreshEmbeddedSetting)
-    }
-  }, [applyHistoryAIEmbeddedReviewPolicy])
-
   useUpdateEffect(() => {
     if (!embeddedSettingCacheReadyRef.current) return
     const policy = setting.ReviewPolicy ?? AIAgentSettingDefault.ReviewPolicy ?? 'manual'
     if (lastPersistedEmbeddedSettingRef.current.ReviewPolicy === policy) return
     setHistoryAIReviewPolicy(policy).then(() => {
       lastPersistedEmbeddedSettingRef.current = { ReviewPolicy: policy }
-      emiter.emit('onRefreshHistoryAIEmbeddedSetting', '')
     })
   }, [setting.ReviewPolicy])
 
@@ -375,6 +364,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     onGetHttpFlowFuzzStatus,
     onYaklangCodeChange,
   })
+
+  const imageStoreKey = useCreation(() => getChatDataStoreKey(cacheDataStore), [cacheDataStore])
+  const [, { onClearImage }] = useDeleteAIImageByNode()
+
   const { execute, casualLoading } = chatIPCData
 
   useEffect(() => {
@@ -479,6 +472,25 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }))
     aiReActChatRef.current?.setValue('')
   })
+
+  const handleDelChats = useMemoizedFn((jsonString: string) => {
+    try {
+      const sessions: string[] = JSON.parse(jsonString)
+      if (!sessions.length || imageStoreKey === 'unknown') return
+      onClearImage({
+        chatDataStoreKey: imageStoreKey,
+        sessionID: sessions,
+      })
+      events.onDelChats(sessions)
+    } catch (error) {}
+  })
+
+  useEffect(() => {
+    emiter.on('onDelChats', handleDelChats)
+    return () => {
+      emiter.off('onDelChats', handleDelChats)
+    }
+  }, [handleDelChats])
 
   const onStop = useMemoizedFn(() => {
     if (execute && activeID) {
