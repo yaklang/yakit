@@ -1040,6 +1040,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const [yakitMode, setYakitMode] = useState<'soft' | ''>('')
   // 是否展示项目管理
   const [showProjectManage, setShowProjectManage] = useState<boolean>(false)
+  // 项目管理页面列表刷新
   const [projectListRefreshTrigger, setProjectListRefreshTrigger] = useState<number>(0)
   const [serverPushEnterProject, setServerPushEnterProject] = useState<{
     id: string
@@ -1048,7 +1049,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   } | null>(null)
   const [enterProjectLoading, setEnterProjectLoading] = useState<boolean>(false)
 
-  const refreshProjectList = useMemoizedFn(() => {
+  const onRefreshProjectListFun = useMemoizedFn(() => {
     setProjectListRefreshTrigger((value) => value + 1)
   })
 
@@ -1058,10 +1059,9 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   })
 
   useEffect(() => {
-    const onRefreshProjectList = () => refreshProjectList()
-    emiter.on('onRefreshProjectList', onRefreshProjectList)
+    emiter.on('onRefreshProjectList', onRefreshProjectListFun)
     return () => {
-      emiter.off('onRefreshProjectList', onRefreshProjectList)
+      emiter.off('onRefreshProjectList', onRefreshProjectListFun)
     }
   }, [])
   // 由普通项目到管理页面的提示框
@@ -1116,7 +1116,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         const projectName = payload?.project_name || ''
         const projectType = payload?.type || getEnvTypeByProjects()
 
-        refreshProjectList()
+        onRefreshProjectListFun()
 
         if (!isProjectDatabaseType(projectType) || !projectId || projectId <= 0) {
           return
