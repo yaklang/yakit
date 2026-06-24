@@ -12,7 +12,6 @@ import type { Dispatch, SetStateAction } from 'react'
 import type { Domain } from '@/pages/ai-agent/store/constants'
 import type { AIAgentGrpcApi, AIInputEvent, AIOutputEvent, AISource, AIStartParams, AITaskStatusType } from './grpcApi'
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
-import type { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import type { AIAgentChatData, AIAgentChatMetaData, AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { createChatStore } from './chatStore'
@@ -28,12 +27,7 @@ interface UseHookBaseEvents {
   handleSetData: (res: AIOutputEvent) => void
   handleResetData: () => void
 }
-export type handleSendFunc = (params: {
-  request: AIInputEvent
-  optionValue?: string
-  extraValue?: AIChatIPCStartParams['extraValue']
-  cb?: () => void
-}) => void
+export type handleSendFunc = (params: { request: AIInputEvent; optionValue?: string; cb?: () => void }) => void
 
 interface UseHookStateFunc {
   getContentMap: (token: string) => AIChatQSData | undefined
@@ -251,8 +245,6 @@ export interface UseChatIPCState {
 export interface AIChatIPCStartParams {
   token: string
   params: AIInputEvent
-  /** 供前端处理逻辑和UI的额外参数 */
-  extraValue?: CustomPluginExecuteFormValue | Record<string, CustomPluginExecuteFormValue[]>
 }
 
 /** 执行流途中发送消息的参数 */
@@ -261,7 +253,6 @@ export interface AIChatSendParams {
   type: ChatIPCSendType
   params: AIInputEvent
   optionValue?: string
-  extraValue?: AIChatIPCStartParams['extraValue']
 }
 
 /** 任务规划的taskID和状态 */
