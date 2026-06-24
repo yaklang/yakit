@@ -206,6 +206,10 @@ const configOption = {
     createStartMenuShortcut: true,
   },
   beforePack: 'packageScript/buildHook/before-pack.js',
+  // 静态 AppImage runtime，无需目标系统安装 libfuse2（Kali / Ubuntu 24.04+ 等）
+  toolsets: {
+    appimage: '1.0.3',
+  },
   releaseInfo: {
     releaseName: '${version}',
     releaseNotes: 'view github release: https://github.com/yaklang/yakit/releases',
