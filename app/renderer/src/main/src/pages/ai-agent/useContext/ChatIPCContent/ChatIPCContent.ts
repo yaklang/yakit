@@ -27,6 +27,8 @@ export interface AISendSyncMessageParams {
   params?: MakeOptional<AIStartParams, 'UserQuery'>
   syncID?: string
 }
+
+// @deprecated
 export interface AISendConfigHotpatchParams {
   hotpatchType: AIInputEvent['HotpatchType']
   params: MakeOptional<AIStartParams, 'UserQuery'>

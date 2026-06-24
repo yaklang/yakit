@@ -30,14 +30,6 @@ export type AIAgentEventProps = {
   /** 文件系统默认展开路径 */
   fileSystemDefaultExpand: string
 
-  /** AIReviewRule相关数据发生编发,是否热更新
-   * @name reviewPolicy {AIStartParams["ReviewPolicy"]
-   * @name aiReviewRiskControlScore {AIStartParams["AIReviewRiskControlScore"]
-   */
-  onRefreshAIReviewRuleSelect: string
-
-  /** 嵌入侧栏 ReviewPolicy 变更，通知其他已挂载 Provider 同步 */
-  onRefreshHistoryAIEmbeddedSetting: string
   /**
    * 会话数据管理
    * @name type "refresh" | "clear" | "prependSession" | "updateSession" | "loadNextPage"
