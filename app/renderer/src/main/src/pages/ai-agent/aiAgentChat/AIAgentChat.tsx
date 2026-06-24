@@ -181,17 +181,19 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       aiReActChatRef.current?.handleStart(value) // 等自由对话渲染出来再发送
     })
   })
-
+  // @deprecated
   const handleSendCasual = useMemoizedFn((params: AIChatIPCSendParams) => {
     handleSendInteractiveMessage(params, 'casual')
   })
+  // @deprecated
   const handleSendTask = useMemoizedFn((params: AIChatIPCSendParams) => {
     handleSendInteractiveMessage(params, 'task')
   })
+  // @deprecated
   const handleSend = useMemoizedFn((params: AIChatIPCSendParams) => {
     handleSendInteractiveMessage(params, '')
   })
-  /**发送 IsInteractiveMessage 消息 */
+  /**发送 @deprecated IsInteractiveMessage 消息 */
   const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
     const { value, id, optionValue } = params
     if (!sessionId) return
@@ -205,7 +207,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     onSend({ token: sessionId, type, params: info, optionValue })
     handleStopAfterChangeState()
   })
-  /**发送 IsSyncMessage 消息 */
+  /** @deprecated 发送 IsSyncMessage 消息 */
   const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
     if (!sessionId) return
     const { syncType, SyncJsonInput, params, syncID } = data
@@ -220,7 +222,8 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     onSend({ token: sessionId, type: '', params: info })
   })
 
-  /**发送 IsConfigHotpatch 消息 */
+  /**
+   * @deprecated 发送 IsConfigHotpatch 消息 */
   const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
     if (!sessionId) return
     const { hotpatchType, params, taskId } = data
