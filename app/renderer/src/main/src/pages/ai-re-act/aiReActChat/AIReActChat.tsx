@@ -56,8 +56,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       externalParameters,
     } = props
-    const { setActiveChat } = useAIAgentDispatcher()
-
+    const { setActiveChat, fetchAISource } = useAIAgentDispatcher()
     const { chatDataStoreKey } = useGetChatDataStoreKey()
     const historyChatAISource = useCreation(
       () => getAISourceListFromChatDataStoreKey(chatDataStoreKey),
