@@ -34,6 +34,7 @@ import { IMonacoEditor } from '@/utils/editors'
 import {
   getYakJavaDecompilerHistory,
   isResetJavaDecompilerActiveFile,
+  openJavaDecompilerCodeSource,
   removeJavaDecompilerAreaFileInfo,
   updateJavaDecompilerAreaFileInfo,
 } from '../utils'
@@ -48,8 +49,6 @@ import { YakitMenuItemType } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { ScrollProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { getMapFileDetail } from '../FileTreeMap/FileMap'
-import { isAcceptEligible } from '@/components/yakitUI/YakitForm/YakitForm'
-import { getOpenFileInfo } from '@/pages/yakRunner/utils'
 
 export const RunnerTabs: React.FC<RunnerTabsProps> = memo((props) => {
   const { tabsId, wrapperClassName } = props
@@ -946,19 +945,21 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
     getHistoryList()
   }, [])
 
-  // 打开文件
-  const openFile = useMemoizedFn(async () => {
+  const openCodeSource = useMemoizedFn(async (mode: 'file' | 'directory' | 'all') => {
     try {
-      const openFileInfo = await getOpenFileInfo()
-      if (openFileInfo) {
-        const { path, name } = openFileInfo
-        if (!isAcceptEligible(path, '.jar,.war,.ear')) {
-          failed(`仅支持.jar,.war,.ear格式的文件`)
-          return
-        }
-        emiter.emit('onOpenDecompilerTree', path)
+      const openInfo = await openJavaDecompilerCodeSource(mode)
+      if (openInfo) {
+        emiter.emit('onOpenDecompilerTree', openInfo.path)
       }
     } catch (error) {}
+  })
+
+  const openFile = useMemoizedFn(async () => {
+    await openCodeSource('file')
+  })
+
+  const openDirectory = useMemoizedFn(async () => {
+    await openCodeSource('directory')
   })
 
   return (
@@ -976,8 +977,16 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
             <div className={classNames(styles['btn-style'], styles['btn-open-file'])} onClick={openFile}>
               <div className={styles['btn-title']}>
                 <YakRunnerOpenFileIcon />
-                点击 JAR 文件到此处反编译
-                <span className={styles['sub-title']}>支持 .jar, .war, .ear 文件</span>
+                打开 JAR 文件
+                <span className={styles['sub-title']}>支持 .jar, .war, .ear</span>
+              </div>
+              <OutlineImportIcon className={styles['icon-style']} />
+            </div>
+            <div className={classNames(styles['btn-style'], styles['btn-open-file'])} onClick={openDirectory}>
+              <div className={styles['btn-title']}>
+                <YakRunnerOpenFolderIcon />
+                打开 JAR 目录
+                <span className={styles['sub-title']}>批量浏览目录内所有 JAR</span>
               </div>
               <OutlineImportIcon className={styles['icon-style']} />
             </div>
