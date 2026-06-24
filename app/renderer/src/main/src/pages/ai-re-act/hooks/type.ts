@@ -82,6 +82,8 @@ export interface UseYakExecResultEvents extends UseHookBaseEvents {
 export interface UseCasualChatParams extends UseHookBaseParams {
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
+  /** review 触发回调事件 */
+  onReview?: (data: AIChatQSData) => void
   /** 触发 review-release 后的回调事件 */
   onReviewRelease: (id: string) => void
 }

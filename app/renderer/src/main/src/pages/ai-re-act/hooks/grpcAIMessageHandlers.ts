@@ -1767,6 +1767,9 @@ const handleDetachedPlanReview: AIMessageHandler = (request) => {
       type: chatData.type,
       chatType: chatData.chatType,
     })
+    if (!isAuto) {
+      review?.onReview && review.onReview(cloneDeep(chatData))
+    }
   }
 }
 /** Type='plan_task_analysis' plan-review的补充信息 */
