@@ -1760,19 +1760,21 @@ export const AuditModalForm: React.FC<AuditModalFormProps> = (props) => {
                     dots
                     min={0}
                     max={3}
-                    tipFormatter={(value) => {
-                      switch (value) {
-                        case 0:
-                          return t('AuditCode.compileSpeedDisabled')
-                        case 1:
-                          return t('AuditCode.compileSpeedSlow')
-                        case 2:
-                          return t('AuditCode.compileSpeedMedium')
-                        case 3:
-                          return t('AuditCode.compileSpeedFast')
-                        default:
-                          return value
-                      }
+                    tooltip={{
+                      formatter: (value) => {
+                        switch (value) {
+                          case 0:
+                            return t('AuditCode.compileSpeedDisabled')
+                          case 1:
+                            return t('AuditCode.compileSpeedSlow')
+                          case 2:
+                            return t('AuditCode.compileSpeedMedium')
+                          case 3:
+                            return t('AuditCode.compileSpeedFast')
+                          default:
+                            return value
+                        }
+                      },
                     }}
                   />
                 </Form.Item>
