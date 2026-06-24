@@ -53,13 +53,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       externalParameters,
     } = props
-    const { setActiveChat } = useAIAgentDispatcher()
-
+    const { setActiveChat, fetchAISource } = useAIAgentDispatcher()
     const { chatDataStoreKey } = useGetChatDataStoreKey()
-    const historyChatAISource = useCreation(
-      () => getAISourceListFromChatDataStoreKey(chatDataStoreKey),
-      [chatDataStoreKey],
-    )
+
     const { chatIPCData } = useChatIPCStore()
     const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
     const execute = useCreation(() => chatIPCData.execute, [chatIPCData.execute])
@@ -371,7 +367,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                             overlayClassName={styles['history-chat-tooltip']}
                             title={
                               <div className={styles['history-chat-tooltip-content']}>
-                                <HistoryChat embedded aiSource={historyChatAISource} />
+                                <HistoryChat embedded aiSource={[fetchAISource()]} />
                               </div>
                             }
                           >
