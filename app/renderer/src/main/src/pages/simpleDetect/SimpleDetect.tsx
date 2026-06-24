@@ -916,7 +916,15 @@ const SimpleDetectFormContent: React.FC<SimpleDetectFormContentProps> = React.me
         extra={t('SimpleDetect.scanSpeedHint')}
         initialValue={defaultScanDeep}
       >
-        <Slider tipFormatter={null} min={1} max={3} marks={marks(t)} disabled={disabled} />
+        <Slider
+          tooltip={{
+            open: false,
+          }}
+          min={1}
+          max={3}
+          marks={marks(t)}
+          disabled={disabled}
+        />
       </Form.Item>
       <Form.Item label={' '} colon={false}>
         <div className={styles['form-extra']}>
