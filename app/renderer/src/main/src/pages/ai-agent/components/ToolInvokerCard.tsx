@@ -145,7 +145,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={`工具-${data.toolName}`}
+      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
       // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -320,7 +320,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   })
   return (
     <ChatCard
-      titleText={`工具-${data.toolName}`}
+      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
       // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>

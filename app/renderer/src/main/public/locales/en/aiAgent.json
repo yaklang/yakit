@@ -337,7 +337,8 @@
     "duration": "Duration",
     "relatedRisks": "Related Risks",
     "httpTraffic": "HTTP Traffic",
-    "refreshCodeBlockData": "Refresh Code Block Data"
+    "refreshCodeBlockData": "Refresh Code Block Data",
+    "tool": "Tool"
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "Path join failed",

@@ -337,7 +337,8 @@
     "duration": "执行时长",
     "relatedRisks": "相关漏洞",
     "httpTraffic": "HTTP 流量",
-    "refreshCodeBlockData": "刷新代码块数据"
+    "refreshCodeBlockData": "刷新代码块数据",
+    "tool": "工具"
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "路径拼接失败",
