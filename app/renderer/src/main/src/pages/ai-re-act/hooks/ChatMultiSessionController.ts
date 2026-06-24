@@ -363,7 +363,9 @@ export class ChatMultiSessionController {
     this.closeIPCListeners(sessionId)
   }
 
-  /** 关闭指定session的连接 */
+  /** 关闭指定session的连接
+   * TODO - 期望传一个对象，{ sessionIds: string[]; aiSource: AISource }
+   */
   public forceCloseSession(sessionId: string) {
     ipcRenderer.invoke('cancel-ai-re-act', sessionId).catch(() => {})
 

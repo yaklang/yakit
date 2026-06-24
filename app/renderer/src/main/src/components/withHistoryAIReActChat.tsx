@@ -360,10 +360,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     onGetHttpFlowFuzzStatus,
     onYaklangCodeChange,
   })
-
-  const imageStoreKey = useCreation(() => getChatDataStoreKey(cacheDataStore), [cacheDataStore])
-  const [, { onClearImage }] = useDeleteAIImageByNode()
-
   const { execute, casualLoading } = chatIPCData
 
   useEffect(() => {
@@ -463,25 +459,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }))
     aiReActChatRef.current?.setValue('')
   })
-
-  const handleDelChats = useMemoizedFn((jsonString: string) => {
-    try {
-      const sessions: string[] = JSON.parse(jsonString)
-      if (!sessions.length || imageStoreKey === 'unknown') return
-      onClearImage({
-        chatDataStoreKey: imageStoreKey,
-        sessionID: sessions,
-      })
-      events.onDelChats(sessions)
-    } catch (error) {}
-  })
-
-  useEffect(() => {
-    emiter.on('onDelChats', handleDelChats)
-    return () => {
-      emiter.off('onDelChats', handleDelChats)
-    }
-  }, [handleDelChats])
 
   const onStop = useMemoizedFn(() => {
     if (execute && activeID) {

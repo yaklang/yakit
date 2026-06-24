@@ -1,12 +1,11 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { AIAgentChatMode, AIAgentChatProps, AIReActTaskChatReviewProps, HandleStartParams } from './type'
-import { useCreation, useDebounceFn, useInViewport, useMap, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
+import { useDebounceFn, useInViewport, useMap, useMemoizedFn, useSafeState, useUpdateEffect } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 import { AIAgentTriggerEventInfo } from '../aiAgentType'
 import useAIAgentStore from '../useContext/useStore'
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
 import { RemoteAIAgentGV } from '@/enums/aiAgent'
-import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import cloneDeep from 'lodash/cloneDeep'
 import { randomString } from '@/utils/randomUtil'
@@ -14,8 +13,6 @@ import ChatIPCContent, {
   AIChatIPCSendParams,
   AISendConfigHotpatchParams,
   AISendSyncMessageParams,
-  ChatIPCContextDispatcher,
-  ChatIPCContextStore,
 } from '../useContext/ChatIPCContent/ChatIPCContent'
 import { AIReActChatReview } from '@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -50,6 +47,9 @@ import { PageNodeItemProps } from '@/store/pageInfo'
 import { isForcedSetAIModal } from '../aiModelList/utils'
 import { Trans } from 'react-i18next'
 import { AIInputWithParamsTemplate, aiInputWithParamsTemplate } from '../components/aiMilkdownInput/utils'
+import { useStore } from 'zustand'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import { globalSessionEngine } from '@/pages/ai-re-act/hooks/ChatMultiSessionController'
 
 const AIChatWelcome = React.lazy(() => import('../aiChatWelcome/AIChatWelcome'))
 
@@ -65,7 +65,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
 
   const { activeChat } = useAIAgentStore()
-  const { setActiveChat, getSetting, setSetting } = useAIAgentDispatcher()
+  const { setActiveChat, getSetting, setSetting, onSend, onClose } = useAIAgentDispatcher()
+
+  /** 当前对话唯一ID */
+  const sessionId = useCurrentSessionId()
+  const { store } = globalSessionEngine.ensureSession(sessionId)
+  const execute = useStore(store, (state) => state.execute)
 
   const aiReActChatRef = useRef<AIChatContentRefProps>(null)
   const aiChatWelcomeRef = useRef<AIChatContentRefProps>(null)
@@ -138,11 +143,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     }
   })
 
-  /** 当前对话唯一ID */
-  const activeID = useCreation(() => {
-    return activeChat?.SessionID
-  }, [activeChat])
-
   // 提问结束后缓存数据
   const handleChatingEnd = useMemoizedFn(() => {
     handleStopAfterChangeState()
@@ -175,19 +175,6 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       removeSyncIdInfoMap(syncID)
     }
   })
-  const [chatIPCData, events] = useChatIPC({
-    autoConnect: true,
-    onEnd: handleChatingEnd,
-    onTaskReview: handleShowReview,
-    onTaskReviewExtra: handleShowReviewExtra,
-    onReviewRelease: handleReleaseReview,
-    onTaskStart: handleTaskStart,
-    setSessionChatName,
-    onSyncIDChange,
-    cacheDataStore: aiChatDataStore,
-    getSetting,
-  })
-  const { execute } = chatIPCData
 
   const handleStart = useMemoizedFn((value: HandleStartParams) => {
     setTimeout(() => {
@@ -207,7 +194,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   /**发送 IsInteractiveMessage 消息 */
   const handleSendInteractiveMessage = useMemoizedFn((params: AIChatIPCSendParams, type: ChatIPCSendType) => {
     const { value, id, optionValue } = params
-    if (!activeID) return
+    if (!sessionId) return
     if (!id) return
 
     const info: AIInputEvent = {
@@ -215,12 +202,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       InteractiveId: id,
       InteractiveJSONInput: value,
     }
-    events.onSend({ token: activeID, type, params: info, optionValue })
+    onSend({ token: sessionId, type, params: info, optionValue })
     handleStopAfterChangeState()
   })
   /**发送 IsSyncMessage 消息 */
   const handleSendSyncMessage = useMemoizedFn((data: AISendSyncMessageParams) => {
-    if (!activeID) return
+    if (!sessionId) return
     const { syncType, SyncJsonInput, params, syncID } = data
     const info: AIInputEvent = {
       IsSyncMessage: true,
@@ -230,12 +217,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
       SyncID: syncID || randomString(8),
     }
     info.SyncID && setSyncIdInfoMap(info.SyncID, true)
-    events.onSend({ token: activeID, type: '', params: info })
+    onSend({ token: sessionId, type: '', params: info })
   })
 
   /**发送 IsConfigHotpatch 消息 */
   const handleSendConfigHotpatch = useMemoizedFn((data: AISendConfigHotpatchParams) => {
-    if (!activeID) return
+    if (!sessionId) return
     const { hotpatchType, params, taskId } = data
     const info: AIInputEvent = {
       IsConfigHotpatch: true,
@@ -245,12 +232,12 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     if (!!taskId) {
       info.TaskId = taskId
     }
-    events.onSend({ token: activeID, type: '', params: info })
+    onSend({ token: sessionId, type: '', params: info })
   })
 
   const onStop = useMemoizedFn(() => {
-    if (execute && activeID) {
-      events.onClose(activeID)
+    if (execute && sessionId) {
+      onClose([sessionId])
       handleStopAfterChangeState()
     }
   })
@@ -317,26 +304,13 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 
   useUpdateEffect(() => {
     onHistoryAfter()
-    events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
+    // events.onSwitchChat(activeChat?.SessionID, activeChat?.isCreate)
   }, [activeChat])
 
   /**切换历史后的处理逻辑 */
   const onHistoryAfter = useMemoizedFn(() => {
     if (mode === 'welcome') setMode('re-act')
   })
-
-  const handleDelChats = useMemoizedFn((jsonString: string) => {
-    try {
-      const sessions: string[] = JSON.parse(jsonString)
-      events.onDelChats(sessions)
-    } catch (error) {}
-  })
-  useEffect(() => {
-    emiter.on('onDelChats', handleDelChats)
-    return () => {
-      emiter.off('onDelChats', handleDelChats)
-    }
-  }, [])
 
   //#region 使用 AI-Forge 模板/Tool 相关逻辑
   const [activeTool, setActiveTool] = useState<AITool>()
@@ -577,26 +551,26 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     setReplaceToolShow(false)
   })
   // #endregion
-  const store: ChatIPCContextStore = useCreation(() => {
-    return {
-      chatIPCData,
-      planReviewTreeKeywordsMap,
-      reviewInfo,
-      reviewExpand,
-      syncIdInfoMap,
-    }
-  }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, syncIdInfoMap])
-  const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
-    return {
-      chatIPCEvents: events,
-      handleSendCasual,
-      handleSendTask,
-      handleStop: onStop,
-      handleSend,
-      handleSendSyncMessage,
-      handleSendConfigHotpatch,
-    }
-  }, [events])
+  // const store: ChatIPCContextStore = useCreation(() => {
+  //   return {
+  //     chatIPCData,
+  //     planReviewTreeKeywordsMap,
+  //     reviewInfo,
+  //     reviewExpand,
+  //     syncIdInfoMap,
+  //   }
+  // }, [chatIPCData, planReviewTreeKeywordsMap, reviewInfo, reviewExpand, syncIdInfoMap])
+  // const dispatcher: ChatIPCContextDispatcher = useCreation(() => {
+  //   return {
+  //     chatIPCEvents: events,
+  //     handleSendCasual,
+  //     handleSendTask,
+  //     handleStop: onStop,
+  //     handleSend,
+  //     handleSendSyncMessage,
+  //     handleSendConfigHotpatch,
+  //   }
+  // }, [events])
 
   const [visible, setVisible] = useSafeState(false)
   const { clearAll } = useKnowledgeBase()
