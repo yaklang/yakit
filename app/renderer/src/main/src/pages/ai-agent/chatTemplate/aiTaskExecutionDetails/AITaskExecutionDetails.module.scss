@@ -64,7 +64,7 @@
 
     flex: 1;
     min-height: 800px;
-    // overflow-y: auto;
+    overflow-y: auto;
   }
 
   .card {
@@ -296,6 +296,7 @@
           gap: 4px;
           padding: 4px 0;
           height: 28px;
+          overflow: hidden;
 
           .todo-title {
             color: var(--Colors-Use-Neutral-Text-3-Secondary);
@@ -311,7 +312,6 @@
         .todo-list {
           display: flex;
           flex-direction: column;
-          gap: 8px;
           overflow-y: auto;
           flex: 1;
         }
@@ -458,6 +458,9 @@
    ==================================================== */
 @container task-details (max-width: 800px) {
   .ai-task-execution-details-container {
+    .content-body {
+      min-height: 0;
+    }
     .summary-section {
       grid-template-columns: repeat(2, 1fr);
     }
@@ -509,6 +512,9 @@
 
 @container task-details (max-width: 500px) {
   .ai-task-execution-details-container {
+    .content-body {
+      min-height: 0;
+    }
     .summary-section {
       grid-template-columns: 1fr;
       gap: 8px;
