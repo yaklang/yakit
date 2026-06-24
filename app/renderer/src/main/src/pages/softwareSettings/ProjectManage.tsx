@@ -74,6 +74,7 @@ export interface ProjectManageProp {
   engineMode: YaklangEngineMode
   onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
   onFinish: () => any
+  projectListRefreshTrigger?: number
 }
 /** (新建|编辑)项目|文件夹参数 */
 export interface ProjectParamsProps {
@@ -1133,6 +1134,12 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
       emiter.off('onRefreshProjectList', onRefreshProjectList)
     }
   }, [])
+
+  useEffect(() => {
+    if (props.projectListRefreshTrigger) {
+      update(1)
+    }
+  }, [props.projectListRefreshTrigger])
 
   return (
     <div className={styles['project-manage-wrapper']}>
