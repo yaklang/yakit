@@ -103,7 +103,7 @@ export default memo(ToolInvokerCard)
 
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
-  const { titleText, modalInfo, operationInfo, fileList, chatType, data } = props
+  const { modalInfo, operationInfo, fileList, chatType, data } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const { activeChat } = useAIAgentStore()
@@ -145,7 +145,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={titleText}
+      titleText={`工具-${data.toolName}`}
       // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -187,7 +187,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
-  const { titleText, modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
+  const { modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
@@ -320,7 +320,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   })
   return (
     <ChatCard
-      titleText={titleText}
+      titleText={`工具-${data.toolName}`}
       // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
