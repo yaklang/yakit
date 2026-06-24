@@ -346,7 +346,7 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
   const chatData: AIChatQSData = {
-    id: data.react_task_id,
+    id: res.TaskId || data.react_task_id,
     chatType: 'reAct',
     type: AIChatQSDataTypeEnum.QUESTION,
     Timestamp: res.Timestamp,

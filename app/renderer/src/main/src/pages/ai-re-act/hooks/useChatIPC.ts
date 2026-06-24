@@ -680,7 +680,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         }
 
         let ipcContent = Uint8ArrayToString(res.Content) || ''
-        // console.log('ipcContent', res, `------${res.TaskIndex}`, ipcContent)
+        // console.log('ipcContent', res, `------${res.TaskId}`, ipcContent)
         if (res.Type === 'structured' && res.NodeId === 'recovery_history') {
           const recoveryHistory = JSON.parse(ipcContent) as AIAgentGrpcApi.RecoveryHistory
           const chatStore = getChatDataStore()
@@ -863,7 +863,7 @@ function useChatIPC(params?: UseChatIPCParams) {
           if (!res.IsSync) {
             handleTriggerQuestionQueueRequest()
             const data = JSON.parse(ipcContent) as AIAgentGrpcApi.QuestionQueueStatusChange
-            currentCasualTaskID.current = data.react_task_id
+            currentCasualTaskID.current = res.TaskId || data.react_task_id
             casualChatEvent.resetTodoListData()
             if (data.focus_mode) {
               // 记录场景状态
@@ -947,7 +947,10 @@ function useChatIPC(params?: UseChatIPCParams) {
             // 只负责获取自由对话的任务状态
             if (currentTaskPlanID.current?.coordinatorId === res.CoordinatorId) return
             /* 问题的状态变化 */
-            const { react_task_id, react_task_now_status } = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
+
+            const params = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
+            const { react_task_now_status } = params
+            const react_task_id = res.TaskId || params.react_task_id
             if (['completed', 'aborted'].includes(react_task_now_status)) {
               if (currentCasualTaskID.current && currentCasualTaskID.current === react_task_id) {
                 setCancelCasualLoading(false)

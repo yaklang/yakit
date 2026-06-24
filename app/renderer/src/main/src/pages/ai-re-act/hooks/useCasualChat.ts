@@ -14,7 +14,7 @@ import { handleGrpcDataPushLog } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
-import { DefaultPlanItemDetailsData } from './defaultConstant'
+import { DefaultTodoListCardData } from './defaultConstant'
 
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
@@ -33,7 +33,7 @@ function useCasualChat(params: UseCasualChatParams) {
   const resetTodoListData = useMemoizedFn(() => {
     const chatDetail = getCasualChat()
     if (!chatDetail) return
-    chatDetail.planDetails = cloneDeep(DefaultPlanItemDetailsData)
+    chatDetail.planDetails.todoList = cloneDeep(DefaultTodoListCardData)
     setToolListRenderNumber(0)
   })
   const getContentMap = useMemoizedFn((mapKey: string) => {

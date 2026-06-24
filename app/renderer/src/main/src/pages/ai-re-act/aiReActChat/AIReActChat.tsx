@@ -1,11 +1,11 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 
 import styles from './AIReActChat.module.scss'
 import { AIHandleStartResProps, AINotifyMessageProps, AIReActChatProps, AISendResProps } from './AIReActChatType'
 import { AIChatTextarea } from '@/pages/ai-agent/template/template'
 import { AIReActChatContents } from '../aiReActChatContents/AIReActChatContents'
 import { AIChatTextareaRefProps, AIChatTextareaSubmit } from '@/pages/ai-agent/template/type'
-import { useControllableValue, useCreation, useMemoizedFn } from 'ahooks'
+import { useControllableValue, useCreation, useInterval, useMemoizedFn } from 'ahooks'
 import { yakitNotify } from '@/utils/notification'
 import { ColorsChatIcon } from '@/assets/icon/colors'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
@@ -288,14 +288,33 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
         return cloneDeep(DefaultTodoListCardData)
       }
     }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
-    const taskId = useCreation(() => {
-      if (!activeChat?.SessionID) return ''
-      try {
-        return getPlanDetails()?.taskId || ''
-      } catch (error) {
-        return ''
+    const getTaskId = useMemoizedFn(() => {
+      return chatIPCEvents.fetchCurrentCasualTaskID()
+    })
+
+    const onDetails = useMemoizedFn((e) => {
+      e.stopPropagation()
+      const taskId = getTaskId()
+      if (!taskId) {
+        yakitNotify('error', 'taskId不存在')
+        return
       }
-    }, [chatIPCData.casualChat?.toolListRenderNumber, activeChat?.SessionID])
+      if (chatDataStoreKey === 'aiChatDataStore') {
+        emiter.emit(
+          'actionAITaskContentTab',
+          JSON.stringify({
+            type: 'add',
+            params: {
+              key: taskId,
+              label: '自由对话',
+              goal: '',
+            },
+          }),
+        )
+      } else {
+        yakitNotify('info', '当前会话不属于 AIAgent 数据源，无法查看任务详情')
+      }
+    })
 
     return (
       <>
@@ -318,7 +337,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                   <span className={styles['chat-header-title-text']}>{title}</span>
                   {focusMode && (
                     <YakitTag fullRadius={true} className={styles['chat-header-focus-mode']}>
-                      场景:{focusMode}
+                      场景:<span className={styles['text']}>{focusMode}</span>
                     </YakitTag>
                   )}
                 </div>
@@ -357,6 +376,9 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                       </>
                     ) : (
                       <>
+                        <YakitButton type="outline2" radius="28px" icon={<OutlineListTodoIcon />} onClick={onDetails}>
+                          任务详情
+                        </YakitButton>
                         <ChevronleftButton onClick={(e) => handleSwitchShowFreeChat(false)} />
                       </>
                     ))}
@@ -364,7 +386,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
               </div>
               {todoData?.items?.length > 0 && (
                 <div className={styles['todoList-wrapper']}>
-                  <AIToDoList className={styles['to-do-list']} todoData={todoData} taskId={taskId} />
+                  <AIToDoList className={styles['to-do-list']} todoData={todoData} />
                 </div>
               )}
               <AIReActChatContents chats={chatIPCData.casualChat} />

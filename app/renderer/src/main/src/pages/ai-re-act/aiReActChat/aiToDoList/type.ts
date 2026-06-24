@@ -6,7 +6,6 @@ export interface AIToDoListProps {
   todoData: TodoListCardData
   /** 禁止展开收起 */
   bannedExpand?: boolean
-  taskId: string
 }
 export interface AIToDoListItemProps {
   item: AIAgentGrpcApi.TodoListUpdateItem
