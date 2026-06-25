@@ -17,7 +17,6 @@ import ChatIPCContent, {
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 import { AIAgentSettingDefault } from '@/pages/ai-agent/defaultConstant'
-import { ChatDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { createActiveChatSessionId, getAIReActRequestParams } from '@/pages/ai-agent/utils'
 import { AISession } from '@/pages/ai-agent/type/aiChat'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
@@ -30,7 +29,7 @@ import {
   AISendParams,
   AISendResProps,
 } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
-import { AIAgentGrpcApi, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEvent, AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   getWebFuzzerPageIsHttps,
@@ -48,7 +47,6 @@ import {
 } from '../pages/yakRunner/yakRunnerAiCodeApplyBridge'
 import { ChatIPCSendType, UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
 import useChatIPC from '@/pages/ai-re-act/hooks/useChatIPC'
-import { getAISourceFromChatDataStoreKey, getChatDataStoreKey } from '@/pages/ai-re-act/hooks/useGetChatDataStoreKey'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useDeleteAIImageByNode from '@/pages/ai-agent/components/aiMilkdownInput/aiCustomFile/hooks/useDeleteAIImageByNode'
 import emiter from '@/utils/eventBus/eventBus'
@@ -176,7 +174,7 @@ function normalizeStartUserQueryToTextDescription(event: AIInputEvent): AIInputE
 }
 
 export interface HistoryAIReActChatProviderProps {
-  cacheDataStore: ChatDataStore
+  source: AISource
   focusModeLoop: HistoryAIReActFocusModeLoop
   children: React.ReactNode
   /** Web Fuzzer 页签 id：AI 改包回写、请求附件、fuzz 状态推送等桥接用，与 SessionID 无关 */
@@ -195,7 +193,7 @@ export interface HistoryAIReActChatProviderProps {
 }
 
 export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProviderInner({
-  cacheDataStore,
+  source,
   focusModeLoop,
   children,
   httpFuzzTabPageId,
@@ -337,22 +335,16 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     pushAIFuzzStatusRuntimeIdToWebFuzzerPage(httpFuzzTabPageId, runtimeId, { source: 'auto' })
   })
 
-  const aiSource = useCreation(
-    () => getAISourceFromChatDataStoreKey(getChatDataStoreKey(cacheDataStore)) ?? 'ai',
-    [cacheDataStore],
-  )
-
   const [chatIPCData, events] = useChatIPC({
-    autoConnect: true,
-    aiSource,
-    cacheDataStore,
-    getSetting,
-    onHttpFuzzRequestChange,
-    onGetHttpFlowFuzzStatus,
-    onYaklangCodeChange,
+    // autoConnect: true,
+    // aiSource,
+    // cacheDataStore,
+    // getSetting,
+    // onHttpFuzzRequestChange,
+    // onGetHttpFlowFuzzStatus,
+    // onYaklangCodeChange,
   })
 
-  const imageStoreKey = useCreation(() => getChatDataStoreKey(cacheDataStore), [cacheDataStore])
   const [, { onClearImage }] = useDeleteAIImageByNode()
 
   const { execute, casualLoading } = chatIPCData
@@ -455,25 +447,6 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
     }))
     aiReActChatRef.current?.setValue('')
   })
-
-  const handleDelChats = useMemoizedFn((jsonString: string) => {
-    try {
-      const sessions: string[] = JSON.parse(jsonString)
-      if (!sessions.length || imageStoreKey === 'unknown') return
-      onClearImage({
-        chatDataStoreKey: imageStoreKey,
-        sessionID: sessions,
-      })
-      events.onDelChats(sessions)
-    } catch (error) {}
-  })
-
-  useEffect(() => {
-    emiter.on('onDelChats', handleDelChats)
-    return () => {
-      emiter.off('onDelChats', handleDelChats)
-    }
-  }, [handleDelChats])
 
   const onStop = useMemoizedFn(() => {
     if (execute && activeID) {
@@ -663,9 +636,10 @@ export const HistoryAIReActChatProvider = memo(function HistoryAIReActChatProvid
         mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}
         onChatReady={flushPendingMention}
         externalParameters={externalParameters}
+        source={source}
       />
     ),
-    [inViewport, flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat],
+    [inViewport, flushPendingMention, mergeRemoteAIAgentSetting, onSendRequest, onStartRequest, showFreeChat, source],
   )
 
   const contextValue = useMemo(
