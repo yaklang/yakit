@@ -1176,6 +1176,7 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
 )
 
 const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     index,
     disabled,

@@ -14,7 +14,7 @@ export const onExpandHTTPFlow = (
   if (!flow) {
     return (
       <YakitEmpty
-        title={t?.('HTTPFlowTable.requestDetailsNotFound') || t('HTTPFlowTable.requestDetailsNotFound')}
+        title={t?.('HTTPFlowTable.requestDetailsNotFound')}
       ></YakitEmpty>
     )
   }
