@@ -1,13 +1,9 @@
-import { CSSProperties, Dispatch, ReactNode, SetStateAction, MutableRefObject } from 'react'
+import { Dispatch, SetStateAction } from 'react'
 import { AISession } from './type/aiChat'
-import { AITreeNodeProps } from './aiTree/type'
-import { HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { AITabsEnum } from './defaultConstant'
-import { AIAgentGrpcApi, AIStartParams } from '../ai-re-act/hooks/grpcApi'
-import { AIChatQSData, AIStreamOutput } from '../ai-re-act/hooks/aiRender'
-import { UseYakExecResultState, PlanLoadingStatus, CurrentExecTaskTree } from '../ai-re-act/hooks/type'
-import { ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
-import { UseChatIPCEvents } from '@/pages/ai-re-act/hooks/type'
+import { AIStartParams } from '../ai-re-act/hooks/grpcApi'
+import { PlanLoadingStatus, CurrentExecTaskTree } from '../ai-re-act/hooks/type'
+import type { ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
 export interface AIAgentProps {
   pageId: string
 }
@@ -56,7 +52,7 @@ export interface AIChatLeftSideProps {
 export type AITabsEnumType = `${AITabsEnum}`
 
 export interface AIAgentChatStreamProps {
-  streams: ReActChatRenderItem[]
+  streams: ReActChatRenderElement[]
   session: string
   defaultExpand?: boolean
   scrollToBottom: boolean

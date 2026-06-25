@@ -151,7 +151,7 @@ export interface AIStartParams {
   /**
    *
    */
-  Source: AISource
+  Source?: AISource
 
   EnabledCapabilities?: AIEnabledCapability[]
 
