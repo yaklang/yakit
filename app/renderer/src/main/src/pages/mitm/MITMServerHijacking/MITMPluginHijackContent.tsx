@@ -451,10 +451,16 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
         },
       })
       .then((res) => {
-        yakitNotify('success', t('MITMHijackedContent.update_template') + tempNameRef.current + t('MITMHijackedContent.success'))
+        yakitNotify(
+          'success',
+          t('MITMHijackedContent.update_template') + tempNameRef.current + t('MITMHijackedContent.success'),
+        )
       })
       .catch((error) => {
-        yakitNotify('error', t('MITMHijackedContent.update_template') + tempNameRef.current + t('MITMHijackedContent.failed') + error)
+        yakitNotify(
+          'error',
+          t('MITMHijackedContent.update_template') + tempNameRef.current + t('MITMHijackedContent.failed') + error,
+        )
       })
   })
 

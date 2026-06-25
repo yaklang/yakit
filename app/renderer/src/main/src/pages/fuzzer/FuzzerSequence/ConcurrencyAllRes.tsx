@@ -62,7 +62,10 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
   )
 
   const [form] = Form.useForm()
-  const [activeKey, setActiveKey] = useState<string[]>([t('ResponseViewer.matcher'), t('ExtractorsPanel.dataExtractor')])
+  const [activeKey, setActiveKey] = useState<string[]>([
+    t('ResponseViewer.matcher'),
+    t('ExtractorsPanel.dataExtractor'),
+  ])
   const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>('true')
   const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
   const [isRefresh, setIsRefresh] = useState<boolean>(false)

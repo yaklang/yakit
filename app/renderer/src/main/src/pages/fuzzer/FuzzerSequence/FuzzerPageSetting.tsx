@@ -77,7 +77,11 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
   useEffect(() => {
     getRemoteValue(RemoteGV.FuzzerSequenceSettingShow).then((data) => {
       try {
-        setActiveKey(data ? JSON.parse(data) : [t('ResponseViewer.matcher'), t('ExtractorsPanel.dataExtractor'), t('VariablePanel.setVariable')])
+        setActiveKey(
+          data
+            ? JSON.parse(data)
+            : [t('ResponseViewer.matcher'), t('ExtractorsPanel.dataExtractor'), t('VariablePanel.setVariable')],
+        )
       } catch (error) {
         yakitFailed(t('FuzzerPageSetting.getSequenceConfigKeyFailed') + error)
       }

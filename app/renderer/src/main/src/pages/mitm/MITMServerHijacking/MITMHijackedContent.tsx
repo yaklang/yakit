@@ -91,7 +91,7 @@ interface MITMHijackedContentProps {
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     status,
     setStatus,

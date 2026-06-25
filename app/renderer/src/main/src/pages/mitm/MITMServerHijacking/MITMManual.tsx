@@ -142,7 +142,9 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
   return (
     <div className={classNames(styles['autoForward-manual-urlInfo'], className)}>
       <div className={classNames(styles['manual-url-info'], 'content-ellipsis')}>
-        {status === 'hijacking' ? t('MITMServerHijacking.target_listening') : t('MITMServerHijacking.target_url', { url: urlInfo })}
+        {status === 'hijacking'
+          ? t('MITMServerHijacking.target_listening')
+          : t('MITMServerHijacking.target_url', { url: urlInfo })}
       </div>
       {ipInfo && status !== 'hijacking' && (
         <>

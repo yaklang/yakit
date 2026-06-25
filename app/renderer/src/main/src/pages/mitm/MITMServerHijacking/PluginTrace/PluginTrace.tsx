@@ -571,10 +571,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                               }
 
                               if (selectCurTrace?.Status === 'completed') {
-                                yakitNotify(
-                                  'info',
-                                  selectCurTrace?.TraceID + t('PluginTrace.status_completed_removed'),
-                                )
+                                yakitNotify('info', selectCurTrace?.TraceID + t('PluginTrace.status_completed_removed'))
                                 return
                               }
 
@@ -597,8 +594,12 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                   </div>
                   <div className={styles['content-resize-second']}>
                     <Descriptions bordered size="small" column={2} labelStyle={{ width: 120 }}>
-                      <Descriptions.Item label={t('PluginTrace.hook_name')}>{selectCurTrace?.HookName || '-'}</Descriptions.Item>
-                      <Descriptions.Item label={t('PluginTrace.duration')}>{selectCurTrace?.DurationMs || '-'}</Descriptions.Item>
+                      <Descriptions.Item label={t('PluginTrace.hook_name')}>
+                        {selectCurTrace?.HookName || '-'}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t('PluginTrace.duration')}>
+                        {selectCurTrace?.DurationMs || '-'}
+                      </Descriptions.Item>
                       <Descriptions.Item label={t('PluginTrace.call_parameters')} span={2}>
                         <div className={styles['descriptions-item']}>
                           {selectCurTrace?.ExecutionArgsStr && (

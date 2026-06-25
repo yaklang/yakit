@@ -102,7 +102,7 @@ export interface YakFilterRemoteObj {
 }
 
 export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     status,
     noParamsCheckList,
@@ -779,14 +779,20 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
         if (removeGroup.length) {
           yakitNotify(
             'success',
-            t('MITMPluginLocalList.plugins_removed_from_group', { count: allChecked ? total : query.IncludedScriptNames?.length, groups: removeGroup.join(',') }),
+            t('MITMPluginLocalList.plugins_removed_from_group', {
+              count: allChecked ? total : query.IncludedScriptNames?.length,
+              groups: removeGroup.join(','),
+            }),
           )
         }
         const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
         if (addGroup.length) {
           yakitNotify(
             'success',
-            t('MITMPluginLocalList.plugins_added_to_group', { count: allChecked ? total : query.IncludedScriptNames?.length, groups: addGroup.join(',') }),
+            t('MITMPluginLocalList.plugins_added_to_group', {
+              count: allChecked ? total : query.IncludedScriptNames?.length,
+              groups: addGroup.join(','),
+            }),
           )
         }
         if (removeGroup.length || addGroup.length) {
@@ -799,11 +805,23 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
       apiFetchSaveYakScriptGroupOnline(query).then(() => {
         setAddGroupVisible(false)
         if (removeGroup.length) {
-          yakitNotify('success', t('MITMPluginLocalList.plugins_removed_from_group', { count: allChecked ? total : query.uuid.length, groups: removeGroup.join(',') }))
+          yakitNotify(
+            'success',
+            t('MITMPluginLocalList.plugins_removed_from_group', {
+              count: allChecked ? total : query.uuid.length,
+              groups: removeGroup.join(','),
+            }),
+          )
         }
         const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
         if (addGroup.length) {
-          yakitNotify('success', t('MITMPluginLocalList.plugins_added_to_group', { count: allChecked ? total : query.uuid.length, groups: addGroup.join(',') }))
+          yakitNotify(
+            'success',
+            t('MITMPluginLocalList.plugins_added_to_group', {
+              count: allChecked ? total : query.uuid.length,
+              groups: addGroup.join(','),
+            }),
+          )
         }
         if (removeGroup.length || addGroup.length) {
           getGroupList()
@@ -1103,7 +1121,9 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
 
   return (
     <div className={style['plugin-group-list']}>
-      {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('MITMPluginLocalList.no_data')} />}
+      {pugGroup.length === 0 && (
+        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('MITMPluginLocalList.no_data')} />
+      )}
       {pugGroup.map((item) => (
         <div
           className={classNames(style['plugin-group-item'], {
