@@ -146,7 +146,6 @@ export interface QueryAISessionRequest {
     Source?: AISource[]
   }
 }
-
 export interface AIAgentChatData {
   /** http_fuzz_request_change事件通知数据 */
   httpFuzzRequest?: AIAgentGrpcApi.HttpFuzzRequestChange

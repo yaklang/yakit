@@ -15,14 +15,7 @@ import type {
   UseHookBaseParams,
   UseTaskChatEvents,
 } from './type'
-import type {
-  AIAgentGrpcApi,
-  AIEventQueryRequest,
-  AIInputEvent,
-  AIOutputEvent,
-  AIOutputI18n,
-  AIStartParams,
-} from './grpcApi'
+import type { AIAgentGrpcApi, AIEventQueryRequest, AIInputEvent, AIOutputEvent, AIStartParams } from './grpcApi'
 import type { AIChatData } from '@/pages/ai-agent/type/aiChat'
 import type { DeepPartial } from '@/pages/ai-agent/store/ChatDataStore'
 import type { AIChatQSData, ChatListRenderType } from './aiRender'
@@ -34,12 +27,11 @@ import { Uint8ArrayToString } from '@/utils/str'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useCasualChat from './useCasualChat'
 import useTaskChat from './useTaskChat'
-import { genBaseAIChatData, genErrorLogData, genExecTasks, handleGrpcDataPushLog } from './utils'
-import { AITaskStatus, AIInputEventSyncTypeEnum } from './grpcApi'
+import { handleGrpcDataPushLog } from './utils'
+import { AIInputEventSyncTypeEnum } from './grpcApi'
 import useAIChatLog from './useAIChatLog'
 import cloneDeep from 'lodash/cloneDeep'
 import {
-  convertNodeIdToVerbose,
   DefaultAIQuestionQueues,
   DefaultMemoryList,
   DefaultPlanHistoryList,
