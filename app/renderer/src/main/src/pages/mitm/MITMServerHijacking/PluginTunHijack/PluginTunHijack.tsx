@@ -69,6 +69,7 @@ export const PluginTunHijackDef: PluginTunHijackRefProps = {
 
 export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
   React.forwardRef((props, ref) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
     const {
       hidden,
       pluginTunHijackData,
@@ -329,6 +330,7 @@ const ConnectivityCheckAction: React.FC = React.memo(() => {
 
 export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.memo(
   React.forwardRef((props, ref) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
     const { deviceName, pluginTunHijackDel, handleDeleteRoute, onQuitTunHijackFun, onCloseTunHijackFun } = props
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -638,6 +640,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
 
 export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React.memo(
   (props: TunHijackProcessTableProps) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
     const { deviceName, pluginTunHijackAddActionsFun, setTableType } = props
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [tableData, setTableData] = useState<ProcessInfo[]>([])
@@ -1007,6 +1010,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
 )
 
 export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
   const { pluginTunHijackAddActionsFun, setTableType } = props
   const [hijackProcessInfo, setHijackProcessInfo] = useControllableValue<ConnectionInfo[] | undefined>(props, {
     valuePropName: 'hijackProcessInfo',
