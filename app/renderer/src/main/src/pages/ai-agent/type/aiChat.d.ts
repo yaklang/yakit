@@ -221,10 +221,9 @@ export interface AIAgentChatMetaData {
 
   /** 历史数据: review_release先出现的历史review数据的id-release */
   historyReviewReleaseID: Record<string, AIAgentGrpcApi.ReviewRelease>
+
   /** 当前plan_review对应的扩展数据ID */
-  currentPlanReviewId: string
-  /** 当前进行中的review数据(包含自由对话和任务规划) */
-  reviewData: Map<string, AIChatQSData>
+  currentPlanReviewExtraId: string
   /** 当前plan_review的异步详细数据 */
   planReviewExtraData: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
 

@@ -108,8 +108,7 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     currentTaskPlanID: undefined,
     currentTaskPlanActiveNode: new Set(),
     historyReviewReleaseID: {},
-    currentPlanReviewId: '',
-    reviewData: new Map(),
+    currentPlanReviewExtraId: '',
     planReviewExtraData: new Map(),
     toolStderrStreamData: new Map(),
     systemEventUUID: [],
@@ -157,9 +156,13 @@ export class ChatMultiSessionController {
     return this.activeShowSession === sessionId
   }
 
-  /** 更新指定会话的配置参数 */
-  public updateSessionConfig(sessionId: string, config: Partial<AIStartParams>) {
+  /**
+   * 更新指定会话的配置参数
+   * Source 字段连接会话时锁死，后续不允许热更新
+   */
+  public updateSessionConfig(sessionId: string, config: Partial<Omit<AIStartParams, 'Source'>>) {
     const { request } = this.ensureSession(sessionId)
+    delete config['Source']
     Object.assign(request, config)
   }
 
@@ -200,61 +203,97 @@ export class ChatMultiSessionController {
         return
       }
 
-      const { store, rawData, meta } = this.ensureSession(token)
-      if (params.IsFreeInput) {
+      const { store, rawData } = this.ensureSession(token)
+      // 自由对话没有问题进行中时，才改变loading的title
+      if (params.IsFreeInput && !store.getState().casualLoading) {
         store.getState().updateState({ casualTitle: '等待回复中...' })
       }
 
       switch (type) {
         case 'casual':
           if (params.IsInteractiveMessage && params.InteractiveId) {
-            const review = meta.reviewData.get(params.InteractiveId)
-            if (!review) {
+            const isExist = store.getState().currentCasualReview.includes(params.InteractiveId)
+            const review = rawData.contents.get(params.InteractiveId)
+            if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
               return
             }
 
-            ;(review.data as AIReviewType).selected = params.InteractiveJSONInput
-            ;(review.data as AIReviewType).optionValue = optionValue
-
-            const chatData = cloneDeep(review)
-            meta.reviewData.delete(params.InteractiveId)
-            rawData.contents.set(params.InteractiveId, chatData)
-            store.getState().incrementNodeVersion(params.InteractiveId, 'item')
+            store.getState().updateCasualReview(params.InteractiveId, 'remove')
+            switch (review.type) {
+              case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
+                // review操作后不展示在UI上，直接删除
+                rawData.contents.delete(review.id)
+                store.getState().deleteListElement('reAct', review.id)
+                break
+              case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
+              case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+                // review操作后正常展示在UI上
+                review.data.selected = params.InteractiveJSONInput
+                review.data.optionValue = optionValue
+                store.getState().incrementNodeVersion(review.id, 'item')
+                break
+              default:
+                break
+            }
           }
           break
         case 'task':
           if (params.IsInteractiveMessage && params.InteractiveId) {
-            const review = meta.reviewData.get(params.InteractiveId)
-            if (!review) {
+            const isExist = store.getState().currentPlanReviewToken === params.InteractiveId
+            const review = rawData.contents.get(params.InteractiveId)
+            if (!isExist || !review) {
               yakitNotify('error', '未获取到 review 信息, 操作无效')
               return
             }
 
-            ;(review.data as AIReviewType).selected = params.InteractiveJSONInput
-            ;(review.data as AIReviewType).optionValue = optionValue
-
-            const chatData = cloneDeep(review)
-            if (chatData.type === AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
-              const tasks = chatData.data
-              const plans = genExecTasks(tasks.plans.root_task)
-              store.getState().updatePlanTree({
-                task_tree: cloneDeep(plans),
-                root_task_name: tasks.plans.root_task.name,
-              })
+            store.getState().updateState({ currentPlanReviewToken: '' })
+            switch (review.type) {
+              case AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP:
+              case AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE:
+                // review操作后不展示在UI上，直接删除
+                rawData.contents.delete(review.id)
+                store.getState().deleteListElement('reAct', review.id)
+                break
+              case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
+              case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
+                // review操作后正常展示在UI上
+                review.data.selected = params.InteractiveJSONInput
+                review.data.optionValue = optionValue
+                store.getState().dispatchStreamingNode({
+                  chatType: 'task',
+                  node: {
+                    token: review.id,
+                    kind: 'item',
+                    type: review.type,
+                    dataOrigin: 'grpc_realtime_data',
+                  },
+                  groupTokenGenerator: () => '',
+                })
+                break
+              case AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE:
+                review.data.selected = params.InteractiveJSONInput
+                review.data.optionValue = optionValue
+                const tasks = review.data
+                const plans = genExecTasks(tasks.plans.root_task)
+                store.getState().updatePlanTree({
+                  task_tree: cloneDeep(plans),
+                  root_task_name: tasks.plans.root_task.name,
+                })
+                store.getState().dispatchStreamingNode({
+                  chatType: 'task',
+                  node: {
+                    token: review.id,
+                    kind: 'item',
+                    type: review.type,
+                    dataOrigin: 'grpc_realtime_data',
+                  },
+                  groupTokenGenerator: () => '',
+                })
+                break
+              default:
+                break
             }
-            meta.reviewData.delete(params.InteractiveId)
-            rawData.contents.set(params.InteractiveId, chatData)
-            store.getState().dispatchStreamingNode({
-              chatType: 'reAct',
-              node: {
-                token: chatData.id,
-                kind: 'item',
-                type: chatData.type,
-                dataOrigin: 'grpc_realtime_data',
-              },
-              groupTokenGenerator: () => '',
-            })
           }
           break
 
