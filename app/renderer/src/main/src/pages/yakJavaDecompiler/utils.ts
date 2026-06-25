@@ -424,9 +424,9 @@ export const getYakJavaDecompilerHistory = (): Promise<YakJavaDecompilerHistoryP
   })
 }
 
-export const isJavaDecompilerArchiveFile = (path: string) => isAcceptEligible(path, '.jar,.war,.ear')
+const isJavaDecompilerArchiveFile = (path: string) => isAcceptEligible(path, '.jar,.war,.ear,.zip')
 
-export const validateJavaDecompilerCodeSourcePath = (path: string) => {
+const validateJavaDecompilerCodeSourcePath = (path: string) => {
   if (isJavaDecompilerArchiveFile(path)) {
     return true
   }
@@ -435,7 +435,7 @@ export const validateJavaDecompilerCodeSourcePath = (path: string) => {
 }
 
 /**
- * @name 打开 JAR/WAR/EAR 文件或包含 JAR 的目录
+ * @name 打开 JAR/WAR/EAR/ZIP 文件或包含 JAR 的目录
  */
 export const openJavaDecompilerCodeSource = (
   mode: 'file' | 'directory' | 'all' = 'all',
@@ -449,7 +449,7 @@ export const openJavaDecompilerCodeSource = (
 
   return new Promise((resolve, reject) => {
     handleOpenFileSystemDialog({
-      title: mode === 'directory' ? '选择包含 JAR 的目录' : '选择 JAR/WAR/EAR 文件或目录',
+      title: mode === 'directory' ? '选择包含 JAR 的目录' : '选择 JAR/WAR/EAR/ZIP 文件或目录',
       properties: [...properties],
     })
       .then(async (data) => {
@@ -460,7 +460,7 @@ export const openJavaDecompilerCodeSource = (
           }
           const path: string = data.filePaths[0]
           if (!validateJavaDecompilerCodeSourcePath(path)) {
-            failed('仅支持 .jar、.war、.ear 文件或本地目录')
+            failed('仅支持 .jar、.war、.ear、.zip 文件或本地目录')
             resolve(null)
             return
           }
