@@ -138,7 +138,7 @@ interface ManualUrlInfoProps {
   traceInfo: TraceInfo
 }
 export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const { urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className, traceInfo } = props
   return (
     <div className={classNames(styles['autoForward-manual-urlInfo'], className)}>
@@ -237,7 +237,7 @@ interface MITMManualEditorProps {
   taskId?: string
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     urlInfo,
     isHttp,

@@ -149,7 +149,7 @@ const MITMHijackTab: YakitTabsProps[] = [
   },
 ]
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = React.memo((props) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
 
   const {
     isHasParams,
