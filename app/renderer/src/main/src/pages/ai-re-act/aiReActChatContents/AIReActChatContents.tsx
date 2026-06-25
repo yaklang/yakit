@@ -1,11 +1,6 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 'react'
 import classNames from 'classnames'
-import {
-  AIReActChatContentsPProps,
-  AIReferenceNodeProps,
-  AIReActChatContentsRef,
-  AIStreamNodeProps,
-} from './AIReActChatContentsType'
+import { AIReActChatContentsPProps, AIReferenceNodeProps, AIStreamNodeProps } from './AIReActChatContentsType'
 import styles from './AIReActChatContents.module.scss'
 import { useCreation } from 'ahooks'
 import { AIMarkdown } from '@/pages/ai-agent/components/aiMarkdown/AIMarkdown'
@@ -21,16 +16,16 @@ import { Virtuoso } from 'react-virtuoso'
 import useVirtuosoAutoScroll from '../hooks/useVirtuosoAutoScroll'
 import useChatStreamLocateHighlight from '../hooks/useChatStreamLocateHighlight'
 import { ChatReferenceMaterialPayload, ReActChatRenderItem } from '../hooks/aiRender'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import Loading from '@/components/Loading/Loading'
 import { ScrollText } from '@/pages/ai-agent/chatTemplate/TaskLoading/TaskLoading'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 import useAIAgentStore from '@/pages/ai-agent/useContext/useStore'
 import useLoadHistory from '../hooks/useLoadHistory'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import AITextSyntaxFlow from '@/pages/ai-agent/components/aiTextSyntaxFlow/AITextSyntaxFlow'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const getAIReferenceNodeByType = (contentType?: string) => {
   switch (contentType) {
@@ -53,7 +48,8 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   const { NodeId, content, NodeIdVerbose, CallToolID, ContentType, status } = stream.data
   // 是否仍在流式输出（结束态 status 为 'end'，历史消息亦为 'end'，据此控制流式淡入效果）
   const streaming = status !== 'end'
-  const { yakExecResult } = useChatIPCStore().chatIPCData
+  const store = useCurrentStore()
+  const execFileRecord = useStore(store, (state) => state.execFileRecord)
   const { nodeLabel } = useAINodeLabel(NodeIdVerbose)
 
   const modalInfo: ModalInfoProps = useCreation(() => {
@@ -94,7 +90,6 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
         />
       )
     case AIStreamContentType.TEXT_PLAIN: {
-      const { execFileRecord } = yakExecResult
       const fileList = execFileRecord.get(CallToolID)
       return (
         <StreamCard
@@ -123,21 +118,21 @@ export const AIStreamNode: React.FC<AIStreamNodeProps> = React.memo((props) => {
   }
 })
 const TYPE = 'reAct'
-export const AIReActChatContents = React.memo(
-  forwardRef<AIReActChatContentsRef, AIReActChatContentsPProps>((props, ref) => {
-    const { chats } = props
-    const listRootRef = useRef<HTMLDivElement>(null)
-    const {
-      casualTitle,
-      requestHistoryState: { casualLoadMoreLoading },
-      execute,
-    } = useChatIPCStore().chatIPCData
 
+export const AIReActChatContents: React.FC<AIReActChatContentsPProps> = React.memo(
+  forwardRef((props, ref) => {
     const { activeChat } = useAIAgentStore()
 
+    const store = useCurrentStore()
+    const casualChat = useStore(store, (state) => state.casualChat)
+    const chatLength = useStore(store, (state) => state.casualChat.elements.length)
+    const casualTitle = useStore(store, (state) => state.casualTitle)
+    const execute = useStore(store, (state) => state.execute)
+    const casualLoadMoreLoading = useStore(store, (state) => state.requestHistoryState.casualLoadMoreLoading)
+
+    /** TODO - 新版中历史逻辑暂未补充 */
     const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
 
-    const chatLength = useCreation(() => chats.elements.length, [chats.elements.length])
     // 向上滚动加载
     const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
       loading: casualLoadMoreLoading,
@@ -224,10 +219,10 @@ export const AIReActChatContents = React.memo(
           scrollerRef={setScrollerRef}
           firstItemIndex={firstItemIndex}
           atBottomStateChange={setIsAtBottomRef}
-          data={chats.elements}
+          data={casualChat}
           totalListHeightChanged={handleTotalListHeightChanged}
           itemContent={renderItem}
-          initialTopMostItemIndex={chats.elements.length > 1 ? chats.elements.length - 1 : 0}
+          initialTopMostItemIndex={chatLength > 1 ? chatLength - 1 : 0}
           components={components}
           atBottomThreshold={50}
           skipAnimationFrameInResizeObserver
