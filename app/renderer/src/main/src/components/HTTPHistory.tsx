@@ -371,7 +371,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                       history: true,
                       dataDetails: { type: 'text2' },
                       add: (
-                        <Tooltip title="新建会话">
+                        <Tooltip title={t('HTTPHistory.new_session')}>
                           <YakitButton
                             type="text2"
                             icon={<OutlineMessageCirclePlusIcon />}

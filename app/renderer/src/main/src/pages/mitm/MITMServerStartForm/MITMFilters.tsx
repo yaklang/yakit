@@ -449,23 +449,23 @@ export const isFilterItemEmpty = (item: FilterDataItem) => {
 }
 const filterRangeOption: YakitSelectProps['options'] = [
   {
-    label: '排除 Hostnames',
+    label: t('MITMFilters.exclude_hostnames'),
     value: 'ExcludeHostnames',
   },
   {
-    label: '包含 Hostnames',
+    label: t('MITMFilters.include_hostnames'),
     value: 'IncludeHostnames',
   },
   {
-    label: '排除 URL路径',
+    label: t('MITMFilters.exclude_url_paths'),
     value: 'ExcludeUri',
   },
   {
-    label: '包含 URL路径',
+    label: t('MITMFilters.include_url_paths'),
     value: 'IncludeUri',
   },
   {
-    label: '排除 HTTP方法',
+    label: t('MITMFilters.exclude_http_methods'),
     value: 'ExcludeMethods',
   },
 ]

@@ -161,7 +161,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       if (autoForward !== 'manual' && value.ManualHijackListAction) {
         if (hijackFilterFlag) {
           setAutoForward('manual')
-          yakitNotify('info', '已触发 条件 劫持')
+          yakitNotify('info', t('MITMManual.conditional_hijack_triggered'))
         }
       }
       const hijackData = value.ManualHijackList[0]
@@ -319,9 +319,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         switch (rowData.Status) {
           case ManualHijackListStatus.Hijacking_Request:
           case ManualHijackListStatus.WaitHijack:
-            return '请求'
+            return t('MITMRule.request')
           case ManualHijackListStatus.Hijacking_Response:
-            return '响应'
+            return t('MITMRule.response')
           default:
             return ''
         }
@@ -352,7 +352,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         },
         {
           key: 'copy-url',
-          label: '复制 URL',
+          label: t('MITMManual.copy_url'),
         },
         {
           key: 'discard-data',
@@ -367,7 +367,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         },
         {
           key: 'send-webFuzzer',
-          label: '发送到 Web Fuzzer',
+          label: t('MITMManual.send_to_web_fuzzer'),
           children: [
             // SystemInfo
             {
@@ -398,7 +398,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         },
         {
           key: 'mark-color',
-          label: '标注颜色',
+          label: t('MITMManual.mark_color'),
           children: availableColors.map((i) => {
             return {
               key: i.title,
@@ -408,7 +408,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         },
         {
           key: 'remove-color',
-          label: '移除颜色',
+          label: t('MITMManual.remove_color'),
         },
       ]
       if (rowData.Status !== ManualHijackListStatus.Hijacking_Request) {
@@ -548,12 +548,12 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
     const columns: ColumnsTypeProps[] = useCreation(() => {
       return [
         {
-          title: '到达顺序',
+          title: t('MITMManual.arrival_order'),
           dataKey: 'arrivalOrder',
           width: 120,
         },
         {
-          title: '状态',
+          title: t('MITMManual.status'),
           dataKey: 'Status',
           render: (value: ManualHijackListStatus) => {
             let icon = <></>
@@ -578,7 +578,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           width: 120,
         },
         {
-          title: '方法',
+          title: t('MITMManual.method'),
           dataKey: 'Method',
           width: 80,
         },
@@ -587,7 +587,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           dataKey: 'URL',
         },
         {
-          title: '标记颜色',
+          title: t('MITMManual.mark_color'),
           dataKey: 'Tags',
           width: 200,
           render: (text) => {
@@ -1213,24 +1213,24 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
       { type: 'divider' },
       {
         key: 'trigger-auto-hijacked',
-        label: '切换为自动劫持模式',
+        label: t('MITMManual.switch_to_auto_hijack_mode'),
         keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked,
       },
       {
         key: 'submit-data',
-        label: '放行数据',
+        label: t('MITMManual.forward_data'),
         keybindings: YakEditorOptionShortcutKey.SubmitDataMitm,
       },
       {
         key: 'drop-data',
-        label: '丢弃数据',
+        label: t('MITMManual.drop_data'),
         keybindings: YakEditorOptionShortcutKey.DropDataMitm,
       },
     ]
     if (!forResponse) {
       menu.push({
         key: 'hijack-current-response',
-        label: '劫持该响应',
+        label: t('MITMManual.hijack_response'),
         keybindings: YakEditorOptionShortcutKey.HijackResponseMitm,
       })
     }
@@ -1294,7 +1294,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
               },
               {
                 value: 'render',
-                label: '渲染',
+                label: t('MITMManual.render'),
               },
             ])
           }
@@ -1365,11 +1365,11 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
                 value={type}
                 options={[
                   {
-                    label: '请求',
+                    label: t('MITMRule.request'),
                     value: 'request',
                   },
                   {
-                    label: '响应',
+                    label: t('MITMRule.response'),
                     value: 'response',
                   },
                 ]}

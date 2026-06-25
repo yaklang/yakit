@@ -127,7 +127,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
   const menuData = useMemo(() => {
     let menu: HistoryMenuData[] = [
       {
-        key: '发送到 Web Fuzzer',
+        key: t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
         label: t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
         number: 10,
         default: true,
@@ -147,7 +147,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         onClickBatch: () => {},
       },
       {
-        key: '发送到 WS Fuzzer',
+        key: t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'),
         label: t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'),
         number: 10,
         webSocket: true,
@@ -206,7 +206,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           }),
       },
       {
-        key: '数据包扫描',
+        key: t('HTTPFlowTable.RowContextMenu.packetScan'),
         label: t('HTTPFlowTable.RowContextMenu.packetScan'),
         number: 200,
         default: true,
@@ -219,7 +219,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         })),
       },
       {
-        key: '插件扩展',
+        key: t('HTTPFlowTable.RowContextMenu.pluginExtension'),
         label: t('HTTPFlowTable.RowContextMenu.pluginExtension'),
         default: true,
         webSocket: false,
@@ -228,7 +228,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         children: getCodecHistoryPlugin(),
       },
       {
-        key: 'AI插件',
+        key: t('HTTPFlowTable.RowContextMenu.aiPlugin'),
         label: (
           <>
             <IconSolidAIIcon className={'ai-plugin-menu-icon-default'} />
@@ -299,7 +299,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         },
       },
       {
-        key: '下载 Response Body',
+        key: t('HTTPFlowTable.RowContextMenu.downloadResponseBody'),
         label: t('HTTPFlowTable.RowContextMenu.downloadResponseBody'),
         default: true,
         webSocket: false,
@@ -310,7 +310,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         },
       },
       {
-        key: '浏览器中打开URL',
+        key: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
         label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
         default: true,
         webSocket: false,
@@ -320,7 +320,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         },
       },
       {
-        key: '浏览器中查看响应',
+        key: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
         label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
         default: true,
         webSocket: false,
@@ -330,7 +330,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         },
       },
       {
-        key: '复制为 CSRF Poc',
+        key: t('HTTPFlowTable.RowContextMenu.copyAsCSRFPoc'),
         label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc'),
         default: true,
         webSocket: false,
@@ -349,24 +349,24 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         ],
       },
       {
-        key: '复制为 Yak PoC 模版',
+        key: t('HTTPFlowTable.RowContextMenu.copyAsYakPoCTemplate'),
         label: t('HTTPFlowTable.RowContextMenu.copyAsYakPoCTemplate'),
         default: true,
         webSocket: false,
         onClickSingle: () => {},
         children: [
           {
-            key: '数据包 PoC 模版',
+            key: t('HTTPFlowTable.RowContextMenu.packetPoCTemplate'),
             label: t('HTTPFlowTable.RowContextMenu.packetPoCTemplate'),
           },
           {
-            key: '批量检测 PoC 模版',
+            key: t('HTTPFlowTable.RowContextMenu.batchTestPoCTemplate'),
             label: t('HTTPFlowTable.RowContextMenu.batchTestPoCTemplate'),
           },
         ],
       },
       {
-        key: '标注颜色',
+        key: t('HTTPFlowTable.RowContextMenu.tagColor'),
         label: t('HTTPFlowTable.RowContextMenu.tagColor'),
         default: true,
         webSocket: false,
@@ -393,7 +393,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         }),
       },
       {
-        key: '移除颜色',
+        key: t('HTTPFlowTable.RowContextMenu.removeColor'),
         label: t('HTTPFlowTable.RowContextMenu.removeColor'),
         default: true,
         webSocket: false,
@@ -411,14 +411,14 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           }),
       },
       {
-        key: '发送到对比器',
+        key: t('HTTPFlowTable.RowContextMenu.sendToComparer'),
         label: t('HTTPFlowTable.RowContextMenu.sendToComparer'),
         default: true,
         webSocket: false,
         onClickSingle: () => {},
         children: [
           {
-            key: '发送到对比器左侧',
+            key: t('HTTPFlowTable.RowContextMenu.sendToComparerLeft'),
             label: t('HTTPFlowTable.RowContextMenu.sendToComparerLeft'),
             // disabled: [false, true, false][compareState]
           },
@@ -430,31 +430,31 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         ],
       },
       {
-        key: '屏蔽',
+        key: t('HTTPFlowTable.RowContextMenu.block'),
         label: t('HTTPFlowTable.RowContextMenu.block'),
         webSocket: true,
         default: true,
         onClickSingle: () => {},
         children: [
           {
-            key: '屏蔽该记录',
+            key: t('HTTPFlowTable.RowContextMenu.blockRecord'),
             label: t('HTTPFlowTable.RowContextMenu.blockRecord'),
             keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockRecord].keys,
           },
           {
-            key: '屏蔽URL',
+            key: t('HTTPFlowTable.RowContextMenu.blockURL'),
             label: t('HTTPFlowTable.RowContextMenu.blockURL'),
             keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockURL].keys,
           },
           {
-            key: '屏蔽域名',
+            key: t('HTTPFlowTable.RowContextMenu.blockDomain'),
             label: t('HTTPFlowTable.RowContextMenu.blockDomain'),
             keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableBlockDomain].keys,
           },
         ],
       },
       {
-        key: '删除',
+        key: t('HTTPFlowTable.RowContextMenu.delete'),
         label: t('HTTPFlowTable.RowContextMenu.delete'),
         webSocket: true,
         default: true,
@@ -463,7 +463,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         all: true,
         children: [
           {
-            key: '删除记录',
+            key: t('HTTPFlowTable.RowContextMenu.deleteRecord'),
             label: t('HTTPFlowTable.RowContextMenu.deleteRecord'),
             keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteRecord].keys,
             onClick: (v) => onRemoveHttpHistory({ Id: [v.Id] }),
@@ -472,7 +472,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             },
           },
           {
-            key: '删除URL',
+            key: t('HTTPFlowTable.RowContextMenu.deleteURL'),
             label: t('HTTPFlowTable.RowContextMenu.deleteURL'),
             keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteURL].keys,
             onClick: (v) => onRemoveHttpHistory({ URLPrefix: v.Url }),
@@ -486,7 +486,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             },
           },
           {
-            key: '删除域名',
+            key: t('HTTPFlowTable.RowContextMenu.deleteDomain'),
             label: t('HTTPFlowTable.RowContextMenu.deleteDomain'),
             keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableDeleteDomain].keys,
             onClick: (v) => onRemoveHttpHistory({ URLPrefix: v?.HostPort?.split(':')[0] }),
@@ -502,7 +502,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         ],
       },
       {
-        key: '分享数据包',
+        key: t('HTTPFlowTable.RowContextMenu.sharePacket'),
         label: t('HTTPFlowTable.RowContextMenu.sharePacket'),
         number: 30,
         default: true,
@@ -521,7 +521,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         onClickSingle: (v) => onViewAttachmentDataRefresh(v.Id),
       },
       {
-        key: '导出数据',
+        key: t('HTTPFlowTable.RowContextMenu.exportData'),
         label: t('HTTPFlowTable.RowContextMenu.exportData'),
         default: true,
         webSocket: false,
@@ -529,7 +529,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         onClickBatch: () => {},
         children: [
           {
-            key: '导出为Excel',
+            key: t('HTTPFlowTable.RowContextMenu.exportToExcel'),
             label: t('HTTPFlowTable.RowContextMenu.exportToExcel'),
             onClick: (v) => onExcelExport([v]),
             onClickBatch: (list) => {
@@ -537,7 +537,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             },
           },
           {
-            key: '导出为HAR',
+            key: t('HTTPFlowTable.RowContextMenu.exportToHAR'),
             label: t('HTTPFlowTable.RowContextMenu.exportToHAR'),
             onClick: (v) => onHarExport([v.Id]),
             onClickBatch: (list) => {
@@ -547,14 +547,14 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         ],
       },
       {
-        key: '编辑tag',
+        key: t('HTTPFlowTable.RowContextMenu.editTag'),
         label: t('HTTPFlowTable.RowContextMenu.editTag'),
         default: true,
         webSocket: true,
         onClickSingle: (v) => onEditTags(v),
       },
       {
-        key: '新窗口打开',
+        key: t('HTTPFlowTable.RowContextMenu.openInNewWindow'),
         label: t('HTTPFlowTable.RowContextMenu.openInNewWindow'),
         default: true,
         webSocket: true,
@@ -565,7 +565,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     ]
     if (isEnpriTrace() && userInfo.isLogin) {
       menu.push({
-        key: '上传数据',
+        key: t('HTTPFlowTable.RowContextMenu.uploadData'),
         label: t('HTTPFlowTable.RowContextMenu.uploadData'),
         number: 30,
         default: true,
@@ -658,7 +658,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           if (keyPath.length === 2) {
             const menuName = keyPath[1]
             let menuItemName = keyPath[0]
-            if (menuName === '插件扩展' || menuName === 'AI插件') {
+            if (menuName === t('HTTPFlowTable.RowContextMenu.pluginExtension') || menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin')) {
               // 没有插件 下载codec插件
               if (key === 'Get*plug-in' || key === 'Get*ai-plug-in') {
                 emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
@@ -674,7 +674,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
                     item.children.forEach((itemIn: HistoryMenuData) => {
                       if (itemIn.key === menuItemName) {
                         // 由于为保持key值唯一 添加了特定字符 现在移除掉
-                        if (menuName === 'AI插件' && menuItemName.startsWith('aiplugin-')) {
+                        if (menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin') && menuItemName.startsWith('aiplugin-')) {
                           menuItemName = menuItemName.slice('aiplugin-'.length)
                         }
                         emiter.emit(
@@ -695,7 +695,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             }
           }
 
-          if (keyPath.includes('数据包扫描')) {
+          if (keyPath.includes(t('HTTPFlowTable.RowContextMenu.packetScan'))) {
             const scanItem = packetScanDefaultValue.find((e) => e.Verbose === key || e.VerboseUi === key)
             if (!scanItem) return
             execPacketScan({
@@ -705,7 +705,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             })
             return
           }
-          if (keyPath.includes('标注颜色')) {
+          if (keyPath.includes(t('HTTPFlowTable.RowContextMenu.tagColor'))) {
             const colorItem = availableColors.find((e) => e.title === key)
             if (!colorItem) return
             CalloutColor(rowData, colorItem, data, setData)
@@ -732,31 +732,31 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
                 true,
               )
               break
-            case '数据包 PoC 模版':
+            case t('HTTPFlowTable.RowContextMenu.packetPoCTemplate'):
               onPocMould(rowData)
               break
-            case '批量检测 PoC 模版':
+            case t('HTTPFlowTable.RowContextMenu.batchTestPoCTemplate'):
               onBatchPocMould(rowData)
               break
-            case '屏蔽该记录':
+            case t('HTTPFlowTable.RowContextMenu.blockRecord'):
               onShieldRecord(rowData)
               break
-            case '屏蔽URL':
+            case t('HTTPFlowTable.RowContextMenu.blockURL'):
               onShieldURL(rowData)
               break
-            case '屏蔽域名':
+            case t('HTTPFlowTable.RowContextMenu.blockDomain'):
               onShieldDomain(rowData)
               break
-            case '删除记录':
+            case t('HTTPFlowTable.RowContextMenu.deleteRecord'):
               onRemoveHttpHistory({ Id: [rowData.Id] })
               break
-            case '删除URL':
+            case t('HTTPFlowTable.RowContextMenu.deleteURL'):
               onRemoveHttpHistory({ URLPrefix: rowData.Url })
               break
-            case '删除域名':
+            case t('HTTPFlowTable.RowContextMenu.deleteDomain'):
               onRemoveHttpHistory({ URLPrefix: rowData?.HostPort?.split(':')[0] })
               break
-            case '发送到对比器左侧':
+            case t('HTTPFlowTable.RowContextMenu.sendToComparerLeft'):
               setCompareLeft({
                 content: new Buffer(rowData.Request).toString('utf8'),
                 language: 'http',
@@ -780,10 +780,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             case 'sendToWS':
               newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
               break
-            case '导出为Excel':
+            case t('HTTPFlowTable.RowContextMenu.exportToExcel'):
               onExcelExport([rowData])
               break
-            case '导出为HAR':
+            case t('HTTPFlowTable.RowContextMenu.exportToHAR'):
               onHarExport([rowData.Id])
               break
             default:
@@ -816,7 +816,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     if (keyPath.length === 2) {
       const menuName = keyPath[1]
       let menuItemName = keyPath[0]
-      if (menuName === '插件扩展' || menuName === 'AI插件') {
+      if (menuName === t('HTTPFlowTable.RowContextMenu.pluginExtension') || menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin')) {
         // 没有插件 下载codec插件
         if (key === 'Get*plug-in' || key === 'Get*ai-plug-in') {
           emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
@@ -832,7 +832,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
               item.children.forEach((itemIn: HistoryMenuData) => {
                 if (itemIn.key === menuItemName) {
                   // 由于为保持key值唯一 添加了特定字符 现在移除掉
-                  if (menuName === 'AI插件' && menuItemName.startsWith('aiplugin-')) {
+                  if (menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin') && menuItemName.startsWith('aiplugin-')) {
                     menuItemName = menuItemName.slice('aiplugin-'.length)
                   }
                   emiter.emit(
@@ -861,7 +861,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       }
     }
 
-    if (keyPath.includes('数据包扫描')) {
+    if (keyPath.includes(t('HTTPFlowTable.RowContextMenu.packetScan'))) {
       let sendIds: string[] = selectedRowKeys
       if (isAllSelect) {
         if (total > 200) {
@@ -876,7 +876,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           return
         }
       }
-      const currentItemScan = menuData.find((f) => f.onClickBatch && f.key === '数据包扫描')
+      const currentItemScan = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.packetScan'))
       const currentItemPacketScan = packetScanDefaultValue.find((f) => f.Verbose === key || f.VerboseUi === key)
       if (!currentItemScan || !currentItemPacketScan) return
 
@@ -887,8 +887,8 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       })
       return
     }
-    if (keyPath.includes('标注颜色')) {
-      const currentItemColor = menuData.find((f) => f.onClickBatch && f.key === '标注颜色')
+    if (keyPath.includes(t('HTTPFlowTable.RowContextMenu.tagColor'))) {
+      const currentItemColor = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.tagColor'))
       const colorItem = availableColors.find((e) => e.title === key)
       if (!currentItemColor || !colorItem) return
       calloutColorBatch({
@@ -904,12 +904,12 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       return
     }
     switch (key) {
-      case '删除记录':
+      case t('HTTPFlowTable.RowContextMenu.deleteRecord'):
         onRemoveHttpHistory({
           Id: selectedRowKeys,
         })
         break
-      case '删除URL':
+      case t('HTTPFlowTable.RowContextMenu.deleteURL'):
         const urls = selectedRows.map((ele) => ele.Url)
         onRemoveHttpHistory({
           Filter: {
@@ -917,7 +917,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           },
         })
         break
-      case '删除域名':
+      case t('HTTPFlowTable.RowContextMenu.deleteDomain'):
         const hosts = selectedRows.map((ele) => ele.HostPort?.split(':')[0])
         onRemoveHttpHistory({
           Filter: {
@@ -926,7 +926,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         })
         break
       case 'sendAndJumpToWebFuzzer':
-        const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === '发送到 Web Fuzzer')
+        const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'))
         if (!currentItemJumpToFuzzer) return
         onBatch(
           (el) => onSendToTab(el, true, downstreamProxyStr, fromMITM),
@@ -936,7 +936,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
         break
       case 'sendToWebFuzzer':
-        const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === '发送到 Web Fuzzer')
+        const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'))
         if (!currentItemToFuzzer) return
         onBatch(
           (el) => onSendToTab(el, false, downstreamProxyStr, fromMITM),
@@ -945,7 +945,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         )
         break
       case 'sendAndJumpToWS':
-        const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === '发送到 WS Fuzzer')
+        const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'))
         if (!currentItemJumpToWS) return
         onBatch(
           (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
@@ -955,7 +955,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
         break
       case 'sendToWS':
-        const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === '发送到 WS Fuzzer')
+        const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'))
         if (!currentItemToWS) return
         onBatch(
           (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request, false),
@@ -963,10 +963,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           selectedRowKeys.length === total,
         )
         break
-      case '导出为Excel':
+      case t('HTTPFlowTable.RowContextMenu.exportToExcel'):
         onExcelExport(selectedRows)
         break
-      case '导出为HAR':
+      case t('HTTPFlowTable.RowContextMenu.exportToHAR'):
         onHarExport(isAllSelect ? [] : selectedRows.map((item) => item.Id))
         break
       default:

@@ -219,7 +219,7 @@ export const MITMServerStartForm: React.FC<MITMServerStartFormProp> = React.memo
         setOpenRepRuleFlag(findOpenRepRule !== undefined)
         setRules(newRules)
       })
-      .catch((e) => yakitFailed('获取规则列表失败:' + e))
+      .catch((e) => yakitFailed(t('MITMServerForm.failed_to_get_rule_list') + e))
   })
   const onSwitchPlugin = useMemoizedFn((checked) => {
     props.setEnableInitialPlugin(checked)

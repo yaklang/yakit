@@ -43,11 +43,13 @@ import { debugToPrintLogs } from '@/utils/logCollection'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { ManualHijackTypeProps } from './MITMManual/MITMManualType'
 import { cloneDeep } from 'lodash'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const PluginHasParamsDrawer = React.lazy(() => import('../../components/pluginHasParamsDrawer/PluginHasParamsDrawer'))
 
 const { ipcRenderer } = window.require('electron')
 
 export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     hooks,
     hooksID,
@@ -241,7 +243,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
   }, [showPluginHistoryList])
   const historyIcon = useMemo(() => {
     return (
-      <Tooltip title={showPluginHistoryList.includes(i.ScriptName) ? '取消查看该插件流量' : '查看该插件流量'}>
+      <Tooltip title={showPluginHistoryList.includes(i.ScriptName) ? t('YakScriptLoader.cancel_viewing_plugin_traffic') : t('YakScriptLoader.view_plugin_traffic')}>
         <OutlileHistoryIcon
           className={classNames(style['history-icon'], {
             [style['history-icon-def']]: !showPluginHistoryList.includes(i.ScriptName),
@@ -295,7 +297,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     return (
       <YakitPopconfirm
         disabled={!p.onSendToPatch}
-        title="发送到【热加载】中调试代码？"
+        title={t('YakScriptLoader.send_to_hot_patch_for_code_debugging')}
         onConfirm={() => {
           if (!i.Content) {
             getScriptInfo(i, true)
@@ -389,7 +391,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
           </>
         ) : null}
         {status !== 'idle' && hasPluginOutInfo && (
-          <Tooltip title="查看当前插件输出">
+          <Tooltip title={t('YakScriptLoader.view_current_plugin_output')}>
             <OutlinePositionIcon
               className={classNames(style['position-icon'], {
                 [style['position-light']]: showPluginStream === i.ScriptName,
@@ -538,6 +540,6 @@ export interface MITMYakScriptLoaderProps {
 
 export function clearMITMPluginCache(version: string) {
   grpcMITMClearPluginCache(version).catch((e) => {
-    failed(`清除插件缓存失败: ${e}`)
+    failed(t('YakScriptLoader.clear_plugin_cache_failed', { e }))
   })
 }

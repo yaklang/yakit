@@ -4,7 +4,8 @@
     "process": "Process",
     "builtinTag": "System Tag",
     "pleaseEnterDomainToSearch": "Please enter a domain to search, e.g., baidu.com",
-    "AI": "AI"
+    "AI": "AI",
+    "new_session": "New Session"
   },
   "HTTPFlowTable": {
     "requestDetailsNotFound": "Request details not found",

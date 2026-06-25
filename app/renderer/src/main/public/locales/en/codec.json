@@ -35,6 +35,7 @@
   },
   "NewCodec": {
     "saveUpdateConfirm": "Do you want to save updates to the current template?",
-    "unrecognizedData": "Unrecognized Data"
+    "unrecognizedData": "Unrecognized Data",
+    "other": "Other"
   }
 }

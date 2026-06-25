@@ -28,23 +28,24 @@ import { RemoteMitmGV } from '@/enums/mitm'
 import classNames from 'classnames'
 import { PluginExecutionTrace, PluginTraceProps, QueryPluginTrace } from './type'
 import styles from './PluginTrace.module.scss'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const TraceStatusMapTag = [
   {
     key: ['pending'],
-    name: '等待中',
+    name: t('PluginTrace.waiting'),
     tag: 'blue',
   },
-  { key: ['running'], name: '执行中', tag: 'yellow' },
+  { key: ['running'], name: t('PluginTrace.running'), tag: 'yellow' },
   {
     key: ['completed'],
-    name: '完成',
+    name: t('PluginTrace.completed'),
     tag: 'success',
   },
-  { key: ['failed'], name: '失败', tag: 'danger' },
+  { key: ['failed'], name: t('PluginTrace.failed'), tag: 'danger' },
   {
     key: ['cancelled'],
-    name: '取消',
+    name: t('MITMPluginHijackContent.cancel'),
     tag: 'info',
   },
 ]
@@ -72,6 +73,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
       pluginTraceList,
     } = props
 
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
     useImperativeHandle(
       ref,
       () => ({
@@ -227,23 +229,23 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
       const columnArr: ColumnsTypeProps[] = [
         {
-          title: '序号',
+          title: t('PluginTrace.index'),
           width: 96,
           fixed: 'left',
           dataKey: 'Index',
         },
         {
-          title: '插件名称',
+          title: t('PluginTrace.plugin_name'),
           width: 200,
           dataKey: 'PluginID',
         },
         {
-          title: 'Hook名称',
+          title: t('PluginTrace.hook_name'),
           dataKey: 'HookName',
           width: 200,
         },
         {
-          title: '状态',
+          title: t('MITMManual.status'),
           dataKey: 'Status',
           width: 80,
           filterProps: {
@@ -252,15 +254,15 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
             filterMultiple: true,
             filters: [
               {
-                label: '执行中',
+                label: t('PluginTrace.running'),
                 value: 'running',
               },
               {
-                label: '失败',
+                label: t('PluginTrace.failed'),
                 value: 'failed',
               },
               {
-                label: '取消',
+                label: t('MITMPluginHijackContent.cancel'),
                 value: 'cancelled',
               },
             ],
@@ -268,28 +270,28 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
           render: (text) => traceStatusTag(text),
         },
         {
-          title: '调用参数',
+          title: t('PluginTrace.call_parameters'),
           width: 300,
           dataKey: 'ExecutionArgsStr',
         },
         {
-          title: '开始时间',
+          title: t('PluginTrace.start_time'),
           width: 150,
           dataKey: 'StartTime',
           render: (text) => <div>{text === 0 ? '-' : formatTimestamp(text)}</div>,
         },
         {
-          title: '耗时（ms）',
+          title: t('PluginTrace.duration_ms'),
           width: 100,
           dataKey: 'DurationMs',
         },
         {
-          title: '错误信息',
+          title: t('PluginTrace.error_message'),
           width: 200,
           dataKey: 'ErrorMessage',
         },
         {
-          title: '操作',
+          title: t('ProxyConfig.operation'),
           width: 70,
           fixed: 'right',
           dataKey: 'Action',
@@ -375,7 +377,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
             }
           }
         } catch (error) {
-          yakitNotify('error', '搜索失败:' + error)
+          yakitNotify('error', t('PluginTrace.search_failed') + error)
         }
       },
       { wait: 300 },
@@ -393,7 +395,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
           }
         })
           .catch((e) => {
-            yakitNotify('error', '搜索失败:' + e)
+            yakitNotify('error', t('PluginTrace.search_failed') + e)
           })
           .finally(() => {
             setTimeout(() => {
@@ -449,8 +451,8 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
         {isInitTrace ? (
           <YakitEmpty
             image={<TraceSvgSvgIcon />}
-            title="插件追踪"
-            description="开启追踪后可查看插件具体的执行情况和执行失败的原因"
+            title={t('MITMPluginHijackContent.plugin_trace')}
+            description={t('PluginTrace.enable_tracing_to_view_plugin_execution_')}
             style={{ marginTop: 80 }}
           >
             <YakitButton type="primary" icon={<OutlinePlay2Icon />} onClick={startPluginTrace} loading={startLoading}>
@@ -464,7 +466,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
               <div className={styles['plugin-trace-content']}>
                 <YakitInput.Search
                   wrapperStyle={{ marginBottom: 8 }}
-                  placeholder="请输入插件名或Hook名进行搜索"
+                  placeholder={t('PluginTrace.search_by_plugin_name_or_hook_name')}
                   onChange={onSearchChange}
                   onSearch={onSearch}
                   value={searchValue}
@@ -564,14 +566,14 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                             color="yellow"
                             onClick={() => {
                               if (!selectCurTrace?.TraceID) {
-                                yakitNotify('info', '列表未找到，暂无法定位')
+                                yakitNotify('info', t('PluginTrace.not_found_in_list_cannot_locate'))
                                 return
                               }
 
                               if (selectCurTrace?.Status === 'completed') {
                                 yakitNotify(
                                   'info',
-                                  selectCurTrace?.TraceID + '：状态已执行完成，已自动从列表移除，暂无法定位',
+                                  selectCurTrace?.TraceID + t('PluginTrace.status_completed_removed'),
                                 )
                                 return
                               }
@@ -595,9 +597,9 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                   </div>
                   <div className={styles['content-resize-second']}>
                     <Descriptions bordered size="small" column={2} labelStyle={{ width: 120 }}>
-                      <Descriptions.Item label="Hook名称">{selectCurTrace?.HookName || '-'}</Descriptions.Item>
-                      <Descriptions.Item label="耗时">{selectCurTrace?.DurationMs || '-'}</Descriptions.Item>
-                      <Descriptions.Item label="调用参数" span={2}>
+                      <Descriptions.Item label={t('PluginTrace.hook_name')}>{selectCurTrace?.HookName || '-'}</Descriptions.Item>
+                      <Descriptions.Item label={t('PluginTrace.duration')}>{selectCurTrace?.DurationMs || '-'}</Descriptions.Item>
+                      <Descriptions.Item label={t('PluginTrace.call_parameters')} span={2}>
                         <div className={styles['descriptions-item']}>
                           {selectCurTrace?.ExecutionArgsStr && (
                             <CopyComponents copyText={selectCurTrace?.ExecutionArgsStr || ''} />
@@ -605,7 +607,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                           {selectCurTrace?.ExecutionArgsStr || '-'}
                         </div>
                       </Descriptions.Item>
-                      <Descriptions.Item label="错误信息" span={2}>
+                      <Descriptions.Item label={t('PluginTrace.error_message')} span={2}>
                         <div className={styles['descriptions-item']}>
                           {selectCurTrace?.ErrorMessage && (
                             <CopyComponents copyText={selectCurTrace?.ErrorMessage || ''} />

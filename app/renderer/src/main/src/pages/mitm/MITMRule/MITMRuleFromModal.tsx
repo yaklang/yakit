@@ -202,22 +202,22 @@ export const MITMRuleFromModal: React.FC<MITMRuleFromModalProps> = (props) => {
       >
         <Form form={form} labelCol={{ span: 5 }} wrapperCol={{ span: 16 }} className={styles['modal-from']}>
           {/* <Form.Item
-                        label='执行顺序'
+                        label={t('MITMRule.execution_order')}
                         name='Index'
                         rules={[
                             {
                                 validator: async (_, value) => {
                                     if (!value) {
-                                        return Promise.reject("请输入大于0的数字")
+                                        return Promise.reject(t('MITMRuleFromModal.please_enter_a_number_greater_than_0'))
                                     }
                                     if (value <= 0) {
-                                        return Promise.reject("需要输入大于0的数字")
+                                        return Promise.reject(t('MITMRuleFromModal.a_number_greater_than_0_is_required'))
                                     }
                                     if (
                                         rules.filter((i) => i.Index === value).length > 0 &&
                                         !(isEdit && value === currentItem?.Index)
                                     ) {
-                                        return Promise.reject("执行顺序冲突（Index 冲突），重新设置执行顺序")
+                                        return Promise.reject(t('MITMRuleFromModal.execution_order_conflict_index_conflict_'))
                                     }
                                 }
                             }

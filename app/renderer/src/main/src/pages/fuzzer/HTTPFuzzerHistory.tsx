@@ -163,7 +163,7 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                     label={
                         <div style={{display: "flex", alignItems: "center"}}>
                             
-                            <Tooltip title={"快速搜索 Host 与 Request 中的内容"}>
+                            <Tooltip title={i18n.t("FuzzerTemplates.quick_search_content_in_host_and_request", { ns: "history" })}>
                                 <YakitButton type='text' size={"small"} icon={<QuestionOutlined />} />
                             </Tooltip>
                         </div>
