@@ -46,8 +46,12 @@ export const apiSystemConfig: APINoRequestFunc<API.SystemConfigResponse> = (hidd
       method: 'get',
       url: 'system/config',
     })
-      .then(resolve)
+      .then((data) => {
+        console.log('system/config----', data)
+        resolve(data)
+      })
       .catch((e) => {
+        console.log('system/config error----', e)
         if (!hiddenError) yakitNotify('error', tOriginal('LayoutUtils.apiSystemConfigFailed', { error: String(e) }))
         reject(e)
       })

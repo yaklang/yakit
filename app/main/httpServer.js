@@ -9,7 +9,7 @@ const { pickAxiosErrorCore } = require('./toolsFunc')
 const { assertTrustedAppSender, normalizeHttpBaseUrl } = require('./security')
 
 // 请求超时时间
-const DefaultTimeOut = 30 * 1000
+const DefaultTimeOut = 60 * 1000
 
 // 软件启动后判断是 CE 版本还是 EE 版本
 ipcMain.handle('is-enpritrace-to-domain', (event, flag) => {
@@ -75,7 +75,7 @@ service.interceptors.request.use(
     config.baseURL = `${baseUrl}/api/`
     config.headers = config.headers || {}
     if (USER_INFO.isLogin && USER_INFO.token) config.headers['Authorization'] = USER_INFO.token
-    // console.log('request-config',config);
+    printLogOutputFile(`[BaseURL config] => ${config.baseURL},${config.url},${config.method}`)
     printLogOutputFile(`[BaseURL Log] => ${baseUrl}`)
     return config
   },
@@ -91,7 +91,9 @@ service.interceptors.response.use(
       code: response.status,
       data: response.data,
     }
-    // console.log("response__1", response)
+    printLogOutputFile(
+      `[BaseURL response] => ${response.status},${response.config.baseURL},${response.config.url},${response.config.method},${JSON.stringify(response.data)}`,
+    )
     return res
   },
   (error) => {
