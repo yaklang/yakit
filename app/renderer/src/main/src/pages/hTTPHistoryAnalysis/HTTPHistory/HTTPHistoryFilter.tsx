@@ -18,7 +18,6 @@ import {
   OutlineCogIcon,
   OutlineFilterIcon,
   OutlineMessageCirclePlusIcon,
-  OutlinePlusIcon,
   OutlineRefreshIcon,
   OutlineReplyIcon,
   OutlineSearchIcon,
@@ -78,7 +77,7 @@ import { HistoryProcess, HistoryTab } from '@/components/HTTPHistory'
 import { useBuiltinTagList } from '@/components/HTTPFlowTable/useBuiltinTagList'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { v4 as uuidv4 } from 'uuid'
-import { cloneDeep, isEqual, toArray } from 'lodash'
+import { cloneDeep, isEqual } from 'lodash'
 import { MitmExtractAggregateFlowFilterRow } from '@/utils/yakQueryHTTPFlow'
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { randomString } from '@/utils/randomUtil'
@@ -132,11 +131,11 @@ import {
   FilterConfig,
   HTTPFlowTableFormConfiguration,
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
-import { FlowAiStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
+import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 const { ipcRenderer } = window.require('electron')
 
 interface HTTPHistoryFilterProps {
@@ -416,7 +415,7 @@ HTTPHistoryFilterInner.displayName = 'HTTPHistoryFilterInner'
 
 export const HTTPHistoryFilter: React.FC<HTTPHistoryFilterProps> = (props) => {
   return (
-    <HistoryAIReActChatProvider cacheDataStore={FlowAiStore} focusModeLoop="http_flow_analyze">
+    <HistoryAIReActChatProvider source={AISourceEnum.flow} focusModeLoop="http_flow_analyze">
       <HTTPHistoryFilterInner {...props} />
     </HistoryAIReActChatProvider>
   )

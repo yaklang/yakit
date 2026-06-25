@@ -117,6 +117,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   SyncPerceptionTrigger: false,
   EnablePlan: false,
   PlanExecTaskConcurrency: 2,
+  Source: 'ai',
 }
 
 /** mcp 自定义服务器配置类型选项 */

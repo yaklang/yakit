@@ -77,7 +77,7 @@ interface HistoryChatProps {
 }
 
 const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
-  const { setActiveChat, fetchAISource, onClose } = useAIAgentDispatcher()
+  const { setActiveChat, onClose, getSetting } = useAIAgentDispatcher()
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [{ sessions }, dispatcher] = useSessionList(aiSource)
   const { activeChat } = useAIAgentStore()
@@ -110,7 +110,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      const source = fetchAISource()
+      const source = getSetting().Source
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { Source: aiSource } },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: [] }, //删除全部只需要传chatDataStoreKey
@@ -147,7 +147,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
     setClearLoading(true)
     try {
       const sessionIds = sessions.map((item) => item.SessionID)
-      const source = fetchAISource()
+      const source = getSetting().Source
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { BeforeTimestamp: beforeTimestamp, Source: aiSource } },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },

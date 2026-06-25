@@ -165,7 +165,7 @@ const HistoryChatList: FC<{
     editInfo.current = undefined
   })
 
-  const { onClose, fetchAISource } = useAIAgentDispatcher()
+  const { getSetting } = useAIAgentDispatcher()
   const handleDeleteChat = useMemoizedFn(async (info: AISession) => {
     const { SessionID } = info
     const isLoading = delLoading.includes(SessionID)
@@ -193,7 +193,7 @@ const HistoryChatList: FC<{
 
     try {
       const sessionIds = [SessionID]
-      const source = fetchAISource()
+      const source = getSetting().Source
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: { SessionID: [SessionID], Source: aiSource } },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },

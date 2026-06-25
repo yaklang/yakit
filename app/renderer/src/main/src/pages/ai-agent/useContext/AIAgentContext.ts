@@ -3,6 +3,7 @@ import { AIAgentSetting } from '../aiAgentType'
 import { AISession } from '../type/aiChat'
 import { AIChatIPCStartParams, AIChatSendParams } from '@/pages/ai-re-act/hooks/type'
 import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIAgentSettingDefault } from '../defaultConstant'
 
 export interface AIAgentContextStore {
   /** 全局配置 */
@@ -16,9 +17,9 @@ export interface UseChatIPCStartParams {
   onSuccess?: (sessionId: string) => void
 }
 export interface AIAgentContextDispatcher {
-  setSetting?: Dispatch<SetStateAction<AIAgentSetting>>
-  getSetting?: () => AIAgentSetting
-  setActiveChat?: Dispatch<SetStateAction<AISession | undefined>>
+  setSetting: Dispatch<SetStateAction<AIAgentSetting>>
+  getSetting: () => AIAgentSetting
+  setActiveChat: Dispatch<SetStateAction<AISession | undefined>>
 
   /** 开始会话 */
   onStart: (UseChatIPCStartParams) => void
@@ -26,8 +27,6 @@ export interface AIAgentContextDispatcher {
   onSend: (params: AIChatSendParams) => void
   /** 关闭指定会话 */
   onClose: (sessionId: string[]) => void
-  /** 获取当前ai来源 */
-  fetchAISource: () => AISource
 }
 
 export interface AIAgentContextValue {
@@ -37,18 +36,16 @@ export interface AIAgentContextValue {
 
 export default createContext<AIAgentContextValue>({
   store: {
-    setting: {},
+    setting: { ...AIAgentSettingDefault },
     activeChat: undefined,
   },
   dispatcher: {
-    setSetting: undefined,
-    getSetting: undefined,
-
-    setActiveChat: undefined,
+    setSetting: () => {},
+    getSetting: () => AIAgentSettingDefault,
+    setActiveChat: () => {},
 
     onStart: () => {},
     onSend: () => {},
     onClose: () => {},
-    fetchAISource: () => 'ai',
   },
 })
