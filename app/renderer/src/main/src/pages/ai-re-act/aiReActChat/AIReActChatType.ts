@@ -1,4 +1,4 @@
-import { AIAgentChatMode, HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
+import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { AIChatQSData } from '../hooks/aiRender'
 import { AIInputEvent } from '../hooks/grpcApi'
 import React from 'react'
@@ -46,7 +46,6 @@ type ExternalParametersRightIcon = Partial<{
   [RightIconType.details]: React.ReactElement
 }>
 export interface AIReActChatProps {
-  mode: AIAgentChatMode
   chatContainerClassName?: string
   chatContainerHeaderClassName?: string
   showFreeChat: boolean
