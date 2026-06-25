@@ -2,8 +2,6 @@ import { YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitRe
 import { useCreation } from 'ahooks'
 import { useRef, useState } from 'react'
 import { AITabsEnumType } from '../../aiAgentType'
-import { AITabsEnum } from '../../defaultConstant'
-import type { UseTaskChatState } from '@/pages/ai-re-act/hooks/type'
 
 type ResizeBoxProps = Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'>
 
@@ -13,7 +11,7 @@ interface Params {
   activeKey?: AITabsEnumType
   showFreeChat: boolean
   timeLine: boolean
-  taskChat: UseTaskChatState
+  taskChatElementLength: number
 }
 
 export function useAIChatResizeBox(params: Params) {
@@ -26,7 +24,7 @@ export function useAIChatResizeBox(params: Params) {
   }
 
   const resizeBoxProps = useCreation<ResizeBoxProps>(() => {
-    const { activeKey, showFreeChat, timeLine, taskChat } = params
+    const { activeKey, showFreeChat, timeLine, taskChatElementLength } = params
     let override = overrideRef.current
     // 消费一次就清掉
     overrideRef.current = null
@@ -41,7 +39,7 @@ export function useAIChatResizeBox(params: Params) {
     }
     // const isFileSystemKey = activeKey === AITabsEnum.File_System
     // const isTaskContentKey = activeKey === AITabsEnum.Task_Content
-    const isTaskStreamsEmpty = taskChat.elements?.length <= 0
+    const isTaskStreamsEmpty = taskChatElementLength <= 0
 
     let secondRatio: ResizeBoxProps['secondRatio']
     let firstRatio: ResizeBoxProps['firstRatio']
@@ -84,7 +82,7 @@ export function useAIChatResizeBox(params: Params) {
       ...computed,
       ...override,
     }
-  }, [params.activeKey, params.showFreeChat, params.timeLine, params.taskChat.elements?.length, version])
+  }, [params.activeKey, params.showFreeChat, params.timeLine, params?.taskChatElementLength, version])
 
   return {
     resizeBoxProps,
