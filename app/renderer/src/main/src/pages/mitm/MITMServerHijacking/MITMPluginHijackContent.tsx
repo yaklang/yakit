@@ -145,7 +145,7 @@ const MITMHijackTab: YakitTabsProps[] = [
   },
   {
     value: 'tun-hijack',
-    label: t('PluginTunHijack.tunHijack'),
+    label: i18n.t('PluginTunHijack.tunHijack', { ns: 'mitm' }),
   },
 ]
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = React.memo((props) => {

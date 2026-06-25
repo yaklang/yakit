@@ -1,4 +1,5 @@
 import { Divider, Form, Modal, Tooltip } from 'antd'
+import i18n from '@/i18n/i18n'
 import React, { ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
   MITMContentReplacerRule,
