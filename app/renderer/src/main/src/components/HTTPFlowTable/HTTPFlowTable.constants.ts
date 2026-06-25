@@ -76,6 +76,10 @@ export interface HTTPFlow {
   IsTooLargeResponse: boolean
   TooLargeResponseHeaderFile: string
   TooLargeResponseBodyFile: string
+  IsTooLargeRequest: boolean
+  TooLargeRequestHeaderFile: string
+  TooLargeRequestBodyFile: string
+  IsRequestOversize?: boolean
   DisableRenderStyles: boolean
 
   RequestString: string

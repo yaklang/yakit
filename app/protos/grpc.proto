@@ -6989,6 +6989,13 @@ message HTTPFlow {
   string FromPlugin = 50;
   string Host = 52;
   string PathSuffix = 53;
+
+  // 超大请求：body 落盘，DB 仅保留 header + 占位（与 IsTooLargeResponse 对称）
+  bool IsTooLargeRequest = 54;
+  string TooLargeRequestHeaderFile = 55;
+  string TooLargeRequestBodyFile = 56;
+  // 列表查询时由 SQL 计算：request 过大或 DB 中 request 过长
+  bool IsRequestOversize = 57;
 }
 
 message FuzzableParam {
