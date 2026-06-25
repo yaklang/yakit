@@ -5,7 +5,6 @@ import {
   OutlineCogIcon,
   OutlineMCPIcon,
   OutlineSparklesIcon,
-  OutlineTemplateIcon,
   OutlineWrenchIcon,
   OutlineBookOpenTextIcon,
   OutlineBotIcon,
@@ -122,6 +121,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
     EnableGoalMode: false,
     GoalMinIterations: 0,
   },
+  Source: 'ai',
 }
 
 /** mcp 自定义服务器配置类型选项 */

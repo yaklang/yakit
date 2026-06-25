@@ -96,7 +96,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
     setRemoteValue(RemoteAIAgentGV.AIAgentChatSetting, JSON.stringify(cache))
   }, [setting])
 
-  const { onStart, onSend, onClose, fetchAISource } = useChatIPC({ source: AISourceEnum.aiAgent })
+  const { onStart, onSend, onClose } = useChatIPC()
 
   const store: AIAgentContextStore = useMemo(() => {
     return {
@@ -112,7 +112,6 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
       onStart,
       onSend,
       onClose,
-      fetchAISource,
     }
   }, [])
 
@@ -144,6 +143,7 @@ export const AIAgent: React.FC<AIAgentProps> = (props) => {
                   EnableGoalMode: false,
                   GoalMinIterations: AIAgentSettingDefault.Strategy?.GoalMinIterations,
                 },
+                Source: AISourceEnum.aiAgent,
               })
             } catch (error) {}
           })

@@ -68,7 +68,6 @@ import { randomString } from '@/utils/randomUtil'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
-import { yakRunnerPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT } from '@/constants/focusMode'
 import { YakRunnerAiAttachProvider, YakRunnerAiAttachRef, useYakRunnerAiAttachRef } from './YakRunnerAiAttachContext'
 import { YakRunnerAiSidePanel } from './YakRunnerAiSidePanel'
@@ -86,6 +85,7 @@ import {
   type YakRunnerCasualCodeReplaceReviewPayload,
 } from './yakRunnerAiCodeApplyBridge'
 import { syncYakRunnerPatchWorkingDraft } from './yakRunnerAiCodePatchApply'
+import { AISourceEnum } from '../ai-re-act/hooks/grpcApi'
 const { ipcRenderer } = window.require('electron')
 
 // 模拟tabs分块及对应文件
@@ -1278,7 +1278,7 @@ const YakRunnerWorkbench: React.FC<YakRunnerProps> = (props) => {
 const YakRunnerWithAIInner: React.FC<YakRunnerProps> = (props) => {
   return (
     <HistoryAIReActChatProvider
-      cacheDataStore={yakRunnerPageAiStore}
+      source={AISourceEnum.yakRunner}
       focusModeLoop={YAK_RUNNER_FOCUS_MODE_CODE_SECURITY_AUDIT}
       yakRunnerPageId={YAK_RUNNER_AI_PAGE_ID}
     >

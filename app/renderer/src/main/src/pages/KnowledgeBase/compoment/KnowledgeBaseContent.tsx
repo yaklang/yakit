@@ -35,7 +35,6 @@ import { apiCancelDebugPlugin } from '@/pages/plugins/utils'
 import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import { CreateKnowledgeBaseData } from '../TKnowledgeBase'
 
-import { knowledgeBaseDataStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIHandleStartParams } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
@@ -46,7 +45,6 @@ import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { GuideFooter } from './GuideFooter'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { OutlineMessageCirclePlusIcon, OutlineXIcon } from '@/assets/icon/outline'
-import { OutlinePlusIcon } from '@/assets/newIcon'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { InstallPluginModal } from './InstallPluginModal/InstallPluginModal'
 import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '../hooks/useCheckKnowledgePlugin'
@@ -60,6 +58,7 @@ import { ImportModal } from './ImportModal'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResult/PluginExecuteResult'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 
 interface KnowledgeBaseContentProps {
   knowledgeBaseID: string
@@ -684,7 +683,7 @@ const KnowledgeBaseContent = forwardRef<unknown, KnowledgeBaseContentProps>(func
 
   return (
     <HistoryAIReActChatProvider
-      cacheDataStore={knowledgeBaseDataStore}
+      source={AISourceEnum.knowledgeBase}
       focusModeLoop=""
       resolveStartExtraParams={resolveStartExtraParams}
       mergeRemoteAIAgentSetting={mergeRemoteAIAgentSetting}

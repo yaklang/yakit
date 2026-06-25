@@ -93,6 +93,7 @@ import { FiltersItemProps } from './TableVirtualResize/TableVirtualResizeType'
 import { HTTPFlowRuleDataFilter } from './HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -435,7 +436,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
 
 export const HTTPHistory: React.FC<HTTPHistoryProp> = (props) => {
   return (
-    <HistoryAIReActChatProvider cacheDataStore={histroyAiStore} focusModeLoop="http_flow_analyze">
+    <HistoryAIReActChatProvider source={AISourceEnum.history} focusModeLoop="http_flow_analyze">
       <HTTPHistoryInner {...props} />
     </HistoryAIReActChatProvider>
   )
