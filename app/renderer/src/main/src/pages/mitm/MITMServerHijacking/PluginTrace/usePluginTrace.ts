@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import i18n from '@/i18n/i18n'
 import { PluginExecutionTrace, PluginTraceParams, PluginTraceStats } from './type'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { yakitNotify } from '@/utils/notification'
@@ -41,7 +42,7 @@ function usePluginTrace(params: PluginTraceParams) {
       cancelTracesIdRef.current = []
       pluginTraceRefFun().noDetailFun()
       pluginTraceRefFun().refreshAndScrollNow()
-      yakitNotify('info', t('PluginTrace.plugin_trace_started'))
+      yakitNotify('info', i18n.t('PluginTrace.plugin_trace_started', { ns: 'mitm' }))
     })
 
     ipcRenderer.on('start-mitm-plugin-trace-error', (event, err) => {
@@ -123,7 +124,7 @@ function usePluginTrace(params: PluginTraceParams) {
       setStopLoading(false)
       pluginTraceRefFun().cancelTracesToState()
       pluginTraceRefFun().refreshFlush()
-      yakitNotify('info', t('PluginTrace.plugin_trace_stopped'))
+      yakitNotify('info', i18n.t('PluginTrace.plugin_trace_stopped', { ns: 'mitm' }))
     })
 
     return () => {

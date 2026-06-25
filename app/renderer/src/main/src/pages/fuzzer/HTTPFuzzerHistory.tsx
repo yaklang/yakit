@@ -1,3 +1,4 @@
+import i18n from '@/i18n/i18n'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Card, Divider, List, Space } from 'antd'
 import { formatTimestamp } from '../../utils/timeUtil'
