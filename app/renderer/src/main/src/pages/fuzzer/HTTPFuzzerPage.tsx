@@ -1,5 +1,5 @@
-import React, { CSSProperties, memo, useEffect, useLayoutEffect, useMemo, useRef, useState, createRef } from 'react'
-import { Form, Result, Space, Popover, Tooltip, Divider, Descriptions } from 'antd'
+import React, { CSSProperties, useEffect, useLayoutEffect, useMemo, useRef, useState, createRef } from 'react'
+import { Form, Result, Space, Tooltip, Divider, Descriptions } from 'antd'
 import {
   IMonacoEditor,
   NewHTTPPacketEditor,
@@ -109,7 +109,6 @@ import {
 } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
   registerWebFuzzerPageApplyRequestFromCard,
@@ -119,9 +118,8 @@ import {
   registerWebFuzzerPageOnAIFuzzStatus,
   type WebFuzzerCasualReplaceReviewPayload,
 } from './webFuzzerAiRequestApplyBridge'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
-import { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
+import { AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { shallow } from 'zustand/shallow'
 import { usePageInfo, PageNodeItemProps, WebFuzzerPageInfoProps, getFuzzerProcessedCacheData } from '@/store/pageInfo'
 import { YakitCopyText } from '@/components/yakitUI/YakitCopyText/YakitCopyText'
@@ -196,7 +194,6 @@ import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
 import { PublicHTTPHistoryIcon } from '@/routes/publicIcon'
 import { useProxy } from '@/hook/useProxy'
 import { MITMConsts } from '../mitm/MITMConsts'
-import { RemoteGV } from '@/yakitGV'
 import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import { useChunkAutoScrollToBottom } from './hooks/useAutoScrollToBottom'
 const tOriginal = i18n.getFixedT(null, ['yakitUi', 'webFuzzer'])
@@ -3259,10 +3256,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
 
 /** 每个 Web Fuzzer 页签独立 WebFuzzerAiStore，避免多开时共用内存缓存导致会话数据互相覆盖 */
 const HTTPFuzzerPage: React.FC<HTTPFuzzerPageProp> = (props) => {
-  const fuzzerAiChatDataStore = useCreation(() => new WebFuzzerAiStore(props.id), [props.id])
   return (
     <HistoryAIReActChatProvider
-      cacheDataStore={fuzzerAiChatDataStore}
+      source={AISourceEnum.webFuzzer}
       focusModeLoop="http_fuzztest"
       httpFuzzTabPageId={props.id}
     >

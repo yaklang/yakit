@@ -118,6 +118,7 @@ export const AIAgentSettingDefault: AIAgentSetting = {
   EnablePlan: false,
   PlanExecTaskConcurrency: 2,
   EnableDetachedPlan: true,
+  Source: 'ai',
 }
 
 /** mcp 自定义服务器配置类型选项 */

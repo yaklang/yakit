@@ -8,7 +8,7 @@ import useCurrentSessionId from './useCurrentSessionId'
 import { AISource } from './grpcApi'
 const { ipcRenderer } = window.require('electron')
 
-export function useChatIPC(params: { source: AISource }) {
+export function useChatIPC() {
   const sessionId = useCurrentSessionId()
   const currentSessionIdRef = useRef(sessionId)
 
@@ -49,10 +49,6 @@ export function useChatIPC(params: { source: AISource }) {
     globalSessionEngine.forceCloseSession(sessionId, params.source)
   })
 
-  const fetchAISource = useMemoizedFn(() => {
-    return params.source
-  })
-
   // 组件卸载时拔插头，清理闭环
   useEffect(() => {
     return () => {
@@ -60,5 +56,5 @@ export function useChatIPC(params: { source: AISource }) {
     }
   }, [])
 
-  return { onStart, onSend, onClose, fetchAISource }
+  return { onStart, onSend, onClose }
 }

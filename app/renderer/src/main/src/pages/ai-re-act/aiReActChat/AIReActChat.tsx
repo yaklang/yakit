@@ -17,7 +17,7 @@ import { Tooltip } from 'antd'
 import { ClockIcon } from '@/assets/newIcon'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import HistoryChat from '@/pages/ai-agent/historyChat/HistoryChat'
-import { AIInputEvent, AIInputEventSyncTypeEnum, AIStartParams } from '../hooks/grpcApi'
+import { AIInputEvent, AIInputEventSyncTypeEnum, AISourceEnum, AIStartParams } from '../hooks/grpcApi'
 import { AITaskQuery } from '@/pages/ai-agent/components/aiTaskQuery/AITaskQuery'
 import { HandleStartParams } from '@/pages/ai-agent/aiAgentChat/type'
 import { formatAIAgentSetting, getAIReActRequestParams } from '@/pages/ai-agent/utils'
@@ -27,10 +27,7 @@ import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
 import useAINodeLabel from '../hooks/useAINodeLabel'
 import useSessionId from '../hooks/useSessionId'
-import useGetChatDataStoreKey, {
-  getAISourceFromChatDataStoreKey,
-  getAISourceListFromChatDataStoreKey,
-} from '../hooks/useGetChatDataStoreKey'
+import useGetChatDataStoreKey from '../hooks/useGetChatDataStoreKey'
 import { AISendSyncMessageParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import emiter from '@/utils/eventBus/eventBus'
 import { omit } from 'lodash'
@@ -53,7 +50,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       startRequest,
       externalParameters,
     } = props
-    const { setActiveChat, fetchAISource } = useAIAgentDispatcher()
+    const { setActiveChat, getSetting } = useAIAgentDispatcher()
     const { chatDataStoreKey } = useGetChatDataStoreKey()
 
     const { chatIPCData } = useChatIPCStore()
@@ -72,6 +69,10 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
 
     const { activeChat, setting } = useAIAgentStore()
     const { getSession } = useSessionId()
+
+    const source = useCreation(() => {
+      return setting.Source
+    }, [setting.Source])
 
     const contextTokenSession = useCreation(() => {
       return activeChat?.SessionID || setting.TimelineSessionID
@@ -116,13 +117,14 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       const { qs, sessionId } = value
       const sessionID = activeChat?.SessionID || '' // 判断历史还是新建
 
+      const source = getSetting().Source ?? AISourceEnum.aiAgent // getSetting保证最新
       const request: AIStartParams = {
         ...formatAIAgentSetting(setting),
         UserQuery: qs,
         CoordinatorId: '',
         Sequence: 1,
         PreferSessionCachedConfig: true,
-        Source: getAISourceFromChatDataStoreKey(chatDataStoreKey),
+        Source: source,
       }
 
       const session = getSession(sessionId)
@@ -151,7 +153,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
             StartParams: request,
             SessionID: session,
             TitleInitialized: false,
-            Source: request.Source ?? 'ai',
+            Source: request.Source,
             LastUsedAt: new Date().getTime(),
             isCreate: true,
           }
@@ -367,7 +369,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                             overlayClassName={styles['history-chat-tooltip']}
                             title={
                               <div className={styles['history-chat-tooltip-content']}>
-                                <HistoryChat embedded aiSource={[fetchAISource()]} />
+                                <HistoryChat embedded aiSource={[source]} />
                               </div>
                             }
                           >
