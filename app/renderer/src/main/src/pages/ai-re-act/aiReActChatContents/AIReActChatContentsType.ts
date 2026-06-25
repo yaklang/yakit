@@ -1,9 +1,6 @@
 import type { ChatReferenceMaterialPayload, ChatStream } from '../hooks/aiRender'
-import type { UseCasualChatState } from '../hooks/type'
 
-export interface AIReActChatContentsPProps {
-  chats: UseCasualChatState
-}
+export interface AIReActChatContentsPProps {}
 
 export interface AIStreamNodeProps {
   stream: ChatStream

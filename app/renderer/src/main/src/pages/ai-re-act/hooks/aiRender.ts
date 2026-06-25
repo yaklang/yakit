@@ -454,6 +454,7 @@ export interface ChatStoreState {
 
   httpFuzzRequestUpdate: number
   httpFlowFuzzStatusUpdate: number
+  /** 更新会话标题名 */
   sessionTitleUpdate: number
   /** 记忆列表 */
   memoryListUpdate: number
