@@ -338,6 +338,7 @@ export interface YakitGetOnlinePluginProps {
  * @param listType 'online'默认首页 mine 个人, recycle 回收站 check 审核页面"
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     listType = 'online',
     pluginType,
@@ -441,6 +442,7 @@ export interface IRifyApplySyntaxFlowRuleUpdateProps {
  * IRify一键更新规则
  */
 export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUpdateProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const { visible, setVisible, getContainer, wrapClassName } = props
   const taskToken = useMemo(() => randomString(40), [])
   const [percent, setPercent] = useState<number>(0)
@@ -628,6 +630,7 @@ interface PluginGroupProps {
   onClickMagFun?: () => void
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     selectGroup,
     setSelectGroup,
@@ -936,6 +939,7 @@ interface PluginSearchProps {
 }
 type PluginSearchType = 'Tags' | 'Keyword' | 'FieldKeywords'
 export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     onSearch,
     tag,
@@ -1084,6 +1088,7 @@ interface PluginGroupListProps {
   closePluginGroupList: () => void
 }
 const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     pugGroup,
     isOnline,
