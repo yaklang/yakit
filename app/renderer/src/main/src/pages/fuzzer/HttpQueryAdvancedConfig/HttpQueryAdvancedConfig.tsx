@@ -943,7 +943,17 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   <YakitInputNumber type="horizontal" size="small" min={1} />
                 </Form.Item>
 
-                <Form.Item label={t('HttpQueryAdvancedConfig.random_delay2')} style={{ marginBottom: 0 }}>
+                <Form.Item
+                  label={
+                    <span className={styles['advanced-config-form-label']}>
+                      {t('HttpQueryAdvancedConfig.random_delay2')}
+                      <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} overlayStyle={{ width: 150 }}>
+                        <InformationCircleIcon className={styles['info-icon']} />
+                      </Tooltip>
+                    </span>
+                  }
+                  style={{ marginBottom: 0 }}
+                >
                   <div className={styles['advanced-config-delay']}>
                     <Form.Item
                       name="minDelaySeconds"

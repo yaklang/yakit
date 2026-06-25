@@ -448,7 +448,7 @@
     "real_host": "Real Host",
     "host_collision_tip": "For Host collision, please configure the real Host",
     "set_proxy": "Set Proxy",
-    "multi_proxy_tip": "When multiple proxies are set, the system will intelligently choose an available proxy for sending packets",
+    "multi_proxy_tip": "Each request will be randomly delayed based on the configured Min-Max range",
     "proxy_auth_config": "Configure Proxy Authentication",
     "disable_system_proxy": "Disable System Proxy",
     "frontend_render_count": "Frontend Render Count",
