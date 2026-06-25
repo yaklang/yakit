@@ -40,7 +40,10 @@ export const createChatStore = () => {
       focusMode: '',
       showPlanList: false,
       taskStatus: cloneDeep(DefaultPlanLoadingStatus),
-      currentPlanReviewData: undefined,
+
+      currentCasualReview: [],
+      currentPlanReviewToken: '',
+      currentPlanReviewExtraUpdate: 0,
 
       items: {},
       groups: {},
@@ -103,15 +106,27 @@ export const createChatStore = () => {
           Object.assign(state, partial)
         }),
 
+      updateTaskLoadingStatus: (partial) =>
+        set((state) => {
+          Object.assign(state.taskStatus, partial)
+        }),
+
+      updateCasualReview: (id: string, status: 'add' | 'remove') =>
+        set((state) => {
+          if (status === 'add') {
+            if (!state.currentCasualReview.includes(id)) state.currentCasualReview.push(id)
+          } else if (status === 'remove') {
+            if (state.currentCasualReview.includes(id)) {
+              state.currentCasualReview = state.currentCasualReview.filter((item) => item !== id)
+            }
+          }
+        }),
+
       updateCasualTodoList: () => {
         set((state) => {
           state.casualChat.todoListUpdate += 1
         })
       },
-      updateTaskLoadingStatus: (partial) =>
-        set((state) => {
-          Object.assign(state.taskStatus, partial)
-        }),
       updatePlanTree: (planTree: CurrentExecTaskTree) =>
         set((state) => {
           Object.assign(state.taskChat.plan, planTree)
@@ -201,6 +216,27 @@ export const createChatStore = () => {
           if (kind === 'item' && state.items[token]) state.items[token].renderNum += 1
           if (kind === 'group' && state.groups[token]) state.groups[token].renderNum += 1
           if (kind === 'task' && state.tasks[token]) state.tasks[token].renderNum += 1
+        }),
+
+      deleteListElement: (chatType, token) =>
+        set((state) => {
+          const taskItem = state.tasks[token]
+          if (taskItem) {
+          }
+          const groupItem = state.groups[token]
+          if (groupItem) {
+            state.groups[token].childrenTokens = state.groups[token].childrenTokens.filter((item) => item !== token)
+          }
+          const itemItem = state.items[token]
+          if (itemItem) {
+            state.items[token].childrenTokens = state.items[token].childrenTokens.filter((item) => item !== token)
+          }
+
+          if (chatType === 'reAct') {
+            state.casualChat.elements = state.casualChat.elements.filter((item) => item.token !== token)
+          } else {
+            state.taskChat.elements = state.taskChat.elements.filter((item) => item.token !== token)
+          }
         }),
     })),
   )

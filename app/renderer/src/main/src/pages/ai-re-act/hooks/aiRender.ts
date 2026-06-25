@@ -498,8 +498,13 @@ export interface ChatStoreState {
   showPlanList: boolean
   /** 任务规划的loading状态信息 */
   taskStatus: PlanLoadingStatus
+
+  /** 自由对话的当前review(未操作) */
+  currentCasualReview: string[]
   /** 任务规划当前显示的review数据 */
-  currentPlanReviewData: AIChatQSData | undefined
+  currentPlanReviewToken: string
+  /** 当前review是plan时，异步数据的更新版本 */
+  currentPlanReviewExtraUpdate: number
 
   items: Record<string, ReActChatItemMeta>
   groups: Record<string, ReActChatGroupMeta>
@@ -536,7 +541,8 @@ export interface ChatStoreState {
       | 'sessionTitleUpdate'
       | 'memoryListUpdate'
       | 'updateSystemStream'
-      | 'yaklangCodeChangeUpdate',
+      | 'yaklangCodeChangeUpdate'
+      | 'currentPlanReviewExtraUpdate',
   ) => void
 
   updateFolders: (info: AIFileSystemPin) => void
@@ -564,6 +570,8 @@ export interface ChatStoreState {
         | 'riskTabUpdate'
         | 'grpcFolders'
         | 'reActTimelines'
+        | 'currentCasualReview'
+        | 'currentPlanReviewExtraUpdate'
         | 'items'
         | 'groups'
         | 'tasks'
@@ -573,9 +581,13 @@ export interface ChatStoreState {
     >,
   ) => void
 
+  updateTaskLoadingStatus: (status: Partial<PlanLoadingStatus>) => void
+
+  /** 正在等待用户操作的reviewId列表 */
+  updateCasualReview: (id: string, status: 'add' | 'remove') => void
+
   /** 更新自由对话列表的todoList，真实数据存放在内存池中 */
   updateCasualTodoList: () => void
-  updateTaskLoadingStatus: (status: Partial<PlanLoadingStatus>) => void
   updatePlanTree: (planTree: CurrentExecTaskTree) => void
 
   /** 更新 每个工具执行过程中-文件的操作记录 */
@@ -595,4 +607,7 @@ export interface ChatStoreState {
     groupTokenGenerator: () => string
   }) => void
   incrementNodeVersion: (token: string, kind: 'item' | 'group' | 'task') => void
+
+  /** 删除指定列表的某项元素 */
+  deleteListElement: (chatType: ChatListRenderType, token: string) => void
 }
