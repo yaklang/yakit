@@ -41,6 +41,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { AIReviewParams } from './aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
+import { ClockIcon } from '@/assets/newIcon'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -330,34 +331,31 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                 {t('ToolInvokerCard.startTime')}:<span>{startTime}</span>
               </div>
             )} */}
-            {!!duration && (
-              <div>
-                {t('ToolInvokerCard.duration')}:<span>{duration}</span>s
-              </div>
-            )}
           </div>
 
-          {!!riskFlowDataCount && (
-            <>
+          <div style={{ marginRight: 12 }}>
+            {!!riskFlowDataCount && (
+              <>
+                <label
+                  onClick={() => {
+                    switchAIActTab(AITabsEnum.Risk)
+                  }}
+                >
+                  {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
+                </label>
+                <Divider type="vertical" />
+              </>
+            )}
+            {!!httpFlowDataCount && (
               <label
                 onClick={() => {
-                  switchAIActTab(AITabsEnum.Risk)
+                  switchAIActTab(AITabsEnum.HTTP)
                 }}
               >
-                {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
+                {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
               </label>
-              <Divider type="vertical" />
-            </>
-          )}
-          {!!httpFlowDataCount && (
-            <label
-              onClick={() => {
-                switchAIActTab(AITabsEnum.HTTP)
-              }}
-            >
-              {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
-            </label>
-          )}
+            )}
+          </div>
           {isChildWindow || (
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
               <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
@@ -376,7 +374,24 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
         </div>
       }
       titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
-      footer={expand && <OperationCardFooter {...operationInfo} />}
+      footer={
+        expand && (
+          <div className={styles['tool-invoker-card-footer']}>
+            {modalInfo?.time && (
+              <div className={styles['tool-invoker-card-footer-time']}>
+                <ClockIcon />
+                {formatTimestamp(modalInfo.time)}
+                {!!duration && (
+                  <div>
+                    {t('ToolInvokerCard.duration')}:<span>{duration}</span>s
+                  </div>
+                )}
+              </div>
+            )}
+            <OperationCardFooter {...operationInfo} />
+          </div>
+        )
+      }
     >
       {expand && (
         <ToolStatusCard

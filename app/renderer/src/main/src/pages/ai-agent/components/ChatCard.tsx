@@ -43,7 +43,7 @@ const ChatCard: FC<ChatCardProps> = ({
           {children}
         </div>
       )}
-      {footer && <div className={styles['chat-card-footer']}>{footer}</div>}
+      {footer && <div className={styles['chat-card-hover-footer']}>{footer}</div>}
     </div>
   )
 }

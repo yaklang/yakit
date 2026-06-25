@@ -36,12 +36,13 @@ const ModalInfo: FC<ModalInfoProps> = ({ icon, title, time, trailing }) => {
       )
     )
   }, [icon])
+  if (!title) return null
 
   return (
     <div className={styles['modal-info']}>
       <div className={styles['modal-info-title']}>
         {iconSvg}
-        <span className={styles['modal-info-title-text']}>{title ? getModelName(title) : '系统输出'}</span>
+        <span className={styles['modal-info-title-text']}>{getModelName(title)}</span>
         {time != null && time > 0 ? (
           <span
             className={trailing != null ? styles['modal-info-title-time-squeeze'] : styles['modal-info-title-time']}

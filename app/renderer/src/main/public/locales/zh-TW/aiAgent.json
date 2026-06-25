@@ -335,8 +335,8 @@
     "cancelled": "已取消",
     "startTime": "開始時間",
     "duration": "執行時長",
-    "relatedRisks": "相關漏洞",
-    "httpTraffic": "HTTP 流量",
+    "relatedRisks": "漏洞",
+    "httpTraffic": "流量",
     "refreshCodeBlockData": "重新整理程式碼塊資料",
     "tool": "工具"
   },

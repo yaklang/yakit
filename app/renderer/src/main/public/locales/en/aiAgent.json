@@ -335,8 +335,8 @@
     "cancelled": "Cancelled",
     "startTime": "Start Time",
     "duration": "Duration",
-    "relatedRisks": "Related Risks",
-    "httpTraffic": "HTTP Traffic",
+    "relatedRisks": "Risks",
+    "httpTraffic": "Traffic",
     "refreshCodeBlockData": "Refresh Code Block Data",
     "tool": "Tool"
   },
