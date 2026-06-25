@@ -978,7 +978,7 @@ export const YakJavaDecompilerWelcomePage: React.FC<YakJavaDecompilerWelcomePage
               <div className={styles['btn-title']}>
                 <YakRunnerOpenFileIcon />
                 打开 JAR 文件
-                <span className={styles['sub-title']}>支持 .jar, .war, .ear</span>
+                <span className={styles['sub-title']}>支持 .jar, .war, .ear, .zip</span>
               </div>
               <OutlineImportIcon className={styles['icon-style']} />
             </div>
