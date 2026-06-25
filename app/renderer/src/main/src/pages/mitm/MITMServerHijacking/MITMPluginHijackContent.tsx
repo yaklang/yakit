@@ -67,6 +67,7 @@ import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
 const PluginTrace = React.lazy(() => import('./PluginTrace/PluginTrace'))
 
 const { ipcRenderer } = window.require('electron')
@@ -127,20 +128,20 @@ const HotLoadDefaultData: YakScript = {
 }
 const MITMHijackTab: YakitTabsProps[] = [
   {
-    label: t('PluginTunHijack.all'),
+    label: i18n.t('PluginTunHijack.all', { ns: 'mitm' }),
     value: 'all',
   },
   {
-    label: t('MITMPluginHijackContent.enabled'),
+    label: i18n.t('MITMPluginHijackContent.enabled', { ns: 'mitm' }),
     value: 'loaded',
   },
   {
-    label: t('MITMPluginHijackContent.hot_patch'),
+    label: i18n.t('MITMPluginHijackContent.hot_patch', { ns: 'mitm' }),
     value: 'hot-patch',
   },
   {
     value: 'trace',
-    label: t('MITMPluginHijackContent.plugin_trace'),
+    label: i18n.t('MITMPluginHijackContent.plugin_trace', { ns: 'mitm' }),
   },
   {
     value: 'tun-hijack',
@@ -148,6 +149,8 @@ const MITMHijackTab: YakitTabsProps[] = [
   },
 ]
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+
   const {
     isHasParams,
     onIsHasParams,

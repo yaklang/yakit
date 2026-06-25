@@ -62,49 +62,49 @@ const { ipcRenderer } = window.require('electron')
 
 const HitColor = {
   red: {
-    title: t('MITMRule.red'),
+    title: i18n.t('MITMRule.red', { ns: 'mitm' }),
     titleUi: 'YakitTable.red',
     value: 'red',
     className: 'color-bg-red',
   },
   green: {
-    title: t('MITMRule.green'),
+    title: i18n.t('MITMRule.green', { ns: 'mitm' }),
     titleUi: 'YakitTable.green',
     value: 'green',
     className: 'color-bg-green',
   },
   blue: {
-    title: t('MITMRule.blue'),
+    title: i18n.t('MITMRule.blue', { ns: 'mitm' }),
     titleUi: 'YakitTable.blue',
     value: 'blue',
     className: 'color-bg-blue',
   },
   yellow: {
-    title: t('MITMRule.yellow'),
+    title: i18n.t('MITMRule.yellow', { ns: 'mitm' }),
     titleUi: 'YakitTable.yellow',
     value: 'yellow',
     className: 'color-bg-yellow',
   },
   orange: {
-    title: t('MITMRule.orange'),
+    title: i18n.t('MITMRule.orange', { ns: 'mitm' }),
     titleUi: 'YakitTable.orange',
     value: 'orange',
     className: 'color-bg-orange',
   },
   purple: {
-    title: t('MITMRule.purple'),
+    title: i18n.t('MITMRule.purple', { ns: 'mitm' }),
     titleUi: 'YakitTable.purple',
     value: 'purple',
     className: 'color-bg-purple',
   },
   cyan: {
-    title: t('MITMRule.cyan'),
+    title: i18n.t('MITMRule.cyan', { ns: 'mitm' }),
     titleUi: 'YakitTable.cyan',
     value: 'cyan',
     className: 'color-bg-cyan',
   },
   grey: {
-    title: t('MITMRule.gray'),
+    title: i18n.t('MITMRule.gray', { ns: 'mitm' }),
     titleUi: 'YakitTable.grey',
     value: 'grey',
     className: 'color-bg-grey',
