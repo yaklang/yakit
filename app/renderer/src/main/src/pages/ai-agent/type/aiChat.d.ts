@@ -1,9 +1,8 @@
-import type { AIFileSystemPin, TaskChatTaskInfo, UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
+import type { TaskChatTaskInfo, UseChatIPCState } from '@/pages/ai-re-act/hooks/type'
 import type { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { AIYakExecFileRecord, PlanItemDetailsData, ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
+import type { PlanItemDetailsData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
-import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {

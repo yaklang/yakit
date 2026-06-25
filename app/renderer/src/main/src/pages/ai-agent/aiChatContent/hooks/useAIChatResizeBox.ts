@@ -3,7 +3,6 @@ import { useCreation } from 'ahooks'
 import { useRef, useState } from 'react'
 import { AITabsEnumType } from '../../aiAgentType'
 import { AITabsEnum } from '../../defaultConstant'
-import type { UseTaskChatState } from '@/pages/ai-re-act/hooks/type'
 
 type ResizeBoxProps = Omit<YakitResizeBoxProps, 'firstNode' | 'secondNode'>
 
@@ -13,7 +12,6 @@ interface Params {
   activeKey?: AITabsEnumType
   showFreeChat: boolean
   timeLine: boolean
-  taskChat: UseTaskChatState
   /** 任务规划 tabs 是否有内容 */
   hasTaskTabs: boolean
   /** 文件系统是否有预览文件 */
@@ -87,15 +85,7 @@ export function useAIChatResizeBox(params: Params) {
       ...computed,
       ...override,
     }
-  }, [
-    params.activeKey,
-    params.showFreeChat,
-    params.timeLine,
-    params.hasTaskTabs,
-    params.hasFilePreview,
-    params.taskChat.elements?.length,
-    version,
-  ])
+  }, [params.activeKey, params.showFreeChat, params.timeLine, params.hasTaskTabs, params.hasFilePreview, version])
 
   return {
     resizeBoxProps,

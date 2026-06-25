@@ -45,7 +45,6 @@ import { SolidChatIcon } from '@/assets/icon/solid'
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
     const {
-      mode,
       chatContainerClassName,
       chatContainerHeaderClassName,
       title = '自由对话',
@@ -266,11 +265,11 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     // #endregion
 
     const isShowRetract = useCreation(() => {
-      return mode === 'task' && showFreeChat
-    }, [mode, showFreeChat])
+      return showFreeChat
+    }, [showFreeChat])
     const isShowExpand = useCreation(() => {
-      return mode === 'task' && !showFreeChat
-    }, [mode, showFreeChat])
+      return !showFreeChat
+    }, [showFreeChat])
     const handleSwitchShowFreeChat = useMemoizedFn((v) => {
       setShowFreeChat(v)
     })

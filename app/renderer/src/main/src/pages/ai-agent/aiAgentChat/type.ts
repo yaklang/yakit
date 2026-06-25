@@ -1,11 +1,10 @@
 import { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import { AIAgentGrpcApi, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIChatTextareaSubmit } from '../template/type'
-import { AIChatIPCStartParams } from '@/pages/ai-re-act/hooks/type'
 import { ReactNode } from 'react'
 
 export interface AIAgentChatProps {}
-export type AIAgentChatMode = 'welcome' | 're-act' | 'task'
+export type AIAgentChatMode = 'welcome' | 're-act'
 export interface AIReActTaskChatReviewProps {
   reviewInfo: AIChatQSData
   planReviewTreeKeywordsMap: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra>
@@ -15,5 +14,4 @@ export interface AIReActTaskChatReviewProps {
 
 export interface HandleStartParams extends AIChatTextareaSubmit {
   attachedResourceInfo?: AIInputEvent['AttachedResourceInfo']
-  extraValue?: AIChatIPCStartParams['extraValue']
 }

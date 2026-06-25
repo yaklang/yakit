@@ -1,3 +1,4 @@
+/** @deprecated */
 import { createContext } from 'react'
 import { defaultChatIPCData } from '../../defaultConstant'
 import { cloneDeep } from 'lodash'
@@ -21,6 +22,7 @@ export interface AIChatIPCSendParams {
   optionValue?: string
 }
 type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
 export interface AISendSyncMessageParams {
   syncType: AIInputEvent['SyncType']
   SyncJsonInput?: AIInputEvent['SyncJsonInput']
@@ -34,6 +36,7 @@ export interface AISendConfigHotpatchParams {
   params: MakeOptional<AIStartParams, 'UserQuery'>
   taskId?: AIInputEvent['TaskId']
 }
+/** @deprecated */
 export interface ChatIPCContextDispatcher {
   /** useChatIPC的各种事件 */
   chatIPCEvents: UseChatIPCEvents
@@ -49,11 +52,12 @@ export interface ChatIPCContextDispatcher {
   /**发送 Config-Hotpatch */
   handleSendConfigHotpatch: (params: AISendConfigHotpatchParams) => void
 }
-
+/** @deprecated */
 export interface ChatIPCContextValue {
   store: ChatIPCContextStore
   dispatcher: ChatIPCContextDispatcher
 }
+/** @deprecated */
 export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
   chatIPCEvents: {
     fetchToken: () => '',
@@ -83,6 +87,7 @@ export const defaultDispatcherOfChatIPC: ChatIPCContextDispatcher = {
   handleSendSyncMessage: () => {},
   handleSendConfigHotpatch: () => {},
 }
+/** @deprecated */
 export default createContext<ChatIPCContextValue>({
   store: {
     chatIPCData: cloneDeep(defaultChatIPCData),
