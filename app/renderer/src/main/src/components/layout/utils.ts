@@ -47,7 +47,6 @@ export const apiSystemConfig: APINoRequestFunc<API.SystemConfigResponse> = (hidd
       url: 'system/config',
     })
       .then((data) => {
-        console.log('system/config----', data)
         resolve(data)
       })
       .catch((e) => {
@@ -150,6 +149,8 @@ export const useUploadInfoByEnpriTrace = () => {
       if (isLogin) {
         apiSystemConfig()
           .then((config) => {
+            console.log('apiSystemConfig----', config, isUpdateGlobalConfig)
+
             const data = config.data || []
             setEeSystemConfig([...data])
             let autoUploadProjectParams = {
@@ -171,6 +172,8 @@ export const useUploadInfoByEnpriTrace = () => {
               // 此处全局配置更新仅在登录时生效
               if (isUpdateGlobalConfig && item.configName === 'globalProxy') {
                 if (item.isOpen) {
+                  console.log('apiUpdateGlobalNetworkConfig---', item.content)
+
                   apiUpdateGlobalNetworkConfig({
                     GlobalProxy: [item.content],
                   })

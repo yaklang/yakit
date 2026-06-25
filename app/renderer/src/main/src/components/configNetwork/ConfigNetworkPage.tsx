@@ -288,6 +288,9 @@ export const ConfigNetworkPage: React.FC<ConfigNetworkPageProp> = (props) => {
         MaxContentLength: +rsp.MaxContentLength / (1024 * 1024) || 10,
       }
       originGlobalConfigRef.current = { ...value }
+      console.log('GetGlobalNetworkConfig-rsp--', rsp)
+      console.log('GetGlobalNetworkConfig-value--', value)
+
       setParams({ ...value })
       setLoading(false)
     })
