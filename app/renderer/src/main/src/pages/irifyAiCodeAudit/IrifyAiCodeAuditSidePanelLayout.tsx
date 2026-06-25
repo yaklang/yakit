@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { Tooltip } from 'antd'
 import { OutlineBotIcon, OutlinePlusIcon, OutlineXIcon } from '@/assets/icon/outline'
@@ -6,7 +6,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
-import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { useHistoryAIReActChat, useHistoryAIReActTaskDetails } from '@/components/historyAIReActChat'
 import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
@@ -52,6 +52,15 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
     }
     setActiveKey(key)
   })
+
+  const { appendAiDetailsTab, detailsRightIcon, renderAITaskDetailsPanel, isShowAIReActChatDetails } =
+    useHistoryAIReActTaskDetails({
+      onSwitchTab: onActiveKey,
+    })
+  const yakitTabs = useMemo(
+    () => appendAiDetailsTab(sideTabs),
+    [appendAiDetailsTab, sideTabs, isShowAIReActChatDetails],
+  )
 
   const onSendCodeBlockFun = useMemoizedFn((res: string) => {
     const needOpenPanel = !openTabsFlag || activeKey !== 'ai'
@@ -113,6 +122,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
             </Tooltip>
           ),
           close: <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />,
+          details: detailsRightIcon,
         },
         footerRightTypes: [
           {
@@ -135,14 +145,17 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
         key={i18n.language}
         t={t}
         type={placement === 'right' ? 'vertical-right' : undefined}
-        yakitTabs={sideTabs}
+        yakitTabs={yakitTabs}
         activeKey={activeKey}
         onActiveKey={onActiveKey}
         show={openTabsFlag}
         setShow={setOpenTabsFlag}
         className={styles.tabWrap}
       >
-        <div className={styles.tabContent}>{aiChat}</div>
+        <div className={styles.tabContent}>
+          {aiChat}
+          {renderAITaskDetailsPanel(activeKey)}
+        </div>
       </YakitSideTab>
     </div>
   )
