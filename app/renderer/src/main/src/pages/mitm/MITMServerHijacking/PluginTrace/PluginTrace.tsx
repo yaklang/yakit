@@ -1,4 +1,5 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import i18n from '@/i18n/i18n'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePlay2Icon, OutlineRefreshIcon } from '@/assets/icon/outline'
@@ -33,19 +34,19 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const TraceStatusMapTag = [
   {
     key: ['pending'],
-    name: t('PluginTrace.waiting'),
+    name: i18n.t('PluginTrace.waiting', { ns: 'mitm' }),
     tag: 'blue',
   },
-  { key: ['running'], name: t('PluginTrace.running'), tag: 'yellow' },
+  { key: ['running'], name: i18n.t('PluginTrace.running', { ns: 'mitm' }), tag: 'yellow' },
   {
     key: ['completed'],
-    name: t('PluginTrace.completed'),
+    name: i18n.t('PluginTrace.completed', { ns: 'mitm' }),
     tag: 'success',
   },
-  { key: ['failed'], name: t('PluginTrace.failed'), tag: 'danger' },
+  { key: ['failed'], name: i18n.t('PluginTrace.failed', { ns: 'mitm' }), tag: 'danger' },
   {
     key: ['cancelled'],
-    name: t('MITMPluginHijackContent.cancel'),
+    name: i18n.t('MITMPluginHijackContent.cancel', { ns: 'mitm' }),
     tag: 'info',
   },
 ]

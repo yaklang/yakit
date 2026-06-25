@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useImperativeHandle, useMemo, useRef } from 'react'
+import i18n from '@/i18n/i18n'
 import { Form, Progress, Tooltip } from 'antd'
 import { useControllableValue, useCreation, useInViewport, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import styles from './PluginTunHijack.module.scss'
@@ -52,7 +53,7 @@ import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
 import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
-const CONNECTIVITY_CHECK_PLUGIN_NAME = t('PluginTunHijack.pluginName')
+const CONNECTIVITY_CHECK_PLUGIN_NAME = i18n.t('PluginTunHijack.pluginName', { ns: 'mitm' })
 const CONNECTIVITY_CHECK_DEBUG_PARAMS: DebugPluginRequest = {
   Code: '',
   PluginType: 'yak',

@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import i18n from '@/i18n/i18n'
 import { Divider, Form, notification, Tooltip, Typography } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import ChromeLauncherButton from '@/pages/mitm/MITMChromeLauncher'
@@ -168,7 +169,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         initPluginNames: props.defaultPlugins || [],
         version: mitmVersion,
       }).then(() => {
-        info(t('MITMServerHijacking.initial_mitm_plugin_started_successfully'))
+        info(i18n.t('MITMServerHijacking.initial_mitm_plugin_started_successfully', { ns: 'mitm' }))
       })
     }
   }, [props.enableInitialMITMPlugin, props.defaultPlugins])
@@ -332,14 +333,20 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
   })
 
   const mapProxyValue = (value: string) => {
-    if (value.includes(t('MITMRuleFromModal.rule_group'))) {
-      return value.replace(t('MITMRuleFromModal.rule_group'), t('MITMRuleFromModal.rule_group'))
+    if (value.includes(i18n.t('MITMRuleFromModal.rule_group', { ns: 'mitm' }))) {
+      return value.replace(
+        i18n.t('MITMRuleFromModal.rule_group', { ns: 'mitm' }),
+        i18n.t('MITMRuleFromModal.rule_group', { ns: 'mitm' }),
+      )
     }
-    if (value.includes(t('ProxyConfig.disabled'))) {
-      return value.replace(t('ProxyConfig.disabled'), t('ProxyConfig.disabled'))
+    if (value.includes(i18n.t('ProxyConfig.disabled', { ns: 'mitm' }))) {
+      return value.replace(
+        i18n.t('ProxyConfig.disabled', { ns: 'mitm' }),
+        i18n.t('ProxyConfig.disabled', { ns: 'mitm' }),
+      )
     }
-    if (value.includes(t('ProxyConfig.Points'))) {
-      return value.replace(t('ProxyConfig.Points'), t('ProxyConfig.Points'))
+    if (value.includes(i18n.t('ProxyConfig.Points', { ns: 'mitm' }))) {
+      return value.replace(i18n.t('ProxyConfig.Points', { ns: 'mitm' }), i18n.t('ProxyConfig.Points', { ns: 'mitm' }))
     }
     return value
   }
@@ -384,7 +391,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                   if (p.key === 'downstreamProxy') {
                     return (
                       <YakitTag closable={true} onClose={downStreamTagClose} key={`tip-${idx}`}>
-                        {`${t('ProxyConfig.downstream_agent')}: ${mapProxyValue(p.value as string)}`}
+                        {`${i18n.t('ProxyConfig.downstream_agent', { ns: 'mitm' })}: ${mapProxyValue(p.value as string)}`}
                       </YakitTag>
                     )
                   }
@@ -415,15 +422,15 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                       updateDisableSystemProxy(true)
                     }}
                   >
-                    {t('MITMServerHijacking.system_proxy')}
+                    {i18n.t('MITMServerHijacking.system_proxy', { ns: 'mitm' })}
                     {systemProxy?.CurrentProxy}
                   </YakitTag>
                 )}
               {globalEnabledTemplateName && (
                 <YakitTag closable onClose={onDisableGlobalHotPatch}>
                   <Tooltip title={globalEnabledTemplateName}>
-                    {t('GlobalHotPatch.Global_hot_template')}
-                    {t('GlobalHotPatch.started')}
+                    {i18n.t('GlobalHotPatch.Global_hot_template', { ns: 'mitm' })}
+                    {i18n.t('GlobalHotPatch.started', { ns: 'mitm' })}
                   </Tooltip>
                 </YakitTag>
               )}
@@ -443,8 +450,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     })
                   }}
                 >
-                  {t('GlobalHotPatch.MITM_hot_patch')}
-                  {t('GlobalHotPatch.started')}
+                  {i18n.t('GlobalHotPatch.MITM_hot_patch', { ns: 'mitm' })}
+                  {i18n.t('GlobalHotPatch.started', { ns: 'mitm' })}
                 </YakitTag>
               )}
             </div>
@@ -475,12 +482,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
               placement="bottom"
               title={
                 <div className={style['proxy_configuration_top']} onClick={() => setDownStreamAgentModalVisible(true)}>
-                  {t('ProxyConfig.downstream_agent')}
+                  {i18n.t('ProxyConfig.downstream_agent', { ns: 'mitm' })}
                 </div>
               }
               content={
                 <div className={style['proxy_configuration_bottom']}>
-                  <span>{t('HttpQueryAdvancedConfig.disable_system_proxy')}</span>
+                  <span>{i18n.t('HttpQueryAdvancedConfig.disable_system_proxy', { ns: 'mitm' })}</span>
                   <YakitSwitch
                     size="large"
                     checked={disableSystemProxy}
@@ -491,7 +498,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 </div>
               }
             >
-              <div className={style['link-item']}>{t('AgentConfigModal.proxy_configuration')}</div>
+              <div className={style['link-item']}>{i18n.t('AgentConfigModal.proxy_configuration', { ns: 'mitm' })}</div>
             </YakitPopover>
             <Divider type="vertical" style={{ margin: '0 4px', top: 1 }} />
             {!isNarrow && (
@@ -543,8 +550,11 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 <YakitMenu
                   selectedKeys={[]}
                   data={[
-                    { key: 'rule-config', label: t('MITMServerHijacking.rule_configuration') },
-                    { key: 'cert-download', label: t('MITMFormAdvancedConfiguration.certificateDownload') },
+                    { key: 'rule-config', label: i18n.t('MITMServerHijacking.rule_configuration', { ns: 'mitm' }) },
+                    {
+                      key: 'cert-download',
+                      label: i18n.t('MITMFormAdvancedConfiguration.certificateDownload', { ns: 'mitm' }),
+                    },
                   ]}
                   onClick={({ key }) => {
                     setMorePopoverVisible(false)

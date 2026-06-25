@@ -247,8 +247,6 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   const [hooksID, handlersID] = useMap<string, boolean>(new Map<string, boolean>()) // 当前hooks的插件id
   const [loading, setLoading] = useState(false)
 
-  const { t } = useI18nNamespaces(['webFuzzer'])
-
   // 是否允许获取默认勾选值
   const isDefaultCheck = useRef<boolean>(false)
 
