@@ -116,6 +116,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       default:
         const taskItem = tabs.find((item) => item.value === activeKey)
         const goal = taskGoalRef.current.get(activeKey)
+        console.log('详情页', activeKey, goal, taskItem)
         return <AITaskExecutionDetails taskId={activeKey} taskGoal={goal} taskName={taskItem?.label as string} />
     }
   }, [activeKey, tabs])

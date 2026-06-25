@@ -28,6 +28,7 @@ import {
   OutlineBotIcon,
   OutlineFileSlidersIcon,
   OutlineFilterIcon,
+  OutlineListTodoIcon,
   OutlineLog2Icon,
   OutlineMessageCirclePlusIcon,
   OutlinePlusIcon,
@@ -93,6 +94,7 @@ import { FiltersItemProps } from './TableVirtualResize/TableVirtualResizeType'
 import { HTTPFlowRuleDataFilter } from './HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { useCampare } from '@/hook/useCompare/useCompare'
 import { useBuiltinTagList } from './HTTPFlowTable/useBuiltinTagList'
+import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -289,6 +291,38 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
   const [secondNodeVisible, setSecondNodeVisible] = useState<boolean>(false)
   // #endregion
 
+  const [AITaskDetails, setAITaskDetails] = useState<{
+    key: string
+    label: string
+    goal: string
+  }>()
+  const onAIReActChatDetails = useMemoizedFn(() => {
+    const taskId = historyAIReActChatBridge.events.fetchCurrentCasualTaskID()
+    console.log('onAIReActChatDetails', taskId)
+    setAITaskDetails({
+      key: taskId,
+      label: '自由对话',
+      goal: '',
+    })
+    setIsShowAIReActChatDetails(true)
+    onActiveKey('ai-details')
+  })
+
+  const [isShowAIReActChatDetails, setIsShowAIReActChatDetails] = useState<boolean>(false)
+
+  const yakitTabs = useMemo(() => {
+    if (isShowAIReActChatDetails) {
+      return [
+        ...HistoryTab,
+        {
+          icon: <OutlineListTodoIcon />,
+          label: '任务详情',
+          value: 'ai-details',
+        },
+      ]
+    }
+    return HistoryTab
+  }, [isShowAIReActChatDetails])
   return (
     <div className={styles.hTTPHistory} ref={httpHistoryRef}>
       <YakitResizeBox
@@ -300,7 +334,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
             <YakitSideTab
               key={i18n.language}
               t={t}
-              yakitTabs={HistoryTab}
+              yakitTabs={yakitTabs}
               activeKey={activeKey}
               onActiveKey={onActiveKey}
               show={openTabsFlag}
@@ -380,6 +414,11 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                       close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
                       ),
+                      details: (
+                        <Tooltip title="任务详情">
+                          <YakitButton type="text2" icon={<OutlineListTodoIcon />} onClick={onAIReActChatDetails} />
+                        </Tooltip>
+                      ),
                     },
                     footerRightTypes: [
                       {
@@ -396,6 +435,13 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                     onAfterSubmit: clearHttpFlowSelection,
                   },
                 })}
+              {activeKey === 'ai-details' && AITaskDetails && (
+                <AITaskExecutionDetails
+                  taskId={AITaskDetails.key}
+                  taskGoal={AITaskDetails.goal}
+                  taskName={AITaskDetails.label}
+                />
+              )}
             </div>
           </div>
         )}
