@@ -48,6 +48,7 @@ import {
 import { HotPatchTemplate } from '@/pages/invoker/data/MITMPluginTamplate'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useStore } from '@/store'
+import { formatTemplateTeams } from './utils'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -83,11 +84,6 @@ interface GetOnlineHotPatchTemplateRequest {
   name?: string
 }
 
-interface HotPatchTemplateTeam {
-  tags: string
-  node: HotPatchTempItem[]
-}
-
 const INPUT_MAX_LENGTH = 50
 const DEBUG_TIMEOUT_SECONDS = 20
 const DEBUG_LIMIT = 300
@@ -105,33 +101,6 @@ const HOT_PATCH_PARAMS_GETTER_DEFAULT = `__getParams__ = func() {
         // "foo-params": "asdfasdfassss",      # 可用 {{params(foo-params)}}
     }
 }`
-
-export const formatTemplateTeams = (list: HotPatchTempItem[]): HotPatchTemplateTeam[] => {
-  const taggedTeams: HotPatchTemplateTeam[] = []
-  const emptyTagNodes: HotPatchTempItem[] = []
-  const tagIndexMap = new Map<string, number>()
-
-  list.forEach((item) => {
-    const tags = item.Tags?.trim() || ''
-    if (!tags) {
-      emptyTagNodes.push(item)
-      return
-    }
-    const index = tagIndexMap.get(tags)
-    if (index === undefined) {
-      tagIndexMap.set(tags, taggedTeams.length)
-      taggedTeams.push({ tags, node: [item] })
-      return
-    }
-    taggedTeams[index].node.push(item)
-  })
-
-  emptyTagNodes.forEach((item) => {
-    taggedTeams.push({ tags: '', node: [item] })
-  })
-
-  return taggedTeams
-}
 
 function collectTemplateGroups(list: HotPatchTempItem[]) {
   const groups = new Set<string>()

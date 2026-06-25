@@ -58,7 +58,7 @@ import { openConsoleNewWindow } from '@/utils/openWebsite'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
-import { formatTemplateTeams } from '../configManagement/HotPatchManagement'
+import { formatTemplateTeams } from '../configManagement/utils'
 interface HTTPFuzzerHotPatchProp {
   pageId: string
   onInsert: (s: string) => any
