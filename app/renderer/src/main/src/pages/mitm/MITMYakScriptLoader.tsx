@@ -547,6 +547,6 @@ export interface MITMYakScriptLoaderProps {
 
 export function clearMITMPluginCache(version: string) {
   grpcMITMClearPluginCache(version).catch((e) => {
-    failed(t('YakScriptLoader.clear_plugin_cache_failed', { e }))
+    failed(i18n.t('YakScriptLoader.clear_plugin_cache_failed', { ns: 'mitm', e }))
   })
 }
