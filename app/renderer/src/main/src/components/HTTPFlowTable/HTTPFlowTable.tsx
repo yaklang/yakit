@@ -1,4 +1,4 @@
-﻿import React, { Ref, useEffect, useMemo, useRef, useState, useContext } from 'react'
+import React, { Ref, useEffect, useMemo, useRef, useState, useContext } from 'react'
 import { Divider, Tooltip, Badge } from 'antd'
 import { YakQueryHTTPFlowRequest } from '../../utils/yakQueryHTTPFlow'
 import { YakScript } from '../../pages/invoker/schema'
@@ -30,6 +30,7 @@ import { YakitDropdownMenu } from '../yakitUI/YakitDropdownMenu/YakitDropdownMen
 import { YakitButton } from '../yakitUI/YakitButton/YakitButton'
 import { YakitPopover } from '../yakitUI/YakitPopover/YakitPopover'
 import { showYakitModal } from '../yakitUI/YakitModal/YakitModalConfirm'
+import { YakitHint } from '@/components/yakitUI/YakitHint/YakitHint'
 import { ShareModal } from '@/pages/fuzzer/components/ShareImportExportData'
 import { useSize } from 'ahooks'
 import { YakitTag } from '../yakitUI/YakitTag/YakitTag'
@@ -119,6 +120,7 @@ import {
   type HTTPFlowsToOnlineBatchRequest,
   type HTTPFlowsToOnlineBatchResponse,
   SourceType,
+  SHIELD_MAX_LIMIT,
 } from './HTTPFlowTable.constants'
 import {
   buildHTTPFlowQueryTags,
@@ -211,6 +213,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const [shieldData, setShieldData, getShieldData] = useGetSetState<ShieldData>({
     data: [],
   })
+  const [showShieldTooManyHint, setShowShieldTooManyHint] = useState(false)
   const [isRefresh, setIsRefresh] = useState<boolean>(false) // 刷新表格，滚动至0
   const [_, setBodyLengthUnit, getBodyLengthUnit] = useGetSetState<'B' | 'K' | 'M'>('B')
   const [currentIndex, setCurrentIndex] = useState<number>()
@@ -603,7 +606,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   }, [onGetOtherPageAdvancedSearchData, updateAdvancedSearch])
   const handleShieldDataUpdate = useMemoizedFn(() => {
     setRemoteValue(HTTP_FLOW_TABLE_SHIELD_DATA, JSON.stringify(shieldData))
-    const { shieldIds, shieldHosts } = splitHTTPFlowTableShieldData(shieldData.data)
+    const lastPickData = shieldData.data.slice(-SHIELD_MAX_LIMIT)
+    const { shieldIds, shieldHosts } = splitHTTPFlowTableShieldData(lastPickData)
 
     setParams((prev) => {
       // 高级筛选 屏蔽hostName
@@ -655,9 +659,12 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       .then((data) => {
         if (!data) return
         try {
-          const cacheData = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'getShieldList' })
+          let cacheDataList = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'getShieldList' })?.data || []
+          if (cacheDataList.length > SHIELD_MAX_LIMIT && isOneceLoading.current) {
+            setShowShieldTooManyHint(true)
+          }
           setShieldData({
-            data: cacheData?.data || [],
+            data: cacheDataList,
           })
         } catch (e) {
           updateData()
@@ -1819,15 +1826,23 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       RequestToYakCodeTemplate.Batch,
     )
   })
+  const appendShieldItem = useMemoizedFn((item: string | number) => {
+    const { data = [] } = shieldData || {}
+    if (data.includes(item)) return
+    if (data.length >= SHIELD_MAX_LIMIT) {
+      yakitNotify('warning', t('HTTPFlowTable.shieldLimitReached'))
+      return
+    }
+    const newArr = filterItem([...data, item])
+    setShieldData({ ...shieldData, data: newArr })
+  })
   /**
    * @description 屏蔽该记录
    */
   const onShieldRecord = useMemoizedFn((v: HTTPFlow) => {
     if (!(v && v.Id)) return
     const id = Math.ceil(v.Id)
-    const newArr = filterItem([...shieldData.data, id])
-    const newObj = { ...shieldData, data: newArr }
-    setShieldData(newObj)
+    appendShieldItem(id)
   })
   /**
    * @description 屏蔽URL
@@ -1835,9 +1850,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const onShieldURL = useMemoizedFn((v: HTTPFlow) => {
     let Url = v?.Url
     // 根据URL拿到ID数组
-    const newArr = filterItem([...shieldData.data, Url])
-    const newObj = { ...shieldData, data: newArr }
-    setShieldData(newObj)
+    appendShieldItem(Url)
   })
   /**
    * @description 屏蔽域名
@@ -1845,9 +1858,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const onShieldDomain = useMemoizedFn((v: HTTPFlow) => {
     const host = v?.HostPort?.split(':')[0] || ''
     // 根据host拿到对应ID数组
-    const newArr = filterItem([...shieldData.data, host])
-    const newObj = { ...shieldData, data: newArr }
-    setShieldData(newObj)
+    appendShieldItem(host)
   })
 
   useHTTPFlowTableShortcutKeys({
@@ -2748,6 +2759,14 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
           defalutColumnsOrder={defalutColumnsOrderRef.current}
         ></AdvancedSet>
       )}
+      <YakitHint
+        visible={showShieldTooManyHint}
+        title={t('HTTPFlowTable.shieldTooManyOnlyLatestTitle')}
+        content={t('HTTPFlowTable.shieldTooManyOnlyLatest')}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        okButtonText={t('YakitButton.ok')}
+        onOk={() => setShowShieldTooManyHint(false)}
+      />
     </div>
   )
 })

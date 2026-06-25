@@ -100,7 +100,10 @@
     "setColorSuccess": "Set HTTPFlow color successfully",
     "removeColorSuccess": "Clear HTTPFlow color successfully",
     "sendLimitData": "You can only send a maximum of {{maxLength}} data entries at a time",
-    "resetConfirm": "Confirm Reset？"
+    "resetConfirm": "Confirm Reset？",
+    "shieldLimitReached": "To protect database performance, only 5 block rules can be active. Use \"Delete\" to remove packets you are not interested in.",
+    "shieldTooManyOnlyLatestTitle": "Too Many Block Rules",
+    "shieldTooManyOnlyLatest": "For performance, only the latest 5 block rules are active. You can use \"Delete\" on specific packets to remove ones you are not interested in."
   },
   "ImportExportProgress": {
     "exportHARData": "Export HAR traffic data"

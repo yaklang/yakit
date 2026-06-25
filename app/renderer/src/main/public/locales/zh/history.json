@@ -100,7 +100,10 @@
     "setColorSuccess": "设置 HTTPFlow 颜色成功",
     "removeColorSuccess": "清除 HTTPFlow 颜色成功",
     "sendLimitData": "最多同时只能发送{{maxLength}}条数据",
-    "resetConfirm": "确认重置？"
+    "resetConfirm": "确认重置？",
+    "shieldLimitReached": "为保护数据库性能,屏蔽只允许5条生效,可以使用\"删除\"数据来移除不感兴趣的数据包",
+    "shieldTooManyOnlyLatestTitle": "屏蔽条件过多",
+    "shieldTooManyOnlyLatest": "为保护性能，只生效最新5条屏蔽条件，用户可以通过\"删除\"特定数据包来移除不感兴趣的数据包。"
   },
   "ImportExportProgress": {
     "exportHARData": "导出HAR流量数据"
