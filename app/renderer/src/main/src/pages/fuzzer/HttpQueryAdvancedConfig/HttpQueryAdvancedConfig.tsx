@@ -902,7 +902,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               </YakitPanel>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.concurrency_config')}
-                key=i18n.t("FuzzerTemplates.packet_config", { ns: "webFuzzer" })
+                key={i18n.t("FuzzerTemplates.packet_config", { ns: "webFuzzer" })}
                 extra={
                   <YakitButton
                     type="text"
