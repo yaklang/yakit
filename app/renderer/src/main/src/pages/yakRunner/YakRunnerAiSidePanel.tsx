@@ -44,14 +44,7 @@ export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ chil
     setActiveKey(key)
   })
 
-  const { appendAiDetailsTab, detailsRightIcon, renderAITaskDetailsPanel, isShowAIReActChatDetails } =
-    useHistoryAIReActTaskDetails({
-      onSwitchTab: onActiveKey,
-    })
-  const yakitTabs = useMemo(
-    () => appendAiDetailsTab(defaultAiTabs),
-    [appendAiDetailsTab, isShowAIReActChatDetails],
-  )
+  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
 
   const onSendCodeBlockFun = useMemoizedFn((res: string) => {
     const needOpenPanel = !openTabsFlag || activeKey !== 'ai'
@@ -129,17 +122,14 @@ export const YakRunnerAiSidePanel: React.FC<YakRunnerAiSidePanelProps> = ({ chil
         key={i18n.language}
         t={t}
         type="vertical-right"
-        yakitTabs={yakitTabs}
+        yakitTabs={defaultAiTabs}
         activeKey={activeKey}
         onActiveKey={onActiveKey}
         show={openTabsFlag}
         setShow={setOpenTabsFlag}
         className={styles.tabWrap}
       >
-        <div className={styles.tabContent}>
-          {aiChat}
-          {renderAITaskDetailsPanel(activeKey)}
-        </div>
+        <div className={styles.tabContent}>{aiChat}</div>
       </YakitSideTab>
     </div>
   )

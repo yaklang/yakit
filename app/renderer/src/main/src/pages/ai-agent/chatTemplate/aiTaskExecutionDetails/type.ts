@@ -8,6 +8,7 @@ export interface AITaskExecutionDetailsProps {
   taskId: string
   taskName?: string
   taskGoal?: string
+  onClose?: () => void
 }
 export interface AITaskActionItemProps {
   title: string

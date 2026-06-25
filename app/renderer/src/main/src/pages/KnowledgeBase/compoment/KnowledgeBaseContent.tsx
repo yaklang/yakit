@@ -36,7 +36,11 @@ import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import { CreateKnowledgeBaseData } from '../TKnowledgeBase'
 
 import { knowledgeBaseDataStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { HistoryAIReActChatProvider, useHistoryAIReActChat, useHistoryAIReActTaskDetails } from '@/components/historyAIReActChat'
+import {
+  HistoryAIReActChatProvider,
+  useHistoryAIReActChat,
+  useHistoryAIReActTaskDetails,
+} from '@/components/historyAIReActChat'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIHandleStartParams } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import Joyride, { ACTIONS, CallBackProps, STATUS } from 'react-joyride'
@@ -101,9 +105,7 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
     const { renderHistoryAIReActChat, setShowFreeChat, showFreeChat, historyAIReActChatBridge } =
       useHistoryAIReActChat()
     const [knowledgeAiView, setKnowledgeAiView] = useSafeState<'chat' | 'details'>('chat')
-    const { detailsRightIcon, renderInlineAITaskDetails, isAiDetailsViewActive } = useHistoryAIReActTaskDetails({
-      onSwitchTab: () => setKnowledgeAiView('details'),
-    })
+    const { detailsRightIcon } = useHistoryAIReActTaskDetails()
     useUpdateEffect(() => {
       if (!showFreeChat) {
         setKnowledgeAiView('chat')
@@ -580,34 +582,32 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
           }
           secondNode={
             showFreeChat
-              ? knowledgeAiView === 'details' && isAiDetailsViewActive
-                ? renderInlineAITaskDetails()
-                : renderHistoryAIReActChat({
-                    className: styles['knowledge-base-ai-chat'],
-                    title: 'AI 召回',
-                    externalParameters: {
-                      isOpen: false,
-                      rightIcon: {
-                        history: true,
-                        dataDetails: { type: 'text2' },
-                        add: (
-                          <Tooltip title="新建会话">
-                            <YakitButton
-                              type="text2"
-                              icon={<OutlineMessageCirclePlusIcon />}
-                              onClick={() => historyAIReActChatBridge.onNewChat()}
-                            />
-                          </Tooltip>
-                        ),
-                        close: (
-                          <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setShowFreeChat(false)} />
-                        ),
-                        details: detailsRightIcon,
-                      },
-                      filterMentionType: ['knowledgeBase'],
-                      onAfterSubmit: generatreMention,
+              ? renderHistoryAIReActChat({
+                  className: styles['knowledge-base-ai-chat'],
+                  title: 'AI 召回',
+                  externalParameters: {
+                    isOpen: false,
+                    rightIcon: {
+                      history: true,
+                      dataDetails: { type: 'text2' },
+                      add: (
+                        <Tooltip title="新建会话">
+                          <YakitButton
+                            type="text2"
+                            icon={<OutlineMessageCirclePlusIcon />}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
+                          />
+                        </Tooltip>
+                      ),
+                      close: (
+                        <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setShowFreeChat(false)} />
+                      ),
+                      details: detailsRightIcon,
                     },
-                  })
+                    filterMentionType: ['knowledgeBase'],
+                    onAfterSubmit: generatreMention,
+                  },
+                })
               : null
           }
           {...ResizeBoxProps}

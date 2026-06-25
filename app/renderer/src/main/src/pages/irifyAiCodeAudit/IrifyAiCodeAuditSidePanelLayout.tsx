@@ -53,14 +53,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
     setActiveKey(key)
   })
 
-  const { appendAiDetailsTab, detailsRightIcon, renderAITaskDetailsPanel, isShowAIReActChatDetails } =
-    useHistoryAIReActTaskDetails({
-      onSwitchTab: onActiveKey,
-    })
-  const yakitTabs = useMemo(
-    () => appendAiDetailsTab(sideTabs),
-    [appendAiDetailsTab, sideTabs, isShowAIReActChatDetails],
-  )
+  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
 
   const onSendCodeBlockFun = useMemoizedFn((res: string) => {
     const needOpenPanel = !openTabsFlag || activeKey !== 'ai'
@@ -145,17 +138,14 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
         key={i18n.language}
         t={t}
         type={placement === 'right' ? 'vertical-right' : undefined}
-        yakitTabs={yakitTabs}
+        yakitTabs={sideTabs}
         activeKey={activeKey}
         onActiveKey={onActiveKey}
         show={openTabsFlag}
         setShow={setOpenTabsFlag}
         className={styles.tabWrap}
       >
-        <div className={styles.tabContent}>
-          {aiChat}
-          {renderAITaskDetailsPanel(activeKey)}
-        </div>
+        <div className={styles.tabContent}>{aiChat}</div>
       </YakitSideTab>
     </div>
   )

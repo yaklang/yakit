@@ -85,11 +85,7 @@ import { YakitSideTab } from './yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
 import { JSONParseLog } from '@/utils/tool'
 import { histroyAiStore } from '@/pages/ai-agent/store/ChatDataStore'
-import {
-  HistoryAIReActChatProvider,
-  useHistoryAIReActChat,
-  useHistoryAIReActTaskDetails,
-} from './historyAIReActChat'
+import { HistoryAIReActChatProvider, useHistoryAIReActChat, useHistoryAIReActTaskDetails } from './historyAIReActChat'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
@@ -175,14 +171,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
     setActiveKey(key)
   })
 
-  const { appendAiDetailsTab, detailsRightIcon, renderAITaskDetailsPanel, isShowAIReActChatDetails } =
-    useHistoryAIReActTaskDetails({
-      onSwitchTab: onActiveKey,
-    })
-  const yakitTabs = useMemo(
-    () => appendAiDetailsTab(HistoryTab),
-    [appendAiDetailsTab, isShowAIReActChatDetails],
-  )
+  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
 
   useDebounceEffect(
     () => {
@@ -313,7 +302,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
             <YakitSideTab
               key={i18n.language}
               t={t}
-              yakitTabs={yakitTabs}
+              yakitTabs={HistoryTab}
               activeKey={activeKey}
               onActiveKey={onActiveKey}
               show={openTabsFlag}
@@ -410,7 +399,6 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                     onAfterSubmit: clearHttpFlowSelection,
                   },
                 })}
-              {renderAITaskDetailsPanel(activeKey)}
             </div>
           </div>
         )}

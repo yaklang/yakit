@@ -134,7 +134,11 @@ import {
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import { FlowAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
-import { HistoryAIReActChatProvider, useHistoryAIReActChat, useHistoryAIReActTaskDetails } from '@/components/historyAIReActChat'
+import {
+  HistoryAIReActChatProvider,
+  useHistoryAIReActChat,
+  useHistoryAIReActTaskDetails,
+} from '@/components/historyAIReActChat'
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
 const { ipcRenderer } = window.require('electron')
@@ -228,14 +232,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     setActiveKey(key)
   })
 
-  const { appendAiDetailsTab, detailsRightIcon, renderAITaskDetailsPanel, isShowAIReActChatDetails } =
-    useHistoryAIReActTaskDetails({
-      onSwitchTab: onActiveKey,
-    })
-  const yakitTabs = useMemo(
-    () => appendAiDetailsTab(HistoryTab),
-    [appendAiDetailsTab, isShowAIReActChatDetails],
-  )
+  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
 
   useDebounceEffect(
     () => {
@@ -292,7 +289,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
             <YakitSideTab
               key={i18n.language}
               t={t}
-              yakitTabs={yakitTabs}
+              yakitTabs={HistoryTab}
               activeKey={activeKey}
               onActiveKey={onActiveKey}
               show={openTabsFlag}
@@ -380,7 +377,6 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                   },
                 })}
               </div>
-              {renderAITaskDetailsPanel(activeKey)}
             </div>
           </div>
         }

@@ -108,7 +108,11 @@ import {
   OutlineDotsverticalIcon,
 } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
-import { HistoryAIReActChatProvider, useHistoryAIReActChat, useHistoryAIReActTaskDetails } from '@/components/historyAIReActChat'
+import {
+  HistoryAIReActChatProvider,
+  useHistoryAIReActChat,
+  useHistoryAIReActTaskDetails,
+} from '@/components/historyAIReActChat'
 import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
@@ -2345,9 +2349,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
   }, [advancedConfigShowType, setShowFreeChat])
 
   const [fuzzerAiView, setFuzzerAiView] = useState<'chat' | 'details'>('chat')
-  const { detailsRightIcon, renderInlineAITaskDetails, isAiDetailsViewActive } = useHistoryAIReActTaskDetails({
-    onSwitchTab: () => setFuzzerAiView('details'),
-  })
+  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
   useUpdateEffect(() => {
     if (advancedConfigShowType !== 'ai') {
       setFuzzerAiView('chat')
@@ -2688,47 +2690,43 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                 id={props.id}
                 matchSubmitFun={matchSubmitFun}
                 showFormContentType={advancedConfigShowType}
-                fuzzerAiSlot={
-                  fuzzerAiView === 'details' && isAiDetailsViewActive
-                    ? renderInlineAITaskDetails()
-                    : renderHistoryAIReActChat({
-                        externalParameters: {
-                          isOpen: false,
-                          rightIcon: {
-                            history: true,
-                            dataDetails: { type: 'text2' },
-                            add: (
-                              <Tooltip title={t('HTTPFuzzerPage.AI_new_conversation')}>
-                                <YakitButton
-                                  type="text2"
-                                  icon={<OutlinePlusIcon />}
-                                  onClick={() => historyAIReActChatBridge.onNewChat()}
-                                />
-                              </Tooltip>
-                            ),
-                            close: (
-                              <YakitButton
-                                type="text2"
-                                icon={<OutlineXIcon />}
-                                onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
-                              />
-                            ),
-                            details: detailsRightIcon,
-                          },
-                          footerRightTypes: [
-                            {
-                              type: AIInputFooterRightEnum.AIFocusMode,
-                              props: {
-                                value: focusModeLoop,
-                                onChange: () => {},
-                                disabled: true,
-                              },
-                            },
-                          ],
-                          filterMentionType: ['focusMode'],
+                fuzzerAiSlot={renderHistoryAIReActChat({
+                  externalParameters: {
+                    isOpen: false,
+                    rightIcon: {
+                      history: true,
+                      dataDetails: { type: 'text2' },
+                      add: (
+                        <Tooltip title={t('HTTPFuzzerPage.AI_new_conversation')}>
+                          <YakitButton
+                            type="text2"
+                            icon={<OutlinePlusIcon />}
+                            onClick={() => historyAIReActChatBridge.onNewChat()}
+                          />
+                        </Tooltip>
+                      ),
+                      close: (
+                        <YakitButton
+                          type="text2"
+                          icon={<OutlineXIcon />}
+                          onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
+                        />
+                      ),
+                      details: detailsRightIcon,
+                    },
+                    footerRightTypes: [
+                      {
+                        type: AIInputFooterRightEnum.AIFocusMode,
+                        props: {
+                          value: focusModeLoop,
+                          onChange: () => {},
+                          disabled: true,
                         },
-                      })
-                }
+                      },
+                    ],
+                    filterMentionType: ['focusMode'],
+                  },
+                })}
                 proxyListRef={proxyListRef}
                 isbuttonIsSendReqStatus={isbuttonIsSendReqStatus}
                 cachedTotal={cachedTotal}
