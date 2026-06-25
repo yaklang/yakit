@@ -44,6 +44,7 @@ import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamTy
 import { ManualHijackTypeProps } from './MITMManual/MITMManualType'
 import { cloneDeep } from 'lodash'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
 const PluginHasParamsDrawer = React.lazy(() => import('../../components/pluginHasParamsDrawer/PluginHasParamsDrawer'))
 
 const { ipcRenderer } = window.require('electron')
@@ -246,8 +247,8 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
       <Tooltip
         title={
           showPluginHistoryList.includes(i.ScriptName)
-            ? t('YakScriptLoader.cancel_viewing_plugin_traffic')
-            : t('YakScriptLoader.view_plugin_traffic')
+            ? i18n.t('YakScriptLoader.cancel_viewing_plugin_traffic', { ns: 'mitm' })
+            : i18n.t('YakScriptLoader.view_plugin_traffic', { ns: 'mitm' })
         }
       >
         <OutlileHistoryIcon
@@ -303,7 +304,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
     return (
       <YakitPopconfirm
         disabled={!p.onSendToPatch}
-        title={t('YakScriptLoader.send_to_hot_patch_for_code_debugging')}
+        title={i18n.t('YakScriptLoader.send_to_hot_patch_for_code_debugging', { ns: 'mitm' })}
         onConfirm={() => {
           if (!i.Content) {
             getScriptInfo(i, true)
@@ -397,7 +398,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
           </>
         ) : null}
         {status !== 'idle' && hasPluginOutInfo && (
-          <Tooltip title={t('YakScriptLoader.view_current_plugin_output')}>
+          <Tooltip title={i18n.t('YakScriptLoader.view_current_plugin_output', { ns: 'mitm' })}>
             <OutlinePositionIcon
               className={classNames(style['position-icon'], {
                 [style['position-light']]: showPluginStream === i.ScriptName,
