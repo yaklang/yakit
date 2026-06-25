@@ -24,6 +24,7 @@ import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { PencilAltIcon } from '@/assets/newIcon'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import i18n from '@/i18n/i18n'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
 
 const { YakitPanel } = YakitCollapse
@@ -449,23 +450,23 @@ export const isFilterItemEmpty = (item: FilterDataItem) => {
 }
 const filterRangeOption: YakitSelectProps['options'] = [
   {
-    label: t('MITMFilters.exclude_hostnames'),
+    label: i18n.t('MITMFilters.exclude_hostnames', { ns: 'mitm' }),
     value: 'ExcludeHostnames',
   },
   {
-    label: t('MITMFilters.include_hostnames'),
+    label: i18n.t('MITMFilters.include_hostnames', { ns: 'mitm' }),
     value: 'IncludeHostnames',
   },
   {
-    label: t('MITMFilters.exclude_url_paths'),
+    label: i18n.t('MITMFilters.exclude_url_paths', { ns: 'mitm' }),
     value: 'ExcludeUri',
   },
   {
-    label: t('MITMFilters.include_url_paths'),
+    label: i18n.t('MITMFilters.include_url_paths', { ns: 'mitm' }),
     value: 'IncludeUri',
   },
   {
-    label: t('MITMFilters.exclude_http_methods'),
+    label: i18n.t('MITMFilters.exclude_http_methods', { ns: 'mitm' }),
     value: 'ExcludeMethods',
   },
 ]
