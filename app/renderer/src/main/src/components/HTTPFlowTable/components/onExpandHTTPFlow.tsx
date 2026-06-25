@@ -12,7 +12,7 @@ export const onExpandHTTPFlow = (
   pageType?: HTTPHistorySourcePageType,
 ) => {
   if (!flow) {
-    return <YakitEmpty title={t?.('HTTPFlowTable.requestDetailsNotFound') || '找不到该请求详情'}></YakitEmpty>
+    return <YakitEmpty title={t?.('HTTPFlowTable.requestDetailsNotFound') || t('HTTPFlowTable.requestDetailsNotFound')}></YakitEmpty>
   }
 
   return (

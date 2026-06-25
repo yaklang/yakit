@@ -63,6 +63,7 @@ import { PluginExecuteResult } from '@/pages/plugins/operator/pluginExecuteResul
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { YakitAutoComGroupSearchWithAll } from '@/components/yakitUI/YakitAutoComplete/YakitAutoComGroupSearchWithAll'
 import { StreamUpdateState } from './PluginsOutput/StreamProcessor'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const MITMManual = React.lazy(() => import('@/pages/mitm/MITMManual/MITMManual'))
 
@@ -90,6 +91,7 @@ interface MITMHijackedContentProps {
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     status,
     setStatus,
@@ -118,7 +120,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const [hijackResponseType, setHijackResponseType] = useState<'all' | 'never'>('never') // 劫持类型
 
   const [forResponse, setForResponse] = useState(false)
-  const [urlInfo, setUrlInfo] = useState('监听中...')
+  const [urlInfo, setUrlInfo] = useState(t('MITMHijackedContent.listening'))
   const [ipInfo, setIpInfo] = useState('')
 
   // 当前正在劫持的请求/响应，是否是 Websocket
@@ -209,7 +211,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         }
       })
       .catch((err) => {
-        yakitFailed('获取 MITM 过滤器失败:' + err)
+        yakitFailed(t('MITMHijackedContent.failed_to_get_mitm_filter') + err)
       })
   })
   const setFilters = useMemoizedFn(() => {
@@ -230,7 +232,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
           }, 500)
         })
         .catch((err) => {
-          yakitFailed('删除过滤器中包含项的所有内容失败：' + err)
+          yakitFailed(t('MITMHijackedContent.failed_to_delete_filter_include_items') + err)
         })
     }
   })
@@ -252,10 +254,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setTimeout(() => {
           getRules()
         }, 500)
-        yakitNotify('success', '已成功开启规则“全部不替换”按钮')
+        yakitNotify('success', t('MITMHijackedContent.successfully_enabled_no_replacement_for_'))
       })
       .catch((e) => {
-        yakitNotify('error', '关闭失败')
+        yakitNotify('error', t('MITMHijackedContent.disable_failed'))
       })
   })
   const setRulesAllDisable = useMemoizedFn(() => {
@@ -269,10 +271,10 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setTimeout(() => {
           getRules()
         }, 500)
-        yakitNotify('success', '已成功开启规则“全部禁用”按钮')
+        yakitNotify('success', t('MITMHijackedContent.successfully_enabled_disable_all_rule_bu'))
       })
       .catch((e) => {
-        yakitNotify('error', '关闭失败')
+        yakitNotify('error', t('MITMHijackedContent.disable_failed'))
       })
   })
   const getRules = useMemoizedFn(() => {
@@ -294,7 +296,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
           setAlertVisible(true)
         }
       })
-      .catch((e) => yakitFailed('获取规则列表失败:' + e))
+      .catch((e) => yakitFailed(t('MITMServerForm.failed_to_get_rule_list') + e))
   })
   useEffect(() => {
     getMITMFilter()
@@ -324,7 +326,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     if (!moreRuleLimit && moreRuleLimitFlagRef.current) {
       setMoreRuleLimit(true)
       setAlertVisible(true)
-      yakitNotify('info', '开启染色/匹配规则会导致性能下降，如遇风险，请谨慎操作')
+      yakitNotify('info', t('MITMHijackedContent.enabling_colorizationmatching_rules_may_'))
     }
   })
   const clearLoadedPlugins = () => {
@@ -383,7 +385,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     return (
       <>
         检测到配置{openWhiteFilter()}，如抓包有问题可先将白名单设置{closeDisposition('filter')}
-        <Tooltip title="关闭则会删除过滤器中包含项的所有内容">
+        <Tooltip title={t('MITMHijackedContent.when_disabled_all_content_matching_the_f')}>
           <OutlineInformationcircleIcon className={styles['circle-icon']} />
         </Tooltip>
         。
@@ -395,7 +397,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     return (
       <>
         检测到配置{openReplaceRule()}，如抓包有问题可先将替换{closeDisposition('rule')}
-        <Tooltip title="关闭则会开启“全部不替换”按钮">
+        <Tooltip title={t('MITMHijackedContent.when_disabled_the_no_replacement_for_all')}>
           <OutlineInformationcircleIcon className={styles['circle-icon']} />
         </Tooltip>
         。
@@ -408,7 +410,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       <>
         检测到配置{openReplaceRule()}和{openWhiteFilter()}白名单，如抓包有问题可先将配置
         {closeDisposition('all')}
-        <Tooltip title="关闭则会开启规则“全部不替换”按钮，并删除过滤器中包含项的所有内容">
+        <Tooltip title={t('MITMHijackedContent.disable_no_replace_and_delete_content')}>
           <OutlineInformationcircleIcon className={styles['circle-icon']} />
         </Tooltip>
         。
@@ -428,7 +430,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     return (
       <>
         检测到性能下降，如配置染色/匹配规则，可先将规则{closeDisposition('moreRuleLimit')}
-        <Tooltip title="关闭则禁用全部规则">
+        <Tooltip title={t('MITMHijackedContent.when_disabled_all_rules_will_be_disabled')}>
           <OutlineInformationcircleIcon className={styles['circle-icon']} />
         </Tooltip>
         。
@@ -550,7 +552,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
       version: mitmVersion,
     }
     grpcMITMAutoForward(value).finally(() => {
-      console.info(`设置服务端自动转发：${!isManual}`)
+      console.info(t('MITMHijackedContent.set_server_auto_forward', { value: !isManual }))
     })
     if (mitmVersion === MITMVersion.V2 && autoForward === 'manual') {
       grpcMITMV2RecoverManualHijack()
@@ -568,7 +570,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         setHijackFilterFlag(flag)
       })
       .catch((err) => {
-        yakitFailed('获取 条件劫持 过滤器失败:' + err)
+        yakitFailed(t('MITMHijackedContent.failed_to_get_conditional_hijack_filter') + err)
       })
   })
   useEffect(() => {
@@ -603,7 +605,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
 
     if (msg.forResponse) {
       if (!msg.response || !msg.responseId) {
-        yakitFailed('BUG: MITM 错误，未能获取到正确的 Response 或 Response ID')
+        yakitFailed(t('MITMHijackedContent.bug__mitm_error__failed_to_get_correct_r'))
         return
       }
       if (!isManual) {
@@ -651,7 +653,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         if (hijackFilterFlag) {
           setAutoForward('manual')
           updateRequest()
-          info('已触发 条件 劫持')
+          info(t('MITMManual.conditional_hijack_triggered'))
         } else {
           forwardRequest(msg.id)
           if (!!currentPacket) {
@@ -729,11 +731,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         if (currentPacketId > 0) {
           allowHijackedResponseByRequest(currentPacketId)
         }
-        info('劫持所有响应内容')
+        info(t('MITMHijackedContent.hijack_all_response_content'))
         break
       case 'never':
         cancelHijackedResponseByRequest(currentPacketId)
-        info('仅劫持请求')
+        info(t('MITMHijackedContent.hijack_requests_only'))
         break
       default:
         break
@@ -756,7 +758,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     }
     setForResponse(false)
     setCalloutColor('')
-    setUrlInfo('监听中...')
+    setUrlInfo(t('MITMHijackedContent.listening'))
     setIpInfo('')
   })
 
@@ -798,7 +800,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   /**刷新手动劫持 */
   const onRefreshManual = useMemoizedFn(() => {
     grpcMITMV2RecoverManualHijack().then(() => {
-      yakitNotify('info', '刷新成功')
+      yakitNotify('info', t('MITMHijackedContent.refresh_successful'))
     })
   })
   const onSubmitAll = useMemoizedFn(() => {
@@ -848,7 +850,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                   <YakitCheckbox checked={isOnlyLookResponse} onChange={onHijackResponse} />
                   <Tooltip
                     overlayClassName="plugins-tooltip"
-                    title="勾选以后会默认放行所有请求，劫持对应响应"
+                    title={t('MITMHijackedContent.when_checked_all_requests_will_be_forwar')}
                     placement="top"
                   >
                     <span className={styles['mitm-v2-switch-label']}>只看响应</span>
@@ -863,15 +865,15 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                       data={[
                         {
                           key: 'batch-submit-data',
-                          label: '批量放行',
+                          label: t('MITMHijackedContent.batch_forward'),
                         },
                         {
                           key: 'batch-discard-data',
-                          label: '批量丢弃',
+                          label: t('MITMHijackedContent.batch_drop'),
                         },
                         {
                           key: 'batch-hijacking-response',
-                          label: '批量劫持响应',
+                          label: t('MITMHijackedContent.batch_hijack_response'),
                         },
                       ]}
                       onClick={onMITMManualBatchOperate}
@@ -1024,9 +1026,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   })
 
   // #region 插件输出展示插件
-  const [pluginSearchValue, setPluginSearchValue] = useState('其他')
+  const [pluginSearchValue, setPluginSearchValue] = useState(t('MITMHijackedContent.other'))
   useEffect(() => {
-    setPluginSearchValue(showPluginStream === 'default' ? '其他' : showPluginStream)
+    setPluginSearchValue(showPluginStream === 'default' ? t('MITMHijackedContent.other') : showPluginStream)
   }, [showPluginStream])
   const hasSinglePluginUpdate = useMemoizedFn((pluginName: string) => {
     const update = updatesPlugins?.get(pluginName)
@@ -1039,7 +1041,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   })
   const pluginOptions = useMemo(() => {
     return Object.keys(pluginStreamInfo || {}).map((pluginName) => {
-      const text = pluginName === 'default' ? '其他' : pluginName
+      const text = pluginName === 'default' ? t('MITMHijackedContent.other') : pluginName
       return {
         label: (
           <Badge dot={hasSinglePluginUpdate(pluginName)} size="small">
@@ -1078,13 +1080,13 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
               value={autoForward}
               options={[
                 {
-                  label: '手动劫持',
+                  label: t('MITMHijackedContent.manual_hijack'),
                   value: 'manual',
                 },
                 {
                   label: (
                     <>
-                      <Tooltip title="条件劫持" align={{ offset: [0, 0] }}>
+                      <Tooltip title={t('MITMFiltersModal.hijack_condition')} align={{ offset: [0, 0] }}>
                         <div style={{ display: 'flex' }} onClick={() => setFiltersVisible(true)}>
                           {hijackFilterFlag ? (
                             <OutlineConfiguredIcon className={styles['configuredIcon']} />
@@ -1097,7 +1099,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                   ),
                   value: 'hijackFilter',
                 },
-                { label: '自动放行', value: 'log' },
+                { label: t('MITMHijackedContent.auto_forward'), value: 'log' },
                 {
                   label: (
                     <Badge dot={hasPluginsStreamUpdate} offset={[0, 0]}>
@@ -1149,7 +1151,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
               size="small"
               wrapperStyle={{ width: 350 }}
               groupSearchWithAll
-              placeholder={showPluginStream === 'default' ? '其他' : showPluginStream}
+              placeholder={showPluginStream === 'default' ? t('MITMHijackedContent.other') : showPluginStream}
               virtual
               listHeight={300}
               value={pluginSearchValue}

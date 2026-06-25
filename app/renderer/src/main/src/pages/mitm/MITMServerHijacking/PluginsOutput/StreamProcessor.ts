@@ -1,4 +1,5 @@
 import { DEFAULT_LOG_LIMIT } from '@/defaultConstants/HoldGRPCStream'
+import i18n from '@/i18n/i18n'
 import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
 import { HoldGRPCStreamInfo, HoldGRPCStreamProps, StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
@@ -544,7 +545,7 @@ export const useStreamProcessorManager = (manager: StreamProcessorManager) => {
   }, [manager])
 
   return {
-    streamInfos: manager.buildAllStreamInfo([{ tabName: '日志', type: 'log' }]),
+    streamInfos: manager.buildAllStreamInfo([{ tabName: i18n.t('MITMServerHijacking.log'), type: 'log' }]),
     updates: new Map(manager.getUpdates()),
     hasUpdate: manager.getAnyUpdate(),
   }

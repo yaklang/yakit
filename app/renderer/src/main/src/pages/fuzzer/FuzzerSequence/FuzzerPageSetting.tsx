@@ -77,7 +77,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
   useEffect(() => {
     getRemoteValue(RemoteGV.FuzzerSequenceSettingShow).then((data) => {
       try {
-        setActiveKey(data ? JSON.parse(data) : ['匹配器', '数据提取器', '设置变量'])
+        setActiveKey(data ? JSON.parse(data) : [t('ResponseViewer.matcher'), t('ExtractorsPanel.dataExtractor'), t('VariablePanel.setVariable')])
       } catch (error) {
         yakitFailed(t('FuzzerPageSetting.getSequenceConfigKeyFailed') + error)
       }
@@ -153,8 +153,8 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
   })
   const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
     const keyMap = {
-      matchers: '匹配器',
-      extractors: '数据提取器',
+      matchers: t('ResponseViewer.matcher'),
+      extractors: t('ExtractorsPanel.dataExtractor'),
     }
     if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
       onSwitchCollapse([...activeKey, keyMap[type]])
@@ -196,14 +196,14 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
           bordered={false}
         >
           <MatchersPanel
-            key="匹配器"
+            key={t('ResponseViewer.matcher')}
             onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
             onEdit={onEditMatchers}
             onSetValue={onSetValue}
             onApply={onApply}
           />
           <ExtractorsPanel
-            key="数据提取器"
+            key={t('ExtractorsPanel.dataExtractor')}
             onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
             onEdit={onEditExtractors}
             onSetValue={onSetValue}
@@ -211,7 +211,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
           />
           <VariablePanel
             pageId={pageId}
-            key="设置变量"
+            key={t('VariablePanel.setVariable')}
             defaultHttpResponse={defaultHttpResponse}
             onAdd={onAddExtra}
             onSetValue={onSetValue}

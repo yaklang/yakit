@@ -552,7 +552,7 @@ export const AIPluginComponent: React.FC<AIPluginComponentProps> = (props) => {
         }
 
         const data = i
-          .filter((script) => script.Tags.includes('AI工具'))
+          .filter((script) => script.Tags.includes(t('HTTPFuzzerClickEditorMenu.aiTool')))
           .map((script) => {
             return {
               key: script.ScriptName,

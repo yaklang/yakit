@@ -41,7 +41,7 @@ function usePluginTrace(params: PluginTraceParams) {
       cancelTracesIdRef.current = []
       pluginTraceRefFun().noDetailFun()
       pluginTraceRefFun().refreshAndScrollNow()
-      yakitNotify('info', '插件追踪已开始')
+      yakitNotify('info', t('PluginTrace.plugin_trace_started'))
     })
 
     ipcRenderer.on('start-mitm-plugin-trace-error', (event, err) => {
@@ -123,7 +123,7 @@ function usePluginTrace(params: PluginTraceParams) {
       setStopLoading(false)
       pluginTraceRefFun().cancelTracesToState()
       pluginTraceRefFun().refreshFlush()
-      yakitNotify('info', '插件追踪已停止')
+      yakitNotify('info', t('PluginTrace.plugin_trace_stopped'))
     })
 
     return () => {

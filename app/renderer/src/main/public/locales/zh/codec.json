@@ -35,6 +35,7 @@
   },
   "NewCodec": {
     "saveUpdateConfirm": "是否保存更新当前模板",
-    "unrecognizedData": "未识别数据"
+    "unrecognizedData": "未识别数据",
+    "other": "其他"
   }
 }

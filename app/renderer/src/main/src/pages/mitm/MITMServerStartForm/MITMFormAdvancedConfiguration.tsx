@@ -135,11 +135,11 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
           for (let index = 0; index < values.length; index++) {
             const item = values[index]
             if (!item.CrtPem) {
-              yakitFailed('客户端证书(PEM)异常')
+              yakitFailed(t('MITMFormAdvancedConfiguration.client_certificate_pem_error'))
               break
             }
             if (!item.KeyPem) {
-              yakitFailed('客户端私钥(PEM)异常')
+              yakitFailed(t('MITMFormAdvancedConfiguration.client_private_key_pem_error'))
               break
             }
             const newItem: ClientCertificate = {
@@ -154,7 +154,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
 
           setCerts(certList)
         } catch (error) {
-          yakitFailed('数据格式异常')
+          yakitFailed(t('MITMFormAdvancedConfiguration.data_format_error'))
         }
       })
     })
@@ -391,7 +391,7 @@ const MITMFormAdvancedConfiguration: React.FC<MITMFormAdvancedConfigurationProps
                   for (const port of portList) {
                     const strPort = String(port).trim()
                     if (!portRegex.test(strPort)) {
-                      throw new Error('请输入正确的端口号（1-65535）')
+                      throw new Error(t('MITMFormAdvancedConfiguration.please_enter_a_valid_port_number_165535'))
                     }
                   }
 

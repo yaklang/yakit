@@ -385,11 +385,11 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             data: [
               {
                 key: 'noResetRefresh',
-                label: '仅刷新',
+                label: t('MITMLog.refresh_only'),
               },
               {
                 key: 'resetRefresh',
-                label: '重置查询条件刷新',
+                label: t('MITMLog.reset_query_and_refresh'),
               },
             ],
             onClick: ({ key }) => {

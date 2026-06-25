@@ -1,3 +1,4 @@
+import i18n from '@/i18n/i18n'
 import { IMonacoCodeEditor, IMonacoEditor } from '../../utils/editors'
 import { EncodeTag } from './templates/SingleTag'
 import { IRange } from 'monaco-editor'
@@ -56,140 +57,140 @@ export const monacoEditorRemoveAllHighlight = (editor?: IMonacoEditor) => {
 
 export const encodeOperators: FuzzOperatorItem[] = [
   {
-    name: '全部转大写',
+    name: i18n.t('FuzzerTemplates.uppercase_all', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'upper'} help={'编码标签内容转大写'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'upper'} help={i18n.t('FuzzerTemplates.convert_tag_content_to_uppercase', { ns: 'webFuzzer' })} />
     ),
     tag: 'upper',
   },
   {
-    name: '全部转小写',
+    name: i18n.t('FuzzerTemplates.lowercase_all', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'lower'} help={'编码标签内容转小写'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'lower'} help={i18n.t('FuzzerTemplates.convert_tag_content_to_lowercase', { ns: 'webFuzzer' })} />
     ),
     tag: 'lower',
   },
   {
-    name: `解析成字符串（例如{{str(\\xA0\\x45)}}）`,
+    name: i18n.t('FuzzerTemplates.parse_as_string_eg_str_xa0_x45', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
       <EncodeTag
         {...{ origin: s, setOrigin: callback }}
         tag={'str'}
-        help={'解析成字符串（例如{{str("\xA0\x45")}}），用于转换不可见字符'}
+        help={i18n.t('FuzzerTemplates.parse_as_string_e_g_str_xa0_x45_for_co', { ns: 'webFuzzer' })}
       />
     ),
     tag: 'str',
   },
   {
-    name: 'base64编码',
+    name: i18n.t('FuzzerTemplates.base64_encode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'base64enc'} help={'Base64 编码标签内内容'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'base64enc'} help={i18n.t('FuzzerTemplates.base64_encode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'base64enc',
   },
   {
-    name: 'base64解码',
+    name: i18n.t('FuzzerTemplates.base64_decode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'base64dec'} help={'Base64 解码标签内内容'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'base64dec'} help={i18n.t('FuzzerTemplates.base64_decode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'base64dec',
   },
   {
-    name: '16进制编码',
+    name: i18n.t('FuzzerTemplates.hex_encode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'hex'} help={'把标签内容变成16进制编码'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'hex'} help={i18n.t('FuzzerTemplates.convert_tag_content_to_hex_encoding', { ns: 'webFuzzer' })} />
     ),
     tag: 'hex',
   },
   {
-    name: '16进制解码',
+    name: i18n.t('FuzzerTemplates.hex_decode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'hexdec'} help={'把标签内容按16进制解码'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'hexdec'} help={i18n.t('FuzzerTemplates.decode_tag_content_from_hex', { ns: 'webFuzzer' })} />
     ),
     tag: 'hexdec',
   },
   {
-    name: '计算SHA1',
+    name: i18n.t('FuzzerTemplates.calculate_sha1', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha1'} help={'计算标签内容的 Sha1'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha1'} help={i18n.t('FuzzerTemplates.calculate_sha1_of_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'sha1',
   },
   {
-    name: '计算SHA256',
+    name: i18n.t('FuzzerTemplates.calculate_sha256', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha256'} help={'计算标签内容的 Sha256'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha256'} help={i18n.t('FuzzerTemplates.calculate_sha256_of_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'sha256',
   },
   {
-    name: '计算SHA512',
+    name: i18n.t('FuzzerTemplates.calculate_sha512', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha512'} help={'计算标签内容的 Sha512'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'sha512'} help={i18n.t('FuzzerTemplates.calculate_sha512_of_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'sha512',
   },
   {
-    name: 'URL 编码',
+    name: i18n.t('EncodeComponent.urlEncode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'urlenc'} help={'把标签内容变成URL 编码'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'urlenc'} help={i18n.t('FuzzerTemplates.url_encode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'urlenc',
   },
   {
-    name: 'URL 解码',
+    name: i18n.t('FuzzerTemplates.url_decode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'urldec'} help={'把标签内容按URL 解码'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'urldec'} help={i18n.t('FuzzerTemplates.url_decode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'urldec',
   },
   {
-    name: "'双重URL'编码",
+    name: i18n.t('FuzzerTemplates.double_url_encode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'doubleurlenc'} help={"把标签内容变成'双重URL'编码"} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'doubleurlenc'} help={i18n.t('FuzzerTemplates.double_url_encode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'doubleurlenc',
   },
   {
-    name: "'双重URL'解码",
+    name: i18n.t('FuzzerTemplates.double_url_decode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'doubleurldec'} help={"把标签内容按'双重URL'解码"} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'doubleurldec'} help={i18n.t('FuzzerTemplates.double_url_decode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'doubleurldec',
   },
   {
-    name: 'HTML(&#xxxx;)编码',
+    name: i18n.t('FuzzerTemplates.html_xxxx_encode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'html'} help={'把标签内容变成HTML(&#xxxx;)编码'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'html'} help={i18n.t('FuzzerTemplates.html_xxxx_encode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'html',
   },
   {
-    name: 'HTML(&#xAAAA;)编码 - 16进制',
+    name: i18n.t('FuzzerTemplates.html_xaaaa_hex_encode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'htmlhex'} help={'把标签内容变成HTML(&#xAAAA;)编码'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'htmlhex'} help={i18n.t('FuzzerTemplates.html_xaaaa_encode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'htmlhex',
   },
   {
-    name: 'HTML(&#xxxx;)解码',
+    name: i18n.t('FuzzerTemplates.html_xxxx_decode', { ns: 'webFuzzer' }),
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'htmldec'} help={'把标签内容按HTML(&#xxxx;)解码'} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'htmldec'} help={i18n.t('FuzzerTemplates.html_xxxx_decode_tag_content', { ns: 'webFuzzer' })} />
     ),
     tag: 'htmldec',
   },
   {
-    name: "'ASCII'编码",
+    name: i18n.t('FuzzerTemplates.ascii_encode', { ns: 'webFuzzer' }),
     tag: 'ascii',
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'ascii'} help={"把标签内容变成'ASCII'编码"} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'ascii'} help={i18n.t('FuzzerTemplates.ascii_encode_tag_content', { ns: 'webFuzzer' })} />
     ),
   },
   {
-    name: "'ASCII'解码",
+    name: i18n.t('FuzzerTemplates.ascii_decode', { ns: 'webFuzzer' }),
     tag: 'asciidec',
     optionsRender: (s, callback) => (
-      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'asciidec'} help={"把标签内容按'ASCII'解码"} />
+      <EncodeTag {...{ origin: s, setOrigin: callback }} tag={'asciidec'} help={i18n.t('FuzzerTemplates.ascii_decode_tag_content', { ns: 'webFuzzer' })} />
     ),
   },
 ]

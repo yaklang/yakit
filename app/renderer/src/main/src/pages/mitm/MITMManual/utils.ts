@@ -1,4 +1,5 @@
 import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import i18n from '@/i18n/i18n'
 import { defaultSingleManualHijack } from '@/defaultConstants/mitmV2'
 import { yakitNotify } from '@/utils/notification'
 
@@ -39,7 +40,7 @@ export const grpcMITMSetColor: APIFunc<MITMSetColorRequest, null> = (params, hid
     })
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMSetColor 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmsetcolor_failed') + e)
         reject(e)
       })
   })
@@ -63,7 +64,7 @@ export const grpcMITMV2HijackedCurrentResponse: APIFunc<MITMV2HijackedCurrentRes
     })
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMV2HijackedCurrentResponse 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmv2hijackedcurrentresponse_failed') + e)
         reject(e)
       })
   })
@@ -81,7 +82,7 @@ export const grpcMITMV2CancelHijackedCurrentResponse: APIFunc<MITMV2CancelHijack
     })
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMV2CancelHijackedCurrentResponse 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmv2cancelhijackedcurrentresponse_failed') + e)
         reject(e)
       })
   })
@@ -97,7 +98,7 @@ export const grpcMITMV2Drop: APIFunc<MITMV2DropRequest, null> = (params, hiddenE
     grpcMITMManualHijackMessage(params)
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMV2Drop 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmv2drop_failed') + e)
         reject(e)
       })
   })
@@ -112,7 +113,7 @@ export const grpcMITMV2Forward: APIFunc<MITMV2ForwardRequest, null> = (params, h
     grpcMITMManualHijackMessage(params)
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMV2Forward 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmv2forward_failed') + e)
         reject(e)
       })
   })
@@ -127,7 +128,7 @@ export const grpcMITMV2SubmitRequestData: APIFunc<MITMV2SubmitRequestDataRequest
     grpcMITMManualHijackMessage({ ...params, SendPacket: true })
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMV2SubmitRequestData 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmv2submitrequestdata_failed') + e)
         reject(e)
       })
   })
@@ -146,7 +147,7 @@ export const grpcMITMV2SubmitResponseData: APIFunc<MITMV2SubmitRequestDataRespon
     grpcMITMManualHijackMessage({ ...params, SendPacket: true })
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMV2SubmitResponseData 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmv2submitresponsedata_failed') + e)
         reject(e)
       })
   })
@@ -162,7 +163,7 @@ export const grpcMITMV2SubmitPayloadData: APIFunc<MITMV2SubmitPayloadDataRequest
     grpcMITMManualHijackMessage({ ...params, SendPacket: true })
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMV2SubmitPayloadData 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmv2submitpayloaddata_failed') + e)
         reject(e)
       })
   })
@@ -175,7 +176,7 @@ export const grpcMITMV2RecoverManualHijack: APINoRequestFunc<null> = (hiddenErro
       .invoke('mitmV2-recover-manual-hijack')
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcMITMV2RecoverManualHijack 失败:' + e)
+        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmv2recovermanualhijack_failed') + e)
         reject(e)
       })
   })

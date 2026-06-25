@@ -1608,7 +1608,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         setCodecSingleHistoryPlugin(
           i.map((script) => {
-            const isAiPlugin: boolean = script.Tags.includes('AI工具')
+            const isAiPlugin: boolean = script.Tags.includes(t('HTTPFuzzerClickEditorMenu.aiTool'))
             return {
               key: script.ScriptName,
               label: script.ScriptName,
@@ -1639,7 +1639,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         }
         setCodecMultipleHistoryPlugin(
           i.map((script) => {
-            const isAiPlugin: boolean = script.Tags.includes('AI工具')
+            const isAiPlugin: boolean = script.Tags.includes(t('HTTPFuzzerClickEditorMenu.aiTool'))
             return {
               key: script.ScriptName,
               label: script.ScriptName,

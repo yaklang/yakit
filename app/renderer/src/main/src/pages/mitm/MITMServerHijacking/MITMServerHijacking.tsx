@@ -168,7 +168,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         initPluginNames: props.defaultPlugins || [],
         version: mitmVersion,
       }).then(() => {
-        info('启动初始 MITM 插件成功')
+        info(t('MITMServerHijacking.initial_mitm_plugin_started_successfully'))
       })
     }
   }, [props.enableInitialMITMPlugin, props.defaultPlugins])
@@ -235,7 +235,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         })
         .catch((e: any) => {
           reject(e)
-          notification['error']({ message: `停止中间人劫持失败：${e}` })
+          notification['error']({ message: t('MITMServerHijacking.stop_mitm_hijack_failed', { e }) })
           debugToPrintLogs({
             page: 'MITMServerHijacking',
             fun: 'stopFun',
@@ -332,14 +332,14 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
   })
 
   const mapProxyValue = (value: string) => {
-    if (value.includes('规则组')) {
-      return value.replace('规则组', t('MITMRuleFromModal.rule_group'))
+    if (value.includes(t('MITMRuleFromModal.rule_group'))) {
+      return value.replace(t('MITMRuleFromModal.rule_group'), t('MITMRuleFromModal.rule_group'))
     }
-    if (value.includes('已禁用')) {
-      return value.replace('已禁用', t('ProxyConfig.disabled'))
+    if (value.includes(t('ProxyConfig.disabled'))) {
+      return value.replace(t('ProxyConfig.disabled'), t('ProxyConfig.disabled'))
     }
-    if (value.includes('代理节点')) {
-      return value.replace('代理节点', t('ProxyConfig.Points'))
+    if (value.includes(t('ProxyConfig.Points'))) {
+      return value.replace(t('ProxyConfig.Points'), t('ProxyConfig.Points'))
     }
     return value
   }
@@ -415,7 +415,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                       updateDisableSystemProxy(true)
                     }}
                   >
-                    {'系统代理'}
+                    {t('MITMServerHijacking.system_proxy')}
                     {systemProxy?.CurrentProxy}
                   </YakitTag>
                 )}
@@ -543,8 +543,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 <YakitMenu
                   selectedKeys={[]}
                   data={[
-                    { key: 'rule-config', label: '规则配置' },
-                    { key: 'cert-download', label: '证书下载' },
+                    { key: 'rule-config', label: t('MITMServerHijacking.rule_configuration') },
+                    { key: 'cert-download', label: t('MITMFormAdvancedConfiguration.certificateDownload') },
                   ]}
                   onClick={({ key }) => {
                     setMorePopoverVisible(false)
@@ -737,13 +737,13 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
     <>
       <YakitModal
         visible={downStreamAgentModalVisible}
-        title="下游代理"
+        title={t('ProxyConfig.downstream_agent')}
         width={506}
         maskClosable={false}
         destroyOnClose={true}
         closable
         centered
-        okText="确认"
+        okText={t('MITMServerHijacking.confirm')}
         onCancel={onClose}
         onOk={onOKFun}
         bodyStyle={{ padding: 0 }}
@@ -759,7 +759,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
             style={{ height: '100%' }}
           >
             <Form.Item
-              label="下游代理"
+              label={t('ProxyConfig.downstream_agent')}
               name="downstreamProxy"
               getValueFromEvent={(value) => {
                 // 只保留最后一个选中的值
@@ -805,7 +805,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
                 options={proxyRouteOptions}
                 mode="tags"
                 maxTagCount={2}
-                placeholder="例如 http://127.0.0.1:7890 或者 socks5://127.0.0.1:7890"
+                placeholder={t('ProxyConfig.example_proxy_address')}
               />
             </Form.Item>
           </Form>

@@ -56,6 +56,7 @@ import { RemoteGV } from '@/yakitGV'
 import { YakitRoute } from '@/enums/yakitRoute'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { ManualHijackTypeProps } from '../MITMManual/MITMManualType'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -101,6 +102,7 @@ export interface YakFilterRemoteObj {
 }
 
 export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     status,
     noParamsCheckList,
@@ -193,14 +195,14 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     if (Number(total) === 0 && (tags.length > 0 || searchKeyword || fieldKeywords || groupNames.length > 0)) {
       return (
         <div className={style['mitm-plugin-empty']}>
-          <YakitEmpty title={null} description="搜索结果“空”" />
+          <YakitEmpty title={null} description={t('MITMPluginLocalList.search_result_is_empty')} />
         </div>
       )
     }
     if (Number(initialTotal) === 0) {
       return (
         <div className={style['mitm-plugin-empty']}>
-          <YakitEmpty description="可一键获取官方云端插件，或导入外部插件源" />
+          <YakitEmpty description={t('MITMPluginLocalList.click_to_get_official_cloud_plugins_or_i')} />
           <div className={style['mitm-plugin-buttons']}>
             <YakitButton type="outline1" icon={<CloudDownloadIcon />} onClick={() => setVisibleOnline(true)}>
               获取云端插件
@@ -367,7 +369,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     })
     ipcRenderer.on(`${taskToken}-error`, (_, e) => {
       onRefLocalPluginList()
-      yakitNotify('error', '下载失败:' + e)
+      yakitNotify('error', t('MITMPluginLocalList.download_failed') + e)
     })
     return () => {
       ipcRenderer.removeAllListeners(`${taskToken}-data`)
@@ -385,13 +387,13 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         .invoke('DownloadOnlinePlugins', addParams, taskToken)
         .then(() => {})
         .catch((e) => {
-          failed(`下载失败:${e}`)
+          failed(t('MITMPluginLocalList.download_failed_e', { e }))
         })
     }
   }, [visible])
   const StopAllPlugin = () => {
     ipcRenderer.invoke('cancel-DownloadOnlinePlugins', taskToken).catch((e) => {
-      failed(`停止下载:${e}`)
+      failed(t('MITMPluginLocalList.stop_download_failed_e', { e }))
       onRefLocalPluginList()
     })
   }
@@ -402,7 +404,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
   return (
     <YakitHint
       visible={visible}
-      title={`${getReleaseEditionName()} 云端插件下载中...`}
+      title={t('MITMPluginLocalList.cloud_plugins_downloading', { edition: getReleaseEditionName() })}
       heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={() => {
         StopAllPlugin()
@@ -418,7 +420,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         strokeColor="var(--Colors-Use-Main-Primary)"
         trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
         percent={percent}
-        format={(percent) => `已下载 ${percent}%`}
+        format={(percent) => t('MITMPluginLocalList.downloaded_percent', { percent })}
       />
     </YakitHint>
   )
@@ -459,7 +461,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
     })
     ipcRenderer.on(`${taskToken}-error`, (_, e) => {
       onRefLocalRuleList()
-      yakitNotify('error', '更新失败:' + e)
+      yakitNotify('error', t('MITMPluginLocalList.update_failed') + e)
     })
     return () => {
       ipcRenderer.removeAllListeners(`${taskToken}-data`)
@@ -473,13 +475,13 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
         .invoke('ApplySyntaxFlowRuleUpdate', taskToken)
         .then(() => {})
         .catch((e) => {
-          failed(`更新失败:${e}`)
+          failed(t('MITMPluginLocalList.update_failed_e', { e }))
         })
     }
   }, [visible])
   const StopAllRule = () => {
     ipcRenderer.invoke('cancel-streamApplySyntaxFlowRuleUpdate', taskToken).catch((e) => {
-      failed(`停止更新:${e}`)
+      failed(t('MITMPluginLocalList.stop_update_failed_e', { e }))
       onRefLocalRuleList()
     })
   }
@@ -490,7 +492,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
   return (
     <YakitHint
       visible={visible}
-      title={`${getReleaseEditionName()} 规则更新中...`}
+      title={t('MITMPluginLocalList.rules_updating', { edition: getReleaseEditionName() })}
       heardIcon={<SolidCloudDownloadIcon style={{ color: 'var(--Colors-Use-Warning-Primary)' }} />}
       onCancel={() => {
         StopAllRule()
@@ -506,7 +508,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
         strokeColor="var(--Colors-Use-Main-Primary)"
         trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
         percent={percent}
-        format={(percent) => `已更新 ${percent}%`}
+        format={(percent) => t('MITMPluginLocalList.updated_percent', { percent })}
       />
     </YakitHint>
   )
@@ -727,11 +729,11 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
           let copyAllGroup = Array.isArray(res.allGroup) ? [...res.allGroup] : []
           // 便携版 如果没有基础扫描 塞基础扫描
           if (isEnpriTraceAgent()) {
-            const index = copySetGroup.findIndex((name) => name === '基础扫描')
-            const index2 = copyAllGroup.findIndex((name) => name === '基础扫描')
+            const index = copySetGroup.findIndex((name) => name === t('MITMPluginLocalList.basic_scan'))
+            const index2 = copyAllGroup.findIndex((name) => name === t('MITMPluginLocalList.basic_scan'))
 
             if (index === -1 && index2 === -1) {
-              copyAllGroup = [...copyAllGroup, '基础扫描']
+              copyAllGroup = [...copyAllGroup, t('MITMPluginLocalList.basic_scan')]
             }
           }
           const newAllGroup = copyAllGroup.map((name) => ({
@@ -777,14 +779,14 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
         if (removeGroup.length) {
           yakitNotify(
             'success',
-            `${allChecked ? total : query.IncludedScriptNames?.length}个插件已从“${removeGroup.join(',')}”组移除`,
+            t('MITMPluginLocalList.plugins_removed_from_group', { count: allChecked ? total : query.IncludedScriptNames?.length, groups: removeGroup.join(',') }),
           )
         }
         const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
         if (addGroup.length) {
           yakitNotify(
             'success',
-            `${allChecked ? total : query.IncludedScriptNames?.length}个插件已添加至“${addGroup.join(',')}”组`,
+            t('MITMPluginLocalList.plugins_added_to_group', { count: allChecked ? total : query.IncludedScriptNames?.length, groups: addGroup.join(',') }),
           )
         }
         if (removeGroup.length || addGroup.length) {
@@ -797,11 +799,11 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
       apiFetchSaveYakScriptGroupOnline(query).then(() => {
         setAddGroupVisible(false)
         if (removeGroup.length) {
-          yakitNotify('success', `${allChecked ? total : query.uuid.length}个插件已从“${removeGroup.join(',')}”组移除`)
+          yakitNotify('success', t('MITMPluginLocalList.plugins_removed_from_group', { count: allChecked ? total : query.uuid.length, groups: removeGroup.join(',') }))
         }
         const addGroup: string[] = checkedGroup.filter((item) => !originCheckedGroup.includes(item))
         if (addGroup.length) {
-          yakitNotify('success', `${allChecked ? total : query.uuid.length}个插件已添加至“${addGroup.join(',')}”组`)
+          yakitNotify('success', t('MITMPluginLocalList.plugins_added_to_group', { count: allChecked ? total : query.uuid.length, groups: addGroup.join(',') }))
         }
         if (removeGroup.length || addGroup.length) {
           getGroupList()
@@ -942,7 +944,7 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
         .then((res) => {
           setAllTag(res.Tag.map((item) => ({ Name: item.Value, Total: item.Total })))
         })
-        .catch((e) => failed('获取插件组失败:' + e))
+        .catch((e) => failed(t('MITMPluginLocalList.get_plugin_groups_failed') + e))
         .finally(() => {})
     }
   }, [searchType])
@@ -996,11 +998,11 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
       beforeOptionWidth={92}
       addonBeforeOption={[
         {
-          label: '关键字',
+          label: t('MITMPluginLocalList.keyword'),
           value: 'FieldKeywords',
         },
         {
-          label: '全文搜索',
+          label: t('MITMPluginLocalList.fulltext_search'),
           value: 'Keyword',
         },
         {
@@ -1096,12 +1098,12 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
 
   const showExtraOptBtns = (group: string) => {
     // 线上 便携版 基础扫描不允许编辑删除操作
-    return showOptBtns && !(isOnline && isEnpriTraceAgent() && group === '基础扫描')
+    return showOptBtns && !(isOnline && isEnpriTraceAgent() && group === t('MITMPluginLocalList.basic_scan'))
   }
 
   return (
     <div className={style['plugin-group-list']}>
-      {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无数据" />}
+      {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('MITMPluginLocalList.no_data')} />}
       {pugGroup.map((item) => (
         <div
           className={classNames(style['plugin-group-item'], {

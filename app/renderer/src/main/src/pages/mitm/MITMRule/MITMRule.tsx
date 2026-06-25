@@ -62,49 +62,49 @@ const { ipcRenderer } = window.require('electron')
 
 const HitColor = {
   red: {
-    title: '红色',
+    title: t('MITMRule.red'),
     titleUi: 'YakitTable.red',
     value: 'red',
     className: 'color-bg-red',
   },
   green: {
-    title: '绿色',
+    title: t('MITMRule.green'),
     titleUi: 'YakitTable.green',
     value: 'green',
     className: 'color-bg-green',
   },
   blue: {
-    title: '蓝色',
+    title: t('MITMRule.blue'),
     titleUi: 'YakitTable.blue',
     value: 'blue',
     className: 'color-bg-blue',
   },
   yellow: {
-    title: '黄色',
+    title: t('MITMRule.yellow'),
     titleUi: 'YakitTable.yellow',
     value: 'yellow',
     className: 'color-bg-yellow',
   },
   orange: {
-    title: '橙色',
+    title: t('MITMRule.orange'),
     titleUi: 'YakitTable.orange',
     value: 'orange',
     className: 'color-bg-orange',
   },
   purple: {
-    title: '紫色',
+    title: t('MITMRule.purple'),
     titleUi: 'YakitTable.purple',
     value: 'purple',
     className: 'color-bg-purple',
   },
   cyan: {
-    title: '青色',
+    title: t('MITMRule.cyan'),
     titleUi: 'YakitTable.cyan',
     value: 'cyan',
     className: 'color-bg-cyan',
   },
   grey: {
-    title: '灰色',
+    title: t('MITMRule.gray'),
     titleUi: 'YakitTable.grey',
     value: 'grey',
     className: 'color-bg-grey',

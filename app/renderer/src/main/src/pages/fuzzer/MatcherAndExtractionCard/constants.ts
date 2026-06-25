@@ -1,4 +1,5 @@
 import { TableCellToColorTag } from '@/components/TableVirtualResize/utils'
+import i18n from '@/i18n/i18n'
 import { HTTPResponseExtractor, HTTPResponseMatcher } from './MatcherAndExtractionCardType'
 import { TFunction } from '@/i18n/useI18nNamespaces'
 
@@ -653,8 +654,8 @@ extractors:
 ## 正则捕获组说明
 
 - \`group: 0\` - 提取整个匹配的内容
-- \`group: 1\` - 提取第一个括号 \`()\` 内的内容
-- \`group: 2\` - 提取第二个括号 \`()\` 内的内容
+- \`group: 1\` - Extract first parenthesis \`()\`  content
+- \`group: 2\` - Extract second parenthesis \`()\`  content
 
 **示例**：
 \`\`\`yaml
@@ -726,8 +727,8 @@ to_upper(request_url)          // URL 转大写
 
 ### 提取引号内容
 \`\`\`regex
-"([^"]+)"             // 双引号内的内容
-'([^']+)'             // 单引号内的内容
+"([^"]+)"             // 双引号 content
+'([^']+)'             // 单引号 content
 \`\`\`
 
 ### 提取 JSON 值
