@@ -902,7 +902,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               </YakitPanel>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.concurrency_config')}
-                key={i18n.t("FuzzerTemplates.packet_config", { ns: "webFuzzer" })}
+                key={i18n.t('FuzzerTemplates.packet_config', { ns: 'webFuzzer' })}
                 extra={
                   <YakitButton
                     type="text"
@@ -1250,7 +1250,13 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <YakitButton
                       type="text"
                       onClick={(e) =>
-                        handleVariableAdd(e, 'methodGet', t('HttpQueryAdvancedConfig.get_params'), { Key: '', Value: '' }, methodGetRef)
+                        handleVariableAdd(
+                          e,
+                          'methodGet',
+                          t('HttpQueryAdvancedConfig.get_params'),
+                          { Key: '', Value: '' },
+                          methodGetRef,
+                        )
                       }
                       className={styles['btn-padding-right-0']}
                       size="small"
@@ -1285,7 +1291,13 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <YakitButton
                       type="text"
                       onClick={(e) =>
-                        handleVariableAdd(e, 'methodPost', t('HttpQueryAdvancedConfig.post_params'), { Key: '', Value: '' }, methodPostRef)
+                        handleVariableAdd(
+                          e,
+                          'methodPost',
+                          t('HttpQueryAdvancedConfig.post_params'),
+                          { Key: '', Value: '' },
+                          methodPostRef,
+                        )
                       }
                       className={styles['btn-padding-right-0']}
                       size="small"

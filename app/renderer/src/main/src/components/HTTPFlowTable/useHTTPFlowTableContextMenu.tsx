@@ -632,7 +632,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           if (keyPath.length === 2) {
             const menuName = keyPath[1]
             let menuItemName = keyPath[0]
-            if (menuName === t('HTTPFlowTable.RowContextMenu.pluginExtension') || menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin')) {
+            if (
+              menuName === t('HTTPFlowTable.RowContextMenu.pluginExtension') ||
+              menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin')
+            ) {
               // 没有插件 下载codec插件
               if (key === 'Get*plug-in' || key === 'Get*ai-plug-in') {
                 emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
@@ -648,7 +651,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
                     item.children.forEach((itemIn: HistoryMenuData) => {
                       if (itemIn.key === menuItemName) {
                         // 由于为保持key值唯一 添加了特定字符 现在移除掉
-                        if (menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin') && menuItemName.startsWith('aiplugin-')) {
+                        if (
+                          menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin') &&
+                          menuItemName.startsWith('aiplugin-')
+                        ) {
                           menuItemName = menuItemName.slice('aiplugin-'.length)
                         }
                         emiter.emit(
@@ -808,7 +814,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     if (keyPath.length === 2) {
       const menuName = keyPath[1]
       let menuItemName = keyPath[0]
-      if (menuName === t('HTTPFlowTable.RowContextMenu.pluginExtension') || menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin')) {
+      if (
+        menuName === t('HTTPFlowTable.RowContextMenu.pluginExtension') ||
+        menuName === t('HTTPFlowTable.RowContextMenu.aiPlugin')
+      ) {
         // 没有插件 下载codec插件
         if (key === 'Get*plug-in' || key === 'Get*ai-plug-in') {
           emiter.emit('onOpenFuzzerModal', JSON.stringify({ scriptName: key, isAiPlugin: 'isGetPlugin' }))
@@ -868,7 +877,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           return
         }
       }
-      const currentItemScan = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.packetScan'))
+      const currentItemScan = menuData.find(
+        (f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.packetScan'),
+      )
       const currentItemPacketScan = packetScanDefaultValue.find((f) => f.Verbose === key || f.VerboseUi === key)
       if (!currentItemScan || !currentItemPacketScan) return
 
@@ -880,7 +891,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
       return
     }
     if (keyPath.includes(t('HTTPFlowTable.RowContextMenu.tagColor'))) {
-      const currentItemColor = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.tagColor'))
+      const currentItemColor = menuData.find(
+        (f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.tagColor'),
+      )
       const colorItem = availableColors.find((e) => e.title === key)
       if (!currentItemColor || !colorItem) return
       calloutColorBatch({
@@ -918,7 +931,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         })
         break
       case 'sendAndJumpToWebFuzzer':
-        const currentItemJumpToFuzzer = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'))
+        const currentItemJumpToFuzzer = menuData.find(
+          (f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
+        )
         if (!currentItemJumpToFuzzer) return
         onBatch(
           (el) => onSendToTab(el, true, downstreamProxyStr, fromMITM),
@@ -928,7 +943,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
         break
       case 'sendToWebFuzzer':
-        const currentItemToFuzzer = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'))
+        const currentItemToFuzzer = menuData.find(
+          (f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWebFuzzer'),
+        )
         if (!currentItemToFuzzer) return
         onBatch(
           (el) => onSendToTab(el, false, downstreamProxyStr, fromMITM),
@@ -937,7 +954,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         )
         break
       case 'sendAndJumpToWS':
-        const currentItemJumpToWS = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'))
+        const currentItemJumpToWS = menuData.find(
+          (f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'),
+        )
         if (!currentItemJumpToWS) return
         onBatch(
           (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request),
@@ -947,7 +966,9 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
 
         break
       case 'sendToWS':
-        const currentItemToWS = menuData.find((f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'))
+        const currentItemToWS = menuData.find(
+          (f) => f.onClickBatch && f.key === t('HTTPFlowTable.RowContextMenu.sendToWSFuzzer'),
+        )
         if (!currentItemToWS) return
         onBatch(
           (el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request, false),

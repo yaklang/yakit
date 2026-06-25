@@ -517,7 +517,8 @@ export const grpcMITMCancelHijackedCurrentResponseById: APIFunc<number, null> = 
       .invoke(url, id, false)
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', i18n.t('MITMHacker.grpc_mitmcancelhijackedcurrentresponsebyid_failed') + e)
+        if (!hiddenError)
+          yakitNotify('error', i18n.t('MITMHacker.grpc_mitmcancelhijackedcurrentresponsebyid_failed') + e)
         reject(e)
       })
   })

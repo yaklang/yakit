@@ -49,7 +49,7 @@ const PluginHasParamsDrawer = React.lazy(() => import('../../components/pluginHa
 const { ipcRenderer } = window.require('electron')
 
 export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     hooks,
     hooksID,
@@ -243,7 +243,13 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
   }, [showPluginHistoryList])
   const historyIcon = useMemo(() => {
     return (
-      <Tooltip title={showPluginHistoryList.includes(i.ScriptName) ? t('YakScriptLoader.cancel_viewing_plugin_traffic') : t('YakScriptLoader.view_plugin_traffic')}>
+      <Tooltip
+        title={
+          showPluginHistoryList.includes(i.ScriptName)
+            ? t('YakScriptLoader.cancel_viewing_plugin_traffic')
+            : t('YakScriptLoader.view_plugin_traffic')
+        }
+      >
         <OutlileHistoryIcon
           className={classNames(style['history-icon'], {
             [style['history-icon-def']]: !showPluginHistoryList.includes(i.ScriptName),
