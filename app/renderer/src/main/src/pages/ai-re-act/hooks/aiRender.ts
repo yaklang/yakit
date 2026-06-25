@@ -1,13 +1,13 @@
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import type { AIAgentGrpcApi, AIOutputEvent, AITaskStatusType, AIOutputI18n, AIInputEvent } from './grpcApi'
 import type {
-  AIChatIPCStartParams,
   AIFileSystemPin,
   AIQuestionQueues,
   CurrentExecTaskTree,
   PlanLoadingStatus,
   UseAIMessageDataState,
 } from './type'
+import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 
 // #region AI-Agent 非会话列表外的渲染数据
 /** 插件执行中的文件操作记录 */
@@ -375,7 +375,7 @@ export interface AIChatQSDataBase<T extends string, U> {
   /** 节点信息所属的任务节点索引 */
   taskIndex?: AIOutputEvent['TaskIndex']
   /** 前端专属数据，供前端逻辑和UI处理使用 */
-  extraValue?: AIChatIPCStartParams['extraValue']
+  extraValue?: CustomPluginExecuteFormValue | Record<string, CustomPluginExecuteFormValue[]>
   /** 参考资料 */
   reference?: ChatReferenceMaterialPayload
   /** 父集合组的key(如果被收集到集合组中, 则存在该字段) */
@@ -514,8 +514,11 @@ export interface ChatStoreState {
   }
   // #endregion
 
+  /** UI上的头部的card横向滚动列表数据 */
   card: AIAgentGrpcApi.AIInfoCard[]
+  /** 工具卡片相关的文件数据 */
   execFileRecord: Map<string, AIYakExecFileRecord[]>
+  /** 文件操作列表 */
   yakExecResultLogs: StreamResult.Log[]
 
   /** 切换session时的loading状态 */
