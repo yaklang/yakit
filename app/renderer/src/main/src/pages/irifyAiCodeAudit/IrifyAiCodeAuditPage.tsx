@@ -2,10 +2,9 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import emiter from '@/utils/eventBus/eventBus'
 import { AuditCodePageInfoProps } from '@/store/pageInfo'
-import { irifyAiCodeAuditPageAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { IrifyAiCodeAuditStyle, resolveIrifyFocusModeLoop, isIrifyAuditStyleConfirmed } from './irifyAiCodeAuditStyle'
 import { HistoryAIReActChatProvider } from '@/components/historyAIReActChat'
-import { AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIInputEvent, AISourceEnum } from '@/pages/ai-re-act/hooks/grpcApi'
 import { IrifyAiCodeAuditSidePanelLayout } from './IrifyAiCodeAuditSidePanelLayout'
 import {
   appendIrifyWorkbenchAttachments,
@@ -133,7 +132,7 @@ const IrifyAiCodeAuditPageInner: React.FC<IrifyAiCodeAuditPageProps> = ({ auditC
 
   return (
     <HistoryAIReActChatProvider
-      cacheDataStore={irifyAiCodeAuditPageAiStore}
+      source={AISourceEnum.irify}
       focusModeLoop={resolveIrifyFocusModeLoop(auditStyle)}
       transformInputEvent={transformInputEvent}
     >

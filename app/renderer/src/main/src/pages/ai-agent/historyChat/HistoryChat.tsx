@@ -91,7 +91,7 @@ interface HistoryChatProps {
 }
 
 const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
-  const { setActiveChat, fetchAISource, onClose } = useAIAgentDispatcher()
+  const { setActiveChat, onClose, getSetting } = useAIAgentDispatcher()
   const { t } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const [historySourceFilter, setHistorySourceFilter] = useState<HistorySourceFilter>('local')
   const enableHistorySourceFilter = useMemo(() => aiSource.includes('im'), [aiSource])
@@ -132,7 +132,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
 
     setClearLoading(true)
     try {
-      const source = fetchAISource()
+      const source = getSetting().Source
       const filter = isGlobalAIAgentHistory ? { DeleteAll: true } : { Filter: { Source: historyQuerySources } }
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: filter,
@@ -180,7 +180,7 @@ const HistoryChat = memo(({ aiSource, embedded }: HistoryChatProps) => {
               Source: historyQuerySources,
             }
       const sessionIds = sessions.map((item) => item.SessionID)
-      const source = fetchAISource()
+      const source = getSetting().Source
       await handAIHistoryChatRemove({
         grpcDeleteAISessionParams: { Filter: filter },
         handleClearAIImageParams: { chatDataStoreKey: getImageStoreKeyByAISource(source), sessionID: sessionIds },

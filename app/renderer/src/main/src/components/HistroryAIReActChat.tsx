@@ -22,6 +22,7 @@ import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { getRemoteValue } from '@/utils/kv'
 import { AIModelForm } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
 import useListenWidth from '@/pages/pluginHub/hooks/useListenWidth'
+import { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
 
 interface HistoryAIReActChatProps {
   refRef: React.RefObject<HTMLDivElement>
@@ -37,6 +38,8 @@ interface HistoryAIReActChatProps {
   mergeRemoteAIAgentSetting?: (cache: AIAgentSetting, prev: AIAgentSetting) => AIAgentSetting
   onChatReady?: () => void
   externalParameters: NonNullable<AIReActChatProps['externalParameters']>
+
+  source: AISource
 }
 
 const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
@@ -54,6 +57,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
     mergeRemoteAIAgentSetting,
     onChatReady,
     externalParameters,
+    source,
   } = props
 
   const [_, setGlobalNetworkConfig] = useSafeState<GlobalNetworkConfig>(defaultParams)
@@ -109,6 +113,7 @@ const HistroryAIReActChat: FC<HistoryAIReActChatProps> = (props) => {
               return {
                 ...next,
                 ReviewPolicy: prev.ReviewPolicy,
+                Source: source,
               }
             })
           } catch (error) {}
