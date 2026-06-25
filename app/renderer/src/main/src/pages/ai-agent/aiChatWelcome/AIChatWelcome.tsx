@@ -48,22 +48,6 @@ import { reseultKnowledgePlugin, useCheckKnowledgePlugin } from '@/pages/Knowled
 import useGetAIMaterialsData, { getAIRecommendIconByType } from '@/pages/ai-re-act/hooks/useGetAIMaterialsData'
 import { AIMentionCommandParams } from '../components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
 
-// const sideberRadioOptions = [
-//     {
-//         value: "fileTree",
-//         label: "文件树"
-//     },
-//     {
-//         value: "knoledge",
-//         label: "知识库"
-//     }
-// ]
-
-// const getRandomItems = (array, count = 3) => {
-//   const shuffled = [...array].sort(() => 0.5 - Math.random())
-//   return shuffled.slice(0, count)
-// }
-
 const randomAIMaterialsDataIsEmpty = (randObj) => {
   try {
     return (
@@ -83,7 +67,7 @@ enum AIChatWelcomeTabKeyEnum {
 const AIChatWelcome: React.FC<AIChatWelcomeProps> = React.memo(
   forwardRef((props, ref) => {
     const { t, i18n } = useI18nNamespaces(['aiAgent'])
-    const { onTriageSubmit, onSetReAct, streams, api } = props
+    const { onTriageSubmit, streams, api } = props
 
     const aiChatTextareaRef = useRef<AIChatTextareaRefProps>({
       setMention: () => {},
