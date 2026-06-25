@@ -5,7 +5,6 @@ import { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { useMemoizedFn } from 'ahooks'
 
 import useCurrentSessionId from './useCurrentSessionId'
-import { AISource } from './grpcApi'
 const { ipcRenderer } = window.require('electron')
 
 export function useChatIPC() {
@@ -18,7 +17,6 @@ export function useChatIPC() {
 
   // 这里一定要使用useCallback，通过依赖的sessionId变化，将上一个sessionId的on监听事件进行闭包
   // 多个sessionId就会生成多个自己的监听闭包，从而实现多会话的独立监听
-  // TODO - 需要AISource
   const onStart = useCallback(
     (args: AIChatIPCStartParams, onSuccess?: (sessionId: string) => void) => {
       // 监听网络，直接丢给大脑处理
