@@ -109,6 +109,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         onClose && onClose()
         onSuccee && onSuccee()
         uploadProjectEvent.startUpload({
+          isAutoUploadProject: true,
           isUploadSyncData: true,
           isUpdateGlobalConfig: enterpriseLogin,
         })
@@ -176,6 +177,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         }
 
         uploadProjectEvent.startUpload({
+          isAutoUploadProject: true,
           isUpdateGlobalConfig: enterpriseLogin,
         })
       })
