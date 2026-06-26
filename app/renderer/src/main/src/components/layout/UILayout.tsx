@@ -75,14 +75,7 @@ import { grpcFetchLatestYakVersion, grpcFetchYakInstallResult } from '@/apiUtils
 import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { handleFetchArchitecture, handleFetchIsDev, SystemInfo } from '@/constants/hardware'
-import {
-  apiSplitUpload,
-  ExportProjectRequest,
-  grpcExportProject,
-  grpcGetProjects,
-  SplitUploadRequest,
-  useUploadInfoByEnpriTrace,
-} from './utils'
+import { apiSplitUpload, ExportProjectRequest, grpcExportProject, grpcGetProjects, SplitUploadRequest } from './utils'
 import moment from 'moment'
 import { debugToPrintLog } from '@/utils/logCollection'
 import { usePageInfo } from '@/store/pageInfo'
@@ -270,13 +263,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // #region 企业版登录成功后根据配置信息看是否需要自动上传项目
   const projectListRef = useRef<ProjectDescription[]>([])
-  const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
   useEffect(() => {
-    // 登录根据配置参数判断是否自动上传项目
-    uploadProjectEvent.startUpload({
-      isAutoUploadProject: true,
-    })
-
     // 登录获取服务端AI配置
     if (userInfo.isLogin && isEnpriTrace()) {
       aiGlobalConfigEvent.getAIGlobalConfigAfterLogin()
