@@ -1996,7 +1996,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           if (!serverPushEnterProject) return
           setEnterProjectLoading(true)
           yakitProject
-            .setCurrentProject({ Id: serverPushEnterProject.id, Type: serverPushEnterProject.type })
+            .setCurrentProject({ Id: +serverPushEnterProject.id, Type: serverPushEnterProject.type })
             .then(() => {
               info(t('ProjectManage.switchDatabaseSuccess'))
               setServerPushEnterProject(null)
