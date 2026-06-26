@@ -42,6 +42,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { debugToPrintLogs } from '@/utils/logCollection'
 import { HoldGRPCStreamInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 import { ManualHijackTypeProps } from './MITMManual/MITMManualType'
+import { cloneDeep } from 'lodash'
 const PluginHasParamsDrawer = React.lazy(() => import('../../components/pluginHasParamsDrawer/PluginHasParamsDrawer'))
 
 const { ipcRenderer } = window.require('electron')
@@ -100,7 +101,7 @@ export const MITMYakScriptLoader = React.memo((p: MITMYakScriptLoaderProps) => {
         [ele.Field]: value,
       }
     })
-    mitmParamsDefaultFormValueRef.current = { ...initFormValue }
+    mitmParamsDefaultFormValueRef.current = cloneDeep(initFormValue)
     getRemoteValue('mitm_has_params_' + i.ScriptName).then((res) => {
       if (res) {
         try {

@@ -46,6 +46,7 @@ export interface ExecuteEnterNodeByPluginParamsProps extends JsonFormSchemaListW
   pluginType?: string
   isExecuting: boolean
   isInline?: boolean
+  refreshValue?: number
 }
 
 export interface OutputFormComponentsByTypeProps extends JsonFormSchemaListWrapper {
@@ -57,6 +58,7 @@ export interface OutputFormComponentsByTypeProps extends JsonFormSchemaListWrapp
   /** 插件类型 */
   pluginType?: string
   isInline?: boolean
+  refreshValue?: number
 }
 
 export interface FormExtraSettingProps {
@@ -85,6 +87,7 @@ export interface FormContentItemByTypeProps extends JsonFormSchemaListWrapper {
   pluginType?: string
   disabled?: boolean
   isInline?: boolean
+  refreshValue?: number
 }
 
 export interface PluginFixFormParamsProps {

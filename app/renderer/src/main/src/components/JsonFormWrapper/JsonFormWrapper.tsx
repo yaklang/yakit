@@ -6,7 +6,7 @@ import { RJSFSchema, UiSchema, WidgetProps } from '@rjsf/utils'
 import { YakitSelect } from '../yakitUI/YakitSelect/YakitSelect'
 import { YakitInput } from '../yakitUI/YakitInput/YakitInput'
 import { YakitDragger } from '../yakitUI/YakitForm/YakitForm'
-import { useGetState, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { YakitInputNumber } from '../yakitUI/YakitInputNumber/YakitInputNumber'
 import { Checkbox } from 'antd'
 import { YakitCheckbox } from '../yakitUI/YakitCheckbox/YakitCheckbox'
@@ -18,6 +18,7 @@ import ObjectFieldTemplate from './templates/ObjectFieldTemplate'
 import { ColumnSchemaProps, EditTable, UiSchemaTableProps } from './editTable/EditTable'
 import { cloneDeep } from 'lodash'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 
 const JSON_SCHEMA_ROW_FORM_CLASS = 'json-schema-row-form'
 
@@ -74,6 +75,7 @@ export interface JsonFormValidateProps {
   error?: any[]
   key: string
   value: string
+  label: string
 }
 
 export interface JsonFormSchemaListWrapper {
@@ -93,6 +95,7 @@ export interface JsonFormWrapperProps {
   }>
   field: string
   value?: string
+  refreshValue?: number
   onChange?: (v: string) => void
   schema: RJSFSchema
   uiSchema: UiSchema
@@ -102,10 +105,10 @@ export interface JsonFormWrapperProps {
 
 /** 创建一个包装组件来处理 JsonForm */
 export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props) => {
-  const { jsonSchemaListRef, field, value, schema, uiSchema: PropsUiSchema, disabled, isInline } = props
+  const { jsonSchemaListRef, field, value, refreshValue, schema, uiSchema: PropsUiSchema, disabled, isInline } = props
   const { t } = useI18nNamespaces(['yakitUi'])
-
-  const [formData, setFormData, getFormData] = useGetState<any>(value || {})
+  const labelRef = useRef<string>('')
+  const [formData, setFormData, getFormData] = useGetSetState<any>(value || {})
   const jsonSchemaRef = useRef<any>()
   // 用于强制刷新
   const [formKey, setFormKey] = useState(0)
@@ -127,7 +130,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
   }, [])
 
   // 调用校验是否错误
-  const validate = () => {
+  const validate = useMemoizedFn(() => {
     try {
       const result = jsonSchemaRef.current?.validate(getFormData())
       return {
@@ -135,6 +138,7 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         error: result?.errors,
         key: field,
         value: getFormData(),
+        label: labelRef.current,
       } as JsonFormValidateProps
     } catch (error) {
       // console.error("JsonForm validation error:", error)
@@ -142,14 +146,16 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
         pass: false,
         key: field,
         value: getFormData(),
+        label: labelRef.current,
       } as JsonFormValidateProps
     }
-  }
+  })
 
   useUpdateEffect(() => {
     // 当外部 value 变化时更新内部状态
-    value && setFormData(value)
-  }, [value])
+    setFormData(value)
+    setFormKey((prev) => prev + 1)
+  }, [value, refreshValue])
 
   // const UploadFolderPath = useMemoizedFn((props: FieldProps) => {
   //     const {formData, disabled, onChange} = props
@@ -470,7 +476,8 @@ export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props
   })
 
   const getTableWidget = useMemoizedFn((props: WidgetProps) => {
-    const { value, onChange, options, uiSchema } = props
+    const { value, onChange, options, uiSchema, label } = props
+    labelRef.current = label
     return (
       <EditTable
         columnSchema={props.schema as ColumnSchemaProps}
