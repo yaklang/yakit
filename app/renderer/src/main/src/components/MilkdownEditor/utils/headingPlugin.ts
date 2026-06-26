@@ -1,6 +1,5 @@
 import { $command } from '@milkdown/utils'
 import { convertSelectionByNode } from './utils'
-import { headingSchema } from '@milkdown/kit/preset/commonmark'
 import { $prose } from '@milkdown/kit/utils'
 import { Plugin, PluginKey } from '@milkdown/kit/prose/state'
 import type { EditorView } from '@milkdown/prose/view'
@@ -11,7 +10,11 @@ export const listToHeadingCommand = $command(
   (ctx) =>
     (level: number = 0) =>
     (state, dispatch) => {
-      const command = convertSelectionByNode(headingSchema.type(ctx), { level })
+      const headingNodeType = state.schema.nodes.heading
+      if (!headingNodeType) {
+        return false
+      }
+      const command = convertSelectionByNode(headingNodeType, { level })
       return command(state, dispatch)
     },
 )
@@ -49,9 +52,11 @@ export const customSyncHeadingIdPlugin = $prose((ctx) => {
     const tr = view.state.tr.setMeta('addToHistory', false)
 
     let found = false
-    if (headingSchema) {
+
+    const headingNodeType = view.state.schema.nodes.heading
+    if (headingNodeType) {
       view.state.doc.descendants((node, pos) => {
-        if (node.type === headingSchema.type(ctx)) {
+        if (node.type === headingNodeType) {
           if (node.textContent.trim().length === 0) return
 
           const attrs = node.attrs
