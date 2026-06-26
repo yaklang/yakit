@@ -768,7 +768,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
   const { t } = useI18nNamespaces(['aiAgent'])
   const { reviewInfo, planReviewTreeKeywordsMap, footerExtra } = props
   const { reviewExpand } = useChatIPCStore()
-  const { handleSendTask } = useChatIPCDispatcher()
+  const { handleSendTask, handleSendSyncMessage } = useChatIPCDispatcher()
   const [expand, setReviewExpand] = useState<boolean>(true)
   useEffect(() => {
     setReviewExpand(reviewExpand)
@@ -801,6 +801,7 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
           <AIReActChatReview
             info={reviewInfo}
             onSendAI={handleSendTask}
+            onSendSyncMessage={handleSendSyncMessage}
             planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
             renderFooterExtra={renderFooter}
             expand={expand}

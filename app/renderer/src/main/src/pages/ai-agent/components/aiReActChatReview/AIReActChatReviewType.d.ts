@@ -1,6 +1,7 @@
 import { AIChatIPCSendParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import { AIChatQSData } from '../../../ai-re-act/hooks/aiRender'
 import { AIAgentGrpcApi } from '../../../ai-re-act/hooks/grpcApi'
+import { ChatIPCContextDispatcher } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 
 export interface AIReActChatReviewProps {
   info: AIChatQSData
@@ -10,6 +11,7 @@ export interface AIReActChatReviewProps {
   renderFooterExtra?: (node: React.ReactNode) => React.ReactNode
   expand: boolean
   className?: string
+  onSendSyncMessage?: ChatIPCContextDispatcher['handleSendSyncMessage']
 }
 
 export interface ForgeReviewFormRefProps {

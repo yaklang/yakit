@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react'
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { AITaskContentProps } from './type'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { AIAgentTriggerEventInfo, AITabsEnumType } from '@/pages/ai-agent/aiAgentType'
@@ -10,15 +10,21 @@ import { OutlineXIcon } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import classNames from 'classnames'
 import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
-import { AIReActTaskChatContent } from '../aiReActTaskChat/AIReActTaskChat'
+import { AIReActTaskChatContent, AIRenderTaskFooterExtra } from '../aiReActTaskChat/AIReActTaskChat'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
+import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
+import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
   const { tabBarExtraContent, emptyNode } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
-  const { taskChat } = useChatIPCStore().chatIPCData
+  const {
+    chatIPCData: { taskChat },
+    reviewInfo,
+    planReviewTreeKeywordsMap,
+  } = useChatIPCStore()
   const [tabs, setTabs, getTabs] = useGetSetState<YakitSideTabProps['yakitTabs']>([])
   const [activeKey, setActiveKey] = useState<string>('taskContent')
 
@@ -119,6 +125,16 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
         return <AITaskExecutionDetails taskId={activeKey} taskGoal={goal} taskName={taskItem?.label as string} />
     }
   }, [activeKey, tabs])
+
+  const detachedPlanReviewInfo = useMemo(() => {
+    if (reviewInfo?.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
+      return reviewInfo
+    }
+    return null
+  }, [reviewInfo])
+
+  const onExtraAction = useMemoizedFn(() => {})
+
   return (
     <div className={styles['chat-content-wrapper']}>
       {!!taskChat?.elements?.length || !!tabs.length ? (
@@ -138,6 +154,29 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
         </YakitSideTab>
       ) : (
         emptyNode
+      )}
+
+      {detachedPlanReviewInfo && (
+        <AIReActTaskChatReview
+          reviewInfo={detachedPlanReviewInfo}
+          setScrollToBottom={() => {}}
+          planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
+          footerExtra={(node) => (
+            <AIRenderTaskFooterExtra
+              onExtraAction={onExtraAction}
+              btnProps={{ size: 'middle' }}
+              subTaskBtnProps={{
+                size: 'middle',
+                type: 'outline2',
+                className: '',
+                colors: 'primary',
+                radius: '4px',
+              }}
+            >
+              {node}
+            </AIRenderTaskFooterExtra>
+          )}
+        />
       )}
     </div>
   )

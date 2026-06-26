@@ -691,7 +691,7 @@ const AIPlanPrompt: React.FC<AIPlanPromptProps> = React.memo(
     )
   }),
 )
-const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.memo((props) => {
+export const AIRenderTaskFooterExtra: React.FC<AIRenderTaskFooterExtraProps> = React.memo((props) => {
   const { onExtraAction, btnProps, children } = props
   const { t } = useI18nNamespaces(['aiAgent'])
   const { chatIPCEvents } = useChatIPCDispatcher()
