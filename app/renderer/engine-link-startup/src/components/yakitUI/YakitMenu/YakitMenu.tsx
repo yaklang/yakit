@@ -1,7 +1,7 @@
 import React, { ReactNode, useMemo } from 'react'
 import { useMemoizedFn } from 'ahooks'
 import { Menu, MenuProps, Tooltip } from 'antd'
-import { ItemType } from 'antd/lib/menu/hooks/useItems'
+import { ItemType } from 'antd/es/menu/interface'
 import { MenuDividerType } from 'rc-menu/lib/interface'
 
 import classNames from 'classnames'
@@ -188,7 +188,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
       <Menu
         {...restMenu}
         className={classNames(styles['yakit-menu-wrapper'], className || '')}
-        // items={data && data.length > 0 ? items : restMenu.items}
+        items={data && data.length > 0 ? items : restMenu.items}
       />
     </div>
   )

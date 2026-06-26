@@ -144,6 +144,7 @@
   :global {
     .ant-dropdown-menu {
       padding: 4px;
+      box-shadow: 0px 2px 4px var(--Colors-Use-Basic-Shadow);
     }
     .ant-popover-inner-content {
       border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
@@ -154,12 +155,20 @@
         box-shadow: none;
       }
     }
+
+    .ant-menu-light.ant-menu-root.ant-menu-inline,
+    .ant-menu-light > .ant-menu.ant-menu-root.ant-menu-inline,
+    .ant-menu-light.ant-menu-root.ant-menu-vertical,
+    .ant-menu-light > .ant-menu.ant-menu-root.ant-menu-vertical {
+      border-inline-end: none;
+    }
   }
 }
 
 @mixin generateMenuStyle($kind: '') {
   .ant-#{$kind}menu-item.ant-#{$kind}menu-item-only-child {
     height: 100%;
+    width: 100%;
     padding: 0;
     margin: 0;
     border-radius: 4px;
@@ -193,8 +202,8 @@
   }
   .ant-#{$kind}menu-item.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child,
   .ant-#{$kind}menu-item.ant-#{$kind}menu-item-selected.ant-#{$kind}menu-item-active.ant-#{$kind}menu-item-only-child {
-    color: var(--menu-active-color);
-    background-color: var(--menu-active-background);
+    color: var(--menu-active-color) !important;
+    background-color: var(--menu-active-background) !important;
     span.anticon {
       color: var(--menu-active-color);
     }
@@ -256,6 +265,7 @@
     .ant-#{$kind}menu-submenu-title {
       color: var(--menu-color);
       height: 100%;
+      width: 100%;
       padding: 0;
       margin: 0;
     }
@@ -378,6 +388,8 @@
       &.ant-menu-sub.ant-menu-vertical {
         min-width: 128px;
         background: var(--Colors-Use-Basic-Background);
+        margin: 0 4px;
+        padding: 4px;
       }
     }
 

@@ -43,6 +43,8 @@ export interface YakitMenuProp extends MenuProps {
   size?: 'default' | 'rightMenu'
   /** 点击一级菜单触发 onClick */
   parentTitleClick?: boolean
+  menuWrapperClassName?: string
+  menuItemTitleClassName?: string
 }
 
 export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
@@ -56,6 +58,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     size = 'default',
     parentTitleClick = false,
     onClick,
+    menuWrapperClassName,
+    menuItemTitleClassName,
     ...restMenu
   } = props
 
@@ -97,12 +101,24 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                 {info.itemIcon}
                 {isHint && !!hintTitle ? (
                   <Tooltip zIndex={9999} title={hintTitle} placement="leftBottom">
-                    <div className={classNames(styles['yakit-menu-item-title'], 'yakit-single-line-ellipsis')}>
+                    <div
+                      className={classNames(
+                        styles['yakit-menu-item-title'],
+                        'yakit-single-line-ellipsis',
+                        menuItemTitleClassName,
+                      )}
+                    >
                       {info.label}
                     </div>
                   </Tooltip>
                 ) : (
-                  <div className={classNames(styles['yakit-menu-item-title'], 'yakit-single-line-ellipsis')}>
+                  <div
+                    className={classNames(
+                      styles['yakit-menu-item-title'],
+                      'yakit-single-line-ellipsis',
+                      menuItemTitleClassName,
+                    )}
+                  >
                     {info.label}
                   </div>
                 )}
@@ -141,12 +157,24 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
                 {info.itemIcon}
                 {isHint && !!hintTitle ? (
                   <Tooltip zIndex={9999} title={hintTitle} placement="leftBottom">
-                    <div className={classNames(styles['yakit-menu-item-title'], 'yakit-single-line-ellipsis')}>
+                    <div
+                      className={classNames(
+                        styles['yakit-menu-item-title'],
+                        'yakit-single-line-ellipsis',
+                        menuItemTitleClassName,
+                      )}
+                    >
                       {info.label}
                     </div>
                   </Tooltip>
                 ) : (
-                  <div className={classNames(styles['yakit-menu-item-title'], 'yakit-single-line-ellipsis')}>
+                  <div
+                    className={classNames(
+                      styles['yakit-menu-item-title'],
+                      'yakit-single-line-ellipsis',
+                      menuItemTitleClassName,
+                    )}
+                  >
                     {info.label}
                   </div>
                 )}
@@ -165,12 +193,12 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
   if (data.length > 0) for (let item of data) items.push(generateMenuInfo(item))
 
   return (
-    <div className={classNames(styles['yakit-menu-div-wrapper'], menuTypeClass, menuSizeClass)}>
+    <div className={classNames(styles['yakit-menu-div-wrapper'], menuTypeClass, menuSizeClass, menuWrapperClassName)}>
       <Menu
         {...restMenu}
         onClick={onClick}
         className={classNames(styles['yakit-menu-wrapper'], className || '')}
-        // items={data && data.length > 0 ? items : restMenu.items}
+        items={data && data.length > 0 ? items : restMenu.items}
       />
     </div>
   )

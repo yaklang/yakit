@@ -277,26 +277,6 @@ export const WebShellURLTreeAndTable: React.FC<WebShellURLTreeAndTableProp> = (p
     if (rowData) {
       setSelected(rowData)
     }
-    // showByCustom已废弃，删除，更换为 showByRightContext
-    // showByCustom(
-    //     {
-    //         reactNode: (
-    //             <div className={mitmStyles["context-menu-custom"]}>
-    //                 <YakitMenu
-    //                     data={fileMenuData as YakitMenuItemProps[]}
-    //                     width={150}
-    //                     onClick={({key}) => {
-    //                         fileMenuSelect(key)
-    //                     }}
-    //                 />
-    //             </div>
-    //         ),
-    //         height: 266,
-    //         width: 158
-    //     },
-    //     event.clientX,
-    //     event.clientY
-    // )
     showByRightContext(
       {
         width: 158,
