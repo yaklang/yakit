@@ -89,7 +89,7 @@
     background: var(--Colors-Use-Neutral-Bg-Hover);
   }
 
-  &:hover &-hover-footer {
+  &:hover > &-hover-footer {
     opacity: 1;
     pointer-events: auto;
   }

@@ -140,9 +140,10 @@
       align-items: center;
       border-radius: 4px;
       position: absolute;
-      bottom: 8px;
+      top: 8px;
       right: 8px;
       color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      background-color: var(--Colors-Use-Neutral-Bg);
     }
     .copy-icon {
       margin: 0;
