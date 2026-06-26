@@ -13,6 +13,7 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
       TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
       CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
       CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
     outputs:
@@ -125,6 +126,7 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
       TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
       CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
       CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
