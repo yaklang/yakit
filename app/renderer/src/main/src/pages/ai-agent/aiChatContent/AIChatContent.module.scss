@@ -221,6 +221,7 @@
 
 .echarts-details-popover {
   :global {
+    transform-origin: 50% 0px !important;
     .ant-popover-arrow {
       display: none;
     }
