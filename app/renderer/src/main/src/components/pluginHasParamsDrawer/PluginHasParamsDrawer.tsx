@@ -205,8 +205,8 @@ const PluginHasParamsForm = React.forwardRef((props: PluginHasParamsFormProps, r
   const jsonSchemaListRef = useRef<{
     [key: string]: any
   }>({})
-  const [resetCounter, setResetCounter] = useState(0)
   const [currentJsonSchemaInitial, setCurrentJsonSchemaInitial] = useState(initFormValue)
+  const [refreshValue, setRefreshValue] = useState<number>(0)
 
   useImperativeHandle(
     ref,
@@ -216,7 +216,7 @@ const PluginHasParamsForm = React.forwardRef((props: PluginHasParamsFormProps, r
         if (defaultFormValue) {
           form.setFieldsValue(defaultFormValue)
           setCurrentJsonSchemaInitial(defaultFormValue)
-          setResetCounter((prev) => prev + 1)
+          setRefreshValue((prev) => prev + 1)
         }
       },
     }),
@@ -233,14 +233,28 @@ const PluginHasParamsForm = React.forwardRef((props: PluginHasParamsFormProps, r
           setTimeout(() => {
             const result = getJsonSchemaListResult(jsonSchemaListRef.current)
             if (result.jsonSchemaError.length > 0) {
-              failed(t('PluginHasParamsDrawer.jsonSchemaValidateFailed'))
+              const errorMessages = result.jsonSchemaError
+                .filter((item) => item.error && Array.isArray(item.error))
+                .flatMap((item) =>
+                  // @ts-ignore
+                  item.error.map((err) => ({
+                    label: item.label || '未命名配置',
+                    message: err.message || '未知错误',
+                  })),
+                )
+              const userPrompt = errorMessages.map(({ label, message }) => `${label}：${message}`).join('\n')
+              if (userPrompt.length) {
+                failed(userPrompt)
+              } else {
+                failed(t('PluginHasParamsDrawer.jsonSchemaValidateFailed'))
+              }
               return
             }
             result.jsonSchemaSuccess.forEach((item) => {
               values[item.key] = JSON.stringify(item.value)
             })
             resolve(values)
-          }, 300)
+          }, 500)
         })
         .catch(() => {
           resolve(undefined)
@@ -256,12 +270,12 @@ const PluginHasParamsForm = React.forwardRef((props: PluginHasParamsFormProps, r
       initialValues={initFormValue}
     >
       <ExecuteEnterNodeByPluginParams
-        key={resetCounter}
         paramsList={requiredParams}
         pluginType={pluginType}
         isExecuting={false}
         jsonSchemaListRef={jsonSchemaListRef}
         jsonSchemaInitial={currentJsonSchemaInitial}
+        refreshValue={refreshValue}
       />
       <ExtraParamsNodeByType extraParamsGroup={groupParams} pluginType={pluginType} />
     </Form>
