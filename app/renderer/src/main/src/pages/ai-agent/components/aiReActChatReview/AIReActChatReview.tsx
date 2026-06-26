@@ -290,7 +290,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       if (rootTask) {
         syncPayload.plans = {
           ...detachedReview.plans,
-          root_task: rootTask as AIAgentGrpcApi.DetachedPlanRootTask,
+          root_task: rootTask as AIAgentGrpcApi.PlanTask,
         }
       }
     }

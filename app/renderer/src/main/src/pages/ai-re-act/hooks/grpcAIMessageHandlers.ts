@@ -1,5 +1,5 @@
 import type { AIMessageHandler, AIMessageHandlerParams, UpdateRenderDataParams } from './type'
-import type { AIAgentGrpcApi } from './grpcApi'
+import type { AIAgentGrpcApi, AIInputEvent } from './grpcApi'
 import type {
   AIChatQSData,
   AIChatQSDataType,
@@ -1616,18 +1616,26 @@ let reviewReleaseID: Record<string, AIAgentGrpcApi.ReviewRelease> = {}
 /** 记录plan_review补充信息的唯一ID */
 let currentPlanReviewId = ''
 
-/** 将 review 数据注入聊天流 UI（不走 onReview 弹层） */
-const handleTriggerReviewInChat = (
-  request: Pick<AIMessageHandlerParams, 'setContentMap' | 'setElements' | 'getContentMap' | 'res'>,
-  chatData: AIChatQSData,
-) => {
-  const cloned = cloneDeep(chatData)
-  request.setContentMap(cloned.id, cloned)
-  handleUpdateUISingleState(request.setElements, request.getContentMap, request.res.IsSync, {
-    mapKey: cloned.id,
-    type: cloned.type,
-    chatType: cloned.chatType,
-  })
+/** 自动提交 review continue 给后端，并清理本地缓存数据 */
+const handleAutoSubmitReviewContinue = (request: AIMessageHandlerParams, chatData: AIChatQSData) => {
+  const { review, getChatDataStore, setElements, info } = request
+  const reviewData = chatData.data as AIReviewType & { selectors?: AIAgentGrpcApi.ReviewSelector[] }
+  const continueSelector = reviewData?.selectors?.find((item) => item.value === 'continue')
+  const suggestion = continueSelector?.value || 'continue'
+  const input: AIInputEvent = {
+    IsInteractiveMessage: true,
+    InteractiveId: chatData.id,
+    InteractiveJSONInput: JSON.stringify({ suggestion }),
+  }
+
+  review?.sendRequest?.(input)
+  review?.handleSetReview?.(undefined)
+
+  const contents =
+    info.chatType === 'task' ? getChatDataStore?.()?.taskChat?.contents : getChatDataStore?.()?.casualChat?.contents
+  contents?.delete(chatData.id)
+
+  setElements((old) => old.filter((item) => !(item.token === chatData.id && item.type === chatData.type)))
 }
 
 /** Type='plan_review_require' plan-review */
@@ -1658,7 +1666,7 @@ const handlePlanReview: AIMessageHandler = (request) => {
     chatType: info.chatType,
     id: data.id,
     type: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE,
-    data: { ...cloneDeep(data), reviewType: AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE },
+    data: { ...cloneDeep(data) },
     taskIndex: generateTaskId({
       chatType: info.chatType,
       res,
@@ -1738,7 +1746,7 @@ const handleDetachedPlanReview: AIMessageHandler = (request) => {
     chatType: info.chatType,
     id: data.id,
     type: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE,
-    data: { ...cloneDeep(data), reviewType: AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE },
+    data: { ...cloneDeep(data) },
     taskIndex: generateTaskId({
       chatType: info.chatType,
       res,
@@ -1888,7 +1896,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
       //   chatType: chatData.chatType,
       // })
     } else {
-      handleTriggerReviewInChat(request, chatData)
+      handleAutoSubmitReviewContinue(request, chatData)
     }
   } else if (info.chatType === 'reAct') {
     if (isAuto) return
@@ -1968,7 +1976,7 @@ const handleToolReview: AIMessageHandler = (request) => {
       //   chatType: chatData.chatType,
       // })
     } else {
-      handleTriggerReviewInChat(request, chatData)
+      handleAutoSubmitReviewContinue(request, chatData)
     }
   } else if (info.chatType === 'reAct') {
     if (isAuto) return

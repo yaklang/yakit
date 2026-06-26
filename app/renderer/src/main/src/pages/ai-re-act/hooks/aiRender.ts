@@ -86,8 +86,6 @@ interface ReviewSelectedOption {
   /** 已操作 review 的选项内容(json 模式) */
   selected?: string
   optionValue?: string
-  /** 前端标识 review 数据来源，调用层可用于区分计划审阅和 detached plan 审阅 */
-  reviewType?: 'plan_review_require' | 'detached_plan_require'
 }
 /** 对 review 数据进行操作后的记录, 专用于 UI 上的历史展示 */
 export type UIPlanReview = AIAgentGrpcApi.PlanReviewRequire &

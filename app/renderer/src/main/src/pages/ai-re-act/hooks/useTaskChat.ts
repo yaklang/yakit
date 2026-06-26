@@ -254,6 +254,7 @@ function useTaskChat(params: UseTaskChatParams) {
             onReviewExtra,
             onReviewRelease,
             handleReviewDataToUI,
+            sendRequest,
           },
           getChatDataStore,
         })

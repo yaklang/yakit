@@ -561,38 +561,9 @@ export declare namespace AIAgentGrpcApi {
     plans_id: string
   }
 
-  /** detached plan 审阅-子任务 */
-  export interface DetachedPlanSubtask {
-    task_id: string
-    index: string
-    name: string
-    goal: string
-    semantic_identifier: string
-    progress: string
-    summary: string
-    total_tool_call_count: number
-    success_tool_call_count: number
-    fail_tool_call_count: number
-  }
-
-  /** detached plan 审阅-根任务 */
-  export interface DetachedPlanRootTask {
-    task_id: string
-    index: string
-    name: string
-    goal: string
-    semantic_identifier: string
-    subtasks: DetachedPlanSubtask[]
-    progress: string
-    summary: string
-    total_tool_call_count: number
-    success_tool_call_count: number
-    fail_tool_call_count: number
-  }
-
   /** detached plan 审阅-计划详情 */
   export interface DetachedPlan {
-    root_task: DetachedPlanRootTask
+    root_task: PlanTask
     facts: string
     document: string
   }

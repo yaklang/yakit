@@ -381,6 +381,8 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
     onReviewRelease?: (id: string) => void
     /** 将 review 数据处理成需要展示的UI数据 */
     handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
+    /** 向进行中的 grpc 流发送交互消息 */
+    sendRequest?: UseTaskChatParams['sendRequest']
   }
   /** store数据 */
   getChatDataStore: UseHookBaseParams['getChatDataStore']
