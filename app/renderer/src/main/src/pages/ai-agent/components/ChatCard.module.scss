@@ -1,6 +1,7 @@
 @use '../../../styles/mixin.scss' as mixin;
 
 .chat-card {
+  position: relative;
   width: 100%;
   padding: 4px 8px;
   background-color: var(--Colors-Use-Neutral-Bg-Hover);
@@ -22,7 +23,7 @@
       align-items: center;
       gap: 4px;
       // padding: 4px 8px 0 0;
-      flex: 1 1 auto;
+      flex: 1;
       min-width: 0;
     }
 
@@ -70,9 +71,26 @@
     min-height: 0;
   }
 
-  &-footer {
+  &-hover-footer {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 0px;
+    z-index: 1;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: center;
+    box-sizing: border-box;
+    height: 28px;
+    padding: 2px 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    border-radius: 4px;
+    background: var(--Colors-Use-Neutral-Bg-Hover);
+  }
+
+  &:hover > &-hover-footer {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

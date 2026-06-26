@@ -24,6 +24,7 @@ import {
   OutlineArrownarrowrightIcon,
   OutlineChevronsDownUpIcon,
   OutlineChevronsUpDownIcon,
+  OutlineClockIcon,
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -103,7 +104,7 @@ export default memo(ToolInvokerCard)
 
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
-  const { titleText, modalInfo, operationInfo, fileList, chatType, data } = props
+  const { modalInfo, operationInfo, fileList, chatType, data } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const { activeChat } = useAIAgentStore()
@@ -145,7 +146,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   }, [stream?.reference])
   return (
     <ChatCard
-      titleText={titleText}
+      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
       // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -187,7 +188,7 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
 
 /**tool result status:error/success/cancel */
 const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
-  const { titleText, modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
+  const { modalInfo, operationInfo, fileList, data, chatType, token, isChildWindow } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
   const { fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
@@ -320,7 +321,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   })
   return (
     <ChatCard
-      titleText={titleText}
+      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
       // titleIcon={<SolidToolIcon />}
       titleMore={
         <div className={styles['tool-invoker-card-extra']}>
@@ -330,34 +331,31 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
                 {t('ToolInvokerCard.startTime')}:<span>{startTime}</span>
               </div>
             )} */}
-            {!!duration && (
-              <div>
-                {t('ToolInvokerCard.duration')}:<span>{duration}</span>s
-              </div>
-            )}
           </div>
 
-          {!!riskFlowDataCount && (
-            <>
+          <div style={{ marginRight: 12 }}>
+            {!!riskFlowDataCount && (
+              <>
+                <label
+                  onClick={() => {
+                    switchAIActTab(AITabsEnum.Risk)
+                  }}
+                >
+                  {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
+                </label>
+                <Divider type="vertical" />
+              </>
+            )}
+            {!!httpFlowDataCount && (
               <label
                 onClick={() => {
-                  switchAIActTab(AITabsEnum.Risk)
+                  switchAIActTab(AITabsEnum.HTTP)
                 }}
               >
-                {t('ToolInvokerCard.relatedRisks')} <span>{riskFlowDataCount}</span>
+                {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
               </label>
-              <Divider type="vertical" />
-            </>
-          )}
-          {!!httpFlowDataCount && (
-            <label
-              onClick={() => {
-                switchAIActTab(AITabsEnum.HTTP)
-              }}
-            >
-              {t('ToolInvokerCard.httpTraffic')} <span>{httpFlowDataCount}</span>
-            </label>
-          )}
+            )}
+          </div>
           {isChildWindow || (
             <Tooltip title={t('ToolInvokerCard.refreshCodeBlockData')}>
               <YakitButton size="small" type="text" icon={<OutlineRefreshIcon />} onClick={getListToolList} />
@@ -376,7 +374,24 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
         </div>
       }
       titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
-      footer={expand && <OperationCardFooter {...operationInfo} />}
+      footer={
+        expand && (
+          <div className={styles['tool-invoker-card-footer']}>
+            {modalInfo?.time && (
+              <div className={styles['tool-invoker-card-footer-time']}>
+                <OutlineClockIcon />
+                {formatTimestamp(modalInfo.time)}
+                {!!duration && (
+                  <div>
+                    {t('ToolInvokerCard.duration')}:<span>{duration}</span>s
+                  </div>
+                )}
+              </div>
+            )}
+            <OperationCardFooter {...operationInfo} />
+          </div>
+        )
+      }
     >
       {expand && (
         <ToolStatusCard

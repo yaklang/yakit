@@ -335,9 +335,10 @@
     "cancelled": "Cancelled",
     "startTime": "Start Time",
     "duration": "Duration",
-    "relatedRisks": "Related Risks",
-    "httpTraffic": "HTTP Traffic",
-    "refreshCodeBlockData": "Refresh Code Block Data"
+    "relatedRisks": "Risks",
+    "httpTraffic": "Traffic",
+    "refreshCodeBlockData": "Refresh Code Block Data",
+    "tool": "Tool"
   },
   "FileTreeSystemItem": {
     "joinPathFailed": "Path join failed",

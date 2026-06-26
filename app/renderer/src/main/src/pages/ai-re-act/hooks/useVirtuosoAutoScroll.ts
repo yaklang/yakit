@@ -7,9 +7,6 @@ interface UseVirtuosoAutoScrollProps {
   total?: number
   isPrependingRef?: React.MutableRefObject<boolean>
 }
-
-const AT_BOTTOM_THRESHOLD = 100
-
 const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScrollProps) => {
   const virtuosoRef = useRef<VirtuosoHandle>(null)
   const isAtBottomRef = useRef(true)
@@ -17,15 +14,10 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
   const userScrollingRef = useRef(false)
   const userScrollTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const scrollerElRef = useRef<HTMLElement | null>(null)
-  const detachListenersRef = useRef<(() => void) | null>(null)
-
-  const syncAtBottomFromScroller = useMemoizedFn((el: HTMLElement) => {
-    const distance = el.scrollHeight - el.scrollTop - el.clientHeight
-    isAtBottomRef.current = distance <= AT_BOTTOM_THRESHOLD
-  })
 
   const markUserScrolling = useMemoizedFn((direction?: 'up' | 'down') => {
     userScrollingRef.current = true
+    // 用户主动向上滚动，立即关闭自动滚动，无需等 atBottomStateChange
     if (direction === 'up') {
       isAtBottomRef.current = false
     }
@@ -51,19 +43,15 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
     markUserScrolling('up')
   })
 
-  const handleScroll = useMemoizedFn(() => {
-    const el = scrollerElRef.current
-    if (!el) return
-    syncAtBottomFromScroller(el)
-  })
-
   /** 检测鼠标拖拽滚动条：mousedown 在滚动条区域（clientX 超出 contentWidth） */
   const handleMouseDown = useMemoizedFn((e: MouseEvent) => {
     const el = scrollerElRef.current
     if (!el) return
+    // 点击位置在内容区域右侧 = 点在滚动条上
     if (e.offsetX >= el.clientWidth || e.offsetY >= el.clientHeight) {
       markUserScrolling()
       const onMouseUp = () => {
+        // mouseup 后延迟一段时间再取消标记，避免惯性滚动
         userScrollTimerRef.current = setTimeout(() => {
           userScrollingRef.current = false
         }, 200)
@@ -73,59 +61,40 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
     }
   })
 
-  const detachScrollerListeners = useMemoizedFn(() => {
-    detachListenersRef.current?.()
-    detachListenersRef.current = null
-  })
-
-  const attachScrollerListeners = useMemoizedFn((el: HTMLElement) => {
-    detachScrollerListeners()
-
-    const onWheel = (e: WheelEvent) => handleWheel(e)
-    const onTouchMove = () => handleTouchMove()
-    const onKeyDown = (e: KeyboardEvent) => handleKeyDown(e)
-    const onMouseDown = (e: MouseEvent) => handleMouseDown(e)
-    const onScroll = () => handleScroll()
-
-    el.addEventListener('wheel', onWheel, { passive: true })
-    el.addEventListener('touchmove', onTouchMove, { passive: true })
-    el.addEventListener('keydown', onKeyDown)
-    el.addEventListener('mousedown', onMouseDown)
-    el.addEventListener('scroll', onScroll, { passive: true })
-
-    detachListenersRef.current = () => {
-      el.removeEventListener('wheel', onWheel)
-      el.removeEventListener('touchmove', onTouchMove)
-      el.removeEventListener('keydown', onKeyDown)
-      el.removeEventListener('mousedown', onMouseDown)
-      el.removeEventListener('scroll', onScroll)
+  // 卸载时清理 timer 和事件监听
+  useEffect(() => {
+    return () => {
+      if (userScrollTimerRef.current) clearTimeout(userScrollTimerRef.current)
+      if (scrollerElRef.current) {
+        scrollerElRef.current.removeEventListener('wheel', handleWheel)
+        scrollerElRef.current.removeEventListener('touchmove', handleTouchMove)
+        scrollerElRef.current.removeEventListener('keydown', handleKeyDown)
+        scrollerElRef.current.removeEventListener('mousedown', handleMouseDown)
+      }
     }
-
-    syncAtBottomFromScroller(el)
-  })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   /** 传给 Virtuoso 的 scrollerRef，自动挂载 wheel/touchmove/keydown 监听 */
   const setScrollerRef = useMemoizedFn((ref: HTMLElement | Window | null) => {
     const el = ref instanceof HTMLElement ? ref : null
-    if (scrollerElRef.current === el) return
+
+    if (scrollerElRef.current) {
+      scrollerElRef.current.removeEventListener('wheel', handleWheel)
+      scrollerElRef.current.removeEventListener('touchmove', handleTouchMove)
+      scrollerElRef.current.removeEventListener('keydown', handleKeyDown)
+      scrollerElRef.current.removeEventListener('mousedown', handleMouseDown)
+    }
+
     scrollerElRef.current = el
+
     if (el) {
-      attachScrollerListeners(el)
-    } else {
-      detachScrollerListeners()
+      el.addEventListener('wheel', handleWheel, { passive: true })
+      el.addEventListener('touchmove', handleTouchMove, { passive: true })
+      el.addEventListener('keydown', handleKeyDown)
+      el.addEventListener('mousedown', handleMouseDown)
     }
   })
-
-  useEffect(() => {
-    const el = scrollerElRef.current
-    if (el) {
-      attachScrollerListeners(el)
-    }
-    return () => {
-      if (userScrollTimerRef.current) clearTimeout(userScrollTimerRef.current)
-      detachScrollerListeners()
-    }
-  }, [attachScrollerListeners, detachScrollerListeners])
 
   const scrollToIndex = useMemoizedFn((index: 'LAST' | number, behavior?: 'auto' | 'smooth') => {
     const isLast = index === 'LAST' || (total != null && index === total - 1)
@@ -154,19 +123,21 @@ const useVirtuosoAutoScroll = ({ total, isPrependingRef }: UseVirtuosoAutoScroll
 
   const setIsAtBottomRef = useMemoizedFn((flag: boolean) => {
     if (flag) {
+      // 滚到底部了，恢复自动滚动
       isAtBottomRef.current = true
-    } else if (userScrollingRef.current) {
-      isAtBottomRef.current = false
+    } else {
+      // 只有用户主动滚动才关闭自动滚动
+      // 内容突然增大导致的 atBottomStateChange(false) 不应中断自动滚动
+      if (userScrollingRef.current) {
+        isAtBottomRef.current = false
+      }
     }
   })
 
   const { run: handleTotalListHeightChanged } = useThrottleFn(
     () => {
+      // 向上加载历史数据时高度变化，不应触发滚动到底部
       if (isPrependingRef?.current) return
-      const el = scrollerElRef.current
-      if (el) {
-        syncAtBottomFromScroller(el)
-      }
       if (isAtBottomRef.current && !userScrollingRef.current) {
         smartScrollToBottom()
       }

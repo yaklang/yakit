@@ -19,3 +19,9 @@
 .focused {
   overflow-y: overlay;
 }
+
+/** 由父级容器负责滚动时，内容区自然撑开 */
+.embed-in-parent {
+  max-height: none;
+  overflow: visible;
+}

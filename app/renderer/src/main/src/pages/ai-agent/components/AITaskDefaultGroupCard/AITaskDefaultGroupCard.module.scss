@@ -6,7 +6,7 @@
   border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   background: var(--Colors-Use-Basic-Background);
   max-height: 600px;
-  padding: 6px 8px;
+  padding: 4px 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -37,7 +37,7 @@
         color: var(--Colors-Use-Neutral-Text-1-Title);
         font-size: 12px;
         font-style: normal;
-        font-weight: 600;
+        font-weight: 500;
         line-height: 16px;
         letter-spacing: 0.5px;
         flex-shrink: 0;
@@ -63,6 +63,8 @@
 
   &-content {
     max-height: 156px;
+    min-height: 0;
+    flex-shrink: 1;
     overflow-y: hidden;
     padding-top: 4px;
     margin: 0 -2px;
@@ -71,6 +73,10 @@
       overflow-y: overlay;
     }
   }
+}
+
+.content-inner {
+  min-height: 0;
 }
 
 .expand {
@@ -83,73 +89,6 @@
   height: 100%;
   flex: 1;
   min-height: 0;
-}
-
-.content-inner {
-  position: relative;
-  padding: 4px 4px 4px 0;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 8px;
-    top: 4px;
-    bottom: 4px;
-    width: 2px;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-    border-radius: 1px;
-  }
-}
-
-.stream-row {
-  position: relative;
-  margin: 0 0 8px;
-  padding: 0 4px 0 2em;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 20px;
-  letter-spacing: 0.5px;
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
-  word-break: break-word;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 8px;
-    top: 10px;
-    width: 8px;
-    height: 2px;
-    background: var(--Colors-Use-Neutral-Bg-Hover);
-  }
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
-.stream-label {
-  color: var(--Colors-Use-Neutral-Text-3-Secondary);
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 14px;
-  letter-spacing: 0.5px;
-  margin-right: 4px;
-}
-
-.stream-content {
-  color: var(--Colors-Use-Neutral-Text-4-Help-text);
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 14px;
-  letter-spacing: 0.5px;
-}
-
-.reference-btn {
-  padding: 0;
-  line-height: 20px;
-  margin-left: 4px;
 }
 
 .child-window {

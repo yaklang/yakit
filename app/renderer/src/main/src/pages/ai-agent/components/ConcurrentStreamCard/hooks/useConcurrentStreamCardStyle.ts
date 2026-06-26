@@ -1,5 +1,5 @@
 import { useMemo, type CSSProperties } from 'react'
-import { CARD_PADDING, CHILD_WINDOW_STYLE } from '../constants'
+import { CHILD_WINDOW_STYLE } from '../constants'
 
 interface BuildCardStyleOptions {
   bgColor: string
@@ -17,12 +17,10 @@ export function buildConcurrentStreamCardStyle({
 }: BuildCardStyleOptions): CSSProperties {
   if (isChildWindow) return CHILD_WINDOW_STYLE
 
-  const base = { padding: CARD_PADDING }
   const isGradientBg = bgColor.includes('gradient(')
 
   if (!showStripe) {
     return {
-      ...base,
       backgroundImage: isGradientBg ? bgColor : undefined,
       backgroundColor: isGradientBg ? undefined : bgColor,
       backgroundRepeat: undefined,
@@ -32,7 +30,6 @@ export function buildConcurrentStreamCardStyle({
   }
 
   return {
-    ...base,
     backgroundImage: isGradientBg ? `${vectorBg}, ${bgColor}` : vectorBg,
     backgroundColor: isGradientBg ? undefined : bgColor,
     backgroundRepeat: 'no-repeat, no-repeat',

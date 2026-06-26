@@ -1654,19 +1654,19 @@ const handlePlanReview: AIMessageHandler = (request) => {
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
-    // const target = reviewReleaseID[data.id]
-    // if (target) {
-    //   chatData.data.selected = JSON.stringify(target.params)
-    //   chatData.data.optionValue = target.params?.suggestion || 'continue'
-    // }
-    // setContentMap(chatData.id, cloneDeep(chatData))
-    // if (target) {
-    //   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-    //     mapKey: chatData.id,
-    //     type: chatData.type,
-    //     chatType: chatData.chatType,
-    //   })
-    // }
+    const target = reviewReleaseID[data.id]
+    if (target) {
+      chatData.data.selected = JSON.stringify(target.params)
+      chatData.data.optionValue = target.params?.suggestion || 'continue'
+    }
+    setContentMap(chatData.id, cloneDeep(chatData))
+    if (target) {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+        mapKey: chatData.id,
+        type: chatData.type,
+        chatType: chatData.chatType,
+      })
+    }
     return
   }
 
@@ -1681,12 +1681,12 @@ const handlePlanReview: AIMessageHandler = (request) => {
   if (info.chatType === 'task') {
     // 该类型的实时数据只有任务规划才有
     if (isAuto) {
-      // setContentMap(chatData.id, cloneDeep(chatData))
-      // handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-      //   mapKey: chatData.id,
-      //   type: chatData.type,
-      //   chatType: chatData.chatType,
-      // })
+      setContentMap(chatData.id, cloneDeep(chatData))
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+        mapKey: chatData.id,
+        type: chatData.type,
+        chatType: chatData.chatType,
+      })
       review?.handleReviewDataToUI && review.handleReviewDataToUI(cloneDeep(chatData))
     } else {
       currentPlanReviewId = ''
@@ -1813,6 +1813,7 @@ const handleTaskReview: AIMessageHandler = (request) => {
       review?.onReview && review.onReview(cloneDeep(chatData))
     }
   } else if (info.chatType === 'reAct') {
+    if (isAuto) return
     setContentMap(chatData.id, cloneDeep(chatData))
     handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: chatData.id,
@@ -1892,6 +1893,7 @@ const handleToolReview: AIMessageHandler = (request) => {
       review?.onReview && review.onReview(cloneDeep(chatData))
     }
   } else if (info.chatType === 'reAct') {
+    if (isAuto) return
     setContentMap(chatData.id, cloneDeep(chatData))
     handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: chatData.id,
@@ -1932,19 +1934,19 @@ const handleUserInteractive: AIMessageHandler = (request) => {
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
-    // const target = reviewReleaseID[data.id]
-    // if (target) {
-    //   chatData.data.selected = JSON.stringify(target.params)
-    //   chatData.data.optionValue = target.params?.suggestion || 'continue'
-    // }
-    // setContentMap(chatData.id, cloneDeep(chatData))
-    // if (target) {
-    //   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-    //     mapKey: chatData.id,
-    //     type: chatData.type,
-    //     chatType: chatData.chatType,
-    //   })
-    // }
+    const target = reviewReleaseID[data.id]
+    if (target) {
+      chatData.data.selected = JSON.stringify(target.params)
+      chatData.data.optionValue = target.params?.suggestion || 'continue'
+    }
+    setContentMap(chatData.id, cloneDeep(chatData))
+    if (target) {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+        mapKey: chatData.id,
+        type: chatData.type,
+        chatType: chatData.chatType,
+      })
+    }
     return
   }
 
@@ -1998,19 +2000,19 @@ const handleAIForgeReviewRequire: AIMessageHandler = (request) => {
   }
   if (res.IsSync) {
     // 历史review数据，直接存入map里，等待review_release出现后渲染到UI上
-    // const target = reviewReleaseID[data.id]
-    // if (target) {
-    //   chatData.data.selected = JSON.stringify(target.params)
-    //   chatData.data.optionValue = target.params?.suggestion || 'continue'
-    // }
-    // setContentMap(chatData.id, cloneDeep(chatData))
-    // if (target) {
-    //   handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-    //     mapKey: chatData.id,
-    //     type: chatData.type,
-    //     chatType: chatData.chatType,
-    //   })
-    // }
+    const target = reviewReleaseID[data.id]
+    if (target) {
+      chatData.data.selected = JSON.stringify(target.params)
+      chatData.data.optionValue = target.params?.suggestion || 'continue'
+    }
+    setContentMap(chatData.id, cloneDeep(chatData))
+    if (target) {
+      handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+        mapKey: chatData.id,
+        type: chatData.type,
+        chatType: chatData.chatType,
+      })
+    }
     return
   }
 

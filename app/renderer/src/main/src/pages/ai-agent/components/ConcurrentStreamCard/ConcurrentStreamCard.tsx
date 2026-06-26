@@ -23,8 +23,6 @@ import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import emiter from '@/utils/eventBus/eventBus'
 import { yakitNotify } from '@/utils/notification'
 
-const { ipcRenderer } = window.require('electron')
-
 const ConcurrentStreamCard: FC<{
   elements: ReActChatTaskElementSub[]
   session: string

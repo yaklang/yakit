@@ -85,8 +85,8 @@ const AITaskDefaultGroupCard: FC<{
         <AITaskDefaultGroupContent
           elements={elements}
           session={session}
-          chatType={chatType}
-          hasNext={hasNext}
+          // chatType={chatType}
+          // hasNext={hasNext}
           isChildWindow={isChildWindow}
           onContentFocusChange={setContentFocused}
         />
