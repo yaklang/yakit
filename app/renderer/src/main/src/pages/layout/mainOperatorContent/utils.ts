@@ -22,6 +22,13 @@ export interface FuzzerConfig {
   Type: 'page' | 'pageGroup'
   Config: string
 }
+
+/** Server push payload for web_fuzzer_tab (aligned with backend WebFuzzerTabPush). */
+export interface WebFuzzerTabPush {
+  openFlag?: boolean
+  data?: FuzzerConfig[]
+}
+
 export interface DbOperateMessage {
   //表名 数据源
   TableName: string

@@ -90,6 +90,7 @@ import { NewYakitLoading } from '../basics/NewYakitLoading'
 import classNames from 'classnames'
 import styles from './uiLayout.module.scss'
 import { JSONParseLog } from '@/utils/tool'
+import { closeDuplexConn, startupDuplexConn } from '@/utils/duplex/duplex'
 import { LocalGVS } from '@/enums/localGlobal'
 import { useSoftMode } from '@/store/softMode'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
@@ -131,7 +132,7 @@ export interface UILayoutProp {
 }
 
 const UILayout: React.FC<UILayoutProp> = (props) => {
-  const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi'])
+  const { t, i18n } = useI18nNamespaces(['layout', 'yakitUi', 'projectManage'])
   const mcp = useSyncYakMcpStream({})
   const { currentPageTabRouteKey } = usePageInfo(
     (s) => ({
@@ -1039,6 +1040,30 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const [yakitMode, setYakitMode] = useState<'soft' | ''>('')
   // 是否展示项目管理
   const [showProjectManage, setShowProjectManage] = useState<boolean>(false)
+  // 项目管理页面列表刷新
+  const [projectListRefreshTrigger, setProjectListRefreshTrigger] = useState<number>(0)
+  const [serverPushEnterProject, setServerPushEnterProject] = useState<{
+    id: string
+    projectName: string
+    type: string
+  } | null>(null)
+  const [enterProjectLoading, setEnterProjectLoading] = useState<boolean>(false)
+
+  const onRefreshProjectListFun = useMemoizedFn(() => {
+    setProjectListRefreshTrigger((value) => value + 1)
+  })
+
+  const isProjectDatabaseType = useMemoizedFn((projectType?: string) => {
+    if (!projectType || projectType === 'file') return false
+    return projectType === getEnvTypeByProjects() || projectType === 'project' || projectType === 'ssa_project'
+  })
+
+  useEffect(() => {
+    emiter.on('onRefreshProjectList', onRefreshProjectListFun)
+    return () => {
+      emiter.off('onRefreshProjectList', onRefreshProjectListFun)
+    }
+  }, [])
   // 由普通项目到管理页面的提示框
   const [linkDatabaseHint, setLinkDatabaseHint] = useState<boolean>(false)
   // 由临时项目到管理页面的提示框
@@ -1081,6 +1106,50 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
         setNowProjectDescription(rsp || undefined)
       })
   })
+
+  useEffect(() => {
+    const onServerPushProjectChanged = (res?: string) => {
+      try {
+        const payload = JSONParseLog(res || '{}', { page: 'UILayout', fun: 'onServerPushProjectChanged' })
+        const action = payload?.action || 'create'
+        const projectId = payload?.id
+        const projectName = payload?.project_name || ''
+        const projectType = payload?.type || getEnvTypeByProjects()
+
+        onRefreshProjectListFun()
+
+        if (!isProjectDatabaseType(projectType) || !projectId || projectId <= 0) {
+          return
+        }
+
+        if (action === 'prompt_enter') {
+          setServerPushEnterProject({
+            id: `${projectId}`,
+            projectName,
+            type: projectType,
+          })
+          return
+        }
+
+        if (action === 'auto_enter') {
+          yakitProject
+            .setCurrentProject({ Id: projectId, Type: projectType })
+            .then(() => {
+              info(t('ProjectManage.switchDatabaseSuccess'))
+              softwareSettingFinish()
+            })
+            .catch((e) => {
+              failed(t('ProjectManage.switchDatabaseFailed') + ': ' + `${e}`)
+            })
+        }
+      } catch (error) {}
+    }
+
+    emiter.on('onServerPushProjectChanged', onServerPushProjectChanged)
+    return () => {
+      emiter.off('onServerPushProjectChanged', onServerPushProjectChanged)
+    }
+  }, [])
 
   // 当前使用的项目
   const [currentProject, setCurrentProject] = useState<ProjectDescription>()
@@ -1170,6 +1239,18 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   useEffect(() => {
     if (engineLink) {
       setSwitchEngineLoading(false)
+    }
+  }, [engineLink])
+
+  // DuplexConnection 与引擎连接生命周期绑定，避免进入/离开项目管理页时反复断开重连
+  useEffect(() => {
+    if (!engineLink) {
+      closeDuplexConn()
+      return
+    }
+    startupDuplexConn()
+    return () => {
+      closeDuplexConn()
     }
   }, [engineLink])
 
@@ -1820,6 +1901,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
                     engineMode={engineMode || 'local'}
                     onEngineModeChange={handleLinkRemoteMode}
                     onFinish={softwareSettingFinish}
+                    projectListRefreshTrigger={projectListRefreshTrigger}
                   />
                 ) : (
                   props.children
@@ -1904,6 +1986,31 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
           }}
         />
       )}
+      {/* MCP / 后端推送：是否进入新建项目 */}
+      <YakitHint
+        visible={!!serverPushEnterProject}
+        title={t('ProjectManage.hint')}
+        content={`${t('ProjectManage.enterNewProject')} ${serverPushEnterProject?.projectName || ''}`}
+        okButtonProps={{ loading: enterProjectLoading }}
+        onOk={() => {
+          if (!serverPushEnterProject) return
+          setEnterProjectLoading(true)
+          yakitProject
+            .setCurrentProject({ Id: +serverPushEnterProject.id, Type: serverPushEnterProject.type })
+            .then(() => {
+              info(t('ProjectManage.switchDatabaseSuccess'))
+              setServerPushEnterProject(null)
+              softwareSettingFinish()
+            })
+            .catch((e) => {
+              failed(t('ProjectManage.switchDatabaseFailed') + ': ' + `${e}`)
+            })
+            .finally(() => {
+              setTimeout(() => setEnterProjectLoading(false), 500)
+            })
+        }}
+        onCancel={() => setServerPushEnterProject(null)}
+      />
 
       <YakitGetOnlinePlugin
         visible={coedcPluginShow}

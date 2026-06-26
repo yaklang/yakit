@@ -72,6 +72,7 @@ export interface SoftwareSettingsProp {
   engineMode: YaklangEngineMode
   onEngineModeChange: (mode: YaklangEngineMode, keepalive?: boolean) => any
   onFinish: () => any
+  projectListRefreshTrigger?: number
 }
 
 export const SoftwareSettings: React.FC<SoftwareSettingsProp> = memo((props) => {

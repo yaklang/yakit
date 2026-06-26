@@ -81,8 +81,8 @@ export const setOpenPerformanceTips = (value: boolean) => {
 }
 
 export const startupDuplexConn = () => {
-  info('Server Push Enabled Already')
   cleanupDuplexListeners()
+  yakitStream.cancel('DuplexConnection', id)
 
   const offData = yakitStream.onData(id, (data: DuplexConnectionProps) => {
     try {
@@ -117,6 +117,14 @@ export const startupDuplexConn = () => {
         // fuzzer-批量请求中的丢弃包数量
         case 'fuzzer_server_push':
           emiter.emit('onGetDiscardPackageCount', JSON.stringify(obj))
+          break
+        // MCP / 后端通知前端新建 Web Fuzzer Tab
+        case 'web_fuzzer_tab':
+          emiter.emit('onServerPushOpenWebFuzzerTab', JSON.stringify(obj))
+          break
+        // MCP / 后端通知前端刷新项目列表或进入新建项目
+        case 'project':
+          emiter.emit('onServerPushProjectChanged', JSON.stringify(obj))
           break
         // 通知QuerySSARisks轮询更新
         case 'ssa_risk':

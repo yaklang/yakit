@@ -31,6 +31,8 @@ export type WebFuzzerEventProps = {
 
   /** 全局刷新器返回数据-发送请求里丢弃包的数量 */
   onGetDiscardPackageCount: string
+  /** MCP / 后端推送：新建 Web Fuzzer Tab */
+  onServerPushOpenWebFuzzerTab: string
   /** 保存webfuzzer历史记录 */
   onSaveHistoryDataHttpFuzzer?: string
 }

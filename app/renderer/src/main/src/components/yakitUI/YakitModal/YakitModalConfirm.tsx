@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 import style from './YakitModalConfirm.module.scss'
 import { YakitButton } from '../YakitButton/YakitButton'
 import { ShowModalProps } from '@/utils/showModal'
@@ -99,6 +99,7 @@ export interface YakitModalConfirmProps extends Omit<YakitBaseModalProp, 'title'
   onOkText?: ModalI18nNode
   onCancelText?: ModalI18nNode
   showConfirmLoading?: boolean
+  icon?: ReactNode
 }
 
 interface YakitBaseModalProps extends YakitModalProp, React.ComponentProps<any> {

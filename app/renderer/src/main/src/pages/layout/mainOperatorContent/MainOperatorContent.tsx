@@ -124,7 +124,6 @@ import {
   RuleManagementPageInfoProps,
   AuditHoleInfoProps,
 } from '@/store/pageInfo'
-import { startupDuplexConn, closeDuplexConn } from '@/utils/duplex/duplex'
 import cloneDeep from 'lodash/cloneDeep'
 import { onToManageGroup } from '@/pages/securityTool/yakPoC/YakPoC'
 import { apiFetchQueryYakScriptGroupLocal } from '@/pages/plugins/utils'
@@ -154,6 +153,7 @@ import {
   FuzzerConfig,
   QueryFuzzerConfigRequest,
   SaveFuzzerConfigRequest,
+  WebFuzzerTabPush,
   apiQueryFuzzerConfig,
   apiSaveFuzzerConfig,
 } from './utils'
@@ -755,15 +755,6 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   const [bugTestValue, setBugTestValue] = useState<string>()
   const [bugUrl, setBugUrl] = useState<string>('')
   const { resetCompareData } = useHttpFlowStore()
-
-  // 在组件启动的时候，执行一次，用于初始化服务端推送（DuplexConnection）
-  useEffect(() => {
-    startupDuplexConn()
-    return () => {
-      // 当组件销毁的时候，关闭DuplexConnection
-      closeDuplexConn()
-    }
-  }, [])
 
   /** ---------- 新逻辑 start ---------- */
 
@@ -2737,7 +2728,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
   })
 
   // 获取数据库中缓存的web-fuzzer页面信息
-  const fetchFuzzerList = useMemoizedFn(async (cache, add) => {
+  const fetchFuzzerList = useMemoizedFn(async (cache, add, openFlag = true) => {
     try {
       const cacheData: FuzzerCacheDataProps = (await getFuzzerCacheData()) || {
         proxy: [],
@@ -2886,7 +2877,7 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       }
       setPagesData(YakitRoute.HTTPFuzzer, pageNodeInfo)
       setPageCache(oldPageCache)
-      if (!isSecurityExpert) {
+      if (!isSecurityExpert && openFlag) {
         setCurrentTabKey(key)
       }
       const lastPage = multipleNodeList[multipleNodeList.length - 1]
@@ -3262,6 +3253,40 @@ export const MainOperatorContent: React.FC<MainOperatorContentProps> = React.mem
       })
     })
   })
+
+  const onServerPushOpenWebFuzzerTab = useMemoizedFn(async (res?: string) => {
+    try {
+      const payload: WebFuzzerTabPush = JSONParseLog(res || '{}', {
+        page: 'MainOperatorContent',
+        fun: 'onServerPushOpenWebFuzzerTab',
+      })
+      const { openFlag = true, data = [] } = payload
+      if (!data.length) return
+
+      const isExistWF = pageCache.findIndex((ele) => ele.route === YakitRoute.HTTPFuzzer) !== -1
+      if (!isExistWF) {
+        await onInitFuzzer(false)
+      }
+
+      const pageList =
+        data.map((ele) =>
+          JSONParseLog(ele.Config, { page: 'MainOperatorContent', fun: 'onServerPushOpenWebFuzzerTab' }),
+        ) || []
+
+      if (pageList.length > 0) {
+        await fetchFuzzerList(pageList, true, openFlag)
+      }
+    } catch (error) {
+      yakitNotify('error', t('MainOperatorContent.openWFFailed', { error: `${error}` }))
+    }
+  })
+
+  useEffect(() => {
+    emiter.on('onServerPushOpenWebFuzzerTab', onServerPushOpenWebFuzzerTab)
+    return () => {
+      emiter.off('onServerPushOpenWebFuzzerTab', onServerPushOpenWebFuzzerTab)
+    }
+  }, [])
 
   /**保存历史记录 */
   const onSaveHistory = useMemoizedFn((routeKey: YakitRoute) => {
