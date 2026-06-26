@@ -10,7 +10,7 @@ import {
   AITaskExecutionDetailsProps,
   AITaskStatisticsStatusProps,
 } from './type'
-import { OutlinePresentationchartbarIcon, OutlineTrashIcon } from '@/assets/icon/outline'
+import { OutlinePresentationchartbarIcon, OutlineTrashIcon, OutlineXIcon } from '@/assets/icon/outline'
 import styles from './AITaskExecutionDetails.module.scss'
 import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import { AIDeleteNodeIcon, AIDoingNodeIcon, AIDoneNodeIcon, AIPendingNodeIcon, AISkippedNodeIcon } from './icon'
@@ -53,7 +53,7 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { timeDiffWithMoment } from '@/utils/timeUtil'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
-  const { taskId, taskGoal, taskName } = props
+  const { taskId, taskGoal, taskName, onClose } = props
   const { chatIPCEvents } = useChatIPCDispatcher()
   const { activeChat } = useAIAgentStore()
 
@@ -217,14 +217,21 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     return `${planItemDetailsData?.execution.risk_count ?? `0`}`
   }, [planItemDetailsData?.execution?.risk_count])
   return (
-    <div className={styles['ai-task-execution-details-container']}>
+    <div
+      className={classNames(styles['ai-task-execution-details-container'], {
+        [styles['with-close']]: !!onClose,
+      })}
+    >
       {/* 头部 */}
       <div className={styles['header']}>
-        <div className={styles['header-title']}>
-          <OutlinePresentationchartbarIcon className={styles['header-icon']} />
-          <span className={styles['title-text']}>任务执行详情</span>
+        <div className={styles['header-row']}>
+          <div className={styles['header-title']}>
+            <OutlinePresentationchartbarIcon className={styles['header-icon']} />
+            <span className={styles['title-text']}>任务执行详情</span>
+            <div className={styles['header-subtitle']}>{taskName}</div>
+          </div>
+          {onClose && <YakitButton icon={<OutlineXIcon />} type="text2" onClick={onClose} />}
         </div>
-        <div className={styles['header-subtitle']}>{taskName}</div>
       </div>
 
       <div className={styles['content-body']}>

@@ -6,7 +6,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from '@/components/yakitSideTab/YakitSideTabType'
-import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import { useHistoryAIReActChat, useHistoryAIReActTaskDetails } from '@/components/historyAIReActChat'
 import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
@@ -52,6 +52,8 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
     }
     setActiveKey(key)
   })
+
+  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
 
   const onSendCodeBlockFun = useMemoizedFn((res: string) => {
     const needOpenPanel = !openTabsFlag || activeKey !== 'ai'
@@ -113,6 +115,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
             </Tooltip>
           ),
           close: <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />,
+          details: detailsRightIcon,
         },
         footerRightTypes: [
           {

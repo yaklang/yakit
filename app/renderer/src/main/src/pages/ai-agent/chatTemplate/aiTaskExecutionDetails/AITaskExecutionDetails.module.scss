@@ -10,12 +10,25 @@
   /* 声明为容器查询的上下文，基于行内尺寸(宽度)进行计算 */
   container-type: inline-size;
   container-name: task-details;
+
+  &.with-close {
+    overflow: hidden;
+    height: 100%;
+    max-height: calc(100vh - 80px);
+  }
   .header {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 12px;
-    overflow: hidden;
     flex-shrink: 0;
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 12px 12px 8px 0;
+    }
 
     .header-title {
       display: flex;
@@ -65,6 +78,10 @@
     flex: 1;
     min-height: 800px;
     overflow-y: auto;
+  }
+
+  &.with-close .content-body {
+    min-height: 0;
   }
 
   .card {

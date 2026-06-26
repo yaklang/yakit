@@ -345,6 +345,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                   {isShowRetract &&
                     (externalParameters?.rightIcon ? (
                       <>
+                        {getTaskId() && externalParameters.rightIcon.details}
                         {externalParameters.rightIcon.dataDetails && (
                           <AIContextToken
                             iconOnly

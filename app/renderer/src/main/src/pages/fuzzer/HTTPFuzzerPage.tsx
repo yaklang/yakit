@@ -108,7 +108,11 @@ import {
   OutlineDotsverticalIcon,
 } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
-import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
+import {
+  HistoryAIReActChatProvider,
+  useHistoryAIReActChat,
+  useHistoryAIReActTaskDetails,
+} from '@/components/historyAIReActChat'
 import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
@@ -2351,6 +2355,9 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
       setShowFreeChat(true)
     }
   }, [advancedConfigShowType, setShowFreeChat])
+
+  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
+
   const hotPatchVisible = useCreation(
     () => advancedConfigShowType === 'hot-patch' && advancedConfigVisible,
     [advancedConfigShowType, advancedConfigVisible],
@@ -2707,6 +2714,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
                         />
                       ),
+                      details: detailsRightIcon,
                     },
                     footerRightTypes: [
                       {

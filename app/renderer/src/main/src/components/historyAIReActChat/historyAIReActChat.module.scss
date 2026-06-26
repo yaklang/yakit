@@ -1,0 +1,25 @@
+.ai-re-act-task-popover {
+  :global {
+    transform-origin: 50% 0px !important;
+    .ant-popover-arrow {
+      display: none;
+    }
+    .ant-popover-content {
+      transform: translateY(14px);
+    }
+    .ant-popover-inner-content {
+      padding: 0;
+    }
+    .ant-popover-inner {
+      border-radius: 8px;
+    }
+  }
+}
+
+.task-details-popover-body {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, calc(100vw - 48px));
+  max-height: calc(100vh - 80px);
+  overflow: hidden;
+}
