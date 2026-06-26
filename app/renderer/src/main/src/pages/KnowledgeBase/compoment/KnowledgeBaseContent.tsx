@@ -104,13 +104,7 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
     const { t } = useI18nNamespaces(['plugin'])
     const { renderHistoryAIReActChat, setShowFreeChat, showFreeChat, historyAIReActChatBridge } =
       useHistoryAIReActChat()
-    const [knowledgeAiView, setKnowledgeAiView] = useSafeState<'chat' | 'details'>('chat')
     const { detailsRightIcon } = useHistoryAIReActTaskDetails()
-    useUpdateEffect(() => {
-      if (!showFreeChat) {
-        setKnowledgeAiView('chat')
-      }
-    }, [showFreeChat])
     const [streams, api] = useMultipleHoldGRPCStream()
     const { refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync } = useCheckKnowledgePlugin()
 

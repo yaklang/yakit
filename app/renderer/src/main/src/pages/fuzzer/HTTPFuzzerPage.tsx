@@ -2348,13 +2348,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   }, [advancedConfigShowType, setShowFreeChat])
 
-  const [fuzzerAiView, setFuzzerAiView] = useState<'chat' | 'details'>('chat')
   const { detailsRightIcon } = useHistoryAIReActTaskDetails()
-  useUpdateEffect(() => {
-    if (advancedConfigShowType !== 'ai') {
-      setFuzzerAiView('chat')
-    }
-  }, [advancedConfigShowType])
 
   const hotPatchVisible = useCreation(
     () => advancedConfigShowType === 'hot-patch' && advancedConfigVisible,

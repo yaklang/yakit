@@ -43,7 +43,6 @@ type ExternalParametersRightIcon = Partial<{
   [RightIconType.close]: React.ReactElement
   [RightIconType.add]: React.ReactElement
   [RightIconType.dataDetails]: true | DataDetailsButtonProps
-  /** 点击时由 AIReActChat 注入 taskId 作为 onClick 参数 */
   [RightIconType.details]: React.ReactElement
 }>
 export interface AIReActChatProps {
