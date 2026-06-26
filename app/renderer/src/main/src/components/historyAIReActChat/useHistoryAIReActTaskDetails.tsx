@@ -13,10 +13,7 @@ export interface UseHistoryAIReActTaskDetailsOptions {
 }
 
 export function useHistoryAIReActTaskDetails(options?: UseHistoryAIReActTaskDetailsOptions) {
-  const detailsRightIcon = useMemo(
-    () => <TaskDetailsPopover taskLabel={options?.taskLabel} />,
-    [options?.taskLabel],
-  )
+  const detailsRightIcon = useMemo(() => <TaskDetailsPopover taskLabel={options?.taskLabel} />, [options?.taskLabel])
 
   return {
     detailsRightIcon,
