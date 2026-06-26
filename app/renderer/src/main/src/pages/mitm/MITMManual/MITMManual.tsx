@@ -39,6 +39,7 @@ import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeB
 import { showByRightContext } from '@/components/yakitUI/YakitMenu/showByRightContext'
 import { OtherMenuListProps } from '@/components/yakitUI/YakitEditor/YakitEditorType'
 import { availableColors, onSendToTab } from '@/components/HTTPFlowTable/HTTPFlowTable'
+import { filterColorTag } from '@/components/TableVirtualResize/utils'
 import classNames from 'classnames'
 import styles from './MITMManual.module.scss'
 import { SystemInfo } from '@/constants/hardware'
@@ -303,6 +304,11 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       }
       setCurrentSelectItem(newSelectItem)
       setEditorShowIndexShowIndex(newSelectItem ? newEditorShowIndexShowIndex : 0)
+      newData = newData.map(({ Tags = [], ...rest }) => ({
+        ...rest,
+        Tags,
+        cellClassName: filterColorTag(Tags.join('|')),
+      }))
       setData([...newData])
       mitmV2HijackInfoRef.current = []
       setIntervalTime(undefined)
