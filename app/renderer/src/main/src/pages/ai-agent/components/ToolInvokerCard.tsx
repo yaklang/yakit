@@ -24,6 +24,7 @@ import {
   OutlineArrownarrowrightIcon,
   OutlineChevronsDownUpIcon,
   OutlineChevronsUpDownIcon,
+  OutlineClockIcon,
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -41,7 +42,6 @@ import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitR
 import { AIReviewParams } from './aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isAuxOrChildWindow } from '@/utils/isAuxOrChildWindow'
-import { ClockIcon } from '@/assets/newIcon'
 
 /** @name AI工具按钮对应图标 */
 const AIToolToIconMap: Record<string, ReactNode> = {
@@ -379,7 +379,7 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
           <div className={styles['tool-invoker-card-footer']}>
             {modalInfo?.time && (
               <div className={styles['tool-invoker-card-footer-time']}>
-                <ClockIcon />
+                <OutlineClockIcon />
                 {formatTimestamp(modalInfo.time)}
                 {!!duration && (
                   <div>

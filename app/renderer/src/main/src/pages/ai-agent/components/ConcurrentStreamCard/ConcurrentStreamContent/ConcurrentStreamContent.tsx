@@ -30,45 +30,64 @@ const ConcurrentStreamContent: FC<ConcurrentStreamContentProps> = memo(
     const startIndexLatest = useLatest(startIndex)
     /** 用户是否在底部附近，用于决定新元素到来时是否跟随滚动 */
     const isAtBottomRef = useRef<boolean>(true)
+    const isFirstMountRef = useRef(true)
 
     const getScrollEl = useMemoizedFn(() => scrollContainerRef?.current ?? scrollRef.current)
 
-    /** 挂载 / 新元素 / 流式增高时，若在底部则自动跟随 */
+    /** 流式增高时，仅在底部则自动跟随 */
     useLayoutEffect(() => {
       const scrollEl = getScrollEl()
       const measureEl = contentMeasureRef.current
       if (!scrollEl || !measureEl) return
 
-      isAtBottomRef.current = true
-
-      const scrollToBottom = (force = false) => {
-        if (!force && !isAtBottomRef.current) return
+      let rafId = 0
+      const scrollToBottom = () => {
+        if (!isAtBottomRef.current) return
         scrollEl.scrollTop = scrollEl.scrollHeight
       }
 
-      scrollToBottom(true)
-
-      let rafId = 0
-      const scheduleScrollToBottom = (force = false) => {
-        cancelAnimationFrame(rafId)
-        rafId = requestAnimationFrame(() => {
-          scrollToBottom(force)
-        })
-      }
-
-      // 首帧布局可能尚未收敛，补一次异步置底
-      scheduleScrollToBottom(true)
-      const rafId2 = requestAnimationFrame(() => scheduleScrollToBottom(true))
-
       const observer = new ResizeObserver(() => {
-        scheduleScrollToBottom()
+        cancelAnimationFrame(rafId)
+        rafId = requestAnimationFrame(scrollToBottom)
       })
       observer.observe(measureEl)
 
       return () => {
         cancelAnimationFrame(rafId)
-        cancelAnimationFrame(rafId2)
         observer.disconnect()
+      }
+    }, [getScrollEl, scrollContainerRef])
+
+    /** 挂载 / 新元素时置底：首次强制，后续仅在底部时跟随 */
+    useLayoutEffect(() => {
+      const scrollEl = getScrollEl()
+      if (!scrollEl) return
+
+      const force = isFirstMountRef.current
+      isFirstMountRef.current = false
+
+      const scrollToBottom = (forceScroll = false) => {
+        if (!forceScroll && !isAtBottomRef.current) return
+        scrollEl.scrollTop = scrollEl.scrollHeight
+      }
+
+      scrollToBottom(force)
+
+      if (!force) {
+        if (isAtBottomRef.current) {
+          requestAnimationFrame(() => scrollToBottom(false))
+        }
+        return
+      }
+
+      let rafId = 0
+      const rafId2 = requestAnimationFrame(() => {
+        rafId = requestAnimationFrame(() => scrollToBottom(true))
+      })
+
+      return () => {
+        cancelAnimationFrame(rafId2)
+        cancelAnimationFrame(rafId)
       }
     }, [elements.length, getScrollEl, scrollContainerRef])
 
