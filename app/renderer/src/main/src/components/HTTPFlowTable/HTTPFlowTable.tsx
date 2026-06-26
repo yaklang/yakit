@@ -660,6 +660,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
         if (!data) return
         try {
           let cacheDataList = JSONParseLog(data, { page: 'HTTPFlowTable', fun: 'getShieldList' })?.data || []
+          const current = getShieldData()?.data || []
+          if (isEqual(current, cacheDataList)) return
           if (cacheDataList.length > SHIELD_MAX_LIMIT && isOneceLoading.current) {
             setShowShieldTooManyHint(true)
           }
@@ -705,20 +707,19 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
       if (filter['ContentType']) {
         filter['SearchContentType'] = filter['ContentType'].join(',')
       }
-      const newParams = {
-        ...getParams(),
-        ...filter,
-        Tags: buildHTTPFlowQueryTags(tagsFilter, onlyFavorite),
-        bodyLength: !!(afterBodyLength || beforeBodyLength || checkBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
-      }
-      setParams(newParams)
-      setParams({
+      setP({
+        Filter: {
+          ...getParams(),
+          ...filter,
+          Tags: buildHTTPFlowQueryTags(tagsFilter, onlyFavorite),
+          bodyLength: !!(afterBodyLength || beforeBodyLength || checkBodyLength), // 用来判断响应长度的icon颜色是否显示蓝色
+        },
         Pagination: {
           ...tableParams.Pagination,
           Order: sort.order,
           OrderBy: sort.orderBy === 'DurationMs' ? 'duration' : sort.orderBy || 'id',
         },
-      } as ParamsTProps)
+      })
     },
     { wait: 500 },
   ).run
@@ -803,6 +804,9 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     delete copyQuery.Pagination
     delete copyQuery.AfterId
     delete copyQuery.BeforeId
+    if (Array.isArray(copyQuery.Methods)) {
+      copyQuery.Methods = copyQuery.Methods.join(',')
+    }
     setQueryParams(JSON.stringify(copyQuery))
   }, [tableParams.Filter])
 
