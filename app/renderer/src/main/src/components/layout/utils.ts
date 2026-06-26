@@ -41,6 +41,7 @@ export const safeFormatDownloadProcessState = (state: DownloadingState) => {
 }
 
 export const apiSystemConfig: APINoRequestFunc<API.SystemConfigResponse> = (hiddenError) => {
+  console.log('system/config-接口请求')
   return new Promise((resolve, reject) => {
     NetWorkApi<null, API.SystemConfigResponse>({
       method: 'get',
