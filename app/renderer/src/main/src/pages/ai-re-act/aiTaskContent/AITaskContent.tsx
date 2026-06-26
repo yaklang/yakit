@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { AITaskContentProps } from './type'
 import { YakitSideTab } from '@/components/yakitSideTab/YakitSideTab'
 import { AIAgentTriggerEventInfo, AITabsEnumType } from '@/pages/ai-agent/aiAgentType'
@@ -10,11 +10,10 @@ import { OutlineXIcon } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
 import classNames from 'classnames'
 import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
-import { AIReActTaskChatContent, AIRenderTaskFooterExtra } from '../aiReActTaskChat/AIReActTaskChat'
+import { AIReActTaskChatContent } from '../aiReActTaskChat/AIReActTaskChat'
+import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatReviewBar'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
-import { AIChatQSDataTypeEnum } from '../hooks/aiRender'
-import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
   const { tabBarExtraContent, emptyNode } = props
@@ -22,16 +21,19 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
 
   const {
     chatIPCData: { taskChat },
-    reviewInfo,
-    planReviewTreeKeywordsMap,
   } = useChatIPCStore()
   const [tabs, setTabs, getTabs] = useGetSetState<YakitSideTabProps['yakitTabs']>([])
   const [activeKey, setActiveKey] = useState<string>('taskContent')
+  const [scrollToBottom, setScrollToBottom] = useState(false)
 
   const isSetTaskTabRef = useRef<boolean>(false)
   const taskGoalRef = useRef<Map<string, string>>(new Map())
   const divRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(divRef)
+
+  const onScrollToBottom = useMemoizedFn(() => {
+    setScrollToBottom((v) => !v)
+  })
 
   useEffect(() => {
     if (inViewport) {
@@ -117,26 +119,17 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const tabContent = useCreation(() => {
     switch (activeKey) {
       case 'taskContent':
-        return <AIReActTaskChatContent />
+        return <AIReActTaskChatContent scrollToBottom={scrollToBottom} onScrollToBottom={onScrollToBottom} />
 
       default:
         const taskItem = tabs.find((item) => item.value === activeKey)
         const goal = taskGoalRef.current.get(activeKey)
         return <AITaskExecutionDetails taskId={activeKey} taskGoal={goal} taskName={taskItem?.label as string} />
     }
-  }, [activeKey, tabs])
-
-  const detachedPlanReviewInfo = useMemo(() => {
-    if (reviewInfo?.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
-      return reviewInfo
-    }
-    return null
-  }, [reviewInfo])
-
-  const onExtraAction = useMemoizedFn(() => {})
+  }, [activeKey, onScrollToBottom, scrollToBottom, tabs])
 
   return (
-    <div className={styles['chat-content-wrapper']}>
+    <div className={styles['chat-content-wrapper']} ref={divRef}>
       {!!taskChat?.elements?.length || !!tabs.length ? (
         <YakitSideTab
           key={i18n.language}
@@ -156,28 +149,7 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
         emptyNode
       )}
 
-      {detachedPlanReviewInfo && (
-        <AIReActTaskChatReview
-          reviewInfo={detachedPlanReviewInfo}
-          setScrollToBottom={() => {}}
-          planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
-          footerExtra={(node) => (
-            <AIRenderTaskFooterExtra
-              onExtraAction={onExtraAction}
-              btnProps={{ size: 'middle' }}
-              subTaskBtnProps={{
-                size: 'middle',
-                type: 'outline2',
-                className: '',
-                colors: 'primary',
-                radius: '4px',
-              }}
-            >
-              {node}
-            </AIRenderTaskFooterExtra>
-          )}
-        />
-      )}
+      <AIReActTaskChatReviewBar setScrollToBottom={setScrollToBottom} />
     </div>
   )
 })

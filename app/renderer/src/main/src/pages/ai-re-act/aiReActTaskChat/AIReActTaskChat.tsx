@@ -16,13 +16,11 @@ import {
   AIRenderTaskFooterExtraProps,
 } from './AIReActTaskChatType'
 import styles from './AIReActTaskChat.module.scss'
-import { ColorsBrainCircuitIcon } from '@/assets/icon/colors'
 import { AIAgentChatStream, AIChatLeftSide } from '@/pages/ai-agent/chatTemplate/AIAgentChatTemplate'
 import { useControllableValue, useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import classNames from 'classnames'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { ChevrondownButton } from '../aiReActChat/AIReActComponent'
-import { AIReActTaskChatReview } from '@/pages/ai-agent/aiAgentChat/AIAgentChat'
 import {
   OutlineArrowscollapseIcon,
   OutlineArrowsexpandIcon,
@@ -58,6 +56,7 @@ import { YakitSwitch } from '@/components/yakitUI/YakitSwitch/YakitSwitch'
 import useAIAgentDispatcher from '@/pages/ai-agent/useContext/useDispatcher'
 import { has } from 'lodash'
 import { AITaskContent } from '../aiTaskContent/AITaskContent'
+import { useTaskChatExtraAction } from './useTaskChatExtraAction'
 
 const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
   const { setShowFreeChat, setTimeLine } = props
@@ -135,102 +134,16 @@ const AIReActTaskChat: React.FC<AIReActTaskChatProps> = React.memo((props) => {
 export default AIReActTaskChat
 
 export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = React.memo((props) => {
-  const { reviewInfo, planReviewTreeKeywordsMap, chatIPCData } = useChatIPCStore()
+  const { scrollToBottom, onScrollToBottom } = props
+  const { reviewInfo, chatIPCData } = useChatIPCStore()
   const { t } = useI18nNamespaces(['aiAgent'])
   const { activeChat } = useAIAgentStore()
   const { taskChat } = chatIPCData
-
-  const taskStatus = useCreation(() => {
-    return chatIPCData.taskStatus
-  }, [chatIPCData.taskStatus])
-
-  const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
+  const { onExtraAction, getTaskId } = useTaskChatExtraAction()
 
   const streams = useCreation(() => {
     return taskChat.elements
   }, [taskChat.elements])
-
-  const [scrollToBottom, setScrollToBottom] = useState(false)
-  const onScrollToBottom = useMemoizedFn(() => {
-    setScrollToBottom((v) => !v)
-  })
-
-  const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchCurrentTaskPlanID()
-  })
-  const getTaskId = useMemoizedFn(() => {
-    return getTaskInfo()?.taskID
-  })
-  /**取消当前指定任务 */
-  const onStopTask = useMemoizedFn(() => {
-    const taskId = getTaskId()
-    if (!taskId) return
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-      SyncJsonInput: JSON.stringify({ task_id: taskId }),
-    })
-    if (!!reviewInfo) {
-      chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
-    }
-    onSendPlayHistoryList()
-  })
-  /**取消当前执行的子任务 */
-  const onStopSubTask = useMemoizedFn((syncID: string) => {
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
-      SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', skip_current_task: true }),
-      syncID: syncID,
-    })
-    if (!!reviewInfo) {
-      chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
-    }
-    setTimeout(() => {
-      onSendPlayHistoryList()
-    }, 500)
-  })
-  const onSendPlayHistoryList = useMemoizedFn(() => {
-    chatIPCData.execute && handleSendSyncMessage({ syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
-  })
-  const onExtraAction = useMemoizedFn((type: 'stopTask' | 'stopSubTask' | 'recover', syncID: string) => {
-    switch (type) {
-      case 'stopTask':
-        onStopTask()
-        break
-      case 'stopSubTask':
-        onStopSubTask(syncID)
-        break
-      case 'recover':
-        onRecover()
-        break
-      default:
-        break
-    }
-  })
-
-  const onRecover = useMemoizedFn(() => {
-    const info = getTaskInfo()
-    const coordinatorId = info?.coordinatorId
-    const taskId = info?.taskID
-    if (!coordinatorId) return
-    // 选停止当前任务，再发送恢复的数据
-    if (taskStatus.loading && taskId) {
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
-        SyncJsonInput: JSON.stringify({ task_id: taskId }),
-      })
-    }
-
-    setTimeout(() => {
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
-        SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId }),
-      })
-      chatIPCEvents.resetCurrentTaskPlanID()
-    }, 200)
-    if (!!reviewInfo) {
-      chatIPCEvents.handleTaskReviewRelease((reviewInfo.data as AIReviewType).id)
-    }
-  })
 
   return (
     <>
@@ -242,66 +155,39 @@ export const AIReActTaskChatContent: React.FC<AIReActTaskChatContentProps> = Rea
           taskStatus={chatIPCData.taskStatus}
         />
       </div>
-      {!!reviewInfo ? (
-        <AIReActTaskChatReview
-          reviewInfo={reviewInfo}
-          planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
-          setScrollToBottom={setScrollToBottom}
-          footerExtra={(node) => (
-            <AIRenderTaskFooterExtra
-              onExtraAction={onExtraAction}
-              btnProps={{ size: 'middle' }}
-              subTaskBtnProps={{
-                size: 'middle',
-                type: 'outline2',
-                className: '',
-                colors: 'primary',
-                radius: '4px',
-              }}
-            >
-              {node}
-            </AIRenderTaskFooterExtra>
-          )}
-        />
-      ) : (
-        streams.length > 0 && (
-          <div className={styles['footer']}>
-            {chatIPCData.execute && (
-              <AIManualAdditionPopover chatType="task">
-                <YakitButton
-                  type="outline2"
-                  radius="28px"
-                  icon={<OutlineHandIcon />}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                  }}
-                  size="large"
-                >
-                  {t('AIReActTaskChatContent.humanIntervention')}
-                </YakitButton>
-              </AIManualAdditionPopover>
-            )}
-
-            <AIGlobalCommandPopover>
-              <YakitButton icon={<OutlineCodeIcon />} radius="28px" type="outline2" size="large">
-                {t('AIReActTaskChatContent.globalDirective')}
+      {!reviewInfo && streams.length > 0 && (
+        <div className={styles['footer']}>
+          {chatIPCData.execute && (
+            <AIManualAdditionPopover chatType="task">
+              <YakitButton
+                type="outline2"
+                radius="28px"
+                icon={<OutlineHandIcon />}
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+                size="large"
+              >
+                {t('AIReActTaskChatContent.humanIntervention')}
               </YakitButton>
-            </AIGlobalCommandPopover>
-            {chatIPCData.execute && !!getTaskId() && (
-              <>
-                <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />
-              </>
-            )}
-            <YakitButton
-              type="outline2"
-              icon={<OutlinePositionIcon />}
-              radius="50%"
-              onClick={onScrollToBottom}
-              className={styles['position-button']}
-              size="large"
-            />
-          </div>
-        )
+            </AIManualAdditionPopover>
+          )}
+
+          <AIGlobalCommandPopover>
+            <YakitButton icon={<OutlineCodeIcon />} radius="28px" type="outline2" size="large">
+              {t('AIReActTaskChatContent.globalDirective')}
+            </YakitButton>
+          </AIGlobalCommandPopover>
+          {chatIPCData.execute && !!getTaskId() && <AIRenderTaskFooterExtra onExtraAction={onExtraAction} />}
+          <YakitButton
+            type="outline2"
+            icon={<OutlinePositionIcon />}
+            radius="50%"
+            onClick={onScrollToBottom}
+            className={styles['position-button']}
+            size="large"
+          />
+        </div>
       )}
     </>
   )

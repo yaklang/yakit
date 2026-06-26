@@ -42,18 +42,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { randomString } from '@/utils/randomUtil'
 import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 
-const ReviewSubmitButton: FC<{
-  onClick: () => void
-}> = ({ onClick }) => {
-  const { t } = useI18nNamespaces(['yakitUi'])
-  return (
-    <button className={styles['continue-btn']} onClick={onClick}>
-      {t('YakitButton.runNow')}
-      <ColorsOutlineWarpIcon />
-    </button>
-  )
-}
-
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
   const {
     info,
@@ -503,12 +491,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     )
     return findIndex !== -1
   }, [review, type])
-  const hasReviewSelectorActions = useCreation(() => {
-    return noAIOptionsList.showButton.length > 0 || noAIOptionsList.allowShowInput.length > 0
-  }, [noAIOptionsList])
-  const showReviewFooterActions = useCreation(() => {
-    return isContinue || hasReviewSelectorActions
-  }, [isContinue, hasReviewSelectorActions])
   const onSendAIByValue = useMemoizedFn((value: string, optionValue?: string) => {
     const params: AIChatIPCSendParams = {
       value,
@@ -557,13 +539,16 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
               })}
             </div>
           )}
-          {isContinue && <ReviewSubmitButton onClick={handleContinue} />}
+          <button className={styles['continue-btn']} onClick={handleContinue}>
+            {t('YakitButton.runNow')}
+            <ColorsOutlineWarpIcon />
+          </button>
         </>
       )
     }
     return (
       <div className={styles['btn-group']}>
-        {showReviewFooterActions && renderFooterRightExtra()}
+        {isContinue && renderFooterRightExtra()}
         {type === 'require_user_interactive' && (
           <YakitButton disabled={!isRequireQS} loading={requireLoading} onClick={handleAIRequireQSSend}>
             {t('YakitButton.submitted')}
@@ -573,7 +558,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     )
   }, [
     isContinue,
-    showReviewFooterActions,
     reviewTreeOption,
     forgeOption,
     type,
