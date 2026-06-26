@@ -136,6 +136,11 @@ interface StartUploadProps {
   isUploadSyncData?: boolean
   // 是否更新全局配置
   isUpdateGlobalConfig?: boolean
+  // 登录信息
+  loginInfo?: {
+    isLogin: boolean
+    token: string
+  }
 }
 
 export const useUploadInfoByEnpriTrace = () => {
@@ -143,7 +148,10 @@ export const useUploadInfoByEnpriTrace = () => {
   const { setEeSystemConfig } = useEeSystemConfig()
   const startUpload = useMemoizedFn(async (params: StartUploadProps): Promise<API.SystemConfigList[] | undefined> => {
     const { isAutoUploadProject, isUploadSyncData, isUpdateGlobalConfig } = params || {}
-    const { isLogin, token } = userInfo
+    const isLogin = params?.loginInfo?.isLogin || userInfo.isLogin
+    const token = params?.loginInfo?.token || userInfo.token
+    console.log('startUpload:userInfo.isLogin---', userInfo.isLogin)
+    console.log('startUpload:isLogin---', isLogin)
     if (isEnpriTrace()) {
       // 登录根据配置参数判断是否自动上传项目
       // 退出登录不需要去中止正在上传的项目；线上接口会抛错；因为循环跑接口，所以抛错信息很能很多(已告知产品)

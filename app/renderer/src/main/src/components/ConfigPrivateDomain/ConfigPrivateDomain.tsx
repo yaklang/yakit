@@ -116,10 +116,15 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         success(t('ConfigPrivateDomain.enterpriseLoginSuccess'))
         onClose && onClose()
         onSuccee && onSuccee()
+        console.log('bengin-222')
         systemConfig = await uploadProjectEvent.startUpload({
           isAutoUploadProject: true,
           isUploadSyncData: true,
           isUpdateGlobalConfig: enterpriseLogin,
+          loginInfo: {
+            isLogin: true,
+            token: user.token,
+          },
         })
       }
       if (systemConfig?.length) {
@@ -185,7 +190,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         } else {
           setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
         }
-
+        console.log('bengin-111')
         uploadProjectEvent
           .startUpload({
             isAutoUploadProject: true,
