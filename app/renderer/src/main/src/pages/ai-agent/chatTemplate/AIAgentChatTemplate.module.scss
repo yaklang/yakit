@@ -182,13 +182,13 @@
     }
   }
   // 后代类名ai-stream-chat-content-wrapper且下一个也是 的不要 padding-top（concurrent-stream-card 本身是流卡片容器，排除在外保留间距）
-  .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
-    & + .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
-      .item-inner:has(:global(.ai-stream-chat-content-wrapper)):not(:has(:global(.concurrent-stream-card))) {
-        padding-top: 0;
-      }
-    }
-  }
+  // .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
+  //   & + .item-wrapper:has(:global(.ai-stream-chat-content-wrapper)) {
+  //     .item-inner:has(:global(.ai-stream-chat-content-wrapper)):not(:has(:global(.concurrent-stream-card))) {
+  //       padding-top: 0;
+  //     }
+  //   }
+  // }
   .task-loading-footer {
     padding: 0 12px;
   }
