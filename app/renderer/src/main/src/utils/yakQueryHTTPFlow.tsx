@@ -52,6 +52,10 @@ export interface YakQueryHTTPFlowRequest {
   HiddenIndex?: string[]
   /** MITM 提取聚合行多选 OR 过滤 */
   MitmExtractAggregateFilterRows?: MitmExtractAggregateFlowFilterRow[]
+  AfterId?: number
+  BeforeId?: number
+  /** 仅前端用于 BodyLength 筛选图标状态，不会传给后端 */
+  bodyLength?: boolean
 }
 
 /** QueryMITMExtractedAggregate 返回行（IPC/JSON 可能为 PascalCase 或 camelCase） */

@@ -29,6 +29,7 @@ export interface HTTPFlow {
   Hash: string
   IsHTTPS: boolean
   Url: string
+  URL: string
   Request: Uint8Array
   Response: Uint8Array
   StatusCode: number
@@ -309,6 +310,7 @@ export const HTTP_FLOW_FAVORITE_TAG = 'YAKIT_FAVORITE'
 
 export const OFFSET_LIMIT = 30
 export const OFFSET_STEP = 100
+export const SHIELD_MAX_LIMIT = 5
 
 export const HTTP_FLOW_TABLE_SHIELD_DATA = 'HTTP_FLOW_TABLE_SHIELD_DATA'
 

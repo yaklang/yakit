@@ -19,6 +19,28 @@ import { ColumnSchemaProps, EditTable, UiSchemaTableProps } from './editTable/Ed
 import { cloneDeep } from 'lodash'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
+const JSON_SCHEMA_ROW_FORM_CLASS = 'json-schema-row-form'
+
+const mergeUiSchemaRowFormClass = (uiSchema: UiSchema = {}): UiSchema => {
+  const result: UiSchema = { ...uiSchema }
+  const existingClassNames = result['ui:classNames']
+  if (typeof existingClassNames === 'string') {
+    result['ui:classNames'] = classNames(existingClassNames, JSON_SCHEMA_ROW_FORM_CLASS)
+  } else {
+    result['ui:classNames'] = JSON_SCHEMA_ROW_FORM_CLASS
+  }
+
+  Object.keys(result).forEach((key) => {
+    if (key.startsWith('ui:')) return
+    const child = result[key]
+    if (child && typeof child === 'object') {
+      result[key] = mergeUiSchemaRowFormClass(child as UiSchema)
+    }
+  })
+
+  return result
+}
+
 export const getJsonSchemaListResult = (obj: { [key: string]: any }) => {
   // 此处的key用于筛选重复的表单数据
   let keyError: string[] = []
@@ -75,17 +97,23 @@ export interface JsonFormWrapperProps {
   schema: RJSFSchema
   uiSchema: UiSchema
   disabled?: boolean
+  isInline?: boolean
 }
 
 /** 创建一个包装组件来处理 JsonForm */
 export const JsonFormWrapper: React.FC<JsonFormWrapperProps> = React.memo((props) => {
-  const { jsonSchemaListRef, field, value, schema, uiSchema, disabled } = props
+  const { jsonSchemaListRef, field, value, schema, uiSchema: PropsUiSchema, disabled, isInline } = props
   const { t } = useI18nNamespaces(['yakitUi'])
 
   const [formData, setFormData, getFormData] = useGetState<any>(value || {})
   const jsonSchemaRef = useRef<any>()
   // 用于强制刷新
   const [formKey, setFormKey] = useState(0)
+
+  const uiSchema = useMemo(
+    () => (isInline ? mergeUiSchemaRowFormClass(cloneDeep(PropsUiSchema || {})) : PropsUiSchema),
+    [PropsUiSchema, isInline],
+  )
 
   useEffect(() => {
     if (jsonSchemaListRef.current) {

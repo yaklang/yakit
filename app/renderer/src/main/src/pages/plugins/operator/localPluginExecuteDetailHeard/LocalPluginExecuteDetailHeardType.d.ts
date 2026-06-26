@@ -45,6 +45,7 @@ export interface ExecuteEnterNodeByPluginParamsProps extends JsonFormSchemaListW
   paramsList: YakParamProps[]
   pluginType?: string
   isExecuting: boolean
+  isInline?: boolean
 }
 
 export interface OutputFormComponentsByTypeProps extends JsonFormSchemaListWrapper {
@@ -55,6 +56,7 @@ export interface OutputFormComponentsByTypeProps extends JsonFormSchemaListWrapp
   disabled?: boolean
   /** 插件类型 */
   pluginType?: string
+  isInline?: boolean
 }
 
 export interface FormExtraSettingProps {
@@ -82,6 +84,7 @@ export interface FormContentItemByTypeProps extends JsonFormSchemaListWrapper {
   item: YakParamProps
   pluginType?: string
   disabled?: boolean
+  isInline?: boolean
 }
 
 export interface PluginFixFormParamsProps {

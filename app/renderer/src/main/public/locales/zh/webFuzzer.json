@@ -448,7 +448,7 @@
     "real_host": "真实Host",
     "host_collision_tip": "如需Host碰撞，请配置真实Host",
     "set_proxy": "设置代理",
-    "multi_proxy_tip": "设置多个代理时，会智能选择能用的代理进行发包",
+    "multi_proxy_tip": "每次发包会根据设置的 Min-Max 区间进行随机延迟",
     "proxy_auth_config": "配置代理认证",
     "disable_system_proxy": "禁用系统代理",
     "frontend_render_count": "前端渲染数量",

@@ -48,18 +48,16 @@ export const useHTTPFlowTableShortcutKeys = (options: UseHTTPFlowTableShortcutKe
   } = options
 
   useShortcutKeyTrigger('sendAndJump*common', (focus) => {
-    if (!inViewport || focus || isMonacoFocused(focus)) return
-    const selected = getSelected()
-    if (!selected) return
+    const selected = getSelected?.()
+    if (!inViewport || !selected || isMonacoFocused(focus)) return
     selected.IsWebsocket
       ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request)
       : onSendToTab(selected, true, downstreamProxyStr, fromMITM)
   })
 
   useShortcutKeyTrigger('send*common', (focus) => {
-    if (!inViewport || isMonacoFocused(focus)) return
     const selected = getSelected()
-    if (!selected) return
+    if (!inViewport || !selected || isMonacoFocused(focus)) return
     selected.IsWebsocket
       ? newWebsocketFuzzerTab(selected.IsHTTPS, selected.Request, false)
       : onSendToTab(selected, false, downstreamProxyStr, fromMITM)

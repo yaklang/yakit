@@ -24,7 +24,8 @@ export const onSendToTab = async (
 ) => {
   if (!rowData) return
   const params: Record<string, string> = {}
-  const isHttpUrl = (rowData as HTTPFlow).Url.startsWith('http://')
+  const { Url, URL } = rowData as HTTPFlow
+  const isHttpUrl = (Url || URL)?.startsWith('http://')
 
   if (fromMITM) {
     try {

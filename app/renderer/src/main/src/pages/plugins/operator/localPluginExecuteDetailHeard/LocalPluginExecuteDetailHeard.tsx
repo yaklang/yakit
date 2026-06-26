@@ -183,6 +183,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
             pluginType={plugin.Type}
             isExecuting={isExecuting}
             jsonSchemaListRef={jsonSchemaListRef}
+            isInline
           />
         )
       case 'codec':
@@ -490,7 +491,7 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
 
 /**执行的入口通过插件参数生成组件 */
 export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginParamsProps> = React.memo((props) => {
-  const { paramsList, pluginType, isExecuting, jsonSchemaListRef, jsonSchemaInitial } = props
+  const { paramsList, pluginType, isExecuting, jsonSchemaListRef, jsonSchemaInitial, isInline } = props
 
   return (
     <>
@@ -502,6 +503,7 @@ export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginPa
             disabled={isExecuting}
             jsonSchemaListRef={jsonSchemaListRef}
             jsonSchemaInitial={jsonSchemaInitial}
+            isInline={isInline}
           />
         </React.Fragment>
       ))}
@@ -510,7 +512,7 @@ export const ExecuteEnterNodeByPluginParams: React.FC<ExecuteEnterNodeByPluginPa
 })
 /**插件执行输入》输出form表单的组件item */
 export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React.memo((props) => {
-  const { item, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial } = props
+  const { item, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial, isInline } = props
   const { t, i18n } = useI18nNamespaces(['plugin', 'yakitUi'])
   let extraSetting: FormExtraSettingProps | undefined = undefined
   try {
@@ -616,6 +618,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
           disabled={disabled}
           jsonSchemaListRef={jsonSchemaListRef}
           jsonSchemaInitial={jsonSchemaInitial}
+          isInline={isInline}
         />
       )
   }
@@ -623,7 +626,7 @@ export const FormContentItemByType: React.FC<FormContentItemByTypeProps> = React
 
 /**执行表单单个项 */
 export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProps> = (props) => {
-  const { item, extraSetting, codeType, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial } = props
+  const { item, extraSetting, codeType, disabled, pluginType, jsonSchemaListRef, jsonSchemaInitial, isInline } = props
   const { t, i18n } = useI18nNamespaces(['yakitUi'])
   const [validateStatus, setValidateStatus] = useState<'success' | 'error'>('success')
 
@@ -837,6 +840,7 @@ export const OutputFormComponentsByType: React.FC<OutputFormComponentsByTypeProp
           jsonSchemaListRef={jsonSchemaListRef}
           disabled={disabled}
           value={value}
+          isInline={isInline}
         />
       )
     default:

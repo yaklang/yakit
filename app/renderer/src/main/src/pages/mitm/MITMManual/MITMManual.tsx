@@ -99,7 +99,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       hijackFilterFlag,
       setAutoForward,
     } = props
-    const { t, i18n } = useI18nNamespaces(['history'])
+    const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
     const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] = useGetState<SingleManualHijackInfoMessage>()
