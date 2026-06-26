@@ -279,13 +279,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     setEditShow(false)
   })
 
-  const submitDetachedPlan = useMemoizedFn((forceIncludePlans = false) => {
+  const submitDetachedPlan = useMemoizedFn(() => {
     const detachedReview = review as AIAgentGrpcApi.DetachedPlanRequire
     const syncPayload: { coordinator_id: string; plans?: AIAgentGrpcApi.DetachedPlan } = {
       coordinator_id: detachedReview.coordinator_id,
     }
     const isTreeEdited = !isEqual(reviewTrees, initReviewTreesRef.current)
-    if (forceIncludePlans || isTreeEdited) {
+    if (isTreeEdited) {
       const [rootTask] = reviewListToTrees(reviewTrees)
       if (rootTask) {
         syncPayload.plans = {
@@ -415,12 +415,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   /**审阅模式提交树,type: plan_review_require */
   const handleSubmitReviewTree = useMemoizedFn(() => {
     if (!reviewTreeOption) return
-
-    if (info.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
-      submitDetachedPlan(true)
-      setReviewTreeOption(undefined)
-      return
-    }
 
     const tree = reviewListToTrees(reviewTrees)
     const jsonInput = {
