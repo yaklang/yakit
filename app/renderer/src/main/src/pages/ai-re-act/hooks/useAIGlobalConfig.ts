@@ -6,12 +6,12 @@ import {
   grpcGetAIGlobalConfig,
   grpcSetAIGlobalConfig,
 } from '@/pages/ai-agent/aiModelList/utils'
-import { apiSystemConfig } from '@/components/layout/utils'
 import { useAIGlobalConfigStore } from '@/store/aiGlobalConfig'
 import { AIModelTypeEnum } from '@/pages/ai-agent/defaultConstant'
 import { shallow } from 'zustand/shallow'
 import { cloneDeep } from 'lodash'
 import { getFileNameByModelType } from '@/pages/ai-agent/aiModelList/aiModelForm/AIModelForm'
+import { API } from '@/services/swagger/resposeType'
 
 interface UseAIGlobalConfigData {
   aiGlobalConfig: AIGlobalConfig
@@ -29,7 +29,7 @@ interface UseAIGlobalConfigEvents {
   /** 获取最新的值,不会设置全局变量中的值,会设置ref */
   getLastAIGlobalConfig: () => Promise<AIGlobalConfig>
   /** 企业版登录后获取服务端 AI 配置并合并到本地配置 */
-  getAIGlobalConfigAfterLogin: () => Promise<void>
+  getAIGlobalConfigAfterLogin: (data: API.SystemConfigList[]) => Promise<void>
   /** 设置到全局变量中 */
   setConfigStore: (data: AIGlobalConfig) => void
 }
@@ -121,12 +121,12 @@ function useAIGlobalConfig(params) {
   })
 
   /** 企业版登录后获取服务端 AI 配置并合并到本地配置 */
-  const getAIGlobalConfigAfterLogin = useMemoizedFn(async () => {
+  const getAIGlobalConfigAfterLogin = useMemoizedFn(async (data: API.SystemConfigList[]) => {
     try {
+      if (!data?.length) return
       const currentConfig = await getLastAIGlobalConfig()
       const nextConfig: AIGlobalConfig = cloneDeep(currentConfig)
 
-      const data = (await apiSystemConfig()).data || []
       const aiConfig = data.find((item) => item.configName === 'AI')
       if (!aiConfig?.content) return
 
@@ -166,7 +166,7 @@ function useAIGlobalConfig(params) {
       onRefresh: (isShowLoading) => getAIGlobalConfig(isShowLoading),
       setAIGlobalConfig: (res) => setAIGlobalConfig(res),
       getLastAIGlobalConfig: () => getLastAIGlobalConfig(),
-      getAIGlobalConfigAfterLogin: () => getAIGlobalConfigAfterLogin(),
+      getAIGlobalConfigAfterLogin: (data) => getAIGlobalConfigAfterLogin(data),
       setConfigStore: (res) => setConfigStore(res),
     }
   }, [])

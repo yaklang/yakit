@@ -141,59 +141,61 @@ interface StartUploadProps {
 export const useUploadInfoByEnpriTrace = () => {
   const { userInfo } = useStore()
   const { setEeSystemConfig } = useEeSystemConfig()
-  const startUpload = useMemoizedFn((params: StartUploadProps) => {
+  const startUpload = useMemoizedFn(async (params: StartUploadProps): Promise<API.SystemConfigList[] | undefined> => {
     const { isAutoUploadProject, isUploadSyncData, isUpdateGlobalConfig } = params || {}
     const { isLogin, token } = userInfo
     if (isEnpriTrace()) {
       // 登录根据配置参数判断是否自动上传项目
       // 退出登录不需要去中止正在上传的项目；线上接口会抛错；因为循环跑接口，所以抛错信息很能很多(已告知产品)
       if (isLogin) {
-        apiSystemConfig()
-          .then((config) => {
-            console.log('apiSystemConfig----', config, isUpdateGlobalConfig)
+        try {
+          const config = await apiSystemConfig(true)
+          console.log('apiSystemConfig----', config, isUpdateGlobalConfig)
 
-            const data = config.data || []
-            setEeSystemConfig([...data])
-            let autoUploadProjectParams = {
-              isOpen: false,
-              day: 10,
+          const data = config.data || []
+          setEeSystemConfig([...data])
+          let autoUploadProjectParams = {
+            isOpen: false,
+            day: 10,
+          }
+          data.forEach((item) => {
+            if (isUploadSyncData && item.configName === 'syncData') {
+              if (item.isOpen) {
+                syncData(token)
+              }
             }
-            data.forEach((item) => {
-              if (isUploadSyncData && item.configName === 'syncData') {
-                if (item.isOpen) {
-                  syncData(token)
-                }
+            if (item.configName === 'autoUploadProject') {
+              autoUploadProjectParams = {
+                isOpen: item.isOpen,
+                day: !Number.isNaN(+item.content) ? +item.content : 10,
               }
-              if (item.configName === 'autoUploadProject') {
-                autoUploadProjectParams = {
-                  isOpen: item.isOpen,
-                  day: !Number.isNaN(+item.content) ? +item.content : 10,
-                }
-              }
-              // 此处全局配置更新仅在登录时生效
-              if (isUpdateGlobalConfig && item.configName === 'globalProxy') {
-                if (item.isOpen) {
-                  console.log('apiUpdateGlobalNetworkConfig---', item.content)
+            }
+            // 此处全局配置更新仅在登录时生效
+            if (isUpdateGlobalConfig && item.configName === 'globalProxy') {
+              if (item.isOpen) {
+                console.log('apiUpdateGlobalNetworkConfig---', item.content)
 
-                  apiUpdateGlobalNetworkConfig({
-                    GlobalProxy: [item.content],
-                  })
-                }
+                apiUpdateGlobalNetworkConfig({
+                  GlobalProxy: [item.content],
+                })
               }
-            })
-
-            //自动上传项目
-            if (isAutoUploadProject && autoUploadProjectParams.isOpen) {
-              emiter.emit('autoUploadProject', JSON.stringify(autoUploadProjectParams))
             }
           })
-          .catch(() => {
-            setEeSystemConfig([])
-          })
+
+          //自动上传项目
+          if (isAutoUploadProject && autoUploadProjectParams.isOpen) {
+            emiter.emit('autoUploadProject', JSON.stringify(autoUploadProjectParams))
+          }
+          return data
+        } catch {
+          setEeSystemConfig([])
+          return undefined
+        }
       }
-    } else {
-      isUploadSyncData && syncData(token)
+      return undefined
     }
+    isUploadSyncData && syncData(token)
+    return undefined
   })
 
   // 登录前同步与HTTPFlows同步

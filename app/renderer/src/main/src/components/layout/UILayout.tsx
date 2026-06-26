@@ -49,7 +49,6 @@ import { useScreenRecorder } from '@/store/screenRecorder'
 import { ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicControl'
 import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { RemoteEngine } from './RemoteEngine/RemoteEngine'
 import { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
@@ -183,8 +182,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   const { setSoftMode } = useSoftMode()
   /** ---------- 软件状态相关属性 End ---------- */
 
-  const [_, aiGlobalConfigEvent] = useAIGlobalConfig()
-
   // #region 新窗口引擎已经启动好，只需要看门狗检查是否ready，此处默认初始化一些变量
   const [showLoadingPage, setShowLoadingPage] = useState<boolean>(false)
   /** 本地引擎自检输出日志 */
@@ -263,13 +260,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
 
   // #region 企业版登录成功后根据配置信息看是否需要自动上传项目
   const projectListRef = useRef<ProjectDescription[]>([])
-  useEffect(() => {
-    // 登录获取服务端AI配置
-    if (userInfo.isLogin && isEnpriTrace()) {
-      aiGlobalConfigEvent.getAIGlobalConfigAfterLogin()
-    }
-  }, [userInfo.isLogin])
-
   useEffect(() => {
     emiter.on('autoUploadProject', (data) => {
       try {

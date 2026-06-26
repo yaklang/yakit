@@ -25,6 +25,7 @@ import { RightOutlined } from '@ant-design/icons'
 import { LoginParamsProp } from '@/pages/Login'
 import { YakitSpin } from '../yakitUI/YakitSpin/YakitSpin'
 import { FIXED_PRIVATE_DOMAIN_BASE_URL } from '@/enums/privateDomain'
+import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 interface OnlineProfileProps {
   BaseUrl: string
@@ -80,6 +81,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   }
   // 企业登录
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
+  const [, aiGlobalConfigEvent] = useAIGlobalConfig()
   const loginUser = useMemoizedFn(async () => {
     const { user_name, pwd } = getFormValue()
     try {
@@ -109,15 +111,19 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         token: res.token,
       }
       setStoreUserInfo(user)
+      let systemConfig: Awaited<ReturnType<typeof uploadProjectEvent.startUpload>>
       if (data?.next) {
         success(t('ConfigPrivateDomain.enterpriseLoginSuccess'))
         onClose && onClose()
         onSuccee && onSuccee()
-        uploadProjectEvent.startUpload({
+        systemConfig = await uploadProjectEvent.startUpload({
           isAutoUploadProject: true,
           isUploadSyncData: true,
           isUpdateGlobalConfig: enterpriseLogin,
         })
+      }
+      if (systemConfig?.length) {
+        await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
       }
       // 首次登录强制修改密码 非原生系统登录时不强制修改
       if (!res.loginTime && res.from_platform === 'company') {
@@ -125,8 +131,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
         return
       }
       //超过设置时间 强制修改密码
-      const { isOpen, content } =
-        (await apiSystemConfig(true)).data?.find((item) => item.configName === 'forceChangePwd') || {}
+      const { isOpen, content } = systemConfig?.find((item) => item.configName === 'forceChangePwd') || {}
       const days = Number(content)
       if (!isOpen || !days || !res.updatedAt || res.from_platform !== 'company') return
       if (Math.floor(Date.now() / 1000) - days * 86400 > res.updatedAt) {
@@ -181,10 +186,16 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           setRemoteValue(getRemoteHttpSettingGV(), JSON.stringify(values))
         }
 
-        uploadProjectEvent.startUpload({
-          isAutoUploadProject: true,
-          isUpdateGlobalConfig: enterpriseLogin,
-        })
+        uploadProjectEvent
+          .startUpload({
+            isAutoUploadProject: true,
+            isUpdateGlobalConfig: enterpriseLogin,
+          })
+          .then(async (systemConfig) => {
+            if (systemConfig?.length) {
+              await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
+            }
+          })
       })
       .catch((e: any) => {
         // !enterpriseLogin && setTimeout(() => setLoading(false), 300)
@@ -303,11 +314,17 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
     success('企业登录成功')
     onClose && onClose()
     onSuccee && onSuccee()
-    uploadProjectEvent.startUpload({
-      isAutoUploadProject: true,
-      isUploadSyncData: true,
-      isUpdateGlobalConfig: enterpriseLogin,
-    })
+    uploadProjectEvent
+      .startUpload({
+        isAutoUploadProject: true,
+        isUploadSyncData: true,
+        isUpdateGlobalConfig: enterpriseLogin,
+      })
+      .then(async (systemConfig) => {
+        if (systemConfig?.length) {
+          await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
+        }
+      })
   })
 
   // 全局监听登录状态
