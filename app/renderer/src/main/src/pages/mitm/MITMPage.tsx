@@ -181,7 +181,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     })
     grpcClientMITMNotification(mitmVersion).on((i: Uint8Array) => {
       try {
-        info(Uint8ArrayToString(i))
+        yakitNotify('warning', Uint8ArrayToString(i))
       } catch (e) {}
     })
 

@@ -1575,6 +1575,60 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
   }, [highLightItem])
 
   // 响应额外按钮
+  const openTooLargePacketFile = (filePath: string) => {
+    ipcRenderer
+      .invoke('is-file-exists', filePath)
+      .then((flag: boolean) => {
+        if (flag) {
+          openABSFileLocated(filePath)
+        } else {
+          failed(t('HTTPFlowDetailRequestAndResponse.targetFileNotExist'))
+        }
+      })
+      .catch(() => {})
+  }
+
+  const secondNodeReqExtraBtn = () => {
+    let extraBtn: ReactElement[] = []
+    if (flow?.IsTooLargeRequest) {
+      extraBtn.push(
+        <YakitDropdownMenu
+          key="intact-req"
+          menu={{
+            data: [
+              {
+                key: 'tooLargeRequestHeaderFile',
+                label: t('HTTPFlowDetailRequestAndResponse.viewHeader'),
+              },
+              { key: 'tooLargeRequestBodyFile', label: t('HTTPFlowDetailRequestAndResponse.viewBody') },
+            ],
+            onClick: ({ key }) => {
+              switch (key) {
+                case 'tooLargeRequestHeaderFile':
+                  openTooLargePacketFile(flow.TooLargeRequestHeaderFile)
+                  break
+                case 'tooLargeRequestBodyFile':
+                  openTooLargePacketFile(flow.TooLargeRequestBodyFile)
+                  break
+                default:
+                  break
+              }
+            },
+          }}
+          dropdown={{
+            trigger: ['click'],
+            placement: 'bottom',
+          }}
+        >
+          <YakitButton type="primary" size="small">
+            {t('HTTPFlowDetailRequestAndResponse.fullRequest')}
+          </YakitButton>
+        </YakitDropdownMenu>,
+      )
+    }
+    return extraBtn
+  }
+
   const secondNodeResExtraBtn = () => {
     let extraBtn: ReactElement[] = []
     if (flow?.IsTooLargeResponse) {
@@ -1592,28 +1646,10 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             onClick: ({ key }) => {
               switch (key) {
                 case 'tooLargeResponseHeaderFile':
-                  ipcRenderer
-                    .invoke('is-file-exists', flow.TooLargeResponseHeaderFile)
-                    .then((flag: boolean) => {
-                      if (flag) {
-                        openABSFileLocated(flow.TooLargeResponseHeaderFile)
-                      } else {
-                        failed(t('HTTPFlowDetailRequestAndResponse.targetFileNotExist'))
-                      }
-                    })
-                    .catch(() => {})
+                  openTooLargePacketFile(flow.TooLargeResponseHeaderFile)
                   break
                 case 'tooLargeResponseBodyFile':
-                  ipcRenderer
-                    .invoke('is-file-exists', flow.TooLargeResponseBodyFile)
-                    .then((flag: boolean) => {
-                      if (flag) {
-                        openABSFileLocated(flow.TooLargeResponseBodyFile)
-                      } else {
-                        failed(t('HTTPFlowDetailRequestAndResponse.targetFileNotExist'))
-                      }
-                    })
-                    .catch(() => {})
+                  openTooLargePacketFile(flow.TooLargeResponseBodyFile)
                   break
                 default:
                   break
@@ -1720,6 +1756,7 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
           <NewHTTPPacketEditor
             fromMITM={fromMITM}
             keepSearchName={`${pageType}-request`}
+            isShowBeautifyRender={!flow?.IsTooLargeRequest}
             title={(() => {
               let titleEle: ReactNode[] = []
               if (isShowBeforeData && beforeResValue.length > 0) {
@@ -1769,6 +1806,13 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
                   </Tooltip>,
                 )
               }
+              if (flow?.IsTooLargeRequest || flow?.IsRequestOversize) {
+                titleEle.push(
+                  <YakitTag style={{ marginLeft: 8 }} color="danger" key={'title-IsTooLargeRequest'}>
+                    {t('HTTPFlowDetailRequestAndResponse.oversizedRequest')}
+                  </YakitTag>,
+                )
+              }
               titleEle.push(<ResByteCountTag editor={reqEditor} pageType={pageType} showJumpTree={showJumpTree} />)
               return titleEle
             })()}
@@ -1790,9 +1834,12 @@ export const HTTPFlowDetailRequestAndResponse: React.FC<HTTPFlowDetailRequestAnd
             // 这个为了解决不可见字符的问题
             defaultPacket={!!flow?.SafeHTTPRequest ? flow.SafeHTTPRequest : undefined}
             extra={
-              flow.InvalidForUTF8Request ? (
-                <YakitTag color={'red'}>{t('HTTPFlowDetailRequestAndResponse.containsBinaryStream')}</YakitTag>
-              ) : undefined
+              <>
+                {flow.InvalidForUTF8Request ? (
+                  <YakitTag color={'red'}>{t('HTTPFlowDetailRequestAndResponse.containsBinaryStream')}</YakitTag>
+                ) : null}
+                {secondNodeReqExtraBtn()}
+              </>
             }
             defaultSearchKeyword={search}
             editorOperationRecord="HTTP_FLOW_DETAIL_REQUEST_AND_REQUEST"
