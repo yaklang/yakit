@@ -242,7 +242,6 @@ export const LocalPluginExecuteDetailHeard: React.FC<PluginExecuteDetailHeardPro
     const result = getJsonSchemaListResult(jsonSchemaListRef.current)
 
     if (result.jsonSchemaError.length > 0) {
-      console.log(result.jsonSchemaError)
       failed(`jsonSchema校验失败`)
       return
     }
