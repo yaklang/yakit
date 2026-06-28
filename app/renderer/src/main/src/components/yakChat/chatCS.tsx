@@ -1134,12 +1134,12 @@ export const YakChatCS: React.FC<YakChatCSProps> = (props) => {
             {/* <YakitChatCSIcon />
                         ChatCS
                         <Tooltip
-                            overlayClassName={classNames(styles["tooltip-wrapper"], styles["info-hint-popover"])}
-                            overlayStyle={{paddingTop: 4}}
+                            classNames={{ root: classNames(styles["tooltip-wrapper"], styles["info-hint-popover"]) }}
+                            styles={{ root: { paddingTop: 4 } }}
                             title={"ChatCS模型参数：6.5b，训练Token: 1.5T 显卡资源：A40*4，使用文心增强知识推理能力"}
                         >
                             <OutlineInformationcircleIcon className={styles["info-hint"]} />
-                        </Tooltip> */}
+                        </Tooltip>
             {/* <YakitRadioButtons
                             value={chatcsType}
                             onChange={(e) => {

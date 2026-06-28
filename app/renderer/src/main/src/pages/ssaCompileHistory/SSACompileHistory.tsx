@@ -210,7 +210,7 @@ const SSACompileHistory: React.FC<SSACompileHistoryProps> = (props) => {
       dataIndex: 'Description',
       render: (text) => {
         return (
-          <Tooltip title={text} overlayClassName={styles['tooltip-line-feed']}>
+          <Tooltip title={text} classNames={{ root: styles['tooltip-line-feed'] }}>
             <div className={classNames('yakit-content-single-ellipsis', styles['audit-text'])}>{text || '-'}</div>
           </Tooltip>
         )

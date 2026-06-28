@@ -1154,7 +1154,7 @@ export const HotPatchManagement: React.FC = () => {
       </div>
 
       <YakitModal
-        visible={createModalVisible}
+        open={createModalVisible}
         title={t('AddHotCodeTemplate.add_template')}
         onCancel={() => setCreateModalVisible(false)}
         onOk={onConfirmCreate}
@@ -1170,7 +1170,7 @@ export const HotPatchManagement: React.FC = () => {
       </YakitModal>
 
       <YakitModal
-        visible={groupModalVisible}
+        open={groupModalVisible}
         title={t('HotCodeTemplate.create_group')}
         onCancel={() => {
           setGroupModalVisible(false)
