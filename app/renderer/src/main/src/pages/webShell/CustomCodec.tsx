@@ -210,7 +210,7 @@ export const CustomCodecEditor: React.FC<CustomCodecEditorProps> = React.memo((p
           <YakitButton type="primary" className={mitmStyles['button-save']} onClick={() => onSaveToDataBase()}>
             保存
           </YakitButton>
-          <Tooltip title="官方网站" placement="top" overlayClassName={mitmStyles['question-tooltip']}>
+          <Tooltip title="官方网站" placement="top" classNames={{ root: mitmStyles['question-tooltip'] }}>
             <YakitButton
               type="outline2"
               className={mitmStyles['button-question']}

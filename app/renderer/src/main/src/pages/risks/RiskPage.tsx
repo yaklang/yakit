@@ -171,7 +171,7 @@ const RiskQuery: React.FC<RiskQueryProps> = React.memo((props) => {
     <div className={classNames(styles['risk-query'], { [styles['risk-query-hidden']]: !advancedQuery })}>
       <div className={styles['risk-query-heard']}>
         <span>{t('RiskQuery.advanced_query')}</span>
-        <Tooltip title={t('YakitButton.collapseFilter')} placement="top" overlayClassName="plugins-tooltip">
+        <Tooltip title={t('YakitButton.collapseFilter')} placement="top" classNames={{ root: 'plugins-tooltip' }}>
           <YakitButton type="text2" onClick={onClose} icon={<OutlineCloseIcon />}></YakitButton>
         </Tooltip>
       </div>

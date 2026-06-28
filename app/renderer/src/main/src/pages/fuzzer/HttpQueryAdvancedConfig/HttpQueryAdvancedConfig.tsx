@@ -539,7 +539,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 label={
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.real_host')}
-                    <Tooltip title={t('HttpQueryAdvancedConfig.host_collision_tip')} overlayStyle={{ width: 150 }}>
+                    <Tooltip title={t('HttpQueryAdvancedConfig.host_collision_tip')} styles={{ root: { width: 150 } }}>
                       <InformationCircleIcon className={styles['info-icon']} />
                     </Tooltip>
                   </span>
@@ -552,7 +552,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 label={
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.set_proxy')}
-                    <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} overlayStyle={{ width: 150 }}>
+                    <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} styles={{ root: { width: 150 } }}>
                       <InformationCircleIcon className={styles['info-icon']} />
                     </Tooltip>
                   </span>
@@ -621,7 +621,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                 label={
                   <span className={styles['advanced-config-form-label']}>
                     {t('HttpQueryAdvancedConfig.frontend_render_count')}
-                    <Tooltip title={t('HttpQueryAdvancedConfig.frontend_render_tip')} overlayStyle={{ width: 150 }}>
+                    <Tooltip title={t('HttpQueryAdvancedConfig.frontend_render_tip')} styles={{ root: { width: 150 } }}>
                       <InformationCircleIcon className={styles['info-icon']} />
                     </Tooltip>
                   </span>
@@ -724,7 +724,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   label={
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.render_fuzz')}
-                      <Tooltip title={t('HttpQueryAdvancedConfig.compat_mode_tip')} overlayStyle={{ width: 150 }}>
+                      <Tooltip title={t('HttpQueryAdvancedConfig.compat_mode_tip')} styles={{ root: { width: 150 } }}>
                         <InformationCircleIcon className={styles['info-icon']} />
                       </Tooltip>
                     </span>
@@ -742,7 +742,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   label={
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.no_fix_length')}
-                      <Tooltip title={t('HttpQueryAdvancedConfig.no_fix_length_tip')} overlayStyle={{ width: 220 }}>
+                      <Tooltip title={t('HttpQueryAdvancedConfig.no_fix_length_tip')} styles={{ root: { width: 220 } }}>
                         <InformationCircleIcon className={styles['info-icon']} />
                       </Tooltip>
                     </span>
@@ -946,7 +946,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                   label={
                     <span className={styles['advanced-config-form-label']}>
                       {t('HttpQueryAdvancedConfig.random_delay2')}
-                      <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} overlayStyle={{ width: 150 }}>
+                      <Tooltip title={t('HttpQueryAdvancedConfig.multi_proxy_tip')} styles={{ root: { width: 150 } }}>
                         <InformationCircleIcon className={styles['info-icon']} />
                       </Tooltip>
                     </span>
