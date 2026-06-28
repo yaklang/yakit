@@ -927,7 +927,11 @@ export const HubDetailListOpt: <T>(props: HubDetailListOptProps<T>) => any = mem
         </div>
         <div className={styles['plugin-details-item-show']}>
           {extraNode()}
-          <Tooltip title={help || 'No Description about it.'} placement="topRight" overlayClassName="plugins-tooltip">
+          <Tooltip
+            title={help || 'No Description about it.'}
+            placement="topRight"
+            classNames={{ root: 'plugins-tooltip' }}
+          >
             <OutlineQuestionmarkcircleIcon className={styles['plugin-details-item-show-icon-style']} />
           </Tooltip>
           <YakitPopover

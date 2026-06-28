@@ -402,7 +402,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
                           },
                         }}
                         wrapperStyle={{ width: 80, marginRight: 4 }}
-                        dropdownMatchSelectWidth={false}
+                        popupMatchSelectWidth={false}
                         onClick={(e) => {
                           e.stopPropagation()
                         }}
