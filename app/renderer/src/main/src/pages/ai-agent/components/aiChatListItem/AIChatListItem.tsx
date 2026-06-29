@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { AIChatListItemProps } from './type'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { AIReActChatReview } from '../aiReActChatReview/AIReActChatReview'
@@ -6,73 +6,34 @@ import { AIReviewResult } from '../aiReviewResult/AIReviewResult'
 import { AITriageChatContent } from '../aiTriageChat/AITriageChat'
 import ToolInvokerCard from '../ToolInvokerCard'
 import styles from './AIChatListItem.module.scss'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import DividerCard from '../DividerCard'
 import { AIToolDecision } from '../aiToolDecision/AIToolDecision'
 import { AIChatQSData, AIChatQSDataTypeEnum } from '@/pages/ai-re-act/hooks/aiRender'
 import AiFailPlanCard from '../aiFailPlanCard/AiFailPlanCard'
-import classNames from 'classnames'
-import { has, isArray } from 'lodash'
-import { HandleStartParams } from '../../aiAgentChat/type'
-import { AIChatMentionSelectItem } from '../aiChatMention/type'
 import { AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
-import { FileToChatQuestionList } from '../../template/type'
 import StreamingChatContent from './StreamingChatContent/StreamingChatContent'
 import StaticChatContent from './StaticChatContent/StaticChatContent'
-import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import useAIAgentStore from '../../useContext/useStore'
 import { AIManualIntervention } from '../aiManualIntervention/AIManualIntervention'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { AIModelErrorPrompt } from './aiModelErrorPrompt/AIModelErrorPrompt'
 import { AIHttpFlowFuzzStatusCard } from '../aiHttpFlowFuzzStatusCard/AIHttpFlowFuzzStatusCard'
 import { AIReportFinishCard } from '../aiReportFinishCard/AIReportFinishCard'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const chatContentExtraProps = {
   contentClassName: styles['content-wrapper'],
   chatClassName: styles['question-wrapper'],
 }
-/**@description 额外参数中获取文件列表数据 */
-export const isHaveFreeDialogFileList = (extraValue: HandleStartParams['extraValue']): FileToChatQuestionList[] => {
-  if (has(extraValue, 'freeDialogFileList') && isArray(extraValue.freeDialogFileList)) {
-    return extraValue.freeDialogFileList
-  }
-  return []
-}
-/**@description 额外参数中获取选中的forge */
-export const isHaveSelectForges = (extraValue: HandleStartParams['extraValue']): AIChatMentionSelectItem[] => {
-  if (has(extraValue, 'selectForges') && isArray(extraValue.selectForges)) {
-    return extraValue.selectForges
-  }
-  return []
-}
-/**@description 额外参数中获取选中的 tool */
-export const isHaveSelectTools = (extraValue: HandleStartParams['extraValue']): AIChatMentionSelectItem[] => {
-  if (has(extraValue, 'selectTools') && isArray(extraValue.selectTools)) {
-    return extraValue.selectTools
-  }
-  return []
-}
-/**@description 额外参数中获取选中的 KnowledgeBases */
-export const isHaveSelectKnowledgeBases = (extraValue: HandleStartParams['extraValue']): AIChatMentionSelectItem[] => {
-  if (has(extraValue, 'selectKnowledgeBases') && isArray(extraValue.selectKnowledgeBases)) {
-    return extraValue.selectKnowledgeBases
-  }
-  return []
-}
-const isExtraShow = (extraValue: HandleStartParams['extraValue']) => {
-  return (
-    isHaveFreeDialogFileList(extraValue).length > 0 ||
-    isHaveSelectForges(extraValue).length > 0 ||
-    isHaveSelectTools(extraValue).length > 0 ||
-    isHaveSelectKnowledgeBases(extraValue).length > 0
-  )
-}
+
 export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) => {
   const { item, type, hasNext, itemIndex, session: sessionProp } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  const { handleSendCasual } = useChatIPCDispatcher()
-  const { yakExecResult } = useChatIPCStore().chatIPCData
+  const store = useCurrentStore()
+  const execFileRecord = useStore(store, (state) => state.execFileRecord)
+
   const { activeChat } = useAIAgentStore()
   const session = sessionProp || activeChat?.SessionID
   const aiStreamNodeProps = useCreation(() => {
@@ -108,9 +69,9 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
             content={data?.qs}
             extraValue={extraValue}
             {...chatContentExtraProps}
-            contentClassName={classNames({
-              [styles['file-content-wrapper']]: isExtraShow(extraValue),
-            })}
+            // contentClassName={classNames({
+            //   [styles['file-content-wrapper']]: isExtraShow(extraValue),
+            // })}
           />
         )
       // case AIChatQSDataTypeEnum.STREAM:
@@ -126,7 +87,6 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
           />
         )
       case AIChatQSDataTypeEnum.TOOL_RESULT:
-        const { execFileRecord } = yakExecResult
         const fileList = execFileRecord.get(data.callToolId)
         return (
           <ToolInvokerCard
@@ -161,8 +121,8 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         } else {
           return (
             <AIReActChatReview
+              chatType="casual"
               info={itemData}
-              onSendAI={handleSendCasual}
               isEmbedded={true}
               expand={true}
               className={styles['review-wrapper']}

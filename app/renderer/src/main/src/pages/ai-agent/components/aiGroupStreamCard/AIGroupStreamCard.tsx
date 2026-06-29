@@ -1,9 +1,9 @@
-import { ChatListRenderType, ChatReferenceMaterialPayload, ReActChatElement } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatReferenceMaterialPayload, ReActChatElement } from '@/pages/ai-re-act/hooks/aiRender'
 import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo } from 'react'
 import styles from './AIGroupStreamCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { OutlineArrowsexpandIcon, OutlineChevronsDownUpIcon, OutlineChevronsUpDownIcon } from '@/assets/icon/outline'
+import { OutlineArrowsexpandIcon } from '@/assets/icon/outline'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitModal } from '@/components/yakitUI/YakitModal/YakitModal'
 import { useTypedStream } from '../aiChatListItem/StreamingChatContent/hooks/useTypedStream'
@@ -23,14 +23,12 @@ export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties
 }
 
 const AIStreamNode: FC<{
-  chatType: ChatListRenderType
   token: string
   index: number
-  session: string
   nodeLabel?: string
-}> = ({ chatType, token, index, session, nodeLabel }) => {
+}> = ({ token, index, nodeLabel }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { stream } = useTypedStream({ chatType, token, session })
+  const { stream } = useTypedStream({ token })
   const [open, setOpen] = useState(false)
   const [openPopover, setOpenPopover] = useState(false)
 
@@ -96,7 +94,7 @@ const AIGroupStreamCard: FC<{
   session: string
 }> = ({ elements, hasNext, session }) => {
   const lastElement = elements[elements.length - 1]
-  const { stream } = useTypedStream({ chatType: lastElement?.chatType, token: lastElement?.token ?? '', session })
+  const { stream } = useTypedStream({ token: lastElement?.token ?? '' })
   const { nodeLabel } = useAINodeLabel(stream?.data.NodeIdVerbose)
   const [expand, setExpand] = useState(true)
   const content = stream?.data.content || ''
@@ -190,66 +188,9 @@ const AIGroupStreamCard: FC<{
             setExpand(!expand)
           }}
         >
-          <div className={styles['title-node-label']}>
-            {/* <OutlineBrainIcon className={styles['brain-icon']} /> */}
-            {nodeLabel}
-          </div>
-          <div className={styles['stream-text']}>
-            {shouldShowMask && <div className={styles['ai-mask']} />}
-            <p
-              className={classNames({
-                [styles['stream-text-hidden']]: expand,
-              })}
-            >
-              <span>{content}</span>
-            </p>
-          </div>
-          <Tooltip title="展开">
-            <YakitButton
-              size="small"
-              type="text"
-              icon={<OutlineChevronsUpDownIcon />}
-              className={classNames(styles['expand-btn'], {
-                [styles['hidden-expand-btn']]: expand,
-              })}
-            />
-          </Tooltip>
-          <Tooltip title="收起">
-            <YakitButton
-              size="small"
-              type="text"
-              icon={<OutlineChevronsDownUpIcon />}
-              className={classNames(styles['expand-btn'], {
-                [styles['hidden-expand-btn']]: !expand,
-              })}
-            />
-          </Tooltip>
-        </div>
-        <div
-          className={classNames(styles.content, {
-            [styles.expand]: expand,
-            [styles.noMask]: isScroll,
-          })}
-        >
-          <div
-            ref={contentRef}
-            onClick={() => setIsScroll(true)}
-            className={styles['content-inner']}
-            style={{
-              overflow: isScroll ? 'overlay' : 'hidden',
-            }}
-          >
-            {elements.map((el, index) => (
-              <AIStreamNode
-                session={session}
-                nodeLabel={nodeLabel}
-                key={el.token}
-                chatType={el.chatType}
-                token={el.token}
-                index={index + 1}
-              />
-            ))}
-          </div>
+          {elements.map((el, index) => (
+            <AIStreamNode nodeLabel={nodeLabel} key={el.token} token={el.token} index={index + 1} />
+          ))}
         </div>
       </div>
     </Tooltip>
