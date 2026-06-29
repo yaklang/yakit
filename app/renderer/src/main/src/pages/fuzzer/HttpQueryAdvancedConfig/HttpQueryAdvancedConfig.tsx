@@ -62,7 +62,6 @@ import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import ProxyRulesConfig, { ProxyTest } from '@/components/configNetwork/ProxyRulesConfig'
 import { checkProxyVersion, isValidUrlWithProtocol } from '@/utils/proxyConfigUtil'
 import { useProxy } from '@/hook/useProxy'
-import i18n from '@/i18n/i18n'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
@@ -227,7 +226,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     emiter.on('openMatcherAndExtraction', openDrawer)
     getRemoteValue(WEB_FUZZ_Advanced_Config_ActiveKey).then((data) => {
       try {
-        setActiveKey(data ? JSON.parse(data) : t('HttpQueryAdvancedConfig.request_config'))
+        setActiveKey(data ? JSON.parse(data) : '请求包配置')
       } catch (error) {
         yakitFailed(t('HttpQueryAdvancedConfig.collapse_active_key_error') + error)
       }
@@ -292,8 +291,8 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
 
   const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
     const keyMap = {
-      matchers: t('ResponseViewer.matcher'),
-      extractors: t('ExtractorsPanel.dataExtractor'),
+      matchers: '匹配器',
+      extractors: '数据提取器',
     }
     if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
       onSwitchCollapse([...activeKey, keyMap[type]])
@@ -369,16 +368,16 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
     }
   })
   const retryActive: string[] = useMemo(() => {
-    let newRetryActive = [t('HttpQueryAdvancedConfig.retry_conditions')]
+    let newRetryActive = ['重试条件']
     if (retry) {
-      newRetryActive = [...newRetryActive, t('HttpQueryAdvancedConfig.retry_conditions')]
+      newRetryActive = [...newRetryActive, '重试条件']
     } else {
-      newRetryActive = newRetryActive.filter((ele) => ele !== t('HttpQueryAdvancedConfig.retry_conditions'))
+      newRetryActive = newRetryActive.filter((ele) => ele !== '重试条件')
     }
     if (noRetry) {
-      newRetryActive = [...newRetryActive, t('HttpQueryAdvancedConfig.no_retry_conditions')]
+      newRetryActive = [...newRetryActive, '不重试条件']
     } else {
-      newRetryActive = newRetryActive.filter((ele) => ele !== t('HttpQueryAdvancedConfig.no_retry_conditions'))
+      newRetryActive = newRetryActive.filter((ele) => ele !== '不重试条件')
     }
     return newRetryActive
   }, [retry, noRetry])
@@ -685,7 +684,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
             <YakitCollapse activeKey={activeKey} onChange={(key) => onSwitchCollapse(key)} destroyInactivePanel={true}>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.request_config')}
-                key={t('HttpQueryAdvancedConfig.request_config')}
+                key="请求包配置"
                 extra={
                   <YakitButton
                     type="text"
@@ -902,7 +901,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               </YakitPanel>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.concurrency_config')}
-                key={i18n.t('FuzzerTemplates.packet_config', { ns: 'webFuzzer' })}
+                key="发包配置"
                 extra={
                   <YakitButton
                     type="text"
@@ -990,7 +989,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               </YakitPanel>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.retry_config')}
-                key={t('HttpQueryAdvancedConfig.retry_config')}
+                key="重试配置"
                 extra={
                   <YakitButton
                     type="text"
@@ -1033,7 +1032,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         </YakitCheckbox>
                       </Form.Item>
                     }
-                    key={t('HttpQueryAdvancedConfig.retry_conditions')}
+                    key="重试条件"
                     className={styles['advanced-config-collapse-secondary-item']}
                   >
                     <Form.Item
@@ -1053,7 +1052,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                         </YakitCheckbox>
                       </Form.Item>
                     }
-                    key={t('HttpQueryAdvancedConfig.no_retry_conditions')}
+                    key="不重试条件"
                     className={styles['advanced-config-collapse-secondary-item']}
                   >
                     <Form.Item
@@ -1068,7 +1067,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               </YakitPanel>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.redirect_config')}
-                key={t('HttpQueryAdvancedConfig.redirect_config')}
+                key="重定向配置"
                 extra={
                   <YakitButton
                     type="text"
@@ -1110,7 +1109,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               </YakitPanel>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.dns_config')}
-                key={t('HttpQueryAdvancedConfig.dns_config')}
+                key="DNS配置"
                 extra={
                   <YakitButton
                     type="text"
@@ -1212,21 +1211,21 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               className={styles['rule-collapse']}
             >
               <MatchersPanel
-                key={t('ResponseViewer.matcher')}
+                key="匹配器"
                 onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                 onEdit={onEditMatchers}
                 onSetValue={onSetValue}
                 onApply={onApply}
               />
               <ExtractorsPanel
-                key={t('ExtractorsPanel.dataExtractor')}
+                key="数据提取器"
                 onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                 onEdit={onEditExtractors}
                 onSetValue={onSetValue}
                 onApply={onApply}
               />
               <VariablePanel
-                key={t('VariablePanel.setVariable')}
+                key="设置变量"
                 defaultHttpResponse={defaultHttpResponse}
                 onAdd={onAddExtra}
                 pageId={id}
@@ -1234,7 +1233,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               />
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.get_params')}
-                key={t('HttpQueryAdvancedConfig.get_params')}
+                key="GET 参数"
                 extra={
                   <>
                     <YakitButton
@@ -1250,13 +1249,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <YakitButton
                       type="text"
                       onClick={(e) =>
-                        handleVariableAdd(
-                          e,
-                          'methodGet',
-                          t('HttpQueryAdvancedConfig.get_params'),
-                          { Key: '', Value: '' },
-                          methodGetRef,
-                        )
+                        handleVariableAdd(e, 'methodGet', 'GET 参数', { Key: '', Value: '' }, methodGetRef)
                       }
                       className={styles['btn-padding-right-0']}
                       size="small"
@@ -1275,7 +1268,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
               </YakitPanel>
               <YakitPanel
                 header={t('HttpQueryAdvancedConfig.post_params')}
-                key={t('HttpQueryAdvancedConfig.post_params')}
+                key="POST 参数"
                 extra={
                   <>
                     <YakitButton
@@ -1291,13 +1284,7 @@ export const HttpQueryAdvancedConfig: React.FC<HttpQueryAdvancedConfigProps> = R
                     <YakitButton
                       type="text"
                       onClick={(e) =>
-                        handleVariableAdd(
-                          e,
-                          'methodPost',
-                          t('HttpQueryAdvancedConfig.post_params'),
-                          { Key: '', Value: '' },
-                          methodPostRef,
-                        )
+                        handleVariableAdd(e, 'methodPost', 'POST 参数', { Key: '', Value: '' }, methodPostRef)
                       }
                       className={styles['btn-padding-right-0']}
                       size="small"

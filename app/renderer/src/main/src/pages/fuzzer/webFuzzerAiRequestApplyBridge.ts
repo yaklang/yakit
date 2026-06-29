@@ -1,6 +1,7 @@
 import type { AIAgentGrpcApi } from '@/pages/ai-re-act/hooks/grpcApi'
 import i18n from '@/i18n/i18n'
 import { yakitFailed } from '@/utils/notification'
+const tOriginal = i18n.getFixedT(null, 'webFuzzer')
 
 export type WebFuzzerApplyRequestExtras = { isHttps?: boolean }
 
@@ -98,7 +99,7 @@ export function getWebFuzzerPageIsHttps(pageId: string): boolean | null {
 export function applyRequestContentToWebFuzzerPage(pageId: string, raw: string): void {
   const fn = pageApplyHandlers.get(pageId)
   if (!fn) {
-    yakitFailed(i18n.t('FuzzerTemplates.could_not_find_the_corresponding_web_fuzzer_page', { ns: 'webFuzzer' }))
+    yakitFailed(tOriginal('FuzzerTemplates.could_not_find_the_corresponding_web_fuzzer_page'))
     return
   }
   fn(raw)
@@ -167,7 +168,7 @@ export function applyHttpFuzzRequestChangeToWebFuzzerPage(
 ): void {
   const fn = pageApplyHandlers.get(pageId)
   if (!fn) {
-    yakitFailed(i18n.t('FuzzerTemplates.could_not_find_the_corresponding_web_fuzzer_page', { ns: 'webFuzzer' }))
+    yakitFailed(tOriginal('FuzzerTemplates.could_not_find_the_corresponding_web_fuzzer_page'))
     return
   }
   const raw = data?.request?.raw

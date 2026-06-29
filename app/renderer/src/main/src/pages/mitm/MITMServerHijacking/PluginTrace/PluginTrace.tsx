@@ -1,5 +1,4 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react'
-import i18n from '@/i18n/i18n'
 import { YakitEmpty } from '@/components/yakitUI/YakitEmpty/YakitEmpty'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlinePlay2Icon, OutlineRefreshIcon } from '@/assets/icon/outline'
@@ -29,27 +28,29 @@ import { RemoteMitmGV } from '@/enums/mitm'
 import classNames from 'classnames'
 import { PluginExecutionTrace, PluginTraceProps, QueryPluginTrace } from './type'
 import styles from './PluginTrace.module.scss'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
-const TraceStatusMapTag = [
-  {
-    key: ['pending'],
-    name: i18n.t('PluginTrace.waiting', { ns: 'mitm' }),
-    tag: 'blue',
-  },
-  { key: ['running'], name: i18n.t('PluginTrace.running', { ns: 'mitm' }), tag: 'yellow' },
-  {
-    key: ['completed'],
-    name: i18n.t('PluginTrace.completed', { ns: 'mitm' }),
-    tag: 'success',
-  },
-  { key: ['failed'], name: i18n.t('PluginTrace.failed', { ns: 'mitm' }), tag: 'danger' },
-  {
-    key: ['cancelled'],
-    name: i18n.t('MITMPluginHijackContent.cancel', { ns: 'mitm' }),
-    tag: 'info',
-  },
-]
+const TraceStatusMapTag = (t: TFunction) => {
+  return [
+    {
+      key: ['pending'],
+      name: t('PluginTrace.waiting'),
+      tag: 'blue',
+    },
+    { key: ['running'], name: t('PluginTrace.running'), tag: 'yellow' },
+    {
+      key: ['completed'],
+      name: t('PluginTrace.completed'),
+      tag: 'success',
+    },
+    { key: ['failed'], name: t('PluginTrace.failed'), tag: 'danger' },
+    {
+      key: ['cancelled'],
+      name: t('YakitButton.cancel'),
+      tag: 'info',
+    },
+  ]
+}
 
 export const pluginTraceRefFunDef = {
   noDetailFun: () => {},
@@ -74,7 +75,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
       pluginTraceList,
     } = props
 
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+    const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
     useImperativeHandle(
       ref,
       () => ({
@@ -219,7 +220,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
     })
 
     const traceStatusTag = useMemoizedFn((text) => {
-      const title = TraceStatusMapTag.filter((item) => item.key.includes(text || ''))[0]
+      const title = TraceStatusMapTag(t).filter((item) => item.key.includes(text || ''))[0]
       return (
         <YakitTag color={title?.tag as YakitTagColor} className={styles['table-traceStatus-tag']}>
           {title ? title.name : text || '-'}
@@ -230,7 +231,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
     const columns: ColumnsTypeProps[] = useCreation<ColumnsTypeProps[]>(() => {
       const columnArr: ColumnsTypeProps[] = [
         {
-          title: t('PluginTrace.index'),
+          title: t('YakitTable.order'),
           width: 96,
           fixed: 'left',
           dataKey: 'Index',
@@ -263,7 +264,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
                 value: 'failed',
               },
               {
-                label: t('MITMPluginHijackContent.cancel'),
+                label: t('YakitButton.cancel'),
                 value: 'cancelled',
               },
             ],
@@ -292,7 +293,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
           dataKey: 'ErrorMessage',
         },
         {
-          title: t('ProxyConfig.operation'),
+          title: t('YakitTable.action'),
           width: 70,
           fixed: 'right',
           dataKey: 'Action',
@@ -310,7 +311,7 @@ const PluginTrace: React.FC<PluginTraceProps> = React.memo(
         },
       ]
       return columnArr
-    }, [])
+    }, [i18n.language])
 
     const updateSelectCurTrace = useMemoizedFn((traceList) => {
       if (selectCurTrace) {

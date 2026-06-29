@@ -23,8 +23,7 @@ import { FilterType } from './MITMFiltersModal'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { PencilAltIcon } from '@/assets/newIcon'
-import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import i18n from '@/i18n/i18n'
+import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { YakitCombinationSearch } from '@/components/YakitCombinationSearch/YakitCombinationSearch'
 
 const { YakitPanel } = YakitCollapse
@@ -334,7 +333,7 @@ const MITMAdvancedFilters: React.FC<MITMAdvancedFiltersProps> = React.memo((prop
           className={styles['filter-collapse']}
         >
           {filterData!.map((filterItem, index) => {
-            const name = filterRangeOption?.find((ele) => ele.value === filterItem.Field)?.label
+            const name = filterRangeOption(t)?.find((ele) => ele.value === filterItem.Field)?.label
             if (!!searchValue && !isMatchedSearch(filterItem, searchValue, index)) return null
             const displayName = filterItem.RuleName || `规则_${index}`
             return (
@@ -448,28 +447,30 @@ interface MITMAdvancedFiltersItemProps {
 export const isFilterItemEmpty = (item: FilterDataItem) => {
   return (item.Group || []).map((i) => i.trim()).findIndex((ele) => !ele) !== -1
 }
-const filterRangeOption: YakitSelectProps['options'] = [
-  {
-    label: i18n.t('MITMFilters.exclude_hostnames', { ns: 'mitm' }),
-    value: 'ExcludeHostnames',
-  },
-  {
-    label: i18n.t('MITMFilters.include_hostnames', { ns: 'mitm' }),
-    value: 'IncludeHostnames',
-  },
-  {
-    label: i18n.t('MITMFilters.exclude_url_paths', { ns: 'mitm' }),
-    value: 'ExcludeUri',
-  },
-  {
-    label: i18n.t('MITMFilters.include_url_paths', { ns: 'mitm' }),
-    value: 'IncludeUri',
-  },
-  {
-    label: i18n.t('MITMFilters.exclude_http_methods', { ns: 'mitm' }),
-    value: 'ExcludeMethods',
-  },
-]
+const filterRangeOption: (t: TFunction) => YakitSelectProps['options'] = (t) => {
+  return [
+    {
+      label: t('MITMFilters.exclude_hostnames'),
+      value: 'ExcludeHostnames',
+    },
+    {
+      label: t('MITMFilters.include_hostnames'),
+      value: 'IncludeHostnames',
+    },
+    {
+      label: t('MITMFilters.exclude_url_paths'),
+      value: 'ExcludeUri',
+    },
+    {
+      label: t('MITMFilters.include_url_paths'),
+      value: 'IncludeUri',
+    },
+    {
+      label: t('MITMFilters.exclude_http_methods'),
+      value: 'ExcludeMethods',
+    },
+  ]
+}
 export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['mitm'])
   const { item, onEdit, searchValue } = props
@@ -486,7 +487,7 @@ export const MITMAdvancedFiltersItem: React.FC<MITMAdvancedFiltersItemProps> = R
     <>
       <div className={classNames(styles['collapse-panel-condition'])}>
         <LabelNodeItem label={t('MITMAdvancedFiltersItem.scope')}>
-          <YakitSelect value={item.Field} onSelect={(value) => onEdit('Field', value)} options={filterRangeOption} />
+          <YakitSelect value={item.Field} onSelect={(value) => onEdit('Field', value)} options={filterRangeOption(t)} />
         </LabelNodeItem>
         <LabelNodeItem label={t('MITMAdvancedFiltersItem.matcherType')}>
           <YakitRadioButtons

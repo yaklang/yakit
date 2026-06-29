@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import i18n from '@/i18n/i18n'
 import { PluginExecutionTrace, PluginTraceParams, PluginTraceStats } from './type'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import { yakitNotify } from '@/utils/notification'
 import { Uint8ArrayToString } from '@/utils/str'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import { grpcPluginTraceIDCancel, grpcStartPluginTrace, grpcStopPluginTrace } from './utils'
+import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 const { ipcRenderer } = window.require('electron')
 
 function usePluginTrace(params: PluginTraceParams) {
   const { pluginTraceRefFun, onStart, onError, onEnd } = params
+  const { t, i18n } = useI18nNamespaces(['mitm'])
   const [isInitTrace, setIsInitTrace] = useState<boolean>(true) // 是否显示初始追踪界面
   const [startLoading, setStartLoading] = useState<boolean>(false) // 开始按钮loading
   const [tracing, setTracing, getTracing] = useGetSetState<boolean>(false) // 是否正在追踪
@@ -42,7 +43,7 @@ function usePluginTrace(params: PluginTraceParams) {
       cancelTracesIdRef.current = []
       pluginTraceRefFun().noDetailFun()
       pluginTraceRefFun().refreshAndScrollNow()
-      yakitNotify('info', i18n.t('PluginTrace.plugin_trace_started', { ns: 'mitm' }))
+      yakitNotify('info', t('PluginTrace.plugin_trace_started'))
     })
 
     ipcRenderer.on('start-mitm-plugin-trace-error', (event, err) => {
@@ -124,7 +125,7 @@ function usePluginTrace(params: PluginTraceParams) {
       setStopLoading(false)
       pluginTraceRefFun().cancelTracesToState()
       pluginTraceRefFun().refreshFlush()
-      yakitNotify('info', i18n.t('PluginTrace.plugin_trace_stopped', { ns: 'mitm' }))
+      yakitNotify('info', t('PluginTrace.plugin_trace_stopped'))
     })
 
     return () => {

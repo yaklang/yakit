@@ -2243,7 +2243,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
         showSuccess={showSuccess}
         retrySubmit={() => {
           if (loading) {
-            yakitNotify('info', t('HTTPFuzzerPage.waitCurrentTaskFinish') || t('HTTPFuzzerPage.waitCurrentTaskFinish'))
+            yakitNotify('info', t('HTTPFuzzerPage.waitCurrentTaskFinish'))
             return
           }
           if (failedFuzzer.length > 0) {
@@ -2253,7 +2253,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
             onValidateHTTPFuzzer()
             getNewCurrentPage()
           } else {
-            yakitNotify('info', t('HTTPFuzzerPage.retryNoFailedTask') || t('HTTPFuzzerPage.retryNoFailedTask'))
+            yakitNotify('info', t('HTTPFuzzerPage.retryNoFailedTask'))
           }
         }}
         isShowMatch={!loading}

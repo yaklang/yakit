@@ -1,5 +1,4 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import i18n from '@/i18n/i18n'
 import { Divider, Form, notification, Tooltip, Typography } from 'antd'
 import emiter from '@/utils/eventBus/eventBus'
 import ChromeLauncherButton from '@/pages/mitm/MITMChromeLauncher'
@@ -129,6 +128,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
     updatesPlugins,
     pluginOutputRef,
   } = props
+  const { t, i18n } = useI18nNamespaces(['webFuzzer', 'mitm'])
 
   const { queryPagesDataById, removePagesDataCacheById } = usePageInfo(
     (s) => ({
@@ -155,7 +155,6 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
   const [isFilter, setIsFilter] = useState(false)
   const [filterWebsocket, setFilterWebsocket] = useState<boolean>(false)
   const [disableSystemProxy, setDisableSystemProxy] = useState<boolean>(false)
-  const { t, i18n } = useI18nNamespaces(['webFuzzer', 'mitm'])
 
   const mitmContent = useContext(MITMContext)
 
@@ -169,7 +168,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
         initPluginNames: props.defaultPlugins || [],
         version: mitmVersion,
       }).then(() => {
-        info(i18n.t('MITMServerHijacking.initial_mitm_plugin_started_successfully', { ns: 'mitm' }))
+        info(t('MITMServerHijacking.initial_mitm_plugin_started_successfully'))
       })
     }
   }, [props.enableInitialMITMPlugin, props.defaultPlugins])
@@ -333,20 +332,14 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
   })
 
   const mapProxyValue = (value: string) => {
-    if (value.includes(i18n.t('MITMRuleFromModal.rule_group', { ns: 'mitm' }))) {
-      return value.replace(
-        i18n.t('MITMRuleFromModal.rule_group', { ns: 'mitm' }),
-        i18n.t('MITMRuleFromModal.rule_group', { ns: 'mitm' }),
-      )
+    if (value.includes('规则组')) {
+      return value.replace('规则组', t('MITMRuleFromModal.rule_group'))
     }
-    if (value.includes(i18n.t('ProxyConfig.disabled', { ns: 'mitm' }))) {
-      return value.replace(
-        i18n.t('ProxyConfig.disabled', { ns: 'mitm' }),
-        i18n.t('ProxyConfig.disabled', { ns: 'mitm' }),
-      )
+    if (value.includes('已禁用')) {
+      return value.replace('已禁用', t('ProxyConfig.disabled'))
     }
-    if (value.includes(i18n.t('ProxyConfig.Points', { ns: 'mitm' }))) {
-      return value.replace(i18n.t('ProxyConfig.Points', { ns: 'mitm' }), i18n.t('ProxyConfig.Points', { ns: 'mitm' }))
+    if (value.includes('代理节点')) {
+      return value.replace('代理节点', t('ProxyConfig.Points'))
     }
     return value
   }
@@ -391,7 +384,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                   if (p.key === 'downstreamProxy') {
                     return (
                       <YakitTag closable={true} onClose={downStreamTagClose} key={`tip-${idx}`}>
-                        {`${i18n.t('ProxyConfig.downstream_agent', { ns: 'mitm' })}: ${mapProxyValue(p.value as string)}`}
+                        {`${t('ProxyConfig.downstream_agent')}: ${mapProxyValue(p.value as string)}`}
                       </YakitTag>
                     )
                   }
@@ -422,15 +415,15 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                       updateDisableSystemProxy(true)
                     }}
                   >
-                    {i18n.t('MITMServerHijacking.system_proxy', { ns: 'mitm' })}
+                    {t('MITMServerHijacking.system_proxy')}
                     {systemProxy?.CurrentProxy}
                   </YakitTag>
                 )}
               {globalEnabledTemplateName && (
                 <YakitTag closable onClose={onDisableGlobalHotPatch}>
                   <Tooltip title={globalEnabledTemplateName}>
-                    {i18n.t('GlobalHotPatch.Global_hot_template', { ns: 'mitm' })}
-                    {i18n.t('GlobalHotPatch.started', { ns: 'mitm' })}
+                    {t('GlobalHotPatch.Global_hot_template')}
+                    {t('GlobalHotPatch.started')}
                   </Tooltip>
                 </YakitTag>
               )}
@@ -450,8 +443,8 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                     })
                   }}
                 >
-                  {i18n.t('GlobalHotPatch.MITM_hot_patch', { ns: 'mitm' })}
-                  {i18n.t('GlobalHotPatch.started', { ns: 'mitm' })}
+                  {t('GlobalHotPatch.MITM_hot_patch')}
+                  {t('GlobalHotPatch.started')}
                 </YakitTag>
               )}
             </div>
@@ -482,12 +475,12 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
               placement="bottom"
               title={
                 <div className={style['proxy_configuration_top']} onClick={() => setDownStreamAgentModalVisible(true)}>
-                  {i18n.t('ProxyConfig.downstream_agent', { ns: 'mitm' })}
+                  {t('ProxyConfig.downstream_agent')}
                 </div>
               }
               content={
                 <div className={style['proxy_configuration_bottom']}>
-                  <span>{i18n.t('HttpQueryAdvancedConfig.disable_system_proxy', { ns: 'mitm' })}</span>
+                  <span>{t('HttpQueryAdvancedConfig.disable_system_proxy')}</span>
                   <YakitSwitch
                     size="large"
                     checked={disableSystemProxy}
@@ -498,7 +491,7 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 </div>
               }
             >
-              <div className={style['link-item']}>{i18n.t('AgentConfigModal.proxy_configuration', { ns: 'mitm' })}</div>
+              <div className={style['link-item']}>{t('AgentConfigModal.proxy_configuration')}</div>
             </YakitPopover>
             <Divider type="vertical" style={{ margin: '0 4px', top: 1 }} />
             {!isNarrow && (
@@ -550,10 +543,10 @@ export const MITMServerHijacking: React.FC<MITMServerHijackingProp> = (props) =>
                 <YakitMenu
                   selectedKeys={[]}
                   data={[
-                    { key: 'rule-config', label: i18n.t('MITMServerHijacking.rule_configuration', { ns: 'mitm' }) },
+                    { key: 'rule-config', label: t('MITMServerHijacking.rule_configuration') },
                     {
                       key: 'cert-download',
-                      label: i18n.t('MITMFormAdvancedConfiguration.certificateDownload', { ns: 'mitm' }),
+                      label: t('MITMFormAdvancedConfiguration.certificateDownload'),
                     },
                   ]}
                   onClick={({ key }) => {
@@ -647,7 +640,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
   } = props
   const [form] = Form.useForm()
   const mitmContent = useContext(MITMContext)
-  const { t, i18n } = useI18nNamespaces(['mitm'])
+  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
   const { proxyRouteOptions, getProxyValue, checkProxyEndpoints, proxyConfig, comparePointUrl } = useProxy()
 
   const mitmVersion = useCreation(() => {
@@ -753,7 +746,7 @@ const DownStreamAgentModal: React.FC<DownStreamAgentModalProp> = React.memo((pro
         destroyOnClose={true}
         closable
         centered
-        okText={t('MITMServerHijacking.confirm')}
+        okText={t('YakitButton.confirm')}
         onCancel={onClose}
         onOk={onOKFun}
         bodyStyle={{ padding: 0 }}

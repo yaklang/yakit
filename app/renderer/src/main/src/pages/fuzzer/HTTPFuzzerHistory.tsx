@@ -1,4 +1,3 @@
-import i18n from '@/i18n/i18n'
 import React, { useEffect, useMemo, useState } from 'react'
 import { Card, Divider, List, Space } from 'antd'
 import { formatTimestamp } from '../../utils/timeUtil'
@@ -163,8 +162,8 @@ export const HTTPFuzzerHistorySelector: React.FC<HTTPFuzzerHistorySelectorProp> 
                 <InputItem
                     label={
                         <div style={{display: "flex", alignItems: "center"}}>
-                            
-                            <Tooltip title={i18n.t("FuzzerTemplates.quick_search_content_in_host_and_request", { ns: "history" })}>
+
+                            <Tooltip title={"快速搜索 Host 与 Request 中的内容"}>
                                 <YakitButton type='text' size={"small"} icon={<QuestionOutlined />} />
                             </Tooltip>
                         </div>

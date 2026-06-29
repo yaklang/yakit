@@ -100,7 +100,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       hijackFilterFlag,
       setAutoForward,
     } = props
-    const { t, i18n } = useI18nNamespaces(['history', 'yakitUi'])
+    const { t, i18n } = useI18nNamespaces(['history', 'yakitUi', 'mitm'])
     const [data, setData] = useState<SingleManualHijackInfoMessage[]>([])
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [currentSelectItem, setCurrentSelectItem, getCurrentSelectItem] = useGetState<SingleManualHijackInfoMessage>()
@@ -319,9 +319,9 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         switch (rowData.Status) {
           case ManualHijackListStatus.Hijacking_Request:
           case ManualHijackListStatus.WaitHijack:
-            return t('MITMRule.request')
+            return '请求'
           case ManualHijackListStatus.Hijacking_Response:
-            return t('MITMRule.response')
+            return '响应'
           default:
             return ''
         }
@@ -600,7 +600,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           },
         },
       ]
-    }, [])
+    }, [i18n.language])
     const onlyShowFirstNode = useCreation(() => {
       return !(data.length && currentSelectItem && currentSelectItem.TaskID)
     }, [currentSelectItem, data.length])
@@ -1176,7 +1176,6 @@ const ManualHijackInfo: React.FC<ManualHijackInfoProps> = React.memo(
 )
 
 const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     index,
     disabled,
@@ -1190,6 +1189,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
     isResponse,
     isOnlyLookResponse,
   } = props
+  const { i18n, t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const { currentPacket, requestPacket } = currentPacketInfo
   const [modifiedPacket, setModifiedPacket] = useControllableValue<string>(props, {
     valuePropName: 'modifiedPacket',
@@ -1258,7 +1258,7 @@ const MITMV2ManualEditor: React.FC<MITMV2ManualEditorProps> = React.memo((props)
         },
       },
     }
-  }, [forResponse, info, modifiedPacket])
+  }, [forResponse, info, modifiedPacket, i18n.language])
 
   const onHijackCurrentResponse = useMemoizedFn(() => {
     if (info.Status === ManualHijackListStatus.WaitHijack) {

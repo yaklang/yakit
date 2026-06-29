@@ -824,7 +824,6 @@
     "render_tag_content_as_nuclei_template_before_sendi": "将标签内容当作nuclei模板渲染后再发包",
     "group_1_extract_first_parenthesis": "group: 1` - 提取第一个括号 `()`",
     "group_2_extract_second_parenthesis": "group: 2` - 提取第二个括号 `()`",
-    "quick_search_content_in_host_and_request": "快速搜索 Host 与 Request 中的内容",
     "packet_config": "发包配置",
     "could_not_find_the_corresponding_web_fuzzer_page": "未找到对应的 Web Fuzzer 页，请保持该页已打开。",
     "double_url_encode": "'双重URL'编码",

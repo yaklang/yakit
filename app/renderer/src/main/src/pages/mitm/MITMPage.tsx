@@ -346,7 +346,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         if (downstreamProxyRuleId) {
           const name = Routes.find(({ Id }) => Id === downstreamProxyRuleId)?.Name
           if (name) {
-            proxyPartStr = t('MITMPage.rule_group_name', { name })
+            proxyPartStr = `规则组：${name}`
           }
 
           setDownstreamProxyStr(downstreamProxyRuleId)

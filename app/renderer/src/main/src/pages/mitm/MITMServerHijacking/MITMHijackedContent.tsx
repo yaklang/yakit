@@ -91,7 +91,6 @@ interface MITMHijackedContentProps {
 }
 
 const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     status,
     setStatus,
@@ -111,6 +110,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
     updatesPlugins,
     pluginOutputRef,
   } = props
+  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
   const mitmContent = useContext(MITMContext)
 
   const mitmVersion = useCreation(() => {
@@ -1052,7 +1052,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
         pluginName: pluginName,
       }
     })
-  }, [pluginStreamInfo])
+  }, [pluginStreamInfo, i18n.language])
   // #endregion
 
   return (
@@ -1103,7 +1103,7 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
                 {
                   label: (
                     <Badge dot={hasPluginsStreamUpdate} offset={[0, 0]}>
-                      <span className={styles['pluginOut-text']}>插件输出</span>
+                      <span className={styles['pluginOut-text']}>{t('MITMHijackedContent.plugin_output')}</span>
                     </Badge>
                   ),
                   value: 'pluginOutput',

@@ -503,7 +503,7 @@ const ChromeLauncherButton: React.FC<ChromeLauncherButtonProp> = React.memo((pro
           visible={chromeVisible}
           onCancel={() => setChromeVisible(false)}
           closable={true}
-          width="50%"
+          width="max(850px, 50%)"
           footer={null}
           bodyStyle={{ padding: 0 }}
         >

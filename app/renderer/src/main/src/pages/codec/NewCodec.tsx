@@ -2206,7 +2206,7 @@ export const NewCodec: React.FC<NewCodecProps> = (props) => {
     })
 
     // 找到 title 为 "其他" 的项的索引
-    const index = data.findIndex((item) => item.title === t('NewCodec.other'))
+    const index = data.findIndex((item) => item.title === '其他')
     // 如果找到了，则将该项移动到数组尾部
     if (index !== -1) {
       const otherItem = data.splice(index, 1)[0]

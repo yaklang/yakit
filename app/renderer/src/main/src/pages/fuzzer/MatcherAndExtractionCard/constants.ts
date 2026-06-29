@@ -1,5 +1,4 @@
 import { TableCellToColorTag } from '@/components/TableVirtualResize/utils'
-import i18n from '@/i18n/i18n'
 import { HTTPResponseExtractor, HTTPResponseMatcher } from './MatcherAndExtractionCardType'
 import { TFunction } from '@/i18n/useI18nNamespaces'
 

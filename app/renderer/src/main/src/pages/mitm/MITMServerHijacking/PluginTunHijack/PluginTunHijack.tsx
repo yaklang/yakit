@@ -53,7 +53,7 @@ import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
 import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
 const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
-const CONNECTIVITY_CHECK_PLUGIN_NAME = i18n.t('PluginTunHijack.pluginName', { ns: 'mitm' })
+const CONNECTIVITY_CHECK_PLUGIN_NAME = 'TUN 劫持联通性检测'
 const CONNECTIVITY_CHECK_DEBUG_PARAMS: DebugPluginRequest = {
   Code: '',
   PluginType: 'yak',
@@ -69,7 +69,7 @@ export const PluginTunHijackDef: PluginTunHijackRefProps = {
 
 export const PluginTunHijack: React.FC<PluginTunHijackProps> = React.memo(
   React.forwardRef((props, ref) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
+    const { t } = useI18nNamespaces(['mitm'])
     const {
       hidden,
       pluginTunHijackData,
@@ -330,7 +330,7 @@ const ConnectivityCheckAction: React.FC = React.memo(() => {
 
 export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.memo(
   React.forwardRef((props, ref) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
+    const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi'])
     const { deviceName, pluginTunHijackDel, handleDeleteRoute, onQuitTunHijackFun, onCloseTunHijackFun } = props
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -408,23 +408,23 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
         //     dataKey: "tun_name",
         // },
         {
-          title: t('PluginTunHijack.operation'),
+          title: t('YakitTable.action'),
           width: 70,
           fixed: 'right',
           dataKey: 'Action',
           render: (_, record: HijackTableDataProps) => {
             return (
               <YakitButton type="text" colors="danger" size="small" onClick={() => handleDeleteRoute([record.ip_addr])}>
-                {t('PluginTunHijack.delete')}
+                {t('YakitButton.delete')}
               </YakitButton>
             )
           },
         },
       ]
-    }, [])
+    }, [i18n.language])
     // 以下为路由表查询逻辑---
     const [pluginTunHijackFind, pluginTunHijackFindActions] = usePluginTunHijack({
-      PluginName: t('PluginTunHijack.routeQueryPlugin'),
+      PluginName: '路由表查询',
       onEnd: () => {
         setLoading(false)
       },
@@ -485,7 +485,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
 
     // 以下为路由表增加逻辑---
     const [pluginTunHijackAdd, pluginTunHijackAddActions] = usePluginTunHijack({
-      PluginName: t('PluginTunHijack.routeAddPlugin'),
+      PluginName: '路由表增加',
       onEnd: () => {
         setAddLoading(false)
       },
@@ -562,7 +562,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
                     colors="danger"
                     onClick={() => handleDeleteRoute(selectedRowKeys.length > 0 ? selectedRowKeys : undefined)}
                   >
-                    {selectedRowKeys.length > 0 ? t('PluginTunHijack.delete') : t('PluginTunHijack.clear')}
+                    {selectedRowKeys.length > 0 ? t('YakitButton.delete') : t('YakitButton.clear')}
                   </YakitButton>
                 </>
               )}
@@ -617,7 +617,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
           destroyOnClose={true}
           onCancel={onCancel}
           onOk={handleRouteOk}
-          okText={t('PluginTunHijack.startExecute')}
+          okText={t('YakitButton.start_execution')}
           okButtonProps={{
             loading: addLoading,
           }}
@@ -640,7 +640,7 @@ export const PluginTunHijackTable: React.FC<PluginTunHijackTableProps> = React.m
 
 export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React.memo(
   (props: TunHijackProcessTableProps) => {
-    const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
+    const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
     const { deviceName, pluginTunHijackAddActionsFun, setTableType } = props
     const [isRefresh, setIsRefresh] = useState<boolean>(false)
     const [tableData, setTableData] = useState<ProcessInfo[]>([])
@@ -698,7 +698,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
         },
       },
       {
-        title: t('PluginTunHijack.operation'),
+        title: t('YakitTable.action'),
         width: 128,
         fixed: 'right',
         dataKey: 'Action',
@@ -787,7 +787,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
         render: (processesNum: string) => (processesNum ? processesNum : '-'),
       },
       {
-        title: t('PluginTunHijack.operation'),
+        title: t('YakitTable.action'),
         width: 70,
         fixed: 'right',
         dataKey: 'Action',
@@ -1010,7 +1010,7 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
 )
 
 export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi', 'plugin'])
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const { pluginTunHijackAddActionsFun, setTableType } = props
   const [hijackProcessInfo, setHijackProcessInfo] = useControllableValue<ConnectionInfo[] | undefined>(props, {
     valuePropName: 'hijackProcessInfo',
@@ -1083,7 +1083,7 @@ export const HijackProcessInfoModal: React.FC<HijackProcessInfoModalProps> = Rea
       },
     },
     {
-      title: t('PluginTunHijack.operation'),
+      title: t('YakitTable.action'),
       width: 100,
       fixed: 'right',
       dataKey: 'Action',

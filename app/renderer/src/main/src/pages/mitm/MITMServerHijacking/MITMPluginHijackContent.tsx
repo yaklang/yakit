@@ -128,29 +128,27 @@ const HotLoadDefaultData: YakScript = {
 }
 const MITMHijackTab: YakitTabsProps[] = [
   {
-    label: i18n.t('PluginTunHijack.all', { ns: 'mitm' }),
+    label: 'PluginTunHijack.all',
     value: 'all',
   },
   {
-    label: i18n.t('MITMPluginHijackContent.enabled', { ns: 'mitm' }),
+    label: 'MITMPluginHijackContent.enabled',
     value: 'loaded',
   },
   {
-    label: i18n.t('MITMPluginHijackContent.hot_patch', { ns: 'mitm' }),
+    label: 'MITMPluginHijackContent.hot_patch',
     value: 'hot-patch',
   },
   {
     value: 'trace',
-    label: i18n.t('MITMPluginHijackContent.plugin_trace', { ns: 'mitm' }),
+    label: 'MITMPluginHijackContent.plugin_trace',
   },
   {
     value: 'tun-hijack',
-    label: i18n.t('PluginTunHijack.tunHijack', { ns: 'mitm' }),
+    label: 'PluginTunHijack.tunHijack',
   },
 ]
 export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
-
   const {
     isHasParams,
     onIsHasParams,
@@ -187,7 +185,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     setShowPluginStream,
     setAutoForward,
   } = props
-
+  const { t, i18n } = useI18nNamespaces(['mitm', 'yakitUi', 'webFuzzer'])
   const mitmContent = useContext(MITMContext)
 
   const mitmVersion = useCreation(() => {
@@ -686,7 +684,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   const { tunSessionState, setTunSessionState, mitmHotStatus, setMitmHotStatus } = useStore()
   const PluginTunHijackRef = useRef<PluginTunHijackRefProps>(PluginTunHijackDef)
   const [pluginTunHijackData, pluginTunHijackActions] = usePluginTunHijack({
-    PluginName: t('PluginTunHijack.tun_hijack_service'),
+    PluginName: 'Tun劫持服务',
     onEnd: () => {
       onCloseTunHijackFun()
     },
@@ -705,7 +703,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
     })
   })
   const [pluginTunHijackDel, pluginTunHijackDelActions] = usePluginTunHijack({
-    PluginName: t('PluginTunHijack.route_table_delete'),
+    PluginName: '路由表删除',
     onEnd: () => {
       if (isQuitRef.current) {
         // 先行清除后再关闭Tun劫持
@@ -919,6 +917,7 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
                 onChange={(e) => {
                   onIsHasParams(e.target.value)
                 }}
+                style={{ minWidth: i18n.language === 'en' ? 240 : undefined }}
               />
               <YakModuleListHeard
                 onSelectAll={onSelectAll}
@@ -1001,6 +1000,8 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
           show={openTabsFlag}
           setShow={onSetOpenTabsFlag}
           barHint={() => ''}
+          t={t}
+          key={i18n.language}
         />
         <div
           className={classNames(styles['mitm-hijack-tab-cont-item'])}
@@ -1031,9 +1032,9 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
             不再提醒
           </YakitCheckbox>
         }
-        okButtonText={t('MITMPluginHijackContent.ok')}
+        okButtonText={t('YakitButton.well')}
         onOk={handleQuitOK}
-        cancelButtonText={t('MITMPluginHijackContent.cancel')}
+        cancelButtonText={t('YakitButton.cancel')}
         onCancel={handleQuitCancel}
       />
     </div>

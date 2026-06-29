@@ -77,11 +77,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
   useEffect(() => {
     getRemoteValue(RemoteGV.FuzzerSequenceSettingShow).then((data) => {
       try {
-        setActiveKey(
-          data
-            ? JSON.parse(data)
-            : [t('ResponseViewer.matcher'), t('ExtractorsPanel.dataExtractor'), t('VariablePanel.setVariable')],
-        )
+        setActiveKey(data ? JSON.parse(data) : ['匹配器', '数据提取器', '设置变量'])
       } catch (error) {
         yakitFailed(t('FuzzerPageSetting.getSequenceConfigKeyFailed') + error)
       }
@@ -157,8 +153,8 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
   })
   const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
     const keyMap = {
-      matchers: t('ResponseViewer.matcher'),
-      extractors: t('ExtractorsPanel.dataExtractor'),
+      matchers: '匹配器',
+      extractors: '数据提取器',
     }
     if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
       onSwitchCollapse([...activeKey, keyMap[type]])
@@ -200,14 +196,14 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
           bordered={false}
         >
           <MatchersPanel
-            key={t('ResponseViewer.matcher')}
+            key="匹配器"
             onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
             onEdit={onEditMatchers}
             onSetValue={onSetValue}
             onApply={onApply}
           />
           <ExtractorsPanel
-            key={t('ExtractorsPanel.dataExtractor')}
+            key="数据提取器"
             onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
             onEdit={onEditExtractors}
             onSetValue={onSetValue}
@@ -215,7 +211,7 @@ const FuzzerPageSetting: React.FC<FuzzerPageSettingProps> = React.memo((props) =
           />
           <VariablePanel
             pageId={pageId}
-            key={t('VariablePanel.setVariable')}
+            key="设置变量"
             defaultHttpResponse={defaultHttpResponse}
             onAdd={onAddExtra}
             onSetValue={onSetValue}
