@@ -138,7 +138,7 @@ interface ManualUrlInfoProps {
   traceInfo: TraceInfo
 }
 export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
+  const { t } = useI18nNamespaces(['mitm'])
   const { urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className, traceInfo } = props
   return (
     <div className={classNames(styles['autoForward-manual-urlInfo'], className)}>
@@ -237,7 +237,6 @@ interface MITMManualEditorProps {
   taskId?: string
 }
 export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     urlInfo,
     isHttp,
@@ -257,6 +256,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     requestPacket,
     beautifyTriggerRefresh,
   } = props
+  const { t, i18n } = useI18nNamespaces(['mitm'])
   // 操作系统类型
   const [system, setSystem] = useState<string>()
 
@@ -354,7 +354,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         },
       }
     }
-  }, [forResponse, autoForward, currentPacketId])
+  }, [forResponse, autoForward, currentPacketId, i18n.language])
 
   return (
     <NewHTTPPacketEditor

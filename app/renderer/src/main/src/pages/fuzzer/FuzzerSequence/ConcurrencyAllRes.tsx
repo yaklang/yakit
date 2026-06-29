@@ -62,10 +62,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
   )
 
   const [form] = Form.useForm()
-  const [activeKey, setActiveKey] = useState<string[]>([
-    t('ResponseViewer.matcher'),
-    t('ExtractorsPanel.dataExtractor'),
-  ])
+  const [activeKey, setActiveKey] = useState<string[]>(['匹配器', '数据提取器'])
   const [showSuccess, setShowSuccess] = useState<FuzzerShowSuccess>('true')
   const [query, setQuery] = useState<HTTPFuzzerPageTableQuery>()
   const [isRefresh, setIsRefresh] = useState<boolean>(false)
@@ -100,7 +97,7 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
   useEffect(() => {
     getRemoteValue(RemoteGV.FuzzerSequenceSettingShow).then((data) => {
       try {
-        setActiveKey(data ? JSON.parse(data) : [t('ResponseViewer.matcher'), t('ExtractorsPanel.dataExtractor')])
+        setActiveKey(data ? JSON.parse(data) : ['匹配器', '数据提取器'])
       } catch (error) {
         yakitFailed(`${t('ConcurrencyAllRes.get_config_key_failed')}${error}`)
       }
@@ -174,8 +171,8 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
 
   const onAddMatchingAndExtractionCard = useMemoizedFn((type: MatchingAndExtraction) => {
     const keyMap = {
-      matchers: t('ResponseViewer.matcher'),
-      extractors: t('ExtractorsPanel.dataExtractor'),
+      matchers: '匹配器',
+      extractors: '数据提取器',
     }
     if (activeKey?.findIndex((ele) => ele === keyMap[type]) === -1) {
       onSwitchCollapse([...activeKey, keyMap[type]])
@@ -318,14 +315,14 @@ export const ConcurrencyAllRes: React.FC<ConcurrencyAllResProps> = React.memo((p
                   bordered={false}
                 >
                   <MatchersPanel
-                    key={t('ResponseViewer.matcher')}
+                    key="匹配器"
                     onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                     onEdit={onEditMatchers}
                     onSetValue={onSetValue}
                     onApply={onApply}
                   />
                   <ExtractorsPanel
-                    key={t('ExtractorsPanel.dataExtractor')}
+                    key="数据提取器"
                     onAddMatchingAndExtractionCard={onAddMatchingAndExtractionCard}
                     onEdit={onEditExtractors}
                     onSetValue={onSetValue}

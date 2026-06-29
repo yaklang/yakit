@@ -1,5 +1,4 @@
 import { Divider, Form, Modal, Tooltip } from 'antd'
-import i18n from '@/i18n/i18n'
 import React, { ReactNode, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import {
   MITMContentReplacerRule,
@@ -63,49 +62,49 @@ const { ipcRenderer } = window.require('electron')
 
 const HitColor = {
   red: {
-    title: i18n.t('MITMRule.red', { ns: 'mitm' }),
+    title: '红色',
     titleUi: 'YakitTable.red',
     value: 'red',
     className: 'color-bg-red',
   },
   green: {
-    title: i18n.t('MITMRule.green', { ns: 'mitm' }),
+    title: '绿色',
     titleUi: 'YakitTable.green',
     value: 'green',
     className: 'color-bg-green',
   },
   blue: {
-    title: i18n.t('MITMRule.blue', { ns: 'mitm' }),
+    title: '蓝色',
     titleUi: 'YakitTable.blue',
     value: 'blue',
     className: 'color-bg-blue',
   },
   yellow: {
-    title: i18n.t('MITMRule.yellow', { ns: 'mitm' }),
+    title: '黄色',
     titleUi: 'YakitTable.yellow',
     value: 'yellow',
     className: 'color-bg-yellow',
   },
   orange: {
-    title: i18n.t('MITMRule.orange', { ns: 'mitm' }),
+    title: '橙色',
     titleUi: 'YakitTable.orange',
     value: 'orange',
     className: 'color-bg-orange',
   },
   purple: {
-    title: i18n.t('MITMRule.purple', { ns: 'mitm' }),
+    title: '紫色',
     titleUi: 'YakitTable.purple',
     value: 'purple',
     className: 'color-bg-purple',
   },
   cyan: {
-    title: i18n.t('MITMRule.cyan', { ns: 'mitm' }),
+    title: '青色',
     titleUi: 'YakitTable.cyan',
     value: 'cyan',
     className: 'color-bg-cyan',
   },
   grey: {
-    title: i18n.t('MITMRule.gray', { ns: 'mitm' }),
+    title: '灰色',
     titleUi: 'YakitTable.grey',
     value: 'grey',
     className: 'color-bg-grey',

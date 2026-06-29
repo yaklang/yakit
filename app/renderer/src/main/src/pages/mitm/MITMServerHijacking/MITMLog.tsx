@@ -385,11 +385,11 @@ export const MITMLogHeardExtra: React.FC<MITMLogHeardExtraProps> = React.memo((p
             data: [
               {
                 key: 'noResetRefresh',
-                label: t('MITMLog.refresh_only'),
+                label: t('YakitButton.refreshOnly'),
               },
               {
                 key: 'resetRefresh',
-                label: t('MITMLog.reset_query_and_refresh'),
+                label: t('YakitButton.resetQueryAndRefresh'),
               },
             ],
             onClick: ({ key }) => {

@@ -392,12 +392,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           {
             key: t('HTTPFlowTable.RowContextMenu.sendToComparerLeft'),
             label: t('HTTPFlowTable.RowContextMenu.sendToComparerLeft'),
-            // disabled: [false, true, false][compareState]
           },
           {
-            key: '发送到对比器右侧',
+            key: t('HTTPFlowTable.RowContextMenu.sendToComparerRight'),
             label: t('HTTPFlowTable.RowContextMenu.sendToComparerRight'),
-            // disabled: [false, false, true][compareState]
           },
         ],
       },
@@ -742,7 +740,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
                 language: 'http',
               })
               break
-            case '发送到对比器右侧':
+            case t('HTTPFlowTable.RowContextMenu.sendToComparerRight'):
               setCompareRight({
                 content: new Buffer(rowData.Request).toString('utf8'),
                 language: 'http',

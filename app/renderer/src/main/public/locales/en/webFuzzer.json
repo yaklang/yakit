@@ -170,8 +170,8 @@
   "SecondNodeTitle": {
     "oversizedResponse": "Oversized Response",
     "contentTypeModified": "Content-Type was modified; the original content is displayed next to the corresponding field",
-    "success": "Success [{{success}}]",
-    "failure": "Failure [{{failed}}]",
+    "success": "Success [{{count}}]",
+    "failure": "Failure [{{count}}]",
     "concurrencyLoad": "Concurrency/Load"
   },
   "EditorOverlayWidget": {
@@ -824,7 +824,6 @@
     "render_tag_content_as_nuclei_template_before_sendi": "Render tag content as Nuclei template before sending",
     "group_1_extract_first_parenthesis": "group: 1` - Extract first parenthesis `()`",
     "group_2_extract_second_parenthesis": "group: 2` - Extract second parenthesis `()`",
-    "quick_search_content_in_host_and_request": "Quick search content in Host and Request",
     "packet_config": "Packet Config",
     "could_not_find_the_corresponding_web_fuzzer_page": "Could not find the corresponding Web Fuzzer page. Please make sure the page is open.",
     "double_url_encode": "'Double URL' Encode",

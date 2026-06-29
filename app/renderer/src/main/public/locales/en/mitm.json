@@ -33,15 +33,7 @@
     "white_list_tip": "After configuring a whitelist, the rules will no longer apply to file extensions on the whitelist. Multiple file extensions can be configured, for example: .txt/.jpg/.mp4",
     "add_rule": "Add Rule",
     "default_Configuration": "Default Configuration",
-    "rule_content_tip": "Multiple rules can be configured sequentially, with each subsequent rule matching the results of the previous filter again",
-    "red": "Red",
-    "green": "Green",
-    "blue": "Blue",
-    "yellow": "Yellow",
-    "orange": "Orange",
-    "purple": "Purple",
-    "cyan": "Cyan",
-    "gray": "Gray"
+    "rule_content_tip": "Multiple rules can be configured sequentially, with each subsequent rule matching the results of the previous filter again"
   },
   "RuleExportAndImportButton": {
     "import_configuration": "Import",
@@ -182,7 +174,6 @@
     "matching_results": "Matching Results"
   },
   "YakScriptLoader": {
-    "reset_parameters": "Reset Parameters",
     "cancel_viewing_plugin_traffic": "Cancel viewing plugin traffic",
     "view_plugin_traffic": "View plugin traffic",
     "send_to_hot_patch_for_code_debugging": "Send to Hot Patch for code debugging?",
@@ -208,8 +199,7 @@
     "ruleGroup": "Rule Group: ",
     "downstreamProxy": "Downstream Proxy: ",
     "onlyGMTLS": "|GM-TLS Only",
-    "enableProxyAuth": "|Enable Proxy Auth",
-    "rule_group_name": "Rule Group: {{name}}"
+    "enableProxyAuth": "|Enable Proxy Auth"
   },
   "MITMServer": {
     "passive_plugin": "Passive Plugin",
@@ -257,8 +247,7 @@
     "include_hostnames": "Include Hostnames",
     "exclude_url_paths": "Exclude URL Paths",
     "include_url_paths": "Include URL Paths",
-    "exclude_http_methods": "Exclude HTTP Methods",
-    "rule_index": "Rule_{{index}}"
+    "exclude_http_methods": "Exclude HTTP Methods"
   },
   "MITMAdvancedFilters": {
     "pleaseCompleteCondition": "Please complete the added condition before adding a new one",
@@ -309,23 +298,17 @@
     "connectivityChecking": "TUN Hijack Connectivity Check In Progress",
     "connectivityCheckCompleted": "TUN Hijack Connectivity Check Completed",
     "connectivityCheckPluginNotFound": "Local plugin '{{name}}' was not found. Install the plugin first, or change the plugin name in code to the actual script name.",
-    "pluginName": "TUN Hijack Connectivity Check",
     "starting": "Starting...",
     "tunHijack": "TUN Hijack",
     "tunHijackDesc": "After enabling TUN hijack, hijacking can be performed without configuring a proxy",
     "streamCloseError": "Current stream closed abnormally, performing forced close",
-    "operation": "Action",
-    "delete": "Delete",
-    "clear": "Clear",
     "routeQueryPlugin": "Route Table Query",
     "routeQueryFailed": "Route table query failed",
-    "routeAddPlugin": "Route Table Add",
     "routeAddSuccessTag": "Route added successfully",
     "addRouteSuccess": "Route added successfully",
     "processList": "Process List",
     "routeList": "Route List",
     "addRoute": "Add Route",
-    "startExecute": "Start Execution",
     "targetList": "Target List",
     "targetListTooltip": "List of targets to hijack, can be separated by commas or newlines, and will parse CIDR ranges and domains",
     "targetListPlaceholder": "Enter target list",
@@ -344,9 +327,7 @@
     "infoDetail": "Details",
     "copyHint": "Double-click content to copy to clipboard",
     "hijack_process": "Hijack Process",
-    "monitor_hijack_process_count": "Monitor Hijack Process Count",
-    "tun_hijack_service": "Tun Hijack Service",
-    "route_table_delete": "Route Table Delete"
+    "monitor_hijack_process_count": "Monitor Hijack Process Count"
   },
   "MITMChromeLauncher": {
     "proxy_configuration": "Proxy Configuration",
@@ -416,8 +397,7 @@
     "client_certificate_pem_error": "Client certificate (PEM) error",
     "client_private_key_pem_error": "Client private key (PEM) error",
     "data_format_error": "Data format error",
-    "please_enter_a_valid_port_number_165535": "Please enter a valid port number (1-65535)",
-    "certificate_index": "Certificate {{index}}"
+    "please_enter_a_valid_port_number_165535": "Please enter a valid port number (1-65535)"
   },
   "MITMFiltersModal": {
     "save_filter_config": "Save Filter Configuration",
@@ -551,6 +531,7 @@
     "other": "Other",
     "manual_hijack": "Manual Hijack",
     "auto_forward": "Auto Forward",
+    "plugin_output": "Plugin Output",
     "failed_to_delete_filter_include_items": "Failed to delete filter include items: ",
     "bug__mitm_error__failed_to_get_correct_r": "BUG: MITM error, failed to get correct Response or Response ID",
     "success": " Success",
@@ -594,10 +575,6 @@
     "set_server_auto_forward": "Set server auto-forward: {{value}}",
     "disable_no_replace_and_delete_content": "When disabled, the 'No Replacement for All' rule button will be enabled, and all content matching the filter includes will be deleted"
   },
-  "MITMLog": {
-    "refresh_only": "Refresh Only",
-    "reset_query_and_refresh": "Reset query and refresh"
-  },
   "MITMServerHijacking": {
     "target_listening": "Target: Listening...",
     "switch_to_auto_hijack_mode": "Switch to auto hijack mode",
@@ -608,7 +585,6 @@
     "initial_mitm_plugin_started_successfully": "Initial MITM plugin started successfully",
     "system_proxy": "System Proxy",
     "rule_configuration": "Rule Configuration",
-    "confirm": "Confirm",
     "log": "Log",
     "target_url": "Target: {{url}}",
     "stop_mitm_hijack_failed": "Failed to stop MITM hijack: {{e}}"
@@ -633,27 +609,17 @@
     "route_table_delete": "Route Table Delete",
     "closing_tun_hijack_service_please_wait": "Closing Tun hijack service, please wait...",
     "interactive_plugin": "Interactive Plugin",
-    "ok": "OK",
-    "cancel": "Cancel",
     "update_mitm_plugin_status_failed": "Failed to update MITM plugin status: {{e}}",
     "close_tun_proxy_warning": "Closing Tun proxy will clear the routing table and stop all hijacking processes",
     "close_tun_proxy_warning_full": "Closing Tun proxy will clear the routing table and stop all hijacking processes to prevent affecting normal usage"
   },
   "MITMPluginLocalList": {
-    "search_result_is_empty": "Search result is empty",
     "click_to_get_official_cloud_plugins_or_i": "Click to get official cloud plugins, or import external plugin sources",
     "download_failed": "Download failed: ",
-    "update_failed": "Update failed: ",
-    "basic_scan": "Basic Scan",
     "keyword": "Keyword",
     "fulltext_search": "Full-text Search",
-    "no_data": "No data",
-    "download_failed_e": "Download failed: {{e}}",
     "stop_download_failed_e": "Stop download failed: {{e}}",
-    "downloaded_percent": "Downloaded {{percent}}%",
-    "update_failed_e": "Update failed: {{e}}",
     "stop_update_failed_e": "Stop update failed: {{e}}",
-    "updated_percent": "Updated {{percent}}%",
     "get_plugin_groups_failed": "Failed to get plugin groups: ",
     "cloud_plugins_downloading": "{{edition}} cloud plugins downloading...",
     "rules_updating": "{{edition}} rules updating...",
@@ -666,7 +632,6 @@
     "completed": "Completed",
     "failed": "Failed",
     "cancel": "Cancel",
-    "index": "Index",
     "plugin_name": "Plugin Name",
     "hook_name": "Hook Name",
     "status": "Status",
@@ -683,6 +648,5 @@
     "plugin_trace_started": "Plugin trace started",
     "plugin_trace_stopped": "Plugin trace stopped",
     "status_completed_removed": ": Status completed, automatically removed from list, cannot locate"
-  },
-  "utils": {}
+  }
 }

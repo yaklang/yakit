@@ -100,7 +100,7 @@ export const MatchersPanel: React.FC<MatchersPanelProps> = React.memo((props) =>
             <div className={styles['matchers-number']}>{matchers?.length}</div>
           </div>
         }
-        key={t('ResponseViewer.matcher')}
+        key="匹配器"
         extra={
           <>
             <YakitButton
@@ -206,7 +206,7 @@ export const ExtractorsPanel: React.FC<ExtractorsPanelProps> = React.memo((props
             <div className={styles['matchers-number']}>{extractors?.length}</div>
           </div>
         }
-        key={t('ExtractorsPanel.dataExtractor')}
+        key="数据提取器"
         extra={
           <>
             <YakitButton
@@ -325,7 +325,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
       })
   })
   const onAddPrams = useMemoizedFn(() => {
-    onAdd(t('VariablePanel.setVariable'))
+    onAdd('设置变量')
     const index = params.findIndex((ele: { Key: string; Value: string }) => !ele || (!ele.Key && !ele.Value))
     if (index === -1) {
       const newParams = [...params, { Key: '', Value: '', Type: 'raw' }]
@@ -369,7 +369,7 @@ export const VariablePanel: React.FC<VariablePanelProps> = React.memo((props) =>
       <YakitPanel
         {...restProps}
         header={t('VariablePanel.setVariable')}
-        key={t('VariablePanel.setVariable')}
+        key="设置变量"
         extra={
           <>
             <YakitButton

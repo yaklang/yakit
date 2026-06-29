@@ -1,4 +1,4 @@
-import React, { ReactNode, Suspense, useEffect, useRef, useState } from 'react'
+import React, { ReactNode, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { YakitResizeBox } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
 import {
   useCreation,
@@ -7,6 +7,7 @@ import {
   useInViewport,
   useMemoizedFn,
   usePrevious,
+  useSize,
   useThrottleEffect,
   useUpdateEffect,
 } from 'ahooks'
@@ -478,6 +479,8 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
   // #endregion
 
   // #region 执行表单
+  const analysisMainRightRef = useRef(null)
+  const size = useSize(analysisMainRightRef)
   const [sourceType, setSourceType] = useState<SourceType>('database')
   const [concurrency, setConcurrency] = useState<number>(10)
   const [enableDeduplicate, setEnableDeduplicate] = useState<boolean>(false)
@@ -756,6 +759,10 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
       onSetRefreshHttpTable((prev) => !prev)
     }
   }, [inViewport])
+
+  const showExecForm = useMemo(() => {
+    return executeStatus === 'default' || isExit
+  }, [executeStatus, isExit])
   // #endregion
 
   return (
@@ -926,12 +933,13 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
             firstMinSize={650}
             secondMinSize={500}
             secondNode={
-              <div className={styles['AnalysisMain-right']}>
-                {executeStatus === 'default' || isExit ? (
-                  <div
-                    className={styles['AnalysisMain-right-default']}
-                    style={{ overflow: sourceType === 'database' ? 'auto' : undefined }}
-                  >
+              <div
+                className={styles['AnalysisMain-right']}
+                ref={analysisMainRightRef}
+                style={{ overflow: showExecForm ? 'scroll' : undefined }}
+              >
+                {showExecForm ? (
+                  <div className={styles['AnalysisMain-right-default']}>
                     <div className={styles['AnalysisMain-right-default-header']}>
                       <div className={styles['title-wrapper']}>
                         <span className={styles['title']}>{t('AnalysisMain.execution_result')}</span>{' '}
@@ -962,7 +970,12 @@ const AnalysisMain: React.FC<AnalysisMainProps> = React.memo((props) => {
                     <div
                       className={styles['exec-form-item']}
                       style={{
-                        height: sourceType === 'rawpacket' ? `calc(100% - 200px)` : undefined,
+                        height:
+                          sourceType === 'rawpacket'
+                            ? (size?.height || 0) >= 400
+                              ? `calc(100% - 200px)`
+                              : `calc(100% - 300px)`
+                            : undefined,
                       }}
                     >
                       {sourceType === 'database' ? (

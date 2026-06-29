@@ -102,7 +102,6 @@ export interface YakFilterRemoteObj {
 }
 
 export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     status,
     noParamsCheckList,
@@ -134,6 +133,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     setShowPluginStream,
     setAutoForward,
   } = props
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
 
   const [vlistHeigth, setVListHeight] = useState(0)
   const [initialTotal, setInitialTotal] = useState<number>(0) //初始插件总数
@@ -195,7 +195,7 @@ export const MITMPluginLocalList: React.FC<MITMPluginLocalListProps> = React.mem
     if (Number(total) === 0 && (tags.length > 0 || searchKeyword || fieldKeywords || groupNames.length > 0)) {
       return (
         <div className={style['mitm-plugin-empty']}>
-          <YakitEmpty title={null} description={t('MITMPluginLocalList.search_result_is_empty')} />
+          <YakitEmpty title={null} description={t('YakitEmpty.searchEmpty')} />
         </div>
       )
     }
@@ -338,7 +338,6 @@ export interface YakitGetOnlinePluginProps {
  * @param listType 'online'默认首页 mine 个人, recycle 回收站 check 审核页面"
  */
 export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     listType = 'online',
     pluginType,
@@ -348,6 +347,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     isRereshLocalPluginList = true,
     getContainer,
   } = props
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const taskToken = useMemo(() => randomString(40), [])
   const [percent, setPercent] = useState<number>(0)
   useEffect(() => {
@@ -370,7 +370,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
     })
     ipcRenderer.on(`${taskToken}-error`, (_, e) => {
       onRefLocalPluginList()
-      yakitNotify('error', t('MITMPluginLocalList.download_failed') + e)
+      yakitNotify('error', t('YakitNotification.downloadFailed', { error: e + '' }))
     })
     return () => {
       ipcRenderer.removeAllListeners(`${taskToken}-data`)
@@ -388,7 +388,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         .invoke('DownloadOnlinePlugins', addParams, taskToken)
         .then(() => {})
         .catch((e) => {
-          failed(t('MITMPluginLocalList.download_failed_e', { e }))
+          failed(t('YakitNotification.downloadFailed', { error: e + '' }))
         })
     }
   }, [visible])
@@ -421,7 +421,7 @@ export const YakitGetOnlinePlugin: React.FC<YakitGetOnlinePluginProps> = React.m
         strokeColor="var(--Colors-Use-Main-Primary)"
         trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
         percent={percent}
-        format={(percent) => t('MITMPluginLocalList.downloaded_percent', { percent })}
+        format={(percent) => t('YakitProgress.downloadedPercent', { percent })}
       />
     </YakitHint>
   )
@@ -442,8 +442,8 @@ export interface IRifyApplySyntaxFlowRuleUpdateProps {
  * IRify一键更新规则
  */
 export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUpdateProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const { visible, setVisible, getContainer, wrapClassName } = props
+  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const taskToken = useMemo(() => randomString(40), [])
   const [percent, setPercent] = useState<number>(0)
   useEffect(() => {
@@ -463,7 +463,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
     })
     ipcRenderer.on(`${taskToken}-error`, (_, e) => {
       onRefLocalRuleList()
-      yakitNotify('error', t('MITMPluginLocalList.update_failed') + e)
+      yakitNotify('error', t('YakitNotification.updateFailed', { error: e }))
     })
     return () => {
       ipcRenderer.removeAllListeners(`${taskToken}-data`)
@@ -477,7 +477,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
         .invoke('ApplySyntaxFlowRuleUpdate', taskToken)
         .then(() => {})
         .catch((e) => {
-          failed(t('MITMPluginLocalList.update_failed_e', { e }))
+          failed(t('YakitNotification.updateFailed', { error: e }))
         })
     }
   }, [visible])
@@ -510,7 +510,7 @@ export const IRifyApplySyntaxFlowRuleUpdate: React.FC<IRifyApplySyntaxFlowRuleUp
         strokeColor="var(--Colors-Use-Main-Primary)"
         trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
         percent={percent}
-        format={(percent) => t('MITMPluginLocalList.updated_percent', { percent })}
+        format={(percent) => t('YakitProgress.updated_percent', { percent })}
       />
     </YakitHint>
   )
@@ -630,7 +630,6 @@ interface PluginGroupProps {
   onClickMagFun?: () => void
 }
 export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     selectGroup,
     setSelectGroup,
@@ -644,6 +643,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
     total = 0,
     checkedPlugin = [],
   } = props
+  const { t } = useI18nNamespaces(['mitm'])
 
   const [visible, setVisible] = useState<boolean>(false)
   /**
@@ -732,11 +732,11 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
           let copyAllGroup = Array.isArray(res.allGroup) ? [...res.allGroup] : []
           // 便携版 如果没有基础扫描 塞基础扫描
           if (isEnpriTraceAgent()) {
-            const index = copySetGroup.findIndex((name) => name === t('MITMPluginLocalList.basic_scan'))
-            const index2 = copyAllGroup.findIndex((name) => name === t('MITMPluginLocalList.basic_scan'))
+            const index = copySetGroup.findIndex((name) => name === '基础扫描')
+            const index2 = copyAllGroup.findIndex((name) => name === '基础扫描')
 
             if (index === -1 && index2 === -1) {
-              copyAllGroup = [...copyAllGroup, t('MITMPluginLocalList.basic_scan')]
+              copyAllGroup = [...copyAllGroup, '基础扫描']
             }
           }
           const newAllGroup = copyAllGroup.map((name) => ({
@@ -939,7 +939,6 @@ interface PluginSearchProps {
 }
 type PluginSearchType = 'Tags' | 'Keyword' | 'FieldKeywords'
 export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     onSearch,
     tag,
@@ -952,6 +951,7 @@ export const PluginSearch: React.FC<PluginSearchProps> = React.memo((props) => {
     inputSize,
     selectModuleTypeSize,
   } = props
+  const { t } = useI18nNamespaces(['mitm'])
   const [searchType, setSearchType] = useState<PluginSearchType>('FieldKeywords')
   const [afterModuleType, setAfterModuleType] = useState<'input' | 'select'>('input')
   const [allTag, setAllTag] = useState<TagValue[]>([])
@@ -1088,7 +1088,6 @@ interface PluginGroupListProps {
   closePluginGroupList: () => void
 }
 const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
-  const { t } = useI18nNamespaces(['mitm', 'yakitUi'])
   const {
     pugGroup,
     isOnline,
@@ -1099,6 +1098,7 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
     onDelGroup,
     closePluginGroupList,
   } = props
+  const { t } = useI18nNamespaces(['yakitUi'])
   const [newName, setNewName] = useState<string>('') // 插件组新名字
   const [editGroup, setEditGroup] = useState<string>('')
   const delGroupConfirmPopRef = useRef<any>()
@@ -1121,14 +1121,12 @@ const PluginGroupList: React.FC<PluginGroupListProps> = React.memo((props) => {
 
   const showExtraOptBtns = (group: string) => {
     // 线上 便携版 基础扫描不允许编辑删除操作
-    return showOptBtns && !(isOnline && isEnpriTraceAgent() && group === t('MITMPluginLocalList.basic_scan'))
+    return showOptBtns && !(isOnline && isEnpriTraceAgent() && group === '基础扫描')
   }
 
   return (
     <div className={style['plugin-group-list']}>
-      {pugGroup.length === 0 && (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('MITMPluginLocalList.no_data')} />
-      )}
+      {pugGroup.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('YakitEmpty.noData')} />}
       {pugGroup.map((item) => (
         <div
           className={classNames(style['plugin-group-item'], {
