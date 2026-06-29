@@ -1618,24 +1618,15 @@ let currentPlanReviewId = ''
 
 /** 自动提交 review continue 给后端，并清理本地缓存数据 */
 const handleAutoSubmitReviewContinue = (request: AIMessageHandlerParams, chatData: AIChatQSData) => {
-  const { review, getChatDataStore, setElements, info } = request
-  const reviewData = chatData.data as AIReviewType & { selectors?: AIAgentGrpcApi.ReviewSelector[] }
-  const continueSelector = reviewData?.selectors?.find((item) => item.value === 'continue')
-  const suggestion = continueSelector?.value || 'continue'
+  const { review } = request
   const input: AIInputEvent = {
     IsInteractiveMessage: true,
     InteractiveId: chatData.id,
-    InteractiveJSONInput: JSON.stringify({ suggestion }),
+    InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
   }
 
   review?.sendRequest?.(input)
   review?.handleSetReview?.(undefined)
-
-  const contents =
-    info.chatType === 'task' ? getChatDataStore?.()?.taskChat?.contents : getChatDataStore?.()?.casualChat?.contents
-  contents?.delete(chatData.id)
-
-  setElements((old) => old.filter((item) => !(item.token === chatData.id && item.type === chatData.type)))
 }
 
 /** Type='plan_review_require' plan-review */
@@ -1900,6 +1891,8 @@ const handleTaskReview: AIMessageHandler = (request) => {
     }
   } else if (info.chatType === 'reAct') {
     if (isAuto) return
+    // 将数据存入hook里的缓存变量中
+    review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
     setContentMap(chatData.id, cloneDeep(chatData))
     handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: chatData.id,
@@ -1965,8 +1958,6 @@ const handleToolReview: AIMessageHandler = (request) => {
     chatData.data.selected = JSON.stringify({ suggestion: 'continue' })
     chatData.data.optionValue = 'continue'
   }
-  // 将数据存入hook里的缓存变量中
-  review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
   if (info.chatType === 'task') {
     if (isAuto) {
       // setContentMap(chatData.id, cloneDeep(chatData))
@@ -1980,6 +1971,8 @@ const handleToolReview: AIMessageHandler = (request) => {
     }
   } else if (info.chatType === 'reAct') {
     if (isAuto) return
+    // 将数据存入hook里的缓存变量中
+    review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
     setContentMap(chatData.id, cloneDeep(chatData))
     handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
       mapKey: chatData.id,
