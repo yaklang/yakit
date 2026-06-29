@@ -19,10 +19,8 @@ import {
 } from '../MITMHacker/utils'
 import {
   useControllableValue,
-  useCounter,
   useCreation,
   useGetState,
-  useInterval,
   useInViewport,
   useMap,
   useMemoizedFn,
@@ -112,12 +110,33 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       boolean
     >(new Map())
 
-    const [currentOrder, { inc: addOrder, set: setOrder, reset: resetOrder }] = useCounter(1, { min: 1 })
-    const [intervalTime, setIntervalTime] = useState<number>()
+    // 性能优化：currentOrder 仅在 forwardHandlerV2 中赋值 arrivalOrder，不在 JSX 中读取，改为 ref 避免 Add 消息触发重渲染
+    const currentOrderRef = useRef<number>(1)
+    const addOrder = useMemoizedFn(() => {
+      currentOrderRef.current++
+    })
+    const setOrder = useMemoizedFn((v: number) => {
+      currentOrderRef.current = v
+    })
+    const resetOrder = useMemoizedFn(() => {
+      currentOrderRef.current = 1
+    })
+    // 性能优化：intervalTime 仅用于控制 flush 定时器的启停，不在 JSX 中读取。
+    // 改为 ref + 手动 setInterval/clearInterval，避免每次 flush 周期的两次 setState 重渲染
+    const flushIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+    const startFlushInterval = useMemoizedFn(() => {
+      if (flushIntervalRef.current !== null) return
+      flushIntervalRef.current = setInterval(() => {
+        handleManualHijackList()
+      }, 100)
+    })
+    const stopFlushInterval = useMemoizedFn(() => {
+      if (flushIntervalRef.current !== null) {
+        clearInterval(flushIntervalRef.current)
+        flushIntervalRef.current = null
+      }
+    })
     const mitmV2HijackInfoRef = useRef<SingleManualHijackInfoMessage[]>([])
-    const clearMITMHijackV2 = useInterval(() => {
-      handleManualHijackList()
-    }, intervalTime)
 
     const manualHijackInfoRef = useRef<ManualHijackInfoRefProps>({
       onSubmitData: () => {},
@@ -147,7 +166,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         }
       })
       return () => {
-        clearMITMHijackV2()
+        stopFlushInterval()
         grpcClientMITMHijacked(mitmVersion).remove()
       }
     }, [])
@@ -170,7 +189,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
           if (!!hijackData) {
             const item: SingleManualHijackInfoMessage = {
               ...hijackData,
-              arrivalOrder: currentOrder,
+              arrivalOrder: currentOrderRef.current,
               manualHijackListAction: ManualHijackListAction.Hijack_List_Add,
             }
             mitmV2HijackInfoRef.current.push(item)
@@ -234,8 +253,8 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
         default:
           break
       }
-      if (mitmV2HijackInfoRef.current.length > 0 && !intervalTime) {
-        setIntervalTime(100)
+      if (mitmV2HijackInfoRef.current.length > 0 && flushIntervalRef.current === null) {
+        startFlushInterval()
       }
     })
     /**处理手动劫持数据,后端在发送数据得时候已经做过节流/防抖处理 */
@@ -311,7 +330,7 @@ const MITMManual: React.FC<MITMManualProps> = React.memo(
       }))
       setData([...newData])
       mitmV2HijackInfoRef.current = []
-      setIntervalTime(undefined)
+      stopFlushInterval()
     })
 
     const getMitmManualContextMenu = useMemoizedFn((rowData: SingleManualHijackInfoMessage) => {

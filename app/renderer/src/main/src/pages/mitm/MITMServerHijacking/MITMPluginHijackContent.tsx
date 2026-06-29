@@ -259,15 +259,17 @@ export const MITMPluginHijackContent: React.FC<MITMPluginHijackContentProps> = R
   }, [compareHasParamsCheckList])
 
   // 初始化加载 hooks，设置定时更新 hooks 状态
+  // 性能优化：轮询间隔从 1s 延长到 3s，且仅在视口可见时轮询，减少 IPC 调用
   useEffect(() => {
+    if (!inViewport) return
     updateHooks()
     const id = setInterval(() => {
       updateHooks()
-    }, 1000)
+    }, 3000)
     return () => {
       clearInterval(id)
     }
-  }, [])
+  }, [inViewport])
 
   useEffect(() => {
     // 加载状态(从服务端加载)

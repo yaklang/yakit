@@ -1,6 +1,6 @@
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { info, yakitFailed, yakitNotify } from '@/utils/notification'
-import { useCreation, useInViewport, useMemoizedFn } from 'ahooks'
+import { useCreation, useInViewport, useMemoizedFn, useThrottleFn } from 'ahooks'
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { MITMResponse, TraceInfo } from '../MITMPage'
 import styles from './MITMServerHijacking.module.scss'
@@ -167,6 +167,11 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
   const [sourceType, setSourceType] = useState<string>('mitm')
   const [tableTotal, setTableTotal] = useState<number>(0)
   const [tableSelectNum, setTableSelectNum] = useState<number>(0)
+  // 性能优化：高流量下这三个 setState 由 HTTPFlowRealTimeTableAndEditor 每条流回调触发，
+  // 用 throttle 合并到 500ms 最多一次，避免 header 频繁重渲染
+  const { run: throttledSetHasNewData } = useThrottleFn((v: boolean) => setHasNewData(v), { wait: 500 })
+  const { run: throttledSetTableTotal } = useThrottleFn((v: number) => setTableTotal(v), { wait: 500 })
+  const { run: throttledSetTableSelectNum } = useThrottleFn((v: number) => setTableSelectNum(v), { wait: 500 })
   const mitmHijackedContentRef = useRef<HTMLDivElement>(null)
   const [inViewport] = useInViewport(mitmHijackedContentRef)
   const { builtinTagList } = useBuiltinTagList(autoForward === 'log', inViewport)
@@ -1000,9 +1005,9 @@ const MITMHijackedContent: React.FC<MITMHijackedContentProps> = React.memo((prop
             noTableTitle={true}
             downstreamProxyStr={downstreamProxyStr}
             params={{ SourceType: sourceType }}
-            onSetTableTotal={setTableTotal}
-            onSetTableSelectNum={setTableSelectNum}
-            onSetHasNewData={setHasNewData}
+            onSetTableTotal={throttledSetTableTotal}
+            onSetTableSelectNum={throttledSetTableSelectNum}
+            onSetHasNewData={throttledSetHasNewData}
             wrapperStyle={{ padding: 0 }}
             onQueryParams={(queryParams) => {
               try {
