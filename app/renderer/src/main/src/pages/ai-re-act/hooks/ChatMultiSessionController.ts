@@ -6,10 +6,10 @@ import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/default
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultMemoryList, DefaultPlanItemDetailsData } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
-import { genExecTasks, handleGrpcDataPushLog } from './utils'
+import { genExecTasks } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
-import { AIChatQSDataTypeEnum, type AIReviewType } from './aiRender'
+import { type AIChatQSData, AIChatQSDataTypeEnum } from './aiRender'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 
 const { ipcRenderer } = window.require('electron')
@@ -115,10 +115,14 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     cardKVPair: new Map(),
     cardKVPaidTimer: null,
     execFileRecordOrder: 1,
+    syncIDMap: new Map(),
   }
 }
 
 export class ChatMultiSessionController {
+  // 存放各个页面下的session集合
+  private pageSessionMap = new Map<string, Set<string>>()
+
   private requestPool = new Map<string, AIStartParams>()
   private storePool = new Map<string, ReturnType<typeof createChatStore>>()
   private rawDataPool = new Map<string, AIAgentChatData>()
@@ -178,6 +182,7 @@ export class ChatMultiSessionController {
     const { request, store, meta } = this.ensureSession(sessionId)
 
     store.getState().updateState({ execute: true, casualTitle: '发送问题，开启会话...' })
+    this.pageSessionMap.get(params.Params?.Source ?? 'ai')?.add(sessionId)
 
     if (params.Params?.UserQuery) {
       meta.createChatQuestion = {
@@ -203,10 +208,16 @@ export class ChatMultiSessionController {
         return
       }
 
-      const { store, rawData } = this.ensureSession(token)
+      const { store, rawData, meta } = this.ensureSession(token)
       // 自由对话没有问题进行中时，才改变loading的title
       if (params.IsFreeInput && !store.getState().casualLoading) {
         store.getState().updateState({ casualTitle: '等待回复中...' })
+      }
+
+      if (params.IsSyncMessage && params.SyncID) {
+        // 记录发送请求里的syncId-标识开始处理中
+        meta.syncIDMap.set(params.SyncID, true)
+        store.getState().updateStateCount('syncIDUpdate')
       }
 
       switch (type) {
@@ -308,85 +319,121 @@ export class ChatMultiSessionController {
     ipcRenderer.invoke('send-ai-re-act', sessionId, request)
   }
 
-  // 💥 核心替换：完美接管原 useChatIPC 里的巨型数据分发逻辑！
+  /** 💥 核心替换：接管原 useChatIPC 里的巨型数据分发逻辑！ */
   public handleGrpcOutputEvent(sessionId: string, res: AIOutputEvent) {
-    // 所有数据，均抄送一份到日志中
-    handleGrpcDataPushLog({ info: res, pushLog: () => {} })
-
-    const { store, rawData, request, meta } = this.ensureSession(sessionId)
-
-    if (res.Type === 'pong') {
-      const { createChatQuestion } = meta
-      if (createChatQuestion) {
-        this.requestMessage(sessionId, createChatQuestion)
-        meta.createChatQuestion = undefined
-        store.getState().updateState({ casualTitle: '等待回复中...' })
-      } else {
-        // 调用历史数据恢复方法
-      }
-      meta?.onSessionStartSuccess?.(sessionId)
-      return
-    }
-
-    if (res.Type === 'structured') {
+    try {
       let ipcContent = Uint8ArrayToString(res.Content) || ''
-      const obj = JSON.parse(ipcContent) || ''
+      // 所有数据，均抄送一份到日志中
+      aiAgentLogEmitter.dispatch({
+        session: sessionId,
+        type: 'log',
+        Timestamp: res.Timestamp,
+        log: { level: 'log', message: ipcContent },
+      })
 
-      if (obj?.level) {
-        // 日志类型数据
-        const data = obj as AIAgentGrpcApi.Log
-        aiAgentLogEmitter.dispatch({
-          session: sessionId,
-          type: 'log',
-          Timestamp: res.Timestamp,
-          log: data,
+      const { store, rawData, request, meta } = this.ensureSession(sessionId)
+
+      if (res.SyncID && meta.syncIDMap.has(res.SyncID)) {
+        // 标识同步ID已处理
+        meta.syncIDMap.delete(res.SyncID)
+        store.getState().updateStateCount('syncIDUpdate')
+      }
+
+      if (res.Type === 'pong') {
+        const { createChatQuestion } = meta
+        if (createChatQuestion) {
+          this.requestMessage(sessionId, createChatQuestion)
+          meta.createChatQuestion = undefined
+          store.getState().updateState({ casualTitle: '等待回复中...' })
+        } else {
+          // 调用历史数据恢复方法
+        }
+        meta?.onSessionStartSuccess?.(sessionId)
+        return
+      }
+
+      if (res.Type === 'structured') {
+        const obj = JSON.parse(ipcContent) || ''
+
+        if (obj?.level) {
+          // 日志类型数据
+          const data = obj as AIAgentGrpcApi.Log
+          aiAgentLogEmitter.dispatch({
+            session: sessionId,
+            type: 'log',
+            Timestamp: res.Timestamp,
+            log: data,
+          })
+          return
+        }
+      }
+
+      let funcKey = res.Type
+      if (
+        res.Type === 'structured' &&
+        [
+          'session_title',
+          'timeline_item',
+          'react_task_enqueue',
+          'react_task_dequeue',
+          'queue_info',
+          'react_task_status_changed',
+          'status',
+          'stream-finished',
+        ].includes(res.NodeId)
+      ) {
+        funcKey = res.NodeId
+      } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
+        funcKey = res.NodeId
+      } else if (res.Type === 'report_finish' || res.NodeId === 'report-finish') {
+        funcKey = res.NodeId
+      } else if (res.Type === 'structured' && res.NodeId === 'system') {
+        const ipcContent = Uint8ArrayToString(res.Content) || ''
+        const data = JSON.parse(ipcContent) || ''
+        if (data && typeof data === 'object' && data?.type === 'push_task') {
+          funcKey = 'push_task'
+        } else if (data && typeof data === 'object' && data?.type === 'pop_task') {
+          funcKey = 'pop_task'
+        }
+      }
+      const handleFunc = grpcAIMessageHandlers[funcKey || '']
+      if (handleFunc) {
+        handleFunc({
+          sessionId,
+          res,
+          chatType: meta.currentTaskPlanID?.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
+          store,
+          rawData,
+          request,
+          meta,
+          sendRequest: (request) => this.requestMessage(sessionId, request),
         })
         return
       }
-    }
-
-    let funcKey = res.Type
-    if (
-      res.Type === 'structured' &&
-      [
-        'session_title',
-        'timeline_item',
-        'react_task_enqueue',
-        'react_task_dequeue',
-        'queue_info',
-        'react_task_status_changed',
-        'status',
-        'stream-finished',
-      ].includes(res.NodeId)
-    ) {
-      funcKey = res.NodeId
-    } else if (res.Type === 'api_request_failed' && res.NodeId === 'ai_call_failure') {
-      funcKey = res.NodeId
-    } else if (res.Type === 'report_finish' || res.NodeId === 'report-finish') {
-      funcKey = res.NodeId
-    } else if (res.Type === 'structured' && res.NodeId === 'system') {
-      const ipcContent = Uint8ArrayToString(res.Content) || ''
-      const data = JSON.parse(ipcContent) || ''
-      if (data && typeof data === 'object' && data?.type === 'push_task') {
-        funcKey = 'push_task'
-      } else if (data && typeof data === 'object' && data?.type === 'pop_task') {
-        funcKey = 'pop_task'
-      }
-    }
-    const handleFunc = grpcAIMessageHandlers[funcKey || '']
-    if (handleFunc) {
-      handleFunc({
-        res,
-        chatType: meta.currentTaskPlanID?.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
-        store,
-        rawData,
-        request,
-        meta,
-        pushLog: () => {},
-        sendRequest: (request) => this.requestMessage(sessionId, request),
+    } catch (error) {
+      aiAgentLogEmitter.dispatch({
+        session: sessionId,
+        type: 'log',
+        Timestamp: res.Timestamp,
+        log: { level: 'try-error', message: `${res.Type}-${res.NodeId}: ${error}` },
       })
-      return
     }
+  }
+
+  /** 主动往列表里放入一条数据 */
+  public pushDataToSession(sessionId: string, data: AIChatQSData) {
+    const { store, rawData } = this.ensureSession(sessionId)
+    rawData.contents.set(data.id, data)
+    store.getState().dispatchStreamingNode({
+      chatType: data.chatType,
+      node: {
+        token: data.id,
+        kind: 'item',
+        type: data.type,
+        dataOrigin: 'grpc_realtime_data',
+      },
+      groupTokenGenerator: () => '',
+    })
   }
 
   private closeIPCListeners(sessionId: string) {
@@ -405,7 +452,8 @@ export class ChatMultiSessionController {
   /** 关闭指定session的连接
    * TODO - 期望传一个对象，{ sessionIds: string[]; aiSource: AISource }
    */
-  public forceCloseSession(sessionId: string) {
+  public forceCloseSession(params: { sessionIds: string[]; source: string }) {
+    const { sessionIds, source } = params
     ipcRenderer.invoke('cancel-ai-re-act', sessionId).catch(() => {})
 
     this.readyChannels.delete(sessionId)

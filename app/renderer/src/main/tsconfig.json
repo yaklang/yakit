@@ -3,7 +3,7 @@
     "target": "es2017",
     "lib": ["dom", "dom.iterable", "esnext", "ES2015.Promise", "ES2021.String"],
     "allowJs": true,
-    "skipLibCheck": true,
+    "skipLibCheck": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,

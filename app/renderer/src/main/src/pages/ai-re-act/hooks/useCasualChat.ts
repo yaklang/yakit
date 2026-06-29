@@ -1,10 +1,4 @@
-import type {
-  AIChatLogData,
-  handleSendFunc,
-  UseCasualChatEvents,
-  UseCasualChatParams,
-  UseCasualChatState,
-} from './type'
+import type { handleSendFunc, UseCasualChatEvents, UseCasualChatParams, UseCasualChatState } from './type'
 import type { AIChatQSData, ReActChatRenderItem } from './aiRender'
 import type { AIOutputEvent } from './grpcApi'
 import { useRef, useState } from 'react'
@@ -12,16 +6,11 @@ import { useCreation, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
 import { yakitNotify } from '@/utils/notification'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import { DefaultTodoListCardData } from './defaultConstant'
 
 function useCasualChat(params: UseCasualChatParams): [UseCasualChatState, UseCasualChatEvents]
 
 function useCasualChat(params: UseCasualChatParams) {
-  const { pushLog, getChatDataStore, getRequest, onReview, onReviewRelease } = params || {}
-
-  const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
-    pushLog && pushLog(logInfo)
-  })
+  const { getChatDataStore, getRequest, onReviewRelease } = params || {}
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
   const getCasualChat = useMemoizedFn(() => {

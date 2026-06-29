@@ -3,6 +3,7 @@ import type { AIAgentGrpcApi, AIInputEvent, AIStartParams } from '@/pages/ai-re-
 import type { PlanItemDetailsData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AIChatQSData } from '@/pages/ai-re-act/hooks/aiRender'
 import type { AISource } from '@/pages/ai-re-act/hooks/grpcApi'
+import { PaginationSchema } from '@/pages/invoker/schema'
 
 /** 上下文字节统计 */
 export interface AIContextStatsDetail {
@@ -237,4 +238,7 @@ export interface AIAgentChatMetaData {
 
   /** 用于文件操作记录的计数器 */
   execFileRecordOrder: number
+
+  /** 同步ID-是否已处理 */
+  syncIDMap: Map<string, boolean>
 }

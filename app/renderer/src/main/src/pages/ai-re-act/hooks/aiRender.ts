@@ -463,16 +463,32 @@ export interface ChatStoreState {
   /** 会话执行状态 */
   execute: boolean
 
+  /** aiChat.d.ts AIAgentChatData httpFuzzRequest */
   httpFuzzRequestUpdate: number
+  /** aiChat.d.ts AIAgentChatData httpFlowFuzzStatus */
   httpFlowFuzzStatusUpdate: number
-  /** 更新会话标题名 */
+  /**
+   * 更新会话标题名
+   * aiChat.d.ts AIAgentChatData sessionTitle
+   */
   sessionTitleUpdate: number
-  /** 记忆列表 */
+  /**
+   * 记忆列表
+   * aiChat.d.ts AIAgentChatData memoryList
+   */
   memoryListUpdate: number
-  /** 系统流信息(isSystem=true&type=stream) */
+  /**
+   * 系统流信息(isSystem=true&type=stream)
+   * aiChat.d.ts AIAgentChatData systemStream
+   */
   updateSystemStream: number
-  /** yaklang_code_change 更新 */
+  /**
+   * yaklang_code_change 更新
+   * aiChat.d.ts AIAgentChatData yaklangCodeChange
+   */
   yaklangCodeChangeUpdate: number
+  /** aiChat.d.ts AIAgentChatMetaData syncID */
+  syncIDUpdate: number
 
   /** 接口运行过程中的数据文件夹合集 */
   grpcFolders: AIFileSystemPin[]
@@ -488,9 +504,11 @@ export interface ChatStoreState {
 
   /** 运行时产生http数据(是否显示tab，是否刷新数据) */
   httpTabShow: boolean
+  /** aiChat.d.ts AIAgentChatData httpRunTimeIDs */
   httpTabUpdate: number
   /** 运行时产生risk数据(是否显示tab，是否刷新数据) */
   riskTabShow: boolean
+  /** aiChat.d.ts AIAgentChatData riskRunTimeIDs */
   riskTabUpdate: number
 
   // #region 会话列表相关数据
@@ -509,7 +527,10 @@ export interface ChatStoreState {
   currentCasualReview: string[]
   /** 任务规划当前显示的review数据 */
   currentPlanReviewToken: string
-  /** 当前review是plan时，异步数据的更新版本 */
+  /**
+   * 当前review是plan时，异步数据的更新版本
+   * aiChat.d.ts AIAgentChatMetaData planReviewExtraData
+   */
   currentPlanReviewExtraUpdate: number
 
   items: Record<string, ReActChatItemMeta>
@@ -518,6 +539,7 @@ export interface ChatStoreState {
 
   casualChat: {
     elements: ReActChatRenderElement[]
+    /** aiChat.d.ts AIAgentChatData casualChat['planDetails'] */
     todoListUpdate: number
   }
   taskChat: {
@@ -551,7 +573,8 @@ export interface ChatStoreState {
       | 'memoryListUpdate'
       | 'updateSystemStream'
       | 'yaklangCodeChangeUpdate'
-      | 'currentPlanReviewExtraUpdate',
+      | 'currentPlanReviewExtraUpdate'
+      | 'syncIDUpdate',
   ) => void
 
   updateFolders: (info: AIFileSystemPin) => void
@@ -573,6 +596,7 @@ export interface ChatStoreState {
         | 'memoryListUpdate'
         | 'updateSystemStream'
         | 'yaklangCodeChangeUpdate'
+        | 'syncIDUpdate'
         | 'httpTabShow'
         | 'httpTabUpdate'
         | 'riskTabShow'

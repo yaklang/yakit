@@ -1,43 +1,27 @@
 import type {
-  AIChatLogData,
   CurrentExecTaskTree,
   handleSendFunc,
   UseTaskChatEvents,
   UseTaskChatParams,
   UseTaskChatState,
 } from './type'
-import type { AIChatQSData, AIReviewType, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
+import type { AIChatQSData, ReActChatRenderItem, AITaskInfoProps } from './aiRender'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
-import { Uint8ArrayToString } from '@/utils/str'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog, handleTodoListData, isValidTaskIndex } from './utils'
+import { genBaseAIChatData, genExecTasks } from './utils'
 import { yakitNotify } from '@/utils/notification'
-import { AIInputEventSyncTypeEnum, AITaskStatus } from './grpcApi'
+import { AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import { has } from 'lodash'
-import { grpcAIMessageHandlers } from './grpcAIMessageHandlers'
 
 function useTaskChat(params: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params: UseTaskChatParams) {
-  const {
-    pushLog,
-    getChatDataStore,
-    getRequest,
-    getCurrentTaskPlanID,
-    onReview,
-    onReviewExtra,
-    onReviewRelease,
-    sendRequest,
-  } = params || {}
-
-  const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
-    pushLog && pushLog(logInfo)
-  })
+  const { getChatDataStore, getRequest, getCurrentTaskPlanID, onReview, onReviewExtra, onReviewRelease, sendRequest } =
+    params || {}
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
 
@@ -72,10 +56,7 @@ function useTaskChat(params: UseTaskChatParams) {
       if (!taskKey) return
       const existing = getContentMap(taskKey)
       if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-        handleGrpcDataPushLog({
-          info: res,
-          pushLog: handlePushLog,
-        })
+        // push log
         return
       }
       const chatData: AIChatQSData =
@@ -134,10 +115,7 @@ function useTaskChat(params: UseTaskChatParams) {
         })
       }
     } catch {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
+      // push log
     }
   })
 
