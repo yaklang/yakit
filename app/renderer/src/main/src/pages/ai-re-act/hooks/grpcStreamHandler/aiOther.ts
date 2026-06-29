@@ -1,7 +1,7 @@
 import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import { genBaseAIChatData, generateTaskNodeID, genExecTasks, pushLogToOtherWindow } from '../utils'
+import { genBaseAIChatData, generateTaskNodeID, genExecTasks } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData, DefaultPlanLoadingStatus } from '../defaultConstant'
@@ -37,13 +37,7 @@ const handleSessionTitle: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const nameInfo = JSON.parse(ipcContent) as { title: string }
   if (!nameInfo || !nameInfo.title) {
-    pushLogToOtherWindow({
-      sessionId: request.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.NodeId}数据错误: ${ipcContent}`,
-    })
+    request.pushLog({ level: 'error', message: `${res.NodeId}数据错误: ${ipcContent}` })
     return
   }
   rawData.sessionTitle = nameInfo.title
@@ -61,13 +55,7 @@ const handleStartPlanAndExecution: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
   if (!startInfo.coordinator_id) {
-    pushLogToOtherWindow({
-      sessionId: request.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据, coordinator_id 为空`,
-    })
+    request.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
     return
   }
   meta.currentTaskPlanID = {
@@ -114,13 +102,7 @@ const handleEndPlanAndExecution: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
   if (!startInfo.coordinator_id) {
-    pushLogToOtherWindow({
-      sessionId: request.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据, coordinator_id 为空`,
-    })
+    request.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
     return
   }
   if (startInfo.coordinator_id === meta.currentTaskPlanID?.coordinatorId) {
@@ -402,13 +384,7 @@ const handleTrafficCount: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.HTTPTrafficNotice & AIAgentGrpcApi.RiskTrafficNotice
   if (!data.runtime_id) {
-    pushLogToOtherWindow({
-      sessionId: request.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    request.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
@@ -426,10 +402,7 @@ const handleTrafficCount: AIMessageHandler = (request) => {
   // 更新工具执行结果卡片里的流量和风险数量
   const toolResult = rawData.contents.get(data.runtime_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || toolResult.chatType !== chatType) {
-    pushLogToOtherWindow({
-      sessionId: request.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    request.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${data.runtime_id})工具结果卡片数据不存在`,
     })

@@ -1,7 +1,7 @@
 import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import { genBaseAIChatData, generateTaskNodeDataID, pushLogToOtherWindow } from '../utils'
+import { genBaseAIChatData, generateTaskNodeDataID } from '../utils'
 import { AIChatQSDataTypeEnum, type AIToolResult } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultAIToolResult, DefaultToolResultSummary } from '../defaultConstant'
@@ -13,13 +13,7 @@ const handleToolCallStart: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, tool, start_time, start_time_ms } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
   if (!call_tool_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常, ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
   }
 
@@ -54,22 +48,13 @@ const handleToolCallParam: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, params } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallParams
   if (!call_tool_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常, ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
   }
 
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
     })
@@ -88,23 +73,14 @@ const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
   const { call_tool_id, id, selectors } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallWatcher
 
   if (!call_tool_id || !id || !selectors || !selectors?.length) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常, ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
   }
 
   // 先获取工具结果数据，从里面拿到stream的EventUUID
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
     })
@@ -113,10 +89,7 @@ const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
   // 通过上面获取到的EventUUID，获取stream数据
   const toolForStreamData = rawData.contents.get(toolResult.data.stream.EventUUID)
   if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    requestInfo.pushLog({
       level: 'error',
       message: `EventUUID: ${toolResult.data.stream.EventUUID} 的stream数据没有对应的初始化`,
     })
@@ -143,32 +116,20 @@ const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, dir_path } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallDirPath
   if (!call_tool_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常, ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
   }
 
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
     })
     return
   }
   if (toolResult.data.tool.dirPath) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), dir_path已存在，不能重复设置`,
     })
@@ -192,22 +153,13 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
   const { call_tool_id, ...rest } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
   if (!call_tool_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常, ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
   }
 
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
     })
@@ -246,22 +198,13 @@ const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
   const { call_tool_id, summary } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
   if (!call_tool_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常, ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常, ${ipcContent}` })
     return
   }
 
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    requestInfo.pushLog({
       level: 'error',
       message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
     })

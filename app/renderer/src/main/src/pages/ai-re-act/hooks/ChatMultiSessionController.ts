@@ -6,7 +6,7 @@ import { AIAgentSettingDefault, AIModelTypeEnum } from '@/pages/ai-agent/default
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultMemoryList, DefaultPlanItemDetailsData } from './defaultConstant'
 import { grpcAIMessageHandlers } from './grpcStreamHandler/grpcAIOutputEventHandlers'
-import { genExecTasks } from './utils'
+import { genExecTasks, pushLogToOtherWindow } from './utils'
 import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { yakitNotify } from '@/utils/notification'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from './aiRender'
@@ -398,7 +398,6 @@ export class ChatMultiSessionController {
       const handleFunc = grpcAIMessageHandlers[funcKey || '']
       if (handleFunc) {
         handleFunc({
-          sessionId,
           res,
           chatType: meta.currentTaskPlanID?.coordinatorId === res.CoordinatorId ? 'task' : 'reAct',
           store,
@@ -406,6 +405,14 @@ export class ChatMultiSessionController {
           request,
           meta,
           sendRequest: (request) => this.requestMessage(sessionId, request),
+          pushLog: (log) => {
+            pushLogToOtherWindow({
+              sessionId: sessionId,
+              isHistory: res.IsSync,
+              Timestamp: res.Timestamp,
+              ...log,
+            })
+          },
         })
         return
       }
