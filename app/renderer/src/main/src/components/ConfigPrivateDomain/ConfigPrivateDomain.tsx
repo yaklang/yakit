@@ -120,6 +120,10 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
           isAutoUploadProject: true,
           isUploadSyncData: true,
           isUpdateGlobalConfig: enterpriseLogin,
+          loginInfo: {
+            isLogin: true,
+            token: user.token,
+          },
         })
       }
       if (systemConfig?.length) {
@@ -310,22 +314,33 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
   }
 
   // 登录成功
-  const onLoginSuccess = useMemoizedFn(() => {
+  const onLoginSuccess = useMemoizedFn((user) => {
     success('企业登录成功')
     onClose && onClose()
     onSuccee && onSuccee()
-    uploadProjectEvent.startUpload({
-      isUploadSyncData: true,
-      isUpdateGlobalConfig: enterpriseLogin,
-    })
+    uploadProjectEvent
+      .startUpload({
+        isAutoUploadProject: true,
+        isUploadSyncData: true,
+        isUpdateGlobalConfig: enterpriseLogin,
+        loginInfo: {
+          isLogin: true,
+          token: user.token,
+        },
+      })
+      .then(async (systemConfig) => {
+        if (systemConfig?.length) {
+          await aiGlobalConfigEvent.getAIGlobalConfigAfterLogin(systemConfig)
+        }
+      })
   })
 
   // 全局监听登录状态
   useEffect(() => {
     const cleanup = yakitAuth.onSignCCBInData((res: any) => {
-      const { ok, info } = res
+      const { ok, info, user } = res
       if (ok) {
-        onLoginSuccess()
+        onLoginSuccess(user)
       } else {
         failed(info)
       }

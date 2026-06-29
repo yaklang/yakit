@@ -75,7 +75,7 @@ module.exports = {
       USER_INFO.companyHeadImg = user.companyHeadImg
       win.webContents.send('fetch-signin-token', user)
       if (type === 'ccb') {
-        win.webContents.send('fetch-signin-ccb-data', { ok: true, info: '登录成功' })
+        win.webContents.send('fetch-signin-ccb-data', { ok: true, info: '登录成功', user })
       } else {
         win.webContents.send('fetch-signin-data', { ok: true, info: '登录成功' })
       }
