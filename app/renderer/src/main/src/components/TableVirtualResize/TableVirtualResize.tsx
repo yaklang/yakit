@@ -992,8 +992,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       event.ctrlKey || event.metaKey,
     )
 
-    if (event.clientY <= nextDragSelectionState.rectTop + nextDragSelectionState.headerHeight) return
-
     const startPoint = getDragSelectionPoint(nextDragSelectionState, event.clientX, event.clientY)
 
     resetDragSelection(false)
@@ -1561,7 +1559,6 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                   },
                   containerClassName,
                 )}
-                onMouseDown={onMouseDownDragSelection}
               >
                 <div ref={columnsRef} className={classNames(styles['virtual-table-col'])}>
                   {columns.map((columnsItem, cIndex) => (
@@ -1598,7 +1595,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                   ))}
                 </div>
                 {/* <DndProvider backend={HTML5Backend}> */}
-                <div ref={wrapperRef} className={classNames(styles['virtual-table-list'])}>
+                <div
+                  ref={wrapperRef}
+                  className={classNames(styles['virtual-table-list'])}
+                  onMouseDown={onMouseDownDragSelection}
+                >
                   {columns.map((columnsItem, index) => (
                     <ColRender
                       colIndex={index}
