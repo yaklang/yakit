@@ -207,8 +207,6 @@ export interface AIAgentChatMetaData {
   onSessionStartSuccess?: (sessionId: string) => void
   /** 任务规划的实时记忆列表 */
   taskMemoryList: AIAgentGrpcApi.MemoryEntryList
-  /** 当前专注场景ID */
-  focusOfTaskID: string
   /** 通知消息的消失定时器 */
   notifyMessageTimer: NodeJS.Timeout | null
   /** 当前自由对话问题的re_act_task_id */

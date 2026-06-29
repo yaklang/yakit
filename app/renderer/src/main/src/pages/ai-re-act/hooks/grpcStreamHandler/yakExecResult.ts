@@ -4,6 +4,7 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { checkStreamValidity, convertCardInfo } from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import type { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 
+// TODO: ?
 const handleStatus: AIMessageHandler = (request) => {
   const { res, chatType, store, meta } = request
   if (res.Type !== 'structured' || res.NodeId !== 'status') return

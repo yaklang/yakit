@@ -4,7 +4,7 @@ import { Uint8ArrayToString } from '@/utils/str'
 import { genBaseAIChatData, generateTaskNodeID, genExecTasks, pushLogToOtherWindow } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultCurrentExecTaskTree, DefaultPlanLoadingStatus, DefaultTodoListCardData } from '../defaultConstant'
+import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData, DefaultPlanLoadingStatus } from '../defaultConstant'
 import has from 'lodash/has'
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
@@ -236,9 +236,8 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
   // 实时数据里，记录用户问题的状态和专注模式信息
   if (!res.IsSync) {
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
-    meta.currentCasualTaskID = data.react_task_id
+    meta.currentCasualTaskID = res.TaskId || data.react_task_id
     rawData.casualChat.planDetails = cloneDeep(DefaultPlanItemDetailsData)
-    meta.focusOfTaskID = data.focus_mode ? data.react_task_id : ''
     store.getState().updateState({ focusMode: data.focus_mode ? data.focus_mode : '', casualLoading: true })
   }
 
@@ -356,14 +355,11 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
       // 问题任务完成或者者被中止后，重置当前问题任务id
       meta.currentCasualTaskID = ''
       store.getState().updateState({ cancelCasualLoading: false })
-    }
-    if (meta.focusOfTaskID === react_task_id) {
       // 取消专注模式
-      meta.focusOfTaskID = ''
       store.getState().updateState({ focusMode: '' })
     }
     store.getState().updateState({ casualLoading: false })
-    rawData.casualChat.todoList = cloneDeep(DefaultTodoListCardData)
+    rawData.casualChat.planDetails = cloneDeep(DefaultPlanItemDetailsData)
     store.getState().updateCasualTodoList()
     if (meta.currentTaskPlanID?.taskID === react_task_id) {
       // 该问题触发了任务规划, 所以需要将任务规划状态也调整
@@ -373,6 +369,7 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
   }
 }
 
+// TODO: ?
 const handleStatus: AIMessageHandler = (request) => {
   const { res, chatType, store } = request
   if (res.Type !== 'structured' || res.NodeId !== 'status') return
