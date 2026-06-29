@@ -11,9 +11,9 @@ import { OutlineInformationcircleIcon } from '@/assets/icon/outline'
 import { useMemoizedFn, useSize } from 'ahooks'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import useAIAgentStore from '../../useContext/useStore'
-import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const TYPE_COLOR_MAP: Record<string, 'info' | 'white' | 'danger'> = {
   user_input: 'info',
@@ -82,15 +82,15 @@ const VirtuosoListContainer = forwardRef<HTMLDivElement, ListProps>(({ children,
 
 VirtuosoListContainer.displayName = 'VirtuosoListContainer'
 
-const TYPE = 'timelineID'
-
 const TimelineCard: FC = () => {
   const { activeChat } = useAIAgentStore()
-  const {
-    reActTimelines,
-    // historyState: { timelinesLoading },
-    requestHistoryState: { timelinesLoading },
-  } = useChatIPCStore().chatIPCData
+
+  const store = useCurrentStore()
+
+  const reActTimelines = useStore(store, (state) => state.reActTimelines)
+  const timelinesLoading = useStore(store, (state) => state.requestHistoryState.timelinesLoading)
+
+  /** TODO - 等待hooks */
   const { handleLoadMoreHistory, handleHasMoreHistory } = useChatIPCDispatcher().chatIPCEvents
   const { virtuosoRef, handleTotalListHeightChanged, setScrollerRef, setIsAtBottomRef } = useVirtuosoAutoScroll({
     total: reActTimelines.length,

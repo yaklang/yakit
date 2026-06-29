@@ -32,7 +32,6 @@ export function buildConcurrentStreamContext({
       chatIPCData: cloneDeep(defaultChatIPCData),
       reviewInfo: undefined,
       planReviewTreeKeywordsMap: new Map(),
-      reviewExpand: false,
     },
     dispatcher: {
       ...defaultDispatcherOfChatIPC,

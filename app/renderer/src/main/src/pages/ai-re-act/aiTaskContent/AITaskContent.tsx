@@ -13,15 +13,16 @@ import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExec
 import { AIReActTaskChatContent } from '../aiReActTaskChat/AIReActTaskChat'
 import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatReviewBar'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
+import { useStore } from 'zustand'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 
 export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) => {
   const { tabBarExtraContent, emptyNode } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
-  const {
-    chatIPCData: { taskChat },
-  } = useChatIPCStore()
+  const store = useCurrentStore()
+  const taskChat = useStore(store, (state) => state.taskChat)
+
   const [tabs, setTabs, getTabs] = useGetSetState<YakitSideTabProps['yakitTabs']>([])
   const [activeKey, setActiveKey] = useState<string>('taskContent')
   const [scrollToBottom, setScrollToBottom] = useState(false)

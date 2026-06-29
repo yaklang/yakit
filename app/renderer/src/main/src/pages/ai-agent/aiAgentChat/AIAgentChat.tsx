@@ -9,17 +9,10 @@ import { RemoteAIAgentGV } from '@/enums/aiAgent'
 import useAIAgentDispatcher from '../useContext/useDispatcher'
 import cloneDeep from 'lodash/cloneDeep'
 import { randomString } from '@/utils/randomUtil'
-import {
-  AIChatIPCSendParams,
-  AISendConfigHotpatchParams,
-  AISendSyncMessageParams,
-} from '../useContext/ChatIPCContent/ChatIPCContent'
 import { AIReActChatReview } from '@/pages/ai-agent/components/aiReActChatReview/AIReActChatReview'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineChevrondoubledownIcon, OutlineChevrondoubleupIcon } from '@/assets/icon/outline'
 import { ChatIPCSendType } from '@/pages/ai-re-act/hooks/type'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
-import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import { AIAgentGrpcApi, AIInputEvent } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AIChatQSData, AIReviewType } from '@/pages/ai-re-act/hooks/aiRender'
 import { failed, yakitNotify } from '@/utils/notification'
@@ -95,11 +88,10 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
   >(new Map())
 
   const [reviewInfo, setReviewInfo] = useState<AIChatQSData>()
-  const [reviewExpand, setReviewExpand] = useState<boolean>(true)
 
   // @deprecated
   const handleShowReview = useMemoizedFn((info: AIChatQSData) => {
-    setReviewExpand(true)
+    // setReviewExpand(true)
     setReviewInfo(cloneDeep(info))
   })
   // @deprecated
@@ -224,7 +216,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
     // 清空review信息
     setReviewInfo(undefined)
     resetPlanReviewTreeKeywords()
-    setReviewExpand(true)
+    // setReviewExpand(true)
   })
 
   useEffect(() => {
@@ -704,12 +696,7 @@ export const AIAgentChat: React.FC<AIAgentChatProps> = memo((props) => {
 export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const { reviewInfo, planReviewTreeKeywordsMap, footerExtra } = props
-  const { reviewExpand } = useChatIPCStore()
-  const { handleSendTask, handleSendSyncMessage } = useChatIPCDispatcher()
   const [expand, setReviewExpand] = useState<boolean>(true)
-  useEffect(() => {
-    setReviewExpand(reviewExpand)
-  }, [reviewExpand])
   const handleExpand = useMemoizedFn(() => {
     setReviewExpand((old) => !old)
   })
@@ -736,9 +723,8 @@ export const AIReActTaskChatReview: React.FC<AIReActTaskChatReviewProps> = React
       >
         <div className={styles['review-wrapper']}>
           <AIReActChatReview
+            chatType="task"
             info={reviewInfo}
-            onSendAI={handleSendTask}
-            onSendSyncMessage={handleSendSyncMessage}
             planReviewTreeKeywordsMap={planReviewTreeKeywordsMap}
             renderFooterExtra={renderFooter}
             expand={expand}

@@ -1,4 +1,4 @@
-import { ChatListRenderType, ChatReferenceMaterialPayload, ReActChatElement } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatReferenceMaterialPayload, ReActChatElement } from '@/pages/ai-re-act/hooks/aiRender'
 import { type CSSProperties, useState, type FC, useRef, useEffect, useMemo } from 'react'
 import styles from './AIGroupStreamCard.module.scss'
 import useAINodeLabel from '@/pages/ai-re-act/hooks/useAINodeLabel'
@@ -23,14 +23,12 @@ export const Code: FC<{ code: ChatReferenceMaterialPayload; style: CSSProperties
 }
 
 const AIStreamNode: FC<{
-  chatType: ChatListRenderType
   token: string
   index: number
-  session: string
   nodeLabel?: string
-}> = ({ chatType, token, index, session, nodeLabel }) => {
+}> = ({ token, index, nodeLabel }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { stream } = useTypedStream({ chatType, token, session })
+  const { stream } = useTypedStream({ token })
   const [open, setOpen] = useState(false)
   const [openPopover, setOpenPopover] = useState(false)
 
@@ -96,7 +94,7 @@ const AIGroupStreamCard: FC<{
   session: string
 }> = ({ elements, hasNext, session }) => {
   const lastElement = elements[elements.length - 1]
-  const { stream } = useTypedStream({ chatType: lastElement?.chatType, token: lastElement?.token ?? '', session })
+  const { stream } = useTypedStream({ token: lastElement?.token ?? '' })
   const { nodeLabel } = useAINodeLabel(stream?.data.NodeIdVerbose)
   const [expand, setExpand] = useState(true)
   const content = stream?.data.content || ''
@@ -237,14 +235,7 @@ const AIGroupStreamCard: FC<{
           }}
         >
           {elements.map((el, index) => (
-            <AIStreamNode
-              session={session}
-              nodeLabel={nodeLabel}
-              key={el.token}
-              chatType={el.chatType}
-              token={el.token}
-              index={index + 1}
-            />
+            <AIStreamNode nodeLabel={nodeLabel} key={el.token} token={el.token} index={index + 1} />
           ))}
         </div>
       </div>
