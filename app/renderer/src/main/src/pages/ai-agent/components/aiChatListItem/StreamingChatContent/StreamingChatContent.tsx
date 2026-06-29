@@ -1,9 +1,5 @@
 import { AIStreamNode } from '@/pages/ai-re-act/aiReActChatContents/AIReActChatContents'
-import {
-  AIChatQSDataTypeEnum,
-  type ChatListRenderType,
-  type ReActChatRenderItem,
-} from '@/pages/ai-re-act/hooks/aiRender'
+import { AIChatQSDataTypeEnum, type ReActChatRenderItem } from '@/pages/ai-re-act/hooks/aiRender'
 import { memo, type FC } from 'react'
 import { useTypedStream } from './hooks/useTypedStream'
 import AIGroupStreamCard from '../../aiGroupStreamCard/AIGroupStreamCard'
@@ -20,15 +16,14 @@ type StreamingChatContentProps = ReActChatRenderItem & {
 }
 
 type SingleStreamProps = {
-  chatType: ChatListRenderType
   token: string
   streamClassName?: StreamCls
   session: string
   listItemIndex?: number
 }
 
-const AIStreamCard: FC<SingleStreamProps> = ({ chatType, token, streamClassName, session, listItemIndex }) => {
-  const { stream } = useTypedStream({ chatType, token, session })
+const AIStreamCard: FC<SingleStreamProps> = ({ token, streamClassName, session, listItemIndex }) => {
+  const { stream } = useTypedStream({ token })
   if (!stream) return null
 
   return (
@@ -57,13 +52,7 @@ const StreamingChatContent: FC<StreamingChatContentProps> = (props) => {
     return <AIGroupStreamCard session={session} elements={props.children} hasNext={hasNext} />
   }
   return (
-    <AIStreamCard
-      session={session}
-      chatType={chatType}
-      token={token}
-      listItemIndex={listItemIndex}
-      streamClassName={streamClassName}
-    />
+    <AIStreamCard session={session} token={token} listItemIndex={listItemIndex} streamClassName={streamClassName} />
   )
 }
 export default memo(StreamingChatContent)

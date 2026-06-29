@@ -18,8 +18,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
 import { AIToDoListItem } from '@/pages/ai-re-act/aiReActChat/aiToDoList/AIToDoList'
 import { useCreation, useInterval, useMemoizedFn, useSelections } from 'ahooks'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import useAIAgentStore from '../../useContext/useStore'
 import { ForgesAndSkillsDynamicItem, PlanItemDetailsData, TodoListCardData } from '@/pages/ai-re-act/hooks/aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import isEqual from 'lodash/isEqual'
@@ -38,6 +36,7 @@ import { TableTotalAndSelectNumber } from '@/components/TableTotalAndSelectNumbe
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import {
   AIAgentGrpcApi,
+  AIInputEvent,
   AIInputEventHotPatchTypeEnum,
   AIInputEventSyncTypeEnum,
   AIStartParams,
@@ -51,11 +50,14 @@ import {
 } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
+import { useCurrentRawData } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import { randomString } from '@/utils/randomUtil'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName } = props
-  const { chatIPCEvents } = useChatIPCDispatcher()
-  const { activeChat } = useAIAgentStore()
+  const rawData = useCurrentRawData()
 
   const [planItemDetailsData, setPlanItemDetailsData] = useState<PlanItemDetailsData>()
   const perPlanItemDetailsDataUUIdRef = useRef<string>('')
@@ -74,10 +76,9 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     if (!taskId) return
     let itemData: PlanItemDetailsData | undefined = undefined
     if (taskId.includes('react')) {
-      itemData = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')?.casualChat.planDetails
+      itemData = rawData.casualChat.planDetails
     } else {
-      const planDetailsMap = chatIPCEvents.fetchChatDataStore()?.get(activeChat?.SessionID || '')
-        ?.taskChat.planDetailsMap
+      const planDetailsMap = rawData.taskChat.planDetailsMap
       if (!planDetailsMap || planDetailsMap.size === 0) return
       itemData = planDetailsMap.get(taskId)
     }
@@ -365,7 +366,9 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
 
 const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.memo((props) => {
   const { title, type, onClose, taskId } = props
-  const { handleSendConfigHotpatch, handleSendSyncMessage } = useChatIPCDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
 
   const [keyword, setKeyword] = useState<string>()
   const [loading, setLoading] = useState<boolean>(false)
@@ -586,17 +589,22 @@ const AITaskDetailsAddPopover: React.FC<AITaskDetailsAddPopoverProps> = React.me
         Type: item.type,
       }
     })
-    handleSendConfigHotpatch({
-      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnabledCapabilities,
-      params: {
+    const info: AIInputEvent = {
+      IsConfigHotpatch: true,
+      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_EnabledCapabilities,
+      Params: {
         EnabledCapabilities: enabledCapabilities,
       },
-      taskId,
-    })
+      TaskId: taskId,
+    }
+    onSend({ token: sessionId, type: '', params: info })
     setTimeout(() => {
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
-      })
+      const info: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: info })
     }, 1000)
     onClose()
   })
@@ -695,14 +703,18 @@ const typeOptions = [
 ]
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
   const { type, colTitle, fixedList, dynamicList, taskId } = props
-  const { handleSendConfigHotpatch, handleSendSyncMessage } = useChatIPCDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
+
   const [configType, setConfigType] = useState<'fixed' | 'dynamic'>('fixed')
   const [scroll, setScroll] = useState<boolean>(false)
   const [visible, setVisible] = useState<boolean>(false)
   const onRemove = useMemoizedFn((dynamicItem) => {
-    handleSendConfigHotpatch({
-      hotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_DisabledCapabilities,
-      params: {
+    const info: AIInputEvent = {
+      IsConfigHotpatch: true,
+      HotpatchType: AIInputEventHotPatchTypeEnum.HotPatchType_DisabledCapabilities,
+      Params: {
         EnabledCapabilities: dynamicList
           .filter((ele) => isEqual(ele, dynamicItem))
           .map((item) => ({
@@ -710,12 +722,16 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
             Type: getType(item.category),
           })),
       },
-      taskId,
-    })
+      TaskId: taskId,
+    }
+    onSend({ token: sessionId, type: '', params: info })
     setTimeout(() => {
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
-      })
+      const info: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_CAPABILITY_INVENTORY,
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: '', params: info })
     }, 1000)
   })
   const renderList = useMemoizedFn(() => {

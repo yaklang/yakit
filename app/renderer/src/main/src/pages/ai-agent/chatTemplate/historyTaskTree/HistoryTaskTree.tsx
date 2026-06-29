@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import React, { memo, useRef, useState } from 'react'
 import styles from './HistoryTaskTree.module.scss'
 import {
   AIHistoryContinueTaskProps,
@@ -7,10 +7,8 @@ import {
   SendRecoverParams,
 } from './HistoryTaskTreeType'
 import { useCreation, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
-import { AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
+import { AIInputEvent, AIInputEventSyncTypeEnum, AITaskStatus } from '@/pages/ai-re-act/hooks/grpcApi'
 import { AITree } from '../../aiTree/AITree'
-import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import YakitCollapse from '@/components/yakitUI/YakitCollapse/YakitCollapse'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { formatTimestamp } from '@/utils/timeUtil'
@@ -24,6 +22,9 @@ import useAIAgentStore from '../../useContext/useStore'
 import { formatAIAgentSetting } from '../../utils'
 import useAIAgentDispatcher from '../../useContext/useDispatcher'
 import { randomString } from '@/utils/randomUtil'
+import { useCurrentMeta, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
 export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
   const { data, currentTaskItem } = props
@@ -107,18 +108,20 @@ export const HistoryTaskTree: React.FC<HistoryTaskTreeProps> = memo((props) => {
 export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React.memo((props) => {
   const { coordinatorId, taskIndex } = props
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { chatIPCData } = useChatIPCStore()
-  const { chatIPCEvents, handleSendSyncMessage } = useChatIPCDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const meta = useCurrentMeta()
+  const store = useCurrentStore()
+  const taskStatus = useStore(store, (state) => state.taskStatus)
+  const cancelTaskLoading = useStore(store, (state) => state.cancelTaskLoading)
+  const execute = useStore(store, (state) => state.execute)
+
   const { activeChat } = useAIAgentStore()
-  const { getSetting } = useAIAgentDispatcher()
+  const { getSetting, onSend, onStart } = useAIAgentDispatcher()
 
   const [visible, setVisible] = useState<boolean>(false)
 
   const sendRecoverParamsRef = useRef<SendRecoverParams>()
-
-  const taskStatus = useCreation(() => {
-    return chatIPCData.taskStatus
-  }, [chatIPCData.taskStatus])
 
   const isExecuting = useCreation(() => {
     return taskStatus.loading
@@ -129,7 +132,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
   }, [isExecuting, taskIndex, sendRecoverParamsRef.current?.taskIndex])
 
   const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchCurrentTaskPlanID()
+    return meta.currentTaskPlanID
   })
   const getTaskId = useMemoizedFn(() => {
     const taskInfo = getTaskInfo()
@@ -144,9 +147,9 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
     const currentCoordinatorId = getTaskInfo()?.coordinatorId || ''
     const taskInfo = getTaskInfo()
     let show = true
-    if (!chatIPCData.execute) return true
+    if (!execute) return true
     if (coordinatorId === currentCoordinatorId) {
-      show = taskInfo?.status === AITaskStatus.error && !chatIPCData?.taskStatus?.loading
+      show = taskInfo?.status === AITaskStatus.error && !taskStatus?.loading
     }
     // 如果当前有任务正在等待被恢复
     if (sendRecoverParamsRef.current) {
@@ -159,7 +162,7 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
     const isStopping = taskInfo?.status === AITaskStatus.error && taskStatus.loading
 
     // 如果系统正处于正在停止/取消任务的全局 Loading 状态，或当前任务本身正处于停止进行中的状态
-    if (chatIPCData.cancelTaskLoading || isStopping) {
+    if (cancelTaskLoading || isStopping) {
       return false
     }
 
@@ -167,11 +170,16 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
   })
   const onSendRecover = useMemoizedFn((params: SendRecoverParams) => {
     const { coordinatorId, taskIndex } = params
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
+
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_RECOVERY_PLAN_AND_EXEC,
       SyncJsonInput: JSON.stringify({ coordinator_id: coordinatorId, start_task_index: taskIndex }),
-    })
-    chatIPCEvents.resetCurrentTaskPlanID()
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: 'task', params: info })
+    meta.currentTaskPlanID = undefined
+
     sendRecoverParamsRef.current = undefined
   })
   const onRecover = useMemoizedFn(() => {
@@ -182,35 +190,38 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
       coordinatorId,
       taskIndex,
     }
-    chatIPCEvents.handleCancelLoadingChange('task', true)
+    store.getState().updateState({
+      cancelCasualLoading: true,
+    })
     if (taskStatus.loading && taskId) {
       // 选停止当前任务，等待任务停止成功后，再发送恢复的数据
-      handleSendSyncMessage({
-        syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
+      const info: AIInputEvent = {
+        IsSyncMessage: true,
+        SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_REACT_CANCEL_TASK,
         SyncJsonInput: JSON.stringify({ task_id: taskId }),
-      })
-    } else if (chatIPCData.execute) {
+
+        SyncID: randomString(8),
+      }
+      onSend({ token: sessionId, type: 'task', params: info })
+    } else if (execute) {
       onSendRecover(sendRecoverParamsRef.current)
     } else if (activeChat?.SessionID && getSetting) {
       const session = activeChat?.SessionID
-      chatIPCEvents.onStart(
-        {
-          token: session,
-          params: {
-            IsStart: true,
-            Params: {
-              ...formatAIAgentSetting(getSetting()),
-              UserQuery: '',
-              TimelineSessionID: session,
-              CoordinatorId: '',
-              Sequence: 1,
-            },
+      onStart({
+        params: {
+          IsStart: true,
+          Params: {
+            ...formatAIAgentSetting(getSetting()),
+            UserQuery: '',
+            TimelineSessionID: session,
+            CoordinatorId: '',
+            Sequence: 1,
           },
         },
-        () => {
+        onSuccess: () => {
           sendRecoverParamsRef.current && onSendRecover(sendRecoverParamsRef.current)
         },
-      )
+      })
     }
   })
   return isShow() ? (
@@ -253,16 +264,23 @@ export const AIHistoryContinueTask: React.FC<AIHistoryContinueTaskProps> = React
 export const AIHistorySkipTask: React.FC<{ taskIndex: string }> = React.memo(({ taskIndex }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
   const syncIdOfStopSubTask = useRef<string>('')
-  const { syncIdInfoMap } = useChatIPCStore()
-  const { handleSendSyncMessage } = useChatIPCDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const { onSend } = useAIAgentDispatcher()
+  /** TODO - 记录syncType消息的id */
+  // const { syncIdInfoMap } = useChatIPCStore()
 
   const onCancelTask = useMemoizedFn(() => {
     syncIdOfStopSubTask.current = randomString(8)
-    handleSendSyncMessage({
-      syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
-      SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', subtask_index: taskIndex }),
-      syncID: syncIdOfStopSubTask.current,
-    })
+
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_SKIP_SUBTASK_IN_PLAN,
+      SyncJsonInput: JSON.stringify({ reason: '用户认为这个任务不需要执行', skip_current_task: taskIndex }),
+
+      SyncID: syncIdOfStopSubTask.current,
+    }
+    onSend({ token: sessionId, type: 'task', params: info })
   })
   return (
     <YakitPopconfirm

@@ -16,12 +16,10 @@ import styles from './AITaskDefaultGroupCard.module.scss'
 const BOTTOM_THRESHOLD = 10
 
 const SystemStreamRow: FC<{
-  chatType: ReActChatElement['chatType']
   token: string
-  session: string
-}> = ({ chatType, token, session }) => {
+}> = ({ token }) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { stream } = useTypedStream({ chatType, token, session })
+  const { stream } = useTypedStream({ token })
   const { nodeLabel } = useAINodeLabel(stream?.data.NodeIdVerbose)
 
   if (!stream) return null
@@ -134,7 +132,7 @@ const AITaskDefaultGroupContent: FC<{
     >
       <div className={styles['content-inner']}>
         {streamElements.map((el) => (
-          <SystemStreamRow key={el.token} chatType={chatType} token={el.token} session={session} />
+          <SystemStreamRow key={el.token} token={el.token} />
         ))}
       </div>
     </div>

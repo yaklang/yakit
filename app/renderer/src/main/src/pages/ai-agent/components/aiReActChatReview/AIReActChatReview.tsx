@@ -1,6 +1,6 @@
 import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
-import { OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon } from '@/assets/icon/outline'
+import { OutlineArrowrightIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { useCountDown, useCreation, useMemoizedFn } from 'ahooks'
 import { SolidAnnotationIcon, SolidVariableIcon } from '@/assets/icon/solid'
 import { Form, Input } from 'antd'
@@ -17,29 +17,40 @@ import { YakParamProps } from '@/pages/plugins/pluginsType'
 import { ExecuteEnterNodeByPluginParams } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType } from '@/pages/plugins/editDetails/utils'
-import { AIAgentGrpcApi } from '../../../ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEvent } from '../../../ai-re-act/hooks/grpcApi'
 
 import classNames from 'classnames'
 import styles from './AIReActChatReview.module.scss'
-import { AIChatIPCSendParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import { OutlineHandleColorsIcon, ColorsOutlineWarpIcon } from '@/assets/icon/colors'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { AIReviewType } from '../../../ai-re-act/hooks/aiRender'
 import { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
+/**
+ * TODO - onSendAI在内部自己通过类型判断发送
+ */
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
   const {
     info: { type, data: review },
-    onSendAI,
     planReviewTreeKeywordsMap,
     isEmbedded,
     renderFooterExtra,
     expand,
     className,
+    chatType,
   } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
-  const { chatIPCData } = useChatIPCStore()
+
+  const { onSend } = useAIAgentDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const execute = useStore(store, (state) => state.execute)
+
   const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
   const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
   const [currentPlansId, setCurrentPlansId] = useState<string>('')
@@ -76,12 +87,12 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     targetDate,
   })
   useEffect(() => {
-    if (!chatIPCData.execute) return
+    if (!execute) return
     const data = review as AIAgentGrpcApi.ToolUseReviewRequire
     if (!!data?.aiReview?.seconds) {
       setTargetDate(Date.now() + data.aiReview.seconds * 1000)
     }
-  }, [review, chatIPCData.execute])
+  }, [review, execute])
   //#endregion
   const reviewTitle = useCreation(() => {
     const subTitle = !!countdown ? (
@@ -411,12 +422,12 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     return findIndex !== -1
   }, [review])
   const onSendAIByValue = useMemoizedFn((value: string, optionValue?: string) => {
-    const params: AIChatIPCSendParams = {
-      value,
-      id: (review as AIReviewType).id,
-      optionValue,
+    const info: AIInputEvent = {
+      IsInteractiveMessage: true,
+      InteractiveId: (review as AIReviewType).id,
+      InteractiveJSONInput: value,
     }
-    onSendAI(params)
+    onSend({ token: sessionId, type: chatType, params: info, optionValue })
   })
 
   const footerNode = useCreation(() => {
