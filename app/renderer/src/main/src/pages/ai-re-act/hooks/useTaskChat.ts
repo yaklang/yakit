@@ -1,5 +1,4 @@
 import type {
-  AIChatLogData,
   CurrentExecTaskTree,
   handleSendFunc,
   UseTaskChatEvents,
@@ -12,7 +11,7 @@ import { useRef, useState } from 'react'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree } from './defaultConstant'
-import { genBaseAIChatData, genExecTasks, handleGrpcDataPushLog } from './utils'
+import { genBaseAIChatData, genExecTasks } from './utils'
 import { yakitNotify } from '@/utils/notification'
 import { AITaskStatus } from './grpcApi'
 import { AIChatQSDataTypeEnum } from './aiRender'
@@ -21,20 +20,8 @@ import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 function useTaskChat(params: UseTaskChatParams): [UseTaskChatState, UseTaskChatEvents]
 
 function useTaskChat(params: UseTaskChatParams) {
-  const {
-    pushLog,
-    getChatDataStore,
-    getRequest,
-    getCurrentTaskPlanID,
-    onReview,
-    onReviewExtra,
-    onReviewRelease,
-    sendRequest,
-  } = params || {}
-
-  const handlePushLog = useMemoizedFn((logInfo: AIChatLogData) => {
-    pushLog && pushLog(logInfo)
-  })
+  const { getChatDataStore, getRequest, getCurrentTaskPlanID, onReview, onReviewExtra, onReviewRelease, sendRequest } =
+    params || {}
 
   const [elements, setElements, getElements] = useGetSetState<ReActChatRenderItem[]>([])
 
@@ -71,10 +58,7 @@ function useTaskChat(params: UseTaskChatParams) {
       const taskKey = `${taskId}-${ownTaskId}`
       const existing = getContentMap(taskKey)
       if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-        handleGrpcDataPushLog({
-          info: res,
-          pushLog: handlePushLog,
-        })
+        // push log
         return
       }
       const chatData: AIChatQSData =
@@ -132,10 +116,7 @@ function useTaskChat(params: UseTaskChatParams) {
         })
       }
     } catch {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: handlePushLog,
-      })
+      // push log
     }
   })
 

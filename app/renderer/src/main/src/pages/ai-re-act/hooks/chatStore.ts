@@ -22,6 +22,7 @@ export const createChatStore = () => {
       memoryListUpdate: 0,
       updateSystemStream: 0,
       yaklangCodeChangeUpdate: 0,
+      syncIDUpdate: 0,
 
       grpcFolders: [],
       reActTimelines: [],

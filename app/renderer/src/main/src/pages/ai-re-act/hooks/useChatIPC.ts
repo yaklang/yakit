@@ -27,7 +27,6 @@ import { Uint8ArrayToString } from '@/utils/str'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useCasualChat from './useCasualChat'
 import useTaskChat from './useTaskChat'
-import { handleGrpcDataPushLog } from './utils'
 import { AIInputEventSyncTypeEnum } from './grpcApi'
 import useAIChatLog from './useAIChatLog'
 import cloneDeep from 'lodash/cloneDeep'
@@ -264,7 +263,6 @@ function useChatIPC(params?: UseChatIPCParams) {
   })
 
   const [casualChat, casualChatEvent] = useCasualChat({
-    pushLog: logEvents.pushLog,
     getChatDataStore,
     getRequest: fetchAIRequest,
     getCurrentCasualTaskID: fetchCurrentCasualTaskID,
@@ -296,7 +294,6 @@ function useChatIPC(params?: UseChatIPCParams) {
   })
 
   const [taskChat, taskChatEvent] = useTaskChat({
-    pushLog: logEvents.pushLog,
     getChatDataStore,
     getRequest: fetchAIRequest,
     getCurrentTaskPlanID: fetchCurrentTaskPlanID,
@@ -376,10 +373,7 @@ function useChatIPC(params?: UseChatIPCParams) {
         Content: '已清空所有任务队列数据',
       })
     } catch (error) {
-      handleGrpcDataPushLog({
-        info: res,
-        pushLog: logEvents.pushLog,
-      })
+      // push log
     }
   })
   // #endregion
@@ -661,7 +655,7 @@ function useChatIPC(params?: UseChatIPCParams) {
 
         return
       } catch (error) {
-        handleGrpcDataPushLog({ info: res, pushLog: logEvents.pushLog })
+        // push log
       }
     })
     ipcRenderer.on(`${token}-end`, (e, res: any) => {
