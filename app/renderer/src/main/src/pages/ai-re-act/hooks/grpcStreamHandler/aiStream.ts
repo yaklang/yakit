@@ -1,13 +1,7 @@
 import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi, AIOutputEvent } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import {
-  genBaseAIChatData,
-  generateTaskNodeDataID,
-  pushLogToOtherWindow,
-  isToolStderrStream,
-  isToolStdoutStream,
-} from '../utils'
+import { genBaseAIChatData, generateTaskNodeDataID, isToolStderrStream, isToolStdoutStream } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import { convertNodeIdToVerbose } from '../defaultConstant'
 import { aiAgentLogEmitter } from '../AIAgentLogEmitter'
@@ -25,26 +19,14 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
   const { event_writer_id } = JSON.parse(ipcContent) as { event_writer_id: string }
   // event_writer_id为空
   if (!event_writer_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
   // tool-xxx-stderr 数据单独初始化逻辑
   if (isToolStderrStream(NodeId) && CallToolID) {
     if (!CallToolID) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
     if (!meta.toolStderrStreamData.has(CallToolID)) {
@@ -59,21 +41,12 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stdout 数据单独初始化逻辑
   if (isToolStdoutStream(NodeId)) {
     if (!CallToolID) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
     let toolResult = rawData.contents.get(CallToolID)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
+      requestInfo.pushLog({
         level: 'error',
         message: `NodeID: ${NodeId} 的stream数据没有对应的工具结果(CallToolID: ${CallToolID})初始化`,
       })
@@ -111,10 +84,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
 
   // 数据已存在，流数据输出顺序不对, 视为异常
   if (streamData) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
+    requestInfo.pushLog({
       level: 'error',
       message: `Stream-NodeId: ${NodeId}, EventUUID: (${event_writer_id}), 已存在对应的数据`,
     })
@@ -153,13 +123,7 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   const { CallToolID, EventUUID, NodeId } = res
   const content = (Uint8ArrayToString(res.Content) || '') + (Uint8ArrayToString(res.StreamDelta) || '')
   if (!EventUUID || !NodeId) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据缺失: EventUUID(${EventUUID}) NodeId(${NodeId})`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据缺失: EventUUID(${EventUUID}) NodeId(${NodeId})` })
     return
   }
 
@@ -203,13 +167,7 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stderr 数据单独处理逻辑
   if (isToolStderrStream(NodeId)) {
     if (!CallToolID) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
     const errorResult = meta.toolStderrStreamData.get(CallToolID)
@@ -219,21 +177,12 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stdout 数据单独处理逻辑
   if (isToolStdoutStream(NodeId)) {
     if (!CallToolID) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空` })
       return
     }
     const toolResult = rawData.contents.get(CallToolID)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
+      requestInfo.pushLog({
         level: 'error',
         message: `Stream-NodeID: ${NodeId} 数据没有对应的工具结果(CallToolID: ${CallToolID})初始化`,
       })
@@ -241,10 +190,7 @@ const handleStream: AIMessageHandler = (requestInfo) => {
     }
     const toolForStreamData = rawData.contents.get(toolResult.data.stream.EventUUID)
     if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
+      requestInfo.pushLog({
         level: 'error',
         message: `Stream-EventUUID: ${toolResult.data.stream.EventUUID} 数据没有对应的初始化`,
       })
@@ -265,13 +211,7 @@ const handleStream: AIMessageHandler = (requestInfo) => {
 
   // 数据不存在
   if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `Stream-NodeId: ${NodeId}, EventUUID: (${EventUUID}) 数据未初始化`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `Stream-NodeId: ${NodeId}, EventUUID: (${EventUUID}) 数据未初始化` })
     return
   }
 
@@ -305,13 +245,7 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   let ipcContent = Uint8ArrayToString(res.Content) || ''
   const { event_writer_id, node_id, is_reason, is_system } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
   if (!event_writer_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `stream-finished数据, event_writer_id 为空`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `stream-finished数据, event_writer_id 为空` })
     return
   }
 
@@ -337,25 +271,13 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stderr 数据单独结束逻辑
   if (isToolStderrStream(node_id)) {
     if (!CallToolID) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `数据(NodeId: ${node_id}), CallToolID 为空`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `数据(NodeId: ${node_id}), CallToolID 为空` })
       return
     }
 
     const toolErrorResult = meta.toolStderrStreamData.get(CallToolID)
     if (!toolErrorResult) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `NodeId(${node_id})&CallToolID(${CallToolID}) 数据没有初始化`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `NodeId(${node_id})&CallToolID(${CallToolID}) 数据没有初始化` })
       return
     }
 
@@ -375,13 +297,7 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stdout 数据单独结束逻辑
   if (isToolStdoutStream(node_id)) {
     if (!CallToolID) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `(NodeId: ${node_id})的数据, CallToolID 为空`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `(NodeId: ${node_id})的数据, CallToolID 为空` })
       return
     }
 
