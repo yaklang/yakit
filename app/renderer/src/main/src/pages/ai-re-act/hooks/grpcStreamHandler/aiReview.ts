@@ -195,6 +195,14 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
     // rawData.contents.delete(chatData.id)
     store.getState().updateState({ currentPlanReviewToken: chatData.id })
   } else if (chatType === 'reAct') {
+    // 实时-自由对话里, 自动请求执行
+    // const info: AIInputEvent = {
+    //   IsInteractiveMessage: true,
+    //   InteractiveId: chatData.id,
+    //   InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
+    // }
+    // sendRequest(info)
+    // rawData.contents.delete(chatData.id)
     store.getState().updateCasualReview(chatData.id, 'add')
     store.getState().dispatchStreamingNode({
       chatType: chatType,
@@ -239,7 +247,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
       isExist: (key) => rawData.contents.has(key),
     }),
   }
-  // 历史数据-task-review数据不进行展示
+  // 历史数据-tool-review数据不进行展示
   if (res.IsSync) return
 
   // 实时数据处理逻辑
@@ -264,6 +272,14 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
     // rawData.contents.delete(chatData.id)
     store.getState().updateState({ currentPlanReviewToken: chatData.id })
   } else if (chatType === 'reAct') {
+    // 实时-自由对话里, 自动请求执行
+    // const info: AIInputEvent = {
+    //   IsInteractiveMessage: true,
+    //   InteractiveId: chatData.id,
+    //   InteractiveJSONInput: JSON.stringify({ suggestion: 'continue' }),
+    // }
+    // sendRequest(info)
+    // rawData.contents.delete(chatData.id)
     store.getState().updateCasualReview(chatData.id, 'add')
     store.getState().dispatchStreamingNode({
       chatType: chatType,
