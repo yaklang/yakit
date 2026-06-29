@@ -1,13 +1,7 @@
 import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import {
-  genBaseAIChatData,
-  generateTaskNodeDataID,
-  generateTaskNodeID,
-  pushLogToOtherWindow,
-  isValidTaskIndex,
-} from '../utils'
+import { genBaseAIChatData, generateTaskNodeDataID, generateTaskNodeID, isValidTaskIndex } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum, type ReportFinishCardData } from '../aiRender'
 import { convertNodeIdToVerbose } from '../defaultConstant'
 
@@ -230,13 +224,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
   const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
   const { fuzz_id, runtime_id, reason, status } = payload
   if (!fuzz_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
@@ -298,13 +286,7 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
   let content = parsed?.summary_markdown ?? ''
 
   if (!report_path) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据缺少 report_path`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据缺少 report_path` })
     return
   }
 
@@ -359,13 +341,7 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
     const taskID = generateTaskNodeID(meta.currentTaskPlanID.taskID, info.task.index)
     const chatDetail = rawData.contents.get(taskID)
     if (chatDetail && chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `${info.task.index}-push_task数据已存在`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `${info.task.index}-push_task数据已存在` })
       return
     }
     const chatData: AIChatQSData = {
@@ -440,13 +416,7 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
     const taskID = generateTaskNodeID(meta.currentTaskPlanID.taskID, info.task.index)
     const chatDetail = rawData.contents.get(taskID)
     if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
-        level: 'error',
-        message: `${info.task.index}-pop_task数据不存在`,
-      })
+      requestInfo.pushLog({ level: 'error', message: `${info.task.index}-pop_task数据不存在` })
       return
     }
     meta.currentTaskPlanActiveNode.delete(info.task.index)
