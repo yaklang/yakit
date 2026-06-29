@@ -292,8 +292,13 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       return chatIPCEvents.fetchCurrentCasualTaskID()
     })
 
-    const onDetails = useMemoizedFn((e) => {
-      e.stopPropagation()
+    useEffect(() => {
+      if (casualLoading) {
+        onDetails()
+      }
+    }, [casualLoading])
+
+    const onDetails = useMemoizedFn(() => {
       const taskId = getTaskId()
       if (!taskId) {
         yakitNotify('error', 'taskId不存在')
