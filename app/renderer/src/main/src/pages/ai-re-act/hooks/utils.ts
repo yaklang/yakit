@@ -10,12 +10,11 @@ import type {
   TodoListCardData,
   ChatListRenderType,
 } from './aiRender'
-import type { AIChatLogToInfo, AIChatLogData } from './type'
 import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
 import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
-import { Uint8ArrayToString } from '@/utils/str'
 import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
+import { aiAgentLogEmitter } from './AIAgentLogEmitter'
 
 /** 生成任务节点的唯一ID */
 export const generateTaskNodeID = (planID: string, taskID: string) => {
@@ -49,35 +48,24 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
   }
 }
 
-/** 生成一个异常日志数据的对象 */
-export const genErrorLogData = (
-  Timestamp: AIChatLogToInfo['Timestamp'],
-  message: AIChatLogToInfo['data']['message'],
-): AIChatLogToInfo => {
-  return {
-    type: 'log',
-    Timestamp,
-    data: { level: 'error', message: message },
-  }
-}
+/** Agent 往日志窗口推送日志数据 */
+export const pushLogToOtherWindow = (params: {
+  sessionId: string
+  /** 是否是历史数据 */
+  isHistory: AIOutputEvent['IsSync']
+  Timestamp: AIOutputEvent['Timestamp']
+  level: string
+  message: string
+}) => {
+  const { sessionId, isHistory, Timestamp, level, message } = params
+  if (isHistory) return
 
-/** 将接口数据(AIOutputEvent)转换为日志数据(AIAgentGrpcApi.Log), 并push到日志队列中 */
-export const handleGrpcDataPushLog = (params: { info: AIOutputEvent; pushLog: (log: AIChatLogData) => void }) => {
-  try {
-    const { info, pushLog } = params
-    // 这类类型的数据从日志数据中屏蔽掉，后续的stream类型逻辑会使用到
-    if (info.Type === 'stream_start') return
-    let ipcContent = Uint8ArrayToString(info.Content) || ''
-    const logInfo: AIChatLogData = {
-      type: 'log',
-      Timestamp: info.Timestamp,
-      data: {
-        level: `${info.Type}-${info.NodeId}`,
-        message: ipcContent,
-      },
-    }
-    pushLog(logInfo)
-  } catch (error) {}
+  aiAgentLogEmitter.dispatch({
+    session: sessionId,
+    type: 'log',
+    Timestamp: Timestamp,
+    log: { level: level, message: message },
+  })
 }
 
 // #region 处理任务规划-任务树相关方法

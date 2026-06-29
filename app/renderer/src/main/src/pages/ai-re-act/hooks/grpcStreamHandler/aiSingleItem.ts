@@ -1,26 +1,15 @@
-import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
+import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import {
   genBaseAIChatData,
   generateTaskNodeDataID,
   generateTaskNodeID,
-  genErrorLogData,
+  pushLogToOtherWindow,
   isValidTaskIndex,
 } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum, type ReportFinishCardData } from '../aiRender'
 import { convertNodeIdToVerbose } from '../defaultConstant'
-
-/** grpc流数据转换成错误信息输出到日志中 */
-const handleErrorGRPCToLog: (
-  /** 该条grpc流数据是历史数据 */
-  isHistory: AIMessageHandlerParams['res']['IsSync'],
-  pushLog: AIMessageHandlerParams['pushLog'],
-  error: ReturnType<typeof genErrorLogData>,
-) => void = (isHistory, pushLog, error) => {
-  if (isHistory) return
-  pushLog(error)
-}
 
 const handleThought: AIMessageHandler = (requestInfo) => {
   const { res, chatType, store, rawData, meta } = requestInfo
@@ -232,7 +221,7 @@ const handleApiRequestFailed: AIMessageHandler = (requestInfo) => {
 }
 
 const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'http_flow_fuzz_status') return
   // 历史数据无用-不处理
   if (res.IsSync) return
@@ -241,7 +230,13 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
   const payload = JSON.parse(ipcContent) as AIAgentGrpcApi.GetHttpFlowFuzzStatus
   const { fuzz_id, runtime_id, reason, status } = payload
   if (!fuzz_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
@@ -292,7 +287,7 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (requestInfo) => {
 }
 
 const handleReportFinish: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'report_finish' || res.NodeId !== 'report-finish') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || '{}'
@@ -303,7 +298,13 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
   let content = parsed?.summary_markdown ?? ''
 
   if (!report_path) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type} 数据缺少 report_path`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据缺少 report_path`,
+    })
     return
   }
 
@@ -337,7 +338,7 @@ const handleReportFinish: AIMessageHandler = (requestInfo) => {
 }
 
 const handlePushTask: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'system') return
   // 历史数据和自由对话数据不处理
   if (res.IsSync || chatType === 'reAct') return
@@ -358,11 +359,13 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
     const taskID = generateTaskNodeID(meta.currentTaskPlanID.taskID, info.task.index)
     const chatDetail = rawData.contents.get(taskID)
     if (chatDetail && chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `${info.task.index}-push_task数据已存在`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `${info.task.index}-push_task数据已存在`,
+      })
       return
     }
     const chatData: AIChatQSData = {
@@ -416,7 +419,7 @@ const handlePushTask: AIMessageHandler = (requestInfo) => {
 }
 
 const handlePopTask: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, pushLog, sendRequest } = requestInfo
+  const { res, chatType, store, rawData, meta, sendRequest } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'system') return
   // 历史数据和自由对话数据不处理
   if (res.IsSync || chatType === 'reAct') return
@@ -437,7 +440,13 @@ const handlePopTask: AIMessageHandler = (requestInfo) => {
     const taskID = generateTaskNodeID(meta.currentTaskPlanID.taskID, info.task.index)
     const chatDetail = rawData.contents.get(taskID)
     if (!chatDetail || chatDetail.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-      handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${info.task.index}-pop_task数据不存在`))
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `${info.task.index}-pop_task数据不存在`,
+      })
       return
     }
     meta.currentTaskPlanActiveNode.delete(info.task.index)

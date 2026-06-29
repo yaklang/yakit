@@ -1,30 +1,25 @@
-import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
+import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import { genBaseAIChatData, generateTaskNodeDataID, genErrorLogData } from '../utils'
+import { genBaseAIChatData, generateTaskNodeDataID, pushLogToOtherWindow } from '../utils'
 import { AIChatQSDataTypeEnum, type AIToolResult } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultAIToolResult, DefaultToolResultSummary } from '../defaultConstant'
 
-/** grpc流数据转换成错误信息输出到日志中 */
-const handleErrorGRPCToLog: (
-  /** 该条grpc流数据是历史数据 */
-  isHistory: AIMessageHandlerParams['res']['IsSync'],
-  pushLog: AIMessageHandlerParams['pushLog'],
-  error: ReturnType<typeof genErrorLogData>,
-) => void = (isHistory, pushLog, error) => {
-  if (isHistory) return
-  pushLog(error)
-}
-
 const handleToolCallStart: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, rawData, meta, pushLog } = requestInfo
+  const { res, chatType, rawData, meta } = requestInfo
   if (res.Type !== 'tool_call_start') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, tool, start_time, start_time_ms } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
   if (!call_tool_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常, ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常, ${ipcContent}`,
+    })
     return
   }
 
@@ -53,26 +48,31 @@ const handleToolCallStart: AIMessageHandler = (requestInfo) => {
 }
 
 const handleToolCallParam: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, pushLog } = requestInfo
+  const { res, store, rawData } = requestInfo
   if (res.Type !== 'tool_call_param') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, params } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallParams
   if (!call_tool_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常, ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常, ${ipcContent}`,
+    })
     return
   }
 
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(
-        res.Timestamp,
-        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
-      ),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+    })
     return
   }
 
@@ -81,38 +81,45 @@ const handleToolCallParam: AIMessageHandler = (requestInfo) => {
 }
 
 const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, pushLog } = requestInfo
+  const { res, store, rawData } = requestInfo
   if (res.Type !== 'tool_call_watcher') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, id, selectors } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallWatcher
 
   if (!call_tool_id || !id || !selectors || !selectors?.length) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常, ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常, ${ipcContent}`,
+    })
     return
   }
 
   // 先获取工具结果数据，从里面拿到stream的EventUUID
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(
-        res.Timestamp,
-        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
-      ),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+    })
     return
   }
   // 通过上面获取到的EventUUID，获取stream数据
   const toolForStreamData = rawData.contents.get(toolResult.data.stream.EventUUID)
   if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `EventUUID: ${toolResult.data.stream.EventUUID} 的stream数据没有对应的初始化`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `EventUUID: ${toolResult.data.stream.EventUUID} 的stream数据没有对应的初始化`,
+    })
     return
   }
   // 这里是直接使用引用设置的值，所以不需要在使用setContentMap设置回去
@@ -130,34 +137,41 @@ const handleToolCallWatcher: AIMessageHandler = (requestInfo) => {
 }
 
 const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, pushLog } = requestInfo
+  const { res, store, rawData } = requestInfo
   if (res.Type !== 'tool_call_log_dir') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, dir_path } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCallDirPath
   if (!call_tool_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常, ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常, ${ipcContent}`,
+    })
     return
   }
 
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(
-        res.Timestamp,
-        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
-      ),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+    })
     return
   }
   if (toolResult.data.tool.dirPath) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `${res.Type}数据(call_tool_id:${call_tool_id}), dir_path已存在，不能重复设置`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), dir_path已存在，不能重复设置`,
+    })
     return
   }
 
@@ -167,7 +181,7 @@ const handleToolCallLogDir: AIMessageHandler = (requestInfo) => {
 }
 
 const handleToolCallResult: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, meta, pushLog } = requestInfo
+  const { res, store, rawData, meta } = requestInfo
   if (!['tool_call_user_cancel', 'tool_call_done', 'tool_call_error'].includes(res.Type)) return
   const status =
     { tool_call_user_cancel: 'user_cancelled', tool_call_done: 'success', tool_call_error: 'failed' }[res.Type] ||
@@ -178,20 +192,25 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
   const { call_tool_id, ...rest } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
   if (!call_tool_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常, ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常, ${ipcContent}`,
+    })
     return
   }
 
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(
-        res.Timestamp,
-        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
-      ),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+    })
     return
   }
 
@@ -220,27 +239,32 @@ const handleToolCallResult: AIMessageHandler = (requestInfo) => {
 }
 
 const handleToolCallSummary: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, meta, pushLog } = requestInfo
+  const { res, store, rawData, meta } = requestInfo
   if (res.Type !== 'tool_call_summary') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { call_tool_id, summary } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
 
   if (!call_tool_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常, ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常, ${ipcContent}`,
+    })
     return
   }
 
   const toolResult = rawData.contents.get(call_tool_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(
-        res.Timestamp,
-        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
-      ),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+    })
     return
   }
 
