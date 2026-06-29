@@ -102,7 +102,6 @@ const genAIAgentChatMetaData = (): AIAgentChatMetaData => {
     createChatQuestion: undefined,
     casualMemoryList: cloneDeep(DefaultMemoryList),
     taskMemoryList: cloneDeep(DefaultMemoryList),
-    focusOfTaskID: '',
     notifyMessageTimer: null,
     currentCasualTaskID: '',
     currentTaskPlanID: undefined,
