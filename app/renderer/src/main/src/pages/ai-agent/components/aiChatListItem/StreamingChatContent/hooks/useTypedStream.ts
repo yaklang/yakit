@@ -1,13 +1,11 @@
 // hooks/useTypedStream.ts
 import { useMemo } from 'react'
-import { ChatListRenderType, ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useStreamingTypewriter } from './useStreamingTypewriter'
 import { useStreamingChatContent } from './useStreamingChatContent'
 
 export interface UseTypedStreamOptions {
-  chatType: ChatListRenderType
   token: string
-  session: string
   /** 单步最小输出字符数（下限），默认 2 */
   step?: number
   /** 单步最大输出字符数（上限，保证每次渲染长度不会突然过大），默认 18 */
@@ -35,10 +33,10 @@ export interface UseTypedStreamResult {
  * - 历史记录（直接 end）：禁用打字效果，直接显示
  */
 export function useTypedStream(options: UseTypedStreamOptions): UseTypedStreamResult {
-  const { chatType, token, session, step = 2, maxStep = 18, interval = 30, catchUpFrames = 9 } = options
+  const { token, step = 2, maxStep = 18, interval = 30, catchUpFrames = 9 } = options
 
   // 获取流数据和是否需要打字效果
-  const { renderNumber, stream: rawStream, shouldType } = useStreamingChatContent({ chatType, token, session })
+  const { renderNumber, stream: rawStream, shouldType } = useStreamingChatContent({ token })
 
   const content = rawStream?.data?.content || ''
   // 后端流是否已结束。结束后必须保证最终渲染的是真实完整内容，不能被打字机中间状态污染

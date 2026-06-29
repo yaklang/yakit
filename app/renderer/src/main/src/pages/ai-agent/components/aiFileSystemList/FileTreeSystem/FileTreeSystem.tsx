@@ -7,15 +7,20 @@ import { useCustomFolder } from '../store/useCustomFolder'
 import styles from './FileTreeSystem.module.scss'
 import FileTreeDrop from '@/pages/ai-agent/aiChatWelcome/FileTreeDrop/FileTreeDrop'
 import { Divider } from 'antd'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 const FileTreeSystem = () => {
   const { t } = useI18nNamespaces(['aiAgent'])
+
+  const store = useCurrentStore()
+
   // 单选
   const [selected, setSelected] = useState<FileNodeProps>()
   // ai的文件夹
-  const { grpcFolders } = useChatIPCStore().chatIPCData
+
+  const grpcFolders = useStore(store, (state) => state.grpcFolders)
   // 用户文件夹
   const customFolder = useCustomFolder()
 

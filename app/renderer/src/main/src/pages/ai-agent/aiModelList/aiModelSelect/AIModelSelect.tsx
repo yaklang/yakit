@@ -35,7 +35,6 @@ import {
 } from '../../defaultConstant'
 import { AIModelFreeTag, getTipByType, OutlineAtomIconByStatus, setAIModal } from '../AIModelList'
 import { AIChatSelect } from '@/pages/ai-re-act/aiReviewRuleSelect/AIReviewRuleSelect'
-import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import {
   OutlineBrainIcon,
   OutlineCheckIcon,
@@ -98,7 +97,6 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
 
   const currentRouteKey = usePageInfo((state) => state.getCurrentPageTabRouteKey(), shallow)
   //#region AI model
-  const { chatIPCData } = useChatIPCStore()
 
   const [aiType, setAIType] = useState<AISelectType>('online') //暂时只有online，后续会加"local"
 
@@ -281,9 +279,7 @@ export const AIModelSelect: React.FC<AIModelSelectProps> = React.memo((props) =>
     visionItem && list.push(visionItem)
     return list
   }, [selectIntelligentItem, lightweightModels, visionModels])
-  const execute = useCreation(() => {
-    return chatIPCData.execute
-  }, [chatIPCData.execute])
+
   const onSelectPolicy = useMemoizedFn((value) => {
     setAIModelOptions((old) => {
       return {

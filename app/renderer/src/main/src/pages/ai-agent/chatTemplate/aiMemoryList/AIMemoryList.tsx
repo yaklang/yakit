@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { AIMemoryContentProps, AIMemoryEchartsProps, AIMemoryListProps, AIMemoryScoreEchartsProps } from './type'
-import useChatIPCStore from '../../useContext/ChatIPCContent/useStore'
 import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import styles from './AIMemoryList.module.scss'
 import { RollingLoadList } from '@/components/RollingLoadList/RollingLoadList'
@@ -13,9 +12,14 @@ import ReactResizeDetector from 'react-resize-detector'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { OutlineTrashIcon } from '@/assets/icon/outline'
 import { YakitPopconfirm } from '@/components/yakitUI/YakitPopconfirm/YakitPopconfirm'
-import useChatIPCDispatcher from '../../useContext/ChatIPCContent/useDispatcher'
 import { grpcDeleteAIMemoryEntity } from '@/pages/memoryBase/utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
+import useAIAgentDispatcher from '../../useContext/useDispatcher'
+import cloneDeep from 'lodash/cloneDeep'
+import { DefaultMemoryList } from '@/pages/ai-re-act/hooks/defaultConstant'
 
 const { ipcRenderer } = window.require('electron')
 const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
@@ -52,9 +56,16 @@ const getScoreList = (data: AIAgentGrpcApi.MemoryEntry) => {
 }
 const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
   const { t } = useI18nNamespaces(['aiAgent'])
-  const { chatIPCData } = useChatIPCStore()
-  const { handleStop } = useChatIPCDispatcher()
-  const { chatIPCEvents } = useChatIPCDispatcher()
+
+  const sessionId = useCurrentSessionId()
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+
+  const { onClose } = useAIAgentDispatcher()
+
+  const memoryListUpdate = useStore(store, (state) => state.memoryListUpdate)
+  const execute = useStore(store, (state) => state.execute)
+
   const [width, setWidth] = useState<number>()
 
   const [loading, setLoading] = useState<boolean>(false)
@@ -64,23 +75,23 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
   useDebounceEffect(
     () => {
       if (!isClearMemory) return
-      const token = chatIPCEvents.fetchToken()
-      ipcRenderer.once(`${token}-end`, () => {
+      /** TODO - 需要hooks告诉UI层，此次关闭的type(来源) */
+      ipcRenderer.once(`${sessionId}-end`, () => {
         onClearMemory()
         setIsClearMemory(false)
       })
-      handleStop()
+      onClose([sessionId])
     },
     [isClearMemory],
     { wait: 1000 },
   )
 
   const list = useCreation(() => {
-    return chatIPCData?.memoryList?.memories || []
-  }, [chatIPCData?.memoryList?.memories])
+    return rawData?.memoryList?.memories || []
+  }, [memoryListUpdate])
 
   const echartsData: AIMemoryEchartsProps['data'] = useCreation(() => {
-    const data = chatIPCData?.memoryList?.score_overview
+    const data = rawData?.memoryList?.score_overview
     const xData: string[] = []
     const yData: number[] = []
     Object.entries(data || {}).forEach(([key, value]) => {
@@ -88,11 +99,11 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
       yData.push(value)
     })
     return { xData, yData }
-  }, [chatIPCData?.memoryList?.score_overview])
+  }, [memoryListUpdate])
 
   const onClearMemoryConfirm = useMemoizedFn((e) => {
     e.stopPropagation()
-    if (chatIPCData.execute) {
+    if (execute) {
       setIsClearMemory(true)
     } else {
       onClearMemory()
@@ -100,11 +111,12 @@ const AIMemoryList: React.FC<AIMemoryListProps> = React.memo((props) => {
   })
   const onClearMemory = useMemoizedFn(() => {
     setLoading(true)
+    /** TODO - 多会话清空记忆库，数据清空后其余会话会有新数据往记忆库中增加，导致看起来清空失败 */
     grpcDeleteAIMemoryEntity({
       Filter: {},
     })
       .then(() => {
-        chatIPCEvents.handleResetTarget('memoryList')
+        rawData.memoryList = cloneDeep(DefaultMemoryList)
       })
       .finally(() => {
         setTimeout(() => {

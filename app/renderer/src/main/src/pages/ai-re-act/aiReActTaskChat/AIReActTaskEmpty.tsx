@@ -10,17 +10,20 @@ import { getAIRecommendIconByType } from '../hooks/useGetAIMaterialsData'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { AIReActTaskEmptyProps, AIReActTaskRecommendProps } from './AIReActTaskChatType'
 import FilePreviewRecentList from '@/pages/ai-agent/components/aiFileSystemList/FilePreview/components/FilePreviewRecentList'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 import { getNameByPath } from '@/pages/yakRunner/utils'
 import { AITabsEnum } from '@/pages/ai-agent/defaultConstant'
+import { useStore } from 'zustand'
+import { useCurrentStore } from '../hooks/useCurrentDataBySession'
 
 const AIReActTaskEmpty: React.FC<AIReActTaskEmptyProps> = React.memo((props) => {
   const { loadingAIMaterials, randomAIMaterialsData, onRefresh, onClickItem } = props
 
+  const store = useCurrentStore()
+  const grpcFolders = useStore(store, (state) => state.grpcFolders)
+
   const taskEmptyRef = useRef<HTMLDivElement>(null)
   const [inViewPort = true] = useInViewport(taskEmptyRef)
 
-  const { grpcFolders } = useChatIPCStore().chatIPCData
   const [sessionFiles, setSessionFiles] = useState<Array<(typeof grpcFolders)[number] & { name: string }>>([])
 
   useEffect(() => {
