@@ -16,6 +16,65 @@ declare module '*.css' {
 
 type BridgeCleanup = () => void
 
+type System = import('./pages/StartupPage/types').System
+type Architecture = import('./pages/StartupPage/types').Architecture
+type DownloadingState = import('./pages/StartupPage/types').DownloadingState
+type YaklangEngineMode = import('./pages/StartupPage/types').YaklangEngineMode
+type YakitStatusType = import('./pages/StartupPage/types').YakitStatusType
+type YaklangEngineWatchDogCredential = import('./pages/StartupPage/types').YaklangEngineWatchDogCredential
+type TypeCallbackExtra = import('./pages/StartupPage/types').TypeCallbackExtra
+type StartLocalEngine = import('./pages/StartupPage/types').StartLocalEngine
+type YakitAuthInfo = import('./pages/StartupPage/components/RemoteEngine/RemoteEngineType').YakitAuthInfo
+type CheckAllowSecretLocal = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').CheckAllowSecretLocal
+type FixupDatabase = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').FixupDatabase
+type ReclaimDatabaseSpace = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').ReclaimDatabaseSpace
+type AllowSecretLocalExecResult = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').AllowSecretLocalExecResult
+type FixupDatabaseExecResult = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').FixupDatabaseExecResult
+type StartupExecResult = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').ExecResult
+
+interface CredentialUpdatePayload {
+  credential: YaklangEngineWatchDogCredential
+}
+
+interface FromMainWindowPayload extends TypeCallbackExtra {
+  yakitStatus?: YakitStatusType | YaklangEngineMode
+}
+
+interface FetchLatestYakitVersionPayload {
+  config?: { timeout?: number }
+  releaseEditionName?: string
+}
+
+interface DownloadYakitOptions {
+  isEnterprise?: boolean
+  isIRify?: boolean
+  isMemfit?: boolean
+}
+
+interface FetchCheckYaklangSourceConfig {
+  timeout?: number
+}
+
+interface YakProcessInfo {
+  port: number
+  pid: number
+  ppid?: number
+  cmd: string
+  origin: unknown
+}
+
+interface YaklangEngineAddr {
+  addr: string
+}
+
+interface EchoPayload {
+  text: string
+}
+
+interface EchoResult {
+  result: string
+}
+
 interface YakitBridge {
   app: {
     markRendererReady: () => void
@@ -23,11 +82,11 @@ interface YakitBridge {
     setEnterpriseToDomain: (flag: boolean) => Promise<unknown>
     exitApp: (params: Record<string, unknown>) => Promise<unknown>
     relaunch: () => Promise<unknown>
-    completeEngineLink: (payload: Record<string, unknown>) => Promise<unknown>
+    completeEngineLink: (payload: CredentialUpdatePayload) => Promise<unknown>
     closeWindow: () => Promise<unknown>
     onCloseWindow: (callback: () => void) => BridgeCleanup
-    onFromMainWindow: (callback: (data: any) => void) => BridgeCleanup
-    onCredentialUpdate: (callback: (data: any) => void) => BridgeCleanup
+    onFromMainWindow: (callback: (data: FromMainWindowPayload) => void) => BridgeCleanup
+    onCredentialUpdate: (callback: (data: CredentialUpdatePayload) => void) => BridgeCleanup
   }
   theme: {
     setTheme: (theme: 'light' | 'dark') => Promise<unknown>
@@ -46,15 +105,15 @@ interface YakitBridge {
     getText: () => Promise<string>
   }
   cache: {
-    setLocalCache: (key: string, value: any) => Promise<unknown>
-    getLocalCache: (key: string) => Promise<any>
-    getRemoteKey: (key: string) => Promise<any>
+    setLocalCache: (key: string, value: unknown) => Promise<unknown>
+    getLocalCache: (key: string) => Promise<unknown>
+    getRemoteKey: (key: string) => Promise<unknown>
     setRemoteKey: (key: string, value: string) => Promise<unknown>
     setRemoteKeyWithTTL: (key: string, value: string, ttl: number) => Promise<unknown>
   }
   system: {
-    fetchSystemName: () => Promise<any>
-    fetchCpuArch: () => Promise<any>
+    fetchSystemName: () => Promise<System>
+    fetchCpuArch: () => Promise<Architecture>
     isDev: () => Promise<boolean>
   }
   logs: {
@@ -71,41 +130,41 @@ interface YakitBridge {
     clearComputePercent: () => Promise<unknown>
   }
   engine: {
-    initCVEDatabase: () => Promise<any>
+    initCVEDatabase: () => Promise<unknown>
     isYaklangEngineInstalled: () => Promise<boolean>
     getBuildInEngineVersion: () => Promise<string>
-    restoreEngineAndPlugin: () => Promise<any>
+    restoreEngineAndPlugin: () => Promise<unknown>
     fetchLatestYaklangVersion: () => Promise<string>
-    downloadLatestYak: (version: string) => Promise<any>
-    writeEngineKeyToYakitProjects: (version?: string) => Promise<any>
-    clearLocalYaklangVersionCache: () => Promise<any>
-    installYakEngine: (version: string) => Promise<any>
-    cancelDownloadYakEngineVersion: (version: string) => Promise<any>
+    downloadLatestYak: (version: string) => Promise<unknown>
+    writeEngineKeyToYakitProjects: (version?: string) => Promise<unknown>
+    clearLocalYaklangVersionCache: () => Promise<unknown>
+    installYakEngine: (version: string) => Promise<unknown>
+    cancelDownloadYakEngineVersion: (version: string) => Promise<unknown>
     getAvailableOSSDomain: () => Promise<string>
-    checkAllowSecretLocalYaklangEngine: (params: any) => Promise<any>
-    fixupDatabase: (params: any) => Promise<any>
-    reclaimDatabaseSpace: (params: any) => Promise<any>
+    checkAllowSecretLocalYaklangEngine: (params: CheckAllowSecretLocal) => Promise<AllowSecretLocalExecResult>
+    fixupDatabase: (params: FixupDatabase) => Promise<FixupDatabaseExecResult>
+    reclaimDatabaseSpace: (params: ReclaimDatabaseSpace) => Promise<StartupExecResult>
     fetchYakitVersion: () => Promise<string>
-    fetchLatestYakitVersion: (payload: any) => Promise<string>
-    downloadLatestYakit: (version: string, type: any) => Promise<any>
-    cancelDownloadYakitVersion: () => Promise<any>
+    fetchLatestYakitVersion: (payload: FetchLatestYakitVersionPayload) => Promise<string>
+    downloadLatestYakit: (version: string, type: DownloadYakitOptions) => Promise<unknown>
+    cancelDownloadYakitVersion: () => Promise<unknown>
     getCurrentYak: () => Promise<string>
-    fetchCheckYaklangSource: (version: string, config?: any) => Promise<string>
+    fetchCheckYaklangSource: (version: string, config?: FetchCheckYaklangSourceConfig) => Promise<string>
     calcEngineSha265: () => Promise<string[]>
-    startSecretLocalYaklangEngine: (params: any) => Promise<any>
-    echo: (payload: { text: string }) => Promise<{ result: string }>
-    cancelAllTasks: () => Promise<any>
-    killYakGrpc: (pid: number) => Promise<any>
-    listYakGrpc: () => Promise<any[]>
-    fetchYaklangEngineAddr: () => Promise<{ addr: string }>
-    outputLogToWelcomeConsole: (message: string) => Promise<any>
-    connectYaklangEngine: (credential: any) => Promise<any>
-    getRemoteAuthAll: () => Promise<any[]>
-    saveRemoteAuth: (params: any) => Promise<any>
-    removeRemoteAuth: (name: string) => Promise<any>
+    startSecretLocalYaklangEngine: (params: StartLocalEngine) => Promise<StartupExecResult>
+    echo: (payload: EchoPayload) => Promise<EchoResult>
+    cancelAllTasks: () => Promise<unknown>
+    killYakGrpc: (pid: number) => Promise<unknown>
+    listYakGrpc: () => Promise<YakProcessInfo[]>
+    fetchYaklangEngineAddr: () => Promise<YaklangEngineAddr>
+    outputLogToWelcomeConsole: (message: string) => Promise<unknown>
+    connectYaklangEngine: (credential: YaklangEngineWatchDogCredential) => Promise<unknown>
+    getRemoteAuthAll: () => Promise<YakitAuthInfo[]>
+    saveRemoteAuth: (params: YakitAuthInfo) => Promise<unknown>
+    removeRemoteAuth: (name: string) => Promise<unknown>
     onStartYaklangEngineError: (callback: (message: string) => void) => BridgeCleanup
-    onDownloadYakEngineProgress: (callback: (state: any) => void) => BridgeCleanup
-    onDownloadYakitProgress: (callback: (state: any) => void) => BridgeCleanup
+    onDownloadYakEngineProgress: (callback: (state: DownloadingState) => void) => BridgeCleanup
+    onDownloadYakitProgress: (callback: (state: DownloadingState) => void) => BridgeCleanup
     onStartUpEngineMessage: (callback: (message: string) => void) => BridgeCleanup
   }
 }
