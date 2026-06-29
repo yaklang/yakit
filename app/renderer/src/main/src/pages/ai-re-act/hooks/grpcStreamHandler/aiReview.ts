@@ -1,10 +1,10 @@
-import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
+import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import {
   genBaseAIChatData,
   generateTaskNodeDataID,
-  genErrorLogData,
+  pushLogToOtherWindow,
   genExecTasks,
   isAutoExecuteReviewContinue,
 } from '../utils'
@@ -12,19 +12,8 @@ import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { AIReviewJudgeLevelMap } from '../defaultConstant'
 
-/** grpc流数据转换成错误信息输出到日志中 */
-const handleErrorGRPCToLog: (
-  /** 该条grpc流数据是历史数据 */
-  isHistory: AIMessageHandlerParams['res']['IsSync'],
-  pushLog: AIMessageHandlerParams['pushLog'],
-  error: ReturnType<typeof genErrorLogData>,
-) => void = (isHistory, pushLog, error) => {
-  if (isHistory) return
-  pushLog(error)
-}
-
 const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, request, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, request, meta } = requestInfo
   if (res.Type !== 'plan_review_require') return
   // 历史数据-grpc流数据在任务规划下无效，不处理
   if (res.IsSync && chatType === 'task') return
@@ -32,7 +21,13 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequire
   if (!data?.id || !data?.plans || !data?.plans?.root_task || !data?.selectors || !data?.selectors?.length) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
@@ -98,7 +93,7 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
   }
 }
 const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, request, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, request, meta } = requestInfo
   if (res.Type !== 'plan_task_analysis') return
   // 历史数据-grpc流数据在任务规划下无效，不处理
   if (res.IsSync || chatType !== 'task') return
@@ -111,17 +106,25 @@ const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
     !data?.keywords?.length ||
     (meta.currentPlanReviewExtraId && meta.currentPlanReviewExtraId !== data.plans_id)
   ) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
   const reviewDetail = rawData.contents.get(store.getState().currentPlanReviewToken)
   if (!reviewDetail || reviewDetail.type !== AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `${res.Type}数据异常: 未找到对应plan_review_require数据`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: 未找到对应plan_review_require数据`,
+    })
     return
   }
 
@@ -138,13 +141,19 @@ const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
 }
 
 const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, request, meta, pushLog, sendRequest } = requestInfo
+  const { res, chatType, store, rawData, request, meta } = requestInfo
   if (res.Type !== 'task_review_require') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TaskReviewRequire
   if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
@@ -201,13 +210,19 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
 }
 
 const handleToolReview: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, request, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, request, meta } = requestInfo
   if (res.Type !== 'tool_use_review_require') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ToolUseReviewRequire
   if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
@@ -264,13 +279,19 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
 }
 
 const handleUserInteractive: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'require_user_interactive') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewRequire
   if (!data?.id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
@@ -330,7 +351,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
 }
 
 const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, request, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, request, meta } = requestInfo
   if (res.Type !== 'exec_aiforge_review_require') return
   // 任务规划不存在该类型数据
   if (chatType === 'task') return
@@ -338,7 +359,13 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ExecForgeReview
   if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
@@ -401,23 +428,31 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
 }
 
 const handleAIReviewJudgement: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, pushLog } = requestInfo
+  const { res, store, rawData } = requestInfo
   if (!['ai_review_start', 'ai_review_countdown', 'ai_review_end'].includes(res.Type)) return
   if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const score = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewJudgement
   if (!score?.interactive_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
   const reviewDetail = rawData.contents.get(score.interactive_id)
   if (!reviewDetail || reviewDetail.id !== score.interactive_id) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `${res.Type}数据异常: 没有对应的review数据`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: 没有对应的review数据`,
+    })
     return
   }
 
@@ -437,26 +472,31 @@ const handleAIReviewJudgement: AIMessageHandler = (requestInfo) => {
       break
 
     default:
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(
-          res.Timestamp,
-          `${res.Type}数据异常(interactive_id:${score?.interactive_id || '-'})未找到对应review`,
-        ),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `${res.Type}数据异常(interactive_id:${score?.interactive_id || '-'})未找到对应review`,
+      })
       break
   }
 }
 
 const handleReviewRelease: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'review_release') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReviewRelease
   if (!data?.id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
@@ -497,11 +537,13 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
   }
 
   if (!reviewDetail) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `${res.Type}数据(id:${data?.id || '-'})没有对应的review数据`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据(id:${data?.id || '-'})没有对应的review数据`,
+    })
     return
   }
   switch (reviewDetail.type) {

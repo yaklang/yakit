@@ -1,22 +1,11 @@
-import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
+import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import { genBaseAIChatData, generateTaskNodeID, genErrorLogData, genExecTasks } from '../utils'
+import { genBaseAIChatData, generateTaskNodeID, genExecTasks, pushLogToOtherWindow } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { DefaultCurrentExecTaskTree, DefaultPlanLoadingStatus, DefaultTodoListCardData } from '../defaultConstant'
 import has from 'lodash/has'
-
-/** grpc流数据转换成错误信息输出到日志中 */
-const handleErrorGRPCToLog: (
-  /** 该条grpc流数据是历史数据 */
-  isHistory: AIMessageHandlerParams['res']['IsSync'],
-  pushLog: AIMessageHandlerParams['pushLog'],
-  error: ReturnType<typeof genErrorLogData>,
-) => void = (isHistory, pushLog, error) => {
-  if (isHistory) return
-  pushLog(error)
-}
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
   const { res, store, rawData } = request
@@ -41,18 +30,20 @@ const handleHttpFlowFuzzStatus: AIMessageHandler = (request) => {
 }
 
 const handleSessionTitle: AIMessageHandler = (request) => {
-  const { res, store, rawData, pushLog } = request
+  const { res, store, rawData } = request
   if (res.Type !== 'structured' || res.NodeId !== 'session_title') return
   if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const nameInfo = JSON.parse(ipcContent) as { title: string }
   if (!nameInfo || !nameInfo.title) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `${res.NodeId}数据, 数据错误: ${JSON.stringify(nameInfo.title)}`),
-    )
+    pushLogToOtherWindow({
+      sessionId: request.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.NodeId}数据错误: ${ipcContent}`,
+    })
     return
   }
   rawData.sessionTitle = nameInfo.title
@@ -60,7 +51,7 @@ const handleSessionTitle: AIMessageHandler = (request) => {
 }
 
 const handleStartPlanAndExecution: AIMessageHandler = (request) => {
-  const { res, store, rawData, meta, pushLog, sendRequest } = request
+  const { res, store, rawData, meta, sendRequest } = request
   if (res.Type !== 'start_plan_and_execution') return
   if (res.IsSync) return
 
@@ -70,7 +61,13 @@ const handleStartPlanAndExecution: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
   if (!startInfo.coordinator_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据, coordinator_id 为空`))
+    pushLogToOtherWindow({
+      sessionId: request.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据, coordinator_id 为空`,
+    })
     return
   }
   meta.currentTaskPlanID = {
@@ -110,14 +107,20 @@ const handleStartPlanAndExecution: AIMessageHandler = (request) => {
   })
 }
 const handleEndPlanAndExecution: AIMessageHandler = (request) => {
-  const { res, store, rawData, meta, pushLog } = request
+  const { res, store, rawData, meta } = request
   if (res.Type !== 'end_plan_and_execution') return
   if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
   if (!startInfo.coordinator_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据, coordinator_id 为空`))
+    pushLogToOtherWindow({
+      sessionId: request.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据, coordinator_id 为空`,
+    })
     return
   }
   if (startInfo.coordinator_id === meta.currentTaskPlanID?.coordinatorId) {
@@ -397,12 +400,18 @@ const handleStatus: AIMessageHandler = (request) => {
 }
 
 const handleTrafficCount: AIMessageHandler = (request) => {
-  const { res, chatType, store, rawData, pushLog } = request
+  const { res, chatType, store, rawData } = request
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.HTTPTrafficNotice & AIAgentGrpcApi.RiskTrafficNotice
   if (!data.runtime_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: request.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
@@ -420,11 +429,13 @@ const handleTrafficCount: AIMessageHandler = (request) => {
   // 更新工具执行结果卡片里的流量和风险数量
   const toolResult = rawData.contents.get(data.runtime_id)
   if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || toolResult.chatType !== chatType) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `${res.Type}数据(call_tool_id:${data.runtime_id})工具结果卡片数据不存在`),
-    )
+    pushLogToOtherWindow({
+      sessionId: request.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据(call_tool_id:${data.runtime_id})工具结果卡片数据不存在`,
+    })
     return
   }
   let update = false

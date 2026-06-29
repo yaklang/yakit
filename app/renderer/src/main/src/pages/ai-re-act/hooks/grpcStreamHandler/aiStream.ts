@@ -1,10 +1,10 @@
-import type { AIMessageHandler, AIMessageHandlerParams } from '../type'
+import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi, AIOutputEvent } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
 import {
   genBaseAIChatData,
   generateTaskNodeDataID,
-  genErrorLogData,
+  pushLogToOtherWindow,
   isToolStderrStream,
   isToolStdoutStream,
 } from '../utils'
@@ -12,19 +12,8 @@ import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import { convertNodeIdToVerbose } from '../defaultConstant'
 import { aiAgentLogEmitter } from '../AIAgentLogEmitter'
 
-/** grpc流数据转换成错误信息输出到日志中 */
-const handleErrorGRPCToLog: (
-  /** 该条grpc流数据是历史数据 */
-  isHistory: AIMessageHandlerParams['res']['IsSync'],
-  pushLog: AIMessageHandlerParams['pushLog'],
-  error: ReturnType<typeof genErrorLogData>,
-) => void = (isHistory, pushLog, error) => {
-  if (isHistory) return
-  pushLog(error)
-}
-
 const handleStreamStart: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, rawData, meta, pushLog } = requestInfo
+  const { res, chatType, rawData, meta } = requestInfo
   if (res.Type !== 'stream_start') return
 
   if (res.IsSystem || res.IsReason) return
@@ -36,18 +25,26 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
   const { event_writer_id } = JSON.parse(ipcContent) as { event_writer_id: string }
   // event_writer_id为空
   if (!event_writer_id) {
-    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据异常: ${ipcContent}`))
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据异常: ${ipcContent}`,
+    })
     return
   }
 
   // tool-xxx-stderr 数据单独初始化逻辑
   if (isToolStderrStream(NodeId) && CallToolID) {
     if (!CallToolID) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`,
+      })
       return
     }
     if (!meta.toolStderrStreamData.has(CallToolID)) {
@@ -62,23 +59,24 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stdout 数据单独初始化逻辑
   if (isToolStdoutStream(NodeId)) {
     if (!CallToolID) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`,
+      })
       return
     }
     let toolResult = rawData.contents.get(CallToolID)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(
-          res.Timestamp,
-          `NodeID: ${NodeId} 的stream数据没有对应的工具结果(CallToolID: ${CallToolID})初始化`,
-        ),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `NodeID: ${NodeId} 的stream数据没有对应的工具结果(CallToolID: ${CallToolID})初始化`,
+      })
       return
     }
 
@@ -113,11 +111,13 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
 
   // 数据已存在，流数据输出顺序不对, 视为异常
   if (streamData) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `Stream-NodeId: ${NodeId}, EventUUID: (${event_writer_id}), 已存在对应的数据`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `Stream-NodeId: ${NodeId}, EventUUID: (${event_writer_id}), 已存在对应的数据`,
+    })
     return
   }
 
@@ -145,7 +145,7 @@ const handleStreamStart: AIMessageHandler = (requestInfo) => {
 }
 
 const handleStream: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, meta } = requestInfo
   if (res.Type !== 'stream') return
   // 历史数据-(系统信息|推理信息)数据，不处理
   if (res.IsSync && (res.IsSystem || res.IsReason)) return
@@ -153,11 +153,13 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   const { CallToolID, EventUUID, NodeId } = res
   const content = (Uint8ArrayToString(res.Content) || '') + (Uint8ArrayToString(res.StreamDelta) || '')
   if (!EventUUID || !NodeId) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `${res.Type}数据缺失: EventUUID(${EventUUID}) NodeId(${NodeId})`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `${res.Type}数据缺失: EventUUID(${EventUUID}) NodeId(${NodeId})`,
+    })
     return
   }
 
@@ -185,7 +187,7 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   if (res.IsReason) {
     // 实时数据-推理信息-系统信息输出到日志中
     aiAgentLogEmitter.dispatch({
-      session: '',
+      session: requestInfo.sessionId,
       type: 'stream',
       Timestamp: res.Timestamp,
       stream: {
@@ -201,11 +203,13 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stderr 数据单独处理逻辑
   if (isToolStderrStream(NodeId)) {
     if (!CallToolID) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`,
+      })
       return
     }
     const errorResult = meta.toolStderrStreamData.get(CallToolID)
@@ -215,32 +219,35 @@ const handleStream: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stdout 数据单独处理逻辑
   if (isToolStdoutStream(NodeId)) {
     if (!CallToolID) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `${res.Type}数据(NodeId: ${NodeId}), CallToolID 为空`,
+      })
       return
     }
     const toolResult = rawData.contents.get(CallToolID)
     if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT || !toolResult.data.stream.EventUUID) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(
-          res.Timestamp,
-          `Stream-NodeID: ${NodeId} 数据没有对应的工具结果(CallToolID: ${CallToolID})初始化`,
-        ),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `Stream-NodeID: ${NodeId} 数据没有对应的工具结果(CallToolID: ${CallToolID})初始化`,
+      })
       return
     }
     const toolForStreamData = rawData.contents.get(toolResult.data.stream.EventUUID)
     if (!toolForStreamData || toolForStreamData.type !== AIChatQSDataTypeEnum.STREAM) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `Stream-EventUUID: ${toolResult.data.stream.EventUUID} 数据没有对应的初始化`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `Stream-EventUUID: ${toolResult.data.stream.EventUUID} 数据没有对应的初始化`,
+      })
       return
     }
     const isRender = !toolForStreamData.data.content
@@ -258,11 +265,13 @@ const handleStream: AIMessageHandler = (requestInfo) => {
 
   // 数据不存在
   if (!streamData || streamData.type !== AIChatQSDataTypeEnum.STREAM) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `Stream-NodeId: ${NodeId}, EventUUID: (${EventUUID}) 数据未初始化`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `Stream-NodeId: ${NodeId}, EventUUID: (${EventUUID}) 数据未初始化`,
+    })
     return
   }
 
@@ -288,7 +297,7 @@ const handleStream: AIMessageHandler = (requestInfo) => {
 }
 
 const handleStreamFinished: AIMessageHandler = (requestInfo) => {
-  const { res, store, rawData, meta, pushLog } = requestInfo
+  const { res, store, rawData, meta } = requestInfo
   if (res.Type !== 'structured' || res.NodeId !== 'stream-finished') return
   // 历史数据-(系统信息|推理信息)数据，不处理
   if (res.IsSync && (res.IsSystem || res.IsReason)) return
@@ -296,20 +305,22 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   let ipcContent = Uint8ArrayToString(res.Content) || ''
   const { event_writer_id, node_id, is_reason, is_system } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStreamFinished
   if (!event_writer_id) {
-    handleErrorGRPCToLog(
-      res.IsSync,
-      pushLog,
-      genErrorLogData(res.Timestamp, `stream-finished数据, event_writer_id 为空`),
-    )
+    pushLogToOtherWindow({
+      sessionId: requestInfo.sessionId,
+      isHistory: res.IsSync,
+      Timestamp: res.Timestamp,
+      level: 'error',
+      message: `stream-finished数据, event_writer_id 为空`,
+    })
     return
   }
 
   // 实时数据-系统信息(不需要结束处理, 由下一个自动顶替)
   if (is_system) return
+  // 实时数据-推理信息-系统信息输出到日志中
   if (is_reason) {
-    // 实时数据-推理信息-系统信息输出到日志中
     aiAgentLogEmitter.dispatch({
-      session: '',
+      session: requestInfo.sessionId,
       type: 'stream',
       Timestamp: res.Timestamp,
       stream: {
@@ -326,21 +337,25 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stderr 数据单独结束逻辑
   if (isToolStderrStream(node_id)) {
     if (!CallToolID) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `数据(NodeId: ${node_id}), CallToolID 为空`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `数据(NodeId: ${node_id}), CallToolID 为空`,
+      })
       return
     }
 
     const toolErrorResult = meta.toolStderrStreamData.get(CallToolID)
     if (!toolErrorResult) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `NodeId(${node_id})&CallToolID(${CallToolID}) 数据没有初始化`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `NodeId(${node_id})&CallToolID(${CallToolID}) 数据没有初始化`,
+      })
       return
     }
 
@@ -360,11 +375,13 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
   // tool-xxx-stdout 数据单独结束逻辑
   if (isToolStdoutStream(node_id)) {
     if (!CallToolID) {
-      handleErrorGRPCToLog(
-        res.IsSync,
-        pushLog,
-        genErrorLogData(res.Timestamp, `(NodeId: ${node_id})的数据, CallToolID 为空`),
-      )
+      pushLogToOtherWindow({
+        sessionId: requestInfo.sessionId,
+        isHistory: res.IsSync,
+        Timestamp: res.Timestamp,
+        level: 'error',
+        message: `(NodeId: ${node_id})的数据, CallToolID 为空`,
+      })
       return
     }
 
@@ -398,7 +415,7 @@ const handleStreamFinished: AIMessageHandler = (requestInfo) => {
 }
 
 const handleReferenceMaterial: AIMessageHandler = (requestInfo) => {
-  const { res, chatType, store, rawData, request, meta, pushLog } = requestInfo
+  const { res, chatType, store, rawData, request, meta } = requestInfo
   if (res.Type !== 'reference_material') return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
