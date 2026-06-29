@@ -49,7 +49,6 @@ import { useScreenRecorder } from '@/store/screenRecorder'
 import { ResultObjProps, remoteOperation } from '@/pages/dynamicControl/DynamicControl'
 import { useEeSystemConfig, useStore, yakitDynamicStatus } from '@/store'
 import { useTemporaryProjectStore } from '@/store/temporaryProject'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 import emiter from '@/utils/eventBus/eventBus'
 import { RemoteEngine } from './RemoteEngine/RemoteEngine'
 import { RemoteLinkInfo } from './RemoteEngine/RemoteEngineType'
@@ -183,8 +182,6 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
   // 模式 目前只有yakit社区版有
   const { setSoftMode } = useSoftMode()
   /** ---------- 软件状态相关属性 End ---------- */
-
-  const [_, aiGlobalConfigEvent] = useAIGlobalConfig()
 
   // #region 新窗口引擎已经启动好，只需要看门狗检查是否ready，此处默认初始化一些变量
   const [showLoadingPage, setShowLoadingPage] = useState<boolean>(false)
