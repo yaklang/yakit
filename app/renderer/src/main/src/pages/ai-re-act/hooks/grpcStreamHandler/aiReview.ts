@@ -1,13 +1,7 @@
 import type { AIMessageHandler } from '../type'
 import type { AIAgentGrpcApi } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import {
-  genBaseAIChatData,
-  generateTaskNodeDataID,
-  pushLogToOtherWindow,
-  genExecTasks,
-  isAutoExecuteReviewContinue,
-} from '../utils'
+import { genBaseAIChatData, generateTaskNodeDataID, genExecTasks, isAutoExecuteReviewContinue } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
 import { AIReviewJudgeLevelMap } from '../defaultConstant'
@@ -21,13 +15,7 @@ const handlePlanReviewRequire: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.PlanReviewRequire
   if (!data?.id || !data?.plans || !data?.plans?.root_task || !data?.selectors || !data?.selectors?.length) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
@@ -106,25 +94,13 @@ const handlePlanTaskAnalysis: AIMessageHandler = (requestInfo) => {
     !data?.keywords?.length ||
     (meta.currentPlanReviewExtraId && meta.currentPlanReviewExtraId !== data.plans_id)
   ) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
   const reviewDetail = rawData.contents.get(store.getState().currentPlanReviewToken)
   if (!reviewDetail || reviewDetail.type !== AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: 未找到对应plan_review_require数据`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: 未找到对应plan_review_require数据` })
     return
   }
 
@@ -147,13 +123,7 @@ const handleTaskReviewRequire: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.TaskReviewRequire
   if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
@@ -224,13 +194,7 @@ const handleToolReview: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ToolUseReviewRequire
   if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
@@ -301,13 +265,7 @@ const handleUserInteractive: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewRequire
   if (!data?.id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
@@ -375,13 +333,7 @@ const handleAIForgeReviewRequire: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ExecForgeReview
   if (!data?.id || !data?.selectors || !data?.selectors?.length) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
@@ -451,24 +403,12 @@ const handleAIReviewJudgement: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const score = JSON.parse(ipcContent) as AIAgentGrpcApi.AIReviewJudgement
   if (!score?.interactive_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
   const reviewDetail = rawData.contents.get(score.interactive_id)
   if (!reviewDetail || reviewDetail.id !== score.interactive_id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: 没有对应的review数据`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: 没有对应的review数据` })
     return
   }
 
@@ -488,10 +428,7 @@ const handleAIReviewJudgement: AIMessageHandler = (requestInfo) => {
       break
 
     default:
-      pushLogToOtherWindow({
-        sessionId: requestInfo.sessionId,
-        isHistory: res.IsSync,
-        Timestamp: res.Timestamp,
+      requestInfo.pushLog({
         level: 'error',
         message: `${res.Type}数据异常(interactive_id:${score?.interactive_id || '-'})未找到对应review`,
       })
@@ -506,13 +443,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.ReviewRelease
   if (!data?.id) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据异常: ${ipcContent}`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据异常: ${ipcContent}` })
     return
   }
 
@@ -553,13 +484,7 @@ const handleReviewRelease: AIMessageHandler = (requestInfo) => {
   }
 
   if (!reviewDetail) {
-    pushLogToOtherWindow({
-      sessionId: requestInfo.sessionId,
-      isHistory: res.IsSync,
-      Timestamp: res.Timestamp,
-      level: 'error',
-      message: `${res.Type}数据(id:${data?.id || '-'})没有对应的review数据`,
-    })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据(id:${data?.id || '-'})没有对应的review数据` })
     return
   }
   switch (reviewDetail.type) {
