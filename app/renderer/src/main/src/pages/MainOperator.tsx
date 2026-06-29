@@ -72,7 +72,6 @@ import { apiGetGlobalNetworkConfig } from './spaceEngine/utils'
 import { setAIModal } from './ai-agent/aiModelList/AIModelList'
 import { Trans } from 'react-i18next'
 import aiChatMessageStore from './ai-agent/store/aiChatMessageStore'
-import useAIGlobalConfig from '@/pages/ai-re-act/hooks/useAIGlobalConfig'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -383,15 +382,6 @@ const Main: React.FC<MainProp> = React.memo((props) => {
   /** ---------- 远程控制 end ---------- */
   /** ---------- 登录状态变化的逻辑 start ---------- */
   const { userInfo, setStoreUserInfo } = useStore()
-
-  const [_, aiGlobalConfigEvent] = useAIGlobalConfig()
-
-  useEffect(() => {
-    // 登录获取服务端AI配置
-    if (userInfo.isLogin && isEnpriTrace()) {
-      aiGlobalConfigEvent.getAIGlobalConfigAfterLogin()
-    }
-  }, [userInfo.isLogin])
 
   useEffect(() => {
     ipcRenderer.on('fetch-signin-token', (e, res: UserInfoProps) => {
