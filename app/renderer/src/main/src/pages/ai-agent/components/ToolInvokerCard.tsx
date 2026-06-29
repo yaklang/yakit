@@ -10,7 +10,6 @@ import {
   AIToolResult,
   AIYakExecFileRecord,
   ChatListRenderType,
-  ReActChatBaseInfo,
 } from '@/pages/ai-re-act/hooks/aiRender'
 import FileList from './FileList'
 import type { ModalInfoProps } from './ModelInfo'
@@ -158,14 +157,11 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   const { operationInfo, fileList, chatType, data, titleText } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
-  const { activeChat } = useAIAgentStore()
   const { handleSend } = useChatIPCDispatcher()
 
   // 获取流数据
   const { stream } = useStreamingChatContent({
-    chatType,
     token: data.stream.EventUUID,
-    session: activeChat?.SessionID || '',
   })
 
   const selectors = useCreation(() => {

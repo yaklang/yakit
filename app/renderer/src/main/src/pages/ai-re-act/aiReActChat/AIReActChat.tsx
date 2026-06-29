@@ -157,7 +157,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
       const session = getSession(sessionId)
 
       request.TimelineSessionID = session
-      const { extra, attachedResourceInfo } = getAIReActRequestParams(value)
+      const { attachedResourceInfo } = getAIReActRequestParams(value)
       // 发送初始化参数
       const aiInputEvent: AIInputEvent = {
         IsStart: true,
@@ -228,7 +228,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
     const handleSend = useMemoizedFn((data: HandleStartParams) => {
       if (!activeChat?.SessionID) return
       try {
-        const { extra, attachedResourceInfo } = getAIReActRequestParams(data)
+        const { attachedResourceInfo } = getAIReActRequestParams(data)
         const chatMessage: AIInputEvent = {
           IsFreeInput: true,
           FreeInput: data.qs,

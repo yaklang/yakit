@@ -1,13 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
-import { ChatListRenderType, ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
+import { ChatStream } from '@/pages/ai-re-act/hooks/aiRender'
 import { useRafPolling } from '@/hook/useRafPolling/useRafPolling'
-import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
-import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
+import { useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
 
 export interface UseStreamingChatContentParams {
-  chatType: ChatListRenderType
   token: string
-  session: string
 }
 
 export interface UseStreamingChatContentResult {
@@ -20,16 +18,19 @@ export interface UseStreamingChatContentResult {
 }
 
 export function useStreamingChatContent(params: UseStreamingChatContentParams): UseStreamingChatContentResult {
-  const { chatType, token, session } = params
+  const { token } = params
+
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+
+  const tokenRenderNum = useStore(store, (state) => state.items[token]?.renderNum)
 
   const hasStartedRef = useRef<boolean>(false)
   const [shouldType, setShouldType] = useState<boolean>(false)
-  const fetchChatDataStore = useChatIPCDispatcher().chatIPCEvents.fetchChatDataStore()
-  const { execute } = useChatIPCStore().chatIPCData
 
   const getData = useCallback((): ChatStream | null => {
-    return fetchChatDataStore?.getContentMap({ session, chatType, mapKey: token }) as ChatStream
-  }, [fetchChatDataStore, session, chatType, token])
+    return rawData.contents.get(token) as ChatStream
+  }, [tokenRenderNum])
 
   const { renderNumber, aiDataRef } = useRafPolling<ChatStream>({
     getData,

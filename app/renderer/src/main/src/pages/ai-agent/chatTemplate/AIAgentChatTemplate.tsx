@@ -5,13 +5,13 @@ import { OutlineChevronrightIcon } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { grpcQueryAIToolDetails } from '../grpc'
+import { AIChatQSData, AIChatQSDataTypeEnum, ReActChatRenderElement } from '@/pages/ai-re-act/hooks/aiRender'
 import {
-  AIChatQSData,
-  AIChatQSDataTypeEnum,
-  AITaskStartInfo,
-  ReActChatRenderItem,
-} from '@/pages/ai-re-act/hooks/aiRender'
-import { AIAgentGrpcApi, AIEventQueryRequest, AIInputEventSyncTypeEnum } from '@/pages/ai-re-act/hooks/grpcApi'
+  AIAgentGrpcApi,
+  AIEventQueryRequest,
+  AIInputEvent,
+  AIInputEventSyncTypeEnum,
+} from '@/pages/ai-re-act/hooks/grpcApi'
 import { taskAnswerToIconMap } from '../defaultConstant'
 import { AIChatListItem } from '../components/aiChatListItem/AIChatListItem'
 import StreamCard from '../components/StreamCard'
@@ -27,14 +27,17 @@ import { PreWrapper } from '../components/ToolInvokerCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import TimelineCard from './TimelineCard/TimelineCard'
 import AIMemoryList from './aiMemoryList/AIMemoryList'
-import useChatIPCStore from '../useContext/ChatIPCContent/useStore'
 import TaskLoading from './TaskLoading/TaskLoading'
 import { YakitResizeBox, YakitResizeBoxProps } from '@/components/yakitUI/YakitResizeBox/YakitResizeBox'
-import useChatIPCDispatcher from '../useContext/ChatIPCContent/useDispatcher'
 import { HistoryTaskTree } from './historyTaskTree/HistoryTaskTree'
 import { AIReviewParams } from '../components/aiReviewResult/AIReviewResult'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import useLoadHistory from '@/pages/ai-re-act/hooks/useLoadHistory'
+import { useCurrentMeta, useCurrentRawData, useCurrentStore } from '@/pages/ai-re-act/hooks/useCurrentDataBySession'
+import { useStore } from 'zustand'
+import useAIAgentDispatcher from '../useContext/useDispatcher'
+import { randomString } from '@/utils/randomUtil'
+import useCurrentSessionId from '@/pages/ai-re-act/hooks/useCurrentSessionId'
 
 export enum AIChatLeft {
   TaskTree = 'task-tree',
@@ -46,10 +49,18 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
   const { taskTree, taskName } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent'])
 
-  const { chatIPCData } = useChatIPCStore()
-  const { handleSendSyncMessage, chatIPCEvents } = useChatIPCDispatcher()
+  const { onSend } = useAIAgentDispatcher()
+  const sessionId = useCurrentSessionId()
 
-  const { taskChat, memoryList } = useChatIPCStore().chatIPCData
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  const meta = useCurrentMeta()
+
+  const taskChat = useStore(store, (state) => state.taskChat)
+  const execute = useStore(store, (state) => state.execute)
+  const memoryListUpdate = useStore(store, (state) => state.memoryListUpdate)
+  const planHistoryList = useStore(store, (state) => state.planHistoryList)
+
   const [activeTab, setActiveTab] = useState<AIChatLeft>(AIChatLeft.Timeline)
   const [expand, setExpand] = useControllableValue<boolean>(props, {
     defaultValue: true,
@@ -65,34 +76,28 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
     }
   }, [hasTaskTree])
 
-  const planHistoryList = useCreation(() => {
-    return (
-      chatIPCData.planHistoryList || {
-        total: 0,
-        records: [],
-        session_id: '',
-      }
-    )
-  }, [chatIPCData.planHistoryList])
   const length = useCreation(() => {
-    return memoryList?.memories?.length
-  }, [memoryList?.memories?.length])
-  const getTaskInfo = useMemoizedFn(() => {
-    return chatIPCEvents.fetchCurrentTaskPlanID()
-  })
+    return rawData?.memoryList?.memories?.length || 0
+  }, [memoryListUpdate])
 
   const handleCancelExpand = useMemoizedFn(() => {
     setExpand(false)
   })
 
   const onSendPlayHistoryList = useMemoizedFn(() => {
-    handleSendSyncMessage({ syncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS })
+    const info: AIInputEvent = {
+      IsSyncMessage: true,
+      SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_PLAN_EXEC_TASKS,
+
+      SyncID: randomString(8),
+    }
+    onSend({ token: sessionId, type: 'task', params: info })
   })
 
   const renderDom = useMemoizedFn(() => {
     switch (activeTab) {
       case AIChatLeft.TaskTree:
-        const coordinatorId = getTaskInfo()?.coordinatorId || ''
+        const coordinatorId = meta.currentTaskPlanID?.coordinatorId || ''
         const currentTaskItem: AIAgentGrpcApi.PlanHistory = {
           coordinator_id: coordinatorId,
           created_at: '',
@@ -125,7 +130,7 @@ export const AIChatLeftSide: React.FC<AIChatLeftSideProps> = memo((props) => {
 
   const handleTabChange = useMemoizedFn((value: AIChatLeft) => {
     setActiveTab(value)
-    if (chatIPCData.execute && value === AIChatLeft.TaskTree) {
+    if (execute && value === AIChatLeft.TaskTree) {
       onSendPlayHistoryList()
     }
   })
@@ -201,11 +206,32 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   const { streams, scrollToBottom, taskStatus, session } = props
   const listRootRef = useRef<HTMLDivElement>(null)
 
-  const { handleLoadMoreHistory, handleHasMoreHistory, fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
+  const [highlightedItem, setHighlightedItem] = useState<{ index: number; token: number } | null>(null)
+  const highlightRafRef = useRef<number>(0)
+  const highlightObserverRef = useRef<IntersectionObserver | null>(null)
 
-  const {
-    requestHistoryState: { taskLoadMoreLoading },
-  } = useChatIPCStore().chatIPCData
+  const store = useCurrentStore()
+  const rawData = useCurrentRawData()
+  const meta = useCurrentMeta()
+  /** TODO - hooks未写 */
+  const { handleLoadMoreHistory, handleHasMoreHistory, fetchChatDataStore } = useChatIPCDispatcher().chatIPCEvents
+  useUpdateEffect(() => {
+    scrollToIndex('LAST')
+  }, [scrollToBottom])
+
+  const taskLoadMoreLoading = useStore(store, (state) => state.requestHistoryState.taskLoadMoreLoading)
+
+  useEffect(() => {
+    if (!highlightedItem) return
+
+    const clearTimer = window.setTimeout(() => {
+      setHighlightedItem(null)
+    }, 1600)
+
+    return () => {
+      window.clearTimeout(clearTimer)
+    }
+  }, [highlightedItem])
 
   // 向上滚动加载
   const { firstItemIndex, handleLoadMore, isPrependingRef } = useLoadHistory({
@@ -235,7 +261,7 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
   }, [scrollToBottom])
 
   const renderItem = useCallback(
-    (index: number, stream: ReActChatRenderItem) => {
+    (index: number, stream: ReActChatRenderElement) => {
       if (!stream.token) return null
       const arrayIndex = index - firstItemIndex
       const hasNext = streams.length - arrayIndex > 1
@@ -273,20 +299,31 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     }),
     [Footer, Header, Item],
   )
+  /** TODO - 需验证一下 */
   const onTreeLocate = useMemoizedFn((id?: string) => {
     if (!id) return
-    const index = streams.findIndex((item) => {
-      if (item.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return false
-      const chatItem = fetchChatDataStore()?.getContentMap({
-        session,
-        chatType: item.chatType,
-        mapKey: item.token,
-      })
-      if (!chatItem) return false
-      return (chatItem.data as AITaskStartInfo).taskId === id
-    })
-    locateToIndex(index, 'auto')
+    // const index = streams.findIndex((item) => {
+    //   if (item.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) return false
+    //   const chatItem = fetchChatDataStore()?.getContentMap({
+    //     session,
+    //     chatType: item.chatType,
+    //     mapKey: item.token,
+    //   })
+    //   if (!chatItem) return false
+    //   return (chatItem.data as AITaskStartInfo).taskId === id
+    // })
+    const index = streams.findIndex((item) => item.token === id)
+    if (index !== -1) locateToIndex(index, 'auto')
   })
+  // const onScrollToIndex = useMemoizedFn((id) => {
+  //   if (!meta?.currentTaskPlanID?.taskID) return false
+  //   const taskID = generateTaskNodeID(meta?.currentTaskPlanID?.taskID, id)
+  //   const index = streams.findIndex((item) => taskID === item.token)
+  //   if (index !== -1) {
+  //     scrollToIndex(index, 'auto')
+  //     waitAndHighlight(index)
+  //   }
+  // })
   useMount(() => {
     emiter.on('onAITreeLocatePlanningList', onTreeLocate)
     return () => {
@@ -294,8 +331,8 @@ export const AIAgentChatStream: React.FC<AIAgentChatStreamProps> = memo((props) 
     }
   })
   return (
-    <div ref={listRootRef} className={styles['ai-agent-chat-stream']}>
-      <Virtuoso<ReActChatRenderItem>
+    <div className={styles['ai-agent-chat-stream']}>
+      <Virtuoso<ReActChatRenderElement>
         ref={virtuosoRef}
         key={session}
         scrollerRef={setScrollerRef}
@@ -324,7 +361,8 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
   const [toolList, setToolList] = useState<AIChatQSData[]>([])
   const [loading, setLoading] = useState<boolean>(false)
 
-  const { yakExecResult } = useChatIPCStore().chatIPCData
+  const store = useCurrentStore()
+  const execFileRecord = useStore(store, (state) => state.execFileRecord)
 
   const getList = useMemoizedFn(() => {
     if (!callToolId) return
@@ -351,7 +389,6 @@ export const AIChatToolDrawerContent: React.FC<AIChatToolDrawerContentProps> = m
         <>
           {toolList.map((info) => {
             const { id, Timestamp, type, data } = info
-            const { execFileRecord } = yakExecResult
             switch (type) {
               case AIChatQSDataTypeEnum.STREAM:
               case AIChatQSDataTypeEnum.TOOL_CALL_RESULT: {
