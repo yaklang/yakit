@@ -568,15 +568,6 @@ export declare namespace AIAgentGrpcApi {
     document: string
   }
 
-  /** detached plan 审阅-选项 */
-  export interface DetachedPlanSelector {
-    allow_extra_prompt: boolean
-    id: string
-    prompt: string
-    prompt_english: string
-    value: string
-  }
-
   /** detached_plan_require 响应结构 */
   export interface DetachedPlanRequire {
     coordinator_id: string
@@ -587,7 +578,7 @@ export declare namespace AIAgentGrpcApi {
     plans_id: string
     're-act_id': string
     're-act_task': string
-    selectors: DetachedPlanSelector[]
+    selectors: ReviewSelector[]
     session_id: string
   }
 

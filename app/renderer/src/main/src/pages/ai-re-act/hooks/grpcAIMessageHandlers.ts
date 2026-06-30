@@ -1876,8 +1876,6 @@ const handleTaskReview: AIMessageHandler = (request) => {
     chatData.data.selected = JSON.stringify({ suggestion: 'continue' })
     chatData.data.optionValue = 'continue'
   }
-  // 将数据存入hook里的缓存变量中
-  review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
   if (info.chatType === 'task') {
     if (isAuto) {
       // setContentMap(chatData.id, cloneDeep(chatData))
