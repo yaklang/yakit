@@ -50,7 +50,6 @@ import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import useHoldGRPCStream from '@/hook/useHoldGRPCStream/useHoldGRPCStream'
 import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
 import { HTTPRequestBuilderParams } from '@/models/HTTPRequestBuilder'
-const { TabPane } = PluginTabs
 const { ipcRenderer } = window.require('electron')
 const CONNECTIVITY_CHECK_PLUGIN_NAME = 'TUN 劫持联通性检测'
 const CONNECTIVITY_CHECK_DEBUG_PARAMS: DebugPluginRequest = {
@@ -956,42 +955,50 @@ export const TunHijackProcessTable: React.FC<TunHijackProcessTableProps> = React
                 </YakitButton>
               ) : null
             }
-          >
-            <TabPane key="hijacking" tab="已劫持任务">
-              <TableVirtualResize
-                isRefresh={false}
-                isShowTitle={false}
-                data={hijackTasks}
-                renderKey={'uuid'}
-                pagination={{
-                  page: 1,
-                  limit: 50,
-                  total: hijackTasks.length,
-                  onChange: () => {},
-                }}
-                columns={hijackColumns}
-                enableDrag
-              />
-            </TabPane>
-
-            <TabPane key="all" tab="全部">
-              <TableVirtualResize
-                isRefresh={isRefresh}
-                isShowTitle={false}
-                data={tableData}
-                renderKey={'Pid'}
-                pagination={{
-                  page: 1,
-                  limit: 50,
-                  total: tableData.length,
-                  onChange: () => {},
-                }}
-                columns={columns}
-                enableDrag
-                onChange={onTableChange}
-              />
-            </TabPane>
-          </PluginTabs>
+            items={[
+              {
+                key: 'hijacking',
+                label: '已劫持任务',
+                children: (
+                  <TableVirtualResize
+                    isRefresh={false}
+                    isShowTitle={false}
+                    data={hijackTasks}
+                    renderKey={'uuid'}
+                    pagination={{
+                      page: 1,
+                      limit: 50,
+                      total: hijackTasks.length,
+                      onChange: () => {},
+                    }}
+                    columns={hijackColumns}
+                    enableDrag
+                  />
+                ),
+              },
+              {
+                key: 'all',
+                label: '全部',
+                children: (
+                  <TableVirtualResize
+                    isRefresh={isRefresh}
+                    isShowTitle={false}
+                    data={tableData}
+                    renderKey={'Pid'}
+                    pagination={{
+                      page: 1,
+                      limit: 50,
+                      total: tableData.length,
+                      onChange: () => {},
+                    }}
+                    columns={columns}
+                    enableDrag
+                    onChange={onTableChange}
+                  />
+                ),
+              },
+            ]}
+          ></PluginTabs>
         </div>
 
         <HijackProcessInfoModal

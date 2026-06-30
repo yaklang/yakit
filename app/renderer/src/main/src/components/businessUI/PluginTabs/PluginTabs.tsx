@@ -4,8 +4,6 @@ import { Tabs, TabsProps } from 'antd'
 import classNames from 'classnames'
 import styles from './PluginTabs.module.scss'
 
-const { TabPane } = Tabs
-
 interface PluginTabsProps extends Omit<TabsProps, 'size' | 'type'> {
   /** @deprecated 组件无法设置该属性,默认定值为 default */
   size?: 'default'
@@ -33,4 +31,4 @@ const PluginTabs: React.FC<PluginTabsProps> = (props) => {
 }
 
 /** @name 插件功能页面相关 Tabs 组件 */
-export default Object.assign(PluginTabs, { TabPane })
+export default PluginTabs

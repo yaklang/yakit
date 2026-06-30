@@ -787,22 +787,24 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
               )}
             </>
           }
-        >
-          <PluginTabs.TabPane
-            tab={
-              <div className={styles['info-tab']}>
-                {t('MessageCenter.unread')}
-                {typeof noRedDataTotal === 'number' && <div className={styles['info-tab-dot']}>{noRedDataTotal}</div>}
-              </div>
-            }
-            key={'unread'}
-          >
-            {virtualList()}
-          </PluginTabs.TabPane>
-          <PluginTabs.TabPane tab={t('MessageCenter.all')} key={'all'}>
-            {virtualList()}
-          </PluginTabs.TabPane>
-        </PluginTabs>
+          items={[
+            {
+              key: 'unread',
+              label: (
+                <div className={styles['info-tab']}>
+                  {t('MessageCenter.unread')}
+                  {typeof noRedDataTotal === 'number' && <div className={styles['info-tab-dot']}>{noRedDataTotal}</div>}
+                </div>
+              ),
+              children: virtualList(),
+            },
+            {
+              key: 'all',
+              label: t('MessageCenter.all'),
+              children: virtualList(),
+            },
+          ]}
+        ></PluginTabs>
       </div>
     </Resizable>
   )

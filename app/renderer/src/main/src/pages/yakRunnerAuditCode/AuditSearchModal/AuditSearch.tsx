@@ -431,11 +431,8 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                 }}
                 tabBarStyle={{ marginBottom: 5 }}
                 className="scan-port-tabs"
-              >
-                {extraSettingData.map((item) => {
-                  return <PluginTabs.TabPane tab={item.label} key={item.value}></PluginTabs.TabPane>
-                })}
-              </PluginTabs>
+                items={extraSettingData.map((item) => ({ key: item.value, label: item.label }))}
+              ></PluginTabs>
             </div>
           )}
           <>

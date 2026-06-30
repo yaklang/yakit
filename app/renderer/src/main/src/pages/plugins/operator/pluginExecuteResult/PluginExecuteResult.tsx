@@ -60,8 +60,6 @@ import moment from 'moment'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
 
-const { TabPane } = PluginTabs
-
 export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.memo((props) => {
   const {
     streamInfo,
@@ -195,17 +193,16 @@ export const PluginExecuteResult: React.FC<PluginExecuteResultProps> = React.mem
         </div>
       )}
       {showTabs.length > 0 && (
-        <PluginTabs defaultActiveKey={defaultActiveKey} tabBarExtraContent={{ right: PluginTabsRightNode }}>
-          {showTabs.map((ele) => (
-            <TabPane
-              tab={tabBarRender(ele, showRiskTotal)}
-              key={ele.tabName}
-              className={styles['plugin-execute-result-tabPane']}
-            >
-              {renderTabContent(ele)}
-            </TabPane>
-          ))}
-        </PluginTabs>
+        <PluginTabs
+          defaultActiveKey={defaultActiveKey}
+          tabBarExtraContent={{ right: PluginTabsRightNode }}
+          items={showTabs.map((ele) => ({
+            key: ele.tabName,
+            label: tabBarRender(ele, showRiskTotal),
+            children: renderTabContent(ele),
+            className: styles['plugin-execute-result-tabPane'],
+          }))}
+        ></PluginTabs>
       )}
     </div>
   )
@@ -412,25 +409,21 @@ export const PluginExecuteLog: React.FC<PluginExecuteLogProps> = React.memo((pro
         onChange={onTabChange}
         type="line"
         wrapperClassName={classNames(styles['plugin-execute-log'], wrapperClassName)}
-      >
-        {logTabs.map((ele) => (
-          <TabPane
-            tab={
-              <div
-                className={classNames(styles['log-tab-name'], {
-                  [styles['log-tab-name-active']]: activeKey === ele.type,
-                })}
-              >
-                {ele.icon} {ele.name}
-                {!!ele.number && <div className={styles['tab-number']}>{ele.number}</div>}
-              </div>
-            }
-            key={ele.type}
-          >
-            {renderTabContent(ele.type)}
-          </TabPane>
-        ))}
-      </PluginTabs>
+        items={logTabs.map((ele) => ({
+          key: ele.type,
+          label: (
+            <div
+              className={classNames(styles['log-tab-name'], {
+                [styles['log-tab-name-active']]: activeKey === ele.type,
+              })}
+            >
+              {ele.icon} {ele.name}
+              {!!ele.number && <div className={styles['tab-number']}>{ele.number}</div>}
+            </div>
+          ),
+          children: renderTabContent(ele.type),
+        }))}
+      ></PluginTabs>
     </>
   )
 })
