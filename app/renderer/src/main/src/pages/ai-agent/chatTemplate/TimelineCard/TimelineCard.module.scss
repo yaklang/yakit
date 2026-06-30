@@ -1,6 +1,9 @@
 @use '../../../../styles/mixin.scss' as mixin;
 
 .timeline-card-wrapper {
+  --timeline-line-left: 25px;
+  --timeline-line-width: 2px;
+
   width: 100%;
   height: 100%;
   display: flex;
@@ -10,15 +13,15 @@
   position: relative;
   .virtuoso-item-list {
     position: relative;
-    padding: 8px 0;
+    padding: 8px 12px;
 
     &::before {
       content: '';
       position: absolute;
       top: 0;
       bottom: 0;
-      left: 12px;
-      width: 2px;
+      left: var(--timeline-line-left);
+      width: var(--timeline-line-width);
       height: calc(100% + 3px);
       background-color: var(--Colors-Use-Neutral-Disable);
       z-index: 0;
@@ -104,23 +107,26 @@
 
   .arrow {
     height: 10px;
+    margin-top: -7px;
     position: relative;
     &::before,
     &::after {
       content: '';
       position: absolute;
-      width: 2px;
+      left: var(--timeline-line-left);
+      bottom: 0;
+      width: var(--timeline-line-width);
       height: 10px;
       background-color: var(--Colors-Use-Neutral-Disable);
-      top: -6px;
+      transform-origin: bottom center;
     }
+
     &::before {
-      transform: rotate(-45deg);
-      left: 8px;
-    }
-    &::after {
       transform: rotate(45deg);
-      left: 16px;
+    }
+
+    &::after {
+      transform: rotate(-45deg);
     }
   }
 
