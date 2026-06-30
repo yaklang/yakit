@@ -15,8 +15,6 @@ jobs:
     env:
       CI: ''
       APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
@@ -118,8 +116,6 @@ jobs:
       ENGINE_VERSION: ${{ needs.prepare_engine.outputs.engine_version }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
       APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
-      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-      APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}

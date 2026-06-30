@@ -16,7 +16,7 @@ module.exports = async function afterSign(context) {
     appBundleId: appBundleId,
     appPath: `${appOutDir}/${appName}.app`,
     appleId: process.env.APPLE_ID,
-    appleIdPassword: process.env.APPLE_PASSWORD,
-    teamId: process.env.TEAM_ID, // 可选，根据需要配置
+    appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
+    teamId: process.env.APPLE_TEAM_ID,
   })
 }

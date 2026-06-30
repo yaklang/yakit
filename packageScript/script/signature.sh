@@ -18,8 +18,8 @@ security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.k
 # 设置超时时间为一小时
 security set-keychain-settings -t 3600 -u build.keychain
 
-# 从钥匙串中查找包含 TEAM_ID 的签名证书标识
-CERT_ID=$(security find-identity -v -p codesigning | grep "$TEAM_ID" | head -n1 | awk -F\" '{print $2}')
+# 从钥匙串中查找包含 APPLE_TEAM_ID 的签名证书标识
+CERT_ID=$(security find-identity -v -p codesigning | grep "$APPLE_TEAM_ID" | head -n1 | awk -F\" '{print $2}')
 echo "Using certificate: $CERT_ID"
 
 # ===============================
