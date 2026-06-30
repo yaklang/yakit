@@ -67,7 +67,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 
 const { ipcRenderer } = window.require('electron')
 const { YakitPanel } = YakitCollapse
-const { TabPane } = PluginTabs
 
 interface HubListFilterProps {
   wrapperClassName?: string
@@ -369,13 +368,8 @@ export const HubOuterList: React.FC<HubOuterListProps> = memo((props) => {
           wrapperClassName={styles['hub-outer-list-tab']}
           activeKey={listTabActive}
           onChange={onListTabActiveChange}
-        >
-          {listTabs.map((item) => (
-            <TabPane key={item.key} tab={item.tab}>
-              {listBody(item.key)}
-            </TabPane>
-          ))}
-        </PluginTabs>
+          items={listTabs.map((item) => ({ key: item.key, label: item.tab, children: listBody(item.key) }))}
+        ></PluginTabs>
       ) : (
         <>{listBody('')}</>
       )}

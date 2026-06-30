@@ -54,7 +54,7 @@ import { JSONParseLog } from '@/utils/tool'
 import { HTTPFlowCodec } from '@/utils/encodec'
 import { YakitMenu, YakitMenuItemType } from './yakitUI/YakitMenu/YakitMenu'
 import { PageContainer } from '@ant-design/pro-layout'
-const { TabPane } = PluginTabs
+import type { TabsProps } from 'antd'
 const { ipcRenderer } = window.require('electron')
 
 const RandomChunkedDataTable = React.lazy(() => import('./HTTPFlowTable/RandomChunkedDataTable/RandomChunkedDataTable'))
@@ -391,38 +391,58 @@ export const HTTPFlowDetail: React.FC<HTTPFlowDetailProp> = (props) => {
             </Descriptions>
             <div style={{ width: '100%', overflow: 'auto' }} className={styles['flow-detail-tabs']}>
               {flow.GetParams.length > 0 || flow.PostParams.length > 0 || flow.CookieParams.length > 0 ? (
-                <PluginTabs>
-                  {flow.GetParams.length > 0 && (
-                    <TabPane key={'get'} tab={t('HTTPFlowDetail.gETParameters')}>
-                      <FuzzableParamList
-                        data={flow.GetParams}
-                        sendToWebFuzzer={() => {
-                          if (props.onClose) props.onClose()
-                        }}
-                      />
-                    </TabPane>
-                  )}
-                  {flow.PostParams.length > 0 && (
-                    <TabPane key={'post'} tab={t('HTTPFlowDetail.pOSTParameters')}>
-                      <FuzzableParamList
-                        data={flow.PostParams}
-                        sendToWebFuzzer={() => {
-                          if (props.onClose) props.onClose()
-                        }}
-                      />
-                    </TabPane>
-                  )}
-                  {flow.CookieParams.length > 0 && (
-                    <TabPane key={'cookie'} tab={t('HTTPFlowDetail.cookieParameters')}>
-                      <FuzzableParamList
-                        data={flow.CookieParams}
-                        sendToWebFuzzer={() => {
-                          if (props.onClose) props.onClose()
-                        }}
-                      />
-                    </TabPane>
-                  )}
-                </PluginTabs>
+                <PluginTabs
+                  items={(() => {
+                    const items: TabsProps['items'] = []
+
+                    if (flow.GetParams.length > 0) {
+                      items.push({
+                        key: 'get',
+                        label: t('HTTPFlowDetail.gETParameters'),
+                        children: (
+                          <FuzzableParamList
+                            data={flow.GetParams}
+                            sendToWebFuzzer={() => {
+                              if (props.onClose) props.onClose()
+                            }}
+                          />
+                        ),
+                      })
+                    }
+
+                    if (flow.PostParams.length > 0) {
+                      items.push({
+                        key: 'post',
+                        label: t('HTTPFlowDetail.pOSTParameters'),
+                        children: (
+                          <FuzzableParamList
+                            data={flow.PostParams}
+                            sendToWebFuzzer={() => {
+                              if (props.onClose) props.onClose()
+                            }}
+                          />
+                        ),
+                      })
+                    }
+
+                    if (flow.CookieParams.length > 0) {
+                      items.push({
+                        key: 'cookie',
+                        label: t('HTTPFlowDetail.cookieParameters'),
+                        children: (
+                          <FuzzableParamList
+                            data={flow.CookieParams}
+                            sendToWebFuzzer={() => {
+                              if (props.onClose) props.onClose()
+                            }}
+                          />
+                        ),
+                      })
+                    }
+
+                    return items
+                  })()}
+                ></PluginTabs>
               ) : (
                 ''
               )}

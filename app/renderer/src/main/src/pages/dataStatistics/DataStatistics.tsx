@@ -29,7 +29,6 @@ import { IPTableRefProps, UserTableRefProps } from './UserTable/UserTableType'
 import { isEnpriTrace } from '@/utils/envfile'
 import { useTheme } from '@/hook/useTheme'
 const { RangePicker } = YakitDatePicker
-const { TabPane } = PluginTabs
 
 // 将分钟转换为小时，并保留两位小数
 const minutesToHours = (minutes: number) => {
@@ -1249,14 +1248,19 @@ export const DataStatistics: React.FC<DataStatisticsProps> = (props) => {
                       </YakitDropdownMenu>
                     </div>
                   }
-                >
-                  <TabPane key="ip" tab="按IP">
-                    <IPTable ref={ipTableRef} />
-                  </TabPane>
-                  <TabPane key="account" tab="按账号">
-                    <UserTable ref={userTableRef} />
-                  </TabPane>
-                </PluginTabs>
+                  items={[
+                    {
+                      key: 'ip',
+                      label: '按IP',
+                      children: <IPTable ref={ipTableRef} />,
+                    },
+                    {
+                      key: 'account',
+                      label: '按账号',
+                      children: <UserTable ref={userTableRef} />,
+                    },
+                  ]}
+                ></PluginTabs>
               </div>
             ) : (
               <>

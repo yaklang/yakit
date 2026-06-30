@@ -145,14 +145,21 @@ export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) 
 
   return (
     <>
-      <PluginTabs defaultActiveKey={data[0]?.CWE || '-'} type="card" tabBarExtraContent={tabBarExtraContent}>
-        {data.map((i: CWEDetail) => (
-          <PluginTabs.TabPane tab={i.CWE} key={i.CWE}>
-            <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
-            <div className={styles['no-more']}>暂无更多</div>
-          </PluginTabs.TabPane>
-        ))}
-      </PluginTabs>
+      <PluginTabs
+        defaultActiveKey={data[0]?.CWE || '-'}
+        type="card"
+        tabBarExtraContent={tabBarExtraContent}
+        items={data.map((i: CWEDetail) => ({
+          key: i.CWE,
+          label: i.CWE,
+          children: (
+            <>
+              <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
+              <div className={styles['no-more']}>暂无更多</div>
+            </>
+          ),
+        }))}
+      ></PluginTabs>
     </>
   )
 })

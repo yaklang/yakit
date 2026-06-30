@@ -43,7 +43,6 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 
 const { ipcRenderer } = window.require('electron')
 const { Paragraph, Title } = Typography
-const { TabPane } = Tabs
 
 const GraphComponent = ({ dot }) => {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -583,381 +582,391 @@ export const EntityRepositoryPage: React.FC = () => {
         </Title>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane
-          tab={
-            <span>
-              <DatabaseOutlined />
-              Repositories
-            </span>
-          }
-          key="repositories"
-        >
-          <div className={styles.tabContent}>
-            <Card className={styles.card}>
-              <div className={styles.actionButtons}>
-                <Space>
-                  <YakitButton type="primary" icon={<ReloadOutlined />} onClick={loadRepositories} loading={loading}>
-                    Refresh
-                  </YakitButton>
-                </Space>
-              </div>
-
-              <div className={styles.tableContainer}>
-                <Table
-                  columns={repositoryColumns}
-                  dataSource={repositories}
-                  rowKey="ID"
-                  loading={loading}
-                  scroll={{ x: 'max-content', y: 200 }}
-                  pagination={{
-                    total: repositories.length,
-                    pageSize: 20,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
-                    showTotal: (total) => `Total ${total} repositories`,
-                  }}
-                />
-              </div>
-            </Card>
-          </div>
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <FileTextOutlined />
-              Entities
-            </span>
-          }
-          key="entities"
-          disabled={!selectedRepository}
-        >
-          <div className={styles.tabContent}>
-            <Card className={styles.card}>
-              {selectedRepository && (
-                <div className={styles.repositoryInfo}>
-                  <div className={styles.repositoryName}>Entities in: {selectedRepository.Name}</div>
-                  <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
-                </div>
-              )}
-
-              <div className={styles.actionButtons}>
-                <Space>
-                  <YakitButton
-                    type="primary"
-                    icon={<ReloadOutlined />}
-                    onClick={() => loadEntities()}
-                    loading={loading}
-                  >
-                    Refresh
-                  </YakitButton>
-                  {selectedEntityIds.length > 0 && (
-                    <YakitButton
-                      type="outline2"
-                      onClick={() => {
-                        setActiveTab('erm')
-                        setTimeout(() => {
-                          generateERMDot(selectedEntityIds, ermDepth)
-                        }, 100)
-                      }}
-                    >
-                      Generate ERM for Selected ({selectedEntityIds.length})
-                    </YakitButton>
-                  )}
-                </Space>
-              </div>
-
-              {/* Entity Filter Form */}
-              <Card size="small" className={styles.filterCard} style={{ marginBottom: 16 }}>
-                <div style={{ marginBottom: 8, fontSize: 12, color: '#666' }}>
-                  <SearchOutlined /> Filter entities (all fields are optional)
-                </div>
-                <Form layout="inline" className={styles.filterForm} onFinish={handleEntityFilterChange}>
-                  <Form.Item label="Entity Type" name="entityType">
-                    <Input placeholder="Enter entity type" style={{ width: 150 }} />
-                  </Form.Item>
-                  <Form.Item label="Entity Name" name="entityName">
-                    <Input placeholder="Enter entity name" style={{ width: 150 }} />
-                  </Form.Item>
-                  <Form.Item label="Entity IDs" name="entityIds">
-                    <Input placeholder="Enter IDs (comma separated)" style={{ width: 200 }} />
-                  </Form.Item>
-                  <Form.Item>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={[
+          {
+            key: 'repositories',
+            label: (
+              <span>
+                <DatabaseOutlined />
+                Repositories
+              </span>
+            ),
+            children: (
+              <div className={styles.tabContent}>
+                <Card className={styles.card}>
+                  <div className={styles.actionButtons}>
                     <Space>
-                      <YakitButton type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                        Search
-                      </YakitButton>
-                      <YakitButton onClick={clearEntityFilters} type="outline2">
-                        Clear
+                      <YakitButton
+                        type="primary"
+                        icon={<ReloadOutlined />}
+                        onClick={loadRepositories}
+                        loading={loading}
+                      >
+                        Refresh
                       </YakitButton>
                     </Space>
-                  </Form.Item>
-                </Form>
-              </Card>
+                  </div>
 
-              <div className={styles.tableContainer}>
-                <Table
-                  columns={entityColumns}
-                  dataSource={entities}
-                  rowKey="ID"
-                  loading={loading}
-                  scroll={{ x: 'max-content', y: 200 }}
-                  rowSelection={{
-                    selectedRowKeys: selectedEntityIds,
-                    onChange: (selectedRowKeys, selectedRows) => {
-                      setSelectedEntityIds(selectedRowKeys as number[])
-                    },
-                  }}
-                  pagination={{
-                    current: entityPagination.Page,
-                    pageSize: entityPagination.Limit,
-                    total: entityTotal,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
-                    showTotal: (total) => `Total ${total} entities`,
-                    onChange: (page, pageSize) => {
-                      setEntityPagination({
-                        ...entityPagination,
-                        Page: page,
-                        Limit: pageSize || entityPagination.Limit,
-                      })
-                      loadEntities(page, pageSize)
-                    },
-                  }}
-                />
-              </div>
-            </Card>
-          </div>
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <NodeIndexOutlined />
-              Relationships
-            </span>
-          }
-          key="relationships"
-          disabled={!selectedRepository}
-        >
-          <div className={styles.tabContent}>
-            <Card className={styles.card}>
-              {selectedRepository && (
-                <div className={styles.repositoryInfo}>
-                  <div className={styles.repositoryName}>Relationships in: {selectedRepository.Name}</div>
-                  <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
-                </div>
-              )}
-
-              <div className={styles.actionButtons}>
-                <Space>
-                  <YakitButton
-                    type="primary"
-                    icon={<ReloadOutlined />}
-                    onClick={() => loadRelationships()}
-                    loading={loading}
-                  >
-                    Refresh
-                  </YakitButton>
-                </Space>
-              </div>
-
-              {/* Relationship Filter Form */}
-              <Card size="small" className={styles.filterCard} style={{ marginBottom: 16 }}>
-                <div style={{ marginBottom: 8, fontSize: 12, color: '#666' }}>
-                  <SearchOutlined /> Filter relationships (all fields are optional)
-                </div>
-                <Form layout="inline" className={styles.filterForm} onFinish={handleRelationshipFilterChange}>
-                  <Form.Item label="Relationship Type" name="relationshipType">
-                    <Input placeholder="Enter relationship type" style={{ width: 150 }} />
-                  </Form.Item>
-                  <Form.Item label="Source Entity IDs" name="sourceEntityIds">
-                    <Input placeholder="Enter source IDs (comma separated)" style={{ width: 200 }} />
-                  </Form.Item>
-                  <Form.Item label="Target Entity IDs" name="targetEntityIds">
-                    <Input placeholder="Enter target IDs (comma separated)" style={{ width: 200 }} />
-                  </Form.Item>
-                  <Form.Item label="Relationship IDs" name="relationshipIds">
-                    <Input placeholder="Enter relationship IDs (comma separated)" style={{ width: 200 }} />
-                  </Form.Item>
-                  <Form.Item>
-                    <Space>
-                      <YakitButton type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                        Search
-                      </YakitButton>
-                      <YakitButton onClick={clearRelationshipFilters} type="outline2">
-                        Clear
-                      </YakitButton>
-                    </Space>
-                  </Form.Item>
-                </Form>
-              </Card>
-
-              <div className={styles.tableContainer}>
-                <Table
-                  columns={relationshipColumns}
-                  dataSource={relationships}
-                  rowKey="ID"
-                  loading={loading}
-                  scroll={{ x: 'max-content', y: 200 }}
-                  pagination={{
-                    current: relationshipPagination.Page,
-                    pageSize: relationshipPagination.Limit,
-                    total: relationshipTotal,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
-                    showTotal: (total) => `Total ${total} relationships`,
-                    onChange: (page, pageSize) => {
-                      setRelationshipPagination({
-                        ...relationshipPagination,
-                        Page: page,
-                        Limit: pageSize || relationshipPagination.Limit,
-                      })
-                      loadRelationships(page, pageSize)
-                    },
-                  }}
-                />
-              </div>
-            </Card>
-          </div>
-        </TabPane>
-
-        <TabPane
-          tab={
-            <span>
-              <FileTextOutlined />
-              ERM Diagram
-            </span>
-          }
-          key="erm"
-          disabled={!selectedRepository}
-        >
-          <div className={styles.tabContent}>
-            <Card className={styles.card}>
-              {selectedRepository && (
-                <div className={styles.repositoryInfo}>
-                  <div className={styles.repositoryName}>ERM Diagram for: {selectedRepository.Name}</div>
-                  <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
-                </div>
-              )}
-
-              {/* ERM Generation Form */}
-              <Card size="small" className={styles.filterCard} style={{ marginBottom: 16 }}>
-                <div style={{ marginBottom: 8, fontSize: 12, color: '#666' }}>
-                  <FileTextOutlined /> ERM Diagram Generation Settings
-                </div>
-                <div style={{ marginBottom: 12, fontSize: 11, color: '#999' }}>
-                  Tip: You can select specific entities from the Entities tab, or enter entity IDs manually. Leave
-                  entity IDs empty to generate diagram for all entities.
-                </div>
-
-                <Space direction="vertical" className={styles.ermSettings} style={{ width: '100%' }}>
-                  <Space>
-                    <span style={{ fontSize: 12 }}>Depth:</span>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={ermDepth}
-                      onChange={(e) => setErmDepth(parseInt(e.target.value) || 2)}
-                      style={{ width: 80 }}
-                      placeholder="2"
-                    />
-                    <span style={{ fontSize: 12 }}>Selected Entity IDs:</span>
-                    <Input
-                      value={selectedEntityIds.join(', ')}
-                      onChange={(e) => {
-                        const ids = e.target.value
-                          .split(',')
-                          .map((id) => parseInt(id.trim()))
-                          .filter((id) => !isNaN(id))
-                        setSelectedEntityIds(ids)
-                      }}
-                      style={{ width: 200 }}
-                      placeholder="Enter entity IDs (comma separated)"
-                    />
-                  </Space>
-                  {selectedEntityIds.length > 0 && (
-                    <div style={{ fontSize: 11, color: '#666' }}>
-                      Selected entities:{' '}
-                      {selectedEntityIds
-                        .map((id) => {
-                          const entity = entities.find((e) => e.ID === id)
-                          return entity ? `${id} (${entity.Name})` : id
-                        })
-                        .join(', ')}
-                    </div>
-                  )}
-                  <Space>
-                    <YakitButton
-                      type="primary"
-                      icon={<ReloadOutlined />}
-                      onClick={() =>
-                        generateERMDot(selectedEntityIds.length > 0 ? selectedEntityIds : undefined, ermDepth)
-                      }
+                  <div className={styles.tableContainer}>
+                    <Table
+                      columns={repositoryColumns}
+                      dataSource={repositories}
+                      rowKey="ID"
                       loading={loading}
-                    >
-                      Generate ERM Diagram
-                    </YakitButton>
-                    <YakitButton
-                      type="outline2"
-                      onClick={() => {
-                        setSelectedEntityIds([])
-                        setErmDepth(2)
+                      scroll={{ x: 'max-content', y: 200 }}
+                      pagination={{
+                        total: repositories.length,
+                        pageSize: 20,
+                        showSizeChanger: true,
+                        showQuickJumper: true,
+                        showTotal: (total) => `Total ${total} repositories`,
                       }}
-                    >
-                      Clear Selection
-                    </YakitButton>
-                  </Space>
-                </Space>
-              </Card>
-
-              {/* View Mode Toggle */}
-              {ermDot && (
-                <div className={styles.viewModeToggle}>
-                  <Space>
-                    <YakitButton
-                      type={ermViewMode === 'svg' ? 'primary' : 'outline2'}
-                      icon={<EyeOutlined />}
-                      onClick={() => setErmViewMode('svg')}
-                    >
-                      SVG View
-                    </YakitButton>
-                    <YakitButton
-                      type={ermViewMode === 'dot' ? 'primary' : 'outline2'}
-                      icon={<CodeOutlined />}
-                      onClick={() => setErmViewMode('dot')}
-                    >
-                      DOT Code
-                    </YakitButton>
-                  </Space>
-                </div>
-              )}
-
-              {/* SVG Display */}
-              {ermViewMode === 'svg' && ermDot && (
-                <div className={styles.ermDiagram}>
-                  <Card title="ERM Diagram (SVG)" size="small">
-                    <div className={styles.svgContainer}>
-                      <GraphComponent dot={ermDot} />
+                    />
+                  </div>
+                </Card>
+              </div>
+            ),
+          },
+          {
+            key: 'entities',
+            label: (
+              <span>
+                <FileTextOutlined />
+                Entities
+              </span>
+            ),
+            disabled: !selectedRepository,
+            children: (
+              <div className={styles.tabContent}>
+                <Card className={styles.card}>
+                  {selectedRepository && (
+                    <div className={styles.repositoryInfo}>
+                      <div className={styles.repositoryName}>Entities in: {selectedRepository.Name}</div>
+                      <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
                     </div>
-                  </Card>
-                </div>
-              )}
+                  )}
 
-              {/* DOT Code Display */}
-              {ermViewMode === 'dot' && ermDot && (
-                <div className={styles.ermDiagram}>
-                  <Card title="DOT Format" size="small">
-                    <pre className={styles.dotContent}>{ermDot}</pre>
+                  <div className={styles.actionButtons}>
+                    <Space>
+                      <YakitButton
+                        type="primary"
+                        icon={<ReloadOutlined />}
+                        onClick={() => loadEntities()}
+                        loading={loading}
+                      >
+                        Refresh
+                      </YakitButton>
+                      {selectedEntityIds.length > 0 && (
+                        <YakitButton
+                          type="outline2"
+                          onClick={() => {
+                            setActiveTab('erm')
+                            setTimeout(() => {
+                              generateERMDot(selectedEntityIds, ermDepth)
+                            }, 100)
+                          }}
+                        >
+                          Generate ERM for Selected ({selectedEntityIds.length})
+                        </YakitButton>
+                      )}
+                    </Space>
+                  </div>
+
+                  {/* Entity Filter Form */}
+                  <Card size="small" className={styles.filterCard} style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 8, fontSize: 12, color: '#666' }}>
+                      <SearchOutlined /> Filter entities (all fields are optional)
+                    </div>
+                    <Form layout="inline" className={styles.filterForm} onFinish={handleEntityFilterChange}>
+                      <Form.Item label="Entity Type" name="entityType">
+                        <Input placeholder="Enter entity type" style={{ width: 150 }} />
+                      </Form.Item>
+                      <Form.Item label="Entity Name" name="entityName">
+                        <Input placeholder="Enter entity name" style={{ width: 150 }} />
+                      </Form.Item>
+                      <Form.Item label="Entity IDs" name="entityIds">
+                        <Input placeholder="Enter IDs (comma separated)" style={{ width: 200 }} />
+                      </Form.Item>
+                      <Form.Item>
+                        <Space>
+                          <YakitButton type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                            Search
+                          </YakitButton>
+                          <YakitButton onClick={clearEntityFilters} type="outline2">
+                            Clear
+                          </YakitButton>
+                        </Space>
+                      </Form.Item>
+                    </Form>
                   </Card>
-                </div>
-              )}
-            </Card>
-          </div>
-        </TabPane>
-      </Tabs>
+
+                  <div className={styles.tableContainer}>
+                    <Table
+                      columns={entityColumns}
+                      dataSource={entities}
+                      rowKey="ID"
+                      loading={loading}
+                      scroll={{ x: 'max-content', y: 200 }}
+                      rowSelection={{
+                        selectedRowKeys: selectedEntityIds,
+                        onChange: (selectedRowKeys, selectedRows) => {
+                          setSelectedEntityIds(selectedRowKeys as number[])
+                        },
+                      }}
+                      pagination={{
+                        current: entityPagination.Page,
+                        pageSize: entityPagination.Limit,
+                        total: entityTotal,
+                        showSizeChanger: true,
+                        showQuickJumper: true,
+                        showTotal: (total) => `Total ${total} entities`,
+                        onChange: (page, pageSize) => {
+                          setEntityPagination({
+                            ...entityPagination,
+                            Page: page,
+                            Limit: pageSize || entityPagination.Limit,
+                          })
+                          loadEntities(page, pageSize)
+                        },
+                      }}
+                    />
+                  </div>
+                </Card>
+              </div>
+            ),
+          },
+          {
+            key: 'relationships',
+            label: (
+              <span>
+                <NodeIndexOutlined />
+                Relationships
+              </span>
+            ),
+            disabled: !selectedRepository,
+            children: (
+              <div className={styles.tabContent}>
+                <Card className={styles.card}>
+                  {selectedRepository && (
+                    <div className={styles.repositoryInfo}>
+                      <div className={styles.repositoryName}>Relationships in: {selectedRepository.Name}</div>
+                      <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
+                    </div>
+                  )}
+
+                  <div className={styles.actionButtons}>
+                    <Space>
+                      <YakitButton
+                        type="primary"
+                        icon={<ReloadOutlined />}
+                        onClick={() => loadRelationships()}
+                        loading={loading}
+                      >
+                        Refresh
+                      </YakitButton>
+                    </Space>
+                  </div>
+
+                  {/* Relationship Filter Form */}
+                  <Card size="small" className={styles.filterCard} style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 8, fontSize: 12, color: '#666' }}>
+                      <SearchOutlined /> Filter relationships (all fields are optional)
+                    </div>
+                    <Form layout="inline" className={styles.filterForm} onFinish={handleRelationshipFilterChange}>
+                      <Form.Item label="Relationship Type" name="relationshipType">
+                        <Input placeholder="Enter relationship type" style={{ width: 150 }} />
+                      </Form.Item>
+                      <Form.Item label="Source Entity IDs" name="sourceEntityIds">
+                        <Input placeholder="Enter source IDs (comma separated)" style={{ width: 200 }} />
+                      </Form.Item>
+                      <Form.Item label="Target Entity IDs" name="targetEntityIds">
+                        <Input placeholder="Enter target IDs (comma separated)" style={{ width: 200 }} />
+                      </Form.Item>
+                      <Form.Item label="Relationship IDs" name="relationshipIds">
+                        <Input placeholder="Enter relationship IDs (comma separated)" style={{ width: 200 }} />
+                      </Form.Item>
+                      <Form.Item>
+                        <Space>
+                          <YakitButton type="primary" htmlType="submit" icon={<SearchOutlined />}>
+                            Search
+                          </YakitButton>
+                          <YakitButton onClick={clearRelationshipFilters} type="outline2">
+                            Clear
+                          </YakitButton>
+                        </Space>
+                      </Form.Item>
+                    </Form>
+                  </Card>
+
+                  <div className={styles.tableContainer}>
+                    <Table
+                      columns={relationshipColumns}
+                      dataSource={relationships}
+                      rowKey="ID"
+                      loading={loading}
+                      scroll={{ x: 'max-content', y: 200 }}
+                      pagination={{
+                        current: relationshipPagination.Page,
+                        pageSize: relationshipPagination.Limit,
+                        total: relationshipTotal,
+                        showSizeChanger: true,
+                        showQuickJumper: true,
+                        showTotal: (total) => `Total ${total} relationships`,
+                        onChange: (page, pageSize) => {
+                          setRelationshipPagination({
+                            ...relationshipPagination,
+                            Page: page,
+                            Limit: pageSize || relationshipPagination.Limit,
+                          })
+                          loadRelationships(page, pageSize)
+                        },
+                      }}
+                    />
+                  </div>
+                </Card>
+              </div>
+            ),
+          },
+          {
+            key: 'erm',
+            label: (
+              <span>
+                <FileTextOutlined />
+                ERM Diagram
+              </span>
+            ),
+            disabled: !selectedRepository,
+            children: (
+              <div className={styles.tabContent}>
+                <Card className={styles.card}>
+                  {selectedRepository && (
+                    <div className={styles.repositoryInfo}>
+                      <div className={styles.repositoryName}>ERM Diagram for: {selectedRepository.Name}</div>
+                      <div className={styles.repositoryDescription}>{selectedRepository.Description}</div>
+                    </div>
+                  )}
+
+                  {/* ERM Generation Form */}
+                  <Card size="small" className={styles.filterCard} style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 8, fontSize: 12, color: '#666' }}>
+                      <FileTextOutlined /> ERM Diagram Generation Settings
+                    </div>
+                    <div style={{ marginBottom: 12, fontSize: 11, color: '#999' }}>
+                      Tip: You can select specific entities from the Entities tab, or enter entity IDs manually. Leave
+                      entity IDs empty to generate diagram for all entities.
+                    </div>
+
+                    <Space direction="vertical" className={styles.ermSettings} style={{ width: '100%' }}>
+                      <Space>
+                        <span style={{ fontSize: 12 }}>Depth:</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={10}
+                          value={ermDepth}
+                          onChange={(e) => setErmDepth(parseInt(e.target.value) || 2)}
+                          style={{ width: 80 }}
+                          placeholder="2"
+                        />
+                        <span style={{ fontSize: 12 }}>Selected Entity IDs:</span>
+                        <Input
+                          value={selectedEntityIds.join(', ')}
+                          onChange={(e) => {
+                            const ids = e.target.value
+                              .split(',')
+                              .map((id) => parseInt(id.trim()))
+                              .filter((id) => !isNaN(id))
+                            setSelectedEntityIds(ids)
+                          }}
+                          style={{ width: 200 }}
+                          placeholder="Enter entity IDs (comma separated)"
+                        />
+                      </Space>
+                      {selectedEntityIds.length > 0 && (
+                        <div style={{ fontSize: 11, color: '#666' }}>
+                          Selected entities:{' '}
+                          {selectedEntityIds
+                            .map((id) => {
+                              const entity = entities.find((e) => e.ID === id)
+                              return entity ? `${id} (${entity.Name})` : id
+                            })
+                            .join(', ')}
+                        </div>
+                      )}
+                      <Space>
+                        <YakitButton
+                          type="primary"
+                          icon={<ReloadOutlined />}
+                          onClick={() =>
+                            generateERMDot(selectedEntityIds.length > 0 ? selectedEntityIds : undefined, ermDepth)
+                          }
+                          loading={loading}
+                        >
+                          Generate ERM Diagram
+                        </YakitButton>
+                        <YakitButton
+                          type="outline2"
+                          onClick={() => {
+                            setSelectedEntityIds([])
+                            setErmDepth(2)
+                          }}
+                        >
+                          Clear Selection
+                        </YakitButton>
+                      </Space>
+                    </Space>
+                  </Card>
+
+                  {/* View Mode Toggle */}
+                  {ermDot && (
+                    <div className={styles.viewModeToggle}>
+                      <Space>
+                        <YakitButton
+                          type={ermViewMode === 'svg' ? 'primary' : 'outline2'}
+                          icon={<EyeOutlined />}
+                          onClick={() => setErmViewMode('svg')}
+                        >
+                          SVG View
+                        </YakitButton>
+                        <YakitButton
+                          type={ermViewMode === 'dot' ? 'primary' : 'outline2'}
+                          icon={<CodeOutlined />}
+                          onClick={() => setErmViewMode('dot')}
+                        >
+                          DOT Code
+                        </YakitButton>
+                      </Space>
+                    </div>
+                  )}
+
+                  {/* SVG Display */}
+                  {ermViewMode === 'svg' && ermDot && (
+                    <div className={styles.ermDiagram}>
+                      <Card title="ERM Diagram (SVG)" size="small">
+                        <div className={styles.svgContainer}>
+                          <GraphComponent dot={ermDot} />
+                        </div>
+                      </Card>
+                    </div>
+                  )}
+
+                  {/* DOT Code Display */}
+                  {ermViewMode === 'dot' && ermDot && (
+                    <div className={styles.ermDiagram}>
+                      <Card title="DOT Format" size="small">
+                        <pre className={styles.dotContent}>{ermDot}</pre>
+                      </Card>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            ),
+          },
+        ]}
+      ></Tabs>
     </div>
   )
 }

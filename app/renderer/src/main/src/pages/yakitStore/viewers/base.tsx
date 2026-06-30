@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo, CSSProperties } from 'react'
+import React, { useEffect, useRef, useState, useMemo, CSSProperties, Children } from 'react'
 import { YakScript } from '../../invoker/schema'
 import { Card, Col, Progress, Row, Space, Statistic, Timeline, Tooltip, Pagination, Tag, Divider } from 'antd'
 import { HTTPFlow, HTTPFlowTable, LogLevelToCode } from '../../../components/HTTPFlowTable/HTTPFlowTable'
@@ -30,7 +30,7 @@ import { YakitTag } from '@/components/yakitUI/YakitTag/YakitTag'
 import moment from 'moment'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-const { TabPane } = PluginTabs
+import type { TabsProps } from 'antd'
 const { ipcRenderer } = window.require('electron')
 
 export interface StatusCardProps {
@@ -317,110 +317,140 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
             if (xtermRef && props.debugMode) xtermFit(xtermRef, 50, 18)
           }, 50)
         }}
-      >
-        {(finalFeatures || []).map((i, index) => {
-          return (
-            <TabPane tab={YakitFeatureTabName(i.feature, i.params)} key={`feature-${index}`}>
-              <YakitFeatureRender
-                params={i.params}
-                feature={i.feature}
-                execResultsLog={feature || []}
-                excelName={YakitFeatureTabName(i.feature, i.params)}
-              />
-            </TabPane>
-          )
-        })}
-        <TabPane tab={t('viewers.base.PluginResultUI.log')} key={finalFeatures.length > 0 ? 'log' : 'feature-0'}>
-          {
-            <>
-              <AutoCard
-                title={
-                  <Space>
-                    <div>{t('viewers.base.PluginResultUI.taskExtraLogAndResult')}</div>
-                    <YakitTag color="info">
-                      {(timelineItemProps || []).length > 0
-                        ? formatDate(timelineItemProps[0].timestamp)
-                        : formatDate(moment().unix())}
-                    </YakitTag>
-                  </Space>
-                }
-                size={'small'}
-                bodyStyle={{ overflowY: 'auto' }}
-                style={{ borderTop: 'none' }}
-              >
-                <div className="passive-log-container">
-                  <Divider style={{ marginTop: 8 }} />
-                  <div className="log-timeline">
-                    <Timeline pending={loading}>
-                      {(timelineItemProps || [])
-                        .reverse()
-                        .filter((item) => item.level !== 'json-risk')
-                        .map((e, index) => {
-                          return (
+        items={(() => {
+          const items: TabsProps['items'] = []
+
+          // 1. 动态 feature 选项卡
+          ;(finalFeatures || []).forEach((i, index) => {
+            items.push({
+              key: `feature-${index}`,
+              label: YakitFeatureTabName(i.feature, i.params),
+              children: (
+                <YakitFeatureRender
+                  params={i.params}
+                  feature={i.feature}
+                  execResultsLog={feature || []}
+                  excelName={YakitFeatureTabName(i.feature, i.params)}
+                />
+              ),
+            })
+          })
+
+          // 2. Log 选项卡（固定存在）
+          items.push({
+            key: finalFeatures.length > 0 ? 'log' : 'feature-0',
+            label: t('viewers.base.PluginResultUI.log'),
+            children: (
+              <>
+                <AutoCard
+                  title={
+                    <Space>
+                      <div>{t('viewers.base.PluginResultUI.taskExtraLogAndResult')}</div>
+                      <YakitTag color="info">
+                        {(timelineItemProps || []).length > 0
+                          ? formatDate(timelineItemProps[0].timestamp)
+                          : formatDate(moment().unix())}
+                      </YakitTag>
+                    </Space>
+                  }
+                  size={'small'}
+                  bodyStyle={{ overflowY: 'auto' }}
+                  style={{ borderTop: 'none' }}
+                >
+                  <div className="passive-log-container">
+                    <Divider style={{ marginTop: 8 }} />
+                    <div className="log-timeline">
+                      <Timeline pending={loading}>
+                        {(timelineItemProps || [])
+                          .reverse()
+                          .filter((item) => item.level !== 'json-risk')
+                          .map((e, index) => (
                             <Timeline.Item key={index} color={LogLevelToCode(e.level)}>
                               <YakitLogFormatter data={e.data} level={e.level} timestamp={e.timestamp} />
                             </Timeline.Item>
-                          )
-                        })}
-                    </Timeline>
+                          ))}
+                      </Timeline>
+                    </div>
                   </div>
+                </AutoCard>
+              </>
+            ),
+          })
+
+          // 3. Risk 选项卡（条件渲染）
+          if (!!props?.risks && props.risks.length > 0) {
+            items.push({
+              key: 'risk',
+              label: (
+                <div>
+                  {t('YakitRoute.vulnerabilityAndrisk')}
+                  <Tag style={{ marginLeft: 4 }} color={'red'}>
+                    {props.risks.length}
+                  </Tag>
                 </div>
-              </AutoCard>
-            </>
-          }
-        </TabPane>
-        {!!props?.risks && props.risks.length > 0 && (
-          <TabPane
-            tab={
-              <div>
-                {t('YakitRoute.vulnerabilityAndrisk')}
-                <Tag style={{ marginLeft: 4 }} color={'red'}>
-                  {props.risks.length}
-                </Tag>
-              </div>
-            }
-            key={'risk'}
-          >
-            <AutoCard bodyStyle={{ overflowY: 'auto' }}>
-              <Space direction={'vertical'} style={{ width: '100%' }} size={12}>
-                {props.risks.slice(0, 10).map((i) => {
-                  return <RiskDetails info={i} shrink={true} />
-                })}
-                {/* {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
+              ),
+              children: (
+                <AutoCard bodyStyle={{ overflowY: 'auto' }}>
+                  <Space direction={'vertical'} style={{ width: '100%' }} size={12}>
+                    {props.risks.slice(0, 10).map((i) => (
+                      <RiskDetails info={i} shrink={true} />
+                    ))}
+                    {/* {props.risks.slice((pageCode-1)*10,pageCode*10).map(i => {
                                 return <RiskDetails info={i} shrink={true}/>
                             })}
                             {props.risks.length>10&&<div style={{textAlign:"right"}}>
                                 <Pagination simple current={pageCode} onChange={(page)=>setPageCode(page)} total={props.risks.length} />
                             </div>} */}
-              </Space>
-            </AutoCard>
-          </TabPane>
-        )}
-        <TabPane tab={'Console'} key={'console'}>
-          <div style={{ width: '100%', height: consoleHeight ? consoleHeight : '100%' }}>
-            <EngineConsole isMini={true} />
-          </div>
-        </TabPane>
-        {/*{props.fromPlugin && <TabPane tab={"插件所有流量"} key={"current-plugin-flow"}>*/}
-        {/*    <div style={{width: "100%", height: "100%"}}>*/}
-        {/*        <HTTPFlowTable*/}
-        {/*            noHeader={true}*/}
-        {/*            params={{FromPlugin: props.fromPlugin}}*/}
-        {/*        />*/}
-        {/*    </div>*/}
-        {/*</TabPane>}*/}
-        {/*{!props.debugMode && props.onXtermRef ? (*/}
-        {/*    <TabPane tab={"Console"} key={"console"}>*/}
-        {/*        <div style={{width: "100%", height: "100%"}}>*/}
-        {/*            <CVXterm ref={xtermRef} options={{convertEol: true}}/>*/}
-        {/*        </div>*/}
-        {/*    </TabPane>*/}
-        {/*) : <TabPane tab={"Console"} key={"console"}>*/}
-        {/*    <div style={{width: "100%", height: "100%"}}>*/}
-        {/*        <EngineConsole isMini={true}/>*/}
-        {/*    </div>*/}
-        {/*</TabPane>}*/}
-      </PluginTabs>
+                  </Space>
+                </AutoCard>
+              ),
+            })
+          }
+
+          // 4. Console 选项卡（固定）
+          items.push({
+            key: 'console',
+            label: 'Console',
+            children: (
+              <div style={{ width: '100%', height: consoleHeight ? consoleHeight : '100%' }}>
+                <EngineConsole isMini={true} />
+              </div>
+            ),
+          })
+
+          // if (props.fromPlugin) {
+          //   items.push({
+          //     key: 'current-plugin-flow',
+          //     label: '插件所有流量',
+          //     children: (
+          //       <div style={{ width: '100%', height: '100%' }}>
+          //         <HTTPFlowTable noHeader={true} params={{ FromPlugin: props.fromPlugin }} />
+          //       </div>
+          //     ),
+          //   })
+          // }
+
+          // items.push({
+          //   key: 'console',
+          //   label: 'Console',
+          //   children: (
+          //     <>
+          //       {!props.debugMode && props.onXtermRef ? (
+          //         <div style={{ width: '100%', height: '100%' }}>
+          //           <CVXterm ref={xtermRef} options={{ convertEol: true }} />
+          //         </div>
+          //       ) : (
+          //         <div style={{ width: '100%', height: '100%' }}>
+          //           <EngineConsole isMini={true} />
+          //         </div>
+          //       )}
+          //     </>
+          //   ),
+          // })
+
+          return items
+        })()}
+      ></PluginTabs>
       {/* </div> */}
     </div>
   )
