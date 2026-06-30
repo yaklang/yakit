@@ -28,7 +28,8 @@ type DownloadingState = import('@/yakitGVDefine').DownloadingState
 type YaklangEngineMode = import('@/yakitGVDefine').YaklangEngineMode
 type YakitStatusType = import('@/yakitGVDefine').YakitStatusType
 type YakitSettingCallbackType = import('@/yakitGVDefine').YakitSettingCallbackType
-type YaklangEngineWatchDogCredential = import('@/components/layout/YaklangEngineWatchDog').YaklangEngineWatchDogCredential
+type YaklangEngineWatchDogCredential =
+  import('@/components/layout/YaklangEngineWatchDog').YaklangEngineWatchDogCredential
 type UserInfoProps = import('@/store').UserInfoProps
 type YakitAuthInfo = import('@/components/layout/RemoteEngine/RemoteEngineType').YakitAuthInfo
 type ExecResult = import('@/pages/invoker/schema').ExecResult
@@ -47,12 +48,29 @@ type QueryRisksRequest = import('@/pages/risks/YakitRiskTable/YakitRiskTableType
 type DeleteRiskRequest = import('@/pages/risks/YakitRiskTable/utils').DeleteRiskRequest
 type CheckSyntaxFlowRuleUpdateResponse = import('@/components/layout/GlobalState').CheckSyntaxFlowRuleUpdateResponse
 type UploadImgTypeProps = import('@/hook/useUploadOSS/useUploadOSS').UploadImgTypeProps
+type QueryRisksResponse = import('@/pages/risks/YakitRiskTable/YakitRiskTableType').QueryRisksResponse
+type Risk = import('@/pages/risks/schema').Risk
+type QueryYakScriptsResponse = import('@/pages/invoker/schema').QueryYakScriptsResponse
+type ProjectsResponse = import('@/pages/softwareSettings/ProjectManage').ProjectsResponse
+type ProjectDescription = import('@/pages/softwareSettings/ProjectManage').ProjectDescription
+type GetSSAWorkbenchDashboardResponse = import('@/pages/irifyHome/IRifyHomeType').GetSSAWorkbenchDashboardResponse
+type GetSystemProxyResult = import('@/utils/ConfigSystemProxy').GetSystemProxyResult
+type GlobalProxyRulesConfig = import('@/apiUtils/grpc').GlobalProxyRulesConfig
+type AutoDecodeResult = import('@/utils/encodec').AutoDecodeResult
+type YakStaticAnalyzeErrorResult = import('@/utils/editorMarkers').YakStaticAnalyzeErrorResult
+type YakQueryHTTPFlowResponse = import('@/components/HTTPFlowTable/HTTPFlowTable.constants').YakQueryHTTPFlowResponse
+type LayoutSplitUploadResponse = import('@/components/layout/utils').SplitUploadResponse
+type NetInterface = import('@/models/Traffic').NetInterface
+type OnlineProfileProps = import('@/NewApp').OnlineProfileProps
+type API = import('@/services/swagger/resposeType').API
+type AxiosResponseProps = import('@/services/fetch').AxiosResponseProps
+type AxiosResponseInfoProps = import('@/services/fetch').AxiosResponseInfoProps
 
 /** gRPC 空请求（对应 proto Empty） */
 type GrpcEmptyRequest = Record<string, never>
 
-/** gRPC 通用响应 */
-type GrpcResult = unknown
+/** gRPC 空响应（对应 proto Empty） */
+type GrpcEmptyResponse = void
 
 /** 双向流写入请求包装（token + 单次 write 参数） */
 interface GrpcStreamWritePayload<T> {
@@ -159,7 +177,7 @@ interface StaticAnalyzeErrorRequest {
 }
 
 interface DefaultProxyResult {
-  Proxy?: string
+  Proxy: string
 }
 
 interface DetermineAdaptedVersionEngineRequest {
@@ -289,6 +307,112 @@ interface AutoDecodeRequest {
 
 type ExportProjectParams = Omit<ExportProjectRequest, 'token'>
 
+interface NewRisk {
+  Title: string
+  Id: number
+  CreatedAt: number
+  UpdatedAt: number
+  Verbose: string
+  TitleVerbose: string
+  IsRead: boolean
+}
+
+interface QueryNewRiskResponse {
+  Data: NewRisk[]
+  NewRiskTotal: number
+  Total: number
+  Unread: number
+}
+
+interface GetGlobalReverseServerResponse {
+  PublicReverseIP: string
+  PublicReversePort: number
+  LocalReverseAddr: string
+  LocalReversePort: number
+}
+
+interface GetMachineIDResponse {
+  MachineID: string
+}
+
+interface IsPrivilegedForNetRawResponse {
+  IsPrivileged: boolean
+  Advice: string
+  AdviceVerbose: string
+}
+
+interface VerifySystemCertificateResponse {
+  valid: boolean
+  Reason: string
+}
+
+interface GeneralResponse {
+  Ok: boolean
+  Reason?: string
+}
+
+interface IsCVEDatabaseReadyResponse {
+  Ok: boolean
+  Reason: string
+  ShouldUpdate: boolean
+}
+
+interface IsScrecorderReadyResponse {
+  Ok: boolean
+  Reason: string
+}
+
+interface GenerateExtractRuleResponse {
+  PrefixRegexp: string
+  SuffixRegexp: string
+  SelectedRegexp: string
+}
+
+interface YaklangCompileAndFormatResponse {
+  Code: string
+  Errors: YakStaticAnalyzeErrorResult[]
+}
+
+interface StaticAnalyzeErrorResponse {
+  Result: YakStaticAnalyzeErrorResult[]
+}
+
+interface AutoDecodeResponse {
+  Results: AutoDecodeResult[]
+}
+
+interface ProcessEnvStorage {
+  Key: string
+  Value: string
+  ExpiredAt: number
+  ProcessEnv?: boolean
+  Verbose?: string
+  Group?: string
+}
+
+interface GetProcessEnvKeyResult {
+  Results: ProcessEnvStorage[]
+}
+
+interface UploadImgApiResponse {
+  code?: number
+  message?: string
+  data?: {
+    from?: string
+    reason?: string
+  }
+}
+
+interface UploadFileApiResponse {
+  code?: number
+  message?: string
+  data?: string | { reason?: string }
+}
+
+type SplitUploadResponse = LayoutSplitUploadResponse & {
+  resArr?: UploadImgApiResponse[]
+}
+
 interface AppSyncMessage {
   type: 'theme' | 'i18n'
   payload: string
@@ -343,7 +467,7 @@ interface DownloadYakitOptions {
 
 interface StartLocalYaklangEngineParams {
   port: number
-  version: string
+  version?: string
   isEnpriTraceAgent: boolean
   isIRify?: boolean
   password?: string
@@ -433,20 +557,14 @@ interface AvailableLocalAddrResult {
   Interfaces: NetInterface[]
 }
 
-interface NetInterface {
-  Name?: string
-  Addr?: string
-  IP?: string
-  Description?: string
-  IsIpv4?: boolean
-  IsIpv6?: boolean
-}
-
 interface CodecRunParams {
   Type: string
   Text: string
-  Params: unknown[]
-  ScriptName: string
+  Params?: {
+    Key: string
+    Value: string
+  }[]
+  ScriptName?: string
 }
 
 interface CodecRunResult {
@@ -487,12 +605,12 @@ interface YakitBridge {
     fetchSystemAndArch: () => Promise<string>
   }
   network: {
-    axiosApi: (params: AxiosBridgeParams) => Promise<unknown>
+    axiosApi: (params: AxiosBridgeParams) => Promise<AxiosResponseProps<AxiosResponseInfoProps>>
     logoutDynamicControl: (params: LogoutDynamicControlParams) => Promise<unknown>
     killDynamicControl: () => Promise<unknown>
     exitDynamicControlPage: () => Promise<unknown>
-    uploadRiskToOnline: (payload: UploadRiskToOnlineRequest) => Promise<GrpcResult>
-    httpFlowsToOnline: (payload: HTTPFlowsToOnlineRequest) => Promise<GrpcResult>
+    uploadRiskToOnline: (payload: UploadRiskToOnlineRequest) => Promise<GrpcEmptyResponse>
+    httpFlowsToOnline: (payload: HTTPFlowsToOnlineRequest) => Promise<GrpcEmptyResponse>
   }
   shell: {
     openExternal: (url: string) => Promise<unknown>
@@ -507,36 +625,36 @@ interface YakitBridge {
   reverse: {
     getStatus: () => Promise<boolean>
     cancel: () => Promise<unknown>
-    config: (payload: ConfigGlobalReverseRequest) => Promise<GrpcResult>
-    getServer: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
-    setYakBridgeLogServer: (payload: YakDNSLogBridgeAddr) => Promise<GrpcResult>
+    config: (payload: ConfigGlobalReverseRequest) => Promise<GrpcEmptyResponse>
+    getServer: (params?: GrpcEmptyRequest) => Promise<GetGlobalReverseServerResponse>
+    setYakBridgeLogServer: (payload: YakDNSLogBridgeAddr) => Promise<GrpcEmptyResponse>
     availableLocalAddr: (params?: GrpcEmptyRequest) => Promise<AvailableLocalAddrResult>
     onError: (callback: (message: string) => void) => BridgeCleanup
   }
   risk: {
-    fetchLatestInfo: (payload: QueryNewRiskRequest) => Promise<GrpcResult>
-    queryRisks: (payload: Partial<QueryRisksRequest>) => Promise<GrpcResult>
-    setInfoRead: (payload: NewRiskReadRequest) => Promise<GrpcResult>
-    query: (payload: QueryRiskRequest) => Promise<GrpcResult>
-    delete: (payload: DeleteRiskRequest) => Promise<GrpcResult>
+    fetchLatestInfo: (payload: QueryNewRiskRequest) => Promise<QueryNewRiskResponse>
+    queryRisks: (payload: Partial<QueryRisksRequest>) => Promise<QueryRisksResponse>
+    setInfoRead: (payload: NewRiskReadRequest) => Promise<GrpcEmptyResponse>
+    query: (payload: QueryRiskRequest) => Promise<Risk>
+    delete: (payload: DeleteRiskRequest) => Promise<GrpcEmptyResponse>
   }
   asset: {
-    deleteDomains: (payload: DeleteDomainsRequest) => Promise<GrpcResult>
-    deletePorts: (payload: DeletePortsRequest) => Promise<GrpcResult>
+    deleteDomains: (payload: DeleteDomainsRequest) => Promise<GrpcEmptyResponse>
+    deletePorts: (payload: DeletePortsRequest) => Promise<GrpcEmptyResponse>
   }
   httpFlow: {
-    queryHistory: (payload: YakQueryHTTPFlowRequest) => Promise<GrpcResult>
+    queryHistory: (payload: YakQueryHTTPFlowRequest) => Promise<GrpcEmptyResponse>
   }
   host: {
-    getSystemProxy: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
-    setSystemProxy: (payload: SetSystemProxyRequest) => Promise<GrpcResult>
+    getSystemProxy: (params?: GrpcEmptyRequest) => Promise<GetSystemProxyResult>
+    setSystemProxy: (payload: SetSystemProxyRequest) => Promise<GrpcEmptyResponse>
     getChromePath: () => Promise<string | null>
-    getMachineID: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
-    resetAndInvalidUserData: (payload: ResetAndInvalidUserDataRequest) => Promise<GrpcResult>
-    isPrivilegedForNetRaw: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
-    promotePermissionForUserPcap: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
-    verifySystemCertificate: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
-    installMITMCertificate: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
+    getMachineID: (params?: GrpcEmptyRequest) => Promise<GetMachineIDResponse>
+    resetAndInvalidUserData: (payload: ResetAndInvalidUserDataRequest) => Promise<GrpcEmptyResponse>
+    isPrivilegedForNetRaw: (params?: GrpcEmptyRequest) => Promise<IsPrivilegedForNetRawResponse>
+    promotePermissionForUserPcap: (params?: GrpcEmptyRequest) => Promise<GeneralResponse>
+    verifySystemCertificate: (params?: GrpcEmptyRequest) => Promise<VerifySystemCertificateResponse>
+    installMITMCertificate: (params?: GrpcEmptyRequest) => Promise<GeneralResponse>
     generateInstallScript: () => Promise<string>
   }
   window: {
@@ -589,8 +707,8 @@ interface YakitBridge {
     onLiveEngineLog: (callback: (stdout: string) => void) => BridgeCleanup
   }
   editorTools: {
-    compileAndFormat: (payload: YaklangCompileAndFormatRequest) => Promise<GrpcResult>
-    staticAnalyze: (payload: StaticAnalyzeErrorRequest) => Promise<GrpcResult>
+    compileAndFormat: (payload: YaklangCompileAndFormatRequest) => Promise<YaklangCompileAndFormatResponse>
+    staticAnalyze: (payload: StaticAnalyzeErrorRequest) => Promise<StaticAnalyzeErrorResponse>
   }
   perf: {
     startComputePercent: () => Promise<unknown>
@@ -598,12 +716,12 @@ interface YakitBridge {
     clearComputePercent: () => Promise<unknown>
   }
   cache: {
-    setLocalCache: (key: string, value: unknown) => Promise<unknown>
-    getLocalCache: (key: string) => Promise<unknown>
-    getRemoteKey: (key: string) => Promise<unknown>
+    setLocalCache: (key: string, value: any) => Promise<unknown>
+    getLocalCache: (key: string) => Promise<any>
+    getRemoteKey: (key: string) => Promise<any>
     setRemoteKey: (key: string, value: string) => Promise<unknown>
     setRemoteKeyWithTTL: (key: string, value: string, ttl: number) => Promise<unknown>
-    getRemoteProjectKey: (key: string) => Promise<unknown>
+    getRemoteProjectKey: (key: string) => Promise<any>
     setRemoteProjectKey: (key: string, value: string) => Promise<unknown>
   }
   clipboard: {
@@ -611,13 +729,13 @@ interface YakitBridge {
     getText: () => Promise<string>
   }
   profile: {
-    getOnlineProfile: (params?: GrpcEmptyRequest) => Promise<OnlineProfileRequest>
-    setOnlineProfile: (params: OnlineProfileRequest) => Promise<GrpcResult>
+    getOnlineProfile: (params?: GrpcEmptyRequest) => Promise<OnlineProfileProps>
+    setOnlineProfile: (params: OnlineProfileRequest) => Promise<GrpcEmptyResponse>
   }
   auth: {
     startUserSignIn: (payload: { url: string; type: string }) => void
-    companySignIn: (payload: Record<string, unknown>) => Promise<unknown>
-    editBaseUrl: (baseUrl: string) => Promise<unknown>
+    companySignIn: (payload: Record<string, any>) => Promise<{ next?: boolean; info?: string }>
+    editBaseUrl: (baseUrl: string) => Promise<any>
     requestPasswordReset: () => Promise<unknown>
     onSignInData: (callback: (payload: SignInDataPayload) => void) => BridgeCleanup
     onBaseUrlStatus: (callback: () => void) => BridgeCleanup
@@ -640,24 +758,24 @@ interface YakitBridge {
     downloadLatestYak: (version: string) => Promise<unknown>
     cancelDownloadYakEngineVersion: (version?: string) => Promise<unknown>
     downloadLatestYakit: (version: string, type?: DownloadYakitOptions) => Promise<unknown>
-    downloadLatestIntranetYakit: (filePath: string) => Promise<unknown>
+    downloadLatestIntranetYakit: (filePath: string) => Promise<any>
     cancelDownloadYakitVersion: () => Promise<unknown>
     fetchCheckYaklangSource: (version: string, config?: FetchCheckYaklangSourceConfig) => Promise<string>
     calcEngineSha265: () => Promise<string[]>
-    isCVEDatabaseReady: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
+    isCVEDatabaseReady: (params?: GrpcEmptyRequest) => Promise<IsCVEDatabaseReadyResponse>
     getDefaultProxy: (params?: GrpcEmptyRequest) => Promise<DefaultProxyResult>
-    setDefaultProxy: (payload: DefaultProxyResult) => Promise<GrpcResult>
+    setDefaultProxy: (payload: DefaultProxyResult) => Promise<GrpcEmptyResponse>
     getAvailablePort: () => Promise<number>
     getRandomLocalEnginePort: () => Promise<number>
     determineAdaptedVersionEngine: (payload: DetermineAdaptedVersionEngineRequest) => Promise<boolean>
-    getGlobalProxyRulesConfig: () => Promise<GrpcResult>
-    setGlobalProxyRulesConfig: (config: unknown) => Promise<GrpcResult>
+    getGlobalProxyRulesConfig: () => Promise<GlobalProxyRulesConfig>
+    setGlobalProxyRulesConfig: (config: GlobalProxyRulesConfig) => Promise<GrpcEmptyResponse>
     clearLocalYaklangVersionCache: () => Promise<unknown>
     fetchYaklangEngineAddr: () => Promise<YaklangEngineAddr>
     requestYakVersion: () => Promise<unknown>
     listYakGrpc: () => Promise<YakProcessInfo[]>
-    killYakGrpc: (pid: number) => Promise<unknown>
-    killOldEngineProcess: (type?: string) => Promise<unknown>
+    killYakGrpc: (pid: number) => Promise<any>
+    killOldEngineProcess: (type?: string) => Promise<any>
     checkLocalDatabase: () => Promise<unknown>
     fixLocalDatabase: () => Promise<unknown>
     isPortAvailable: (port: number) => Promise<unknown>
@@ -677,53 +795,53 @@ interface YakitBridge {
     onDownloadYakitProgress: (callback: (payload: DownloadingState) => void) => BridgeCleanup
   }
   upload: {
-    splitUpload: (payload: SplitUploadPayload) => Promise<GrpcResult>
-    uploadImgBase64: (payload: UploadImgBase64Payload) => Promise<GrpcResult>
-    uploadFile: (payload: UploadFilePayload) => Promise<GrpcResult>
+    splitUpload: (payload: SplitUploadPayload) => Promise<SplitUploadResponse>
+    uploadImgBase64: (payload: UploadImgBase64Payload) => Promise<UploadImgApiResponse>
+    uploadFile: (payload: UploadFilePayload) => Promise<UploadFileApiResponse>
   }
   exporter: {
-    writeToFile: (payload: ExtractDataToFilePayload) => Promise<GrpcResult>
+    writeToFile: (payload: ExtractDataToFilePayload) => Promise<GrpcEmptyResponse>
   }
   extractor: {
-    generateRule: (payload: GenerateExtractRuleRequest) => Promise<GrpcResult>
-    run: (payload: ExtractDataRequest, token: string) => Promise<GrpcResult>
-    cancel: (token: string) => Promise<GrpcResult>
-    sendToTable: (payload: SendExtractedToTablePayload) => Promise<GrpcResult>
+    generateRule: (payload: GenerateExtractRuleRequest) => Promise<GenerateExtractRuleResponse>
+    run: (payload: ExtractDataRequest, token: string) => Promise<GrpcEmptyResponse>
+    cancel: (token: string) => Promise<GrpcEmptyResponse>
+    sendToTable: (payload: SendExtractedToTablePayload) => Promise<GrpcEmptyResponse>
   }
   processEnv: {
-    getAllKeys: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
-    setKey: (payload: SetKeyRequest) => Promise<GrpcResult>
-    deleteKey: (payload: Pick<SetKeyRequest, 'Key'>) => Promise<GrpcResult>
+    getAllKeys: (params?: GrpcEmptyRequest) => Promise<GetProcessEnvKeyResult>
+    setKey: (payload: SetKeyRequest) => Promise<GrpcEmptyResponse>
+    deleteKey: (payload: Pick<SetKeyRequest, 'Key'>) => Promise<GrpcEmptyResponse>
   }
   plugin: {
-    queryYakScript: (params: QueryYakScriptRequest) => Promise<GrpcResult>
+    queryYakScript: (params: QueryYakScriptRequest) => Promise<QueryYakScriptsResponse>
     checkSyntaxFlowRuleUpdate: (params?: GrpcEmptyRequest) => Promise<CheckSyntaxFlowRuleUpdateResponse>
-    deleteByUserId: (payload: DeletePluginByUserIDRequest) => Promise<GrpcResult>
+    deleteByUserId: (payload: DeletePluginByUserIDRequest) => Promise<GrpcEmptyResponse>
   }
   script: {
-    execYakCode: (params: YakScriptParam, token: string) => Promise<GrpcResult>
+    execYakCode: (params: YakScriptParam, token: string) => Promise<GrpcEmptyResponse>
   }
   mcp: {
-    startServer: (params: StartMcpServerRequest, token: string) => Promise<GrpcResult>
+    startServer: (params: StartMcpServerRequest, token: string) => Promise<GrpcEmptyResponse>
   }
   duplex: {
-    start: (params: DuplexConnectionRequest, token: string) => Promise<GrpcResult>
-    write: (payload: DuplexConnectionRequest, token: string) => Promise<GrpcResult>
+    start: (params: DuplexConnectionRequest, token: string) => Promise<GrpcEmptyResponse>
+    write: (payload: DuplexConnectionRequest, token: string) => Promise<GrpcEmptyResponse>
   }
   socket: {
     start: () => Promise<unknown>
     close: () => Promise<unknown>
-    send: (payload: Uint8Array | string) => Promise<unknown>
+    send: (payload: API.WsRequest) => Promise<unknown>
     onMessage: (callback: (payload: Uint8Array) => void) => BridgeCleanup
     onOpen: (callback: () => void) => BridgeCleanup
     onClose: (callback: () => void) => BridgeCleanup
     onError: (callback: (payload: unknown) => void) => BridgeCleanup
   }
   stream: {
-    onData: (token: string, callback: (payload: unknown) => void) => BridgeCleanup
-    onError: (token: string, callback: (payload: unknown) => void) => BridgeCleanup
-    onEnd: (token: string, callback: (payload?: unknown) => void) => BridgeCleanup
-    onceEnd: (token: string, callback: (payload?: unknown) => void) => BridgeCleanup
+    onData: (token: string, callback: (payload: any) => void) => BridgeCleanup
+    onError: (token: string, callback: (payload: any) => void) => BridgeCleanup
+    onEnd: (token: string, callback: (payload?: any) => void) => BridgeCleanup
+    onceEnd: (token: string, callback: (payload?: any) => void) => BridgeCleanup
     cancel: (apiKey: string, token: string) => Promise<unknown>
   }
   uiLayout: {
@@ -731,8 +849,8 @@ interface YakitBridge {
     onFromEngineLinkWindow: (callback: (payload: EngineLinkFromMainWindowPayload) => void) => BridgeCleanup
     clearRunnerTerminal: () => Promise<unknown>
     refreshMainMenu: () => Promise<unknown>
-    onKillOldEngineProcess: (callback: () => void) => BridgeCleanup
-    onLogoutDynamicControl: (callback: () => void) => BridgeCleanup
+    onKillOldEngineProcess: (callback: (payload?: any) => void) => BridgeCleanup
+    onLogoutDynamicControl: (callback: (payload?: any) => void) => BridgeCleanup
     requestSignOut: () => Promise<unknown>
     onSignOutRequested: (callback: () => void) => BridgeCleanup
     onJudgeLicenseLogin: (callback: () => void) => BridgeCleanup
@@ -741,23 +859,23 @@ interface YakitBridge {
     onSwitchConnectionRefresh: (callback: (value: boolean) => void) => BridgeCleanup
     onOpenScreenCapModal: (callback: () => void) => BridgeCleanup
     requestOpenScreenCapModal: () => Promise<unknown>
-    isScreenRecorderReady: (params?: GrpcEmptyRequest) => Promise<GrpcResult>
+    isScreenRecorderReady: (params?: GrpcEmptyRequest) => Promise<IsScrecorderReadyResponse>
     cancelScreenRecorder: (token: string) => Promise<unknown>
     activateScreenshot: () => Promise<unknown>
     onStartYaklangEngineError: (callback: (error: string) => void) => BridgeCleanup
   }
   project: {
-    setCurrentProject: (params: SetCurrentProjectRequest) => Promise<GrpcResult>
-    getCurrentProjectEx: (params: GetCurrentProjectExRequest) => Promise<GrpcResult>
-    getSSAWorkbenchDashboard: (params: GetSSAWorkbenchDashboardRequest) => Promise<GrpcResult>
-    getDefaultProjectEx: (params: GetDefaultProjectExRequest) => Promise<GrpcResult>
-    getProjects: (params: ProjectParamsProp) => Promise<GrpcResult>
-    exportProject: (params: ExportProjectParams, token: string) => Promise<GrpcResult>
-    cancelExportProject: (token: string) => Promise<GrpcResult>
+    setCurrentProject: (params: SetCurrentProjectRequest) => Promise<GrpcEmptyResponse>
+    getCurrentProjectEx: (params: GetCurrentProjectExRequest) => Promise<ProjectDescription>
+    getSSAWorkbenchDashboard: (params: GetSSAWorkbenchDashboardRequest) => Promise<GetSSAWorkbenchDashboardResponse>
+    getDefaultProjectEx: (params: GetDefaultProjectExRequest) => Promise<ProjectDescription>
+    getProjects: (params: ProjectParamsProp) => Promise<ProjectsResponse>
+    exportProject: (params: ExportProjectParams, token: string) => Promise<unknown>
+    cancelExportProject: (token: string) => Promise<unknown>
   }
   codec: {
     run: (params: CodecRunParams) => Promise<CodecRunResult>
-    autoDecode: (payload: AutoDecodeRequest) => Promise<GrpcResult>
+    autoDecode: (payload: AutoDecodeRequest) => Promise<AutoDecodeResponse>
     mutateHttpRequest: (payload: MutateHTTPRequestParams) => Promise<MutateHTTPRequestResponse>
   }
   fileSystem: {

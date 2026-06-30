@@ -458,7 +458,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       PemBytes: StringToUint8Array(info.tls ? info.caPem || '' : ''),
       Port: parseInt(info.port),
       Mode: 'remote',
-    }
+    } as unknown as YaklangEngineWatchDogCredential
     setCredential(obj as unknown as YaklangEngineWatchDogCredential)
     yakitApp.updateCredential({ credential: obj })
     onStartLinkEngine()
@@ -994,7 +994,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             PemBytes: StringToUint8Array(res?.Result || ''),
             Port: resultObj.port,
             Mode: 'remote',
-          }
+          } as unknown as YaklangEngineWatchDogCredential
           setCredential(obj as unknown as YaklangEngineWatchDogCredential)
           yakitApp.updateCredential({ credential: obj })
           onStartLinkEngine(true)

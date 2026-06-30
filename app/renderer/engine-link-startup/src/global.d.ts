@@ -28,8 +28,10 @@ type YakitAuthInfo = import('./pages/StartupPage/components/RemoteEngine/RemoteE
 type CheckAllowSecretLocal = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').CheckAllowSecretLocal
 type FixupDatabase = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').FixupDatabase
 type ReclaimDatabaseSpace = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').ReclaimDatabaseSpace
-type AllowSecretLocalExecResult = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').AllowSecretLocalExecResult
-type FixupDatabaseExecResult = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').FixupDatabaseExecResult
+type AllowSecretLocalExecResult =
+  import('./pages/StartupPage/components/LocalEngine/LocalEngineType').AllowSecretLocalExecResult
+type FixupDatabaseExecResult =
+  import('./pages/StartupPage/components/LocalEngine/LocalEngineType').FixupDatabaseExecResult
 type StartupExecResult = import('./pages/StartupPage/components/LocalEngine/LocalEngineType').ExecResult
 
 interface CredentialUpdatePayload {
@@ -105,9 +107,9 @@ interface YakitBridge {
     getText: () => Promise<string>
   }
   cache: {
-    setLocalCache: (key: string, value: unknown) => Promise<unknown>
-    getLocalCache: (key: string) => Promise<unknown>
-    getRemoteKey: (key: string) => Promise<unknown>
+    setLocalCache: (key: string, value: any) => Promise<unknown>
+    getLocalCache: (key: string) => Promise<any>
+    getRemoteKey: (key: string) => Promise<any>
     setRemoteKey: (key: string, value: string) => Promise<unknown>
     setRemoteKeyWithTTL: (key: string, value: string, ttl: number) => Promise<unknown>
   }
@@ -153,12 +155,12 @@ interface YakitBridge {
     calcEngineSha265: () => Promise<string[]>
     startSecretLocalYaklangEngine: (params: StartLocalEngine) => Promise<StartupExecResult>
     echo: (payload: EchoPayload) => Promise<EchoResult>
-    cancelAllTasks: () => Promise<unknown>
-    killYakGrpc: (pid: number) => Promise<unknown>
+    cancelAllTasks: () => Promise<any>
+    killYakGrpc: (pid: number) => Promise<any>
     listYakGrpc: () => Promise<YakProcessInfo[]>
     fetchYaklangEngineAddr: () => Promise<YaklangEngineAddr>
-    outputLogToWelcomeConsole: (message: string) => Promise<unknown>
-    connectYaklangEngine: (credential: YaklangEngineWatchDogCredential) => Promise<unknown>
+    outputLogToWelcomeConsole: (message: string) => Promise<unknanyown>
+    connectYaklangEngine: (credential: YaklangEngineWatchDogCredential) => Promise<any>
     getRemoteAuthAll: () => Promise<YakitAuthInfo[]>
     saveRemoteAuth: (params: YakitAuthInfo) => Promise<unknown>
     removeRemoteAuth: (name: string) => Promise<unknown>

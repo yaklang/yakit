@@ -67,7 +67,7 @@ export const grpcExportProject: APIFunc<ExportProjectRequest, null> = (params, h
     const value = omit(params, 'version')
     yakitProject
       .exportProject(value, token)
-      .then(resolve)
+      .then(() => resolve(null))
       .catch((e) => {
         if (!hiddenError) yakitNotify('error', tOriginal('LayoutUtils.grpcExportProjectFailed', { error: String(e) }))
         reject(e)
@@ -79,7 +79,7 @@ export const grpcCancelExportProject: APIFunc<string, null> = (token, hiddenErro
   return new Promise((resolve, reject) => {
     yakitProject
       .cancelExportProject(token)
-      .then(resolve)
+      .then(() => resolve(null))
       .catch((e) => {
         if (!hiddenError)
           yakitNotify('error', tOriginal('LayoutUtils.grpcCancelExportProjectFailed', { error: String(e) }))

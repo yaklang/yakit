@@ -2828,7 +2828,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   const singleRead = useMemoizedFn((info: LatestRiskInfo) => {
     yakitRisk
       .setInfoRead({ AfterId: fetchNode.current, Ids: [info.Id] })
-      .then((res: Risk) => {
+      .then(() => {
         const newUnread = risks.Unread - 1 > 0 ? risks.Unread - 1 : 0
         const newRiskTotal = risks.NewRiskTotal - 1 > 0 ? risks.NewRiskTotal - 1 : 0
         setRisks({
@@ -2869,7 +2869,7 @@ const UIOpRisk: React.FC<UIOpRiskProp> = React.memo((props) => {
   const allRead = useMemoizedFn(() => {
     yakitRisk
       .setInfoRead({ Ids: [] })
-      .then((res: Risk) => {
+      .then(() => {
         setRisks({
           ...risks,
           Unread: 0,

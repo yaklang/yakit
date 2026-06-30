@@ -167,7 +167,7 @@ export const ConfigGlobalReverse = React.memo(() => {
   // }, [addr, password, ok])
 
   const updateIface = useMemoizedFn(() => {
-    yakitReverse.availableLocalAddr({}).then((data: { Interfaces: NetInterface[] }) => {
+    yakitReverse.availableLocalAddr({}).then((data) => {
       const arr = (data.Interfaces || []).filter((i) => i.IP !== '127.0.0.1')
       setIfaces(arr)
     })
