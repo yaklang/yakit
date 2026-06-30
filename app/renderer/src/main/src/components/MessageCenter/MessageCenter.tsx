@@ -15,7 +15,6 @@ import { failed, success, warn, info, yakitNotify } from '@/utils/notification'
 import classNames from 'classnames'
 import { YakitButton, YakitButtonProp } from '../yakitUI/YakitButton/YakitButton'
 import { Resizable } from 're-resizable'
-import YakitTabs from '../yakitUI/YakitTabs/YakitTabs'
 import ReactResizeDetector from 'react-resize-detector'
 import { formatTimestampJudge } from '@/utils/timeUtil'
 import { RemoveIcon } from '@/assets/newIcon'
@@ -48,6 +47,7 @@ import {
 } from '@/pages/softwareSettings/ProjectManage'
 import { YakitHint } from '../yakitUI/YakitHint/YakitHint'
 import moment from 'moment'
+import PluginTabs from '../businessUI/PluginTabs/PluginTabs'
 const { ipcRenderer } = window.require('electron')
 
 export interface MessageItemProps {
@@ -768,7 +768,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
             <YakitButton size="small" type="text2" icon={<RemoveIcon />} onClick={() => setVisible(false)} />
           </div>
         </div>
-        <YakitTabs
+        <PluginTabs
           activeKey={activeKey}
           onChange={(v: any) => setActiveKey(v)}
           tabBarStyle={{ marginBottom: 5 }}
@@ -788,7 +788,7 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
             </>
           }
         >
-          <YakitTabs.YakitTabPane
+          <PluginTabs.TabPane
             tab={
               <div className={styles['info-tab']}>
                 {t('MessageCenter.unread')}
@@ -798,11 +798,11 @@ export const MessageCenterModal: React.FC<MessageCenterModalProps> = (props) => 
             key={'unread'}
           >
             {virtualList()}
-          </YakitTabs.YakitTabPane>
-          <YakitTabs.YakitTabPane tab={t('MessageCenter.all')} key={'all'}>
+          </PluginTabs.TabPane>
+          <PluginTabs.TabPane tab={t('MessageCenter.all')} key={'all'}>
             {virtualList()}
-          </YakitTabs.YakitTabPane>
-        </YakitTabs>
+          </PluginTabs.TabPane>
+        </PluginTabs>
       </div>
     </Resizable>
   )

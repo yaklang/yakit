@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ShellType, WebShellDetail } from '@/pages/webShell/models'
 import { WebShellURLTreeAndTable } from '@/pages/webShell/WebShellTreeAndTable'
-import YakitTabs from '@/components/yakitUI/YakitTabs/YakitTabs'
 import { CVXterm } from '@/components/CVXterm'
 import { TERMINAL_INPUT_KEY, YakitCVXterm } from '@/components/yakitUI/YakitCVXterm/YakitCVXterm'
 import { useMemoizedFn, useUpdateEffect } from 'ahooks'
@@ -12,6 +11,7 @@ import ReactResizeDetector from 'react-resize-detector'
 import path from 'path'
 import { YakURL } from '@/pages/yakURLTree/data'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 
 interface MsgProps {
   arch: string
@@ -81,7 +81,7 @@ export const WebShellDetailOpt: React.FC<WebShellDetailOptProps> = (props) => {
               const helloMsg = `Arch: ${msg.arch}
 OS: ${msg.osInfo}
 LocalIP: ${msg.localIp}
-                            
+
 ${msg.currentPath}`
               setDefaultXterm(helloMsg + '>')
               const sortedKeys = Object.keys(obj.msg).sort((a, b) => obj.msg[a].length - obj.msg[b].length)
@@ -98,7 +98,7 @@ ${msg.currentPath}`
           } else {
             let obj = JSON.parse(new Buffer(r.Data, 'utf8').toString())
             setDefaultPath(obj.CurrentDir)
-            const helloMsg = `OS: ${obj.OS}        
+            const helloMsg = `OS: ${obj.OS}
 ${obj.CurrentDir}`
 
             setDefaultXterm(helloMsg + '>')
@@ -164,13 +164,13 @@ ${obj.CurrentDir}`
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
-      <YakitTabs
+      <PluginTabs
         activeKey={activeKey}
         onChange={(v) => setActiveKey(v)}
-        className="scan-port-tabs no-theme-tabs"
+        className="scan-port-tabs"
         tabBarStyle={{ marginBottom: 5 }}
       >
-        <YakitTabs.YakitTabPane tab={'基本信息'} key={'basicInfo'}>
+        <PluginTabs.TabPane tab={'基本信息'} key={'basicInfo'}>
           <div style={{ overflow: 'auto', height: '100%' }}>
             {shellType === 'Behinder' ? (
               <>
@@ -182,8 +182,8 @@ ${obj.CurrentDir}`
               </>
             )}
           </div>
-        </YakitTabs.YakitTabPane>
-        <YakitTabs.YakitTabPane tab={'虚拟终端'} key={'vcmd'}>
+        </PluginTabs.TabPane>
+        <PluginTabs.TabPane tab={'虚拟终端'} key={'vcmd'}>
           <div style={{ height: '100%', width: '100%' }}>
             <ReactResizeDetector
               onResize={(width, height) => {
@@ -233,19 +233,19 @@ ${obj.CurrentDir}`
               }}
             />
           </div>
-        </YakitTabs.YakitTabPane>
-        <YakitTabs.YakitTabPane tab={'文件管理'} key={'fileOpt'}>
+        </PluginTabs.TabPane>
+        <PluginTabs.TabPane tab={'文件管理'} key={'fileOpt'}>
           <WebShellURLTreeAndTable
             Id={props.webshellInfo.Id}
             CurrentPath={defaultPath}
             shellType={props.webshellInfo.ShellType as ShellType}
           />
-        </YakitTabs.YakitTabPane>
-        <YakitTabs.YakitTabPane tab={'数据库管理'} key={'databaseOpt'}>
+        </PluginTabs.TabPane>
+        <PluginTabs.TabPane tab={'数据库管理'} key={'databaseOpt'}>
           {props.webshellInfo.Url}
           {props.webshellInfo.ShellType}
-        </YakitTabs.YakitTabPane>
-      </YakitTabs>
+        </PluginTabs.TabPane>
+      </PluginTabs>
     </div>
   )
 }

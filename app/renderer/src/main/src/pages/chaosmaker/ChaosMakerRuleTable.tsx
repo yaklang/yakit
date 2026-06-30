@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { Space, Tag } from 'antd'
-import YakitTabs from '@/components/yakitUI/YakitTabs/YakitTabs'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import { ChaosMakerRuleGroup } from '@/pages/chaosmaker/ChaosMaker'
@@ -17,6 +16,7 @@ import { ChaosMakerOperators, ExecuteChaosMakerRuleRequest } from '@/pages/chaos
 import { failed } from '@/utils/notification'
 import { ChaosMakerRunningSteps } from '@/pages/chaosmaker/ChaosMakerRunningSteps'
 import { ChaosMakerRule } from '@/models/ChaosMaker'
+import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 
 export interface ChaosMakerRuleTableProp {
   groups?: ChaosMakerRuleGroup[]
@@ -122,8 +122,8 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
         couldBeenReset={activeTab !== 'tables'}
         onReset={props.onReset}
       />
-      <YakitTabs style={{ height: '100%' }} activeKey={activeTab} type={'card'} onChange={(e) => {}}>
-        <YakitTabs.YakitTabPane disabled={running} key="tables" tab={'规则列表'}>
+      <PluginTabs style={{ height: '100%' }} activeKey={activeTab} type={'card'} onChange={(e) => {}}>
+        <PluginTabs.TabPane disabled={running} key="tables" tab={'规则列表'}>
           <TableVirtualResize<ChaosMakerRule>
             isRefresh={false}
             columns={
@@ -161,13 +161,13 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
               onChange: (page: number, newLimit: number) => update(page, newLimit),
             }}
           />
-        </YakitTabs.YakitTabPane>
+        </PluginTabs.TabPane>
         {running && (
-          <YakitTabs.YakitTabPane key={'steps'} tab={'运行状态'}>
+          <PluginTabs.TabPane key={'steps'} tab={'运行状态'}>
             <ChaosMakerRunningSteps params={executeParam} />
-          </YakitTabs.YakitTabPane>
+          </PluginTabs.TabPane>
         )}
-      </YakitTabs>
+      </PluginTabs>
     </AutoCard>
   )
 }
