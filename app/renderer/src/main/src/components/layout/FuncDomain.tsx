@@ -716,7 +716,7 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                     dropdown={{
                       placement: 'bottom',
                       trigger: ['click'],
-                      onVisibleChange: (value: boolean) => {
+                      onOpenChange: (value: boolean) => {
                         setDynamicMenuOpen(value)
                       },
                     }}

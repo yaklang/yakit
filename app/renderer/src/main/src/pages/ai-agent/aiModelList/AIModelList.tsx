@@ -1301,8 +1301,8 @@ const AILocalModelListItem: React.FC<AILocalModelListItemProps> = React.memo((pr
                 dropdown={{
                   trigger: ['click', 'contextMenu'],
                   placement: 'bottomLeft',
-                  visible: visible,
-                  onVisibleChange: setVisible,
+                  open: visible,
+                  onOpenChange: setVisible,
                 }}
               >
                 <YakitButton

@@ -12,16 +12,25 @@ interface YakitDropdownMenuProps {
 }
 /** 可能准备写成基础组件 */
 export const YakitDropdownMenu: React.FC<YakitDropdownMenuProps> = memo((props) => {
-  const { dropdown: { overlayClassName, ...restProps } = {}, menu, children } = props
+  const {
+    dropdown: { overlayClassName, ...restProps } = {},
+    menu: { menuWrapperClassName, ...resetMenu },
+    children,
+  } = props
 
   const overlay = useMemo(() => {
-    return <YakitMenu {...menu} />
-  }, [menu])
+    return (
+      <YakitMenu
+        {...resetMenu}
+        menuWrapperClassName={classNames(styles['yakit-dropdown-menu-div'], menuWrapperClassName)}
+      />
+    )
+  }, [resetMenu])
 
   return (
     <Dropdown
       {...restProps}
-      overlay={overlay}
+      popupRender={() => overlay}
       overlayClassName={classNames(styles['yakit-dropdown-menu'], overlayClassName)}
     >
       {children}

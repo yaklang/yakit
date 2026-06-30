@@ -813,7 +813,7 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
   return (
     <div className={classNames(style['mitm-plugin-group'], wrapperClassName)} ref={pluginGroupRef}>
       <Dropdown
-        overlay={
+        popupRender={() => (
           <PluginGroupList
             pugGroup={pugGroup}
             isOnline={isOnline}
@@ -849,9 +849,9 @@ export const PluginGroup: React.FC<PluginGroupProps> = React.memo((props) => {
             }}
             closePluginGroupList={() => setVisible(false)}
           />
-        }
-        visible={visible}
-        onVisibleChange={setVisible}
+        )}
+        open={visible}
+        onOpenChange={setVisible}
         overlayStyle={{ borderRadius: 4, width: 200 }}
       >
         <div

@@ -76,10 +76,10 @@ const AddKnowledgenBaseDropdownMenu: FC<{
         dropdown={{
           trigger: ['click'],
           placement: 'bottomRight',
-          onVisibleChange: (v) => {
+          onOpenChange: (v) => {
             setCreateMenuOpen(v)
           },
-          visible: createMenuOpen,
+          open: createMenuOpen,
         }}
       >
         <YakitButton

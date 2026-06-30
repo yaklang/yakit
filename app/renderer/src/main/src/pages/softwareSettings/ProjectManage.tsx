@@ -299,7 +299,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               dropdown={{
                 trigger: ['click'],
                 overlayClassName: styles['dropdown-menu-filter-wrapper'],
-                onVisibleChange: (open) => setTypeShow(open),
+                onOpenChange: (open) => setTypeShow(open),
               }}
               menu={{
                 data: typeFilter,
@@ -451,7 +451,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               dropdown={{
                 trigger: ['click'],
                 overlayClassName: styles['dropdown-menu-filter-wrapper'],
-                onVisibleChange: (open) => setTimeShow(open),
+                onOpenChange: (open) => setTimeShow(open),
               }}
               menu={{
                 data: timeFilter,
@@ -516,7 +516,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               trigger: ['click'],
               placement: 'bottomRight',
               overlayClassName: styles['dropdown-menu-filter-wrapper'],
-              onVisibleChange: (open) => setOperateShow(open ? +Id : -1),
+              onOpenChange: (open) => setOperateShow(open ? +Id : -1),
             }}
             menu={{
               data: [
@@ -552,7 +552,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
               trigger: ['click'],
               placement: 'bottomRight',
               overlayClassName: styles['dropdown-menu-filter-wrapper'],
-              onVisibleChange: (open) => setOperateShow(open ? +Id : -1),
+              onOpenChange: (open) => setOperateShow(open ? +Id : -1),
             }}
             menu={{
               data: [
@@ -1202,7 +1202,7 @@ const ProjectManage: React.FC<ProjectManageProp> = memo((props) => {
                   dropdown={{
                     placement: 'bottomRight',
                     overlayClassName: styles['dropdown-menu-filter-wrapper'],
-                    onVisibleChange: (open) => setHeaderShow(open),
+                    onOpenChange: (open) => setHeaderShow(open),
                   }}
                   menu={{
                     data: [
@@ -2623,7 +2623,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = memo((props) => {
   }, [menu])
 
   return (
-    <Dropdown {...dropdown} overlay={overlay}>
+    <Dropdown {...dropdown} popupRender={() => overlay}>
       {children}
     </Dropdown>
   )
