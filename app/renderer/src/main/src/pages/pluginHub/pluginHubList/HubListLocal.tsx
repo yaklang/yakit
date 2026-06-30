@@ -1386,7 +1386,7 @@ export const HubListLocal: React.FC<HubListLocalProps> = memo((props) => {
               ) : listTotal > 0 ? (
                 <YakitEmpty
                   image={emptyImageTarget}
-                  imageStyle={{ margin: '0 auto 24px', width: 274, height: 180 }}
+                  styles={{ image: { margin: '0 auto 24px', width: 274, height: 180 } }}
                   title={t('YakitEmpty.searchEmpty')}
                   className={styles['hub-list-empty']}
                 />

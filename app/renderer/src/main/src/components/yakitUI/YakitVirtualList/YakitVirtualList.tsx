@@ -420,11 +420,11 @@ export const ListSelectFilterPopover: React.FC<ListSelectFilterPopoverProps> = R
           {option.length > 0 && list.length === 0 && (
             <YakitEmpty
               image={emptyImageTarget}
-              imageStyle={{ margin: '24px auto 12px', width: 160 }}
+              styles={{ image: { margin: '24px auto 12px', width: 160 } }}
               title={t('YakitEmpty.searchEmpty')}
             />
           )}
-          {option.length === 0 && <YakitEmpty imageStyle={{ margin: '24px auto 12px', width: 160 }} />}
+          {option.length === 0 && <YakitEmpty styles={{ image: { margin: '24px auto 12px', width: 160 } }} />}
           <div className={styles['option-list-content']}>
             <div
               ref={containerRef}

@@ -757,7 +757,7 @@ export const OnlinePayloadGroupList: React.FC<OnlinePayloadGroupListProps> = (pr
         <>
           <YakitEmpty
             image={<img src={powerEmptyImage} alt="" />}
-            imageStyle={{ width: 220, height: 150, margin: 'auto' }}
+            styles={{ image: { width: 220, height: 150, margin: 'auto' } }}
             title="暂无查看权限"
             description="登录后即可查看"
           />

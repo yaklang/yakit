@@ -98,7 +98,9 @@ const EnterpriseJudgeLogin: React.FC<EnterpriseJudgeLoginProps> = (props) => {
     <>
       {loading ? (
         <div style={{ paddingTop: 10, textAlign: 'center' }}>
-          <YakitSpin tip={t('EnterpriseJudgeLogin.verifyingLicense')}></YakitSpin>
+          <YakitSpin tip={t('EnterpriseJudgeLogin.verifyingLicense')}>
+            <div style={{ minHeight: 100 }} /> {/* 占位 */}
+          </YakitSpin>
         </div>
       ) : (
         <>

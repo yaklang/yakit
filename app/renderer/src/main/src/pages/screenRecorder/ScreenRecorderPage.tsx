@@ -54,7 +54,7 @@ export const ScreenRecorderPage: React.FC<ScreenRecorderPageProp> = (props) => {
         <div className={styles['not-installed-empty']}>
           <YakitEmpty
             image={<img src={screcorderEmptyImageTarget} alt="" />}
-            imageStyle={{ height: 200, margin: 'auto', marginBottom: 24 }}
+            styles={{ image: { height: 200, margin: 'auto', marginBottom: 24 } }}
             title={<div style={{ fontSize: 14 }}>{t('ScreenRecorderPage.notInstalled')}</div>}
             description={t('ScreenRecorderPage.installHint')}
           />
