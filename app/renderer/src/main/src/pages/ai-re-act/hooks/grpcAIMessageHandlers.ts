@@ -1709,12 +1709,11 @@ const handlePlanReview: AIMessageHandler = (request) => {
 }
 /** Type='detached_plan_require' detached plan review */
 const handleDetachedPlanReview: AIMessageHandler = (request) => {
-  const { res, info, getRequest, pushLog, review, setContentMap } = request
-  if (res.Type !== 'detached_plan_require') return
+  const { res, info, pushLog, review } = request
+  if (res.Type !== 'detached_plan_require' || res.NodeId !== 'detached-plan') return
 
-  if (res.NodeId !== 'detached-plan') return
   // 历史数据-grpc流数据在任务规划下无效，不处理
-  if (res.IsSync && info.chatType === 'task') return
+  if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const data = JSON.parse(ipcContent) as AIAgentGrpcApi.DetachedPlanRequire
@@ -1747,28 +1746,8 @@ const handleDetachedPlanReview: AIMessageHandler = (request) => {
   }
   if (res.IsSync) return
 
-  const isAuto = isAutoExecuteReviewContinue({ type: res.Type, getFunc: getRequest })
-  if (isAuto) {
-    chatData.data.selected = JSON.stringify({ suggestion: 'continue' })
-    chatData.data.optionValue = 'continue'
-  }
-  review?.handleSetReview && review.handleSetReview(isAuto ? undefined : chatData)
-  if (info.chatType === 'task') {
-    if (isAuto) {
-      review?.handleReviewDataToUI && review.handleReviewDataToUI(cloneDeep(chatData))
-    } else {
-      review?.onReview && review.onReview(cloneDeep(chatData))
-    }
-  } else if (info.chatType === 'reAct') {
-    setContentMap(chatData.id, cloneDeep(chatData))
-    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
-      mapKey: chatData.id,
-      type: chatData.type,
-      chatType: chatData.chatType,
-    })
-    // if (!isAuto) {
+  if (info.chatType === 'reAct') {
     review?.onReview && review.onReview(cloneDeep(chatData))
-    // }
   }
 }
 /** Type='plan_task_analysis' plan-review的补充信息 */
