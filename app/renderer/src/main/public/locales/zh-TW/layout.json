@@ -263,6 +263,9 @@
     "setPrivateDomainFailed": "設定私有域失敗: {{error}}",
     "remoteControlClosing": "遠端控制關閉中..."
   },
+  "CeUserMenu": {
+    "tokenConsumption": "Token 消耗"
+  },
   "FuncDomain": {
     "remoteInProgress": "遠端中",
     "signOut": "退出登入",

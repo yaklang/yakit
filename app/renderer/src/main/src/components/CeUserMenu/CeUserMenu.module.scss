@@ -1,0 +1,187 @@
+@import '../../theme/themeify.scss';
+
+@mixin generateMenuSelect($type: 'primary') {
+  --menu-select-color: #{fetch-color($type, 'color-5')};
+  --menu-select-icon-color: #{fetch-color($type, 'color-5')};
+  --menu-select-background: #{fetch-color($type, 'color-1')};
+}
+
+@mixin generateItemPrimary($type: 'primary') {
+  --menu-color: #{fetch-color($type, 'color-5')};
+  --menu-icon-color: #{fetch-color($type, 'color-5')};
+  --menu-background: var(--Colors-Use-Basic-Background);
+  --menu-active-color: var(--Colors-Use-Basic-Background);
+  --menu-active-icon-color: var(--Colors-Use-Basic-Background);
+  --menu-active-background: #{fetch-color($type, 'color-6')};
+  @include generateMenuSelect($type);
+}
+
+.ce-user-menu-content {
+  width: 216px;
+  padding: 8px 4px;
+  background: var(--Colors-Use-Basic-Background);
+  --menu-color: var(--Colors-Use-Neutral-Text-1-Title);
+  --menu-icon-color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  --menu-background: var(--Colors-Use-Basic-Background);
+  --menu-active-color: #{fetch-color('primary', 'color-7')};
+  --menu-active-icon-color: var(--Colors-Use-Basic-Background);
+  --menu-active-background: #{fetch-color('primary', 'color-5')};
+  @include generateMenuSelect();
+}
+
+.ce-user-menu-divider {
+  height: 1px;
+  margin: 8px 0;
+  background: var(--Colors-Use-Neutral-Border);
+}
+
+.ce-user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--menu-color);
+  background-color: var(--menu-background);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+
+  &:hover {
+    color: var(--menu-active-color);
+    background-color: var(--menu-active-background);
+
+    .ce-user-menu-item-icon {
+      color: var(--menu-active-icon-color);
+    }
+  }
+
+  path {
+    stroke-width: 1.5px;
+  }
+}
+
+.ce-user-menu-item-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--menu-icon-color);
+  svg {
+    height: 16px;
+    width: 16px;
+  }
+}
+
+.ce-user-menu-item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+.ce-user-menu-item-danger {
+  @include generateItemPrimary('danger');
+}
+
+.ce-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 0px;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  // &:hover {
+  //   background: var(--Colors-Use-Main-Focus);
+  // }
+}
+.ce-user-info-avatar-wrapper {
+  display: flex;
+  padding: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+}
+.ce-user-info-name-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ce-user-info-name {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+}
+
+.ce-user-info-email {
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+.ce-user-info-token {
+  display: flex;
+  padding: 0 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  align-self: stretch;
+}
+
+.ce-user-info-progress-fill {
+}
+
+.ce-user-info-token-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.ce-user-info-token-label {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+.ce-user-info-token-percent {
+  margin-left: 4px;
+  color: var(--Colors-Use-Neutral-Text-4-Help-text);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
+
+.ce-user-info-token-value {
+  color: var(--Colors-Use-Neutral-Text-1-Title);
+  text-align: center;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+}
