@@ -4,5 +4,34 @@
   "quickStart": "快速開始",
   "openLocalFolder": "打開本地文件夾",
   "recentlyOpened": "最近打開",
-  "newChat": "新建會話"
+  "newChat": "新建會話",
+  "styleToggle": {
+    "code": "程式碼審計",
+    "skill": "Skill"
+  },
+  "onboarding": {
+    "title": "AI 程式碼審計引導",
+    "subtitle": "按步驟選擇目錄與審計風格，即可開始審計。",
+    "stepSelectDirectory": "選擇目錄",
+    "stepSelectStyle": "選擇審計風格",
+    "stepStart": "開始",
+    "selectDirectory": "選擇需要審計的目錄",
+    "selectDirectoryFirst": "請先選擇需要審計的目錄",
+    "currentSelected": "目前選擇：",
+    "historyEmpty": "暫無歷史目錄",
+    "selectStyle": "選擇審計風格",
+    "styleCodeTitle": "程式碼審計",
+    "styleCodeDesc": "面向複雜業務邏輯、跨檔案關聯與自然語言風險解釋。",
+    "styleSkillTitle": "Skill 安全分析",
+    "styleSkillDesc": "針對 Skill 與規則化審計場景做特化分析。",
+    "summaryDirectory": "審計目錄",
+    "summaryStyle": "審計風格",
+    "summaryMessage": "預設訊息",
+    "notSelected": "未選擇",
+    "startHint": "點擊開始後，將自動發送「開始審計」並鎖定目前風格，開始後不可切換。",
+    "cancel": "取消",
+    "prev": "上一步",
+    "next": "下一步",
+    "start": "開始"
+  }
 }

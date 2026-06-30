@@ -18,6 +18,7 @@ import { FilterLibRuleKind } from '@/pages/ruleManagement/RuleManagementType'
 import { JSONParseLog } from '@/utils/tool'
 import { configManagementTabType } from '.'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
+import { IrifyAiCodeAuditStyle } from '@/constants/focusMode'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'store')
 
@@ -283,6 +284,9 @@ export interface AuditCodePageInfoProps {
   // 只看新增
   isShowCompare?: boolean
   refreshRiskOrRuleList?: boolean
+  /** Irify「AI 代码审计」入口风格：'code'=AI 代码审计；'skill'=AI Skill 安全分析。
+   *  仅用于 Irify_AI_Code_Audit 页面，决定默认 focus mode loop 与引导蒙版的预选。 */
+  auditStyle?: IrifyAiCodeAuditStyle
 }
 
 export interface CodeScanPageInfoProps {

@@ -58,3 +58,8 @@
   align-self: stretch;
   width: 100%;
 }
+
+/* 右下角「代码审计 / Skill」二选一切换：替代被锁死的 AIFocusMode 下拉 */
+.auditStyleToggle {
+  flex-shrink: 0;
+}

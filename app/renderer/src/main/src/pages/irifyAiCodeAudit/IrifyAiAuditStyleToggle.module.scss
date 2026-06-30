@@ -1,0 +1,36 @@
+.audit-style-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 6px;
+  background: var(--Colors-Use-Neutral-Bg-Hover);
+  border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
+  user-select: none;
+}
+
+.toggle-item {
+  cursor: pointer;
+  padding: 2px 10px;
+  border-radius: 4px;
+  color: var(--Colors-Use-Neutral-Text-3-Secondary);
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.toggle-item-active {
+  color: var(--Colors-Use-Main-Primary);
+  background: var(--Colors-Use-Basic-Background);
+  font-weight: 500;
+}
+
+.locked {
+  .toggle-item {
+    cursor: not-allowed;
+    opacity: 0.85;
+  }
+}
