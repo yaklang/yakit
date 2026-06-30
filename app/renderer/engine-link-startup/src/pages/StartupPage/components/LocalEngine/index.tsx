@@ -118,10 +118,6 @@ export const LocalEngine: React.FC<LocalEngineProps> = memo(
       } catch (error) {
         // 旧调用直接跳过
         if (callId !== latestCheckCallIdRef.current) return
-        if (yakitStatusRef.current === 'break') {
-          setLog(['已主动断开, 请点击手动连接引擎'])
-          setYakitStatus('break')
-        }
       }
     })
 
