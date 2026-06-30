@@ -1,12 +1,19 @@
-import React, { forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import React, { type FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
-import { OutlineArrowrightIcon, OutlineHandIcon, OutlineWarpIcon, OutlineXIcon } from '@/assets/icon/outline'
+import {
+  OutlineArrowrightIcon,
+  OutlineExitIcon,
+  OutlineHandIcon,
+  OutlineWarpIcon,
+  OutlineXIcon,
+} from '@/assets/icon/outline'
 import { useCountDown, useCreation, useMemoizedFn } from 'ahooks'
 import { SolidAnnotationIcon, SolidVariableIcon } from '@/assets/icon/solid'
 import { Form, Input } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { yakitNotify } from '@/utils/notification'
 import cloneDeep from 'lodash/cloneDeep'
+import isEqual from 'lodash/isEqual'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import AIPlanReviewTree from '@/pages/ai-agent/aiPlanReviewTree/AIPlanReviewTree'
 import { handleFlatAITree } from '../../../ai-re-act/hooks/utils'
@@ -17,29 +24,39 @@ import { YakParamProps } from '@/pages/plugins/pluginsType'
 import { ExecuteEnterNodeByPluginParams } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeard'
 import { CustomPluginExecuteFormValue } from '@/pages/plugins/operator/localPluginExecuteDetailHeard/LocalPluginExecuteDetailHeardType'
 import { getValueByType } from '@/pages/plugins/editDetails/utils'
-import { AIAgentGrpcApi } from '../../../ai-re-act/hooks/grpcApi'
+import { AIAgentGrpcApi, AIInputEventSyncTypeEnum } from '../../../ai-re-act/hooks/grpcApi'
 
 import classNames from 'classnames'
 import styles from './AIReActChatReview.module.scss'
 import { AIChatIPCSendParams } from '@/pages/ai-agent/useContext/ChatIPCContent/ChatIPCContent'
 import { OutlineHandleColorsIcon, ColorsOutlineWarpIcon } from '@/assets/icon/colors'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
-import { AIReviewType } from '../../../ai-re-act/hooks/aiRender'
+import {
+  AIChatQSData,
+  AIChatQSDataTypeEnum,
+  AIReviewType,
+  UIDetachedPlanReview,
+} from '../../../ai-re-act/hooks/aiRender'
 import { AIForge } from '@/pages/ai-agent/type/forge'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { randomString } from '@/utils/randomUtil'
+import useChatIPCDispatcher from '@/pages/ai-agent/useContext/ChatIPCContent/useDispatcher'
 
 export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((props) => {
   const {
-    info: { type, data: review },
+    info,
     onSendAI,
+    onSendSyncMessage,
     planReviewTreeKeywordsMap,
     isEmbedded,
     renderFooterExtra,
     expand,
     className,
   } = props
+  const { type, data: review } = info
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { chatIPCData } = useChatIPCStore()
+  const { chatIPCEvents } = useChatIPCDispatcher()
   const [reviewTreeOption, setReviewTreeOption] = useState<AIAgentGrpcApi.ReviewSelector>()
   const [reviewTrees, setReviewTrees] = useState<AIAgentGrpcApi.PlanTask[]>([])
   const [currentPlansId, setCurrentPlansId] = useState<string>('')
@@ -47,10 +64,36 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   const forgeReviewFormRef = useRef<ForgeReviewFormRefProps>({ validateFields: () => {} })
 
   const initReviewTreesRef = useRef<AIAgentGrpcApi.PlanTask[]>([])
+  const pendingPlanReviewRef = useRef<AIChatQSData | null>(null)
+
+  /** detached_plan_require 到来时，自动通过尚未提交的 plan_review_require */
+  useEffect(() => {
+    const selected = (info.data as AIReviewType)?.selected
+
+    if (info.type === AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE) {
+      pendingPlanReviewRef.current = selected ? null : info
+      return
+    }
+
+    if (
+      info.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE &&
+      pendingPlanReviewRef.current &&
+      !(pendingPlanReviewRef.current.data as AIReviewType)?.selected
+    ) {
+      const planReview = pendingPlanReviewRef.current.data as AIReviewType
+      onSendAI({
+        value: JSON.stringify({ suggestion: 'continue' }),
+        id: planReview.id,
+        optionValue: 'continue',
+      })
+      pendingPlanReviewRef.current = null
+    }
+  }, [info, onSendAI])
 
   useEffect(() => {
     switch (type) {
       case 'plan_review_require':
+      case 'detached_plan_require':
         const data = review as AIAgentGrpcApi.PlanReviewRequire
         const list: AIAgentGrpcApi.PlanTask[] = []
         handleFlatAITree(list, data.plans.root_task)
@@ -101,6 +144,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         title = t('AIReActChatReview.userPrompt')
         break
       case 'plan_review_require':
+      case 'detached_plan_require':
         title = t('AIReActChatReview.planReview')
         break
       case 'task_review_require':
@@ -223,8 +267,35 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     setEditShow(false)
   })
 
+  const submitDetachedPlan = useMemoizedFn(() => {
+    const detachedReview = review as AIAgentGrpcApi.DetachedPlanRequire
+    const syncPayload: { coordinator_id: string; plans?: AIAgentGrpcApi.DetachedPlan } = {
+      coordinator_id: detachedReview.coordinator_id,
+    }
+    const isTreeEdited = !isEqual(reviewTrees, initReviewTreesRef.current)
+    if (isTreeEdited) {
+      const [rootTask] = reviewListToTrees(reviewTrees)
+      if (rootTask) {
+        syncPayload.plans = {
+          ...detachedReview.plans,
+          root_task: rootTask as AIAgentGrpcApi.PlanTask,
+        }
+      }
+    }
+    onSendSyncMessage?.({
+      syncType: AIInputEventSyncTypeEnum.SYNC_EXECUTE_DETACHED_PLAN,
+      syncID: randomString(8),
+      SyncJsonInput: JSON.stringify(syncPayload),
+    })
+    chatIPCEvents.handleTaskReviewRelease(detachedReview.id)
+  })
+
   /** 继续执行 */
   const handleContinue = useMemoizedFn(() => {
+    if (info.type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
+      submitDetachedPlan()
+      return
+    }
     if (!isContinue) return
     const find = ((review as AIAgentGrpcApi.ToolUseReviewRequire)?.selectors || []).find(
       (item) => item.value === 'continue',
@@ -240,9 +311,13 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     const allowShowInput: AIAgentGrpcApi.ReviewSelector[] = []
     const showButton: AIAgentGrpcApi.ReviewSelector[] = []
     if (
-      ['tool_use_review_require', 'plan_review_require', 'task_review_require', 'exec_aiforge_review_require'].includes(
-        type,
-      )
+      [
+        'tool_use_review_require',
+        'plan_review_require',
+        'detached_plan_require',
+        'task_review_require',
+        'exec_aiforge_review_require',
+      ].includes(type)
     ) {
       selectors
         ?.filter((item) => item.value !== 'continue')
@@ -279,6 +354,12 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
         break
       case 'input_params':
         setForgeOption(info)
+        break
+      case 'close':
+        if (type === AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE) {
+          chatIPCEvents.handleTaskReviewRelease((review as AIReviewType).id)
+          return
+        }
         break
       default:
         if (editShow) return
@@ -321,14 +402,14 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   })
   /**审阅模式提交树,type: plan_review_require */
   const handleSubmitReviewTree = useMemoizedFn(() => {
-    if (!!reviewTreeOption) {
-      const tree = reviewListToTrees(reviewTrees)
-      const jsonInput = {
-        suggestion: reviewTreeOption.value,
-        'reviewed-task-tree': tree[0],
-      }
-      onSendAIByValue(JSON.stringify(jsonInput), reviewTreeOption.value)
+    if (!reviewTreeOption) return
+
+    const tree = reviewListToTrees(reviewTrees)
+    const jsonInput = {
+      suggestion: reviewTreeOption.value,
+      'reviewed-task-tree': tree[0],
     }
+    onSendAIByValue(JSON.stringify(jsonInput), reviewTreeOption.value)
   })
   /**智能应用用户自己修改ai得提交 */
   const handleSubmitForge = useMemoizedFn(() => {
@@ -409,7 +490,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
       (item) => item.value === 'continue',
     )
     return findIndex !== -1
-  }, [review])
+  }, [review, type])
   const onSendAIByValue = useMemoizedFn((value: string, optionValue?: string) => {
     const params: AIChatIPCSendParams = {
       value,
@@ -418,7 +499,6 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     }
     onSendAI(params)
   })
-
   const footerNode = useCreation(() => {
     const renderFooterRightExtra = () => {
       // forge和play不会同时存在

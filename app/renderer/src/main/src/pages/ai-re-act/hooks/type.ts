@@ -82,6 +82,8 @@ export interface UseYakExecResultEvents extends UseHookBaseEvents {
 export interface UseCasualChatParams extends UseHookBaseParams {
   /** 获取流接口请求参数 */
   getRequest: () => AIAgentSetting | undefined
+  /** review 触发回调事件 */
+  onReview?: (data: AIChatQSData) => void
   /** 触发 review-release 后的回调事件 */
   onReviewRelease: (id: string) => void
 }
@@ -379,6 +381,8 @@ export interface AIMessageHandlerParams extends UseHookStateFunc {
     onReviewRelease?: (id: string) => void
     /** 将 review 数据处理成需要展示的UI数据 */
     handleReviewDataToUI?: (reviewInfo: AIChatQSData) => void
+    /** 向进行中的 grpc 流发送交互消息 */
+    sendRequest?: UseTaskChatParams['sendRequest']
   }
   /** store数据 */
   getChatDataStore: UseHookBaseParams['getChatDataStore']

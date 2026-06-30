@@ -9,7 +9,10 @@ export interface AIReActTaskChatProps {
   setTimeLine: (show: boolean) => void
 }
 
-export interface AIReActTaskChatContentProps {}
+export interface AIReActTaskChatContentProps {
+  scrollToBottom: boolean
+  onScrollToBottom: () => void
+}
 
 export interface AIReActTaskChatLeftSideProps {
   leftExpand: boolean

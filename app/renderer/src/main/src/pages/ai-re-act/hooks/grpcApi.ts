@@ -160,6 +160,11 @@ export interface AIStartParams {
    * 默认：2
    */
   PlanExecTaskConcurrency?: number
+  /**
+   * 为 true 时 request_plan 走 detached plan 审阅流程；默认 false 时走旧版异步 plan-and-execute。
+   * 需配合 EnablePlan=true 才会暴露 request_plan 动作。
+   */
+  EnableDetachedPlan?: boolean
 }
 
 interface AIEnabledCapability {
@@ -221,6 +226,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_TYPE_RECOVERY_HISTORY = 'recovery_history',
   /** 获取能力相关数据 */
   SYNC_CAPABILITY_INVENTORY = 'capability_inventory_sync',
+  /** 执行分离PLAN */
+  SYNC_EXECUTE_DETACHED_PLAN = 'execute_detached_plan',
 }
 
 export interface AIInputEvent {
@@ -552,6 +559,27 @@ export declare namespace AIAgentGrpcApi {
     index: string
     keywords: string[]
     plans_id: string
+  }
+
+  /** detached plan 审阅-计划详情 */
+  export interface DetachedPlan {
+    root_task: PlanTask
+    facts: string
+    document: string
+  }
+
+  /** detached_plan_require 响应结构 */
+  export interface DetachedPlanRequire {
+    coordinator_id: string
+    detached: boolean
+    id: string
+    plan_payload: string
+    plans: DetachedPlan
+    plans_id: string
+    're-act_id': string
+    're-act_task': string
+    selectors: ReviewSelector[]
+    session_id: string
   }
 
   /**

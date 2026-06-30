@@ -11,6 +11,7 @@ import emiter from '@/utils/eventBus/eventBus'
 import classNames from 'classnames'
 import { AITaskExecutionDetails } from '@/pages/ai-agent/chatTemplate/aiTaskExecutionDetails/AITaskExecutionDetails'
 import { AIReActTaskChatContent } from '../aiReActTaskChat/AIReActTaskChat'
+import { AIReActTaskChatReviewBar } from '../aiReActTaskChat/AIReActTaskChatReviewBar'
 import useGetSetState from '@/pages/pluginHub/hooks/useGetSetState'
 import useChatIPCStore from '@/pages/ai-agent/useContext/ChatIPCContent/useStore'
 
@@ -18,14 +19,21 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const { tabBarExtraContent, emptyNode } = props
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi', 'yakitRoute'])
 
-  const { taskChat } = useChatIPCStore().chatIPCData
+  const {
+    chatIPCData: { taskChat },
+  } = useChatIPCStore()
   const [tabs, setTabs, getTabs] = useGetSetState<YakitSideTabProps['yakitTabs']>([])
   const [activeKey, setActiveKey] = useState<string>('taskContent')
+  const [scrollToBottom, setScrollToBottom] = useState(false)
 
   const isSetTaskTabRef = useRef<boolean>(false)
   const taskGoalRef = useRef<Map<string, string>>(new Map())
   const divRef = useRef<HTMLDivElement>(null)
   const [inViewport = true] = useInViewport(divRef)
+
+  const onScrollToBottom = useMemoizedFn(() => {
+    setScrollToBottom((v) => !v)
+  })
 
   useEffect(() => {
     if (inViewport) {
@@ -111,16 +119,17 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
   const tabContent = useCreation(() => {
     switch (activeKey) {
       case 'taskContent':
-        return <AIReActTaskChatContent />
+        return <AIReActTaskChatContent scrollToBottom={scrollToBottom} onScrollToBottom={onScrollToBottom} />
 
       default:
         const taskItem = tabs.find((item) => item.value === activeKey)
         const goal = taskGoalRef.current.get(activeKey)
         return <AITaskExecutionDetails taskId={activeKey} taskGoal={goal} taskName={taskItem?.label as string} />
     }
-  }, [activeKey, tabs])
+  }, [activeKey, onScrollToBottom, scrollToBottom, tabs])
+
   return (
-    <div className={styles['chat-content-wrapper']}>
+    <div className={styles['chat-content-wrapper']} ref={divRef}>
       {!!taskChat?.elements?.length || !!tabs.length ? (
         <YakitSideTab
           key={i18n.language}
@@ -139,6 +148,8 @@ export const AITaskContent: React.FC<AITaskContentProps> = React.memo((props) =>
       ) : (
         emptyNode
       )}
+
+      <AIReActTaskChatReviewBar setScrollToBottom={setScrollToBottom} />
     </div>
   )
 })

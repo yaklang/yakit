@@ -90,6 +90,7 @@ interface ReviewSelectedOption {
 /** 对 review 数据进行操作后的记录, 专用于 UI 上的历史展示 */
 export type UIPlanReview = AIAgentGrpcApi.PlanReviewRequire &
   ReviewSelectedOption & { taskExtra?: Map<string, AIAgentGrpcApi.PlanReviewRequireExtra> }
+export type UIDetachedPlanReview = AIAgentGrpcApi.DetachedPlanRequire & ReviewSelectedOption
 export type UITaskReview = AIAgentGrpcApi.TaskReviewRequire & ReviewSelectedOption
 export type UIToolUseReview = AIAgentGrpcApi.ToolUseReviewRequire & ReviewSelectedOption
 export type UIRequireUserInteractive = AIAgentGrpcApi.AIReviewRequire & ReviewSelectedOption
@@ -97,6 +98,7 @@ export type UIExecAIForgeReview = AIAgentGrpcApi.ExecForgeReview & ReviewSelecte
 
 export type AIReviewType =
   | UIPlanReview
+  | UIDetachedPlanReview
   | UITaskReview
   | UIToolUseReview
   | UIRequireUserInteractive
@@ -231,6 +233,8 @@ export enum AIChatQSDataTypeEnum {
   AI_API_REQUEST_FAILED = 'ai_api_request_failed',
   /**计划审阅 */
   PLAN_REVIEW_REQUIRE = 'plan_review_require',
+  /**detached plan 审阅 */
+  DETACHED_PLAN_REQUIRE = 'detached_plan_require',
   /**任务审阅 */
   TASK_REVIEW_REQUIRE = 'task_review_require',
   /**工具审阅 */
@@ -331,6 +335,7 @@ type ChatThought = AIChatQSDataBase<AIChatQSDataTypeEnum.THOUGHT, string>
 type ChatResult = AIChatQSDataBase<AIChatQSDataTypeEnum.RESULT, string>
 type ChatToolResult = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_RESULT, AIToolResult>
 type ChatPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.PLAN_REVIEW_REQUIRE, UIPlanReview>
+type ChatDetachedPlanReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.DETACHED_PLAN_REQUIRE, UIDetachedPlanReview>
 type ChatTaskReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TASK_REVIEW_REQUIRE, UITaskReview>
 type ChatToolUseReviewRequire = AIChatQSDataBase<AIChatQSDataTypeEnum.TOOL_USE_REVIEW_REQUIRE, UIToolUseReview>
 type ChatRequireUserInteractive = AIChatQSDataBase<
@@ -364,6 +369,7 @@ export type AIChatQSData =
   | ChatResult
   | ChatToolResult
   | ChatPlanReviewRequire
+  | ChatDetachedPlanReviewRequire
   | ChatTaskReviewRequire
   | ChatToolUseReviewRequire
   | ChatRequireUserInteractive
