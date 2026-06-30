@@ -605,7 +605,7 @@ export const NewHTTPPacketEditor: React.FC<NewHTTPPacketEditorProp> = React.memo
   const [popoverVisible, setPopoverVisible] = useState<boolean>(false)
   const editorCardRef = useRef<HTMLDivElement>(null)
   const editorCardSize = useSize(editorCardRef)
-  const isCompactTypeOptions = +(editorCardSize?.width || 0) < 580
+  const isCompactTypeOptions = +(editorCardSize?.width || 0) < (!!props.extra ? 580 : 400)
 
   const [type, setType] = useControllableValue<RenderTypeOptionVal | undefined>(props, {
     defaultValue: undefined,
