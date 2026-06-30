@@ -169,83 +169,102 @@ ${obj.CurrentDir}`
         onChange={(v) => setActiveKey(v)}
         className="scan-port-tabs"
         tabBarStyle={{ marginBottom: 5 }}
-      >
-        <PluginTabs.TabPane tab={'基本信息'} key={'basicInfo'}>
-          <div style={{ overflow: 'auto', height: '100%' }}>
-            {shellType === 'Behinder' ? (
+        items={[
+          {
+            label: '基本信息',
+            key: 'basicInfo',
+            children: (
+              <div style={{ overflow: 'auto', height: '100%' }}>
+                {shellType === 'Behinder' ? (
+                  <>
+                    <YakitEditor type={'html'} value={behidnerBaseInfo} readOnly={true}></YakitEditor>
+                  </>
+                ) : (
+                  <>
+                    <YakitEditor type={'html'} value={godzillaBaseInfo} readOnly={true}></YakitEditor>
+                  </>
+                )}
+              </div>
+            ),
+          },
+          {
+            label: '虚拟终端',
+            key: 'vcmd',
+            children: (
+              <div style={{ height: '100%', width: '100%' }}>
+                <ReactResizeDetector
+                  onResize={(width, height) => {
+                    if (!width || !height) return
+                    const row = Math.floor(height / 18.5)
+                    const col = Math.floor(width / 10)
+                    if (xtermRef) xtermFit(xtermRef, col, row)
+                  }}
+                  handleWidth={true}
+                  handleHeight={true}
+                  refreshMode={'debounce'}
+                  refreshRate={50}
+                />
+                <YakitCVXterm
+                  maxHeight={0}
+                  ref={xtermRef}
+                  isWrite={false}
+                  onData={(data) => {
+                    if (data.replace(/[\x7F]/g, '').length > 0) {
+                      writeXTerm(xtermRef, data)
+                      // 处理用户输入的数据
+                      setInputValue((prevInput) => prevInput + data)
+                    }
+                  }}
+                  onKey={(e) => {
+                    const { key } = e
+                    const { keyCode } = e.domEvent
+                    // 删除
+                    if (keyCode === TERMINAL_INPUT_KEY.BACK && xtermRef?.current) {
+                      // 如只剩初始值则不删除
+                      if (inputValue === defaultXterm) {
+                        return
+                      }
+                      setInputValue((prevInput) => prevInput.replace(/.$/, '').replace(/[\x7F]/g, ''))
+                      // 发送 backspace 字符
+                      xtermRef.current.terminal.write('\b \b')
+                      return
+                    }
+                    // 回车
+                    if (keyCode === TERMINAL_INPUT_KEY.ENTER && xtermRef?.current) {
+                      // 此处调用接口
+                      commandExec(inputValue)
+                      xtermRef.current.terminal.write('\n')
+                      setInputValue('')
+                      return
+                    }
+                  }}
+                />
+              </div>
+            ),
+          },
+          {
+            label: '文件管理',
+            key: 'fileOpt',
+            children: (
+              <WebShellURLTreeAndTable
+                Id={props.webshellInfo.Id}
+                CurrentPath={defaultPath}
+                shellType={props.webshellInfo.ShellType as ShellType}
+              />
+            ),
+          },
+          {
+            label: '数据库管理',
+            key: 'databaseOpt',
+            children: (
               <>
-                <YakitEditor type={'html'} value={behidnerBaseInfo} readOnly={true}></YakitEditor>
+                {props.webshellInfo.Url}
+                {props.webshellInfo.ShellType}
               </>
-            ) : (
-              <>
-                <YakitEditor type={'html'} value={godzillaBaseInfo} readOnly={true}></YakitEditor>
-              </>
-            )}
-          </div>
-        </PluginTabs.TabPane>
-        <PluginTabs.TabPane tab={'虚拟终端'} key={'vcmd'}>
-          <div style={{ height: '100%', width: '100%' }}>
-            <ReactResizeDetector
-              onResize={(width, height) => {
-                if (!width || !height) return
-                const row = Math.floor(height / 18.5)
-                const col = Math.floor(width / 10)
-                if (xtermRef) xtermFit(xtermRef, col, row)
-              }}
-              handleWidth={true}
-              handleHeight={true}
-              refreshMode={'debounce'}
-              refreshRate={50}
-            />
-            <YakitCVXterm
-              maxHeight={0}
-              ref={xtermRef}
-              isWrite={false}
-              onData={(data) => {
-                if (data.replace(/[\x7F]/g, '').length > 0) {
-                  writeXTerm(xtermRef, data)
-                  // 处理用户输入的数据
-                  setInputValue((prevInput) => prevInput + data)
-                }
-              }}
-              onKey={(e) => {
-                const { key } = e
-                const { keyCode } = e.domEvent
-                // 删除
-                if (keyCode === TERMINAL_INPUT_KEY.BACK && xtermRef?.current) {
-                  // 如只剩初始值则不删除
-                  if (inputValue === defaultXterm) {
-                    return
-                  }
-                  setInputValue((prevInput) => prevInput.replace(/.$/, '').replace(/[\x7F]/g, ''))
-                  // 发送 backspace 字符
-                  xtermRef.current.terminal.write('\b \b')
-                  return
-                }
-                // 回车
-                if (keyCode === TERMINAL_INPUT_KEY.ENTER && xtermRef?.current) {
-                  // 此处调用接口
-                  commandExec(inputValue)
-                  xtermRef.current.terminal.write('\n')
-                  setInputValue('')
-                  return
-                }
-              }}
-            />
-          </div>
-        </PluginTabs.TabPane>
-        <PluginTabs.TabPane tab={'文件管理'} key={'fileOpt'}>
-          <WebShellURLTreeAndTable
-            Id={props.webshellInfo.Id}
-            CurrentPath={defaultPath}
-            shellType={props.webshellInfo.ShellType as ShellType}
-          />
-        </PluginTabs.TabPane>
-        <PluginTabs.TabPane tab={'数据库管理'} key={'databaseOpt'}>
-          {props.webshellInfo.Url}
-          {props.webshellInfo.ShellType}
-        </PluginTabs.TabPane>
-      </PluginTabs>
+            ),
+          },
+        ]}
+      ></PluginTabs>
     </div>
   )
 }

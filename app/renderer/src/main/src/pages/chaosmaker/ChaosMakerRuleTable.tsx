@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { Children, useEffect, useState } from 'react'
 import { Space, Tag } from 'antd'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
 import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
@@ -17,7 +17,7 @@ import { failed } from '@/utils/notification'
 import { ChaosMakerRunningSteps } from '@/pages/chaosmaker/ChaosMakerRunningSteps'
 import { ChaosMakerRule } from '@/models/ChaosMaker'
 import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
-
+import type { TabsProps } from 'antd'
 export interface ChaosMakerRuleTableProp {
   groups?: ChaosMakerRuleGroup[]
   onReset?: () => any
@@ -122,52 +122,68 @@ export const ChaosMakerRuleTable: React.FC<ChaosMakerRuleTableProp> = (props) =>
         couldBeenReset={activeTab !== 'tables'}
         onReset={props.onReset}
       />
-      <PluginTabs style={{ height: '100%' }} activeKey={activeTab} type={'card'} onChange={(e) => {}}>
-        <PluginTabs.TabPane disabled={running} key="tables" tab={'规则列表'}>
-          <TableVirtualResize<ChaosMakerRule>
-            isRefresh={false}
-            columns={
-              [
-                {
-                  title: '规则名',
-                  dataKey: 'NameZh',
-                  render: (_, i: ChaosMakerRule) => i.NameZh || i.Name,
-                },
-                { title: '规则类型', dataKey: 'ClassType' },
-                {
-                  title: '相关',
-                  dataKey: 'CVE',
-                  render: (_, i: ChaosMakerRule) => (i['CVE'] || []).join(', '),
-                },
-              ] as ColumnsTypeProps[]
-            }
-            renderKey={'Id'}
-            data={data}
-            loading={loading}
-            size={'small'}
-            currentSelectItem={selectedRowKeys}
-            onRowClick={(i: ChaosMakerRule) => {
-              showDrawer({
-                title: '流量规则详情',
-                width: '30%',
-                content: <div>{JSON.stringify(i)}</div>,
-              })
-              setSelectedRowKeys(i)
-            }}
-            pagination={{
-              page: pagination.Page,
-              limit,
-              total,
-              onChange: (page: number, newLimit: number) => update(page, newLimit),
-            }}
-          />
-        </PluginTabs.TabPane>
-        {running && (
-          <PluginTabs.TabPane key={'steps'} tab={'运行状态'}>
-            <ChaosMakerRunningSteps params={executeParam} />
-          </PluginTabs.TabPane>
-        )}
-      </PluginTabs>
+      <PluginTabs
+        style={{ height: '100%' }}
+        activeKey={activeTab}
+        type={'card'}
+        onChange={(e) => {}}
+        items={(() => {
+          const items: TabsProps['items'] = []
+
+          items.push({
+            key: 'tables',
+            label: '规则列表',
+            children: (
+              <TableVirtualResize<ChaosMakerRule>
+                isRefresh={false}
+                columns={
+                  [
+                    {
+                      title: '规则名',
+                      dataKey: 'NameZh',
+                      render: (_, i: ChaosMakerRule) => i.NameZh || i.Name,
+                    },
+                    { title: '规则类型', dataKey: 'ClassType' },
+                    {
+                      title: '相关',
+                      dataKey: 'CVE',
+                      render: (_, i: ChaosMakerRule) => (i['CVE'] || []).join(', '),
+                    },
+                  ] as ColumnsTypeProps[]
+                }
+                renderKey={'Id'}
+                data={data}
+                loading={loading}
+                size={'small'}
+                currentSelectItem={selectedRowKeys}
+                onRowClick={(i: ChaosMakerRule) => {
+                  showDrawer({
+                    title: '流量规则详情',
+                    width: '30%',
+                    content: <div>{JSON.stringify(i)}</div>,
+                  })
+                  setSelectedRowKeys(i)
+                }}
+                pagination={{
+                  page: pagination.Page,
+                  limit,
+                  total,
+                  onChange: (page: number, newLimit: number) => update(page, newLimit),
+                }}
+              />
+            ),
+          })
+
+          if (running) {
+            items.push({
+              key: 'steps',
+              label: '运行状态',
+              children: <ChaosMakerRunningSteps params={executeParam} />,
+            })
+          }
+          return items
+        })()}
+      ></PluginTabs>
     </AutoCard>
   )
 }

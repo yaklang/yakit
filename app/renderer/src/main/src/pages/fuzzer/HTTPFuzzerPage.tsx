@@ -3232,22 +3232,184 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                                     paddingLeft: 8,
                                     paddingRight: 8,
                                   }}
-                                  showSourceType={false}
-                                  showAdvancedSearch={false}
-                                  showProtocolType={false}
-                                  showColorSwatch={false}
-                                  showDelAll={false}
-                                  showBatchActions={false}
-                                  showFlod={false}
-                                  showHistoryAnalysisBtn
-                                  onHistoryAnalysisClick={jumpHTTPHistoryAnalysis}
-                                  titleHeight={47}
+                                  extractorValue={{
+                                    extractorList: advancedConfigValue.extractors || [],
+                                  }}
+                                  defActiveKey={activeKey}
+                                  defActiveType={activeType}
+                                  defActiveKeyAndOrder={defActiveKeyAndOrder}
+                                  onSaveMatcherAndExtraction={(matcher, extractor) => {
+                                    setAdvancedConfigValue({
+                                      ...advancedConfigValue,
+                                      matchers: matcher.matchersList,
+                                      extractors: extractor.extractorList,
+                                    })
+                                  }}
+                                  webFuzzerValue={requestRef.current}
+                                  showResponseInfoSecondEditor={showResponseInfoSecondEditor}
+                                  setShowResponseInfoSecondEditor={setShowResponseInfoSecondEditor}
+                                  secondNodeTitle={secondNodeTitle}
+                                  secondNodeExtra={secondNodeExtra}
+                                  onSetOnlyOneResEditor={setOnlyOneResEditor}
+                                  loading={loading}
                                 />
-                              ) : null}
-                            </div>
-                          </div>
-                        </PluginTabs.TabPane>
-                      </PluginTabs>
+                              </div>
+                            ) : (
+                              <div
+                                style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}
+                              >
+                                <div className={classNames(styles['resize-card-heard'])}>
+                                  <div className={styles['resize-card-heard-title']}>{secondNodeTitle()}</div>
+                                  <div className={styles['resize-card-heard-extra']}></div>
+                                  {secondNodeExtra()}
+                                </div>
+                                <div style={{ flex: 1, minHeight: 0 }}>
+                                  {cachedTotal >= 1 ? (
+                                    <>
+                                      {showSuccess === 'true' && (
+                                        <HTTPFuzzerPageTable
+                                          // onSendToWebFuzzer={onSendToWebFuzzer}
+                                          success={true}
+                                          data={successFuzzer}
+                                          setExportData={setExportData}
+                                          query={query}
+                                          setQuery={setQuery}
+                                          extractedMap={extractedMap}
+                                          isEnd={loading}
+                                          pageId={props.id}
+                                          moreLimtAlertMsg={moreLimtAlertMsg}
+                                          noMoreLimtAlertMsg={noMoreLimtAlertMsg}
+                                          fuzzerTableMaxData={fuzzerTableMaxData}
+                                          hasExtractorRules={hasExtractorRules}
+                                        />
+                                      )}
+                                      {showSuccess === 'false' && (
+                                        <HTTPFuzzerPageTable
+                                          success={false}
+                                          data={failedFuzzer}
+                                          query={query}
+                                          setQuery={setQuery}
+                                          isEnd={loading}
+                                          extractedMap={extractedMap}
+                                          pageId={props.id}
+                                        />
+                                      )}
+                                      {showSuccess === 'Concurrent/Load' && (
+                                        <div
+                                          style={{
+                                            height: '100%',
+                                            overflowY: 'auto',
+                                            overflowX: 'hidden',
+                                          }}
+                                          key={i18n.language}
+                                        >
+                                          <FuzzerConcurrentLoad
+                                            inViewportCurrent={inViewport && currentFuzzerPage}
+                                            fuzzerResChartData={fuzzerResChartData}
+                                          />
+                                        </div>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <Result
+                                      status={'warning'}
+                                      title={t('HTTPFuzzerPage.editAndSendRequest')}
+                                      subTitle={
+                                        <div>
+                                          {t('HTTPFuzzerPage.fuzzTestResultsInfo')}
+                                          {skipSaveHTTPFlow ? (
+                                            <>
+                                              {t('HTTPFuzzerPage.responseLimitExceeded')}
+                                              <YakitButton
+                                                type="text"
+                                                icon={<OutlineCogIcon />}
+                                                style={{
+                                                  padding: 0,
+                                                  height: 'auto',
+                                                  verticalAlign: 'top',
+                                                }}
+                                                onClick={() => {
+                                                  emiter.emit(
+                                                    'menuOpenPage',
+                                                    JSON.stringify({
+                                                      route: YakitRoute.Beta_ConfigNetwork,
+                                                    }),
+                                                  )
+                                                }}
+                                              >
+                                                {t('HTTPFuzzerPage.saveHttpTrafficSettings')}
+                                              </YakitButton>
+                                            </>
+                                          ) : (
+                                            ''
+                                          )}
+                                        </div>
+                                      }
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            ),
+                          },
+                          {
+                            key: 'ai',
+                            label: t('HTTPFuzzerPage.responseTabAi'),
+                            disabled: allAiFuzzRuntimeIds.length === 0,
+                            // AI tab：thin header 承载标题 + 放大/收起按钮，复用 secondFull 状态与手动 tab 共享布局切换
+                            children: (
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  height: '100%',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                <div className={classNames(styles['resize-card-heard'])}>
+                                  <div className={styles['resize-card-heard-title']}>
+                                    {t('HTTPFuzzerPage.aiTabTitle')}
+                                  </div>
+                                  <div className={styles['resize-card-heard-extra']}></div>
+                                  <div
+                                    className={styles['resize-card-icon']}
+                                    onClick={() => setSecondFull(!secondFull)}
+                                  >
+                                    {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                                  </div>
+                                </div>
+                                <div style={{ flex: 1, minHeight: 0 }}>
+                                  {effectiveAiRuntimeId ? (
+                                    <HTTPFlowRealTimeTableAndEditor
+                                      key={effectiveAiRuntimeId}
+                                      wrapperStyle={{ padding: 0 }}
+                                      pageType="Plugin"
+                                      runtimeId={effectiveAiRuntimeId}
+                                      params={{ SourceType: 'scan' }}
+                                      filterTagDom={aiFilterTagDom}
+                                      defaultExcludeColumnsKey={aiFuzzTableExcludeColumnsKey}
+                                      httpHistoryTableTitleStyle={{
+                                        paddingTop: 12,
+                                        paddingLeft: 8,
+                                        paddingRight: 8,
+                                      }}
+                                      showSourceType={false}
+                                      showAdvancedSearch={false}
+                                      showProtocolType={false}
+                                      showColorSwatch={false}
+                                      showDelAll={false}
+                                      showBatchActions={false}
+                                      showFlod={false}
+                                      showHistoryAnalysisBtn
+                                      onHistoryAnalysisClick={jumpHTTPHistoryAnalysis}
+                                      titleHeight={47}
+                                    />
+                                  ) : null}
+                                </div>
+                              </div>
+                            ),
+                          },
+                        ]}
+                      ></PluginTabs>
                     </div>
                   </div>
                 }

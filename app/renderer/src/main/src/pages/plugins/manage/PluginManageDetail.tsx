@@ -62,8 +62,6 @@ import classNames from 'classnames'
 import '../plugins.scss'
 import styles from './pluginManage.module.scss'
 
-const { TabPane } = PluginTabs
-
 const filter = (arr) => arr.filter((item, index) => arr.indexOf(item) === index)
 
 const { ipcRenderer } = window.require('electron')
@@ -927,55 +925,65 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
         onBack={onPluginBack}
       >
         <div className={styles['details-content-wrapper']}>
-          <PluginTabs tabPosition="right">
-            <TabPane tab={t('PluginManageDetail.sourceCode')} key="code">
-              <YakitSpin spinning={loading}>
-                <div className={styles['plugin-info-wrapper']}>
-                  <PluginDetailHeader
-                    pluginName={plugin.script_name}
-                    help={plugin.help}
-                    titleNode={statusTag[+plugin.status]}
-                    tags={plugin.tags}
-                    extraNode={extraNode}
-                    img={plugin.head_img}
-                    user={plugin.authors}
-                    pluginId={plugin.uuid}
-                    updated_at={plugin.updated_at}
-                    prImgs={(plugin.collaborator || []).map((ele) => ({
-                      headImg: ele.head_img,
-                      userName: ele.user_name,
-                    }))}
-                    type={plugin.type}
-                    wrapperClassName={styles['plugin-info-header']}
-                  />
+          <PluginTabs
+            tabPosition="right"
+            items={[
+              {
+                key: 'code',
+                label: t('PluginManageDetail.sourceCode'),
+                children: (
+                  <YakitSpin spinning={loading}>
+                    <div className={styles['plugin-info-wrapper']}>
+                      <PluginDetailHeader
+                        pluginName={plugin.script_name}
+                        help={plugin.help}
+                        titleNode={statusTag[+plugin.status]}
+                        tags={plugin.tags}
+                        extraNode={extraNode}
+                        img={plugin.head_img}
+                        user={plugin.authors}
+                        pluginId={plugin.uuid}
+                        updated_at={plugin.updated_at}
+                        prImgs={(plugin.collaborator || []).map((ele) => ({
+                          headImg: ele.head_img,
+                          userName: ele.user_name,
+                        }))}
+                        type={plugin.type}
+                        wrapperClassName={styles['plugin-info-header']}
+                      />
 
-                  {plugin.status === 0 || plugin.status === 3 ? (
-                    <div className={styles['plugin-info-body']}>
-                      <div className={styles['plugin-modify-info']}>
-                        {isApply && (
-                          <div className={styles['modify-advice']}>
-                            <div className={styles['advice-icon']}>
-                              <OutlineLightbulbIcon />
-                            </div>
-                            <div className={styles['advice-body']}>
-                              <div className={styles['advice-content']}>
-                                <div className={styles['content-title']}>
-                                  {t('PluginManageDetail.modifyContentDesc')}
+                      {plugin.status === 0 || plugin.status === 3 ? (
+                        <div className={styles['plugin-info-body']}>
+                          <div className={styles['plugin-modify-info']}>
+                            {isApply && (
+                              <div className={styles['modify-advice']}>
+                                <div className={styles['advice-icon']}>
+                                  <OutlineLightbulbIcon />
                                 </div>
-                                <div className={styles['content-style']}>{apply?.description || ''}</div>
+                                <div className={styles['advice-body']}>
+                                  <div className={styles['advice-content']}>
+                                    <div className={styles['content-title']}>
+                                      {t('PluginManageDetail.modifyContentDesc')}
+                                    </div>
+                                    <div className={styles['content-style']}>{apply?.description || ''}</div>
+                                  </div>
+                                  <div className={styles['advice-user']}>
+                                    <AuthorImg src={apply?.img || ''} />
+                                    {apply?.name || ''}
+                                    <ApplicantIcon />
+                                  </div>
+                                </div>
                               </div>
-                              <div className={styles['advice-user']}>
-                                <AuthorImg src={apply?.img || ''} />
-                                {apply?.name || ''}
-                                <ApplicantIcon />
-                              </div>
-                            </div>
+                            )}
+                            <PluginModifyInfo
+                              ref={infoRef}
+                              isEdit={true}
+                              data={infoParams}
+                              tagsCallback={onTagsCallback}
+                            />
                           </div>
-                        )}
-                        <PluginModifyInfo ref={infoRef} isEdit={true} data={infoParams} tagsCallback={onTagsCallback} />
-                      </div>
 
-                      {/* {supplement && (
+                          {/* {supplement && (
                                                 <div className={styles["plugin-supplement"]}>
                                                     <div className={styles["supplement-header"]}>补充资料</div>
                                                     {supplement.text && (
@@ -1034,68 +1042,74 @@ export const PluginManageDetail: React.FC<PluginManageDetailProps> = memo(
                                                 </div>
                                             )} */}
 
-                      <div className={styles['plugin-setting-info']}>
-                        <div className={styles['setting-header']}>{t('PluginManageDetail.pluginConfig')}</div>
-                        <div className={styles['setting-body']}>
-                          <PluginModifySetting
-                            ref={settingRef}
-                            type={plugin.type}
-                            tags={cacheTags || []}
-                            setTags={onSwitchToTags}
-                            data={settingParams}
-                          />
-                          <PluginEditorDiff
-                            language={plugin.type}
-                            isDiff={isApply}
-                            newCode={content}
-                            oldCode={oldContent}
-                            setCode={setContent}
-                            triggerUpdate={updateDiff}
-                          />
+                          <div className={styles['plugin-setting-info']}>
+                            <div className={styles['setting-header']}>{t('PluginManageDetail.pluginConfig')}</div>
+                            <div className={styles['setting-body']}>
+                              <PluginModifySetting
+                                ref={settingRef}
+                                type={plugin.type}
+                                tags={cacheTags || []}
+                                setTags={onSwitchToTags}
+                                data={settingParams}
+                              />
+                              <PluginEditorDiff
+                                language={plugin.type}
+                                isDiff={isApply}
+                                newCode={content}
+                                oldCode={oldContent}
+                                setCode={setContent}
+                                triggerUpdate={updateDiff}
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={styles['details-editor-wrapper']}>
-                      <YakitEditor type={plugin.type} value={content} readOnly={true} />
-                    </div>
-                  )}
+                      ) : (
+                        <div className={styles['details-editor-wrapper']}>
+                          <YakitEditor type={plugin.type} value={content} readOnly={true} />
+                        </div>
+                      )}
 
-                  {debugShow && (
-                    <PluginDebug
-                      getContainer={document.getElementById('plugin-manage-detail') || undefined}
-                      plugin={debugPlugin}
-                      visible={debugShow}
-                      onClose={onCancelDebug}
-                      onMerge={onMerge}
+                      {debugShow && (
+                        <PluginDebug
+                          getContainer={document.getElementById('plugin-manage-detail') || undefined}
+                          plugin={debugPlugin}
+                          visible={debugShow}
+                          onClose={onCancelDebug}
+                          onMerge={onMerge}
+                        />
+                      )}
+                    </div>
+                  </YakitSpin>
+                ),
+              },
+              {
+                key: 'logs',
+                label: t('PluginManageDetail.logs'),
+                children: (
+                  <div className={styles['plugin-logs-wrapper']}>
+                    <PluginDetailHeader
+                      pluginName={plugin.script_name}
+                      help={plugin.help}
+                      titleNode={statusTag[+plugin.status]}
+                      tags={plugin.tags}
+                      extraNode={extraNode}
+                      img={plugin.head_img}
+                      user={plugin.authors}
+                      pluginId={plugin.uuid}
+                      updated_at={plugin.updated_at}
+                      prImgs={(plugin.collaborator || []).map((ele) => ({
+                        headImg: ele.head_img,
+                        userName: ele.user_name,
+                      }))}
+                      type={plugin.type}
+                      wrapperClassName={styles['plugin-info-header']}
                     />
-                  )}
-                </div>
-              </YakitSpin>
-            </TabPane>
-            <TabPane tab={t('PluginManageDetail.logs')} key="logs">
-              <div className={styles['plugin-logs-wrapper']}>
-                <PluginDetailHeader
-                  pluginName={plugin.script_name}
-                  help={plugin.help}
-                  titleNode={statusTag[+plugin.status]}
-                  tags={plugin.tags}
-                  extraNode={extraNode}
-                  img={plugin.head_img}
-                  user={plugin.authors}
-                  pluginId={plugin.uuid}
-                  updated_at={plugin.updated_at}
-                  prImgs={(plugin.collaborator || []).map((ele) => ({
-                    headImg: ele.head_img,
-                    userName: ele.user_name,
-                  }))}
-                  type={plugin.type}
-                  wrapperClassName={styles['plugin-info-header']}
-                />
-                <PluginLog getContainer={pageWrapId} plugin={plugin} />
-              </div>
-            </TabPane>
-          </PluginTabs>
+                    <PluginLog getContainer={pageWrapId} plugin={plugin} />
+                  </div>
+                ),
+              },
+            ]}
+          ></PluginTabs>
         </div>
 
         <ReasonModal

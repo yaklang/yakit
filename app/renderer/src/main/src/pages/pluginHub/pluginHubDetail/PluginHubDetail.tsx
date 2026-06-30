@@ -45,8 +45,6 @@ import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './PluginHubDetail.module.scss'
 
-const { TabPane } = PluginTabs
-
 /**
  * @description 该组件在yakit中只能出现一次，否则元素id将会重复
  */
@@ -731,161 +729,179 @@ export const PluginHubDetail: React.FC<PluginHubDetailProps> = memo(
               activeKey={activeKey}
               onChange={onTabChange}
               renderTabBar={bar}
-            >
-              <TabPane tab={t('PluginHubDetail.online')} key="online" disabled={!hasOnline}>
-                {!!onlinePlugin ? (
-                  <div className={styles['tab-pane-wrapper']}>
-                    <HubDetailHeader
-                      pluginName={onlinePlugin?.script_name || '-'}
-                      help={onlinePlugin?.help || '-'}
-                      type={onlinePlugin?.type || 'yak'}
-                      tags={onlinePlugin?.tags || ''}
-                      extraNode={extraNode}
-                      img={onlinePlugin?.head_img || ''}
-                      user={onlinePlugin?.authors || '-'}
-                      prImgs={(onlinePlugin?.collaborator || []).map((ele) => ({
-                        headImg: ele.head_img,
-                        userName: ele.user_name,
-                      }))}
-                      updated_at={onlinePlugin?.updated_at || 0}
-                      basePluginName={copySourcePlugin}
-                      infoExtra={infoExtraNode}
-                    />
-                    <div className={styles['detail-content']}>
-                      <div className={styles['editer-body']}>
-                        <YakitEditor
-                          type={onlinePlugin?.type || 'plaintext'}
-                          value={onlinePlugin?.content || ''}
-                          readOnly={true}
-                        />
+              items={[
+                {
+                  key: 'online',
+                  label: t('PluginHubDetail.online'),
+                  disabled: !hasOnline,
+                  children: !!onlinePlugin ? (
+                    <div className={styles['tab-pane-wrapper']}>
+                      <HubDetailHeader
+                        pluginName={onlinePlugin?.script_name || '-'}
+                        help={onlinePlugin?.help || '-'}
+                        type={onlinePlugin?.type || 'yak'}
+                        tags={onlinePlugin?.tags || ''}
+                        extraNode={extraNode}
+                        img={onlinePlugin?.head_img || ''}
+                        user={onlinePlugin?.authors || '-'}
+                        prImgs={(onlinePlugin?.collaborator || []).map((ele) => ({
+                          headImg: ele.head_img,
+                          userName: ele.user_name,
+                        }))}
+                        updated_at={onlinePlugin?.updated_at || 0}
+                        basePluginName={copySourcePlugin}
+                        infoExtra={infoExtraNode}
+                      />
+                      <div className={styles['detail-content']}>
+                        <div className={styles['editer-body']}>
+                          <YakitEditor
+                            type={onlinePlugin?.type || 'plaintext'}
+                            value={onlinePlugin?.content || ''}
+                            readOnly={true}
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className={styles['tab-pane-empty']}>
-                    <YakitEmpty title={t('PluginHubDetail.noPluginInfo')} />
-                  </div>
-                )}
-              </TabPane>
-              <TabPane tab={t('YakitButton.execute')} key="exectue" disabled={!hasLocal}>
-                <div className={styles['tab-pane-exectue']}>
-                  {!loading ? (
-                    <>
-                      {!!localPlugin ? (
-                        <LocalPluginExecute
-                          plugin={localPlugin}
-                          headExtraNode={extraNode}
-                          isHiddenUUID={true}
-                          infoExtra={infoExtraNode}
-                          hiddenUpdateBtn={true}
-                        />
+                  ) : (
+                    <div className={styles['tab-pane-empty']}>
+                      <YakitEmpty title={t('PluginHubDetail.noPluginInfo')} />
+                    </div>
+                  ),
+                },
+                {
+                  key: 'exectue',
+                  label: t('YakitButton.execute'),
+                  disabled: !hasLocal,
+                  children: (
+                    <div className={styles['tab-pane-exectue']}>
+                      {!loading ? (
+                        <>
+                          {!!localPlugin ? (
+                            <LocalPluginExecute
+                              plugin={localPlugin}
+                              headExtraNode={extraNode}
+                              isHiddenUUID={true}
+                              infoExtra={infoExtraNode}
+                              hiddenUpdateBtn={true}
+                            />
+                          ) : (
+                            <div className={styles['tab-pane-empty']}>
+                              <YakitEmpty title={t('PluginHubDetail.noPluginInfo')} />
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <div className={styles['tab-pane-empty']}>
                           <YakitEmpty title={t('PluginHubDetail.noPluginInfo')} />
                         </div>
                       )}
-                    </>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'local',
+                  label: t('PluginHubDetail.local'),
+                  disabled: !hasLocal,
+                  children: !!localPlugin ? (
+                    <div className={styles['tab-pane-wrapper']}>
+                      <HubDetailHeader
+                        pluginName={localPlugin?.ScriptName || '-'}
+                        help={localPlugin?.Help || '-'}
+                        type={localPlugin?.Type || 'yak'}
+                        tags={localPlugin?.Tags || ''}
+                        extraNode={extraNode}
+                        img={localPlugin?.HeadImg || ''}
+                        user={localPlugin?.Author || '-'}
+                        prImgs={(localPlugin?.CollaboratorInfo || []).map((ele) => ({
+                          headImg: ele.HeadImg,
+                          userName: ele.UserName,
+                        }))}
+                        updated_at={localPlugin?.UpdatedAt || 0}
+                        basePluginName={copySourcePlugin}
+                        infoExtra={infoExtraNode}
+                      />
+                      <div className={styles['detail-content']}>
+                        <div className={styles['editer-body']}>
+                          <YakitEditor
+                            type={localPlugin?.Type || 'yak'}
+                            value={localPlugin?.Content || ''}
+                            readOnly={true}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className={styles['tab-pane-empty']}>
                       <YakitEmpty title={t('PluginHubDetail.noPluginInfo')} />
                     </div>
-                  )}
-                </div>
-              </TabPane>
-              <TabPane tab={t('PluginHubDetail.local')} key="local" disabled={!hasLocal}>
-                {!!localPlugin ? (
-                  <div className={styles['tab-pane-wrapper']}>
-                    <HubDetailHeader
-                      pluginName={localPlugin?.ScriptName || '-'}
-                      help={localPlugin?.Help || '-'}
-                      type={localPlugin?.Type || 'yak'}
-                      tags={localPlugin?.Tags || ''}
-                      extraNode={extraNode}
-                      img={localPlugin?.HeadImg || ''}
-                      user={localPlugin?.Author || '-'}
-                      prImgs={(localPlugin?.CollaboratorInfo || []).map((ele) => ({
-                        headImg: ele.HeadImg,
-                        userName: ele.UserName,
-                      }))}
-                      updated_at={localPlugin?.UpdatedAt || 0}
-                      basePluginName={copySourcePlugin}
-                      infoExtra={infoExtraNode}
-                    />
-                    <div className={styles['detail-content']}>
-                      <div className={styles['editer-body']}>
-                        <YakitEditor
-                          type={localPlugin?.Type || 'yak'}
-                          value={localPlugin?.Content || ''}
-                          readOnly={true}
-                        />
+                  ),
+                },
+                {
+                  key: 'log',
+                  label: t('PluginHubDetail.log'),
+                  disabled: !hasOnline,
+                  children: (
+                    <div className={styles['tab-pane-wrapper']}>
+                      <HubDetailHeader
+                        pluginName={onlinePlugin?.script_name || '-'}
+                        help={onlinePlugin?.help || '-'}
+                        type={onlinePlugin?.type || 'yak'}
+                        tags={onlinePlugin?.tags || ''}
+                        extraNode={extraNode}
+                        img={onlinePlugin?.head_img || ''}
+                        user={onlinePlugin?.authors || '-'}
+                        prImgs={(onlinePlugin?.collaborator || []).map((ele) => ({
+                          headImg: ele.head_img,
+                          userName: ele.user_name,
+                        }))}
+                        updated_at={onlinePlugin?.updated_at || 0}
+                        basePluginName={copySourcePlugin}
+                        infoExtra={infoExtraNode}
+                      />
+                      {onlinePlugin ? (
+                        <PluginLog ref={pluginLogRef} getContainer={wrapperId} plugin={onlinePlugin} />
+                      ) : (
+                        <div className={styles['tab-pane-empty']}>
+                          <YakitEmpty title={t('PluginHubDetail.noLogInfo')} />
+                        </div>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'setting',
+                  label: t('PluginHubDetail.setting'),
+                  disabled: !hasLocal,
+                  children: !!localPlugin ? (
+                    <div className={styles['tab-pane-wrapper']}>
+                      <HubDetailHeader
+                        pluginName={localPlugin?.ScriptName || '-'}
+                        help={localPlugin?.Help || '-'}
+                        type={localPlugin?.Type || 'yak'}
+                        tags={localPlugin?.Tags || ''}
+                        extraNode={extraNode}
+                        img={localPlugin?.HeadImg || ''}
+                        user={localPlugin?.Author || '-'}
+                        prImgs={(localPlugin?.CollaboratorInfo || []).map((ele) => ({
+                          headImg: ele.HeadImg,
+                          userName: ele.UserName,
+                        }))}
+                        updated_at={localPlugin?.UpdatedAt || 0}
+                        basePluginName={copySourcePlugin}
+                        infoExtra={infoExtraNode}
+                      />
+                      <div className={styles['detail-content']}>
+                        <PluginEnvVariables isPlugin={true} keys={localPlugin?.PluginEnvKey || []} />
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className={styles['tab-pane-empty']}>
-                    <YakitEmpty title={t('PluginHubDetail.noPluginInfo')} />
-                  </div>
-                )}
-              </TabPane>
-
-              <TabPane tab={t('PluginHubDetail.log')} key="log" disabled={!hasOnline}>
-                <div className={styles['tab-pane-wrapper']}>
-                  <HubDetailHeader
-                    pluginName={onlinePlugin?.script_name || '-'}
-                    help={onlinePlugin?.help || '-'}
-                    type={onlinePlugin?.type || 'yak'}
-                    tags={onlinePlugin?.tags || ''}
-                    extraNode={extraNode}
-                    img={onlinePlugin?.head_img || ''}
-                    user={onlinePlugin?.authors || '-'}
-                    prImgs={(onlinePlugin?.collaborator || []).map((ele) => ({
-                      headImg: ele.head_img,
-                      userName: ele.user_name,
-                    }))}
-                    updated_at={onlinePlugin?.updated_at || 0}
-                    basePluginName={copySourcePlugin}
-                    infoExtra={infoExtraNode}
-                  />
-                  {onlinePlugin ? (
-                    <PluginLog ref={pluginLogRef} getContainer={wrapperId} plugin={onlinePlugin} />
                   ) : (
                     <div className={styles['tab-pane-empty']}>
-                      <YakitEmpty title={t('PluginHubDetail.noLogInfo')} />
+                      <YakitEmpty title={t('PluginHubDetail.noEnvInfo')} />
                     </div>
-                  )}
-                </div>
-              </TabPane>
-
-              <TabPane tab={t('PluginHubDetail.setting')} key="setting" disabled={!hasLocal}>
-                {!!localPlugin ? (
-                  <div className={styles['tab-pane-wrapper']}>
-                    <HubDetailHeader
-                      pluginName={localPlugin?.ScriptName || '-'}
-                      help={localPlugin?.Help || '-'}
-                      type={localPlugin?.Type || 'yak'}
-                      tags={localPlugin?.Tags || ''}
-                      extraNode={extraNode}
-                      img={localPlugin?.HeadImg || ''}
-                      user={localPlugin?.Author || '-'}
-                      prImgs={(localPlugin?.CollaboratorInfo || []).map((ele) => ({
-                        headImg: ele.HeadImg,
-                        userName: ele.UserName,
-                      }))}
-                      updated_at={localPlugin?.UpdatedAt || 0}
-                      basePluginName={copySourcePlugin}
-                      infoExtra={infoExtraNode}
-                    />
-                    <div className={styles['detail-content']}>
-                      <PluginEnvVariables isPlugin={true} keys={localPlugin?.PluginEnvKey || []} />
-                    </div>
-                  </div>
-                ) : (
-                  <div className={styles['tab-pane-empty']}>
-                    <YakitEmpty title={t('PluginHubDetail.noEnvInfo')} />
-                  </div>
-                )}
-              </TabPane>
-            </PluginTabs>
+                  ),
+                },
+              ]}
+            ></PluginTabs>
 
             <div className={styles['plugin-hub-detail-empty']}>
               <YakitEmpty

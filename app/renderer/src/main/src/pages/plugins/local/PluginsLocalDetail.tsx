@@ -13,8 +13,6 @@ import classNames from 'classnames'
 import '../plugins.scss'
 import styles from './PluginsLocalDetail.module.scss'
 
-const { TabPane } = PluginTabs
-
 /**转换group参数*/
 export const convertGroupParam = (filter: PluginFilterParams, extra: { group: YakFilterRemoteObj[] }) => {
   const realFilters: PluginFilterParams = {
@@ -52,48 +50,57 @@ export const PluginDetailsTab: React.FC<PluginDetailsTabProps> = React.memo((pro
         onTabClick={(key) => {
           setActiveKey(key)
         }}
-      >
-        <TabPane tab="执行" key="execute">
-          <div className={styles['plugin-execute-wrapper']}>
-            {executorShow ? (
-              <LocalPluginExecute
-                plugin={plugin}
-                headExtraNode={headExtraNode}
-                linkPluginConfig={linkPluginConfig}
-                initExecParamsValue={initExecParamsValue}
-                code={code}
-                input={input}
-                noHTTPRequestTemplate={noHTTPRequestTemplate}
-                autoExecute={autoExecute}
-              />
-            ) : (
-              <YakitSpin wrapperClassName={styles['plugin-execute-spin']} />
-            )}
-          </div>
-        </TabPane>
-        <TabPane tab="源码" key="code">
-          <div className={styles['plugin-info-wrapper']}>
-            <PluginDetailHeader
-              pluginName={plugin.ScriptName}
-              help={plugin.Help}
-              tags={plugin.Tags}
-              extraNode={<div className={styles['extra']}>{headExtraNode}</div>}
-              img={plugin.HeadImg || ''}
-              user={plugin.Author}
-              pluginId={plugin.UUID}
-              updated_at={plugin.UpdatedAt || 0}
-              prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
-                headImg: ele.HeadImg,
-                userName: ele.UserName,
-              }))}
-              type={plugin.Type}
-            />
-            <div className={styles['details-editor-wrapper']}>
-              <YakitEditor type={plugin.Type} value={plugin.Content} readOnly={true} />
-            </div>
-          </div>
-        </TabPane>
-      </PluginTabs>
+        items={[
+          {
+            key: 'execute',
+            label: '执行',
+            children: (
+              <div className={styles['plugin-execute-wrapper']}>
+                {executorShow ? (
+                  <LocalPluginExecute
+                    plugin={plugin}
+                    headExtraNode={headExtraNode}
+                    linkPluginConfig={linkPluginConfig}
+                    initExecParamsValue={initExecParamsValue}
+                    code={code}
+                    input={input}
+                    noHTTPRequestTemplate={noHTTPRequestTemplate}
+                    autoExecute={autoExecute}
+                  />
+                ) : (
+                  <YakitSpin wrapperClassName={styles['plugin-execute-spin']} />
+                )}
+              </div>
+            ),
+          },
+          {
+            key: 'code',
+            label: '源码',
+            children: (
+              <div className={styles['plugin-info-wrapper']}>
+                <PluginDetailHeader
+                  pluginName={plugin.ScriptName}
+                  help={plugin.Help}
+                  tags={plugin.Tags}
+                  extraNode={<div className={styles['extra']}>{headExtraNode}</div>}
+                  img={plugin.HeadImg || ''}
+                  user={plugin.Author}
+                  pluginId={plugin.UUID}
+                  updated_at={plugin.UpdatedAt || 0}
+                  prImgs={(plugin.CollaboratorInfo || []).map((ele) => ({
+                    headImg: ele.HeadImg,
+                    userName: ele.UserName,
+                  }))}
+                  type={plugin.Type}
+                />
+                <div className={styles['details-editor-wrapper']}>
+                  <YakitEditor type={plugin.Type} value={plugin.Content} readOnly={true} />
+                </div>
+              </div>
+            ),
+          },
+        ]}
+      ></PluginTabs>
       {loginshow && <Login visible={loginshow} onCancel={() => setLoginShow(false)}></Login>}
     </div>
   )
