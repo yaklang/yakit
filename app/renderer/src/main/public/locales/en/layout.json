@@ -263,6 +263,9 @@
     "setPrivateDomainFailed": "Failed to set private domain: {{error}}",
     "remoteControlClosing": "Remote control is closing..."
   },
+  "CeUserMenu": {
+    "tokenConsumption": "Token Usage"
+  },
   "FuncDomain": {
     "remoteInProgress": "Remote in progress",
     "signOut": "Sign Out",
