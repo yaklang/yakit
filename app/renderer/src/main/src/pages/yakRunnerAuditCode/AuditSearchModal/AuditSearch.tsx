@@ -18,7 +18,6 @@ import { RemoteGV } from '@/yakitGV'
 import { YakitAutoCompleteRefProps } from '@/components/yakitUI/YakitAutoComplete/YakitAutoCompleteType'
 import { grpcFetchLocalPluginDetail } from '@/pages/pluginHub/utils/grpc'
 import { YakitHintWhite } from '@/components/yakitUI/YakitHint/YakitHint'
-import YakitTabs from '@/components/yakitUI/YakitTabs/YakitTabs'
 import emiter from '@/utils/eventBus/eventBus'
 import { apiDebugPlugin, DebugPluginRequest } from '@/pages/plugins/utils'
 import { randomString } from '@/utils/randomUtil'
@@ -39,6 +38,7 @@ import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import useShortcutKeyTrigger from '@/utils/globalShortcutKey/events/useShortcutKeyTrigger'
 import { KVPair } from '@/models/kv'
 import { JSONParseLog } from '@/utils/tool'
+import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 
 let selectedSearchVal: string = ''
 export const onSetSelectedSearchVal = (v: string = '') => {
@@ -418,7 +418,7 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
 
           {extraSettingData.length > 0 && (
             <div className={styles['tabs-box']}>
-              <YakitTabs
+              <PluginTabs
                 activeKey={activeKey}
                 onChange={(v) => {
                   if (executing) {
@@ -430,12 +430,12 @@ export const AuditSearchModal: React.FC<AuditSearchProps> = memo((props) => {
                   setActiveKey(v)
                 }}
                 tabBarStyle={{ marginBottom: 5 }}
-                className="scan-port-tabs no-theme-tabs"
+                className="scan-port-tabs"
               >
                 {extraSettingData.map((item) => {
-                  return <YakitTabs.YakitTabPane tab={item.label} key={item.value}></YakitTabs.YakitTabPane>
+                  return <PluginTabs.TabPane tab={item.label} key={item.value}></PluginTabs.TabPane>
                 })}
-              </YakitTabs>
+              </PluginTabs>
             </div>
           )}
           <>

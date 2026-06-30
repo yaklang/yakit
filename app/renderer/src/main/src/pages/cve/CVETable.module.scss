@@ -360,41 +360,6 @@
   margin-bottom: 12px;
 }
 
-.cwe-tabs {
-  :global {
-    .ant-tabs-nav {
-      background-color: var(--Colors-Use-Neutral-Bg) !important;
-      position: sticky;
-      top: 0;
-    }
-    .ant-tabs-nav-wrap {
-      height: 31px;
-      overflow: initial !important;
-    }
-    .ant-tabs-tab {
-      background-color: var(--Colors-Use-Neutral-Bg) !important;
-      border-radius: 0 !important;
-      // border-top: 1px solid var(--Colors-Use-Neutral-Border) !important;
-    }
-    .ant-tabs-tab-active {
-      border-radius: 0;
-      background-color: var(--Colors-Use-Neutral-Bg-Hover) !important;
-      border-top-width: 0 !important;
-      &::before {
-        content: '';
-        border-top: 2px solid var(--Colors-Use-Main-Border);
-        width: calc(100% + 2px);
-        position: absolute;
-        height: 0;
-        top: -1px;
-        left: -1px;
-      }
-    }
-    .ant-tabs-content-holder {
-      overflow-y: overlay;
-    }
-  }
-}
 .heard-right-operation {
   display: flex;
   justify-content: flex-end;
