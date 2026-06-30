@@ -376,7 +376,9 @@ export const PluginLogList: React.FC<PluginLogListProps> = memo((props) => {
 
         {loading && (
           <div className={styles['list-loading']}>
-            <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} tip="加载中..." />
+            <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} tip="加载中...">
+              <div style={{ minHeight: 100 }} /> {/* 占位 */}
+            </YakitSpin>
           </div>
         )}
         {!loading && !hasMore.current && <div className={styles['list-bottom']}>已经到底啦～</div>}

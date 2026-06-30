@@ -42,7 +42,11 @@ const LicensePage: React.FC<LicensePageProps> = (props) => {
   }, [])
 
   if (!licenseRequest) {
-    return <YakitSpin wrapperClassName="license-spin-box" tip={t('LicensePage.loadingLicense')} />
+    return (
+      <YakitSpin wrapperClassName="license-spin-box" tip={t('LicensePage.loadingLicense')}>
+        <div style={{ minHeight: 100 }} /> {/* 占位 */}
+      </YakitSpin>
+    )
   }
 
   const UploadLicense = () => {

@@ -610,7 +610,9 @@ export const ProxyTest = memo((props: ProxyTestProps) => {
             size="large"
             tip={t('ProxyConfig.detectionLoading')}
             wrapperClassName={styles['proxy-test-modal-loading']}
-          />
+          >
+            <div style={{ minHeight: 100 }} /> {/* 占位 */}
+          </YakitSpin>
         )
       case 'success':
         return (

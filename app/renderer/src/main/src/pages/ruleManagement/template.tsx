@@ -1009,7 +1009,7 @@ export const EditRuleDrawer: React.FC<EditRuleDrawerProps> = memo((props) => {
             <YakitButton type="text2" icon={<OutlineXIcon />} onClick={handleCancel} />
           </div>
         }
-        visible={visible}
+        open={visible}
       >
         {/* 审计详情 */}
         <div className={classNames(styles['drawer-body'], { [styles['drawer-hidden']]: !auditDetailShow })}>
@@ -2398,7 +2398,7 @@ export const OnlineRuleGroupList: React.FC<OnlineRuleGroupListProps> = memo(
           <>
             <YakitEmpty
               image={<img src={powerEmptyImage} alt="" />}
-              imageStyle={{ width: 220, height: 150, margin: 'auto' }}
+              styles={{ image: { width: 220, height: 150, margin: 'auto' } }}
               title={t('OnlineRuleGroupList.noPermissionTitle')}
               description={t('OnlineRuleGroupList.noPermissionDesc')}
             />

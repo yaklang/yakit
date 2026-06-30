@@ -665,7 +665,7 @@ export const ListShowContainer: <T>(props: ListShowContainerProps<T>) => any = m
   return isShowSearchResultEmpty ? (
     <YakitEmpty
       image={emptyImageTarget}
-      imageStyle={{ width: 274, height: 180, marginBottom: 24 }}
+      styles={{ image: { width: 274, height: 180, marginBottom: 24 } }}
       title={t('YakitEmpty.searchEmpty')}
       style={{ paddingTop: '10%' }}
       className={styles['empty-list']}

@@ -2289,7 +2289,7 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = memo((props) => {
       className={styles['drawer-wrapper']}
       closable={false}
       placement="bottom"
-      visible={visible}
+      open={visible}
       onClose={() => setVisible(false)}
     >
       <div className={styles['drawer-body']}>

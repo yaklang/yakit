@@ -473,7 +473,7 @@ const ForwardForgeName = forwardRef((props: ForgeNameProps, ref: Ref<ForgeNameRe
             )}
             {loading && (
               <div className={styles['forge-list-loading']}>
-                <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} tip="" />
+                <YakitSpin wrapperClassName={styles['loading-style']} spinning={true} />
               </div>
             )}
           </div>

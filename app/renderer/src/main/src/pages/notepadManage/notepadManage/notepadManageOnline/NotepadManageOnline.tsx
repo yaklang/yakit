@@ -384,7 +384,7 @@ const NotepadManageOnline: React.FC<NotepadOnlineProps> = React.memo((props) => 
           ) : (
             <YakitEmpty
               image={emptyImageTarget}
-              imageStyle={{ margin: '96px auto 12px', height: 200 }}
+              styles={{ image: { margin: '96px auto 12px', height: 200 } }}
               title={t('YakitEmpty.searchEmpty')}
             />
           )

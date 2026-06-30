@@ -395,7 +395,7 @@ export const KnowledgeBaseQA: React.FC<KnowledgeBaseQAProps> = ({ knowledgeBase,
                       ? knowledgeBase.KnowledgeBaseName
                       : t('playground.KnowledgeBaseQA.allCollections'),
                   })}
-                  imageStyle={{ height: 60 }}
+                  styles={{ image: { height: 60 } }}
                 />
               </div>
             ) : (
