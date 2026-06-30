@@ -440,9 +440,9 @@ export const FuncFilterPopover: React.FC<FuncFilterPopoverProps> = memo((props) 
   return (
     <Dropdown
       overlayClassName={styles['func-filter-popover']}
-      overlay={overlay}
+      popupRender={() => overlay}
       placement={placement}
-      onVisibleChange={setShow}
+      onOpenChange={setShow}
       disabled={disabled}
     >
       {nameAndIcon ? (

@@ -734,7 +734,7 @@ export const HotPatchManagement: React.FC = () => {
     <Dropdown
       placement="bottomRight"
       trigger={['click']}
-      overlay={
+      popupRender={() => (
         <YakitMenu
           className={styles['hot-patch-menu']}
           popupClassName={styles['hot-patch-menu']}
@@ -757,7 +757,7 @@ export const HotPatchManagement: React.FC = () => {
             if (key === 'create-group') onOpenCreateGroupModal(type)
           }}
         />
-      }
+      )}
     >
       <YakitButton size="small" type="outline1" icon={<OutlinePlusIcon />} />
     </Dropdown>

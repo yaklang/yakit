@@ -367,8 +367,8 @@ const AIPlanReviewTreeItem: React.FC<AIPlanReviewTreeItemProps> = React.memo((pr
               dropdown={{
                 trigger: ['click'],
                 placement: 'bottom',
-                visible: visible,
-                onVisibleChange: setVisible,
+                open: visible,
+                onOpenChange: setVisible,
               }}
             >
               <YakitButton

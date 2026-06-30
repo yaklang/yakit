@@ -283,10 +283,10 @@ export const OnlineFolderComponent: React.FC<OnlineFolderComponentProps> = (prop
                 dropdown={{
                   trigger: ['click'],
                   placement: 'bottomRight',
-                  onVisibleChange: (v) => {
+                  onOpenChange: (v) => {
                     setMenuOpen(v)
                   },
-                  visible: menuOpen,
+                  open: menuOpen,
                 }}
               >
                 <div className={styles['extra-icon']}>
@@ -629,10 +629,10 @@ export const OnlineFileComponent: React.FC<OnlineFileComponentProps> = (props) =
                   overlayClassName: styles['payload-list-menu'],
                   trigger: ['click'],
                   placement: 'bottomRight',
-                  onVisibleChange: (v) => {
+                  onOpenChange: (v) => {
                     setMenuOpen(v)
                   },
-                  visible: menuOpen,
+                  open: menuOpen,
                 }}
               >
                 <div className={styles['extra-icon']}>

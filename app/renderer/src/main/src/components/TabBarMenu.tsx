@@ -27,7 +27,7 @@ export const TabBarMenu = (
       {...props}
       children={(barNode: React.ReactElement) => {
         return (
-          <Dropdown overlay={tabBarMenu(barNode.key)} trigger={['contextMenu']}>
+          <Dropdown popupRender={() => tabBarMenu(barNode.key)} trigger={['contextMenu']}>
             {barNode}
           </Dropdown>
         )

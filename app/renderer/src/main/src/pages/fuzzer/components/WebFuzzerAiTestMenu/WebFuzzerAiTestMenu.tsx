@@ -170,11 +170,11 @@ export const WebFuzzerAiTestMenu: React.FC<WebFuzzerAiTestMenuProps> = React.mem
   return (
     <>
       <Dropdown
-        overlay={overlay}
+        popupRender={() => overlay}
         trigger={['click']}
         placement="bottomLeft"
-        visible={dropdownVisible}
-        onVisibleChange={(visible) => {
+        open={dropdownVisible}
+        onOpenChange={(visible) => {
           if (loading) {
             yakitNotify('info', t('HTTPFuzzerPage.loadData'))
             return

@@ -186,8 +186,8 @@ const NotepadManageLocalList: React.FC<NotepadManageLocalListProps> = (props) =>
                 },
               }}
               dropdown={{
-                visible: timeSortVisible,
-                onVisibleChange: setTimeSortVisible,
+                open: timeSortVisible,
+                onOpenChange: setTimeSortVisible,
               }}
             >
               <YakitButton type="text2">

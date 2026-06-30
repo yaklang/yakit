@@ -312,7 +312,7 @@ const FileTreeSystemItem: FC<FileTreeSystemItemProps> = ({
         trigger: ['contextMenu'],
         placement: 'bottomRight',
         getPopupContainer: () => document.body,
-        visible: isShowRightMenu,
+        open: isShowRightMenu,
       }}
     >
       <div className={styles['file-tree-system-item']}>

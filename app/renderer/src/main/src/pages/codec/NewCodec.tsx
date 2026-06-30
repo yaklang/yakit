@@ -398,10 +398,10 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                       overlayClassName: styles['codec-input-menu'],
                       trigger: ['click'],
                       placement: 'bottomRight',
-                      onVisibleChange: (v) => {
+                      onOpenChange: (v) => {
                         setInputMenuOpen(v)
                       },
-                      visible: inputMenuOpen,
+                      open: inputMenuOpen,
                     }}
                   >
                     <div className={styles['extra-icon']}>
@@ -524,10 +524,10 @@ export const NewCodecRightEditorBox: React.FC<NewCodecRightEditorBoxProps> = (pr
                             overlayClassName: styles['codec-output-menu'],
                             trigger: ['click'],
                             placement: 'bottomRight',
-                            onVisibleChange: (v) => {
+                            onOpenChange: (v) => {
                               setOutputMenuOpen(v)
                             },
-                            visible: outputMenuOpen,
+                            open: outputMenuOpen,
                           }}
                         >
                           <div className={styles['extra-icon']}>
