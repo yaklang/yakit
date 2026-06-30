@@ -741,7 +741,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 <>
                   <Dropdown
                     overlayClassName={style['customize-drop-menu']}
-                    overlay={
+                    popupRender={() => (
                       <>
                         {CustomizeMenuData.map((item) => (
                           <div
@@ -782,8 +782,8 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                           </div>
                         </YakitSpin>
                       </>
-                    }
-                    onVisibleChange={setCustomizeVisible}
+                    )}
+                    onOpenChange={setCustomizeVisible}
                   >
                     <YakitButton
                       type="secondary2"

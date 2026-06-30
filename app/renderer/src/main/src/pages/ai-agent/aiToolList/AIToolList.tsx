@@ -374,8 +374,8 @@ const AIToolListItem: React.FC<AIToolListItemProps> = React.memo((props) => {
                 dropdown={{
                   trigger: ['click', 'contextMenu'],
                   placement: 'bottomLeft',
-                  visible: visible,
-                  onVisibleChange: setVisible,
+                  open: visible,
+                  onOpenChange: setVisible,
                 }}
               >
                 <YakitButton isActive={visible} type="text2" size="small" icon={<OutlineDotsverticalIcon />} />

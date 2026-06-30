@@ -20,7 +20,7 @@ export interface DropdownMenuProps {
 export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
   // @ts-ignore
   const {
-    dropdown: { overlay, ...restDropdown } = {},
+    dropdown: { popupRender, ...restDropdown } = {},
     menu: { data = [], onClick: onclick, ...restMenu } = {},
     onClick,
     children,
@@ -32,7 +32,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
         data={data || []}
         {...restMenu}
         onClick={(e) => {
-          const { item, key, keyPath, domEvent } = e
+          const { key, keyPath, domEvent } = e
           if (onClick) onClick(key)
           if (onclick) onclick(e)
         }}
@@ -41,7 +41,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = (props) => {
   }
 
   return (
-    <Dropdown overlay={overlay ? overlay : Menus} {...restDropdown}>
+    <Dropdown popupRender={(originNode) => (popupRender ? popupRender(originNode) : Menus())} {...restDropdown}>
       {children ? children : <></>}
     </Dropdown>
   )

@@ -256,7 +256,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
             const isActive = noteId === rowData.Id
             return (
               <Dropdown
-                overlay={
+                popupRender={() => (
                   <YakitMenu
                     data={[
                       {
@@ -276,7 +276,7 @@ const NotepadLocalList: React.FC<NotepadLocalListProps> = React.memo((props) => 
                       key === 'delete' && onRemove(singleFilter(rowData))
                     }}
                   />
-                }
+                )}
                 trigger={['contextMenu']}
               >
                 <div

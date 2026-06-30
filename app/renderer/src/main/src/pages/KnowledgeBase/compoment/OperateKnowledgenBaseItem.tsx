@@ -163,10 +163,10 @@ const OperateKnowledgenBaseItem: FC<TOperateKnowledgenBaseItemProps> = ({
         dropdown={{
           trigger: ['click'],
           placement: 'bottomRight',
-          onVisibleChange: (v) => {
+          onOpenChange: (v) => {
             setMenuOpen(v)
           },
-          visible: menuOpen,
+          open: menuOpen,
         }}
       >
         <SolidDotsverticalIcon

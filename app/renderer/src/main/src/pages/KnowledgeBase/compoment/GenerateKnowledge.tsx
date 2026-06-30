@@ -164,10 +164,10 @@ const GenerateKnowledge: FC<GenerateKnowledgeProps> = ({
           trigger: ['click'],
           placement: 'bottomRight',
           overlayClassName: styles['dropdownMene-data-children'],
-          onVisibleChange: (v) => {
+          onOpenChange: (v) => {
             setDropdownMenuVisible(v)
           },
-          visible: dropdownMenuVisible,
+          open: dropdownMenuVisible,
         }}
       >
         {children ? children : <YakitButton type="primary" size="large" icon={<OutlinePlay2Icon />} name="生成知识" />}
