@@ -100,7 +100,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
             <>
               <YakitEmpty
                 image={<img src={serverEmptyImage} alt="" />}
-                imageStyle={{ width: 272, height: 265, marginBottom: 16 }}
+                styles={{ image: { width: 272, height: 265, marginBottom: 16 } }}
                 title="服务器故障"
                 description="服务器故障，请联系管理员修复"
               />
@@ -121,7 +121,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                                 <>
                                     <YakitEmpty
                                         image={<img src={NoPermissions} alt='' />}
-                                        imageStyle={{width: 320, height: 250, marginBottom: 16}}
+                                        styles={{image: { width: 320, height: 250, marginBottom: 16 }}}
                                         title='暂无访问权限'
                                         description='登录后即可访问该页面'
                                     />
@@ -136,14 +136,14 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
                             ) : (
                                 <YakitEmpty
                                     image={<img src={NoPermissions} alt='' />}
-                                    imageStyle={{width: 320, height: 250, marginBottom: 16}}
+                                    styles={{image: { width: 320, height: 250, marginBottom: 16 }}}
                                     title='暂无访问权限'
                                     description='请联系管理员分配权限'
                                 />
                             )} */}
               <YakitEmpty
                 image={<img src={powerEmptyImage} alt="" />}
-                imageStyle={{ width: 320, height: 250, marginBottom: 16 }}
+                styles={{ image: { width: 320, height: 250, marginBottom: 16 } }}
                 title="暂无访问权限"
                 description="登录后即可访问该页面"
               />
@@ -159,7 +159,7 @@ export const OnlineJudgment: React.FC<OnlineJudgmentProps> = React.memo(
             <>
               <YakitEmpty
                 image={<img src={networkEmptyImage} alt="" />}
-                imageStyle={{ width: 300, height: 210, marginBottom: 16 }}
+                styles={{ image: { width: 300, height: 210, marginBottom: 16 } }}
                 title="请检查私有域配置与网络连接"
                 description="连网后才可访问 Yakit 插件商店"
               />

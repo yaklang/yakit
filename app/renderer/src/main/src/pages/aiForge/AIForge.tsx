@@ -262,7 +262,7 @@ const AIForgePage: React.FC<AIForgeProps> = React.memo((props) => {
             ) : listTotal > 0 ? (
               <YakitEmpty
                 image={emptyImageTarget}
-                imageStyle={{ margin: '0 auto 24px', width: 274, height: 180 }}
+                styles={{ image: { margin: '0 auto 24px', width: 274, height: 180 } }}
                 title="搜索结果“空”"
                 className={styles['hub-list-empty']}
               />

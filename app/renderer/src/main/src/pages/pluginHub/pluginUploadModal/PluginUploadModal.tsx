@@ -253,11 +253,9 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
           <PluginUploadPrivateScoreTip
             tip="私密插件不进行源码自动检测，开始上传插件"
             content={
-              <YakitSpin
-                spinning={true}
-                tip="上传中..."
-                wrapperClassName={styles['upload-modal-private-upload-spin']}
-              />
+              <YakitSpin spinning={true} tip="上传中..." wrapperClassName={styles['upload-modal-private-upload-spin']}>
+                <div style={{ minHeight: 100 }} /> {/* 占位 */}
+              </YakitSpin>
             }
             callback={handlePrivateUpload}
           />
@@ -280,11 +278,9 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
           <PluginUploadPrivateScoreTip
             tip="私密插件不进行源码自动检测，自动进行下一步"
             content={
-              <YakitSpin
-                spinning={true}
-                tip="跳转中..."
-                wrapperClassName={styles['upload-modal-private-upload-spin']}
-              />
+              <YakitSpin spinning={true} tip="跳转中..." wrapperClassName={styles['upload-modal-private-upload-spin']}>
+                <div style={{ minHeight: 100 }} /> {/* 占位 */}
+              </YakitSpin>
             }
             callback={handlePrivateSubmit}
           />
@@ -316,7 +312,11 @@ export const PluginUploadModal: React.FC<PluginUploadModalProps> = memo((props) 
           e.stopPropagation()
         }}
       >
-        {loading && <YakitSpin wrapperClassName={styles['spin-loading']} spinning={loading} tip="获取插件信息中..." />}
+        {loading && (
+          <YakitSpin wrapperClassName={styles['spin-loading']} spinning={loading} tip="获取插件信息中...">
+            <div style={{ minHeight: 100 }} />
+          </YakitSpin>
+        )}
         {!loading && isError && <YakitEmpty title={errorInfo.current || '意外错误，请关闭重试'} />}
         {!loading && !!mode && (
           <>

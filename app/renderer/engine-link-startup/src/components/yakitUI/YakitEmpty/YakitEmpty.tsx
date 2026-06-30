@@ -43,7 +43,7 @@ export const YakitEmpty: React.FC<YakitEmptyProps> = (props) => {
     <Empty
       image={<img style={{ userSelect: 'none' }} draggable={false} src={emptyImageTarget} alt="" />}
       styles={{
-        image: props.imageStyle || {
+        image: props?.styles?.image || {
           height: 200,
           width: 200,
           margin: '24px auto',

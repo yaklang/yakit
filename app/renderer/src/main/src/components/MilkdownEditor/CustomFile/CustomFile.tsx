@@ -407,7 +407,9 @@ export const CustomFile: React.FC<CustomFileProps> = (props) => {
             spinning={true}
             tip={t('MilkdownEditor.customFile.loadingFile')}
             wrapperClassName={styles['file-spinning']}
-          />
+          >
+            <div style={{ minHeight: 100 }} /> {/* 占位 */}
+          </YakitSpin>
         )}
       </div>
       {downFileInfo && (

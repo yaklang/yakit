@@ -156,7 +156,7 @@ export const ImagePreviewList: React.FC<ImagePreviewListProps> = memo((props) =>
             >
               <Image key={item.url} src={item.url} className={styles['img-style']} preview={false} />
               <div className={styles['mask-spin']}>
-                <YakitSpin spinning={true} tip="" wrapperClassName={styles['spin-style']} />
+                <YakitSpin spinning={true} wrapperClassName={styles['spin-style']} />
               </div>
               <div
                 className={styles['mask-box']}
@@ -200,7 +200,7 @@ export const ImagePreviewList: React.FC<ImagePreviewListProps> = memo((props) =>
                     >
                       <Image key={item.url} src={item.url} className={styles['img-style']} preview={false} />
                       <div className={styles['mask-spin']}>
-                        <YakitSpin spinning={true} tip="" wrapperClassName={styles['spin-style']} />
+                        <YakitSpin spinning={true} wrapperClassName={styles['spin-style']} />
                       </div>
                       <div
                         className={styles['mask-box']}
