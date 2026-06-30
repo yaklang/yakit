@@ -126,7 +126,7 @@ const renderCard = (infoList, type) => {
             <Tooltip
               color="#fff"
               title={<TooltipTitle list={infoList} />}
-              classNames={{ root: "status-cards-info" }}
+              classNames={{ root: 'status-cards-info' }}
               placement="topLeft"
             >
               <Statistic
@@ -310,7 +310,6 @@ export const PluginResultUI: React.FC<PluginResultUIProp> = React.memo((props) =
       )}
       <PluginTabs
         type="card"
-        className={'main-content-tabs no-theme-tabs'}
         activeKey={active}
         onChange={(activeKey) => {
           setActive(activeKey)

@@ -73,7 +73,7 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
         firstNodeStyle={{ padding: secondFull ? 0 : undefined }}
         secondNode={
           <div className={styles['cve-description']} style={{ display: firstFull ? 'none' : '', overflow: 'initial' }}>
-            {cwes.length === 1 ? (
+            {/* {cwes.length === 1 ? (
               <>
                 <div className={styles['cve-description-heard']}>
                   <div className={styles['cve-description-heard-title']}>
@@ -111,7 +111,22 @@ export const CVEInspect: React.FC<CVEInspectProp> = (props) => {
                   </div>
                 }
               />
-            )}
+            )} */}
+            <CWEDescription
+              data={cwes}
+              onSelectCve={(s) => {
+                onSelectCve(s)
+              }}
+              tabBarExtraContent={
+                <div
+                  className={styles['cve-description-icon']}
+                  onClick={() => setSecondFull(!secondFull)}
+                  style={{ paddingRight: 12 }}
+                >
+                  {secondFull ? <ArrowsRetractIcon /> : <ArrowsExpandIcon />}
+                </div>
+              }
+            />
           </div>
         }
         {...ResizeBoxProps}

@@ -1,4 +1,4 @@
-import { Descriptions, List, Tabs } from 'antd'
+import { Descriptions } from 'antd'
 import { CVEDetail, CWEDetail } from '@/pages/cve/models'
 import classNames from 'classnames'
 import '../main.scss'
@@ -6,8 +6,8 @@ import styles from './CVETable.module.scss'
 import { useCreation } from 'ahooks'
 import moment from 'moment'
 import React, { ReactNode } from 'react'
+import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 const { ipcRenderer } = window.require('electron')
-const { TabPane } = Tabs
 
 export const CVEDescription = React.memo(
   ({
@@ -145,21 +145,14 @@ export const CWEDescription: React.FC<CWEDescriptionProps> = React.memo((props) 
 
   return (
     <>
-      <Tabs
-        defaultActiveKey={data[0]?.CWE || '-'}
-        size="small"
-        type="card"
-        className={classNames(styles['cwe-tabs'], 'main-content-tabs', 'yakit-layout-tabs')}
-        // className={styles["cwe-tabs"]}
-        tabBarExtraContent={tabBarExtraContent}
-      >
+      <PluginTabs defaultActiveKey={data[0]?.CWE || '-'} type="card" tabBarExtraContent={tabBarExtraContent}>
         {data.map((i: CWEDetail) => (
-          <TabPane tab={i.CWE} key={i.CWE}>
+          <PluginTabs.TabPane tab={i.CWE} key={i.CWE}>
             <CWEDescriptionItem item={i} onSelectCve={onSelectCve} />
             <div className={styles['no-more']}>暂无更多</div>
-          </TabPane>
+          </PluginTabs.TabPane>
         ))}
-      </Tabs>
+      </PluginTabs>
     </>
   )
 })

@@ -23,7 +23,7 @@ import {
 } from '@/assets/newIcon'
 import ReactResizeDetector from 'react-resize-detector'
 import { useGetState, useMemoizedFn, useUpdateEffect } from 'ahooks'
-import { Divider, Dropdown, Tabs, Tooltip } from 'antd'
+import { Divider, Dropdown, Tooltip } from 'antd'
 import { YakitMenu, YakitMenuItemProps } from '@/components/yakitUI/YakitMenu/YakitMenu'
 import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
@@ -68,6 +68,7 @@ import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { usePluginToId } from '@/store/publicMenu'
 import { JSONParseLog } from '@/utils/tool'
+import PluginTabs from '@/components/businessUI/PluginTabs/PluginTabs'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -823,7 +824,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
       </div>
       {isExpand && (
         <div className={style['heard-sub-menu-expand']}>
-          <Tabs
+          <PluginTabs
             tabBarExtraContent={
               <div className={style['heard-menu-sort']} onClick={() => onExpand(false)}>
                 <SortAscendingIcon />
@@ -844,7 +845,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
               // 二级菜单的路由信息
               const tabKey = routeInfoToKey(item)
               return (
-                <Tabs.TabPane
+                <PluginTabs.TabPane
                   tab={
                     <div className={style['sub-menu-expand']}>
                       {(!isDisable && (
@@ -895,7 +896,7 @@ const HeardMenu: React.FC<HeardMenuProps> = React.memo((props) => {
                 />
               )
             })}
-          </Tabs>
+          </PluginTabs>
         </div>
       )}
       {/* 后面看看菜单导出的数据格式 */}

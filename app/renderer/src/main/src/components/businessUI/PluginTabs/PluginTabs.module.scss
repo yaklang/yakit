@@ -61,6 +61,11 @@
           }
         }
       }
+      & > .ant-tabs-content-holder {
+        & > .ant-tabs-content > .ant-tabs-tabpane {
+          height: 100%;
+        }
+      }
     }
     // tabPosition = bottom
     .ant-tabs-bottom {
@@ -111,6 +116,11 @@
           .ant-tabs-tab-btn {
             color: var(--Colors-Use-Neutral-Disable);
           }
+        }
+      }
+      & > .ant-tabs-content-holder {
+        & > .ant-tabs-content > .ant-tabs-tabpane {
+          height: 100%;
         }
       }
     }
@@ -182,6 +192,7 @@
         margin-right: 0;
         & > .ant-tabs-content > .ant-tabs-tabpane {
           padding-right: 0;
+          height: 100%;
         }
       }
     }
@@ -250,6 +261,7 @@
         margin-left: 0;
         & > .ant-tabs-content > .ant-tabs-tabpane {
           padding-left: 0;
+          height: 100%;
         }
       }
     }
