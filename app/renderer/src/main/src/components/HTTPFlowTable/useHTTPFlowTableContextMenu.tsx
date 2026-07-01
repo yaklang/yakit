@@ -233,21 +233,6 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         onClickBatch: () => {},
         children: getCodecHistoryPlugin(),
       },
-      // {
-      //   key: 'AI插件',
-      //   label: (
-      //     <>
-      //       <IconSolidAIIcon className={'ai-plugin-menu-icon-default'} />
-      //       <IconSolidAIWhiteIcon className={'ai-plugin-menu-icon-hover'} />
-      //       {t('HTTPFlowTable.RowContextMenu.aiPlugin')}
-      //     </>
-      //   ),
-      //   default: true,
-      //   webSocket: false,
-      //   onClickSingle: () => {},
-      //   onClickBatch: () => {},
-      //   children: getCodecAIPlugin(),
-      // },
       {
         key: 'copyUrl',
         label: t('HTTPFlowTable.RowContextMenu.copyURL'),
@@ -574,6 +559,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     selected?.Id,
     onlyFavorite,
     getUrlWithoutQuery,
+    total,
   ])
 
   /** 菜单自定义快捷键渲染处理事件 */

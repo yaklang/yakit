@@ -64,7 +64,6 @@
       "openURLInBrowser": "Open URL in Browser",
       "viewResponseInBrowser": "View Response in Browser",
       "viewInBrowser": "View in Browser",
-      "copyAs": "Copy as",
       "copyAsCSRFPoc": "Copy as CSRF PoC",
       "copyAsYakPoCTemplate": "Copy as Yak PoC Template",
       "packetPoCTemplate": "Packet PoC Template",

@@ -1682,7 +1682,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         },
       },
     ]
-  }, [data, compareState, i18n.language, onlyFavorite])
+  }, [data, compareState, i18n.language, onlyFavorite, total])
 
   const contextMenuKeybindingHandle = useMemoizedFn((data) => {
     const menus: any = []
