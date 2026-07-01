@@ -77,7 +77,7 @@ const buildEdgePagination = (
       Page: 1,
       Limit: limit,
       Order: sort.order,
-      OrderBy: sort.orderBy || 'Id',
+      OrderBy: sort.orderBy || idKey,
       ...(sort.order === 'asc' ? { BeforeId: edgeId } : { AfterId: edgeId }),
     }
   }
@@ -85,7 +85,7 @@ const buildEdgePagination = (
     Page: 1,
     Limit: limit,
     Order: sort.order,
-    OrderBy: sort.orderBy || 'Id',
+    OrderBy: sort.orderBy || idKey,
     BeforeId: isDesc ? edgeId : undefined,
     AfterId: isDesc ? undefined : edgeId,
   }
@@ -449,7 +449,7 @@ export default function useVirtualTableHook<
         recoverTopIdRef.current = 0
         slidingClippedRef.current = false
       }
-      const limitCount: number = params.Pagination?.FixedLimit || Math.ceil(boxHeightRef.current / 28)
+      const limitCount: number = params.Pagination?.FixedLimit || Math.ceil(boxHeightRef.current / ROW_HEIGHT)
       const paginationProps = {
         Page: 1,
         Limit: limitCount,
