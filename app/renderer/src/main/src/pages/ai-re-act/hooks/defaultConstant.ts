@@ -211,4 +211,5 @@ export const DefaultPlanItemDetailsData: PlanItemDetailsData = {
     risk_count: 0,
     modified_file_count: 0,
   },
+  backgroundProcesses: [],
 }

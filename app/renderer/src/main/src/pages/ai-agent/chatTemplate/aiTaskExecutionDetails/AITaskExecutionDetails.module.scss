@@ -1,8 +1,7 @@
 .ai-task-execution-details-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 0 0 12px;
+  padding: 0 0 0 12px;
 
   height: 100%;
   overflow-y: auto;
@@ -76,7 +75,7 @@
     width: 100%;
 
     flex: 1;
-    min-height: 800px;
+    // min-height: 800px;
     overflow-y: auto;
   }
 
@@ -336,24 +335,50 @@
     }
   }
 
-  .bottom-section {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    min-height: 90px;
-    overflow: hidden;
+  .section {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
     border-radius: 8px;
     border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
   }
+  .browser-processes {
+    border-radius: 8px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    &-title {
+      color: var(--Colors-Use-Neutral-Text-1-Title);
+
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px; /* 142.857% */
+      letter-spacing: 0.1px;
+
+      padding: 6px 8px 2px 8px;
+    }
+    .browser-processes-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+      padding: 8px;
+      overflow: auto;
+      max-height: 500px;
+    }
+  }
   .section-card {
     border-radius: 8px;
-
     padding: 4px;
     display: flex;
     flex-direction: column;
     gap: 4px;
 
     overflow: hidden;
-    max-height: 100%;
+    flex: 1;
+    min-width: 300px;
 
     .section-card-title {
       color: var(--Colors-Use-Neutral-Text-1-Title);
@@ -363,108 +388,6 @@
       line-height: 20px; /* 142.857% */
       letter-spacing: 0.1px;
       padding: 6px 8px 2px 8px;
-    }
-  }
-
-  .plugin-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    border-radius: 6px;
-    border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-    background: var(--Colors-Use-Neutral-Bg);
-
-    overflow: hidden;
-    flex: 1;
-
-    .plugin-group-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: var(--Colors-Use-Neutral-Text-3-Secondary);
-      padding: 4px 8px;
-      .add-btn {
-        padding-right: 0;
-      }
-      .plugin-group-title {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        overflow: hidden;
-        :global {
-          .ant-radio-button-wrapper {
-            padding: 0 8px;
-          }
-        }
-      }
-    }
-
-    .plugin-list {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding: 0px 8px 8px 8px;
-      overflow: auto;
-      flex: 1 1 auto;
-
-      .plugin-item {
-        padding: 2px;
-        padding-left: 6px;
-        border: 1px solid var(--Colors-Use-Neutral-Bg-Hover);
-        background: var(--Colors-Use-Basic-Background);
-        border-radius: 6px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        position: relative;
-
-        color: var(--Colors-Use-Neutral-Text-2-Primary);
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 16px;
-        letter-spacing: 0.5px;
-        .plugin-item-heard {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .plugin-item-title {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          min-height: 24px;
-          padding: 4px 0;
-          overflow: hidden;
-          .text {
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            word-break: break-all;
-          }
-        }
-
-        .plugin-item-desc {
-          font-size: 12px;
-          color: var(--Colors-Use-Neutral-Text-4-Help-text);
-          white-space: nowrap;
-          text-overflow: ellipsis;
-          overflow: hidden;
-          word-break: break-all;
-        }
-
-        .plugin-item-actions {
-          display: none;
-        }
-
-        &:hover {
-          .plugin-item-actions {
-            display: block;
-          }
-        }
-      }
     }
   }
 }
@@ -497,33 +420,6 @@
         display: none; /* 极窄时隐藏右侧操作按钮，保留核心信息展示 */
       }
     }
-    .bottom-section {
-      overflow: initial;
-      position: relative;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      min-height: initial;
-      .section-card {
-        position: relative;
-        /* 增加宽度限制 */
-        min-width: 0;
-        max-width: 100%;
-        &:nth-child(3) {
-          overflow: visible;
-          &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 200%;
-            height: 1px;
-            background-color: var(--Colors-Use-Neutral-Bg-Hover);
-          }
-        }
-      }
-      .plugin-list {
-        max-height: 500px;
-      }
-    }
   }
 }
 
@@ -549,20 +445,6 @@
         /* 剩余的后 2 个元素，每个跨域 3 列 (占据 1/2) */
         > :nth-child(n + 4) {
           grid-column: span 3;
-        }
-      }
-    }
-    .bottom-section {
-      overflow: initial;
-      grid-template-columns: 1fr;
-
-      .section-card {
-        position: relative;
-        &:nth-child(3) {
-          overflow: hidden;
-          &::before {
-            width: 0;
-          }
         }
       }
     }
