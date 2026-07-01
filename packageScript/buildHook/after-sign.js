@@ -12,6 +12,11 @@ module.exports = async function afterSign(context) {
   console.log(`Output Directory ${appOutDir}`)
   console.log(`App Path: ${appOutDir}/${appName}.app`)
 
+  const missing = ['APPLE_ID', 'APPLE_APP_SPECIFIC_PASSWORD', 'APPLE_TEAM_ID'].filter((key) => !process.env[key])
+  if (missing.length > 0) {
+    throw new Error(`Missing required notarization env vars: ${missing.join(', ')}`)
+  }
+
   return await notarize({
     appBundleId: appBundleId,
     appPath: `${appOutDir}/${appName}.app`,
