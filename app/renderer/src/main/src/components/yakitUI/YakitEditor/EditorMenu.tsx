@@ -33,6 +33,8 @@ export interface EditorMenuProp extends MenuProps {
   popupClassName?: string
   /** @name 组件尺寸类型(默认|右键高度紧凑型) */
   size?: 'default' | 'rightMenu'
+  /** 点击一级子菜单标题时触发 onClick */
+  parentTitleClick?: boolean
 }
 
 export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
@@ -43,6 +45,8 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
     className,
     popupClassName,
     size = 'default',
+    parentTitleClick = false,
+    onClick,
     ...restMenu
   } = props
   const [openKeys, setOpenKeys] = useState<string[]>([])
@@ -86,6 +90,11 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
           disabled: info.disabled,
           children: [],
           popupClassName: classNames(styles['yakit-menu-submenu'], menuTypeClass, menuSizeClass, popupClassName),
+          onTitleClick:
+            parentTitleClick && onClick
+              ? ({ key, domEvent }) =>
+                  onClick({ key, keyPath: [key], domEvent } as Parameters<NonNullable<typeof onClick>>[0])
+              : undefined,
         }
         const arr: ItemType[] = []
         for (let item of info.children) {
@@ -125,6 +134,7 @@ export const EditorMenu: React.FC<EditorMenuProp> = React.memo((props) => {
       <Menu
         openKeys={openKeys}
         {...restMenu}
+        onClick={onClick}
         className={classNames(styles['yakit-menu-wrapper'], className || '')}
         items={data && data.length > 0 ? items : restMenu.items}
         onOpenChange={(openKey) => {

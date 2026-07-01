@@ -283,18 +283,18 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         default: true,
         webSocket: false,
         onClickSingle: (v) => {
-          v.Url && openExternalWebsite(v.Url)
+          showResponseViaHTTPFlowID(v)
         },
         children: [
-          {
-            key: 'openURLInBrowser',
-            label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
-            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
-          },
           {
             key: 'viewResponseInBrowser',
             label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
             keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
+          },
+          {
+            key: 'openURLInBrowser',
+            label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
           },
         ],
       },

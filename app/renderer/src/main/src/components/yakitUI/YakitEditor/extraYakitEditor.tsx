@@ -130,7 +130,7 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
     if (noPacketModifier) {
       return init
     } else {
-      return init.concat(['customcontextmenu', 'aiplugin'])
+      return init.concat(['customcontextmenu'])
     }
   }, [noPacketModifier, onlyBasicMenu])
 
@@ -238,44 +238,47 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           }
         },
       },
-      copyUrlWithQuery: {
+      copyUrl: {
         menu: [
           {
-            key: 'copyUrlWithQuery',
-            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
-            keybindings: YakEditorOptionShortcutKey.CopyUrlWithQuery,
+            key: 'copy-url',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrl'),
+            children: [
+              {
+                key: 'copyUrlWithQuery',
+                label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
+                keybindings: YakEditorOptionShortcutKey.CopyUrlWithQuery,
+              },
+              {
+                key: 'copyUrlWithoutQuery',
+                label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
+                keybindings: YakEditorOptionShortcutKey.CopyUrlWithoutQuery,
+              },
+            ],
           },
         ],
-        onRun: () => {
+        onRun: (editor, key) => {
+          if (key === 'copyUrlWithoutQuery') {
+            if (onClickUrlWithoutQueryMenu) {
+              onClickUrlWithoutQueryMenu()
+            } else if (url) {
+              try {
+                const u = new URL(url)
+                u.search = ''
+                u.hash = ''
+                setClipboardText(u.toString())
+              } catch {
+                setClipboardText(url.split('?')[0].split('#')[0])
+              }
+            } else {
+              yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+            }
+            return
+          }
           if (onClickUrlMenu) {
             onClickUrlMenu()
           } else {
             setClipboardText(url || '')
-          }
-        },
-      },
-      copyUrlWithoutQuery: {
-        menu: [
-          {
-            key: 'copyUrlWithoutQuery',
-            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
-            keybindings: YakEditorOptionShortcutKey.CopyUrlWithoutQuery,
-          },
-        ],
-        onRun: () => {
-          if (onClickUrlWithoutQueryMenu) {
-            onClickUrlWithoutQueryMenu()
-          } else if (url) {
-            try {
-              const u = new URL(url)
-              u.search = ''
-              u.hash = ''
-              setClipboardText(u.toString())
-            } catch {
-              setClipboardText(url.split('?')[0].split('#')[0])
-            }
-          } else {
-            yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
           }
         },
       },
