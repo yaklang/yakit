@@ -62,6 +62,8 @@ import { slash, SlashView } from '../Slash/Slash'
 import { httpUploadImgPath } from '@/apiUtils/http'
 import { customShiftEnterPlugin } from './utils'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
+import { fallbackTextDirectivePlugin } from './fallback-text-directive'
+import { fallbackContainerDirectivePlugin } from './fallback-container-directive'
 
 export interface InitEditorHooksCollabProps extends MilkdownCollabProps {
   onCollab: (ctx: Ctx) => void
@@ -420,6 +422,8 @@ export default function useInitEditorHooks(props: InitEditorHooksProps) {
           // mention 提及@
           .use(mentionPlugin)
           .use(customPlugin || [])
+          .use(fallbackTextDirectivePlugin()) // textDirective 兜底
+          .use(fallbackContainerDirectivePlugin()) // containerDirective 兜底
       )
     },
     [readonly, defaultValue, type, collabParams.enableCollab, collabParams.milkdownHash, i18n.language],
