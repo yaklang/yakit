@@ -1,18 +1,15 @@
 import React, { useMemo } from 'react'
 import classNames from 'classnames'
-import { Avatar, Progress } from 'antd'
+import { Avatar } from 'antd'
 import styles from './CeUserMenu.module.scss'
 import { YakitMenuItemDividerProps } from '../yakitUI/YakitMenu/YakitMenu'
 import { UserInfoProps } from '@/store'
 import { UserPlatformType } from '@/pages/globalVariable'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import yakitImg from '@/assets/yakit.jpg'
-
-/** 暂无接口数据时的占位 */
-const MOCK_USER_EMAIL = 'youyouya@gmail.com'
-const MOCK_USER_NAME = '又又呀'
-const MOCK_TOKEN_USED = 20
-const MOCK_TOKEN_TOTAL = 200
+import { useMemoizedFn } from 'ahooks'
+import { API } from '@/services/swagger/resposeType'
+import { getTokenLimit, getTokenPercent, getTokenUsed } from './CeUsageStatisticsModal'
 
 export interface CeUserItemProps {
   key: string
@@ -71,10 +68,12 @@ export const CeUserMenuContent: React.FC<CeUserMenuContentProps> = (props) => {
 
 interface CeUserInfoProps {
   userInfo: UserInfoProps
+  onOpenStatistics?: () => void
+  apiKeysInfo?: API.ApiKeyDetail
 }
 
 export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
-  const { userInfo } = props
+  const { userInfo, onOpenStatistics, apiKeysInfo } = props
   const { t } = useI18nNamespaces(['layout'])
 
   const platformType = UserPlatformType[userInfo.platform || '']
@@ -82,9 +81,9 @@ export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
   const userName = useMemo(() => {
     if (platformType) {
       const nameKey = platformType.name as keyof UserInfoProps
-      return (userInfo[nameKey] as string) || MOCK_USER_NAME
+      return (userInfo[nameKey] as string) || ''
     }
-    return MOCK_USER_NAME
+    return ''
   }, [userInfo, platformType])
 
   const avatarSrc = useMemo(() => {
@@ -95,36 +94,48 @@ export const CeUserInfo: React.FC<CeUserInfoProps> = (props) => {
     return yakitImg
   }, [userInfo, platformType])
 
-  const tokenPercent = Math.round((MOCK_TOKEN_USED / MOCK_TOKEN_TOTAL) * 100)
+  const handleClick = useMemoizedFn((e: React.MouseEvent) => {
+    if (!apiKeysInfo) {
+      return
+    }
+    e.stopPropagation()
+    onOpenStatistics?.()
+  })
 
   return (
-    <div className={styles['ce-user-info']}>
+    <div
+      className={classNames(styles['ce-user-info'], {
+        [styles['ce-user-info-clickable']]: !!apiKeysInfo,
+      })}
+      onClick={handleClick}
+    >
       <div className={styles['ce-user-info-avatar-wrapper']}>
         <Avatar src={avatarSrc} size={40} />
         <div className={styles['ce-user-info-name-wrapper']}>
           <div className={styles['ce-user-info-name']}>{userName}</div>
-          <div className={styles['ce-user-info-email']}>{MOCK_USER_EMAIL}</div>
+          {/* <div className={styles['ce-user-info-email']}>{MOCK_USER_EMAIL}</div> */}
         </div>
       </div>
 
-      <div className={styles['ce-user-info-token']}>
-        <Progress
-          strokeColor="var(--Colors-Use-Main-Primary)"
-          trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
-          percent={tokenPercent}
-          showInfo={false}
-          size="small"
-        />
-        <div className={styles['ce-user-info-token-row']}>
-          <span className={styles['ce-user-info-token-label']}>
-            {t('CeUserMenu.tokenConsumption')}
-            <span className={styles['ce-user-info-token-percent']}>({tokenPercent}%)</span>
-          </span>
-          <span className={styles['ce-user-info-token-value']}>
-            {MOCK_TOKEN_USED}/{MOCK_TOKEN_TOTAL}M
-          </span>
+      {apiKeysInfo && (
+        <div className={styles['ce-user-info-token']}>
+          <div className={styles['ce-user-info-progress-track']}>
+            <div
+              className={styles['ce-user-info-progress-fill']}
+              style={{ width: `${getTokenPercent(apiKeysInfo)}%` }}
+            />
+          </div>
+          <div className={styles['ce-user-info-token-row']}>
+            <span className={styles['ce-user-info-token-label']}>
+              {t('CeUserMenu.tokenConsumption')}
+              <span className={styles['ce-user-info-token-percent']}>({getTokenPercent(apiKeysInfo)}%)</span>
+            </span>
+            <span className={styles['ce-user-info-token-value']}>
+              {apiKeysInfo?.tokenLimitEnable ? `${getTokenUsed(apiKeysInfo)}/${getTokenLimit(apiKeysInfo)}M` : '无限制'}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
