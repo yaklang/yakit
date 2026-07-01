@@ -1466,7 +1466,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys,
           },
         ],
-        onClickBatch: () => {},
+        onClickBatch: (list, n) => {
+          onBatch((el) => onSendToTab(el, true), n, list.length === total)
+        },
+        onClickSingle: (v) => onSendToTab(v, true),
       },
       {
         key: '发送到 WS Fuzzer',
@@ -1486,7 +1489,10 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys,
           },
         ],
-        onClickBatch: () => {},
+        onClickBatch: (list, n) => {
+          onBatch((el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request), n, list.length === total)
+        },
+        onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request),
       },
       {
         key: 'favorite',
@@ -1506,12 +1512,11 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         onClickBatch: (list, n) => toggleHTTPFlowFavoriteBatch(list, n, false),
       },
       {
-        key: 'copyUrlWithQuery',
-        label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
+        key: 'copyURL',
+        label: t('HTTPFlowTable.RowContextMenu.copyURL'),
         number: 30,
         default: true,
         webSocket: true,
-        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
         onClickSingle: (v) => setClipboardText(v.Url),
         onClickBatch: (v, number) => {
           if (v.length === 0) {
@@ -1525,39 +1530,18 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
             yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number }))
           }
         },
-      },
-      {
-        key: 'copyUrlWithoutQuery',
-        label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
-        number: 30,
-        default: true,
-        webSocket: true,
-        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
-        onClickSingle: (v) => {
-          const nextUrl = getUrlWithoutQuery(v.Url)
-          if (!nextUrl) {
-            yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
-            return
-          }
-          setClipboardText(nextUrl)
-        },
-        onClickBatch: (v, number) => {
-          if (v.length === 0) {
-            yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
-            return
-          }
-          if (v.length < number) {
-            const urls = v.map((ele) => getUrlWithoutQuery(ele.Url)).filter((url) => !!url)
-            if (!urls.length) {
-              yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
-              return
-            }
-            setClipboardText(urls.join('\r\n'))
-            resetSelected()
-          } else {
-            yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number }))
-          }
-        },
+        children: [
+          {
+            key: 'copyUrlWithQuery',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
+          },
+          {
+            key: 'copyUrlWithoutQuery',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
+          },
+        ],
       },
       {
         key: '下载 Response Body',
@@ -1571,30 +1555,34 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         },
       },
       {
-        key: '浏览器中打开URL',
-        label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
+        key: '浏览器中查看',
+        label: t('HTTPFlowTable.RowContextMenu.viewInBrowser'),
         default: true,
         webSocket: false,
-        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
         onClickSingle: (v) => {
           v.Url && openExternalWebsite(v.Url)
         },
-      },
-      {
-        key: '浏览器中查看响应',
-        label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
-        default: true,
-        webSocket: false,
-        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
-        onClickSingle: (v) => {
-          showResponseViaHTTPFlowID(v)
-        },
+        children: [
+          {
+            key: 'openURLInBrowser',
+            label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
+          },
+          {
+            key: 'viewResponseInBrowser',
+            label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
+          },
+        ],
       },
       {
         key: '复制为 CSRF Poc',
         label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc'),
         default: true,
         webSocket: false,
+        onClickSingle: (v) => {
+          generateCSRFPocByRequest(v.Request, v.IsHTTPS, (e) => setClipboardText(e), false)
+        },
         children: [
           {
             key: 'csrfpoc',
@@ -1614,6 +1602,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
         label: t('HTTPFlowTable.RowContextMenu.copyAsYakPoCTemplate'),
         default: true,
         webSocket: false,
+        onClickSingle: (v) => onPocMould(v),
         children: [
           {
             key: '数据包 PoC 模版',
@@ -1763,6 +1752,7 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
     showByRightContext(
       {
         width: 180,
+        parentTitleClick: true,
         data: rowContextmenu,
         onClick: ({ key, keyPath }) => {
           // 批量操作菜单点击
@@ -1810,6 +1800,24 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
               break
             case 'sendToWS':
               newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
+              break
+            case 'copyUrlWithQuery':
+              setClipboardText(rowData.Url)
+              break
+            case 'copyUrlWithoutQuery': {
+              const nextUrl = getUrlWithoutQuery(rowData.Url)
+              if (!nextUrl) {
+                yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+                return
+              }
+              setClipboardText(nextUrl)
+              break
+            }
+            case 'openURLInBrowser':
+              rowData.Url && openExternalWebsite(rowData.Url)
+              break
+            case 'viewResponseInBrowser':
+              showResponseViaHTTPFlowID(rowData)
               break
             case '数据包 PoC 模版':
               onPocMould(rowData)
@@ -1887,6 +1895,36 @@ const HTTPFlowFilterTable: React.FC<HTTPFlowTableProps> = React.memo((props) => 
           selectedRowKeys.length === total,
         )
         break
+      case 'copyUrlWithQuery':
+      case 'copyUrlWithoutQuery': {
+        const currentItemCopyUrl = menuData.find((f) => f.onClickBatch && f.key === 'copyURL')
+        if (!currentItemCopyUrl) return
+        if (key === 'copyUrlWithQuery') {
+          currentItemCopyUrl.onClickBatch?.(selectedRows, currentItemCopyUrl.number)
+          break
+        }
+        const urls = selectedRows.map((el) => getUrlWithoutQuery(el.Url)).filter((url) => !!url)
+        if (selectedRows.length > 0 && !urls.length) {
+          yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+          return
+        }
+        if (selectedRows.length >= (currentItemCopyUrl.number || 0)) {
+          yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number: currentItemCopyUrl.number }))
+          return
+        }
+        let copied = false
+        onBatch(
+          () => {
+            if (!copied) {
+              setClipboardText(urls.join('\r\n'))
+              copied = true
+            }
+          },
+          currentItemCopyUrl.number || 0,
+          selectedRowKeys.length === total,
+        )
+        break
+      }
       case '导出为Excel':
         onExcelExport(selectedRowKeys.map((id) => Number(id)))
         break

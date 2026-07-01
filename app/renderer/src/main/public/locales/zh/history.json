@@ -63,6 +63,8 @@
       "downloadResponseBody": "下载 Response Body",
       "openURLInBrowser": "浏览器中打开URL",
       "viewResponseInBrowser": "浏览器中查看响应",
+      "viewInBrowser": "浏览器中查看",
+      "copyAs": "复制为",
       "copyAsCSRFPoc": "复制为 CSRF Poc",
       "copyAsYakPoCTemplate": "复制为 Yak PoC 模版",
       "packetPoCTemplate": "数据包 PoC 模版",
