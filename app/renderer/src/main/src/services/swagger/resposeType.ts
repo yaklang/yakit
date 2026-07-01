@@ -98,12 +98,14 @@ export declare namespace API {
      * 判断是否首次登录
      */
     loginTime?: number
-    /** 密码最近更新时间（unix 秒） */
-    updatedAt?: number
     /**
      * 企业版用户是否有审核权限
      */
     checkPlugin: boolean
+    /**
+     * 用户更新时间
+     */
+    updatedAt?: number
   }
   export interface UrmUserListResponse extends Paging {
     data: UrmUserList[]
@@ -167,6 +169,17 @@ export declare namespace API {
     id: number
     hitCount?: number
   }
+  export interface UpdateApiKeyRequest {
+    apiKey?: string
+    allowedModels?: string
+    tokenLimit?: number
+    trafficLimit?: number
+    unlimited?: string
+    username?: string
+    remark?: string
+    metainfo?: string
+    active?: string
+  }
   export interface TouristUsedDetailResponse extends Paging {
     data: TouristUsedDetail[]
   }
@@ -183,6 +196,7 @@ export declare namespace API {
      * 昵称
      */
     nickName?: string
+    tempId?: number
   }
   export interface TouristTimesResponse {
     dayTimes: number
@@ -362,6 +376,47 @@ export declare namespace API {
      */
     searchTime: string
   }
+  export interface ThirdPartyApplicationConfig {
+    type?: string
+    apiKey?: string
+    userIdentifier?: string
+    userSecret?: string
+    namespace?: string
+    domain?: string
+    webhookURL?: string
+    extraParams?: KVPair[]
+    disabled?: boolean
+    proxy?: string
+    noHttps?: boolean
+    apiType?: string
+    baseURL?: string
+    endpoint?: string
+    enableEndpoint?: boolean
+    headers?: KVPair[]
+    enableThinking?: boolean
+    maxTokens?: number
+    temperature?: string
+    topP?: string
+    topK?: number
+    frequencyPenalty?: string
+    reasoningEffort?: string
+    enableThinkingOpt?: boolean
+  }
+  export interface ThirdPartyAppConfigItemTemplate {
+    required?: boolean
+    name?: string
+    verbose?: string
+    type?: string
+    defaultValue?: string
+    desc?: string
+    extra?: string
+  }
+  export interface Templates {
+    name?: string
+    verbose?: string
+    type?: string
+    items?: ThirdPartyAppConfigItemTemplate[]
+  }
   export interface TemplateDetail extends GormBaseModel {
     type: string
     name: string
@@ -397,6 +452,23 @@ export declare namespace API {
      * 0 待下发 1已下发 2 结束
      */
     status: number
+  }
+  export interface SystemLogWhere {
+    userName?: string
+    startTime?: number
+    endTime?: number
+    ipAdd?: string
+  }
+  export interface SystemLogResponse extends Paging {
+    data: SystemLogList[]
+  }
+  export interface SystemLogRequest extends SystemLogWhere, Pagination {}
+  export interface SystemLogList extends GormBaseModel, SystemLogDetail {}
+  export interface SystemLogDetail {
+    userName?: string
+    systemType?: string
+    ip?: string
+    roleName?: string
   }
   export interface SystemConfigResponse extends Paging {
     data: SystemConfigList[]
@@ -1351,6 +1423,11 @@ export declare namespace API {
      */
     loginIsLogUser?: boolean
   }
+  export interface KVPair {
+    key?: string
+    value?: string
+    marshalValue?: string
+  }
   export interface IsExtractCodeResponse {
     is_extract_code: boolean
   }
@@ -1626,6 +1703,9 @@ export declare namespace API {
     hash: string
     notepadUserId?: number
   }
+  export interface GetAIThirdPartyAppConfigTemplate {
+    templates: Templates[]
+  }
   export interface FuzzableParam {
     position?: string
     paramName?: string
@@ -1700,6 +1780,21 @@ export declare namespace API {
     ruleVerbose?: string[]
     analyzedIds?: number[]
   }
+  export interface ExportSystemLogWhere extends SystemLogRequest {
+    start?: number
+    /**
+     * 导出多少条
+     */
+    end?: number
+  }
+  export interface ExportRiskWhere extends GetRiskRequest {
+    fieldName: string[]
+    start?: number
+    /**
+     * 导出多少条
+     */
+    end?: number
+  }
   export interface ExportHTTPFlowWhere extends HTTPFlowListWhere {
     fieldName: string[]
     /**
@@ -1707,7 +1802,7 @@ export declare namespace API {
      */
     exportType: string
     /**
-     * 包含字段 响应包: response  请求包: request 请求大小: requestLen  标题: title
+     * 包含字段 响应包: response  请求包: request 请求大小: requestLen  标题: title, operationType
      */
     includeField?: string[]
     start?: number
@@ -1802,6 +1897,51 @@ export declare namespace API {
     head_img: string
     user_name: string
     role?: string
+  }
+  export interface ApiKeysResponse {
+    data: ApiKeyDetail[]
+  }
+  export interface ApiKeysRequest {
+    keyword?: string
+    username?: string
+    active?: string
+    page?: number
+    pageSize?: number
+  }
+  export interface ApiKeyDetail {
+    inputBytes?: number
+    outputBytes?: number
+    usageCount?: number
+    successCount?: number
+    failureCount?: number
+    lastUsedTime?: number
+    active?: boolean
+    webSearchCount?: number
+    remark?: string
+    metaInfo?: string
+    apiKey?: string
+    allowedModels?: string[]
+    tokenLimit?: number
+    tokenLimitEnable?: boolean
+    trafficLimit?: number
+    trafficLimitEnable?: boolean
+    trafficUsed?: number
+    tokenUsed?: number
+  }
+  export interface AIConfigHealthCheckResponse {
+    firstByteCostMs?: number
+    totalCostMs?: number
+    rawRequest?: string
+    responseStatusCode?: number
+    responseContent?: string
+    errorMessage?: string
+    rawResponse?: string
+    recommendConfig?: ThirdPartyApplicationConfig
+    success?: boolean
+  }
+  export interface AIConfigHealthCheckRequest {
+    content?: string
+    config?: ThirdPartyApplicationConfig
   }
   export interface ActionSucceeded {
     /**

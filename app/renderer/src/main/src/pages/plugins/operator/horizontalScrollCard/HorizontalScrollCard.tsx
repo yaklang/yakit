@@ -202,7 +202,7 @@ export const HorizontalScrollCard: React.FC<HorizontalScrollCardProps> = React.m
 })
 
 export const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps> = React.memo((props) => {
-  const { tag, info = [] } = props
+  const { tag, info = [], className } = props
   const bgColor = useMemo(() => {
     return getBgColor('11')
   }, [tag])
@@ -212,6 +212,7 @@ export const HorizontalScrollCardItemInfoMultiple: React.FC<StatusCardListProps>
         styles['horizontal-scroll-card-list-item-info-multiple'],
         styles[`card-item-bg-${bgColor}`],
         styles[`card-item-border-left-${bgColor}`],
+        className,
       )}
     >
       <div className={styles['horizontal-scroll-card-list-item-info-multiple-tag']}>

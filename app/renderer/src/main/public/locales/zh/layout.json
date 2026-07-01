@@ -264,7 +264,19 @@
     "remoteControlClosing": "远程控制关闭中..."
   },
   "CeUserMenu": {
-    "tokenConsumption": "Token 消耗"
+    "tokenConsumption": "Token 消耗",
+    "usageStatistics": "使用统计",
+    "apiKey": "ApiKey",
+    "requestStatistics": "请求统计",
+    "byteStatistics": "字节统计",
+    "success": "成功",
+    "failure": "失败",
+    "total": "总数",
+    "input": "输入",
+    "output": "输出",
+    "tokenUsed": "已使用",
+    "tokenLimit": "总限额",
+    "networkSearchCount": "联网搜索次数"
   },
   "FuncDomain": {
     "remoteInProgress": "远程中",
@@ -284,6 +296,8 @@
     "systemConfig": "系统配置",
     "screenRecordingNotice": "录屏须知",
     "isScrecorderReadyFailed": "IsScrecorderReady失败: {{error}}",
+    "getApiKeyDetailFailed": "获取ApiKey详情失败: {{error}}",
+    "getApiKeyTokenFailed": "获取ApiKey Token失败: {{error}}",
     "engineConsole": "引擎Console",
     "signOutSuccess": "已成功退出账号",
     "signOutRemoteConfirm": "点击退出登录将自动退出远程控制，是否确认退出",

@@ -275,6 +275,7 @@ process.on('loaded', function () {
       onYakVersion: (callback) => subscribe('fetch-yak-version-callback', callback),
       onDownloadYakEngineProgress: (callback) => subscribe('download-yak-engine-progress', callback),
       onDownloadYakitProgress: (callback) => subscribe('download-yakit-engine-progress', callback),
+      getApiKeyByOnline: (params) => invoke('GetApiKeyByOnline', params),
     },
     upload: {
       splitUpload: (payload) => invoke('split-upload', payload),

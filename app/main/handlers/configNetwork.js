@@ -231,6 +231,21 @@ module.exports = (win, getClient) => {
     return await asyncGetAIThirdPartyAppConfigTemplate(params)
   })
 
+  const asyncGetApiKeyByOnline = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().GetApiKeyByOnline(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('GetApiKeyByOnline', async (e, params) => {
+    return await asyncGetApiKeyByOnline(params)
+  })
+
   // 查询自定义代码片段
   const asyncQuerySnippets = (params) => {
     return new Promise((resolve, reject) => {

@@ -73,12 +73,14 @@ import { visitorsStatisticsFun } from '@/utils/visitorsStatistics'
 import { serverPushStatus } from '@/utils/duplex/duplex'
 import {
   OutlineExitIcon,
+  OutlineOfficebuildingIcon,
   OutlinePencilaltIcon,
   OutlinePresentationchartlineIcon,
   OutlinePuzzleIcon,
   OutlineRefreshIcon,
   OutlineSearchIcon,
   OutlineShieldexclamationIcon,
+  OutlineUserRoundCogIcon,
   OutlineWrenchIcon,
 } from '@/assets/icon/outline'
 import { YakitEmpty } from '../yakitUI/YakitEmpty/YakitEmpty'
@@ -164,6 +166,7 @@ import {
   yakitUILayout,
 } from '@/services/electronBridge'
 import { CeUserInfo, CeUserItemProps, CeUserItemType, CeUserMenuContent } from '../CeUserMenu/CeUserMenu'
+import { CeUsageStatisticsModal } from '../CeUserMenu/CeUsageStatisticsModal'
 
 const removePrefixV = (version: string) => {
   return version.startsWith('v') ? version.substring(1) : version
@@ -231,8 +234,8 @@ const CeUserMenusMap: Record<string, CeUserItemType> = {
   singOut: { key: 'sign-out', label: 'FuncDomain.signOut', type: 'danger', icon: <OutlineExitIcon /> },
   pluginAudit: { key: 'plugin-audit', label: 'FuncDomain.pluginAudit', icon: <OutlinePuzzleIcon /> },
   misstatement: { key: 'misstatement', label: 'FuncDomain.misstatement', icon: <OutlineShieldexclamationIcon /> },
-  trustList: { key: 'trust-list', label: 'FuncDomain.trustList' },
-  licenseAdmin: { key: 'license-admin', label: 'FuncDomain.licenseAdmin' },
+  trustList: { key: 'trust-list', label: 'FuncDomain.trustList', icon: <OutlineUserRoundCogIcon /> },
+  licenseAdmin: { key: 'license-admin', label: 'FuncDomain.licenseAdmin', icon: <OutlineOfficebuildingIcon /> },
   dataStatistics: {
     key: 'data-statistics',
     label: 'FuncDomain.dataStatistics',
@@ -304,6 +307,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   /** CE用户功能菜单 */
   const [ceUserMenu, setCeUserMenu] = useState<CeUserItemType[]>([CeUserMenusMap['singOut']])
   const [ceUserMenuShow, setCeUserMenuShow] = useState<boolean>(false)
+  const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
+  const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiKeyDetail>()
   /** 修改密码弹框 */
   const [passwordShow, setPasswordShow] = useState<boolean>(false)
   /** 是否允许密码框关闭 */
@@ -432,7 +437,16 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     else {
       // 退出菜单
       const signOutMenu: CeUserItemType[] = [CeUserMenusMap['divider'], CeUserMenusMap['singOut']]
-      const SetUserInfoModule = () => <CeUserInfo userInfo={userInfo} />
+      const SetUserInfoModule = () => (
+        <CeUserInfo
+          userInfo={userInfo}
+          apiKeysInfo={apiKeysInfo}
+          onOpenStatistics={() => {
+            setCeUserMenuShow(false)
+            setUsageStatisticsShow(true)
+          }}
+        />
+      )
 
       // 用户头像
       const userAvatar: CeUserItemType[] = [{ key: 'user-info', label: SetUserInfoModule() }, CeUserMenusMap['divider']]
@@ -497,7 +511,43 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
         setCeUserMenu([...userAvatar, CeUserMenusMap['singOut']])
       }
     }
-  }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect])
+  }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo])
+
+  const apiFetchApiKeys = useMemoizedFn((apikey) => {
+    NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
+      method: 'post',
+      url: 'apikeys',
+      data: {
+        keyword: apikey,
+      },
+    })
+      .then((res) => {
+        if (res.data.length > 0) {
+          setApiKeysInfo(res.data[0])
+        } else {
+          setApiKeysInfo(undefined)
+        }
+      })
+      .catch((err) => {
+        yakitFailed(t('FuncDomain.getApiKeyDetailFailed', { error: err }))
+      })
+  })
+
+  useEffect(() => {
+    if (userInfo.isLogin && userInfo.token && userInfo.platform !== 'company') {
+      yakitEngine
+        .getApiKeyByOnline({ Token: userInfo.token })
+        .then((res) => {
+          apiFetchApiKeys(res.ApiKey)
+        })
+        .catch((err) => {
+          yakitFailed(t('FuncDomain.getApiKeyTokenFailed', { error: err }))
+        })
+    }
+    if (!userInfo.isLogin) {
+      setApiKeysInfo(undefined)
+    }
+  }, [userInfo])
 
   /** 渲染端通信-打开一个指定页面 */
   const onOpenPage = useMemoizedFn((info: RouteToPageProps) => {
@@ -803,6 +853,15 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       </div>
 
       {loginShow && <Login visible={loginShow} onCancel={() => setLoginShow(false)} />}
+
+      {apiKeysInfo && (
+        <CeUsageStatisticsModal
+          visible={usageStatisticsShow}
+          apiKeysInfo={apiKeysInfo}
+          onClose={() => setUsageStatisticsShow(false)}
+        />
+      )}
+
       <YakitModal
         visible={passwordShow}
         closable={passwordClose}

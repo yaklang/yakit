@@ -236,6 +236,9 @@ interface YakitBridge {
     onYakVersion: (callback: (version: string) => void) => BridgeCleanup
     onDownloadYakEngineProgress: (callback: (payload: any) => void) => BridgeCleanup
     onDownloadYakitProgress: (callback: (payload: any) => void) => BridgeCleanup
+    getApiKeyByOnline: (params: { Token: string }) => Promise<{
+      ApiKey: string
+    }>
   }
   upload: {
     splitUpload: (payload: any) => Promise<any>
