@@ -138,11 +138,14 @@ interface ManualUrlInfoProps {
   traceInfo: TraceInfo
 }
 export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) => {
+  const { t } = useI18nNamespaces(['mitm'])
   const { urlInfo, ipInfo, status, currentIsWebsocket, currentIsForResponse, className, traceInfo } = props
   return (
     <div className={classNames(styles['autoForward-manual-urlInfo'], className)}>
       <div className={classNames(styles['manual-url-info'], 'content-ellipsis')}>
-        {status === 'hijacking' ? '目标：监听中...' : `目标：${urlInfo}`}
+        {status === 'hijacking'
+          ? t('MITMServerHijacking.target_listening')
+          : t('MITMServerHijacking.target_url', { url: urlInfo })}
       </div>
       {ipInfo && status !== 'hijacking' && (
         <>
@@ -164,7 +167,7 @@ export const ManualUrlInfo: React.FC<ManualUrlInfoProps> = React.memo((props) =>
           }}
           size="small"
         >
-          Websocket {currentIsForResponse ? '响应' : '请求'}
+          Websocket {currentIsForResponse ? t('MITMRule.response') : t('MITMRule.request')}
         </YakitTag>
       ) : currentIsForResponse && status !== 'hijacking' ? (
         <YakitTag
@@ -253,6 +256,7 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
     requestPacket,
     beautifyTriggerRefresh,
   } = props
+  const { t, i18n } = useI18nNamespaces(['mitm'])
   // 操作系统类型
   const [system, setSystem] = useState<string>()
 
@@ -266,16 +270,16 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         { type: 'divider' },
         {
           key: 'trigger-auto-hijacked',
-          label: '切换为自动劫持模式',
+          label: t('MITMManual.switch_to_auto_hijack_mode'),
           keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked,
         },
         {
           key: 'forward-response',
-          label: '放行该 HTTP Response',
+          label: t('MITMServerHijacking.forward_http_response'),
         },
         {
           key: 'drop-response',
-          label: '丢弃该 HTTP Response',
+          label: t('MITMServerHijacking.drop_http_response'),
         },
       ]
       return {
@@ -304,21 +308,21 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         { type: 'divider' },
         {
           key: 'trigger-auto-hijacked',
-          label: '切换为自动劫持模式',
+          label: t('MITMManual.switch_to_auto_hijack_mode'),
           keybindings: YakEditorOptionShortcutKey.TriggerAutoHijacked,
         },
         {
           key: 'forward-response',
-          label: '放行该 HTTP Response',
+          label: t('MITMServerHijacking.forward_http_response'),
           keybindings: YakEditorOptionShortcutKey.ForwardResponse,
         },
         {
           key: 'drop-response',
-          label: '丢弃该 HTTP Response',
+          label: t('MITMServerHijacking.drop_http_response'),
         },
         {
           key: 'hijack-current-response',
-          label: '劫持该 Request 对应的响应',
+          label: t('MITMServerHijacking.hijack_the_response_for_this_request'),
         },
       ]
 
@@ -350,12 +354,12 @@ export const MITMManualEditor: React.FC<MITMManualEditorProps> = React.memo((pro
         },
       }
     }
-  }, [forResponse, autoForward, currentPacketId])
+  }, [forResponse, autoForward, currentPacketId, i18n.language])
 
   return (
     <NewHTTPPacketEditor
       defaultHttps={isHttp}
-      url={urlInfo === '监听中...' ? '' : urlInfo}
+      url={urlInfo === t('MITMHijackedContent.listening') ? '' : urlInfo}
       originValue={currentPacket}
       noHeader={true}
       isResponse={currentPacket.substring(0, 5).startsWith('HTTP/')}

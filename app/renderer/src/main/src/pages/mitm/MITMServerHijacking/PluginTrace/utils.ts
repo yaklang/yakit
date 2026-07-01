@@ -1,6 +1,8 @@
 import { APIFunc, APINoRequestFunc } from '@/apiUtils/type'
+import i18n from '@/i18n/i18n'
 import { yakitNotify } from '@/utils/notification'
 import { PluginTraceRequest } from './type'
+const tOriginal = i18n.getFixedT(null, 'mitm')
 
 const { ipcRenderer } = window.require('electron')
 /**开始追踪*/
@@ -11,7 +13,7 @@ export const grpcStartPluginTrace: APIFunc<PluginTraceRequest, null> = (params, 
       .invoke(url, params)
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcStartPluginTrace 失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('MITMHacker.grpc_startplugintrace_failed') + e)
         reject(e)
       })
   })
@@ -24,7 +26,7 @@ export const grpcStopPluginTrace: APINoRequestFunc<null> = (hiddenError) => {
       .invoke(url)
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcStopPluginTrace 失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('MITMHacker.grpc_stopplugintrace_failed') + e)
         reject(e)
       })
   })
@@ -37,7 +39,7 @@ export const grpcPluginTraceIDCancel: APIFunc<string, null> = (traceID, hiddenEr
       .invoke(url, traceID)
       .then(resolve)
       .catch((e) => {
-        if (!hiddenError) yakitNotify('error', 'grpcPluginTraceIDCancel 失败:' + e)
+        if (!hiddenError) yakitNotify('error', tOriginal('MITMHacker.grpc_plugintraceidcancel_failed') + e)
         reject(e)
       })
   })

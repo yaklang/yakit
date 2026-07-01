@@ -2,6 +2,7 @@
   "YakitButton": {
     "ok": "OK",
     "confirm": "Confirm",
+    "well": "Well",
     "cancel": "Cancel",
     "save": "Save",
     "save_as": "Save As",
@@ -302,7 +303,8 @@
     "remainingTime": "Remaining time: {{time}}s",
     "elapsedTime": "Elapsed: {{time}}s",
     "downloadSpeed": "Download speed: {{speed}}M/s",
-    "completedPercent": "Completed {{percent}}%"
+    "completedPercent": "Completed {{percent}}%",
+    "updated_percent": "Updated {{percent}}%"
   },
   "YakitSelect": {
     "pleaseSelect": "Please select...",
