@@ -24,6 +24,10 @@ export type useVirtualTableHookParams<T, DataT, DataKey> = {
   }
   /** 外部传入可见性时优先使用 */
   inViewport?: boolean
+  /** 内存滑窗上限，0 表示不裁剪 */
+  maxDataLength?: number
+  /** 滑窗已裁剪标记 */
+  slidingClippedRef?: React.MutableRefObject<boolean>
 }
 
 export type VirtualPaging = {
