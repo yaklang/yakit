@@ -1,5 +1,6 @@
 const { ipcMain, app } = require('electron')
 const fs = require('fs')
+const https = require('https')
 const { getLocalYaklangEngine } = require('../filePath')
 const {
   fetchLatestYakEngineVersion,
@@ -77,6 +78,26 @@ module.exports = {
     /** 校验Yaklang来源是否正确 */
     ipcMain.handle(ipcEventPre + 'fetch-check-yaklang-source', async (e, version, requestConfig) => {
       return await fetchSpecifiedYakVersionHash(version, requestConfig)
+    })
+
+    /** 获取Yaklang所有版本 */
+    const asyncFetchYaklangVersionList = async () => {
+      return new Promise(async (resolve, reject) => {
+        const domain = await getAvailableOSSDomain()
+        let rsp = https.get(`https://${domain}/yak/version-info/active_versions.txt`)
+        rsp.on('response', (rsp) => {
+          rsp
+            .on('data', (data) => {
+              resolve(Buffer.from(data).toString('utf8'))
+            })
+            .on('error', (err) => reject(err))
+        })
+        rsp.on('error', reject)
+      })
+    }
+    /** 获取Yaklang所有版本 */
+    ipcMain.handle(ipcEventPre + 'fetch-yaklang-version-list', async (e) => {
+      return await asyncFetchYaklangVersionList()
     })
   },
 }

@@ -148,6 +148,8 @@ interface YakitBridge {
     reclaimDatabaseSpace: (params: ReclaimDatabaseSpace) => Promise<StartupExecResult>
     fetchYakitVersion: () => Promise<string>
     fetchLatestYakitVersion: (payload: FetchLatestYakitVersionPayload) => Promise<string>
+    fetchYaklangVersionList: () => Promise<string>
+    verifyYakEngineVersion: (version: string) => Promise<boolean>
     downloadLatestYakit: (version: string, type: DownloadYakitOptions) => Promise<unknown>
     cancelDownloadYakitVersion: () => Promise<unknown>
     getCurrentYak: () => Promise<string>
