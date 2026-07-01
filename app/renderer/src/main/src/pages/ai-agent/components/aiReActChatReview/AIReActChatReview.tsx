@@ -1,15 +1,9 @@
 import React, { type FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { AIReActChatReviewProps, ForgeReviewFormProps, ForgeReviewFormRefProps } from './AIReActChatReviewType'
-import {
-  OutlineArrowrightIcon,
-  OutlineExitIcon,
-  OutlineHandIcon,
-  OutlineWarpIcon,
-  OutlineXIcon,
-} from '@/assets/icon/outline'
+import { OutlineArrowrightIcon, OutlineQuestionmarkcircleIcon, OutlineXIcon } from '@/assets/icon/outline'
 import { useCountDown, useCreation, useMemoizedFn } from 'ahooks'
 import { SolidAnnotationIcon, SolidVariableIcon } from '@/assets/icon/solid'
-import { Form, Input } from 'antd'
+import { Form, Input, Tooltip } from 'antd'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
 import { yakitNotify } from '@/utils/notification'
 import cloneDeep from 'lodash/cloneDeep'
@@ -54,6 +48,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     className,
   } = props
   const { type, data: review } = info
+  console.log('info:', info)
   const { t, i18n } = useI18nNamespaces(['aiAgent', 'yakitUi'])
   const { chatIPCData } = useChatIPCStore()
   const { chatIPCEvents } = useChatIPCDispatcher()
@@ -160,7 +155,7 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
   }, [type, countdown, i18n.language])
   const toolReview = useCreation(() => {
     if (type !== 'tool_use_review_require') return null
-    const { tool, tool_description, params } = review as AIAgentGrpcApi.ToolUseReviewRequire
+    const { tool, tool_description, reason, params } = review as AIAgentGrpcApi.ToolUseReviewRequire
     let paramsValue = '-'
     try {
       paramsValue = !!params ? JSON.stringify(params, null, 2) : '-'
@@ -169,8 +164,18 @@ export const AIReActChatReview: React.FC<AIReActChatReviewProps> = React.memo((p
     return (
       <div className={styles['review-task-tool-data']}>
         <div className={styles['task-tool-info']}>
-          <div className={styles['info-title']}>{tool || '-'}</div>
-          <div className={styles['info-description']}>{tool_description || '-'}</div>
+          <div className={styles['info-title-row']}>
+            <div className={styles['info-title']}>{tool || '-'}</div>
+            {!!tool_description && (
+              <Tooltip title={tool_description}>
+                <YakitButton
+                  type="text2"
+                  icon={<OutlineQuestionmarkcircleIcon className={styles['tool-description-help-icon']} />}
+                />
+              </Tooltip>
+            )}
+          </div>
+          <div className={styles['info-description']}>{reason || '-'}</div>
         </div>
 
         <div className={styles['tool-params']}>

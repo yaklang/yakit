@@ -184,10 +184,24 @@
     flex-direction: column;
     gap: 4px;
     color: var(--Colors-Use-Neutral-Text-1-Title);
+    .info-title-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
     .info-title {
       font-size: 16px;
       font-weight: 600;
       line-height: 24px;
+    }
+    .tool-description-help-icon {
+      cursor: pointer;
+      flex-shrink: 0;
+      svg {
+        width: 16px;
+        height: 16px;
+        color: var(--Colors-Use-Neutral-Text-3-Secondary);
+      }
     }
     .info-description {
       font-size: 14px;
