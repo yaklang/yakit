@@ -2343,9 +2343,8 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
   const isUpdate = useMemo(() => {
     const unRead = messageList.filter((item) => !item.isRead).length > 0
     return (
-      (yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
-      lowerYaklangLastVersion ||
-      unRead
+      // (yakitLastVersion !== '' && removePrefixV(yakitLastVersion) !== removePrefixV(yakitVersion)) ||
+      lowerYaklangLastVersion || unRead
     )
   }, [yakitVersion, yakitLastVersion, lowerYaklangLastVersion, messageList])
 
@@ -2477,7 +2476,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
             <div className={styles['notice-version-wrapper']}>
               <div className={styles['version-wrapper']}>
                 {/* 企业版内网Yakit更新 - 无需显示更新内容 */}
-                {isEnpriTrace() && !isYakitIntranetDownloading && (
+                {/* {isEnpriTrace() && !isYakitIntranetDownloading && (
                   <UIOpUpdateYakit
                     version={yakitVersion}
                     lastVersion={yakitLastIntranetVersion}
@@ -2489,9 +2488,9 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                     onResetUpdateWait={() => setIsIntranetYakitUpdateWait(false)}
                     fetchIntranetYakitVersion={fetchIntranetYakitVersion}
                   />
-                )}
+                )} */}
 
-                <UIOpUpdateYakit
+                {/* <UIOpUpdateYakit
                   version={yakitVersion}
                   lastVersion={yakitLastVersion}
                   isUpdateWait={isYakitUpdateWait}
@@ -2501,7 +2500,7 @@ const UIOpNotice: React.FC<UIOpNoticeProp> = React.memo((props) => {
                   onUpdateEdit={UpdateContentEdit}
                   isUpdate={isUpdateYakit}
                   onResetUpdateWait={() => setIsYakitUpdateWait(false)}
-                />
+                /> */}
                 <UIOpUpdateYaklang
                   version={yaklangVersion}
                   lastVersion={yaklangLastVersion}

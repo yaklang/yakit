@@ -29,7 +29,7 @@ export type VersionSource = 'yakit' | 'irify' | 'memfit'
 export const getReleaseEditionName = () => {
   switch (GetReleaseEdition()) {
     case PRODUCT_RELEASE_EDITION.EnpriTrace:
-      return 'EnpriTrace'
+      return 'YAKIT网络安全单兵测试系统 V2.0'
     case PRODUCT_RELEASE_EDITION.EnpriTraceAgent:
       return 'EnpriTraceAgent'
     case PRODUCT_RELEASE_EDITION.BreachTrace:
