@@ -6,8 +6,9 @@
   "recentlyOpened": "最近打开",
   "newChat": "新建会话",
   "styleToggle": {
+    "unset": "未确定",
     "code": "代码审计",
-    "skill": "Skill"
+    "skill": "技能审计"
   },
   "onboarding": {
     "title": "AI 代码审计引导",
@@ -20,6 +21,7 @@
     "currentSelected": "当前选择：",
     "historyEmpty": "暂无历史目录",
     "selectStyle": "选择审计风格",
+    "selectStyleFirst": "请先选择审计风格",
     "styleCodeTitle": "代码审计",
     "styleCodeDesc": "面向复杂业务逻辑、跨文件关联与自然语言风险解释。",
     "styleSkillTitle": "Skill 安全分析",
@@ -27,8 +29,9 @@
     "summaryDirectory": "审计目录",
     "summaryStyle": "审计风格",
     "summaryMessage": "预设消息",
+    "messageRequired": "请输入要发送的消息",
     "notSelected": "未选择",
-    "startHint": "点击开始后，将自动发送「开始审计」并锁定当前风格，开始后不可切换。",
+    "startHint": "可编辑预设消息后点击开始，将自动发送并锁定当前风格，开始后不可切换。",
     "cancel": "取消",
     "prev": "上一步",
     "next": "下一步",

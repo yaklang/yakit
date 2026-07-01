@@ -119,7 +119,8 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
     } else {
       irifyWorkbenchAttachRef.current.projectRootAbsPath = undefined
     }
-  }, [fileTree, irifyWorkbenchAttachRef])
+    irifyWorkbenchAttachRef.current.activeFilePath = activeFile?.path?.trim() || undefined
+  }, [fileTree, activeFile, irifyWorkbenchAttachRef])
 
   const handleFetchFileList = useMemoizedFn((path: string, callback?: (value: FileNodeMapProps[]) => any) => {
     if (getMapFileDetail(path).isCreate) {
@@ -288,13 +289,7 @@ export const YakRunnerIrifyAiCodeAudit: React.FC<YakRunnerProps> = () => {
           if (list) setFileTree([{ path: rootPath }])
         })
 
-        // 打开文件夹时接入历史记录
-        const history: YakRunnerHistoryProps = {
-          isFile: false,
-          name: lastFolder,
-          path: rootPath,
-        }
-        setIrifyAiCodeAuditHistory(history)
+        // 目录历史由引导蒙版「开始审计」时写入（含 auditStyle）
       }
     } catch (error) {}
   })

@@ -371,6 +371,16 @@
 .runner-tab-pane {
   height: 100%;
   background-color: var(--Colors-Use-Neutral-Bg);
+  .runner-tab-pane-editor {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+  }
+  .selection-menu-overlay {
+    position: absolute;
+    z-index: 10;
+    pointer-events: auto;
+  }
   .warning-editor {
     height: 100%;
     width: 100%;
@@ -518,27 +528,14 @@
       .recent-list {
         display: flex;
         flex-direction: column;
+        gap: 4px;
         .list-opt {
-          cursor: pointer;
-          padding: 4px 0px;
-          display: flex;
-          align-items: flex-start;
-          gap: 8px;
-          font-size: 14px;
-          font-weight: 400;
-          line-height: 20px;
-          white-space: nowrap;
-          .file-name {
-            color: var(--Colors-Use-Main-Primary);
-          }
-          .file-path {
-            color: var(--Colors-Use-Neutral-Disable);
-          }
+          padding: 0;
+          border: none;
+          background: transparent;
+
           &:hover {
-            .file-path {
-              color: var(--Colors-Use-Main-Hover);
-              text-decoration: underline;
-            }
+            background: transparent;
           }
         }
       }

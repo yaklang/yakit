@@ -11,7 +11,7 @@ import { AIInputFooterRightEnum } from '@/pages/ai-agent/template/type'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import classNames from 'classnames'
 import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
-import { IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED } from './irifyAiCodeAuditConstants'
+import { resolveIrifyAuditDefaultChatSeed } from './irifyAiCodeAuditConstants'
 import emiter from '@/utils/eventBus/eventBus'
 import { IrifyAiAuditStyleToggle } from './IrifyAiAuditStyleToggle'
 import { IrifyAiCodeAuditStyle } from '@/constants/focusMode'
@@ -111,7 +111,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
     renderHistoryAIReActChat({
       className: styles.aiChatWrap,
       externalParameters: {
-        defaultValue: IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED,
+        defaultValue: resolveIrifyAuditDefaultChatSeed(auditStyle),
         isOpen: false,
         rightIcon: {
           history: true,
@@ -134,7 +134,7 @@ const IrifyAiCodeAuditSidePanelLayoutInner: React.FC<{
             component: (
               <IrifyAiAuditStyleToggle
                 key="irify-audit-style-toggle"
-                value={auditStyle ?? 'code'}
+                value={auditStyle ?? 'unset'}
                 onChange={(style) => onAuditStyleChange?.(style)}
                 locked={auditStyleLocked}
                 className={styles.auditStyleToggle}

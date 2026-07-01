@@ -1,3 +1,4 @@
+import { IrifyAiCodeAuditStyle } from '@/constants/focusMode'
 import { FileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
 import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 export interface YakRunnerProps {
@@ -22,6 +23,8 @@ export interface YakRunnerHistoryProps {
   name: string
   // 路径
   path: string
+  /** 文件夹审计风格（仅目录历史使用） */
+  auditStyle?: IrifyAiCodeAuditStyle
 }
 
 export interface TabFileProps {

@@ -3,19 +3,21 @@ import { Steps } from 'antd'
 import { useCreation, useMemoizedFn } from 'ahooks'
 import classNames from 'classnames'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
+import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
 import { useHistoryAIReActChat } from '@/components/historyAIReActChat'
-import { IrifyAiCodeAuditStyle, resolveIrifyFocusModeLoop } from '@/constants/focusMode'
+import { IrifyAiCodeAuditStyle, isIrifyAuditStyleConfirmed, resolveIrifyFocusModeLoop } from '@/constants/focusMode'
 import { SystemInfo } from '@/constants/hardware'
 import { handleOpenFileSystemDialog } from '@/utils/fileSystemDialog'
 import { showYakitModal } from '@/components/yakitUI/YakitModal/YakitModalConfirm'
 import { warn } from '@/utils/notification'
 import emiter from '@/utils/eventBus/eventBus'
 import i18n from '@/i18n/i18n'
-import { getIrifyAiCodeAuditHistory } from './utils'
+import { getIrifyAiCodeAuditHistory, setIrifyAiCodeAuditHistory } from './utils'
 import { OpenFolderDragger } from './RunnerFileTree/RunnerFileTree'
 import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
+import { IrifyAiCodeAuditHistoryItem } from './IrifyAiCodeAuditHistoryItem'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED } from './irifyAiCodeAuditConstants'
+import { resolveIrifyAuditDefaultChatSeed } from './irifyAiCodeAuditConstants'
 import styles from './IrifyAiCodeAuditOnboardingMask.module.scss'
 
 const tYak = i18n.getFixedT(null, 'yakRunner')
@@ -28,6 +30,10 @@ export interface IrifyAiCodeAuditOnboardingMaskProps {
   auditStyle: IrifyAiCodeAuditStyle
   /** 切换风格（仅在未开始时允许调用） */
   onAuditStyleChange: (style: IrifyAiCodeAuditStyle) => void
+  /** 打开蒙版时预填的目录（来自工作区「打开目录」或历史记录） */
+  defaultSelectedPath?: string
+  /** 入口已确定审计风格时跳过「选择风格」步骤（主页卡片 / 历史记录） */
+  skipStyleStep?: boolean
   /** 关闭蒙版（完成或取消） */
   onClose: () => void
   /** 审计已开始后调用：发送预设消息并锁定风格切换 */
@@ -36,9 +42,37 @@ export interface IrifyAiCodeAuditOnboardingMaskProps {
    * 发送前同步设置工程根路径附件。
    * 工作区打开文件树是异步的，而自动发送「开始审计」是同步触发，
    * 因此由蒙版在发送前把用户选择的目录直接写入 attachRef，
-   * 保证 AIInputEvent.AttachedResourceInfo 携带 code_audit_target_path。
+   * 保证 AIInputEvent.AttachedResourceInfo 携带 directory_path。
    */
   onEnsureProjectRoot: (absPath: string) => void
+}
+
+const getFolderNameFromPath = (path: string) => {
+  const normalized = path.replace(/\\/g, '/').replace(/\/+$/, '')
+  const segments = normalized.split('/').filter(Boolean)
+  return segments[segments.length - 1] ?? path
+}
+
+/** 根据已预填的目录 / 风格，计算打开蒙版时应展示的第一步 */
+const resolveInitialStep = (path: string, skipStyleStep: boolean) => {
+  const hasPath = !!path.trim()
+  if (hasPath && skipStyleStep) return 2
+  if (hasPath) return 1
+  return 0
+}
+
+/** 下一步：若风格已确定则跳过风格选择 */
+const resolveNextStep = (current: number, skipStyleStep: boolean) => {
+  if (current === 0) return skipStyleStep ? 2 : 1
+  if (current === 1) return 2
+  return 2
+}
+
+/** 上一步：确认页始终回到风格选择，便于从历史进入后修改风格 */
+const resolvePrevStep = (current: number) => {
+  if (current === 2) return 1
+  if (current === 1) return 0
+  return 0
 }
 
 /**
@@ -52,24 +86,56 @@ export interface IrifyAiCodeAuditOnboardingMaskProps {
  * 蒙版直接渲染在 HistoryAIReActChatProvider 内，因此可访问 chat bridge 自动发送消息。
  */
 export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboardingMaskProps> = (props) => {
-  const { visible, defaultAuditStyle, auditStyle, onAuditStyleChange, onClose, onStart, onEnsureProjectRoot } = props
+  const {
+    visible,
+    defaultAuditStyle,
+    defaultSelectedPath = '',
+    skipStyleStep = false,
+    auditStyle,
+    onAuditStyleChange,
+    onClose,
+    onStart,
+    onEnsureProjectRoot,
+  } = props
   const { t } = useI18nNamespaces(['irifyAiCodeAudit'])
   const { historyAIReActChatBridge } = useHistoryAIReActChat()
 
   const [current, setCurrent] = useState<number>(0)
   const [selectedPath, setSelectedPath] = useState<string>('')
+  const [chatMessage, setChatMessage] = useState<string>('')
   const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
-  // 每次打开蒙版都重置到第一步并刷新历史目录
+  // 每次打开蒙版：按预填信息跳步，并刷新历史目录与预设消息
   useEffect(() => {
     if (visible) {
-      setCurrent(0)
-      setSelectedPath('')
+      const path = defaultSelectedPath.trim()
+      setSelectedPath(path)
+      setCurrent(resolveInitialStep(path, skipStyleStep))
+      setChatMessage(resolveIrifyAuditDefaultChatSeed(auditStyle))
       getIrifyAiCodeAuditHistory()
         .then((list) => setHistoryList(list.filter((h) => !h.isFile)))
         .catch(() => {})
     }
-  }, [visible])
+  }, [visible, defaultSelectedPath, skipStyleStep])
+
+  // 切换审计风格时同步预设消息（未确定时不覆盖用户已编辑内容）
+  useEffect(() => {
+    if (!visible || !isIrifyAuditStyleConfirmed(auditStyle)) return
+    setChatMessage(resolveIrifyAuditDefaultChatSeed(auditStyle))
+  }, [auditStyle, visible])
+
+  // ESC 关闭蒙版
+  useEffect(() => {
+    if (!visible) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [visible, onClose])
 
   // 入口风格变化时同步预选（仅在第一步展示前同步，避免覆盖用户在第二步的选择）
   useEffect(() => {
@@ -116,11 +182,21 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
 
   const pickHistory = useMemoizedFn((item: YakRunnerHistoryProps) => {
     setSelectedPath(item.path)
+    if (item.isFile) return
+
+    const styleFromHistory = item.auditStyle
+    if (styleFromHistory === 'code' || styleFromHistory === 'skill') {
+      onAuditStyleChange(styleFromHistory)
+      setCurrent(2)
+      return
+    }
+    onAuditStyleChange('unset')
+    setCurrent(1)
   })
 
   const canGoNext = useCreation(() => {
     if (current === 0) return !!selectedPath.trim()
-    if (current === 1) return !!auditStyle
+    if (current === 1) return isIrifyAuditStyleConfirmed(auditStyle)
     return false
   }, [current, selectedPath, auditStyle])
 
@@ -129,11 +205,11 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
       warn(t('onboarding.selectDirectoryFirst'))
       return
     }
-    setCurrent((c) => Math.min(c + 1, 2))
+    setCurrent((step) => resolveNextStep(step, skipStyleStep))
   })
 
   const handlePrev = useMemoizedFn(() => {
-    setCurrent((c) => Math.max(c - 1, 0))
+    setCurrent((step) => resolvePrevStep(step))
   })
 
   const handleStart = useMemoizedFn(() => {
@@ -141,15 +217,30 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
       warn(t('onboarding.selectDirectoryFirst'))
       return
     }
+    if (!isIrifyAuditStyleConfirmed(auditStyle)) {
+      warn(t('onboarding.selectStyleFirst'))
+      return
+    }
+    const message = chatMessage.trim()
+    if (!message) {
+      warn(t('onboarding.messageRequired'))
+      return
+    }
     const absPath = selectedPath.trim()
-    // 1. 打开左侧文件树并写入历史（工作区监听 onAiCodeAuditOpenFileTree）
     emiter.emit('onAiCodeAuditOpenFileTree', absPath)
-    // 2. 工作区异步加载文件树，发送前先同步写入工程根路径，确保附件携带 code_audit_target_path
     onEnsureProjectRoot(absPath)
-    // 3. 发送预设消息「开始审计」，并指定与风格对应的 focus mode loop
-    const focusMode = resolveIrifyFocusModeLoop(auditStyle)
-    historyAIReActChatBridge.handleStart({ qs: IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED, focusMode })
-    // 4. 通知父组件：已开始，锁定风格切换
+    historyAIReActChatBridge.handleStart({
+      qs: message,
+      focusMode: resolveIrifyFocusModeLoop(auditStyle),
+    })
+    // 4. 写入目录 + 审计风格历史
+    setIrifyAiCodeAuditHistory({
+      isFile: false,
+      name: getFolderNameFromPath(absPath),
+      path: absPath,
+      auditStyle,
+    })
+    // 5. 通知父组件：已开始，锁定风格切换
     onStart(auditStyle)
     onClose()
   })
@@ -166,8 +257,8 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
   if (!visible) return null
 
   return (
-    <div className={styles['onboarding-mask']} role="dialog" aria-modal="true">
-      <div className={styles['onboarding-card']}>
+    <div className={styles['onboarding-mask']} role="dialog" aria-modal="true" onClick={onClose}>
+      <div className={styles['onboarding-card']} onClick={(event) => event.stopPropagation()}>
         <div className={styles['onboarding-header']}>
           <div className={styles['onboarding-title']}>{t('onboarding.title')}</div>
           <div className={styles['onboarding-subtitle']}>{t('onboarding.subtitle')}</div>
@@ -200,18 +291,12 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
                     <div className={styles['history-empty']}>{t('onboarding.historyEmpty')}</div>
                   ) : (
                     historyList.map((item) => (
-                      <div
-                        key={item.path}
-                        className={classNames(styles['history-item'], {
-                          [styles['history-item-active']]: item.path === selectedPath,
-                        })}
+                      <IrifyAiCodeAuditHistoryItem
+                        key={`${item.path}-${item.auditStyle ?? 'unset'}`}
+                        item={item}
+                        active={item.path === selectedPath}
                         onClick={() => pickHistory(item)}
-                      >
-                        <div className={styles['history-item-name']}>{item.name}</div>
-                        <div className={classNames(styles['history-item-path'], 'yakit-single-line-ellipsis')}>
-                          {item.path}
-                        </div>
-                      </div>
+                      />
                     ))
                   )}
                 </div>
@@ -257,12 +342,21 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
                 <div className={styles['start-summary-row']}>
                   <span className={styles['start-summary-label']}>{t('onboarding.summaryStyle')}</span>
                   <span className={styles['start-summary-value']}>
-                    {auditStyle === 'skill' ? t('onboarding.styleSkillTitle') : t('onboarding.styleCodeTitle')}
+                    {auditStyle === 'skill'
+                      ? t('onboarding.styleSkillTitle')
+                      : auditStyle === 'code'
+                        ? t('onboarding.styleCodeTitle')
+                        : t('styleToggle.unset')}
                   </span>
                 </div>
-                <div className={styles['start-summary-row']}>
+                <div className={styles['start-summary-message']}>
                   <span className={styles['start-summary-label']}>{t('onboarding.summaryMessage')}</span>
-                  <span className={styles['start-summary-value']}>{`“${IRIFY_CODE_AUDIT_DEFAULT_CHAT_SEED}”`}</span>
+                  <YakitInput.TextArea
+                    value={chatMessage}
+                    onChange={(event) => setChatMessage(event.target.value)}
+                    autoSize={{ minRows: 2, maxRows: 5 }}
+                    className={styles['start-message-input']}
+                  />
                 </div>
               </div>
               <div className={styles['start-hint']}>{t('onboarding.startHint')}</div>
@@ -271,7 +365,7 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
         </div>
 
         <div className={styles['onboarding-footer']}>
-          <YakitButton type="text2" onClick={onClose}>
+          <YakitButton type="outline2" onClick={onClose} className={styles['cancel-btn']}>
             {t('onboarding.cancel')}
           </YakitButton>
           <div className={styles['onboarding-footer-right']}>
@@ -285,7 +379,11 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
                 {t('onboarding.next')}
               </YakitButton>
             ) : (
-              <YakitButton type="primary" onClick={handleStart} disabled={!selectedPath.trim()}>
+              <YakitButton
+                type="primary"
+                onClick={handleStart}
+                disabled={!selectedPath.trim() || !chatMessage.trim() || !isIrifyAuditStyleConfirmed(auditStyle)}
+              >
                 {t('onboarding.start')}
               </YakitButton>
             )}

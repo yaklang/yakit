@@ -6,8 +6,9 @@
   "recentlyOpened": "Recently opened",
   "newChat": "New chat",
   "styleToggle": {
+    "unset": "Undetermined",
     "code": "Code Audit",
-    "skill": "Skill"
+    "skill": "Skill Audit"
   },
   "onboarding": {
     "title": "AI Code Audit Guide",
@@ -20,6 +21,7 @@
     "currentSelected": "Selected: ",
     "historyEmpty": "No recent directories",
     "selectStyle": "Select audit style",
+    "selectStyleFirst": "Please select an audit style first",
     "styleCodeTitle": "Code Audit",
     "styleCodeDesc": "For complex business logic, cross-file correlation, and natural-language risk explanation.",
     "styleSkillTitle": "Skill Security Analysis",
@@ -27,8 +29,9 @@
     "summaryDirectory": "Directory",
     "summaryStyle": "Style",
     "summaryMessage": "Preset Message",
+    "messageRequired": "Please enter a message to send",
     "notSelected": "Not selected",
-    "startHint": "After clicking start, \"Start Audit\" will be sent automatically and the current style will be locked. Switching is disabled once started.",
+    "startHint": "Edit the preset message if needed, then click Start to send it and lock the current style. Switching is disabled once started.",
     "cancel": "Cancel",
     "prev": "Previous",
     "next": "Next",

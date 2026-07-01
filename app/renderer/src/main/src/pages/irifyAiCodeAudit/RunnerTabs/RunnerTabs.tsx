@@ -30,6 +30,7 @@ import {
 import { SolidIrifyMiniLogoIcon } from '@/assets/icon/colors'
 import { YakRunnerOpenFolderIcon } from '../../yakRunner/icon'
 import { YakitEditor } from '@/components/yakitUI/YakitEditor/YakitEditor'
+import { IrifyAiCodeAuditSelectionMenu } from '../IrifyAiCodeAuditSelectionMenu'
 import {
   useCreation,
   useDebounceFn,
@@ -85,7 +86,8 @@ import { JumpToEditorProps } from '../BottomEditorDetails/BottomEditorDetailsTyp
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { isIRify } from '@/utils/envfile'
 import { StreamMarkdown } from '@/pages/assetViewer/reportRenders/markdownRender'
-import { getIrifyAiCodeAuditHistory, setIrifyAiCodeAuditHistory } from '../utils'
+import { getIrifyAiCodeAuditHistory, requestIrifyAiCodeAuditOnboarding, setIrifyAiCodeAuditHistory } from '../utils'
+import { IrifyAiCodeAuditHistoryItem } from '../IrifyAiCodeAuditHistoryItem'
 import { KeyToIcon } from '@/pages/yakRunner/FileTree/icon'
 import { SystemInfo } from '@/constants/hardware'
 import i18n from '@/i18n/i18n'
@@ -1003,6 +1005,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
   // 编辑器实例
   const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
+  const reqEditorRef = useRef<IMonacoEditor>()
   // 是否允许展示二进制
   const [allowBinary, setAllowBinary] = useState<boolean>(false)
   const isDestroy = useRef<boolean>(false)
@@ -1250,6 +1253,7 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   }, [editorInfo])
 
   const setReqEditorFun = useMemoizedFn((editor: IMonacoEditor) => {
+    reqEditorRef.current = editor
     setReqEditor(editor)
   })
 
@@ -1291,6 +1295,77 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
     )
   })
 
+  const onSendAIActionRef = useRef(onSendAIAction)
+  onSendAIActionRef.current = onSendAIAction
+
+  const [selectionMenuVisible, setSelectionMenuVisible] = useState(false)
+  const [selectionMenuPos, setSelectionMenuPos] = useState({ top: 0, left: 0 })
+  const selectionMenuVisibleRef = useRef(false)
+
+  const closeSelectionMenu = useMemoizedFn(() => {
+    selectionMenuVisibleRef.current = false
+    setSelectionMenuVisible(false)
+  })
+
+  const updateSelectionMenuPosition = useMemoizedFn((editor: IMonacoEditor) => {
+    const selection = editor.getSelection()
+    if (!selection) {
+      closeSelectionMenu()
+      return
+    }
+    const selectedText = editor.getModel()?.getValueInRange(selection) || ''
+    if (!selectedText) {
+      closeSelectionMenu()
+      return
+    }
+    const anchorLine =
+      selection.endLineNumber >= selection.startLineNumber ? selection.endLineNumber : selection.startLineNumber
+    const anchorColumn =
+      selection.endLineNumber >= selection.startLineNumber ? selection.endColumn : selection.startColumn
+    const pos = editor.getScrolledVisiblePosition({ lineNumber: anchorLine, column: anchorColumn })
+    if (!pos) {
+      closeSelectionMenu()
+      return
+    }
+    selectionMenuVisibleRef.current = true
+    setSelectionMenuPos({ top: pos.top + pos.height + 4, left: pos.left })
+    setSelectionMenuVisible(true)
+  })
+
+  useEffect(() => {
+    closeSelectionMenu()
+  }, [editorInfo?.path])
+
+  useEffect(() => {
+    if (!reqEditor) return
+
+    const mouseUpDisposable = reqEditor.onMouseUp((e) => {
+      if (!e.event.leftButton) return
+      requestAnimationFrame(() => updateSelectionMenuPosition(reqEditor))
+    })
+    const selectionDisposable = reqEditor.onDidChangeCursorSelection((e) => {
+      const selectedText = reqEditor.getModel()?.getValueInRange(e.selection) || ''
+      if (!selectedText) {
+        closeSelectionMenu()
+      } else if (selectionMenuVisibleRef.current) {
+        updateSelectionMenuPosition(reqEditor)
+      }
+    })
+    const scrollDisposable = reqEditor.onDidScrollChange(() => {
+      if (selectionMenuVisibleRef.current) {
+        updateSelectionMenuPosition(reqEditor)
+      }
+    })
+    const blurDisposable = reqEditor.onDidBlurEditorWidget(closeSelectionMenu)
+
+    return () => {
+      mouseUpDisposable.dispose()
+      selectionDisposable.dispose()
+      scrollDisposable.dispose()
+      blurDisposable.dispose()
+    }
+  }, [reqEditor, closeSelectionMenu, updateSelectionMenuPosition])
+
   const rightContextMenu: OtherMenuListProps = useCreation(() => {
     return {
       sendAIActions: {
@@ -1326,17 +1401,34 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
               <StreamMarkdown content={editorInfo?.code || ''} />
             </div>
           ) : (
-            <YakitEditor
-              editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
-              editorDidMount={setReqEditorFun}
-              // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
-              type={editorInfo?.language}
-              value={editorInfo?.code || ''}
-              setValue={setYakitEditorValue}
-              highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
-              highLightClass="hight-light-yak-runner-color"
-              contextMenu={rightContextMenu}
-            />
+            <div className={styles['runner-tab-pane-editor']}>
+              <YakitEditor
+                editorOperationRecord="YAK_RUNNNER_EDITOR_RECORF"
+                editorDidMount={setReqEditorFun}
+                // 因monaco版本兼容问题 如若type传入“javascript”等，则可能会抛出错误 进而影响dnd拖拽
+                type={editorInfo?.language}
+                value={editorInfo?.code || ''}
+                setValue={setYakitEditorValue}
+                highLightText={editorInfo?.highLightRange ? [editorInfo?.highLightRange] : undefined}
+                highLightClass="hight-light-yak-runner-color"
+                contextMenu={rightContextMenu}
+              />
+              {selectionMenuVisible && (
+                <div
+                  className={styles['selection-menu-overlay']}
+                  style={{ top: selectionMenuPos.top, left: selectionMenuPos.left }}
+                >
+                  <IrifyAiCodeAuditSelectionMenu
+                    close={closeSelectionMenu}
+                    onSend={() => {
+                      if (reqEditorRef.current) {
+                        onSendAIActionRef.current(reqEditorRef.current)
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           )}
         </>
       )}
@@ -1350,48 +1442,27 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo(()
   const size = useSize(ref)
   const [historyList, setHistoryList] = useState<YakRunnerHistoryProps[]>([])
 
-  const getHistoryList = useMemoizedFn(async () => {
+  const getHistoryList = useMemoizedFn(async (data?: string) => {
     try {
+      if (data) {
+        const historyData: YakRunnerHistoryProps[] = JSON.parse(data)
+        setHistoryList(historyData)
+        return
+      }
       const list = await getIrifyAiCodeAuditHistory()
       setHistoryList(list)
     } catch (error) {}
   })
   useEffect(() => {
     getHistoryList()
+    emiter.on('onAiCodeAuditRefreshRunnerHistory', getHistoryList)
+    return () => {
+      emiter.off('onAiCodeAuditRefreshRunnerHistory', getHistoryList)
+    }
   }, [])
 
   const openFolder = useMemoizedFn(() => {
-    if (SystemInfo.mode === 'remote') {
-      let absolutePath = ''
-      const m = showYakitModal({
-        title: (modalT) => modalT('RunnerFileTree.enterFolderPath'),
-        width: 400,
-        type: 'white',
-        closable: false,
-        centered: true,
-        content: <OpenFolderDragger setAbsolutePath={(v) => (absolutePath = v)} />,
-        onCancel: () => {
-          m.destroy()
-        },
-        onOk: async () => {
-          if (absolutePath.length === 0) {
-            warn(tYak('RunnerFileTree.enterFolderPath'))
-            return
-          }
-          emiter.emit('onAiCodeAuditOpenFileTree', absolutePath)
-          m.destroy()
-        },
-      })
-    } else {
-      handleOpenFileSystemDialog({ title: tYak('RunnerFileTree.selectFolder'), properties: ['openDirectory'] }).then(
-        (data) => {
-          if (data.filePaths.length) {
-            const absolutePath: string = data.filePaths[0].replace(/\\/g, '\\')
-            emiter.emit('onAiCodeAuditOpenFileTree', absolutePath)
-          }
-        },
-      )
-    }
+    requestIrifyAiCodeAuditOnboarding()
   })
 
   return (
@@ -1429,16 +1500,14 @@ export const YakRunnerWelcomePage: React.FC<YakRunnerWelcomePageProps> = memo(()
               .slice(0, 3)
               .map((item) => {
                 return (
-                  <div
-                    key={item.path}
+                  <IrifyAiCodeAuditHistoryItem
+                    key={`${item.path}-${item.auditStyle ?? 'unset'}`}
+                    item={item}
                     className={styles['list-opt']}
                     onClick={() => {
-                      emiter.emit('onAiCodeAuditOpenFileTree', item.path)
+                      requestIrifyAiCodeAuditOnboarding({ path: item.path, auditStyle: item.auditStyle })
                     }}
-                  >
-                    <div className={styles['file-name']}>{item.name}</div>
-                    <div className={classNames(styles['file-path'], 'yakit-single-line-ellipsis')}>{item.path}</div>
-                  </div>
+                  />
                 )
               })}
           </div>
