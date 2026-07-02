@@ -228,6 +228,8 @@ export enum AIInputEventSyncTypeEnum {
   SYNC_CAPABILITY_INVENTORY = 'capability_inventory_sync',
   /** 执行分离PLAN */
   SYNC_EXECUTE_DETACHED_PLAN = 'execute_detached_plan',
+  /** 关闭浏览器进程 */
+  SYNC_CLOSE_BROWSER = 'close_browser_sync',
 }
 
 export interface AIInputEvent {
@@ -666,6 +668,13 @@ export declare namespace AIAgentGrpcApi {
       risk_count: number
       modified_file_count: number
     }
+    background_processes: {
+      type: 'browser' // 枚举，目前值只有browser
+      process_id: string // 进程ID，关闭的唯一标识，关闭进程时会用到
+      process_name: string // 枚举，目前只有running
+      status: 'running'
+      started_at: number
+    }[]
     /** 下面两个字段暂时没有用，故不添加 */
     // perception
     // capabilities

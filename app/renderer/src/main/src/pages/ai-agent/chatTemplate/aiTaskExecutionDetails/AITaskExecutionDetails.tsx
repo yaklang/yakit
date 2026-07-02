@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import {
-  AITaskActionItemProps,
+  AIBrowserProcessesProps,
   AITaskDetailsAddListItem,
   AITaskDetailsAddPopoverProps,
   AITaskDetailsAddPopoverResponse,
@@ -51,6 +51,7 @@ import {
 } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { YakitRadioButtons } from '@/components/yakitUI/YakitRadioButtons/YakitRadioButtons'
 import { timeDiffWithMoment } from '@/utils/timeUtil'
+import { AITaskActionItem, AITaskExecutionList } from './aiTaskExecutionList/AITaskExecutionList'
 
 export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = React.memo((props) => {
   const { taskId, taskGoal, taskName, onClose } = props
@@ -216,6 +217,28 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
     if (!planItemDetailsData?.execution) return '暂无'
     return `${planItemDetailsData?.execution.risk_count ?? `0`}`
   }, [planItemDetailsData?.execution?.risk_count])
+
+  const showForge = useCreation(() => {
+    if (!planItemDetailsData) return false
+    return forgeFixedList.length > 0 || forgeDynamicList.length > 0
+  }, [forgeFixedList, forgeDynamicList, planItemDetailsData])
+  const showTool = useCreation(() => {
+    if (!planItemDetailsData) return false
+    return (planItemDetailsData?.tool.fixed.length || planItemDetailsData?.tool.dynamic.length) > 0
+  }, [planItemDetailsData?.tool.fixed, planItemDetailsData?.tool.dynamic, planItemDetailsData])
+  const showPlugin = useCreation(() => {
+    if (!planItemDetailsData) return false
+    return (planItemDetailsData?.plugins.fixed.length || planItemDetailsData?.plugins.dynamic.length) > 0
+  }, [planItemDetailsData?.plugins.fixed, planItemDetailsData?.plugins.dynamic, planItemDetailsData])
+  const showMCP = useCreation(() => {
+    if (!planItemDetailsData) return false
+    return (planItemDetailsData?.mcp.fixed.length || planItemDetailsData?.mcp.dynamic.length) > 0
+  }, [planItemDetailsData?.mcp.fixed, planItemDetailsData?.mcp.dynamic, planItemDetailsData])
+  const showBackgroundProcesses = useCreation(() => {
+    if (!planItemDetailsData) return false
+    return (planItemDetailsData?.backgroundProcesses?.length || 0) > 0
+  }, [planItemDetailsData?.backgroundProcesses])
+
   return (
     <div
       className={classNames(styles['ai-task-execution-details-container'], {
@@ -275,7 +298,7 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
                   <Progress
                     strokeColor="var(--Colors-Use-Neutral-Disable)"
                     trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
-                    percent={Math.ceil(finishedCount / total) * 100}
+                    percent={Math.round((finishedCount / (total || 1)) * 100)}
                     size="small"
                     showInfo={false}
                     className={styles['progress-bar']}
@@ -329,43 +352,92 @@ export const AITaskExecutionDetails: React.FC<AITaskExecutionDetailsProps> = Rea
             )}
           </div>
         </div>
-
+        {showBackgroundProcesses && (
+          <div className={styles['section']}>
+            <AIBrowserProcesses list={planItemDetailsData?.backgroundProcesses || []} />
+          </div>
+        )}
         {/* 技能、工具、插件三列 */}
-        <div className={styles['bottom-section']}>
-          <AITaskDetailsCardList
-            key="forge"
-            type="forge"
-            colTitle="技能"
-            taskId={taskId}
-            fixedList={forgeFixedList}
-            dynamicList={forgeDynamicList}
-          />
-          <AITaskDetailsCardList
-            key="tool"
-            type="tool"
-            colTitle={'工具'}
-            taskId={taskId}
-            fixedList={planItemDetailsData?.tool.fixed || []}
-            dynamicList={planItemDetailsData?.tool.dynamic || []}
-          />
-          <AITaskDetailsCardList
-            key="yak_plugin"
-            type="yak_plugin"
-            colTitle={'插件'}
-            taskId={taskId}
-            fixedList={planItemDetailsData?.plugins.fixed || []}
-            dynamicList={planItemDetailsData?.plugins.dynamic || []}
-          />
-          <AITaskDetailsCardList
-            key="mcp"
-            type="mcp"
-            colTitle={'MCP'}
-            taskId={taskId}
-            fixedList={planItemDetailsData?.mcp.fixed || []}
-            dynamicList={planItemDetailsData?.mcp.dynamic || []}
-          />
-        </div>
+        {showForge || showTool || showPlugin || showMCP ? (
+          <div className={styles['section']}>
+            {showForge && (
+              <AITaskDetailsCardList
+                key="forge"
+                type="forge"
+                colTitle="技能"
+                taskId={taskId}
+                fixedList={forgeFixedList}
+                dynamicList={forgeDynamicList}
+              />
+            )}
+            {showTool && (
+              <AITaskDetailsCardList
+                key="tool"
+                type="tool"
+                colTitle={'工具'}
+                taskId={taskId}
+                fixedList={planItemDetailsData?.tool.fixed || []}
+                dynamicList={planItemDetailsData?.tool.dynamic || []}
+              />
+            )}
+            {showPlugin && (
+              <AITaskDetailsCardList
+                key="yak_plugin"
+                type="yak_plugin"
+                colTitle={'插件'}
+                taskId={taskId}
+                fixedList={planItemDetailsData?.plugins.fixed || []}
+                dynamicList={planItemDetailsData?.plugins.dynamic || []}
+              />
+            )}
+            {showMCP && (
+              <AITaskDetailsCardList
+                key="mcp"
+                type="mcp"
+                colTitle={'MCP'}
+                taskId={taskId}
+                fixedList={planItemDetailsData?.mcp.fixed || []}
+                dynamicList={planItemDetailsData?.mcp.dynamic || []}
+              />
+            )}
+          </div>
+        ) : null}
       </div>
+    </div>
+  )
+})
+
+const AIBrowserProcesses: React.FC<AIBrowserProcessesProps> = React.memo((props) => {
+  const { list } = props
+
+  const { handleSendSyncMessage } = useChatIPCDispatcher()
+
+  const onRemove = useMemoizedFn((processes: AIBrowserProcessesProps['list'][number]) => {
+    handleSendSyncMessage({
+      syncType: AIInputEventSyncTypeEnum.SYNC_CLOSE_BROWSER,
+      SyncJsonInput: JSON.stringify({
+        process_id: processes.process_id,
+      }),
+    })
+  })
+  return (
+    <div className={classNames(styles['browser-processes'])}>
+      <div className={styles['browser-processes-title']}>{'浏览器进程管理'}</div>
+      <AITaskExecutionList<AIBrowserProcessesProps['list'][number]>
+        classNameList={styles['browser-processes-list']}
+        list={list}
+        renderItem={(processes, index) => (
+          <AITaskActionItem
+            key={processes.process_id}
+            title={processes.process_name}
+            titleExtra={
+              <YakitPopconfirm title={'确定要关闭嘛?'} onConfirm={() => onRemove(processes)}>
+                <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
+              </YakitPopconfirm>
+            }
+          />
+        )}
+      />
     </div>
   )
 })
@@ -702,9 +774,10 @@ const typeOptions = [
 ]
 const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((props) => {
   const { type, colTitle, fixedList, dynamicList, taskId } = props
+
   const { handleSendConfigHotpatch, handleSendSyncMessage } = useChatIPCDispatcher()
   const [configType, setConfigType] = useState<'fixed' | 'dynamic'>('fixed')
-  const [scroll, setScroll] = useState<boolean>(false)
+
   const [visible, setVisible] = useState<boolean>(false)
   const onRemove = useMemoizedFn((dynamicItem) => {
     handleSendConfigHotpatch({
@@ -725,109 +798,80 @@ const AITaskDetailsCardList: React.FC<AITaskDetailsCardListProps> = React.memo((
       })
     }, 1000)
   })
-  const renderList = useMemoizedFn(() => {
-    switch (configType) {
-      case 'fixed':
-        return fixedList.map((fixedItem, index) => (
-          <AITaskActionItem
-            key={fixedItem.verbose_name + fixedItem.name}
-            title={fixedItem.verbose_name || fixedItem.name}
-            category={fixedItem.category}
-            description={fixedItem.description}
+  const renderHeader = useMemoizedFn(() => {
+    return (
+      <>
+        <div className={styles['plugin-group-title']}>
+          <YakitRadioButtons
+            buttonStyle="solid"
+            value={configType}
+            onChange={(e) => setConfigType(e.target.value)}
+            options={typeOptions}
+            // size="small"
           />
-        ))
-      case 'dynamic':
-        return dynamicList.map((dynamicItem, index) => (
-          <AITaskActionItem
-            key={dynamicItem.name}
-            title={dynamicItem.name}
-            description={dynamicItem.description}
-            category={dynamicItem.category}
-            titleExtra={
-              <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
-                <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
-              </YakitPopconfirm>
+          {/* <YakitTag border={false} fullRadius size="small">
+{configType === 'dynamic' ? dynamicList.length : fixedList.length}
+</YakitTag> */}
+        </div>
+        {configType === 'dynamic' && (
+          <YakitPopover
+            content={
+              <AITaskDetailsAddPopover
+                type={type}
+                title={`添加${colTitle}`}
+                taskId={taskId}
+                onClose={() => setVisible(false)}
+              />
             }
-          />
-        ))
-      default:
-        return <></>
-    }
+            trigger="click"
+            placement="top"
+            destroyTooltipOnHide
+            visible={visible}
+            onVisibleChange={setVisible}
+            overlayClassName={styles['add-popover']}
+          >
+            <YakitButton type="text" className={styles['add-btn']}>
+              添加
+            </YakitButton>
+          </YakitPopover>
+        )}
+      </>
+    )
   })
   return (
     <div className={styles['section-card']}>
       <div className={styles['section-card-title']}>{colTitle}</div>
-      <div className={styles['plugin-group']}>
-        <div className={styles['plugin-group-header']}>
-          <div className={styles['plugin-group-title']}>
-            <YakitRadioButtons
-              buttonStyle="solid"
-              value={configType}
-              onChange={(e) => setConfigType(e.target.value)}
-              options={typeOptions}
-              // size="small"
-            />
-            {/* <YakitTag border={false} fullRadius size="small">
-              {configType === 'dynamic' ? dynamicList.length : fixedList.length}
-            </YakitTag> */}
-          </div>
-          {configType === 'dynamic' && (
-            <YakitPopover
-              content={
-                <AITaskDetailsAddPopover
-                  type={type}
-                  title={`添加${colTitle}`}
-                  taskId={taskId}
-                  onClose={() => setVisible(false)}
-                />
+      {configType === 'dynamic' ? (
+        <AITaskExecutionList<AITaskDetailsCardListProps['dynamicList'][number]>
+          list={dynamicList}
+          header={renderHeader()}
+          renderItem={(dynamicItem, index) => (
+            <AITaskActionItem
+              key={dynamicItem.name}
+              title={dynamicItem.name}
+              description={dynamicItem.description}
+              category={dynamicItem.category}
+              titleExtra={
+                <YakitPopconfirm title={'确定删除嘛?'} onConfirm={() => onRemove(dynamicItem)}>
+                  <YakitButton isHover icon={<OutlineTrashIcon />} type="secondary2" colors="danger" />
+                </YakitPopconfirm>
               }
-              trigger="click"
-              placement="top"
-              destroyTooltipOnHide
-              visible={visible}
-              onVisibleChange={setVisible}
-              overlayClassName={styles['add-popover']}
-            >
-              <YakitButton type="text" className={styles['add-btn']}>
-                添加
-              </YakitButton>
-            </YakitPopover>
+            />
           )}
-        </div>
-        <div
-          className={styles['plugin-list']}
-          style={{ overflowY: scroll ? 'auto' : 'hidden' }}
-          onMouseEnter={() => setScroll(true)}
-          onMouseLeave={() => setScroll(false)}
-        >
-          {renderList()}
-        </div>
-      </div>
-    </div>
-  )
-})
-
-const AITaskActionItem: React.FC<AITaskActionItemProps> = React.memo((props) => {
-  const { title, category, description, titleExtra } = props
-  return (
-    <div className={classNames(styles['plugin-item'])}>
-      <div className={styles['plugin-item-heard']}>
-        <div className={styles['plugin-item-title']}>
-          <div className={styles['text']} title={title}>
-            {title}
-          </div>
-          {category === 'skill' && (
-            <YakitTag color="info" size="small">
-              skill
-            </YakitTag>
+        />
+      ) : (
+        <AITaskExecutionList<AITaskDetailsCardListProps['fixedList'][number]>
+          list={fixedList}
+          header={renderHeader()}
+          renderItem={(fixedItem, index) => (
+            <AITaskActionItem
+              key={fixedItem.verbose_name + fixedItem.name}
+              title={fixedItem.verbose_name || fixedItem.name}
+              category={fixedItem.category}
+              description={fixedItem.description}
+            />
           )}
-        </div>
-        {titleExtra && <div className={styles['plugin-item-actions']}>{titleExtra}</div>}
-      </div>
-      {description && (
-        <div className={styles['plugin-item-desc']} title={description}>
-          {description}
-        </div>
+        />
       )}
     </div>
   )

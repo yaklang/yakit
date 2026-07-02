@@ -10,12 +10,7 @@ export interface AITaskExecutionDetailsProps {
   taskGoal?: string
   onClose?: () => void
 }
-export interface AITaskActionItemProps {
-  title: string
-  description?: string
-  titleExtra?: ReactNode
-  category?: PlanItemDetailsCategoryTypes
-}
+
 export type PlanItemDetailsCategoryTypes = (
   | AIAgentGrpcApi.PlanItemDetailsFixedItem
   | AIAgentGrpcApi.PlanItemDetailsDynamicToolItem
@@ -67,4 +62,8 @@ export interface AITaskStatisticsStatusItem {
 }
 export interface AITaskStatisticsStatusProps {
   list: AITaskStatisticsStatusItem[]
+}
+
+export interface AIBrowserProcessesProps {
+  list: AIAgentGrpcApi.SessionSnapshot['background_processes']
 }

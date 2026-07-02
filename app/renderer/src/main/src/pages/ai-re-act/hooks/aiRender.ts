@@ -202,6 +202,7 @@ export interface PlanItemDetailsData {
   }
   perception: AIAgentGrpcApi.PerceptionData
   execution: AIAgentGrpcApi.SessionSnapshot['execution']
+  backgroundProcesses: AIAgentGrpcApi.SessionSnapshot['background_processes']
 }
 
 /** UI：发包统计卡片数据（由 http_flow_fuzz_status 事件驱动） */

@@ -61,7 +61,7 @@ export const AIToDoList: React.FC<AIToDoListProps> = React.memo((props) => {
                 <Progress
                   strokeColor="var(--Colors-Use-Neutral-Disable)"
                   trailColor="var(--Colors-Use-Neutral-Bg-Hover)"
-                  percent={Math.ceil(finishedCount / total) * 100}
+                  percent={Math.round((finishedCount / (total || 1)) * 100)}
                   size="small"
                   showInfo={false}
                   className={styles['progress-bar']}
