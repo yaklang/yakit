@@ -1502,9 +1502,11 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
       }
       // base64 / hex 走"文本/HEX 可切换"的公共编辑器（默认文本）；unquote(Binary) 走字节级 HEX 编辑器
       const useTextHexEditor = entry.kind === 'base64' || entry.kind === 'hex'
+      const editorAction = readOnly ? 'View' : 'Edit'
       const editorTitle = useTextHexEditor
-        ? `Edit ${entry.kind === 'base64' ? 'Base64' : 'HexString'} - {{${entry.tagName}(...)}}`
-        : `Edit Binary - {{${entry.tagName}(...)}}`
+        ? `${editorAction} ${entry.kind === 'base64' ? 'Base64' : 'HexString'} - {{${entry.tagName}(...)}}`
+        : `${editorAction} Binary - {{${entry.tagName}(...)}}`
+
       const infoModal = showYakitModal({
         title: editorTitle,
         width: '60%',
@@ -1519,6 +1521,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         ) : (
           <BinaryFuzztagHexModal
             entry={entry}
+            readOnly={readOnly}
             initialData={initialData}
             onSubmit={handleSubmit}
             onCancel={() => infoModal.destroy()}
