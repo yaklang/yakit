@@ -9,7 +9,7 @@ import {
   YakitWhiteSvgIcon,
 } from './icons'
 import { YakitEllipsis } from '../basics/YakitEllipsis'
-import { useCreation, useDebounceEffect, useMemoizedFn, useUpdateEffect } from 'ahooks'
+import { useCreation, useDebounceEffect, useDebounceFn, useMemoizedFn, useUpdateEffect } from 'ahooks'
 import { showModal } from '@/utils/showModal'
 import { failed, info, success, yakitFailed, warn, yakitNotify } from '@/utils/notification'
 import { ConfigPrivateDomain } from '../ConfigPrivateDomain/ConfigPrivateDomain'
@@ -309,6 +309,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
   const [ceUserMenuShow, setCeUserMenuShow] = useState<boolean>(false)
   const [usageStatisticsShow, setUsageStatisticsShow] = useState<boolean>(false)
   const [apiKeysInfo, setApiKeysInfo] = useState<API.ApiKeyDetail>()
+  const [apiKeysInfoLoading, setApiKeysInfoLoading] = useState<boolean>(false)
+  const cacheApiKeyRef = useRef<string>()
   /** 修改密码弹框 */
   const [passwordShow, setPasswordShow] = useState<boolean>(false)
   /** 是否允许密码框关闭 */
@@ -513,7 +515,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
     }
   }, [userInfo.role, userInfo.platform, userInfo.companyHeadImg, dynamicConnect, apiKeysInfo])
 
-  const apiFetchApiKeys = useMemoizedFn((apikey) => {
+  const apiFetchApiKeys = useMemoizedFn((apikey, isLoading: boolean = false) => {
+    isLoading && setApiKeysInfoLoading(true)
     NetWorkApi<API.ApiKeysRequest, API.ApiKeysResponse>({
       method: 'post',
       url: 'apikeys',
@@ -531,23 +534,43 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
       .catch((err) => {
         yakitFailed(t('FuncDomain.getApiKeyDetailFailed', { error: err }))
       })
+      .finally(() => {
+        isLoading && setApiKeysInfoLoading(false)
+      })
+  })
+
+  const getGrpcApiKey = useDebounceFn(
+    () => {
+      if (userInfo.isLogin && userInfo.token && userInfo.platform !== 'company') {
+        yakitEngine
+          .getApiKeyByOnline({ Token: userInfo.token })
+          .then((res) => {
+            cacheApiKeyRef.current = res.ApiKey
+            apiFetchApiKeys(res.ApiKey)
+          })
+          .catch((err) => {
+            yakitFailed(t('FuncDomain.getApiKeyTokenFailed', { error: err }))
+          })
+      }
+      if (!userInfo.isLogin) {
+        setApiKeysInfo(undefined)
+        cacheApiKeyRef.current = undefined
+      }
+    },
+    { wait: 500 },
+  ).run
+
+  const onUpdateApiKey = useMemoizedFn((isLoading: boolean = false) => {
+    if (cacheApiKeyRef.current) {
+      apiFetchApiKeys(cacheApiKeyRef.current, isLoading)
+    } else {
+      getGrpcApiKey()
+    }
   })
 
   useEffect(() => {
-    if (userInfo.isLogin && userInfo.token && userInfo.platform !== 'company') {
-      yakitEngine
-        .getApiKeyByOnline({ Token: userInfo.token })
-        .then((res) => {
-          apiFetchApiKeys(res.ApiKey)
-        })
-        .catch((err) => {
-          yakitFailed(t('FuncDomain.getApiKeyTokenFailed', { error: err }))
-        })
-    }
-    if (!userInfo.isLogin) {
-      setApiKeysInfo(undefined)
-    }
-  }, [userInfo])
+    getGrpcApiKey()
+  }, [userInfo.isLogin])
 
   /** 渲染端通信-打开一个指定页面 */
   const onOpenPage = useMemoizedFn((info: RouteToPageProps) => {
@@ -831,6 +854,9 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
                         }
                         visible={ceUserMenuShow}
                         onVisibleChange={(visible) => {
+                          if (visible) {
+                            onUpdateApiKey()
+                          }
                           setCeUserMenuShow(visible)
                         }}
                       >
@@ -859,6 +885,8 @@ export const FuncDomain: React.FC<FuncDomainProp> = React.memo((props) => {
           visible={usageStatisticsShow}
           apiKeysInfo={apiKeysInfo}
           onClose={() => setUsageStatisticsShow(false)}
+          update={() => onUpdateApiKey(true)}
+          loading={apiKeysInfoLoading}
         />
       )}
 

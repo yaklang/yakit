@@ -10,6 +10,11 @@
   gap: 8px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--Colors-Use-Neutral-Border);
+  justify-content: space-between;
+}
+
+.api-key-row-left {
+  flex: 1;
 }
 
 .api-key-label {
