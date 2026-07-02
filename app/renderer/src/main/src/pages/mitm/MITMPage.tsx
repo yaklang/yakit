@@ -85,6 +85,7 @@ import {
   StreamUpdateState,
   useStreamProcessorManager,
 } from './MITMServerHijacking/PluginsOutput/StreamProcessor'
+import { RemoteMitmGV } from '@/enums/mitm'
 const MITMRule = React.lazy(() => import('./MITMRule/MITMRule'))
 
 const { ipcRenderer } = window.require('electron')
@@ -160,6 +161,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     proxyRouteOptions,
     comparePointUrl,
   } = useProxy()
+  const [disableTrafficGuard, setDisableTrafficGuard] = useState<boolean>(false)
   const { t, i18n } = useI18nNamespaces(['mitm'])
 
   const mitmContent = useContext(MITMContext)
@@ -300,6 +302,7 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
         certificates: certs,
         extra,
         version: mitmVersion,
+        DisableTrafficGuard: disableTrafficGuard,
       }
       return grpcMITMStartCall(params, true).catch((e: any) => {
         notification['error']({ message: t('MITMPage.startMitmFailed') + e })
@@ -501,6 +504,14 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
     }
   }, [])
 
+  useEffect(() => {
+    getRemoteValue(RemoteMitmGV.MitmDisableTrafficGuard).then((res) => {
+      if (res) {
+        setDisableTrafficGuard(res === 'true')
+      }
+    })
+  }, [])
+
   return (
     <>
       <div
@@ -510,7 +521,13 @@ export const MITMPage: React.FC<MITMPageProp> = (props) => {
       >
         {onRenderMITM()}
       </div>
-      <MITMRule status={status} visible={visible && !!inViewport} setVisible={setVisible} />
+      <MITMRule
+        status={status}
+        visible={visible && !!inViewport}
+        setVisible={setVisible}
+        disableTrafficGuard={disableTrafficGuard}
+        setDisableTrafficGuard={setDisableTrafficGuard}
+      />
     </>
   )
 }
