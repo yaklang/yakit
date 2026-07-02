@@ -155,8 +155,8 @@ FunctionEnd
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
                     ${Else}
-                        StrCpy $INSTALL_PATH_REG_KEY_NAME "AutoPentestTool_InstallPath"
-                        StrCpy $EXE_NAME "Auto Pentest Tool"
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "CEAutoPentestTool_InstallPath"
+                        StrCpy $EXE_NAME "CE Auto Pentest Tool"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}
@@ -194,8 +194,8 @@ FunctionEnd
                         StrCpy $INSTALL_PATH_REG_KEY_NAME "MemfitAI_InstallPath"
                         StrCpy $EXE_NAME "Memfit AI"
                     ${Else}
-                        StrCpy $INSTALL_PATH_REG_KEY_NAME "AutoPentestTool_InstallPath"
-                        StrCpy $EXE_NAME "Auto Pentest Tool"
+                        StrCpy $INSTALL_PATH_REG_KEY_NAME "CEAutoPentestTool_InstallPath"
+                        StrCpy $EXE_NAME "CE Auto Pentest Tool"
                     ${EndIf}
                 ${EndIf}
             ${EndIf}

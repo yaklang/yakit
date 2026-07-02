@@ -77,9 +77,9 @@ switch (platform) {
     break
   case 'memfit':
     appInfoOption = {
-      appId: 'io.yaklang.AutoPentestTool',
-      extraMetadata: { name: 'AutoPentestTool' },
-      productName: 'Auto Pentest Tool',
+      appId: 'io.yaklang.CEAutoPentestTool',
+      extraMetadata: { name: 'CEAutoPentestTool' },
+      productName: 'CE Auto Pentest Tool',
       copyright: 'Copyright © 2021 v1ll4n',
     }
     files = ['!app/assets/**/*', 'app/assets/memfit-close.png', 'app/assets/memfitlogo*', ...fixedFile]

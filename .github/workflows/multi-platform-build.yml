@@ -207,7 +207,7 @@ jobs:
                   elif [ "${{ inputs.version }}" = "irifyee" ]; then
                     echo "ENV_Software_Name=IRifyEnpriTrace" >> $GITHUB_ENV
                   elif [ "${{ inputs.version }}" = "memfit" ]; then
-                    echo "ENV_Software_Name=Auto Pentest Tool" >> $GITHUB_ENV
+                    echo "ENV_Software_Name=CE Auto Pentest Tool" >> $GITHUB_ENV
                   else
                     echo "No software version obtained" >&2
                     exit 1
