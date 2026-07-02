@@ -90,7 +90,7 @@ contextBridge.exposeInMainWorld('yakitBridge', {
     restoreEngineAndPlugin: () => invokePrefixed('RestoreEngineAndPlugin', {}),
     fetchLatestYaklangVersion: () => invokePrefixed('fetch-latest-yaklang-version'),
     fetchYaklangVersionList: () => invokePrefixed('fetch-yaklang-version-list'),
-    verifyYakEngineVersion: (version) => invoke('yak-engine-version-exists-and-correctness', version),
+    verifyYakEngineVersion: (version) => invokePrefixed('yak-engine-version-exists-and-correctness', version),
     downloadLatestYak: (version) => invokePrefixed('download-latest-yak', version),
     writeEngineKeyToYakitProjects: (version) => invokePrefixed('write-engine-key-to-yakit-projects', version),
     clearLocalYaklangVersionCache: () => invokePrefixed('clear-local-yaklang-version-cache'),
