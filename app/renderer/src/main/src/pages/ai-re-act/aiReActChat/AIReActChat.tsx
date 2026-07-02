@@ -40,6 +40,7 @@ import { cloneDeep } from 'lodash'
 import { DefaultTodoListCardData } from '../hooks/defaultConstant'
 import { TodoListCardData } from '../hooks/aiRender'
 import { OutlineListTodoIcon } from '@/assets/icon/outline'
+import TaskDetailsPopover from '@/components/historyAIReActChat/TaskDetailsPopover'
 
 export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
   forwardRef((props, ref) => {
@@ -345,7 +346,7 @@ export const AIReActChat: React.FC<AIReActChatProps> = React.memo(
                   {isShowRetract &&
                     (externalParameters?.rightIcon ? (
                       <>
-                        {getTaskId() && externalParameters.rightIcon.details}
+                        {getTaskId() && externalParameters.rightIcon.taskDetails && <TaskDetailsPopover />}
                         {externalParameters.rightIcon.dataDetails && (
                           <AIContextToken
                             iconOnly

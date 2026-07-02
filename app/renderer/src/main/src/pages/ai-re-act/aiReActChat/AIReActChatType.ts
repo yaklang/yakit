@@ -35,7 +35,7 @@ enum RightIconType {
   close = 'close',
   add = 'add',
   dataDetails = 'dataDetails',
-  details = 'details',
+  taskDetails = 'taskDetails',
 }
 
 type ExternalParametersRightIcon = Partial<{
@@ -43,7 +43,7 @@ type ExternalParametersRightIcon = Partial<{
   [RightIconType.close]: React.ReactElement
   [RightIconType.add]: React.ReactElement
   [RightIconType.dataDetails]: true | DataDetailsButtonProps
-  [RightIconType.details]: React.ReactElement
+  [RightIconType.taskDetails]: boolean
 }>
 export interface AIReActChatProps {
   mode: AIAgentChatMode

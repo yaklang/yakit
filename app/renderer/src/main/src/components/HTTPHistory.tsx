@@ -85,7 +85,7 @@ import { YakitSideTab } from './yakitSideTab/YakitSideTab'
 import { YakitTabsProps } from './yakitSideTab/YakitSideTabType'
 import { JSONParseLog } from '@/utils/tool'
 import { histroyAiStore } from '@/pages/ai-agent/store/ChatDataStore'
-import { HistoryAIReActChatProvider, useHistoryAIReActChat, useHistoryAIReActTaskDetails } from './historyAIReActChat'
+import { HistoryAIReActChatProvider, useHistoryAIReActChat } from './historyAIReActChat'
 import YakitCollapse from './yakitUI/YakitCollapse/YakitCollapse'
 import { YakitPopover } from './yakitUI/YakitPopover/YakitPopover'
 import { yakitNotify } from '@/utils/notification'
@@ -170,8 +170,6 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
     }
     setActiveKey(key)
   })
-
-  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
 
   useDebounceEffect(
     () => {
@@ -382,7 +380,7 @@ const HTTPHistoryInner: React.FC<HTTPHistoryProp> = (props) => {
                       close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
                       ),
-                      details: detailsRightIcon,
+                      taskDetails: true,
                     },
                     footerRightTypes: [
                       {

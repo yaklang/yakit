@@ -10,8 +10,3 @@ export {
   type HistoryAIReActChatSlotRender,
   type HistoryAIReActFocusModeLoop,
 } from '../withHistoryAIReActChat'
-export {
-  useHistoryAIReActTaskDetails,
-  type HistoryAIReActTaskDetailsInfo,
-  type UseHistoryAIReActTaskDetailsOptions,
-} from './useHistoryAIReActTaskDetails'

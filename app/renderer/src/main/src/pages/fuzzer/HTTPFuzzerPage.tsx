@@ -111,7 +111,6 @@ import emiter from '@/utils/eventBus/eventBus'
 import {
   HistoryAIReActChatProvider,
   useHistoryAIReActChat,
-  useHistoryAIReActTaskDetails,
 } from '@/components/historyAIReActChat'
 import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
@@ -2356,8 +2355,6 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
     }
   }, [advancedConfigShowType, setShowFreeChat])
 
-  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
-
   const hotPatchVisible = useCreation(
     () => advancedConfigShowType === 'hot-patch' && advancedConfigVisible,
     [advancedConfigShowType, advancedConfigVisible],
@@ -2714,7 +2711,7 @@ const HTTPFuzzerPageCore: React.FC<HTTPFuzzerPageProp> = (props) => {
                           onClick={() => emiter.emit('onSetAdvancedConfigShow', JSON.stringify({ type: 'ai' }))}
                         />
                       ),
-                      details: detailsRightIcon,
+                      taskDetails: true,
                     },
                     footerRightTypes: [
                       {
