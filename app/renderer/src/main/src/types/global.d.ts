@@ -400,7 +400,7 @@ interface UploadImgApiResponse {
   data?: {
     from?: string
     reason?: string
-  }
+  } & string
 }
 
 interface UploadFileApiResponse {
