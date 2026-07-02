@@ -12,6 +12,7 @@ import styles from './CustomizeCode.module.scss'
 import { useTheme } from '@/hook/useTheme'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
 import { yakitNotify } from '@/utils/notification'
+import { invalidateCustomSnippetsCache } from '@/utils/monacoSpec/yakCompletionSchema'
 import type {
   CodeCustomizeModalProps,
   RowOf,
@@ -205,6 +206,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
     {
       manual: true,
       onSuccess: () => {
+        invalidateCustomSnippetsCache()
         detailCustomCodeRun()
         setVisibleOpen(false)
         yakitNotify('success', t('ConfigNetworkPage.addSnippetGroupSuccess'))
@@ -223,6 +225,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
     {
       manual: true,
       onSuccess: () => {
+        invalidateCustomSnippetsCache()
         detailCustomCodeRun()
         yakitNotify('success', t('ConfigNetworkPage.deleteSnippetSuccess'))
       },
@@ -239,6 +242,7 @@ const CodeCustomize: FC<Partial<TCodeCustomizeTagProps>> = ({ value }) => {
     {
       manual: true,
       onSuccess: () => {
+        invalidateCustomSnippetsCache()
         detailCustomCodeRun()
         setVisibleOpen(false)
         yakitNotify('success', t('ConfigNetworkPage.editSnippetGroupSuccess'))

@@ -8,6 +8,44 @@ import { highlightKinds } from './fuzzHTTPMonacoSpec'
 
 const { ipcRenderer } = window.require('electron')
 
+// 自定义代码片段(QuerySnippets)缓存：补全在每次击键都会触发，
+// 若每次都走 IPC 查询数据库会带来明显的性能开销。这里做一个短 TTL 缓存，
+// 在连续输入期间复用结果，既保证性能，又能在片段被修改后很快刷新。
+const CUSTOM_SNIPPETS_TTL = 5000
+let _customSnippetsCache: { at: number; data: TCustomCodeGeneral<string[]> | undefined } | null = null
+let _customSnippetsInflight: Promise<TCustomCodeGeneral<string[]> | undefined> | null = null
+
+const queryCustomSnippetsCached = async (): Promise<TCustomCodeGeneral<string[]> | undefined> => {
+  const now = Date.now()
+  if (_customSnippetsCache && now - _customSnippetsCache.at < CUSTOM_SNIPPETS_TTL) {
+    return _customSnippetsCache.data
+  }
+  // 合并同一时刻的并发请求，避免抖动期间重复查询
+  if (_customSnippetsInflight) {
+    return _customSnippetsInflight
+  }
+  const inflight: Promise<TCustomCodeGeneral<string[]> | undefined> = ipcRenderer
+    .invoke('QuerySnippets', { Filter: {} })
+    .then((data: TCustomCodeGeneral<string[]>) => {
+      _customSnippetsCache = { at: Date.now(), data }
+      return data
+    })
+    .catch((err) => {
+      console.info(err)
+      return undefined
+    })
+    .finally(() => {
+      _customSnippetsInflight = null
+    })
+  _customSnippetsInflight = inflight
+  return inflight
+}
+
+// 允许外部在片段增删改后主动失效缓存
+export const invalidateCustomSnippetsCache = () => {
+  _customSnippetsCache = null
+}
+
 export interface Range {
   Code: string
   StartLine: number
@@ -588,11 +626,11 @@ export const newYaklangCompletionHandlerProvider = (
     const iWord = getWordWithPointAtPosition(model, position)
     const type = getModelContext(model, 'plugin') || 'yak'
 
-    // 获取自定义代码片段
-    const customCodeList: TCustomCodeGeneral<string[]> = await ipcRenderer
-      .invoke('QuerySnippets', { Filter: {} })
-      .catch((err) => console.info(err))
-    const targetCustomCode = getAllRows(customCodeList ?? []).filter((it) => it.State === 'yak') ?? []
+    // 获取自定义代码片段(带短 TTL 缓存，避免每次击键都查询数据库)
+    const customCodeList = await queryCustomSnippetsCached()
+    const targetCustomCode = getAllRows(customCodeList ?? ({} as TCustomCodeGeneral<string[]>)).filter(
+      (it) => it.State === 'yak',
+    )
 
     const transformCustomCode = targetCustomCode.map((it) => ({
       Label: it.Name,
@@ -636,6 +674,11 @@ export const newYaklangCompletionHandlerProvider = (
           }
           const targetSuggestions = r.SuggestionMessage?.concat(transformCustomCode)
           let suggestions = targetSuggestions.map((i) => {
+            // 后端仅在「回调实参位置」下发 Kind==='Snippet' 的回调函数字面量补全
+            // (如 poc.saveHandler(func(rsp){})，见 grpc_language_suggestion.go)。
+            // 这类补全在当前上下文里最相关，给它最高排序并预选 func 声明式，方便直接 Tab 展开。
+            const isCallbackSnippet = i.Kind === 'Snippet'
+            const isFuncDeclSnippet = isCallbackSnippet && i.InsertText.startsWith('func(')
             return {
               insertTextRules: languages.CompletionItemInsertTextRule.InsertAsSnippet,
               insertText: i.InsertText,
@@ -644,7 +687,8 @@ export const newYaklangCompletionHandlerProvider = (
               detail: i.DefinitionVerbose,
               documentation: { value: i.Description, isTrusted: true },
               range: range,
-              sortText: getSortTextByKindAndLabel(i.Kind, i.Label),
+              preselect: isFuncDeclSnippet ? true : undefined,
+              sortText: isCallbackSnippet ? '0' + i.Label : getSortTextByKindAndLabel(i.Kind, i.Label),
             } as languages.CompletionItem
           })
 
@@ -686,4 +730,112 @@ export const getWordWithPointAtPosition = (
   }
 
   return iWord
+}
+
+// ===== 回调函数参数：输入 "(" 时的精准自动触发 =====
+// 目标：只在「确实带函数(回调)参数的库函数」后输入 "(" 时，自动弹出补全(展示 func(){} 骨架)，
+// 而不是把 "(" 设为全局触发字符(那会让每个括号都弹窗、且频繁请求后端，影响性能)。
+// 实现：对每个 callee 只做「一次」轻量后端判定(复用补全接口，看返回里是否有回调 Snippet)，
+// 结果按 callee 名缓存；命中缓存后为纯本地判断，零额外请求。
+
+// callee -> 是否带回调参数 的缓存(整会话复用；后端函数签名稳定，可安全长期缓存)
+const _calleeHasCallbackCache = new Map<string, boolean>()
+
+// 明显不是"函数调用"的关键字，输入其后的 "(" 不触发(if/for/switch 等)
+const CALLEE_STOP_WORDS = new Set([
+  'if',
+  'for',
+  'while',
+  'switch',
+  'func',
+  'fn',
+  'def',
+  'return',
+  'go',
+  'defer',
+  'catch',
+  'else',
+  'elif',
+  'in',
+  'range',
+  'make',
+  'new',
+  'chan',
+  'map',
+  'import',
+  'include',
+  'assert',
+  'try',
+  'select',
+  'case',
+])
+
+// 从当前行光标前文本里，提取紧邻 "(" 之前的调用名(如 poc.saveHandler)。无则返回 ''。
+export const extractCalleeBeforeParen = (model: monaco.editor.ITextModel, position: monaco.Position): string => {
+  try {
+    const before = model.getValueInRange({
+      startLineNumber: position.lineNumber,
+      startColumn: 1,
+      endLineNumber: position.lineNumber,
+      endColumn: position.column,
+    })
+    // 光标前文本必须以 "标识符链(" 结尾
+    const m = before.match(/([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\($/)
+    return m ? m[1] : ''
+  } catch (e) {
+    return ''
+  }
+}
+
+// 在输入 "(" 后，若 callee 是带回调参数的函数，则自动唤起补全。
+// 全程 try/catch，任何异常都静默降级，绝不影响编辑器。
+export const maybeAutoTriggerCallbackOnParen = async (
+  editor: monaco.editor.ICodeEditor,
+  model: monaco.editor.ITextModel,
+  position: monaco.Position,
+  scriptType: string,
+): Promise<void> => {
+  try {
+    const callee = extractCalleeBeforeParen(model, position)
+    if (!callee) return
+    const lastSeg = callee.includes('.') ? callee.split('.').pop() || callee : callee
+    if (CALLEE_STOP_WORDS.has(lastSeg)) return
+
+    // 命中缓存：纯本地判断，零请求
+    if (_calleeHasCallbackCache.has(callee)) {
+      if (_calleeHasCallbackCache.get(callee)) {
+        editor.trigger('yak-callback', 'editor.action.triggerSuggest', {})
+      }
+      return
+    }
+
+    // 未知 callee：做一次轻量探测(复用补全接口)。返回里出现 Kind==='Snippet'
+    // 即代表后端认为「当前实参期望函数类型」(回调骨架)，仅回调场景才会出现。
+    const iWord = getWordWithPointAtPosition(model, position)
+    const resp: YaklangLanguageSuggestionResponse = await ipcRenderer.invoke('YaklangLanguageSuggestion', {
+      InspectType: 'completion',
+      YakScriptType: scriptType,
+      YakScriptCode: model.getValue(),
+      ModelID: model.id,
+      Range: {
+        Code: iWord.word,
+        StartLine: position.lineNumber,
+        EndLine: position.lineNumber,
+        StartColumn: iWord.startColumn,
+        EndColumn: iWord.endColumn,
+      } as Range,
+    } as YaklangLanguageSuggestionRequest)
+
+    const hasCallback = !!resp && (resp.SuggestionMessage || []).some((i) => i.Kind === 'Snippet')
+    _calleeHasCallbackCache.set(callee, hasCallback)
+    if (hasCallback) {
+      // 探测期间用户可能已移动光标/继续输入，触发前再确认仍在同一个 "(" 上下文
+      const cur = editor.getPosition()
+      if (cur && extractCalleeBeforeParen(model, cur) === callee) {
+        editor.trigger('yak-callback', 'editor.action.triggerSuggest', {})
+      }
+    }
+  } catch (e) {
+    // ignore：自动触发失败不影响正常补全
+  }
 }
