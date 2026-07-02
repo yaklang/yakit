@@ -108,10 +108,7 @@ import {
   OutlineDotsverticalIcon,
 } from '@/assets/icon/outline'
 import emiter from '@/utils/eventBus/eventBus'
-import {
-  HistoryAIReActChatProvider,
-  useHistoryAIReActChat,
-} from '@/components/historyAIReActChat'
+import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { WebFuzzerAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import {
   applyHttpFuzzRequestChangeToWebFuzzerPage,
