@@ -26,6 +26,7 @@ export const DefaultAIToolResult: AIToolResult = {
     execError: '',
     dirPath: '',
     resultDetails: '',
+    reason: '',
   },
   httpFlowDataCount: 0,
   riskFlowDataCount: 0,

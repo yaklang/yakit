@@ -1550,6 +1550,42 @@ const handleToolCallSummary: AIMessageHandler = (request) => {
   }
 }
 
+/** Type='tool_call_reason' 工具调用理由 */
+const handleToolCallReason: AIMessageHandler = (request) => {
+  const { res, getContentMap, pushLog } = request
+  if (res.Type !== 'tool_call_reason') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const { call_tool_id, reason } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
+
+  if (!call_tool_id) {
+    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
+    return
+  }
+
+  const toolResult = getContentMap(call_tool_id)
+  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+    handleErrorGRPCToLog(
+      res.IsSync,
+      pushLog,
+      genErrorLogData(
+        res.Timestamp,
+        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+      ),
+    )
+    return
+  }
+
+  toolResult.data.tool.reason = reason || ''
+  if (toolResult.data.type === 'stream' || toolResult.data.type === 'result') {
+    handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+      mapKey: toolResult.id,
+      type: toolResult.type,
+      chatType: toolResult.chatType,
+    })
+  }
+}
+
 /** 工具执行结果的流量数据计数逻辑 */
 const handleTrafficCount: AIMessageHandler = (request) => {
   const { res, getContentMap, pushLog } = request
@@ -2307,6 +2343,7 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   tool_call_done: handleToolCallDone,
   tool_call_error: handleToolCallError,
   tool_call_summary: handleToolCallSummary,
+  tool_call_reason: handleToolCallReason,
   yak_httpflow_count: handleYakHttpFlow,
   yak_risk_count: handleYakRisk,
   stream_start: handleStreamStart,

@@ -121,6 +121,10 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
     return stream?.data?.selectors
   }, [stream?.data?.selectors])
 
+  const reason = useCreation(() => {
+    return data?.tool?.reason || ''
+  }, [data?.tool?.reason])
+
   const onToolExtra = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
     switch (item.value) {
       case 'enough-cancel':
@@ -170,7 +174,13 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
           )}
         </div>
       }
-      titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
+      titleExtra={
+        !!reason ? (
+          <span className={styles['tool-invoker-card-reason']} title={reason}>
+            {reason}
+          </span>
+        ) : null
+      }
       footer={<OperationCardFooter {...operationInfo} />}
     >
       <ToolStatusCard status={'purple'} title={<div className={styles['tool-name']}>{data.toolName}</div>}>
@@ -212,6 +222,10 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const summary = useCreation(() => {
     return data?.tool?.summary || ''
   }, [data?.tool?.summary])
+
+  const reason = useCreation(() => {
+    return data?.tool?.reason || ''
+  }, [data?.tool?.reason])
 
   const content = useCreation(() => {
     return data?.tool?.toolStdoutContent?.content || ''
@@ -373,7 +387,13 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
           </Tooltip>
         </div>
       }
-      titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
+      titleExtra={
+        !!reason ? (
+          <span className={styles['tool-invoker-card-reason']} title={reason}>
+            {reason}
+          </span>
+        ) : null
+      }
       footer={
         expand && (
           <div className={styles['tool-invoker-card-footer']}>
