@@ -15,6 +15,8 @@ import { YakitDropdownMenu } from '@/components/yakitUI/YakitDropdownMenu/YakitD
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { SoftwareBasics, SoftwareBasicsProps } from '../SoftwareBasics'
 import { yakitApp } from '@/utils/electronBridge'
+import { YakitPopover } from '@/components/yakitUI/YakitPopover/YakitPopover'
+import { MoreYaklangVersion } from '../MoreYaklangVersion'
 
 import classNames from 'classnames'
 import styles from './YakitLoading.module.scss'
@@ -51,6 +53,12 @@ export interface YakitLoadingProp extends SoftwareBasicsProps {
   /** 倒计时秒数 */
   countdown?: number
 
+  /** 更多引擎列表 */
+  moreYaklangVersionList: string[]
+
+  /** 设置指定下载引擎版本号 */
+  setYaklangSpecifyVersion: (version: string) => void
+
   btnClickCallback: (type: YaklangEngineMode | YakitStatusType, extra?: LoadingClickExtra) => void
 }
 
@@ -76,8 +84,11 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     setSoftMode,
     softLang,
     setSoftLang,
+    moreYaklangVersionList,
+    setYaklangSpecifyVersion,
   } = props
 
+  const [moreVersionPopShow, setMoreVersionPopShow] = useState<boolean>(false)
   const [form] = Form.useForm()
   /** 用户协议勾选状态 */
   const [agrCheck, setAgrCheck] = useState<boolean>(false)
@@ -623,7 +634,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
     return !yakitStatus || statusArr.includes(yakitStatus)
   }, [yakitStatus])
 
-  const showRemoteLinkBtn = useMemo(() => {
+  const unLinkStatus = useMemo(() => {
     const statusArr: YakitStatusType[] = ['link', 'ready', 'init', 'reclaimDatabaseSpace_start']
     return yakitStatus && !statusArr.includes(yakitStatus)
   }, [yakitStatus])
@@ -725,7 +736,7 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                     </>
                   )}
                   {/* 远程连接按钮：在非连接状态时显示 */}
-                  {showRemoteLinkBtn && (
+                  {unLinkStatus && (
                     <>
                       <Divider type="vertical"></Divider>
                       <span
@@ -743,6 +754,31 @@ export const YakitLoading: React.FC<YakitLoadingProp> = (props) => {
                         <OutlineArrowcirclerightIcon className={styles['arrow-circle-right-icon']} />
                       </span>
                     </>
+                  )}
+                  {/* 更多版本按钮：在非连接状态时显示 */}
+                  {unLinkStatus && (
+                    <div className={styles['more-version-btn']}>
+                      <YakitPopover
+                        visible={moreVersionPopShow}
+                        overlayClassName={styles['more-versions-popover']}
+                        placement="topLeft"
+                        trigger="click"
+                        content={
+                          <MoreYaklangVersion
+                            moreYaklangVersionList={moreYaklangVersionList}
+                            onClosePop={(visible, version) => {
+                              setMoreVersionPopShow(visible)
+                              setYaklangSpecifyVersion(version)
+                            }}
+                          />
+                        }
+                        onVisibleChange={(visible) => {
+                          setMoreVersionPopShow(visible)
+                        }}
+                      >
+                        <span className={classNames(styles['primary-btn'])}>更多版本</span>
+                      </YakitPopover>
+                    </div>
                   )}
                 </>
               )}

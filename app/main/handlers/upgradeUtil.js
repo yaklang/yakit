@@ -240,6 +240,52 @@ const diagnosingYakVersion = () => {
   })
 }
 
+// 判断历史引擎版本是否存在以及正确性
+const asyncYakEngineVersionExistsAndCorrectness = (version) => {
+  const dest = path.join(
+    yaklangEngineDir,
+    version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
+  )
+  return new Promise(async (resolve, reject) => {
+    try {
+      const url = await getCheckTextUrl(version)
+      if (url === '') {
+        reject(`Unsupported platform: ${process.platform}`)
+        return
+      }
+
+      if (fs.existsSync(dest)) {
+        let rsp = https.get(url)
+        rsp.on('response', (rsp) => {
+          rsp
+            .on('data', (data) => {
+              const onlineha = Buffer.from(data).toString('utf8')
+              const sum = crypto.createHash('sha256')
+              sum.update(fs.readFileSync(dest))
+              const localha = sum.digest('hex')
+              if (onlineha === localha) {
+                resolve(true)
+              } else {
+                resolve(false)
+              }
+            })
+            .on('error', (err) => reject(err))
+        })
+        rsp.on('error', (err) => reject(err))
+        rsp.setTimeout(3000, () => {
+          // 设置请求超时时间为3秒
+          rsp.destroy() // 超时后中止请求
+          reject('Request timeout')
+        })
+      } else {
+        reject('Engine version directory does not exist')
+      }
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
 module.exports = {
   getLatestYakLocalEngine,
   initial: async () => {
@@ -458,50 +504,6 @@ module.exports = {
       return await asyncWriteEngineKeyToYakitProjects(version)
     })
 
-    // 判断历史引擎版本是否存在以及正确性
-    const asyncYakEngineVersionExistsAndCorrectness = (version) => {
-      const dest = path.join(
-        yaklangEngineDir,
-        version.startsWith('dev/') ? 'yak-' + version.replace('dev/', 'dev-') : `yak-${version}`,
-      )
-      return new Promise(async (resolve, reject) => {
-        try {
-          const url = await getCheckTextUrl(version)
-          if (url === '') {
-            reject(`Unsupported platform: ${process.platform}`)
-          }
-
-          if (fs.existsSync(dest)) {
-            let rsp = https.get(url)
-            rsp.on('response', (rsp) => {
-              rsp
-                .on('data', (data) => {
-                  const onlineha = Buffer.from(data).toString('utf8')
-                  const sum = crypto.createHash('sha256')
-                  sum.update(fs.readFileSync(dest))
-                  const localha = sum.digest('hex')
-                  if (onlineha === localha) {
-                    resolve(true)
-                  } else {
-                    resolve(false)
-                  }
-                })
-                .on('error', (err) => reject(err))
-            })
-            rsp.on('error', (err) => reject(err))
-            rsp.setTimeout(3000, () => {
-              // 设置请求超时时间为3秒
-              rsp.destroy() // 超时后中止请求
-              reject('Request timeout')
-            })
-          } else {
-            reject('Engine version directory does not exist')
-          }
-        } catch (error) {
-          reject(error)
-        }
-      })
-    }
     ipcMain.handle('yak-engine-version-exists-and-correctness', async (e, version) => {
       return await asyncYakEngineVersionExistsAndCorrectness(version)
     })
@@ -1539,6 +1541,10 @@ module.exports = {
 
     ipcMain.handle(ipcEventPre + 'get-current-yak', async (e, params) => {
       return await asyncGetCurrentLatestYakVersion(params)
+    })
+
+    ipcMain.handle(ipcEventPre + 'yak-engine-version-exists-and-correctness', async (e, version) => {
+      return await asyncYakEngineVersionExistsAndCorrectness(version)
     })
   },
 }

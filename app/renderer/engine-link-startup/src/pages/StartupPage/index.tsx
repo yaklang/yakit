@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useMemoizedFn } from 'ahooks'
+import { useMemoizedFn, useUpdateEffect } from 'ahooks'
 import {
   DragHeaderHeight,
   handleFetchArchitecture,
@@ -39,6 +39,7 @@ import { DownloadYaklang } from './components/DownloadYaklang'
 import {
   FetchSoftwareVersion,
   GetConnectPort,
+  getReleaseEditionName,
   isCommunityEdition,
   isCommunityIRify,
   isCommunityMemfit,
@@ -367,6 +368,11 @@ export const StartupPage: React.FC = () => {
   // #region Yak引擎、Yakit下载更新逻辑
   // 检测到新版yakit的弹窗显示
   const [yakitUpdate, setYakitUpdate] = useState<boolean>(false)
+  /** 更多引擎列表 */
+  const [moreYaklangVersionList, setMoreYaklangVersionList] = useState<string[]>([])
+  const moreYaklangTime = useRef(null)
+  /** 指定下载引擎版本 */
+  const [yaklangSpecifyVersion, setYaklangSpecifyVersion] = useState<string>('')
   // 更新yaklang-modal
   const [yaklangDownload, setYaklangDownload] = useState<boolean>(false)
   const onDownloadedYaklang = useMemoizedFn((isOk: boolean) => {
@@ -384,6 +390,8 @@ export const StartupPage: React.FC = () => {
     if (isOk) {
       isEngineInstalled.current = true
     }
+    breakHandleRef.current = false
+    setYaklangSpecifyVersion('')
     setLinkLocalEngine()
   })
 
@@ -406,6 +414,125 @@ export const StartupPage: React.FC = () => {
       localEngineRef.current.checkEngineSource()
     }
   })
+
+  // 获取更多Yaklang引擎版本
+  const fetchMoreYaklangLastVersion = useMemoizedFn(() => {
+    yakitEngine
+      .fetchYaklangVersionList()
+      .then((data: string) => {
+        const arr = data.split('\n').filter((v) => v)
+        let devPrefix: string[] = []
+        let noPrefix: string[] = []
+        arr.forEach((item) => {
+          if (item.startsWith('dev')) {
+            devPrefix.push(item)
+          } else {
+            noPrefix.push(item)
+          }
+        })
+        setMoreYaklangVersionList(noPrefix.concat(devPrefix))
+      })
+      .catch((err) => {
+        setMoreYaklangVersionList([])
+      })
+  })
+  useEffect(() => {
+    // 出现更多版本按钮的情况、非连接状态，获取更多引擎列表，并启动定时器
+    const statusArr: YakitStatusType[] = [
+      'softwareBasics',
+      'install',
+      'installNetWork',
+      'link_countdown',
+      'link',
+      'ready',
+      'init',
+      'reclaimDatabaseSpace_start',
+    ]
+    if (yakitStatus && !statusArr.includes(yakitStatus)) {
+      if (moreYaklangTime.current) clearInterval(moreYaklangTime.current)
+      fetchMoreYaklangLastVersion()
+      moreYaklangTime.current = setInterval(fetchMoreYaklangLastVersion, 60000)
+    } else {
+      if (moreYaklangTime.current) {
+        setMoreYaklangVersionList([])
+        clearInterval(moreYaklangTime.current)
+        moreYaklangTime.current = null
+      }
+    }
+  }, [yakitStatus])
+  useEffect(() => {
+    return () => {
+      if (moreYaklangTime.current) {
+        setMoreYaklangVersionList([])
+        clearInterval(moreYaklangTime.current)
+      }
+    }
+  }, [])
+
+  // 判断引擎版本没有问题，则直接安装，否则重新下载
+  const yakEngineVersionExistsAndCorrectness = async (
+    version: string,
+    installSuccessCallback: () => void,
+    installErrCallback: (err) => void,
+    errCallback: () => void,
+  ) => {
+    try {
+      const res = await yakitEngine.verifyYakEngineVersion(version)
+      if (res === true) {
+        // 清空主进程yaklang版本缓存
+        yakitEngine.clearLocalYaklangVersionCache()
+        yakitEngine
+          .installYakEngine(version)
+          .then(() => {
+            yakitNotify('info', '已检测到本地存在对应版本引擎，直接进行安装')
+            yakitNotify('success', `安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
+            installSuccessCallback()
+          })
+          .catch((err: any) => {
+            yakitNotify(
+              'error',
+              `安装失败：${err.message.indexOf('operation not permitted') > -1 ? '请关闭引擎后重试' : String(err)}`,
+            )
+            installErrCallback(err)
+          })
+      } else {
+        errCallback && errCallback()
+      }
+    } catch (error) {
+      errCallback && errCallback()
+    }
+  }
+  // 下载指定版本引擎
+  useUpdateEffect(() => {
+    if (yaklangSpecifyVersion) {
+      killCurrentProcess(() => {
+        yakEngineVersionExistsAndCorrectness(
+          yaklangSpecifyVersion,
+          () => {
+            setYaklangSpecifyVersion('')
+            breakHandleRef.current = false
+            isCheckVersion.current = false
+            setLinkLocalEngine()
+          },
+          (err) => {
+            setYaklangSpecifyVersion('')
+            breakHandleRef.current = false
+            isCheckVersion.current = false
+            if (err.message === 'operation not permitted') {
+              setLinkLocalEngine()
+            } else {
+              // 引擎文件已经被删除了
+              safeSetYakitStatus('')
+              handleOperations('install')
+            }
+          },
+          () => {
+            setYaklangDownload(true)
+          },
+        )
+      }, [getCustomPort()])
+    }
+  }, [yaklangSpecifyVersion])
   // #endregion
 
   // #region YakitLoading逻辑
@@ -884,7 +1011,7 @@ export const StartupPage: React.FC = () => {
       setLocalValue(LocalGVS.YaklangEngineMode, getEngineMode())
 
       // 缓存连接端口
-      cacheLocalModePort(getCredential().Port)
+      cacheLocalModePort(+getCredential().Port || +getCustomPort() || GetConnectPort())
 
       const waitTime: number = 5000
       const id = setInterval(() => {
@@ -1124,13 +1251,15 @@ export const StartupPage: React.FC = () => {
                   setSoftMode={setSoftMode}
                   softLang={softLang}
                   setSoftLang={setSoftLang}
+                  moreYaklangVersionList={moreYaklangVersionList}
+                  setYaklangSpecifyVersion={setYaklangSpecifyVersion}
                 />
                 {/* 更新引擎 */}
                 {yaklangDownload && (
                   <DownloadYaklang
                     isTop={isTop}
                     setIsTop={setIsTop}
-                    yaklangSpecifyVersion={''}
+                    yaklangSpecifyVersion={yaklangSpecifyVersion}
                     system={system}
                     visible={yaklangDownload}
                     onCancel={onDownloadedYaklang}
