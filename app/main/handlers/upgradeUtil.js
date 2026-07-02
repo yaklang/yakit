@@ -251,6 +251,7 @@ const asyncYakEngineVersionExistsAndCorrectness = (version) => {
       const url = await getCheckTextUrl(version)
       if (url === '') {
         reject(`Unsupported platform: ${process.platform}`)
+        return
       }
 
       if (fs.existsSync(dest)) {

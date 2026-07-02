@@ -456,6 +456,7 @@ export const StartupPage: React.FC = () => {
       if (moreYaklangTime.current) {
         setMoreYaklangVersionList([])
         clearInterval(moreYaklangTime.current)
+        moreYaklangTime.current = null
       }
     }
   }, [yakitStatus])
@@ -484,7 +485,7 @@ export const StartupPage: React.FC = () => {
           .installYakEngine(version)
           .then(() => {
             yakitNotify('info', '已检测到本地存在对应版本引擎，直接进行安装')
-            yakitNotify('success', `安装成功，如未生效，重启 ${getReleaseEditionName()}} 即可`)
+            yakitNotify('success', `安装成功，如未生效，重启 ${getReleaseEditionName()} 即可`)
             installSuccessCallback()
           })
           .catch((err: any) => {

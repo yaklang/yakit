@@ -13,7 +13,7 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
   const { moreYaklangVersionList, onClosePop } = props
   const [versionList, setVersionList] = useState<string[]>(moreYaklangVersionList)
   const [searchVersionVal, setSearchVersionVal] = useState<string>('')
-  const [searchVersionList, setSearchVersionList] = useState<string[]>([])
+  // const [searchVersionList, setSearchVersionList] = useState<string[]>([])
 
   useEffect(() => {
     setVersionList(moreYaklangVersionList)
@@ -21,13 +21,14 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
 
   const onSearchVersion = (version: string) => {
     setSearchVersionVal(version)
-    const arr = versionList.filter((v) => v.includes(version))
-    setSearchVersionList(arr)
+    // const arr = versionList.filter((v) => v.includes(version))
+    // setSearchVersionList(arr)
   }
 
   const renderVersionList = useMemo(() => {
-    return searchVersionVal ? searchVersionList : versionList
-  }, [searchVersionVal, searchVersionList, versionList])
+    if (!searchVersionVal) return versionList
+    return versionList.filter((v) => v.includes(searchVersionVal))
+  }, [searchVersionVal, versionList])
 
   const versionListItemClick = (version: string) => {
     onClosePop(false, version)
@@ -47,7 +48,7 @@ export const MoreYaklangVersion: React.FC<MoreYaklangVersionProps> = React.memo(
         {renderVersionList.length ? (
           <>
             {renderVersionList.map((v, index) => (
-              <div className={styles['version-list-item']} key={index} onClick={() => versionListItemClick(v)}>
+              <div className={styles['version-list-item']} key={v} onClick={() => versionListItemClick(v)}>
                 {v}
               </div>
             ))}
