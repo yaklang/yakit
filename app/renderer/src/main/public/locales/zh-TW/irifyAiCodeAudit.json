@@ -31,10 +31,11 @@
     "summaryMessage": "預設訊息",
     "messageRequired": "請輸入要發送的訊息",
     "notSelected": "未選擇",
-    "startHint": "可編輯預設訊息後點擊開始，將自動發送並鎖定目前風格，開始後不可切換。",
+    "startHint": "可編輯預設訊息。「開始」將自動發送並鎖定風格；「僅打開文件」只打開目錄並填入輸入框，不自動運行 AI。",
     "cancel": "取消",
     "prev": "上一步",
     "next": "下一步",
+    "openOnly": "僅打開文件",
     "start": "開始"
   }
 }

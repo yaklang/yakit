@@ -31,10 +31,11 @@
     "summaryMessage": "预设消息",
     "messageRequired": "请输入要发送的消息",
     "notSelected": "未选择",
-    "startHint": "可编辑预设消息后点击开始，将自动发送并锁定当前风格，开始后不可切换。",
+    "startHint": "可编辑预设消息。「开始」将自动发送并锁定风格；「仅打开文件」只打开目录并把消息填入输入框，不自动运行 AI。",
     "cancel": "取消",
     "prev": "上一步",
     "next": "下一步",
+    "openOnly": "仅打开文件",
     "start": "开始"
   }
 }

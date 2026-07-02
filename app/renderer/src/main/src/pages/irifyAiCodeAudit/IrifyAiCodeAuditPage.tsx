@@ -106,6 +106,11 @@ const IrifyAiCodeAuditPageInner: React.FC<IrifyAiCodeAuditPageProps> = ({ auditC
     setStarted(true)
   })
 
+  const handleOnboardingOpenOnly = useMemoizedFn((style: IrifyAiCodeAuditStyle) => {
+    if (!isIrifyAuditStyleConfirmed(style)) return
+    setAuditStyle(style)
+  })
+
   const handleOnboardingClose = useMemoizedFn(() => {
     setOnboardingVisible(false)
     setOnboardingSelectedPath('')
@@ -144,6 +149,7 @@ const IrifyAiCodeAuditPageInner: React.FC<IrifyAiCodeAuditPageProps> = ({ auditC
         onAuditStyleChange={handleAuditStyleChange}
         onClose={handleOnboardingClose}
         onStart={handleOnboardingStart}
+        onOpenOnly={handleOnboardingOpenOnly}
         onEnsureProjectRoot={handleEnsureProjectRoot}
       />
     </HistoryAIReActChatProvider>

@@ -38,6 +38,8 @@ export interface IrifyAiCodeAuditOnboardingMaskProps {
   onClose: () => void
   /** 审计已开始后调用：发送预设消息并锁定风格切换 */
   onStart: (style: IrifyAiCodeAuditStyle) => void
+  /** 仅打开目录：写入输入框但不发送，不锁定风格 */
+  onOpenOnly: (style: IrifyAiCodeAuditStyle) => void
   /**
    * 发送前同步设置工程根路径附件。
    * 工作区打开文件树是异步的，而自动发送「开始审计」是同步触发，
@@ -95,6 +97,7 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
     onAuditStyleChange,
     onClose,
     onStart,
+    onOpenOnly,
     onEnsureProjectRoot,
   } = props
   const { t } = useI18nNamespaces(['irifyAiCodeAudit'])
@@ -212,36 +215,54 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
     setCurrent((step) => resolvePrevStep(step))
   })
 
-  const handleStart = useMemoizedFn(() => {
+  const validateStep3 = useMemoizedFn(() => {
     if (!selectedPath.trim()) {
       warn(t('onboarding.selectDirectoryFirst'))
-      return
+      return false
     }
     if (!isIrifyAuditStyleConfirmed(auditStyle)) {
       warn(t('onboarding.selectStyleFirst'))
-      return
+      return false
     }
-    const message = chatMessage.trim()
-    if (!message) {
-      warn(t('onboarding.messageRequired'))
-      return
-    }
-    const absPath = selectedPath.trim()
+    return true
+  })
+
+  const persistDirectoryOpen = useMemoizedFn((absPath: string) => {
     emiter.emit('onAiCodeAuditOpenFileTree', absPath)
     onEnsureProjectRoot(absPath)
-    historyAIReActChatBridge.handleStart({
-      qs: message,
-      focusMode: resolveIrifyFocusModeLoop(auditStyle),
-    })
-    // 4. 写入目录 + 审计风格历史
     setIrifyAiCodeAuditHistory({
       isFile: false,
       name: getFolderNameFromPath(absPath),
       path: absPath,
       auditStyle,
     })
-    // 5. 通知父组件：已开始，锁定风格切换
+  })
+
+  const handleStart = useMemoizedFn(() => {
+    if (!validateStep3()) return
+    const message = chatMessage.trim()
+    if (!message) {
+      warn(t('onboarding.messageRequired'))
+      return
+    }
+    const absPath = selectedPath.trim()
+    persistDirectoryOpen(absPath)
+    historyAIReActChatBridge.handleStart({
+      qs: message,
+      focusMode: resolveIrifyFocusModeLoop(auditStyle),
+    })
     onStart(auditStyle)
+    onClose()
+  })
+
+  const handleOpenOnly = useMemoizedFn(() => {
+    if (!validateStep3()) return
+    const absPath = selectedPath.trim()
+    persistDirectoryOpen(absPath)
+    onOpenOnly(auditStyle)
+    setTimeout(() => {
+      historyAIReActChatBridge.setValue(chatMessage.trim())
+    })
     onClose()
   })
 
@@ -379,13 +400,22 @@ export const IrifyAiCodeAuditOnboardingMask: React.FC<IrifyAiCodeAuditOnboarding
                 {t('onboarding.next')}
               </YakitButton>
             ) : (
-              <YakitButton
-                type="primary"
-                onClick={handleStart}
-                disabled={!selectedPath.trim() || !chatMessage.trim() || !isIrifyAuditStyleConfirmed(auditStyle)}
-              >
-                {t('onboarding.start')}
-              </YakitButton>
+              <>
+                <YakitButton
+                  type="outline2"
+                  onClick={handleOpenOnly}
+                  disabled={!selectedPath.trim() || !isIrifyAuditStyleConfirmed(auditStyle)}
+                >
+                  {t('onboarding.openOnly')}
+                </YakitButton>
+                <YakitButton
+                  type="primary"
+                  onClick={handleStart}
+                  disabled={!selectedPath.trim() || !chatMessage.trim() || !isIrifyAuditStyleConfirmed(auditStyle)}
+                >
+                  {t('onboarding.start')}
+                </YakitButton>
+              </>
             )}
           </div>
         </div>

@@ -1005,7 +1005,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   const [editorInfo, setEditorInfo] = useState<FileDetailInfo>()
   // 编辑器实例
   const [reqEditor, setReqEditor] = useState<IMonacoEditor>()
-  const reqEditorRef = useRef<IMonacoEditor>()
   // 是否允许展示二进制
   const [allowBinary, setAllowBinary] = useState<boolean>(false)
   const isDestroy = useRef<boolean>(false)
@@ -1253,7 +1252,6 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
   }, [editorInfo])
 
   const setReqEditorFun = useMemoizedFn((editor: IMonacoEditor) => {
-    reqEditorRef.current = editor
     setReqEditor(editor)
   })
 
@@ -1421,8 +1419,8 @@ const RunnerTabPane: React.FC<RunnerTabPaneProps> = memo((props) => {
                   <IrifyAiCodeAuditSelectionMenu
                     close={closeSelectionMenu}
                     onSend={() => {
-                      if (reqEditorRef.current) {
-                        onSendAIActionRef.current(reqEditorRef.current)
+                      if (reqEditor) {
+                        onSendAIActionRef.current(reqEditor)
                       }
                     }}
                   />

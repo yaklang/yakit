@@ -31,10 +31,11 @@
     "summaryMessage": "Preset Message",
     "messageRequired": "Please enter a message to send",
     "notSelected": "Not selected",
-    "startHint": "Edit the preset message if needed, then click Start to send it and lock the current style. Switching is disabled once started.",
+    "startHint": "Edit the preset message if needed. Start sends it and locks the style. Open Only opens the directory and fills the input without running AI.",
     "cancel": "Cancel",
     "prev": "Previous",
     "next": "Next",
+    "openOnly": "Open Only",
     "start": "Start"
   }
 }
