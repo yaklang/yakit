@@ -23,7 +23,7 @@ export interface AIStreamOutput {
 
 /** 工具结果的信息内容 */
 export interface AIToolResult {
-  type: '' | 'stream' | 'result'
+  type: 'create' | 'stream' | 'result'
   callToolId: string
   /**工具名称 */
   toolName: string
@@ -61,11 +61,15 @@ export interface AIToolResult {
     resultDetails: string
     /** review参数信息 */
     reviewParams?: AIAgentGrpcApi.ToolUseReviewRequire['params']
+    /** 工具调用理由 */
+    reason?: string
   }
   /** http流量数据总数 */
   httpFlowDataCount: number
   /** risk流量数据总数 */
   riskFlowDataCount: number
+  /** 是否正在生成参数 */
+  isProcessingParams?: boolean
 }
 
 /** 任务节点的信息 */

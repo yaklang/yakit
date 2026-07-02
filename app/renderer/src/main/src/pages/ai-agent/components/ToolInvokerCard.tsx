@@ -92,6 +92,8 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
         return <ToolStdoutCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
       case 'result':
         return <ToolResultCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
+      case 'create':
+        return <ToolLoadingCard {...props} />
       default:
         return null
     }
@@ -102,9 +104,52 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
 
 export default memo(ToolInvokerCard)
 
+/** tool loading - processing params */
+const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
+  const { data } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
+
+  const reason = useCreation(() => {
+    return data?.tool?.reason || ''
+  }, [data?.tool?.reason])
+
+  return (
+    <ChatCard
+      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
+      titleExtra={
+        !!reason ? (
+          <span className={styles['tool-invoker-card-reason']} title={reason}>
+            {reason}
+          </span>
+        ) : null
+      }
+    >
+      <ToolStatusCard
+        status={'purple'}
+        title={
+          <div className={styles['tool-title']}>
+            <div className={styles['tool-title-left']}>
+              <div className={styles['tool-name']}>{data.toolName}</div>
+              <YakitTag size="small" fullRadius color={'purple' as YakitTagColor}>
+                生成参数中
+              </YakitTag>
+            </div>
+          </div>
+        }
+      >
+        <div className={styles['tool-loading-content']}>
+          <YakitSpin spinning>
+            <div className={styles['tool-loading-block']} />
+          </YakitSpin>
+        </div>
+      </ToolStatusCard>
+    </ChatCard>
+  )
+})
+
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
-  const { modalInfo, operationInfo, fileList, chatType, data } = props
+  const { operationInfo, fileList, chatType, data } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const { activeChat } = useAIAgentStore()
@@ -120,6 +165,10 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
   const selectors = useCreation(() => {
     return stream?.data?.selectors
   }, [stream?.data?.selectors])
+
+  const reason = useCreation(() => {
+    return data?.tool?.reason || ''
+  }, [data?.tool?.reason])
 
   const onToolExtra = useMemoizedFn((item: AIAgentGrpcApi.ReviewSelector) => {
     switch (item.value) {
@@ -170,7 +219,13 @@ const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
           )}
         </div>
       }
-      titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
+      titleExtra={
+        !!reason ? (
+          <span className={styles['tool-invoker-card-reason']} title={reason}>
+            {reason}
+          </span>
+        ) : null
+      }
       footer={<OperationCardFooter {...operationInfo} />}
     >
       <ToolStatusCard status={'purple'} title={<div className={styles['tool-name']}>{data.toolName}</div>}>
@@ -212,6 +267,10 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
   const summary = useCreation(() => {
     return data?.tool?.summary || ''
   }, [data?.tool?.summary])
+
+  const reason = useCreation(() => {
+    return data?.tool?.reason || ''
+  }, [data?.tool?.reason])
 
   const content = useCreation(() => {
     return data?.tool?.toolStdoutContent?.content || ''
@@ -373,7 +432,13 @@ const ToolResultCard: React.FC<ToolResultCardProps> = memo((props) => {
           </Tooltip>
         </div>
       }
-      titleExtra={<>{modalInfo && <ModalInfo {...modalInfo} />}</>}
+      titleExtra={
+        !!reason ? (
+          <span className={styles['tool-invoker-card-reason']} title={reason}>
+            {reason}
+          </span>
+        ) : null
+      }
       footer={
         expand && (
           <div className={styles['tool-invoker-card-footer']}>

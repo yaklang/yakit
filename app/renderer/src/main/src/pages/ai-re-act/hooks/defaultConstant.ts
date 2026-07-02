@@ -5,7 +5,7 @@ import type { AIQuestionQueues, PlanLoadingStatus, CurrentExecTaskTree } from '.
 
 /** 工具执行结果-默认值 */
 export const DefaultAIToolResult: AIToolResult = {
-  type: '',
+  type: 'create',
   callToolId: '',
   toolName: '-',
   toolDescription: '',
@@ -26,9 +26,11 @@ export const DefaultAIToolResult: AIToolResult = {
     execError: '',
     dirPath: '',
     resultDetails: '',
+    reason: '',
   },
   httpFlowDataCount: 0,
   riskFlowDataCount: 0,
+  isProcessingParams: false,
 }
 /** 工作执行结果总结-不同阶段的默认展示内容 */
 export const DefaultToolResultSummary: Record<string, { wait: string; result: string }> = {
