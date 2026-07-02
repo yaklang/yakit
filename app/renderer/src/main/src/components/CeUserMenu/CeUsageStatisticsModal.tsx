@@ -24,14 +24,14 @@ export const getTokenPercent = (apiKeysInfo: API.ApiKeyDetail) => {
 export const getTokenLimit = (apiKeysInfo: API.ApiKeyDetail) => {
   // 转换为mb
   if (apiKeysInfo?.tokenLimit && apiKeysInfo.tokenLimit > 0) {
-    return Math.round(apiKeysInfo.tokenLimit / 1024 / 1024)
+    return Math.round(apiKeysInfo.tokenLimit / 1000 / 1000)
   }
   return 0
 }
 
 export const getTokenUsed = (apiKeysInfo: API.ApiKeyDetail) => {
   if (apiKeysInfo?.tokenUsed && apiKeysInfo.tokenUsed > 0) {
-    return (apiKeysInfo.tokenUsed / 1024 / 1024).toFixed(2)
+    return (apiKeysInfo.tokenUsed / 1000 / 1000).toFixed(2)
   }
   return 0
 }
