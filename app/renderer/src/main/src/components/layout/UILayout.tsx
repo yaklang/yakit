@@ -459,7 +459,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
       Port: parseInt(info.port),
       Mode: 'remote',
     } as unknown as YaklangEngineWatchDogCredential
-    setCredential(obj as unknown as YaklangEngineWatchDogCredential)
+    setCredential(obj)
     yakitApp.updateCredential({ credential: obj })
     onStartLinkEngine()
   })
@@ -995,7 +995,7 @@ const UILayout: React.FC<UILayoutProp> = (props) => {
             Port: resultObj.port,
             Mode: 'remote',
           } as unknown as YaklangEngineWatchDogCredential
-          setCredential(obj as unknown as YaklangEngineWatchDogCredential)
+          setCredential(obj)
           yakitApp.updateCredential({ credential: obj })
           onStartLinkEngine(true)
         })
