@@ -251,7 +251,7 @@ jobs:
                   echo "win_artifact=${ENV_Software_Name}-${SOFTWARE_VERSION}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe" >> "$GITHUB_OUTPUT"
 
             - name: Prepare Mac app signing
-              if: ${{ inputs.sign && !inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              if: ${{ inputs.sign && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
               env:
                   APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
                   CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
