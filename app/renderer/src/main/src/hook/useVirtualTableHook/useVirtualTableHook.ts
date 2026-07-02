@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, MutableRefObject, useMemo } from 'react'
 import {
   ParamsTProps,
   useVirtualTableHookParams,
@@ -16,6 +16,7 @@ import { genDefaultPagination } from '@/pages/invoker/schema'
 
 const OFFSET_LIMIT = 30
 const OFFSET_STEP = 100
+const ROW_HEIGHT = 28 // 行高
 
 const defSort: SortProps = {
   order: 'desc',
@@ -31,6 +32,63 @@ export const verifyOrder = (pagination: VirtualPaging, AfterId?: number) => {
     isReverse = true
   }
   return { pagination, isReverse }
+}
+
+type ScrollPending<T> = { arr: T[]; direction: 'top' | 'bottom'; oldEdgeId: number }
+
+const clipSlidingData = <T>(arr: T[], max: number, keep: 'head' | 'tail') =>
+  arr.length > max ? (keep === 'head' ? arr.slice(0, max) : arr.slice(-max)) : arr
+
+const syncSlidingEdgeIds = <T extends Record<string, any>>(
+  arr: T[],
+  order: string,
+  idKey: string,
+  maxIdRef: MutableRefObject<number>,
+  minIdRef: MutableRefObject<number>,
+) => {
+  if (!arr.length) {
+    maxIdRef.current = 0
+    minIdRef.current = 0
+    return
+  }
+  const first = Number(arr[0][idKey])
+  const last = Number(arr[arr.length - 1][idKey])
+  if (['desc', 'none'].includes(order)) {
+    maxIdRef.current = first
+    minIdRef.current = last
+  } else {
+    minIdRef.current = first
+    maxIdRef.current = last
+  }
+}
+
+const buildEdgePagination = (
+  edge: 'top' | 'bottom',
+  data: Record<string, any>[],
+  idKey: string,
+  sort: SortProps,
+  limit: number,
+): VirtualPaging | null => {
+  if (!data.length) return null
+  const isDesc = ['desc', 'none'].includes(sort.order)
+  const edgeId = Number(edge === 'top' ? data[0][idKey] : data[data.length - 1][idKey])
+  if (edge === 'top') {
+    return {
+      Page: 1,
+      Limit: limit,
+      Order: sort.order,
+      OrderBy: sort.orderBy || idKey,
+      ...(sort.order === 'asc' ? { BeforeId: edgeId } : { AfterId: edgeId }),
+    }
+  }
+  return {
+    Page: 1,
+    Limit: limit,
+    Order: sort.order,
+    OrderBy: sort.orderBy || idKey,
+    BeforeId: isDesc ? edgeId : undefined,
+    AfterId: isDesc ? undefined : edgeId,
+  }
 }
 
 // 使用此hook接口需满足此种结构
@@ -71,7 +129,14 @@ export default function useVirtualTableHook<
     initResDataFun,
     responseKey = { data: 'Data', id: 'Id' },
     inViewport: inViewportProp,
+    maxDataLength = 0,
+    slidingClippedRef: slidingClippedRefProp,
   } = props
+
+  const isSliding = maxDataLength > 0
+  const internalSlidingClippedRef = useRef(false)
+  const slidingClippedRef = slidingClippedRefProp ?? internalSlidingClippedRef
+  const idKey = useMemo(() => responseKey.id, [responseKey])
 
   const [params, setParams] = useState<ParamsTProps>(defaultParams)
   // 表格展示的完整数据
@@ -106,6 +171,40 @@ export default function useVirtualTableHook<
   // 是否允许更改endLoop
   const isAllowSetEndLoopRef = useRef<boolean>(false)
 
+  const recoverTopIdRef = useRef(0)
+  const pendingScrollRef = useRef<ScrollPending<DataT> | null>(null)
+
+  const markSlidingClip = (len: number) => {
+    if (len > maxDataLength) {
+      slidingClippedRef.current = true
+      setOffsetData([])
+    }
+  }
+
+  //裁剪数据
+  const commitSlidingData = (arr: DataT[], order: string) => {
+    setData(arr)
+    syncSlidingEdgeIds(arr, order, idKey, maxIdRef, minIdRef)
+  }
+
+  //裁剪后滚动到旧数据的最后一条
+  useLayoutEffect(() => {
+    if (!isSliding || !slidingClippedRef.current || !pendingScrollRef.current) return
+    const pending = pendingScrollRef.current
+    pendingScrollRef.current = null
+    const el = tableRef.current?.containerRef
+    if (!el) return
+    const i = pending.arr.findIndex((item) => Number(item[idKey]) === pending.oldEdgeId)
+    if (i < 0) return
+    if (pending.direction === 'bottom') {
+      const rowNumber = (el.clientHeight - ROW_HEIGHT) / ROW_HEIGHT
+      const y = 1 - (rowNumber - Math.trunc(rowNumber))
+      el.scrollTop = Math.max(0, (i - Math.floor(rowNumber) + y) * ROW_HEIGHT + 7)
+    } else {
+      el.scrollTop = Math.max(0, i * ROW_HEIGHT)
+    }
+  }, [isSliding, data, idKey, tableRef])
+
   // 方法请求
   const getDataByGrpc = useMemoizedFn((query, type: 'top' | 'bottom' | 'update' | 'offset') => {
     if (isGrpcRef.current) return
@@ -118,6 +217,11 @@ export default function useVirtualTableHook<
     const realQuery: ParamsTProps = cloneDeep(query)
     // 倒序时需要额外处理传给后端顺序
     const verifyResult = verifyOrder(realQuery.Pagination, realQuery.Pagination.AfterId)
+    if (isSliding && realQuery.Pagination.Order === 'asc' && realQuery.Pagination.BeforeId) {
+      realQuery.Pagination.Order = 'desc'
+      verifyResult.pagination = realQuery.Pagination
+      verifyResult.isReverse = true
+    }
     finalParams.Pagination = verifyResult.pagination
     grpcFun(finalParams)
       .then((rsp: DataResponseProps<DataT, DataKey>) => {
@@ -128,8 +232,31 @@ export default function useVirtualTableHook<
 
         if (type === 'top') {
           if (newData.length <= 0) {
+            if (isSliding && recoverTopIdRef.current > 0) {
+              recoverTopIdRef.current = 0
+              return
+            }
             // 没有数据
             serverPushStatus && setIsLoop(false)
+            return
+          }
+          if (isSliding) {
+            const order = query.Pagination.Order
+            const oldFirstId = data[0]?.[idKey]
+            const merged = [...newData, ...data]
+            markSlidingClip(merged.length)
+            const arr = clipSlidingData(merged, maxDataLength, 'head')
+            pendingScrollRef.current =
+              merged.length > maxDataLength && oldFirstId != null
+                ? { arr, direction: 'top', oldEdgeId: Number(oldFirstId) }
+                : null
+            commitSlidingData(arr, order)
+            if (recoverTopIdRef.current) {
+              const firstId = Number(arr[0][idKey])
+              const done = order === 'asc' ? firstId <= recoverTopIdRef.current : firstId >= recoverTopIdRef.current
+              if (done) recoverTopIdRef.current = 0
+            }
+            setTotal(rsp.Total)
             return
           }
           if (['desc', 'none'].includes(query.Pagination.Order)) {
@@ -148,6 +275,22 @@ export default function useVirtualTableHook<
             serverPushStatus && setIsLoop(false)
             return
           }
+          if (isSliding) {
+            const prevTopId = data[0]?.[idKey]
+            const oldLastId = data[data.length - 1]?.[idKey]
+            const merged = [...data, ...newData]
+            const clipped = merged.length > maxDataLength
+            markSlidingClip(merged.length)
+            if (clipped && prevTopId) {
+              recoverTopIdRef.current = Math.max(recoverTopIdRef.current, Number(prevTopId))
+            }
+            const arr = clipSlidingData(merged, maxDataLength, 'tail')
+            pendingScrollRef.current =
+              clipped && oldLastId != null ? { arr, direction: 'bottom', oldEdgeId: Number(oldLastId) } : null
+            commitSlidingData(arr, query.Pagination.Order)
+            setTotal(rsp.Total)
+            return
+          }
           const arr = [...data, ...newData]
           setData(arr)
           if (['desc', 'none'].includes(query.Pagination.Order)) {
@@ -162,6 +305,7 @@ export default function useVirtualTableHook<
             serverPushStatus && setIsLoop(false)
             return
           }
+          if (isSliding && slidingClippedRef.current) return
           if (['desc', 'none'].includes(query.Pagination.Order)) {
             const newOffsetData = newData.concat(getOffsetData())
             maxIdRef.current = newOffsetData[0][responseKey.id]
@@ -178,13 +322,19 @@ export default function useVirtualTableHook<
           }
           setIsRefresh(!isRefresh)
           setPagination(rsp.Pagination)
-          setData([...newData])
-          if (['desc', 'none'].includes(query.Pagination.Order)) {
-            maxIdRef.current = newData.length > 0 ? newData[0][responseKey.id] : 0
-            minIdRef.current = newData.length > 0 ? newData[newData.length - 1][responseKey.id] : 0
+          if (isSliding) {
+            const keep = query.Pagination.Order === 'asc' ? 'tail' : 'head'
+            markSlidingClip(newData.length)
+            commitSlidingData(clipSlidingData([...newData], maxDataLength, keep), query.Pagination.Order)
           } else {
-            maxIdRef.current = newData.length > 0 ? newData[newData.length - 1][responseKey.id] : 0
-            minIdRef.current = newData.length > 0 ? newData[0][responseKey.id] : 0
+            setData([...newData])
+            if (['desc', 'none'].includes(query.Pagination.Order)) {
+              maxIdRef.current = newData.length > 0 ? newData[0][responseKey.id] : 0
+              minIdRef.current = newData.length > 0 ? newData[newData.length - 1][responseKey.id] : 0
+            } else {
+              maxIdRef.current = newData.length > 0 ? newData[newData.length - 1][responseKey.id] : 0
+              minIdRef.current = newData.length > 0 ? newData[0][responseKey.id] : 0
+            }
           }
         }
         setTotal(rsp.Total)
@@ -207,8 +357,27 @@ export default function useVirtualTableHook<
   const updateTopData = useMemoizedFn(() => {
     // 倒序的时候有储存的偏移量 则直接使用
     if (getOffsetData().length && ['desc', 'none'].includes(sortRef.current.order)) {
-      setData([...getOffsetData(), ...data])
-      setOffsetData([])
+      if (isSliding && slidingClippedRef.current) {
+        setOffsetData([])
+      } else if (isSliding) {
+        const merged = [...getOffsetData(), ...data]
+        markSlidingClip(merged.length)
+        commitSlidingData(clipSlidingData(merged, maxDataLength, 'head'), sortRef.current.order)
+        setOffsetData([])
+        return
+      } else {
+        setData([...getOffsetData(), ...data])
+        setOffsetData([])
+        return
+      }
+    }
+    if (isSliding) {
+      const edgePagination = buildEdgePagination('top', data, idKey, sortRef.current, pagination.Limit)
+      if (!edgePagination) {
+        updateData()
+        return
+      }
+      getDataByGrpc({ ...params, Pagination: edgePagination, Filter: { ...params.Filter } }, 'top')
       return
     }
     // 如无偏移 则直接请求数据
@@ -233,6 +402,15 @@ export default function useVirtualTableHook<
 
   // 偏移量更新底部数据
   const updateBottomData = useMemoizedFn(() => {
+    if (isSliding) {
+      const edgePagination = buildEdgePagination('bottom', data, idKey, sortRef.current, pagination.Limit)
+      if (!edgePagination) {
+        updateData()
+        return
+      }
+      getDataByGrpc({ ...params, Pagination: edgePagination, Filter: { ...params.Filter } }, 'bottom')
+      return
+    }
     // 如无偏移 则直接请求数据
     if (minIdRef.current === 0) {
       updateData()
@@ -267,7 +445,11 @@ export default function useVirtualTableHook<
       setLoading(true)
       maxIdRef.current = 0
       minIdRef.current = 0
-      const limitCount: number = params.Pagination?.FixedLimit || Math.ceil(boxHeightRef.current / 28)
+      if (isSliding) {
+        recoverTopIdRef.current = 0
+        slidingClippedRef.current = false
+      }
+      const limitCount: number = params.Pagination?.FixedLimit || Math.ceil(boxHeightRef.current / ROW_HEIGHT)
       const paginationProps = {
         Page: 1,
         Limit: limitCount,
@@ -320,7 +502,15 @@ export default function useVirtualTableHook<
     }
     // 滚动条接近触底
     else if (typeof scrollBottomPercent === 'number' && scrollBottomPercent > 0.9) {
-      updateBottomData()
+      //这里判断需要裁剪的列表是否在底部 避免裁剪后 滚动条一直在接近底部
+      if (
+        !isSliding ||
+        (typeof scrollHeight === 'number' &&
+          typeof scrollTop === 'number' &&
+          typeof clientHeight === 'number' &&
+          scrollHeight - scrollTop - clientHeight < ROW_HEIGHT)
+      )
+        updateBottomData()
       setOffsetData([])
     }
     // 滚动条在中间 增量
@@ -328,8 +518,8 @@ export default function useVirtualTableHook<
       if (data.length === 0) {
         updateData()
       } else {
-        // 倒序的时候才需要掉接口拿偏移数据
-        if (['desc', 'none'].includes(sortRef.current.order)) {
+        // 倒序的时候才需要掉接口拿偏移数据 开始裁剪后就不拿偏移数据
+        if (['desc', 'none'].includes(sortRef.current.order) && (!isSliding || !slidingClippedRef.current)) {
           updateOffsetData()
         }
       }

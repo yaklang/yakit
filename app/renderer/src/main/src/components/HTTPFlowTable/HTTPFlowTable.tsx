@@ -105,6 +105,7 @@ import {
 import {
   HTTP_FLOW_TABLE_SHIELD_DATA,
   OFFSET_LIMIT,
+  HTTP_FLOW_TABLE_MAX_DATA_LENGTH,
   OFFSET_STEP,
   defSort,
   type codecHistoryPluginProps,
@@ -276,6 +277,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   const getAddDataByGrpcRef = useRef<(query: YakQueryHTTPFlowRequest) => void>(() => {})
   const offsetDataRef = useRef<HTTPFlow[]>([])
   const updateDataRef = useRef<() => void>(() => {})
+  const slidingClippedRef = useRef(false)
 
   useEffect(() => {
     return () => {
@@ -332,11 +334,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return !!AfterId && !BeforeId && Limit !== OFFSET_STEP
   })
 
-  // history 页面时，判断倒序情况，并且未加载的数据（减去 offsetData 缓存）超过 200 条时整表刷新
+  // history 页面时，判断倒序情况，并且未加载的数据（减去 offsetData 缓存）超过 200 条时整表刷新 数据裁剪后按照增量来加载
   const grpcQueryHTTPFlows = useMemoizedFn(async (hookParams: ParamsTProps & { Filter: YakQueryHTTPFlowRequest }) => {
     const { Pagination } = hookParams
     const { AfterId, BeforeId, Order, OrderBy, ...paginationFields } = Pagination
-    if (!backgroundRefresh && pageType !== 'MITM' && isTopLoadRequest(hookParams) && Order !== 'asc') {
+    if (
+      !slidingClippedRef.current &&
+      !backgroundRefresh &&
+      pageType !== 'MITM' &&
+      isTopLoadRequest(hookParams) &&
+      Order !== 'asc'
+    ) {
       try {
         const rsp = await apiQueryHTTPFlows({
           ...hookParams,
@@ -357,6 +365,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     return apiQueryHTTPFlows(hookParams)
   })
 
+  //只有history需要裁剪
+  const maxDataLength = useMemo(() => {
+    return pageType === 'History' ? HTTP_FLOW_TABLE_MAX_DATA_LENGTH : 0
+  }, [pageType])
+
   // 表格数据交给 useVirtualTableHook：负责上下滚动加载、中间位置拉新数据（offsetData 红点）
   const [
     tableParams,
@@ -374,6 +387,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     onFirst,
     initResDataFun,
     inViewport: inViewport || isBackgroundRefresh,
+    maxDataLength,
+    slidingClippedRef,
     defaultParams: {
       Filter: {
         SourceType: props.params?.SourceType || 'mitm',
