@@ -10,7 +10,9 @@ import {
   YaklangLanguageSuggestionResponse,
   getWordWithPointAtPosition,
   YaklangLanguageFindResponse,
+  maybeAutoTriggerCallbackOnParen,
 } from './yakCompletionSchema'
+import { setupCompletionHint } from './yakCompletionHint'
 import { KeyCode, KeyMod, languages } from 'monaco-editor'
 import CodeAction = languages.CodeAction
 import CodeActionList = languages.CodeActionList
@@ -489,6 +491,11 @@ monaco.languages.registerCompletionItemProvider(YaklangMonacoSpec, {
             // if next character is "(", remove the "(" and after content in the insertText
             if (nextValue === '(') {
               items = items.map((item) => {
+                // 回调函数字面量补全(Snippet，如 func(rsp){})本身就带括号与函数体，
+                // 不能按「函数名补全」的规则截断，否则会被截成 "func"。
+                if (item.kind === CompletionItemKind.Snippet) {
+                  return item
+                }
                 let index = item.insertText.indexOf('(')
                 if (index !== -1) {
                   item.insertText = item.insertText.slice(0, index)
@@ -575,7 +582,52 @@ monaco.editor.onDidCreateEditor((editor) => {
       keybinding: KeyMod.Alt | KeyCode.KeyD,
       command: 'editor.action.revealDefinition',
     },
+    {
+      // 手动唤起自动补全(纯新增快捷键，避免使用会与"行注释切换"冲突的 Cmd/Ctrl+/)
+      // Ctrl+Space 作为 Monaco 自带触发方式仍然有效
+      keybinding: KeyMod.Alt | KeyCode.Slash,
+      command: 'editor.action.triggerSuggest',
+    },
   ])
+  // 空闲时的补全提示(纯增强，出错静默降级，不影响编辑器)
+  try {
+    setupCompletionHint(editor)
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.info('setupCompletionHint init failed', e)
+  }
+  // 输入 "(" 时的回调骨架精准自动触发：仅对"带函数参数的库函数"生效(见 yakCompletionSchema)
+  editor.onDidChangeModelContent((e) => {
+    try {
+      const model = editor.getModel()
+      if (!model || model.getLanguageId() !== YaklangMonacoSpec) {
+        return
+      }
+      if (editor.getOption(monaco.editor.EditorOption.readOnly)) {
+        return
+      }
+      // 仅当本次编辑是"输入左括号"时才判定(自动补右括号时 text 可能是 "()")
+      const typedParen = e.changes.some((c) => c.text === '(' || c.text === '()')
+      if (!typedParen) {
+        return
+      }
+      const position = editor.getPosition()
+      if (!position) {
+        return
+      }
+      const scriptType = getModelContext(model, 'plugin') || 'yak'
+      // 延迟到本次编辑结算之后再判定，避免与自动补右括号等操作竞争
+      setTimeout(() => {
+        const cur = editor.getPosition()
+        if (!cur) {
+          return
+        }
+        maybeAutoTriggerCallbackOnParen(editor, model, cur, scriptType)
+      }, 0)
+    } catch (err) {
+      // ignore：自动触发失败不影响正常编辑
+    }
+  })
   editor.onDidChangeModel((e) => {
     const model = editor.getModel()
     if (!model) {
