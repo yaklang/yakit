@@ -433,11 +433,3 @@ export const aiStreamDataHandlers = {
   'stream-finished': handleStreamFinished,
   reference_material: handleReferenceMaterial,
 } as const
-
-const exampleHandle = (res: AIOutputEvent) => {
-  let funcKey = res.Type
-  if (res.Type === 'structured' && ['stream-finished'].includes(res.NodeId)) {
-    // stream数据结束标识
-    funcKey = res.NodeId
-  }
-}

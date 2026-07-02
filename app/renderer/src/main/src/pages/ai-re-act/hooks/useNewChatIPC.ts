@@ -1,7 +1,7 @@
 // useChatIPC.ts
 import { useEffect, useCallback, useRef } from 'react'
 import { globalSessionEngine } from './ChatMultiSessionController'
-import { AIChatIPCStartParams, AIChatSendParams } from './type'
+import type { AIChatIPCStartParams, AIChatSendParams } from './type'
 import { useMemoizedFn } from 'ahooks'
 
 import useCurrentSessionId from './useCurrentSessionId'
@@ -9,6 +9,7 @@ const { ipcRenderer } = window.require('electron')
 
 export function useChatIPC() {
   const sessionId = useCurrentSessionId()
+  // TODO: 我需要知道这个hook所在的页面，从而在生命周期的卸载时期关闭所有会话
   const currentSessionIdRef = useRef(sessionId)
 
   useEffect(() => {

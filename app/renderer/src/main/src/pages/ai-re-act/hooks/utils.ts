@@ -3,18 +3,23 @@
  */
 import type { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import type { DialogueRecord } from '@/pages/ai-agent/store/type'
-import type {
-  AITaskInfoProps,
-  ReActChatRenderItem,
-  AIChatQSDataType,
-  TodoListCardData,
-  ChatListRenderType,
+import {
+  type AITaskInfoProps,
+  type ReActChatRenderItem,
+  type AIChatQSDataType,
+  type TodoListCardData,
+  type ChatListRenderType,
+  AIChatQSDataTypeEnum,
 } from './aiRender'
-import type { AIAgentGrpcApi, AIOutputEvent } from './grpcApi'
+import { AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from './grpcApi'
 import { AIToDoListStatusEnum, generateTaskChatExecution } from '@/pages/ai-agent/defaultConstant'
 import { v4 as uuidv4 } from 'uuid'
 import { JSONParseLog } from '@/utils/tool'
 import { aiAgentLogEmitter } from './AIAgentLogEmitter'
+import cloneDeep from 'lodash/cloneDeep'
+import { DefaultPlanLoadingStatus } from './defaultConstant'
+import type { AIMessageHandler } from './type'
+import { ChatMultiSessionController } from './ChatMultiSessionController'
 
 /** 生成任务节点的唯一ID */
 export const generateTaskNodeID = (planID: string, taskID: string) => {
@@ -53,23 +58,45 @@ export const genBaseAIChatData = (info: AIOutputEvent) => {
   }
 }
 
+/** 任务规划结束后的所有数据处理 */
+export const handleTaskPlanEnd: (requestInfo: ReturnType<ChatMultiSessionController['ensureSession']>) => void = (
+  requestInfo,
+) => {
+  const { store, rawData, meta } = requestInfo
+
+  // 将UI列表里正在执行中的任务组状态变成error
+  const actives = Array.from(meta.currentTaskPlanActiveNode)
+  meta.currentTaskPlanActiveNode.clear()
+  for (const active of actives) {
+    const taskNodeInfo = rawData.contents.get(active)
+    if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
+      continue
+    }
+    taskNodeInfo.data.status = AITaskStatus.error
+    store.getState().incrementNodeVersion(taskNodeInfo.id, 'task')
+  }
+  // 将当前正在执行的任务树里, 进行中的节点状态变成error
+  const newPlanTree = cloneDeep(store.getState().taskChat.plan)
+  newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
+    if (item.progress === AITaskStatus.inProgress) item.progress = AITaskStatus.error
+    return item
+  })
+  store.getState().updatePlanTree(newPlanTree)
+  store.getState().updateState({ taskStatus: cloneDeep(DefaultPlanLoadingStatus) })
+}
+
 /** Agent 往日志窗口推送日志数据 */
 export const pushLogToOtherWindow = (params: {
   sessionId: string
-  /** 是否是历史数据 */
-  isHistory: AIOutputEvent['IsSync']
   Timestamp: AIOutputEvent['Timestamp']
   level: string
   message: string
 }) => {
-  const { sessionId, isHistory, Timestamp, level, message } = params
-  if (isHistory) return
-
   aiAgentLogEmitter.dispatch({
-    session: sessionId,
+    session: params.sessionId,
     type: 'log',
-    Timestamp: Timestamp,
-    log: { level: level, message: message },
+    Timestamp: params.Timestamp,
+    log: { level: params.level, message: params.message },
   })
 }
 

@@ -101,9 +101,13 @@ export interface ReActChatBaseMeta {
 }
 export interface ReActChatItemMeta extends ReActChatBaseMeta {
   kind: 'item'
+  /** 组的标识符 */
+  nodeId: AIOutputEvent['NodeId']
 }
 export interface ReActChatGroupMeta extends ReActChatBaseMeta {
   kind: 'group'
+  /** 组的标识符 */
+  nodeId: AIOutputEvent['NodeId']
   childrenTokens: string[]
 }
 export interface ReActChatTaskMeta extends ReActChatBaseMeta {
@@ -111,15 +115,12 @@ export interface ReActChatTaskMeta extends ReActChatBaseMeta {
   childrenTokens: string[]
 }
 
-export type ReActChatMeta = ReActChatItemMeta | ReActChatGroupMeta | ReActChatTaskMeta
-
 /** UI 视图渲染路标 (控制元素怎么画、要不要动画、数据从哪来) */
 export interface ReActChatRenderElement {
   kind: 'item' | 'group' | 'task'
   token: string
   chatType: ChatListRenderType
   isCached: boolean // 核心结界：决定是否触发工具链折叠与渐入动画
-  cacheOrder: number // 前端纯视觉排序权重
   dataOrigin: ReActChatDataOrigin // 业务物理来源
 }
 
@@ -501,6 +502,8 @@ export interface ChatStoreState {
   riskTabUpdate: number
 
   // #region 会话列表相关数据
+  /** 当前自由对话问题的re_act_task_id */
+  currentCasualTaskID: string
   /** 自由对话的loading 显示的文案 */
   casualTitle: string
   /** 自由对话的是否进行中 */
@@ -550,7 +553,10 @@ export interface ChatStoreState {
   cancelCasualLoading: boolean
   /** 用户主动取消问题的loading状态(任务规划) */
   cancelTaskLoading: boolean
-  /** 请求历史数据相关State */
+
+  /**
+   * TODO - 有问题，需要调整 请求历史数据相关State
+   */
   requestHistoryState: UseAIMessageDataState
 
   /** 更新精准字段数据依赖的渲染版本号 */
@@ -562,8 +568,8 @@ export interface ChatStoreState {
       | 'memoryListUpdate'
       | 'updateSystemStream'
       | 'yaklangCodeChangeUpdate'
-      | 'currentPlanReviewExtraUpdate'
-      | 'syncIDUpdate',
+      | 'syncIDUpdate'
+      | 'currentPlanReviewExtraUpdate',
   ) => void
 
   updateFolders: (info: AIFileSystemPin) => void
@@ -586,12 +592,12 @@ export interface ChatStoreState {
         | 'updateSystemStream'
         | 'yaklangCodeChangeUpdate'
         | 'syncIDUpdate'
+        | 'grpcFolders'
+        | 'reActTimelines'
         | 'httpTabShow'
         | 'httpTabUpdate'
         | 'riskTabShow'
         | 'riskTabUpdate'
-        | 'grpcFolders'
-        | 'reActTimelines'
         | 'currentCasualReview'
         | 'currentPlanReviewExtraUpdate'
         | 'items'
@@ -624,12 +630,23 @@ export interface ChatStoreState {
       type: AIChatQSDataType
       dataOrigin: ReActChatDataOrigin
       isCached?: boolean
-      cacheOrder?: number
+      /**
+       * 专供合并成组的逻辑使用
+       *
+       * 是否能合并成组的标识符-AIOutputEvent['NodeId']
+       * 只有在AIOutputEvent['ContentType']为default时，才能合并成组，并且才会有值
+       */
+      nodeId?: AIOutputEvent['NodeId']
+      /**
+       * 专供合并成组的逻辑使用
+       *
+       * 比如 合并成组、添加到组中时，需要对非状态机里数据做的额外处理操作
+       * @param groupToken 组token
+       * @param tokens 新添加到组中的token集合
+       */
+      groupExtra?: (groupToken: string, tokens: string[]) => void
     }
     groupTokenGenerator: () => string
   }) => void
   incrementNodeVersion: (token: string, kind: 'item' | 'group' | 'task') => void
-
-  /** 删除指定列表的某项元素 */
-  deleteListElement: (chatType: ChatListRenderType, token: string) => void
 }

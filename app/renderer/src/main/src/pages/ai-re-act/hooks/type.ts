@@ -327,6 +327,7 @@ export interface UseAIChatLogEvents {
 
 // #region AI-Agent相关grpc流数据处理逻辑
 export interface AIMessageHandlerParams {
+  sessionId: string
   /** grpc流原始数据 */
   res: AIOutputEvent
   chatType: ChatListRenderType

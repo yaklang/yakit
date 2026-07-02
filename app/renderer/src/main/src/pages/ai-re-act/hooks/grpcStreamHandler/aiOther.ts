@@ -1,10 +1,10 @@
 import type { AIMessageHandler } from '../type'
 import { AIInputEventSyncTypeEnum, AITaskStatus, type AIAgentGrpcApi, type AIOutputEvent } from '../grpcApi'
 import { Uint8ArrayToString } from '@/utils/str'
-import { genBaseAIChatData, generateTaskNodeID, genExecTasks } from '../utils'
+import { genBaseAIChatData, generateTaskNodeID, genExecTasks, handleTaskPlanEnd } from '../utils'
 import { type AIChatQSData, AIChatQSDataTypeEnum } from '../aiRender'
 import cloneDeep from 'lodash/cloneDeep'
-import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData, DefaultPlanLoadingStatus } from '../defaultConstant'
+import { DefaultCurrentExecTaskTree, DefaultPlanItemDetailsData } from '../defaultConstant'
 import has from 'lodash/has'
 
 const handleHttpFuzzRequestChange: AIMessageHandler = (request) => {
@@ -94,15 +94,15 @@ const handleStartPlanAndExecution: AIMessageHandler = (request) => {
     groupTokenGenerator: () => '',
   })
 }
-const handleEndPlanAndExecution: AIMessageHandler = (request) => {
-  const { res, store, rawData, meta } = request
+const handleEndPlanAndExecution: AIMessageHandler = (requestInfo) => {
+  const { res, store, rawData, meta } = requestInfo
   if (res.Type !== 'end_plan_and_execution') return
   if (res.IsSync) return
 
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const startInfo = JSON.parse(ipcContent) as AIAgentGrpcApi.AIStartPlanAndExecution
   if (!startInfo.coordinator_id) {
-    request.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
+    requestInfo.pushLog({ level: 'error', message: `${res.Type}数据, coordinator_id 为空` })
     return
   }
   if (startInfo.coordinator_id === meta.currentTaskPlanID?.coordinatorId) {
@@ -118,23 +118,7 @@ const handleEndPlanAndExecution: AIMessageHandler = (request) => {
       node: { token: chatData.id, kind: 'item', type: chatData.type, dataOrigin: 'grpc_realtime_data' },
       groupTokenGenerator: () => '',
     })
-    const actives = Array.from(meta.currentTaskPlanActiveNode)
-    meta.currentTaskPlanActiveNode.clear()
-    for (const active of actives) {
-      const taskNodeInfo = rawData.contents.get(active)
-      if (!taskNodeInfo || taskNodeInfo.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
-        continue
-      }
-      taskNodeInfo.data.status = AITaskStatus.error
-      store.getState().incrementNodeVersion(taskNodeInfo.id, 'task')
-    }
-    const newPlanTree = store.getState().taskChat.plan
-    newPlanTree.task_tree = newPlanTree.task_tree.map((item) => {
-      if (item.progress === AITaskStatus.inProgress) item.progress = AITaskStatus.error
-      return item
-    })
-    store.getState().updatePlanTree(newPlanTree)
-    store.getState().updateState({ taskStatus: cloneDeep(DefaultPlanLoadingStatus) })
+    handleTaskPlanEnd({ store, rawData, meta, request: requestInfo.request })
   }
 }
 
@@ -218,9 +202,12 @@ const handleReactTaskDequeue: AIMessageHandler = (request) => {
   // 实时数据里，记录用户问题的状态和专注模式信息
   if (!res.IsSync) {
     sendRequest({ IsSyncMessage: true, SyncType: AIInputEventSyncTypeEnum.SYNC_TYPE_QUEUE_INFO })
-    meta.currentCasualTaskID = res.TaskId || data.react_task_id
     rawData.casualChat.planDetails = cloneDeep(DefaultPlanItemDetailsData)
-    store.getState().updateState({ focusMode: data.focus_mode ? data.focus_mode : '', casualLoading: true })
+    store.getState().updateState({
+      currentCasualTaskID: res.TaskId || data.react_task_id,
+      focusMode: data.focus_mode ? data.focus_mode : '',
+      casualLoading: true,
+    })
   }
 
   // 用户问题的UI回显
@@ -333,9 +320,7 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
   const ipcContent = Uint8ArrayToString(res.Content) || ''
   const { react_task_id, react_task_now_status } = JSON.parse(ipcContent) as AIAgentGrpcApi.ReactTaskChanged
   if (['completed', 'aborted'].includes(react_task_now_status)) {
-    if (meta.currentCasualTaskID && meta.currentCasualTaskID === react_task_id) {
-      // 问题任务完成或者者被中止后，重置当前问题任务id
-      meta.currentCasualTaskID = ''
+    if (store.getState().currentCasualTaskID && store.getState().currentCasualTaskID === react_task_id) {
       store.getState().updateState({ cancelCasualLoading: false })
       // 取消专注模式
       store.getState().updateState({ focusMode: '' })
@@ -348,33 +333,6 @@ const handleReactTaskStatusChanged: AIMessageHandler = (request) => {
       meta.currentTaskPlanID.status = react_task_now_status as AITaskStatus
       store.getState().updateState({ cancelTaskLoading: false })
     }
-  }
-}
-
-// TODO: ?
-const handleStatus: AIMessageHandler = (request) => {
-  const { res, chatType, store } = request
-  if (res.Type !== 'structured' || res.NodeId !== 'status') return
-  if (res.IsSync) return
-
-  const ipcContent = Uint8ArrayToString(res.Content) || ''
-  const data = JSON.parse(ipcContent) as { key: string; value: string }
-  if (data.key === 're-act-loading-status-key') {
-    if (chatType === 'task') {
-      // 任务规划-loading展示标题
-      store.getState().updateTaskLoadingStatus({ task: data.value || '加载中...' })
-    } else {
-      // 自由对话-loading展示标题
-      store.getState().updateState({ casualTitle: data.value })
-    }
-  } else if (data.key === 'plan-executing-loading-status-key') {
-    if (chatType === 'task') {
-      // 任务规划-loading展示标题
-      store.getState().updateTaskLoadingStatus({ plan: data.value || '加载中...' })
-    }
-  } else {
-    // 执行状态卡片处理
-    // yakExecResultEvent.handleSetData(res)
   }
 }
 
@@ -470,28 +428,8 @@ export const aiOtherDataHandlers = {
   plan_exec_tasks: handlePlanExecTasks,
   queue_info: handleQueueInfo,
   react_task_status_changed: handleReactTaskStatusChanged,
-  status: handleStatus,
   yak_httpflow_count: handleTrafficCount,
   yak_risk_count: handleTrafficCount,
   plan: handlePlan,
   yaklang_code_change: handleYaklangCodeChange,
 } as const
-
-const exampleHandle = (res: AIOutputEvent) => {
-  let funcKey = res.Type
-  if (
-    res.Type === 'structured' &&
-    [
-      'session_title',
-      'timeline_item',
-      'react_task_enqueue',
-      'react_task_dequeue',
-      'queue_info',
-      'react_task_status_changed',
-      'status',
-    ].includes(res.NodeId)
-  ) {
-    // stream数据结束标识
-    funcKey = res.NodeId
-  }
-}
