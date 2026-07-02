@@ -22,14 +22,16 @@ export const generateTaskId = (params: {
   getContentMap: AIMessageHandlerParams['getContentMap']
 }) => {
   const { chatType, res, getCurrentTaskPlanID, getContentMap } = params
-  if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
-    const taskKey = res.TaskIndex ? `${getCurrentTaskPlanID()?.taskID}-${res.TaskIndex}` : ''
-    return `${getCurrentTaskPlanID()?.taskID}-${!!getContentMap(taskKey) ? res.TaskIndex : 'unknown'}`
-  }
-  if (chatType === 'reAct' && res.TaskId) {
+  if (res.TaskId) {
     const taskGroup = getContentMap(res.TaskId)
     if (taskGroup?.type === AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
       return res.TaskId
+    }
+  }
+  if (chatType === 'task' && getCurrentTaskPlanID?.()?.taskID) {
+    const defaultKey = `${getCurrentTaskPlanID()?.taskID}-unknown`
+    if (getContentMap(defaultKey)?.type === AIChatQSDataTypeEnum.TASK_DEFAULT_GROUP) {
+      return defaultKey
     }
   }
   return undefined
