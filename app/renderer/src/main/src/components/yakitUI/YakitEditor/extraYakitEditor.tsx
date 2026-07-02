@@ -337,21 +337,49 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
           saveABSFileToOpen(`${t('YakitEditor.HTTPPacketYakitEditor.packet')}-${Date.now()}.txt`, text)
         },
       },
-      openURLBrowser: {
+      viewInBrowser: {
         menu: [
           {
-            key: 'open-url-in-browser',
-            label: t('YakitEditor.HTTPPacketYakitEditor.openUrlInBrowser'),
-            keybindings: YakEditorOptionShortcutKey.OpenUrlInBrowser,
+            key: 'view-in-browser',
+            label: t('HTTPFlowTable.RowContextMenu.viewInBrowser'),
+            children: [
+              {
+                key: 'viewResponseInBrowser',
+                label: t('YakitEditor.HTTPPacketYakitEditor.viewResponseInBrowser'),
+                keybindings: YakEditorOptionShortcutKey.ViewResponseInBrowser,
+              },
+              {
+                key: 'openURLInBrowser',
+                label: t('YakitEditor.HTTPPacketYakitEditor.openUrlInBrowser'),
+                keybindings: YakEditorOptionShortcutKey.OpenUrlInBrowser,
+              },
+            ],
           },
         ],
         onRun: (editor: YakitIMonacoEditor, key: string) => {
-          if (onClickOpenBrowserMenu) {
-            onClickOpenBrowserMenu()
-          } else if (url) {
-            openExternalWebsite(url)
-          } else {
-            yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+          if (key === 'openURLInBrowser') {
+            if (onClickOpenBrowserMenu) {
+              onClickOpenBrowserMenu()
+            } else if (url) {
+              openExternalWebsite(url)
+            } else {
+              yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+            }
+            return
+          }
+          try {
+            if (readOnly && originValueBytes) {
+              showResponseViaResponseRaw(originValueBytes)
+              return
+            }
+            const text = editor.getModel()?.getValue()
+            if (!text) {
+              failed(t('YakitEditor.HTTPPacketYakitEditor.cannotRetrievePacketContent'))
+              return
+            }
+            showResponseViaResponseRaw(originValueBytes)
+          } catch (e) {
+            failed('editor exec show in browser failed')
           }
         },
       },
@@ -371,31 +399,6 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
             } else {
               yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.showRawInEditor'))
             }
-          }
-        },
-      },
-      openBrowser: {
-        menu: [
-          {
-            key: 'open-in-browser',
-            label: t('YakitEditor.HTTPPacketYakitEditor.viewResponseInBrowser'),
-            keybindings: YakEditorOptionShortcutKey.ViewResponseInBrowser,
-          },
-        ],
-        onRun: (editor: YakitIMonacoEditor, key: string) => {
-          try {
-            if (readOnly && originValueBytes) {
-              showResponseViaResponseRaw(originValueBytes)
-              return
-            }
-            const text = editor.getModel()?.getValue()
-            if (!text) {
-              failed(t('YakitEditor.HTTPPacketYakitEditor.cannotRetrievePacketContent'))
-              return
-            }
-            showResponseViaResponseRaw(originValueBytes)
-          } catch (e) {
-            failed('editor exec show in browser failed')
           }
         },
       },
