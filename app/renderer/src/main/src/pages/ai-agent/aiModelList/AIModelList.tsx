@@ -819,6 +819,11 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
   const modelName = useCreation(() => {
     return getModelName(item.ModelName)
   }, [item.ModelName])
+
+  // 判断是否显示删除按钮,如果是内置模型,不显示删除按钮
+  const isShowRemove = useCreation(() => {
+    return item.ExtraParams.find((param) => param.Key === 'isBuildin')?.Value !== 'true'
+  }, [item.ExtraParams])
   return (
     <div className={styles['ai-online-model-list-item']}>
       <div className={styles['ai-online-model-list-item-header']}>
@@ -839,22 +844,24 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
         <div className={styles['ai-online-model-list-item-extra-edit']}>
           <YakitButton type="text2" icon={<OutlineEngineIcon />} onClick={onCheckModel} loading={testLoading} />
           <YakitButton type="text2" icon={<OutlinePencilaltIcon />} onClick={onEditClick} disabled={item?.IsOnline} />
-          <YakitPopconfirm
-            title={`确定要删除厂商${config.Type},模型名称为${modelName} 吗？`}
-            onConfirm={onRemoveClick}
-            onCancel={(e) => {
-              e?.stopPropagation()
-            }}
-          >
-            <YakitButton
-              type="text2"
-              icon={<OutlineTrashIcon />}
-              className={styles['trash-icon']}
-              onClick={(e) => {
-                e.stopPropagation()
+          {isShowRemove && (
+            <YakitPopconfirm
+              title={`确定要删除厂商${config.Type},模型名称为${modelName} 吗？`}
+              onConfirm={onRemoveClick}
+              onCancel={(e) => {
+                e?.stopPropagation()
               }}
-            />
-          </YakitPopconfirm>
+            >
+              <YakitButton
+                type="text2"
+                icon={<OutlineTrashIcon />}
+                className={styles['trash-icon']}
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+              />
+            </YakitPopconfirm>
+          )}
         </div>
         {checked && <OutlineCheckIcon className={styles['check-icon']} />}
       </div>
