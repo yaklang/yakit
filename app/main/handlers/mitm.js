@@ -224,10 +224,29 @@ module.exports = (win, getClient) => {
     }
   })
 
+  // 内置规则开关
+  ipcMain.handle('mitm-disableTrafficGuard', (e, params) => {
+    if (stream) {
+      const { DisableTrafficGuard } = params
+      stream.write({
+        DisableTrafficGuard: DisableTrafficGuard,
+      })
+    }
+  })
+
   // 开始调用 MITM，设置 stream
   let isFirstData = true
   ipcMain.handle('mitm-start-call', (e, params) => {
-    const { host, port, downstreamProxy, enableHttp2, ForceDisableKeepAlive, certificates, extra } = params
+    const {
+      host,
+      port,
+      downstreamProxy,
+      enableHttp2,
+      ForceDisableKeepAlive,
+      certificates,
+      DisableTrafficGuard,
+      extra,
+    } = params
     if (stream) {
       if (win) {
         win.webContents.send('client-mitm-start-success')
@@ -318,6 +337,7 @@ module.exports = (win, getClient) => {
         enableHttp2,
         ForceDisableKeepAlive,
         certificates,
+        DisableTrafficGuard,
         ...extra,
         DisableCACertPage: extra.disableCACertPage,
         DisableWebsocketCompression: !extra.DisableWebsocketCompression,

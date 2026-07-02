@@ -21,7 +21,7 @@ import {
   TrashIcon,
 } from '@/assets/newIcon'
 import { TableVirtualResize } from '@/components/TableVirtualResize/TableVirtualResize'
-import { useCreation, useDebounceFn, useMemoizedFn, useThrottleFn } from 'ahooks'
+import { useCreation, useDebounceFn, useMemoizedFn, useThrottleFn, useUpdateEffect } from 'ahooks'
 import { ColumnsTypeProps } from '@/components/TableVirtualResize/TableVirtualResizeType'
 import classNames from 'classnames'
 import { YakitDrawer } from '@/components/yakitUI/YakitDrawer/YakitDrawer'
@@ -48,15 +48,19 @@ import { useMenuHeight } from '@/store/menuHeight'
 import { WebsiteGV } from '@/enums/website'
 import {
   grpcClientMITMContentReplacerUpdate,
+  grpcDisableTrafficGuard,
   grpcMITMContentReplacers,
   MITMContentReplacersRequest,
+  MITMDisableTrafficGuardRequest,
 } from '../MITMHacker/utils'
 import MITMContext from '../Context/MITMContext'
 import ReactResizeDetector from 'react-resize-detector'
 import { YakitInput } from '@/components/yakitUI/YakitInput/YakitInput'
-import { OutlineCogIcon, OutlineSearchIcon } from '@/assets/icon/outline'
+import { OutlineCogIcon, OutlineQuestionmarkcircleIcon, OutlineSearchIcon } from '@/assets/icon/outline'
 import { TFunction, useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { JSONParseLog } from '@/utils/tool'
+import { setRemoteValue } from '@/utils/kv'
+import { RemoteMitmGV } from '@/enums/mitm'
 
 const { ipcRenderer } = window.require('electron')
 
@@ -192,6 +196,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
       onSetRules,
       onRefreshCom,
       inMouseEnterTable = false,
+      disableTrafficGuard = false,
+      setDisableTrafficGuard,
     } = props
     const { t, i18n } = useI18nNamespaces(['yakitUi', 'mitm'])
     const mitmContent = useContext(MITMContext)
@@ -222,6 +228,22 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const [whiteList, setWhiteList] = useState<string[]>([])
     const [originalWhiteList, setOriginalWhiteList] = useState<string[]>([])
     const ruleButtonRef = useRef<RuleExportAndImportHandle | null>(null)
+
+    const disableTrafficGuardRef = useRef<boolean>(disableTrafficGuard)
+    useUpdateEffect(() => {
+      disableTrafficGuardRef.current = disableTrafficGuard
+    }, [disableTrafficGuard])
+    const saveDisableTrafficGuard = useMemoizedFn(() => {
+      setDisableTrafficGuard?.(disableTrafficGuardRef.current)
+      setRemoteValue(RemoteMitmGV.MitmDisableTrafficGuard, disableTrafficGuardRef.current + '')
+    })
+    const hijackSendDisableTrafficGuard = useMemoizedFn(() => {
+      const value: MITMDisableTrafficGuardRequest = {
+        DisableTrafficGuard: disableTrafficGuardRef.current,
+        version: mitmVersion,
+      }
+      grpcDisableTrafficGuard(value)
+    })
 
     useImperativeHandle(
       ref,
@@ -723,6 +745,11 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             } else {
               success(t('YakitNotification.saved'))
             }
+
+            if (ruleUse === 'mitm') {
+              saveDisableTrafficGuard()
+            }
+
             onRefreshCurrentRules()
           })
           .catch((e) => {
@@ -770,6 +797,8 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
                   } else {
                     success(t('YakitNotification.saved'))
                   }
+                  saveDisableTrafficGuard()
+                  hijackSendDisableTrafficGuard()
                   onRefreshCurrentRules()
                 })
                 .catch((e) => {
@@ -792,6 +821,12 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
               } else {
                 success(t('YakitNotification.saved'))
               }
+
+              if (ruleUse === 'mitm') {
+                saveDisableTrafficGuard()
+                hijackSendDisableTrafficGuard()
+              }
+
               onRefreshCurrentRules()
             })
             .catch((e) => {
@@ -951,12 +986,18 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
             onSaveToDataBase()
           },
           onCancel: () => {
+            if (ruleUse === 'mitm') {
+              disableTrafficGuardRef.current = disableTrafficGuard
+            }
             setVisible(false)
           },
           cancelButtonProps: { size: 'small', className: 'modal-cancel-button' },
           okButtonProps: { size: 'small', className: 'modal-ok-button' },
         })
       } else {
+        if (ruleUse === 'mitm') {
+          disableTrafficGuardRef.current = disableTrafficGuard
+        }
         setVisible(false)
       }
     })
@@ -967,6 +1008,24 @@ const MITMRule: React.FC<MITMRuleProp> = React.memo(
     const extra = () => {
       return (
         <div className={styles['heard-right-operation']}>
+          {ruleUse === 'mitm' && (
+            <div className={styles['heard-right-operation-disableTrafficGuard']} key={visible + ''}>
+              <label>
+                {t('MITMRule.built_in_rules')}
+                <Tooltip title={t('MITMRule.built_in_rules_tip')} placement="top" align={{ targetOffset: [-5, -15] }}>
+                  <OutlineQuestionmarkcircleIcon />
+                </Tooltip>
+                <YakitSwitch
+                  defaultChecked={disableTrafficGuardRef.current}
+                  onChange={(checked) => {
+                    disableTrafficGuardRef.current = checked
+                  }}
+                  size="middle"
+                />
+              </label>
+              <Divider type="vertical" className={styles['heard-right-operation_divider']} />
+            </div>
+          )}
           <YakitButton type="text" icon={<OutlineCogIcon />} onClick={() => setWhiteListVisible(true)}>
             {t('MITMRule.white_list')}
           </YakitButton>

@@ -27,6 +27,8 @@
     "existing_mitm_content_rules": "Rules",
     "total_rules_count": "Total {{count}}",
     "no_replace_all": "No Replacement for All",
+    "built_in_rules": "Built-in Rules",
+    "built_in_rules_tip": "Enable to use built-in rules during packet capture.",
     "white_list": "Whitelist",
     "white_list_modal_title": "Rule Whitelist Configuration",
     "white_list_label": "File Suffix",

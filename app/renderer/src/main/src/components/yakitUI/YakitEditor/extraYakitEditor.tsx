@@ -199,25 +199,45 @@ export const HTTPPacketYakitEditor: React.FC<HTTPPacketYakitEditor> = React.memo
               return
             }
             case 'copyBodyBase64': {
-              const text = editor.getModel()?.getValue()
-              if (!text) {
-                yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.noPacketCannotCopyBody'))
-                return
+              if (readOnly && downbodyParams?.Id) {
+                ipcRenderer
+                  .invoke('EncodeHTTPPacketContent', {
+                    HTTPFlowId: downbodyParams.Id,
+                    IsRequest: downbodyParams.IsRequest,
+                    Position: 'body',
+                    EncodingType: 'base64',
+                  })
+                  .then((obj) => {
+                    if (obj.EncodedText) {
+                      setClipboardText(obj.EncodedText)
+                    } else if (obj.Error) {
+                      yakitNotify('info', `${obj.Error}`)
+                    }
+                  })
+                  .catch((err) => {
+                    yakitNotify('error', `${err}`)
+                  })
+              } else {
+                const text = editor.getModel()?.getValue()
+                if (!text) {
+                  yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.noPacketCannotCopyBody'))
+                  return
+                }
+                ipcRenderer
+                  .invoke('GetHTTPPacketBody', { Packet: text, ForceRenderFuzztag: true })
+                  .then((bytes: { Raw: Uint8Array }) => {
+                    ipcRenderer
+                      .invoke('BytesToBase64', {
+                        Bytes: bytes.Raw,
+                      })
+                      .then((res: { Base64: string }) => {
+                        setClipboardText(res.Base64)
+                      })
+                      .catch((err) => {
+                        yakitNotify('error', `${err}`)
+                      })
+                  })
               }
-              ipcRenderer
-                .invoke('GetHTTPPacketBody', { Packet: text, ForceRenderFuzztag: true })
-                .then((bytes: { Raw: Uint8Array }) => {
-                  ipcRenderer
-                    .invoke('BytesToBase64', {
-                      Bytes: bytes.Raw,
-                    })
-                    .then((res: { Base64: string }) => {
-                      setClipboardText(res.Base64)
-                    })
-                    .catch((err) => {
-                      yakitNotify('error', `${err}`)
-                    })
-                })
               return
             }
             case 'copy-to-notepad': {

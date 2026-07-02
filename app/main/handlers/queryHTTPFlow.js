@@ -231,6 +231,22 @@ module.exports = (win, getClient) => {
     return await asyncGetHTTPPacketBody(params)
   })
 
+  // asyncEncodeHTTPPacketContent wrapper
+  const asyncEncodeHTTPPacketContent = (params) => {
+    return new Promise((resolve, reject) => {
+      getClient().EncodeHTTPPacketContent(params, (err, data) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(data)
+      })
+    })
+  }
+  ipcMain.handle('EncodeHTTPPacketContent', async (e, params) => {
+    return await asyncEncodeHTTPPacketContent(params)
+  })
+
   const execWriteFile = (uuid, resolve, reject) => {
     const context = activeRequests.get(uuid)
     if (!context) return

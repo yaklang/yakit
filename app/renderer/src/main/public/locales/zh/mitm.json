@@ -27,6 +27,8 @@
     "existing_mitm_content_rules": "现有 MITM 内容规则",
     "total_rules_count": "共 {{count}} 条规则",
     "no_replace_all": "全部不替换",
+    "built_in_rules": "内置规则",
+    "built_in_rules_tip": "打开则会在抓包过程中使用内置规则",
     "white_list": "白名单",
     "white_list_modal_title": "规则白名单配置",
     "white_list_label": "文件后缀",
