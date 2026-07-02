@@ -378,7 +378,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     pagination,
     loading,
     offsetData,
-    { startT, setTLoad: setLoading, setTData, noResetRefreshT: updateData, setP },
+    { startT, setTLoad: setLoading, setTData, noResetRefreshT: updateData, setP, refreshT },
   ] = useVirtualTableHook<ParamsTProps & { Filter: YakQueryHTTPFlowRequest }, HTTPFlow, 'Data', 'Id'>({
     tableBoxRef: useRef(null), // props.inViewport 判断可见性，不必再挂一个 ref
     tableRef,
@@ -477,8 +477,8 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
 
   useEffect(() => {
     if (!viewAttachIdFirstRef.current || !data.length) return
-    viewAttachIdFirstRef.current = false
     const timer = setTimeout(() => {
+      viewAttachIdFirstRef.current = false
       emiter.emit('onScrollToByClick', JSON.stringify({ historyId, id: viewAttachId + '' }))
     }, 500)
     return () => clearTimeout(timer)
@@ -1917,19 +1917,17 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     }
     return obj
   }, [props.params, pageType, runTimeId, params])
-  const resetAllFun = useMemoizedFn(() => {
-    setParams({
-      Pagination: {
-        ...tableParams.Pagination,
-        Order: defSort.order,
-        OrderBy: defSort.orderBy,
-      },
-    } as ParamsTProps)
+  const resetAllFun = useMemoizedFn((filter: YakQueryHTTPFlowRequest, attachId: number = 0) => {
+    refreshT(filter, {
+      ...tableParams.Pagination,
+      Order: defSort.order,
+      OrderBy: defSort.orderBy,
+    })
     setIsReset(!isReset)
     setWatchRefresh((prev) => !prev)
     setColor([])
     setOnlyFavorite(false)
-    setViewAttachId(0)
+    setViewAttachId(attachId)
     setCheckBodyLength(false)
     setBeforeBodyLength(undefined)
     setAfterBodyLength(undefined)
@@ -1938,13 +1936,11 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
     refreshTabsContRef.current = true
   })
   const onResetRefresh = useMemoizedFn(() => {
-    setParams({ ...resetParams })
-    resetAllFun()
+    resetAllFun({ ...resetParams })
   })
   /**@description 导入重置查询条件并刷新 */
   const onImportResetRefresh = useMemoizedFn(() => {
-    setParams({ ...resetParams, SourceType: '' })
-    resetAllFun()
+    resetAllFun({ ...resetParams, SourceType: '' })
   })
   useUpdateEffect(() => {
     onImportResetRefresh()
@@ -1953,9 +1949,7 @@ export const HTTPFlowTable = React.memo<HTTPFlowTableProp>((props) => {
   /**查看附近数据包 */
   const onViewAttachmentDataRefresh = useMemoizedFn((id: number) => {
     viewAttachIdFirstRef.current = true
-    setParams({ ...resetParams, SourceType: props.params?.SourceType || '', IncludeId: getFullRange(+id) })
-    resetAllFun()
-    setViewAttachId(+id)
+    resetAllFun({ ...resetParams, SourceType: props.params?.SourceType || '', IncludeId: getFullRange(+id) }, +id)
   })
 
   /**
