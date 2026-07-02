@@ -37,9 +37,12 @@
 }
 
 .task-name {
+  width: 100%;
   color: var(--Colors-Use-Neutral-Text-1-Title);
   font-size: 12px;
   font-weight: 500;
   line-height: 16px;
   letter-spacing: 0.5px;
+  min-width: 0;
+  @include mixin.text-ellipsis(1, false, false, true);
 }

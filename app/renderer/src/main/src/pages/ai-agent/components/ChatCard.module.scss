@@ -40,8 +40,9 @@
     }
 
     &-text {
+      flex: 1;
       min-width: 0;
-      max-width: 20em;
+      overflow: hidden;
       font-size: 12px;
       font-style: normal;
       font-weight: 500;
@@ -52,12 +53,19 @@
     }
 
     &-extra {
-      flex: 1;
+      flex-shrink: 0;
+      min-width: 0;
+      max-width: 100%;
       @include mixin.text-ellipsis(1, false, false, true);
+
+      &:empty {
+        display: none;
+      }
     }
 
     &-more {
       display: flex;
+      flex-shrink: 0;
       justify-content: flex-end;
       align-items: center;
       overflow: hidden;
