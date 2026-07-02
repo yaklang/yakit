@@ -1,5 +1,5 @@
 import { getRemoteValue, setRemoteValue } from '@/utils/kv'
-import { IrifyAiCodeAuditStyle } from '@/constants/focusMode'
+import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 import { YakRunnerHistoryProps } from './YakRunnerIrifyAiCodeAuditType'
 import emiter from '@/utils/eventBus/eventBus'
 import { failed } from '@/utils/notification'

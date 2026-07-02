@@ -14,7 +14,7 @@ import styles from './IrifyAiCodeAuditSidePanelLayout.module.scss'
 import { resolveIrifyAuditDefaultChatSeed } from './irifyAiCodeAuditConstants'
 import emiter from '@/utils/eventBus/eventBus'
 import { IrifyAiAuditStyleToggle } from './IrifyAiAuditStyleToggle'
-import { IrifyAiCodeAuditStyle } from '@/constants/focusMode'
+import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 
 const defaultAiTabs: YakitTabsProps[] = [
   {

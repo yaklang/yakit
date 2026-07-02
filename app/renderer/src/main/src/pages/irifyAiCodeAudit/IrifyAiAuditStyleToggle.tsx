@@ -1,6 +1,6 @@
 import React from 'react'
 import classNames from 'classnames'
-import { IrifyAiCodeAuditStyle, normalizeIrifyAuditStyleForSidebar } from '@/constants/focusMode'
+import { IrifyAiCodeAuditStyle, normalizeIrifyAuditStyleForSidebar } from './irifyAiCodeAuditStyle'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import styles from './IrifyAiAuditStyleToggle.module.scss'
 

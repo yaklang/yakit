@@ -18,7 +18,7 @@ import { FilterLibRuleKind } from '@/pages/ruleManagement/RuleManagementType'
 import { JSONParseLog } from '@/utils/tool'
 import { configManagementTabType } from '.'
 import { AIMentionCommandParams } from '@/pages/ai-agent/components/aiMilkdownInput/aiMilkdownMention/aiMentionPlugin'
-import { IrifyAiCodeAuditStyle } from '@/constants/focusMode'
+import { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'store')
 

@@ -42,7 +42,7 @@ import { yakitProject } from '@/services/electronBridge'
 import { yakitFailed } from '@/utils/notification'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
-import { IrifyAiCodeAuditStyle } from '@/constants/focusMode'
+import { IrifyAiCodeAuditStyle } from '@/pages/irifyAiCodeAudit/irifyAiCodeAuditStyle'
 
 const RISK_STAT_CONFIG = [
   {

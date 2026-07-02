@@ -1,4 +1,4 @@
-import { IrifyAiCodeAuditStyle } from '@/constants/focusMode'
+import { IrifyAiCodeAuditStyle } from './irifyAiCodeAuditStyle'
 import { FileDetailInfo, Selection } from './RunnerTabs/RunnerTabsType'
 import { StreamResult } from '@/hook/useHoldGRPCStream/useHoldGRPCStreamType'
 export interface YakRunnerProps {
