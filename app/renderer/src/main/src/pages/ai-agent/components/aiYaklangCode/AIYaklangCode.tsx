@@ -34,8 +34,8 @@ export const AIYaklangCode: React.FC<AIYaklangCodeProps> = React.memo((props) =>
             originValue={content}
             readOnly={true}
             onlyBasicMenu={false}
-            noMinimap={false}
-            noLineNumber={false}
+            noMinimap={true}
+            noLineNumber={true}
           />
         )
       default:
