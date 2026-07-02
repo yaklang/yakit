@@ -28,7 +28,7 @@ import {
   OutlineRefreshIcon,
 } from '@/assets/icon/outline'
 import { YakitButton } from '@/components/yakitUI/YakitButton/YakitButton'
-import { Divider, Tooltip } from 'antd'
+import { Divider, Skeleton, Tooltip } from 'antd'
 import { YakitSpin } from '@/components/yakitUI/YakitSpin/YakitSpin'
 import { formatTimestamp } from '@/utils/timeUtil'
 import { OperationCardFooter, OperationCardFooterProps } from './OperationCardFooter/OperationCardFooter'
@@ -93,7 +93,7 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
       case 'result':
         return <ToolResultCard isChildWindow={isChildWindow.current} {...props} operationInfo={operationInfo} />
       default:
-        return null
+        return data.isProcessingParams ? <ToolLoadingCard {...props} /> : null
     }
   })
 
@@ -102,9 +102,53 @@ const ToolInvokerCard: FC<ToolInvokerCardProps> = (props) => {
 
 export default memo(ToolInvokerCard)
 
+/** tool loading - processing params */
+const ToolLoadingCard: React.FC<ToolInvokerCardProps> = memo((props) => {
+  const { data } = props
+  const { t } = useI18nNamespaces(['aiAgent'])
+
+  const reason = useCreation(() => {
+    return data?.tool?.reason || ''
+  }, [data?.tool?.reason])
+
+  return (
+    <ChatCard
+      titleText={`${t('ToolInvokerCard.tool')}-${data.toolName}`}
+      titleExtra={
+        !!reason ? (
+          <span className={styles['tool-invoker-card-reason']} title={reason}>
+            {reason}
+          </span>
+        ) : null
+      }
+    >
+      <ToolStatusCard
+        status={'purple'}
+        title={
+          <div className={styles['tool-title']}>
+            <div className={styles['tool-title-left']}>
+              <div className={styles['tool-name']}>{data.toolName}</div>
+              <YakitTag size="small" fullRadius color={'purple' as YakitTagColor}>
+                生成参数中
+              </YakitTag>
+            </div>
+          </div>
+        }
+      >
+        <div className={styles['tool-loading-content']}>
+          <Skeleton active title={false} paragraph={{ rows: 1, width: '60%' }} />
+          <div className={styles['tool-loading-block']}>
+            <Skeleton active title={false} paragraph={{ rows: 3, width: ['100%', '72%', '42%'] }} />
+          </div>
+        </div>
+      </ToolStatusCard>
+    </ChatCard>
+  )
+})
+
 /**tool_**_stdout */
 const ToolStdoutCard: React.FC<ToolStdoutCardProps> = memo((props) => {
-  const { modalInfo, operationInfo, fileList, chatType, data } = props
+  const { operationInfo, fileList, chatType, data } = props
   const { t } = useI18nNamespaces(['aiAgent'])
 
   const { activeChat } = useAIAgentStore()

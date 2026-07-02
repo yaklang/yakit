@@ -759,6 +759,8 @@ export declare namespace AIAgentGrpcApi {
     start_time_ms: number
     /** 工具执行的理由 */
     reason?: string
+    /** 是否正在生成参数 */
+    isProcessingParams?: boolean
   }
   /** 工具执行时的可选操作(tool_call_watcher) */
   export interface AIToolCallWatcher {

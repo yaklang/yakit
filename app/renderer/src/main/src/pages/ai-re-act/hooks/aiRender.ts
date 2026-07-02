@@ -68,6 +68,8 @@ export interface AIToolResult {
   httpFlowDataCount: number
   /** risk流量数据总数 */
   riskFlowDataCount: number
+  /** 是否正在生成参数 */
+  isProcessingParams?: boolean
 }
 
 /** 任务节点的信息 */

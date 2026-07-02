@@ -1464,7 +1464,8 @@ const handleToolCallResult: (
   toolResult.data.durationMS = rest.duration_ms || 0
   toolResult.data.durationSeconds = rest.duration_seconds || 0
   toolResult.data.tool.status = status
-
+  /** 触发这个函数说明状态一定不是 processing_params */
+  toolResult.data.isProcessingParams = false
   // 设置总结内容，没有就设置成获取中，有就使用获取到的内容
   toolResult.data.tool.summary = toolResult.data.tool.summary || DefaultToolResultSummary[status]?.wait || ''
   // 设置执行结果错误数据内容(std_xxx_stderr)
@@ -1498,6 +1499,43 @@ const handleToolCallDone: AIMessageHandler = (request) => {
 const handleToolCallError: AIMessageHandler = (request) => {
   if (request.res.Type !== 'tool_call_error') return
   handleToolCallResult(request, 'failed')
+}
+
+/** Type='tool_call_status' 工具执行结果-状态 */
+const handleToolCallStatus: AIMessageHandler = (request) => {
+  const { res, getContentMap, pushLog } = request
+  if (res.Type !== 'tool_call_status') return
+
+  const ipcContent = Uint8ArrayToString(res.Content) || ''
+  const { call_tool_id, status } = JSON.parse(ipcContent) as AIAgentGrpcApi.AIToolCall
+  if (status !== 'processing_params') return
+  if (!call_tool_id) {
+    handleErrorGRPCToLog(res.IsSync, pushLog, genErrorLogData(res.Timestamp, `${res.Type}数据, call_tool_id 为空`))
+    return
+  }
+
+  const toolResult = getContentMap(call_tool_id)
+  if (!toolResult || toolResult.type !== AIChatQSDataTypeEnum.TOOL_RESULT) {
+    handleErrorGRPCToLog(
+      res.IsSync,
+      pushLog,
+      genErrorLogData(
+        res.Timestamp,
+        `${res.Type}数据(call_tool_id:${call_tool_id}), 没有对应的tool_call_start类型初始化`,
+      ),
+    )
+    return
+  }
+
+  const isProcessingParams = status === 'processing_params'
+  if (toolResult.data.isProcessingParams === isProcessingParams) return
+
+  toolResult.data.isProcessingParams = status === 'processing_params'
+  handleUpdateUISingleState(request.setElements, request.getContentMap, res.IsSync, {
+    mapKey: toolResult.id,
+    type: toolResult.type,
+    chatType: toolResult.chatType,
+  })
 }
 
 /** Type='tool_call_summary' 工具执行结果-总结 */
@@ -2342,6 +2380,7 @@ export const grpcAIMessageHandlers: Record<string, AIMessageHandler> = {
   tool_call_user_cancel: handleToolCallUserCancel,
   tool_call_done: handleToolCallDone,
   tool_call_error: handleToolCallError,
+  tool_call_status: handleToolCallStatus,
   tool_call_summary: handleToolCallSummary,
   tool_call_reason: handleToolCallReason,
   yak_httpflow_count: handleYakHttpFlow,

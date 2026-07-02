@@ -129,24 +129,22 @@ export const AIChatListItem: React.FC<AIChatListItemProps> = React.memo((props) 
         const { execFileRecord } = yakExecResult
         const fileList = execFileRecord.get(data.callToolId)
         return (
-          !!data.type && (
-            <ToolInvokerCard
-              titleText={t('AIChatListItem.toolCall')}
-              fileList={fileList}
-              modalInfo={{
-                time: Timestamp,
-                title: itemData.AIModelName,
-                icon: itemData.AIService,
-              }}
-              operationInfo={{
-                callToolId: data.callToolId,
-                aiFilePath: data.tool.dirPath,
-              }}
-              data={data}
-              chatType={item.chatType}
-              token={item.token}
-            />
-          )
+          <ToolInvokerCard
+            titleText={t('AIChatListItem.toolCall')}
+            fileList={fileList}
+            modalInfo={{
+              time: Timestamp,
+              title: itemData.AIModelName,
+              icon: itemData.AIService,
+            }}
+            operationInfo={{
+              callToolId: data.callToolId,
+              aiFilePath: data.tool.dirPath,
+            }}
+            data={data}
+            chatType={item.chatType}
+            token={item.token}
+          />
         )
       case AIChatQSDataTypeEnum.EXEC_AIFORGE_REVIEW_REQUIRE:
       case AIChatQSDataTypeEnum.REQUIRE_USER_INTERACTIVE:
