@@ -54,6 +54,11 @@ on:
                 required: false
                 type: boolean
                 default: false
+            sign:
+                description: "Sign installers when packaging"
+                required: false
+                type: boolean
+                default: false
 
 jobs:
     build_yakit:
@@ -66,7 +71,7 @@ jobs:
 
         steps:
             - name: Display incoming configuration parameters
-              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }} ${{ inputs.skipEnterpriseLicense }}
+              run: echo ${{ inputs.platform }} ${{ inputs.legacy }} ${{ inputs.version }} ${{ inputs.engine }} ${{ inputs.engineVersion }} ${{ inputs.devTool }} ${{ inputs.skipEnterpriseLicense }} ${{ inputs.sign }}
 
             - uses: actions/checkout@v4
             - uses: actions/setup-node@v4
@@ -112,11 +117,35 @@ jobs:
             - name: "Download Yak Engine via wget(MacOS)"
               if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
               id: download-darwin-engine
-              run: wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_amd64 && zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+              run: |
+                  wget -O bins/yak_darwin_amd64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_amd64
+                  if [ "${{ inputs.sign }}" != "true" ]; then
+                    zip ./bins/yak_darwin_amd64.zip ./bins/yak_darwin_amd64 && rm ./bins/yak_darwin_amd64
+                  fi
             - name: "Download Yak Engine via wget(MacOS-arm64)"
               if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
               id: download-darwin-engine-arm64
-              run: wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64 && zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+              run: |
+                  wget -O bins/yak_darwin_arm64 https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64
+                  if [ "${{ inputs.sign }}" != "true" ]; then
+                    zip ./bins/yak_darwin_arm64.zip ./bins/yak_darwin_arm64 && rm ./bins/yak_darwin_arm64
+                  fi
+
+            - name: Signature Mac Engine
+              if: ${{ inputs.sign && inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              env:
+                  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+                  CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+                  CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh
+              shell: bash
+
+            - name: Fetch macOS sha256
+              if: ${{ inputs.engine && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              run: |
+                  wget -O bins/yak_darwin_amd64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_amd64.sha256.txt
+                  wget -O bins/yak_darwin_arm64.sha256.txt https://yaklang.oss-accelerate.aliyuncs.com/yak/${{ inputs.engineVersion || env.ENGINE_VERSION }}/yak_darwin_arm64.sha256.txt
+              shell: bash
 
             - name: "Download Yak Engine via wget(Linux)"
               if: ${{ inputs.engine && contains(fromJSON('["linux","uos","mwl"]'), inputs.platform) }}
@@ -220,6 +249,35 @@ jobs:
               shell: bash
               run: |
                   echo "win_artifact=${ENV_Software_Name}-${SOFTWARE_VERSION}-windows${{ inputs.legacy && '-legacy' || '' }}-amd64.exe" >> "$GITHUB_OUTPUT"
+
+            - name: Prepare Mac app signing
+              if: ${{ inputs.sign && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              env:
+                  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+                  CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+                  CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+              run: chmod +x ./packageScript/script/signature.sh && ./packageScript/script/signature.sh build
+              shell: bash
+
+            - name: Enable code signing env
+              if: ${{ inputs.sign && contains(fromJSON('["darwin","mwl"]'), inputs.platform) }}
+              env:
+                  APPLE_ID: ${{ secrets.APPLE_ACCOUNT_EMAIL }}
+                  APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+                  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+                  CERT_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+                  CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+              run: |
+                  echo "APPLE_ID=${APPLE_ID}" >> $GITHUB_ENV
+                  echo "APPLE_APP_SPECIFIC_PASSWORD=${APPLE_APP_SPECIFIC_PASSWORD}" >> $GITHUB_ENV
+                  echo "APPLE_TEAM_ID=${APPLE_TEAM_ID}" >> $GITHUB_ENV
+                  echo "CERT_PASSWORD=${CERT_PASSWORD}" >> $GITHUB_ENV
+                  {
+                    echo "CERT_BASE64<<EOF"
+                    echo "${CERT_BASE64}"
+                    echo "EOF"
+                  } >> $GITHUB_ENV
+              shell: bash
 
             - name: Build Yakit (MultiPlatform)
               if: ${{ inputs.platform == 'mwl' }}
