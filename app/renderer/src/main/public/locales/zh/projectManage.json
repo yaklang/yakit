@@ -1,6 +1,7 @@
 {
   "ProjectManage": {
     "server": "服务端",
+    "builtin": "内置",
     "projectCode": "项目编号",
     "moduleCode": "系统模块编号",
     "description": "备注",

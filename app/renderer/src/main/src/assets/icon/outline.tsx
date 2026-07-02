@@ -6308,3 +6308,22 @@ const OutlineBrainCircuit = () => (
 export const OutlineBrainCircuitIcon = (props: Partial<IconProps>) => {
   return <Icon component={OutlineBrainCircuit} {...props} />
 }
+
+const OutlineUserRoundCog = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M2 21C2.00012 19.741 2.29739 18.4997 2.86766 17.3772C3.43792 16.2548 4.26506 15.2827 5.28182 14.5402C6.29858 13.7976 7.47624 13.3056 8.71904 13.104C9.96183 12.9024 11.2347 12.9969 12.434 13.38M19.5001 14.3L19.1001 15.2M16.9 20.8L16.5 21.7001M21.7001 19.5001L20.8 19.1001M15.2 16.9L14.3 16.5M21.7001 16.5L20.8 16.9M15.2 19.1001L14.3 19.5001M19.5001 21.7001L19.1001 20.8M16.9 15.2L16.5 14.3M15 8C15 10.7614 12.7614 13 10 13C7.23858 13 5 10.7614 5 8C5 5.23858 7.23858 3 10 3C12.7614 3 15 5.23858 15 8ZM21 18C21 19.6569 19.6569 21 18 21C16.3431 21 15 19.6569 15 18C15 16.3431 16.3431 15 18 15C19.6569 15 21 16.3431 21 18Z"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+)
+
+/**
+ *  @description Outline/UserRoundCog
+ */
+export const OutlineUserRoundCogIcon = (props: Partial<IconProps>) => {
+  return <Icon component={OutlineUserRoundCog} {...props} />
+}

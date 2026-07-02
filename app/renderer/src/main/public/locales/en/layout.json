@@ -263,6 +263,21 @@
     "setPrivateDomainFailed": "Failed to set private domain: {{error}}",
     "remoteControlClosing": "Remote control is closing..."
   },
+  "CeUserMenu": {
+    "tokenConsumption": "Token Usage",
+    "usageStatistics": "Usage Statistics",
+    "apiKey": "ApiKey",
+    "requestStatistics": "Request Statistics",
+    "byteStatistics": "Byte Statistics",
+    "success": "Success",
+    "failure": "Failure",
+    "total": "Total",
+    "input": "Input",
+    "output": "Output",
+    "tokenUsed": "Used",
+    "tokenLimit": "Total Limit",
+    "networkSearchCount": "Web Search Count"
+  },
   "FuncDomain": {
     "remoteInProgress": "Remote in progress",
     "signOut": "Sign Out",
@@ -281,6 +296,8 @@
     "systemConfig": "System Configuration",
     "screenRecordingNotice": "Screen Recording Notice",
     "isScrecorderReadyFailed": "IsScrecorderReady failed: {{error}}",
+    "getApiKeyDetailFailed": "Failed to get ApiKey details: {{error}}",
+    "getApiKeyTokenFailed": "Failed to get ApiKey token: {{error}}",
     "engineConsole": "Engine Console",
     "signOutSuccess": "Successfully signed out",
     "signOutRemoteConfirm": "Clicking sign out will automatically exit remote control, are you sure you want to exit?",

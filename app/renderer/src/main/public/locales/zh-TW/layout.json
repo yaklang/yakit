@@ -263,6 +263,21 @@
     "setPrivateDomainFailed": "設定私有域失敗: {{error}}",
     "remoteControlClosing": "遠端控制關閉中..."
   },
+  "CeUserMenu": {
+    "tokenConsumption": "Token 消耗",
+    "usageStatistics": "使用統計",
+    "apiKey": "ApiKey",
+    "requestStatistics": "請求統計",
+    "byteStatistics": "位元組統計",
+    "success": "成功",
+    "failure": "失敗",
+    "total": "總數",
+    "input": "輸入",
+    "output": "輸出",
+    "tokenUsed": "已使用",
+    "tokenLimit": "總限額",
+    "networkSearchCount": "聯網搜索次數"
+  },
   "FuncDomain": {
     "remoteInProgress": "遠端中",
     "signOut": "退出登入",
@@ -281,6 +296,8 @@
     "systemConfig": "系統配置",
     "screenRecordingNotice": "錄屏須知",
     "isScrecorderReadyFailed": "IsScrecorderReady失敗: {{error}}",
+    "getApiKeyDetailFailed": "獲取ApiKey詳情失敗: {{error}}",
+    "getApiKeyTokenFailed": "獲取ApiKey Token失敗: {{error}}",
     "engineConsole": "引擎Console",
     "signOutSuccess": "已成功退出賬號",
     "signOutRemoteConfirm": "點選退出登入將自動退出遠端控制，是否確認退出",
