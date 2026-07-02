@@ -68,9 +68,7 @@ function useTaskChat(params: UseTaskChatParams) {
 
   const handleTaskNode = useMemoizedFn((res: AIOutputEvent, info: AIAgentGrpcApi.ChangeTask) => {
     try {
-      const taskKey = getCurrentTaskPlanID()?.taskID
-        ? `${getCurrentTaskPlanID()?.taskID}-${info.task.index}`
-        : undefined
+      const taskKey = info.task.task_id
       if (!taskKey) return
       const existing = getContentMap(taskKey)
       if (existing && existing.type !== AIChatQSDataTypeEnum.TASK_NODE_GROUP) {
