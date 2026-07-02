@@ -650,9 +650,16 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
         for (let name in keyToOnRunRef.current) {
           if (keyToOnRunRef.current[name].includes(menuName)) {
             const allMenu = { ...baseMenuListsObj, ...extraMenuListsObj, ...contextMenu }
-            allMenu[name].onRun(editor, menuName)
+            let runKey = menuName
+            const parentMenu = allMenu[name].menu.find((item) => (item as EditorMenuItemProps).key === menuName) as
+              | EditorMenuItemProps
+              | undefined
+            if (parentMenu?.children?.length) {
+              runKey = (parentMenu.children[0] as EditorMenuItemProps).key
+            }
+            allMenu[name].onRun(editor, runKey)
             executeFunc = true
-            onRightContextMenu(menuName)
+            onRightContextMenu(runKey)
             break
           }
         }
@@ -1675,6 +1682,7 @@ export const YakitEditor: React.FC<YakitEditorProps> = React.memo((props) => {
     showByRightContext(
       <EditorMenu
         size="rightMenu"
+        parentTitleClick={true}
         data={[...rightContextMenu.current]}
         onClick={({ key, keyPath }) => menuItemHandle(key, keyPath)}
       />,

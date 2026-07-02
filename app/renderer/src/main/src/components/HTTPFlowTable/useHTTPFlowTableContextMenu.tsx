@@ -144,7 +144,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys,
           },
         ],
-        onClickBatch: () => {},
+        onClickBatch: (list, n) => {
+          onBatch((el) => onSendToTab(el, true, downstreamProxyStr, fromMITM), n!, list.length === total)
+        },
+        onClickSingle: (v) => onSendToTab(v, true, downstreamProxyStr, fromMITM),
       },
       {
         key: '发送到 WS Fuzzer',
@@ -164,7 +167,10 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             keybindings: getGlobalShortcutKeyEvents()[GlobalShortcutKey.CommonSendToWebFuzzer].keys,
           },
         ],
-        onClickBatch: () => {},
+        onClickBatch: (list, n) => {
+          onBatch((el) => newWebsocketFuzzerTab(el.IsHTTPS, el.Request), n!, list.length === total)
+        },
+        onClickSingle: (v) => newWebsocketFuzzerTab(v.IsHTTPS, v.Request),
       },
       {
         key: 'favorite',
@@ -228,27 +234,11 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         children: getCodecHistoryPlugin(),
       },
       {
-        key: 'AI插件',
-        label: (
-          <>
-            <IconSolidAIIcon className={'ai-plugin-menu-icon-default'} />
-            <IconSolidAIWhiteIcon className={'ai-plugin-menu-icon-hover'} />
-            {t('HTTPFlowTable.RowContextMenu.aiPlugin')}
-          </>
-        ),
-        default: true,
-        webSocket: false,
-        onClickSingle: () => {},
-        onClickBatch: () => {},
-        children: getCodecAIPlugin(),
-      },
-      {
-        key: 'copyUrlWithQuery',
-        label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
+        key: 'copyUrl',
+        label: t('HTTPFlowTable.RowContextMenu.copyURL'),
         number: 30,
         webSocket: true,
         default: true,
-        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
         onClickSingle: (v) => setClipboardText(v.Url || ''),
         onClickBatch: (v, number) => {
           if (v.length === 0) {
@@ -263,40 +253,18 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
             yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number }))
           }
         },
-      },
-      {
-        key: 'copyUrlWithoutQuery',
-        label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
-        number: 30,
-        webSocket: true,
-        default: true,
-        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
-        onClickSingle: (v) => {
-          const nextUrl = getUrlWithoutQuery(v.Url)
-          if (!nextUrl) {
-            yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
-            return
-          }
-          setClipboardText(nextUrl)
-        },
-        onClickBatch: (v, number) => {
-          if (v.length === 0) {
-            yakitNotify('warning', t('HTTPFlowTable.pleaseSelectData'))
-            return
-          }
-          if (v.length < number!) {
-            const urls = v.map((ele) => getUrlWithoutQuery(ele.Url)).filter((url) => !!url)
-            if (!urls.length) {
-              yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
-              return
-            }
-            setClipboardText(urls.join('\r\n'))
-            setSelectedRowKeys([])
-            setSelectedRows([])
-          } else {
-            yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number }))
-          }
-        },
+        children: [
+          {
+            key: 'copyUrlWithQuery',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithQuery'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithQuery].keys,
+          },
+          {
+            key: 'copyUrlWithoutQuery',
+            label: t('YakitEditor.HTTPPacketYakitEditor.copyUrlWithoutQuery'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableCopyUrlWithoutQuery].keys,
+          },
+        ],
       },
       {
         key: '下载 Response Body',
@@ -310,30 +278,34 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         },
       },
       {
-        key: '浏览器中打开URL',
-        label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
+        key: 'viewInBrowser',
+        label: t('HTTPFlowTable.RowContextMenu.viewInBrowser'),
         default: true,
         webSocket: false,
-        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
-        onClickSingle: (v) => {
-          v.Url && openExternalWebsite(v.Url)
-        },
-      },
-      {
-        key: '浏览器中查看响应',
-        label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
-        default: true,
-        webSocket: false,
-        keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
         onClickSingle: (v) => {
           showResponseViaHTTPFlowID(v)
         },
+        children: [
+          {
+            key: 'viewResponseInBrowser',
+            label: t('HTTPFlowTable.RowContextMenu.viewResponseInBrowser'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableViewResponseInBrowser].keys,
+          },
+          {
+            key: 'openURLInBrowser',
+            label: t('HTTPFlowTable.RowContextMenu.openURLInBrowser'),
+            keybindings: getYakitMultipleShortcutKeyEvents()[YakitMultipleShortcutKey.TableOpenUrlInBrowser].keys,
+          },
+        ],
       },
       {
         key: '复制为 CSRF Poc',
         label: t('YakitEditor.HTTPPacketYakitEditor.copyAsCsrfPoc'),
         default: true,
         webSocket: false,
+        onClickSingle: (v) => {
+          generateCSRFPocByRequest(v.Request, v.IsHTTPS, (e) => setClipboardText(e), false)
+        },
         children: [
           {
             key: 'csrfpoc',
@@ -353,7 +325,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
         label: t('HTTPFlowTable.RowContextMenu.copyAsYakPoCTemplate'),
         default: true,
         webSocket: false,
-        onClickSingle: () => {},
+        onClickSingle: (v) => onPocMould(v),
         children: [
           {
             key: '数据包 PoC 模版',
@@ -587,6 +559,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     selected?.Id,
     onlyFavorite,
     getUrlWithoutQuery,
+    total,
   ])
 
   /** 菜单自定义快捷键渲染处理事件 */
@@ -648,6 +621,7 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
     showByRightContext(
       {
         width: 180,
+        parentTitleClick: true,
         data: rowContextmenu,
         // openKeys:['复制为 Yak PoC 模版',],
         onClick: ({ key, keyPath }) => {
@@ -779,6 +753,24 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
               break
             case 'sendToWS':
               newWebsocketFuzzerTab(rowData.IsHTTPS, rowData.Request, false)
+              break
+            case 'copyUrlWithQuery':
+              setClipboardText(rowData.Url || '')
+              break
+            case 'copyUrlWithoutQuery': {
+              const nextUrl = getUrlWithoutQuery(rowData.Url)
+              if (!nextUrl) {
+                yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+                return
+              }
+              setClipboardText(nextUrl)
+              break
+            }
+            case 'openURLInBrowser':
+              rowData.Url && openExternalWebsite(rowData.Url)
+              break
+            case 'viewResponseInBrowser':
+              showResponseViaHTTPFlowID(rowData)
               break
             case '导出为Excel':
               onExcelExport([rowData])
@@ -963,6 +955,36 @@ export const useHTTPFlowTableContextMenu = (options: UseHTTPFlowTableContextMenu
           selectedRowKeys.length === total,
         )
         break
+      case 'copyUrlWithQuery':
+      case 'copyUrlWithoutQuery': {
+        const currentItemCopyUrl = menuData.find((f) => f.onClickBatch && f.key === 'copyUrl')
+        if (!currentItemCopyUrl) return
+        if (key === 'copyUrlWithQuery') {
+          currentItemCopyUrl.onClickBatch?.(selectedRows, currentItemCopyUrl.number)
+          break
+        }
+        const urls = selectedRows.map((el) => getUrlWithoutQuery(el.Url)).filter((url) => !!url)
+        if (selectedRows.length > 0 && !urls.length) {
+          yakitNotify('info', t('YakitEditor.HTTPPacketYakitEditor.urlNotExist'))
+          return
+        }
+        if (selectedRows.length >= (currentItemCopyUrl.number || 0)) {
+          yakitNotify('warning', t('HTTPFlowTable.copyLimit', { number: currentItemCopyUrl.number }))
+          return
+        }
+        let copied = false
+        onBatch(
+          () => {
+            if (!copied) {
+              setClipboardText(urls.join('\r\n'))
+              copied = true
+            }
+          },
+          currentItemCopyUrl.number || 0,
+          selectedRowKeys.length === total,
+        )
+        break
+      }
       case '导出为Excel':
         onExcelExport(selectedRows)
         break

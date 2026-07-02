@@ -41,6 +41,8 @@ export interface YakitMenuProp extends MenuProps {
   popupClassName?: string
   /** @name 组件尺寸类型(默认|右键高度紧凑型) */
   size?: 'default' | 'rightMenu'
+  /** 点击一级菜单触发 onClick */
+  parentTitleClick?: boolean
 }
 
 export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
@@ -52,6 +54,8 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     className,
     popupClassName,
     size = 'default',
+    parentTitleClick = false,
+    onClick,
     ...restMenu
   } = props
 
@@ -110,6 +114,11 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
           disabled: info.disabled,
           children: [],
           popupClassName: classNames(styles['yakit-menu-submenu'], menuTypeClass, menuSizeClass, popupClassName),
+          onTitleClick:
+            parentTitleClick && onClick
+              ? ({ key, domEvent }) =>
+                  onClick({ key, keyPath: [key], domEvent } as Parameters<NonNullable<typeof onClick>>[0])
+              : undefined,
         }
         const arr: ItemType[] = []
         for (let item of info.children) {
@@ -159,6 +168,7 @@ export const YakitMenu: React.FC<YakitMenuProp> = React.memo((props) => {
     <div className={classNames(styles['yakit-menu-div-wrapper'], menuTypeClass, menuSizeClass)}>
       <Menu
         {...restMenu}
+        onClick={onClick}
         className={classNames(styles['yakit-menu-wrapper'], className || '')}
         items={data && data.length > 0 ? items : restMenu.items}
       />
