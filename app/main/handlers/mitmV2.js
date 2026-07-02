@@ -222,6 +222,14 @@ module.exports = (win, getClient) => {
     }
   })
 
+  // 内置规则开关
+  ipcMain.handle('mitmV2-disableTrafficGuard', (e, params) => {
+    if (stream) {
+      const { DisableTrafficGuard } = params
+      sendMessage({ DisableTrafficGuard: DisableTrafficGuard })
+    }
+  })
+
   // 开始调用 MITM，设置 stream
   let isFirstData = true
   ipcMain.handle('mitmV2-start-call', (e, params) => {

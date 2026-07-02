@@ -591,6 +591,8 @@ service Yak {
   rpc GetRequestBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
   rpc GetResponseBodyByHTTPFlowID(DownloadBodyByHTTPFlowIDRequest) returns (Bytes);
   rpc GetHTTPPacketBody(GetHTTPPacketBodyRequest) returns (Bytes);
+  // 从文本或 HTTPFlow 提取 header/body/完整报文并编码；可选落盘
+  rpc EncodeHTTPPacketContent(EncodeHTTPPacketContentRequest) returns (EncodeHTTPPacketContentResponse);
 
   // 注册一个 Facades HTTP 响应
   rpc RegisterFacadesHTTP(RegisterFacadesHTTPRequest) returns (RegisterFacadesHTTPResponse);
@@ -3696,6 +3698,26 @@ message GetHTTPPacketBodyRequest {
 
 message DownloadBodyByHTTPFlowIDRequest {
   int64 Id = 1;
+}
+
+// Position: header | body | all (aliases: packet, full)
+message EncodeHTTPPacketContentRequest {
+  string Text = 1;
+  bytes InputBytes = 2;
+  int64 HTTPFlowId = 3;
+  bool IsRequest = 4;
+  string Position = 5;
+  string EncodingType = 6;
+  repeated ExecParamItem Params = 7;
+  bool SaveToFile = 8;
+  string FilePath = 9;
+}
+
+message EncodeHTTPPacketContentResponse {
+  string EncodedText = 1;
+  string SavedPath = 2;
+  string SavedDir = 3;
+  string Error = 4;
 }
 
 message Bytes {
@@ -7213,6 +7235,9 @@ message MITMRequest {
   // hijack filter
   MITMFilterData HijackFilterData = 65;
   bool updateHijackFilter = 66;
+
+  // disable built-in TrafficGuard sensitive-info scanning
+  bool DisableTrafficGuard = 69;
 }
 
 message FilterDataItem {
@@ -9030,6 +9055,9 @@ message MITMV2Request{
   // When non-empty, the server will listen on Port (primary) and all ExtraPorts.
   // All ports share the same MITM server instance and configuration.
   repeated uint32 ExtraPorts = 57;
+
+  // disable built-in TrafficGuard sensitive-info scanning
+  bool DisableTrafficGuard = 58;
 }
 
 message MITMV2Response {

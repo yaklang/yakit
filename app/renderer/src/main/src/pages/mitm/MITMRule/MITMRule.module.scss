@@ -20,6 +20,7 @@
   justify-content: space-between;
   padding: 0 16px;
 }
+
 .heard-right-operation {
   display: flex;
   justify-content: flex-end;
@@ -71,6 +72,23 @@
 
   .heard-right-operation_divider {
     margin: 0 4px;
+  }
+
+  &-disableTrafficGuard {
+    display: flex;
+    align-items: center;
+
+    label {
+      display: flex;
+      align-items: center;
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    font-size: 12px;
+    color: var(--Colors-Use-Main-Primary);
   }
 }
 
