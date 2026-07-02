@@ -2,9 +2,7 @@ import React, { useMemo } from 'react'
 import classNames from 'classnames'
 import { Progress } from 'antd'
 import { YakitModal } from '../yakitUI/YakitModal/YakitModal'
-import {
-  HorizontalScrollCardItemInfoMultiple,
-} from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
+import { HorizontalScrollCardItemInfoMultiple } from '@/pages/plugins/operator/horizontalScrollCard/HorizontalScrollCard'
 import { OutlineDocumentduplicateIcon, OutlineHashtagIcon } from '@/assets/icon/outline'
 import { useI18nNamespaces } from '@/i18n/useI18nNamespaces'
 import { setClipboardText } from '@/utils/clipboard'
