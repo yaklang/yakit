@@ -36,11 +36,7 @@ import { KnowledgeBaseTableHeaderProps } from './KnowledgeBaseTableHeader'
 import { CreateKnowledgeBaseData } from '../TKnowledgeBase'
 
 import { knowledgeBaseDataStore } from '@/pages/ai-agent/store/ChatDataStore'
-import {
-  HistoryAIReActChatProvider,
-  useHistoryAIReActChat,
-  useHistoryAIReActTaskDetails,
-} from '@/components/historyAIReActChat'
+import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { AIAgentSetting } from '@/pages/ai-agent/aiAgentType'
 import { AIHandleStartParams } from '@/pages/ai-re-act/aiReActChat/AIReActChatType'
 import Joyride, { ACTIONS, CallBackProps, STATUS } from 'react-joyride'
@@ -104,7 +100,6 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
     const { t } = useI18nNamespaces(['plugin'])
     const { renderHistoryAIReActChat, setShowFreeChat, showFreeChat, historyAIReActChatBridge } =
       useHistoryAIReActChat()
-    const { detailsRightIcon } = useHistoryAIReActTaskDetails()
     const [streams, api] = useMultipleHoldGRPCStream()
     const { refresh: refreshPluginStatus, ThirdPartyBinaryRunAsync } = useCheckKnowledgePlugin()
 
@@ -596,7 +591,7 @@ const KnowledgeBaseContentInner = forwardRef<unknown, KnowledgeBaseContentProps>
                       close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setShowFreeChat(false)} />
                       ),
-                      details: detailsRightIcon,
+                      taskDetails: true,
                     },
                     filterMentionType: ['knowledgeBase'],
                     onAfterSubmit: generatreMention,

@@ -134,11 +134,7 @@ import {
 } from '@/components/HTTPFlowTable/HTTPFlowTableFormConfiguration/HTTPFlowTableFormConfiguration'
 import { FlowAiStore } from '@/pages/ai-agent/store/ChatDataStore'
 import { AIInputFooterRightEnum, AIInputInnerFeatureEnum } from '@/pages/ai-agent/template/type'
-import {
-  HistoryAIReActChatProvider,
-  useHistoryAIReActChat,
-  useHistoryAIReActTaskDetails,
-} from '@/components/historyAIReActChat'
+import { HistoryAIReActChatProvider, useHistoryAIReActChat } from '@/components/historyAIReActChat'
 import { HTTPFlowRuleDataFilter } from '@/components/HTTPFlowTable/HTTPFlowRuleDataFilter'
 import { isFilterSectionActive, safeParse } from '../HTTPHistoryAnalysis.utils'
 const { ipcRenderer } = window.require('electron')
@@ -231,8 +227,6 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
     }
     setActiveKey(key)
   })
-
-  const { detailsRightIcon } = useHistoryAIReActTaskDetails()
 
   useDebounceEffect(
     () => {
@@ -359,7 +353,7 @@ const HTTPHistoryFilterInner: React.FC<HTTPHistoryFilterProps> = React.memo((pro
                       close: (
                         <YakitButton type="text2" icon={<OutlineXIcon />} onClick={() => setOpenTabsFlag(false)} />
                       ),
-                      details: detailsRightIcon,
+                      taskDetails: true,
                     },
                     footerRightTypes: [
                       {

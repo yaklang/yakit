@@ -155,7 +155,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       .setOnlineProfile({
         ...values,
       })
-      .then((data) => {
+      .then(() => {
         addHttpHistoryList(values.BaseUrl)
         addProxyList(values.Proxy)
         setFormValue(values)
@@ -201,7 +201,7 @@ export const ConfigPrivateDomain: React.FC<ConfigPrivateDomainProps> = React.mem
       })
   })
   useEffect(() => {
-    const cleanup = yakitAuth.onBaseUrlStatus((res: any) => {
+    const cleanup = yakitAuth.onBaseUrlStatus(() => {
       enterpriseLogin && loginUser()
       emiter.emit('onSwitchPrivateDomain', '') // 修改私有域成功后发送的信号
     })

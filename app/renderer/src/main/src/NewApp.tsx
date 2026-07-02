@@ -28,7 +28,7 @@ import { useI18nNamespaces } from './i18n/useI18nNamespaces'
 /** 部分页面懒加载 */
 const Main = lazy(() => import('./pages/MainOperator'))
 
-interface OnlineProfileProps {
+export interface OnlineProfileProps {
   BaseUrl: string
   Password?: string
   IsCompany?: boolean
@@ -248,7 +248,7 @@ function NewApp() {
   const { dynamicStatus } = yakitDynamicStatus()
   const [uploadProjectEvent] = useUploadInfoByEnpriTrace()
   useEffect(() => {
-    const offCloseWindow = yakitApp.onCloseWindow(async (_res: any) => {
+    const offCloseWindow = yakitApp.onCloseWindow(async () => {
       // 如果关闭按钮有其他的弹窗 则不显示 showMessageBox
       const showCloseMessageBox = !(Array.from(runNodeList).length || temporaryProjectIdRef.current)
       // 关闭前的所有接口调用都放到allSettled里面
@@ -265,7 +265,7 @@ function NewApp() {
       }
     })
 
-    const offMinimizeWindow = yakitApp.onMinimizeWindow(async (_res: any) => {
+    const offMinimizeWindow = yakitApp.onMinimizeWindow(async () => {
       const { token } = userInfo
       if (token && token.length > 0) {
         uploadProjectEvent.startUpload({

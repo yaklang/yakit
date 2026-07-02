@@ -104,9 +104,10 @@ export const httpUploadFile: APIFunc<httpUploadFileFileInfo, string> = (request,
       .uploadFile(request)
       .then((res) => {
         if (res?.code === 200 && res?.data) {
-          resolve(res.data)
+          resolve(typeof res.data === 'string' ? res.data : '')
         } else {
-          const message = res?.message || res?.data?.reason || tOriginal('YakitNotification.unknown_error')
+          const dataReason = typeof res?.data === 'object' && res?.data ? res.data.reason : undefined
+          const message = res?.message || dataReason || tOriginal('YakitNotification.unknown_error')
           if (!hiddenError) yakitNotify('error', tOriginal('apiUtilsHttp.uploadFileFailed', { error: message }))
           reject(message)
         }

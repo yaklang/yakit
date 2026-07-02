@@ -7,7 +7,7 @@ import { yakitNetwork } from './electronBridge'
 import i18n from '@/i18n/i18n'
 const tOriginal = i18n.getFixedT(null, 'utils')
 
-interface AxiosResponseInfoProps {
+export interface AxiosResponseInfoProps {
   message?: string
   reason?: string
   userInfo?: UserInfoProps
@@ -16,7 +16,7 @@ interface AxiosResponseInfoProps {
 // 批量覆盖
 type Merge<M, N> = Omit<M, Extract<keyof M, keyof N>> & N
 
-type AxiosResponseProps<T = any, D = any> = Merge<
+export type AxiosResponseProps<T = any, D = any> = Merge<
   AxiosResponse<T, D>,
   {
     code?: number
