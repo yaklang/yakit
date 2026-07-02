@@ -834,6 +834,11 @@ const AIOnlineModelListItem: React.FC<AIOnlineModelListItemProps> = React.memo((
           <OutlineAtomIcon className={styles['atom-icon']} />
           <span className={styles['ai-online-model-list-item-model-text']}>{config.Type}</span>
         </div>
+        {!isShowRemove && (
+          <div className={styles['ai-online-model-list-item-model']}>
+            <span className={styles['ai-online-model-list-item-model-text']}>{t('ProjectManage.builtin')}</span>
+          </div>
+        )}
         {item?.IsOnline ? (
           <YakitTag size="small" color="warning" fullRadius className={styles['ai-online-model-list-item-info']}>
             {t('ProjectManage.server')}
